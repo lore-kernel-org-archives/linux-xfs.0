@@ -2,72 +2,70 @@ Return-Path: <SRS0=AYd8=6O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DE92C4724C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D06C47247
 	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 22:47:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F11620774
+	by mail.kernel.org (Postfix) with ESMTP id C61DA20774
 	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 22:47:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PG+TGR6m"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nnUhvKLu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727068AbgD3WrJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726784AbgD3WrJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 30 Apr 2020 18:47:09 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:48368 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726784AbgD3WrH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 18:47:07 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UMhNBX047342
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:06 GMT
+Received: from aserp2120.oracle.com ([141.146.126.78]:43686 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727062AbgD3WrJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 18:47:09 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UMgrP1128243
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=p52fkTygRwBbegWKK/2yBceS1c6Adp5pxzT7YrbwB3Y=;
- b=PG+TGR6mrFZC5xKnFp6BpjHd8/gtaO0t/CInWxfs4ZmirSYfCX2Eqwd51Jj6L6BOsG+E
- f/K9Fq1dNvapM8j7bzpV6Hm81PpRkGlWBE7pClYSzNTEJZflq+IbgIiDfhH5cWasXJyK
- yRc4yw3Qnh6IcyUF4ZVzBb/isfAoHKsWUogvMqBKCBjKiy8SOTQErE3ZSX5ejt7tA8jf
- 7ZOZezYjkelGm7avBB95Wu2hJqFyUtp6V4osC7FGz/sa7NpoRntz1G34HiX5SYTY6nV/
- zFDPNVPSBpn/Qrc0hmlItSVDBEb7RBZG2P0E+aqoPg4LW4gyRD+6hGI9Qg8twKFvJaMw RQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 30r7f5r269-1
+ date : message-id : in-reply-to : references; s=corp-2020-01-29;
+ bh=5iZ3kZtH3a6tQNE8l5DNVTs/K3RhAi61CQT1fTfrwd4=;
+ b=nnUhvKLuGqfMMNhnSJrt/sKyB9onrEi8QPq3xcJJOXExEsh4mUG62khyodr66TnOsA2f
+ QG7/YtnVUtnFaJdOxnhvnzSrXGqKP5dVrVUiu7K6LoFRcJi7UeErCzxRGKBNm5tCWoTB
+ +S1FwieiGSl7dL/t7jtftKSsJK1tGP7JmxF/feDCSNI/f0o9oafAtjL4/7cPQTGQhi1x
+ bVLu4G41ck7qnW3tRDJBQPZVDhMnsZIpmkR3muGXerI9NazLjL+4oOIOygt2poDAKulO
+ c7jTZb7B81jGPGuVMwe3lPYhV/56WxqEjyGvF2y/TEQxiqlewAdPHc+Y5UgxZ6v/x2Xa dw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 30r7f3g22x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:06 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UMhP7f181146
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:05 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 30r7fes26a-1
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:08 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UMgSNU016166
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:08 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 30r7f298ew-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:05 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:07 +0000
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03UMl5Tv012786
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:05 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03UMl7Uc011742
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:07 GMT
 Received: from localhost.localdomain (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 30 Apr 2020 15:47:04 -0700
+        with ESMTP ; Thu, 30 Apr 2020 15:47:07 -0700
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v9 00/43] xfsprogs: Delay Ready Attributes
-Date:   Thu, 30 Apr 2020 15:46:17 -0700
-Message-Id: <20200430224700.4183-1-allison.henderson@oracle.com>
+Subject: [PATCH v9 09/43] xfsprogs: remove ATTR_KERNOVAL
+Date:   Thu, 30 Apr 2020 15:46:26 -0700
+Message-Id: <20200430224700.4183-10-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200430224700.4183-1-allison.henderson@oracle.com>
+References: <20200430224700.4183-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 suspectscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004300167
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 phishscore=0
+ adultscore=0 spamscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004300167
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
- lowpriorityscore=0 priorityscore=1501 adultscore=0 mlxlogscore=999
- clxscore=1015 phishscore=0 impostorscore=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 suspectscore=1
+ phishscore=0 mlxlogscore=999 impostorscore=0 spamscore=0 mlxscore=0
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
  definitions=main-2004300167
 Sender: linux-xfs-owner@vger.kernel.org
@@ -75,83 +73,129 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+We can just pass down the Linux convention of a zero valuelen to just
+query for the existance of an attribute to the low-level code instead.
+The use in the legacy xfs_attr_list code only used by the ioctl
+interface was already dead code, as the callers check that the flag
+is not present.
 
-This set applies the corresponding changes for delayed ready attributes to
-xfsprogs. I will pick up the reviews from the kernel side series and mirror
-them here.  This set also includes some patches from the kernel side that have
-not yet been ported.  They are not part of the delayed ready attr set, but
-they are required in order for the kernel side ports to seat correctly.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+---
+ libxfs/xfs_attr.c        |  8 ++++----
+ libxfs/xfs_attr.h        |  4 +---
+ libxfs/xfs_attr_leaf.c   | 14 +++++++-------
+ libxfs/xfs_attr_remote.c |  2 +-
+ 4 files changed, 13 insertions(+), 15 deletions(-)
 
-This series can also be viewed on github here:
-https://github.com/allisonhenderson/xfs_work/tree/delay_ready_attrs_xfsprogs_v9
-
-And also the extended delayed attribute and parent pointer series:
-https://github.com/allisonhenderson/xfs_work/tree/delay_ready_attrs_xfsprogs_v9_extended
-
-Thanks all!
-Allison
-
-Allison Collins (43):
-  xfsprogs: remove the ATTR_INCOMPLETE flag
-  xfsprogs: merge xfs_attr_remove into xfs_attr_set
-  xfsprogs: remove the name == NULL check from xfs_attr_args_init
-  xfsprogs: remove the MAXNAMELEN check from xfs_attr_args_init
-  xfsprogs: turn xfs_da_args.value into a void pointer
-  xfsprogs: pass an initialized xfs_da_args structure to xfs_attr_set
-  xfsprogs: pass an initialized xfs_da_args to xfs_attr_get
-  xfsprogs: remove the xfs_inode argument to xfs_attr_get_ilocked
-  xfsprogs: remove ATTR_KERNOVAL
-  xfsprogs: remove ATTR_ALLOC and XFS_DA_OP_ALLOCVAL
-  xfsprogs: replace ATTR_KERNOTIME with XFS_DA_OP_NOTIME
-  xfsprogs: factor out a xfs_attr_match helper
-  xfsprogs: cleanup struct xfs_attr_list_context
-  xfsprogs: remove the unused ATTR_ENTRY macro
-  xfsprogs: move the legacy xfs_attr_list to xfs_ioctl.c
-  xfsprogs: rename xfs_attr_list_int to xfs_attr_list
-  xfsprogs: clean up the ATTR_REPLACE checks
-  xfsprogs: clean up the attr flag confusion
-  xfsprogs: embedded the attrlist cursor into struct
-    xfs_attr_list_context
-  xfsprogs: Add xfs_has_attr and subroutines
-  xfsprogs: Check for -ENOATTR or -EEXIST
-  xfsprogs: Factor out new helper functions xfs_attr_rmtval_set
-  xfsprogs: Pull up trans handling in xfs_attr3_leaf_flipflags
-  xfsprogs: Split apart xfs_attr_leaf_addname
-  xfsprogs: Refactor xfs_attr_try_sf_addname
-  xfsprogs: Pull up trans roll from xfs_attr3_leaf_setflag
-  xfsprogs: Factor out xfs_attr_rmtval_invalidate
-  xfsprogs: Pull up trans roll in xfs_attr3_leaf_clearflag
-  xfsprogs: Add helper function __xfs_attr_rmtval_remove
-  xfsprogs: Pull up xfs_attr_rmtval_invalidate
-  xfsprogs: Add helper function xfs_attr_node_shrink
-  xfsprogs: Remove unneeded xfs_trans_roll_inode calls
-  xfsprogs: Add helpers xfs_attr_is_shortform and xfs_attr_set_shortform
-  xfsprogs: Add helper function xfs_attr_leaf_mark_incomplete
-  xfsprogs: Add remote block helper functions
-  xfsprogs: Add helper function xfs_attr_node_removename_setup
-  xfsprogs: Add helper function xfs_attr_node_removename_rmt
-  xfsprogs: Simplify xfs_attr_leaf_addname
-  xfsprogs: Simplify xfs_attr_node_addname
-  xfsprogs: Lift -ENOSPC handler from xfs_attr_leaf_addname
-  xfsprogs: Add delay ready attr remove routines
-  xfsprogs: Add delay ready attr set routines
-  xfsprogs: Rename __xfs_attr_rmtval_remove
-
- db/attrset.c             |   61 +-
- include/libxfs.h         |    1 +
- libxfs/libxfs_api_defs.h |    9 +-
- libxfs/xfs_attr.c        | 1518 +++++++++++++++++++++++++++-------------------
- libxfs/xfs_attr.h        |  313 +++++++---
- libxfs/xfs_attr_leaf.c   |  212 +++----
- libxfs/xfs_attr_leaf.h   |    4 +-
- libxfs/xfs_attr_remote.c |  261 +++++---
- libxfs/xfs_attr_remote.h |    8 +-
- libxfs/xfs_da_btree.h    |    9 +-
- libxfs/xfs_da_format.h   |   12 -
- libxfs/xfs_fs.h          |   32 +-
- 12 files changed, 1511 insertions(+), 929 deletions(-)
-
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 72c03f67..db724af 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -94,9 +94,9 @@ xfs_attr_get_ilocked(
+ /*
+  * Retrieve an extended attribute by name, and its value if requested.
+  *
+- * If ATTR_KERNOVAL is set in args->flags, then the caller does not want the
+- * value, just an indication whether the attribute exists and the size of the
+- * value if it exists. The size is returned in args.valuelen.
++ * If args->valuelen is zero, then the caller does not want the value, just an
++ * indication whether the attribute exists and the size of the value if it
++ * exists. The size is returned in args.valuelen.
+  *
+  * If the attribute is found, but exceeds the size limit set by the caller in
+  * args->valuelen, return -ERANGE with the size of the attribute that was found
+@@ -115,7 +115,7 @@ xfs_attr_get(
+ 	uint			lock_mode;
+ 	int			error;
+ 
+-	ASSERT((args->flags & (ATTR_ALLOC | ATTR_KERNOVAL)) || args->value);
++	ASSERT((args->flags & ATTR_ALLOC) || !args->valuelen || args->value);
+ 
+ 	XFS_STATS_INC(args->dp->i_mount, xs_attr_get);
+ 
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index b8c4ed2..fe064cd 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -34,12 +34,11 @@ struct xfs_attr_list_context;
+ #define ATTR_REPLACE	0x0020	/* pure set: fail if attr does not exist */
+ 
+ #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
+-#define ATTR_KERNOVAL	0x2000	/* [kernel] get attr size only, not value */
+ 
+ #define ATTR_ALLOC	0x8000	/* [kernel] allocate xattr buffer on demand */
+ 
+ #define ATTR_KERNEL_FLAGS \
+-	(ATTR_KERNOTIME | ATTR_KERNOVAL | ATTR_ALLOC)
++	(ATTR_KERNOTIME | ATTR_ALLOC)
+ 
+ #define XFS_ATTR_FLAGS \
+ 	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
+@@ -49,7 +48,6 @@ struct xfs_attr_list_context;
+ 	{ ATTR_CREATE,		"CREATE" }, \
+ 	{ ATTR_REPLACE,		"REPLACE" }, \
+ 	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
+-	{ ATTR_KERNOVAL,	"KERNOVAL" }, \
+ 	{ ATTR_ALLOC,		"ALLOC" }
+ 
+ /*
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 541a1ff..8e07e2a 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -461,7 +461,7 @@ xfs_attr_copy_value(
+ 	/*
+ 	 * No copy if all we have to do is get the length
+ 	 */
+-	if (args->flags & ATTR_KERNOVAL) {
++	if (!args->valuelen) {
+ 		args->valuelen = valuelen;
+ 		return 0;
+ 	}
+@@ -827,9 +827,9 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+ /*
+  * Retrieve the attribute value and length.
+  *
+- * If ATTR_KERNOVAL is specified, only the length needs to be returned.
+- * Unlike a lookup, we only return an error if the attribute does not
+- * exist or we can't retrieve the value.
++ * If args->valuelen is zero, only the length needs to be returned.  Unlike a
++ * lookup, we only return an error if the attribute does not exist or we can't
++ * retrieve the value.
+  */
+ int
+ xfs_attr_shortform_getvalue(
+@@ -2441,9 +2441,9 @@ xfs_attr3_leaf_lookup_int(
+  * Get the value associated with an attribute name from a leaf attribute
+  * list structure.
+  *
+- * If ATTR_KERNOVAL is specified, only the length needs to be returned.
+- * Unlike a lookup, we only return an error if the attribute does not
+- * exist or we can't retrieve the value.
++ * If args->valuelen is zero, only the length needs to be returned.  Unlike a
++ * lookup, we only return an error if the attribute does not exist or we can't
++ * retrieve the value.
+  */
+ int
+ xfs_attr3_leaf_getvalue(
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index b2a0156..a9a48b30 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -396,7 +396,7 @@ xfs_attr_rmtval_get(
+ 
+ 	trace_xfs_attr_rmtval_get(args);
+ 
+-	ASSERT(!(args->flags & ATTR_KERNOVAL));
++	ASSERT(args->valuelen != 0);
+ 	ASSERT(args->rmtvaluelen == args->valuelen);
+ 
+ 	valuelen = args->rmtvaluelen;
 -- 
 2.7.4
 
