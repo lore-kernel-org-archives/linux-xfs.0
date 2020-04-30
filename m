@@ -7,65 +7,65 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4EF2C47258
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 22:47:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C96FC47259
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 22:47:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C30392074A
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 22:47:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B420207DD
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 22:47:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MHnMuujv"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BkouQyD+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727027AbgD3WrK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727057AbgD3WrK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 30 Apr 2020 18:47:10 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:58852 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:58860 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727057AbgD3WrK (ORCPT
+        with ESMTP id S1727077AbgD3WrK (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 18:47:10 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UMhiUS063692
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:07 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UMi5bJ063812
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:09 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=NsVaLSWlUl8F1K6hY1/VK4rCXNSeDosL4h+VnArxnsg=;
- b=MHnMuujv0y3Qcu4lBmW4eII624Ov/6T27WbhRLyByMGn3bPrnjTAwaNUDXSNPgB031OH
- u3ca+BWD3hbvrXIczLAQYSfyv1ppaZXMpwmVD2/YUMIu69qD9teX0UByi2MsM3dO6e7n
- SFcDsceHC0Nnv80ea39RA5c39pv71N4t1sgwhsS+wvXdz75P05r/Ra2ny3iAP/jPmT0D
- rHGIA8+GzLLoyASDdvRpfcRfMY96pWwWw6f8r4Ic2vghSpiXMDCBaB/ECI6OWM6LG90W
- oA6rDXHjGhwXf6vrHQTErCk+JOfIGlxPmHm2NVRbLWbP98c2RzZKNrRBsd/9cSNW6LXN 7w== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 30r7f8027r-1
+ bh=eSBij3GsuVcuSrdxBUgM1u4nrS7kwiIPn8MxKJOfcTk=;
+ b=BkouQyD+wQKPHbnsVGuhYWGm/vt6rglUKF9h6ymd+bfgAibvF1RXEjHF8uqTpaMY4B9N
+ xH2Z0u+GqghnnlPAOIkiuKI53tU5X7njawwS43wdiFcslb9xIgmaqD8dRDx+JGFkLEhs
+ nuSJu5wNiEF+EDGDId/EN7XRRWo5/fljE+/RGbhHl7uWx3qEAGfSS1QAk5g2463ZWDTe
+ 8mPHGgZIHq26ZQcPdWfC4tJ3de3v0X27gemKAoL110D26K55D21azbl4HTlgiokbqCvW
+ vuNxJmty+wmfclZpRZgWg0Z56N1LUkexpRPN406HQIeojUVzW4qzGQPn8GDPeeeucI3P jQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 30r7f8027t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:07 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UMgER3141553
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:07 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 30qtg23dpu-1
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UMgt0P076959
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:08 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 30r7f89yx1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:07 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:08 +0000
 Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03UMl6sc012281
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:06 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03UMl7AA011746
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 22:47:07 GMT
 Received: from localhost.localdomain (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 30 Apr 2020 15:47:06 -0700
+        with ESMTP ; Thu, 30 Apr 2020 15:47:07 -0700
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v9 06/43] xfsprogs: pass an initialized xfs_da_args structure to xfs_attr_set
-Date:   Thu, 30 Apr 2020 15:46:23 -0700
-Message-Id: <20200430224700.4183-7-allison.henderson@oracle.com>
+Subject: [PATCH v9 10/43] xfsprogs: remove ATTR_ALLOC and XFS_DA_OP_ALLOCVAL
+Date:   Thu, 30 Apr 2020 15:46:27 -0700
+Message-Id: <20200430224700.4183-11-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200430224700.4183-1-allison.henderson@oracle.com>
 References: <20200430224700.4183-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
- mlxlogscore=999 phishscore=0 malwarescore=0 spamscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=3
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 mlxlogscore=999
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2003020000 definitions=main-2004300167
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxlogscore=999
  spamscore=0 malwarescore=0 clxscore=1015 phishscore=0 mlxscore=0
- lowpriorityscore=0 suspectscore=1 adultscore=0 priorityscore=1501
+ lowpriorityscore=0 suspectscore=3 adultscore=0 priorityscore=1501
  bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2003020000 definitions=main-2004300167
 Sender: linux-xfs-owner@vger.kernel.org
@@ -73,8 +73,9 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Instead of converting from one style of arguments to another in
-xfs_attr_set, pass the structure from higher up in the call chain.
+Use a NULL args->value as the indicator to lazily allocate a buffer
+instead, and let the caller always free args->value instead of
+duplicating the cleanup.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
@@ -83,249 +84,124 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 ---
- db/attrset.c      | 34 ++++++++++++++++++---------
- libxfs/xfs_attr.c | 69 +++++++++++++++++++++++++------------------------------
- libxfs/xfs_attr.h |  3 +--
- 3 files changed, 55 insertions(+), 51 deletions(-)
+ libxfs/xfs_attr.c      | 20 +++++---------------
+ libxfs/xfs_attr.h      |  7 ++-----
+ libxfs/xfs_attr_leaf.c |  2 +-
+ libxfs/xfs_da_btree.h  |  2 --
+ 4 files changed, 8 insertions(+), 23 deletions(-)
 
-diff --git a/db/attrset.c b/db/attrset.c
-index 708e71e3..0b5aabb 100644
---- a/db/attrset.c
-+++ b/db/attrset.c
-@@ -66,9 +66,10 @@ attr_set_f(
- 	int		argc,
- 	char		**argv)
- {
--	xfs_inode_t	*ip = NULL;
--	char		*name, *value, *sp;
--	int		c, valuelen = 0, flags = 0;
-+	xfs_inode_t		*ip = NULL;
-+	char			*name, *value, *sp;
-+	int			c, valuelen = 0, flags = 0;
-+	struct xfs_da_args	args;
- 
- 	if (cur_typ == NULL) {
- 		dbprintf(_("no current type\n"));
-@@ -146,8 +147,13 @@ attr_set_f(
- 		goto out;
- 	}
- 
--	if (libxfs_attr_set(ip, (unsigned char *)name, strlen(name),
--				(unsigned char *)value, valuelen, flags)) {
-+	args.dp = ip;
-+	args.name = (unsigned char *)name;
-+	args.namelen = strlen(name);
-+	args.value = (unsigned char *)value;
-+	args.flags = flags;
-+
-+	if (libxfs_attr_set(&args)){
- 		dbprintf(_("failed to set attr %s on inode %llu\n"),
- 			name, (unsigned long long)iocur_top->ino);
- 		goto out;
-@@ -170,10 +176,10 @@ attr_remove_f(
- 	int		argc,
- 	char		**argv)
- {
--	xfs_inode_t	*ip = NULL;
--	char		*name;
--	int		c, flags = 0;
--
-+	xfs_inode_t		*ip = NULL;
-+	char			*name;
-+	int			c, flags = 0;
-+	struct xfs_da_args	args;
- 	if (cur_typ == NULL) {
- 		dbprintf(_("no current type\n"));
- 		return 0;
-@@ -222,8 +228,14 @@ attr_remove_f(
- 		goto out;
- 	}
- 
--	if (libxfs_attr_set(ip, (unsigned char *)name, strlen(name), NULL, 0,
--			       flags)){
-+	args.dp = ip;
-+	args.name = (unsigned char *)name;
-+	args.namelen = strlen(name);
-+	args.value = NULL;
-+	args.valuelen = 0;
-+	args.flags = flags;
-+
-+	if (libxfs_attr_set(&args)){
- 		dbprintf(_("failed to remove attr %s from inode %llu\n"),
- 			name, (unsigned long long)iocur_top->ino);
- 		goto out;
 diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 00cd7c2..bc64e92 100644
+index db724af..7adc547 100644
 --- a/libxfs/xfs_attr.c
 +++ b/libxfs/xfs_attr.c
-@@ -330,22 +330,17 @@ xfs_attr_remove_args(
- }
- 
- /*
-- * Note: If value is NULL the attribute will be removed, just like the
-+ * Note: If args->value is NULL the attribute will be removed, just like the
-  * Linux ->setattr API.
+@@ -98,15 +98,14 @@ xfs_attr_get_ilocked(
+  * indication whether the attribute exists and the size of the value if it
+  * exists. The size is returned in args.valuelen.
+  *
++ * If args->value is NULL but args->valuelen is non-zero, allocate the buffer
++ * for the value after existence of the attribute has been determined. The
++ * caller always has to free args->value if it is set, no matter if this
++ * function was successful or not.
++ *
+  * If the attribute is found, but exceeds the size limit set by the caller in
+  * args->valuelen, return -ERANGE with the size of the attribute that was found
+  * in args->valuelen.
+- *
+- * If ATTR_ALLOC is set in args->flags, allocate the buffer for the value after
+- * existence of the attribute has been determined. On success, return that
+- * buffer to the caller and leave them to free it. On failure, free any
+- * allocated buffer and ensure the buffer pointer returned to the caller is
+- * null.
   */
  int
- xfs_attr_set(
--	struct xfs_inode	*dp,
--	const unsigned char	*name,
--	size_t			namelen,
--	unsigned char		*value,
--	int			valuelen,
--	int			flags)
-+	struct xfs_da_args	*args)
- {
-+	struct xfs_inode	*dp = args->dp;
- 	struct xfs_mount	*mp = dp->i_mount;
--	struct xfs_da_args	args;
- 	struct xfs_trans_res	tres;
--	int			rsvd = (flags & ATTR_ROOT) != 0;
-+	int			rsvd = (args->flags & ATTR_ROOT) != 0;
- 	int			error, local;
- 	unsigned int		total;
+ xfs_attr_get(
+@@ -115,8 +114,6 @@ xfs_attr_get(
+ 	uint			lock_mode;
+ 	int			error;
  
-@@ -356,25 +351,22 @@ xfs_attr_set(
- 	if (error)
- 		return error;
- 
--	error = xfs_attr_args_init(&args, dp, name, namelen, flags);
--	if (error)
--		return error;
+-	ASSERT((args->flags & ATTR_ALLOC) || !args->valuelen || args->value);
 -
--	args.value = value;
--	args.valuelen = valuelen;
-+	args->geo = mp->m_attr_geo;
-+	args->whichfork = XFS_ATTR_FORK;
-+	args->hashval = xfs_da_hashname(args->name, args->namelen);
+ 	XFS_STATS_INC(args->dp->i_mount, xs_attr_get);
  
- 	/*
- 	 * We have no control over the attribute names that userspace passes us
- 	 * to remove, so we have to allow the name lookup prior to attribute
- 	 * removal to fail as well.
- 	 */
--	args.op_flags = XFS_DA_OP_OKNOENT;
-+	args->op_flags = XFS_DA_OP_OKNOENT;
+ 	if (XFS_FORCED_SHUTDOWN(args->dp->i_mount))
+@@ -128,18 +125,11 @@ xfs_attr_get(
  
--	if (value) {
-+	if (args->value) {
- 		XFS_STATS_INC(mp, xs_attr_set);
+ 	/* Entirely possible to look up a name which doesn't exist */
+ 	args->op_flags = XFS_DA_OP_OKNOENT;
+-	if (args->flags & ATTR_ALLOC)
+-		args->op_flags |= XFS_DA_OP_ALLOCVAL;
  
--		args.op_flags |= XFS_DA_OP_ADDNAME;
--		args.total = xfs_attr_calc_size(&args, &local);
-+		args->op_flags |= XFS_DA_OP_ADDNAME;
-+		args->total = xfs_attr_calc_size(args, &local);
+ 	lock_mode = xfs_ilock_attr_map_shared(args->dp);
+ 	error = xfs_attr_get_ilocked(args);
+ 	xfs_iunlock(args->dp, lock_mode);
  
- 		/*
- 		 * If the inode doesn't have an attribute fork, add one.
-@@ -382,8 +374,8 @@ xfs_attr_set(
- 		 */
- 		if (XFS_IFORK_Q(dp) == 0) {
- 			int sf_size = sizeof(struct xfs_attr_sf_hdr) +
--				XFS_ATTR_SF_ENTSIZE_BYNAME(args.namelen,
--						valuelen);
-+				XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen,
-+						args->valuelen);
- 
- 			error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
- 			if (error)
-@@ -391,10 +383,11 @@ xfs_attr_set(
- 		}
- 
- 		tres.tr_logres = M_RES(mp)->tr_attrsetm.tr_logres +
--				 M_RES(mp)->tr_attrsetrt.tr_logres * args.total;
-+				 M_RES(mp)->tr_attrsetrt.tr_logres *
-+					args->total;
- 		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
- 		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
--		total = args.total;
-+		total = args->total;
- 	} else {
- 		XFS_STATS_INC(mp, xs_attr_remove);
- 
-@@ -407,29 +400,29 @@ xfs_attr_set(
- 	 * operation if necessary
- 	 */
- 	error = xfs_trans_alloc(mp, &tres, total, 0,
--			rsvd ? XFS_TRANS_RESERVE : 0, &args.trans);
-+			rsvd ? XFS_TRANS_RESERVE : 0, &args->trans);
- 	if (error)
- 		return error;
- 
- 	xfs_ilock(dp, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(args.trans, dp, 0);
--	if (value) {
-+	xfs_trans_ijoin(args->trans, dp, 0);
-+	if (args->value) {
- 		unsigned int	quota_flags = XFS_QMOPT_RES_REGBLKS;
- 
- 		if (rsvd)
- 			quota_flags |= XFS_QMOPT_FORCE_RES;
--		error = xfs_trans_reserve_quota_nblks(args.trans, dp,
--				args.total, 0, quota_flags);
-+		error = xfs_trans_reserve_quota_nblks(args->trans, dp,
-+				args->total, 0, quota_flags);
- 		if (error)
- 			goto out_trans_cancel;
--		error = xfs_attr_set_args(&args);
-+		error = xfs_attr_set_args(args);
- 		if (error)
- 			goto out_trans_cancel;
- 		/* shortform attribute has already been committed */
--		if (!args.trans)
-+		if (!args->trans)
- 			goto out_unlock;
- 	} else {
--		error = xfs_attr_remove_args(&args);
-+		error = xfs_attr_remove_args(args);
- 		if (error)
- 			goto out_trans_cancel;
- 	}
-@@ -439,23 +432,23 @@ xfs_attr_set(
- 	 * transaction goes to disk before returning to the user.
- 	 */
- 	if (mp->m_flags & XFS_MOUNT_WSYNC)
--		xfs_trans_set_sync(args.trans);
-+		xfs_trans_set_sync(args->trans);
- 
--	if ((flags & ATTR_KERNOTIME) == 0)
--		xfs_trans_ichgtime(args.trans, dp, XFS_ICHGTIME_CHG);
-+	if ((args->flags & ATTR_KERNOTIME) == 0)
-+		xfs_trans_ichgtime(args->trans, dp, XFS_ICHGTIME_CHG);
- 
- 	/*
- 	 * Commit the last in the sequence of transactions.
- 	 */
--	xfs_trans_log_inode(args.trans, dp, XFS_ILOG_CORE);
--	error = xfs_trans_commit(args.trans);
-+	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE);
-+	error = xfs_trans_commit(args->trans);
- out_unlock:
- 	xfs_iunlock(dp, XFS_ILOCK_EXCL);
+-	/* on error, we have to clean up allocated value buffers */
+-	if (error && (args->flags & ATTR_ALLOC)) {
+-		kmem_free(args->value);
+-		args->value = NULL;
+-	}
  	return error;
- 
- out_trans_cancel:
--	if (args.trans)
--		xfs_trans_cancel(args.trans);
-+	if (args->trans)
-+		xfs_trans_cancel(args->trans);
- 	goto out_unlock;
  }
  
 diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index db58a6c..07ca543 100644
+index fe064cd..a6de050 100644
 --- a/libxfs/xfs_attr.h
 +++ b/libxfs/xfs_attr.h
-@@ -149,8 +149,7 @@ int xfs_attr_get_ilocked(struct xfs_inode *ip, struct xfs_da_args *args);
- int xfs_attr_get(struct xfs_inode *ip, const unsigned char *name,
- 		 size_t namelen, unsigned char **value, int *valuelenp,
- 		 int flags);
--int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
--		 size_t namelen, unsigned char *value, int valuelen, int flags);
-+int xfs_attr_set(struct xfs_da_args *args);
- int xfs_attr_set_args(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+@@ -35,10 +35,8 @@ struct xfs_attr_list_context;
+ 
+ #define ATTR_KERNOTIME	0x1000	/* [kernel] don't update inode timestamps */
+ 
+-#define ATTR_ALLOC	0x8000	/* [kernel] allocate xattr buffer on demand */
+-
+ #define ATTR_KERNEL_FLAGS \
+-	(ATTR_KERNOTIME | ATTR_ALLOC)
++	(ATTR_KERNOTIME)
+ 
+ #define XFS_ATTR_FLAGS \
+ 	{ ATTR_DONTFOLLOW, 	"DONTFOLLOW" }, \
+@@ -47,8 +45,7 @@ struct xfs_attr_list_context;
+ 	{ ATTR_SECURE,		"SECURE" }, \
+ 	{ ATTR_CREATE,		"CREATE" }, \
+ 	{ ATTR_REPLACE,		"REPLACE" }, \
+-	{ ATTR_KERNOTIME,	"KERNOTIME" }, \
+-	{ ATTR_ALLOC,		"ALLOC" }
++	{ ATTR_KERNOTIME,	"KERNOTIME" }
+ 
+ /*
+  * The maximum size (into the kernel or returned from the kernel) of an
+diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
+index 8e07e2a..fb07d1d 100644
+--- a/libxfs/xfs_attr_leaf.c
++++ b/libxfs/xfs_attr_leaf.c
+@@ -474,7 +474,7 @@ xfs_attr_copy_value(
+ 		return -ERANGE;
+ 	}
+ 
+-	if (args->op_flags & XFS_DA_OP_ALLOCVAL) {
++	if (!args->value) {
+ 		args->value = kmem_alloc_large(valuelen, 0);
+ 		if (!args->value)
+ 			return -ENOMEM;
+diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
+index 0967d1b..dd1ac52 100644
+--- a/libxfs/xfs_da_btree.h
++++ b/libxfs/xfs_da_btree.h
+@@ -88,7 +88,6 @@ typedef struct xfs_da_args {
+ #define XFS_DA_OP_ADDNAME	0x0004	/* this is an add operation */
+ #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
+ #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
+-#define XFS_DA_OP_ALLOCVAL	0x0020	/* lookup to alloc buffer if found  */
+ #define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
+ 
+ #define XFS_DA_OP_FLAGS \
+@@ -97,7 +96,6 @@ typedef struct xfs_da_args {
+ 	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
+ 	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
+ 	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
+-	{ XFS_DA_OP_ALLOCVAL,	"ALLOCVAL" }, \
+ 	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
+ 
+ /*
 -- 
 2.7.4
 
