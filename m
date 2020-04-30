@@ -7,72 +7,72 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AAAAC4724C
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 18:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 889ADC4724C
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 18:43:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3EFB12495B
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 18:42:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AA2920836
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 18:43:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="keY0MtRR"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="t/qw/r8i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726309AbgD3Smd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Apr 2020 14:42:33 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:42922 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726272AbgD3Smd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 14:42:33 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UIfbjs073141;
-        Thu, 30 Apr 2020 18:42:29 GMT
+        id S1726453AbgD3SnP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Apr 2020 14:43:15 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41474 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726338AbgD3SnO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 14:43:14 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UIfO27057262;
+        Thu, 30 Apr 2020 18:43:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=XnJbO7DU/jB5Yhv1fQEh5wQr57oJTzqR9QQyuQ1whbc=;
- b=keY0MtRRSMT33pz9sq9hIxAGQjw6U8qrHBTVsJf6dbvyvYJdHYd/lz+hcvnHvLn/duUO
- BMLfWEF2nFfQNDXEXHfey08zOWg5OQhHxUeFBNh/e37yjjwgXmR+niWAC8P3Cv6u2Pdt
- X2tn1JUcZcgokWMtFyg7lIe378TRWO6pJAQp1oZPKC3rCeuQ84CTSgPtugVkz1mH47QJ
- rqX0x4wCuiXYu5qGR9M1xa8r5CqZz/RNZ7uEBweBVoL5xXcegFkxeMlR7uG7TKRK0VWh
- 5RRDVkH/gx1KxYGE9V4oktRRmwFVRNOCQIbMv3qendmOb823T+LxH5tyeJoEo5J0EC8b YQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 30p01p3rnk-1
+ bh=Kc2yrRczBz+dymmYvYlmdnXIBMuqMi4dy+Pw8THnXHg=;
+ b=t/qw/r8il2DSjepR9P3uDwACNoCyA6IP3TZAbfyonmw3Z+dH6+Msx7gtUQuJjPCCq3gv
+ Iv8NF2fE8gc5B4Av4gIjE/AO5B3p3/xwiH6Ew7CPHOtuOMUE5MPQXbb82IXzZxUdLTjK
+ IHo0udfa//nvf9s9uurbbKeUGgImfnjBeDPN1peEE0euapQTFnYeP0n+qLeHxXEY5bwn
+ sGPBe5HHiD4cN4uUqvQ7d1kgK/WPvE89Fj1/X+Sf4PsnPe6RHhI917BJukx41JR2sefA
+ QkNYIoZovqok0V57rYbqTeO1mnIZvCPN8J/BRhT1/I4Q77pmdMYTHIf6TUgEIzBMk+24 Xg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 30p2p0jp3q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 30 Apr 2020 18:42:29 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UIaK1Z078222;
-        Thu, 30 Apr 2020 18:42:29 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 30qtg1mgfw-1
+        Thu, 30 Apr 2020 18:43:11 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UIZ2bY071146;
+        Thu, 30 Apr 2020 18:41:10 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 30qtf87da7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 30 Apr 2020 18:42:29 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03UIgSjn020880;
-        Thu, 30 Apr 2020 18:42:28 GMT
+        Thu, 30 Apr 2020 18:41:10 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03UIf9K7023216;
+        Thu, 30 Apr 2020 18:41:09 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 30 Apr 2020 18:42:28 +0000
-Date:   Thu, 30 Apr 2020 11:42:27 -0700
+        with ESMTP ; Thu, 30 Apr 2020 11:41:09 -0700
+Date:   Thu, 30 Apr 2020 11:41:07 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 06/17] xfs: refactor ratelimited buffer error messages
- into helper
-Message-ID: <20200430184227.GG6742@magnolia>
+Subject: Re: [PATCH v3 05/17] xfs: reset buffer write failure state on
+ successful completion
+Message-ID: <20200430184107.GF6742@magnolia>
 References: <20200429172153.41680-1-bfoster@redhat.com>
- <20200429172153.41680-7-bfoster@redhat.com>
+ <20200429172153.41680-6-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200429172153.41680-7-bfoster@redhat.com>
+In-Reply-To: <20200429172153.41680-6-bfoster@redhat.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 adultscore=0
- mlxlogscore=999 phishscore=0 malwarescore=0 spamscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004300144
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0 phishscore=0
+ malwarescore=0 mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2004300144
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 clxscore=1015
- phishscore=0 mlxlogscore=999 adultscore=0 priorityscore=1501 mlxscore=0
- suspectscore=2 malwarescore=0 lowpriorityscore=0 impostorscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 clxscore=1015
+ bulkscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
+ mlxscore=0 suspectscore=0 mlxlogscore=999 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
  definitions=main-2004300144
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,162 +80,81 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 29, 2020 at 01:21:42PM -0400, Brian Foster wrote:
-> XFS has some inconsistent log message rate limiting with respect to
-> buffer alerts. The metadata I/O error notification uses the generic
-> ratelimited alert, the buffer push code uses a custom rate limit and
-> the similar quiesce time failure checks are not rate limited at all
-> (when they should be).
+On Wed, Apr 29, 2020 at 01:21:41PM -0400, Brian Foster wrote:
+> The buffer write failure flag is intended to control the internal
+> write retry that XFS has historically implemented to help mitigate
+> the severity of transient I/O errors. The flag is set when a buffer
+> is resubmitted from the I/O completion path due to a previous
+> failure. It is checked on subsequent I/O completions to skip the
+> internal retry and fall through to the higher level configurable
+> error handling mechanism. The flag is cleared in the synchronous and
+> delwri submission paths and also checked in various places to log
+> write failure messages.
 > 
-> The custom rate limit defined in the buf item code is specifically
-> crafted for buffer alerts. It is more aggressive than generic rate
-> limiting code because it must accommodate a high frequency of I/O
-> error events in a relative short timeframe.
+> There are a couple minor problems with the current usage of this
+> flag. One is that we issue an internal retry after every submission
+> from xfsaild due to how delwri submission clears the flag. This
+> results in double the expected or configured number of write
+> attempts when under sustained failures. Another more subtle issue is
+> that the flag is never cleared on successful I/O completion. This
+> can cause xfs_wait_buftarg() to suggest that dirty buffers are being
+> thrown away due to the existence of the flag, when the reality is
+> that the flag might still be set because the write succeeded on the
+> retry.
 > 
-> Factor out the custom rate limit state from the buf item code into a
-> per-buftarg rate limit so various alerts are limited based on the
-> target. Define a buffer alert helper function and use it for the
-> buffer alerts that are already ratelimited.
+> Clear the write failure flag on successful I/O completion to address
+> both of these problems. This means that the internal retry attempt
+> occurs once since the last time a buffer write failed and that
+> various other contexts only see the flag set when the immediately
+> previous write attempt has failed.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-I wonder if there's more that needs to be hooked to the buftarg
-ratelimiter, but this seems reasonable enough on its own,
+Makes sense, and probably explains why the ioerr retry timeouts
+sometimes took longer than I was expecting them to...
 
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_buf.c      | 15 +++++++++++----
->  fs/xfs/xfs_buf.h      |  1 +
->  fs/xfs/xfs_buf_item.c | 17 ++++-------------
->  fs/xfs/xfs_message.c  | 22 ++++++++++++++++++++++
->  fs/xfs/xfs_message.h  |  3 +++
->  5 files changed, 41 insertions(+), 17 deletions(-)
+>  fs/xfs/xfs_buf.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index fd76a84cefdd..594d5e1df6f8 100644
+> index d5d6a68bb1e6..fd76a84cefdd 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -1244,10 +1244,10 @@ xfs_buf_ioerror_alert(
->  	struct xfs_buf		*bp,
->  	xfs_failaddr_t		func)
->  {
-> -	xfs_alert_ratelimited(bp->b_mount,
-> -"metadata I/O error in \"%pS\" at daddr 0x%llx len %d error %d",
-> -			func, (uint64_t)XFS_BUF_ADDR(bp), bp->b_length,
-> -			-bp->b_error);
-> +	xfs_buf_alert_ratelimited(bp, "XFS: metadata IO error",
-> +		"metadata I/O error in \"%pS\" at daddr 0x%llx len %d error %d",
-> +				  func, (uint64_t)XFS_BUF_ADDR(bp),
-> +				  bp->b_length, -bp->b_error);
->  }
->  
->  /*
-> @@ -1828,6 +1828,13 @@ xfs_alloc_buftarg(
->  	btp->bt_bdev = bdev;
->  	btp->bt_daxdev = dax_dev;
->  
-> +	/*
-> +	 * Buffer IO error rate limiting. Limit it to no more than 10 messages
-> +	 * per 30 seconds so as to not spam logs too much on repeated errors.
-> +	 */
-> +	ratelimit_state_init(&btp->bt_ioerror_rl, 30 * HZ,
-> +			     DEFAULT_RATELIMIT_BURST);
-> +
->  	if (xfs_setsize_buftarg_early(btp, bdev))
->  		goto error_free;
->  
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 06ea3eef866e..050c53b739e2 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -91,6 +91,7 @@ typedef struct xfs_buftarg {
->  	struct list_lru		bt_lru;
->  
->  	struct percpu_counter	bt_io_count;
-> +	struct ratelimit_state	bt_ioerror_rl;
->  } xfs_buftarg_t;
->  
->  struct xfs_buf;
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index b452a399a441..1f7acffc99ba 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -481,14 +481,6 @@ xfs_buf_item_unpin(
->  	}
->  }
->  
-> -/*
-> - * Buffer IO error rate limiting. Limit it to no more than 10 messages per 30
-> - * seconds so as to not spam logs too much on repeated detection of the same
-> - * buffer being bad..
-> - */
-> -
-> -static DEFINE_RATELIMIT_STATE(xfs_buf_write_fail_rl_state, 30 * HZ, 10);
-> -
->  STATIC uint
->  xfs_buf_item_push(
->  	struct xfs_log_item	*lip,
-> @@ -518,11 +510,10 @@ xfs_buf_item_push(
->  	trace_xfs_buf_item_push(bip);
->  
->  	/* has a previous flush failed due to IO errors? */
-> -	if ((bp->b_flags & XBF_WRITE_FAIL) &&
-> -	    ___ratelimit(&xfs_buf_write_fail_rl_state, "XFS: Failing async write")) {
-> -		xfs_warn(bp->b_mount,
-> -"Failing async write on buffer block 0x%llx. Retrying async write.",
-> -			 (long long)bp->b_bn);
-> +	if (bp->b_flags & XBF_WRITE_FAIL) {
-> +		xfs_buf_alert_ratelimited(bp, "XFS: Failing async write",
-> +	    "Failing async write on buffer block 0x%llx. Retrying async write.",
-> +					  (long long)bp->b_bn);
+> @@ -1197,8 +1197,10 @@ xfs_buf_ioend(
+>  		bp->b_ops->verify_read(bp);
 >  	}
 >  
->  	if (!xfs_buf_delwri_queue(bp, buffer_list))
-> diff --git a/fs/xfs/xfs_message.c b/fs/xfs/xfs_message.c
-> index e0f9d3b6abe9..bc66d95c8d4c 100644
-> --- a/fs/xfs/xfs_message.c
-> +++ b/fs/xfs/xfs_message.c
-> @@ -117,3 +117,25 @@ xfs_hex_dump(const void *p, int length)
->  {
->  	print_hex_dump(KERN_ALERT, "", DUMP_PREFIX_OFFSET, 16, 1, p, length, 1);
->  }
-> +
-> +void
-> +xfs_buf_alert_ratelimited(
-> +	struct xfs_buf		*bp,
-> +	const char		*rlmsg,
-> +	const char		*fmt,
-> +	...)
-> +{
-> +	struct xfs_mount	*mp = bp->b_mount;
-> +	struct va_format	vaf;
-> +	va_list			args;
-> +
-> +	/* use the more aggressive per-target rate limit for buffers */
-> +	if (!___ratelimit(&bp->b_target->bt_ioerror_rl, rlmsg))
-> +		return;
-> +
-> +	va_start(args, fmt);
-> +	vaf.fmt = fmt;
-> +	vaf.va = &args;
-> +	__xfs_printk(KERN_ALERT, mp, &vaf);
-> +	va_end(args);
-> +}
-> diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
-> index 0b05e10995a0..6be2ebe3a7b9 100644
-> --- a/fs/xfs/xfs_message.h
-> +++ b/fs/xfs/xfs_message.h
-> @@ -62,4 +62,7 @@ void asswarn(struct xfs_mount *mp, char *expr, char *f, int l);
+> -	if (!bp->b_error)
+> +	if (!bp->b_error) {
+> +		bp->b_flags &= ~XBF_WRITE_FAIL;
+>  		bp->b_flags |= XBF_DONE;
+> +	}
 >  
->  extern void xfs_hex_dump(const void *p, int length);
+>  	if (bp->b_iodone)
+>  		(*(bp->b_iodone))(bp);
+> @@ -1274,7 +1276,7 @@ xfs_bwrite(
 >  
-> +void xfs_buf_alert_ratelimited(struct xfs_buf *bp, const char *rlmsg,
-> +			       const char *fmt, ...);
-> +
->  #endif	/* __XFS_MESSAGE_H */
+>  	bp->b_flags |= XBF_WRITE;
+>  	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q |
+> -			 XBF_WRITE_FAIL | XBF_DONE);
+> +			 XBF_DONE);
+>  
+>  	error = xfs_buf_submit(bp);
+>  	if (error)
+> @@ -1996,7 +1998,7 @@ xfs_buf_delwri_submit_buffers(
+>  		 * synchronously. Otherwise, drop the buffer from the delwri
+>  		 * queue and submit async.
+>  		 */
+> -		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
+> +		bp->b_flags &= ~_XBF_DELWRI_Q;
+>  		bp->b_flags |= XBF_WRITE;
+>  		if (wait_list) {
+>  			bp->b_flags &= ~XBF_ASYNC;
 > -- 
 > 2.21.1
 > 
