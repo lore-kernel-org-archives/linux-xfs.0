@@ -2,208 +2,185 @@ Return-Path: <SRS0=AYd8=6O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 187F8C47247
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 18:16:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C116CC47247
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 18:18:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6DEB20836
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 18:16:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A79620836
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 18:18:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SxS9onF/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iND3gm2P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726384AbgD3SQp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Apr 2020 14:16:45 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:48236 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725844AbgD3SQp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 14:16:45 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UHxZU9182969;
-        Thu, 30 Apr 2020 18:16:42 GMT
+        id S1726437AbgD3SSk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Apr 2020 14:18:40 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:56630 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726355AbgD3SSk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 14:18:40 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UHwsVd063622;
+        Thu, 30 Apr 2020 18:18:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=jQ191uaXQ71LVCkHQ00vAzD04OJgtajQtl60VYvRIAM=;
- b=SxS9onF/U0I1SYHR9Jj0rAt6icndorXDqEfvEos4b9OCkREhTVeqH38XPbqInFIvS2SA
- V0OT7CaVU++mbpnDfKMjg4d8siIBJvhmhb2qLdDIW8t7l2xwCUzpKx7PVx8LQ7XGKJcl
- ne2Tbx20LB1LJ2Ei29MuLFM1ybkI2w/M4HiJXxFyUbTL7P1jQO08LB+g1PQzijgWyIfA
- RckjNGYRMR/Y+fMDKiTuA57TR1ct6SpEO6Y5Rd7KzKRfmTTCahU6gfMFfkiMyGZ3ObTK
- SmjKwcTqzR2bQ95vkqI+H9Zjv87vlTTS3/YAW3dlSsp3XVo/j8yhGdL6+P6YHfhSAi1z +A== 
+ content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
+ bh=AFk98aXqfjqnRzsoxI4FkmWCxhi0PdevDGivQTgVS9M=;
+ b=iND3gm2PHEVZ3QJTJTpmSJzqzhhkMb/R+nmXk69M7spIJJFafqpLyNqBfR5UpNgUUCax
+ /UxjLpc5YS48j1ZZkkIricafcwtI30W19cz8/tXz9RefT6I3OtakPYG6SvMJP+kc6jD5
+ PS8mK32HGIZkMgGQBsFfurmXz2mfugNDAcABZQ04FwFyk6rqNTxCehzHPt3aVJEaQM9j
+ utiKpLjhrtgMKUiXqkLkigjiFSoUpkIea1ldMJEa78a9L4ze89FU2xVORqEIvTJZPr+o
+ iKCUWADQS+IO2mQ7rGD9ILZ6zAI4m0bRNdAe91CpHPryqfBENX4ptpV12iPGqZHboguj wQ== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 30p2p0jhxw-1
+        by aserp2120.oracle.com with ESMTP id 30nucgd3ja-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 30 Apr 2020 18:16:41 +0000
+        Thu, 30 Apr 2020 18:18:33 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UI6XcW111154;
-        Thu, 30 Apr 2020 18:16:41 GMT
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03UI6Yb7111284;
+        Thu, 30 Apr 2020 18:16:32 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 30qtkwx9nf-1
+        by aserp3030.oracle.com with ESMTP id 30qtkwx9f3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 30 Apr 2020 18:16:41 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03UIGe5S004354;
-        Thu, 30 Apr 2020 18:16:40 GMT
+        Thu, 30 Apr 2020 18:16:32 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03UIGTOx004289;
+        Thu, 30 Apr 2020 18:16:29 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 30 Apr 2020 11:16:40 -0700
-Date:   Thu, 30 Apr 2020 11:16:39 -0700
+        with ESMTP ; Thu, 30 Apr 2020 11:16:29 -0700
+Date:   Thu, 30 Apr 2020 11:16:28 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 02/17] xfs: factor out buffer I/O failure code
-Message-ID: <20200430181639.GC6742@magnolia>
-References: <20200429172153.41680-1-bfoster@redhat.com>
- <20200429172153.41680-3-bfoster@redhat.com>
+Subject: Re: [PATCH 01/21] xfs: refactor log recovery item sorting into a
+ generic dispatch structure
+Message-ID: <20200430181628.GB6742@magnolia>
+References: <158820765488.467894.15408191148091671053.stgit@magnolia>
+ <158820766135.467894.13993542565087629835.stgit@magnolia>
+ <20200430055309.GA29110@infradead.org>
+ <20200430150821.GY6742@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20200429172153.41680-3-bfoster@redhat.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200430150821.GY6742@magnolia>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=2 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0 mlxscore=0
  phishscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
  definitions=main-2004300142
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9607 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 clxscore=1015
- bulkscore=0 adultscore=0 lowpriorityscore=0 impostorscore=0 malwarescore=0
- mlxscore=0 suspectscore=2 mlxlogscore=999 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004300142
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ mlxlogscore=999 impostorscore=0 suspectscore=0 malwarescore=0
+ lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004300142
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 29, 2020 at 01:21:38PM -0400, Brian Foster wrote:
-> We use the same buffer I/O failure code in a few different places.
-> It's not much code, but it's not necessarily self-explanatory.
-> Factor it into a helper and document it in one place.
+On Thu, Apr 30, 2020 at 08:08:21AM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 29, 2020 at 10:53:09PM -0700, Christoph Hellwig wrote:
+> > On Wed, Apr 29, 2020 at 05:47:41PM -0700, Darrick J. Wong wrote:
+> > > +extern const struct xlog_recover_item_type xlog_icreate_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_buf_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_inode_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_dquot_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_quotaoff_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_bmap_intent_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_bmap_done_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_extfree_intent_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_extfree_done_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_rmap_intent_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_rmap_done_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_refcount_intent_item_type;
+> > > +extern const struct xlog_recover_item_type xlog_refcount_done_item_type;
+> > 
+> > I'd prefer if we didn't have to expose these structures, but had a
+> > xlog_register_recovery_item helper that just adds them to a list or
+> > array.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> I can look into making a register function and do lookups, but that's
+> a lot of indirection to save ~15 or so externs.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Ok, so I looked into this, and I don't know of a good way to avoid
+exporting 14 *somethings*.  If we require a xlog_register_recovery_item
+call to link the item types when the module loads, something has to call
+that registration function.  That can be an __init function in each item
+recovery source file, but now we have to export all fourteen of those
+functions so that we can call them from init_xfs_fs.  Unless you've got
+a better suggestion, I don't think this is worth the effort.
 
 --D
 
-> ---
->  fs/xfs/xfs_buf.c      | 21 +++++++++++++++++----
->  fs/xfs/xfs_buf.h      |  1 +
->  fs/xfs/xfs_buf_item.c | 21 +++------------------
->  fs/xfs/xfs_inode.c    |  6 +-----
->  4 files changed, 22 insertions(+), 27 deletions(-)
+> > >  typedef struct xlog_recover_item {
+> > >  	struct list_head	ri_list;
+> > > -	int			ri_type;
+> > >  	int			ri_cnt;	/* count of regions found */
+> > >  	int			ri_total;	/* total regions */
+> > >  	xfs_log_iovec_t		*ri_buf;	/* ptr to regions buffer */
+> > > +	const struct xlog_recover_item_type *ri_type;
+> > >  } xlog_recover_item_t;
+> > 
+> > Btw, killing the xlog_recover_item_t typedef might be a worthwhile prep
+> > patch.
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 9ec3eaf1c618..d5d6a68bb1e6 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -1248,6 +1248,22 @@ xfs_buf_ioerror_alert(
->  			-bp->b_error);
->  }
->  
-> +/*
-> + * To simulate an I/O failure, the buffer must be locked and held with at least
-> + * three references. The LRU reference is dropped by the stale call. The buf
-> + * item reference is dropped via ioend processing. The third reference is owned
-> + * by the caller and is dropped on I/O completion if the buffer is XBF_ASYNC.
-> + */
-> +void
-> +xfs_buf_ioend_fail(
-> +	struct xfs_buf	*bp)
-> +{
-> +	bp->b_flags &= ~XBF_DONE;
-> +	xfs_buf_stale(bp);
-> +	xfs_buf_ioerror(bp, -EIO);
-> +	xfs_buf_ioend(bp);
-> +}
-> +
->  int
->  xfs_bwrite(
->  	struct xfs_buf		*bp)
-> @@ -1480,10 +1496,7 @@ __xfs_buf_submit(
->  
->  	/* on shutdown we stale and complete the buffer immediately */
->  	if (XFS_FORCED_SHUTDOWN(bp->b_mount)) {
-> -		xfs_buf_ioerror(bp, -EIO);
-> -		bp->b_flags &= ~XBF_DONE;
-> -		xfs_buf_stale(bp);
-> -		xfs_buf_ioend(bp);
-> +		xfs_buf_ioend_fail(bp);
->  		return -EIO;
->  	}
->  
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 9a04c53c2488..06ea3eef866e 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -263,6 +263,7 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
->  		xfs_failaddr_t failaddr);
->  #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
->  extern void xfs_buf_ioerror_alert(struct xfs_buf *bp, xfs_failaddr_t fa);
-> +void xfs_buf_ioend_fail(struct xfs_buf *);
->  
->  extern int __xfs_buf_submit(struct xfs_buf *bp, bool);
->  static inline int xfs_buf_submit(struct xfs_buf *bp)
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 8796adde2d12..b452a399a441 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -471,28 +471,13 @@ xfs_buf_item_unpin(
->  		xfs_buf_relse(bp);
->  	} else if (freed && remove) {
->  		/*
-> -		 * There are currently two references to the buffer - the active
-> -		 * LRU reference and the buf log item. What we are about to do
-> -		 * here - simulate a failed IO completion - requires 3
-> -		 * references.
-> -		 *
-> -		 * The LRU reference is removed by the xfs_buf_stale() call. The
-> -		 * buf item reference is removed by the xfs_buf_iodone()
-> -		 * callback that is run by xfs_buf_do_callbacks() during ioend
-> -		 * processing (via the bp->b_iodone callback), and then finally
-> -		 * the ioend processing will drop the IO reference if the buffer
-> -		 * is marked XBF_ASYNC.
-> -		 *
-> -		 * Hence we need to take an additional reference here so that IO
-> -		 * completion processing doesn't free the buffer prematurely.
-> +		 * The buffer must be locked and held by the caller to simulate
-> +		 * an async I/O failure.
->  		 */
->  		xfs_buf_lock(bp);
->  		xfs_buf_hold(bp);
->  		bp->b_flags |= XBF_ASYNC;
-> -		xfs_buf_ioerror(bp, -EIO);
-> -		bp->b_flags &= ~XBF_DONE;
-> -		xfs_buf_stale(bp);
-> -		xfs_buf_ioend(bp);
-> +		xfs_buf_ioend_fail(bp);
->  	}
->  }
->  
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index d1772786af29..909ca7c0bac4 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3630,11 +3630,7 @@ xfs_iflush_cluster(
->  	 */
->  	ASSERT(bp->b_iodone);
->  	bp->b_flags |= XBF_ASYNC;
-> -	bp->b_flags &= ~XBF_DONE;
-> -	xfs_buf_stale(bp);
-> -	xfs_buf_ioerror(bp, -EIO);
-> -	xfs_buf_ioend(bp);
-> -
-> +	xfs_buf_ioend_fail(bp);
->  	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
->  
->  	/* abort the corrupt inode, as it was not attached to the buffer */
-> -- 
-> 2.21.1
+> Hrm, ok....
 > 
+> > > --- a/fs/xfs/xfs_buf_item.c
+> > > +++ b/fs/xfs/xfs_buf_item.c
+> > > @@ -17,7 +17,6 @@
+> > >  #include "xfs_trace.h"
+> > >  #include "xfs_log.h"
+> > >  
+> > > -
+> > >  kmem_zone_t	*xfs_buf_item_zone;
+> > >  
+> > >  static inline struct xfs_buf_log_item *BUF_ITEM(struct xfs_log_item *lip)
+> > 
+> > Spurious whitespace change in a file not otherwise touched.
+> 
+> Fixed.
+> 
+> > >  
+> > > @@ -107,3 +109,14 @@ xfs_icreate_log(
+> > >  	tp->t_flags |= XFS_TRANS_DIRTY;
+> > >  	set_bit(XFS_LI_DIRTY, &icp->ic_item.li_flags);
+> > >  }
+> > > +
+> > > +static enum xlog_recover_reorder
+> > > +xlog_icreate_reorder(
+> > > +		struct xlog_recover_item *item)
+> > > +{
+> > > +	return XLOG_REORDER_BUFFER_LIST;
+> > > +}
+> > 
+> > It might be worth to throw in a comment why icreate items got to
+> > the buffer list.
+> > 
+> > > +		return 0;
+> > > +#ifdef CONFIG_XFS_QUOTA
+> > > +	case XFS_LI_DQUOT:
+> > > +		item->ri_type = &xlog_dquot_item_type;
+> > > +		return 0;
+> > > +	case XFS_LI_QUOTAOFF:
+> > > +		item->ri_type = &xlog_quotaoff_item_type;
+> > > +		return 0;
+> > > +#endif /* CONFIG_XFS_QUOTA */
+> > > +	default:
+> > > +		return -EFSCORRUPTED;
+> > > +	}
+> > > +}
+> > 
+> > Quote recovery support currently is unconditionalẏ  Making it
+> > conditional on CONFIG_XFS_QUOTA means a kernel without that config
+> > will now fail to recover a file system with quota updates in the log.
+> 
+> Heh, I hadn't realized that quota recovery always works even if quotas
+> are disabled.  Ok, xfs_dquot_recovery.c it is...
+> 
+> --D
