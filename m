@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 918DBC83000
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 00:48:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD64BC83004
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 00:49:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C43A20575
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 00:48:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB13420787
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 00:49:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aWEZEKZc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TqtJ3cGy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726337AbgD3As6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Apr 2020 20:48:58 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:49302 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726510AbgD3As5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Apr 2020 20:48:57 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03U0lMIt164621
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:48:55 GMT
+        id S1726539AbgD3AtD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Apr 2020 20:49:03 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:46132 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726510AbgD3AtD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Apr 2020 20:49:03 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03U0muf4193052
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:49:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=Binw4eqAO6fSLrK9vE8PHhGIA9XXCyTAuXBhMaB7zyc=;
- b=aWEZEKZcBwowQBasQU0smnCPN/ymL09erFdMkC6V6MHpp5wkyyAEqMm0V52trOC38goO
- jdoMg4l4aTon7gGg9Xi58qfAd0TrusTW7m8vt0GumpVA7p7BT2ZpGcNmvDzycq+8eQZb
- zxSnTma5XLmxe8cLyNLiEODQuTDXgrED0iqiyTYJukBEGfplVerueErnD0bmoKzlT/5Y
- qG7mfeZkQpFTDmB8kLLjfOIl6fQNA9jwZfWspZqCv8rpbBMoOg+ixEH5kqtCKJEWHoq7
- iK5QlZ8rYIg/HiJb7VAlUyd0wPhcDaM0/0ZgamCsKZLqtiGvdcJJc37/Hq5/67LI55lt dw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 30p01ny8k8-1
+ bh=Z6mDe8/mhSy/KuZiFTLVi49zaQr/0cwrBSMhAJplGv0=;
+ b=TqtJ3cGyL68hIbvPbIog8fwtZbM12s88FaT1dy0Odoy7QmjhhYIesrcjepIz6VFrPeQX
+ wey7dPeYJjWQP3r9sDHpQoz6Mc/gmm6nKkVOjI9Z3L+zVMUPIICFYW1rbYOpAkF3bZ7h
+ +B42F4z+SK8la9YkZipI67dXLemxN6cELgtYFnuVsto5SrsUcevxcpcluJgmce5PWTtP
+ OGC5lEHK5WBF2JjGQ+H0+Sn+JotclhQ2jV2+5HqIrQhN5Pvxo3A1n3pI05yNU5Po38Oc
+ 6knjv35P2vwQFt6iq2udEgdXgfEpJ3a1VPeParj2AZ2C6O42s9CcD8O+p4qfW3peh09U 2w== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 30nucg8q9c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:48:55 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03U0l6fh119990
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:48:54 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 30my0jr2dq-1
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:49:01 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 03U0m6ul070397
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:49:01 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 30mxrw8k3w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:48:54 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 03U0msT1009596
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:48:54 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:49:01 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 03U0n0tm024731
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 00:49:00 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 30 Apr 2020 00:48:53 +0000
-Subject: [PATCH 12/21] xfs: refactor log recovery BUI item dispatch for
- pass2 commit functions
+        with ESMTP ; Wed, 29 Apr 2020 17:48:59 -0700
+Subject: [PATCH 13/21] xfs: refactor recovered EFI log item playback
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 29 Apr 2020 17:48:52 -0700
-Message-ID: <158820773272.467894.9763070232498118105.stgit@magnolia>
+Date:   Wed, 29 Apr 2020 17:48:59 -0700
+Message-ID: <158820773902.467894.5745757511104582380.stgit@magnolia>
 In-Reply-To: <158820765488.467894.15408191148091671053.stgit@magnolia>
 References: <158820765488.467894.15408191148091671053.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -64,16 +63,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9606 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0
- suspectscore=3 adultscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2004300001
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9606 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 clxscore=1015
- phishscore=0 mlxlogscore=999 adultscore=0 priorityscore=1501 mlxscore=0
- suspectscore=3 malwarescore=0 lowpriorityscore=0 impostorscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=3
+ mlxlogscore=999 malwarescore=0 bulkscore=0 spamscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2004300000
+ definitions=main-2004300001
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9606 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ mlxlogscore=999 impostorscore=0 suspectscore=3 malwarescore=0
+ lowpriorityscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2004300001
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -81,360 +80,193 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the bmap update intent and intent-done pass2 commit code into the
-per-item source code files and use dispatch functions to call them.  We
-do these one at a time because there's a lot of code to move.  No
-functional changes.
+Move the code that processes the log items created from the recovered
+log items into the per-item source code files and use dispatch functions
+to call them.  No functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_item.c   |  134 ++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_item.h   |    2 -
- fs/xfs/xfs_log_recover.c |  139 ++--------------------------------------------
- 3 files changed, 137 insertions(+), 138 deletions(-)
+ fs/xfs/xfs_extfree_item.c |   32 +++++++++++++++++++++++++++++--
+ fs/xfs/xfs_extfree_item.h |    5 -----
+ fs/xfs/xfs_log_recover.c  |   46 ++++-----------------------------------------
+ fs/xfs/xfs_trans.h        |    4 ++++
+ 4 files changed, 38 insertions(+), 49 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index a2824013e2cb..f5c19ea4affb 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -22,6 +22,7 @@
- #include "xfs_bmap_btree.h"
- #include "xfs_trans_space.h"
- #include "xfs_error.h"
-+#include "xfs_log_priv.h"
- #include "xfs_log_recover.h"
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 53c1d3b9b957..229c6dee0f85 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -28,6 +28,8 @@
+ kmem_zone_t	*xfs_efi_zone;
+ kmem_zone_t	*xfs_efd_zone;
  
- kmem_zone_t	*xfs_bui_zone;
-@@ -32,7 +33,7 @@ static inline struct xfs_bui_log_item *BUI_ITEM(struct xfs_log_item *lip)
- 	return container_of(lip, struct xfs_bui_log_item, bui_item);
- }
- 
++STATIC int xfs_efi_recover(struct xfs_mount *mp, struct xfs_efi_log_item *efip);
++
+ static inline struct xfs_efi_log_item *EFI_ITEM(struct xfs_log_item *lip)
+ {
+ 	return container_of(lip, struct xfs_efi_log_item, efi_item);
+@@ -51,7 +53,7 @@ xfs_efi_item_free(
+  * committed vs unpin operations in bulk insert operations. Hence the reference
+  * count to ensure only the last caller frees the EFI.
+  */
 -void
 +STATIC void
- xfs_bui_item_free(
- 	struct xfs_bui_log_item	*buip)
+ xfs_efi_release(
+ 	struct xfs_efi_log_item	*efip)
  {
-@@ -135,7 +136,7 @@ static const struct xfs_item_ops xfs_bui_item_ops = {
- /*
-  * Allocate and initialize an bui item with the given number of extents.
-  */
--struct xfs_bui_log_item *
-+STATIC struct xfs_bui_log_item *
- xfs_bui_init(
- 	struct xfs_mount		*mp)
- 
-@@ -565,8 +566,137 @@ xfs_bui_recover(
- 	return error;
+@@ -141,11 +143,37 @@ xfs_efi_item_release(
+ 	xfs_efi_release(EFI_ITEM(lip));
  }
  
-+/*
-+ * Copy an BUI format buffer from the given buf, and into the destination
-+ * BUI format structure.  The BUI/BUD items were designed not to need any
-+ * special alignment handling.
-+ */
-+static int
-+xfs_bui_copy_format(
-+	struct xfs_log_iovec		*buf,
-+	struct xfs_bui_log_format	*dst_bui_fmt)
-+{
-+	struct xfs_bui_log_format	*src_bui_fmt;
-+	uint				len;
-+
-+	src_bui_fmt = buf->i_addr;
-+	len = xfs_bui_log_format_sizeof(src_bui_fmt->bui_nextents);
-+
-+	if (buf->i_len == len) {
-+		memcpy(dst_bui_fmt, src_bui_fmt, len);
-+		return 0;
-+	}
-+	XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
-+	return -EFSCORRUPTED;
-+}
-+
-+/*
-+ * This routine is called to create an in-core extent bmap update
-+ * item from the bui format structure which was logged on disk.
-+ * It allocates an in-core bui, copies the extents from the format
-+ * structure into it, and adds the bui to the AIL with the given
-+ * LSN.
-+ */
++/* Recover the EFI if necessary. */
 +STATIC int
-+xlog_recover_bmap_intent_commit_pass2(
-+	struct xlog			*log,
-+	struct list_head		*buffer_list,
-+	struct xlog_recover_item	*item,
-+	xfs_lsn_t			lsn)
++xfs_efi_item_recover(
++	struct xfs_log_item		*lip,
++	struct xfs_trans		*tp)
 +{
++	struct xfs_ail			*ailp = lip->li_ailp;
++	struct xfs_efi_log_item		*efip;
 +	int				error;
-+	struct xfs_mount		*mp = log->l_mp;
-+	struct xfs_bui_log_item		*buip;
-+	struct xfs_bui_log_format	*bui_formatp;
-+
-+	bui_formatp = item->ri_buf[0].i_addr;
-+
-+	if (bui_formatp->bui_nextents != XFS_BUI_MAX_FAST_EXTENTS) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-+		return -EFSCORRUPTED;
-+	}
-+	buip = xfs_bui_init(mp);
-+	error = xfs_bui_copy_format(&item->ri_buf[0], &buip->bui_format);
-+	if (error) {
-+		xfs_bui_item_free(buip);
-+		return error;
-+	}
-+	atomic_set(&buip->bui_next_extent, bui_formatp->bui_nextents);
-+
-+	spin_lock(&log->l_ailp->ail_lock);
-+	/*
-+	 * The RUI has two references. One for the RUD and one for RUI to ensure
-+	 * it makes it into the AIL. Insert the RUI into the AIL directly and
-+	 * drop the RUI reference. Note that xfs_trans_ail_update() drops the
-+	 * AIL lock.
-+	 */
-+	xfs_trans_ail_update(log->l_ailp, &buip->bui_item, lsn);
-+	xfs_bui_release(buip);
-+	return 0;
-+}
-+
-+
-+/*
-+ * This routine is called when an BUD format structure is found in a committed
-+ * transaction in the log. Its purpose is to cancel the corresponding BUI if it
-+ * was still in the log. To do this it searches the AIL for the BUI with an id
-+ * equal to that in the BUD format structure. If we find it we drop the BUD
-+ * reference, which removes the BUI from the AIL and frees it.
-+ */
-+STATIC int
-+xlog_recover_bmap_done_commit_pass2(
-+	struct xlog			*log,
-+	struct list_head		*buffer_list,
-+	struct xlog_recover_item	*item,
-+	xfs_lsn_t			lsn)
-+{
-+	struct xfs_bud_log_format	*bud_formatp;
-+	struct xfs_bui_log_item		*buip = NULL;
-+	struct xfs_log_item		*lip;
-+	uint64_t			bui_id;
-+	struct xfs_ail_cursor		cur;
-+	struct xfs_ail			*ailp = log->l_ailp;
-+
-+	bud_formatp = item->ri_buf[0].i_addr;
-+	if (item->ri_buf[0].i_len != sizeof(struct xfs_bud_log_format)) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
-+		return -EFSCORRUPTED;
-+	}
-+	bui_id = bud_formatp->bud_bui_id;
 +
 +	/*
-+	 * Search for the BUI with the id in the BUD format structure in the
-+	 * AIL.
++	 * Skip EFIs that we've already processed.
 +	 */
-+	spin_lock(&ailp->ail_lock);
-+	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
-+	while (lip != NULL) {
-+		if (lip->li_type == XFS_LI_BUI) {
-+			buip = (struct xfs_bui_log_item *)lip;
-+			if (buip->bui_format.bui_id == bui_id) {
-+				/*
-+				 * Drop the BUD reference to the BUI. This
-+				 * removes the BUI from the AIL and frees it.
-+				 */
-+				spin_unlock(&ailp->ail_lock);
-+				xfs_bui_release(buip);
-+				spin_lock(&ailp->ail_lock);
-+				break;
-+			}
-+		}
-+		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-+	}
++	efip = container_of(lip, struct xfs_efi_log_item, efi_item);
++	if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
++		return 0;
 +
-+	xfs_trans_ail_cursor_done(&cur);
 +	spin_unlock(&ailp->ail_lock);
++	error = xfs_efi_recover(tp->t_mountp, efip);
++	spin_lock(&ailp->ail_lock);
 +
-+	return 0;
++	return error;
 +}
 +
- const struct xlog_recover_item_type xlog_bmap_intent_item_type = {
-+	.commit_pass2_fn	= xlog_recover_bmap_intent_commit_pass2,
+ static const struct xfs_item_ops xfs_efi_item_ops = {
++	.flags		= XFS_ITEM_TYPE_IS_INTENT,
+ 	.iop_size	= xfs_efi_item_size,
+ 	.iop_format	= xfs_efi_item_format,
+ 	.iop_unpin	= xfs_efi_item_unpin,
+ 	.iop_release	= xfs_efi_item_release,
++	.iop_recover	= xfs_efi_item_recover,
  };
  
- const struct xlog_recover_item_type xlog_bmap_done_item_type = {
-+	.commit_pass2_fn	= xlog_recover_bmap_done_commit_pass2,
- };
-diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-index ad479cc73de8..515b1d5d6ab7 100644
---- a/fs/xfs/xfs_bmap_item.h
-+++ b/fs/xfs/xfs_bmap_item.h
-@@ -74,8 +74,6 @@ struct xfs_bud_log_item {
- extern struct kmem_zone	*xfs_bui_zone;
- extern struct kmem_zone	*xfs_bud_zone;
  
--struct xfs_bui_log_item *xfs_bui_init(struct xfs_mount *);
--void xfs_bui_item_free(struct xfs_bui_log_item *);
- void xfs_bui_release(struct xfs_bui_log_item *);
- int xfs_bui_recover(struct xfs_trans *parent_tp, struct xfs_bui_log_item *buip);
+@@ -594,7 +622,7 @@ const struct xfs_defer_op_type xfs_agfl_free_defer_type = {
+  * Process an extent free intent item that was recovered from
+  * the log.  We need to free the extents that it describes.
+  */
+-int
++STATIC int
+ xfs_efi_recover(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_efi_log_item	*efip)
+diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+index ecbe937952d8..23e3758b5dbb 100644
+--- a/fs/xfs/xfs_extfree_item.h
++++ b/fs/xfs/xfs_extfree_item.h
+@@ -78,9 +78,4 @@ typedef struct xfs_efd_log_item {
+ extern struct kmem_zone	*xfs_efi_zone;
+ extern struct kmem_zone	*xfs_efd_zone;
  
+-void			xfs_efi_release(struct xfs_efi_log_item *);
+-
+-int			xfs_efi_recover(struct xfs_mount *mp,
+-					struct xfs_efi_log_item *efip);
+-
+ #endif	/* __XFS_EXTFREE_ITEM_H__ */
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 9292623bbdb4..d28a46888efb 100644
+index d28a46888efb..06f30ce1d02d 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2056,130 +2056,6 @@ xlog_buf_readahead(
- 		xfs_buf_readahead(log->l_mp->m_ddev_targp, blkno, len, ops);
+@@ -2599,46 +2599,6 @@ xlog_recover_process_data(
+ 	return 0;
  }
  
--/*
-- * Copy an BUI format buffer from the given buf, and into the destination
-- * BUI format structure.  The BUI/BUD items were designed not to need any
-- * special alignment handling.
-- */
--static int
--xfs_bui_copy_format(
--	struct xfs_log_iovec		*buf,
--	struct xfs_bui_log_format	*dst_bui_fmt)
--{
--	struct xfs_bui_log_format	*src_bui_fmt;
--	uint				len;
--
--	src_bui_fmt = buf->i_addr;
--	len = xfs_bui_log_format_sizeof(src_bui_fmt->bui_nextents);
--
--	if (buf->i_len == len) {
--		memcpy(dst_bui_fmt, src_bui_fmt, len);
--		return 0;
--	}
--	XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, NULL);
--	return -EFSCORRUPTED;
--}
--
--/*
-- * This routine is called to create an in-core extent bmap update
-- * item from the bui format structure which was logged on disk.
-- * It allocates an in-core bui, copies the extents from the format
-- * structure into it, and adds the bui to the AIL with the given
-- * LSN.
-- */
+-/* Recover the EFI if necessary. */
 -STATIC int
--xlog_recover_bui_pass2(
--	struct xlog			*log,
--	struct xlog_recover_item	*item,
--	xfs_lsn_t			lsn)
+-xlog_recover_process_efi(
+-	struct xfs_mount		*mp,
+-	struct xfs_ail			*ailp,
+-	struct xfs_log_item		*lip)
 -{
+-	struct xfs_efi_log_item		*efip;
 -	int				error;
--	struct xfs_mount		*mp = log->l_mp;
--	struct xfs_bui_log_item		*buip;
--	struct xfs_bui_log_format	*bui_formatp;
--
--	bui_formatp = item->ri_buf[0].i_addr;
--
--	if (bui_formatp->bui_nextents != XFS_BUI_MAX_FAST_EXTENTS) {
--		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
--		return -EFSCORRUPTED;
--	}
--	buip = xfs_bui_init(mp);
--	error = xfs_bui_copy_format(&item->ri_buf[0], &buip->bui_format);
--	if (error) {
--		xfs_bui_item_free(buip);
--		return error;
--	}
--	atomic_set(&buip->bui_next_extent, bui_formatp->bui_nextents);
--
--	spin_lock(&log->l_ailp->ail_lock);
--	/*
--	 * The RUI has two references. One for the RUD and one for RUI to ensure
--	 * it makes it into the AIL. Insert the RUI into the AIL directly and
--	 * drop the RUI reference. Note that xfs_trans_ail_update() drops the
--	 * AIL lock.
--	 */
--	xfs_trans_ail_update(log->l_ailp, &buip->bui_item, lsn);
--	xfs_bui_release(buip);
--	return 0;
--}
--
--
--/*
-- * This routine is called when an BUD format structure is found in a committed
-- * transaction in the log. Its purpose is to cancel the corresponding BUI if it
-- * was still in the log. To do this it searches the AIL for the BUI with an id
-- * equal to that in the BUD format structure. If we find it we drop the BUD
-- * reference, which removes the BUI from the AIL and frees it.
-- */
--STATIC int
--xlog_recover_bud_pass2(
--	struct xlog			*log,
--	struct xlog_recover_item	*item)
--{
--	struct xfs_bud_log_format	*bud_formatp;
--	struct xfs_bui_log_item		*buip = NULL;
--	struct xfs_log_item		*lip;
--	uint64_t			bui_id;
--	struct xfs_ail_cursor		cur;
--	struct xfs_ail			*ailp = log->l_ailp;
--
--	bud_formatp = item->ri_buf[0].i_addr;
--	if (item->ri_buf[0].i_len != sizeof(struct xfs_bud_log_format)) {
--		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
--		return -EFSCORRUPTED;
--	}
--	bui_id = bud_formatp->bud_bui_id;
 -
 -	/*
--	 * Search for the BUI with the id in the BUD format structure in the
--	 * AIL.
+-	 * Skip EFIs that we've already processed.
 -	 */
--	spin_lock(&ailp->ail_lock);
--	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
--	while (lip != NULL) {
--		if (lip->li_type == XFS_LI_BUI) {
--			buip = (struct xfs_bui_log_item *)lip;
--			if (buip->bui_format.bui_id == bui_id) {
--				/*
--				 * Drop the BUD reference to the BUI. This
--				 * removes the BUI from the AIL and frees it.
--				 */
--				spin_unlock(&ailp->ail_lock);
--				xfs_bui_release(buip);
--				spin_lock(&ailp->ail_lock);
--				break;
--			}
--		}
--		lip = xfs_trans_ail_cursor_next(ailp, &cur);
--	}
+-	efip = container_of(lip, struct xfs_efi_log_item, efi_item);
+-	if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+-		return 0;
 -
--	xfs_trans_ail_cursor_done(&cur);
 -	spin_unlock(&ailp->ail_lock);
+-	error = xfs_efi_recover(mp, efip);
+-	spin_lock(&ailp->ail_lock);
 -
--	return 0;
+-	return error;
 -}
 -
- STATIC int
- xlog_recover_commit_pass1(
- 	struct xlog			*log,
-@@ -2208,21 +2084,16 @@ xlog_recover_commit_pass2(
- {
- 	trace_xfs_log_recover_item_recover(log, trans, item, XLOG_RECOVER_PASS2);
- 
--	if (item->ri_type && item->ri_type->commit_pass2_fn)
--		return item->ri_type->commit_pass2_fn(log, buffer_list, item,
--				trans->r_lsn);
+-/* Release the EFI since we're cancelling everything. */
+-STATIC void
+-xlog_recover_cancel_efi(
+-	struct xfs_mount		*mp,
+-	struct xfs_ail			*ailp,
+-	struct xfs_log_item		*lip)
+-{
+-	struct xfs_efi_log_item		*efip;
 -
--	switch (ITEM_TYPE(item)) {
--	case XFS_LI_BUI:
--		return xlog_recover_bui_pass2(log, item, trans->r_lsn);
--	case XFS_LI_BUD:
--		return xlog_recover_bud_pass2(log, item);
--	default:
-+	if (!item->ri_type) {
- 		xfs_warn(log->l_mp, "%s: invalid item type (%d)",
- 			__func__, ITEM_TYPE(item));
- 		ASSERT(0);
- 		return -EFSCORRUPTED;
- 	}
-+	if (!item->ri_type->commit_pass2_fn)
-+		return 0;
-+	return item->ri_type->commit_pass2_fn(log, buffer_list, item,
-+			trans->r_lsn);
- }
- 
+-	efip = container_of(lip, struct xfs_efi_log_item, efi_item);
+-
+-	spin_unlock(&ailp->ail_lock);
+-	xfs_efi_release(efip);
+-	spin_lock(&ailp->ail_lock);
+-}
+-
+ /* Recover the RUI if necessary. */
  STATIC int
+ xlog_recover_process_rui(
+@@ -2883,7 +2843,7 @@ xlog_recover_process_intents(
+ 		 */
+ 		switch (lip->li_type) {
+ 		case XFS_LI_EFI:
+-			error = xlog_recover_process_efi(log->l_mp, ailp, lip);
++			error = lip->li_ops->iop_recover(lip, parent_tp);
+ 			break;
+ 		case XFS_LI_RUI:
+ 			error = xlog_recover_process_rui(log->l_mp, ailp, lip);
+@@ -2939,7 +2899,9 @@ xlog_recover_cancel_intents(
+ 
+ 		switch (lip->li_type) {
+ 		case XFS_LI_EFI:
+-			xlog_recover_cancel_efi(log->l_mp, ailp, lip);
++			spin_unlock(&ailp->ail_lock);
++			lip->li_ops->iop_release(lip);
++			spin_lock(&ailp->ail_lock);
+ 			break;
+ 		case XFS_LI_RUI:
+ 			xlog_recover_cancel_rui(log->l_mp, ailp, lip);
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 752c7fef9de7..9ac5483d2187 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -77,6 +77,7 @@ struct xfs_item_ops {
+ 	void (*iop_release)(struct xfs_log_item *);
+ 	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
+ 	void (*iop_error)(struct xfs_log_item *, xfs_buf_t *);
++	int (*iop_recover)(struct xfs_log_item *lip, struct xfs_trans *tp);
+ };
+ 
+ /*
+@@ -85,6 +86,9 @@ struct xfs_item_ops {
+  */
+ #define XFS_ITEM_RELEASE_WHEN_COMMITTED	(1 << 0)
+ 
++/* This log item type is an intent log item. */
++#define XFS_ITEM_TYPE_IS_INTENT		(1 << 1)
++
+ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+ 			  int type, const struct xfs_item_ops *ops);
+ 
 
