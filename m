@@ -2,80 +2,143 @@ Return-Path: <SRS0=AYd8=6O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E8AFC4724C
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 21:42:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51E30C4724C
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 21:52:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 171B32071C
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 21:42:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DC2520731
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Apr 2020 21:52:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IixQl6L9"
+	dkim=pass (2048-bit key) header.d=cloud.ionos.com header.i=@cloud.ionos.com header.b="K0b9BUEb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726849AbgD3VmA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Apr 2020 17:42:00 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:26791 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726447AbgD3VmA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 17:42:00 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588282919;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=ZESnp6elIBUFq8FSdDs/+o+VO3ku7zknLv4RJbSZ5es=;
-        b=IixQl6L9oX00rpK5PMKYgaTBMgNRSyTMUYZli4e0JwqoK+f6og5R9JhDf53jqyhvD5A0Y9
-        2R32T2xiY9o9w7EGsJ23q8SNFdr2tQ7aslMYqG33wozAvEUdib35cAIePH0aV8Q58yHeS5
-        hdxET1YmSI15Ffp9/rTmy8ioFGL6dV0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-288-Z8rs3yC6PG6RyCSoKhWmsg-1; Thu, 30 Apr 2020 17:41:57 -0400
-X-MC-Unique: Z8rs3yC6PG6RyCSoKhWmsg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9141D805738
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 21:41:56 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5B0796A944
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 21:41:56 +0000 (UTC)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_io: copy_range can take up to 8 arguments
-Message-ID: <08c6de7b-4caf-1162-29e5-94d8dfe959d6@redhat.com>
-Date:   Thu, 30 Apr 2020 16:41:55 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.7.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+        id S1727891AbgD3Vwq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Apr 2020 17:52:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45986 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727878AbgD3Vwp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Apr 2020 17:52:45 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 023E3C08E859
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 14:52:44 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id rh22so5958813ejb.12
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Apr 2020 14:52:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=LDEyu4DqGHwJ7t/wlLTaUyFP1PKV8rYydYP0xvjnvj8=;
+        b=K0b9BUEbUMN4c/HcO3EMetbwDKa/bQB7gEHoueMz+xCk9NFN8tJEEGyelIxvpaZToN
+         ECQhJ9+wuy6qVtEwW9mUbisrOp3Pj/n5ULKfaLTMyrAgHJ/y7vfV7+QRzZcu/ByCJwZV
+         CPuAb8QHPy18fm4QKel2ZHntwvTIDJWCm5hPjM+GtW6xp2scc5EbWir72q2kghoVWPxH
+         Az6OQH50Tuf5V695TOo+L4tAZIwvPVOvxxLMV5G8tX86ymSPIZ2N9QR403Il6RFjXg4b
+         ouaTyJZDdGlDGYke3obk+Sa+ExaUEl1q26wAKLnV/KKIMOjQcxkwBOITpksORcNhKjYu
+         O75w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=LDEyu4DqGHwJ7t/wlLTaUyFP1PKV8rYydYP0xvjnvj8=;
+        b=Gzeg+X4BSuFmbp0jWcbRCP9UdYYHib+5uMmPT2EwUbR7tdwGd/DCIbWp77N77LK3Pb
+         JDwhvMMTkb6lYzT9atGQl7+fDlmhUdfuVh6Rmlwx4Yylo3ax+SSZfJ1Y5mhDzkFV1F8d
+         pL6LRd/sRoOr7wcbOlny4nkAJWI04W0wmrmMhx3jeZvRoNig05j1JiNz0URTRV42gDje
+         DSNRyrQ+xCQoqEM3nKNbw9nb1sS7/qM1LNmhkWEo73YPCYnn9aDXX2qtEFiwvNYQSsHV
+         Ad6qXyLPCQjQANvxDKs2N1/Nxt/3oRgC4j1vpJgKcZcDTMoBgo0xsdbBCkKlVSjAmKKW
+         ZFcQ==
+X-Gm-Message-State: AGi0PuZTXnEVo4SMohCejgazyIZ9dR9oiX066ZypyGYdFdgK32X2mq+Q
+        KQc5aOIk/xmS61KKGkbxFhGuEA==
+X-Google-Smtp-Source: APiQypJYcY11pPgGBq9YSYemUl02BKlG2gtWtnLYjB8d8jL0gxleYPu+2YtHv3X6Kc4Pait6eLK1vg==
+X-Received: by 2002:a17:906:5918:: with SMTP id h24mr537740ejq.210.1588283562672;
+        Thu, 30 Apr 2020 14:52:42 -0700 (PDT)
+Received: from ls00508.pb.local ([2001:1438:4010:2540:b82f:dfc:5e2a:e7cc])
+        by smtp.gmail.com with ESMTPSA id f13sm92022ejd.2.2020.04.30.14.52.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 30 Apr 2020 14:52:42 -0700 (PDT)
+From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+To:     linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     hch@infradead.org, david@fromorbit.com, willy@infradead.org,
+        Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: [RFC PATCH V2 6/9] iomap: use attach/clear_page_private
+Date:   Thu, 30 Apr 2020 23:44:47 +0200
+Message-Id: <20200430214450.10662-7-guoqing.jiang@cloud.ionos.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200430214450.10662-1-guoqing.jiang@cloud.ionos.com>
+References: <20200430214450.10662-1-guoqing.jiang@cloud.ionos.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If we use the "-f N" variant for the source file specification, we will
-have up to 8 total arguments.
+Since the new pair function is introduced, we can call them to clean the
+code in iomap.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
+Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 ---
+RFC -> RFC V2
+1. change the name of new functions to attach/clear_page_private.
+2. call attach_page_private(newpage, clear_page_private(page)) to
+   cleanup code further as suggested by Matthew Wilcox.
+3. don't return attach_page_private in iomap_page_create per the
+   comment from Christoph Hellwig.
 
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index 68525047..d154fa76 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -179,7 +179,7 @@ copy_range_init(void)
- 	copy_range_cmd.name = "copy_range";
- 	copy_range_cmd.cfunc = copy_range_f;
- 	copy_range_cmd.argmin = 1;
--	copy_range_cmd.argmax = 7;
-+	copy_range_cmd.argmax = 8;
- 	copy_range_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
- 	copy_range_cmd.args = _("[-s src_off] [-d dst_off] [-l len] src_file | -f N");
- 	copy_range_cmd.oneline = _("Copy a range of data between two files");
+ fs/iomap/buffered-io.c | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 89e21961d1ad..cf4c1b02a9d8 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -59,24 +59,19 @@ iomap_page_create(struct inode *inode, struct page *page)
+ 	 * migrate_page_move_mapping() assumes that pages with private data have
+ 	 * their count elevated by 1.
+ 	 */
+-	get_page(page);
+-	set_page_private(page, (unsigned long)iop);
+-	SetPagePrivate(page);
++	attach_page_private(page, iop);
+ 	return iop;
+ }
+ 
+ static void
+ iomap_page_release(struct page *page)
+ {
+-	struct iomap_page *iop = to_iomap_page(page);
++	struct iomap_page *iop = clear_page_private(page);
+ 
+ 	if (!iop)
+ 		return;
+ 	WARN_ON_ONCE(atomic_read(&iop->read_count));
+ 	WARN_ON_ONCE(atomic_read(&iop->write_count));
+-	ClearPagePrivate(page);
+-	set_page_private(page, 0);
+-	put_page(page);
+ 	kfree(iop);
+ }
+ 
+@@ -554,14 +549,8 @@ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
+ 	if (ret != MIGRATEPAGE_SUCCESS)
+ 		return ret;
+ 
+-	if (page_has_private(page)) {
+-		ClearPagePrivate(page);
+-		get_page(newpage);
+-		set_page_private(newpage, page_private(page));
+-		set_page_private(page, 0);
+-		put_page(page);
+-		SetPagePrivate(newpage);
+-	}
++	if (page_has_private(page))
++		attach_page_private(newpage, clear_page_private(page));
+ 
+ 	if (mode != MIGRATE_SYNC_NO_COPY)
+ 		migrate_page_copy(newpage, page);
+-- 
+2.17.1
 
