@@ -2,132 +2,146 @@ Return-Path: <SRS0=3WhG=6P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20D95C35280
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 20:11:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7902EC47254
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 22:54:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFFFE2137B
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 20:11:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53DA6206B8
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 22:54:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jXBQh2z4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0AJ1ab2N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726307AbgEAULi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 May 2020 16:11:38 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:51962 "EHLO
+        id S1726486AbgEAWyg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 May 2020 18:54:36 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:59490 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726045AbgEAULi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 16:11:38 -0400
+        with ESMTP id S1726336AbgEAWyg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 18:54:36 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041K90Rn182841;
-        Fri, 1 May 2020 20:11:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=tWXXVZbfyWYRhB2LaRYwreVJsO3eoixxNwcIh5l+OR8=;
- b=jXBQh2z4N19PqyDqu93NAf01N6KhXPJz/drQtiVYVMmU3lbh5kKnXzqQjL0rNpHOm2iJ
- X9ehpazA56pKkiHZOzdN1h4E6xKnwmt+hTly8kjXOjdNfVDOzzzDaadtJaiv+27jF9ko
- hV07FaVyghtj8wTZ05ateMp+lV6W62P1TGin3y66d82Hh/H1dEhltnafuskDtWVwFIRJ
- u9aE1I4Abv7KtAlD55pDYi7DIc7k0OXR6QfqlhvbdRCNLFhdl+p2aoAclQO8fv4W8jz0
- gp8HyO3SqkXxLT+jOpVZ6f2oVVWJsl4sJTTPuRap6mdKnfc0TR+Rkq9SVBYLUM952ENA Ig== 
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041MniQw035632;
+        Fri, 1 May 2020 22:54:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=VsgINUB4dOK/ph54tHrMMLjIBVUKKHJuPipUU2BCAVU=;
+ b=0AJ1ab2NqUtmXY8U8+ltf4fgkk1T6fwz996pBsvHw1kEsTAceflrcbdI/b3LjDqxded2
+ QNQ/0rVdjQpXLr1FX9cn37v2G6HRwBpsKCka42zOAAFsU6hDGIfNaiNdOkCcUFeM78W8
+ zCyN5zDiguvgJjRlIibtaOPkFuCUC73RO5Ok7B/sCE3D2LXVvVvndBweLr84H+nTBSK3
+ 99wjgfXDGlzxybq08q9lzPpn6p/hZgEtyXz5bi4bCw8Lelz7cZnrmHGgtvgOqNVM0FUC
+ bxKblBTnG7ea3d86QmFArYFl+uOhY83CC3uUwFgFg/5sdqwjhOs+EDhHShH+zbpsSNcj xA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 30r7f3kvyw-1
+        by aserp2120.oracle.com with ESMTP id 30r7f3mafa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 May 2020 20:11:35 +0000
+        Fri, 01 May 2020 22:54:34 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041K8V6d074792;
-        Fri, 1 May 2020 20:11:35 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 30r7f4v6rc-1
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041MgWwW151710;
+        Fri, 1 May 2020 22:54:34 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 30r7f572dg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 May 2020 20:11:35 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 041KBYIt011957;
-        Fri, 1 May 2020 20:11:34 GMT
-Received: from localhost (/67.169.218.210)
+        Fri, 01 May 2020 22:54:34 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 041MsYti013771;
+        Fri, 1 May 2020 22:54:34 GMT
+Received: from [192.168.1.223] (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 01 May 2020 13:11:33 -0700
-Date:   Fri, 1 May 2020 13:11:32 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Jann Horn <jannh@google.com>
-Cc:     linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux API <linux-api@vger.kernel.org>
-Subject: Re: [PATCH RFC 00/18] xfs: atomic file updates
-Message-ID: <20200501201132.GA6742@magnolia>
+        with ESMTP ; Fri, 01 May 2020 15:54:33 -0700
+Subject: Re: [PATCH 02/18] xfs: fix xfs_reflink_remap_prep calling conventions
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
 References: <158812825316.168506.932540609191384366.stgit@magnolia>
- <CAG48ez0Fa6NSmO2a5kuzp6GCAXAXQtBzEDO+YcBL4BW105tF+w@mail.gmail.com>
+ <158812826681.168506.8309047158870409011.stgit@magnolia>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <80ec9426-b634-7db1-070f-06fa1508ffcf@oracle.com>
+Date:   Fri, 1 May 2020 15:54:33 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAG48ez0Fa6NSmO2a5kuzp6GCAXAXQtBzEDO+YcBL4BW105tF+w@mail.gmail.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <158812826681.168506.8309047158870409011.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9608 signatures=668687
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
  adultscore=0 spamscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005010146
+ engine=8.12.0-2003020000 definitions=main-2005010157
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9608 signatures=668687
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 suspectscore=0
  phishscore=0 mlxlogscore=999 impostorscore=0 spamscore=0 mlxscore=0
- priorityscore=1501 lowpriorityscore=0 malwarescore=0 clxscore=1015
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 clxscore=1011
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005010146
+ definitions=main-2005010157
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 01, 2020 at 09:46:07PM +0200, Jann Horn wrote:
-> On Wed, Apr 29, 2020 at 4:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > This series creates a new log incompat feature and log intent items to
-> > track high level progress of swapping ranges of two files and finish
-> > interrupted work if the system goes down.  It then adds a new
-> > FISWAPRANGE ioctl so that userspace can access the atomic extent
-> > swapping feature.  With this feature, user programs will be able to
-> > update files atomically by opening an O_TMPFILE, reflinking the source
-> > file to it, making whatever updates they want to make, and then
-> > atomically swap the changed bits back to the source file.  It even has
-> > an optional ability to detect a changed source file and reject the
-> > update.
-> >
-> > The intent behind this new userspace functionality is to enable atomic
-> > rewrites of arbitrary parts of individual files.  For years, application
-> > programmers wanting to ensure the atomicity of a file update had to
-> > write the changes to a new file in the same directory, fsync the new
-> > file, rename the new file on top of the old filename, and then fsync the
-> > directory.  People get it wrong all the time, and $fs hacks abound.
-> >
-> > With atomic file updates, this is no longer necessary.  Programmers
-> > create an O_TMPFILE, optionally FICLONE the file contents into the
-> > temporary file, make whatever changes they want to the tempfile, and
-> > FISWAPRANGE the contents from the tempfile into the regular file.
+
+
+On 4/28/20 7:44 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> That also requires the *readers* to be atomic though, right? Since now
-> the updates are visible to readers instantly, instead of only on the
-> next open()? If you used this to update /etc/passwd while someone else
-> is in the middle of reading it with a sequence of read() calls, there
-> would be fireworks...
+> Fix the return value of xfs_reflink_remap_prep so that its calling
+> conventions match the rest of xfs.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Looks fine to me:
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
-Right.  In XFS, we guarantee read atomicity by by grabbing i_rwsem and
-the xfs mmap lock, break any layout leases, drain the directios, and
-then flush+invalidate the page cache.  Once that preparation step is
-done, we do the actual extent swap.
-
-> I guess maybe the new API could also be wired up to ext4's
-> EXT4_IOC_MOVE_EXT somehow, provided that the caller specifies
-> FILE_SWAP_RANGE_NONATOMIC?
-
-Sort of.  ext4's MOVE_EXT also swaps the file contents doing the swap
-one buffer_head at a time, so you'd have to turn that off since this API
-assumes that the caller already set each file's contents beforehand.
-
-Ted has theorized that so long as the extent map size is less than 1/4
-of the journal then it would be possible to do atomic swaps in ext4
-without adding all the logical log item bits that were a prerequisite
-for the xfs implementation.
-
---D
+> ---
+>   fs/xfs/xfs_file.c    |    2 +-
+>   fs/xfs/xfs_reflink.c |    6 +++---
+>   2 files changed, 4 insertions(+), 4 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 994fd3d59872..1759fbcbcd46 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1029,7 +1029,7 @@ xfs_file_remap_range(
+>   	/* Prepare and then clone file data. */
+>   	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
+>   			&len, remap_flags);
+> -	if (ret < 0 || len == 0)
+> +	if (ret || len == 0)
+>   		return ret;
+>   
+>   	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index d8c8b299cb1f..5e978d1f169d 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1375,7 +1375,7 @@ xfs_reflink_remap_prep(
+>   	struct inode		*inode_out = file_inode(file_out);
+>   	struct xfs_inode	*dest = XFS_I(inode_out);
+>   	bool			same_inode = (inode_in == inode_out);
+> -	ssize_t			ret;
+> +	int			ret;
+>   
+>   	/* Lock both files against IO */
+>   	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
+> @@ -1399,7 +1399,7 @@ xfs_reflink_remap_prep(
+>   
+>   	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
+>   			len, remap_flags);
+> -	if (ret < 0 || *len == 0)
+> +	if (ret || *len == 0)
+>   		goto out_unlock;
+>   
+>   	/* Attach dquots to dest inode before changing block map */
+> @@ -1434,7 +1434,7 @@ xfs_reflink_remap_prep(
+>   	if (ret)
+>   		goto out_unlock;
+>   
+> -	return 1;
+> +	return 0;
+>   out_unlock:
+>   	xfs_reflink_remap_unlock(file_in, file_out);
+>   	return ret;
+> 
