@@ -2,115 +2,104 @@ Return-Path: <SRS0=3WhG=6P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82110C4724C
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 18:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA17EC4724C
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 19:46:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 554F624961
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 18:27:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97B15216FD
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 19:46:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PEECU9eT"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="ZyvFH+M0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729953AbgEAS1y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 May 2020 14:27:54 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:56116 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729767AbgEAS1y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 14:27:54 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041IJS3f055503;
-        Fri, 1 May 2020 18:27:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=hZ0n9u0mp5PInDH9bKDcT12Jo7Qotdmw1Q++okcxn/k=;
- b=PEECU9eTE6La9nFVQcSzovK+2rEnkVclehvX/vEP2ENbSz0QbuYFwhwsc2At89g0uoDc
- jkRymMUoEODcsBIkY5lWX0RQLq53EpJvHWfrzlwor5XdSHcAYSZhEcEh9YRitJusuoLS
- KSGs2eWU3fucHkTpQuZEHap2CZBBYaVqOK4bYwGoP70QoiEGFxMk4gUf18/D35nmVljR
- iq7CGqPKtkIW+Viuow+BuwYmsmUpcqAGliFZaSpNwpVvzqUiVQRLegkW9oxL3gDFwK+v
- DryW8ap1b2Nj/WN0UuUaC8fD1hc+NTKFO6CPI9a0vSb0iqoAiiUINbivxigW7NH0O9NH Jg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 30r7f5ugd4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 May 2020 18:27:52 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041IGV71136162;
-        Fri, 1 May 2020 18:25:51 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 30r7f4mfkd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 May 2020 18:25:51 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 041IPnx6003046;
-        Fri, 1 May 2020 18:25:49 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 01 May 2020 11:25:49 -0700
-Date:   Fri, 1 May 2020 11:25:48 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     "Saravanan Shanmugham (sarvi)" <sarvi@cisco.com>
-Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Subject: Re: Snapshot/Cloned workspace with changed file/directory ownership
- for all files in clone
-Message-ID: <20200501182548.GZ6742@magnolia>
-References: <DE682B09-7215-41EB-9D1F-25BFB41410E5@cisco.com>
+        id S1726672AbgEATqi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 May 2020 15:46:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53580 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726405AbgEATqh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 15:46:37 -0400
+Received: from mail-lf1-x143.google.com (mail-lf1-x143.google.com [IPv6:2a00:1450:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 015CCC061A0C
+        for <linux-xfs@vger.kernel.org>; Fri,  1 May 2020 12:46:37 -0700 (PDT)
+Received: by mail-lf1-x143.google.com with SMTP id b24so4684036lfp.7
+        for <linux-xfs@vger.kernel.org>; Fri, 01 May 2020 12:46:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Kt6IiWcmZXX6mLZe3Npm+KnNStyWK4tvZMSZknHrpEw=;
+        b=ZyvFH+M0FEmSh28N06nH7yi6EuuiQnNaCVIMA3mgShcIVa7cWxG83XzZcK+9attidQ
+         2c4sCZ0aEx5sZnBre78nNPKQWqJ2puuyL4g+CF4LQDiEavbU3LXBmnx6z3k7+mi1Gcwl
+         2NR6PYa09f0mZVpskNA7T0kO1xYiOGZEVm9yBa+ei+GkVggdds92ykznzEzxhfvtpvVa
+         rapUqKOvGs7LqMCkRzrgJbhq4h9K7YKmkapN9fsCpiJvkbS85NHlYwaG/L+MVko2VMcr
+         7Fc6BK5LCtLbxWvBTe/ruxFuF9NGdx3vH4iOqCfUZ7bBoaY7kRmOclZpIAoC/YtpYx7g
+         URmQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Kt6IiWcmZXX6mLZe3Npm+KnNStyWK4tvZMSZknHrpEw=;
+        b=T2QKwJVOnaLEWGeImi57ejzh4/FHfz6J9dIQPlGlrhYD3uQas3LSRkOfRW8gn7Zctn
+         jReddLhL10eJGux8JUf/PeFM0twuDy1XdWH+bKDGPgQqCPem1YISGpZuFlhQ9VLFNnaO
+         UAsHAC1kCTL5d9zLt9wXE8gloclYgiLQs87gnYdK6jr2BPPwDaX/h4t8KkqkXy5kjN8u
+         g0ORhUpL7g6BdC1nHuTd2gkfe8r3RXCw3hrfrSC19QKZMAV1xIVli8e1wcFSLZcgtPzy
+         zbPDzD4oFlgUqpX1drID4iZC4y2ySThRKfbjPb4wYtNCvVWKYYPl+Agmvo8fy/+Shiws
+         ZlBg==
+X-Gm-Message-State: AGi0PubD3iZREHGnRk3bdtafXphi6nhIhJfexvREPpx6wiI3pky7ZLPE
+        SQcYtYonqzxS6RmVzcpwYLFHExCLqDvVQlC8x1znW2Tg
+X-Google-Smtp-Source: APiQypLCnx5iBY4mxdbtk29iHmVZ+VLcTq41ZYnT5fApK66c7DCSDwDCusSxYcaDfuerlo+1CJxlIg8cVCBKOZUZmGY=
+X-Received: by 2002:ac2:4257:: with SMTP id m23mr3390896lfl.141.1588362395236;
+ Fri, 01 May 2020 12:46:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <DE682B09-7215-41EB-9D1F-25BFB41410E5@cisco.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9608 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- adultscore=0 spamscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005010139
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9608 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
- lowpriorityscore=0 priorityscore=1501 adultscore=0 mlxlogscore=999
- clxscore=1011 phishscore=0 impostorscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005010139
+References: <158812825316.168506.932540609191384366.stgit@magnolia>
+In-Reply-To: <158812825316.168506.932540609191384366.stgit@magnolia>
+From:   Jann Horn <jannh@google.com>
+Date:   Fri, 1 May 2020 21:46:07 +0200
+Message-ID: <CAG48ez0Fa6NSmO2a5kuzp6GCAXAXQtBzEDO+YcBL4BW105tF+w@mail.gmail.com>
+Subject: Re: [PATCH RFC 00/18] xfs: atomic file updates
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Linux API <linux-api@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 01, 2020 at 05:40:45PM +0000, Saravanan Shanmugham (sarvi) wrote:
-> One use case for "cloned" workspaces or "seeded" workspaces, is "prebuilt workspaces" for very large builds.
-> 
-> What would it take to add this capability to the xfs roadmap? This would be very usefull.
-> 
-> Our use case is as following
->    1. Our fully built software build workspaces can be 800GB+
->    2. We have a nightly build that builds the whole workspace 800GB, done by a generic user "buildusr"
->    3. We then snapshot that workspace with xfs snapshotting capability.
+On Wed, Apr 29, 2020 at 4:46 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> This series creates a new log incompat feature and log intent items to
+> track high level progress of swapping ranges of two files and finish
+> interrupted work if the system goes down.  It then adds a new
+> FISWAPRANGE ioctl so that userspace can access the atomic extent
+> swapping feature.  With this feature, user programs will be able to
+> update files atomically by opening an O_TMPFILE, reflinking the source
+> file to it, making whatever updates they want to make, and then
+> atomically swap the changed bits back to the source file.  It even has
+> an optional ability to detect a changed source file and reject the
+> update.
+>
+> The intent behind this new userspace functionality is to enable atomic
+> rewrites of arbitrary parts of individual files.  For years, application
+> programmers wanting to ensure the atomicity of a file update had to
+> write the changes to a new file in the same directory, fsync the new
+> file, rename the new file on top of the old filename, and then fsync the
+> directory.  People get it wrong all the time, and $fs hacks abound.
+>
+> With atomic file updates, this is no longer necessary.  Programmers
+> create an O_TMPFILE, optionally FICLONE the file contents into the
+> temporary file, make whatever changes they want to the tempfile, and
+> FISWAPRANGE the contents from the tempfile into the regular file.
 
-What xfs snapshotting 'capability' is that?
+That also requires the *readers* to be atomic though, right? Since now
+the updates are visible to readers instantly, instead of only on the
+next open()? If you used this to update /etc/passwd while someone else
+is in the middle of reading it with a sequence of read() calls, there
+would be fireworks...
 
-Or, since you've already asked this on the btrfs list, chown -R the
-directory tree after you receive the fs image from the build system.
-
-(Maybe the answer you want is shiftfs...)
-
---D
-
->    3. We want the developer, "sarvi", to be able to clone from that snapshot and be able to incremental software build and development in the cloned workspace or the seeded filesystem/workspace.
-> 
-> Problem: 
-> All the content, files, directories in the cloned workspace are still owned by "buildusr" and not "sarvi", which causes my builds to fail with permission problems.
-> Is there anything in xfs that can help. 
-> For that matter any of the open source filesystems support seeding or snapshot/cloning that you might be aware of.
-> 
-> So far the only filesystem that seems have the capability map/change the file ownership as part of the clone operation is Netapp. 
-> And unfortunately that isn’t open source and wont serve our purpose.
-> 
->  
-> Thanks,
-> Sarvi
-> Occam’s Razor Rules
-> 
+I guess maybe the new API could also be wired up to ext4's
+EXT4_IOC_MOVE_EXT somehow, provided that the caller specifies
+FILE_SWAP_RANGE_NONATOMIC?
