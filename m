@@ -6,62 +6,71 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A533C4724C
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 07:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E39DCC4724C
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 07:56:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 077F0208C3
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 07:50:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9B0E20787
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 07:56:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="k2RagnSg"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZB6tg4KK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728316AbgEAHuR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 May 2020 03:50:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54074 "EHLO
+        id S1728334AbgEAH4n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 May 2020 03:56:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728311AbgEAHuR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 03:50:17 -0400
+        with ESMTP id S1728297AbgEAH4n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 03:56:43 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2203BC035494
-        for <linux-xfs@vger.kernel.org>; Fri,  1 May 2020 00:50:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AA7DC035494
+        for <linux-xfs@vger.kernel.org>; Fri,  1 May 2020 00:56:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=adSBixYXJWm/9CLpx5jHhISHtJTCOLW7EYmSpl6Bgdw=; b=k2RagnSgyz2PdFP5KKvPOMLgLd
-        ZNTQ+IE4pupfdy5CK1KPoSih7Yd+UzmUZZRBVqAWRN8ZeGf7+gP/PmLhTDhHFI4Kn0oOz5hoHFK8u
-        X7iMjMRqGASNX7c67gxJhqA433vZgDDBFwBUBmUtUvWmnkTsCR05kercmhU/sx4E8Aph/MVvMqUMw
-        3x0ncdxuEx4IR9GOro9VkOINZUtj1zO8dYp9J2KNvBuPp37tNX+eat6aiL/IhKHWpIDbjScypZvlC
-        SpmzC8bSWvlTI4GmMYHb+Tye4PU0kn11n182T0i7sOGycYpa38VhbknfuzEQWtgUtdP2G0XAykoQ0
-        Ev7c3N1g==;
+        bh=FWXCXYRgnx+FXlNJBgn5ddLjI3xQvqz1lVo2TCKoN+k=; b=ZB6tg4KKp1zroyvUXQ4Z5M7WFq
+        xGHZo/HNaFJa8WqkSUCA9sU60Bn9cpJBM3f2BJGDgSOlSa82NiloWYDNhFkTXBrwuYxSaBGn2fLNr
+        WX+MP1pSfsP02/rs+VJn4kfdI83CvU80u+MY6wssEsHGb/ujdUI99J7dmvaVPZrIvCGYTqrGr5OTL
+        Np/ZBDy5zbY222OEimwJgTmHZ98SuGkPEHRq6CY/fv4TbtLij61MsT5VAZ1WR9iXz5+qy1HAfqAZO
+        jIqvkn7b9FUZQ+Y0mFYsjwn5Rt4UBFp2RO9fl1Uj9JS6lRtHL/iVxu/WYG9ZzaVeym28h1/MTyP1L
+        j3VvgPIw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jUQR7-0004bX-0T; Fri, 01 May 2020 07:50:17 +0000
-Date:   Fri, 1 May 2020 00:50:16 -0700
+        id 1jUQXL-0000xg-0b; Fri, 01 May 2020 07:56:43 +0000
+Date:   Fri, 1 May 2020 00:56:42 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 10/17] xfs: acquire ->ail_lock from
- xfs_trans_ail_delete()
-Message-ID: <20200501075016.GE29479@infradead.org>
+Subject: Re: [PATCH v3 11/17] xfs: use delete helper for items expected to be
+ in AIL
+Message-ID: <20200501075642.GF29479@infradead.org>
 References: <20200429172153.41680-1-bfoster@redhat.com>
- <20200429172153.41680-11-bfoster@redhat.com>
+ <20200429172153.41680-12-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200429172153.41680-11-bfoster@redhat.com>
+In-Reply-To: <20200429172153.41680-12-bfoster@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Apr 29, 2020 at 01:21:46PM -0400, Brian Foster wrote:
-> Several callers acquire the lock just prior to the call. Callers
-> that require ->ail_lock for other purposes already check IN_AIL
-> state and thus don't require the additional shutdown check in the
-> helper. Push the lock down into xfs_trans_ail_delete(), open code
-> the instances that still acquire it, and remove the unnecessary ailp
-> parameter.
+On Wed, Apr 29, 2020 at 01:21:47PM -0400, Brian Foster wrote:
+> Various intent log items call xfs_trans_ail_remove() with a log I/O
+> error shutdown type, but this helper historically checks whether an
+> item is in the AIL before calling xfs_trans_ail_delete(). This means
+> the shutdown check is essentially a no-op for users of
+> xfs_trans_ail_remove().
+> 
+> It is possible that some items might not be AIL resident when the
+> AIL remove attempt occurs, but this should be isolated to cases
+> where the filesystem has already shutdown. For example, this
+> includes abort of the transaction committing the intent and I/O
+> error of the iclog buffer committing the intent to the log.
+> Therefore, update these callsites to use xfs_trans_ail_delete() to
+> provide AIL state validation for the common path of items being
+> released and removed when associated done items commit to the
+> physical log.
 
-Much better calling conventions with your changes,
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
