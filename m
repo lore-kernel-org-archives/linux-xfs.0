@@ -7,136 +7,111 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66EF3C4724C
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 11:24:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED3D3C4724C
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 11:24:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45DA32166E
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 11:24:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA30B20787
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 11:24:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GDdWxbGT"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z0o6PBz8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728585AbgEALYQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 May 2020 07:24:16 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:33608 "EHLO
+        id S1728588AbgEALYd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 May 2020 07:24:33 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:39269 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728581AbgEALYQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 07:24:16 -0400
+        with ESMTP id S1728581AbgEALYc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 07:24:32 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588332255;
+        s=mimecast20190719; t=1588332271;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=Eg+EMIM140SvxhEuf+dua2l8Q0ig4YAzlaUkT43AuUU=;
-        b=GDdWxbGTbbWJudLuoLUi3hx0EXuvtmwHW4hUjUGKeBk2kofDVEtTW89w0gka67+7PGJht8
-        fVQqvgIdp3JtPF3gO77ak6Mh5XQwbiUEl10KhwObiHziGm3YhSaz10hYw3GWwoaLtoEkOn
-        g3J75LvyyqPVdXFLk7QyS2ffoby3koY=
+        bh=VZGbUnT1Fcre7gFMGXxzxVHZxC8GSSvtKoflwogNaLU=;
+        b=Z0o6PBz8LelNZvZ6XWCQbivnBbIW6+mPa/wrK/Y3CRCilPTx38WcYMR0yeo58eG3MnkfCy
+        +uYTcKuL+bxbEgaLxIOngRbcs7dnvMKgzwWZ1/c0bJu2V6zhyQPn1uwfRKTtORwT15ji4Y
+        6JmsNtlkPjiJyy4+KlX1ieciiyN0l8M=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-134-rALAmVe0P-m_LV0sxTIKzw-1; Fri, 01 May 2020 07:24:12 -0400
-X-MC-Unique: rALAmVe0P-m_LV0sxTIKzw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-432-2q6NELr7PoKeTJ_xHBLVhg-1; Fri, 01 May 2020 07:24:29 -0400
+X-MC-Unique: 2q6NELr7PoKeTJ_xHBLVhg-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 372BF1800D42;
-        Fri,  1 May 2020 11:24:11 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9AE67107ACCA;
+        Fri,  1 May 2020 11:24:28 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C184360C47;
-        Fri,  1 May 2020 11:24:10 +0000 (UTC)
-Date:   Fri, 1 May 2020 07:24:08 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2D87161524;
+        Fri,  1 May 2020 11:24:28 +0000 (UTC)
+Date:   Fri, 1 May 2020 07:24:26 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 07/17] xfs: ratelimit unmount time per-buffer I/O
- error alert
-Message-ID: <20200501112408.GB40250@bfoster>
+Subject: Re: [PATCH v3 08/17] xfs: fix duplicate verification from
+ xfs_qm_dqflush()
+Message-ID: <20200501112426.GC40250@bfoster>
 References: <20200429172153.41680-1-bfoster@redhat.com>
- <20200429172153.41680-8-bfoster@redhat.com>
- <20200430220743.GJ2040@dread.disaster.area>
+ <20200429172153.41680-9-bfoster@redhat.com>
+ <20200430184553.GI6742@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200430220743.GJ2040@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20200430184553.GI6742@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 01, 2020 at 08:07:43AM +1000, Dave Chinner wrote:
-> On Wed, Apr 29, 2020 at 01:21:43PM -0400, Brian Foster wrote:
-> > At unmount time, XFS emits an alert for every in-core buffer that
-> > might have undergone a write error. In practice this behavior is
-> > probably reasonable given that the filesystem is likely short lived
-> > once I/O errors begin to occur consistently. Under certain test or
-> > otherwise expected error conditions, this can spam the logs and slow
-> > down the unmount.
-> > 
-> > Now that we have a ratelimit mechanism specifically for buffer
-> > alerts, reuse it for the per-buffer alerts in xfs_wait_buftarg().
-> > Also lift the final repair message out of the loop so it always
-> > prints and assert that the metadata error handling code has shut
-> > down the fs.
+On Thu, Apr 30, 2020 at 11:45:53AM -0700, Darrick J. Wong wrote:
+> On Wed, Apr 29, 2020 at 01:21:44PM -0400, Brian Foster wrote:
+> > The pre-flush dquot verification in xfs_qm_dqflush() duplicates the
+> > read verifier by checking the dquot in the on-disk buffer. Instead,
+> > verify the in-core variant before it is flushed to the buffer.
 > > 
 > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/xfs_buf.c | 15 +++++++++++----
-> >  1 file changed, 11 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index 594d5e1df6f8..8f0f605de579 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-...
-> > @@ -1685,17 +1686,23 @@ xfs_wait_buftarg(
-> >  			bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
-> >  			list_del_init(&bp->b_lru);
-> >  			if (bp->b_flags & XBF_WRITE_FAIL) {
-> > -				xfs_alert(btp->bt_mount,
-> > +				write_fail = true;
-> > +				xfs_buf_alert_ratelimited(bp,
-> > +					"XFS: Corruption Alert",
-> >  "Corruption Alert: Buffer at daddr 0x%llx had permanent write failures!",
-> >  					(long long)bp->b_bn);
-> > -				xfs_alert(btp->bt_mount,
-> > -"Please run xfs_repair to determine the extent of the problem.");
-> >  			}
-> >  			xfs_buf_rele(bp);
-> >  		}
-> >  		if (loop++ != 0)
-> >  			delay(100);
-> >  	}
-> > +
-> > +	if (write_fail) {
-> > +		ASSERT(XFS_FORCED_SHUTDOWN(btp->bt_mount));
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> I think this is incorrect. A metadata write that is set to retry
-> forever and is failing because of a bad sector or some other
-> persistent device error will not shut down the filesystem, but still
-> be reported here as a failure. Hence we can easily get here without
-> a filesystem shutdown having occurred...
+> Fixes: 7224fa482a6d ("xfs: add full xfs_dqblk verifier") ?
 > 
 
-I'm confused by your comment because I don't see how we get here to free
-a dirty buffer without the filesystem already shut down. AFAICT we're
-going to spin (in freeze or unmount) until all outstanding buffers are
-written back or converted to permanent errors, which shuts down the fs.
-Hm?
-
-Note that I don't object to turning this into a direct
-xfs_force_shutdown() call as a fallback, if that's what you're asking
-for (which isn't totally clear to me either). Obviously my assumption is
-that we're already shut down anyways, but I'd like to get on the same
-page here first...
+Ok, added.
 
 Brian
 
-> Cheers,
+> Otherwise this looks ok,
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Dave.
+> --D
 > 
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > ---
+> >  fs/xfs/xfs_dquot.c | 9 ++++-----
+> >  1 file changed, 4 insertions(+), 5 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> > index af2c8e5ceea0..265feb62290d 100644
+> > --- a/fs/xfs/xfs_dquot.c
+> > +++ b/fs/xfs/xfs_dquot.c
+> > @@ -1116,13 +1116,12 @@ xfs_qm_dqflush(
+> >  	dqb = bp->b_addr + dqp->q_bufoffset;
+> >  	ddqp = &dqb->dd_diskdq;
+> >  
+> > -	/*
+> > -	 * A simple sanity check in case we got a corrupted dquot.
+> > -	 */
+> > -	fa = xfs_dqblk_verify(mp, dqb, be32_to_cpu(ddqp->d_id), 0);
+> > +	/* sanity check the in-core structure before we flush */
+> > +	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(dqp->q_core.d_id),
+> > +			      0);
+> >  	if (fa) {
+> >  		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
+> > -				be32_to_cpu(ddqp->d_id), fa);
+> > +				be32_to_cpu(dqp->q_core.d_id), fa);
+> >  		xfs_buf_relse(bp);
+> >  		xfs_dqfunlock(dqp);
+> >  		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > -- 
+> > 2.21.1
+> > 
 > 
 
