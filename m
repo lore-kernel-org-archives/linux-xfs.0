@@ -2,158 +2,132 @@ Return-Path: <SRS0=3WhG=6P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D76FC4724C
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 15:53:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35E6BC4724C
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 15:56:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3941F216FD
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 15:53:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F541216FD
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 15:56:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VHoBaoms"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EYHZpl+5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728946AbgEAPxj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 May 2020 11:53:39 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:34802 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728495AbgEAPxj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 11:53:39 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041FlkU9005235;
-        Fri, 1 May 2020 15:53:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=5fWckKJWAR99oYakuw8ymhY3Pv39aMRb6zllx+N1I14=;
- b=VHoBaomstsfTsO5TE3y6H6BCD6ByOXCM3m8BEAgWntByfOWCxi8lt7KKDpLmRP2xpjYu
- NmwpGLyz1frlM9tLdIvMFTkP6MdM0IS9bO1Rm1dzDzdreCOBuH55stGqZSNV7gGpeXm9
- JwuoK3Mz0BdWeSuV6OtfNftaenhR3uToLqHXOX/XAii8ZIXqhy7U7zVIipzMmufvwnTN
- VlptKonEhWREskmH/NNYpr12h+ApiahpsKOFEHAAJFu84VDYPnUc4tlvJt1NBUbyoe+F
- C6kG6FFikwKTDPpGah3S8JoGnxkZcRdjd12eX5b82SHWH5LhUZZsmnKE2aLQQG9e7rch lQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 30r7f5tuk8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 May 2020 15:53:21 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041FbThv005355;
-        Fri, 1 May 2020 15:53:20 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 30r7fgy7np-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 May 2020 15:53:20 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 041FrHuP021031;
-        Fri, 1 May 2020 15:53:17 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 01 May 2020 08:53:17 -0700
-Date:   Fri, 1 May 2020 08:53:16 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: pass a commit_mode to xfs_trans_commit
-Message-ID: <20200501155316.GS6742@magnolia>
-References: <20200409073650.1590904-1-hch@lst.de>
- <20200501080703.GA17731@infradead.org>
- <20200501102403.GA37819@bfoster>
- <20200501104245.GA28237@lst.de>
- <20200501115132.GG40250@bfoster>
+        id S1729279AbgEAP41 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 May 2020 11:56:27 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:27754 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729037AbgEAP41 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 11:56:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1588348585;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=aXbAvnlluvqolVbnTIAv0bE7z6ypeDDUijScHdI1dX0=;
+        b=EYHZpl+57E3FQVwsjj3sFd4ZQODZKnOSGhCzoeO+kRH3on5M9KZEenhvii70j8cfkUehj4
+        A18Y7UYxigpR9jCjCulVe28veCQOW+c+i5L1wjljhwSsRgsqNUIzA+Yx9IF8VBh8NluyEJ
+        wcOjknu2HYwzNCu1KecwC5xKT7vbqO4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-286-2zTJ6FCENXWeQAyiXbGcAw-1; Fri, 01 May 2020 11:56:18 -0400
+X-MC-Unique: 2zTJ6FCENXWeQAyiXbGcAw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D10CE107ACCA;
+        Fri,  1 May 2020 15:56:17 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6347E5D714;
+        Fri,  1 May 2020 15:56:17 +0000 (UTC)
+Date:   Fri, 1 May 2020 11:56:15 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 07/12] xfs: remove xfs_iread
+Message-ID: <20200501155615.GN40250@bfoster>
+References: <20200501081424.2598914-1-hch@lst.de>
+ <20200501081424.2598914-8-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200501115132.GG40250@bfoster>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9608 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 suspectscore=0 malwarescore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005010124
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9608 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
- lowpriorityscore=0 priorityscore=1501 adultscore=0 mlxlogscore=999
- clxscore=1015 phishscore=0 impostorscore=0 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005010124
+In-Reply-To: <20200501081424.2598914-8-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 01, 2020 at 07:51:32AM -0400, Brian Foster wrote:
-> On Fri, May 01, 2020 at 12:42:45PM +0200, Christoph Hellwig wrote:
-> > On Fri, May 01, 2020 at 06:24:03AM -0400, Brian Foster wrote:
-> > > I recall looking at this when it was first posted and my first reaction
-> > > was that I didn't really like the interface. I decided to think about it
-> > > to see if it grew on me and then just lost track (sorry). It's not so
-> > > much passing a flag to commit as opposed to the flags not directly
-> > > controlling behavior (i.e., one flag means sync if <something> is true,
-> > > another flag means sync if <something else> is true, etc.) tends to
-> > > confuse me. I don't feel terribly strongly about it if others prefer
-> > > this pattern, but I still find the existing code more readable.
-> > > 
-> > > I vaguely recall thinking it might be nice if we could dump this into
-> > > transaction state to avoid the aforementioned logic warts, but IIRC that
-> > > might not have been possible for all users of this functionality..
-> > 
-> > Moving the flag out of the transaction structure was the main motivation
-> > for this series - the fact that we need different arguments to
-> > xfs_trans_commit is just a fallout from that.  The rationale is that
-> > I found it highly confusing to figure out how and where we set the sync
-> > flag vs having it obvious in the one place where we commit the
-> > transaction.
-> > 
+On Fri, May 01, 2020 at 10:14:19AM +0200, Christoph Hellwig wrote:
+> There is not much point in the xfs_iread function, as it has a single
+> caller and not a whole lot of code.  Move it into the only caller,
+> and trim down the overdocumentation to just documenting the important
+> "why" instead of a lot of redundant "what".
 > 
-> Sorry, I was referring to moving your new [W|DIR]SYNC variants to
-> somewhere like xfs_trans_res->tr_logflags in the comment above, not the
-> existing XFS_TRANS_SYNC flag (which I would keep). Regardless, I didn't
-> think that would work across the board from looking at it before.
-> Perhaps it would work in some cases..
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_inode_buf.c | 73 -----------------------------------
+>  fs/xfs/libxfs/xfs_inode_buf.h |  2 -
+>  fs/xfs/xfs_icache.c           | 33 +++++++++++++++-
+>  3 files changed, 32 insertions(+), 76 deletions(-)
 > 
-> I agree that the current approach is confusing in that it's not always
-> clear when to set the sync flag. I disagree that this patch makes it
-> obvious and in one place because when I see this:
+...
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 8bf1d15be3f6a..dd757c6614956 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+...
+> @@ -510,10 +511,40 @@ xfs_iget_cache_miss(
+>  	if (!ip)
+>  		return -ENOMEM;
+>  
+> -	error = xfs_iread(mp, tp, ip, flags);
+> +	error = xfs_imap(mp, tp, ip->i_ino, &ip->i_imap, flags);
+>  	if (error)
+>  		goto out_destroy;
+>  
+> +	/*
+> +	 * For version 5 superblocks, if we are initialising a new inode and we
+> +	 * are not utilising the XFS_MOUNT_IKEEP inode cluster mode, we can
+> +	 * simple build the new inode core with a random generation number.
+
+I'm assuming the original comment meant to say "simply" here instead of
+"simple." Otherwise looks good to me:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +	 *
+> +	 * For version 4 (and older) superblocks, log recovery is dependent on
+> +	 * the di_flushiter field being initialised from the current on-disk
+> +	 * value and hence we must also read the inode off disk even when
+> +	 * initializing new inodes.
+> +	 */
+> +	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
+> +	    (flags & XFS_IGET_CREATE) && !(mp->m_flags & XFS_MOUNT_IKEEP)) {
+> +		VFS_I(ip)->i_generation = prandom_u32();
+> +	} else {
+> +		struct xfs_dinode	*dip;
+> +		struct xfs_buf		*bp;
+> +
+> +		error = xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &bp, 0, flags);
+> +		if (error)
+> +			goto out_destroy;
+> +
+> +		error = xfs_inode_from_disk(ip, dip);
+> +		if (!error)
+> +			xfs_buf_set_ref(bp, XFS_INO_REF);
+> +		xfs_trans_brelse(tp, bp);
+> +
+> +		if (error)
+> +			goto out_destroy;
+> +	}
+> +
+>  	if (!xfs_inode_verify_forks(ip)) {
+>  		error = -EFSCORRUPTED;
+>  		goto out_destroy;
+> -- 
+> 2.26.2
 > 
-> 	error = xfs_trans_commit(args->trans, XFS_TRANS_COMMIT_WSYNC);
-> 
-> ... it makes me think the flag has an immediate effect (like COMMIT_SYNC
-> does) and subsequently raises the same questions around the existing
-> code of when or when not to use which flag in the context of the
-> individual transaction. *shrug* Just my .02.
 
-Similarly, this fell off my radar screen once the three of us started
-lobbing log refactoring patchsets at each other. :)
-
-AFAICT the goal of the WSYNC/DIRSYNC logic is basically to annotate the
-transaction to say "sysadmin wants all (write|namespace) operations to
-commit synchronously", so at first I was a little surprised that this
-added a flags argument to xfs_trans_commit instead of adding a couple of
-flags to capture the "I'm a write op" or  "I'm a namespace op" to
-xfs_trans_alloc.
-
-/Then/ I realized that xfs_trans_alloc lets you set t_flags directly
-with almost no validation and died a little inside.  Then it occurred
-to me that maybe this is deliberately done just prior to the final
-commit so that the intermediate transaction rolls are not committed
-synchronously, just one big log force at the end.
-
-/And then/ I noticed that in the places where we set SYNC just prior to
-xfs_trans_commit, each deferred op that gets run via xfs_trans_commit's
-call to xfs_defer_finish_noroll blocks waiting for xfs_log_force_lsn,
-when we could probably get away with only forcing the log at the very
-end of the transaction chain.
-
-So, uh, my question is, would it make more sense to (a) create a
-separate trans_alloc flags namespace so that (b) we can add the
-wsync/dirsync annotations from the outset, while keeping in mind that
-(c) we could possibly let the intermediate transaction rolls commit in
-the usual asynchronous fashion so long as the last one forces the log?
-
---D
-
-> Brian
-> 
