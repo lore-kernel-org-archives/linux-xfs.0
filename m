@@ -7,133 +7,191 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C46F6C47254
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 13:34:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 195A0C47254
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 13:34:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1B802495C
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 13:34:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE1C3208DB
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 13:34:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S41jX3i9"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J35TuBMq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730064AbgEANeH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 May 2020 09:34:07 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:20332 "EHLO
+        id S1730604AbgEANeo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 May 2020 09:34:44 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:54536 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730046AbgEANeG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 09:34:06 -0400
+        with ESMTP id S1729589AbgEANen (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 09:34:43 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588340045;
+        s=mimecast20190719; t=1588340081;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=BlqInBPPeTPN+lHZJRtJX3LzKtRsxEcsy2gLocYBBEg=;
-        b=S41jX3i9l9UvhmcRl+aAIgvAiGWYjfZCDlnVZZQmylZ9Q2DbW96saj+jjc9WXN+epFJVMi
-        vAzvIzZDIghLgh4zuKE2ggH3xe3YkoNbIlUocYJY7ddjmAVQBZJvhI687ZDS7/WfmqywAG
-        s+8alFBhSDfo1p1px+e97bxHWHTWadM=
+        bh=Q4uqJ94gILTg6URfmFOZ/gNT3q09kkcarLI71DQ7asE=;
+        b=J35TuBMqmUOR9UWx27Brfgin4sYUntV6QSBO1NRR02UkwdpaGzR1J7rKgn/sk6x2m8Q0Ol
+        aTbzu39HjZejbrETAfyJ4mVnSiKbB8JeRfff5d60H15MsnpTqhygfVXPe34A8Wpd0JCieR
+        BUbpwtNzgxgCzgqhtuD+Xag3gvBefGs=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-81-JJ5qnVyAMkWXbfyhJF-KBQ-1; Fri, 01 May 2020 09:34:01 -0400
-X-MC-Unique: JJ5qnVyAMkWXbfyhJF-KBQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+ us-mta-237-8eIZ4b1pOF6QCW04dLu6Vg-1; Fri, 01 May 2020 09:34:35 -0400
+X-MC-Unique: 8eIZ4b1pOF6QCW04dLu6Vg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5B1FE8014C1;
-        Fri,  1 May 2020 13:34:00 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 15A42107ACCA;
+        Fri,  1 May 2020 13:34:34 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DFF6B605CE;
-        Fri,  1 May 2020 13:33:59 +0000 (UTC)
-Date:   Fri, 1 May 2020 09:33:57 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 986A7196AE;
+        Fri,  1 May 2020 13:34:33 +0000 (UTC)
+Date:   Fri, 1 May 2020 09:34:31 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 02/12] xfs: call xfs_iformat_fork from xfs_inode_from_disk
-Message-ID: <20200501133357.GI40250@bfoster>
+Subject: Re: [PATCH 03/12] xfs: split xfs_iformat_fork
+Message-ID: <20200501133431.GJ40250@bfoster>
 References: <20200501081424.2598914-1-hch@lst.de>
- <20200501081424.2598914-3-hch@lst.de>
+ <20200501081424.2598914-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200501081424.2598914-3-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <20200501081424.2598914-4-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 01, 2020 at 10:14:14AM +0200, Christoph Hellwig wrote:
-> We always need to fill out the fork structures when reading the inode,
-> so call xfs_iformat_fork from the tail of xfs_inode_from_disk.
+On Fri, May 01, 2020 at 10:14:15AM +0200, Christoph Hellwig wrote:
+> xfs_iformat_fork is a weird catchall.  Split it into one helper for
+> the data fork and one for the attr fork, and then call both helper
+> as well as the COW fork initialization from xfs_inode_from_disk.  Order
+> the COW fork initialization after the attr fork initialization given
+> that it can't fail to simplify the error handling.
+> 
+> Note that the newly split helpers are moved down the file in
+> xfs_inode_fork.c to avoid the need for forward declarations.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_inode_buf.c | 7 ++++---
->  fs/xfs/libxfs/xfs_inode_buf.h | 2 +-
->  fs/xfs/xfs_log_recover.c      | 4 +---
->  3 files changed, 6 insertions(+), 7 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_buf.c  |  20 +++-
+>  fs/xfs/libxfs/xfs_inode_fork.c | 186 +++++++++++++++------------------
+>  fs/xfs/libxfs/xfs_inode_fork.h |   3 +-
+>  3 files changed, 103 insertions(+), 106 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 39c5a6e24915c..02f06dec0a5a6 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -186,7 +186,7 @@ xfs_imap_to_bp(
+...
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 518c6f0ec3a61..f30d43364aa92 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+...
+> @@ -325,6 +221,88 @@ xfs_iformat_btree(
 >  	return 0;
 >  }
 >  
-> -void
 > +int
->  xfs_inode_from_disk(
->  	struct xfs_inode	*ip,
->  	struct xfs_dinode	*from)
-> @@ -247,6 +247,8 @@ xfs_inode_from_disk(
->  		to->di_flags2 = be64_to_cpu(from->di_flags2);
->  		to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
->  	}
+> +xfs_iformat_data_fork(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_dinode	*dip)
+> +{
+> +	struct inode		*inode = VFS_I(ip);
 > +
-> +	return xfs_iformat_fork(ip, from);
->  }
+> +	switch (inode->i_mode & S_IFMT) {
+> +	case S_IFIFO:
+> +	case S_IFCHR:
+> +	case S_IFBLK:
+> +	case S_IFSOCK:
+> +		ip->i_d.di_size = 0;
+> +		inode->i_rdev = xfs_to_linux_dev_t(xfs_dinode_get_rdev(dip));
+> +		return 0;
+> +	case S_IFREG:
+> +	case S_IFLNK:
+> +	case S_IFDIR:
+> +		switch (dip->di_format) {
+> +		case XFS_DINODE_FMT_LOCAL:
+> +			return xfs_iformat_local(ip, dip, XFS_DATA_FORK,
+> +					be64_to_cpu(dip->di_size));
+> +		case XFS_DINODE_FMT_EXTENTS:
+> +			return xfs_iformat_extents(ip, dip, XFS_DATA_FORK);
+> +		case XFS_DINODE_FMT_BTREE:
+> +			return xfs_iformat_btree(ip, dip, XFS_DATA_FORK);
+> +		default:
+> +			xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__,
+> +					dip, sizeof(*dip), __this_address);
+> +			return -EFSCORRUPTED;
+> +		}
+> +		break;
+> +	default:
+> +		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, dip,
+> +				sizeof(*dip), __this_address);
+> +		return -EFSCORRUPTED;
+> +	}
+
+Can we fix this function up to use an error variable and return error at
+the end like xfs_iformat_attr_work() does? Otherwise nice cleanup..
+
+Brian
+
+> +}
+> +
+> +static uint16_t
+> +xfs_dfork_attr_shortform_size(
+> +	struct xfs_dinode		*dip)
+> +{
+> +	struct xfs_attr_shortform	*atp =
+> +		(struct xfs_attr_shortform *)XFS_DFORK_APTR(dip);
+> +
+> +	return be16_to_cpu(atp->hdr.totsize);
+> +}
+> +
+> +int
+> +xfs_iformat_attr_fork(
+> +	struct xfs_inode	*ip,
+> +	struct xfs_dinode	*dip)
+> +{
+> +	int			error = 0;
+> +
+> +	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_NOFS);
+> +	switch (dip->di_aformat) {
+> +	case XFS_DINODE_FMT_LOCAL:
+> +		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK,
+> +				xfs_dfork_attr_shortform_size(dip));
+> +		break;
+> +	case XFS_DINODE_FMT_EXTENTS:
+> +		error = xfs_iformat_extents(ip, dip, XFS_ATTR_FORK);
+> +		break;
+> +	case XFS_DINODE_FMT_BTREE:
+> +		error = xfs_iformat_btree(ip, dip, XFS_ATTR_FORK);
+> +		break;
+> +	default:
+> +		xfs_inode_verifier_error(ip, error, __func__, dip,
+> +				sizeof(*dip), __this_address);
+> +		error = -EFSCORRUPTED;
+> +		break;
+> +	}
+> +
+> +	if (error) {
+> +		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
+> +		ip->i_afp = NULL;
+> +	}
+> +	return error;
+> +}
+> +
+>  /*
+>   * Reallocate the space for if_broot based on the number of records
+>   * being added or deleted as indicated in rec_diff.  Move the records
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 668ee942be224..8487b0c88a75e 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -88,7 +88,8 @@ struct xfs_ifork {
 >  
->  void
-> @@ -647,8 +649,7 @@ xfs_iread(
->  	 * Otherwise, just get the truly permanent information.
->  	 */
->  	if (dip->di_mode) {
-> -		xfs_inode_from_disk(ip, dip);
-> -		error = xfs_iformat_fork(ip, dip);
-> +		error = xfs_inode_from_disk(ip, dip);
->  		if (error)  {
->  #ifdef DEBUG
->  			xfs_alert(mp, "%s: xfs_iformat() returned error %d",
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-> index 9b373dcf9e34d..081230faf7bdc 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.h
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> @@ -54,7 +54,7 @@ int	xfs_iread(struct xfs_mount *, struct xfs_trans *,
->  void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
->  void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to,
->  			  xfs_lsn_t lsn);
-> -void	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
-> +int	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
->  void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
->  			       struct xfs_dinode *to);
+>  struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
 >  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 11c3502b07b13..464388125d20b 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2870,9 +2870,7 @@ xfs_recover_inode_owner_change(
->  
->  	/* instantiate the inode */
->  	ASSERT(dip->di_version >= 3);
-> -	xfs_inode_from_disk(ip, dip);
-> -
-> -	error = xfs_iformat_fork(ip, dip);
-> +	error = xfs_inode_from_disk(ip, dip);
->  	if (error)
->  		goto out_free_ip;
->  
+> -int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+> +int		xfs_iformat_data_fork(struct xfs_inode *, struct xfs_dinode *);
+> +int		xfs_iformat_attr_fork(struct xfs_inode *, struct xfs_dinode *);
+>  void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+>  				struct xfs_inode_log_item *, int);
+>  void		xfs_idestroy_fork(struct xfs_inode *, int);
 > -- 
 > 2.26.2
 > 
