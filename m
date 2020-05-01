@@ -6,71 +6,62 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E877C4724C
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 08:01:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88D70C4724C
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 08:02:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A3C2208C3
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 08:01:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F4C8214D8
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 08:02:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="L3ig1AVH"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="orS9qiWO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728310AbgEAIBz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 May 2020 04:01:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55876 "EHLO
+        id S1728297AbgEAICO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 May 2020 04:02:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728297AbgEAIBz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 04:01:55 -0400
+        with ESMTP id S1728277AbgEAICO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 04:02:14 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2A4AC035494
-        for <linux-xfs@vger.kernel.org>; Fri,  1 May 2020 01:01:53 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F276C035494
+        for <linux-xfs@vger.kernel.org>; Fri,  1 May 2020 01:02:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=wsmiPebSLKvhEVIzn/cuiiElnHZJ7ECbscJmrKnx/Pg=; b=L3ig1AVHp9u8cFuFFERcEe1L2/
-        /HItixBenNsdkfA9YDZ8kxBkmhdFtKJkff56+DrbezlOHZ4ThRZmf9JE3anFN1B2e4TcwemHZJdoY
-        XDdRWS2xPHrZzngBqg8kPAnaCvYsc5tUH/G3fv3bdeW7ySXdfKAYCKRHxF6ftdLRhUEq8gJn9OimC
-        UPfPKfEP084foZEPj28oJWW71cy2mYB7fpPvM5ugvhr93FulEUqaMxZLkVB16iut7njQ7yPFoeNY7
-        76RabxhR+7QlOsETqPrlZ0+uRB7Y3rAQYyBFoxt5XolwX7tGgs7IPVO/wOhZ/4y5kwEkyTL81iNuX
-        6V5+xR3g==;
+        bh=DhSpB53Ki1HWrZVakinThisfMfyfIRplXJf3XbBo4x8=; b=orS9qiWOm3b8JRmPnxAyWPA1sD
+        e2bp7MS5Cnhc9Qk21g48aXB+pTdW4/v2yiThtzT5NKIg5/pAhVraSC1NpkOiP/CMuYHtUmW6zHpHn
+        c3jJNWGPnlR6/Bdz79lDxueC1yto7gfWcje7934DtgF4eDf04snySvyQzt4WscsX8pnUznjzgSAML
+        ZBPeVmg8rdbQwLw5n+vvvwI6yR4XFCP6GugryZ9OYdqGJuAdDPVRdEzqbDt12QvRI+yDOYXaWjk+m
+        L206+YHTsTzH43RoWEQiTsmopsohHgl0Dl6j2/DOv224tqlDwfxRxxgehN2Btj2wHP3E5kVHnwdLo
+        RjrdpViA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jUQcJ-0004CA-Gk; Fri, 01 May 2020 08:01:51 +0000
-Date:   Fri, 1 May 2020 01:01:51 -0700
+        id 1jUQcg-0004IQ-HM; Fri, 01 May 2020 08:02:14 +0000
+Date:   Fri, 1 May 2020 01:02:14 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 13/17] xfs: combine xfs_trans_ail_[remove|delete]()
-Message-ID: <20200501080151.GI29479@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 15/17] xfs: random buffer write failure errortag
+Message-ID: <20200501080214.GJ29479@infradead.org>
 References: <20200429172153.41680-1-bfoster@redhat.com>
- <20200429172153.41680-14-bfoster@redhat.com>
- <20200430185841.GN6742@magnolia>
+ <20200429172153.41680-16-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200430185841.GN6742@magnolia>
+In-Reply-To: <20200429172153.41680-16-bfoster@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 30, 2020 at 11:58:41AM -0700, Darrick J. Wong wrote:
-> On Wed, Apr 29, 2020 at 01:21:49PM -0400, Brian Foster wrote:
-> > Now that the functions and callers of
-> > xfs_trans_ail_[remove|delete]() have been fixed up appropriately,
-> > the only difference between the two is the shutdown behavior. There
-> > are only a few callers of the _remove() variant, so make the
-> > shutdown conditional on the parameter and combine the two functions.
-> > 
-> > Suggested-by: Dave Chinner <david@fromorbit.com>
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On Wed, Apr 29, 2020 at 01:21:51PM -0400, Brian Foster wrote:
+> Introduce an error tag to randomly fail async buffer writes. This is
+> primarily to facilitate testing of the XFS error configuration
+> mechanism.
 > 
-> Ok.  I guess the rest of you like this broken out though tbh I found it
-> harder to figure out why and where we were going (and used git range
-> diff as a crutch).  Not that I'm asking to have things put back.  I got
-> through it already... :)
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-The fine grained split actually allowed me to understand what was going
-on.  The large catch all patch looks vaguely nice to me, but I could
-not really reason how it was correct, this series nicely leads there.
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
