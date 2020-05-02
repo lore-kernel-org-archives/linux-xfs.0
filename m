@@ -1,147 +1,102 @@
-Return-Path: <SRS0=3WhG=6P=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=mmaA=6Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7902EC47254
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 22:54:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05EBEC3A5A9
+	for <linux-xfs@archiver.kernel.org>; Sat,  2 May 2020 08:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53DA6206B8
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 May 2020 22:54:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6E4621582
+	for <linux-xfs@archiver.kernel.org>; Sat,  2 May 2020 08:57:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0AJ1ab2N"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c9Hg1kzm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726486AbgEAWyg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 May 2020 18:54:36 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:59490 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726336AbgEAWyg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 May 2020 18:54:36 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041MniQw035632;
-        Fri, 1 May 2020 22:54:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=VsgINUB4dOK/ph54tHrMMLjIBVUKKHJuPipUU2BCAVU=;
- b=0AJ1ab2NqUtmXY8U8+ltf4fgkk1T6fwz996pBsvHw1kEsTAceflrcbdI/b3LjDqxded2
- QNQ/0rVdjQpXLr1FX9cn37v2G6HRwBpsKCka42zOAAFsU6hDGIfNaiNdOkCcUFeM78W8
- zCyN5zDiguvgJjRlIibtaOPkFuCUC73RO5Ok7B/sCE3D2LXVvVvndBweLr84H+nTBSK3
- 99wjgfXDGlzxybq08q9lzPpn6p/hZgEtyXz5bi4bCw8Lelz7cZnrmHGgtvgOqNVM0FUC
- bxKblBTnG7ea3d86QmFArYFl+uOhY83CC3uUwFgFg/5sdqwjhOs+EDhHShH+zbpsSNcj xA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 30r7f3mafa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 May 2020 22:54:34 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 041MgWwW151710;
-        Fri, 1 May 2020 22:54:34 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 30r7f572dg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 May 2020 22:54:34 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 041MsYti013771;
-        Fri, 1 May 2020 22:54:34 GMT
-Received: from [192.168.1.223] (/67.1.142.158)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 01 May 2020 15:54:33 -0700
-Subject: Re: [PATCH 02/18] xfs: fix xfs_reflink_remap_prep calling conventions
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-api@vger.kernel.org
-References: <158812825316.168506.932540609191384366.stgit@magnolia>
- <158812826681.168506.8309047158870409011.stgit@magnolia>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <80ec9426-b634-7db1-070f-06fa1508ffcf@oracle.com>
-Date:   Fri, 1 May 2020 15:54:33 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1727114AbgEBI5z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 2 May 2020 04:57:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35220 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726741AbgEBI5y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 2 May 2020 04:57:54 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB8BFC061A0C;
+        Sat,  2 May 2020 01:57:54 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id n11so5761489pgl.9;
+        Sat, 02 May 2020 01:57:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=CxqauPPQOmctuxrVdiCLcsfetiYJdmmz2EMMFCRLInI=;
+        b=c9Hg1kzmLnzzKJy7eATuX+ZL6gaW6XtQtcYcZIYc2+m5k565bjupKMQ67+GmwgC9N3
+         NZX96SMUOrxTYGKIHEok5jlMMeQzrFQYdRzRW17z6Z0pK15mp0sBO6lrcoD+roj74sha
+         ycTFmXu/GoOPC7aUCOHzF1oDF+XyP6r6wr/CTkQFILEJC3mtwJUQHBariGOnmNoeXPyo
+         EOyAlnE9o6WMlfhEX4hgU4du1634PSsnnFCCsJGwdlHi2T59zL1WsUtqq6s9p42PuNPW
+         iQ5zoc20zUPKpVGCbcbkygRjeaoE39INCXv2HFWcmENxfr+tKrhUp87YVYvohg+qcTwS
+         T90w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=CxqauPPQOmctuxrVdiCLcsfetiYJdmmz2EMMFCRLInI=;
+        b=MbNyX+gHG2NDQ652rKtexLUKT648by1mn5uDUlZO3xlANVYie/aYNTNyq39V23BuIh
+         MT+CvRfeECq2eCk8JedoLBeEJSm3jlStUjx9G/AZ7UbwvbDQoHkgQFHO0r40rJ3XuzGn
+         tm4mdO0V6eenH4g00oZvSd+NcPhsbrAt0p5CADXjsP/PXWIo11/gB7zN+9KbRfnP1lfl
+         nZGAgG5KLgFy2iEMExiTCtgu3Cvu7SkDafZiTYtQh4bPkOtmuFkVR93DI0b80H8TNTMF
+         MI7orQffQC0Nuu1IxiLeUGL4dtF7cS7YYWio16TkFP3HFaDXx764/i+/fa27bx6Usgck
+         Clrw==
+X-Gm-Message-State: AGi0PuZ/YZ87en8fGQogc0XgqmWO0IPziyYmYH3dQFJ6I/ImBKYEwT2R
+        DPezqDhYxGGDyiZJIGqOd+c=
+X-Google-Smtp-Source: APiQypLdymm8Tc66/Ky0UlyOG+4GPnuVllad082xTUrejNIYOwcCBOi1BxsPBsbmhqxhPdL7ijK7eg==
+X-Received: by 2002:a62:81c1:: with SMTP id t184mr8007784pfd.236.1588409874264;
+        Sat, 02 May 2020 01:57:54 -0700 (PDT)
+Received: from nishad ([106.51.232.103])
+        by smtp.gmail.com with ESMTPSA id f99sm1713269pjg.22.2020.05.02.01.57.50
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Sat, 02 May 2020 01:57:53 -0700 (PDT)
+Date:   Sat, 2 May 2020 14:27:47 +0530
+From:   Nishad Kamdar <nishadkamdar@gmail.com>
+To:     Chiristoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Joe Perches <joe@perches.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] xfs: Use the correct style for SPDX License Identifier
+Message-ID: <20200502085745.GA17862@nishad>
+References: <20200425133504.GA11354@nishad>
+ <20200427072527.GA3019@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <158812826681.168506.8309047158870409011.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9608 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 phishscore=0
- adultscore=0 spamscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005010157
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9608 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 suspectscore=0
- phishscore=0 mlxlogscore=999 impostorscore=0 spamscore=0 mlxscore=0
- priorityscore=1501 lowpriorityscore=0 malwarescore=0 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005010157
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200427072527.GA3019@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Apr 27, 2020 at 12:25:27AM -0700, Christoph Hellwig wrote:
+> On Sat, Apr 25, 2020 at 07:05:09PM +0530, Nishad Kamdar wrote:
+> > This patch corrects the SPDX License Identifier style in
+> > header files related to XFS File System support.
+> > For C header files Documentation/process/license-rules.rst
+> > mandates C-like comments (opposed to C source files where
+> > C++ style should be used).
+> > 
+> > Changes made by using a script provided by Joe Perches here:
+> > https://lkml.org/lkml/2019/2/7/46.
+> 
+> Please use up all 73 chars in your commit logs.
 
+Ok, I'll do that.
 
-On 4/28/20 7:44 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Fix the return value of xfs_reflink_remap_prep so that its calling
-> conventions match the rest of xfs.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Looks fine to me:
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Thanks for the review.
 
-> ---
->   fs/xfs/xfs_file.c    |    2 +-
->   fs/xfs/xfs_reflink.c |    6 +++---
->   2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 994fd3d59872..1759fbcbcd46 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1029,7 +1029,7 @@ xfs_file_remap_range(
->   	/* Prepare and then clone file data. */
->   	ret = xfs_reflink_remap_prep(file_in, pos_in, file_out, pos_out,
->   			&len, remap_flags);
-> -	if (ret < 0 || len == 0)
-> +	if (ret || len == 0)
->   		return ret;
->   
->   	trace_xfs_reflink_remap_range(src, pos_in, len, dest, pos_out);
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index d8c8b299cb1f..5e978d1f169d 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1375,7 +1375,7 @@ xfs_reflink_remap_prep(
->   	struct inode		*inode_out = file_inode(file_out);
->   	struct xfs_inode	*dest = XFS_I(inode_out);
->   	bool			same_inode = (inode_in == inode_out);
-> -	ssize_t			ret;
-> +	int			ret;
->   
->   	/* Lock both files against IO */
->   	ret = xfs_iolock_two_inodes_and_break_layout(inode_in, inode_out);
-> @@ -1399,7 +1399,7 @@ xfs_reflink_remap_prep(
->   
->   	ret = generic_remap_file_range_prep(file_in, pos_in, file_out, pos_out,
->   			len, remap_flags);
-> -	if (ret < 0 || *len == 0)
-> +	if (ret || *len == 0)
->   		goto out_unlock;
->   
->   	/* Attach dquots to dest inode before changing block map */
-> @@ -1434,7 +1434,7 @@ xfs_reflink_remap_prep(
->   	if (ret)
->   		goto out_unlock;
->   
-> -	return 1;
-> +	return 0;
->   out_unlock:
->   	xfs_reflink_remap_unlock(file_in, file_out);
->   	return ret;
-> 
+Regards,
+Nishad
