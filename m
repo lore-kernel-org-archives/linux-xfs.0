@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE5EC4725E
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D19AC47259
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C7E12075A
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C85920757
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="I+hzqTyc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BdQn6xUJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728996AbgEDOMG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 10:12:06 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:44317 "EHLO
+        id S1729008AbgEDOMH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 10:12:07 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:53795 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728985AbgEDOMF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 10:12:05 -0400
+        with ESMTP id S1729000AbgEDOMH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 10:12:07 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588601524;
+        s=mimecast20190719; t=1588601525;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=cnvrlUtTTXNcBRSmVAjOLxTemjmuhMmkcPX8X2XX/TY=;
-        b=I+hzqTycx82GbELTIpXFw0MB8li3NrfemzI+ECMQ2tgtkhzRTXYJAGkE6GV5uEuQfbEGmE
-        cke/t3YnJ5mdHNjjn3kQfaJlRP9C+qNMWYp9XTPWrlhSO3ou5OlOXf99pl+vqBD8rGwK1E
-        zWTkKkDSiVnOYCOkFS1QOwHG2botQHI=
+        bh=i5BrqoQ7fS2HqUrXU56D1G8wZT1B1R98dmd4VPdSTeQ=;
+        b=BdQn6xUJuKxuCfIqgP3arFZF72iV9ZclSjC0mhx8/g3e7aSlulf/JyyJ5NXm5r74nWEdzQ
+        NuRSMcxRTt3VQ+UEtEqSVaBFZCXx00JTLPVyVlUdD2Ma8iU4fRSyFoiEmSAJ0nuRpcUSWv
+        NfEAoqxgAdo+xRVQ5HWSjgxyBQ55vJM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-514-Fwy13vIqMBK1GEX_yDfMjw-1; Mon, 04 May 2020 10:12:02 -0400
-X-MC-Unique: Fwy13vIqMBK1GEX_yDfMjw-1
+ us-mta-305-va1FsvX-Pt2aI5FvA5oIDQ-1; Mon, 04 May 2020 10:12:03 -0400
+X-MC-Unique: va1FsvX-Pt2aI5FvA5oIDQ-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8D1BD800687
-        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:12:01 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 72DBF872FE0
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:12:02 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 45AC519C4F
-        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:12:01 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2A62819C4F
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:12:02 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v4 15/17] xfs: random buffer write failure errortag
-Date:   Mon,  4 May 2020 10:11:52 -0400
-Message-Id: <20200504141154.55887-16-bfoster@redhat.com>
+Subject: [PATCH v4 17/17] xfs: remove unused iget_flags param from xfs_imap_to_bp()
+Date:   Mon,  4 May 2020 10:11:54 -0400
+Message-Id: <20200504141154.55887-18-bfoster@redhat.com>
 In-Reply-To: <20200504141154.55887-1-bfoster@redhat.com>
 References: <20200504141154.55887-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -58,87 +58,120 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Introduce an error tag to randomly fail async buffer writes. This is
-primarily to facilitate testing of the XFS error configuration
-mechanism.
+iget_flags is unused in xfs_imap_to_bp(). Remove the parameter and
+fix up the callers.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_errortag.h | 4 +++-
- fs/xfs/xfs_buf.c             | 6 ++++++
- fs/xfs/xfs_error.c           | 3 +++
- 3 files changed, 12 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 5 ++---
+ fs/xfs/libxfs/xfs_inode_buf.h | 2 +-
+ fs/xfs/scrub/ialloc.c         | 3 +--
+ fs/xfs/xfs_inode.c            | 7 +++----
+ fs/xfs/xfs_log_recover.c      | 2 +-
+ 5 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 79e6c4fb1d8a..2486dab19023 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -55,7 +55,8 @@
- #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
- #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
- #define XFS_ERRTAG_IUNLINK_FALLBACK			34
--#define XFS_ERRTAG_MAX					35
-+#define XFS_ERRTAG_BUF_IOERROR				35
-+#define XFS_ERRTAG_MAX					36
-=20
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -95,5 +96,6 @@
- #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
- #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
- #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
-+#define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
-=20
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 8f0f605de579..61629efd56ee 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1289,6 +1289,12 @@ xfs_buf_bio_end_io(
- 	struct bio		*bio)
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.=
+c
+index b102e611bf54..81a010422bea 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -161,8 +161,7 @@ xfs_imap_to_bp(
+ 	struct xfs_imap		*imap,
+ 	struct xfs_dinode       **dipp,
+ 	struct xfs_buf		**bpp,
+-	uint			buf_flags,
+-	uint			iget_flags)
++	uint			buf_flags)
  {
- 	struct xfs_buf		*bp =3D (struct xfs_buf *)bio->bi_private;
-+	struct xfs_mount	*mp =3D bp->b_mount;
-+
-+	if (!bio->bi_status &&
-+	    (bp->b_flags & XBF_WRITE) && (bp->b_flags & XBF_ASYNC) &&
-+	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BUF_IOERROR))
-+		bio->bi_status =3D BLK_STS_IOERR;
-=20
+ 	struct xfs_buf		*bp;
+ 	int			error;
+@@ -621,7 +620,7 @@ xfs_iread(
  	/*
- 	 * don't overwrite existing errors - otherwise we can lose errors on
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index a21e9cc6516a..7f6e20899473 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -53,6 +53,7 @@ static unsigned int xfs_errortag_random_default[] =3D {
- 	XFS_RANDOM_FORCE_SCRUB_REPAIR,
- 	XFS_RANDOM_FORCE_SUMMARY_RECALC,
- 	XFS_RANDOM_IUNLINK_FALLBACK,
-+	XFS_RANDOM_BUF_IOERROR,
- };
+ 	 * Get pointers to the on-disk inode and the buffer containing it.
+ 	 */
+-	error =3D xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &bp, 0, iget_flags)=
+;
++	error =3D xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &bp, 0);
+ 	if (error)
+ 		return error;
 =20
- struct xfs_errortag_attr {
-@@ -162,6 +163,7 @@ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_=
-REF);
- XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
- XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
- XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
-+XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.=
+h
+index 9b373dcf9e34..d9b4781ac9fd 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -48,7 +48,7 @@ struct xfs_imap {
 =20
- static struct attribute *xfs_errortag_attrs[] =3D {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -199,6 +201,7 @@ static struct attribute *xfs_errortag_attrs[] =3D {
- 	XFS_ERRORTAG_ATTR_LIST(force_repair),
- 	XFS_ERRORTAG_ATTR_LIST(bad_summary),
- 	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
-+	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
- 	NULL,
- };
+ int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+ 		       struct xfs_imap *, struct xfs_dinode **,
+-		       struct xfs_buf **, uint, uint);
++		       struct xfs_buf **, uint);
+ int	xfs_iread(struct xfs_mount *, struct xfs_trans *,
+ 		  struct xfs_inode *, uint);
+ void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
+diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
+index 64c217eb06a7..6517d67e8d51 100644
+--- a/fs/xfs/scrub/ialloc.c
++++ b/fs/xfs/scrub/ialloc.c
+@@ -278,8 +278,7 @@ xchk_iallocbt_check_cluster(
+ 			&XFS_RMAP_OINFO_INODES);
+=20
+ 	/* Grab the inode cluster buffer. */
+-	error =3D xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &cluster_bp,
+-			0, 0);
++	error =3D xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &cluster_bp, =
+0);
+ 	if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0, &error))
+ 		return error;
+=20
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index e0d9a5bf7507..4f915b91b9fd 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2172,7 +2172,7 @@ xfs_iunlink_update_inode(
+=20
+ 	ASSERT(xfs_verify_agino_or_null(mp, agno, next_agino));
+=20
+-	error =3D xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp, 0, 0);
++	error =3D xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp, 0);
+ 	if (error)
+ 		return error;
+=20
+@@ -2302,7 +2302,7 @@ xfs_iunlink_map_ino(
+ 		return error;
+ 	}
+=20
+-	error =3D xfs_imap_to_bp(mp, tp, imap, dipp, bpp, 0, 0);
++	error =3D xfs_imap_to_bp(mp, tp, imap, dipp, bpp, 0);
+ 	if (error) {
+ 		xfs_warn(mp, "%s: xfs_imap_to_bp returned error %d.",
+ 				__func__, error);
+@@ -3665,8 +3665,7 @@ xfs_iflush(
+ 	 * If we get any other error, we effectively have a corruption situatio=
+n
+ 	 * and we cannot flush the inode. Abort the flush and shut down.
+ 	 */
+-	error =3D xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK,
+-			       0);
++	error =3D xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK)=
+;
+ 	if (error =3D=3D -EAGAIN) {
+ 		xfs_ifunlock(ip);
+ 		return error;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 11c3502b07b1..6a98fd9f00b3 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -4987,7 +4987,7 @@ xlog_recover_process_one_iunlink(
+ 	/*
+ 	 * Get the on disk inode to find the next inode in the bucket.
+ 	 */
+-	error =3D xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &ibp, 0, 0);
++	error =3D xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &ibp, 0);
+ 	if (error)
+ 		goto fail_iput;
 =20
 --=20
 2.21.1
