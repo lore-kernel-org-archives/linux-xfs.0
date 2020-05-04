@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 364A4C4725B
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E55C4725F
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1227320705
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01C6D20705
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XEclVoSh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="flSXOJ75"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729010AbgEDOMF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 10:12:05 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:36511 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728997AbgEDOME (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 10:12:04 -0400
+        id S1728985AbgEDOMH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 10:12:07 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:56382 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729008AbgEDOMG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 10:12:06 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588601522;
+        s=mimecast20190719; t=1588601524;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=NOOtmd5TI9IDGofjGJk8LbM6lfRAA57QevKxYvNZkwY=;
-        b=XEclVoShpxuDdxKP54W4s5ASk4TPKbAwsB4seSEncvp75kCr8jaC5cBY+ZM0e8rDfpi6xl
-        A1fNa35D2EiS/O4MKabWNDKEY/aqvNnjoxEejiAjJ9bJlCHDy5HyJCZrFTGtNXEw+3k7QL
-        hqFK5ja21odWhd9p7y7p445vq/hY+SY=
+        bh=hifscyCk2JNucqMWnXfQmQAvC/2OfdhyhRO48RC6eJE=;
+        b=flSXOJ754Gu9upTFiRHVDy2KedwGlqaLFNZ7kdZWZnbBRMGkQX2BK4oAK0rGxTJQ/d7rWq
+        /aPB9/X8EOlT6FBIRSzgwozL2hRC0lxBD7sZHTJbSszv+phUgIS6X1ayp2T2y5siyxFl+w
+        DSGEoG+qne7+M5L1YSIi/njICMF+bfE=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-415-Q3w53dgHMkmm8sC_wAAz7g-1; Mon, 04 May 2020 10:12:00 -0400
-X-MC-Unique: Q3w53dgHMkmm8sC_wAAz7g-1
+ us-mta-479-NCxVlLpxONqKGilhyHJOgA-1; Mon, 04 May 2020 10:12:02 -0400
+X-MC-Unique: NCxVlLpxONqKGilhyHJOgA-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C4A0EEC1A4
-        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:11:59 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 20FD1107ACCD
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:12:01 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7F6981C92D
-        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:11:59 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id CD7AC2C259
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:12:00 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v4 11/17] xfs: use delete helper for items expected to be in AIL
-Date:   Mon,  4 May 2020 10:11:48 -0400
-Message-Id: <20200504141154.55887-12-bfoster@redhat.com>
+Subject: [PATCH v4 14/17] xfs: remove unused iflush stale parameter
+Date:   Mon,  4 May 2020 10:11:51 -0400
+Message-Id: <20200504141154.55887-15-bfoster@redhat.com>
 In-Reply-To: <20200504141154.55887-1-bfoster@redhat.com>
 References: <20200504141154.55887-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -58,84 +58,87 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Various intent log items call xfs_trans_ail_remove() with a log I/O
-error shutdown type, but this helper historically checks whether an
-item is in the AIL before calling xfs_trans_ail_delete(). This means
-the shutdown check is essentially a no-op for users of
-xfs_trans_ail_remove().
-
-It is possible that some items might not be AIL resident when the
-AIL remove attempt occurs, but this should be isolated to cases
-where the filesystem has already shutdown. For example, this
-includes abort of the transaction committing the intent and I/O
-error of the iclog buffer committing the intent to the log.
-Therefore, update these callsites to use xfs_trans_ail_delete() to
-provide AIL state validation for the common path of items being
-released and removed when associated done items commit to the
-physical log.
+The stale parameter was used to control the now unused shutdown
+parameter of xfs_trans_ail_remove().
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_item.c     | 2 +-
- fs/xfs/xfs_extfree_item.c  | 2 +-
- fs/xfs/xfs_refcount_item.c | 2 +-
- fs/xfs/xfs_rmap_item.c     | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_icache.c     | 2 +-
+ fs/xfs/xfs_inode.c      | 2 +-
+ fs/xfs/xfs_inode_item.c | 7 +++----
+ fs/xfs/xfs_inode_item.h | 2 +-
+ 4 files changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index ee6f4229cebc..909221a4a8ab 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -51,7 +51,7 @@ xfs_bui_release(
- {
- 	ASSERT(atomic_read(&buip->bui_refcount) > 0);
- 	if (atomic_dec_and_test(&buip->bui_refcount)) {
--		xfs_trans_ail_remove(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
-+		xfs_trans_ail_delete(&buip->bui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_bui_item_free(buip);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 8bf1d15be3f6..7032efcb6814 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1128,7 +1128,7 @@ xfs_reclaim_inode(
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		xfs_iunpin_wait(ip);
+ 		/* xfs_iflush_abort() drops the flush lock */
+-		xfs_iflush_abort(ip, false);
++		xfs_iflush_abort(ip);
+ 		goto reclaim;
  	}
- }
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 6ea847f6e298..cd98eba24884 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -55,7 +55,7 @@ xfs_efi_release(
+ 	if (xfs_ipincount(ip)) {
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6fb3e26afa8b..e0d9a5bf7507 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3702,7 +3702,7 @@ xfs_iflush(
+ 	return 0;
+=20
+ abort:
+-	xfs_iflush_abort(ip, false);
++	xfs_iflush_abort(ip);
+ shutdown:
+ 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ 	return error;
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 1a02058178d1..cefa2484f0db 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -762,10 +762,9 @@ xfs_iflush_done(
+  */
+ void
+ xfs_iflush_abort(
+-	xfs_inode_t		*ip,
+-	bool			stale)
++	struct xfs_inode		*ip)
  {
- 	ASSERT(atomic_read(&efip->efi_refcount) > 0);
- 	if (atomic_dec_and_test(&efip->efi_refcount)) {
--		xfs_trans_ail_remove(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
-+		xfs_trans_ail_delete(&efip->efi_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_efi_item_free(efip);
- 	}
- }
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 8eeed73928cd..712939a015a9 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -50,7 +50,7 @@ xfs_cui_release(
+-	xfs_inode_log_item_t	*iip =3D ip->i_itemp;
++	struct xfs_inode_log_item	*iip =3D ip->i_itemp;
+=20
+ 	if (iip) {
+ 		xfs_trans_ail_delete(&iip->ili_item, 0);
+@@ -793,7 +792,7 @@ xfs_istale_done(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_log_item	*lip)
  {
- 	ASSERT(atomic_read(&cuip->cui_refcount) > 0);
- 	if (atomic_dec_and_test(&cuip->cui_refcount)) {
--		xfs_trans_ail_remove(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
-+		xfs_trans_ail_delete(&cuip->cui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_cui_item_free(cuip);
- 	}
+-	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode, true);
++	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode);
  }
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 4911b68f95dd..ff949b32c051 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -50,7 +50,7 @@ xfs_rui_release(
- {
- 	ASSERT(atomic_read(&ruip->rui_refcount) > 0);
- 	if (atomic_dec_and_test(&ruip->rui_refcount)) {
--		xfs_trans_ail_remove(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
-+		xfs_trans_ail_delete(&ruip->rui_item, SHUTDOWN_LOG_IO_ERROR);
- 		xfs_rui_item_free(ruip);
- 	}
- }
+=20
+ /*
+diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+index 07a60e74c39c..a68c114b79a0 100644
+--- a/fs/xfs/xfs_inode_item.h
++++ b/fs/xfs/xfs_inode_item.h
+@@ -34,7 +34,7 @@ extern void xfs_inode_item_init(struct xfs_inode *, str=
+uct xfs_mount *);
+ extern void xfs_inode_item_destroy(struct xfs_inode *);
+ extern void xfs_iflush_done(struct xfs_buf *, struct xfs_log_item *);
+ extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
+-extern void xfs_iflush_abort(struct xfs_inode *, bool);
++extern void xfs_iflush_abort(struct xfs_inode *);
+ extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
+ 					 struct xfs_inode_log_format *);
+=20
 --=20
 2.21.1
 
