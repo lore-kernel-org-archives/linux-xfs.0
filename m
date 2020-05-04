@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D19AC47259
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D90C47258
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C85920757
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8C292075A
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BdQn6xUJ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="B+HlH/uo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729008AbgEDOMH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 10:12:07 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:53795 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729000AbgEDOMH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 10:12:07 -0400
+        id S1729011AbgEDOMG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 10:12:06 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:27065 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728993AbgEDOME (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 10:12:04 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588601525;
+        s=mimecast20190719; t=1588601522;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=i5BrqoQ7fS2HqUrXU56D1G8wZT1B1R98dmd4VPdSTeQ=;
-        b=BdQn6xUJuKxuCfIqgP3arFZF72iV9ZclSjC0mhx8/g3e7aSlulf/JyyJ5NXm5r74nWEdzQ
-        NuRSMcxRTt3VQ+UEtEqSVaBFZCXx00JTLPVyVlUdD2Ma8iU4fRSyFoiEmSAJ0nuRpcUSWv
-        NfEAoqxgAdo+xRVQ5HWSjgxyBQ55vJM=
+        bh=RAHp6lPwVTIZs5OxnXXTP0KEpOqUUJuxs8Q5y6XkSsg=;
+        b=B+HlH/uot97J+Qdf83pMyO9fXwJwUfw7LwHJ5LClToCUGHDcEbcR7wrmCfc30HkyY7FIPI
+        WtjLmrgQHU9J0j70IUFy0LyyJvBB1mWgC4dPPN98+VZ0v0uyWDGgAVX+aFgFOzbgIP3bBh
+        RxmqC4Xo9LVSaGkkKnqk9DxogEsuc+A=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-305-va1FsvX-Pt2aI5FvA5oIDQ-1; Mon, 04 May 2020 10:12:03 -0400
-X-MC-Unique: va1FsvX-Pt2aI5FvA5oIDQ-1
+ us-mta-3-fsboJ9hIPR6XRcS4y3TcjA-1; Mon, 04 May 2020 10:11:56 -0400
+X-MC-Unique: fsboJ9hIPR6XRcS4y3TcjA-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 72DBF872FE0
-        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:12:02 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CBA77107ACF5
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:11:55 +0000 (UTC)
 Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2A62819C4F
-        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:12:02 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 837702C2D3
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:11:55 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v4 17/17] xfs: remove unused iget_flags param from xfs_imap_to_bp()
-Date:   Mon,  4 May 2020 10:11:54 -0400
-Message-Id: <20200504141154.55887-18-bfoster@redhat.com>
+Subject: [PATCH v4 02/17] xfs: factor out buffer I/O failure code
+Date:   Mon,  4 May 2020 10:11:39 -0400
+Message-Id: <20200504141154.55887-3-bfoster@redhat.com>
 In-Reply-To: <20200504141154.55887-1-bfoster@redhat.com>
 References: <20200504141154.55887-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -58,121 +58,133 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-iget_flags is unused in xfs_imap_to_bp(). Remove the parameter and
-fix up the callers.
+We use the same buffer I/O failure code in a few different places.
+It's not much code, but it's not necessarily self-explanatory.
+Factor it into a helper and document it in one place.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c | 5 ++---
- fs/xfs/libxfs/xfs_inode_buf.h | 2 +-
- fs/xfs/scrub/ialloc.c         | 3 +--
- fs/xfs/xfs_inode.c            | 7 +++----
- fs/xfs/xfs_log_recover.c      | 2 +-
- 5 files changed, 8 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_buf.c      | 21 +++++++++++++++++----
+ fs/xfs/xfs_buf.h      |  1 +
+ fs/xfs/xfs_buf_item.c | 21 +++------------------
+ fs/xfs/xfs_inode.c    |  6 +-----
+ 4 files changed, 22 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.=
-c
-index b102e611bf54..81a010422bea 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -161,8 +161,7 @@ xfs_imap_to_bp(
- 	struct xfs_imap		*imap,
- 	struct xfs_dinode       **dipp,
- 	struct xfs_buf		**bpp,
--	uint			buf_flags,
--	uint			iget_flags)
-+	uint			buf_flags)
- {
- 	struct xfs_buf		*bp;
- 	int			error;
-@@ -621,7 +620,7 @@ xfs_iread(
- 	/*
- 	 * Get pointers to the on-disk inode and the buffer containing it.
- 	 */
--	error =3D xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &bp, 0, iget_flags)=
-;
-+	error =3D xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &bp, 0);
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 9ec3eaf1c618..d5d6a68bb1e6 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1248,6 +1248,22 @@ xfs_buf_ioerror_alert(
+ 			-bp->b_error);
+ }
 =20
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.=
-h
-index 9b373dcf9e34..d9b4781ac9fd 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -48,7 +48,7 @@ struct xfs_imap {
++/*
++ * To simulate an I/O failure, the buffer must be locked and held with a=
+t least
++ * three references. The LRU reference is dropped by the stale call. The=
+ buf
++ * item reference is dropped via ioend processing. The third reference i=
+s owned
++ * by the caller and is dropped on I/O completion if the buffer is XBF_A=
+SYNC.
++ */
++void
++xfs_buf_ioend_fail(
++	struct xfs_buf	*bp)
++{
++	bp->b_flags &=3D ~XBF_DONE;
++	xfs_buf_stale(bp);
++	xfs_buf_ioerror(bp, -EIO);
++	xfs_buf_ioend(bp);
++}
++
+ int
+ xfs_bwrite(
+ 	struct xfs_buf		*bp)
+@@ -1480,10 +1496,7 @@ __xfs_buf_submit(
 =20
- int	xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
- 		       struct xfs_imap *, struct xfs_dinode **,
--		       struct xfs_buf **, uint, uint);
-+		       struct xfs_buf **, uint);
- int	xfs_iread(struct xfs_mount *, struct xfs_trans *,
- 		  struct xfs_inode *, uint);
- void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
-diff --git a/fs/xfs/scrub/ialloc.c b/fs/xfs/scrub/ialloc.c
-index 64c217eb06a7..6517d67e8d51 100644
---- a/fs/xfs/scrub/ialloc.c
-+++ b/fs/xfs/scrub/ialloc.c
-@@ -278,8 +278,7 @@ xchk_iallocbt_check_cluster(
- 			&XFS_RMAP_OINFO_INODES);
-=20
- 	/* Grab the inode cluster buffer. */
--	error =3D xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &cluster_bp,
--			0, 0);
-+	error =3D xfs_imap_to_bp(mp, bs->cur->bc_tp, &imap, &dip, &cluster_bp, =
-0);
- 	if (!xchk_btree_xref_process_error(bs->sc, bs->cur, 0, &error))
- 		return error;
-=20
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index e0d9a5bf7507..4f915b91b9fd 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2172,7 +2172,7 @@ xfs_iunlink_update_inode(
-=20
- 	ASSERT(xfs_verify_agino_or_null(mp, agno, next_agino));
-=20
--	error =3D xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp, 0, 0);
-+	error =3D xfs_imap_to_bp(mp, tp, &ip->i_imap, &dip, &ibp, 0);
- 	if (error)
- 		return error;
-=20
-@@ -2302,7 +2302,7 @@ xfs_iunlink_map_ino(
- 		return error;
+ 	/* on shutdown we stale and complete the buffer immediately */
+ 	if (XFS_FORCED_SHUTDOWN(bp->b_mount)) {
+-		xfs_buf_ioerror(bp, -EIO);
+-		bp->b_flags &=3D ~XBF_DONE;
+-		xfs_buf_stale(bp);
+-		xfs_buf_ioend(bp);
++		xfs_buf_ioend_fail(bp);
+ 		return -EIO;
  	}
 =20
--	error =3D xfs_imap_to_bp(mp, tp, imap, dipp, bpp, 0, 0);
-+	error =3D xfs_imap_to_bp(mp, tp, imap, dipp, bpp, 0);
- 	if (error) {
- 		xfs_warn(mp, "%s: xfs_imap_to_bp returned error %d.",
- 				__func__, error);
-@@ -3665,8 +3665,7 @@ xfs_iflush(
- 	 * If we get any other error, we effectively have a corruption situatio=
-n
- 	 * and we cannot flush the inode. Abort the flush and shut down.
- 	 */
--	error =3D xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK,
--			       0);
-+	error =3D xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK)=
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 9a04c53c2488..06ea3eef866e 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -263,6 +263,7 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int=
+ error,
+ 		xfs_failaddr_t failaddr);
+ #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_a=
+ddress)
+ extern void xfs_buf_ioerror_alert(struct xfs_buf *bp, xfs_failaddr_t fa)=
 ;
- 	if (error =3D=3D -EAGAIN) {
- 		xfs_ifunlock(ip);
- 		return error;
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 11c3502b07b1..6a98fd9f00b3 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -4987,7 +4987,7 @@ xlog_recover_process_one_iunlink(
- 	/*
- 	 * Get the on disk inode to find the next inode in the bucket.
- 	 */
--	error =3D xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &ibp, 0, 0);
-+	error =3D xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &ibp, 0);
- 	if (error)
- 		goto fail_iput;
++void xfs_buf_ioend_fail(struct xfs_buf *);
 =20
+ extern int __xfs_buf_submit(struct xfs_buf *bp, bool);
+ static inline int xfs_buf_submit(struct xfs_buf *bp)
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 8796adde2d12..b452a399a441 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -471,28 +471,13 @@ xfs_buf_item_unpin(
+ 		xfs_buf_relse(bp);
+ 	} else if (freed && remove) {
+ 		/*
+-		 * There are currently two references to the buffer - the active
+-		 * LRU reference and the buf log item. What we are about to do
+-		 * here - simulate a failed IO completion - requires 3
+-		 * references.
+-		 *
+-		 * The LRU reference is removed by the xfs_buf_stale() call. The
+-		 * buf item reference is removed by the xfs_buf_iodone()
+-		 * callback that is run by xfs_buf_do_callbacks() during ioend
+-		 * processing (via the bp->b_iodone callback), and then finally
+-		 * the ioend processing will drop the IO reference if the buffer
+-		 * is marked XBF_ASYNC.
+-		 *
+-		 * Hence we need to take an additional reference here so that IO
+-		 * completion processing doesn't free the buffer prematurely.
++		 * The buffer must be locked and held by the caller to simulate
++		 * an async I/O failure.
+ 		 */
+ 		xfs_buf_lock(bp);
+ 		xfs_buf_hold(bp);
+ 		bp->b_flags |=3D XBF_ASYNC;
+-		xfs_buf_ioerror(bp, -EIO);
+-		bp->b_flags &=3D ~XBF_DONE;
+-		xfs_buf_stale(bp);
+-		xfs_buf_ioend(bp);
++		xfs_buf_ioend_fail(bp);
+ 	}
+ }
+=20
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d1772786af29..909ca7c0bac4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3630,11 +3630,7 @@ xfs_iflush_cluster(
+ 	 */
+ 	ASSERT(bp->b_iodone);
+ 	bp->b_flags |=3D XBF_ASYNC;
+-	bp->b_flags &=3D ~XBF_DONE;
+-	xfs_buf_stale(bp);
+-	xfs_buf_ioerror(bp, -EIO);
+-	xfs_buf_ioend(bp);
+-
++	xfs_buf_ioend_fail(bp);
+ 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+=20
+ 	/* abort the corrupt inode, as it was not attached to the buffer */
 --=20
 2.21.1
 
