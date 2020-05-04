@@ -7,140 +7,116 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC3AEC3A5A9
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 13:30:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EE0CC47254
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2FE52075B
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 13:30:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2F2520757
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 May 2020 14:12:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ClvkAunT"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UsyNF+ir"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727783AbgEDNa3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 09:30:29 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:34202 "EHLO
+        id S1726404AbgEDOMA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 10:12:00 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:27168 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726404AbgEDNa3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 09:30:29 -0400
+        by vger.kernel.org with ESMTP id S1728187AbgEDOMA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 10:12:00 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588599027;
+        s=mimecast20190719; t=1588601519;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Th0/XxMgoyf798jPzQmoNByPw1ZSy60ZdfSfw+/Ccyw=;
-        b=ClvkAunTx/OWBbvQVJtCeynbMZQJezs3ay6G0jthdID1EwzdJ3fXSr8BMDu9DSwOUiDUFE
-        b+Ziq45zLqHEwN2130Ffx54hFjVB+gKpgOMZC1VewhDi0lHeKwsitxe7pPjt2htKEnRr+4
-        rN9VPnQIcHiI0p+BhGzIGeJMwisSir4=
+        bh=121IX8pXtNLmfAampVbc5HIGjGkfsjmDouu7IKBf+YQ=;
+        b=UsyNF+irMSzPWiVs1GuNTH8I2zGPTPKwRYv03u2eGaqGbN+1Tu9a8m2nRV9rdgpPrdqe7d
+        GG7I9KAPLLZhPpFVH2DESvdpeZunPuD2rshQlkQAhLjwzC0cAeryHSfvD3I14fQOmiVJEq
+        MHaOJFNpPe9LUZP594OvadkvXf0wo0c=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-243-TQKcZNYPNNuY9jF9dGD52w-1; Mon, 04 May 2020 09:30:25 -0400
-X-MC-Unique: TQKcZNYPNNuY9jF9dGD52w-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-484-dn3_tUZsP32C4v9zpFup_A-1; Mon, 04 May 2020 10:11:57 -0400
+X-MC-Unique: dn3_tUZsP32C4v9zpFup_A-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CDD56835B40;
-        Mon,  4 May 2020 13:30:24 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6FE5460C80;
-        Mon,  4 May 2020 13:30:24 +0000 (UTC)
-Date:   Mon, 4 May 2020 09:30:22 -0400
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AE1721009600
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:11:56 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 67E3919C4F
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 14:11:56 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v9 13/24] xfs: Remove unneeded xfs_trans_roll_inode calls
-Message-ID: <20200504133022.GD54625@bfoster>
-References: <20200430225016.4287-1-allison.henderson@oracle.com>
- <20200430225016.4287-14-allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v4 04/17] xfs: remove unnecessary shutdown check from xfs_iflush()
+Date:   Mon,  4 May 2020 10:11:41 -0400
+Message-Id: <20200504141154.55887-5-bfoster@redhat.com>
+In-Reply-To: <20200504141154.55887-1-bfoster@redhat.com>
+References: <20200504141154.55887-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200430225016.4287-14-allison.henderson@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 30, 2020 at 03:50:05PM -0700, Allison Collins wrote:
-> Some calls to xfs_trans_roll_inode and xfs_defer_finish routines are not
-> needed. If they are the last operations executed in these functions, and
-> no further changes are made, then higher level routines will roll or
-> commit the tranactions. The xfs_trans_roll in _removename is also not
-> needed because invalidating blocks is an incore-only change.
-> 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 40 ----------------------------------------
->  1 file changed, 40 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index d83443c..af47566 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-...
-> @@ -784,9 +770,6 @@ xfs_attr_leaf_removename(
->  		/* bp is gone due to xfs_da_shrink_inode */
->  		if (error)
->  			return error;
-> -		error = xfs_defer_finish(&args->trans);
-> -		if (error)
-> -			return error;
->  	}
->  	return 0;
+The shutdown check in xfs_iflush() duplicates checks down in the
+buffer code. If the fs is shut down, xfs_trans_read_buf_map() always
+returns an error and falls into the same error path. Remove the
+unnecessary check along with the warning in xfs_imap_to_bp()
+that generates excessive noise in the log if the fs is shut down.
 
-Looks like this could be simplified to return error at the end of the
-function. Some of the others might have similar simplifications
-available.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_inode_buf.c |  7 +------
+ fs/xfs/xfs_inode.c            | 13 -------------
+ 2 files changed, 1 insertion(+), 19 deletions(-)
 
->  }
-> @@ -1074,13 +1057,6 @@ xfs_attr_node_addname(
->  				goto out;
->  		}
->  
-> -		/*
-> -		 * Commit and start the next trans in the chain.
-> -		 */
-> -		error = xfs_trans_roll_inode(&args->trans, dp);
-> -		if (error)
-> -			goto out;
-> -
-
-There's an xfs_defer_finish() before this roll. Is that not also
-extraneous? It looks like we return straight up to xfs_attr_set() (trans
-commit) from here..
-
->  	} else if (args->rmtblkno > 0) {
->  		/*
->  		 * Added a "remote" value, just clear the incomplete flag.
-...
-> @@ -1194,10 +1158,6 @@ xfs_attr_node_removename(
->  		if (error)
->  			goto out;
->  
-> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> -		if (error)
-> -			goto out;
-> -
-
-I'm still a bit on the fence about this one. At first glance it looks
-like it's not necessary, but technically we're changing behavior by
-combining setting the inactive flag and the first remote block unmap,
-right? If so, that seems fairly reasonable, but it's hard to say for
-sure with the state of the xattr transaction reservations...
-
-Looking around some more, I suppose this could be analogous to the
-!remote remove case where an entry is removed and a potential dabtree
-join occurs under the same transaction. If that's the best argument we
-have, however, I might suggest to split this one out into an independent
-patch and let the commit log describe what's going on in more detail.
-That way it's more obvious to reviewers and if it's wrong it's easier to
-revert.
-
-Brian
-
->  		error = xfs_attr_rmtval_invalidate(args);
->  		if (error)
->  			return error;
-> -- 
-> 2.7.4
-> 
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.=
+c
+index 39c5a6e24915..b102e611bf54 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -172,12 +172,7 @@ xfs_imap_to_bp(
+ 				   (int)imap->im_len, buf_flags, &bp,
+ 				   &xfs_inode_buf_ops);
+ 	if (error) {
+-		if (error =3D=3D -EAGAIN) {
+-			ASSERT(buf_flags & XBF_TRYLOCK);
+-			return error;
+-		}
+-		xfs_warn(mp, "%s: xfs_trans_read_buf() returned error %d.",
+-			__func__, error);
++		ASSERT(error !=3D -EAGAIN || (buf_flags & XBF_TRYLOCK));
+ 		return error;
+ 	}
+=20
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 84f2ee9957dc..6fb3e26afa8b 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3657,19 +3657,6 @@ xfs_iflush(
+ 		return 0;
+ 	}
+=20
+-	/*
+-	 * This may have been unpinned because the filesystem is shutting
+-	 * down forcibly. If that's the case we must not write this inode
+-	 * to disk, because the log record didn't make it to disk.
+-	 *
+-	 * We also have to remove the log item from the AIL in this case,
+-	 * as we wait for an empty AIL as part of the unmount process.
+-	 */
+-	if (XFS_FORCED_SHUTDOWN(mp)) {
+-		error =3D -EIO;
+-		goto abort;
+-	}
+-
+ 	/*
+ 	 * Get the buffer containing the on-disk inode. We are doing a try-lock
+ 	 * operation here, so we may get an EAGAIN error. In that case, return
+--=20
+2.21.1
 
