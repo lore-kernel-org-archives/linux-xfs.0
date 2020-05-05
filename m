@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF311C47247
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 21:09:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8240EC47254
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 21:09:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B505B206FA
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 21:09:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DCB2206FA
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 21:09:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GOtrJU/r"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MHF3lv7Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729218AbgEEVJt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 May 2020 17:09:49 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:49932 "EHLO
+        id S1729222AbgEEVJz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 May 2020 17:09:55 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50016 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729096AbgEEVJt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 17:09:49 -0400
+        with ESMTP id S1729096AbgEEVJy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 17:09:54 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045L39U5117084;
-        Tue, 5 May 2020 21:09:46 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045L3SHT117195;
+        Tue, 5 May 2020 21:09:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
  bh=x1oCuyXBAYVZe4BTdJgwb0shpupG1gsll20tDZTiAcs=;
- b=GOtrJU/rtQyiUndyzOsrSRFDewQXLty3G8tpIqXp3p6L1liH9r8ifNQXSUa5XGN+dAG7
- 3UVAh4XiuFG+eR2v+Kvwhp4ZZ12VOeOzQXXT2jPbZ6oEN/PUaZyq7KeEGNX/V0NTQSAX
- FKsMiZ5yjDd3+d8yzrCE+Rqjz6IgCfDIDPy43JdxvAhGJCN7CaBZt3CNFSDyWMxwXr13
- IoCuz4Wc6qTwamLkunVswoXAwkPrc7Wna/6o+jGlAcWJtE/mP6ARkg2UVlg6ZDx0a1OP
- Ov4oNGpvC/kTyYJ6mqEvNuW0jAPjy861Dsm/a5t0vB1Ja6BvXsxniuvtNb6dKfGiSapI 8Q== 
+ b=MHF3lv7QtrnhS2Dr4u/LkL0J/7/SdwfMRYW6oiVkMhDiw6s3kWyEfdltV68nyLb4qO4p
+ Er4fXmt+Y/y785se7Ls1B+JC4KYcQ+vbJdglK42no0yAaCZ5kkHNhjdElB/OUsHKGLgm
+ rdRASjHeqRdQ0MxwYyJOZalArN5FStOnjNLIAmNtmDNnvk+4hRowaXCH1nfQlE+zZtWN
+ iE3li6chFMWgcsn0gZf//nAIdAYW93dWA/ZhX/zfovq+Jlvz+nICqLSkriV75+dSuKft
+ hLrZmFkFosULtcxDUgVn4G8OxpEg++v8MvsLbhWhD/AmbQopYSzxxuBNgn29i60tuL59 Fw== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 30s0tmf4x5-1
+        by aserp2120.oracle.com with ESMTP id 30s0tmf4xq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 May 2020 21:09:46 +0000
+        Tue, 05 May 2020 21:09:52 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045L5ZIt051962;
-        Tue, 5 May 2020 21:09:46 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 30sjnfsapd-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045L5a94052038;
+        Tue, 5 May 2020 21:09:52 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 30sjnfsaxj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 May 2020 21:09:46 +0000
+        Tue, 05 May 2020 21:09:52 +0000
 Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 045L9jqY030134;
-        Tue, 5 May 2020 21:09:45 GMT
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 045L9oa1029608;
+        Tue, 5 May 2020 21:09:50 GMT
 Received: from [192.168.1.223] (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 05 May 2020 14:09:44 -0700
+        with ESMTP ; Tue, 05 May 2020 14:09:50 -0700
 Subject: Re: [PATCH v4 05/17] xfs: reset buffer write failure state on
  successful completion
 To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 References: <20200504141154.55887-1-bfoster@redhat.com>
  <20200504141154.55887-6-bfoster@redhat.com>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <27692122-2a15-afb9-ae5d-e7db9b59e2d2@oracle.com>
-Date:   Tue, 5 May 2020 14:09:44 -0700
+Message-ID: <29fcc710-1fed-c1d1-c1e1-e7326abec25d@oracle.com>
+Date:   Tue, 5 May 2020 14:09:50 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
