@@ -2,191 +2,368 @@ Return-Path: <SRS0=NnDK=6T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F7EC47254
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 19:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 283ACC47254
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 21:09:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C35E206B9
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 19:08:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9F84206FA
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 21:09:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rXkLlsI4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uGxfeGco"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728642AbgEETIv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 May 2020 15:08:51 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:33064 "EHLO
+        id S1726350AbgEEVJk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 May 2020 17:09:40 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:49444 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726350AbgEETIv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 15:08:51 -0400
+        with ESMTP id S1729011AbgEEVJj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 17:09:39 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045J7coM159710;
-        Tue, 5 May 2020 19:08:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=V2hL+6Bez3Q3m0q2Rc41n9inqnvS/19/CsyiCZ2KHJo=;
- b=rXkLlsI4numFEfvz1dPnicEv13RA4X6p9rhHRHDISIvFLyzXgNuXYficoD/r0HBjl+KU
- F/MVAaVhId/NOsXxAWNLE/5W4m8AQGiceXkKylWOGFpy3QfQKN4Diy0Fm9IFYk/noegO
- LC6LKOXNc7CKZ+TvQieWVsHqn/YtzpW5u5+ZTPfkIY6rMcf/MNchanscSxIxMBGn5X/2
- dyP3m00SqS5Qukl4GhSTVp0pZ5a0w6VFKp6al6FSnrLXfYquNFr7yKXwSXVqJYfG6jpL
- scSyzFEMbNQJGQsMeX1YWeEc2PPjzPGzJe2rrSDRslq2XGcIjrohfbXitZjKJt7HJbBN AQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 30s09r6n2h-1
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045L3bVD166625;
+        Tue, 5 May 2020 21:09:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=M2d9PSExObDsOcMGKxYwEgz+HU/EDk834HoUjns/Mpg=;
+ b=uGxfeGcoFAG+JH2syZlwP4ZEA1AZMjVQJ2qqC8hJU7mzsRhBkYZruz7wOmIOmHekAMuq
+ +b369Qaxaj7Y5rjp446KmUcOkxKYRGu6E+dQ0AuJA0hyBxZYPrg7BOBiBwyoZeW5psLj
+ pSLPSoE18sr8DBfjIIHJBiood2ypHnAXrlnXgD4DdyqIl3+jFJMEoAO4EdmA2RdnQYt4
+ U4if/bBDhKDYfph6+d1eCOD/lPAISTuP1JiclBLiPsYBO0bsPC9y1JH3PLwjNhEEPDkE
+ rIXXS6GL0Cly4kJqi3v2yWSpZupf3FMnv+mtLuWl+c68c7SV2fR63SRHOIrAtXcL/AF5 ng== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 30s09r75p8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 May 2020 19:08:36 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045J8YKT180164;
-        Tue, 5 May 2020 19:08:36 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 30sjk0bbmn-1
+        Tue, 05 May 2020 21:09:35 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045L5mSm128627;
+        Tue, 5 May 2020 21:09:34 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 30t1r5yrm7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 May 2020 19:08:35 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 045J8RcC020780;
-        Tue, 5 May 2020 19:08:27 GMT
-Received: from localhost (/67.169.218.210)
+        Tue, 05 May 2020 21:09:34 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 045L9Xnk029526;
+        Tue, 5 May 2020 21:09:34 GMT
+Received: from [192.168.1.223] (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 05 May 2020 12:08:26 -0700
-Date:   Tue, 5 May 2020 12:08:25 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH] iomap: Submit the BIO at the end of each extent
-Message-ID: <20200505190825.GB5694@magnolia>
-References: <20200320144014.3276-1-willy@infradead.org>
- <20200320214654.GC6812@magnolia>
- <20200505003710.GO5703@magnolia>
- <20200505022415.GE16070@bombadil.infradead.org>
- <20200505025902.GD5716@magnolia>
+        with ESMTP ; Tue, 05 May 2020 14:09:33 -0700
+Subject: Re: [PATCH v4 03/17] xfs: simplify inode flush error handling
+To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+References: <20200504141154.55887-1-bfoster@redhat.com>
+ <20200504141154.55887-4-bfoster@redhat.com>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <60d6b8e2-e5c1-32d2-f387-fc7301d7b9ca@oracle.com>
+Date:   Tue, 5 May 2020 14:09:32 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200505025902.GD5716@magnolia>
+In-Reply-To: <20200504141154.55887-4-bfoster@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9612 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxscore=0 phishscore=0
- bulkscore=0 malwarescore=0 spamscore=0 mlxlogscore=999 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 suspectscore=2
+ spamscore=0 mlxlogscore=999 malwarescore=0 phishscore=0 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005050145
+ definitions=main-2005050163
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9612 signatures=668687
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0
- lowpriorityscore=0 spamscore=0 adultscore=0 clxscore=1015 suspectscore=1
+ lowpriorityscore=0 spamscore=0 adultscore=0 clxscore=1015 suspectscore=2
  priorityscore=1501 malwarescore=0 mlxlogscore=999 phishscore=0
  impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005050145
+ engine=8.12.0-2003020000 definitions=main-2005050163
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 04, 2020 at 07:59:02PM -0700, Darrick J. Wong wrote:
-> On Mon, May 04, 2020 at 07:24:15PM -0700, Matthew Wilcox wrote:
-> > On Mon, May 04, 2020 at 05:37:10PM -0700, Darrick J. Wong wrote:
-> > > run fstests generic/418 at 2020-05-04 17:27:51
-> > > rm (3338) used greatest stack depth: 11728 bytes left
-> > > BUG: kernel NULL pointer dereference, address: 0000000000000000
-> > > #PF: supervisor read access in kernel mode
-> > > #PF: error_code(0x0000) - not-present page
-> > > PGD 0 P4D 0 
-> > > Oops: 0000 [#1] PREEMPT SMP
-> > > CPU: 1 PID: 4900 Comm: dio-invalidate- Not tainted 5.7.0-rc4-djw #rc4
-> > > Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.13.0-1ubuntu1 04/01/2014
-> > > RIP: 0010:iomap_set_range_uptodate+0x5d/0x170
-> > > Code: 07 00 60 00 00 75 13 f0 80 0f 04 48 83 c4 18 5b 5d 41 5c 41 5d 41 5e 41 5f c3 48 8b 47 18 44 8d 74 16 ff 41 89 f1 4c 8b 6f 28 <4c> 8b 38 41 0f b6 af ca 00 00 00 89 e9 41 d3 e9 40 80 fd 1f 0f 87
-> > > RSP: 0018:ffffc90004b0b8e8 EFLAGS: 00010206
-> > > RAX: 0000000000000000 RBX: ffffea0000292440 RCX: 0000000000000000
-> > > RDX: 0000000000000400 RSI: 0000000000000c00 RDI: ffffea0000292440
-> > > RBP: 0000000000001000 R08: ffffc90004b0b958 R09: 0000000000000c00
-> > > R10: 0000000000000002 R11: ffff888017806720 R12: ffffc90004b0ba20
-> > > R13: ffff888017806720 R14: 0000000000000fff R15: ffff88801872c610
-> > > FS:  00007f2091593740(0000) GS:ffff88801e800000(0000) knlGS:0000000000000000
-> > > CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> > > CR2: 0000000000000000 CR3: 0000000017abb005 CR4: 00000000001606a0
-> > > Call Trace:
-> > >  ? __raw_spin_lock_init+0x39/0x60
-> > >  iomap_readpage_actor+0x113/0x3f0
-> > >  iomap_readpages_actor+0x1dc/0x240
-> > >  iomap_apply+0x12d/0x4e9
-> > >  ? iomap_readpage_actor+0x3f0/0x3f0
-> > >  ? mark_held_locks+0x45/0x70
-> > >  iomap_readpages+0xc2/0x290
-> > >  ? iomap_readpage_actor+0x3f0/0x3f0
-> > >  ? xa_clear_mark+0x30/0x30
-> > >  read_pages+0x75/0x1b0
-> > >  __do_page_cache_readahead+0x1bb/0x1d0
-> > >  ondemand_readahead+0x21a/0x540
-> > >  ? pagecache_get_page+0x26/0x320
-> > >  generic_file_read_iter+0x91a/0xd10
-> > >  ? xfs_file_buffered_aio_read+0x88/0x170 [xfs]
-> > >  xfs_file_buffered_aio_read+0x65/0x170 [xfs]
-> > >  xfs_file_read_iter+0xe9/0x2a0 [xfs]
-> > >  new_sync_read+0x12d/0x1d0
-> > >  vfs_read+0xc7/0x180
-> > >  ksys_pread64+0x64/0xa0
-> > >  do_syscall_64+0x50/0x1a0
-> > >  entry_SYSCALL_64_after_hwframe+0x49/0xb3
-> > > RIP: 0033:0x7f209179cbca
-> > > 
-> > > Digging into this with gcc, the RIP value is:
-> > > 
-> > > 0xffffffff813047cd is in iomap_set_range_uptodate (/storage/home/djwong/cdev/work/linux-djw/fs/iomap/buffered-io.c:147).
-> > > 142
-> > > 143     static void
-> > > 144     iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
-> > > 145     {
-> > > 146             struct iomap_page *iop = to_iomap_page(page);
-> > > 147             struct inode *inode = page->mapping->host;
-> > > 148             unsigned first = off >> inode->i_blkbits;
-> > > 149             unsigned last = (off + len - 1) >> inode->i_blkbits;
-> > > 150             bool uptodate = true;
-> > > 151             unsigned long flags;
-> > > 
-> > > So now this makes me wonder, is it possible to be performing readahead
-> > > into a page that doesn't have page->mapping set yet?  I reran this a few
-> > > times, got crashes in different places, but the common factor is that
-> > > page->mapping is NULL, and we're doing readhead.
-> > > 
-> > > I also tried this with the patch *not* applied and had the same
-> > > problems, so it's not actually this patch.  But there's something going
-> > > wrong in the iomap code...
-> > 
-> > Thanks for tracking that down!  I don't see a way for that to happen.
-> > The page is originally allocated in __do_page_cache_readahead() and
-> > (in 5.7) does not have page->mapping set.  Instead, it gets put on
-> > the page_pool list head which gets passed into iomap_readpages().
-> > iomap_next_page() calls add_to_page_cache_lru() which either sets
-> > page->mapping or returns an error.  So I don't see how iomap_next_page()
-> > can give us a page which doesn't have ->mapping set.
-> > 
-> > Is it possible that it's the second dereference, not the first that's
-> > NULL?  ie mapping->host is NULL?
+
+
+On 5/4/20 7:11 AM, Brian Foster wrote:
+> The inode flush code has several layers of error handling between
+> the inode and cluster flushing code. If the inode flush fails before
+> acquiring the backing buffer, the inode flush is aborted. If the
+> cluster flush fails, the current inode flush is aborted and the
+> cluster buffer is failed to handle the initial inode and any others
+> that might have been attached before the error.
 > 
-> Hmm, that's possible too.  I haven't gotten around (it's 19:58 here) to
-> digging further into the disassembly to figure out which pointer
-> deference it really is.
+> Since xfs_iflush() is the only caller of xfs_iflush_cluster(), the
+> error handling between the two can be condensed in the top-level
+> function. If we update xfs_iflush_int() to always fall through to
+> the log item update and attach the item completion handler to the
+> buffer, any errors that occur after the first call to
+> xfs_iflush_int() can be handled with a buffer I/O failure.
+> 
+> Lift the error handling from xfs_iflush_cluster() into xfs_iflush()
+> and consolidate with the existing error handling. This also replaces
+> the need to release the buffer because failing the buffer with
+> XBF_ASYNC drops the current reference.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Ok, I think it looks good
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
-To summarize the live-debugging session willy and I just had on irc,
-this doesn't quite work because an extremely fragmented extent map on a
-blocksize < pagesize filesystem can cause problems:
-
-Thread A gets the mapping for the first block, increments read_count,
-and issues the IO.  The IO completes immediately, so we decrement
-read_count, and since there are no other readers, we unlock the page.
-A's readahead context still points to the page.
-
-Meanwhile, a directio write in thread B wanders in and invalidates the
-page cache, which unmaps the page.  Uhoh...
-
-Next, thread A continues its readahead loop.  It gets the mapping for
-the second block and calls iomap_readpages_actor with the page that is
-still pointed to by the readahead context ... which if we're lucky is
-now unmapped and unlocked, and hasn't been reused yet.
-
---D
-
-> --D
+> ---
+>   fs/xfs/xfs_inode.c | 117 +++++++++++++++++----------------------------
+>   1 file changed, 45 insertions(+), 72 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 909ca7c0bac4..84f2ee9957dc 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3496,6 +3496,7 @@ xfs_iflush_cluster(
+>   	struct xfs_inode	**cilist;
+>   	struct xfs_inode	*cip;
+>   	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+> +	int			error = 0;
+>   	int			nr_found;
+>   	int			clcount = 0;
+>   	int			i;
+> @@ -3588,11 +3589,10 @@ xfs_iflush_cluster(
+>   		 * re-check that it's dirty before flushing.
+>   		 */
+>   		if (!xfs_inode_clean(cip)) {
+> -			int	error;
+>   			error = xfs_iflush_int(cip, bp);
+>   			if (error) {
+>   				xfs_iunlock(cip, XFS_ILOCK_SHARED);
+> -				goto cluster_corrupt_out;
+> +				goto out_free;
+>   			}
+>   			clcount++;
+>   		} else {
+> @@ -3611,33 +3611,7 @@ xfs_iflush_cluster(
+>   	kmem_free(cilist);
+>   out_put:
+>   	xfs_perag_put(pag);
+> -	return 0;
+> -
+> -
+> -cluster_corrupt_out:
+> -	/*
+> -	 * Corruption detected in the clustering loop.  Invalidate the
+> -	 * inode buffer and shut down the filesystem.
+> -	 */
+> -	rcu_read_unlock();
+> -
+> -	/*
+> -	 * We'll always have an inode attached to the buffer for completion
+> -	 * process by the time we are called from xfs_iflush(). Hence we have
+> -	 * always need to do IO completion processing to abort the inodes
+> -	 * attached to the buffer.  handle them just like the shutdown case in
+> -	 * xfs_buf_submit().
+> -	 */
+> -	ASSERT(bp->b_iodone);
+> -	bp->b_flags |= XBF_ASYNC;
+> -	xfs_buf_ioend_fail(bp);
+> -	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> -
+> -	/* abort the corrupt inode, as it was not attached to the buffer */
+> -	xfs_iflush_abort(cip, false);
+> -	kmem_free(cilist);
+> -	xfs_perag_put(pag);
+> -	return -EFSCORRUPTED;
+> +	return error;
+>   }
+>   
+>   /*
+> @@ -3693,17 +3667,16 @@ xfs_iflush(
+>   	 */
+>   	if (XFS_FORCED_SHUTDOWN(mp)) {
+>   		error = -EIO;
+> -		goto abort_out;
+> +		goto abort;
+>   	}
+>   
+>   	/*
+>   	 * Get the buffer containing the on-disk inode. We are doing a try-lock
+> -	 * operation here, so we may get  an EAGAIN error. In that case, we
+> -	 * simply want to return with the inode still dirty.
+> +	 * operation here, so we may get an EAGAIN error. In that case, return
+> +	 * leaving the inode dirty.
+>   	 *
+>   	 * If we get any other error, we effectively have a corruption situation
+> -	 * and we cannot flush the inode, so we treat it the same as failing
+> -	 * xfs_iflush_int().
+> +	 * and we cannot flush the inode. Abort the flush and shut down.
+>   	 */
+>   	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &bp, XBF_TRYLOCK,
+>   			       0);
+> @@ -3712,14 +3685,7 @@ xfs_iflush(
+>   		return error;
+>   	}
+>   	if (error)
+> -		goto corrupt_out;
+> -
+> -	/*
+> -	 * First flush out the inode that xfs_iflush was called with.
+> -	 */
+> -	error = xfs_iflush_int(ip, bp);
+> -	if (error)
+> -		goto corrupt_out;
+> +		goto abort;
+>   
+>   	/*
+>   	 * If the buffer is pinned then push on the log now so we won't
+> @@ -3729,28 +3695,29 @@ xfs_iflush(
+>   		xfs_log_force(mp, 0);
+>   
+>   	/*
+> -	 * inode clustering: try to gather other inodes into this write
+> +	 * Flush the provided inode then attempt to gather others from the
+> +	 * cluster into the write.
+>   	 *
+> -	 * Note: Any error during clustering will result in the filesystem
+> -	 * being shut down and completion callbacks run on the cluster buffer.
+> -	 * As we have already flushed and attached this inode to the buffer,
+> -	 * it has already been aborted and released by xfs_iflush_cluster() and
+> -	 * so we have no further error handling to do here.
+> +	 * Note: Once we attempt to flush an inode, we must run buffer
+> +	 * completion callbacks on any failure. If this fails, simulate an I/O
+> +	 * failure on the buffer and shut down.
+>   	 */
+> -	error = xfs_iflush_cluster(ip, bp);
+> -	if (error)
+> -		return error;
+> +	error = xfs_iflush_int(ip, bp);
+> +	if (!error)
+> +		error = xfs_iflush_cluster(ip, bp);
+> +	if (error) {
+> +		bp->b_flags |= XBF_ASYNC;
+> +		xfs_buf_ioend_fail(bp);
+> +		goto shutdown;
+> +	}
+>   
+>   	*bpp = bp;
+>   	return 0;
+>   
+> -corrupt_out:
+> -	if (bp)
+> -		xfs_buf_relse(bp);
+> -	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> -abort_out:
+> -	/* abort the corrupt inode, as it was not attached to the buffer */
+> +abort:
+>   	xfs_iflush_abort(ip, false);
+> +shutdown:
+> +	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+>   	return error;
+>   }
+>   
+> @@ -3792,6 +3759,7 @@ xfs_iflush_int(
+>   	struct xfs_inode_log_item *iip = ip->i_itemp;
+>   	struct xfs_dinode	*dip;
+>   	struct xfs_mount	*mp = ip->i_mount;
+> +	int			error;
+>   
+>   	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+>   	ASSERT(xfs_isiflocked(ip));
+> @@ -3799,15 +3767,21 @@ xfs_iflush_int(
+>   	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
+>   	ASSERT(iip != NULL && iip->ili_fields != 0);
+>   
+> -	/* set *dip = inode's place in the buffer */
+>   	dip = xfs_buf_offset(bp, ip->i_imap.im_boffset);
+>   
+> +	/*
+> +	 * We don't flush the inode if any of the following checks fail, but we
+> +	 * do still update the log item and attach to the backing buffer as if
+> +	 * the flush happened. This is a formality to facilitate predictable
+> +	 * error handling as the caller will shutdown and fail the buffer.
+> +	 */
+> +	error = -EFSCORRUPTED;
+>   	if (XFS_TEST_ERROR(dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC),
+>   			       mp, XFS_ERRTAG_IFLUSH_1)) {
+>   		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+>   			"%s: Bad inode %Lu magic number 0x%x, ptr "PTR_FMT,
+>   			__func__, ip->i_ino, be16_to_cpu(dip->di_magic), dip);
+> -		goto corrupt_out;
+> +		goto flush_out;
+>   	}
+>   	if (S_ISREG(VFS_I(ip)->i_mode)) {
+>   		if (XFS_TEST_ERROR(
+> @@ -3817,7 +3791,7 @@ xfs_iflush_int(
+>   			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+>   				"%s: Bad regular inode %Lu, ptr "PTR_FMT,
+>   				__func__, ip->i_ino, ip);
+> -			goto corrupt_out;
+> +			goto flush_out;
+>   		}
+>   	} else if (S_ISDIR(VFS_I(ip)->i_mode)) {
+>   		if (XFS_TEST_ERROR(
+> @@ -3828,7 +3802,7 @@ xfs_iflush_int(
+>   			xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+>   				"%s: Bad directory inode %Lu, ptr "PTR_FMT,
+>   				__func__, ip->i_ino, ip);
+> -			goto corrupt_out;
+> +			goto flush_out;
+>   		}
+>   	}
+>   	if (XFS_TEST_ERROR(ip->i_d.di_nextents + ip->i_d.di_anextents >
+> @@ -3839,14 +3813,14 @@ xfs_iflush_int(
+>   			__func__, ip->i_ino,
+>   			ip->i_d.di_nextents + ip->i_d.di_anextents,
+>   			ip->i_d.di_nblocks, ip);
+> -		goto corrupt_out;
+> +		goto flush_out;
+>   	}
+>   	if (XFS_TEST_ERROR(ip->i_d.di_forkoff > mp->m_sb.sb_inodesize,
+>   				mp, XFS_ERRTAG_IFLUSH_6)) {
+>   		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
+>   			"%s: bad inode %Lu, forkoff 0x%x, ptr "PTR_FMT,
+>   			__func__, ip->i_ino, ip->i_d.di_forkoff, ip);
+> -		goto corrupt_out;
+> +		goto flush_out;
+>   	}
+>   
+>   	/*
+> @@ -3863,7 +3837,7 @@ xfs_iflush_int(
+>   
+>   	/* Check the inline fork data before we write out. */
+>   	if (!xfs_inode_verify_forks(ip))
+> -		goto corrupt_out;
+> +		goto flush_out;
+>   
+>   	/*
+>   	 * Copy the dirty parts of the inode into the on-disk inode.  We always
+> @@ -3906,6 +3880,8 @@ xfs_iflush_int(
+>   	 * need the AIL lock, because it is a 64 bit value that cannot be read
+>   	 * atomically.
+>   	 */
+> +	error = 0;
+> +flush_out:
+>   	iip->ili_last_fields = iip->ili_fields;
+>   	iip->ili_fields = 0;
+>   	iip->ili_fsync_fields = 0;
+> @@ -3915,10 +3891,10 @@ xfs_iflush_int(
+>   				&iip->ili_item.li_lsn);
+>   
+>   	/*
+> -	 * Attach the function xfs_iflush_done to the inode's
+> -	 * buffer.  This will remove the inode from the AIL
+> -	 * and unlock the inode's flush lock when the inode is
+> -	 * completely written to disk.
+> +	 * Attach the inode item callback to the buffer whether the flush
+> +	 * succeeded or not. If not, the caller will shut down and fail I/O
+> +	 * completion on the buffer to remove the inode from the AIL and release
+> +	 * the flush lock.
+>   	 */
+>   	xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
+>   
+> @@ -3927,10 +3903,7 @@ xfs_iflush_int(
+>   
+>   	ASSERT(!list_empty(&bp->b_li_list));
+>   	ASSERT(bp->b_iodone != NULL);
+> -	return 0;
+> -
+> -corrupt_out:
+> -	return -EFSCORRUPTED;
+> +	return error;
+>   }
+>   
+>   /* Release an inode. */
+> 
