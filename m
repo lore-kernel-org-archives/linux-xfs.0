@@ -2,149 +2,356 @@ Return-Path: <SRS0=NnDK=6T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C67BC47247
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 05:10:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AB04C47247
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 05:13:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43394206E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 05:10:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 219B120721
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 05:13:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ozbAWsUV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725830AbgEEFKe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 May 2020 01:10:34 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53248 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725320AbgEEFKe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 01:10:34 -0400
-Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id BC84858C1BA;
-        Tue,  5 May 2020 15:10:30 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jVpqf-0002XC-Sq; Tue, 05 May 2020 15:10:29 +1000
-Date:   Tue, 5 May 2020 15:10:29 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        id S1726610AbgEEFNE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 May 2020 01:13:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48888 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725320AbgEEFNE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 01:13:04 -0400
+Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35A75C061A0F
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 22:13:04 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id r14so343757pfg.2
+        for <linux-xfs@vger.kernel.org>; Mon, 04 May 2020 22:13:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=3pisyCFdmPOEdjip42q13csQGWaesagwgD7CnO8NC2g=;
+        b=ozbAWsUVzuschMGwwqrxlW1oEXJWyO1CfgaggQXAUXQ9Ob0Cbz7MaesrURUhts++ps
+         LEupB6HNpo04OHVsMQrTvHgqE/1A6ijhC04djE3BtGbTPGIYizHI/BS4A/yALeXYm5+D
+         SE9Bk27AFSh3Jef+DqR32jJg9BtRPZ6aULUvwOVqj9frZQZlNsTLpgktfk3vmz10OX0F
+         XilG9gNY4ro07HOAFy5prLEB3Tp1Y9EM9R+W/Rz84uv+EhaK3FHNshp32IMHKv6PjLgx
+         MbTXV08yvZOxVIoCJvbEdv3ZMYQpiMmHG9BhansDHjpOUJBrt719pBrZAySJoxTCduyp
+         THzw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=3pisyCFdmPOEdjip42q13csQGWaesagwgD7CnO8NC2g=;
+        b=abW1tgZiUMdbiPNtqDnFVeojcGHnG8CQcddhw9OsDyAgzROZYGjRnCICXUG5y9+yMc
+         Scp/1G3yxLw8+tF4VUdG10ZgUgTASudFlUCF0Vju+EB6Qi9ecELICQNzU1xpfJseW1/d
+         s+IG0aGlNg3+qhSDUK405JDD02IelibWmHsuHEyx7mWz711ZzW3Macv4EQqZS3Q8smWC
+         qsjIykiOUWWoLfLB3SilDcu5x7HwV1p+I4XPDMoFTGBJU1rJdlKQPPxMh/bBSm4/dKF6
+         FIivB9wAOZYtseXXoqX+y7Y2BImz78xKVLqcRkeb8Q7+JCTxJ8KfyJCNOYNhkq4/oCJC
+         Qy7Q==
+X-Gm-Message-State: AGi0Pubzc5xr7ozYGCGthz+FNBfh9De6hyBXnkkxzNKynKXoPEBAPOAu
+        C6AIx6wBYEX9f+qsY8SNoEo=
+X-Google-Smtp-Source: APiQypKFTw6cY4i5uP5cf271oACwp1BwmCRJw40p06KVonR2esG0EogEWNSRUMhlEGFYFu6BQcB3xw==
+X-Received: by 2002:a62:6385:: with SMTP id x127mr1524905pfb.276.1588655583609;
+        Mon, 04 May 2020 22:13:03 -0700 (PDT)
+Received: from garuda.localnet ([122.171.152.206])
+        by smtp.gmail.com with ESMTPSA id mj4sm653903pjb.0.2020.05.04.22.13.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 May 2020 22:13:02 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: proper replay of deferred ops queued during log
- recovery
-Message-ID: <20200505051029.GN2040@dread.disaster.area>
-References: <158864121286.184729.5959003885146573075.stgit@magnolia>
- <158864121900.184729.15751838615488460497.stgit@magnolia>
- <20200505023305.GM2040@dread.disaster.area>
- <20200505030651.GE5716@magnolia>
+Subject: Re: [PATCH 07/28] xfs: refactor log recovery dquot item dispatch for pass2 commit functions
+Date:   Tue, 05 May 2020 10:43:00 +0530
+Message-ID: <1886011.3tpDpypnGq@garuda>
+In-Reply-To: <158864107657.182683.4148915999591482647.stgit@magnolia>
+References: <158864103195.182683.2056162574447133617.stgit@magnolia> <158864107657.182683.4148915999591482647.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200505030651.GE5716@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=qp17tjg0sL84z0HGF9gA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 04, 2020 at 08:06:51PM -0700, Darrick J. Wong wrote:
-> On Tue, May 05, 2020 at 12:33:05PM +1000, Dave Chinner wrote:
-> > On Mon, May 04, 2020 at 06:13:39PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > When we replay unfinished intent items that have been recovered from the
-> > > log, it's possible that the replay will cause the creation of more
-> > > deferred work items.  As outlined in commit 509955823cc9c ("xfs: log
-> > > recovery should replay deferred ops in order"), later work items have an
-> > > implicit ordering dependency on earlier work items.  Therefore, recovery
-> > > must replay the items (both recovered and created) in the same order
-> > > that they would have been during normal operation.
-> > > 
-> > > For log recovery, we enforce this ordering by using an empty transaction
-> > > to collect deferred ops that get created in the process of recovering a
-> > > log intent item to prevent them from being committed before the rest of
-> > > the recovered intent items.  After we finish committing all the
-> > > recovered log items, we allocate a transaction with an enormous block
-> > > reservation, splice our huge list of created deferred ops into that
-> > > transaction, and commit it, thereby finishing all those ops.
-> > > 
-> > > This is /really/ hokey -- it's the one place in XFS where we allow
-> > > nested transactions; the splicing of the defer ops list is is inelegant
-> > > and has to be done twice per recovery function; and the broken way we
-> > > handle inode pointers and block reservations cause subtle use-after-free
-> > > and allocator problems that will be fixed by this patch and the two
-> > > patches after it.
-> > > 
-> > > Therefore, replace the hokey empty transaction with a structure designed
-> > > to capture each chain of deferred ops that are created as part of
-> > > recovering a single unfinished log intent.  Finally, refactor the loop
-> > > that replays those chains to do so using one transaction per chain.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > FWIW, I don't like the "freezer" based naming here. It's too easily
-> > confused with freezing and thawing the filesystem....
-> > 
-> > I know, "delayed deferred ops" isn't much better, but at least it
-> > won't get confused with existing unrelated functionality.
+On Tuesday 5 May 2020 6:41:16 AM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> xfs_defer_{freeze,thaw} -> xfs_defer_{capture,relink} ?
+> Move the log dquot item pass2 commit code into the per-item source code
+> files and use the dispatch function to call it.  We do these one at a
+> time because there's a lot of code to move.  No functional changes.
+>
 
-Yeah, capture seems appropriate, maybe relink -> continue? i.e.
-capture the remaining defer_ops to be run, then continue running
-them?
+Dquot item pass2 processing is functionally consistent with what was done
+before this patch is applied.
 
-/me shrugs and thinks "naming is hard"....
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-> > I've barely looked at the code, so no real comments on that yet,
-> > but I did notice this:
-> > 
-> > > @@ -2495,35 +2515,59 @@ xlog_recover_process_data(
-> > >  /* Take all the collected deferred ops and finish them in order. */
-> > >  static int
-> > >  xlog_finish_defer_ops(
-> > > -	struct xfs_trans	*parent_tp)
-> > > +	struct xfs_mount	*mp,
-> > > +	struct list_head	*dfops_freezers)
-> > >  {
-> > > -	struct xfs_mount	*mp = parent_tp->t_mountp;
-> > > +	struct xfs_defer_freezer *dff, *next;
-> > >  	struct xfs_trans	*tp;
-> > >  	int64_t			freeblks;
-> > >  	uint			resblks;
-> > ....
-> > > +		resblks = min_t(int64_t, UINT_MAX, freeblks);
-> > > +		resblks = (resblks * 15) >> 4;
-> > 
-> > Can overflow when freeblks > (UINT_MAX / 15).
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_dquot_item_recover.c |  109 ++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_log_recover.c        |  112 ---------------------------------------
+>  2 files changed, 109 insertions(+), 112 deletions(-)
 > 
-> D'oh.  Ugh, I hate this whole fugly hack.
 > 
-> TBH I've been thinking that perhaps the freezer function should be
-> capturing the unused transaction block reservation when we capture the
-> dfops chain from the transaction.
+> diff --git a/fs/xfs/xfs_dquot_item_recover.c b/fs/xfs/xfs_dquot_item_recover.c
+> index ebc44c1bc2b1..07ff943972a3 100644
+> --- a/fs/xfs/xfs_dquot_item_recover.c
+> +++ b/fs/xfs/xfs_dquot_item_recover.c
+> @@ -53,9 +53,118 @@ xlog_recover_dquot_ra_pass2(
+>  			&xfs_dquot_buf_ra_ops);
+>  }
+>  
+> +/*
+> + * Recover a dquot record
+> + */
+> +STATIC int
+> +xlog_recover_dquot_commit_pass2(
+> +	struct xlog			*log,
+> +	struct list_head		*buffer_list,
+> +	struct xlog_recover_item	*item,
+> +	xfs_lsn_t			current_lsn)
+> +{
+> +	struct xfs_mount		*mp = log->l_mp;
+> +	struct xfs_buf			*bp;
+> +	struct xfs_disk_dquot		*ddq, *recddq;
+> +	struct xfs_dq_logformat		*dq_f;
+> +	xfs_failaddr_t			fa;
+> +	int				error;
+> +	uint				type;
+> +
+> +	/*
+> +	 * Filesystems are required to send in quota flags at mount time.
+> +	 */
+> +	if (mp->m_qflags == 0)
+> +		return 0;
+> +
+> +	recddq = item->ri_buf[1].i_addr;
+> +	if (recddq == NULL) {
+> +		xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
+> +		return -EFSCORRUPTED;
+> +	}
+> +	if (item->ri_buf[1].i_len < sizeof(struct xfs_disk_dquot)) {
+> +		xfs_alert(log->l_mp, "dquot too small (%d) in %s.",
+> +			item->ri_buf[1].i_len, __func__);
+> +		return -EFSCORRUPTED;
+> +	}
+> +
+> +	/*
+> +	 * This type of quotas was turned off, so ignore this record.
+> +	 */
+> +	type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
+> +	ASSERT(type);
+> +	if (log->l_quotaoffs_flag & type)
+> +		return 0;
+> +
+> +	/*
+> +	 * At this point we know that quota was _not_ turned off.
+> +	 * Since the mount flags are not indicating to us otherwise, this
+> +	 * must mean that quota is on, and the dquot needs to be replayed.
+> +	 * Remember that we may not have fully recovered the superblock yet,
+> +	 * so we can't do the usual trick of looking at the SB quota bits.
+> +	 *
+> +	 * The other possibility, of course, is that the quota subsystem was
+> +	 * removed since the last mount - ENOSYS.
+> +	 */
+> +	dq_f = item->ri_buf[0].i_addr;
+> +	ASSERT(dq_f);
+> +	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id, 0);
+> +	if (fa) {
+> +		xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
+> +				dq_f->qlf_id, fa);
+> +		return -EFSCORRUPTED;
+> +	}
+> +	ASSERT(dq_f->qlf_len == 1);
+> +
+> +	/*
+> +	 * At this point we are assuming that the dquots have been allocated
+> +	 * and hence the buffer has valid dquots stamped in it. It should,
+> +	 * therefore, pass verifier validation. If the dquot is bad, then the
+> +	 * we'll return an error here, so we don't need to specifically check
+> +	 * the dquot in the buffer after the verifier has run.
+> +	 */
+> +	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
+> +				   XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp,
+> +				   &xfs_dquot_buf_ops);
+> +	if (error)
+> +		return error;
+> +
+> +	ASSERT(bp);
+> +	ddq = xfs_buf_offset(bp, dq_f->qlf_boffset);
+> +
+> +	/*
+> +	 * If the dquot has an LSN in it, recover the dquot only if it's less
+> +	 * than the lsn of the transaction we are replaying.
+> +	 */
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		struct xfs_dqblk *dqb = (struct xfs_dqblk *)ddq;
+> +		xfs_lsn_t	lsn = be64_to_cpu(dqb->dd_lsn);
+> +
+> +		if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
+> +			goto out_release;
+> +		}
+> +	}
+> +
+> +	memcpy(ddq, recddq, item->ri_buf[1].i_len);
+> +	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> +		xfs_update_cksum((char *)ddq, sizeof(struct xfs_dqblk),
+> +				 XFS_DQUOT_CRC_OFF);
+> +	}
+> +
+> +	ASSERT(dq_f->qlf_size == 2);
+> +	ASSERT(bp->b_mount == mp);
+> +	bp->b_iodone = xlog_recover_iodone;
+> +	xfs_buf_delwri_queue(bp, buffer_list);
+> +
+> +out_release:
+> +	xfs_buf_relse(bp);
+> +	return 0;
+> +}
+> +
+>  const struct xlog_recover_item_ops xlog_dquot_item_ops = {
+>  	.item_type		= XFS_LI_DQUOT,
+>  	.ra_pass2		= xlog_recover_dquot_ra_pass2,
+> +	.commit_pass2		= xlog_recover_dquot_commit_pass2,
+>  };
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index cb5902550e8c..ea2a53b614c7 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2034,115 +2034,6 @@ xlog_buf_readahead(
+>  		xfs_buf_readahead(log->l_mp->m_ddev_targp, blkno, len, ops);
+>  }
+>  
+> -/*
+> - * Recover a dquot record
+> - */
+> -STATIC int
+> -xlog_recover_dquot_pass2(
+> -	struct xlog			*log,
+> -	struct list_head		*buffer_list,
+> -	struct xlog_recover_item	*item,
+> -	xfs_lsn_t			current_lsn)
+> -{
+> -	xfs_mount_t		*mp = log->l_mp;
+> -	xfs_buf_t		*bp;
+> -	struct xfs_disk_dquot	*ddq, *recddq;
+> -	xfs_failaddr_t		fa;
+> -	int			error;
+> -	xfs_dq_logformat_t	*dq_f;
+> -	uint			type;
+> -
+> -
+> -	/*
+> -	 * Filesystems are required to send in quota flags at mount time.
+> -	 */
+> -	if (mp->m_qflags == 0)
+> -		return 0;
+> -
+> -	recddq = item->ri_buf[1].i_addr;
+> -	if (recddq == NULL) {
+> -		xfs_alert(log->l_mp, "NULL dquot in %s.", __func__);
+> -		return -EFSCORRUPTED;
+> -	}
+> -	if (item->ri_buf[1].i_len < sizeof(struct xfs_disk_dquot)) {
+> -		xfs_alert(log->l_mp, "dquot too small (%d) in %s.",
+> -			item->ri_buf[1].i_len, __func__);
+> -		return -EFSCORRUPTED;
+> -	}
+> -
+> -	/*
+> -	 * This type of quotas was turned off, so ignore this record.
+> -	 */
+> -	type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
+> -	ASSERT(type);
+> -	if (log->l_quotaoffs_flag & type)
+> -		return 0;
+> -
+> -	/*
+> -	 * At this point we know that quota was _not_ turned off.
+> -	 * Since the mount flags are not indicating to us otherwise, this
+> -	 * must mean that quota is on, and the dquot needs to be replayed.
+> -	 * Remember that we may not have fully recovered the superblock yet,
+> -	 * so we can't do the usual trick of looking at the SB quota bits.
+> -	 *
+> -	 * The other possibility, of course, is that the quota subsystem was
+> -	 * removed since the last mount - ENOSYS.
+> -	 */
+> -	dq_f = item->ri_buf[0].i_addr;
+> -	ASSERT(dq_f);
+> -	fa = xfs_dquot_verify(mp, recddq, dq_f->qlf_id, 0);
+> -	if (fa) {
+> -		xfs_alert(mp, "corrupt dquot ID 0x%x in log at %pS",
+> -				dq_f->qlf_id, fa);
+> -		return -EFSCORRUPTED;
+> -	}
+> -	ASSERT(dq_f->qlf_len == 1);
+> -
+> -	/*
+> -	 * At this point we are assuming that the dquots have been allocated
+> -	 * and hence the buffer has valid dquots stamped in it. It should,
+> -	 * therefore, pass verifier validation. If the dquot is bad, then the
+> -	 * we'll return an error here, so we don't need to specifically check
+> -	 * the dquot in the buffer after the verifier has run.
+> -	 */
+> -	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
+> -				   XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp,
+> -				   &xfs_dquot_buf_ops);
+> -	if (error)
+> -		return error;
+> -
+> -	ASSERT(bp);
+> -	ddq = xfs_buf_offset(bp, dq_f->qlf_boffset);
+> -
+> -	/*
+> -	 * If the dquot has an LSN in it, recover the dquot only if it's less
+> -	 * than the lsn of the transaction we are replaying.
+> -	 */
+> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		struct xfs_dqblk *dqb = (struct xfs_dqblk *)ddq;
+> -		xfs_lsn_t	lsn = be64_to_cpu(dqb->dd_lsn);
+> -
+> -		if (lsn && lsn != -1 && XFS_LSN_CMP(lsn, current_lsn) >= 0) {
+> -			goto out_release;
+> -		}
+> -	}
+> -
+> -	memcpy(ddq, recddq, item->ri_buf[1].i_len);
+> -	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+> -		xfs_update_cksum((char *)ddq, sizeof(struct xfs_dqblk),
+> -				 XFS_DQUOT_CRC_OFF);
+> -	}
+> -
+> -	ASSERT(dq_f->qlf_size == 2);
+> -	ASSERT(bp->b_mount == mp);
+> -	bp->b_iodone = xlog_recover_iodone;
+> -	xfs_buf_delwri_queue(bp, buffer_list);
+> -
+> -out_release:
+> -	xfs_buf_relse(bp);
+> -	return 0;
+> -}
+> -
+>  /*
+>   * This routine is called to create an in-core extent free intent
+>   * item from the efi format structure which was logged on disk.
+> @@ -2730,9 +2621,6 @@ xlog_recover_commit_pass2(
+>  		return xlog_recover_bui_pass2(log, item, trans->r_lsn);
+>  	case XFS_LI_BUD:
+>  		return xlog_recover_bud_pass2(log, item);
+> -	case XFS_LI_DQUOT:
+> -		return xlog_recover_dquot_pass2(log, buffer_list, item,
+> -						trans->r_lsn);
+>  	case XFS_LI_ICREATE:
+>  		return xlog_recover_do_icreate_pass2(log, buffer_list, item);
+>  	case XFS_LI_QUOTAOFF:
+> 
+> 
 
-Exactly what problem is this hack supposed to avoid? having the
-filesystem ENOSPC before all the deferops have been completed?
 
-if so, can that even happen? Because the fact that the intents are
-in the log means that when they were started there was enough space
-in the fs for them to run, so ENOSPC should not be an issue, right?
-
-> When we set up the second transaction, we then set t_blk_res to the
-> captured block reservation.  So long as the recovery function is smart
-> enough to set up sufficient reservation we should avoid hitting ENOSPC,
-> right?
-
-I'm not sure ENOSPC is really a problem for recovery of deferred ops
-given the above...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
+
+
+
