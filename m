@@ -7,68 +7,68 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FAA0C3A5A9
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E7C8C3A5A9
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:32:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 418E7206B9
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:31:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63B00206B9
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:32:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NykcF769"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IDwkTeAg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726549AbgEEBbx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 21:31:53 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:48576 "EHLO
+        id S1726926AbgEEBc6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 21:32:58 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:49114 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726482AbgEEBbx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 21:31:53 -0400
+        with ESMTP id S1726531AbgEEBc5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 21:32:57 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0451Umkc096271
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:31:47 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0451T6ZX095224
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:32:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
  references : from : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=nlUN5exSSaVz27yWlfchcscIMXZIAa675om6NdIJUDE=;
- b=NykcF769U3ArE2/hvtm8BcerIKrllqCaEr2JORuXDlv4k3GanPx/AMSkWIjFHXqCJ85V
- tSHhfMJA5AyA5eoWq6Y7I8j5Ow0f7d5sHkaflitozWF2aRd99eqgM5e678GtNkGd1vAh
- PCTlfTBlx1//c8na6jaXiAjgfvikCKYKpqpZjh0I+6Uh7OzpP5OGBHlQq0R8x+T0OKAW
- DfTTG9r8ZdwG6HRgKvRqN2FbDRXuBmlY+zjXw2uTIj+Yk4pZSyNoVXkPmj1FD6uCrSl2
- QyF4yUA/XqEtR9NmcKBh97YMPOHRdmYGOY0dUO4jJfokknho79mDkMS9bQgXEc2wFNiw nQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 30s0tma2b0-1
+ bh=TXMMiw8F2e+fQj5l/ltep2af6WSCcHSpjFD2IhpCFVw=;
+ b=IDwkTeAge7CngaSLRVLsvAbfqsR4VAa3Suf3ugkVx9sHRM/6KzPwHcCd2xwPiaPcrbA1
+ EQ3d4TaXiyxqvv40ZW3RxuGWAaWKEm28Q0IazkCC/kBlKKDZeAcebNSEYytHLtKFHzBt
+ NtVH0cfjFEtrRbTU6kTKuyYVtTx8lO4I809YVOfgVngd3UOK3/HjIXt6hzu81HfNxCK4
+ lV60VDxKWcIIwjvV+MKBcX+AAncYGW1wlO06Az+/TReNMp3W1C7CQq8oiLYB9nxHyP08
+ 4mvaeH/JaGN/BmR+BUf6hgrgxU8Mmj0XVENjmfcHTVvifuUI5Vywwn0FfNM930DQe94L hg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 30s0tma2cj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:31:47 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0451QkHF053739
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:31:46 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 30sjdruv9w-1
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:32:50 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0451RdoC126315
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:32:50 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 30t1r3rxfv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:31:46 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0451Vj8n023952
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:31:45 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:32:49 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0451WnNj026658
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:32:49 GMT
 Received: from [192.168.1.223] (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 May 2020 18:31:45 -0700
+        with ESMTP ; Mon, 04 May 2020 18:32:48 -0700
 Subject: Re: [PATCH v9 23/24] xfs: Add delay ready attr set routines
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20200430225016.4287-1-allison.henderson@oracle.com>
  <20200430225016.4287-24-allison.henderson@oracle.com>
- <20200504194907.GK5703@magnolia>
+ <20200504223628.GN5703@magnolia>
 From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <43ad33fc-4603-2e15-eb5c-59ee94fcdb49@oracle.com>
-Date:   Mon, 4 May 2020 18:31:43 -0700
+Message-ID: <086543ed-e676-4732-591d-20f2ba60aab6@oracle.com>
+Date:   Mon, 4 May 2020 18:32:47 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200504194907.GK5703@magnolia>
+In-Reply-To: <20200504223628.GN5703@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=2 mlxscore=0
- bulkscore=0 adultscore=0 phishscore=0 mlxlogscore=999 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 suspectscore=2
+ spamscore=0 mlxlogscore=999 malwarescore=0 phishscore=0 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
  definitions=main-2005050007
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
@@ -84,7 +84,7 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 
 
-On 5/4/20 12:49 PM, Darrick J. Wong wrote:
+On 5/4/20 3:36 PM, Darrick J. Wong wrote:
 > On Thu, Apr 30, 2020 at 03:50:15PM -0700, Allison Collins wrote:
 >> This patch modifies the attr set routines to be delay ready. This means
 >> they no longer roll or commit transactions, but instead return -EAGAIN
@@ -117,12 +117,6 @@ On 5/4/20 12:49 PM, Darrick J. Wong wrote:
 >>                   v
 >>    ┌──────n── fork has
 >>    │         only 1 blk?
-> 
-> "Refer to the state machine diagram in xfs_attr.h for exact details of
-> how this works."
-Sure, that fine
-
-> 
 >>    │              │
 >>    │              y
 >>    │              │
@@ -348,12 +342,6 @@ Sure, that fine
 >> +		error = xfs_trans_roll_inode(&args->trans, args->dp);
 >> +		if (error)
 >> +			break;
-> 
-> 	if (!xfs_attr_roll_again(&dac, &error))
-> 		break;
-Yep, ok
-
-> 
 >> +
 >> +		if (leaf_bp) {
 >> +			xfs_trans_bjoin(args->trans, leaf_bp);
@@ -374,6 +362,13 @@ Yep, ok
 >> + */
 >> +int
 >> +xfs_attr_set_iter(
+> 
+> Could this be a static function above xfs_attr_set()?  Or is this
+> something that will need to be exported in a later series?
+Later it will be called by the log replay routines, but I suppose it 
+could be static for now.
+
+> 
 >> +	struct xfs_delattr_context	*dac,
 >> +	struct xfs_buf			**leaf_bp)
 >> +{
@@ -437,6 +432,10 @@ Yep, ok
 >> +	/*
 >> +	 * After a shortform to leaf conversion, we need to hold the leaf and
 >> +	 * cylce out the transaction.  When we get back, we need to release
+> 
+> "cycle"
+ok, will fix
+> 
 >> +	 * the leaf.
 >> +	 */
 >> +	if (*leaf_bp != NULL) {
@@ -484,6 +483,29 @@ Yep, ok
 >> +		error = xfs_attr_leaf_addname(dac);
 >> +		if (error == -ENOSPC)
 >> +			/* We will be in node form when we return */
+> 
+> Er, how does this happen?  Is this comment merely referencing the node
+> conversion that just happened 20 lines above?  Or does something else do
+> the conversion too?
+Ok, basically this comment is here in place of what used to be a state 
+set.  There used to be a line here:
+
+			dac->dela_state =  XFS_DAS_LEAF_TO_NODE
+
+which jumped back down to the das_node tag below.  The reason we can get 
+away with out needing a state is because  when we jump out and jump back 
+in, the if(xfs_bmap_one_block()) will fail, and drop us back down to 
+where the das_node tag is anyway.  Hope that makes sense?
+
+Maybe the comment should say:
+			/* No need to set state.  We will be in node form when we are recalled */
+
+?
+
+Some of the states from v8 we can get away from by leveraging things 
+like this, though I have pondered if that reduces readability?
+
+> 
 >> +			return -EAGAIN;
 >>   
 >> +		return error;
@@ -565,9 +587,6 @@ Yep, ok
 >> +	 * required.
 >> +	 */
 >> +	while (dac->blkcnt > 0) {
-> 
-> if() ?
-> 
 >> +		error = xfs_attr_rmtval_set_blk(dac);
 >>   		if (error)
 >>   			return error;
@@ -625,6 +644,18 @@ Yep, ok
 >> -		error = xfs_attr_rmtval_remove(args);
 >>   		if (error)
 >>   			return error;
+> 
+> This whole bit could condense to:
+> 
+> 		error = __xfs_attr_rmtval_remove(dac);
+> 		if (error == -EAGAIN)
+> 			dac->dela_state = XFS_DAS_RM_LBLK;
+> 		if (error)
+> 			return error;
+Ok, will update
+
+> 
+> 
 >>   	}
 >> @@ -957,16 +1050,23 @@ xfs_attr_node_hasname(
 >>    *
@@ -738,9 +769,6 @@ Yep, ok
 >> -		error = xfs_attr_rmtval_set(args);
 >> +		/* Open coded xfs_attr_rmtval_set without trans handling */
 >> +		error = xfs_attr_rmtval_set_init(dac);
-> 
-> Do we need to test/set LEAF_ADDNAME_INIT here too?
-> 
 >> +		if (error)
 >> +			return error;
 >> +
@@ -750,9 +778,6 @@ Yep, ok
 >> +		 */
 >> +das_alloc_node:
 >> +		while (dac->blkcnt > 0) {
-> 
-> if() ?
-> 
 >> +			error = xfs_attr_rmtval_set_blk(dac);
 >> +			if (error)
 >> +				return error;
@@ -934,6 +959,22 @@ Yep, ok
 >> + *	                               │          │
 >> + *	                               v          │
 >> + *	                              done <──────┘
+> 
+> Ok, I traced through all this and I /think/ the state machine
+> accurately reflects the code paths before all the surgery started.
+> Whoever knew that implementing a key-value store was so complex?
+
+I don't think any of us foresaw it becoming what it has back when we 
+first started.  Comparatively, parent pointers seems less complex.  :-) 
+In any case, it certainly seems unique!
+
+Thanks for the reviews!!
+
+Allison
+
+> 
+> --D
+> 
 >> + *
 >>    */
 >>   
@@ -1016,22 +1057,11 @@ Yep, ok
 >> + */
 >> +int
 >> +xfs_attr_rmtval_set_init(
-> 
-> /me wonders if this ought to be named xfs_attr_rmtval_find_space() ?
-> 
-> That's more or less what it's getting ready to do, right?
-This is one Brian had asked for, though I'm not sure how set he is about 
-names?
-
-> 
 >> +	struct xfs_delattr_context	*dac)
 >> +{
 >> +	struct xfs_da_args		*args = dac->da_args;
 >> +	struct xfs_bmbt_irec		*map = &dac->map;
 >> +	int error;
-> 
-> 	int				error;
-> 
 >> +
 >> +	dac->lblkno = 0;
 >> +	dac->blkcnt = 0;
@@ -1047,11 +1077,6 @@ names?
 >> +	dac->lblkno = args->rmtblkno;
 >> +
 >> +	return error;
-> 
-> This could be return 0;.
-Sure
-
-> 
 >> +}
 >> +
 >> +/*
@@ -1075,15 +1100,6 @@ Sure
 >> +		  (xfs_fileoff_t)dac->lblkno,
 >> +		  dac->blkcnt, XFS_BMAPI_ATTRFORK,
 >> +		  args->total, map, &nmap);
-> 
-> The indenting here could be improved.
-ok, will fix.  Will jump into cont' email now :-)
-
-> 
-> Whee, ok, it's lunchtime.  I'll look at the state machine after eating.
-> 
-> --D
-> 
 >> +	if (error)
 >> +		return error;
 >> +
