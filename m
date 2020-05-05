@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28CA8C3A5A9
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:13:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3157C47247
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:13:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03477206D7
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:13:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB27D20658
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:13:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VpXvM8Vb"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PXn5nxY5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728006AbgEEBNx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 21:13:53 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:38092 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726449AbgEEBNv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 21:13:51 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0451388P054672
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:13:49 GMT
+        id S1728055AbgEEBN5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 21:13:57 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:48246 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727995AbgEEBN5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 21:13:57 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04513xBF055604
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:13:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=ljwrJm4LuzUxoEbcmIG8aipGWYU3NlAjJ/kde7xNyh0=;
- b=VpXvM8Vbfl6l6Eu4e+0XcPqorDIterkyjcOhIrH+nVP4z+RSklssZ1xp7ksILEFLoQya
- PtM2sCt7xoZzJmkpvWALUEhjX24nXicGvMnEXGORwQDtHkr/8QgZR4Lp5SyK8/Je3dos
- xyhKvsL5dnSYk1FqxTux9JDUnoMvmKgt+27nnR08lei1Rcdg6VtLTk302lGPS+lJYjk+
- HwaOKQxPHL6N9RNNJ8K9c6HB/UgIxzHRPFErAqvA48IE4ZmxE2fd/uNkIbcx9cj2rSlP
- vd8vN4eYV+DGSj8+t+LXMdpLD77z/1AcXj067jBYOQzH6LdWj4CMyD9ZVsveadxdIWNU Qw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 30s0tma1c0-1
+ bh=3TC7UmAQKU99p+A3jG/83vNZXCR2MYV9ZyLXFPnfhvA=;
+ b=PXn5nxY5ZP+MpxB0eml5XL8nRxRZjVsA6PEc3OFqZ1C6rJkfF24VEimIxUG+pD0Po/Ig
+ qW58xl4C8Gc3RXVQrMsx/6RSMS5FBidqnlmtGoMKh+MhIHoWAIupbXFKkcFsMnPGKapr
+ UggKqfcNZ3uG1Vl2Qa4FtaTasVcQUwQqD3hUp4M0P5SqWetrwjQ1aUI4A8SWKhTvkX8M
+ e9dVBbWJcarKZ0Y3APc/SzKL/Ypp/ZKdLwYurzelY4WsYktJGUi7WnhxeVC+UCJRB6cH
+ AV18jGQORfjlcusu28oxRbg9EwhGMd9+TSZkf8h/vIst3vOjfvgk35yPTNdpBXMPjZIX hQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 30s1gn1vpm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:13:49 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04515jiJ057250
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:13:49 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 30t1r3qs5q-1
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:13:55 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04516fwD149315
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:13:55 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 30sjjxauf5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:13:48 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0451DmYP017117
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:13:48 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:13:55 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0451DsPM015580
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:13:54 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 May 2020 18:13:47 -0700
-Subject: [PATCH 2/3] xfs: reduce log recovery transaction block reservations
+        with ESMTP ; Mon, 04 May 2020 18:13:54 -0700
+Subject: [PATCH 3/3] xfs: fix an incore inode UAF in xfs_bui_recover
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 04 May 2020 18:13:45 -0700
-Message-ID: <158864122523.184729.12836505089842408007.stgit@magnolia>
+Date:   Mon, 04 May 2020 18:13:53 -0700
+Message-ID: <158864123329.184729.14504239314355330619.stgit@magnolia>
 In-Reply-To: <158864121286.184729.5959003885146573075.stgit@magnolia>
 References: <158864121286.184729.5959003885146573075.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -63,16 +63,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 suspectscore=3
- spamscore=0 mlxlogscore=999 malwarescore=0 phishscore=0 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 mlxscore=0 phishscore=0
+ bulkscore=0 malwarescore=0 spamscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
  definitions=main-2005050005
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
- priorityscore=1501 lowpriorityscore=0 spamscore=0 suspectscore=3
- phishscore=0 clxscore=1015 bulkscore=0 mlxlogscore=999 adultscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005050005
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=3 mlxscore=0
+ spamscore=0 clxscore=1015 priorityscore=1501 bulkscore=0 phishscore=0
+ impostorscore=0 malwarescore=0 lowpriorityscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005050005
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -80,173 +80,186 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-On filesystems that support them, bmap intent log items can be used to
-change mappings in inode data or attr forks.  However, if the bmbt must
-expand, the enormous block reservations that we make for finishing
-chains of deferred log items become a liability because the bmbt block
-allocator sets minleft to the transaction reservation and there probably
-aren't any AGs in the filesystem that have that much free space.
+In xfs_bui_item_recover, there exists a use-after-free bug with regards
+to the inode that is involved in the bmap replay operation.  If the
+mapping operation does not complete, we call xfs_bmap_unmap_extent to
+create a deferred op to finish the unmapping work, and we retain a
+pointer to the incore inode.
 
-Whereas previously we would reserve 93% of the free blocks in the
-filesystem, now we only want to reserve 7/8ths of the free space in the
-least full AG, and no more than half of the usable blocks in an AG.  In
-theory we shouldn't run out of space because (prior to the unclean
-shutdown) all of the in-progress transactions successfully reserved the
-worst case number of disk blocks.
+Unfortunately, the very next thing we do is commit the transaction and
+drop the inode.  If reclaim tears down the inode before we try to finish
+the defer ops, we dereference garbage and blow up.  Therefore, create a
+way to join inodes to the defer ops freezer so that we can maintain the
+xfs_inode reference until we're done with the inode.
+
+Note: This imposes the requirement that there be enough memory to keep
+every incore inode in memory throughout recovery.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_defer.c |    6 +---
- fs/xfs/libxfs/xfs_defer.h |    2 +
- fs/xfs/xfs_log_recover.c  |   70 +++++++++++++++++++++++++++++++++------------
- 3 files changed, 54 insertions(+), 24 deletions(-)
+ fs/xfs/libxfs/xfs_defer.c |   50 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_defer.h |   10 +++++++++
+ fs/xfs/xfs_bmap_item.c    |    7 ++++--
+ fs/xfs/xfs_icache.c       |   19 +++++++++++++++++
+ 4 files changed, 83 insertions(+), 3 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index bbbd0141d4a6..ea4d28851bbd 100644
+index ea4d28851bbd..72933fdafcb2 100644
 --- a/fs/xfs/libxfs/xfs_defer.c
 +++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -577,8 +577,8 @@ xfs_defer_freeze(
- 	return 0;
- }
+@@ -16,6 +16,7 @@
+ #include "xfs_inode.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_trace.h"
++#include "xfs_icache.h"
  
--/* Thaw a chain of deferred ops that are attached to a transaction. */
--int
-+/* Thaw a chain of frozen deferred ops by attaching them to the transaction. */
-+void
- xfs_defer_thaw(
+ /*
+  * Deferred Operations in XFS
+@@ -583,8 +584,19 @@ xfs_defer_thaw(
  	struct xfs_defer_freezer	*dff,
  	struct xfs_trans		*tp)
-@@ -588,8 +588,6 @@ xfs_defer_thaw(
+ {
++	int				i;
++
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 
++	/* Re-acquire the inode locks. */
++	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
++		if (!dff->dff_inodes[i])
++			break;
++
++		dff->dff_ilocks[i] = XFS_ILOCK_EXCL;
++		xfs_ilock(dff->dff_inodes[i], dff->dff_ilocks[i]);
++	}
++
  	/* Add the dfops items to the transaction. */
  	list_splice_init(&dff->dff_dfops, &tp->t_dfops);
  	tp->t_flags |= dff->dff_tpflags;
--
--	return 0;
+@@ -597,5 +609,43 @@ xfs_defer_freeezer_finish(
+ 	struct xfs_defer_freezer	*dff)
+ {
+ 	xfs_defer_cancel_list(mp, &dff->dff_dfops);
++	xfs_defer_freezer_irele(dff);
+ 	kmem_free(dff);
  }
- 
- /* Release a deferred op freezer and all resources associated with it. */
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 4789bf53dd96..7ae05e10d750 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -80,7 +80,7 @@ struct xfs_defer_freezer {
- 
- /* Functions to freeze a chain of deferred operations for later. */
- int xfs_defer_freeze(struct xfs_trans *tp, struct xfs_defer_freezer **dffp);
--int xfs_defer_thaw(struct xfs_defer_freezer *dff, struct xfs_trans *tp);
-+void xfs_defer_thaw(struct xfs_defer_freezer *dff, struct xfs_trans *tp);
- void xfs_defer_freeezer_finish(struct xfs_mount *mp,
- 		struct xfs_defer_freezer *dff);
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 908bfb284a9a..50b9d70e502f 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2512,6 +2512,44 @@ xlog_recover_process_data(
- 	return 0;
- }
- 
++
 +/*
-+ * Estimate a block reservation for a log recovery transaction.  Since we run
-+ * separate transactions for each chain of deferred ops that get created as a
-+ * result of recovering unfinished log intent items, we must be careful not to
-+ * reserve so many blocks that block allocations fail because we can't satisfy
-+ * the minleft requirements (e.g. for bmbt blocks).
++ * Attach an inode to this deferred ops freezer.  Callers must hold ILOCK_EXCL,
++ * which will be dropped and reacquired when we're ready to thaw the frozen
++ * deferred ops.
 + */
-+static int
-+xlog_estimate_recovery_resblks(
-+	struct xfs_mount	*mp,
-+	unsigned int		*resblks)
++int
++xfs_defer_freezer_ijoin(
++	struct xfs_defer_freezer	*dff,
++	struct xfs_inode		*ip)
 +{
-+	struct xfs_perag	*pag;
-+	xfs_agnumber_t		agno;
-+	unsigned int		free = 0;
-+	int			error;
++	unsigned int			i;
 +
-+	/* Don't use more than 7/8th of the free space in the least full AG. */
-+	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-+		unsigned int	ag_free;
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
 +
-+		error = xfs_alloc_pagf_init(mp, NULL, agno, 0);
-+		if (error)
-+			return error;
-+		pag = xfs_perag_get(mp, agno);
-+		ag_free = pag->pagf_freeblks + pag->pagf_flcount;
-+		free = max(free, (ag_free * 7) / 8);
-+		xfs_perag_put(pag);
++	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
++		if (dff->dff_inodes[i] == ip)
++			goto out;
++		if (dff->dff_inodes[i] == NULL)
++			break;
 +	}
 +
-+	/* Don't try to reserve more than half the usable AG blocks. */
-+	*resblks = min(free, xfs_alloc_ag_max_usable(mp) / 2);
-+	if (*resblks == 0)
-+		return -ENOSPC;
++	if (i == XFS_DEFER_FREEZER_INODES) {
++		ASSERT(0);
++		return -EFSCORRUPTED;
++	}
 +
++	/*
++	 * Attach this inode to the freezer and drop its ILOCK because we
++	 * assume the caller will need to allocate a transaction.
++	 */
++	dff->dff_inodes[i] = ip;
++	dff->dff_ilocks[i] = 0;
++out:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 +	return 0;
 +}
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index 7ae05e10d750..0052a0313283 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -76,6 +76,11 @@ struct xfs_defer_freezer {
+ 	/* Deferred ops state saved from the transaction. */
+ 	struct list_head	dff_dfops;
+ 	unsigned int		dff_tpflags;
 +
- /* Take all the collected deferred ops and finish them in order. */
- static int
- xlog_finish_defer_ops(
-@@ -2520,27 +2558,25 @@ xlog_finish_defer_ops(
- {
- 	struct xfs_defer_freezer *dff, *next;
- 	struct xfs_trans	*tp;
--	int64_t			freeblks;
--	uint			resblks;
-+	unsigned int		max_resblks;
- 	int			error = 0;
++	/* Inodes to hold when we want to finish the deferred work items. */
++#define XFS_DEFER_FREEZER_INODES	2
++	unsigned int		dff_ilocks[XFS_DEFER_FREEZER_INODES];
++	struct xfs_inode	*dff_inodes[XFS_DEFER_FREEZER_INODES];
+ };
  
-+	error = xlog_estimate_recovery_resblks(mp, &max_resblks);
-+	if (error)
-+		goto out;
+ /* Functions to freeze a chain of deferred operations for later. */
+@@ -83,5 +88,10 @@ int xfs_defer_freeze(struct xfs_trans *tp, struct xfs_defer_freezer **dffp);
+ void xfs_defer_thaw(struct xfs_defer_freezer *dff, struct xfs_trans *tp);
+ void xfs_defer_freeezer_finish(struct xfs_mount *mp,
+ 		struct xfs_defer_freezer *dff);
++int xfs_defer_freezer_ijoin(struct xfs_defer_freezer *dff,
++		struct xfs_inode *ip);
 +
- 	list_for_each_entry_safe(dff, next, dfops_freezers, dff_list) {
-+		unsigned int	resblks;
-+
-+		resblks = min_t(int64_t, percpu_counter_sum(&mp->m_fdblocks),
-+				max_resblks);
-+
- 		/*
- 		 * We're finishing the defer_ops that accumulated as a result
- 		 * of recovering unfinished intent items during log recovery.
- 		 * We reserve an itruncate transaction because it is the
--		 * largest permanent transaction type.  Since we're the only
--		 * user of the fs right now, take 93% (15/16) of the available
--		 * free blocks.  Use weird math to avoid a 64-bit division.
-+		 * largest permanent transaction type.
- 		 */
--		freeblks = percpu_counter_sum(&mp->m_fdblocks);
--		if (freeblks <= 0) {
--			error = -ENOSPC;
--			break;
--		}
--
--		resblks = min_t(int64_t, UINT_MAX, freeblks);
--		resblks = (resblks * 15) >> 4;
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
- 				0, XFS_TRANS_RESERVE, &tp);
- 		if (error)
-@@ -2548,12 +2584,7 @@ xlog_finish_defer_ops(
++/* These functions must be provided by the xfs implementation. */
++void xfs_defer_freezer_irele(struct xfs_defer_freezer *dff);
  
- 		/* transfer all collected dfops to this transaction */
- 		list_del_init(&dff->dff_list);
--		error = xfs_defer_thaw(dff, tp);
--		if (error) {
--			xfs_trans_cancel(tp);
--			xfs_defer_freeezer_finish(mp, dff);
--			break;
--		}
-+		xfs_defer_thaw(dff, tp);
- 
- 		error = xfs_trans_commit(tp);
- 		xfs_defer_freeezer_finish(mp, dff);
-@@ -2561,6 +2592,7 @@ xlog_finish_defer_ops(
- 			break;
+ #endif /* __XFS_DEFER_H__ */
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index c733bdeeeb9b..bbce191d8fcd 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -530,12 +530,13 @@ xfs_bui_item_recover(
  	}
  
-+out:
- 	/* Kill any remaining freezers. */
- 	list_for_each_entry_safe(dff, next, dfops_freezers, dff_list) {
- 		list_del_init(&dff->dff_list);
+ 	error = xlog_recover_trans_commit(tp, dffp);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	xfs_irele(ip);
+-	return error;
++	if (error)
++		goto err_rele;
++	return xfs_defer_freezer_ijoin(*dffp, ip);
+ 
+ err_inode:
+ 	xfs_trans_cancel(tp);
++err_rele:
+ 	if (ip) {
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		xfs_irele(ip);
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 17a0b86fe701..b96ddf5ff334 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -12,6 +12,7 @@
+ #include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
++#include "xfs_defer.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_inode_item.h"
+@@ -1847,3 +1848,21 @@ xfs_start_block_reaping(
+ 	xfs_queue_eofblocks(mp);
+ 	xfs_queue_cowblocks(mp);
+ }
++
++/* Release all the inode resources attached to this freezer. */
++void
++xfs_defer_freezer_irele(
++	struct xfs_defer_freezer	*dff)
++{
++	unsigned int			i;
++
++	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
++		if (!dff->dff_inodes[i])
++			break;
++
++		if (dff->dff_ilocks[i])
++			xfs_iunlock(dff->dff_inodes[i], dff->dff_ilocks[i]);
++		xfs_irele(dff->dff_inodes[i]);
++		dff->dff_inodes[i] = NULL;
++	}
++}
 
