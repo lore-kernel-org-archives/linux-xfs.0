@@ -2,164 +2,226 @@ Return-Path: <SRS0=NnDK=6T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B95FFC4724C
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 03:06:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEBB4C4724C
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 03:33:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F23F206CC
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 03:06:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7CE6206D7
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 03:33:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="M6+z3xxV"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HJb5x5Ie"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726516AbgEEDG6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 23:06:58 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:36194 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726286AbgEEDG5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 23:06:57 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04534wjm034911;
-        Tue, 5 May 2020 03:06:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=hy2h3ugQzY2cgYZXfce2ocywq3sFwtbMBgk/4FzdT8M=;
- b=M6+z3xxVBEj2YHtJzLWJ3tXbaemQxc1iqhkdIiLZ4goRkMRCMavzTtamrqpJWZV/e8+7
- TFj4hdK/otrxEJZ3QpnBzlG/0PjaOrOYDBffaIDDqKiOzEkIhrjgWxURXcDzacWdYso+
- 7cdkzWD+nNwlXAdilun3ACOL07ieIBi0QDYRFRq96INXiyOoH+7BJZD78nbwHB4hEcQ9
- QD3EmbFTIjobT15aE/NLr6QX7oWW5c/B70KZyfXbC20BWOB9ZnJCrMnEAgzZDkArlCln
- LrR8arnlN0DHN5MuBBs5lSN0+CuOyE5wb0tuas12W62+ur8TxKEZidwLVj537XcHrR4t 9g== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 30s1gn23rb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 May 2020 03:06:55 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04536s91142017;
-        Tue, 5 May 2020 03:06:54 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 30sjds0c4m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 May 2020 03:06:54 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04536qTf024984;
-        Tue, 5 May 2020 03:06:52 GMT
-Received: from localhost (/10.159.143.218)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 May 2020 20:06:52 -0700
-Date:   Mon, 4 May 2020 20:06:51 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
+        id S1726516AbgEEDd3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 23:33:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33410 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726345AbgEEDd3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 23:33:29 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09112C061A0F
+        for <linux-xfs@vger.kernel.org>; Mon,  4 May 2020 20:33:29 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id 207so421106pgc.6
+        for <linux-xfs@vger.kernel.org>; Mon, 04 May 2020 20:33:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=26/8kzQWl+S/LLxVh0eQpS7ObviU7spgX1jADHBlvDM=;
+        b=HJb5x5IeQowRPspO82RD1IZ8yF+8iJ7LfNbzEGWiiPg38xeW99P5ubxSKzYE9x+h98
+         YWi5nVPfWua8NSmVYwXlIjhzOIANGftCYq6s0jS5qL1wwBdnOmz+K41BrIDURorvCr/A
+         t/z7w2OGhLGowsFO2rakGwD5TXg5dLF82Q2f3lLS8xa5XXvxYIM2xUo6zBkzhR/UPucM
+         qC7L0UboMijsAEhUUHaeO2AE+jFlhVnnX7ur1zeCQxBjzaWiVpq++EOCz7cd55f0PtI8
+         1PU7F6PpfxCP/bqs7mhYux5gbMq2PNNqyiMJSH+oJT7GINB+BSPe7maoUdpZRfLcZHFQ
+         Gx5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=26/8kzQWl+S/LLxVh0eQpS7ObviU7spgX1jADHBlvDM=;
+        b=ZrBkFqtrSgNAeMuuR/eNIDjgQm+RvWNMPOiyF4Noy4Zw95KU4KCBWfp5tt2/n3JBHq
+         JRmXi8HGt8MBqOCm/twYtaUWfT27OiRDG9YYB2cCM1rwhPIRuwYefxH2POAPpSPMIkV6
+         7slKredMZ9wWdJkD8IlAV402Ing19qPgAr1NLQeZvT3zSC+Te4eobRizJbOeUwdfU6he
+         pPFab8VqJzbi6DBhLg7NbJAlwtLBOvStTflNXtsl4q1+e9I1DE7mv4l4DIcDxx76SAiN
+         rynwwnAFp+rFcxDmqjP9c+iLsminVqzPbmFgW630F1eFlcPrJVwBvML1gPIvJ8XOuzrL
+         mLAQ==
+X-Gm-Message-State: AGi0PuYwCmQ5gwJv331kTqghw+9pgMdpRELhRdzNSyaIqoueQ/yxGG0I
+        G/Kkx3qSq728A0beJgAQY8AnX5aqYxQ=
+X-Google-Smtp-Source: APiQypLfgTxC34Z3fNLTaltQDWjQaqD/Y799cDNjs6Ruyzs0vIatF9usBLkCXNFs1IqBd92hh39CDg==
+X-Received: by 2002:a63:340e:: with SMTP id b14mr1285752pga.290.1588649608374;
+        Mon, 04 May 2020 20:33:28 -0700 (PDT)
+Received: from garuda.localnet ([122.171.152.206])
+        by smtp.gmail.com with ESMTPSA id f4sm434280pgd.0.2020.05.04.20.33.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 May 2020 20:33:27 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: proper replay of deferred ops queued during log
- recovery
-Message-ID: <20200505030651.GE5716@magnolia>
-References: <158864121286.184729.5959003885146573075.stgit@magnolia>
- <158864121900.184729.15751838615488460497.stgit@magnolia>
- <20200505023305.GM2040@dread.disaster.area>
+Subject: Re: [PATCH 01/28] xfs: convert xfs_log_recover_item_t to struct xfs_log_recover_item
+Date:   Tue, 05 May 2020 09:03:24 +0530
+Message-ID: <1743750.cGs67GFofp@garuda>
+In-Reply-To: <158864103888.182683.1949900429505759832.stgit@magnolia>
+References: <158864103195.182683.2056162574447133617.stgit@magnolia> <158864103888.182683.1949900429505759832.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200505023305.GM2040@dread.disaster.area>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=5 mlxscore=0
- bulkscore=0 adultscore=0 phishscore=0 mlxlogscore=999 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005050023
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=5 mlxscore=0
- spamscore=0 clxscore=1015 priorityscore=1501 bulkscore=0 phishscore=0
- impostorscore=0 malwarescore=0 lowpriorityscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005050022
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 05, 2020 at 12:33:05PM +1000, Dave Chinner wrote:
-> On Mon, May 04, 2020 at 06:13:39PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > When we replay unfinished intent items that have been recovered from the
-> > log, it's possible that the replay will cause the creation of more
-> > deferred work items.  As outlined in commit 509955823cc9c ("xfs: log
-> > recovery should replay deferred ops in order"), later work items have an
-> > implicit ordering dependency on earlier work items.  Therefore, recovery
-> > must replay the items (both recovered and created) in the same order
-> > that they would have been during normal operation.
-> > 
-> > For log recovery, we enforce this ordering by using an empty transaction
-> > to collect deferred ops that get created in the process of recovering a
-> > log intent item to prevent them from being committed before the rest of
-> > the recovered intent items.  After we finish committing all the
-> > recovered log items, we allocate a transaction with an enormous block
-> > reservation, splice our huge list of created deferred ops into that
-> > transaction, and commit it, thereby finishing all those ops.
-> > 
-> > This is /really/ hokey -- it's the one place in XFS where we allow
-> > nested transactions; the splicing of the defer ops list is is inelegant
-> > and has to be done twice per recovery function; and the broken way we
-> > handle inode pointers and block reservations cause subtle use-after-free
-> > and allocator problems that will be fixed by this patch and the two
-> > patches after it.
-> > 
-> > Therefore, replace the hokey empty transaction with a structure designed
-> > to capture each chain of deferred ops that are created as part of
-> > recovering a single unfinished log intent.  Finally, refactor the loop
-> > that replays those chains to do so using one transaction per chain.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Tuesday 5 May 2020 6:40:39 AM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> FWIW, I don't like the "freezer" based naming here. It's too easily
-> confused with freezing and thawing the filesystem....
+> Remove the old typedefs.
+>
+
+Straight forward change.
+
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_log_recover.h |    4 ++--
+>  fs/xfs/xfs_log_recover.c        |   26 ++++++++++++++------------
+>  2 files changed, 16 insertions(+), 14 deletions(-)
 > 
-> I know, "delayed deferred ops" isn't much better, but at least it
-> won't get confused with existing unrelated functionality.
-
-xfs_defer_{freeze,thaw} -> xfs_defer_{capture,relink} ?
-
-> I've barely looked at the code, so no real comments on that yet,
-> but I did notice this:
 > 
-> > @@ -2495,35 +2515,59 @@ xlog_recover_process_data(
-> >  /* Take all the collected deferred ops and finish them in order. */
-> >  static int
-> >  xlog_finish_defer_ops(
-> > -	struct xfs_trans	*parent_tp)
-> > +	struct xfs_mount	*mp,
-> > +	struct list_head	*dfops_freezers)
-> >  {
-> > -	struct xfs_mount	*mp = parent_tp->t_mountp;
-> > +	struct xfs_defer_freezer *dff, *next;
-> >  	struct xfs_trans	*tp;
-> >  	int64_t			freeblks;
-> >  	uint			resblks;
-> ....
-> > +		resblks = min_t(int64_t, UINT_MAX, freeblks);
-> > +		resblks = (resblks * 15) >> 4;
+> diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+> index 3bf671637a91..148e0cb5d379 100644
+> --- a/fs/xfs/libxfs/xfs_log_recover.h
+> +++ b/fs/xfs/libxfs/xfs_log_recover.h
+> @@ -22,13 +22,13 @@
+>  /*
+>   * item headers are in ri_buf[0].  Additional buffers follow.
+>   */
+> -typedef struct xlog_recover_item {
+> +struct xlog_recover_item {
+>  	struct list_head	ri_list;
+>  	int			ri_type;
+>  	int			ri_cnt;	/* count of regions found */
+>  	int			ri_total;	/* total regions */
+>  	xfs_log_iovec_t		*ri_buf;	/* ptr to regions buffer */
+> -} xlog_recover_item_t;
+> +};
+>  
+>  struct xlog_recover {
+>  	struct hlist_node	r_list;
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index d0e2dd81de53..c2c06f70fb8a 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1841,7 +1841,7 @@ xlog_recover_reorder_trans(
+>  	struct xlog_recover	*trans,
+>  	int			pass)
+>  {
+> -	xlog_recover_item_t	*item, *n;
+> +	struct xlog_recover_item *item, *n;
+>  	int			error = 0;
+>  	LIST_HEAD(sort_list);
+>  	LIST_HEAD(cancel_list);
+> @@ -2056,7 +2056,7 @@ xlog_recover_buffer_pass1(
+>  STATIC int
+>  xlog_recover_do_inode_buffer(
+>  	struct xfs_mount	*mp,
+> -	xlog_recover_item_t	*item,
+> +	struct xlog_recover_item *item,
+>  	struct xfs_buf		*bp,
+>  	xfs_buf_log_format_t	*buf_f)
+>  {
+> @@ -2561,7 +2561,7 @@ xlog_recover_validate_buf_type(
+>  STATIC void
+>  xlog_recover_do_reg_buffer(
+>  	struct xfs_mount	*mp,
+> -	xlog_recover_item_t	*item,
+> +	struct xlog_recover_item *item,
+>  	struct xfs_buf		*bp,
+>  	xfs_buf_log_format_t	*buf_f,
+>  	xfs_lsn_t		current_lsn)
+> @@ -3759,7 +3759,7 @@ STATIC int
+>  xlog_recover_do_icreate_pass2(
+>  	struct xlog		*log,
+>  	struct list_head	*buffer_list,
+> -	xlog_recover_item_t	*item)
+> +	struct xlog_recover_item *item)
+>  {
+>  	struct xfs_mount	*mp = log->l_mp;
+>  	struct xfs_icreate_log	*icl;
+> @@ -4134,9 +4134,9 @@ STATIC void
+>  xlog_recover_add_item(
+>  	struct list_head	*head)
+>  {
+> -	xlog_recover_item_t	*item;
+> +	struct xlog_recover_item *item;
+>  
+> -	item = kmem_zalloc(sizeof(xlog_recover_item_t), 0);
+> +	item = kmem_zalloc(sizeof(struct xlog_recover_item), 0);
+>  	INIT_LIST_HEAD(&item->ri_list);
+>  	list_add_tail(&item->ri_list, head);
+>  }
+> @@ -4148,7 +4148,7 @@ xlog_recover_add_to_cont_trans(
+>  	char			*dp,
+>  	int			len)
+>  {
+> -	xlog_recover_item_t	*item;
+> +	struct xlog_recover_item *item;
+>  	char			*ptr, *old_ptr;
+>  	int			old_len;
+>  
+> @@ -4171,7 +4171,8 @@ xlog_recover_add_to_cont_trans(
+>  	}
+>  
+>  	/* take the tail entry */
+> -	item = list_entry(trans->r_itemq.prev, xlog_recover_item_t, ri_list);
+> +	item = list_entry(trans->r_itemq.prev, struct xlog_recover_item,
+> +			  ri_list);
+>  
+>  	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
+>  	old_len = item->ri_buf[item->ri_cnt-1].i_len;
+> @@ -4205,7 +4206,7 @@ xlog_recover_add_to_trans(
+>  	int			len)
+>  {
+>  	struct xfs_inode_log_format	*in_f;			/* any will do */
+> -	xlog_recover_item_t	*item;
+> +	struct xlog_recover_item *item;
+>  	char			*ptr;
+>  
+>  	if (!len)
+> @@ -4241,13 +4242,14 @@ xlog_recover_add_to_trans(
+>  	in_f = (struct xfs_inode_log_format *)ptr;
+>  
+>  	/* take the tail entry */
+> -	item = list_entry(trans->r_itemq.prev, xlog_recover_item_t, ri_list);
+> +	item = list_entry(trans->r_itemq.prev, struct xlog_recover_item,
+> +			  ri_list);
+>  	if (item->ri_total != 0 &&
+>  	     item->ri_total == item->ri_cnt) {
+>  		/* tail item is in use, get a new one */
+>  		xlog_recover_add_item(&trans->r_itemq);
+>  		item = list_entry(trans->r_itemq.prev,
+> -					xlog_recover_item_t, ri_list);
+> +					struct xlog_recover_item, ri_list);
+>  	}
+>  
+>  	if (item->ri_total == 0) {		/* first region to be added */
+> @@ -4293,7 +4295,7 @@ STATIC void
+>  xlog_recover_free_trans(
+>  	struct xlog_recover	*trans)
+>  {
+> -	xlog_recover_item_t	*item, *n;
+> +	struct xlog_recover_item *item, *n;
+>  	int			i;
+>  
+>  	hlist_del_init(&trans->r_list);
 > 
-> Can overflow when freeblks > (UINT_MAX / 15).
-
-D'oh.  Ugh, I hate this whole fugly hack.
-
-TBH I've been thinking that perhaps the freezer function should be
-capturing the unused transaction block reservation when we capture the
-dfops chain from the transaction.
-
-When we set up the second transaction, we then set t_blk_res to the
-captured block reservation.  So long as the recovery function is smart
-enough to set up sufficient reservation we should avoid hitting ENOSPC,
-right?
-
---D
-
-> Cheers,
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+
+
+-- 
+chandan
+
+
+
