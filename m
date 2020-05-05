@@ -2,129 +2,214 @@ Return-Path: <SRS0=NnDK=6T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0460DC47254
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 13:12:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BBBCC47247
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 13:19:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7DE320836
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 13:12:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A58620757
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 13:19:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eBkQ7NaO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aYY2ciS5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728933AbgEENMt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 May 2020 09:12:49 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:27476 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728512AbgEENMt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 09:12:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588684368;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xm1KmG3zmVlj9bZ+qtfqdWhkLL8eiUcF/6nT+YszK1g=;
-        b=eBkQ7NaOyuuHcDqDFRy3H6k+inbVfJNs82efTItPvOzuo1dVmvmZnzmlUHv18xl0hHdWvD
-        goD6rVSEljG20msMbIzU4zbEJrg141tjPPzXgehpZs6LqsV1JfXmP4oXlrs7wUMTNIkh0B
-        vFiQnDV2qDY9lzkDwEs3/6cGc580XWo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-427-sHiGol0TPSGRa2K_rZD5CQ-1; Tue, 05 May 2020 09:12:46 -0400
-X-MC-Unique: sHiGol0TPSGRa2K_rZD5CQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AC6C5461;
-        Tue,  5 May 2020 13:12:45 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4D4476292F;
-        Tue,  5 May 2020 13:12:45 +0000 (UTC)
-Date:   Tue, 5 May 2020 09:12:43 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Allison Collins <allison.henderson@oracle.com>
+        id S1729044AbgEENTY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 May 2020 09:19:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39916 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728892AbgEENTX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 09:19:23 -0400
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96272C061A0F
+        for <linux-xfs@vger.kernel.org>; Tue,  5 May 2020 06:19:23 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id d184so874834pfd.4
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 06:19:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=EhKfoILA/OHXv2dU5Q3Y+Mo5u+2QuTH2EKn1gDl77uU=;
+        b=aYY2ciS58yNgr2qlH1lRWegiVefBn3/SzQcPQ/lGpI9wgmksRcynBjBznMVp4CVpa/
+         SC4OhhfCw6sCpob+Hmd6oxWDPjHkRChUrUdHmuBcwFpXY7LXmaP+7tkp/VEKCHRT440i
+         qa4Rh8B1/vrI9cYk0ZdCHECODtOXoVAmXO0BNMqhAJxQhpoD15LeJBH7GCSLX1QRrpWR
+         h+TnzGPssqoDSA6+70gyCNJyDqYVgwqlX963HNB+JKo1xme07rqstnfid+t9dOFgBjqG
+         1I3BTv55ke/VvEv9xeHIMhlEKBniiqmPdBKOKjRmhQYH6/F/fUuxvK8rmBjf4Z4u7kdq
+         R4tA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=EhKfoILA/OHXv2dU5Q3Y+Mo5u+2QuTH2EKn1gDl77uU=;
+        b=f0DRqpSuG08Wl6IF6ekme/+NJ0GYih6Vz14IdDbUYO+rs9bMZaPaMNKCueu31Qb8mt
+         K+Bk8eaedjFhORXX70lMohj5Xx3ykwNveXw46HXTZpj48SdlxMPVrgsnsqt0OvSkPDit
+         a+niDyeA5eskoFxwOhkXfoy31edbdkZi7Ag7RgFwHjSkLHndwbzB2RVAcW9KXksCxc+b
+         U8/7MFy/ZPchacUCTNF8gbv8guniCm1+kzIlHNYB8RDOJlIi9Zww+vmnl/p0TZsjWeU+
+         2UDUVSKX3UCe3syclpCa+2Ix2B5jR1shtPvxbuUYP3jGMuKXIYF3QYYhWRuz8CmGf2W+
+         iB5w==
+X-Gm-Message-State: AGi0PuYSQM8YQ8pwNiS9z3fUoGvza+XrLaZCwr/S5Ik5wzMtVWPWkNu/
+        0bIJNF0sSFep9/pZG3WDOxg=
+X-Google-Smtp-Source: APiQypKoIiMxDUtmBKLVCBVzfbHMM9uviiYSU92l8jd3uZb8yuamHJ1ODd1GL7XE4BT+jnvow7U2LA==
+X-Received: by 2002:a63:151e:: with SMTP id v30mr2811910pgl.329.1588684760619;
+        Tue, 05 May 2020 06:19:20 -0700 (PDT)
+Received: from garuda.localnet ([122.171.152.206])
+        by smtp.gmail.com with ESMTPSA id b8sm2030439pft.11.2020.05.05.06.19.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 May 2020 06:19:19 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v9 21/24] xfs: Lift -ENOSPC handler from
- xfs_attr_leaf_addname
-Message-ID: <20200505131243.GE60048@bfoster>
-References: <20200430225016.4287-1-allison.henderson@oracle.com>
- <20200430225016.4287-22-allison.henderson@oracle.com>
+Subject: Re: [PATCH 19/28] xfs: refactor xlog_recover_process_unlinked
+Date:   Tue, 05 May 2020 18:49:17 +0530
+Message-ID: <1967481.PxtkyhZy26@garuda>
+In-Reply-To: <158864115522.182683.9248036319539577559.stgit@magnolia>
+References: <158864103195.182683.2056162574447133617.stgit@magnolia> <158864115522.182683.9248036319539577559.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200430225016.4287-22-allison.henderson@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Apr 30, 2020 at 03:50:13PM -0700, Allison Collins wrote:
-> Lift -ENOSPC handler from xfs_attr_leaf_addname.  This will help to
-> reorganize transitions between the attr forms later.
+On Tuesday 5 May 2020 6:42:35 AM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> Hoist the unlinked inode processing logic out of the AG loop and into
+> its own function.  No functional changes.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_attr.c | 25 +++++++++++--------------
->  1 file changed, 11 insertions(+), 14 deletions(-)
+>  fs/xfs/xfs_unlink_recover.c |   91 +++++++++++++++++++++++++------------------
+>  1 file changed, 52 insertions(+), 39 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 9171895..c8cae68 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -299,6 +299,13 @@ xfs_attr_set_args(
->  			return error;
->  
->  		/*
-> +		 * Promote the attribute list to the Btree format.
-> +		 */
-> +		error = xfs_attr3_leaf_to_node(args);
-> +		if (error)
-> +			return error;
-> +
-> +		/*
->  		 * Commit that transaction so that the node_addname()
->  		 * call can manage its own transactions.
->  		 */
-> @@ -602,7 +609,7 @@ xfs_attr_leaf_try_add(
->  	struct xfs_da_args	*args,
->  	struct xfs_buf		*bp)
+> 
+> diff --git a/fs/xfs/xfs_unlink_recover.c b/fs/xfs/xfs_unlink_recover.c
+> index 2a19d096e88d..413b34085640 100644
+> --- a/fs/xfs/xfs_unlink_recover.c
+> +++ b/fs/xfs/xfs_unlink_recover.c
+> @@ -145,54 +145,67 @@ xlog_recover_process_one_iunlink(
+>   * scheduled on this CPU to ensure other scheduled work can run without undue
+>   * latency.
+>   */
+> -void
+> -xlog_recover_process_unlinked(
+> -	struct xlog		*log)
+> +STATIC int
+> +xlog_recover_process_iunlinked(
+> +	struct xfs_mount	*mp,
+> +	xfs_agnumber_t		agno)
 >  {
-> -	int			retval, error;
-> +	int			retval;
+> -	struct xfs_mount	*mp;
+>  	struct xfs_agi		*agi;
+>  	struct xfs_buf		*agibp;
+> -	xfs_agnumber_t		agno;
+>  	xfs_agino_t		agino;
+>  	int			bucket;
+>  	int			error;
 >  
->  	/*
->  	 * Look up the given attribute in the leaf block.  Figure out if
-> @@ -634,20 +641,10 @@ xfs_attr_leaf_try_add(
->  	}
->  
->  	/*
-> -	 * Add the attribute to the leaf block, transitioning to a Btree
-> -	 * if required.
-> +	 * Add the attribute to the leaf block
->  	 */
-> -	retval = xfs_attr3_leaf_add(bp, args);
-> -	if (retval == -ENOSPC) {
+> -	mp = log->l_mp;
+> -
+> -	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
 > -		/*
-> -		 * Promote the attribute list to the Btree format. Unless an
-> -		 * error occurs, retain the -ENOSPC retval
+> -		 * Find the agi for this ag.
 > -		 */
-> -		error = xfs_attr3_leaf_to_node(args);
-> -		if (error)
-> -			return error;
-> -	}
-> -	return retval;
-> +	return xfs_attr3_leaf_add(bp, args);
+> -		error = xfs_read_agi(mp, NULL, agno, &agibp);
+> -		if (error) {
+> -			/*
+> -			 * AGI is b0rked. Don't process it.
+> -			 *
+> -			 * We should probably mark the filesystem as corrupt
+> -			 * after we've recovered all the ag's we can....
+> -			 */
+> -			continue;
+> -		}
+> +	/*
+> +	 * Find the agi for this ag.
+> +	 */
+> +	error = xfs_read_agi(mp, NULL, agno, &agibp);
+> +	if (error) {
+>  		/*
+> -		 * Unlock the buffer so that it can be acquired in the normal
+> -		 * course of the transaction to truncate and free each inode.
+> -		 * Because we are not racing with anyone else here for the AGI
+> -		 * buffer, we don't even need to hold it locked to read the
+> -		 * initial unlinked bucket entries out of the buffer. We keep
+> -		 * buffer reference though, so that it stays pinned in memory
+> -		 * while we need the buffer.
+> +		 * AGI is b0rked. Don't process it.
+> +		 *
+> +		 * We should probably mark the filesystem as corrupt
+> +		 * after we've recovered all the ag's we can....
+>  		 */
+> -		agi = agibp->b_addr;
+> -		xfs_buf_unlock(agibp);
+> -
+> -		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
+> -			agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+> -			while (agino != NULLAGINO) {
+> -				agino = xlog_recover_process_one_iunlink(mp,
+> -							agno, agino, bucket);
+> -				cond_resched();
+> -			}
+> +		return error;
+
+
+This causes a change in behaviour i.e. an error return from here would cause
+xlog_recover_process_unlinked() to break "loop on all AGs". Before this
+change, XFS would continue to process all the remaining AGs as described by
+the above comment.
+
+
+> +	}
 > +
->  out_brelse:
->  	xfs_trans_brelse(args->trans, bp);
->  	return retval;
-> -- 
-> 2.7.4
+> +	/*
+> +	 * Unlock the buffer so that it can be acquired in the normal
+> +	 * course of the transaction to truncate and free each inode.
+> +	 * Because we are not racing with anyone else here for the AGI
+> +	 * buffer, we don't even need to hold it locked to read the
+> +	 * initial unlinked bucket entries out of the buffer. We keep
+> +	 * buffer reference though, so that it stays pinned in memory
+> +	 * while we need the buffer.
+> +	 */
+> +	agi = agibp->b_addr;
+> +	xfs_buf_unlock(agibp);
+> +
+> +	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
+> +		agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+> +		while (agino != NULLAGINO) {
+> +			agino = xlog_recover_process_one_iunlink(mp,
+> +						agno, agino, bucket);
+> +			cond_resched();
+>  		}
+> -		xfs_buf_rele(agibp);
+> +	}
+> +	xfs_buf_rele(agibp);
+> +
+> +	return 0;
+> +}
+> +
+> +void
+> +xlog_recover_process_unlinked(
+> +	struct xlog		*log)
+> +{
+> +	struct xfs_mount	*mp = log->l_mp;
+> +	xfs_agnumber_t		agno;
+> +	int			error;
+> +
+> +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+> +		error = xlog_recover_process_iunlinked(mp, agno);
+> +		if (error)
+> +			break;
+>  	}
+>  }
 > 
+> 
+
+
+-- 
+chandan
+
+
 
