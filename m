@@ -2,114 +2,183 @@ Return-Path: <SRS0=NnDK=6T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 149D1C47254
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 11:58:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04206C47247
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 12:03:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1A8B206A5
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 11:58:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1185206B9
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 12:03:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HGPkD9sk"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H7YwZNew"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728180AbgEEL6R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 May 2020 07:58:17 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:58643 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727090AbgEEL6R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 07:58:17 -0400
+        id S1727090AbgEEMDU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 May 2020 08:03:20 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:44635 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728627AbgEEMDU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 08:03:20 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588679895;
+        s=mimecast20190719; t=1588680198;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=7lyvXJ5DuoenPOxI+FBP/XOYDK6e/RtCSUuPqVfZI80=;
-        b=HGPkD9skbtf+F3Oe57d0uQGcgfrq2hggDRBPrCYyNwnGj0fWMebD7aU/dnDGX2ed67OtJg
-        ereWtiZGw0UDGu3wlLWcSfhDPI+jnk+64k1KfMgetICy6U7AVBw+PMyxLwo7ZZYENygrUd
-        Iq5lBsEnlhVLRJoKph3RtSeuzYWe+Ko=
+        bh=jW6dkDuLVcPzMsdhnnWrEvsl0h9GXod1RZMv6ulNPzc=;
+        b=H7YwZNew69PLnBDbRw5QEW+a1bpl16VY3d+J0SZSS9+tLVu74WI2I+r47cNQqw30q99kaL
+        tST6c+e6MxbuZB5cVoyWbN1b5VAfux2AQXV5kSk9cyQInpEXs6EX4vM5qHqd903Tqjun8Q
+        xncg+8MNMy1n58GHniGsx+/8S7WXFW0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-169-vzLK3MBxMnGA-O7voMpEWg-1; Tue, 05 May 2020 07:58:13 -0400
-X-MC-Unique: vzLK3MBxMnGA-O7voMpEWg-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-199-S7MCdJmzMJCtg-IsYZzQrA-1; Tue, 05 May 2020 08:03:16 -0400
+X-MC-Unique: S7MCdJmzMJCtg-IsYZzQrA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 00D1D107ACCA;
-        Tue,  5 May 2020 11:58:13 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D955F80183C;
+        Tue,  5 May 2020 12:03:15 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id AB09260E1C;
-        Tue,  5 May 2020 11:58:12 +0000 (UTC)
-Date:   Tue, 5 May 2020 07:58:10 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7DA9C5D9D3;
+        Tue,  5 May 2020 12:03:15 +0000 (UTC)
+Date:   Tue, 5 May 2020 08:03:13 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
+To:     Allison Collins <allison.henderson@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 00/17] xfs: flush related error handling cleanups
-Message-ID: <20200505115810.GA60048@bfoster>
-References: <20200504141154.55887-1-bfoster@redhat.com>
- <20200504215307.GL2040@dread.disaster.area>
+Subject: Re: [PATCH v9 10/24] xfs: Add helper function
+ __xfs_attr_rmtval_remove
+Message-ID: <20200505120313.GB60048@bfoster>
+References: <20200430225016.4287-1-allison.henderson@oracle.com>
+ <20200430225016.4287-11-allison.henderson@oracle.com>
+ <20200504132722.GA54625@bfoster>
+ <d2effe05-04da-3c8d-5020-4fca83875051@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200504215307.GL2040@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <d2effe05-04da-3c8d-5020-4fca83875051@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 05, 2020 at 07:53:07AM +1000, Dave Chinner wrote:
-> On Mon, May 04, 2020 at 10:11:37AM -0400, Brian Foster wrote:
-> > Hi all,
+On Mon, May 04, 2020 at 02:36:39PM -0700, Allison Collins wrote:
+> 
+> 
+> On 5/4/20 6:27 AM, Brian Foster wrote:
+> > On Thu, Apr 30, 2020 at 03:50:02PM -0700, Allison Collins wrote:
+> > > This function is similar to xfs_attr_rmtval_remove, but adapted to
+> > > return EAGAIN for new transactions. We will use this later when we
+> > > introduce delayed attributes.  This function will eventually replace
+> > > xfs_attr_rmtval_remove
+> > > 
+> > > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> > > Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+> > > ---
 > > 
-> > I think everything has been reviewed to this point. Only minor changes
-> > noted below in this release. A git repo is available here[1].
-> > 
-> > The only outstanding feedback that I'm aware of is Dave's comment on
-> > patch 7 of v3 [2] regarding the shutdown assert check. I'm not aware of
-> > any means to get through xfs_wait_buftarg() with a dirty buffer that
-> > hasn't undergone the permanant error sequence and thus shut down the fs.
-> 
-> # echo 0 > /sys/fs/xfs/<dev>/fail_at_unmount
-> 
-> And now any error with a "retry forever" config (the default) will
-> be collected by xfs_buftarg_wait() without a preceeding shutdown as
-> xfs_buf_iodone_callback_error() will not treat it as a permanent
-> error during unmount. i.e. this doesn't trigger:
-> 
->         /* At unmount we may treat errors differently */
->         if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
->                 goto permanent_error;
-> 
-> and so the error handling just marks it with a write error and lets
-> it go for a write retry in future. These are then collected in
-> xfs_buftarg_wait() as nothing is going to retry them once unmount
-> gets to this point...
+> > Looks like the commit log needs some rewording now that this is a
+> > refactor patch. With that fixed:
+> Ok, maybe just an extra line like "Refactor xfs_attr_rmtval_remove to add
+> helper function __xfs_attr_rmtval_remove" ?
 > 
 
-That doesn't accurately describe the behavior of that configuration,
-though. "Retry forever" means that dirty buffers are going to cycle
-through submission retries and the unmount is going to hang indefinitely
-(on pushing the AIL). Indeed, preventing this unmount hang is the
-original purpose of the fail at unmount knob (commit here[1]).
-
-IOW, we don't get to xfs_wait_buftarg() in that scenario until all dirty
-buffers are either written back successfully or the error configuration
-changes to process the failures as permanent errors and shuts down the
-fs. This can be confirmed easily with the buffer I/O error injection
-patch (use a value of 1 to simulate persistent errors).
+I'd update the first sentence to say something like that instead of how
+the function is similar to xfs_attr_rmtval_remove().
 
 Brian
 
-[1] e6b3bb78962e6 ("xfs: add "fail at unmount" error handling configuration")
-
-> Cheers,
+> > 
+> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Alrighty, thank you!
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Allison
+> 
+> > 
+> > >   fs/xfs/libxfs/xfs_attr_remote.c | 46 ++++++++++++++++++++++++++++++++---------
+> > >   fs/xfs/libxfs/xfs_attr_remote.h |  1 +
+> > >   2 files changed, 37 insertions(+), 10 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> > > index 4d51969..02d1a44 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> > > +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> > > @@ -681,7 +681,7 @@ xfs_attr_rmtval_remove(
+> > >   	xfs_dablk_t		lblkno;
+> > >   	int			blkcnt;
+> > >   	int			error = 0;
+> > > -	int			done = 0;
+> > > +	int			retval = 0;
+> > >   	trace_xfs_attr_rmtval_remove(args);
+> > > @@ -693,14 +693,10 @@ xfs_attr_rmtval_remove(
+> > >   	 */
+> > >   	lblkno = args->rmtblkno;
+> > >   	blkcnt = args->rmtblkcnt;
+> > > -	while (!done) {
+> > > -		error = xfs_bunmapi(args->trans, args->dp, lblkno, blkcnt,
+> > > -				    XFS_BMAPI_ATTRFORK, 1, &done);
+> > > -		if (error)
+> > > -			return error;
+> > > -		error = xfs_defer_finish(&args->trans);
+> > > -		if (error)
+> > > -			return error;
+> > > +	do {
+> > > +		retval = __xfs_attr_rmtval_remove(args);
+> > > +		if (retval && retval != EAGAIN)
+> > > +			return retval;
+> > >   		/*
+> > >   		 * Close out trans and start the next one in the chain.
+> > > @@ -708,6 +704,36 @@ xfs_attr_rmtval_remove(
+> > >   		error = xfs_trans_roll_inode(&args->trans, args->dp);
+> > >   		if (error)
+> > >   			return error;
+> > > -	}
+> > > +	} while (retval == -EAGAIN);
+> > > +
+> > >   	return 0;
+> > >   }
+> > > +
+> > > +/*
+> > > + * Remove the value associated with an attribute by deleting the out-of-line
+> > > + * buffer that it is stored on. Returns EAGAIN for the caller to refresh the
+> > > + * transaction and recall the function
+> > > + */
+> > > +int
+> > > +__xfs_attr_rmtval_remove(
+> > > +	struct xfs_da_args	*args)
+> > > +{
+> > > +	int			error, done;
+> > > +
+> > > +	/*
+> > > +	 * Unmap value blocks for this attr.
+> > > +	 */
+> > > +	error = xfs_bunmapi(args->trans, args->dp, args->rmtblkno,
+> > > +			    args->rmtblkcnt, XFS_BMAPI_ATTRFORK, 1, &done);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	error = xfs_defer_finish(&args->trans);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	if (!done)
+> > > +		return -EAGAIN;
+> > > +
+> > > +	return error;
+> > > +}
+> > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+> > > index eff5f95..ee3337b 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr_remote.h
+> > > +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+> > > @@ -14,4 +14,5 @@ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> > >   int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+> > >   		xfs_buf_flags_t incore_flags);
+> > >   int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+> > > +int __xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> > >   #endif /* __XFS_ATTR_REMOTE_H__ */
+> > > -- 
+> > > 2.7.4
+> > > 
+> > 
 > 
 
