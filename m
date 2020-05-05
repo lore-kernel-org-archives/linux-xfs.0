@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C1AC3A5A9
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:12:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE746C3A5A9
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:12:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 07645206C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:12:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96B08206C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:12:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B+XCzdJu"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zbglELCU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727102AbgEEBM2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 21:12:28 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:50328 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726531AbgEEBM2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 21:12:28 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04514DSE143385
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:12:26 GMT
+        id S1727105AbgEEBMf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 21:12:35 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:47386 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726531AbgEEBMf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 21:12:35 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04513u0e055596
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:12:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=dr6f4x0UpyMpZ55UGqE4u3DyUxa0dSEiL+ezV2PJJcU=;
- b=B+XCzdJuya0OHJ6y9ix1iKijTVCIW198iaKimvEZMs6KlJrYd+rRgnD+KRAT+ttWGe6w
- jqak96cWUA47DeDea6UYVWgfc/0ZTqmsu1Fdt2LECjgRhhb3oGGH2RUZ/rcQuozvPZsf
- mgILhRhr6JaynMLEmGhq/24loYCOAKNXDV42IRIr8eeWWvEQibQCjIcRciWqPqzhZp4s
- Rtc+dkBI3SGhzyMMDrHdVYjQ9ylaTLG5avN7S+mhan94GvY/egVkQSosMQ74xafoUDdC
- hRYmbuF/YKifL8jrvcVW1BgAgGPAp6QndX0zEonMeXDQuSo9q1zj53BPP83lzvJdQPEI Ww== 
+ bh=7uX1UZ1I3GCFmvH+BsbR4Q7j3vxOKO00Mo0zAGoUZmQ=;
+ b=zbglELCUMwdKcP+YiCAvrFd1Uhcjr+7decBhtaLP22inlCC0D+c0+HwyQSZ0HH+XagXv
+ moLAEjvPv+nmSeffdrht3jRRi9NdQAElrj/1DooJ/jHkf79schvh3iwCGbDmNjg6/Jsa
+ 3LNp1D+5iHEHxY22zKS7E+NvSxDHpiEd2O0VUQAePtSXg466veSunT27s+odRYUyGO/E
+ ATIMNpBWCzyQukIigdDC7PUtfRVGYpKy4LzRIBqhpX3A4Nb3NYqr366mko4+X57Vtj/Y
+ ID4o8TqtnmQhBDYQQrZc27Sh48B7XN9JVTZSNKgH85KqRXv5pL9ATG/SVIHXyJ40iJOx 7A== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 30s09r2358-1
+        by userp2120.oracle.com with ESMTP id 30s1gn1vkx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:12:26 +0000
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:12:32 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04515SRT145335
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:12:25 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 30sjnckxen-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04515Sn9145329
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:12:31 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 30sjnckxu5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:12:25 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0451COPQ015144
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:12:24 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:12:31 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0451CUx8016485
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:12:30 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 May 2020 18:12:23 -0700
-Subject: [PATCH 17/28] xfs: refactor recovered BUI log item playback
+        with ESMTP ; Mon, 04 May 2020 18:12:29 -0700
+Subject: [PATCH 18/28] xfs: refactor unlinked inode recovery
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 04 May 2020 18:12:22 -0700
-Message-ID: <158864114272.182683.11138860973756666002.stgit@magnolia>
+Date:   Mon, 04 May 2020 18:12:29 -0700
+Message-ID: <158864114901.182683.2099772155374609732.stgit@magnolia>
 In-Reply-To: <158864103195.182683.2056162574447133617.stgit@magnolia>
 References: <158864103195.182683.2056162574447133617.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -68,11 +68,11 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adults
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
  definitions=main-2005050005
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0
- lowpriorityscore=0 spamscore=0 adultscore=0 clxscore=1015 suspectscore=3
- priorityscore=1501 malwarescore=0 mlxlogscore=999 phishscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005050005
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=3 mlxscore=0
+ spamscore=0 clxscore=1015 priorityscore=1501 bulkscore=0 phishscore=0
+ impostorscore=0 malwarescore=0 lowpriorityscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005050005
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -80,236 +80,442 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the code that processes the log items created from the recovered
-log items into the per-item source code files and use dispatch functions
-to call them.  No functional changes.
+Move the code that processes unlinked inodes into a separate file in
+preparation for centralizing the log recovery bits that have to walk
+every AG.  No functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_item.c   |   44 ++++++++++++++++++----
- fs/xfs/xfs_bmap_item.h   |    3 --
- fs/xfs/xfs_log_recover.c |   91 ++++++----------------------------------------
- 3 files changed, 47 insertions(+), 91 deletions(-)
+ fs/xfs/Makefile                 |    3 -
+ fs/xfs/libxfs/xfs_log_recover.h |    1 
+ fs/xfs/xfs_log_recover.c        |  177 -----------------------------------
+ fs/xfs/xfs_unlink_recover.c     |  198 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 202 insertions(+), 177 deletions(-)
+ create mode 100644 fs/xfs/xfs_unlink_recover.c
 
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 0fbebef69e26..f88ebf8634c4 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -28,6 +28,8 @@
- kmem_zone_t	*xfs_bui_zone;
- kmem_zone_t	*xfs_bud_zone;
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 04611a1068b4..505c898d6cee 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -109,7 +109,8 @@ xfs-y				+= xfs_log.o \
+ 				   xfs_rmap_item.o \
+ 				   xfs_log_recover.o \
+ 				   xfs_trans_ail.o \
+-				   xfs_trans_buf.o
++				   xfs_trans_buf.o \
++				   xfs_unlink_recover.o
  
-+static const struct xfs_item_ops xfs_bui_item_ops;
-+
- static inline struct xfs_bui_log_item *BUI_ITEM(struct xfs_log_item *lip)
- {
- 	return container_of(lip, struct xfs_bui_log_item, bui_item);
-@@ -47,7 +49,7 @@ xfs_bui_item_free(
-  * committed vs unpin operations in bulk insert operations. Hence the reference
-  * count to ensure only the last caller frees the BUI.
-  */
--void
-+STATIC void
- xfs_bui_release(
- 	struct xfs_bui_log_item	*buip)
- {
-@@ -126,13 +128,6 @@ xfs_bui_item_release(
- 	xfs_bui_release(BUI_ITEM(lip));
- }
+ # optional features
+ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index a45f6e9fa47b..33c14dd22b77 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -124,5 +124,6 @@ bool xlog_add_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+ bool xlog_is_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+ bool xlog_put_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+ void xlog_recover_iodone(struct xfs_buf *bp);
++void xlog_recover_process_unlinked(struct xlog *log);
  
--static const struct xfs_item_ops xfs_bui_item_ops = {
--	.iop_size	= xfs_bui_item_size,
--	.iop_format	= xfs_bui_item_format,
--	.iop_unpin	= xfs_bui_item_unpin,
--	.iop_release	= xfs_bui_item_release,
--};
--
- /*
-  * Allocate and initialize an bui item with the given number of extents.
-  */
-@@ -425,7 +420,7 @@ const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
-  * Process a bmap update intent item that was recovered from the log.
-  * We need to update some inode's bmbt.
-  */
--int
-+STATIC int
- xfs_bui_recover(
- 	struct xfs_trans		*parent_tp,
- 	struct xfs_bui_log_item		*buip)
-@@ -560,6 +555,37 @@ xfs_bui_recover(
- 	return error;
- }
- 
-+/* Recover the BUI if necessary. */
-+STATIC int
-+xfs_bui_item_recover(
-+	struct xfs_log_item		*lip,
-+	struct xfs_trans		*tp)
-+{
-+	struct xfs_ail			*ailp = lip->li_ailp;
-+	struct xfs_bui_log_item		*buip = BUI_ITEM(lip);
-+	int				error;
-+
-+	/*
-+	 * Skip BUIs that we've already processed.
-+	 */
-+	if (test_bit(XFS_BUI_RECOVERED, &buip->bui_flags))
-+		return 0;
-+
-+	spin_unlock(&ailp->ail_lock);
-+	error = xfs_bui_recover(tp, buip);
-+	spin_lock(&ailp->ail_lock);
-+
-+	return error;
-+}
-+
-+static const struct xfs_item_ops xfs_bui_item_ops = {
-+	.iop_size	= xfs_bui_item_size,
-+	.iop_format	= xfs_bui_item_format,
-+	.iop_unpin	= xfs_bui_item_unpin,
-+	.iop_release	= xfs_bui_item_release,
-+	.iop_recover	= xfs_bui_item_recover,
-+};
-+
- /*
-  * Copy an BUI format buffer from the given buf, and into the destination
-  * BUI format structure.  The BUI/BUD items were designed not to need any
-diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
-index 515b1d5d6ab7..44d06e62f8f9 100644
---- a/fs/xfs/xfs_bmap_item.h
-+++ b/fs/xfs/xfs_bmap_item.h
-@@ -74,7 +74,4 @@ struct xfs_bud_log_item {
- extern struct kmem_zone	*xfs_bui_zone;
- extern struct kmem_zone	*xfs_bud_zone;
- 
--void xfs_bui_release(struct xfs_bui_log_item *);
--int xfs_bui_recover(struct xfs_trans *parent_tp, struct xfs_bui_log_item *buip);
--
- #endif	/* __XFS_BMAP_ITEM_H__ */
+ #endif	/* __XFS_LOG_RECOVER_H__ */
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index ad5ac97ed0c7..20ee32c2652d 100644
+index 20ee32c2652d..362296b34490 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2553,60 +2553,6 @@ xlog_recover_process_data(
- 	return 0;
+@@ -2720,181 +2720,6 @@ xlog_recover_cancel_intents(
+ 	spin_unlock(&ailp->ail_lock);
  }
  
--/* Recover the BUI if necessary. */
--STATIC int
--xlog_recover_process_bui(
--	struct xfs_trans		*parent_tp,
--	struct xfs_ail			*ailp,
--	struct xfs_log_item		*lip)
+-/*
+- * This routine performs a transaction to null out a bad inode pointer
+- * in an agi unlinked inode hash bucket.
+- */
+-STATIC void
+-xlog_recover_clear_agi_bucket(
+-	xfs_mount_t	*mp,
+-	xfs_agnumber_t	agno,
+-	int		bucket)
 -{
--	struct xfs_bui_log_item		*buip;
+-	xfs_trans_t	*tp;
+-	xfs_agi_t	*agi;
+-	xfs_buf_t	*agibp;
+-	int		offset;
+-	int		error;
+-
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_clearagi, 0, 0, 0, &tp);
+-	if (error)
+-		goto out_error;
+-
+-	error = xfs_read_agi(mp, tp, agno, &agibp);
+-	if (error)
+-		goto out_abort;
+-
+-	agi = agibp->b_addr;
+-	agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+-	offset = offsetof(xfs_agi_t, agi_unlinked) +
+-		 (sizeof(xfs_agino_t) * bucket);
+-	xfs_trans_log_buf(tp, agibp, offset,
+-			  (offset + sizeof(xfs_agino_t) - 1));
+-
+-	error = xfs_trans_commit(tp);
+-	if (error)
+-		goto out_error;
+-	return;
+-
+-out_abort:
+-	xfs_trans_cancel(tp);
+-out_error:
+-	xfs_warn(mp, "%s: failed to clear agi %d. Continuing.", __func__, agno);
+-	return;
+-}
+-
+-STATIC xfs_agino_t
+-xlog_recover_process_one_iunlink(
+-	struct xfs_mount		*mp,
+-	xfs_agnumber_t			agno,
+-	xfs_agino_t			agino,
+-	int				bucket)
+-{
+-	struct xfs_buf			*ibp;
+-	struct xfs_dinode		*dip;
+-	struct xfs_inode		*ip;
+-	xfs_ino_t			ino;
 -	int				error;
 -
+-	ino = XFS_AGINO_TO_INO(mp, agno, agino);
+-	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
+-	if (error)
+-		goto fail;
+-
 -	/*
--	 * Skip BUIs that we've already processed.
+-	 * Get the on disk inode to find the next inode in the bucket.
 -	 */
--	buip = container_of(lip, struct xfs_bui_log_item, bui_item);
--	if (test_bit(XFS_BUI_RECOVERED, &buip->bui_flags))
--		return 0;
+-	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &ibp, 0, 0);
+-	if (error)
+-		goto fail_iput;
 -
--	spin_unlock(&ailp->ail_lock);
--	error = xfs_bui_recover(parent_tp, buip);
--	spin_lock(&ailp->ail_lock);
+-	xfs_iflags_clear(ip, XFS_IRECOVERY);
+-	ASSERT(VFS_I(ip)->i_nlink == 0);
+-	ASSERT(VFS_I(ip)->i_mode != 0);
 -
--	return error;
+-	/* setup for the next pass */
+-	agino = be32_to_cpu(dip->di_next_unlinked);
+-	xfs_buf_relse(ibp);
+-
+-	/*
+-	 * Prevent any DMAPI event from being sent when the reference on
+-	 * the inode is dropped.
+-	 */
+-	ip->i_d.di_dmevmask = 0;
+-
+-	xfs_irele(ip);
+-	return agino;
+-
+- fail_iput:
+-	xfs_irele(ip);
+- fail:
+-	/*
+-	 * We can't read in the inode this bucket points to, or this inode
+-	 * is messed up.  Just ditch this bucket of inodes.  We will lose
+-	 * some inodes and space, but at least we won't hang.
+-	 *
+-	 * Call xlog_recover_clear_agi_bucket() to perform a transaction to
+-	 * clear the inode pointer in the bucket.
+-	 */
+-	xlog_recover_clear_agi_bucket(mp, agno, bucket);
+-	return NULLAGINO;
 -}
 -
--/* Release the BUI since we're cancelling everything. */
+-/*
+- * Recover AGI unlinked lists
+- *
+- * This is called during recovery to process any inodes which we unlinked but
+- * not freed when the system crashed.  These inodes will be on the lists in the
+- * AGI blocks. What we do here is scan all the AGIs and fully truncate and free
+- * any inodes found on the lists. Each inode is removed from the lists when it
+- * has been fully truncated and is freed. The freeing of the inode and its
+- * removal from the list must be atomic.
+- *
+- * If everything we touch in the agi processing loop is already in memory, this
+- * loop can hold the cpu for a long time. It runs without lock contention,
+- * memory allocation contention, the need wait for IO, etc, and so will run
+- * until we either run out of inodes to process, run low on memory or we run out
+- * of log space.
+- *
+- * This behaviour is bad for latency on single CPU and non-preemptible kernels,
+- * and can prevent other filesytem work (such as CIL pushes) from running. This
+- * can lead to deadlocks if the recovery process runs out of log reservation
+- * space. Hence we need to yield the CPU when there is other kernel work
+- * scheduled on this CPU to ensure other scheduled work can run without undue
+- * latency.
+- */
 -STATIC void
--xlog_recover_cancel_bui(
--	struct xfs_mount		*mp,
--	struct xfs_ail			*ailp,
--	struct xfs_log_item		*lip)
+-xlog_recover_process_iunlinks(
+-	struct xlog	*log)
 -{
--	struct xfs_bui_log_item		*buip;
+-	xfs_mount_t	*mp;
+-	xfs_agnumber_t	agno;
+-	xfs_agi_t	*agi;
+-	xfs_buf_t	*agibp;
+-	xfs_agino_t	agino;
+-	int		bucket;
+-	int		error;
 -
--	buip = container_of(lip, struct xfs_bui_log_item, bui_item);
+-	mp = log->l_mp;
 -
--	spin_unlock(&ailp->ail_lock);
--	xfs_bui_release(buip);
--	spin_lock(&ailp->ail_lock);
--}
+-	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
+-		/*
+-		 * Find the agi for this ag.
+-		 */
+-		error = xfs_read_agi(mp, NULL, agno, &agibp);
+-		if (error) {
+-			/*
+-			 * AGI is b0rked. Don't process it.
+-			 *
+-			 * We should probably mark the filesystem as corrupt
+-			 * after we've recovered all the ag's we can....
+-			 */
+-			continue;
+-		}
+-		/*
+-		 * Unlock the buffer so that it can be acquired in the normal
+-		 * course of the transaction to truncate and free each inode.
+-		 * Because we are not racing with anyone else here for the AGI
+-		 * buffer, we don't even need to hold it locked to read the
+-		 * initial unlinked bucket entries out of the buffer. We keep
+-		 * buffer reference though, so that it stays pinned in memory
+-		 * while we need the buffer.
+-		 */
+-		agi = agibp->b_addr;
+-		xfs_buf_unlock(agibp);
 -
--/* Is this log item a deferred action intent? */
--static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
--{
--	switch (lip->li_type) {
--	case XFS_LI_EFI:
--	case XFS_LI_RUI:
--	case XFS_LI_CUI:
--	case XFS_LI_BUI:
--		return true;
--	default:
--		return false;
+-		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
+-			agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+-			while (agino != NULLAGINO) {
+-				agino = xlog_recover_process_one_iunlink(mp,
+-							agno, agino, bucket);
+-				cond_resched();
+-			}
+-		}
+-		xfs_buf_rele(agibp);
 -	}
 -}
 -
- /* Take all the collected deferred ops and finish them in order. */
- static int
- xlog_finish_defer_ops(
-@@ -2641,6 +2587,12 @@ xlog_finish_defer_ops(
- 	return xfs_trans_commit(tp);
- }
+ STATIC void
+ xlog_unpack_data(
+ 	struct xlog_rec_header	*rhead,
+@@ -3574,7 +3399,7 @@ xlog_recover_finish(
+ 		 */
+ 		xfs_log_force(log->l_mp, XFS_LOG_SYNC);
  
-+/* Is this log item a deferred action intent? */
-+static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
+-		xlog_recover_process_iunlinks(log);
++		xlog_recover_process_unlinked(log);
+ 
+ 		xlog_recover_check_summary(log);
+ 
+diff --git a/fs/xfs/xfs_unlink_recover.c b/fs/xfs/xfs_unlink_recover.c
+new file mode 100644
+index 000000000000..2a19d096e88d
+--- /dev/null
++++ b/fs/xfs/xfs_unlink_recover.c
+@@ -0,0 +1,198 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2006 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_bit.h"
++#include "xfs_sb.h"
++#include "xfs_mount.h"
++#include "xfs_defer.h"
++#include "xfs_inode.h"
++#include "xfs_trans.h"
++#include "xfs_log.h"
++#include "xfs_log_priv.h"
++#include "xfs_log_recover.h"
++#include "xfs_trans_priv.h"
++#include "xfs_ialloc.h"
++#include "xfs_icache.h"
++
++/*
++ * This routine performs a transaction to null out a bad inode pointer
++ * in an agi unlinked inode hash bucket.
++ */
++STATIC void
++xlog_recover_clear_agi_bucket(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	int			bucket)
 +{
-+	return lip->li_ops->iop_recover != NULL;
++	struct xfs_trans	*tp;
++	struct xfs_agi		*agi;
++	struct xfs_buf		*agibp;
++	int			offset;
++	int			error;
++
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_clearagi, 0, 0, 0, &tp);
++	if (error)
++		goto out_error;
++
++	error = xfs_read_agi(mp, tp, agno, &agibp);
++	if (error)
++		goto out_abort;
++
++	agi = agibp->b_addr;
++	agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
++	offset = offsetof(xfs_agi_t, agi_unlinked) +
++		 (sizeof(xfs_agino_t) * bucket);
++	xfs_trans_log_buf(tp, agibp, offset,
++			  (offset + sizeof(xfs_agino_t) - 1));
++
++	error = xfs_trans_commit(tp);
++	if (error)
++		goto out_error;
++	return;
++
++out_abort:
++	xfs_trans_cancel(tp);
++out_error:
++	xfs_warn(mp, "%s: failed to clear agi %d. Continuing.", __func__, agno);
++	return;
 +}
 +
- /*
-  * When this is called, all of the log intent items which did not have
-  * corresponding log done items should be in the AIL.  What we do now
-@@ -2711,20 +2663,11 @@ xlog_recover_process_intents(
- 
- 		/*
- 		 * NOTE: If your intent processing routine can create more
--		 * deferred ops, you /must/ attach them to the dfops in this
--		 * routine or else those subsequent intents will get
-+		 * deferred ops, you /must/ attach them to the transaction in
-+		 * this routine or else those subsequent intents will get
- 		 * replayed in the wrong order!
- 		 */
--		switch (lip->li_type) {
--		case XFS_LI_EFI:
--		case XFS_LI_RUI:
--		case XFS_LI_CUI:
--			error = lip->li_ops->iop_recover(lip, parent_tp);
--			break;
--		case XFS_LI_BUI:
--			error = xlog_recover_process_bui(parent_tp, ailp, lip);
--			break;
--		}
-+		error = lip->li_ops->iop_recover(lip, parent_tp);
- 		if (error)
- 			goto out;
- 		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-@@ -2767,19 +2710,9 @@ xlog_recover_cancel_intents(
- 			break;
- 		}
- 
--		switch (lip->li_type) {
--		case XFS_LI_EFI:
--		case XFS_LI_RUI:
--		case XFS_LI_CUI:
--			spin_unlock(&ailp->ail_lock);
--			lip->li_ops->iop_release(lip);
--			spin_lock(&ailp->ail_lock);
--			break;
--		case XFS_LI_BUI:
--			xlog_recover_cancel_bui(log->l_mp, ailp, lip);
--			break;
--		}
--
-+		spin_unlock(&ailp->ail_lock);
-+		lip->li_ops->iop_release(lip);
-+		spin_lock(&ailp->ail_lock);
- 		lip = xfs_trans_ail_cursor_next(ailp, &cur);
- 	}
- 
++STATIC xfs_agino_t
++xlog_recover_process_one_iunlink(
++	struct xfs_mount		*mp,
++	xfs_agnumber_t			agno,
++	xfs_agino_t			agino,
++	int				bucket)
++{
++	struct xfs_buf			*ibp;
++	struct xfs_dinode		*dip;
++	struct xfs_inode		*ip;
++	xfs_ino_t			ino;
++	int				error;
++
++	ino = XFS_AGINO_TO_INO(mp, agno, agino);
++	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
++	if (error)
++		goto fail;
++
++	/*
++	 * Get the on disk inode to find the next inode in the bucket.
++	 */
++	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &ibp, 0, 0);
++	if (error)
++		goto fail_iput;
++
++	xfs_iflags_clear(ip, XFS_IRECOVERY);
++	ASSERT(VFS_I(ip)->i_nlink == 0);
++	ASSERT(VFS_I(ip)->i_mode != 0);
++
++	/* setup for the next pass */
++	agino = be32_to_cpu(dip->di_next_unlinked);
++	xfs_buf_relse(ibp);
++
++	/*
++	 * Prevent any DMAPI event from being sent when the reference on
++	 * the inode is dropped.
++	 */
++	ip->i_d.di_dmevmask = 0;
++
++	xfs_irele(ip);
++	return agino;
++
++ fail_iput:
++	xfs_irele(ip);
++ fail:
++	/*
++	 * We can't read in the inode this bucket points to, or this inode
++	 * is messed up.  Just ditch this bucket of inodes.  We will lose
++	 * some inodes and space, but at least we won't hang.
++	 *
++	 * Call xlog_recover_clear_agi_bucket() to perform a transaction to
++	 * clear the inode pointer in the bucket.
++	 */
++	xlog_recover_clear_agi_bucket(mp, agno, bucket);
++	return NULLAGINO;
++}
++
++/*
++ * Recover AGI unlinked lists
++ *
++ * This is called during recovery to process any inodes which we unlinked but
++ * not freed when the system crashed.  These inodes will be on the lists in the
++ * AGI blocks. What we do here is scan all the AGIs and fully truncate and free
++ * any inodes found on the lists. Each inode is removed from the lists when it
++ * has been fully truncated and is freed. The freeing of the inode and its
++ * removal from the list must be atomic.
++ *
++ * If everything we touch in the agi processing loop is already in memory, this
++ * loop can hold the cpu for a long time. It runs without lock contention,
++ * memory allocation contention, the need wait for IO, etc, and so will run
++ * until we either run out of inodes to process, run low on memory or we run out
++ * of log space.
++ *
++ * This behaviour is bad for latency on single CPU and non-preemptible kernels,
++ * and can prevent other filesytem work (such as CIL pushes) from running. This
++ * can lead to deadlocks if the recovery process runs out of log reservation
++ * space. Hence we need to yield the CPU when there is other kernel work
++ * scheduled on this CPU to ensure other scheduled work can run without undue
++ * latency.
++ */
++void
++xlog_recover_process_unlinked(
++	struct xlog		*log)
++{
++	struct xfs_mount	*mp;
++	struct xfs_agi		*agi;
++	struct xfs_buf		*agibp;
++	xfs_agnumber_t		agno;
++	xfs_agino_t		agino;
++	int			bucket;
++	int			error;
++
++	mp = log->l_mp;
++
++	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
++		/*
++		 * Find the agi for this ag.
++		 */
++		error = xfs_read_agi(mp, NULL, agno, &agibp);
++		if (error) {
++			/*
++			 * AGI is b0rked. Don't process it.
++			 *
++			 * We should probably mark the filesystem as corrupt
++			 * after we've recovered all the ag's we can....
++			 */
++			continue;
++		}
++		/*
++		 * Unlock the buffer so that it can be acquired in the normal
++		 * course of the transaction to truncate and free each inode.
++		 * Because we are not racing with anyone else here for the AGI
++		 * buffer, we don't even need to hold it locked to read the
++		 * initial unlinked bucket entries out of the buffer. We keep
++		 * buffer reference though, so that it stays pinned in memory
++		 * while we need the buffer.
++		 */
++		agi = agibp->b_addr;
++		xfs_buf_unlock(agibp);
++
++		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
++			agino = be32_to_cpu(agi->agi_unlinked[bucket]);
++			while (agino != NULLAGINO) {
++				agino = xlog_recover_process_one_iunlink(mp,
++							agno, agino, bucket);
++				cond_resched();
++			}
++		}
++		xfs_buf_rele(agibp);
++	}
++}
 
