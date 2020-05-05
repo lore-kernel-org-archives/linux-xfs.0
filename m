@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA836C3A5A9
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:10:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE35BC3A5A9
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C854F206C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:10:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B490D206C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 01:10:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Cbp7b2Vs"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kbTP28uw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726551AbgEEBK0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 May 2020 21:10:26 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:49208 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726531AbgEEBK0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 21:10:26 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04514pFi143799
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:10:25 GMT
+        id S1726587AbgEEBKd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 May 2020 21:10:33 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:46148 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726531AbgEEBKc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 May 2020 21:10:32 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04514jEk056553
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:10:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=LCEQjIROfRLRgYgU6SYCHWd2VHCDApNb2O45+sBPv0A=;
- b=Cbp7b2VscjQLRuHna0oh2hHudyA9oGaNYr9yGvh2VsV4hb9NIMiOwefPhczGC2gldT44
- OuKsBD2dkScvETnpKn/HK5DRMtz/Wy/hVAURaSlWU53/km3JKhiB1y2JbclAfeW7BNKQ
- cBGpHLl0057n5boS8zu/L34DS99RQQR6e54Md1RQAQY6xPMV/JNW5iFJo3aBabEwNqxs
- d41s0omXBrtYV3ROkFt8CQXr69THwIy7XLRNul5athbqRo48jsKOWKeZ1+GdBlPo9+Hi
- zXC4DzCgrwY1+lRNWA0magrlliWKID6oKQM7Knsg1e22EyJcoxmOdOD/Ee7oTicQbjfL dA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 30s09r2320-1
+ bh=E20RC8jDHJ2yaeqwu8n0QgWVY0ztNJulQ0Htodn4ZFI=;
+ b=kbTP28uwITpmgjSDUstaGvss932cLSBWZOBC4SzFudvJeoezq52/YWceIHga0eaAN/Pa
+ 9UNhMy4pmklMpdTk50jmb2eVRq4YiUZvok6KZGEZGz3KEYUgH4QR7DZjuIsQqrLNW0PN
+ MJvHzF7TV8bVkMxjvOlThUx4uQUeqrAkNZsVFW9iK6KVkaPwB/ROa4rqWAiX7uP3T1+v
+ +L7I4GWZobbUclZ1tWzp2ZOAOOV/c2oQE0TddkM+M1kc1F9aIbbHvH8WWn7WBOCB5GhS
+ 7++jnQY9D9vNlHLjuHTONToPBBCPAAuC3xUvppb/CGl3+VSwMGDoE57NJoloY764Arae Cg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 30s1gn1vgc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:10:24 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04516ein149291
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:10:24 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 30sjjxak5v-1
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:10:31 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04515S6x145304
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:10:30 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 30sjnckp8h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:10:24 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0451AN3L014523
-        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:10:24 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 01:10:30 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0451AUAV026021
+        for <linux-xfs@vger.kernel.org>; Tue, 5 May 2020 01:10:30 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 May 2020 18:10:23 -0700
-Subject: [PATCH 2/3] xfs: clean up the metadata validation in
- xfs_swap_extent_rmap
+        with ESMTP ; Mon, 04 May 2020 18:10:30 -0700
+Subject: [PATCH 3/3] xfs: actually account for quota changes in
+ xfs_swap_extents
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 04 May 2020 18:10:22 -0700
-Message-ID: <158864102271.182577.2059355876586003107.stgit@magnolia>
+Date:   Mon, 04 May 2020 18:10:29 -0700
+Message-ID: <158864102885.182577.15936710415441871446.stgit@magnolia>
 In-Reply-To: <158864100980.182577.10199078041909350877.stgit@magnolia>
 References: <158864100980.182577.10199078041909350877.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -64,16 +64,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxscore=0 phishscore=0
- bulkscore=0 malwarescore=0 spamscore=0 mlxlogscore=999 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
  definitions=main-2005050005
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9611 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0
- lowpriorityscore=0 spamscore=0 adultscore=0 clxscore=1015 suspectscore=1
- priorityscore=1501 malwarescore=0 mlxlogscore=999 phishscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005050005
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=1 mlxscore=0
+ spamscore=0 clxscore=1015 priorityscore=1501 bulkscore=0 phishscore=0
+ impostorscore=0 malwarescore=0 lowpriorityscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005050005
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -81,70 +81,224 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Bail out if there's something not right with either file's fork
-mappings.
+Currently, xfs_swap_extents neither checks for sufficient quota
+reservation nor does it actually update quota counts when swapping the
+extent forks.  While the primary known user of extent swapping (xfs_fsr)
+is careful to ensure that the user/group/project ids of both files
+match, this is not required by the kernel.  Consequently, unprivileged
+userspace can cause the quota counts to be incorrect.
+
+Fix this by updating quota counts when we swap the extents, and be sure
+to make a quota reservation for the difference in blocks so that we can
+bail out with EDQUOT early if needed.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |   31 +++++++++++++++++++++++--------
- 1 file changed, 23 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.h |   13 +++--
+ fs/xfs/xfs_bmap_util.c   |  125 ++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 134 insertions(+), 4 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
+index f3259ad5c22c..463346caca46 100644
+--- a/fs/xfs/libxfs/xfs_bmap.h
++++ b/fs/xfs/libxfs/xfs_bmap.h
+@@ -158,6 +158,13 @@ static inline int xfs_bmapi_whichfork(int bmapi_flags)
+ 	{ BMAP_ATTRFORK,	"ATTR" }, \
+ 	{ BMAP_COWFORK,		"COW" }
+ 
++/* Return true if the extent is an allocated extent, written or not. */
++static inline bool xfs_bmap_is_mapped_extent(struct xfs_bmbt_irec *irec)
++{
++	return irec->br_startblock != HOLESTARTBLOCK &&
++		irec->br_startblock != DELAYSTARTBLOCK &&
++		!isnullstartblock(irec->br_startblock);
++}
+ 
+ /*
+  * Return true if the extent is a real, allocated extent, or false if it is  a
+@@ -165,10 +172,8 @@ static inline int xfs_bmapi_whichfork(int bmapi_flags)
+  */
+ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+ {
+-	return irec->br_state != XFS_EXT_UNWRITTEN &&
+-		irec->br_startblock != HOLESTARTBLOCK &&
+-		irec->br_startblock != DELAYSTARTBLOCK &&
+-		!isnullstartblock(irec->br_startblock);
++	return xfs_bmap_is_mapped_extent(irec) &&
++	       irec->br_state != XFS_EXT_UNWRITTEN;
+ }
+ 
+ /*
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index cc23a3e23e2d..2774939e176d 100644
+index 2774939e176d..bcac7530d1ac 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -1342,8 +1342,16 @@ xfs_swap_extent_rmap(
- 				&nimaps, 0);
- 		if (error)
- 			goto out;
--		ASSERT(nimaps == 1);
--		ASSERT(tirec.br_startblock != DELAYSTARTBLOCK);
-+		if (nimaps != 1 || tirec.br_startblock == DELAYSTARTBLOCK) {
-+			/*
-+			 * We should never get no mapping or a delalloc extent
-+			 * since the donor file should have been flushed by the
-+			 * caller.
-+			 */
-+			ASSERT(0);
-+			error = -EINVAL;
-+			goto out;
-+		}
+@@ -1358,6 +1358,8 @@ xfs_swap_extent_rmap(
  
- 		trace_xfs_swap_extent_rmap_remap(tip, &tirec);
- 		ilen = tirec.br_blockcount;
-@@ -1360,8 +1368,17 @@ xfs_swap_extent_rmap(
- 					&nimaps, 0);
- 			if (error)
- 				goto out;
--			ASSERT(nimaps == 1);
--			ASSERT(tirec.br_startoff == irec.br_startoff);
-+			if (nimaps != 1 ||
-+			    tirec.br_startoff != irec.br_startoff) {
-+				/*
-+				 * We should never get no mapping or a mapping
-+				 * for another offset, but bail out if that
-+				 * ever does.
-+				 */
-+				ASSERT(0);
-+				error = -EFSCORRUPTED;
-+				goto out;
+ 		/* Unmap the old blocks in the source file. */
+ 		while (tirec.br_blockcount) {
++			int64_t		ip_delta = 0, tip_delta = 0;
++
+ 			ASSERT(tp->t_firstblock == NULLFSBLOCK);
+ 			trace_xfs_swap_extent_rmap_remap_piece(tip, &tirec);
+ 
+@@ -1388,6 +1390,23 @@ xfs_swap_extent_rmap(
+ 					irec.br_blockcount);
+ 			trace_xfs_swap_extent_rmap_remap_piece(tip, &uirec);
+ 
++			/* Update quota accounting. */
++			if (xfs_bmap_is_mapped_extent(&irec)) {
++				tip_delta += irec.br_blockcount;
++				ip_delta -= irec.br_blockcount;
 +			}
- 			trace_xfs_swap_extent_rmap_remap_piece(ip, &irec);
++			if (xfs_bmap_is_mapped_extent(&uirec)) {
++				tip_delta -= uirec.br_blockcount;
++				ip_delta += uirec.br_blockcount;
++			}
++
++			if (tip_delta)
++				xfs_trans_mod_dquot_byino(tp, tip,
++						XFS_TRANS_DQ_BCOUNT, tip_delta);
++			if (ip_delta)
++				xfs_trans_mod_dquot_byino(tp, ip,
++						XFS_TRANS_DQ_BCOUNT, ip_delta);
++
+ 			/* Remove the mapping from the donor file. */
+ 			xfs_bmap_unmap_extent(tp, tip, &uirec);
  
- 			/* Trim the extent. */
-@@ -1400,11 +1417,9 @@ xfs_swap_extent_rmap(
- 		offset_fsb += ilen;
- 	}
+@@ -1435,6 +1454,7 @@ xfs_swap_extent_forks(
+ {
+ 	xfs_filblks_t		aforkblks = 0;
+ 	xfs_filblks_t		taforkblks = 0;
++	int64_t			temp_blks;
+ 	xfs_extnum_t		junk;
+ 	uint64_t		tmp;
+ 	int			error;
+@@ -1476,6 +1496,15 @@ xfs_swap_extent_forks(
+ 	 */
+ 	swap(ip->i_df, tip->i_df);
  
--	tip->i_d.di_flags2 = tip_flags2;
--	return 0;
--
- out:
--	trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
-+	if (error)
-+		trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
- 	tip->i_d.di_flags2 = tip_flags2;
++	/* Update quota accounting. */
++	temp_blks = tip->i_d.di_nblocks - taforkblks + aforkblks;
++	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT,
++			temp_blks - ip->i_d.di_nblocks);
++
++	temp_blks = ip->i_d.di_nblocks + taforkblks - aforkblks;
++	xfs_trans_mod_dquot_byino(tp, tip, XFS_TRANS_DQ_BCOUNT,
++			temp_blks - tip->i_d.di_nblocks);
++
+ 	/*
+ 	 * Fix the on-disk inode values
+ 	 */
+@@ -1566,6 +1595,93 @@ xfs_swap_change_owner(
  	return error;
  }
+ 
++/*
++ * Obtain a quota reservation to make sure we don't hit EDQUOT.  We can skip
++ * this if quota enforcement is disabled or if both inodes' dquots are the
++ * same.
++ */
++STATIC int
++xfs_swap_extents_prep_quota(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*ip,
++	struct xfs_inode	*tip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_filblks_t		aforkblks = 0;
++	xfs_filblks_t		taforkblks = 0;
++	xfs_filblks_t		ip_mapped, tip_mapped;
++	xfs_extnum_t		junk;
++	int			error;
++
++	/*
++	 * Don't bother with a quota reservation if we're not enforcing them
++	 * or the two inodes have the same dquots.
++	 */
++	if (!(mp->m_qflags & XFS_ALL_QUOTA_ENFD) ||
++	    (ip->i_udquot == tip->i_udquot &&
++	     ip->i_gdquot == tip->i_gdquot &&
++	     ip->i_pdquot == tip->i_pdquot))
++		return 0;
++
++	/*
++	 * Count the number of extended attribute blocks
++	 */
++	if ( ((XFS_IFORK_Q(ip) != 0) && (ip->i_d.di_anextents > 0)) &&
++	     (ip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
++		error = xfs_bmap_count_blocks(tp, ip, XFS_ATTR_FORK, &junk,
++				&aforkblks);
++		if (error)
++			return error;
++	}
++	if ( ((XFS_IFORK_Q(tip) != 0) && (tip->i_d.di_anextents > 0)) &&
++	     (tip->i_d.di_aformat != XFS_DINODE_FMT_LOCAL)) {
++		error = xfs_bmap_count_blocks(tp, tip, XFS_ATTR_FORK, &junk,
++				&taforkblks);
++		if (error)
++			return error;
++	}
++
++	/* Figure out how many blocks we'll move out of each file. */
++	ip_mapped = ip->i_d.di_nblocks - aforkblks;
++	tip_mapped = tip->i_d.di_nblocks - taforkblks;
++
++	/*
++	 * For each file, compute the net gain in the number of blocks that
++	 * will be mapped into that file and reserve that much quota.  The
++	 * quota counts must be able to absorb at least that much space.
++	 */
++	if (tip_mapped > ip_mapped) {
++		error = xfs_trans_reserve_quota_nblks(tp, ip,
++				tip_mapped - ip_mapped, 0,
++				XFS_QMOPT_RES_REGBLKS);
++		if (error)
++			return error;
++	}
++
++	if (ip_mapped > tip_mapped) {
++		error = xfs_trans_reserve_quota_nblks(tp, tip,
++				ip_mapped - tip_mapped, 0,
++				XFS_QMOPT_RES_REGBLKS);
++		if (error)
++			return error;
++	}
++
++	/*
++	 * For each file, forcibly reserve the gross gain in mapped blocks so
++	 * that we don't trip over any quota block reservation assertions.
++	 * We must reserve the gross gain because the quota code subtracts from
++	 * bcount the number of blocks that we unmap; it does not add that
++	 * quantity back to the quota block reservation.
++	 */
++	error = xfs_trans_reserve_quota_nblks(tp, ip, ip_mapped, 0,
++			XFS_QMOPT_FORCE_RES | XFS_QMOPT_RES_REGBLKS);
++	if (error)
++		return error;
++
++	return xfs_trans_reserve_quota_nblks(tp, tip, tip_mapped, 0,
++			XFS_QMOPT_FORCE_RES | XFS_QMOPT_RES_REGBLKS);
++}
++
+ int
+ xfs_swap_extents(
+ 	struct xfs_inode	*ip,	/* target inode */
+@@ -1702,6 +1818,15 @@ xfs_swap_extents(
+ 		goto out_trans_cancel;
+ 	}
+ 
++	/*
++	 * Reserve ourselves some quota if any of them are in enforcing mode.
++	 * In theory we only need enough to satisfy the change in the number
++	 * of blocks between the two ranges being remapped.
++	 */
++	error = xfs_swap_extents_prep_quota(tp, ip, tip);
++	if (error)
++		goto out_trans_cancel;
++
+ 	/*
+ 	 * Note the trickiness in setting the log flags - we set the owner log
+ 	 * flag on the opposite inode (i.e. the inode we are setting the new
 
