@@ -2,258 +2,198 @@ Return-Path: <SRS0=NnDK=6T=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE5A7C47247
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 14:11:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD797C47247
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 15:09:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD5132073B
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 14:11:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A00A620757
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 May 2020 15:09:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XdlMGnT4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LiHm1529"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728749AbgEEOLu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 May 2020 10:11:50 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:54905 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727857AbgEEOLu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 10:11:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588687906;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ykJo/xcYZHgKYXRosI/v2AxHguK/RFl/7PBSFi2snpg=;
-        b=XdlMGnT4Q4X0RzvoeafJA2OlsmLUXQwYr2kgeP1hi+ccbm+XbPvVYJElpDZpQ9lMqBtyS3
-        J3hJ99Aj+J/s7H/yK4n5EHJ0IPodYDwXh3sZVJB0zv9E/qhZUJHLkS1PHs7OcCTUDIgyYR
-        fZJVnnAcgsWUcqf/7qhcCN0yQKWIzUw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-287-SH76wt4FM4Odbg3CRG7bng-1; Tue, 05 May 2020 10:11:42 -0400
-X-MC-Unique: SH76wt4FM4Odbg3CRG7bng-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 400C51800D4A;
-        Tue,  5 May 2020 14:11:41 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C297A60BEC;
-        Tue,  5 May 2020 14:11:40 +0000 (UTC)
-Date:   Tue, 5 May 2020 10:11:38 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1729359AbgEEPJE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 May 2020 11:09:04 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41918 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729320AbgEEPJD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 11:09:03 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045F7a8A126513;
+        Tue, 5 May 2020 15:09:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=lCS4FB6psIbIkKZc4qfjQoE+hxoS1WbYwBXZVEiouvk=;
+ b=LiHm1529lP83EZcSLOZ1L15jZiR1CF6xngFMvUCFdODOIQMQ730E2056MQLW5dtb+WAr
+ RbnxlYgK0CKMS1UGd3RQTyASmlmOZKVK320cUkTJv6H5AZ4RSz3rwud74oh8X+CZeMED
+ P+fJQPyBpvWLc+AjyJ4GQ0iYvvuCBaDDxn8+YQO/1SyXkm6CG++0ABXdgy5sfjNQxdNe
+ VznXG9byngixappzPhHgftSW5g24uALFskRM1RjD8Y8KA73Xj/eBwnoGMhHyt9qq4yPU
+ 5focbkdhO/UVtf6tTDGYKs8HaTGISrl2qxMhJS+sXmhGjCiaowOdm2/5qs0O/KFftVFN bQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 30s09r5bt9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 05 May 2020 15:09:00 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 045F6qf2007252;
+        Tue, 5 May 2020 15:08:58 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 30sjdt77ub-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 05 May 2020 15:08:58 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 045F8uH0028003;
+        Tue, 5 May 2020 15:08:56 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 05 May 2020 08:08:56 -0700
+Date:   Tue, 5 May 2020 08:08:55 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: fix an incore inode UAF in xfs_bui_recover
-Message-ID: <20200505141138.GB61176@bfoster>
+Subject: Re: [PATCH 1/3] xfs: proper replay of deferred ops queued during log
+ recovery
+Message-ID: <20200505150855.GQ5703@magnolia>
 References: <158864121286.184729.5959003885146573075.stgit@magnolia>
- <158864123329.184729.14504239314355330619.stgit@magnolia>
+ <158864121900.184729.15751838615488460497.stgit@magnolia>
+ <20200505023305.GM2040@dread.disaster.area>
+ <20200505030651.GE5716@magnolia>
+ <20200505051029.GN2040@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <158864123329.184729.14504239314355330619.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20200505051029.GN2040@dread.disaster.area>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9612 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=5 mlxscore=0
+ bulkscore=0 adultscore=0 phishscore=0 mlxlogscore=999 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005050122
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9612 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0
+ lowpriorityscore=0 spamscore=0 adultscore=0 clxscore=1015 suspectscore=5
+ priorityscore=1501 malwarescore=0 mlxlogscore=999 phishscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005050122
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 04, 2020 at 06:13:53PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, May 05, 2020 at 03:10:29PM +1000, Dave Chinner wrote:
+> On Mon, May 04, 2020 at 08:06:51PM -0700, Darrick J. Wong wrote:
+> > On Tue, May 05, 2020 at 12:33:05PM +1000, Dave Chinner wrote:
+> > > On Mon, May 04, 2020 at 06:13:39PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > When we replay unfinished intent items that have been recovered from the
+> > > > log, it's possible that the replay will cause the creation of more
+> > > > deferred work items.  As outlined in commit 509955823cc9c ("xfs: log
+> > > > recovery should replay deferred ops in order"), later work items have an
+> > > > implicit ordering dependency on earlier work items.  Therefore, recovery
+> > > > must replay the items (both recovered and created) in the same order
+> > > > that they would have been during normal operation.
+> > > > 
+> > > > For log recovery, we enforce this ordering by using an empty transaction
+> > > > to collect deferred ops that get created in the process of recovering a
+> > > > log intent item to prevent them from being committed before the rest of
+> > > > the recovered intent items.  After we finish committing all the
+> > > > recovered log items, we allocate a transaction with an enormous block
+> > > > reservation, splice our huge list of created deferred ops into that
+> > > > transaction, and commit it, thereby finishing all those ops.
+> > > > 
+> > > > This is /really/ hokey -- it's the one place in XFS where we allow
+> > > > nested transactions; the splicing of the defer ops list is is inelegant
+> > > > and has to be done twice per recovery function; and the broken way we
+> > > > handle inode pointers and block reservations cause subtle use-after-free
+> > > > and allocator problems that will be fixed by this patch and the two
+> > > > patches after it.
+> > > > 
+> > > > Therefore, replace the hokey empty transaction with a structure designed
+> > > > to capture each chain of deferred ops that are created as part of
+> > > > recovering a single unfinished log intent.  Finally, refactor the loop
+> > > > that replays those chains to do so using one transaction per chain.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > FWIW, I don't like the "freezer" based naming here. It's too easily
+> > > confused with freezing and thawing the filesystem....
+> > > 
+> > > I know, "delayed deferred ops" isn't much better, but at least it
+> > > won't get confused with existing unrelated functionality.
+> > 
+> > xfs_defer_{freeze,thaw} -> xfs_defer_{capture,relink} ?
 > 
-> In xfs_bui_item_recover, there exists a use-after-free bug with regards
-> to the inode that is involved in the bmap replay operation.  If the
-> mapping operation does not complete, we call xfs_bmap_unmap_extent to
-> create a deferred op to finish the unmapping work, and we retain a
-> pointer to the incore inode.
-> 
-> Unfortunately, the very next thing we do is commit the transaction and
-> drop the inode.  If reclaim tears down the inode before we try to finish
-> the defer ops, we dereference garbage and blow up.  Therefore, create a
-> way to join inodes to the defer ops freezer so that we can maintain the
-> xfs_inode reference until we're done with the inode.
-> 
-> Note: This imposes the requirement that there be enough memory to keep
-> every incore inode in memory throughout recovery.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> Yeah, capture seems appropriate, maybe relink -> continue? i.e.
+> capture the remaining defer_ops to be run, then continue running
+> them?
 
-Maybe I'm missing something, but I thought the discussion on the
-previous version[1] landed on an approach where the intent would hold a
-reference to the inode. Wouldn't that break the dependency on the dfops
-freeze/thaw mechanism?
+I think I like capture/continue.
 
-Brian
+> /me shrugs and thinks "naming is hard"....
 
-[1] https://lore.kernel.org/linux-xfs/20200429235818.GX6742@magnolia/
+:)
 
->  fs/xfs/libxfs/xfs_defer.c |   50 +++++++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/libxfs/xfs_defer.h |   10 +++++++++
->  fs/xfs/xfs_bmap_item.c    |    7 ++++--
->  fs/xfs/xfs_icache.c       |   19 +++++++++++++++++
->  4 files changed, 83 insertions(+), 3 deletions(-)
+> > > I've barely looked at the code, so no real comments on that yet,
+> > > but I did notice this:
+> > > 
+> > > > @@ -2495,35 +2515,59 @@ xlog_recover_process_data(
+> > > >  /* Take all the collected deferred ops and finish them in order. */
+> > > >  static int
+> > > >  xlog_finish_defer_ops(
+> > > > -	struct xfs_trans	*parent_tp)
+> > > > +	struct xfs_mount	*mp,
+> > > > +	struct list_head	*dfops_freezers)
+> > > >  {
+> > > > -	struct xfs_mount	*mp = parent_tp->t_mountp;
+> > > > +	struct xfs_defer_freezer *dff, *next;
+> > > >  	struct xfs_trans	*tp;
+> > > >  	int64_t			freeblks;
+> > > >  	uint			resblks;
+> > > ....
+> > > > +		resblks = min_t(int64_t, UINT_MAX, freeblks);
+> > > > +		resblks = (resblks * 15) >> 4;
+> > > 
+> > > Can overflow when freeblks > (UINT_MAX / 15).
+> > 
+> > D'oh.  Ugh, I hate this whole fugly hack.
+> > 
+> > TBH I've been thinking that perhaps the freezer function should be
+> > capturing the unused transaction block reservation when we capture the
+> > dfops chain from the transaction.
 > 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index ea4d28851bbd..72933fdafcb2 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -16,6 +16,7 @@
->  #include "xfs_inode.h"
->  #include "xfs_inode_item.h"
->  #include "xfs_trace.h"
-> +#include "xfs_icache.h"
->  
->  /*
->   * Deferred Operations in XFS
-> @@ -583,8 +584,19 @@ xfs_defer_thaw(
->  	struct xfs_defer_freezer	*dff,
->  	struct xfs_trans		*tp)
->  {
-> +	int				i;
-> +
->  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
->  
-> +	/* Re-acquire the inode locks. */
-> +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
-> +		if (!dff->dff_inodes[i])
-> +			break;
-> +
-> +		dff->dff_ilocks[i] = XFS_ILOCK_EXCL;
-> +		xfs_ilock(dff->dff_inodes[i], dff->dff_ilocks[i]);
-> +	}
-> +
->  	/* Add the dfops items to the transaction. */
->  	list_splice_init(&dff->dff_dfops, &tp->t_dfops);
->  	tp->t_flags |= dff->dff_tpflags;
-> @@ -597,5 +609,43 @@ xfs_defer_freeezer_finish(
->  	struct xfs_defer_freezer	*dff)
->  {
->  	xfs_defer_cancel_list(mp, &dff->dff_dfops);
-> +	xfs_defer_freezer_irele(dff);
->  	kmem_free(dff);
->  }
-> +
-> +/*
-> + * Attach an inode to this deferred ops freezer.  Callers must hold ILOCK_EXCL,
-> + * which will be dropped and reacquired when we're ready to thaw the frozen
-> + * deferred ops.
-> + */
-> +int
-> +xfs_defer_freezer_ijoin(
-> +	struct xfs_defer_freezer	*dff,
-> +	struct xfs_inode		*ip)
-> +{
-> +	unsigned int			i;
-> +
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> +
-> +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
-> +		if (dff->dff_inodes[i] == ip)
-> +			goto out;
-> +		if (dff->dff_inodes[i] == NULL)
-> +			break;
-> +	}
-> +
-> +	if (i == XFS_DEFER_FREEZER_INODES) {
-> +		ASSERT(0);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
-> +	/*
-> +	 * Attach this inode to the freezer and drop its ILOCK because we
-> +	 * assume the caller will need to allocate a transaction.
-> +	 */
-> +	dff->dff_inodes[i] = ip;
-> +	dff->dff_ilocks[i] = 0;
-> +out:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	return 0;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index 7ae05e10d750..0052a0313283 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -76,6 +76,11 @@ struct xfs_defer_freezer {
->  	/* Deferred ops state saved from the transaction. */
->  	struct list_head	dff_dfops;
->  	unsigned int		dff_tpflags;
-> +
-> +	/* Inodes to hold when we want to finish the deferred work items. */
-> +#define XFS_DEFER_FREEZER_INODES	2
-> +	unsigned int		dff_ilocks[XFS_DEFER_FREEZER_INODES];
-> +	struct xfs_inode	*dff_inodes[XFS_DEFER_FREEZER_INODES];
->  };
->  
->  /* Functions to freeze a chain of deferred operations for later. */
-> @@ -83,5 +88,10 @@ int xfs_defer_freeze(struct xfs_trans *tp, struct xfs_defer_freezer **dffp);
->  void xfs_defer_thaw(struct xfs_defer_freezer *dff, struct xfs_trans *tp);
->  void xfs_defer_freeezer_finish(struct xfs_mount *mp,
->  		struct xfs_defer_freezer *dff);
-> +int xfs_defer_freezer_ijoin(struct xfs_defer_freezer *dff,
-> +		struct xfs_inode *ip);
-> +
-> +/* These functions must be provided by the xfs implementation. */
-> +void xfs_defer_freezer_irele(struct xfs_defer_freezer *dff);
->  
->  #endif /* __XFS_DEFER_H__ */
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index c733bdeeeb9b..bbce191d8fcd 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -530,12 +530,13 @@ xfs_bui_item_recover(
->  	}
->  
->  	error = xlog_recover_trans_commit(tp, dffp);
-> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -	xfs_irele(ip);
-> -	return error;
-> +	if (error)
-> +		goto err_rele;
-> +	return xfs_defer_freezer_ijoin(*dffp, ip);
->  
->  err_inode:
->  	xfs_trans_cancel(tp);
-> +err_rele:
->  	if (ip) {
->  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  		xfs_irele(ip);
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 17a0b86fe701..b96ddf5ff334 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -12,6 +12,7 @@
->  #include "xfs_sb.h"
->  #include "xfs_mount.h"
->  #include "xfs_inode.h"
-> +#include "xfs_defer.h"
->  #include "xfs_trans.h"
->  #include "xfs_trans_priv.h"
->  #include "xfs_inode_item.h"
-> @@ -1847,3 +1848,21 @@ xfs_start_block_reaping(
->  	xfs_queue_eofblocks(mp);
->  	xfs_queue_cowblocks(mp);
->  }
-> +
-> +/* Release all the inode resources attached to this freezer. */
-> +void
-> +xfs_defer_freezer_irele(
-> +	struct xfs_defer_freezer	*dff)
-> +{
-> +	unsigned int			i;
-> +
-> +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
-> +		if (!dff->dff_inodes[i])
-> +			break;
-> +
-> +		if (dff->dff_ilocks[i])
-> +			xfs_iunlock(dff->dff_inodes[i], dff->dff_ilocks[i]);
-> +		xfs_irele(dff->dff_inodes[i]);
-> +		dff->dff_inodes[i] = NULL;
-> +	}
-> +}
-> 
+> Exactly what problem is this hack supposed to avoid? having the
+> filesystem ENOSPC before all the deferops have been completed?
+>
+> if so, can that even happen? Because the fact that the intents are
+> in the log means that when they were started there was enough space
+> in the fs for them to run, so ENOSPC should not be an issue, right?
 
+We're probably not going to run out of space, seeing as we had enough
+space to run the first time.  However, there's various parts of the
+filesystem that either behave differently or ENOSPC early if the
+transaction has no block reservation, so we need to avoid them.
+
+The outcome of the recovery work ought to be as close as possible to
+what would have happened if the fs hadn't gone down.
+
+> > When we set up the second transaction, we then set t_blk_res to the
+> > captured block reservation.  So long as the recovery function is smart
+> > enough to set up sufficient reservation we should avoid hitting ENOSPC,
+> > right?
+> 
+> I'm not sure ENOSPC is really a problem for recovery of deferred ops
+> given the above...
+
+<nod>
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
