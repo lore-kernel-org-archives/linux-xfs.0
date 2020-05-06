@@ -6,83 +6,60 @@ X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC2BDC28CBC
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:18:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F449C4724C
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:18:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 904EC20836
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:18:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2B642080D
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:18:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ftyhPVP3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HipQeufv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729289AbgEFPSN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 May 2020 11:18:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57642 "EHLO
+        id S1729066AbgEFPSk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 May 2020 11:18:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57724 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729003AbgEFPSM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 11:18:12 -0400
+        with ESMTP id S1729003AbgEFPSk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 11:18:40 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5DE6C061A0F
-        for <linux-xfs@vger.kernel.org>; Wed,  6 May 2020 08:18:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5070DC061A0F
+        for <linux-xfs@vger.kernel.org>; Wed,  6 May 2020 08:18:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=GHynaRpGoBzBqzH60qhiTe91YoCiOBqbw05Iaw3bTmU=; b=ftyhPVP3VRlWnNxplFs0Cw1CLZ
-        tgM9CLugCgupbqRs9S7gsuc5lvjCTbMPwJCq2BnKMCaGq4CLwa2QfbKyLsBY7LOKGt1sMN7KrUfeQ
-        HTt9S2V6ab8CT0wR37XOSIpqg5bQ+YMYMEzao9pq4G3IRYet9aH9NqnH4HGAAAfTC3hNXrD92d54H
-        kllJ93JPfmWE3zHiUpJAzoNbiP/JiHAtS5The7EOAG0EDP4Ur0wEu44M/Iz6hhrR75c5r3wRic6OB
-        OgP7wdvVRIKUvkUxoso09PtPOqzXrp/vOtBSbdjmVjk1qEed6G3zojX2ky8KOK2lreiezHtaXu/Zk
-        WMjIHI0w==;
+        bh=8QtZZRvbGQEHzp8NgbGunFc8uunHnAqVZEcZldykSIQ=; b=HipQeufv/QpG4ho4J1E6YXCG3a
+        KtjDZHIzktRkErHzTFDyuC1vQyxMjwIYnVBvHG8DEw4ztzvX2jAVgjb22Zfks4TSs93ocyxfGwYxy
+        dOfVRShvB6KfN/Fxoj1G6JKlki3IgQq8JmKWKTnqj59qil69a2/38d1DEf+QGa0bvKMXQSD+7SP1n
+        sCWZ9pEPcstRdDQgDptW/8ta4clxBgDV3JhD/U9DXJomXNuLex5b02760/Mee3xZ/mfnJzabZccfH
+        sd5dyYtBhSPsrTKB/OSmV79KzxW6V37BQ9jzPfYfNWv6kYHPt54fHWHUa7BABncEY0p0yusgRF2rV
+        eypiX5aA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jWLoK-0006yZ-HX; Wed, 06 May 2020 15:18:12 +0000
-Date:   Wed, 6 May 2020 08:18:12 -0700
+        id 1jWLom-0007NT-35; Wed, 06 May 2020 15:18:40 +0000
+Date:   Wed, 6 May 2020 08:18:40 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 14/28] xfs: refactor recovered EFI log item playback
-Message-ID: <20200506151812.GR7864@infradead.org>
+Subject: Re: [PATCH 15/28] xfs: refactor recovered RUI log item playback
+Message-ID: <20200506151840.GS7864@infradead.org>
 References: <158864103195.182683.2056162574447133617.stgit@magnolia>
- <158864112169.182683.14030031632354525711.stgit@magnolia>
+ <158864112778.182683.3049865779495487697.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <158864112169.182683.14030031632354525711.stgit@magnolia>
+In-Reply-To: <158864112778.182683.3049865779495487697.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +static const struct xfs_item_ops xfs_efi_item_ops = {
-> +	.iop_size	= xfs_efi_item_size,
-> +	.iop_format	= xfs_efi_item_format,
-> +	.iop_unpin	= xfs_efi_item_unpin,
-> +	.iop_release	= xfs_efi_item_release,
-> +	.iop_recover	= xfs_efi_item_recover,
-> +};
-> +
-> +
+On Mon, May 04, 2020 at 06:12:07PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Move the code that processes the log items created from the recovered
+> log items into the per-item source code files and use dispatch functions
+> to call them.  No functional changes.
 
-I guess we can drop the second empty line here.
-
->  		switch (lip->li_type) {
->  		case XFS_LI_EFI:
-> -			error = xlog_recover_process_efi(log->l_mp, ailp, lip);
-> +			error = lip->li_ops->iop_recover(lip, parent_tp);
->  			break;
->  		case XFS_LI_RUI:
->  			error = xlog_recover_process_rui(log->l_mp, ailp, lip);
-> @@ -2893,7 +2853,9 @@ xlog_recover_cancel_intents(
->  
->  		switch (lip->li_type) {
->  		case XFS_LI_EFI:
-> -			xlog_recover_cancel_efi(log->l_mp, ailp, lip);
-> +			spin_unlock(&ailp->ail_lock);
-> +			lip->li_ops->iop_release(lip);
-> +			spin_lock(&ailp->ail_lock);
-
-This looks a little weird, as I'd expect the default statement
-to handle the "generic" case.  But then again this is all transitional,
-so except for minor nitpick above:
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
