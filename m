@@ -2,424 +2,473 @@ Return-Path: <SRS0=Htpe=6U=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E602C47254
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 00:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F423C4724C
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 04:07:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E330020721
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 00:36:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E23E20757
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 04:07:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hb1mdUvX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a6GW+faP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729510AbgEFAgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 May 2020 20:36:33 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:52796 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729159AbgEFAgd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 May 2020 20:36:33 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0460XiOY071521;
-        Wed, 6 May 2020 00:36:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=IQrZynxdI1VzBR4j2NwLth9d7VWVAi+xMso44GwY4n8=;
- b=hb1mdUvX4rdZrC5JfoDVChY3/cTUnPJ2JzDdtr++usix8pn3wCAWYvCiRsqNBBL82tCM
- gYM14GyvP/HCmqgyQUDRPCP0vBBx0uRRqRLi6AbQSQUeFOHQvXR0sDmL5C8HlUIPa8pw
- PGhZ2ZHGCdBEfCUYgVLK0rHNBAKxrXfhYxJ9NXvPuW/LXGxs0Z2raYHVuVzVlcwl6IB/
- 0BDt+aqHQ13FROYL3PXiVDHYGLeyCccxLmxUJphmDQfUgMS4LlqOIvkCUiMbTH62UtJO
- 7aQiS2QlSId4TRtaLkwij3cQrdYlERNMXWuYiUKfl0MHcnueikxBIvPD+tkGkMauam2i JQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 30s0tmfp7v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 06 May 2020 00:36:26 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0460XPq7187031;
-        Wed, 6 May 2020 00:34:26 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 30sjngb24w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 06 May 2020 00:34:26 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0460YPuV018326;
-        Wed, 6 May 2020 00:34:25 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 05 May 2020 17:34:25 -0700
-Date:   Tue, 5 May 2020 17:34:23 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
+        id S1725796AbgEFEHE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 May 2020 00:07:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37742 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725300AbgEFEHE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 00:07:04 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C193C061A0F
+        for <linux-xfs@vger.kernel.org>; Tue,  5 May 2020 21:07:04 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id m7so3877plt.5
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 21:07:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=Cbv4xxWvNVJJhWxp/J00ciFaQPrG/IKHW1rmJm12ha4=;
+        b=a6GW+faPCx1onrnbuaifnaumswwPeyvcKplqvPkwrA1cW3G6t/lM//CC1nTdqx4fjV
+         oi8ft9EF8ywrvkb7Uj90kWZNij/ptPHdCLpNAcW6CIib5md3/gauPYzjpibHhw4SUuba
+         69EJyGQCSNajKHXSb1kX/AvjxLClhnavCDf3u0v2wOdNfHg5DvgunlxGqPQ0wuKEhFcF
+         1a2uzFeiaiywqU5yZR7dBDF/ZtCW+gB+tBWfEsBeIy2HZeq7HyokdKgao8XoBdLAYeKt
+         kXWkGhaf6JQxtGhSGezUMyCrQhViaUbsNXftRv3zAInWeeGJn+Ahqix+RPNb4T6yB5RH
+         EYeQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Cbv4xxWvNVJJhWxp/J00ciFaQPrG/IKHW1rmJm12ha4=;
+        b=kpdNqXJvuinfeglGmKU4ZistqZOwKj/0U0XEmt1W+Aksg24J0/8/yvsZKh2f84+QXs
+         rjpkTexFPNZjXCzKLs9cj75/iPgn8yyHst5BHbcOxBE8/rRDOsctxfjB23l+pGFTezqu
+         7UwnLF3WZTsKXHjuYy4KHdvT69xCYb4ssEnyjTgKiLeaGi0SxF+7KRt8Gb2BerDrRSLC
+         k++/mFA2TK584IyED5H/+dupoqCfl1qI7WDjlorjOy7EA4amy4t8FtNAe6UKzXngSBc/
+         6YT7+UtBygqGqwkKWNOWzzY4wtpF0UMum84l6ufyfMOstuDxYcyC1kg28kOSvGOafB/S
+         GQGA==
+X-Gm-Message-State: AGi0PuYAPybxLUsOb1wRApn4hf3jevulRbEYhWOyRR1ZJUhoI2WVoC2f
+        kcCWeroBlfIlk/XmUG5Yhs59tmTI0no=
+X-Google-Smtp-Source: APiQypLzcHCCTFb0SGPeXzovebUMI/nTNcx7iO/9ZHdtOA+dOSsih/FThayg1QyqZx0BBpArlfKFpg==
+X-Received: by 2002:a17:90a:17a6:: with SMTP id q35mr6672044pja.96.1588738023418;
+        Tue, 05 May 2020 21:07:03 -0700 (PDT)
+Received: from garuda.localnet ([122.171.200.101])
+        by smtp.gmail.com with ESMTPSA id b11sm507603pgq.50.2020.05.05.21.07.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 May 2020 21:07:02 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: fix an incore inode UAF in xfs_bui_recover
-Message-ID: <20200506003423.GS5703@magnolia>
-References: <158864121286.184729.5959003885146573075.stgit@magnolia>
- <158864123329.184729.14504239314355330619.stgit@magnolia>
- <20200505141138.GB61176@bfoster>
+Subject: Re: [PATCH 21/28] xfs: refactor releasing finished intents during log recovery
+Date:   Wed, 06 May 2020 09:36:59 +0530
+Message-ID: <1624585.PyqrBo7VhX@garuda>
+In-Reply-To: <158864116741.182683.12547831138234795563.stgit@magnolia>
+References: <158864103195.182683.2056162574447133617.stgit@magnolia> <158864116741.182683.12547831138234795563.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200505141138.GB61176@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9612 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 phishscore=0
- mlxlogscore=999 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005060001
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9612 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
- priorityscore=1501 lowpriorityscore=0 spamscore=0 suspectscore=0
- phishscore=0 clxscore=1015 bulkscore=0 mlxlogscore=999 adultscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005060001
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 05, 2020 at 10:11:38AM -0400, Brian Foster wrote:
-> On Mon, May 04, 2020 at 06:13:53PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In xfs_bui_item_recover, there exists a use-after-free bug with regards
-> > to the inode that is involved in the bmap replay operation.  If the
-> > mapping operation does not complete, we call xfs_bmap_unmap_extent to
-> > create a deferred op to finish the unmapping work, and we retain a
-> > pointer to the incore inode.
-> > 
-> > Unfortunately, the very next thing we do is commit the transaction and
-> > drop the inode.  If reclaim tears down the inode before we try to finish
-> > the defer ops, we dereference garbage and blow up.  Therefore, create a
-> > way to join inodes to the defer ops freezer so that we can maintain the
-> > xfs_inode reference until we're done with the inode.
-> > 
-> > Note: This imposes the requirement that there be enough memory to keep
-> > every incore inode in memory throughout recovery.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+On Tuesday 5 May 2020 6:42:47 AM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Maybe I'm missing something, but I thought the discussion on the
-> previous version[1] landed on an approach where the intent would hold a
-> reference to the inode. Wouldn't that break the dependency on the dfops
-> freeze/thaw mechanism?
+> Replace the open-coded AIL item walking with a proper helper when we're
+> trying to release an intent item that has been finished.
+>
 
-We did, but as I started pondering how to make this work in practice,
-I soon realized that it's not as simple as "don't irele the inode":
+The functionality is the same as was before applying this patch.
 
-(Part 1)
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-It would be easy enough to add a flag to struct xfs_bmap_intent that
-means "when you're done, unlock and irele the inode".  You'd have to add
-this capability to any log item that deals with inodes, but only
-deferred bmap items need this.
-
-Log recovery looks like this:
-
-----------------
-Transaction 0
-BUI1 unmap file1, offset1, startblock1, length == 200000
-----------------
-<end>
-
-What happens if the first bunmapi call doesn't actually unmap
-everything?  We'll queue yet another bmap intent item (call it BUI2) to
-finish the work.  This means that we can't just drop the inode when
-we're done processing BUI1; we have to propagate the "unlock and irele"
-flag to BUI2.  Ok, so now there's this chaining behavior that wasn't
-there before.
-
-Then I thought about it some more, and wondered what would happen if the
-log contained two unfinished bmap items for the same inode?  If this
-happened, you'd deadlock because you've not released the ILOCK for the
-first unfinished bmap item when you want to acquire the ILOCK for the
-second unfinished bmap item.
-
-You'd have to drop the ILOCK (but retain the inode reference) between
-the two bmap items.  I think this is currently impossible because there
-aren't any transactions that queue multiple bmap intents per
-transaction, nobody else holds the ilock, and the existing rmap
-implementation of the swapext ioctl doesn't allow swapping a file with
-itself.  However...
-
-(Part 2)
-
-The second thing I thought about is, what if there's a lot of work after
-transaction 0?  Say the recovery stream looks like:
-
-----------------
-Transaction 0
-BUI1 unmap file1, offset1, startblock1, length == 200000
-----------------
-<10000 more intents applied to other things>
-----------------
-<end>
-
-This is a problem, because we must drop the ILOCK after completing the
-BUI1 work so that we can process the 10000 more intents before we can
-get to BUI2.  We cannot let the tail of the log get pinned on the locked
-inode, so we must release the ILOCK after we're done with BUI1 and
-re-acquire it when we're ready to deal with BUI2.
-
-This means I need /two/ flags in struct xfs_bmap_intent -- one to say
-that we need to irele the inode at the end of processing, and another to
-say that the bmap item needs to grab the ILOCK.  If there's going to be
-a BUI2 as a result of recovering BUI1, the first flag must be propagated
-to BUI2, but the second flag must /not/ be propagated.
-
-A potential counterargument is that we crammed all 10000 intents into
-the log without pinning the log, so maybe we can hold the ILOCK.
-However....
-
-(Part 3)
-
-Next, I considered how the swapext log item in the atomic file update
-patchset would interact with log recovery.  A couple of notes about the
-swapext log items:
-
-1. They are careful not to create the kinds of bunmap operations that
-would cause the creation of /more/ BUIs.
-
-2. Every time we log one extent's worth of unmap/remap operations (using
-deferred bmap log items, naturally) we log an done item for the original
-swapext intent item and immediately log another swapext intent for the
-work remaining.
-
-I came up with the following sequence of transactions to recover:
-
-----------------
-Transaction 0
-SXI0 file1, offset1, file2, offset2, length == 10
-----------------
-Transaction 1
-BUI1 unmap file1, offset1, startblock1, length == 2
-BUI2 unmap file2, offset2, startblock2, length == 2
-BUI3 map file1, offset1, startblock2, length == 2
-BUI4 map file2, offset2, startblock1, length == 2
-SXD done (SXI0)
-SXI5 file1, offset1 + 2, file2, offset2 + 2, length == 8
----------------
-<end of log>
-
-Recovery in this case will end up with BUI[1-4] and SXI5 that still need
-processing.  Each of the 5 intent items gets its own recovery
-transaction and dfops freezer chain.  BUI1, BUI3, and SXI5 will each
-require ilock'd access to file1, which means that each of them will have
-to have the ability to drop the ILOCK but retain the reference.  The
-same argument applies to file2 and BUI2, BUI4, and SXI5.  Note also that
-in our brave new world, file1 and file2 can be the same.
-
-For the swapext log item type this inode management is particularly
-acute because we're certain to have new SXIs created as a result of
-recovering an SXI.
-
-(End)
-
-In conclusion, we need a mechanism to drop both the inode lock and the
-inode reference.  Each log item type that works with inodes will have to
-set aside 2 flags somewhere in the incore extent structure, and provide
-more or less the same code to manage that state.  Right now that's just
-the bmap items, but then the swapext items and the deferred xattr items
-will have that same requirement when they get added.
-
-If we do that, the inode reference and ilock management diverges even
-further from regular operations.  Regular callers are expected to iget
-and ilock the inode and maintain that all the way to the end of
-xfs_trans_commit.  Log recovery, on the other hand, will add a bunch of
-state handling to some of the log items so that we can drop the ILOCK
-after the first item, and then drop the inode reference after finishing
-the last possible user of that inode in the revived dfops chain.
-
-On the other hand, keeping the inode management in the defer freezer
-code means that I keep all that complexity and state management out of
-the ->finish_item code.  When we go to finish the new incore intents
-that get created during recovery, the inode reference and ILOCK rules
-are the same as anywhere else -- the caller is required to grab the
-inode, the transaction, and the ilock (in that order).
-
-To the extent that recovering log intent items is /not/ the same as
-running a normal transaction, all that weirdness is concentrated in
-xfs_log_recover.c and a single function in xfs_defer.c.  The desired
-behavior is the same across all the log intent item types, so I
-decided in favor of keeping the centralised behavior and (trying to)
-contain the wacky.  We don't need all that right away, but we will.
-
-Note that I did make it so that we retain the reference always, so
-there's no longer a need for irele/igrab cycles, which makes capturing
-the dfops chain less error prone.
-
---D
-
-> Brian
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_log_recover.h |    3 +++
+>  fs/xfs/xfs_bmap_item.c          |   42 +++++++++------------------------------
+>  fs/xfs/xfs_extfree_item.c       |   42 +++++++++------------------------------
+>  fs/xfs/xfs_log_recover.c        |   35 ++++++++++++++++++++++++++++++++-
+>  fs/xfs/xfs_refcount_item.c      |   42 +++++++++------------------------------
+>  fs/xfs/xfs_rmap_item.c          |   42 +++++++++------------------------------
+>  fs/xfs/xfs_trans.h              |    1 +
+>  7 files changed, 78 insertions(+), 129 deletions(-)
 > 
-> [1] https://lore.kernel.org/linux-xfs/20200429235818.GX6742@magnolia/
 > 
-> >  fs/xfs/libxfs/xfs_defer.c |   50 +++++++++++++++++++++++++++++++++++++++++++++
-> >  fs/xfs/libxfs/xfs_defer.h |   10 +++++++++
-> >  fs/xfs/xfs_bmap_item.c    |    7 ++++--
-> >  fs/xfs/xfs_icache.c       |   19 +++++++++++++++++
-> >  4 files changed, 83 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> > index ea4d28851bbd..72933fdafcb2 100644
-> > --- a/fs/xfs/libxfs/xfs_defer.c
-> > +++ b/fs/xfs/libxfs/xfs_defer.c
-> > @@ -16,6 +16,7 @@
-> >  #include "xfs_inode.h"
-> >  #include "xfs_inode_item.h"
-> >  #include "xfs_trace.h"
-> > +#include "xfs_icache.h"
-> >  
-> >  /*
-> >   * Deferred Operations in XFS
-> > @@ -583,8 +584,19 @@ xfs_defer_thaw(
-> >  	struct xfs_defer_freezer	*dff,
-> >  	struct xfs_trans		*tp)
-> >  {
-> > +	int				i;
-> > +
-> >  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-> >  
-> > +	/* Re-acquire the inode locks. */
-> > +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
-> > +		if (!dff->dff_inodes[i])
-> > +			break;
-> > +
-> > +		dff->dff_ilocks[i] = XFS_ILOCK_EXCL;
-> > +		xfs_ilock(dff->dff_inodes[i], dff->dff_ilocks[i]);
-> > +	}
-> > +
-> >  	/* Add the dfops items to the transaction. */
-> >  	list_splice_init(&dff->dff_dfops, &tp->t_dfops);
-> >  	tp->t_flags |= dff->dff_tpflags;
-> > @@ -597,5 +609,43 @@ xfs_defer_freeezer_finish(
-> >  	struct xfs_defer_freezer	*dff)
-> >  {
-> >  	xfs_defer_cancel_list(mp, &dff->dff_dfops);
-> > +	xfs_defer_freezer_irele(dff);
-> >  	kmem_free(dff);
-> >  }
-> > +
-> > +/*
-> > + * Attach an inode to this deferred ops freezer.  Callers must hold ILOCK_EXCL,
-> > + * which will be dropped and reacquired when we're ready to thaw the frozen
-> > + * deferred ops.
-> > + */
-> > +int
-> > +xfs_defer_freezer_ijoin(
-> > +	struct xfs_defer_freezer	*dff,
-> > +	struct xfs_inode		*ip)
-> > +{
-> > +	unsigned int			i;
-> > +
-> > +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> > +
-> > +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
-> > +		if (dff->dff_inodes[i] == ip)
-> > +			goto out;
-> > +		if (dff->dff_inodes[i] == NULL)
-> > +			break;
-> > +	}
-> > +
-> > +	if (i == XFS_DEFER_FREEZER_INODES) {
-> > +		ASSERT(0);
-> > +		return -EFSCORRUPTED;
-> > +	}
-> > +
-> > +	/*
-> > +	 * Attach this inode to the freezer and drop its ILOCK because we
-> > +	 * assume the caller will need to allocate a transaction.
-> > +	 */
-> > +	dff->dff_inodes[i] = ip;
-> > +	dff->dff_ilocks[i] = 0;
-> > +out:
-> > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > +	return 0;
-> > +}
-> > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> > index 7ae05e10d750..0052a0313283 100644
-> > --- a/fs/xfs/libxfs/xfs_defer.h
-> > +++ b/fs/xfs/libxfs/xfs_defer.h
-> > @@ -76,6 +76,11 @@ struct xfs_defer_freezer {
-> >  	/* Deferred ops state saved from the transaction. */
-> >  	struct list_head	dff_dfops;
-> >  	unsigned int		dff_tpflags;
-> > +
-> > +	/* Inodes to hold when we want to finish the deferred work items. */
-> > +#define XFS_DEFER_FREEZER_INODES	2
-> > +	unsigned int		dff_ilocks[XFS_DEFER_FREEZER_INODES];
-> > +	struct xfs_inode	*dff_inodes[XFS_DEFER_FREEZER_INODES];
-> >  };
-> >  
-> >  /* Functions to freeze a chain of deferred operations for later. */
-> > @@ -83,5 +88,10 @@ int xfs_defer_freeze(struct xfs_trans *tp, struct xfs_defer_freezer **dffp);
-> >  void xfs_defer_thaw(struct xfs_defer_freezer *dff, struct xfs_trans *tp);
-> >  void xfs_defer_freeezer_finish(struct xfs_mount *mp,
-> >  		struct xfs_defer_freezer *dff);
-> > +int xfs_defer_freezer_ijoin(struct xfs_defer_freezer *dff,
-> > +		struct xfs_inode *ip);
-> > +
-> > +/* These functions must be provided by the xfs implementation. */
-> > +void xfs_defer_freezer_irele(struct xfs_defer_freezer *dff);
-> >  
-> >  #endif /* __XFS_DEFER_H__ */
-> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > index c733bdeeeb9b..bbce191d8fcd 100644
-> > --- a/fs/xfs/xfs_bmap_item.c
-> > +++ b/fs/xfs/xfs_bmap_item.c
-> > @@ -530,12 +530,13 @@ xfs_bui_item_recover(
-> >  	}
-> >  
-> >  	error = xlog_recover_trans_commit(tp, dffp);
-> > -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > -	xfs_irele(ip);
-> > -	return error;
-> > +	if (error)
-> > +		goto err_rele;
-> > +	return xfs_defer_freezer_ijoin(*dffp, ip);
-> >  
-> >  err_inode:
-> >  	xfs_trans_cancel(tp);
-> > +err_rele:
-> >  	if (ip) {
-> >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >  		xfs_irele(ip);
-> > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > index 17a0b86fe701..b96ddf5ff334 100644
-> > --- a/fs/xfs/xfs_icache.c
-> > +++ b/fs/xfs/xfs_icache.c
-> > @@ -12,6 +12,7 @@
-> >  #include "xfs_sb.h"
-> >  #include "xfs_mount.h"
-> >  #include "xfs_inode.h"
-> > +#include "xfs_defer.h"
-> >  #include "xfs_trans.h"
-> >  #include "xfs_trans_priv.h"
-> >  #include "xfs_inode_item.h"
-> > @@ -1847,3 +1848,21 @@ xfs_start_block_reaping(
-> >  	xfs_queue_eofblocks(mp);
-> >  	xfs_queue_cowblocks(mp);
-> >  }
-> > +
-> > +/* Release all the inode resources attached to this freezer. */
-> > +void
-> > +xfs_defer_freezer_irele(
-> > +	struct xfs_defer_freezer	*dff)
-> > +{
-> > +	unsigned int			i;
-> > +
-> > +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
-> > +		if (!dff->dff_inodes[i])
-> > +			break;
-> > +
-> > +		if (dff->dff_ilocks[i])
-> > +			xfs_iunlock(dff->dff_inodes[i], dff->dff_ilocks[i]);
-> > +		xfs_irele(dff->dff_inodes[i]);
-> > +		dff->dff_inodes[i] = NULL;
-> > +	}
-> > +}
-> > 
+> diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+> index d4d6d4f84fda..b875819a1c04 100644
+> --- a/fs/xfs/libxfs/xfs_log_recover.h
+> +++ b/fs/xfs/libxfs/xfs_log_recover.h
+> @@ -126,4 +126,7 @@ bool xlog_put_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+>  void xlog_recover_iodone(struct xfs_buf *bp);
+>  int xlog_recover_process_unlinked(struct xlog *log);
+>  
+> +void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
+> +		uint64_t intent_id);
+> +
+>  #endif	/* __XFS_LOG_RECOVER_H__ */
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index f88ebf8634c4..96627ea800c8 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -578,12 +578,21 @@ xfs_bui_item_recover(
+>  	return error;
+>  }
+>  
+> +STATIC bool
+> +xfs_bui_item_match(
+> +	struct xfs_log_item	*lip,
+> +	uint64_t		intent_id)
+> +{
+> +	return BUI_ITEM(lip)->bui_format.bui_id == intent_id;
+> +}
+> +
+>  static const struct xfs_item_ops xfs_bui_item_ops = {
+>  	.iop_size	= xfs_bui_item_size,
+>  	.iop_format	= xfs_bui_item_format,
+>  	.iop_unpin	= xfs_bui_item_unpin,
+>  	.iop_release	= xfs_bui_item_release,
+>  	.iop_recover	= xfs_bui_item_recover,
+> +	.iop_match	= xfs_bui_item_match,
+>  };
+>  
+>  /*
+> @@ -675,45 +684,14 @@ xlog_recover_bmap_done_commit_pass2(
+>  	xfs_lsn_t			lsn)
+>  {
+>  	struct xfs_bud_log_format	*bud_formatp;
+> -	struct xfs_bui_log_item		*buip = NULL;
+> -	struct xfs_log_item		*lip;
+> -	uint64_t			bui_id;
+> -	struct xfs_ail_cursor		cur;
+> -	struct xfs_ail			*ailp = log->l_ailp;
+>  
+>  	bud_formatp = item->ri_buf[0].i_addr;
+>  	if (item->ri_buf[0].i_len != sizeof(struct xfs_bud_log_format)) {
+>  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+>  		return -EFSCORRUPTED;
+>  	}
+> -	bui_id = bud_formatp->bud_bui_id;
+> -
+> -	/*
+> -	 * Search for the BUI with the id in the BUD format structure in the
+> -	 * AIL.
+> -	 */
+> -	spin_lock(&ailp->ail_lock);
+> -	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+> -	while (lip != NULL) {
+> -		if (lip->li_type == XFS_LI_BUI) {
+> -			buip = (struct xfs_bui_log_item *)lip;
+> -			if (buip->bui_format.bui_id == bui_id) {
+> -				/*
+> -				 * Drop the BUD reference to the BUI. This
+> -				 * removes the BUI from the AIL and frees it.
+> -				 */
+> -				spin_unlock(&ailp->ail_lock);
+> -				xfs_bui_release(buip);
+> -				spin_lock(&ailp->ail_lock);
+> -				break;
+> -			}
+> -		}
+> -		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+> -	}
+> -
+> -	xfs_trans_ail_cursor_done(&cur);
+> -	spin_unlock(&ailp->ail_lock);
+>  
+> +	xlog_recover_release_intent(log, XFS_LI_BUI, bud_formatp->bud_bui_id);
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> index 3fc8a9864217..4e1b10ab17a5 100644
+> --- a/fs/xfs/xfs_extfree_item.c
+> +++ b/fs/xfs/xfs_extfree_item.c
+> @@ -665,12 +665,21 @@ xfs_efi_item_recover(
+>  	return error;
+>  }
+>  
+> +STATIC bool
+> +xfs_efi_item_match(
+> +	struct xfs_log_item	*lip,
+> +	uint64_t		intent_id)
+> +{
+> +	return EFI_ITEM(lip)->efi_format.efi_id == intent_id;
+> +}
+> +
+>  static const struct xfs_item_ops xfs_efi_item_ops = {
+>  	.iop_size	= xfs_efi_item_size,
+>  	.iop_format	= xfs_efi_item_format,
+>  	.iop_unpin	= xfs_efi_item_unpin,
+>  	.iop_release	= xfs_efi_item_release,
+>  	.iop_recover	= xfs_efi_item_recover,
+> +	.iop_match	= xfs_efi_item_match,
+>  };
+>  
+>  
+> @@ -734,46 +743,15 @@ xlog_recover_extfree_done_commit_pass2(
+>  	struct xlog_recover_item	*item,
+>  	xfs_lsn_t			lsn)
+>  {
+> -	struct xfs_ail_cursor		cur;
+>  	struct xfs_efd_log_format	*efd_formatp;
+> -	struct xfs_efi_log_item		*efip = NULL;
+> -	struct xfs_log_item		*lip;
+> -	struct xfs_ail			*ailp = log->l_ailp;
+> -	uint64_t			efi_id;
+>  
+>  	efd_formatp = item->ri_buf[0].i_addr;
+>  	ASSERT((item->ri_buf[0].i_len == (sizeof(xfs_efd_log_format_32_t) +
+>  		((efd_formatp->efd_nextents - 1) * sizeof(xfs_extent_32_t)))) ||
+>  	       (item->ri_buf[0].i_len == (sizeof(xfs_efd_log_format_64_t) +
+>  		((efd_formatp->efd_nextents - 1) * sizeof(xfs_extent_64_t)))));
+> -	efi_id = efd_formatp->efd_efi_id;
+> -
+> -	/*
+> -	 * Search for the EFI with the id in the EFD format structure in the
+> -	 * AIL.
+> -	 */
+> -	spin_lock(&ailp->ail_lock);
+> -	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+> -	while (lip != NULL) {
+> -		if (lip->li_type == XFS_LI_EFI) {
+> -			efip = (struct xfs_efi_log_item *)lip;
+> -			if (efip->efi_format.efi_id == efi_id) {
+> -				/*
+> -				 * Drop the EFD reference to the EFI. This
+> -				 * removes the EFI from the AIL and frees it.
+> -				 */
+> -				spin_unlock(&ailp->ail_lock);
+> -				xfs_efi_release(efip);
+> -				spin_lock(&ailp->ail_lock);
+> -				break;
+> -			}
+> -		}
+> -		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+> -	}
+> -
+> -	xfs_trans_ail_cursor_done(&cur);
+> -	spin_unlock(&ailp->ail_lock);
+>  
+> +	xlog_recover_release_intent(log, XFS_LI_EFI, efd_formatp->efd_efi_id);
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 0ccc09c004f1..55477b9b9311 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1779,6 +1779,38 @@ xlog_clear_stale_blocks(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Release the recovered intent item in the AIL that matches the given intent
+> + * type and intent id.
+> + */
+> +void
+> +xlog_recover_release_intent(
+> +	struct xlog		*log,
+> +	unsigned short		intent_type,
+> +	uint64_t		intent_id)
+> +{
+> +	struct xfs_ail_cursor	cur;
+> +	struct xfs_log_item	*lip;
+> +	struct xfs_ail		*ailp = log->l_ailp;
+> +
+> +	spin_lock(&ailp->ail_lock);
+> +	for (lip = xfs_trans_ail_cursor_first(ailp, &cur, 0); lip != NULL;
+> +	     lip = xfs_trans_ail_cursor_next(ailp, &cur)) {
+> +		if (lip->li_type != intent_type)
+> +			continue;
+> +		if (!lip->li_ops->iop_match(lip, intent_id))
+> +			continue;
+> +
+> +		spin_unlock(&ailp->ail_lock);
+> +		lip->li_ops->iop_release(lip);
+> +		spin_lock(&ailp->ail_lock);
+> +		break;
+> +	}
+> +
+> +	xfs_trans_ail_cursor_done(&cur);
+> +	spin_unlock(&ailp->ail_lock);
+> +}
+> +
+>  /******************************************************************************
+>   *
+>   *		Log recover routines
+> @@ -2590,7 +2622,8 @@ xlog_finish_defer_ops(
+>  /* Is this log item a deferred action intent? */
+>  static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
+>  {
+> -	return lip->li_ops->iop_recover != NULL;
+> +	return lip->li_ops->iop_recover != NULL &&
+> +	       lip->li_ops->iop_match != NULL;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> index 5b72eebd8764..27126b136b5a 100644
+> --- a/fs/xfs/xfs_refcount_item.c
+> +++ b/fs/xfs/xfs_refcount_item.c
+> @@ -591,12 +591,21 @@ xfs_cui_item_recover(
+>  	return error;
+>  }
+>  
+> +STATIC bool
+> +xfs_cui_item_match(
+> +	struct xfs_log_item	*lip,
+> +	uint64_t		intent_id)
+> +{
+> +	return CUI_ITEM(lip)->cui_format.cui_id == intent_id;
+> +}
+> +
+>  static const struct xfs_item_ops xfs_cui_item_ops = {
+>  	.iop_size	= xfs_cui_item_size,
+>  	.iop_format	= xfs_cui_item_format,
+>  	.iop_unpin	= xfs_cui_item_unpin,
+>  	.iop_release	= xfs_cui_item_release,
+>  	.iop_recover	= xfs_cui_item_recover,
+> +	.iop_match	= xfs_cui_item_match,
+>  };
+>  
+>  /*
+> @@ -684,45 +693,14 @@ xlog_recover_refcount_done_commit_pass2(
+>  	xfs_lsn_t			lsn)
+>  {
+>  	struct xfs_cud_log_format	*cud_formatp;
+> -	struct xfs_cui_log_item		*cuip = NULL;
+> -	struct xfs_log_item		*lip;
+> -	uint64_t			cui_id;
+> -	struct xfs_ail_cursor		cur;
+> -	struct xfs_ail			*ailp = log->l_ailp;
+>  
+>  	cud_formatp = item->ri_buf[0].i_addr;
+>  	if (item->ri_buf[0].i_len != sizeof(struct xfs_cud_log_format)) {
+>  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+>  		return -EFSCORRUPTED;
+>  	}
+> -	cui_id = cud_formatp->cud_cui_id;
+> -
+> -	/*
+> -	 * Search for the CUI with the id in the CUD format structure in the
+> -	 * AIL.
+> -	 */
+> -	spin_lock(&ailp->ail_lock);
+> -	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+> -	while (lip != NULL) {
+> -		if (lip->li_type == XFS_LI_CUI) {
+> -			cuip = (struct xfs_cui_log_item *)lip;
+> -			if (cuip->cui_format.cui_id == cui_id) {
+> -				/*
+> -				 * Drop the CUD reference to the CUI. This
+> -				 * removes the CUI from the AIL and frees it.
+> -				 */
+> -				spin_unlock(&ailp->ail_lock);
+> -				xfs_cui_release(cuip);
+> -				spin_lock(&ailp->ail_lock);
+> -				break;
+> -			}
+> -		}
+> -		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+> -	}
+> -
+> -	xfs_trans_ail_cursor_done(&cur);
+> -	spin_unlock(&ailp->ail_lock);
+>  
+> +	xlog_recover_release_intent(log, XFS_LI_CUI, cud_formatp->cud_cui_id);
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+> index e763dd8ed0a6..3987f217415c 100644
+> --- a/fs/xfs/xfs_rmap_item.c
+> +++ b/fs/xfs/xfs_rmap_item.c
+> @@ -606,12 +606,21 @@ xfs_rui_item_recover(
+>  	return error;
+>  }
+>  
+> +STATIC bool
+> +xfs_rui_item_match(
+> +	struct xfs_log_item	*lip,
+> +	uint64_t		intent_id)
+> +{
+> +	return RUI_ITEM(lip)->rui_format.rui_id == intent_id;
+> +}
+> +
+>  static const struct xfs_item_ops xfs_rui_item_ops = {
+>  	.iop_size	= xfs_rui_item_size,
+>  	.iop_format	= xfs_rui_item_format,
+>  	.iop_unpin	= xfs_rui_item_unpin,
+>  	.iop_release	= xfs_rui_item_release,
+>  	.iop_recover	= xfs_rui_item_recover,
+> +	.iop_match	= xfs_rui_item_match,
+>  };
+>  
+>  /*
+> @@ -675,42 +684,11 @@ xlog_recover_rmap_done_commit_pass2(
+>  	xfs_lsn_t			lsn)
+>  {
+>  	struct xfs_rud_log_format	*rud_formatp;
+> -	struct xfs_rui_log_item		*ruip = NULL;
+> -	struct xfs_log_item		*lip;
+> -	uint64_t			rui_id;
+> -	struct xfs_ail_cursor		cur;
+> -	struct xfs_ail			*ailp = log->l_ailp;
+>  
+>  	rud_formatp = item->ri_buf[0].i_addr;
+>  	ASSERT(item->ri_buf[0].i_len == sizeof(struct xfs_rud_log_format));
+> -	rui_id = rud_formatp->rud_rui_id;
+> -
+> -	/*
+> -	 * Search for the RUI with the id in the RUD format structure in the
+> -	 * AIL.
+> -	 */
+> -	spin_lock(&ailp->ail_lock);
+> -	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
+> -	while (lip != NULL) {
+> -		if (lip->li_type == XFS_LI_RUI) {
+> -			ruip = (struct xfs_rui_log_item *)lip;
+> -			if (ruip->rui_format.rui_id == rui_id) {
+> -				/*
+> -				 * Drop the RUD reference to the RUI. This
+> -				 * removes the RUI from the AIL and frees it.
+> -				 */
+> -				spin_unlock(&ailp->ail_lock);
+> -				xfs_rui_release(ruip);
+> -				spin_lock(&ailp->ail_lock);
+> -				break;
+> -			}
+> -		}
+> -		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+> -	}
+> -
+> -	xfs_trans_ail_cursor_done(&cur);
+> -	spin_unlock(&ailp->ail_lock);
+>  
+> +	xlog_recover_release_intent(log, XFS_LI_RUI, rud_formatp->rud_rui_id);
+>  	return 0;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index 3f6a79108991..3e8808bb07c5 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -78,6 +78,7 @@ struct xfs_item_ops {
+>  	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
+>  	void (*iop_error)(struct xfs_log_item *, xfs_buf_t *);
+>  	int (*iop_recover)(struct xfs_log_item *lip, struct xfs_trans *tp);
+> +	bool (*iop_match)(struct xfs_log_item *item, uint64_t id);
+>  };
+>  
+>  /*
 > 
+> 
+
+
+-- 
+chandan
+
+
+
