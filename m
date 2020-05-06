@@ -6,66 +6,62 @@ X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B0B4C28CBC
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:07:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 96F6CC4724C
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:09:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC4892076D
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:07:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 765912076D
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:09:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gIrhxTNC"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qnCVAOJn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729118AbgEFPHu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 May 2020 11:07:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56034 "EHLO
+        id S1729256AbgEFPJ4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 May 2020 11:09:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728428AbgEFPHu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 11:07:50 -0400
+        with ESMTP id S1727984AbgEFPJz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 11:09:55 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5719AC061A0F
-        for <linux-xfs@vger.kernel.org>; Wed,  6 May 2020 08:07:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D448C061A0F
+        for <linux-xfs@vger.kernel.org>; Wed,  6 May 2020 08:09:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=uTb+sGJFdrSxxf8TrKPgXCUTwoI594s31Kkq0kFD3os=; b=gIrhxTNCZ617463i/pm1I2GYDJ
-        ENTnSuvVlJeR9nlZxVgfo0Zm50aEA3PAT2zYuBdG5IeGCe11Nkg0WDgAoyaqMZOTaiyVHj9CU5Xvk
-        UYS+wNIiPxFclw6fh1/VOx8Sh8RgMq2JmmIOOsyNLCkGnFJ8D+0ZOI8WiYJBvd/Gcdz6xSpu/WLKn
-        /r/7W4b86ykA0tzTMuCv0aKyosxSSWZPY/T2C7Flzya7gJ/XqZK0PcJBci7wl4SQ/7e3G4d5+5UdE
-        tKheZlRdPrH2f98XU+QhNRG6SBOvo243EC6IdRarj1ztpOnbR+iOYdHb6KZYWGiL5HV4yUY4AXfm9
-        t6C/1+IA==;
+        bh=5Utj4CU3gLLwZT4XyK8+4eDpiqEwEoOfMabHn3X0U+s=; b=qnCVAOJnucqNmWJ8EYVV3ochTz
+        oD9Cyjhg5u7jNJ/qfpsBWnFngqJlM2ws2oUkELRVCulkilcJromo6yUy32tugOzAnBGZcaEkhTYzV
+        Zixyz3XQDVNQb1pBwpnWa08dnxhToxZjPxfcd3s96guLHssqa0m5wJboY8H2N/bylqVs/E0ZS84SC
+        mIS0+UfqadHrLYpvy3wkvl4m2NW5U22V5wktP4OEIJ7iwZx6QbYChH+1682ax/Dfvj0zaBcRzmaQw
+        hJ2/bPuIpI4vB689CE8a3yR0JynUXhWWHUvEX/7S0BUdfqc+IUYLrqGIWzfi2FwsgsaXqKvmSo+pq
+        DIb7dSNg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jWLeI-0005AV-7Z; Wed, 06 May 2020 15:07:50 +0000
-Date:   Wed, 6 May 2020 08:07:50 -0700
+        id 1jWLgI-0005KV-Jf; Wed, 06 May 2020 15:09:54 +0000
+Date:   Wed, 6 May 2020 08:09:54 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 04/28] xfs: refactor log recovery item dispatch for pass1
- commit functions
-Message-ID: <20200506150750.GG7864@infradead.org>
+Subject: Re: [PATCH 05/28] xfs: refactor log recovery buffer item dispatch
+ for pass2 commit functions
+Message-ID: <20200506150954.GH7864@infradead.org>
 References: <158864103195.182683.2056162574447133617.stgit@magnolia>
- <158864105772.182683.2888229701435255975.stgit@magnolia>
+ <158864106385.182683.3260001158975713924.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <158864105772.182683.2888229701435255975.stgit@magnolia>
+In-Reply-To: <158864106385.182683.3260001158975713924.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
->  	list_for_each_entry_safe(item, next, &trans->r_itemq, ri_list) {
-> +		trace_xfs_log_recover_item_recover(log, trans, item, pass);
+On Mon, May 04, 2020 at 06:11:03PM -0700, Darrick J. Wong wrote:
+> +	if (item->ri_ops && item->ri_ops->commit_pass2)
+> +		return item->ri_ops->commit_pass2(log, buffer_list, item,
+> +				trans->r_lsn);
 > +
-> +		if (!item->ri_ops) {
-> +			xfs_warn(log->l_mp, "%s: invalid item type (%d)",
-> +				__func__, ITEM_TYPE(item));
-> +			ASSERT(0);
-> +			return -EFSCORRUPTED;
-> +		}
 
-Given that we check for ri_ops during the reorder phase this can't
-happen.  I think we should remove this check.
+I don't think ri_ops can ever be NULL here, so the check should be
+removed.
 
 Otherwise looks good:
 
