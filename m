@@ -2,64 +2,106 @@ Return-Path: <SRS0=Htpe=6U=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4294FC28CBC
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02C6EC28CBC
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 16:34:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FF1520575
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 15:36:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB373208E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 16:34:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tJlr25QS"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eZS5t/fi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729219AbgEFPgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 May 2020 11:36:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60580 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725887AbgEFPgd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 11:36:33 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 184AAC061A0F
-        for <linux-xfs@vger.kernel.org>; Wed,  6 May 2020 08:36:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=uLdwlLYThu2GMhfI5UQA1Avzjzm1MlfPyC2TTe1wik4=; b=tJlr25QSBZsnbUHrQv8LcXA6L9
-        HSDC6ENfq0/bT0GmXBqKy0+VQwY3tUA+mi5kR9iUKdKP6B/ryKUEv/nKnVGpy0wJBUkSR8wxTWOgn
-        fckOP6OqGRWTsP2AZMSPkBCZrTToaAYSy8LrtDiOicdo/Cquj9XT4Cde6ZzG2GjowYkbJkedVTnox
-        Q57BrJ3TZi8MLC4bErD3Y9jm5Y7ekiQv3Q+4trNhE0qgdttSGk2byAy645VmnRvoQEXKkgW+MZGRM
-        dl9weXRXMh2UIRoKth+9auBdHA1LTlIY2YAngsEaHQJcgGhNBYstRU3o/z5NMLgxbe2rB8HTn4FCh
-        +A9iwsjw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jWM64-0001tE-VL; Wed, 06 May 2020 15:36:32 +0000
-Date:   Wed, 6 May 2020 08:36:32 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1729880AbgEFQef (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 May 2020 12:34:35 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37462 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729819AbgEFQee (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 12:34:34 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 046GXCmv167753;
+        Wed, 6 May 2020 16:34:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=5LEwhYF1OKVjvVed8vUFYFGHgpFW0CUIE0ygUrUJRFg=;
+ b=eZS5t/fiFMH4FmB3Pq0/4bIFdrzjG4EWiEk7gxvU5hVQLnRZVVM+mMJxswaSttpWuAL9
+ uLeh4XlCwwyVm9RiWKFrDLJP8YjG4Nf1K98c29xgZUvinBtrM9KRAR+qkaeZatxVhGc8
+ gJrkuPoddDj2c1/ChmuYu0MUsikbOHs41eDHXoJEWfTn5+KTrG+aZzTy6lOPYi/Zwa7N
+ zNk1RW1lhn1XwHBHd8jPs/ecYOApFBOzR+AJ/BTW0fpUI0jhyyenR0EtuDpLIELkGYa4
+ vjAsh04p6n0nDrNSEDkMbl/eLseScblHGHOrKE6pGSVmBgALzWAZ7+dpZYMTX8ZJBWGu Pw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 30usgq2jdx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 06 May 2020 16:34:26 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 046GWdRr050554;
+        Wed, 6 May 2020 16:34:26 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 30us7n44cg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 06 May 2020 16:34:26 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 046GYPp2014582;
+        Wed, 6 May 2020 16:34:25 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 06 May 2020 09:34:24 -0700
+Date:   Wed, 6 May 2020 09:34:24 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 28/28] xfs: use parallel processing to clear unlinked
- metadata
-Message-ID: <20200506153632.GD27850@infradead.org>
-References: <158864103195.182683.2056162574447133617.stgit@magnolia>
- <158864121071.182683.2313546760215092713.stgit@magnolia>
+Subject: Re: [PATCH 3/3] xfs: actually account for quota changes in
+ xfs_swap_extents
+Message-ID: <20200506163424.GT5703@magnolia>
+References: <158864100980.182577.10199078041909350877.stgit@magnolia>
+ <158864102885.182577.15936710415441871446.stgit@magnolia>
+ <20200506145728.GC7864@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <158864121071.182683.2313546760215092713.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200506145728.GC7864@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9613 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 suspectscore=1
+ mlxlogscore=999 malwarescore=0 phishscore=0 mlxscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005060133
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9613 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxscore=0
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 clxscore=1015
+ mlxlogscore=999 spamscore=0 adultscore=0 bulkscore=0 phishscore=0
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005060133
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 04, 2020 at 06:13:30PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, May 06, 2020 at 07:57:28AM -0700, Christoph Hellwig wrote:
+> On Mon, May 04, 2020 at 06:10:29PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Currently, xfs_swap_extents neither checks for sufficient quota
+> > reservation nor does it actually update quota counts when swapping the
+> > extent forks.  While the primary known user of extent swapping (xfs_fsr)
+> > is careful to ensure that the user/group/project ids of both files
+> > match, this is not required by the kernel.  Consequently, unprivileged
+> > userspace can cause the quota counts to be incorrect.
 > 
-> Run all the unlinked metadata clearing work in parallel so that we can
-> take advantage of higher-performance storage devices.
+> Wouldn't be the right fix to enforce an id match?  I think that is a
+> very sensible limitation.
 
-Can you keep this out of the series (and maybe the whole iunlink move)?
-The series already is huge, no need to add performance work to the huge
-refactoring bucket.
+One could do that, but at a cost of breaking any userspace program that
+was using XFS_IOC_SWAPEXT and was not aware that the ids had to match
+(possibly due to the lack of documentation...)
+
+It was trivial enough to port this from the atomic file update series,
+so I decided to post the least functionality-reducing version and see
+what happens.
+
+Thoughts?
+
+--D
