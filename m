@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F423C4724C
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 04:07:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABB39C47259
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 04:46:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E23E20757
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 04:07:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75FB6206F9
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 May 2020 04:46:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a6GW+faP"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jtg5+lpz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725796AbgEFEHE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 May 2020 00:07:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37742 "EHLO
+        id S1725985AbgEFEqC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 May 2020 00:46:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725300AbgEFEHE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 00:07:04 -0400
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C193C061A0F
-        for <linux-xfs@vger.kernel.org>; Tue,  5 May 2020 21:07:04 -0700 (PDT)
-Received: by mail-pl1-x641.google.com with SMTP id m7so3877plt.5
-        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 21:07:04 -0700 (PDT)
+        with ESMTP id S1725862AbgEFEqB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 00:46:01 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FD0AC061A0F
+        for <linux-xfs@vger.kernel.org>; Tue,  5 May 2020 21:46:00 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id fu13so266059pjb.5
+        for <linux-xfs@vger.kernel.org>; Tue, 05 May 2020 21:46:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Cbv4xxWvNVJJhWxp/J00ciFaQPrG/IKHW1rmJm12ha4=;
-        b=a6GW+faPCx1onrnbuaifnaumswwPeyvcKplqvPkwrA1cW3G6t/lM//CC1nTdqx4fjV
-         oi8ft9EF8ywrvkb7Uj90kWZNij/ptPHdCLpNAcW6CIib5md3/gauPYzjpibHhw4SUuba
-         69EJyGQCSNajKHXSb1kX/AvjxLClhnavCDf3u0v2wOdNfHg5DvgunlxGqPQ0wuKEhFcF
-         1a2uzFeiaiywqU5yZR7dBDF/ZtCW+gB+tBWfEsBeIy2HZeq7HyokdKgao8XoBdLAYeKt
-         kXWkGhaf6JQxtGhSGezUMyCrQhViaUbsNXftRv3zAInWeeGJn+Ahqix+RPNb4T6yB5RH
-         EYeQ==
+        bh=daERzG3TEtFJjRy14pisyrjhC/M+rqFm6kSDoU9A1qk=;
+        b=jtg5+lpzioEgUmbtKrVS4yT9Rf1o3UbCM0vdRlTRu3VYUP5iRtil1FvdiGQr5lwOg7
+         QSoDc8x+s0wG1tltgXujkHE46nwLCw9obn32YOT6PcUwwba7cdO41uq2LwX6dLbx4Xo0
+         oPl+SQfB2nxyTQwxPEcxzefY3VytLGPwXitmqDbuLUGUto8RHqLjv77JY4tNRs19y0sJ
+         KE1EW96PLIYVQzDmYm8+Fk5v1oPzdxHNOkUq/2DqbqxwMvQzo730UPYTFhLyOIghcNmC
+         73qvmCkTKKdvAXlNMJIHyKNItlHXhp/SKqYqqaElSWuCeoFDqSmbGTA8xSpaTJCyCaAL
+         bF6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Cbv4xxWvNVJJhWxp/J00ciFaQPrG/IKHW1rmJm12ha4=;
-        b=kpdNqXJvuinfeglGmKU4ZistqZOwKj/0U0XEmt1W+Aksg24J0/8/yvsZKh2f84+QXs
-         rjpkTexFPNZjXCzKLs9cj75/iPgn8yyHst5BHbcOxBE8/rRDOsctxfjB23l+pGFTezqu
-         7UwnLF3WZTsKXHjuYy4KHdvT69xCYb4ssEnyjTgKiLeaGi0SxF+7KRt8Gb2BerDrRSLC
-         k++/mFA2TK584IyED5H/+dupoqCfl1qI7WDjlorjOy7EA4amy4t8FtNAe6UKzXngSBc/
-         6YT7+UtBygqGqwkKWNOWzzY4wtpF0UMum84l6ufyfMOstuDxYcyC1kg28kOSvGOafB/S
-         GQGA==
-X-Gm-Message-State: AGi0PuYAPybxLUsOb1wRApn4hf3jevulRbEYhWOyRR1ZJUhoI2WVoC2f
-        kcCWeroBlfIlk/XmUG5Yhs59tmTI0no=
-X-Google-Smtp-Source: APiQypLzcHCCTFb0SGPeXzovebUMI/nTNcx7iO/9ZHdtOA+dOSsih/FThayg1QyqZx0BBpArlfKFpg==
-X-Received: by 2002:a17:90a:17a6:: with SMTP id q35mr6672044pja.96.1588738023418;
-        Tue, 05 May 2020 21:07:03 -0700 (PDT)
+        bh=daERzG3TEtFJjRy14pisyrjhC/M+rqFm6kSDoU9A1qk=;
+        b=dXJiiqaK0l9uDyV3urjmsnfhQ23nSPq4nmK7swYjB1If6GeuJVnEZeQFcal4uTkXG9
+         3vOyiQ5H7A853+Y1c1KYCI5Rd4B7ynbGSEGIXh8qSXyTCwuu7bv6dsuPYMKtT0Vds6zw
+         hbpoBfhmhPs6s1C8nLMwHCGshixEFispTd5H6ainW/iqsEDgZccQzSkXIpqCtKGzyBb5
+         TNbavcwhfUhW2EJbJJBQryVQS+k9HLWaC7EZCU1iX/O1oAUjuSWfZo5Qk2eNTsKsDLqc
+         PDDycTcpiRTxg7wADVq+aWWhWRH5e5waqzKk2KuUll9Fwsb4Tj3B32thnRPtJuRm6MIZ
+         aDUg==
+X-Gm-Message-State: AGi0Pub/TGjb5HBBYlWrJPhb1Eix3t8dUe5q9LJoQqqP6TdHhwKOkiSl
+        W/m7qlddLFl7XPuNpFeNPfxJssLhkBI=
+X-Google-Smtp-Source: APiQypJh8TppNQ9fySdogf/koJa+GcyKxXm15SzGZlMWFcPoEsCeRphQAONBzgPqyM384XM0uLNZTg==
+X-Received: by 2002:a17:90b:19c9:: with SMTP id nm9mr7099957pjb.86.1588740359692;
+        Tue, 05 May 2020 21:45:59 -0700 (PDT)
 Received: from garuda.localnet ([122.171.200.101])
-        by smtp.gmail.com with ESMTPSA id b11sm507603pgq.50.2020.05.05.21.07.01
+        by smtp.gmail.com with ESMTPSA id i10sm472395pfa.166.2020.05.05.21.45.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 May 2020 21:07:02 -0700 (PDT)
+        Tue, 05 May 2020 21:45:58 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 21/28] xfs: refactor releasing finished intents during log recovery
-Date:   Wed, 06 May 2020 09:36:59 +0530
-Message-ID: <1624585.PyqrBo7VhX@garuda>
-In-Reply-To: <158864116741.182683.12547831138234795563.stgit@magnolia>
-References: <158864103195.182683.2056162574447133617.stgit@magnolia> <158864116741.182683.12547831138234795563.stgit@magnolia>
+Subject: Re: [PATCH 23/28] xfs: refactor intent item RECOVERED flag into the log item
+Date:   Wed, 06 May 2020 10:15:56 +0530
+Message-ID: <1975358.PeGXr0G4sl@garuda>
+In-Reply-To: <158864117994.182683.5443984828546312981.stgit@magnolia>
+References: <158864103195.182683.2056162574447133617.stgit@magnolia> <158864117994.182683.5443984828546312981.stgit@magnolia>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -73,11 +73,12 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tuesday 5 May 2020 6:42:47 AM IST Darrick J. Wong wrote:
+On Tuesday 5 May 2020 6:42:59 AM IST Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Replace the open-coded AIL item walking with a proper helper when we're
-> trying to release an intent item that has been finished.
+> Rename XFS_{EFI,BUI,RUI,CUI}_RECOVERED to XFS_LI_RECOVERED so that we
+> track recovery status in the log item, then get rid of the now unused
+> flags fields in each of those log item types.
 >
 
 The functionality is the same as was before applying this patch.
@@ -86,383 +87,299 @@ Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_log_recover.h |    3 +++
->  fs/xfs/xfs_bmap_item.c          |   42 +++++++++------------------------------
->  fs/xfs/xfs_extfree_item.c       |   42 +++++++++------------------------------
->  fs/xfs/xfs_log_recover.c        |   35 ++++++++++++++++++++++++++++++++-
->  fs/xfs/xfs_refcount_item.c      |   42 +++++++++------------------------------
->  fs/xfs/xfs_rmap_item.c          |   42 +++++++++------------------------------
->  fs/xfs/xfs_trans.h              |    1 +
->  7 files changed, 78 insertions(+), 129 deletions(-)
+>  fs/xfs/xfs_bmap_item.c     |   10 +++++-----
+>  fs/xfs/xfs_bmap_item.h     |    6 ------
+>  fs/xfs/xfs_extfree_item.c  |    8 ++++----
+>  fs/xfs/xfs_extfree_item.h  |    6 ------
+>  fs/xfs/xfs_refcount_item.c |    8 ++++----
+>  fs/xfs/xfs_refcount_item.h |    6 ------
+>  fs/xfs/xfs_rmap_item.c     |    8 ++++----
+>  fs/xfs/xfs_rmap_item.h     |    6 ------
+>  fs/xfs/xfs_trans.h         |    4 +++-
+>  9 files changed, 20 insertions(+), 42 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
-> index d4d6d4f84fda..b875819a1c04 100644
-> --- a/fs/xfs/libxfs/xfs_log_recover.h
-> +++ b/fs/xfs/libxfs/xfs_log_recover.h
-> @@ -126,4 +126,7 @@ bool xlog_put_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
->  void xlog_recover_iodone(struct xfs_buf *bp);
->  int xlog_recover_process_unlinked(struct xlog *log);
->  
-> +void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
-> +		uint64_t intent_id);
-> +
->  #endif	/* __XFS_LOG_RECOVER_H__ */
 > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index f88ebf8634c4..96627ea800c8 100644
+> index 090dc1c53c92..8dd157fc44fa 100644
 > --- a/fs/xfs/xfs_bmap_item.c
 > +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -578,12 +578,21 @@ xfs_bui_item_recover(
->  	return error;
->  }
+> @@ -441,11 +441,11 @@ xfs_bui_recover(
+>  	struct xfs_bmbt_irec		irec;
+>  	struct xfs_mount		*mp = parent_tp->t_mountp;
 >  
-> +STATIC bool
-> +xfs_bui_item_match(
-> +	struct xfs_log_item	*lip,
-> +	uint64_t		intent_id)
-> +{
-> +	return BUI_ITEM(lip)->bui_format.bui_id == intent_id;
-> +}
-> +
->  static const struct xfs_item_ops xfs_bui_item_ops = {
->  	.iop_size	= xfs_bui_item_size,
->  	.iop_format	= xfs_bui_item_format,
->  	.iop_unpin	= xfs_bui_item_unpin,
->  	.iop_release	= xfs_bui_item_release,
->  	.iop_recover	= xfs_bui_item_recover,
-> +	.iop_match	= xfs_bui_item_match,
->  };
+> -	ASSERT(!test_bit(XFS_BUI_RECOVERED, &buip->bui_flags));
+> +	ASSERT(!test_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags));
 >  
->  /*
-> @@ -675,45 +684,14 @@ xlog_recover_bmap_done_commit_pass2(
->  	xfs_lsn_t			lsn)
->  {
->  	struct xfs_bud_log_format	*bud_formatp;
-> -	struct xfs_bui_log_item		*buip = NULL;
-> -	struct xfs_log_item		*lip;
-> -	uint64_t			bui_id;
-> -	struct xfs_ail_cursor		cur;
-> -	struct xfs_ail			*ailp = log->l_ailp;
->  
->  	bud_formatp = item->ri_buf[0].i_addr;
->  	if (item->ri_buf[0].i_len != sizeof(struct xfs_bud_log_format)) {
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
+>  	/* Only one mapping operation per BUI... */
+>  	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS) {
+> -		set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
+> +		set_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags);
+>  		xfs_bui_release(buip);
 >  		return -EFSCORRUPTED;
 >  	}
-> -	bui_id = bud_formatp->bud_bui_id;
-> -
-> -	/*
-> -	 * Search for the BUI with the id in the BUD format structure in the
-> -	 * AIL.
-> -	 */
-> -	spin_lock(&ailp->ail_lock);
-> -	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
-> -	while (lip != NULL) {
-> -		if (lip->li_type == XFS_LI_BUI) {
-> -			buip = (struct xfs_bui_log_item *)lip;
-> -			if (buip->bui_format.bui_id == bui_id) {
-> -				/*
-> -				 * Drop the BUD reference to the BUI. This
-> -				 * removes the BUI from the AIL and frees it.
-> -				 */
-> -				spin_unlock(&ailp->ail_lock);
-> -				xfs_bui_release(buip);
-> -				spin_lock(&ailp->ail_lock);
-> -				break;
-> -			}
-> -		}
-> -		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-> -	}
-> -
-> -	xfs_trans_ail_cursor_done(&cur);
-> -	spin_unlock(&ailp->ail_lock);
+> @@ -479,7 +479,7 @@ xfs_bui_recover(
+>  		 * This will pull the BUI from the AIL and
+>  		 * free the memory associated with it.
+>  		 */
+> -		set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
+> +		set_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags);
+>  		xfs_bui_release(buip);
+>  		return -EFSCORRUPTED;
+>  	}
+> @@ -537,7 +537,7 @@ xfs_bui_recover(
+>  		xfs_bmap_unmap_extent(tp, ip, &irec);
+>  	}
 >  
-> +	xlog_recover_release_intent(log, XFS_LI_BUI, bud_formatp->bud_bui_id);
->  	return 0;
->  }
+> -	set_bit(XFS_BUI_RECOVERED, &buip->bui_flags);
+> +	set_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags);
+>  	xfs_defer_move(parent_tp, tp);
+>  	error = xfs_trans_commit(tp);
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> @@ -568,7 +568,7 @@ xfs_bui_item_recover(
+>  	/*
+>  	 * Skip BUIs that we've already processed.
+>  	 */
+> -	if (test_bit(XFS_BUI_RECOVERED, &buip->bui_flags))
+> +	if (test_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags))
+>  		return 0;
+>  
+>  	spin_unlock(&ailp->ail_lock);
+> diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
+> index 44d06e62f8f9..b9be62f8bd52 100644
+> --- a/fs/xfs/xfs_bmap_item.h
+> +++ b/fs/xfs/xfs_bmap_item.h
+> @@ -32,11 +32,6 @@ struct kmem_zone;
+>   */
+>  #define	XFS_BUI_MAX_FAST_EXTENTS	1
+>  
+> -/*
+> - * Define BUI flag bits. Manipulated by set/clear/test_bit operators.
+> - */
+> -#define	XFS_BUI_RECOVERED		1
+> -
+>  /*
+>   * This is the "bmap update intent" log item.  It is used to log the fact that
+>   * some reverse mappings need to change.  It is used in conjunction with the
+> @@ -49,7 +44,6 @@ struct xfs_bui_log_item {
+>  	struct xfs_log_item		bui_item;
+>  	atomic_t			bui_refcount;
+>  	atomic_t			bui_next_extent;
+> -	unsigned long			bui_flags;	/* misc flags */
+>  	struct xfs_bui_log_format	bui_format;
+>  };
 >  
 > diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-> index 3fc8a9864217..4e1b10ab17a5 100644
+> index dc6ebb5fb8d3..635c99fdda85 100644
 > --- a/fs/xfs/xfs_extfree_item.c
 > +++ b/fs/xfs/xfs_extfree_item.c
-> @@ -665,12 +665,21 @@ xfs_efi_item_recover(
->  	return error;
->  }
+> @@ -592,7 +592,7 @@ xfs_efi_recover(
+>  	xfs_extent_t		*extp;
+>  	xfs_fsblock_t		startblock_fsb;
 >  
-> +STATIC bool
-> +xfs_efi_item_match(
-> +	struct xfs_log_item	*lip,
-> +	uint64_t		intent_id)
-> +{
-> +	return EFI_ITEM(lip)->efi_format.efi_id == intent_id;
-> +}
-> +
->  static const struct xfs_item_ops xfs_efi_item_ops = {
->  	.iop_size	= xfs_efi_item_size,
->  	.iop_format	= xfs_efi_item_format,
->  	.iop_unpin	= xfs_efi_item_unpin,
->  	.iop_release	= xfs_efi_item_release,
->  	.iop_recover	= xfs_efi_item_recover,
-> +	.iop_match	= xfs_efi_item_match,
+> -	ASSERT(!test_bit(XFS_EFI_RECOVERED, &efip->efi_flags));
+> +	ASSERT(!test_bit(XFS_LI_RECOVERED, &efip->efi_item.li_flags));
+>  
+>  	/*
+>  	 * First check the validity of the extents described by the
+> @@ -611,7 +611,7 @@ xfs_efi_recover(
+>  			 * This will pull the EFI from the AIL and
+>  			 * free the memory associated with it.
+>  			 */
+> -			set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
+> +			set_bit(XFS_LI_RECOVERED, &efip->efi_item.li_flags);
+>  			xfs_efi_release(efip);
+>  			return -EFSCORRUPTED;
+>  		}
+> @@ -632,7 +632,7 @@ xfs_efi_recover(
+>  
+>  	}
+>  
+> -	set_bit(XFS_EFI_RECOVERED, &efip->efi_flags);
+> +	set_bit(XFS_LI_RECOVERED, &efip->efi_item.li_flags);
+>  	error = xfs_trans_commit(tp);
+>  	return error;
+>  
+> @@ -655,7 +655,7 @@ xfs_efi_item_recover(
+>  	 * Skip EFIs that we've already processed.
+>  	 */
+>  	efip = container_of(lip, struct xfs_efi_log_item, efi_item);
+> -	if (test_bit(XFS_EFI_RECOVERED, &efip->efi_flags))
+> +	if (test_bit(XFS_LI_RECOVERED, &efip->efi_item.li_flags))
+>  		return 0;
+>  
+>  	spin_unlock(&ailp->ail_lock);
+> diff --git a/fs/xfs/xfs_extfree_item.h b/fs/xfs/xfs_extfree_item.h
+> index 4b2c2c5c5985..cd2860c875bf 100644
+> --- a/fs/xfs/xfs_extfree_item.h
+> +++ b/fs/xfs/xfs_extfree_item.h
+> @@ -16,11 +16,6 @@ struct kmem_zone;
+>   */
+>  #define	XFS_EFI_MAX_FAST_EXTENTS	16
+>  
+> -/*
+> - * Define EFI flag bits. Manipulated by set/clear/test_bit operators.
+> - */
+> -#define	XFS_EFI_RECOVERED	1
+> -
+>  /*
+>   * This is the "extent free intention" log item.  It is used to log the fact
+>   * that some extents need to be free.  It is used in conjunction with the
+> @@ -54,7 +49,6 @@ struct xfs_efi_log_item {
+>  	struct xfs_log_item	efi_item;
+>  	atomic_t		efi_refcount;
+>  	atomic_t		efi_next_extent;
+> -	unsigned long		efi_flags;	/* misc flags */
+>  	xfs_efi_log_format_t	efi_format;
 >  };
 >  
->  
-> @@ -734,46 +743,15 @@ xlog_recover_extfree_done_commit_pass2(
->  	struct xlog_recover_item	*item,
->  	xfs_lsn_t			lsn)
->  {
-> -	struct xfs_ail_cursor		cur;
->  	struct xfs_efd_log_format	*efd_formatp;
-> -	struct xfs_efi_log_item		*efip = NULL;
-> -	struct xfs_log_item		*lip;
-> -	struct xfs_ail			*ailp = log->l_ailp;
-> -	uint64_t			efi_id;
->  
->  	efd_formatp = item->ri_buf[0].i_addr;
->  	ASSERT((item->ri_buf[0].i_len == (sizeof(xfs_efd_log_format_32_t) +
->  		((efd_formatp->efd_nextents - 1) * sizeof(xfs_extent_32_t)))) ||
->  	       (item->ri_buf[0].i_len == (sizeof(xfs_efd_log_format_64_t) +
->  		((efd_formatp->efd_nextents - 1) * sizeof(xfs_extent_64_t)))));
-> -	efi_id = efd_formatp->efd_efi_id;
-> -
-> -	/*
-> -	 * Search for the EFI with the id in the EFD format structure in the
-> -	 * AIL.
-> -	 */
-> -	spin_lock(&ailp->ail_lock);
-> -	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
-> -	while (lip != NULL) {
-> -		if (lip->li_type == XFS_LI_EFI) {
-> -			efip = (struct xfs_efi_log_item *)lip;
-> -			if (efip->efi_format.efi_id == efi_id) {
-> -				/*
-> -				 * Drop the EFD reference to the EFI. This
-> -				 * removes the EFI from the AIL and frees it.
-> -				 */
-> -				spin_unlock(&ailp->ail_lock);
-> -				xfs_efi_release(efip);
-> -				spin_lock(&ailp->ail_lock);
-> -				break;
-> -			}
-> -		}
-> -		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-> -	}
-> -
-> -	xfs_trans_ail_cursor_done(&cur);
-> -	spin_unlock(&ailp->ail_lock);
->  
-> +	xlog_recover_release_intent(log, XFS_LI_EFI, efd_formatp->efd_efi_id);
->  	return 0;
->  }
->  
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 0ccc09c004f1..55477b9b9311 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -1779,6 +1779,38 @@ xlog_clear_stale_blocks(
->  	return 0;
->  }
->  
-> +/*
-> + * Release the recovered intent item in the AIL that matches the given intent
-> + * type and intent id.
-> + */
-> +void
-> +xlog_recover_release_intent(
-> +	struct xlog		*log,
-> +	unsigned short		intent_type,
-> +	uint64_t		intent_id)
-> +{
-> +	struct xfs_ail_cursor	cur;
-> +	struct xfs_log_item	*lip;
-> +	struct xfs_ail		*ailp = log->l_ailp;
-> +
-> +	spin_lock(&ailp->ail_lock);
-> +	for (lip = xfs_trans_ail_cursor_first(ailp, &cur, 0); lip != NULL;
-> +	     lip = xfs_trans_ail_cursor_next(ailp, &cur)) {
-> +		if (lip->li_type != intent_type)
-> +			continue;
-> +		if (!lip->li_ops->iop_match(lip, intent_id))
-> +			continue;
-> +
-> +		spin_unlock(&ailp->ail_lock);
-> +		lip->li_ops->iop_release(lip);
-> +		spin_lock(&ailp->ail_lock);
-> +		break;
-> +	}
-> +
-> +	xfs_trans_ail_cursor_done(&cur);
-> +	spin_unlock(&ailp->ail_lock);
-> +}
-> +
->  /******************************************************************************
->   *
->   *		Log recover routines
-> @@ -2590,7 +2622,8 @@ xlog_finish_defer_ops(
->  /* Is this log item a deferred action intent? */
->  static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
->  {
-> -	return lip->li_ops->iop_recover != NULL;
-> +	return lip->li_ops->iop_recover != NULL &&
-> +	       lip->li_ops->iop_match != NULL;
->  }
->  
->  /*
 > diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-> index 5b72eebd8764..27126b136b5a 100644
+> index fdc18576a023..4b242b3b33a3 100644
 > --- a/fs/xfs/xfs_refcount_item.c
 > +++ b/fs/xfs/xfs_refcount_item.c
-> @@ -591,12 +591,21 @@ xfs_cui_item_recover(
->  	return error;
->  }
+> @@ -441,7 +441,7 @@ xfs_cui_recover(
+>  	bool				requeue_only = false;
+>  	struct xfs_mount		*mp = parent_tp->t_mountp;
 >  
-> +STATIC bool
-> +xfs_cui_item_match(
-> +	struct xfs_log_item	*lip,
-> +	uint64_t		intent_id)
-> +{
-> +	return CUI_ITEM(lip)->cui_format.cui_id == intent_id;
-> +}
-> +
->  static const struct xfs_item_ops xfs_cui_item_ops = {
->  	.iop_size	= xfs_cui_item_size,
->  	.iop_format	= xfs_cui_item_format,
->  	.iop_unpin	= xfs_cui_item_unpin,
->  	.iop_release	= xfs_cui_item_release,
->  	.iop_recover	= xfs_cui_item_recover,
-> +	.iop_match	= xfs_cui_item_match,
->  };
+> -	ASSERT(!test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags));
+> +	ASSERT(!test_bit(XFS_LI_RECOVERED, &cuip->cui_item.li_flags));
 >  
->  /*
-> @@ -684,45 +693,14 @@ xlog_recover_refcount_done_commit_pass2(
->  	xfs_lsn_t			lsn)
->  {
->  	struct xfs_cud_log_format	*cud_formatp;
-> -	struct xfs_cui_log_item		*cuip = NULL;
-> -	struct xfs_log_item		*lip;
-> -	uint64_t			cui_id;
-> -	struct xfs_ail_cursor		cur;
-> -	struct xfs_ail			*ailp = log->l_ailp;
->  
->  	cud_formatp = item->ri_buf[0].i_addr;
->  	if (item->ri_buf[0].i_len != sizeof(struct xfs_cud_log_format)) {
->  		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, log->l_mp);
->  		return -EFSCORRUPTED;
+>  	/*
+>  	 * First check the validity of the extents described by the
+> @@ -472,7 +472,7 @@ xfs_cui_recover(
+>  			 * This will pull the CUI from the AIL and
+>  			 * free the memory associated with it.
+>  			 */
+> -			set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
+> +			set_bit(XFS_LI_RECOVERED, &cuip->cui_item.li_flags);
+>  			xfs_cui_release(cuip);
+>  			return -EFSCORRUPTED;
+>  		}
+> @@ -556,7 +556,7 @@ xfs_cui_recover(
 >  	}
-> -	cui_id = cud_formatp->cud_cui_id;
-> -
-> -	/*
-> -	 * Search for the CUI with the id in the CUD format structure in the
-> -	 * AIL.
-> -	 */
-> -	spin_lock(&ailp->ail_lock);
-> -	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
-> -	while (lip != NULL) {
-> -		if (lip->li_type == XFS_LI_CUI) {
-> -			cuip = (struct xfs_cui_log_item *)lip;
-> -			if (cuip->cui_format.cui_id == cui_id) {
-> -				/*
-> -				 * Drop the CUD reference to the CUI. This
-> -				 * removes the CUI from the AIL and frees it.
-> -				 */
-> -				spin_unlock(&ailp->ail_lock);
-> -				xfs_cui_release(cuip);
-> -				spin_lock(&ailp->ail_lock);
-> -				break;
-> -			}
-> -		}
-> -		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-> -	}
-> -
-> -	xfs_trans_ail_cursor_done(&cur);
-> -	spin_unlock(&ailp->ail_lock);
 >  
-> +	xlog_recover_release_intent(log, XFS_LI_CUI, cud_formatp->cud_cui_id);
->  	return 0;
->  }
+>  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+> -	set_bit(XFS_CUI_RECOVERED, &cuip->cui_flags);
+> +	set_bit(XFS_LI_RECOVERED, &cuip->cui_item.li_flags);
+>  	xfs_defer_move(parent_tp, tp);
+>  	error = xfs_trans_commit(tp);
+>  	return error;
+> @@ -581,7 +581,7 @@ xfs_cui_item_recover(
+>  	/*
+>  	 * Skip CUIs that we've already processed.
+>  	 */
+> -	if (test_bit(XFS_CUI_RECOVERED, &cuip->cui_flags))
+> +	if (test_bit(XFS_LI_RECOVERED, &cuip->cui_item.li_flags))
+>  		return 0;
+>  
+>  	spin_unlock(&ailp->ail_lock);
+> diff --git a/fs/xfs/xfs_refcount_item.h b/fs/xfs/xfs_refcount_item.h
+> index cfaa857673a6..f4f2e836540b 100644
+> --- a/fs/xfs/xfs_refcount_item.h
+> +++ b/fs/xfs/xfs_refcount_item.h
+> @@ -32,11 +32,6 @@ struct kmem_zone;
+>   */
+>  #define	XFS_CUI_MAX_FAST_EXTENTS	16
+>  
+> -/*
+> - * Define CUI flag bits. Manipulated by set/clear/test_bit operators.
+> - */
+> -#define	XFS_CUI_RECOVERED		1
+> -
+>  /*
+>   * This is the "refcount update intent" log item.  It is used to log
+>   * the fact that some reverse mappings need to change.  It is used in
+> @@ -51,7 +46,6 @@ struct xfs_cui_log_item {
+>  	struct xfs_log_item		cui_item;
+>  	atomic_t			cui_refcount;
+>  	atomic_t			cui_next_extent;
+> -	unsigned long			cui_flags;	/* misc flags */
+>  	struct xfs_cui_log_format	cui_format;
+>  };
 >  
 > diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-> index e763dd8ed0a6..3987f217415c 100644
+> index f9cd3ff18736..625eaf954d74 100644
 > --- a/fs/xfs/xfs_rmap_item.c
 > +++ b/fs/xfs/xfs_rmap_item.c
-> @@ -606,12 +606,21 @@ xfs_rui_item_recover(
+> @@ -480,7 +480,7 @@ xfs_rui_recover(
+>  	struct xfs_trans		*tp;
+>  	struct xfs_btree_cur		*rcur = NULL;
+>  
+> -	ASSERT(!test_bit(XFS_RUI_RECOVERED, &ruip->rui_flags));
+> +	ASSERT(!test_bit(XFS_LI_RECOVERED, &ruip->rui_item.li_flags));
+>  
+>  	/*
+>  	 * First check the validity of the extents described by the
+> @@ -515,7 +515,7 @@ xfs_rui_recover(
+>  			 * This will pull the RUI from the AIL and
+>  			 * free the memory associated with it.
+>  			 */
+> -			set_bit(XFS_RUI_RECOVERED, &ruip->rui_flags);
+> +			set_bit(XFS_LI_RECOVERED, &ruip->rui_item.li_flags);
+>  			xfs_rui_release(ruip);
+>  			return -EFSCORRUPTED;
+>  		}
+> @@ -573,7 +573,7 @@ xfs_rui_recover(
+>  	}
+>  
+>  	xfs_rmap_finish_one_cleanup(tp, rcur, error);
+> -	set_bit(XFS_RUI_RECOVERED, &ruip->rui_flags);
+> +	set_bit(XFS_LI_RECOVERED, &ruip->rui_item.li_flags);
+>  	error = xfs_trans_commit(tp);
 >  	return error;
->  }
 >  
-> +STATIC bool
-> +xfs_rui_item_match(
-> +	struct xfs_log_item	*lip,
-> +	uint64_t		intent_id)
-> +{
-> +	return RUI_ITEM(lip)->rui_format.rui_id == intent_id;
-> +}
-> +
->  static const struct xfs_item_ops xfs_rui_item_ops = {
->  	.iop_size	= xfs_rui_item_size,
->  	.iop_format	= xfs_rui_item_format,
->  	.iop_unpin	= xfs_rui_item_unpin,
->  	.iop_release	= xfs_rui_item_release,
->  	.iop_recover	= xfs_rui_item_recover,
-> +	.iop_match	= xfs_rui_item_match,
->  };
+> @@ -596,7 +596,7 @@ xfs_rui_item_recover(
+>  	/*
+>  	 * Skip RUIs that we've already processed.
+>  	 */
+> -	if (test_bit(XFS_RUI_RECOVERED, &ruip->rui_flags))
+> +	if (test_bit(XFS_LI_RECOVERED, &ruip->rui_item.li_flags))
+>  		return 0;
 >  
+>  	spin_unlock(&ailp->ail_lock);
+> diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
+> index 48a77a6f5c94..31e6cdfff71f 100644
+> --- a/fs/xfs/xfs_rmap_item.h
+> +++ b/fs/xfs/xfs_rmap_item.h
+> @@ -35,11 +35,6 @@ struct kmem_zone;
+>   */
+>  #define	XFS_RUI_MAX_FAST_EXTENTS	16
+>  
+> -/*
+> - * Define RUI flag bits. Manipulated by set/clear/test_bit operators.
+> - */
+> -#define	XFS_RUI_RECOVERED		1
+> -
 >  /*
-> @@ -675,42 +684,11 @@ xlog_recover_rmap_done_commit_pass2(
->  	xfs_lsn_t			lsn)
->  {
->  	struct xfs_rud_log_format	*rud_formatp;
-> -	struct xfs_rui_log_item		*ruip = NULL;
-> -	struct xfs_log_item		*lip;
-> -	uint64_t			rui_id;
-> -	struct xfs_ail_cursor		cur;
-> -	struct xfs_ail			*ailp = log->l_ailp;
->  
->  	rud_formatp = item->ri_buf[0].i_addr;
->  	ASSERT(item->ri_buf[0].i_len == sizeof(struct xfs_rud_log_format));
-> -	rui_id = rud_formatp->rud_rui_id;
-> -
-> -	/*
-> -	 * Search for the RUI with the id in the RUD format structure in the
-> -	 * AIL.
-> -	 */
-> -	spin_lock(&ailp->ail_lock);
-> -	lip = xfs_trans_ail_cursor_first(ailp, &cur, 0);
-> -	while (lip != NULL) {
-> -		if (lip->li_type == XFS_LI_RUI) {
-> -			ruip = (struct xfs_rui_log_item *)lip;
-> -			if (ruip->rui_format.rui_id == rui_id) {
-> -				/*
-> -				 * Drop the RUD reference to the RUI. This
-> -				 * removes the RUI from the AIL and frees it.
-> -				 */
-> -				spin_unlock(&ailp->ail_lock);
-> -				xfs_rui_release(ruip);
-> -				spin_lock(&ailp->ail_lock);
-> -				break;
-> -			}
-> -		}
-> -		lip = xfs_trans_ail_cursor_next(ailp, &cur);
-> -	}
-> -
-> -	xfs_trans_ail_cursor_done(&cur);
-> -	spin_unlock(&ailp->ail_lock);
->  
-> +	xlog_recover_release_intent(log, XFS_LI_RUI, rud_formatp->rud_rui_id);
->  	return 0;
->  }
+>   * This is the "rmap update intent" log item.  It is used to log the fact that
+>   * some reverse mappings need to change.  It is used in conjunction with the
+> @@ -52,7 +47,6 @@ struct xfs_rui_log_item {
+>  	struct xfs_log_item		rui_item;
+>  	atomic_t			rui_refcount;
+>  	atomic_t			rui_next_extent;
+> -	unsigned long			rui_flags;	/* misc flags */
+>  	struct xfs_rui_log_format	rui_format;
+>  };
 >  
 > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 3f6a79108991..3e8808bb07c5 100644
+> index 3e8808bb07c5..8308bf6d7e40 100644
 > --- a/fs/xfs/xfs_trans.h
 > +++ b/fs/xfs/xfs_trans.h
-> @@ -78,6 +78,7 @@ struct xfs_item_ops {
->  	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
->  	void (*iop_error)(struct xfs_log_item *, xfs_buf_t *);
->  	int (*iop_recover)(struct xfs_log_item *lip, struct xfs_trans *tp);
-> +	bool (*iop_match)(struct xfs_log_item *item, uint64_t id);
->  };
+> @@ -59,12 +59,14 @@ struct xfs_log_item {
+>  #define	XFS_LI_ABORTED	1
+>  #define	XFS_LI_FAILED	2
+>  #define	XFS_LI_DIRTY	3	/* log item dirty in transaction */
+> +#define	XFS_LI_RECOVERED 4	/* log intent item has been recovered */
 >  
->  /*
+>  #define XFS_LI_FLAGS \
+>  	{ (1 << XFS_LI_IN_AIL),		"IN_AIL" }, \
+>  	{ (1 << XFS_LI_ABORTED),	"ABORTED" }, \
+>  	{ (1 << XFS_LI_FAILED),		"FAILED" }, \
+> -	{ (1 << XFS_LI_DIRTY),		"DIRTY" }
+> +	{ (1 << XFS_LI_DIRTY),		"DIRTY" }, \
+> +	{ (1 << XFS_LI_RECOVERED),	"RECOVERED" }
+>  
+>  struct xfs_item_ops {
+>  	unsigned flags;
 > 
 > 
 
