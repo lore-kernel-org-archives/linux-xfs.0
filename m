@@ -2,99 +2,144 @@ Return-Path: <SRS0=M5eb=6V=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 975EDC38A24
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 13:44:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C25F5C38A24
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 14:36:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6EAA82064A
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 13:44:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DSPREbHt"
+	by mail.kernel.org (Postfix) with ESMTP id A3F842083B
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 14:36:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1588862186;
+	bh=u9GjzKj/aPiAqe3X8tN9HEszZ3EIsc2zXBSCISpLFQ0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Lf4POXfah6WT51S84NiVNluh2j/jKa9gUd2ZnCuXXdHxLozX/zPXEzxiOLcbCbySJ
+	 LJ2nECDDBxOqWaIL9Ob2hgjlDZHru+cI43uz1MGv5LLFip9UueFodfsEAGBHv0uTFy
+	 ual+cAzUT8AKx5/0WdbKjOKoxFatgjIOr1dkhGJc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726074AbgEGNoC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 May 2020 09:44:02 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:43101 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725939AbgEGNoB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 09:44:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588859040;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8FyHjr7cRDRanSqpfXfBg4y5EKZdRa6C0+x8FLrI1sk=;
-        b=DSPREbHtWoOPWpgCX2Z8i0O4M1Vqoxmu9nZvHWISpIf2IXZYHFsrkrqPk5mDQd5EM+IOhs
-        /oYn1gGeAgTOcll3ZL0iaFdUh48iiufdYeB1Er0C/RMs2UMPXq03z1CNcYkPKB0x4Q5O0l
-        BVhhRkBe1E48Fb/pZV6reVMpJRefQ2w=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-15-RUSRasn-OeOO7oj9FMxUXg-1; Thu, 07 May 2020 09:43:58 -0400
-X-MC-Unique: RUSRasn-OeOO7oj9FMxUXg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728634AbgEGOgR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 May 2020 10:36:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54956 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728074AbgEGO2V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 7 May 2020 10:28:21 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7BCA2107ACF4;
-        Thu,  7 May 2020 13:43:57 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0B5D95C1BE;
-        Thu,  7 May 2020 13:43:56 +0000 (UTC)
-Date:   Thu, 7 May 2020 09:43:55 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        by mail.kernel.org (Postfix) with ESMTPSA id 104DD20936;
+        Thu,  7 May 2020 14:28:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1588861701;
+        bh=u9GjzKj/aPiAqe3X8tN9HEszZ3EIsc2zXBSCISpLFQ0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=QP01BDKjEI8PXgFba7sfh9cJbxaGRNCFDYWZj2qH06SCcm/iKNyHLz1P167lWyNIt
+         IZZUB373ZcKgdZpZExMgRO0V51UMwd7hQU2c7rJj0OUsCI8SI14AmddV0nBOXsF1JW
+         AVh0huTdFCL8Bkz4s+E3p0WnOYcX3gUNZFogfFlU=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Ritesh Harjani <riteshh@linux.ibm.com>,
+        Christoph Hellwig <hch@lst.de>, Jan Kara <jack@suse.cz>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/12] xfs: remove xfs_ifork_ops
-Message-ID: <20200507134355.GF9003@bfoster>
-References: <20200501081424.2598914-1-hch@lst.de>
- <20200501081424.2598914-9-hch@lst.de>
- <20200501155649.GO40250@bfoster>
- <20200501160809.GT6742@magnolia>
- <20200501163809.GA18426@lst.de>
- <20200501165017.GA20127@lst.de>
- <20200501182316.GT40250@bfoster>
- <20200507123411.GB17936@lst.de>
+Subject: [PATCH AUTOSEL 5.6 42/50] fibmap: Warn and return an error in case of block > INT_MAX
+Date:   Thu,  7 May 2020 10:27:18 -0400
+Message-Id: <20200507142726.25751-42-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200507142726.25751-1-sashal@kernel.org>
+References: <20200507142726.25751-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200507123411.GB17936@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 07, 2020 at 02:34:11PM +0200, Christoph Hellwig wrote:
-> On Fri, May 01, 2020 at 02:23:16PM -0400, Brian Foster wrote:
-> > Can we use another dummy parent inode value in xfs_repair? It looks to
-> > me that we set it to zero in phase 4 if it fails verification and set
-> > the parent to NULLFSINO (i.e. unknown) in repair's in-core tracking.
-> > Phase 6 walks the directory entries and explicitly sets the parent inode
-> > number of entries with an unknown parent (according to the in-core
-> > tracking). IOW, I don't see where we actually rely on the directory
-> > header having a parent inode of zero outside of detecting it in the
-> > custom verifier. If that's the only functional purpose, I wonder if we
-> > could do something like set the bogus parent field of a sf dir to the
-> > root inode or to itself, that way the default verifier wouldn't trip
-> > over it..
-> 
-> I don't think we need a dummy parent at all - we can just skip the
-> parent validation entirely, which is what my incremental patch does.
-> 
+From: Ritesh Harjani <riteshh@linux.ibm.com>
 
-xfs_repair already skips the parent validation, this patch just
-refactors it. What I was considering above is whether repair uses the
-current dummy value of zero for any functional reason. If not, it kind
-of looks like the earlier phase of repair checks the parent, sees that
-it would fail a verifier, replaces it with zero (which would also fail
-the verifier) and then eventually replaces zero with a valid parent or
-ditches the entry in phase 6. If we placed a temporary parent value in
-the early phase that wouldn't explicitly fail a verifier by being an
-invalid inode number (instead of using 0 to notify the verifier to skip
-the validation), then we wouldn't need to skip the parent validation in
-phase 6 when we look up the inode again.
+[ Upstream commit b75dfde1212991b24b220c3995101c60a7b8ae74 ]
 
-Brian
+We better warn the fibmap user and not return a truncated and therefore
+an incorrect block map address if the bmap() returned block address
+is greater than INT_MAX (since user supplied integer pointer).
+
+It's better to pr_warn() all user of ioctl_fibmap() and return a proper
+error code rather than silently letting a FS corruption happen if the
+user tries to fiddle around with the returned block map address.
+
+We fix this by returning an error code of -ERANGE and returning 0 as the
+block mapping address in case if it is > INT_MAX.
+
+Now iomap_bmap() could be called from either of these two paths.
+Either when a user is calling an ioctl_fibmap() interface to get
+the block mapping address or by some filesystem via use of bmap()
+internal kernel API.
+bmap() kernel API is well equipped with handling of u64 addresses.
+
+WARN condition in iomap_bmap_actor() was mainly added to warn all
+the fibmap users. But now that we have directly added this warning
+for all fibmap users and also made sure to return 0 as block map address
+in case if addr > INT_MAX.
+So we can now remove this logic from iomap_bmap_actor().
+
+Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/ioctl.c        | 8 ++++++++
+ fs/iomap/fiemap.c | 5 +----
+ 2 files changed, 9 insertions(+), 4 deletions(-)
+
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index 282d45be6f453..5e80b40bc1b5c 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -55,6 +55,7 @@ EXPORT_SYMBOL(vfs_ioctl);
+ static int ioctl_fibmap(struct file *filp, int __user *p)
+ {
+ 	struct inode *inode = file_inode(filp);
++	struct super_block *sb = inode->i_sb;
+ 	int error, ur_block;
+ 	sector_t block;
+ 
+@@ -71,6 +72,13 @@ static int ioctl_fibmap(struct file *filp, int __user *p)
+ 	block = ur_block;
+ 	error = bmap(inode, &block);
+ 
++	if (block > INT_MAX) {
++		error = -ERANGE;
++		pr_warn_ratelimited("[%s/%d] FS: %s File: %pD4 would truncate fibmap result\n",
++				    current->comm, task_pid_nr(current),
++				    sb->s_id, filp);
++	}
++
+ 	if (error)
+ 		ur_block = 0;
+ 	else
+diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+index bccf305ea9ce2..d55e8f491a5e5 100644
+--- a/fs/iomap/fiemap.c
++++ b/fs/iomap/fiemap.c
+@@ -117,10 +117,7 @@ iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
+ 
+ 	if (iomap->type == IOMAP_MAPPED) {
+ 		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
+-		if (addr > INT_MAX)
+-			WARN(1, "would truncate bmap result\n");
+-		else
+-			*bno = addr;
++		*bno = addr;
+ 	}
+ 	return 0;
+ }
+-- 
+2.20.1
 
