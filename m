@@ -7,56 +7,57 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9ACB2C28CBC
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 01:06:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50B45C28CBC
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 01:06:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E54220747
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 01:06:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27F722082E
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 01:06:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ar4cQ4tI"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Bw0MS2Tk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727994AbgEGBGW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 May 2020 21:06:22 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55748 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727991AbgEGBGV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 21:06:21 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0470vjth130466;
-        Thu, 7 May 2020 01:04:17 GMT
+        id S1728060AbgEGBG0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 May 2020 21:06:26 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:55014 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727991AbgEGBG0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 May 2020 21:06:26 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0470xRT4123224;
+        Thu, 7 May 2020 01:04:22 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=hLpGgSpPaTamAp2giRQxGmniWAqO5sc9pdLfzCb48AA=;
- b=ar4cQ4tIYAoRdRyxIjmyna1CAZXvJrhP/irp3qQOvf+sytN3QD44ELegsX5BpwklQAQ3
- iDu+WcF2FXpKGFhBv2ZeqKVtRiIRWaHs3YEPHeTMpfsFjfHOusNDSPID/Tu+rcaqmWlE
- gHt939CYOtolNKD57W7tFOYnJg6PgdbvKgPzgIOsxqE1evpX1uW+6OrPorKYoKd+/Dto
- ZwcOomPt9h2iAy7nAmkUdqCIz9OXFkydCvPt05gVHgV4txZIseIrZTvlw9/EcEKmODbF
- qJxkguQWdHxW1zh26kuuUo0eCPvCo7L819e+RPMay2WJzCyXsx7jW6blu+SCWq0d6I4z eQ== 
+ bh=q4erqzCqt12bMeBV2k9QquZ2cI2sjyr5VjV4KH9fKew=;
+ b=Bw0MS2TkK+L0FCbGhLLybppGGiCsg5+SffQUMhLKMconTUh8VaI9+QiK5EM68SxBUzEy
+ 2/dkMw0n1tlF93abIhlP/nlMdQH+/r3iFytzMzHFpJXJq4xkBoIIp1TTlPFCZEnP25J1
+ AdgLNBnkp2EqKO81qwhukF0ywNvzUX/nOdUMlHnHwE4nDug6AMhHxqrINx+nF/ToifUB
+ 68A0D7fifelGPZH4Pg/zfwN+J2PNy2eQhvwpLVUyKIKPKMCm4jQxLe8DLhQ1mH3KC5V4
+ lbwZm7nPzn+5VxMxYzFrZhNDXjUJhfUHKuv0lFLWaj71r2gnRZvJRcNG4N7QsTURMbNn Eg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 30s1gnda7a-1
+        by aserp2120.oracle.com with ESMTP id 30usgq4jhe-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 May 2020 01:04:17 +0000
+        Thu, 07 May 2020 01:04:22 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0470vWwt150870;
-        Thu, 7 May 2020 01:04:16 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 30sjnmbpbq-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0470vXJ9150955;
+        Thu, 7 May 2020 01:04:21 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 30sjnmbphy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 07 May 2020 01:04:16 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04714FXw032224;
-        Thu, 7 May 2020 01:04:15 GMT
+        Thu, 07 May 2020 01:04:21 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04714LRg028939;
+        Thu, 7 May 2020 01:04:21 GMT
 Received: from localhost (/10.159.237.186)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 06 May 2020 18:04:14 -0700
-Subject: [PATCH 23/25] xfs: hoist setting of XFS_LI_RECOVERED to caller
+        with ESMTP ; Wed, 06 May 2020 18:04:20 -0700
+Subject: [PATCH 24/25] xfs: move log recovery buffer cancellation code to
+ xfs_buf_item_recover.c
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
         Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Wed, 06 May 2020 18:04:10 -0700
-Message-ID: <158881345055.189971.1644525085198836818.stgit@magnolia>
+Date:   Wed, 06 May 2020 18:04:17 -0700
+Message-ID: <158881345727.189971.4287628492235319845.stgit@magnolia>
 In-Reply-To: <158881329912.189971.14392758631836955942.stgit@magnolia>
 References: <158881329912.189971.14392758631836955942.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -65,15 +66,15 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9613 signatures=668687
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 phishscore=0
- mlxlogscore=626 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=3
+ mlxlogscore=999 bulkscore=0 malwarescore=0 spamscore=0 suspectscore=3
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
  definitions=main-2005070004
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9613 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=3 mlxscore=0
- spamscore=0 clxscore=1015 priorityscore=1501 bulkscore=0 phishscore=0
- impostorscore=0 malwarescore=0 lowpriorityscore=0 mlxlogscore=671
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005070004
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxscore=0
+ priorityscore=1501 lowpriorityscore=0 malwarescore=0 clxscore=1015
+ mlxlogscore=999 spamscore=0 adultscore=0 bulkscore=0 phishscore=0
+ suspectscore=3 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005070004
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -81,161 +82,267 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The only purpose of XFS_LI_RECOVERED is to prevent log recovery from
-trying to replay recovered intents more than once.  Therefore, we can
-move the bit setting up to the ->iop_recover caller.
+Move the helpers that handle incore buffer cancellation records to
+xfs_buf_item_recover.c since they're not directly related to the main
+log recovery machinery.  No functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_bmap_item.c     |    5 -----
- fs/xfs/xfs_extfree_item.c  |    4 ----
- fs/xfs/xfs_log_recover.c   |    4 ++--
- fs/xfs/xfs_refcount_item.c |    4 ----
- fs/xfs/xfs_rmap_item.c     |    4 ----
- 5 files changed, 2 insertions(+), 19 deletions(-)
+ fs/xfs/libxfs/xfs_log_recover.h |    2 -
+ fs/xfs/xfs_buf_item_recover.c   |  104 +++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_log_recover.c        |  102 --------------------------------------
+ 3 files changed, 104 insertions(+), 104 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 3b8ca4409aa5..6736c5ab188f 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -442,11 +442,8 @@ xfs_bui_item_recover(
- 	int				whichfork;
- 	int				error = 0;
+diff --git a/fs/xfs/libxfs/xfs_log_recover.h b/fs/xfs/libxfs/xfs_log_recover.h
+index 929366d58c35..641132d0e39d 100644
+--- a/fs/xfs/libxfs/xfs_log_recover.h
++++ b/fs/xfs/libxfs/xfs_log_recover.h
+@@ -120,9 +120,7 @@ struct xlog_recover {
  
--	ASSERT(!test_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags));
--
- 	/* Only one mapping operation per BUI... */
- 	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS) {
--		set_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags);
- 		xfs_bui_release(buip);
- 		return -EFSCORRUPTED;
- 	}
-@@ -480,7 +477,6 @@ xfs_bui_item_recover(
- 		 * This will pull the BUI from the AIL and
- 		 * free the memory associated with it.
- 		 */
--		set_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags);
- 		xfs_bui_release(buip);
- 		return -EFSCORRUPTED;
- 	}
-@@ -538,7 +534,6 @@ xfs_bui_item_recover(
- 		xfs_bmap_unmap_extent(tp, ip, &irec);
- 	}
+ void xlog_buf_readahead(struct xlog *log, xfs_daddr_t blkno, uint len,
+ 		const struct xfs_buf_ops *ops);
+-bool xlog_add_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+ bool xlog_is_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+-bool xlog_put_buffer_cancelled(struct xlog *log, xfs_daddr_t blkno, uint len);
+ void xlog_recover_iodone(struct xfs_buf *bp);
  
--	set_bit(XFS_LI_RECOVERED, &buip->bui_item.li_flags);
- 	xfs_defer_move(parent_tp, tp);
- 	error = xfs_trans_commit(tp);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index a8ee9aaef50d..b9c333bae0a1 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -594,8 +594,6 @@ xfs_efi_item_recover(
- 	int				i;
- 	int				error = 0;
+ void xlog_recover_release_intent(struct xlog *log, unsigned short intent_type,
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 4ba2e27a15ca..04faa7310c4f 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -23,6 +23,110 @@
+ #include "xfs_dir2.h"
+ #include "xfs_quota.h"
  
--	ASSERT(!test_bit(XFS_LI_RECOVERED, &efip->efi_item.li_flags));
--
- 	/*
- 	 * First check the validity of the extents described by the
- 	 * EFI.  If any are bad, then assume that all are bad and
-@@ -613,7 +611,6 @@ xfs_efi_item_recover(
- 			 * This will pull the EFI from the AIL and
- 			 * free the memory associated with it.
- 			 */
--			set_bit(XFS_LI_RECOVERED, &efip->efi_item.li_flags);
- 			xfs_efi_release(efip);
- 			return -EFSCORRUPTED;
- 		}
-@@ -634,7 +631,6 @@ xfs_efi_item_recover(
- 
- 	}
- 
--	set_bit(XFS_LI_RECOVERED, &efip->efi_item.li_flags);
- 	error = xfs_trans_commit(tp);
- 	return error;
- 
++/*
++ * This structure is used during recovery to record the buf log items which
++ * have been canceled and should not be replayed.
++ */
++struct xfs_buf_cancel {
++	xfs_daddr_t		bc_blkno;
++	uint			bc_len;
++	int			bc_refcount;
++	struct list_head	bc_list;
++};
++
++static struct xfs_buf_cancel *
++xlog_find_buffer_cancelled(
++	struct xlog		*log,
++	xfs_daddr_t		blkno,
++	uint			len)
++{
++	struct list_head	*bucket;
++	struct xfs_buf_cancel	*bcp;
++
++	if (!log->l_buf_cancel_table)
++		return NULL;
++
++	bucket = XLOG_BUF_CANCEL_BUCKET(log, blkno);
++	list_for_each_entry(bcp, bucket, bc_list) {
++		if (bcp->bc_blkno == blkno && bcp->bc_len == len)
++			return bcp;
++	}
++
++	return NULL;
++}
++
++static bool
++xlog_add_buffer_cancelled(
++	struct xlog		*log,
++	xfs_daddr_t		blkno,
++	uint			len)
++{
++	struct xfs_buf_cancel	*bcp;
++
++	/*
++	 * If we find an existing cancel record, this indicates that the buffer
++	 * was cancelled multiple times.  To ensure that during pass 2 we keep
++	 * the record in the table until we reach its last occurrence in the
++	 * log, a reference count is kept to tell how many times we expect to
++	 * see this record during the second pass.
++	 */
++	bcp = xlog_find_buffer_cancelled(log, blkno, len);
++	if (bcp) {
++		bcp->bc_refcount++;
++		return false;
++	}
++
++	bcp = kmem_alloc(sizeof(struct xfs_buf_cancel), 0);
++	bcp->bc_blkno = blkno;
++	bcp->bc_len = len;
++	bcp->bc_refcount = 1;
++	list_add_tail(&bcp->bc_list, XLOG_BUF_CANCEL_BUCKET(log, blkno));
++	return true;
++}
++
++/*
++ * Check if there is and entry for blkno, len in the buffer cancel record table.
++ */
++bool
++xlog_is_buffer_cancelled(
++	struct xlog		*log,
++	xfs_daddr_t		blkno,
++	uint			len)
++{
++	return xlog_find_buffer_cancelled(log, blkno, len) != NULL;
++}
++
++/*
++ * Check if there is and entry for blkno, len in the buffer cancel record table,
++ * and decremented the reference count on it if there is one.
++ *
++ * Remove the cancel record once the refcount hits zero, so that if the same
++ * buffer is re-used again after its last cancellation we actually replay the
++ * changes made at that point.
++ */
++static bool
++xlog_put_buffer_cancelled(
++	struct xlog		*log,
++	xfs_daddr_t		blkno,
++	uint			len)
++{
++	struct xfs_buf_cancel	*bcp;
++
++	bcp = xlog_find_buffer_cancelled(log, blkno, len);
++	if (!bcp) {
++		ASSERT(0);
++		return false;
++	}
++
++	if (--bcp->bc_refcount == 0) {
++		list_del(&bcp->bc_list);
++		kmem_free(bcp);
++	}
++	return true;
++}
++
++/* log buffer item recovery */
++
+ /*
+  * Sort buffer items for log recovery.  Most buffer items should end up on the
+  * buffer list and are recovered first, with the following exceptions:
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 60e98e48d04b..fa1b63bd9031 100644
+index fa1b63bd9031..572e6707362a 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2643,7 +2643,7 @@ xlog_recover_process_intents(
- 	struct xfs_ail_cursor	cur;
- 	struct xfs_log_item	*lip;
- 	struct xfs_ail		*ailp;
--	int			error = 0;
-+	int			error;
- #if defined(DEBUG) || defined(XFS_WARN)
- 	xfs_lsn_t		last_lsn;
- #endif
-@@ -2693,7 +2693,7 @@ xlog_recover_process_intents(
- 		 * this routine or else those subsequent intents will get
- 		 * replayed in the wrong order!
- 		 */
--		if (!test_bit(XFS_LI_RECOVERED, &lip->li_flags)) {
-+		if (!test_and_set_bit(XFS_LI_RECOVERED, &lip->li_flags)) {
- 			spin_unlock(&ailp->ail_lock);
- 			error = lip->li_ops->iop_recover(lip, parent_tp);
- 			spin_lock(&ailp->ail_lock);
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index b256eafd30d3..c81639891e29 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -442,8 +442,6 @@ xfs_cui_item_recover(
- 	int				i;
- 	int				error = 0;
+@@ -55,17 +55,6 @@ STATIC int
+ xlog_do_recovery_pass(
+         struct xlog *, xfs_daddr_t, xfs_daddr_t, int, xfs_daddr_t *);
  
--	ASSERT(!test_bit(XFS_LI_RECOVERED, &cuip->cui_item.li_flags));
+-/*
+- * This structure is used during recovery to record the buf log items which
+- * have been canceled and should not be replayed.
+- */
+-struct xfs_buf_cancel {
+-	xfs_daddr_t		bc_blkno;
+-	uint			bc_len;
+-	int			bc_refcount;
+-	struct list_head	bc_list;
+-};
 -
- 	/*
- 	 * First check the validity of the extents described by the
- 	 * CUI.  If any are bad, then assume that all are bad and
-@@ -473,7 +471,6 @@ xfs_cui_item_recover(
- 			 * This will pull the CUI from the AIL and
- 			 * free the memory associated with it.
- 			 */
--			set_bit(XFS_LI_RECOVERED, &cuip->cui_item.li_flags);
- 			xfs_cui_release(cuip);
- 			return -EFSCORRUPTED;
- 		}
-@@ -557,7 +554,6 @@ xfs_cui_item_recover(
- 	}
- 
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
--	set_bit(XFS_LI_RECOVERED, &cuip->cui_item.li_flags);
- 	xfs_defer_move(parent_tp, tp);
- 	error = xfs_trans_commit(tp);
+ /*
+  * Sector aligned buffer routines for buffer create/read/write/access
+  */
+@@ -1964,97 +1953,6 @@ xlog_recover_reorder_trans(
  	return error;
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index d190060729a3..a86599db20a6 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -482,8 +482,6 @@ xfs_rui_item_recover(
- 	int				whichfork;
- 	int				error = 0;
+ }
  
--	ASSERT(!test_bit(XFS_LI_RECOVERED, &ruip->rui_item.li_flags));
+-static struct xfs_buf_cancel *
+-xlog_find_buffer_cancelled(
+-	struct xlog		*log,
+-	xfs_daddr_t		blkno,
+-	uint			len)
+-{
+-	struct list_head	*bucket;
+-	struct xfs_buf_cancel	*bcp;
 -
- 	/*
- 	 * First check the validity of the extents described by the
- 	 * RUI.  If any are bad, then assume that all are bad and
-@@ -517,7 +515,6 @@ xfs_rui_item_recover(
- 			 * This will pull the RUI from the AIL and
- 			 * free the memory associated with it.
- 			 */
--			set_bit(XFS_LI_RECOVERED, &ruip->rui_item.li_flags);
- 			xfs_rui_release(ruip);
- 			return -EFSCORRUPTED;
- 		}
-@@ -575,7 +572,6 @@ xfs_rui_item_recover(
- 	}
- 
- 	xfs_rmap_finish_one_cleanup(tp, rcur, error);
--	set_bit(XFS_LI_RECOVERED, &ruip->rui_item.li_flags);
- 	error = xfs_trans_commit(tp);
- 	return error;
- 
+-	if (!log->l_buf_cancel_table)
+-		return NULL;
+-
+-	bucket = XLOG_BUF_CANCEL_BUCKET(log, blkno);
+-	list_for_each_entry(bcp, bucket, bc_list) {
+-		if (bcp->bc_blkno == blkno && bcp->bc_len == len)
+-			return bcp;
+-	}
+-
+-	return NULL;
+-}
+-
+-bool
+-xlog_add_buffer_cancelled(
+-	struct xlog		*log,
+-	xfs_daddr_t		blkno,
+-	uint			len)
+-{
+-	struct xfs_buf_cancel	*bcp;
+-
+-	/*
+-	 * If we find an existing cancel record, this indicates that the buffer
+-	 * was cancelled multiple times.  To ensure that during pass 2 we keep
+-	 * the record in the table until we reach its last occurrence in the
+-	 * log, a reference count is kept to tell how many times we expect to
+-	 * see this record during the second pass.
+-	 */
+-	bcp = xlog_find_buffer_cancelled(log, blkno, len);
+-	if (bcp) {
+-		bcp->bc_refcount++;
+-		return false;
+-	}
+-
+-	bcp = kmem_alloc(sizeof(struct xfs_buf_cancel), 0);
+-	bcp->bc_blkno = blkno;
+-	bcp->bc_len = len;
+-	bcp->bc_refcount = 1;
+-	list_add_tail(&bcp->bc_list, XLOG_BUF_CANCEL_BUCKET(log, blkno));
+-	return true;
+-}
+-
+-/*
+- * Check if there is and entry for blkno, len in the buffer cancel record table.
+- */
+-bool
+-xlog_is_buffer_cancelled(
+-	struct xlog		*log,
+-	xfs_daddr_t		blkno,
+-	uint			len)
+-{
+-	return xlog_find_buffer_cancelled(log, blkno, len) != NULL;
+-}
+-
+-/*
+- * Check if there is and entry for blkno, len in the buffer cancel record table,
+- * and decremented the reference count on it if there is one.
+- *
+- * Remove the cancel record once the refcount hits zero, so that if the same
+- * buffer is re-used again after its last cancellation we actually replay the
+- * changes made at that point.
+- */
+-bool
+-xlog_put_buffer_cancelled(
+-	struct xlog		*log,
+-	xfs_daddr_t		blkno,
+-	uint			len)
+-{
+-	struct xfs_buf_cancel	*bcp;
+-
+-	bcp = xlog_find_buffer_cancelled(log, blkno, len);
+-	if (!bcp) {
+-		ASSERT(0);
+-		return false;
+-	}
+-
+-	if (--bcp->bc_refcount == 0) {
+-		list_del(&bcp->bc_list);
+-		kmem_free(bcp);
+-	}
+-	return true;
+-}
+-
+ void
+ xlog_buf_readahead(
+ 	struct xlog		*log,
 
