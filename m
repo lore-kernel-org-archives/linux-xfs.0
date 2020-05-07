@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56609C38A2A
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E89B4C38A2A
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 376A1208E4
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C81382083B
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GIvw79N7"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YGecpKUk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725969AbgEGMTz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 May 2020 08:19:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57094 "EHLO
+        id S1725985AbgEGMT6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 May 2020 08:19:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57100 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725964AbgEGMTz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 08:19:55 -0400
+        by vger.kernel.org with ESMTP id S1725964AbgEGMT6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 08:19:58 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91B29C05BD43
-        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 05:19:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBB4FC05BD43
+        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 05:19:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=bnY02lXFtCiwQDlDg4izRGHcHv3SmeREpratD5L2WBI=; b=GIvw79N7Vh/lQPq+8dyl/doclu
-        tLiPTpZT8PTyIqoJBfzSli7RMgYSsq6eRF5J6KxVIgfX8aXnURJCplZJfNXrq/fbOoRLBrgOdZSeX
-        8ZfBXEXHruz7bbRTepna0FfLcUDAM8XRXI+9UykezgWSV5xiskLMDl5+8Ur+CxdxfOVxnRi7HU3et
-        TyF53zzHus3jT3/PJ0Vl89qofOrBIFn0akWqCyJntp4+A83c230VOMT5IaFycZCsv/GiG+ijnBvp7
-        AP27NfpWSWVosbgxn0w430dHlYhTdBb61gjRZRoqlXqIJ23sF/4e6OExxGimjxq7vmQFDT3MdWf2F
-        bjo9SNVQ==;
+        bh=U6tZ8Vu+1g7jAHBh63Ktf7mA4C1sS5psRS+4LrdLtnU=; b=YGecpKUkeZuD09m8N/1KQnKQLX
+        jsoP2RUdS4vHzxHE3Tf1bUuH8JcrG4Ai873poP7LU1XRnqcxVMOz08rOLSC5+OUHL4tQ6q/ilHfsr
+        bdDms5NXTt85QNhWSvLo8NckfacK9+Obc1fbHrDwJUka+9d/E9YEB9affULEDwXZfYybMEYM+cSNA
+        kHbPhY6QN/CNwdfBKzLzyusWG3f2elfUNsgBk/TdTx36VibIhqtXhx2AJ7bPoxFpIXVuZKiupxTKM
+        7lm2yGX/GU6MD6s4bB5qxdl5vBj4r58Gayud34rFoD+Urevvs6fO508WqAr1dw5dsAiDwuCZV1euY
+        RDJHDZfw==;
 Received: from [2001:4bb8:180:9d3f:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jWfVL-0005Da-3d; Thu, 07 May 2020 12:19:55 +0000
+        id 1jWfVN-0005Dy-Fa; Thu, 07 May 2020 12:19:57 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
         Chandan Rajendra <chandanrlinux@gmail.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 25/58] xfs: remove XFS_DA_OP_INCOMPLETE
-Date:   Thu,  7 May 2020 14:18:18 +0200
-Message-Id: <20200507121851.304002-26-hch@lst.de>
+Subject: [PATCH 26/58] xfs: embedded the attrlist cursor into struct xfs_attr_list_context
+Date:   Thu,  7 May 2020 14:18:19 +0200
+Message-Id: <20200507121851.304002-27-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200507121851.304002-1-hch@lst.de>
 References: <20200507121851.304002-1-hch@lst.de>
@@ -56,11 +56,11 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Source kernel commit: 254f800f810415cce05872c88e9ef797d81f4375
+Source kernel commit: e3a19cdea84a42d44ef42ff8b5459c903992bbf2
 
-Now that we use the on-disk flags field also for the interface to the
-lower level attr routines we can use the XFS_ATTR_INCOMPLETE definition
-from the on-disk format directly instead.
+The attrlist cursor only exists as part of an attr list context, so
+embedd the structure instead of pointing to it.  Also give it a proper
+xfs_ prefix and remove the obsolete typedef.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
@@ -69,88 +69,52 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_attr.c      |  2 +-
- libxfs/xfs_attr_leaf.c | 15 ++++++---------
- libxfs/xfs_da_btree.h  |  6 ++----
- 3 files changed, 9 insertions(+), 14 deletions(-)
+ libxfs/xfs_attr.h      | 6 +++---
+ libxfs/xfs_attr_leaf.h | 1 -
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 36818814..469d6804 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -898,7 +898,7 @@ restart:
- 		 * The INCOMPLETE flag means that we will find the "old"
- 		 * attr, not the "new" one.
- 		 */
--		args->op_flags |= XFS_DA_OP_INCOMPLETE;
-+		args->attr_filter |= XFS_ATTR_INCOMPLETE;
- 		state = xfs_da_state_alloc();
- 		state->args = args;
- 		state->mp = mp;
-diff --git a/libxfs/xfs_attr_leaf.c b/libxfs/xfs_attr_leaf.c
-index d560f94e..edd01eef 100644
---- a/libxfs/xfs_attr_leaf.c
-+++ b/libxfs/xfs_attr_leaf.c
-@@ -453,7 +453,12 @@ xfs_attr_match(
- 		return false;
- 	if (memcmp(args->name, name, namelen) != 0)
- 		return false;
--	if (args->attr_filter != (flags & XFS_ATTR_NSP_ONDISK_MASK))
-+	/*
-+	 * If we are looking for incomplete entries, show only those, else only
-+	 * show complete entries.
-+	 */
-+	if (args->attr_filter !=
-+	    (flags & (XFS_ATTR_NSP_ONDISK_MASK | XFS_ATTR_INCOMPLETE)))
- 		return false;
- 	return true;
- }
-@@ -2384,14 +2389,6 @@ xfs_attr3_leaf_lookup_int(
+diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
+index a6bedb0e..0d2d0590 100644
+--- a/libxfs/xfs_attr.h
++++ b/libxfs/xfs_attr.h
+@@ -31,14 +31,14 @@ struct xfs_attr_list_context;
  /*
-  * GROT: Add code to remove incomplete entries.
+  * Kernel-internal version of the attrlist cursor.
   */
--		/*
--		 * If we are looking for INCOMPLETE entries, show only those.
--		 * If we are looking for complete entries, show only those.
--		 */
--		if (!!(args->op_flags & XFS_DA_OP_INCOMPLETE) !=
--		    !!(entry->flags & XFS_ATTR_INCOMPLETE)) {
--			continue;
--		}
- 		if (entry->flags & XFS_ATTR_LOCAL) {
- 			name_loc = xfs_attr3_leaf_name_local(leaf, probe);
- 			if (!xfs_attr_match(args, name_loc->namelen,
-diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
-index f3660ae9..53e503b6 100644
---- a/libxfs/xfs_da_btree.h
-+++ b/libxfs/xfs_da_btree.h
-@@ -59,7 +59,7 @@ typedef struct xfs_da_args {
- 	uint8_t		filetype;	/* filetype of inode for directories */
- 	void		*value;		/* set of bytes (maybe contain NULLs) */
- 	int		valuelen;	/* length of value */
--	unsigned int	attr_filter;	/* XFS_ATTR_{ROOT,SECURE} */
-+	unsigned int	attr_filter;	/* XFS_ATTR_{ROOT,SECURE,INCOMPLETE} */
- 	unsigned int	attr_flags;	/* XATTR_{CREATE,REPLACE} */
- 	xfs_dahash_t	hashval;	/* hash value of name */
- 	xfs_ino_t	inumber;	/* input/output inode number */
-@@ -90,7 +90,6 @@ typedef struct xfs_da_args {
- #define XFS_DA_OP_OKNOENT	0x0008	/* lookup/add op, ENOENT ok, else die */
- #define XFS_DA_OP_CILOOKUP	0x0010	/* lookup to return CI name if found */
- #define XFS_DA_OP_NOTIME	0x0020	/* don't update inode timestamps */
--#define XFS_DA_OP_INCOMPLETE	0x0040	/* lookup INCOMPLETE attr keys */
+-typedef struct attrlist_cursor_kern {
++struct xfs_attrlist_cursor_kern {
+ 	__u32	hashval;	/* hash value of next entry to add */
+ 	__u32	blkno;		/* block containing entry (suggestion) */
+ 	__u32	offset;		/* offset in list of equal-hashvals */
+ 	__u16	pad1;		/* padding to match user-level */
+ 	__u8	pad2;		/* padding to match user-level */
+ 	__u8	initted;	/* T/F: cursor has been initialized */
+-} attrlist_cursor_kern_t;
++};
  
- #define XFS_DA_OP_FLAGS \
- 	{ XFS_DA_OP_JUSTCHECK,	"JUSTCHECK" }, \
-@@ -98,8 +97,7 @@ typedef struct xfs_da_args {
- 	{ XFS_DA_OP_ADDNAME,	"ADDNAME" }, \
- 	{ XFS_DA_OP_OKNOENT,	"OKNOENT" }, \
- 	{ XFS_DA_OP_CILOOKUP,	"CILOOKUP" }, \
--	{ XFS_DA_OP_NOTIME,	"NOTIME" }, \
--	{ XFS_DA_OP_INCOMPLETE,	"INCOMPLETE" }
-+	{ XFS_DA_OP_NOTIME,	"NOTIME" }
  
- /*
-  * Storage for holding state during Btree searches and split/join ops.
+ /*========================================================================
+@@ -53,7 +53,7 @@ typedef void (*put_listent_func_t)(struct xfs_attr_list_context *, int,
+ struct xfs_attr_list_context {
+ 	struct xfs_trans	*tp;
+ 	struct xfs_inode	*dp;		/* inode */
+-	struct attrlist_cursor_kern *cursor;	/* position in list */
++	struct xfs_attrlist_cursor_kern cursor;	/* position in list */
+ 	void			*buffer;	/* output buffer */
+ 
+ 	/*
+diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
+index 73615b1d..6dd2d937 100644
+--- a/libxfs/xfs_attr_leaf.h
++++ b/libxfs/xfs_attr_leaf.h
+@@ -8,7 +8,6 @@
+ #define	__XFS_ATTR_LEAF_H__
+ 
+ struct attrlist;
+-struct attrlist_cursor_kern;
+ struct xfs_attr_list_context;
+ struct xfs_da_args;
+ struct xfs_da_state;
 -- 
 2.26.2
 
