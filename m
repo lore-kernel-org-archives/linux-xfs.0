@@ -2,48 +2,49 @@ Return-Path: <SRS0=M5eb=6V=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7727BC4724C
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 252E7C38A24
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 547FB20CC7
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 037C12083B
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lRx2nwx4"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DZ83xB9I"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726661AbgEGMTF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 May 2020 08:19:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56922 "EHLO
+        id S1726690AbgEGMTH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 May 2020 08:19:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56928 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725857AbgEGMTE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 08:19:04 -0400
+        by vger.kernel.org with ESMTP id S1725857AbgEGMTH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 08:19:07 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE06AC05BD43
-        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 05:19:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 76810C05BD43
+        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 05:19:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=UHtt/SxDcyuDdbUn1VsIVOdx0HBAl2wZr/MeP+K1VBI=; b=lRx2nwx46KMX3B8z7spOZokkI/
-        N68QJiFMJQKTzeUYd6PsHaYopzbtxRPDOL1S9wYrgYO10S6F7PEupRRSF4kkonFRIR+J8MnY8ixqp
-        B8KB3UcK5YtacUbFMlZ1Nhpwdh4cZ7vsSOV2n1imVmeIIZ+xJ+hHxqExY73ts22HKStXmSQJdXGrg
-        SKm6RtkIbWGxkPASCnJI4YWEn812YmYOzR+IlYfTgBB6dVKbLvSPJPZa5PlfQX5z8oXG8pbWpVTMP
-        A3/GfjWsB1CyR1tHzcojgldK3Tf9sw9DtuHU9fzZqacSKbZ7xkXCQldes1GPxKRB9+Bkh1MOKebJ/
-        m1RRlasg==;
+        bh=BKNp1DXoFHOCGKBay1iJQ8aUjmI/8Sq/IpqxoBX6blo=; b=DZ83xB9Iu1Ztrt9ngXpSugvpjH
+        I6iOlc9Wg2qg6+inGpzAuHthfCWGGqTEixIYfJ+WZ27Mw/HAd8SgE+jq/ZkpUXtwbN+bF06TSViKf
+        JJRCnCMqDxXQ4bpsc5w1NrEWjefCsOrQoA9IXQW1glnmvgoYWhbpolk9E7oymI6IbwkHhZC68am9R
+        XhBfg+RDN2yPYRH9T6UAWJ98at9yTLfxAQgIhneY0LFaAVLCYsO229UkdgTvCl6wiFASd00g5WeZa
+        pVFneLn3ozcjw2dXz0pOoWAImwrKJ7jEyp/oc4wAvd6zGx0K0BEyMOyEUyKvDr2ZoFtB++rV6MS7G
+        P+2PdwSA==;
 Received: from [2001:4bb8:180:9d3f:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jWfUW-00054C-9e; Thu, 07 May 2020 12:19:04 +0000
+        id 1jWfUY-00054X-MY; Thu, 07 May 2020 12:19:07 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org,
+Cc:     linux-xfs@vger.kernel.org, Qian Cai <cai@lca.pw>,
+        Christoph Hellwig <hch@infradead.org>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 04/58] xfs: remove the kuid/kgid conversion wrappers
-Date:   Thu,  7 May 2020 14:17:57 +0200
-Message-Id: <20200507121851.304002-5-hch@lst.de>
+Subject: [PATCH 05/58] xfs: fix an undefined behaviour in _da3_path_shift
+Date:   Thu,  7 May 2020 14:17:58 +0200
+Message-Id: <20200507121851.304002-6-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200507121851.304002-1-hch@lst.de>
 References: <20200507121851.304002-1-hch@lst.de>
@@ -55,70 +56,66 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Source kernel commit: ba8adad5d036733d240fa8a8f4d055f3d4490562
+From: Qian Cai <cai@lca.pw>
 
-Remove the XFS wrappers for converting from and to the kuid/kgid types.
-Mostly this means switching to VFS i_{u,g}id_{read,write} helpers, but
-in a few spots the calls to the conversion functions is open coded.
-To match the use of sb->s_user_ns in the helpers and other file systems,
-sb->s_user_ns is also used in the quota code.  The ACL code already does
-the conversion in a grotty layering violation in the VFS xattr code,
-so it keeps using init_user_ns for the identity mapping.
+Source kernel commit: 4982bff1ace1196843f55536fcd4cc119738fe39
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+In xfs_da3_path_shift() "blk" can be assigned to state->path.blk[-1] if
+state->path.active is 1 (which is a valid state) when it tries to add an
+entry to a single dir leaf block and then to shift forward to see if
+there's a sibling block that would be a better place to put the new
+entry. This causes a UBSAN warning given negative array indices are
+undefined behavior in C. In practice the warning is entirely harmless
+given that "blk" is never dereferenced in this case, but it is still
+better to fix up the warning and slightly improve the code.
+
+UBSAN: Undefined behaviour in fs/xfs/libxfs/xfs_da_btree.c:1989:14
+index -1 is out of range for type 'xfs_da_state_blk_t [5]'
+Call trace:
+dump_backtrace+0x0/0x2c8
+show_stack+0x20/0x2c
+dump_stack+0xe8/0x150
+__ubsan_handle_out_of_bounds+0xe4/0xfc
+xfs_da3_path_shift+0x860/0x86c [xfs]
+xfs_da3_node_lookup_int+0x7c8/0x934 [xfs]
+xfs_dir2_node_addname+0x2c8/0xcd0 [xfs]
+xfs_dir_createname+0x348/0x38c [xfs]
+xfs_create+0x6b0/0x8b4 [xfs]
+xfs_generic_create+0x12c/0x1f8 [xfs]
+xfs_vn_mknod+0x3c/0x4c [xfs]
+xfs_vn_create+0x34/0x44 [xfs]
+do_last+0xd4c/0x10c8
+path_openat+0xbc/0x2f4
+do_filp_open+0x74/0xf4
+do_sys_openat2+0x98/0x180
+__arm64_sys_openat+0xf8/0x170
+do_el0_svc+0x170/0x240
+el0_sync_handler+0x150/0x250
+el0_sync+0x164/0x180
+
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Qian Cai <cai@lca.pw>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/xfs_inode.h    | 8 ++++----
- libxfs/xfs_inode_buf.c | 8 ++++----
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ libxfs/xfs_da_btree.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/xfs_inode.h b/include/xfs_inode.h
-index 99b0c3aa..b9cdd8ca 100644
---- a/include/xfs_inode.h
-+++ b/include/xfs_inode.h
-@@ -45,11 +45,11 @@ struct inode {
- 	struct timespec	i_ctime;
- };
- 
--#define xfs_uid_to_kuid(uid)	(uid)
--#define xfs_kuid_to_uid(uid)	(uid)
-+#define i_uid_write(inode, uid)		(inode)->i_uid = (uid)
-+#define i_uid_read(inode)		((inode)->i_uid)
- 
--#define xfs_gid_to_kgid(gid)	(gid)
--#define xfs_kgid_to_gid(gid)	(gid)
-+#define i_gid_write(inode, gid)		(inode)->i_gid = (gid)
-+#define i_gid_read(inode)		((inode)->i_gid)
- 
- typedef struct xfs_inode {
- 	struct cache_node	i_node;
-diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-index 9d47208e..64651d4e 100644
---- a/libxfs/xfs_inode_buf.c
-+++ b/libxfs/xfs_inode_buf.c
-@@ -219,8 +219,8 @@ xfs_inode_from_disk(
- 	}
- 
- 	to->di_format = from->di_format;
--	inode->i_uid = xfs_uid_to_kuid(be32_to_cpu(from->di_uid));
--	inode->i_gid = xfs_gid_to_kgid(be32_to_cpu(from->di_gid));
-+	i_uid_write(inode, be32_to_cpu(from->di_uid));
-+	i_gid_write(inode, be32_to_cpu(from->di_gid));
- 	to->di_flushiter = be16_to_cpu(from->di_flushiter);
- 
- 	/*
-@@ -273,8 +273,8 @@ xfs_inode_to_disk(
- 
- 	to->di_version = from->di_version;
- 	to->di_format = from->di_format;
--	to->di_uid = cpu_to_be32(xfs_kuid_to_uid(inode->i_uid));
--	to->di_gid = cpu_to_be32(xfs_kgid_to_gid(inode->i_gid));
-+	to->di_uid = cpu_to_be32(i_uid_read(inode));
-+	to->di_gid = cpu_to_be32(i_gid_read(inode));
- 	to->di_projid_lo = cpu_to_be16(from->di_projid & 0xffff);
- 	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
+diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
+index 3f40e99e..7f26d124 100644
+--- a/libxfs/xfs_da_btree.c
++++ b/libxfs/xfs_da_btree.c
+@@ -1983,7 +1983,8 @@ xfs_da3_path_shift(
+ 	ASSERT(path != NULL);
+ 	ASSERT((path->active > 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
+ 	level = (path->active-1) - 1;	/* skip bottom layer in path */
+-	for (blk = &path->blk[level]; level >= 0; blk--, level--) {
++	for (; level >= 0; level--) {
++		blk = &path->blk[level];
+ 		xfs_da3_node_hdr_from_disk(dp->i_mount, &nodehdr,
+ 					   blk->bp->b_addr);
  
 -- 
 2.26.2
