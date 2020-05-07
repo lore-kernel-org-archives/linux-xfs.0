@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E4D9C38A2A
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58491C38A24
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 112D82083B
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3612520CC7
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lH/NaNFE"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AJyqgFJF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726751AbgEGMTR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 May 2020 08:19:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56962 "EHLO
+        id S1726767AbgEGMTT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 May 2020 08:19:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725857AbgEGMTR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 08:19:17 -0400
+        by vger.kernel.org with ESMTP id S1725857AbgEGMTT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 08:19:19 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 379FAC05BD43
-        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 05:19:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99050C05BD43
+        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 05:19:19 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=gberVM9J7Pp0lQEHiXEVE5jMvprigfTG0D9qFr+8sho=; b=lH/NaNFEDqiNS5awpyf5w758Za
-        QPFJyZPfHTsV/OwyI+xrPp39SpmuT+RTha7PsxqVrOJEl0BOYacRNJjM+7Mn6PrPaItCphij1VYe/
-        m2pqGRq6cvHERC5YgdcYaljixDEq42Jj6Osg5+yQFHvABSrRFovmhBwOrRRCIxgd2lcwVgfIwaDwH
-        PrrHeObirmu/yUQJji86AlCQ6mZIGvGD6EivSYCWwoOWORdTd+7vF0yqNs7mDnEN8g8Jzvy/mu+hV
-        UUaIqfBmv4Dr6EX6JJH8nrF+kPxQirdmuM/wr7LlvHfiKr1tNAJNpymMGa6iTQFqQNzI2/WsVQdzK
-        iUqqfTLg==;
+        bh=9uoMhEUPzDXw4IO1dqPnoZfyVZKStj5mlIKh0aY1/m0=; b=AJyqgFJFPggp2y/5JfGnaOb4dR
+        P/u45SK5pg/Tgh1B+PIcUMdRwiOYzAAxNl2ilsaFvFUtjWjGEzbJ9rEM4zoZAHu2QCQvDIUUlScTq
+        VJeixQWXK6THAyJz5Tv4ysAnCzW50Yxp6yXxqwZBzjbrmG7aqS6c971EzDUKHJPfMwiQACzrj6GmD
+        5FUF5WLl/KKIoGnmM2I0wX/XsX3fPLN2yspC0aS+EVCqUwOaHncuf+1gX1BMdyj/0Nn+MBrcGJipH
+        jBR9xtAMQ/NBOd2RIKwx3Z9luCej/zPSwp7EA8ri8Y+qPoolZS8FskJQVCyy16jDFwDzSQxGMiBND
+        1aTOHtoQ==;
 Received: from [2001:4bb8:180:9d3f:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jWfUi-00056g-Mu; Thu, 07 May 2020 12:19:17 +0000
+        id 1jWfUl-000572-4Y; Thu, 07 May 2020 12:19:19 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
         Chandan Rajendra <chandanrlinux@gmail.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 09/58] xfs: remove the name == NULL check from xfs_attr_args_init
-Date:   Thu,  7 May 2020 14:18:02 +0200
-Message-Id: <20200507121851.304002-10-hch@lst.de>
+Subject: [PATCH 10/58] xfs: remove the MAXNAMELEN check from xfs_attr_args_init
+Date:   Thu,  7 May 2020 14:18:03 +0200
+Message-Id: <20200507121851.304002-11-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200507121851.304002-1-hch@lst.de>
 References: <20200507121851.304002-1-hch@lst.de>
@@ -56,9 +56,10 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Source kernel commit: 79f2280b9bfd54aa37b3fa4a80b0037bd29b4f0e
+Source kernel commit: 4df28c64e4388ac5fa59cd58f9fd6592aae533a2
 
-All callers provide a valid name pointer, remove the redundant check.
+All the callers already check the length when allocating the
+in-kernel xattrs buffers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
@@ -67,51 +68,88 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- db/attrset.c      | 8 ++++++++
- libxfs/xfs_attr.c | 4 ----
- 2 files changed, 8 insertions(+), 4 deletions(-)
+ db/attrset.c      | 18 ++++++++++++++++--
+ libxfs/xfs_attr.c |  3 ---
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
 diff --git a/db/attrset.c b/db/attrset.c
-index 4360e5f7..d4b812e6 100644
+index d4b812e6..c39782b3 100644
 --- a/db/attrset.c
 +++ b/db/attrset.c
-@@ -127,6 +127,10 @@ attr_set_f(
+@@ -69,6 +69,7 @@ attr_set_f(
+ 	xfs_inode_t	*ip = NULL;
+ 	char		*name, *value, *sp;
+ 	int		c, valuelen = 0, flags = 0;
++	size_t		namelen;
+ 
+ 	if (cur_typ == NULL) {
+ 		dbprintf(_("no current type\n"));
+@@ -132,6 +133,12 @@ attr_set_f(
+ 		return 0;
  	}
  
- 	name = argv[optind];
-+	if (!name) {
-+		dbprintf(_("invalid name\n"));
++	namelen = strlen(name);
++	if (namelen >= MAXNAMELEN) {
++		dbprintf(_("name too long\n"));
 +		return 0;
 +	}
- 
++
  	if (valuelen) {
  		value = (char *)memalign(getpagesize(), valuelen);
-@@ -214,6 +218,10 @@ attr_remove_f(
+ 		if (!value) {
+@@ -150,7 +157,7 @@ attr_set_f(
+ 		goto out;
  	}
  
- 	name = argv[optind];
-+	if (!name) {
-+		dbprintf(_("invalid name\n"));
+-	if (libxfs_attr_set(ip, (unsigned char *)name, strlen(name),
++	if (libxfs_attr_set(ip, (unsigned char *)name, namelen,
+ 				(unsigned char *)value, valuelen, flags)) {
+ 		dbprintf(_("failed to set attr %s on inode %llu\n"),
+ 			name, (unsigned long long)iocur_top->ino);
+@@ -177,6 +184,7 @@ attr_remove_f(
+ 	xfs_inode_t	*ip = NULL;
+ 	char		*name;
+ 	int		c, flags = 0;
++	size_t		namelen;
+ 
+ 	if (cur_typ == NULL) {
+ 		dbprintf(_("no current type\n"));
+@@ -223,6 +231,12 @@ attr_remove_f(
+ 		return 0;
+ 	}
+ 
++	namelen = strlen(name);
++	if (namelen >= MAXNAMELEN) {
++		dbprintf(_("name too long\n"));
 +		return 0;
 +	}
- 
++
  	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip,
  			&xfs_default_ifork_ops)) {
+ 		dbprintf(_("failed to iget inode %llu\n"),
+@@ -230,7 +244,7 @@ attr_remove_f(
+ 		goto out;
+ 	}
+ 
+-	if (libxfs_attr_set(ip, (unsigned char *)name, strlen(name),
++	if (libxfs_attr_set(ip, (unsigned char *)name, namelen,
+ 			NULL, 0, flags)) {
+ 		dbprintf(_("failed to remove attr %s from inode %llu\n"),
+ 			name, (unsigned long long)iocur_top->ino);
 diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 248f9e83..ee2225a3 100644
+index ee2225a3..ded952da 100644
 --- a/libxfs/xfs_attr.c
 +++ b/libxfs/xfs_attr.c
-@@ -65,10 +65,6 @@ xfs_attr_args_init(
- 	size_t			namelen,
- 	int			flags)
- {
+@@ -72,9 +72,6 @@ xfs_attr_args_init(
+ 	args->flags = flags;
+ 	args->name = name;
+ 	args->namelen = namelen;
+-	if (args->namelen >= MAXNAMELEN)
+-		return -EFAULT;		/* match IRIX behaviour */
 -
--	if (!name)
--		return -EINVAL;
--
- 	memset(args, 0, sizeof(*args));
- 	args->geo = dp->i_mount->m_attr_geo;
- 	args->whichfork = XFS_ATTR_FORK;
+ 	args->hashval = xfs_da_hashname(args->name, args->namelen);
+ 	return 0;
+ }
 -- 
 2.26.2
 
