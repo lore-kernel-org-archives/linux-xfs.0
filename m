@@ -2,226 +2,496 @@ Return-Path: <SRS0=M5eb=6V=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35F1DC47257
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 08:09:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C083C38A2A
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 09:53:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F7F020753
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 08:09:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CADCF20CC7
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 09:53:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f1l63tFz"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="h5C4OCxG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725834AbgEGIJd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 May 2020 04:09:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46076 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725809AbgEGIJd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 04:09:33 -0400
-Received: from mail-wr1-x442.google.com (mail-wr1-x442.google.com [IPv6:2a00:1450:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB309C061A41;
-        Thu,  7 May 2020 01:09:32 -0700 (PDT)
-Received: by mail-wr1-x442.google.com with SMTP id z8so5205203wrw.3;
-        Thu, 07 May 2020 01:09:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:resent-from:resent-date:resent-message-id:resent-to
-         :message-id:user-agent:date:from:to:cc:subject:references
-         :mime-version:content-disposition;
-        bh=xV3Ps0RsdCVhfxWoq/YPpZZAsZRZc/1bRKCvZXY1C2s=;
-        b=f1l63tFzPYekUF5/P/qZk8XOI5QYNw6EkCD1pgFct2Oun2QZOeS/oz4CVT0hZ8lhUr
-         h839qr7rMRncHscWHM3CRjhaHSE6XTFCN6P2llKiNJOL2Q0nUk5EqCezUPz0LkC8rzPp
-         H2C9TgIK5bJEHoiUwwDXbrLOK9gRo+DuPEpz7FbLkuBXqWXrtRJAB4wygJGpUJnJvU/Q
-         3c3nxNgg+kkeS27OBGL0ttQe8VpO87fyDXw1Z5OyOGMASm3q1FZb1GBqwhqVbdTpri+5
-         AHwyCtBQWwG+u1PudeigXxYuC17mZNPTwCyzsZmRD/QKqL46Cp9u6tO2Ktz8tvgYSQkY
-         //Gw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:resent-from:resent-date:resent-message-id
-         :resent-to:message-id:user-agent:date:from:to:cc:subject:references
-         :mime-version:content-disposition;
-        bh=xV3Ps0RsdCVhfxWoq/YPpZZAsZRZc/1bRKCvZXY1C2s=;
-        b=Gf9bibh0scp6ElL5uLRwvGbGRnOsuwuohw37pmDuZzmbAob6bfTjJ6m1Q/TuwfLfj+
-         nee7dCEbySLwydRR/W9tDD/wmm6lcL3hJR3dmE0683V0ciRtKAd1qswxKr3xFmp+VdDB
-         DxG9jDnOItsjDhO5ompNJXrAilMvN3ZuqJFrM9J8DFNaxlabgebMz3NLBQFClNqaGBYK
-         1HUvKrpmQ3x5G/JkfPaD5AaF4hyD0ELyiwOfR9TKqN4muRhMXVM9XlVru8Vpd3RSymrR
-         G4tHw3LJxsZrc1+XgABUU4Lm4btu6K9xVDLL4YgirpMKUrH88+0xF8R4WNxNa8pNAuPj
-         Qj4w==
-X-Gm-Message-State: AGi0Pub9muJZ45veQLQzFMaxxTnM0sEAttlIeKlUrDIt6Jio22l1RWLl
-        4EKxU0i/0oqleLfE8JKhsU8=
-X-Google-Smtp-Source: APiQypISzecItIXL6bUSv7pE5bwW/O6vts2MY1mF5Ku1rioJ7tRNh4kjLBp9y9/ZHIkyuDTwfZAdoA==
-X-Received: by 2002:adf:face:: with SMTP id a14mr13599009wrs.397.1588838971476;
-        Thu, 07 May 2020 01:09:31 -0700 (PDT)
-Received: from dumbo ([2a01:230:2::ec6])
-        by smtp.gmail.com with ESMTPSA id p7sm7046956wrf.31.2020.05.07.01.09.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 May 2020 01:09:30 -0700 (PDT)
-Received: from cavok by dumbo with local (Exim 4.92)
-        (envelope-from <cavok@dumbo>)
-        id 1jWbaw-0004TM-GV; Thu, 07 May 2020 10:09:26 +0200
-Message-Id: <20200507080650.439636033@linux.com>
-User-Agent: quilt/0.65
-Date:   Thu, 07 May 2020 10:04:57 +0200
-From:   Domenico Andreoli <domenico.andreoli@linux.com>
-To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Pavel Machek <pavel@ucw.cz>, Christoph Hellwig <hch@lst.de>,
-        viro@zeniv.linux.org.uk, tytso@mit.edu, len.brown@intel.com,
-        linux-pm@vger.kernel.org, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Domenico Andreoli <domenico.andreoli@linux.com>
-Subject: [PATCH 1/1] hibernate: restrict writes to the snapshot device
-References: <20200507080456.069724962@linux.com>
+        id S1725910AbgEGJxP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 May 2020 05:53:15 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:24329 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725893AbgEGJxP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 05:53:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1588845191;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=U/R0rr+7TLZ8n4OEO3iKz94fuMOq1IjpAxnBmMpbZ2I=;
+        b=h5C4OCxGNiDPwufOGGToSkshd7uauuEFEK7kYpFcFTkBfFoLAajC6O+ixt6Siu04u51Jiq
+        qCQjiY9a2d23GAzMM1rI3jOg2sOolOCqzpVWP3ft0qgtIFxmCsU0YmnfHMsiZgLWlrND6p
+        JSrXhhOq2JsCaQmhzb/trS7Gyd55Xb4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-288-CWpA46oDPDum0fcc22LPbA-1; Thu, 07 May 2020 05:53:09 -0400
+X-MC-Unique: CWpA46oDPDum0fcc22LPbA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DB159460;
+        Thu,  7 May 2020 09:53:08 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5080C5C1B0;
+        Thu,  7 May 2020 09:53:08 +0000 (UTC)
+Date:   Thu, 7 May 2020 05:53:06 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/3] xfs: fix an incore inode UAF in xfs_bui_recover
+Message-ID: <20200507095306.GA9003@bfoster>
+References: <158864121286.184729.5959003885146573075.stgit@magnolia>
+ <158864123329.184729.14504239314355330619.stgit@magnolia>
+ <20200505141138.GB61176@bfoster>
+ <20200506003423.GS5703@magnolia>
+ <20200506135656.GA5054@bfoster>
+ <20200506170150.GY5703@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Disposition: inline; filename=hibernate-restrict-writes-to-snapshot-dev
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200506170150.GY5703@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Domenico Andreoli <domenico.andreoli@linux.com>
+On Wed, May 06, 2020 at 10:01:50AM -0700, Darrick J. Wong wrote:
+> On Wed, May 06, 2020 at 09:56:56AM -0400, Brian Foster wrote:
+> > On Tue, May 05, 2020 at 05:34:23PM -0700, Darrick J. Wong wrote:
+> > > On Tue, May 05, 2020 at 10:11:38AM -0400, Brian Foster wrote:
+> > > > On Mon, May 04, 2020 at 06:13:53PM -0700, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > 
+> > > > > In xfs_bui_item_recover, there exists a use-after-free bug with regards
+> > > > > to the inode that is involved in the bmap replay operation.  If the
+> > > > > mapping operation does not complete, we call xfs_bmap_unmap_extent to
+> > > > > create a deferred op to finish the unmapping work, and we retain a
+> > > > > pointer to the incore inode.
+> > > > > 
+> > > > > Unfortunately, the very next thing we do is commit the transaction and
+> > > > > drop the inode.  If reclaim tears down the inode before we try to finish
+> > > > > the defer ops, we dereference garbage and blow up.  Therefore, create a
+> > > > > way to join inodes to the defer ops freezer so that we can maintain the
+> > > > > xfs_inode reference until we're done with the inode.
+> > > > > 
+> > > > > Note: This imposes the requirement that there be enough memory to keep
+> > > > > every incore inode in memory throughout recovery.
+> > > > > 
+> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > ---
+> > > > 
+> > > > Maybe I'm missing something, but I thought the discussion on the
+> > > > previous version[1] landed on an approach where the intent would hold a
+> > > > reference to the inode. Wouldn't that break the dependency on the dfops
+> > > > freeze/thaw mechanism?
+> > > 
+> > > We did, but as I started pondering how to make this work in practice,
+> > > I soon realized that it's not as simple as "don't irele the inode":
+> > > 
+> > > (Part 1)
+> > > 
+> > > It would be easy enough to add a flag to struct xfs_bmap_intent that
+> > > means "when you're done, unlock and irele the inode".  You'd have to add
+> > > this capability to any log item that deals with inodes, but only
+> > > deferred bmap items need this.
+> > > 
+> > > Log recovery looks like this:
+> > > 
+> > > ----------------
+> > > Transaction 0
+> > > BUI1 unmap file1, offset1, startblock1, length == 200000
+> > > ----------------
+> > > <end>
+> > > 
+> > > What happens if the first bunmapi call doesn't actually unmap
+> > > everything?  We'll queue yet another bmap intent item (call it BUI2) to
+> > > finish the work.  This means that we can't just drop the inode when
+> > > we're done processing BUI1; we have to propagate the "unlock and irele"
+> > > flag to BUI2.  Ok, so now there's this chaining behavior that wasn't
+> > > there before.
+> > > 
+> > > Then I thought about it some more, and wondered what would happen if the
+> > > log contained two unfinished bmap items for the same inode?  If this
+> > > happened, you'd deadlock because you've not released the ILOCK for the
+> > > first unfinished bmap item when you want to acquire the ILOCK for the
+> > > second unfinished bmap item.
+> > > 
+> > 
+> > Hm, Ok.. so IIUC the lock is implicitly held across these map/unmap
+> > dfops at runtime, but that's not necessarily the case during recovery
+> > due to the dfops chaining behavior. To me, this raises the question of
+> > why we need to reorder/split these particular intents during recovery if
+> > the original operation would have completed under a single inode lock
+> > cycle.
+> 
+> Log recovery /did/ function that way (no reordering) until
+> 509955823cc9c, when it was discovered that we don't have a good way to
+> reconstruct the dfops chain from the list of recovered log intent items.
+> 
+> > The comments in xfs_log_recover.c don't really explain it. From going
+> > back to commit 509955823cc9c ("xfs: log recovery should replay deferred
+> > ops in order"), it looks like the issue is that ordering gets screwed up
+> > for operations that commit multiple intents per-transaction and
+> > completion of those intents creates new child intents. At runtime, we'd
+> > process the intents in the current transaction first and then get to the
+> > child intents in the order they were created. If we didn't have the
+> > recovery time dfops shuffling implemented in this patch, recovery would
+> > process the first intent in the log, then all of the child intents of
+> > that one before getting to the next intent in the log that presumably
+> > would have been second at runtime. Am I following that correctly?
+> 
+> Correct.  If we could figure out how to rebuild the dfops chain (and
+> thus the ordering requirements), we would be able to eliminate this
+> freezer stuff entirely.
+> 
 
-Hibernation via snapshot device requires write permission to the swap
-block device, the one that more often (but not necessarily) is used to
-store the hibernation image.
+Ok, thanks. I was wondering the same, but it's not clear how to do that
+with just the intent information in the log and big checkpoint
+transactions. Perhaps we could if we had a transactional id that was
+common across intents in a single transaction, or otherwise unique
+intent ids that would allow an intent to refer to the next in a chain at
+the time the intent was logged (such that recovery could learn to
+construct and process chains instead of just individual intents). I'm
+curious if we're going to want/need to solve that issue somehow or
+another more directly eventually as we grow more intents and perhaps
+come up with new and more complex intent-based operations (with more
+complex recovery scenarios).
 
-With this patch, such permissions are granted iff:
+> > I think the rest makes sense from the perspective of not wanting to
+> > plumb the conditional locking complexity through the dfops/intent
+> > processing for every intent type that eventually needs it, as opposed to
+> > containing in the log recovery code (via dfops magic). I need to think
+> > about all that some more, but I'd like to make sure I understand why we
+> > have this recovery requirement in the first place.
+> 
+> <nod>  It took me a few hours to figure out why that patch was correct
+> the first time I saw it.  It took me a few hours again(!) when I was
+> trying to write this series. :/
+> 
 
-1) snapshot device config option is enabled
-2) swap partition is used as snapshot device
+If I follow correctly, the rmap swapext sequence makes for a good
+example because the bmap completions generate the rmap intents. A
+simplified (i.e. single extent remap) runtime transactional flow for
+that looks something like the following:
 
-In other circumstance the swap device is not writable from userspace.
+t1: unmap intent, map intent
+t2: unmap done, map intent, runmap intent
+t3: map done, runmap intent, rmap intent
+t4: runmap done, rmap intent
+...
 
-In order to achieve this, every write attempt to a swap device is
-checked against the device configured as part of the uswsusp API [0]
-using a pointer to the inode struct in memory. If the swap device being
-written was not configured for snapshotting, the write request is denied.
+So at runtime these operations complete in the obvious linear order.
+Intents drop off the front as done items are logged and new intents are
+tacked on the end. If we crash between t2 and t3, however, we see t2 in
+the log and would end up completing the map intent and the subsequently
+generated rmap intent (that pops up in t3 at runtime) before we process
+the runmap intent that's still in the log (and was originally in the
+dfops queue for t2). I _think_ that's essentially the scenario described
+in 509955823cc9c, but it's not clear to me if it's the same runtime
+example..
 
-NOTE: this implementation works only for swap block devices, where the
-inode configured by swapon (which sets S_SWAPFILE) is the same used
-by SNAPSHOT_SET_SWAP_AREA.
+Brian
 
-In case of swapfile, SNAPSHOT_SET_SWAP_AREA indeed receives the inode
-of the block device containing the filesystem where the swap files is
-located (+ offset in it) which is never passed to swapon and then has
-not the S_SWAPFILE set.
-
-As result, the swapfile itself (as a file) has never an option to be
-written from userspace. Instead it remains writable if accessed directly
-from the containing block device, which is always writeable from root.
-
-[0] Documentation/power/userland-swsusp.rst
-
-Signed-off-by: Domenico Andreoli <domenico.andreoli@linux.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Pavel Machek <pavel@ucw.cz>
-Cc: Darrick J. Wong <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: viro@zeniv.linux.org.uk
-Cc: tytso@mit.edu
-Cc: len.brown@intel.com
-Cc: linux-pm@vger.kernel.org
-Cc: linux-mm@kvack.org
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-
----
- fs/block_dev.c          |    3 +--
- include/linux/suspend.h |    6 ++++++
- kernel/power/user.c     |   14 +++++++++++++-
- 3 files changed, 20 insertions(+), 3 deletions(-)
-
-Index: b/include/linux/suspend.h
-===================================================================
---- a/include/linux/suspend.h
-+++ b/include/linux/suspend.h
-@@ -466,6 +466,12 @@ static inline bool system_entering_hiber
- static inline bool hibernation_available(void) { return false; }
- #endif /* CONFIG_HIBERNATION */
- 
-+#ifdef CONFIG_HIBERNATION_SNAPSHOT_DEV
-+int is_hibernate_snapshot_dev(const struct inode *);
-+#else
-+static inline int is_hibernate_snapshot_dev(const struct inode *i) { return 0; }
-+#endif
-+
- /* Hibernation and suspend events */
- #define PM_HIBERNATION_PREPARE	0x0001 /* Going to hibernate */
- #define PM_POST_HIBERNATION	0x0002 /* Hibernation finished */
-Index: b/kernel/power/user.c
-===================================================================
---- a/kernel/power/user.c
-+++ b/kernel/power/user.c
-@@ -35,8 +35,14 @@ static struct snapshot_data {
- 	bool ready;
- 	bool platform_support;
- 	bool free_bitmaps;
-+	struct inode *bd_inode;
- } snapshot_state;
- 
-+int is_hibernate_snapshot_dev(const struct inode *bd_inode)
-+{
-+	return hibernation_available() && snapshot_state.bd_inode == bd_inode;
-+}
-+
- static int snapshot_open(struct inode *inode, struct file *filp)
- {
- 	struct snapshot_data *data;
-@@ -95,6 +101,7 @@ static int snapshot_open(struct inode *i
- 	data->frozen = false;
- 	data->ready = false;
- 	data->platform_support = false;
-+	data->bd_inode = NULL;
- 
-  Unlock:
- 	unlock_system_sleep();
-@@ -110,6 +117,7 @@ static int snapshot_release(struct inode
- 
- 	swsusp_free();
- 	data = filp->private_data;
-+	data->bd_inode = NULL;
- 	free_all_swap_pages(data->swap);
- 	if (data->frozen) {
- 		pm_restore_gfp_mask();
-@@ -202,6 +210,7 @@ struct compat_resume_swap_area {
- static int snapshot_set_swap_area(struct snapshot_data *data,
- 		void __user *argp)
- {
-+	struct block_device *bdev;
- 	sector_t offset;
- 	dev_t swdev;
- 
-@@ -232,9 +241,12 @@ static int snapshot_set_swap_area(struct
- 		data->swap = -1;
- 		return -EINVAL;
- 	}
--	data->swap = swap_type_of(swdev, offset, NULL);
-+	data->swap = swap_type_of(swdev, offset, &bdev);
- 	if (data->swap < 0)
- 		return -ENODEV;
-+
-+	data->bd_inode = bdev->bd_inode;
-+	bdput(bdev);
- 	return 0;
- }
- 
-Index: b/fs/block_dev.c
-===================================================================
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -2023,8 +2023,7 @@ ssize_t blkdev_write_iter(struct kiocb *
- 	if (bdev_read_only(I_BDEV(bd_inode)))
- 		return -EPERM;
- 
--	/* uswsusp needs write permission to the swap */
--	if (IS_SWAPFILE(bd_inode) && !hibernation_available())
-+	if (IS_SWAPFILE(bd_inode) && !is_hibernate_snapshot_dev(bd_inode))
- 		return -ETXTBSY;
- 
- 	if (!iov_iter_count(from))
+> --D
+> 
+> > Brian
+> > 
+> > > You'd have to drop the ILOCK (but retain the inode reference) between
+> > > the two bmap items.  I think this is currently impossible because there
+> > > aren't any transactions that queue multiple bmap intents per
+> > > transaction, nobody else holds the ilock, and the existing rmap
+> > > implementation of the swapext ioctl doesn't allow swapping a file with
+> > > itself.  However...
+> > > 
+> > > (Part 2)
+> > > 
+> > > The second thing I thought about is, what if there's a lot of work after
+> > > transaction 0?  Say the recovery stream looks like:
+> > > 
+> > > ----------------
+> > > Transaction 0
+> > > BUI1 unmap file1, offset1, startblock1, length == 200000
+> > > ----------------
+> > > <10000 more intents applied to other things>
+> > > ----------------
+> > > <end>
+> > > 
+> > > This is a problem, because we must drop the ILOCK after completing the
+> > > BUI1 work so that we can process the 10000 more intents before we can
+> > > get to BUI2.  We cannot let the tail of the log get pinned on the locked
+> > > inode, so we must release the ILOCK after we're done with BUI1 and
+> > > re-acquire it when we're ready to deal with BUI2.
+> > > 
+> > > This means I need /two/ flags in struct xfs_bmap_intent -- one to say
+> > > that we need to irele the inode at the end of processing, and another to
+> > > say that the bmap item needs to grab the ILOCK.  If there's going to be
+> > > a BUI2 as a result of recovering BUI1, the first flag must be propagated
+> > > to BUI2, but the second flag must /not/ be propagated.
+> > > 
+> > > A potential counterargument is that we crammed all 10000 intents into
+> > > the log without pinning the log, so maybe we can hold the ILOCK.
+> > > However....
+> > > 
+> > > (Part 3)
+> > > 
+> > > Next, I considered how the swapext log item in the atomic file update
+> > > patchset would interact with log recovery.  A couple of notes about the
+> > > swapext log items:
+> > > 
+> > > 1. They are careful not to create the kinds of bunmap operations that
+> > > would cause the creation of /more/ BUIs.
+> > > 
+> > > 2. Every time we log one extent's worth of unmap/remap operations (using
+> > > deferred bmap log items, naturally) we log an done item for the original
+> > > swapext intent item and immediately log another swapext intent for the
+> > > work remaining.
+> > > 
+> > > I came up with the following sequence of transactions to recover:
+> > > 
+> > > ----------------
+> > > Transaction 0
+> > > SXI0 file1, offset1, file2, offset2, length == 10
+> > > ----------------
+> > > Transaction 1
+> > > BUI1 unmap file1, offset1, startblock1, length == 2
+> > > BUI2 unmap file2, offset2, startblock2, length == 2
+> > > BUI3 map file1, offset1, startblock2, length == 2
+> > > BUI4 map file2, offset2, startblock1, length == 2
+> > > SXD done (SXI0)
+> > > SXI5 file1, offset1 + 2, file2, offset2 + 2, length == 8
+> > > ---------------
+> > > <end of log>
+> > > 
+> > > Recovery in this case will end up with BUI[1-4] and SXI5 that still need
+> > > processing.  Each of the 5 intent items gets its own recovery
+> > > transaction and dfops freezer chain.  BUI1, BUI3, and SXI5 will each
+> > > require ilock'd access to file1, which means that each of them will have
+> > > to have the ability to drop the ILOCK but retain the reference.  The
+> > > same argument applies to file2 and BUI2, BUI4, and SXI5.  Note also that
+> > > in our brave new world, file1 and file2 can be the same.
+> > > 
+> > > For the swapext log item type this inode management is particularly
+> > > acute because we're certain to have new SXIs created as a result of
+> > > recovering an SXI.
+> > > 
+> > > (End)
+> > > 
+> > > In conclusion, we need a mechanism to drop both the inode lock and the
+> > > inode reference.  Each log item type that works with inodes will have to
+> > > set aside 2 flags somewhere in the incore extent structure, and provide
+> > > more or less the same code to manage that state.  Right now that's just
+> > > the bmap items, but then the swapext items and the deferred xattr items
+> > > will have that same requirement when they get added.
+> > > 
+> > > If we do that, the inode reference and ilock management diverges even
+> > > further from regular operations.  Regular callers are expected to iget
+> > > and ilock the inode and maintain that all the way to the end of
+> > > xfs_trans_commit.  Log recovery, on the other hand, will add a bunch of
+> > > state handling to some of the log items so that we can drop the ILOCK
+> > > after the first item, and then drop the inode reference after finishing
+> > > the last possible user of that inode in the revived dfops chain.
+> > > 
+> > > On the other hand, keeping the inode management in the defer freezer
+> > > code means that I keep all that complexity and state management out of
+> > > the ->finish_item code.  When we go to finish the new incore intents
+> > > that get created during recovery, the inode reference and ILOCK rules
+> > > are the same as anywhere else -- the caller is required to grab the
+> > > inode, the transaction, and the ilock (in that order).
+> > > 
+> > > To the extent that recovering log intent items is /not/ the same as
+> > > running a normal transaction, all that weirdness is concentrated in
+> > > xfs_log_recover.c and a single function in xfs_defer.c.  The desired
+> > > behavior is the same across all the log intent item types, so I
+> > > decided in favor of keeping the centralised behavior and (trying to)
+> > > contain the wacky.  We don't need all that right away, but we will.
+> > > 
+> > > Note that I did make it so that we retain the reference always, so
+> > > there's no longer a need for irele/igrab cycles, which makes capturing
+> > > the dfops chain less error prone.
+> > > 
+> > > --D
+> > > 
+> > > > Brian
+> > > > 
+> > > > [1] https://lore.kernel.org/linux-xfs/20200429235818.GX6742@magnolia/
+> > > > 
+> > > > >  fs/xfs/libxfs/xfs_defer.c |   50 +++++++++++++++++++++++++++++++++++++++++++++
+> > > > >  fs/xfs/libxfs/xfs_defer.h |   10 +++++++++
+> > > > >  fs/xfs/xfs_bmap_item.c    |    7 ++++--
+> > > > >  fs/xfs/xfs_icache.c       |   19 +++++++++++++++++
+> > > > >  4 files changed, 83 insertions(+), 3 deletions(-)
+> > > > > 
+> > > > > 
+> > > > > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> > > > > index ea4d28851bbd..72933fdafcb2 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_defer.c
+> > > > > +++ b/fs/xfs/libxfs/xfs_defer.c
+> > > > > @@ -16,6 +16,7 @@
+> > > > >  #include "xfs_inode.h"
+> > > > >  #include "xfs_inode_item.h"
+> > > > >  #include "xfs_trace.h"
+> > > > > +#include "xfs_icache.h"
+> > > > >  
+> > > > >  /*
+> > > > >   * Deferred Operations in XFS
+> > > > > @@ -583,8 +584,19 @@ xfs_defer_thaw(
+> > > > >  	struct xfs_defer_freezer	*dff,
+> > > > >  	struct xfs_trans		*tp)
+> > > > >  {
+> > > > > +	int				i;
+> > > > > +
+> > > > >  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+> > > > >  
+> > > > > +	/* Re-acquire the inode locks. */
+> > > > > +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
+> > > > > +		if (!dff->dff_inodes[i])
+> > > > > +			break;
+> > > > > +
+> > > > > +		dff->dff_ilocks[i] = XFS_ILOCK_EXCL;
+> > > > > +		xfs_ilock(dff->dff_inodes[i], dff->dff_ilocks[i]);
+> > > > > +	}
+> > > > > +
+> > > > >  	/* Add the dfops items to the transaction. */
+> > > > >  	list_splice_init(&dff->dff_dfops, &tp->t_dfops);
+> > > > >  	tp->t_flags |= dff->dff_tpflags;
+> > > > > @@ -597,5 +609,43 @@ xfs_defer_freeezer_finish(
+> > > > >  	struct xfs_defer_freezer	*dff)
+> > > > >  {
+> > > > >  	xfs_defer_cancel_list(mp, &dff->dff_dfops);
+> > > > > +	xfs_defer_freezer_irele(dff);
+> > > > >  	kmem_free(dff);
+> > > > >  }
+> > > > > +
+> > > > > +/*
+> > > > > + * Attach an inode to this deferred ops freezer.  Callers must hold ILOCK_EXCL,
+> > > > > + * which will be dropped and reacquired when we're ready to thaw the frozen
+> > > > > + * deferred ops.
+> > > > > + */
+> > > > > +int
+> > > > > +xfs_defer_freezer_ijoin(
+> > > > > +	struct xfs_defer_freezer	*dff,
+> > > > > +	struct xfs_inode		*ip)
+> > > > > +{
+> > > > > +	unsigned int			i;
+> > > > > +
+> > > > > +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> > > > > +
+> > > > > +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
+> > > > > +		if (dff->dff_inodes[i] == ip)
+> > > > > +			goto out;
+> > > > > +		if (dff->dff_inodes[i] == NULL)
+> > > > > +			break;
+> > > > > +	}
+> > > > > +
+> > > > > +	if (i == XFS_DEFER_FREEZER_INODES) {
+> > > > > +		ASSERT(0);
+> > > > > +		return -EFSCORRUPTED;
+> > > > > +	}
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * Attach this inode to the freezer and drop its ILOCK because we
+> > > > > +	 * assume the caller will need to allocate a transaction.
+> > > > > +	 */
+> > > > > +	dff->dff_inodes[i] = ip;
+> > > > > +	dff->dff_ilocks[i] = 0;
+> > > > > +out:
+> > > > > +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > > +	return 0;
+> > > > > +}
+> > > > > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> > > > > index 7ae05e10d750..0052a0313283 100644
+> > > > > --- a/fs/xfs/libxfs/xfs_defer.h
+> > > > > +++ b/fs/xfs/libxfs/xfs_defer.h
+> > > > > @@ -76,6 +76,11 @@ struct xfs_defer_freezer {
+> > > > >  	/* Deferred ops state saved from the transaction. */
+> > > > >  	struct list_head	dff_dfops;
+> > > > >  	unsigned int		dff_tpflags;
+> > > > > +
+> > > > > +	/* Inodes to hold when we want to finish the deferred work items. */
+> > > > > +#define XFS_DEFER_FREEZER_INODES	2
+> > > > > +	unsigned int		dff_ilocks[XFS_DEFER_FREEZER_INODES];
+> > > > > +	struct xfs_inode	*dff_inodes[XFS_DEFER_FREEZER_INODES];
+> > > > >  };
+> > > > >  
+> > > > >  /* Functions to freeze a chain of deferred operations for later. */
+> > > > > @@ -83,5 +88,10 @@ int xfs_defer_freeze(struct xfs_trans *tp, struct xfs_defer_freezer **dffp);
+> > > > >  void xfs_defer_thaw(struct xfs_defer_freezer *dff, struct xfs_trans *tp);
+> > > > >  void xfs_defer_freeezer_finish(struct xfs_mount *mp,
+> > > > >  		struct xfs_defer_freezer *dff);
+> > > > > +int xfs_defer_freezer_ijoin(struct xfs_defer_freezer *dff,
+> > > > > +		struct xfs_inode *ip);
+> > > > > +
+> > > > > +/* These functions must be provided by the xfs implementation. */
+> > > > > +void xfs_defer_freezer_irele(struct xfs_defer_freezer *dff);
+> > > > >  
+> > > > >  #endif /* __XFS_DEFER_H__ */
+> > > > > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> > > > > index c733bdeeeb9b..bbce191d8fcd 100644
+> > > > > --- a/fs/xfs/xfs_bmap_item.c
+> > > > > +++ b/fs/xfs/xfs_bmap_item.c
+> > > > > @@ -530,12 +530,13 @@ xfs_bui_item_recover(
+> > > > >  	}
+> > > > >  
+> > > > >  	error = xlog_recover_trans_commit(tp, dffp);
+> > > > > -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > > -	xfs_irele(ip);
+> > > > > -	return error;
+> > > > > +	if (error)
+> > > > > +		goto err_rele;
+> > > > > +	return xfs_defer_freezer_ijoin(*dffp, ip);
+> > > > >  
+> > > > >  err_inode:
+> > > > >  	xfs_trans_cancel(tp);
+> > > > > +err_rele:
+> > > > >  	if (ip) {
+> > > > >  		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> > > > >  		xfs_irele(ip);
+> > > > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> > > > > index 17a0b86fe701..b96ddf5ff334 100644
+> > > > > --- a/fs/xfs/xfs_icache.c
+> > > > > +++ b/fs/xfs/xfs_icache.c
+> > > > > @@ -12,6 +12,7 @@
+> > > > >  #include "xfs_sb.h"
+> > > > >  #include "xfs_mount.h"
+> > > > >  #include "xfs_inode.h"
+> > > > > +#include "xfs_defer.h"
+> > > > >  #include "xfs_trans.h"
+> > > > >  #include "xfs_trans_priv.h"
+> > > > >  #include "xfs_inode_item.h"
+> > > > > @@ -1847,3 +1848,21 @@ xfs_start_block_reaping(
+> > > > >  	xfs_queue_eofblocks(mp);
+> > > > >  	xfs_queue_cowblocks(mp);
+> > > > >  }
+> > > > > +
+> > > > > +/* Release all the inode resources attached to this freezer. */
+> > > > > +void
+> > > > > +xfs_defer_freezer_irele(
+> > > > > +	struct xfs_defer_freezer	*dff)
+> > > > > +{
+> > > > > +	unsigned int			i;
+> > > > > +
+> > > > > +	for (i = 0; i < XFS_DEFER_FREEZER_INODES; i++) {
+> > > > > +		if (!dff->dff_inodes[i])
+> > > > > +			break;
+> > > > > +
+> > > > > +		if (dff->dff_ilocks[i])
+> > > > > +			xfs_iunlock(dff->dff_inodes[i], dff->dff_ilocks[i]);
+> > > > > +		xfs_irele(dff->dff_inodes[i]);
+> > > > > +		dff->dff_inodes[i] = NULL;
+> > > > > +	}
+> > > > > +}
+> > > > > 
+> > > > 
+> > > 
+> > 
+> 
 
