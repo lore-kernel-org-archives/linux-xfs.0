@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9042C38A2A
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34D06C38A2A
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86E1B2083B
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 087832083B
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 May 2020 12:19:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oiCd1xrr"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="osL+ko+P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726519AbgEGMTq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 May 2020 08:19:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57060 "EHLO
+        id S1726555AbgEGMTs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 May 2020 08:19:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725857AbgEGMTq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 08:19:46 -0400
+        by vger.kernel.org with ESMTP id S1725857AbgEGMTs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 08:19:48 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F02DAC05BD43
-        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 05:19:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CE9FC05BD43
+        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 05:19:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=pNg56VOOmXwBrIXNWtzrk0ApMocmAp5sGenjy86ZTBk=; b=oiCd1xrrDZOz3A5i/z9q1GHLZz
-        UTIVnBHgw2t8WczcVQPIEgsq2MCONAzQX3BmEV653/0NrsofB6qc5EBqScpmySPNnb4wxSMuVDn/n
-        +Zss9pAB8g1ZkWMjdX6azsjZpaorlNuIGstAPxp7lLfbj7XY4z3BGBm5A4KefYqjsTBEZ4j5ccfCu
-        FQTJ4YB9KZdPrLIkmx4U5V39GIr4B9cCPkULohHybQkPumHRby9RTrpVCoMRkeI1WJDJ6SsrH/iFc
-        GAyjhbYlgtL1u/e6sDQd5AteXh0EArhi1Irs0qQ9LIGmfG98/v91a0x1UgQor8L7kK0Yzkn817PR+
-        V16JMfew==;
+        bh=Z0bfVinOT/kyvGlP/fmcipLweW2YysiCpBVrZCigk6U=; b=osL+ko+PPKuzjS5vDuaoGEBeOx
+        hnpYUHVorid7kDRrl4tQ1sgA9OW5Lwo8HlOKOC/ZX59QbR5SJdZIUvcabQwSe7HFE76oD3r2Oyqa+
+        cesZyEeHLHYlCp1t9z2OVhDvDjbdHKx6Nn6QpCUsohqJXqYQxuugk/UZogpJmFNbDMmcWxHUd2UZz
+        WJALyAlYz7SOdTyTMdmjq31zSaQ8aXRXTT3uAH6fV4chePXHzaQycqhZDFtATZTAXoSlQDwxiWEKa
+        YwlX9chbTu92iAnnKd0CmmDsBYFSexaq+obMaaKHUtQ9UACfag9Ef5LU30RRMniWP5GLj4toDmueJ
+        MxE85rkw==;
 Received: from [2001:4bb8:180:9d3f:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jWfVB-0005C3-Fl; Thu, 07 May 2020 12:19:45 +0000
+        id 1jWfVD-0005CM-T2; Thu, 07 May 2020 12:19:48 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
         Chandan Rajendra <chandanrlinux@gmail.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 21/58] xfs: move the legacy xfs_attr_list to xfs_ioctl.c
-Date:   Thu,  7 May 2020 14:18:14 +0200
-Message-Id: <20200507121851.304002-22-hch@lst.de>
+Subject: [PATCH 22/58] xfs: rename xfs_attr_list_int to xfs_attr_list
+Date:   Thu,  7 May 2020 14:18:15 +0200
+Message-Id: <20200507121851.304002-23-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200507121851.304002-1-hch@lst.de>
 References: <20200507121851.304002-1-hch@lst.de>
@@ -56,14 +56,10 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Source kernel commit: 3e7a779937a225336922ce48fe7a4a609c7db3e2
+Source kernel commit: 17e1dd83ea21dc7aaf44590e5947338351b99bd0
 
-The old xfs_attr_list code is only used by the attrlist by handle
-ioctl.  Move it to xfs_ioctl.c with its user.  Also move the
-attrlist and attrlist_ent structure to xfs_fs.h, as they are exposed
-user ABIs.  They are used through libattr headers with the same name
-by at least xfsdump.  Also document this relation so that it doesn't
-require a research project to figure out.
+The version taking the context structure is the main interface to list
+attributes, so drop the _int postfix.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
@@ -72,82 +68,24 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/xfs_attr.h | 23 -----------------------
- libxfs/xfs_fs.h   | 20 ++++++++++++++++++++
- 2 files changed, 20 insertions(+), 23 deletions(-)
+ libxfs/xfs_attr.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 31c0ffde..0e3c213f 100644
+index 0e3c213f..8d42f578 100644
 --- a/libxfs/xfs_attr.h
 +++ b/libxfs/xfs_attr.h
-@@ -48,27 +48,6 @@ struct xfs_attr_list_context;
+@@ -102,8 +102,8 @@ struct xfs_attr_list_context {
+  * Overall external interface routines.
   */
- #define	ATTR_MAX_VALUELEN	(64*1024)	/* max length of a value */
- 
--/*
-- * Define how lists of attribute names are returned to the user from
-- * the attr_list() call.  A large, 32bit aligned, buffer is passed in
-- * along with its size.  We put an array of offsets at the top that each
-- * reference an attrlist_ent_t and pack the attrlist_ent_t's at the bottom.
-- */
--typedef struct attrlist {
--	__s32	al_count;	/* number of entries in attrlist */
--	__s32	al_more;	/* T/F: more attrs (do call again) */
--	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
--} attrlist_t;
--
--/*
-- * Show the interesting info about one attribute.  This is what the
-- * al_offset[i] entry points to.
-- */
--typedef struct attrlist_ent {	/* data from attr_list() */
--	__u32	a_valuelen;	/* number bytes in value of attr */
--	char	a_name[1];	/* attr name (NULL terminated) */
--} attrlist_ent_t;
--
- /*
-  * Kernel-internal version of the attrlist cursor.
-  */
-@@ -131,8 +110,6 @@ int xfs_attr_get(struct xfs_da_args *args);
- int xfs_attr_set(struct xfs_da_args *args);
- int xfs_attr_set_args(struct xfs_da_args *args);
- int xfs_attr_remove_args(struct xfs_da_args *args);
--int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
--		  int flags, struct attrlist_cursor_kern *cursor);
- bool xfs_attr_namecheck(const void *name, size_t length);
- 
- #endif	/* __XFS_ATTR_H__ */
-diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
-index e362fc81..51a688f2 100644
---- a/libxfs/xfs_fs.h
-+++ b/libxfs/xfs_fs.h
-@@ -593,6 +593,26 @@ typedef struct xfs_attrlist_cursor {
- 	__u32		opaque[4];
- } xfs_attrlist_cursor_t;
- 
-+/*
-+ * Define how lists of attribute names are returned to userspace from the
-+ * XFS_IOC_ATTRLIST_BY_HANDLE ioctl.  struct xfs_attrlist is the header at the
-+ * beginning of the returned buffer, and a each entry in al_offset contains the
-+ * relative offset of an xfs_attrlist_ent containing the actual entry.
-+ *
-+ * NOTE: struct xfs_attrlist must match struct attrlist defined in libattr, and
-+ * struct xfs_attrlist_ent must match struct attrlist_ent defined in libattr.
-+ */
-+struct xfs_attrlist {
-+	__s32	al_count;	/* number of entries in attrlist */
-+	__s32	al_more;	/* T/F: more attrs (do call again) */
-+	__s32	al_offset[1];	/* byte offsets of attrs [var-sized] */
-+};
-+
-+struct xfs_attrlist_ent {	/* data from attr_list() */
-+	__u32	a_valuelen;	/* number bytes in value of attr */
-+	char	a_name[1];	/* attr name (NULL terminated) */
-+};
-+
- typedef struct xfs_fsop_attrlist_handlereq {
- 	struct xfs_fsop_handlereq	hreq; /* handle interface structure */
- 	struct xfs_attrlist_cursor	pos; /* opaque cookie, list offset */
+ int xfs_attr_inactive(struct xfs_inode *dp);
+-int xfs_attr_list_int_ilocked(struct xfs_attr_list_context *);
+-int xfs_attr_list_int(struct xfs_attr_list_context *);
++int xfs_attr_list_ilocked(struct xfs_attr_list_context *);
++int xfs_attr_list(struct xfs_attr_list_context *);
+ int xfs_inode_hasattr(struct xfs_inode *ip);
+ int xfs_attr_get_ilocked(struct xfs_da_args *args);
+ int xfs_attr_get(struct xfs_da_args *args);
 -- 
 2.26.2
 
