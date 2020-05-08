@@ -2,95 +2,65 @@ Return-Path: <SRS0=4QIy=6W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	PDS_TONAME_EQ_TOLOCAL_SHORT,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BC49C4724C
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 01:15:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78DA8C47247
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 03:31:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C702F21473
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 01:15:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53E9720731
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 03:31:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="IrIVDbgC"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q8zE9c/V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726509AbgEHBPX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 May 2020 21:15:23 -0400
-Received: from bilbo.ozlabs.org ([203.11.71.1]:53109 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726495AbgEHBPX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 7 May 2020 21:15:23 -0400
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        id S1726742AbgEHDbz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 May 2020 23:31:55 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:54995 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726683AbgEHDbz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 23:31:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1588908714;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=7IRdgTfSxIdoGrUtCPwrwd8l78trKkcv7w0J3JkNtbg=;
+        b=Q8zE9c/Vmj5dUbQJy6MD2J7B+OPSMpQxHcKcXEIzUTArz59CjHl0dy5ur2USfuirz+jNMD
+        OhJJHivfzNW9S8bEbdn4XvLL1cFQWYqMeIQElQDz4KFswiaodqoqtLn3ruLQkY3ZqUrENH
+        UXtJDX0p+QOGk/xDy5o9csb/C5/ZjTQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-415-vCD22Cu8PbSZxYp0kf-4GQ-1; Thu, 07 May 2020 23:31:53 -0400
+X-MC-Unique: vCD22Cu8PbSZxYp0kf-4GQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 49JC7D1Hryz9sSm;
-        Fri,  8 May 2020 11:15:19 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1588900520;
-        bh=fYEX5NyTNYeHcsPw1wDJewWpAjGzrt1vBb05SZWzgbI=;
-        h=Date:From:To:Cc:Subject:From;
-        b=IrIVDbgCIcMMMM2DIgco5ga/IcgcGrCWG+tuoEsem8x344k82I9PrYByaPbldzSKl
-         S3Y7DxiBJiYxbRDu+NDe83lURPl2ac4zz7VcGP2bQs696zfboqR/M7j7J3jKt4FA0v
-         7Ou781EZij2lQJayhqFNfbyLAJ5hyDZmB8FjJ86mw2UGKbOL798JnCZ4Aq88BR4MsW
-         zIToY6bSig7WNKEhFTnKtifDWETVmDEtMMaP+DGsrR6rkIZemD9HGbamruOuoovVZ9
-         EaFwIT5MjAVeIgJxeF4ZUgVq22BWJEXpOWtrXpKJvgw2y9QnWkC3dBhWb5Gwp5sKC3
-         gyC8XBwMBkOJQ==
-Date:   Fri, 8 May 2020 11:15:18 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Brian Foster <bfoster@redhat.com>
-Subject: linux-next: build warning after merge of the xfs tree
-Message-ID: <20200508111518.27b22640@canb.auug.org.au>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 26C55107ACCA
+        for <linux-xfs@vger.kernel.org>; Fri,  8 May 2020 03:31:52 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id EFB0799CF
+        for <linux-xfs@vger.kernel.org>; Fri,  8 May 2020 03:31:51 +0000 (UTC)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/2] xfs: fix project quota ENOSPC vs EDQUOT
+Message-ID: <447d7fec-2eff-fa99-cd19-acdf353c80d4@redhat.com>
+Date:   Thu, 7 May 2020 22:31:51 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/JuNqr14l__hu6up0y4v5+l/";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/JuNqr14l__hu6up0y4v5+l/
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Currently when project quota is enabled, group quota will return
+ENOSPC vs EDQUOT.  This is the right error code for project quota
+but not for group quota; this is an old bug left over from when they
+were mutually exclusive.
 
-Hi all,
-
-After merging the xfs tree, today's linux-next build (powerpc
-ppc64_defconfig) produced this warning:
-
-fs/xfs/xfs_buf.c: In function 'xfs_buf_bio_end_io':
-fs/xfs/xfs_buf.c:1292:20: warning: unused variable 'mp' [-Wunused-variable]
- 1292 |  struct xfs_mount *mp =3D bp->b_mount;
-      |                    ^~
-
-Introduced by commit
-
-  7376d7454734 ("xfs: random buffer write failure errortag")
-
-DEBUG is not defined.
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/JuNqr14l__hu6up0y4v5+l/
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl60sqYACgkQAVBC80lX
-0GwV6wgAhEy/mBgmMwF5v3uDI5dR86qgPS8Sks8IKj4BS6Ec7I5R4c0mulwztpAW
-2alPk7MijktAvSZ1Po7RfYv0iNnrgLH7F9S9jC+gkpj281Mb0iE1y3gD6/SWglGv
-M6JXOyyFRu1Lq9wJkQTpa+LIFXoPVW5wJhrrhJQgwzI98YeJLwuiCiR07xl5r7I5
-dY7LcjeSrCZJdT3uo2L6qKcN+YOdTeU/ND06fwZYb8slTYsDSOwhBRDqz7Ry92Ww
-/B3HdcY4jm631u4hz7B5+yEdgnroZwBU0ZBd+yBgs/jyYWIx2frxJFwxmzIfZ7gZ
-9P6t1nWNojv9PCphyvBhgmn7gCib5A==
-=u0J0
------END PGP SIGNATURE-----
-
---Sig_/JuNqr14l__hu6up0y4v5+l/--
