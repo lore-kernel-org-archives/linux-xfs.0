@@ -7,44 +7,43 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7CC7C35280
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 03:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4E26C4724C
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 04:00:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A51A22070B
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 03:38:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A516B20720
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 04:00:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JqdyWFh1"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HxrvvbFm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726661AbgEHDij (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 May 2020 23:38:39 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:25919 "EHLO
+        id S1725287AbgEHEAm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 May 2020 00:00:42 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:47014 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726514AbgEHDij (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 May 2020 23:38:39 -0400
+        with ESMTP id S1725271AbgEHEAl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 May 2020 00:00:41 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1588909117;
+        s=mimecast20190719; t=1588910439;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=PA2qG81TA2mjYcKS3qOpm4GrIHmrL88hL7DfMsW/a4g=;
-        b=JqdyWFh1VvgN8u3FoAFi4oVbVqJYcn8xnMWCa7bmW2jKyY5YGbV41VA4t2TUaLo7nmhwEy
-        ZNWHtbqnDxhCEm9TalQpU8ArznEGYrNL7gN9H7GJnp/e/vAczcPDRt6LCpTv1g9VJ7cRnX
-        mrw4f1X6nZpTypA3nrxgCLcQ0LBS+Cs=
+        bh=YzcWrhRRPmD966PmEUFUF1WbbNr4V8A69/gu4cBZbvc=;
+        b=HxrvvbFm5zoixj8ULKFcAYXbD+XU9pXFs71HTBvxEMzwwMLp3+iBI6wAVuZ1Je+++LLhVl
+        vyrHof5oFhHX3MLxSdAmHwia0D45rlSXAQaiGD0wTTCefeiZPIs9RtCKfo2+Tipdmr7/oE
+        nsah3SQF9xEw+bAhMT0nfTa81avqP+E=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-193-oEDLN0DcPk-299lLLH5kpw-1; Thu, 07 May 2020 23:38:35 -0400
-X-MC-Unique: oEDLN0DcPk-299lLLH5kpw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-311-B7SOIO6zMAW6WvqIXqGQ8w-1; Fri, 08 May 2020 00:00:36 -0400
+X-MC-Unique: B7SOIO6zMAW6WvqIXqGQ8w-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 722B4107ACCA
-        for <linux-xfs@vger.kernel.org>; Fri,  8 May 2020 03:38:34 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B3B5F80B725
+        for <linux-xfs@vger.kernel.org>; Fri,  8 May 2020 04:00:35 +0000 (UTC)
 Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4798F6155F
-        for <linux-xfs@vger.kernel.org>; Fri,  8 May 2020 03:38:34 +0000 (UTC)
-Subject: [PATCH 1/2] xfs: group quota should return EDQUOT when prj quota
- enabled
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2696019167
+        for <linux-xfs@vger.kernel.org>; Fri,  8 May 2020 04:00:35 +0000 (UTC)
+Subject: [PATCH 2/2] xfs: remove XFS_QMOPT_ENOSPC flag
 From:   Eric Sandeen <sandeen@redhat.com>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <447d7fec-2eff-fa99-cd19-acdf353c80d4@redhat.com>
@@ -90,8 +89,8 @@ Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
  XQLj5HUlzt3JSwqSwx+++FFfWFMheG2HzkfXrvTpud5NrJkGGVn+ErXy6pNf6zSicb+bUXe9
  i92UTina2zWaaLEwXspqM338TlFC2JICu8pNt+wHpPCjgy2Ei4u5/4zSYjiA+X1I+V99YJhU
  +FpT2jzfLUoVsP/6WHWmM/tsS79i50G/PsXYzKOHj/0ZQCKOsJM14NMMCC8gkONe4tek
-Message-ID: <cb095532-b72b-6369-7304-3b589568f0fe@redhat.com>
-Date:   Thu, 7 May 2020 22:38:33 -0500
+Message-ID: <11a44fb8-d59d-2e57-73bd-06e216efa5e7@redhat.com>
+Date:   Thu, 7 May 2020 23:00:34 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
@@ -99,39 +98,131 @@ In-Reply-To: <447d7fec-2eff-fa99-cd19-acdf353c80d4@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Long ago, group & project quota were mutually exclusive, and so
-when we turned on XFS_QMOPT_ENOSPC ("return ENOSPC if project quota
-is exceeded") when project quota was enabled, we only needed to
-disable it again for user quota.
+The only place we return -EDQUOT, and therefore need to make a decision
+about returning -ENOSPC for project quota instead, is in xfs_trans_dqresv().
 
-When group & project quota got separated, this got missed, and as a
-result if project quota is enabled and group quota is exceeded, the
-error code returned is incorrectly returned as ENOSPC not EDQUOT.
+So there's no reason to be setting and clearing XFS_QMOPT_ENOSPC at higher
+levels; if xfs_trans_dqresv has failed, test if the dqp we were were handed
+is a project quota and if so, return -ENOSPC instead of EDQUOT.  The
+complexity is just a leftover from when project & group quota were mutually
+exclusive and shared some codepaths.
 
-Fix this by stripping XFS_QMOPT_ENOSPC out of flags for group
-quota when we try to reserve the space.
+The prior patch was the trivial bugfix, this is the slightly more involved
+cleanup.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
+Patch 1 was the trivial bugfix, this is the slightly more involved cleanup.
+
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index b2113b17e53c..56d9dd787e7b 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -100,7 +100,6 @@ typedef uint16_t	xfs_qwarncnt_t;
+ #define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
+ #define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
+ #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
+-#define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
+ 
+ /*
+  * flags to xfs_trans_mod_dquot to indicate which field needs to be
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index c225691fad15..591779aa2fd0 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1808,7 +1808,7 @@ xfs_qm_vop_chown_reserve(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	uint64_t		delblks;
+-	unsigned int		blkflags, prjflags = 0;
++	unsigned int		blkflags;
+ 	struct xfs_dquot	*udq_unres = NULL;
+ 	struct xfs_dquot	*gdq_unres = NULL;
+ 	struct xfs_dquot	*pdq_unres = NULL;
+@@ -1849,7 +1849,6 @@ xfs_qm_vop_chown_reserve(
+ 
+ 	if (XFS_IS_PQUOTA_ON(ip->i_mount) && pdqp &&
+ 	    ip->i_d.di_projid != be32_to_cpu(pdqp->q_core.d_id)) {
+-		prjflags = XFS_QMOPT_ENOSPC;
+ 		pdq_delblks = pdqp;
+ 		if (delblks) {
+ 			ASSERT(ip->i_pdquot);
+@@ -1859,8 +1858,7 @@ xfs_qm_vop_chown_reserve(
+ 
+ 	error = xfs_trans_reserve_quota_bydquots(tp, ip->i_mount,
+ 				udq_delblks, gdq_delblks, pdq_delblks,
+-				ip->i_d.di_nblocks, 1,
+-				flags | blkflags | prjflags);
++				ip->i_d.di_nblocks, 1, flags | blkflags);
+ 	if (error)
+ 		return error;
+ 
+@@ -1878,8 +1876,7 @@ xfs_qm_vop_chown_reserve(
+ 		ASSERT(udq_unres || gdq_unres || pdq_unres);
+ 		error = xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
+ 			    udq_delblks, gdq_delblks, pdq_delblks,
+-			    (xfs_qcnt_t)delblks, 0,
+-			    flags | blkflags | prjflags);
++			    (xfs_qcnt_t)delblks, 0, flags | blkflags);
+ 		if (error)
+ 			return error;
+ 		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
 diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index e4eca607e512..47c6e88c9db6 100644
+index 2c3557a80e69..2c07897a3c37 100644
 --- a/fs/xfs/xfs_trans_dquot.c
 +++ b/fs/xfs/xfs_trans_dquot.c
-@@ -757,7 +757,8 @@ xfs_trans_reserve_quota_bydquots(
+@@ -711,7 +711,7 @@ xfs_trans_dqresv(
+ 
+ error_return:
+ 	xfs_dqunlock(dqp);
+-	if (flags & XFS_QMOPT_ENOSPC)
++	if (XFS_QM_ISPDQ(dqp))
+ 		return -ENOSPC;
+ 	return -EDQUOT;
+ }
+@@ -751,15 +751,13 @@ xfs_trans_reserve_quota_bydquots(
+ 	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
+ 
+ 	if (udqp) {
+-		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos,
+-					(flags & ~XFS_QMOPT_ENOSPC));
++		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos, flags);
+ 		if (error)
+ 			return error;
  	}
  
  	if (gdqp) {
--		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags);
-+		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos,
-+					(flags & ~XFS_QMOPT_ENOSPC));
+-		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos,
+-					(flags & ~XFS_QMOPT_ENOSPC));
++		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags);
  		if (error)
  			goto unwind_usr;
  	}
+@@ -804,16 +802,12 @@ xfs_trans_reserve_quota_nblks(
+ 
+ 	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
+ 		return 0;
+-	if (XFS_IS_PQUOTA_ON(mp))
+-		flags |= XFS_QMOPT_ENOSPC;
+ 
+ 	ASSERT(!xfs_is_quota_inode(&mp->m_sb, ip->i_ino));
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+-	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
+-				XFS_TRANS_DQ_RES_RTBLKS ||
+-	       (flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
+-				XFS_TRANS_DQ_RES_BLKS);
++	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES)) == XFS_TRANS_DQ_RES_RTBLKS ||
++	       (flags & ~(XFS_QMOPT_FORCE_RES)) == XFS_TRANS_DQ_RES_BLKS);
+ 
+ 	/*
+ 	 * Reserve nblks against these dquots, with trans as the mediator.
+
 
