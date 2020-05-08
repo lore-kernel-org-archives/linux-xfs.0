@@ -2,112 +2,160 @@ Return-Path: <SRS0=4QIy=6W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C0C7C38A2A
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 14:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF295C4724C
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 15:05:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6BBA82495A
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 14:28:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BFDF621655
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 15:05:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BWqic2P+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727831AbgEHO2H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 May 2020 10:28:07 -0400
-Received: from sandeen.net ([63.231.237.45]:59664 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726942AbgEHO2G (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 8 May 2020 10:28:06 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726627AbgEHPFY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 May 2020 11:05:24 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:43823 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726767AbgEHPFY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 May 2020 11:05:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1588950323;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=2z4WpSAAM0SVeRJea7jYFa7nWhcBVRwcOr+OMQ6+L/M=;
+        b=BWqic2P+qsRrfPrtOWxNyYQYXMH6LkfwWHAZSPWgJGDEJdy6aly8t2Fvh/dwCGmNYL8WyH
+        tKpfr0nQs702B4EReg+ASKqvFR0ZV8/oXt36EgpSN1GxW2h3TFwXp7M1vl6Yif0eSugSYm
+        hRcHg78Koids8lJuVVU/QD/SrVlyiOE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-247-Np6elmJKNA6P5sP4mN3DRA-1; Fri, 08 May 2020 11:05:19 -0400
+X-MC-Unique: Np6elmJKNA6P5sP4mN3DRA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 6BB8D4D7;
-        Fri,  8 May 2020 09:27:56 -0500 (CDT)
-Subject: Re: [PATCH 1/2] xfs: group quota should return EDQUOT when prj quota
- enabled
-To:     Christoph Hellwig <hch@infradead.org>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <447d7fec-2eff-fa99-cd19-acdf353c80d4@redhat.com>
- <cb095532-b72b-6369-7304-3b589568f0fe@redhat.com>
- <20200508071336.GA26853@infradead.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <e6e82690-3dbd-7777-057e-55d8bb41c47b@sandeen.net>
-Date:   Fri, 8 May 2020 09:28:04 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 320C583DC11;
+        Fri,  8 May 2020 15:05:18 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DA82F60F8A;
+        Fri,  8 May 2020 15:05:17 +0000 (UTC)
+Date:   Fri, 8 May 2020 11:05:16 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/12] xfs: handle unallocated inodes in
+ xfs_inode_from_disk
+Message-ID: <20200508150516.GE27577@bfoster>
+References: <20200508063423.482370-1-hch@lst.de>
+ <20200508063423.482370-5-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20200508071336.GA26853@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200508063423.482370-5-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/8/20 2:13 AM, Christoph Hellwig wrote:
-> On Thu, May 07, 2020 at 10:38:33PM -0500, Eric Sandeen wrote:
->> Long ago, group & project quota were mutually exclusive, and so
->> when we turned on XFS_QMOPT_ENOSPC ("return ENOSPC if project quota
->> is exceeded") when project quota was enabled, we only needed to
->> disable it again for user quota.
->>
->> When group & project quota got separated, this got missed, and as a
->> result if project quota is enabled and group quota is exceeded, the
->> error code returned is incorrectly returned as ENOSPC not EDQUOT.
->>
->> Fix this by stripping XFS_QMOPT_ENOSPC out of flags for group
->> quota when we try to reserve the space.
+On Fri, May 08, 2020 at 08:34:15AM +0200, Christoph Hellwig wrote:
+> Handle inodes with a 0 di_mode in xfs_inode_from_disk, instead of partially
+> duplicating inode reading in xfs_iread.
 > 
-> Looks weird, but given that it has historical precedence, and you fix
-> all this mess up in the next patch:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_inode_buf.c | 50 ++++++++++-------------------------
+>  1 file changed, 14 insertions(+), 36 deletions(-)
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index abdecc80579e3..686a026b5f6ed 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -192,6 +192,17 @@ xfs_inode_from_disk(
+>  	ASSERT(ip->i_cowfp == NULL);
+>  	ASSERT(ip->i_afp == NULL);
+>  
+> +	/*
+> +	 * First get the permanent information that is needed to allocate an
+> +	 * inode. If the inode is unused, mode is zero and we shouldn't mess
+> +	 * with the unitialized part of it.
+> +	 */
+> +	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+> +	inode->i_generation = be32_to_cpu(from->di_gen);
+> +	inode->i_mode = be16_to_cpu(from->di_mode);
+> +	if (!inode->i_mode)
+> +		return 0;
+> +
+>  	/*
+>  	 * Convert v1 inodes immediately to v2 inode format as this is the
+>  	 * minimum inode version format we support in the rest of the code.
+> @@ -209,7 +220,6 @@ xfs_inode_from_disk(
+>  	to->di_format = from->di_format;
+>  	i_uid_write(inode, be32_to_cpu(from->di_uid));
+>  	i_gid_write(inode, be32_to_cpu(from->di_gid));
+> -	to->di_flushiter = be16_to_cpu(from->di_flushiter);
+>  
+>  	/*
+>  	 * Time is signed, so need to convert to signed 32 bit before
+> @@ -223,8 +233,6 @@ xfs_inode_from_disk(
+>  	inode->i_mtime.tv_nsec = (int)be32_to_cpu(from->di_mtime.t_nsec);
+>  	inode->i_ctime.tv_sec = (int)be32_to_cpu(from->di_ctime.t_sec);
+>  	inode->i_ctime.tv_nsec = (int)be32_to_cpu(from->di_ctime.t_nsec);
+> -	inode->i_generation = be32_to_cpu(from->di_gen);
+> -	inode->i_mode = be16_to_cpu(from->di_mode);
+>  
+>  	to->di_size = be64_to_cpu(from->di_size);
+>  	to->di_nblocks = be64_to_cpu(from->di_nblocks);
+> @@ -653,39 +661,9 @@ xfs_iread(
+>  		goto out_brelse;
+>  	}
+>  
+> -	/*
+> -	 * If the on-disk inode is already linked to a directory
+> -	 * entry, copy all of the inode into the in-core inode.
+> -	 * xfs_iformat_fork() handles copying in the inode format
+> -	 * specific information.
+> -	 * Otherwise, just get the truly permanent information.
+> -	 */
+> -	if (dip->di_mode) {
+> -		error = xfs_inode_from_disk(ip, dip);
+> -		if (error)  {
+> -#ifdef DEBUG
+> -			xfs_alert(mp, "%s: xfs_iformat() returned error %d",
+> -				__func__, error);
+> -#endif /* DEBUG */
+> -			goto out_brelse;
+> -		}
+> -	} else {
+> -		/*
+> -		 * Partial initialisation of the in-core inode. Just the bits
+> -		 * that xfs_ialloc won't overwrite or relies on being correct.
+> -		 */
+> -		VFS_I(ip)->i_generation = be32_to_cpu(dip->di_gen);
+> -		ip->i_d.di_flushiter = be16_to_cpu(dip->di_flushiter);
+> -
+> -		/*
+> -		 * Make sure to pull in the mode here as well in
+> -		 * case the inode is released without being used.
+> -		 * This ensures that xfs_inactive() will see that
+> -		 * the inode is already free and not try to mess
+> -		 * with the uninitialized part of it.
+> -		 */
+> -		VFS_I(ip)->i_mode = 0;
+> -	}
+> +	error = xfs_inode_from_disk(ip, dip);
+> +	if (error)
+> +		goto out_brelse;
+>  
+>  	ip->i_delayed_blks = 0;
+>  
+> -- 
+> 2.26.2
+> 
 
-Thanks.  I could roll it all up into one patch if that's better, this
-seemed half weird / half more-obvious....
-
--Eric
