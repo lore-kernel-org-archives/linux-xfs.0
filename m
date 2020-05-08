@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EB6DC47247
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 06:34:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AA8FC54E7E
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 06:34:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29F2A207DD
-	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 06:34:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C5BE20870
+	for <linux-xfs@archiver.kernel.org>; Fri,  8 May 2020 06:34:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VNhQDVwD"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QDZL/5Zs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727121AbgEHGet (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 8 May 2020 02:34:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58616 "EHLO
+        id S1727772AbgEHGey (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 8 May 2020 02:34:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58634 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727119AbgEHGet (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 May 2020 02:34:49 -0400
+        by vger.kernel.org with ESMTP id S1727768AbgEHGey (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 8 May 2020 02:34:54 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E74BC05BD43
-        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 23:34:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53F95C05BD43
+        for <linux-xfs@vger.kernel.org>; Thu,  7 May 2020 23:34:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
         Reply-To:Cc:Content-Type:Content-ID:Content-Description;
-        bh=gGJpt2ZYeo1MSVzR5v4GxOQPB2Jh2rMEB0EXSsPOlh4=; b=VNhQDVwDAmVm+K2jRjCnS2pgm+
-        WwsAEqQHr0v2/EwiAHZVrFyHClgNQs2/dBtHT6OhZErmxP11V3sFf/SU0DWUsst+O3PwWnHMaL47p
-        pVk+Hf/q+nENRKgCWGsRT7Q6xR938LLcdGwDpyHX78hR5aOrKgPnTHkRfNg1f5AzKQUBM5Ak4N+uI
-        svrvAxoCz+VjizZTePCRwwqTBdXvfJsTFcEZWuXnlknqjpH3+jNOiuk+HACIJuYLbf5AfTavRR8Pz
-        ZenjxQ7yBFjP7KSEu/dJvhFl7cpK0hFoSUlmWWG9hbDYco8R5wQHPzCpBiIe5WnF6PwzLuFrTvuNa
-        vUsRbe1w==;
+        bh=sDwXDTLufmWpa/ZSfyKKEd+1LRDyaH1VUuMhBDBwN1o=; b=QDZL/5ZsYnxuwDYk7FUnbvQ/X8
+        G120lHhJiuSLsF1fX3DGnSCGKuCucqp9K6+sdJCgk0MkH1tR1M3gK5HJyEp/MxNZ8MW7WagBnGse7
+        O8xGWIG8x++/j34a1lL0tS9sm3Z/BwABsD2tHIOSD9oGGcVJM7rtnMrllAl8SdMQvg2+QXSXuodkd
+        dNxGi78IMzJGbNN2dLr0/h81Uezx9SMSBtMzMEldEro9tOfYuJQZnGa7Cqt4+TiHPGcnafpeiAqOD
+        /3kxapzC3oVRTOfzQHfzBUGiQXHhXieDFit461CBXWgS96cwW5cRQIYfUjqkJ2bvwyboX0OqBp5F0
+        G7z6kE3Q==;
 Received: from [2001:4bb8:180:9d3f:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jWwav-0002wO-3i
-        for linux-xfs@vger.kernel.org; Fri, 08 May 2020 06:34:49 +0000
+        id 1jWwaz-0002wz-SD
+        for linux-xfs@vger.kernel.org; Fri, 08 May 2020 06:34:54 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 10/12] xfs: improve local fork verification
-Date:   Fri,  8 May 2020 08:34:21 +0200
-Message-Id: <20200508063423.482370-11-hch@lst.de>
+Subject: [PATCH 12/12] xfs: remove the NULL fork handling in xfs_bmapi_read
+Date:   Fri,  8 May 2020 08:34:23 +0200
+Message-Id: <20200508063423.482370-13-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200508063423.482370-1-hch@lst.de>
 References: <20200508063423.482370-1-hch@lst.de>
@@ -54,148 +54,73 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Call the data/attr local fork verifies as soon as we are ready for them.
-This keeps them close to the code setting up the forks, and avoids a
-few branches later on.  Also open code xfs_inode_verify_forks in the
-only remaining caller.
+Now that we fully verify the inode forks before they are added to the
+inode cache, the crash reported in
+
+  https://bugzilla.kernel.org/show_bug.cgi?id=204031
+
+can't happen anymore, as we'll never let an inode that has inconsistent
+nextents counts vs the presence of an in-core attr fork leak into the
+inactivate code path.  So remove the work around to try to handle the
+case, and just return an error and warn if the fork is not present.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_inode_fork.c |  8 +++++++-
- fs/xfs/xfs_icache.c            |  6 ------
- fs/xfs/xfs_inode.c             | 28 +++++++++-------------------
- fs/xfs/xfs_inode.h             |  2 --
- fs/xfs/xfs_log_recover.c       |  5 -----
- 5 files changed, 16 insertions(+), 33 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c | 22 +++++-----------------
+ 1 file changed, 5 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index 401921975d75b..2fe325e38fd88 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -227,6 +227,7 @@ xfs_iformat_data_fork(
- 	struct xfs_dinode	*dip)
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 76be1a18e2442..34518a6dc7376 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3891,7 +3891,8 @@ xfs_bmapi_read(
+ 	int			flags)
  {
- 	struct inode		*inode = VFS_I(ip);
-+	int			error;
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_ifork	*ifp;
++	int			whichfork = xfs_bmapi_whichfork(flags);
++	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	struct xfs_bmbt_irec	got;
+ 	xfs_fileoff_t		obno;
+ 	xfs_fileoff_t		end;
+@@ -3899,12 +3900,14 @@ xfs_bmapi_read(
+ 	int			error;
+ 	bool			eof = false;
+ 	int			n = 0;
+-	int			whichfork = xfs_bmapi_whichfork(flags);
  
- 	switch (inode->i_mode & S_IFMT) {
- 	case S_IFIFO:
-@@ -241,8 +242,11 @@ xfs_iformat_data_fork(
- 	case S_IFDIR:
- 		switch (dip->di_format) {
- 		case XFS_DINODE_FMT_LOCAL:
--			return xfs_iformat_local(ip, dip, XFS_DATA_FORK,
-+			error = xfs_iformat_local(ip, dip, XFS_DATA_FORK,
- 					be64_to_cpu(dip->di_size));
-+			if (!error)
-+				error = xfs_ifork_verify_local_data(ip);
-+			return error;
- 		case XFS_DINODE_FMT_EXTENTS:
- 			return xfs_iformat_extents(ip, dip, XFS_DATA_FORK);
- 		case XFS_DINODE_FMT_BTREE:
-@@ -282,6 +286,8 @@ xfs_iformat_attr_fork(
- 	case XFS_DINODE_FMT_LOCAL:
- 		error = xfs_iformat_local(ip, dip, XFS_ATTR_FORK,
- 				xfs_dfork_attr_shortform_size(dip));
-+		if (!error)
-+			error = xfs_ifork_verify_local_attr(ip);
- 		break;
- 	case XFS_DINODE_FMT_EXTENTS:
- 		error = xfs_iformat_extents(ip, dip, XFS_ATTR_FORK);
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index af5748f5d9271..5a3a520b95288 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -543,14 +543,8 @@ xfs_iget_cache_miss(
- 			goto out_destroy;
- 	}
+ 	ASSERT(*nmap >= 1);
+ 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_ENTIRE)));
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
  
--	if (!xfs_inode_verify_forks(ip)) {
--		error = -EFSCORRUPTED;
--		goto out_destroy;
++	if (WARN_ON_ONCE(!ifp))
++		return -EFSCORRUPTED;
++
+ 	if (XFS_IS_CORRUPT(mp, !xfs_ifork_has_extents(ip, whichfork)) ||
+ 	    XFS_TEST_ERROR(false, mp, XFS_ERRTAG_BMAPIFORMAT)) {
+ 		return -EFSCORRUPTED;
+@@ -3915,21 +3918,6 @@ xfs_bmapi_read(
+ 
+ 	XFS_STATS_INC(mp, xs_blk_mapr);
+ 
+-	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	if (!ifp) {
+-		/*
+-		 * A missing attr ifork implies that the inode says we're in
+-		 * extents or btree format but failed to pass the inode fork
+-		 * verifier while trying to load it.  Treat that as a file
+-		 * corruption too.
+-		 */
+-#ifdef DEBUG
+-		xfs_alert(mp, "%s: inode %llu missing fork %d",
+-				__func__, ip->i_ino, whichfork);
+-#endif /* DEBUG */
+-		return -EFSCORRUPTED;
 -	}
 -
- 	trace_xfs_iget_miss(ip);
- 
--
- 	/*
- 	 * Check the inode free state is valid. This also detects lookup
- 	 * racing with unlinks.
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index c8abdefe00377..549ff468b7b60 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3707,23 +3707,6 @@ xfs_iflush(
- 	return error;
- }
- 
--/*
-- * If there are inline format data / attr forks attached to this inode,
-- * make sure they're not corrupt.
-- */
--bool
--xfs_inode_verify_forks(
--	struct xfs_inode	*ip)
--{
--	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
--	    xfs_ifork_verify_local_data(ip))
--		return false;
--	if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL &&
--	    xfs_ifork_verify_local_attr(ip))
--		return false;
--	return true;
--}
--
- STATIC int
- xfs_iflush_int(
- 	struct xfs_inode	*ip,
-@@ -3808,8 +3791,15 @@ xfs_iflush_int(
- 	if (!xfs_sb_version_has_v3inode(&mp->m_sb))
- 		ip->i_d.di_flushiter++;
- 
--	/* Check the inline fork data before we write out. */
--	if (!xfs_inode_verify_forks(ip))
-+	/*
-+	 * If there are inline format data / attr forks attached to this inode,
-+	 * make sure they are not corrupt.
-+	 */
-+	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL &&
-+	    xfs_ifork_verify_local_data(ip))
-+		goto flush_out;
-+	if (ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL &&
-+	    xfs_ifork_verify_local_attr(ip))
- 		goto flush_out;
- 
- 	/*
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 83073c883fbf9..ff846197941e4 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -498,8 +498,6 @@ extern struct kmem_zone	*xfs_inode_zone;
- /* The default CoW extent size hint. */
- #define XFS_DEFAULT_COWEXTSZ_HINT 32
- 
--bool xfs_inode_verify_forks(struct xfs_inode *ip);
--
- int xfs_iunlink_init(struct xfs_perag *pag);
- void xfs_iunlink_destroy(struct xfs_perag *pag);
- 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 3960caf51c9f7..87b940cb760db 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2878,11 +2878,6 @@ xfs_recover_inode_owner_change(
- 	if (error)
- 		goto out_free_ip;
- 
--	if (!xfs_inode_verify_forks(ip)) {
--		error = -EFSCORRUPTED;
--		goto out_free_ip;
--	}
--
- 	if (in_f->ilf_fields & XFS_ILOG_DOWNER) {
- 		ASSERT(in_f->ilf_fields & XFS_ILOG_DBROOT);
- 		error = xfs_bmbt_change_owner(NULL, ip, XFS_DATA_FORK,
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+ 		error = xfs_iread_extents(NULL, ip, whichfork);
+ 		if (error)
 -- 
 2.26.2
 
