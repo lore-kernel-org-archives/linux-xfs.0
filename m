@@ -2,96 +2,99 @@ Return-Path: <SRS0=gwgl=6X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2A03C28CBC
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 14:59:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 145FDC47257
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:29:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6AB012083B
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 14:59:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E58DE2063A
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:29:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Q+3Up5Hj"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sRYqb3B5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728005AbgEIO75 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 May 2020 10:59:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50598 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726782AbgEIO75 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 10:59:57 -0400
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DFE2C061A0C
-        for <linux-xfs@vger.kernel.org>; Sat,  9 May 2020 07:59:57 -0700 (PDT)
-Received: by mail-pl1-x641.google.com with SMTP id b12so72210plz.13
-        for <linux-xfs@vger.kernel.org>; Sat, 09 May 2020 07:59:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=i+tAnuK5SkoNquAQL0UA5l0BzJYq4XRNXMVdYvicKqA=;
-        b=Q+3Up5HjyCsglpPw7uL7FJrgvk1GWP+qM8tor+fOh9hMf8QF25owRMezPeR5Orb6mO
-         iILLWT3hTDLsZTY1TybejNw+PMWloGu9ZoYqrAuIpaOvCAzktE3PxXdbtUROnYZXaoXP
-         StWYZlUnIwz2asfvsKLUPPA1u5B+jrYNe/cL9IPUS6FGl38upBVsiZL89NyUy2NyeCSa
-         TrKaSRYjMWcxpOUfsKv9+5uExKb7ugR7EggUMheoA+oMxaB5SRm7Z2j6brCOv59OJmw8
-         DtOsgn8hOFCnGTVlaJvQAB+9x4KWIWkz5UpPhIQZDeehirsFsUC8ChgB7DaQsYNem4zv
-         6Fmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=i+tAnuK5SkoNquAQL0UA5l0BzJYq4XRNXMVdYvicKqA=;
-        b=YL9dT+sSKUh6bhtKOf2gr+F2QfIJsQsRBm0mZQ17l43os/uRqF6mS4V+scCaH9rQwp
-         3Bm2M5Qqj/Vpv7Qcj8KOWR/nO4aVvEoeoONK9CsFQRoBBBJnpHuX1409KFxnKJbTi6by
-         R0IcgqwLXZeITZv674Lo5GfYs5nkMOj1jfeO+be3RUwaaqNbBTdsqQk0bBth39eBXER6
-         psKoe5UTCJBZ6Rq3gcpaAZGU8oNFfkJZNpIfAjEeobySciHgGPCT+POP1whk0AMmBo/4
-         wToXVGm5Dtt5q7G6vhbdcYLiwjlb6WHhkShc4EFjQfsG1VIx/DeeYOha7CgcSX3dULWE
-         Tn0g==
-X-Gm-Message-State: AGi0PuYuG6AOH9gyA5LtNdRRieYvzpM3wuUuQvEZWyQnFjnHS2ZBrinO
-        pP++GWqF+OqU0k28QkhMMr5qUAo=
-X-Google-Smtp-Source: APiQypIcufQRHu4zUaP85Qa6T/8Grj9K41f6E2gDToAd2uuKvkeJ6xclzmqXdEve77XAJGkY5C/Yrg==
-X-Received: by 2002:a17:902:9f8a:: with SMTP id g10mr7323481plq.233.1589036396457;
-        Sat, 09 May 2020 07:59:56 -0700 (PDT)
-Received: from he-cluster.localdomain ([67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id a12sm4794833pfr.28.2020.05.09.07.59.55
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 09 May 2020 07:59:55 -0700 (PDT)
-From:   xiakaixu1987@gmail.com
-X-Google-Original-From: kaixuxia@tencent.com
-To:     linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH] xfs: fix the warning message in xfs_validate_sb_common()
-Date:   Sat,  9 May 2020 22:59:47 +0800
-Message-Id: <1589036387-15975-1-git-send-email-kaixuxia@tencent.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S1728410AbgEIQ3h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 May 2020 12:29:37 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37000 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728371AbgEIQ3g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 12:29:36 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049GRVrm196417;
+        Sat, 9 May 2020 16:29:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=rxD9/4j7Ipy8lenjDhJPfCKH/e9LW14iqgbviXPW8Fc=;
+ b=sRYqb3B58UtyBk97XwrHnvKxQoYl5yvrQ8TejmSrmsxlWHXR9LfsV/mAGDFYydCHdjBo
+ QAEB7AFLSR4e3WO/cYEU3zQO10xo+DRSSLqfKCZHnV316mWeevPiR0k/8tLxyCt+bADN
+ foHlbDP5DV4Upt0nV33K0e6wRNMNQUGsbN1xJKNj9BDRkElQ60XucPsfsvuevsuGDXdx
+ VI7S7xsuL3OcvJu6Mda/7TSpBBrwn51L0MQdyBZV2bql7VC09wlkrSEfF0IjyW1pU/pt
+ 8ybngXRQBApFmXLBB6jhTHiV4NIVFFzH2vPO7Hqke+Fc6xMqCuobCpM6LJ0TQB/QGe3d og== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 30wmfm14y3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 09 May 2020 16:29:33 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049GRb2p132458;
+        Sat, 9 May 2020 16:29:33 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 30wwxb5gdy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 09 May 2020 16:29:32 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 049GTV9k020156;
+        Sat, 9 May 2020 16:29:31 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 09 May 2020 09:29:31 -0700
+Subject: [PATCH 0/3] xfsprogs: random fixes
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     sandeen@sandeen.net, darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Date:   Sat, 09 May 2020 09:29:31 -0700
+Message-ID: <158904177147.982835.3876574696663645345.stgit@magnolia>
+User-Agent: StGit/0.19
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9616 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ suspectscore=0 bulkscore=0 phishscore=0 mlxscore=0 spamscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005090141
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9616 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxlogscore=999
+ suspectscore=0 clxscore=1015 lowpriorityscore=0 bulkscore=0
+ impostorscore=0 mlxscore=0 priorityscore=1501 adultscore=0 spamscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005090140
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kaixu Xia <kaixuxia@tencent.com>
+Hi all,
 
-The warning message should be PQUOTA/GQUOTA_{ENFD|CHKD} can't along
-with superblock earlier than version 5, so fix it.
+This series consists of fixes for crashes that I found while messing
+around with libedit, new versions of ubuntu, and trying to fix all the
+things that repair didn't catch but check did.
 
-Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
----
- fs/xfs/libxfs/xfs_sb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index c526c5e5ab76..4df87546bd40 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -243,7 +243,7 @@ xfs_validate_sb_common(
- 	} else if (sbp->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
- 				XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD)) {
- 			xfs_notice(mp,
--"Superblock earlier than Version 5 has XFS_[PQ]UOTA_{ENFD|CHKD} bits.");
-+"Superblock earlier than Version 5 has XFS_{P|G}QUOTA_{ENFD|CHKD} bits.");
- 			return -EFSCORRUPTED;
- 	}
- 
--- 
-2.20.0
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
