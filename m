@@ -6,30 +6,29 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F6A4C28CBC
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB103C28CBC
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E39B120A8B
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:32:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D387E21582
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:47:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727863AbgEIRcD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 May 2020 13:32:03 -0400
-Received: from sandeen.net ([63.231.237.45]:58766 "EHLO sandeen.net"
+        id S1728162AbgEIRrY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 May 2020 13:47:24 -0400
+Received: from sandeen.net ([63.231.237.45]:59576 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726214AbgEIRcD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 9 May 2020 13:32:03 -0400
+        id S1726214AbgEIRrY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 May 2020 13:47:24 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id BC69B4D7;
-        Sat,  9 May 2020 12:31:51 -0500 (CDT)
-Subject: Re: [PATCH 3/8] db: add a comment to agfl_crc_flds
-To:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
+        by sandeen.net (Postfix) with ESMTPSA id 38DAB4D7;
+        Sat,  9 May 2020 12:47:12 -0500 (CDT)
+Subject: Re: [PATCH 7/8] repair: cleanup build_agf_agfl
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
 References: <20200509170125.952508-1-hch@lst.de>
- <20200509170125.952508-4-hch@lst.de> <20200509170712.GQ6714@magnolia>
- <20200509171011.GA31656@lst.de>
+ <20200509170125.952508-8-hch@lst.de> <20200509171106.GU6714@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -73,47 +72,76 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <d3683956-96b8-1308-9e66-2db56432da17@sandeen.net>
-Date:   Sat, 9 May 2020 12:32:01 -0500
+Message-ID: <6f0e2ab2-2ac5-dd0e-fb88-beecba3ffda4@sandeen.net>
+Date:   Sat, 9 May 2020 12:47:22 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200509171011.GA31656@lst.de>
+In-Reply-To: <20200509171106.GU6714@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/9/20 12:10 PM, Christoph Hellwig wrote:
-> On Sat, May 09, 2020 at 10:07:12AM -0700, Darrick J. Wong wrote:
->> On Sat, May 09, 2020 at 07:01:20PM +0200, Christoph Hellwig wrote:
->>> Explain the bno field that is not actually part of the structure
->>> anymore.
->>>
->>> Signed-off-by: Christoph Hellwig <hch@lst.de>
->>> ---
->>>  db/agfl.c | 1 +
->>>  1 file changed, 1 insertion(+)
->>>
->>> diff --git a/db/agfl.c b/db/agfl.c
->>> index 45e4d6f9..ce7a2548 100644
->>> --- a/db/agfl.c
->>> +++ b/db/agfl.c
->>> @@ -47,6 +47,7 @@ const field_t	agfl_crc_flds[] = {
->>>  	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
->>>  	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
->>>  	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
->>> +	/* the bno array really is behind the actual structure */
+On 5/9/20 12:11 PM, Darrick J. Wong wrote:
+> On Sat, May 09, 2020 at 07:01:24PM +0200, Christoph Hellwig wrote:
+>> No need to have two variables for the AGFL block number array.
 >>
->> Er... the bno array comes /after/ the actual structure, right?
+>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>> ---
+>>  repair/phase5.c | 7 ++-----
+>>  1 file changed, 2 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/repair/phase5.c b/repair/phase5.c
+>> index 17b57448..677297fe 100644
+>> --- a/repair/phase5.c
+>> +++ b/repair/phase5.c
+>> @@ -2149,18 +2149,15 @@ build_agf_agfl(
+>>  
+>>  	/* setting to 0xff results in initialisation to NULLAGBLOCK */
+>>  	memset(agfl, 0xff, mp->m_sb.sb_sectsize);
 > 
-> Yes.  That's what I mean, but after seems to be less confusing.
-so:
+> /me wonders why this memset isn't sufficient to null out the freelist,
+> but a better cleanup would be to rip all this out in favor of adapting
+> the nearly identical functions in xfs_ag.c.
 
-/* the bno array is after the actual structure */
+probably because xfs_agflblock_init is
 
-right?  I can just do that on merge.
+a) static and
+b) expects a aghdr_init_data *id arg which isn't too convenient here I guess
 
+Might be nice to factor xfs_agflblock_init to call a helper that this and
+build_agf_agfl can both use though, I'll give that a whirl.
+
+-Eric
+
+> In the meantime we don't need duplicate variables, and:
+> 
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> --D
+> 
+>> +	freelist = xfs_buf_to_agfl_bno(agfl_buf);
+>>  	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+>> -		__be32 *agfl_bno = xfs_buf_to_agfl_bno(agfl_buf);
+>> -
+>>  		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+>>  		agfl->agfl_seqno = cpu_to_be32(agno);
+>>  		platform_uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+>>  		for (i = 0; i < libxfs_agfl_size(mp); i++)
+>> -			agfl_bno[i] = cpu_to_be32(NULLAGBLOCK);
+>> +			freelist[i] = cpu_to_be32(NULLAGBLOCK);
+>>  	}
+>>  
+>> -	freelist = xfs_buf_to_agfl_bno(agfl_buf);
+>> -
+>>  	/*
+>>  	 * do we have left-over blocks in the btree cursors that should
+>>  	 * be used to fill the AGFL?
+>> -- 
+>> 2.26.2
+>>
+> 
