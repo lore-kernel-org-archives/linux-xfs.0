@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC743C28CBC
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:06:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A663BC28CBC
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:06:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C89FE2184D
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:06:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7ADD52184D
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:06:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eDacr80B"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="acuYWQbV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727940AbgEIRGd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 May 2020 13:06:33 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:44842 "EHLO
+        id S1728123AbgEIRGm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 May 2020 13:06:42 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:44926 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726013AbgEIRGd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 13:06:33 -0400
+        with ESMTP id S1726013AbgEIRGl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 13:06:41 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049H4DMB128255;
-        Sat, 9 May 2020 17:06:26 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049H4vAT128631;
+        Sat, 9 May 2020 17:06:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=Q1NdSwN/xaC+ji7BTDfYCCYcpI4VfbvL7pK3NKOvdYk=;
- b=eDacr80Bck1HRwY7gxYGUDQB5qkNUFfrptYR32OWaL1asMDbX3hXN/33O0a+D/9uCH1o
- 3s3PARVAOF4Vd/yCrqumVuEVvQgU1abua6LkawN5qlluzZ7r3ncILZktDLNVJCLGHmkI
- DtduXLI6mTmvEaFZo1815mKkjdlPbztrI00JjqvBzd9R8VuvK6A/BTTxpZBPvw+/+zKh
- xLtLNMpV/c5wn1LxhjZm/WquNjkr2J8mhIyTfEdOCzRhEjkRfDEQqKsAUQ4jPVUKq2jk
- tJSP81FaB3pXAJ/LCZNyLaexz+HK/4O1oPoC54cnXXIACnKokR00dKRPwA+9z8SN2SLm /w== 
+ bh=GGIVvj5C3IZRhOQqk/hI8bG3pSgyY7FLATCgBxXMhyg=;
+ b=acuYWQbVlTBusL9JqhSzS32ZfSm/ga0PzLOrwml4JHUYOlYp8gkcIRJ0xErJY0y+p9ry
+ 7eYTVCnreGQ/1VkiIwrtgcqg3F8kPNZrJ3l/GX3qY/xjQhBnJk3D76cUPsY8TEesrIIM
+ uc4k6E6tUic2AgoukDv5tMDSydpE4Oexb3kqrRXBGr9bRJoDP/FHZJPmkYyt8KkdmvnR
+ A3Lpzcdwh6yaMJKpOKGg5e7oGe39BSnaULh5bf2dAQYsi9iIVnAzCbmnHbAXcmzEz/lO
+ oXfFnXgE0bWqdlWZ4nnkFsggCMrSr0lnwAkPui8KgeLPlux+hvd9NVpAbx6G5huziNOL Vg== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 30x0gh80ev-1
+        by userp2130.oracle.com with ESMTP id 30x0gh80f0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 09 May 2020 17:06:26 +0000
+        Sat, 09 May 2020 17:06:37 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049H5W5X162603;
-        Sat, 9 May 2020 17:06:25 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 30wx186aq4-1
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049H5IdQ162098;
+        Sat, 9 May 2020 17:06:37 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 30wx186ay0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 09 May 2020 17:06:25 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 049H6JvZ003518;
-        Sat, 9 May 2020 17:06:19 GMT
+        Sat, 09 May 2020 17:06:36 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 049H6aeP016471;
+        Sat, 9 May 2020 17:06:36 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 09 May 2020 10:06:19 -0700
-Date:   Sat, 9 May 2020 10:06:17 -0700
+        with ESMTP ; Sat, 09 May 2020 10:06:35 -0700
+Date:   Sat, 9 May 2020 10:06:34 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/8] libxfs: use tabs instead of spaces in div_u64
-Message-ID: <20200509170617.GO6714@magnolia>
+Subject: Re: [PATCH 2/8] db: fix a comment in scan_freelist
+Message-ID: <20200509170634.GP6714@magnolia>
 References: <20200509170125.952508-1-hch@lst.de>
- <20200509170125.952508-2-hch@lst.de>
+ <20200509170125.952508-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200509170125.952508-2-hch@lst.de>
+In-Reply-To: <20200509170125.952508-3-hch@lst.de>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9616 signatures=668687
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=1 phishscore=0
  mlxscore=0 adultscore=0 spamscore=0 malwarescore=0 mlxlogscore=999
@@ -78,33 +78,33 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 09, 2020 at 07:01:18PM +0200, Christoph Hellwig wrote:
+On Sat, May 09, 2020 at 07:01:19PM +0200, Christoph Hellwig wrote:
+> XFS_BUF_TO_AGFL_BNO has been renamed to open coded xfs_buf_to_agfl_bno.
+> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok,
+LGTM
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  libxfs/libxfs_priv.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  db/check.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index 8d717d91..5688284d 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -263,8 +263,8 @@ div_u64_rem(uint64_t dividend, uint32_t divisor, uint32_t *remainder)
->   */
->  static inline uint64_t div_u64(uint64_t dividend, uint32_t divisor)
->  {
-> -        uint32_t remainder;
-> -        return div_u64_rem(dividend, divisor, &remainder);
-> +	uint32_t remainder;
-> +	return div_u64_rem(dividend, divisor, &remainder);
->  }
+> diff --git a/db/check.c b/db/check.c
+> index c9bafa8e..09f8f6c9 100644
+> --- a/db/check.c
+> +++ b/db/check.c
+> @@ -4075,7 +4075,7 @@ scan_freelist(
+>  		return;
+>  	}
 >  
->  /**
+> -	/* open coded XFS_BUF_TO_AGFL_BNO */
+> +	/* open coded xfs_buf_to_agfl_bno */
+>  	state.count = 0;
+>  	state.agno = seqno;
+>  	libxfs_agfl_walk(mp, agf, iocur_top->bp, scan_agfl, &state);
 > -- 
 > 2.26.2
 > 
