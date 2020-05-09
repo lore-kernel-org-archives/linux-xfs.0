@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 074C9C28CBC
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:30:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3327C28CBC
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:31:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDB1E20735
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:30:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE8032063A
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:31:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AGblrWiQ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eHaJAYUq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728451AbgEIQa6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 May 2020 12:30:58 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:37648 "EHLO
+        id S1728454AbgEIQbF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 May 2020 12:31:05 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:37762 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728371AbgEIQa6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 12:30:58 -0400
+        with ESMTP id S1728371AbgEIQbF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 12:31:05 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049GO5VA064951;
-        Sat, 9 May 2020 16:30:56 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049GPSev065598;
+        Sat, 9 May 2020 16:31:03 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=rAj1LsSlIP0qV7s64OtGwWZqQvR8hJiJ+de/nhpE7LM=;
- b=AGblrWiQrp9i5VbHKWOcyV9Y/4QjMhUhiFpK97UY0TryPFOolyOPgQsNUIUuqSn/uQ1k
- Lru5PqO6pEtmYa9XscahU4hqB5ZZPb3XTr6Loj8dFcWNpnfKct1xTDXTLe6082xRC2sZ
- OYhl2eYtP/OLsTtHCoSbJkB8O1YNoT6jovCORdrDSz+nhQ+PYtx511UeJ3zYXK5m9327
- irqRzjmA5K3IaJIknjEBuh6diVq3TUkx09QfWCZpYy4KZyG8tisP0NKUWBkwQSamTpTM
- BE8k64OFKntO6Wc41VrqIlHWxm96YK3ZiBc7BWftEAuCnGRhCGdlMlzKTw9BvJp51QGP 5w== 
+ bh=9/8p2pSeNLN8oDv4pZtCefxvMMy0j4OvXk/HXcJH2lk=;
+ b=eHaJAYUqJcpRCb4Tl8rvyv9JRLQYOCNKaJ6rQ7GL0HFuNcCDQod+kH+TrgYNE8tOsarg
+ tRATmEEsprIncIu0gzGSrbF5cwvzue2KbagJRxB3YpvOd8CvF1EtaKxPK1saD37e1FiU
+ xUjaJ+rD8Xop6VUECLDAkSgmQM4XQShWNW/yqli5myuIWBdkQy+Z2Zr6aCZDidHRByWd
+ PrM9H++fnqNMyOPuSybx0fRIOTU0qCZFzTIqQ66A9Fz4UFt+6Zjf+SE9qt5QUoQl3HFb
+ WhwXrP3zlgA1uHiJB6Plh+6X2QrcHdI5gP7ez91s2xmsKb6Mm5gTAudPZShBKVqvP5C9 aQ== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 30wx8n86nn-1
+        by userp2120.oracle.com with ESMTP id 30wx8n86pa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 09 May 2020 16:30:56 +0000
+        Sat, 09 May 2020 16:31:03 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049GRdQl132594;
-        Sat, 9 May 2020 16:30:55 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 30wwxb5hrk-1
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049GRcFv132516;
+        Sat, 9 May 2020 16:31:02 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 30wwxb5hux-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 09 May 2020 16:30:55 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 049GUski025275;
-        Sat, 9 May 2020 16:30:54 GMT
+        Sat, 09 May 2020 16:31:02 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 049GV1xU004762;
+        Sat, 9 May 2020 16:31:01 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 09 May 2020 09:30:54 -0700
-Subject: [PATCH 09/16] xfs_repair: convert to libxfs_verify_agbno
+        with ESMTP ; Sat, 09 May 2020 09:31:01 -0700
+Subject: [PATCH 10/16] xfs_repair: refactor verify_dfsbno_range
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Sat, 09 May 2020 09:30:54 -0700
-Message-ID: <158904185435.982941.16817943726460132539.stgit@magnolia>
+Date:   Sat, 09 May 2020 09:31:00 -0700
+Message-ID: <158904186058.982941.7156787817804393560.stgit@magnolia>
 In-Reply-To: <158904179213.982941.9666913277909349291.stgit@magnolia>
 References: <158904179213.982941.9666913277909349291.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -64,13 +64,13 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9616 signatures=668687
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- suspectscore=2 bulkscore=0 phishscore=0 mlxscore=0 spamscore=0
+ suspectscore=0 bulkscore=0 phishscore=0 mlxscore=0 spamscore=0
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2003020000 definitions=main-2005090141
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9616 signatures=668687
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
  adultscore=0 spamscore=0 malwarescore=0 mlxlogscore=999 phishscore=0
- lowpriorityscore=0 bulkscore=0 suspectscore=2 clxscore=1015
+ lowpriorityscore=0 bulkscore=0 suspectscore=0 clxscore=1015
  impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2003020000 definitions=main-2005090140
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,201 +80,70 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Convert the homegrown verify_agbno callers to use the libxfs function,
-as needed.
+Refactor this function to use libxfs type checking helpers.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
  libxfs/libxfs_api_defs.h |    1 +
- repair/dinode.c          |   11 -----------
- repair/dinode.h          |    5 -----
- repair/scan.c            |   36 +++++++++++++++++++++++-------------
- 4 files changed, 24 insertions(+), 29 deletions(-)
+ repair/dinode.c          |   26 +++++++++-----------------
+ 2 files changed, 10 insertions(+), 17 deletions(-)
 
 
 diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 7b264ff2..c03f0efa 100644
+index c03f0efa..69f79a08 100644
 --- a/libxfs/libxfs_api_defs.h
 +++ b/libxfs/libxfs_api_defs.h
-@@ -20,6 +20,7 @@
- #define xfs_agfl_walk			libxfs_agfl_walk
- 
- #define xfs_ag_init_headers		libxfs_ag_init_headers
-+#define xfs_ag_block_count		libxfs_ag_block_count
- 
- #define xfs_alloc_ag_max_usable		libxfs_alloc_ag_max_usable
- #define xfs_allocbt_maxrecs		libxfs_allocbt_maxrecs
+@@ -184,6 +184,7 @@
+ #define xfs_verify_agbno		libxfs_verify_agbno
+ #define xfs_verify_cksum		libxfs_verify_cksum
+ #define xfs_verify_dir_ino		libxfs_verify_dir_ino
++#define xfs_verify_fsbno		libxfs_verify_fsbno
+ #define xfs_verify_ino			libxfs_verify_ino
+ #define xfs_verify_rtbno		libxfs_verify_rtbno
+ #define xfs_zero_extent			libxfs_zero_extent
 diff --git a/repair/dinode.c b/repair/dinode.c
-index 1f1cc26b..b343534c 100644
+index b343534c..135703d9 100644
 --- a/repair/dinode.c
 +++ b/repair/dinode.c
-@@ -255,17 +255,6 @@ verify_dfsbno_range(xfs_mount_t	*mp,
- 	return (XR_DFSBNORANGE_VALID);
- }
+@@ -228,31 +228,23 @@ verify_dfsbno(xfs_mount_t	*mp,
+ #define XR_DFSBNORANGE_OVERFLOW	3
  
--int
--verify_agbno(xfs_mount_t	*mp,
--		xfs_agnumber_t	agno,
--		xfs_agblock_t	agbno)
--{
+ static __inline int
+-verify_dfsbno_range(xfs_mount_t	*mp,
+-		xfs_fsblock_t	fsbno,
+-		xfs_filblks_t	count)
++verify_dfsbno_range(
++	struct xfs_mount	*mp,
++	xfs_fsblock_t		fsbno,
++	xfs_filblks_t		count)
+ {
+-	xfs_agnumber_t	agno;
+-	xfs_agblock_t	agbno;
 -	xfs_sb_t	*sbp = &mp->m_sb;;
 -
--	/* range check ag #, ag block.  range-checking offset is pointless */
--	return verify_ag_bno(sbp, agno, agbno) == 0;
--}
--
- static int
- process_rt_rec(
- 	xfs_mount_t		*mp,
-diff --git a/repair/dinode.h b/repair/dinode.h
-index 98238357..c8e563b5 100644
---- a/repair/dinode.h
-+++ b/repair/dinode.h
-@@ -9,11 +9,6 @@
- struct blkmap;
- struct prefetch_args;
- 
--int
--verify_agbno(xfs_mount_t	*mp,
--		xfs_agnumber_t	agno,
--		xfs_agblock_t	agbno);
--
- int
- verify_dfsbno(xfs_mount_t	*mp,
- 		xfs_fsblock_t	fsbno);
-diff --git a/repair/scan.c b/repair/scan.c
-index 719ad035..8e81c552 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -678,14 +678,14 @@ _("%s freespace btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 			len = be32_to_cpu(rp[i].ar_blockcount);
- 			end = b + len;
- 
--			if (b == 0 || !verify_agbno(mp, agno, b)) {
-+			if (!libxfs_verify_agbno(mp, agno, b)) {
- 				do_warn(
- 	_("invalid start block %u in record %u of %s btree block %u/%u\n"),
- 					b, i, name, agno, bno);
- 				continue;
- 			}
- 			if (len == 0 || end <= b ||
--			    !verify_agbno(mp, agno, end - 1)) {
-+			    !libxfs_verify_agbno(mp, agno, end - 1)) {
- 				do_warn(
- 	_("invalid length %u in record %u of %s btree block %u/%u\n"),
- 					len, i, name, agno, bno);
-@@ -950,6 +950,16 @@ rmap_in_order(
- 	return offset > lastoffset;
- }
- 
-+static inline bool
-+verify_rmap_agbno(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agblock_t		agbno)
-+{
-+	return agbno < libxfs_ag_block_count(mp, agno);
-+}
-+
-+
- static void
- scan_rmapbt(
- 	struct xfs_btree_block	*block,
-@@ -1068,14 +1078,14 @@ _("%s rmap btree block claimed (state %d), agno %d, bno %d, suspect %d\n"),
- 			end = key.rm_startblock + key.rm_blockcount;
- 
- 			/* Make sure agbno & len make sense. */
--			if (!verify_agbno(mp, agno, b)) {
-+			if (!verify_rmap_agbno(mp, agno, b)) {
- 				do_warn(
- 	_("invalid start block %u in record %u of %s btree block %u/%u\n"),
- 					b, i, name, agno, bno);
- 				continue;
- 			}
- 			if (len == 0 || end <= b ||
--			    !verify_agbno(mp, agno, end - 1)) {
-+			    !verify_rmap_agbno(mp, agno, end - 1)) {
- 				do_warn(
- 	_("invalid length %u in record %u of %s btree block %u/%u\n"),
- 					len, i, name, agno, bno);
-@@ -1363,14 +1373,14 @@ _("leftover CoW extent has invalid startblock in record %u of %s btree block %u/
- 			}
- 			end = agb + len;
- 
--			if (!verify_agbno(mp, agno, agb)) {
-+			if (!libxfs_verify_agbno(mp, agno, agb)) {
- 				do_warn(
- 	_("invalid start block %u in record %u of %s btree block %u/%u\n"),
- 					b, i, name, agno, bno);
- 				continue;
- 			}
- 			if (len == 0 || end <= agb ||
--			    !verify_agbno(mp, agno, end - 1)) {
-+			    !libxfs_verify_agbno(mp, agno, end - 1)) {
- 				do_warn(
- 	_("invalid length %u in record %u of %s btree block %u/%u\n"),
- 					len, i, name, agno, bno);
-@@ -2171,7 +2181,7 @@ scan_agfl(
- {
- 	struct agfl_state	*as = priv;
- 
--	if (verify_agbno(mp, as->agno, bno))
-+	if (libxfs_verify_agbno(mp, as->agno, bno))
- 		set_bmap(as->agno, bno, XR_E_FREE);
- 	else
- 		do_warn(_("bad agbno %u in agfl, agno %d\n"),
-@@ -2244,7 +2254,7 @@ validate_agf(
- 	uint32_t		magic;
- 
- 	bno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]);
--	if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+	if (libxfs_verify_agbno(mp, agno, bno)) {
- 		magic = xfs_sb_version_hascrc(&mp->m_sb) ? XFS_ABTB_CRC_MAGIC
- 							 : XFS_ABTB_MAGIC;
- 		scan_sbtree(bno, be32_to_cpu(agf->agf_levels[XFS_BTNUM_BNO]),
-@@ -2256,7 +2266,7 @@ validate_agf(
+ 	/* the start and end blocks better be in the same allocation group */
+-	agno = XFS_FSB_TO_AGNO(mp, fsbno);
+-	if (agno != XFS_FSB_TO_AGNO(mp, fsbno + count - 1)) {
++	if (XFS_FSB_TO_AGNO(mp, fsbno) !=
++	    XFS_FSB_TO_AGNO(mp, fsbno + count - 1)) {
+ 		return XR_DFSBNORANGE_OVERFLOW;
  	}
  
- 	bno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_CNT]);
--	if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+	if (libxfs_verify_agbno(mp, agno, bno)) {
- 		magic = xfs_sb_version_hascrc(&mp->m_sb) ? XFS_ABTC_CRC_MAGIC
- 							 : XFS_ABTC_MAGIC;
- 		scan_sbtree(bno, be32_to_cpu(agf->agf_levels[XFS_BTNUM_CNT]),
-@@ -2276,7 +2286,7 @@ validate_agf(
- 		priv.last_rec.rm_owner = XFS_RMAP_OWN_UNKNOWN;
- 		priv.nr_blocks = 0;
- 		bno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_RMAP]);
--		if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+		if (libxfs_verify_agbno(mp, agno, bno)) {
- 			scan_sbtree(bno,
- 				    be32_to_cpu(agf->agf_levels[XFS_BTNUM_RMAP]),
- 				    agno, 0, scan_rmapbt, 1, XFS_RMAP_CRC_MAGIC,
-@@ -2294,7 +2304,7 @@ validate_agf(
+-	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
+-	if (verify_ag_bno(sbp, agno, agbno)) {
++	if (!libxfs_verify_fsbno(mp, fsbno))
+ 		return XR_DFSBNORANGE_BADSTART;
+-	}
+-
+-	agbno = XFS_FSB_TO_AGBNO(mp, fsbno + count - 1);
+-	if (verify_ag_bno(sbp, agno, agbno)) {
++	if (!libxfs_verify_fsbno(mp, fsbno + count - 1))
+ 		return XR_DFSBNORANGE_BADEND;
+-	}
  
- 	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
- 		bno = be32_to_cpu(agf->agf_refcount_root);
--		if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+		if (libxfs_verify_agbno(mp, agno, bno)) {
- 			struct refc_priv	priv;
+-	return (XR_DFSBNORANGE_VALID);
++	return XR_DFSBNORANGE_VALID;
+ }
  
- 			memset(&priv, 0, sizeof(priv));
-@@ -2342,7 +2352,7 @@ validate_agi(
- 	uint32_t		magic;
- 
- 	bno = be32_to_cpu(agi->agi_root);
--	if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+	if (libxfs_verify_agbno(mp, agno, bno)) {
- 		magic = xfs_sb_version_hascrc(&mp->m_sb) ? XFS_IBT_CRC_MAGIC
- 							 : XFS_IBT_MAGIC;
- 		scan_sbtree(bno, be32_to_cpu(agi->agi_level),
-@@ -2355,7 +2365,7 @@ validate_agi(
- 
- 	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
- 		bno = be32_to_cpu(agi->agi_free_root);
--		if (bno != 0 && verify_agbno(mp, agno, bno)) {
-+		if (libxfs_verify_agbno(mp, agno, bno)) {
- 			magic = xfs_sb_version_hascrc(&mp->m_sb) ?
- 					XFS_FIBT_CRC_MAGIC : XFS_FIBT_MAGIC;
- 			scan_sbtree(bno, be32_to_cpu(agi->agi_free_level),
+ static int
 
