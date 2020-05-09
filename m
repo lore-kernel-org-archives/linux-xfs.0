@@ -2,119 +2,165 @@ Return-Path: <SRS0=gwgl=6X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80454C28CBC
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 19:18:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B214C28CBC
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 19:47:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C28E20722
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 19:18:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 544E6208DB
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 19:47:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kY3w0vIb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CmaXV0u/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728065AbgEITSQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 May 2020 15:18:16 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:53540 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727940AbgEITSP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 15:18:15 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049JCl3v132474;
-        Sat, 9 May 2020 19:18:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=JUQGWTCCkp0ctNksBQoqYeO9VMijc53OrMKKd5uCZ+4=;
- b=kY3w0vIbYaDYGa+tsN+GA0XOXen2t+02w55RSZlr1Z8UqcEMm7X2JnSLRSyqMS2i5WXV
- LwuY5a63EncxBDyZ2Pli6h0yev3fHnBZ/06QNKTtwneSXsNgYsNSKJH5G/Yr/EKSCQLY
- aGRdpt3/zzLP769FD8vHgRiK37Sj7Ny7ixy0djKsHXqdaQQ/O56JReUNbQAVOD79livH
- Zbs+UmrdhXT7+M+m2qhCtzCQXDlZ2JkUig5UfAasyreBq77UzKSmrNNv2yOUQGE3Ltj3
- dykqqh+ReXlzoCm+3ZjNCD6YnkSkNA1OZUM1V+rdOCwLNIZRceQHeN3m/BgT5EBEzEm4 Dg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 30x0q104qq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 09 May 2020 19:18:08 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 049JHgqk094294;
-        Sat, 9 May 2020 19:18:07 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 30wwxbamdv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 09 May 2020 19:18:07 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 049JI4Ek010851;
-        Sat, 9 May 2020 19:18:07 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 09 May 2020 12:18:04 -0700
-Date:   Sat, 9 May 2020 12:18:03 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/8] db: add a comment to agfl_crc_flds
-Message-ID: <20200509191803.GW6714@magnolia>
-References: <20200509170125.952508-1-hch@lst.de>
- <20200509170125.952508-4-hch@lst.de>
- <20200509170712.GQ6714@magnolia>
- <20200509171011.GA31656@lst.de>
- <d3683956-96b8-1308-9e66-2db56432da17@sandeen.net>
+        id S1728420AbgEITrO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 May 2020 15:47:14 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:26630 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727938AbgEITrN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 15:47:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589053632;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=aJuMFWfMchP7DjPHsJtc+SD+w2XllawgyIK1pgxBumM=;
+        b=CmaXV0u/UKAxcAFh8yUF1b8hDsfjgMFI25/JTdVFP6whIeKe4eb36ueaS6Lk3eEdZvIuFZ
+        vn2BgYjdqoOVsFAE0oX5CVfmXmFmnOhGIb57nkhnPyGnxhqQzzmao+HdIlQw2hfhfiNaZ1
+        XfRODXr87Rjie1oUCRwrvuhnHP/psww=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-225-OOHco-BYPVWsFnOm08SnlQ-1; Sat, 09 May 2020 15:47:05 -0400
+X-MC-Unique: OOHco-BYPVWsFnOm08SnlQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6BEDC1005510;
+        Sat,  9 May 2020 19:47:03 +0000 (UTC)
+Received: from [127.0.0.1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3194B704C0;
+        Sat,  9 May 2020 19:47:02 +0000 (UTC)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH RFC] xfs: allow adjusting individual quota grace times
+Cc:     Jan Kara <jack@suse.cz>
+Message-ID: <ca1d2bb6-6f37-255c-1015-a20c6060d81c@redhat.com>
+Date:   Sat, 9 May 2020 14:47:02 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d3683956-96b8-1308-9e66-2db56432da17@sandeen.net>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9616 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=971 adultscore=0
- suspectscore=1 bulkscore=0 phishscore=0 mlxscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005090168
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9616 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- lowpriorityscore=0 adultscore=0 clxscore=1015 suspectscore=1 phishscore=0
- priorityscore=1501 spamscore=0 malwarescore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005090167
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 09, 2020 at 12:32:01PM -0500, Eric Sandeen wrote:
-> On 5/9/20 12:10 PM, Christoph Hellwig wrote:
-> > On Sat, May 09, 2020 at 10:07:12AM -0700, Darrick J. Wong wrote:
-> >> On Sat, May 09, 2020 at 07:01:20PM +0200, Christoph Hellwig wrote:
-> >>> Explain the bno field that is not actually part of the structure
-> >>> anymore.
-> >>>
-> >>> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> >>> ---
-> >>>  db/agfl.c | 1 +
-> >>>  1 file changed, 1 insertion(+)
-> >>>
-> >>> diff --git a/db/agfl.c b/db/agfl.c
-> >>> index 45e4d6f9..ce7a2548 100644
-> >>> --- a/db/agfl.c
-> >>> +++ b/db/agfl.c
-> >>> @@ -47,6 +47,7 @@ const field_t	agfl_crc_flds[] = {
-> >>>  	{ "uuid", FLDT_UUID, OI(OFF(uuid)), C1, 0, TYP_NONE },
-> >>>  	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
-> >>>  	{ "crc", FLDT_CRC, OI(OFF(crc)), C1, 0, TYP_NONE },
-> >>> +	/* the bno array really is behind the actual structure */
-> >>
-> >> Er... the bno array comes /after/ the actual structure, right?
-> > 
-> > Yes.  That's what I mean, but after seems to be less confusing.
-> so:
-> 
-> /* the bno array is after the actual structure */
-> 
-> right?  I can just do that on merge.
-> 
+vfs/ext3/4 quota allows the administrator to push out the grace time
+for soft quota with the setquota -T command:
 
-With that changed,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+setquota -T [ -u | -g ] [ -F quotaformat ] name block-grace inode-grace -a | filesystem...
 
---D
+       -T, --edit-times
+              Alter times for individual user/group when softlimit is enforced.
+              Times block-grace and inode-grace are specified in seconds or can
+              be string 'unset'.
+
+Essentially, if you do "setquota -T -u username 1d 1d" and "username" is
+over their soft quotas and into their grace time, it will extend the
+grace time expiry to 1d from now.
+
+xfs can't do this, today.  The patch below is a first cut at allowing us
+to do this, and userspace updates are needed as well (I have those in a
+patch stack.)
+
+I'm not looking so much for patch review right now, though, what I'm
+wondering is if this is a change we can make from the ABI perspective?
+
+Because today, if you try to pass in a UID other than 0 (i.e. the
+default grace period) it just gets ignored by the kernel, not rejected.
+
+So there's no real way to know that the grace period adjustment failed
+on an older kernel.  We could consider that a bug and fix it, or
+consider it a change in behavior that we can't just make without
+at least some form of versioning.  Thoughts?
+
+Anyway, the patch below moves the disk quota grace period adjustment out
+from "if id == 0" and allows the change for any ID; it only sets the
+default grace value in the "id == 0" case.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index f48561b7e947..e58ee98f938c 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -555,32 +555,41 @@ xfs_qm_scall_setqlim(
+ 		ddq->d_rtbwarns = cpu_to_be16(newlim->d_rt_spc_warns);
+ 
+ 	if (id == 0) {
+-		/*
+-		 * Timelimits for the super user set the relative time
+-		 * the other users can be over quota for this file system.
+-		 * If it is zero a default is used.  Ditto for the default
+-		 * soft and hard limit values (already done, above), and
+-		 * for warnings.
+-		 */
+-		if (newlim->d_fieldmask & QC_SPC_TIMER) {
+-			defq->btimelimit = newlim->d_spc_timer;
+-			ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
+-		}
+-		if (newlim->d_fieldmask & QC_INO_TIMER) {
+-			defq->itimelimit = newlim->d_ino_timer;
+-			ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
+-		}
+-		if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
+-			defq->rtbtimelimit = newlim->d_rt_spc_timer;
+-			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
+-		}
+ 		if (newlim->d_fieldmask & QC_SPC_WARNS)
+ 			defq->bwarnlimit = newlim->d_spc_warns;
+ 		if (newlim->d_fieldmask & QC_INO_WARNS)
+ 			defq->iwarnlimit = newlim->d_ino_warns;
+ 		if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
+ 			defq->rtbwarnlimit = newlim->d_rt_spc_warns;
+-	} else {
++	}
++
++	/*
++	 * Timelimits for the super user set the relative time the other users
++	 * can be over quota for this file system. If it is zero a default is
++	 * used.  Ditto for the default soft and hard limit values (already
++	 * done, above), and for warnings.
++	 *
++	 * For other IDs, userspace can bump out the grace period if over
++	 * the soft limit.
++	 */
++	if (newlim->d_fieldmask & QC_SPC_TIMER) {
++		if (!id)
++			defq->btimelimit = newlim->d_spc_timer;
++		ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
++	}
++	if (newlim->d_fieldmask & QC_INO_TIMER) {
++		printk("setting inode timer to %d\n", newlim->d_ino_timer);
++		if (!id)
++			defq->itimelimit = newlim->d_ino_timer;
++		ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
++	}
++	if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
++		if (!id)
++			defq->rtbtimelimit = newlim->d_rt_spc_timer;
++		ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
++	}
++
++	if (id != 0) {
+ 		/*
+ 		 * If the user is now over quota, start the timelimit.
+ 		 * The user will not be 'warned'.
+
 
