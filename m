@@ -2,328 +2,245 @@ Return-Path: <SRS0=gwgl=6X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5E6EC28CBC
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:18:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1466DC28CBC
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:23:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E49421775
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:18:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="geV+OL+9"
+	by mail.kernel.org (Postfix) with ESMTP id E547920746
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:23:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728187AbgEIRSt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 May 2020 13:18:49 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:46613 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726013AbgEIRSs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 13:18:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589044726;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=lk2GsBi3Ly08L5hGHtU7GZ3OSQxlxwGZnEZo2nYjZfw=;
-        b=geV+OL+9u4wufjq4S1puo7C9GMGcWt35T+wfpM4Dbmt7KL0pEnZTELoZSU5BiC5wi8IKLZ
-        IGOltMWteRzgVarHWwe2RczuSFwLmgHUY+qzay7oolwMQb3G/uiHpcCBBi8SRjgaGgDn8l
-        aUh4CwZPLon+0X5s4fYcFdVHOPRC6VY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-249-t7oQkQCrPyiAj7OUWMaSEA-1; Sat, 09 May 2020 13:18:44 -0400
-X-MC-Unique: t7oQkQCrPyiAj7OUWMaSEA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1728171AbgEIRXo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 May 2020 13:23:44 -0400
+Received: from sandeen.net ([63.231.237.45]:58402 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726013AbgEIRXo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 9 May 2020 13:23:44 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A855E18CA26B
-        for <linux-xfs@vger.kernel.org>; Sat,  9 May 2020 17:18:43 +0000 (UTC)
-Received: from [127.0.0.1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 74DF15C1C8
-        for <linux-xfs@vger.kernel.org>; Sat,  9 May 2020 17:18:43 +0000 (UTC)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_quota: refactor code to generate id from name
-Message-ID: <8b4b7edb-94b2-3bb1-9ede-73674db82330@redhat.com>
-Date:   Sat, 9 May 2020 12:18:42 -0500
+        by sandeen.net (Postfix) with ESMTPSA id 7DF214D7;
+        Sat,  9 May 2020 12:23:32 -0500 (CDT)
+Subject: Re: [PATCH 4/8] db: cleanup attr_set_f and attr_remove_f
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+References: <20200509170125.952508-1-hch@lst.de>
+ <20200509170125.952508-5-hch@lst.de>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <e7c3ed39-d007-8d9c-d718-ed5c60f92225@sandeen.net>
+Date:   Sat, 9 May 2020 12:23:42 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
+In-Reply-To: <20200509170125.952508-5-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There's boilerplate for setting limits and warnings, where we have
-a case statement for each of the 3 quota types, and from there call
-3 different functions to configure each of the 3 types, each of which
-calls its own version of id to string function... 
+On 5/9/20 12:01 PM, Christoph Hellwig wrote:
+> Don't use local variables for information that is set in the da_args
+> structure.
 
-Refactor this so that the main function can call a generic id to string
-conversion routine, and then call a common action.  This save a lot of
-LOC.
+I'm on the fence about this one; Darrick had missed setting a couple
+of necessary structure members, so I actually see some value in assigning them
+all right before we call into libxfs_attr_set .... it makes it very clear what's
+being sent in to libxfs_attr_set.
 
-I was looking at allowing xfs to bump out individual grace periods like
-setquota can do, and this refactoring allows us to add new actions like
-that without copyingall the boilerplate again.
+-Eric
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
- edit.c |  196 ++++++++++++++++-----------------------------------------
- 1 file changed, 51 insertions(+), 145 deletions(-)
-
-diff --git a/quota/edit.c b/quota/edit.c
-index f9938b8a..70c0969f 100644
---- a/quota/edit.c
-+++ b/quota/edit.c
-@@ -101,6 +101,42 @@ warn_help(void)
- "\n"));
- }
- 
-+static uint32_t
-+id_from_string(
-+	char	*name,
-+	int	type)
-+{
-+	uint32_t	id = -1;
-+
-+	switch (type) {
-+	case XFS_USER_QUOTA:
-+		id = uid_from_string(name);
-+		if (id == -1)
-+			fprintf(stderr, _("%s: invalid user name: %s\n"),
-+				progname, name);
-+		break;
-+	case XFS_GROUP_QUOTA:
-+		id = gid_from_string(name);
-+		if (id == -1)
-+			fprintf(stderr, _("%s: invalid group name: %s\n"),
-+				progname, name);
-+		break;
-+	case XFS_PROJ_QUOTA:
-+		id = prid_from_string(name);
-+		if (id == -1)
-+			fprintf(stderr, _("%s: invalid project name: %s\n"),
-+				progname, name);
-+		break;
-+	default:
-+		ASSERT(0);
-+		break;
-+	}
-+
-+	if (id == -1)
-+		exitcode = 1;
-+	return id;
-+}
-+
- static void
- set_limits(
- 	uint32_t	id,
-@@ -135,75 +171,6 @@ set_limits(
- 	}
- }
- 
--static void
--set_user_limits(
--	char		*name,
--	uint		type,
--	uint		mask,
--	uint64_t	*bsoft,
--	uint64_t	*bhard,
--	uint64_t	*isoft,
--	uint64_t	*ihard,
--	uint64_t	*rtbsoft,
--	uint64_t	*rtbhard)
--{
--	uid_t		uid = uid_from_string(name);
--
--	if (uid == -1) {
--		exitcode = 1;
--		fprintf(stderr, _("%s: invalid user name: %s\n"),
--				progname, name);
--	} else
--		set_limits(uid, type, mask, fs_path->fs_name,
--				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
--}
--
--static void
--set_group_limits(
--	char		*name,
--	uint		type,
--	uint		mask,
--	uint64_t	*bsoft,
--	uint64_t	*bhard,
--	uint64_t	*isoft,
--	uint64_t	*ihard,
--	uint64_t	*rtbsoft,
--	uint64_t	*rtbhard)
--{
--	gid_t		gid = gid_from_string(name);
--
--	if (gid == -1) {
--		exitcode = 1;
--		fprintf(stderr, _("%s: invalid group name: %s\n"),
--				progname, name);
--	} else
--		set_limits(gid, type, mask, fs_path->fs_name,
--				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
--}
--
--static void
--set_project_limits(
--	char		*name,
--	uint		type,
--	uint		mask,
--	uint64_t	*bsoft,
--	uint64_t	*bhard,
--	uint64_t	*isoft,
--	uint64_t	*ihard,
--	uint64_t	*rtbsoft,
--	uint64_t	*rtbhard)
--{
--	prid_t		prid = prid_from_string(name);
--
--	if (prid == -1) {
--		exitcode = 1;
--		fprintf(stderr, _("%s: invalid project name: %s\n"),
--				progname, name);
--	} else
--		set_limits(prid, type, mask, fs_path->fs_name,
--				bsoft, bhard, isoft, ihard, rtbsoft, rtbhard);
--}
--
- /* extract number of blocks from an ascii string */
- static int
- extractb(
-@@ -258,6 +225,7 @@ limit_f(
- 	char		**argv)
- {
- 	char		*name;
-+	uint32_t	id;
- 	uint64_t	bsoft, bhard, isoft, ihard, rtbsoft, rtbhard;
- 	int		c, type = 0, mask = 0, flags = 0;
- 	uint		bsize, ssize, endoptions;
-@@ -339,20 +307,13 @@ limit_f(
- 		return command_usage(&limit_cmd);
- 	}
- 
--	switch (type) {
--	case XFS_USER_QUOTA:
--		set_user_limits(name, type, mask,
--			&bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
--		break;
--	case XFS_GROUP_QUOTA:
--		set_group_limits(name, type, mask,
--			&bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
--		break;
--	case XFS_PROJ_QUOTA:
--		set_project_limits(name, type, mask,
--			&bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
--		break;
--	}
-+
-+	id = id_from_string(name, type);
-+	if (id >= 0)
-+		set_limits(id, type, mask, fs_path->fs_name,
-+			   &bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
-+	else
-+		exitcode = -1;
- 	return 0;
- }
- 
-@@ -561,63 +522,13 @@ set_warnings(
- 	}
- }
- 
--static void
--set_user_warnings(
--	char		*name,
--	uint		type,
--	uint		mask,
--	uint		value)
--{
--	uid_t		uid = uid_from_string(name);
--
--	if (uid == -1) {
--		exitcode = 1;
--		fprintf(stderr, _("%s: invalid user name: %s\n"),
--				progname, name);
--	} else
--		set_warnings(uid, type, mask, fs_path->fs_name, value);
--}
--
--static void
--set_group_warnings(
--	char		*name,
--	uint		type,
--	uint		mask,
--	uint		value)
--{
--	gid_t		gid = gid_from_string(name);
--
--	if (gid == -1) {
--		exitcode = 1;
--		fprintf(stderr, _("%s: invalid group name: %s\n"),
--				progname, name);
--	} else
--		set_warnings(gid, type, mask, fs_path->fs_name, value);
--}
--
--static void
--set_project_warnings(
--	char		*name,
--	uint		type,
--	uint		mask,
--	uint		value)
--{
--	prid_t		prid = prid_from_string(name);
--
--	if (prid == -1) {
--		exitcode = 1;
--		fprintf(stderr, _("%s: invalid project name: %s\n"),
--				progname, name);
--	} else
--		set_warnings(prid, type, mask, fs_path->fs_name, value);
--}
--
- static int
- warn_f(
- 	int		argc,
- 	char		**argv)
- {
- 	char		*name;
-+	uint32_t	id;
- 	uint		value;
- 	int		c, flags = 0, type = 0, mask = 0;
- 
-@@ -675,17 +586,12 @@ warn_f(
- 		return command_usage(&warn_cmd);
- 	}
- 
--	switch (type) {
--	case XFS_USER_QUOTA:
--		set_user_warnings(name, type, mask, value);
--		break;
--	case XFS_GROUP_QUOTA:
--		set_group_warnings(name, type, mask, value);
--		break;
--	case XFS_PROJ_QUOTA:
--		set_project_warnings(name, type, mask, value);
--		break;
--	}
-+	id = id_from_string(name, type);
-+	if (id >= 0)
-+		set_warnings(id, type, mask, fs_path->fs_name, value);
-+	else
-+		exitcode = -1;
-+
- 	return 0;
- }
- 
-
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  db/attrset.c | 67 ++++++++++++++++++++++------------------------------
+>  1 file changed, 28 insertions(+), 39 deletions(-)
+> 
+> diff --git a/db/attrset.c b/db/attrset.c
+> index 1ff2eb85..0a464983 100644
+> --- a/db/attrset.c
+> +++ b/db/attrset.c
+> @@ -67,10 +67,9 @@ attr_set_f(
+>  	int			argc,
+>  	char			**argv)
+>  {
+> -	struct xfs_inode	*ip = NULL;
+> -	struct xfs_da_args	args = { NULL };
+> -	char			*name, *value, *sp;
+> -	int			c, valuelen = 0;
+> +	struct xfs_da_args	args = { };
+> +	char			*sp;
+> +	int			c;
+>  
+>  	if (cur_typ == NULL) {
+>  		dbprintf(_("no current type\n"));
+> @@ -111,8 +110,9 @@ attr_set_f(
+>  
+>  		/* value length */
+>  		case 'v':
+> -			valuelen = (int)strtol(optarg, &sp, 0);
+> -			if (*sp != '\0' || valuelen < 0 || valuelen > 64*1024) {
+> +			args.valuelen = strtol(optarg, &sp, 0);
+> +			if (*sp != '\0' ||
+> +			    args.valuelen < 0 || args.valuelen > 64 * 1024) {
+>  				dbprintf(_("bad attr_set valuelen %s\n"), optarg);
+>  				return 0;
+>  			}
+> @@ -129,35 +129,29 @@ attr_set_f(
+>  		return 0;
+>  	}
+>  
+> -	name = argv[optind];
+> +	args.name = (const unsigned char *)argv[optind];
+> +	args.namelen = strlen(argv[optind]);
+>  
+> -	if (valuelen) {
+> -		value = (char *)memalign(getpagesize(), valuelen);
+> -		if (!value) {
+> -			dbprintf(_("cannot allocate buffer (%d)\n"), valuelen);
+> +	if (args.valuelen) {
+> +		args.value = memalign(getpagesize(), args.valuelen);
+> +		if (!args.value) {
+> +			dbprintf(_("cannot allocate buffer (%d)\n"),
+> +				args.valuelen);
+>  			goto out;
+>  		}
+> -		memset(value, 'v', valuelen);
+> -	} else {
+> -		value = NULL;
+> +		memset(args.value, 'v', args.valuelen);
+>  	}
+>  
+> -	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip,
+> +	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &args.dp,
+>  			&xfs_default_ifork_ops)) {
+>  		dbprintf(_("failed to iget inode %llu\n"),
+>  			(unsigned long long)iocur_top->ino);
+>  		goto out;
+>  	}
+>  
+> -	args.dp = ip;
+> -	args.name = (unsigned char *)name;
+> -	args.namelen = strlen(name);
+> -	args.value = value;
+> -	args.valuelen = valuelen;
+> -
+>  	if (libxfs_attr_set(&args)) {
+>  		dbprintf(_("failed to set attr %s on inode %llu\n"),
+> -			name, (unsigned long long)iocur_top->ino);
+> +			args.name, (unsigned long long)iocur_top->ino);
+>  		goto out;
+>  	}
+>  
+> @@ -166,10 +160,10 @@ attr_set_f(
+>  
+>  out:
+>  	mp->m_flags &= ~LIBXFS_MOUNT_COMPAT_ATTR;
+> -	if (ip)
+> -		libxfs_irele(ip);
+> -	if (value)
+> -		free(value);
+> +	if (args.dp)
+> +		libxfs_irele(args.dp);
+> +	if (args.value)
+> +		free(args.value);
+>  	return 0;
+>  }
+>  
+> @@ -178,9 +172,7 @@ attr_remove_f(
+>  	int			argc,
+>  	char			**argv)
+>  {
+> -	struct xfs_inode	*ip = NULL;
+> -	struct xfs_da_args	args = { NULL };
+> -	char			*name;
+> +	struct xfs_da_args	args = { };
+>  	int			c;
+>  
+>  	if (cur_typ == NULL) {
+> @@ -223,23 +215,20 @@ attr_remove_f(
+>  		return 0;
+>  	}
+>  
+> -	name = argv[optind];
+> +	args.name = (const unsigned char *)argv[optind];
+> +	args.namelen = strlen(argv[optind]);
+>  
+> -	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &ip,
+> +	if (libxfs_iget(mp, NULL, iocur_top->ino, 0, &args.dp,
+>  			&xfs_default_ifork_ops)) {
+>  		dbprintf(_("failed to iget inode %llu\n"),
+>  			(unsigned long long)iocur_top->ino);
+>  		goto out;
+>  	}
+>  
+> -	args.dp = ip;
+> -	args.name = (unsigned char *)name;
+> -	args.namelen = strlen(name);
+> -	args.value = NULL;
+> -
+>  	if (libxfs_attr_set(&args)) {
+>  		dbprintf(_("failed to remove attr %s from inode %llu\n"),
+> -			name, (unsigned long long)iocur_top->ino);
+> +			(unsigned char *)args.name,
+> +			(unsigned long long)iocur_top->ino);
+>  		goto out;
+>  	}
+>  
+> @@ -248,7 +237,7 @@ attr_remove_f(
+>  
+>  out:
+>  	mp->m_flags &= ~LIBXFS_MOUNT_COMPAT_ATTR;
+> -	if (ip)
+> -		libxfs_irele(ip);
+> +	if (args.dp)
+> +		libxfs_irele(args.dp);
+>  	return 0;
+>  }
+> 
