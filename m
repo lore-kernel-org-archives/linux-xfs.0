@@ -6,60 +6,62 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBB9FC28CBC
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:36:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC3D7C28CBC
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:36:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99D31206D6
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:36:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7D9820735
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 16:36:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uHrhsYYG"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hgkhC+Ez"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728005AbgEIQgW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 May 2020 12:36:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37276 "EHLO
+        id S1728281AbgEIQgp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 May 2020 12:36:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37340 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727787AbgEIQgV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 12:36:21 -0400
+        by vger.kernel.org with ESMTP id S1727787AbgEIQgp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 12:36:45 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8367C061A0C
-        for <linux-xfs@vger.kernel.org>; Sat,  9 May 2020 09:36:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A38CC061A0C
+        for <linux-xfs@vger.kernel.org>; Sat,  9 May 2020 09:36:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=mwflHJqrYsPg1B8IQ6D05GSF151NauEFeEKqylDm5RA=; b=uHrhsYYGn44uXEUACRHbDK8Gdg
-        K0nI8jgUw6g+BUVm8UNbCTHP/VICu7C5dBisSVo45aE5tKm9RdDAC7v8Z91SBsp3kwHhh0URRPSBm
-        OMI+OT9mzYFOm3/iW/v1IcyT2GiWD6m1Cr0ORWf/65BDYq1xnDQoeBswRVfupMtMJtyjl9q8173Ml
-        Zs02+DF9mrE9Ouv31W6sxU8R1Uk9enS4hAC/ieNg8ikvx2Fgvfgxfsh9cyJwXOa87X3OsKJQQzTID
-        2FQ4w2D6CqymO0ev6ee5V+nGTMonxFrf0snwyEMWhWCTKyc7NiXf86vKhLR4ytgA/kBJU2kUyqgPZ
-        AdSNI4KA==;
+        bh=yxnmS895MLcJ49TOqJhD8jEmubNJl0GrHsq4Jfr15AA=; b=hgkhC+Ezd5D9Oo7Xa10mMY+S5p
+        oC4k8TIp31mj2+yz5a0KSDHjGeGiEJXpawtdVhB2Jj4PQFVxVOd/Urw4dnRulcXzvfoilUAFepLM3
+        UBa5JIpZcxwxKzsmNJhpmXnTHzpVD1VbxpzmvNHuaYTn6Y9ZUWgeOaSYEzMYiwVI/QB2wDRdNsqbU
+        pgcj6eYs4utve5eHpYGzpQ7ARAp7ir/+NY6mOmu7s5c/tcxs85uMHjH90A2GmJ4v9NdJr56gnFiX6
+        LIm3TAyKHzjM/jswsA5R3g7FkJws68yxxfFkTUO8Bhtvl9mIyjc2/ZFkQsJOZYpPC2wxlA+9mO4is
+        gFsE93IQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jXSSa-0008IG-18; Sat, 09 May 2020 16:36:20 +0000
-Date:   Sat, 9 May 2020 09:36:20 -0700
+        id 1jXSSy-00005D-6Z; Sat, 09 May 2020 16:36:44 +0000
+Date:   Sat, 9 May 2020 09:36:44 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] libxcmd: don't crash if el_gets returns null
-Message-ID: <20200509163620.GB23078@infradead.org>
+Subject: Re: [PATCH 2/3] find_api_violations: fix sed expression
+Message-ID: <20200509163644.GC23078@infradead.org>
 References: <158904177147.982835.3876574696663645345.stgit@magnolia>
- <158904177769.982835.13533960280738735171.stgit@magnolia>
+ <158904178381.982835.124483584305094681.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <158904177769.982835.13533960280738735171.stgit@magnolia>
+In-Reply-To: <158904178381.982835.124483584305094681.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 09, 2020 at 09:29:37AM -0700, Darrick J. Wong wrote:
+On Sat, May 09, 2020 at 09:29:43AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> el_gets returns NULL if it fails to read any characters (due to EOF or
-> errors occurred).  strdup will crash if it is fed a NULL string, so
-> check the return value to avoid segfaulting.
+> Apparently, the grep program in Ubuntu 20.04 is pickier about requiring
+> '(' to be escaped inside range expressions.  This causes a regression in
+> xfs/437, so fix it.
 
-Didn't I review this already?
+Mentioning the actual sed version would be a lot more helpful..
+
+Otherwise looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
