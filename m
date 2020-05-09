@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8793AC47247
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:01:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07C5BC28CBC
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:01:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5469A21775
-	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:01:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB9B42184D
+	for <linux-xfs@archiver.kernel.org>; Sat,  9 May 2020 17:01:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LMWHV01G"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="upwVJWYv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728144AbgEIRBn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 9 May 2020 13:01:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41194 "EHLO
+        id S1728171AbgEIRBp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 9 May 2020 13:01:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727787AbgEIRBm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 13:01:42 -0400
+        with ESMTP id S1727787AbgEIRBp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 9 May 2020 13:01:45 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7A3BC061A0C
-        for <linux-xfs@vger.kernel.org>; Sat,  9 May 2020 10:01:42 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DF31C061A0C
+        for <linux-xfs@vger.kernel.org>; Sat,  9 May 2020 10:01:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=aKUskYfSWkgPDIbeqdiprqGv10yszAnsXDPPVZVxkkc=; b=LMWHV01GS2N0gtsH5IuMjrD4VV
-        Po+nowpL5xVEXkrp0EwWJneoZD6vQRa9cMlUuMyVbo3U7ZuYhi+5YcYLSBXOD8nVZ2SqRJ2MibR4+
-        qaeIfkoiOiQmvZzChUfVphZxV7BICPIDR/B2Xf4TnCXgy980qcumQ7Hm36NU9gwS1Fja+sfPLDwLY
-        4haCGOWb83sy6PkQ7MZHuvvUzufPBf+YsdJBZCQQEMjwTchITefIPSq7m21rkh8WfREUVm3zbhxTn
-        AjzMgXRaJp52rWNrwODPi1ke1BmPt2FyjeuM+Av3QcbgCjiVJxJFX1R4Ymr2U4yttu2c1H8d+tw3D
-        zhg8vznA==;
+        bh=KuvJSh3lnAJIXSfsh3EbXlso8s4CD0kqTenK/w4OQyU=; b=upwVJWYvtCR1trrRCaMoYZ0rd7
+        o8qcGBcUSlcN5qzkTZS/QIgpqMKN5Sgm8L/TFE5oCxf2IeUKwKO2t7cKAXngkEa/AMRPfIt6jbpBz
+        vxeMP4kIlIOJG+DkEKPFaXHrLJnyLeQXXpxIkGpXqSIP8/AqNSn96m3/bLaRW8Zikn9oahHL0jwxN
+        ZP1K+W2LDFgK+JO6GXJpFzv7O8YWDQFcyltVaJihXUHmm0jK6M8zMOyvx4tBV7eStStTkGCtk3TK0
+        HKsq7Qly1mdg12focRKJJDInZ9iVr3XiPWm+Mifzby3MkhuKCFqHKVll7w3cbLhiQVXEBxOjqLJd3
+        x/wfRTrw==;
 Received: from [2001:4bb8:180:9d3f:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jXSr8-00065S-BJ; Sat, 09 May 2020 17:01:42 +0000
+        id 1jXSrA-00065u-PA; Sat, 09 May 2020 17:01:45 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/8] db: ensure that create and replace are exclusive in attr_set_f
-Date:   Sat,  9 May 2020 19:01:23 +0200
-Message-Id: <20200509170125.952508-7-hch@lst.de>
+Subject: [PATCH 7/8] repair: cleanup build_agf_agfl
+Date:   Sat,  9 May 2020 19:01:24 +0200
+Message-Id: <20200509170125.952508-8-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200509170125.952508-1-hch@lst.de>
 References: <20200509170125.952508-1-hch@lst.de>
@@ -54,30 +54,38 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Clear the other flag when applying the create or replace option,
-as the low-level libxfs can't handle both at the same time.
+No need to have two variables for the AGFL block number array.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- db/attrset.c | 2 ++
- 1 file changed, 2 insertions(+)
+ repair/phase5.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/db/attrset.c b/db/attrset.c
-index e3575271..b86ecec7 100644
---- a/db/attrset.c
-+++ b/db/attrset.c
-@@ -99,9 +99,11 @@ attr_set_f(
- 		/* modifiers */
- 		case 'C':
- 			args.attr_flags |= XATTR_CREATE;
-+			args.attr_flags &= ~XATTR_REPLACE;
- 			break;
- 		case 'R':
- 			args.attr_flags |= XATTR_REPLACE;
-+			args.attr_flags &= ~XATTR_CREATE;
- 			break;
+diff --git a/repair/phase5.c b/repair/phase5.c
+index 17b57448..677297fe 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -2149,18 +2149,15 @@ build_agf_agfl(
  
- 		case 'n':
+ 	/* setting to 0xff results in initialisation to NULLAGBLOCK */
+ 	memset(agfl, 0xff, mp->m_sb.sb_sectsize);
++	freelist = xfs_buf_to_agfl_bno(agfl_buf);
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		__be32 *agfl_bno = xfs_buf_to_agfl_bno(agfl_buf);
+-
+ 		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+ 		agfl->agfl_seqno = cpu_to_be32(agno);
+ 		platform_uuid_copy(&agfl->agfl_uuid, &mp->m_sb.sb_meta_uuid);
+ 		for (i = 0; i < libxfs_agfl_size(mp); i++)
+-			agfl_bno[i] = cpu_to_be32(NULLAGBLOCK);
++			freelist[i] = cpu_to_be32(NULLAGBLOCK);
+ 	}
+ 
+-	freelist = xfs_buf_to_agfl_bno(agfl_buf);
+-
+ 	/*
+ 	 * do we have left-over blocks in the btree cursors that should
+ 	 * be used to fill the AGFL?
 -- 
 2.26.2
 
