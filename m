@@ -2,109 +2,244 @@ Return-Path: <SRS0=ZB14=6Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99E61C38A2A
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 May 2020 14:09:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CF3DC54E4B
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 May 2020 16:14:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A05D2071C
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 May 2020 14:09:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7182720820
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 May 2020 16:14:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mF1viwne"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729087AbgEJOJQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 May 2020 10:09:16 -0400
-Received: from sandeen.net ([63.231.237.45]:37590 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728238AbgEJOJP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 10 May 2020 10:09:15 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 1BB173271;
-        Sun, 10 May 2020 09:09:03 -0500 (CDT)
-Subject: Re: [PATCH 4/8] db: cleanup attr_set_f and attr_remove_f
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200509170125.952508-1-hch@lst.de>
- <20200509170125.952508-5-hch@lst.de>
- <e7c3ed39-d007-8d9c-d718-ed5c60f92225@sandeen.net>
- <20200510071104.GA17094@lst.de>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <29f4bd53-6151-d58f-64ae-830b48ebb3cc@sandeen.net>
-Date:   Sun, 10 May 2020 09:09:14 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        id S1729135AbgEJQOL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 May 2020 12:14:11 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:53502 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728762AbgEJQOI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 May 2020 12:14:08 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04AGCMFP160058
+        for <linux-xfs@vger.kernel.org>; Sun, 10 May 2020 16:14:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=gK0JR3vDMRXY9lBdA8uCV3euoBVYKRPLeWU+pkTUUQw=;
+ b=mF1viwnev+hQZ7zXNJIS0OXJTyyHCmgaBigUf+Gh5coqfpoDcyiuiqi8EeFFqFOIRlAO
+ tmNkVcZntwtOqdEoMqsDREuJ7OybvnrBj4klVl1TceSZEMRdx/Rll37TvYt0KWhHx+zA
+ DJHLHOLKojHbmFsLONi2FGzb1RwDXZM4cb5QznimelWsNAeM0t8nKdACAElpzE935Kes
+ 44UonTTCZTDQ4zamWRtFXoLlWDpIH9xGmzPTvTBy3bI7YPzF+rltiGlw+XxohA+D6lrl
+ rpppbdQGZcjPh9/4FpLxkpseV9fmpZ7q9ETUFHIrJ/L8IDRhflSvZaXrqUtRmbbEp2YZ zg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 30x3gm9rua-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sun, 10 May 2020 16:14:06 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04AG8Kj0122320
+        for <linux-xfs@vger.kernel.org>; Sun, 10 May 2020 16:12:05 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 30xbgamaga-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 10 May 2020 16:12:05 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04AGC4bn014371
+        for <linux-xfs@vger.kernel.org>; Sun, 10 May 2020 16:12:04 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 10 May 2020 09:12:04 -0700
+Date:   Sun, 10 May 2020 09:12:03 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 3d60548b216b
+Message-ID: <20200510161203.GX6714@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200510071104.GA17094@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9617 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ spamscore=0 suspectscore=2 phishscore=0 bulkscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005100150
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9617 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ clxscore=1015 spamscore=0 lowpriorityscore=0 phishscore=0 bulkscore=0
+ malwarescore=0 priorityscore=1501 mlxscore=0 suspectscore=2
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005100150
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/10/20 2:11 AM, Christoph Hellwig wrote:
-> On Sat, May 09, 2020 at 12:23:42PM -0500, Eric Sandeen wrote:
->> On 5/9/20 12:01 PM, Christoph Hellwig wrote:
->>> Don't use local variables for information that is set in the da_args
->>> structure.
->>
->> I'm on the fence about this one; Darrick had missed setting a couple
->> of necessary structure members, so I actually see some value in assigning them
->> all right before we call into libxfs_attr_set .... it makes it very clear what's
->> being sent in to libxfs_attr_set.
-> 
-> But using additional local variables doesn't help with initialing
-> the fields, it actually makes it easier to miss, which I guess is
-> what happened.  I find the code much easier to verify without the
-> extra variables.
+Hi folks,
 
-They seem a bit extraneous, but my problem is I can't keep track of how much
-of the args structure is actually filled out when it's spread out over dozens
-of lines ....  
+The for-next branch of the xfs-linux repository at:
 
-*shrug* I dunno. Maybe darrick can cast the tie-breaking vote.  ;)
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
+
+The new head of the for-next branch is commit:
+
+3d60548b216b xfs: remove duplicate headers
+
+New Commits:
+
+Arnd Bergmann (1):
+      [166405f6b53b] xfs: stop CONFIG_XFS_DEBUG from changing compiler flags
+
+Brian Foster (18):
+      [cb6ad0993eb8] xfs: refactor failed buffer resubmission into xfsaild
+      [54b3b1f619ef] xfs: factor out buffer I/O failure code
+      [f20192991d79] xfs: simplify inode flush error handling
+      [15fab3b9be22] xfs: remove unnecessary shutdown check from xfs_iflush()
+      [b6983e80b03b] xfs: reset buffer write failure state on successful completion
+      [f9bccfcc3b59] xfs: refactor ratelimited buffer error messages into helper
+      [61948b6fb276] xfs: ratelimit unmount time per-buffer I/O error alert
+      [629dcb38dc35] xfs: fix duplicate verification from xfs_qm_dqflush()
+      [b707fffda6a3] xfs: abort consistently on dquot flush failure
+      [849274c103ae] xfs: acquire ->ail_lock from xfs_trans_ail_delete()
+      [655879290c28] xfs: use delete helper for items expected to be in AIL
+      [6af0479d8b6b] xfs: drop unused shutdown parameter from xfs_trans_ail_remove()
+      [2b3cf09356d5] xfs: combine xfs_trans_ail_[remove|delete]()
+      [88fc187984c9] xfs: remove unused iflush stale parameter
+      [7376d7454734] xfs: random buffer write failure errortag
+      [28d84620797e] xfs: remove unused shutdown types
+      [c199507993ed] xfs: remove unused iget_flags param from xfs_imap_to_bp()
+      [43dc0aa84ef7] xfs: fix unused variable warning in buffer completion on !DEBUG
+
+Chen Zhou (1):
+      [3d60548b216b] xfs: remove duplicate headers
+
+Christoph Hellwig (16):
+      [e968350aadf3] xfs: refactor the buffer cancellation table helpers
+      [5ce70b770d16] xfs: rename inode_list xlog_recover_reorder_trans
+      [7d4894b4ce07] xfs: factor out a xlog_buf_readahead helper
+      [f15ab3f60ef3] xfs: simplify xlog_recover_inode_ra_pass2
+      [98b69b1285be] xfs: refactor xlog_recover_buffer_pass1
+      [82ff450b2d93] xfs: remove the xfs_efi_log_item_t typedef
+      [c84e819090f3] xfs: remove the xfs_efd_log_item_t typedef
+      [fd9cbe512151] xfs: remove the xfs_inode_log_item_t typedef
+      [e046e949486e] xfs: factor out a xfs_defer_create_intent helper
+      [c1f09188e8de] xfs: merge the ->log_item defer op into ->create_intent
+      [d367a868e46b] xfs: merge the ->diff_items defer op into ->create_intent
+      [13a833333907] xfs: turn dfp_intent into a xfs_log_item
+      [bb47d79750f1] xfs: refactor xfs_defer_finish_noroll
+      [f09d167c2033] xfs: turn dfp_done into a xfs_log_item
+      [3ec1b26c04d4] xfs: use a xfs_btree_cur for the ->finish_cleanup state
+      [2f88f1efd02d] xfs: spell out the parameter name for ->cancel_item
+
+Darrick J. Wong (27):
+      [0d2d35a33ea7] xfs: report unrecognized log item type codes during recovery
+      [8bc3b5e4b70d] xfs: clean up the error handling in xfs_swap_extents
+      [35f4521fd3a0] xfs: convert xfs_log_recover_item_t to struct xfs_log_recover_item
+      [86ffa471d9ce] xfs: refactor log recovery item sorting into a generic dispatch structure
+      [8ea5682d0711] xfs: refactor log recovery item dispatch for pass2 readhead functions
+      [3304a4fabd09] xfs: refactor log recovery item dispatch for pass1 commit functions
+      [1094d3f12363] xfs: refactor log recovery buffer item dispatch for pass2 commit functions
+      [658fa68b6f34] xfs: refactor log recovery inode item dispatch for pass2 commit functions
+      [fcbdf91e0c9f] xfs: refactor log recovery dquot item dispatch for pass2 commit functions
+      [3ec6efa703cf] xfs: refactor log recovery icreate item dispatch for pass2 commit functions
+      [9817aa80dcdc] xfs: refactor log recovery EFI item dispatch for pass2 commit functions
+      [07590a9d38b8] xfs: refactor log recovery RUI item dispatch for pass2 commit functions
+      [9b4467e98340] xfs: refactor log recovery CUI item dispatch for pass2 commit functions
+      [3c6ba3cf90c7] xfs: refactor log recovery BUI item dispatch for pass2 commit functions
+      [2565a11b224b] xfs: remove log recovery quotaoff item dispatch for pass2 commit functions
+      [10d0c6e06fc8] xfs: refactor recovered EFI log item playback
+      [cba0ccac28a7] xfs: refactor recovered RUI log item playback
+      [c57ed2f5a2ff] xfs: refactor recovered CUI log item playback
+      [9329ba89cbb1] xfs: refactor recovered BUI log item playback
+      [bba7b1644a25] xfs: refactor xlog_item_is_intent now that we're done converting
+      [154c733a33d9] xfs: refactor releasing finished intents during log recovery
+      [86a371741386] xfs: refactor adding recovered intent items to the log
+      [889eb55dd68f] xfs: refactor intent item RECOVERED flag into the log item
+      [96b60f826713] xfs: refactor intent item iop_recover calls
+      [cc560a5a9540] xfs: hoist setting of XFS_LI_RECOVERED to caller
+      [17d29bf271ea] xfs: move log recovery buffer cancellation code to xfs_buf_item_recover.c
+      [6ea670ade207] xfs: remove unnecessary includes from xfs_log_recover.c
+
+Eric Sandeen (1):
+      [ec43f6da31f1] xfs: define printk_once variants for xfs messages
+
+Ira Weiny (5):
+      [d45344d6c49c] fs/xfs: Remove unnecessary initialization of i_rwsem
+      [606723d98293] fs/xfs: Change XFS_MOUNT_DAX to XFS_MOUNT_DAX_ALWAYS
+      [8d6c3446ec23] fs/xfs: Make DAX mount option a tri-state
+      [32dbc5655f1c] fs/xfs: Create function xfs_inode_should_enable_dax()
+      [840d493dff1a] fs/xfs: Combine xfs_diflags_to_linux() and xfs_diflags_to_iflags()
+
+Kaixu Xia (7):
+      [c140735bbb65] xfs: trace quota allocations for all quota types
+      [d51bafe0d227] xfs: combine two if statements with same condition
+      [fb353ff19d34] xfs: reserve quota inode transaction space only when needed
+      [ea1c90403d5d] xfs: remove unnecessary variable udqp from xfs_ioctl_setattr
+      [7994aae8516a] xfs: remove unnecessary assertion from xfs_qm_vop_create_dqattach
+      [cd59455980f9] xfs: simplify the flags setting in xfs_qm_scall_quotaon
+      [57fd2d8f61a2] xfs: remove unnecessary check of the variable resblks in xfs_symlink
+
+
+Code Diffstat:
+
+ fs/xfs/Makefile                 |    5 +-
+ fs/xfs/libxfs/xfs_defer.c       |  152 +--
+ fs/xfs/libxfs/xfs_defer.h       |   24 +-
+ fs/xfs/libxfs/xfs_errortag.h    |    4 +-
+ fs/xfs/libxfs/xfs_inode_buf.c   |   12 +-
+ fs/xfs/libxfs/xfs_inode_buf.h   |    2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c  |    2 +-
+ fs/xfs/libxfs/xfs_log_recover.h |   83 +-
+ fs/xfs/libxfs/xfs_trans_inode.c |    2 +-
+ fs/xfs/scrub/ialloc.c           |    3 +-
+ fs/xfs/xfs_bmap_item.c          |  237 +++-
+ fs/xfs/xfs_bmap_item.h          |   11 -
+ fs/xfs/xfs_bmap_util.c          |    2 +-
+ fs/xfs/xfs_buf.c                |   70 +-
+ fs/xfs/xfs_buf.h                |    2 +
+ fs/xfs/xfs_buf_item.c           |  106 +-
+ fs/xfs/xfs_buf_item.h           |    2 -
+ fs/xfs/xfs_buf_item_recover.c   |  984 ++++++++++++++
+ fs/xfs/xfs_dquot.c              |   47 +-
+ fs/xfs/xfs_dquot_item.c         |   17 +-
+ fs/xfs/xfs_dquot_item_recover.c |  201 +++
+ fs/xfs/xfs_error.c              |    3 +
+ fs/xfs/xfs_extfree_item.c       |  216 ++-
+ fs/xfs/xfs_extfree_item.h       |   25 +-
+ fs/xfs/xfs_fsops.c              |    5 +-
+ fs/xfs/xfs_icache.c             |    6 +-
+ fs/xfs/xfs_icreate_item.c       |  152 +++
+ fs/xfs/xfs_inode.c              |  143 +-
+ fs/xfs/xfs_inode.h              |    1 +
+ fs/xfs/xfs_inode_item.c         |   28 +-
+ fs/xfs/xfs_inode_item.h         |    6 +-
+ fs/xfs/xfs_inode_item_recover.c |  400 ++++++
+ fs/xfs/xfs_ioctl.c              |   40 +-
+ fs/xfs/xfs_iops.c               |   77 +-
+ fs/xfs/xfs_log_recover.c        | 2801 ++++-----------------------------------
+ fs/xfs/xfs_message.c            |   22 +
+ fs/xfs/xfs_message.h            |   24 +-
+ fs/xfs/xfs_mount.c              |    7 +-
+ fs/xfs/xfs_mount.h              |    6 +-
+ fs/xfs/xfs_pnfs.c               |    5 +-
+ fs/xfs/xfs_qm.c                 |    7 +-
+ fs/xfs/xfs_qm_syscalls.c        |    6 +-
+ fs/xfs/xfs_refcount_item.c      |  252 ++--
+ fs/xfs/xfs_refcount_item.h      |   11 -
+ fs/xfs/xfs_rmap_item.c          |  229 ++--
+ fs/xfs/xfs_rmap_item.h          |   13 -
+ fs/xfs/xfs_super.c              |   48 +-
+ fs/xfs/xfs_symlink.c            |    6 +-
+ fs/xfs/xfs_trans.h              |    6 +-
+ fs/xfs/xfs_trans_ail.c          |   79 +-
+ fs/xfs/xfs_trans_priv.h         |   21 +-
+ fs/xfs/xfs_xattr.c              |    1 -
+ 52 files changed, 3187 insertions(+), 3427 deletions(-)
+ create mode 100644 fs/xfs/xfs_buf_item_recover.c
+ create mode 100644 fs/xfs/xfs_dquot_item_recover.c
+ create mode 100644 fs/xfs/xfs_inode_item_recover.c
