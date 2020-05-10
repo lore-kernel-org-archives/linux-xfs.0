@@ -2,31 +2,34 @@ Return-Path: <SRS0=ZB14=6Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7670C38A2A
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 May 2020 14:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99E61C38A2A
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 May 2020 14:09:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C88DB2080C
-	for <linux-xfs@archiver.kernel.org>; Sun, 10 May 2020 14:07:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A05D2071C
+	for <linux-xfs@archiver.kernel.org>; Sun, 10 May 2020 14:09:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728978AbgEJOHM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 May 2020 10:07:12 -0400
-Received: from sandeen.net ([63.231.237.45]:37494 "EHLO sandeen.net"
+        id S1729087AbgEJOJQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 10 May 2020 10:09:16 -0400
+Received: from sandeen.net ([63.231.237.45]:37590 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728238AbgEJOHM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 10 May 2020 10:07:12 -0400
+        id S1728238AbgEJOJP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 10 May 2020 10:09:15 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id D61593271;
-        Sun, 10 May 2020 09:06:58 -0500 (CDT)
-Subject: Re: [PATCH] libxfs-apply: use git am instead of patch
+        by sandeen.net (Postfix) with ESMTPSA id 1BB173271;
+        Sun, 10 May 2020 09:09:03 -0500 (CDT)
+Subject: Re: [PATCH 4/8] db: cleanup attr_set_f and attr_remove_f
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-References: <20200510071455.986111-1-hch@lst.de>
+References: <20200509170125.952508-1-hch@lst.de>
+ <20200509170125.952508-5-hch@lst.de>
+ <e7c3ed39-d007-8d9c-d718-ed5c60f92225@sandeen.net>
+ <20200510071104.GA17094@lst.de>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -70,12 +73,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <fb3123d7-a2a0-d503-7730-53135578f483@sandeen.net>
-Date:   Sun, 10 May 2020 09:07:10 -0500
+Message-ID: <29f4bd53-6151-d58f-64ae-830b48ebb3cc@sandeen.net>
+Date:   Sun, 10 May 2020 09:09:14 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200510071455.986111-1-hch@lst.de>
+In-Reply-To: <20200510071104.GA17094@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -84,38 +87,24 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/10/20 2:14 AM, Christoph Hellwig wrote:
-> If neither guilt or stgit are used default to git am instead of patch
-> so that all the commit information is properly propagated.
+On 5/10/20 2:11 AM, Christoph Hellwig wrote:
+> On Sat, May 09, 2020 at 12:23:42PM -0500, Eric Sandeen wrote:
+>> On 5/9/20 12:01 PM, Christoph Hellwig wrote:
+>>> Don't use local variables for information that is set in the da_args
+>>> structure.
+>>
+>> I'm on the fence about this one; Darrick had missed setting a couple
+>> of necessary structure members, so I actually see some value in assigning them
+>> all right before we call into libxfs_attr_set .... it makes it very clear what's
+>> being sent in to libxfs_attr_set.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> But using additional local variables doesn't help with initialing
+> the fields, it actually makes it easier to miss, which I guess is
+> what happened.  I find the code much easier to verify without the
+> extra variables.
 
-Looks good to me.
+They seem a bit extraneous, but my problem is I can't keep track of how much
+of the args structure is actually filled out when it's spread out over dozens
+of lines ....  
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
-
-reminds me I need to change the help to show that the signed off by cmdline option is optional....
-
-> ---
->  tools/libxfs-apply | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
-> index deb9c225..3258272d 100755
-> --- a/tools/libxfs-apply
-> +++ b/tools/libxfs-apply
-> @@ -395,8 +395,8 @@ apply_patch()
->  			fi
->  		fi
->  	else
-> -		echo "Applying with patch utility:"
-> -		patch -p1 < $_new_patch.2
-> +		echo "Applying with git am:"
-> +		git am -s $_new_patch.2
->  		echo "Patch was applied in $REPO; check for rejects, etc"
-
-I suppose git-am will already be pretty noisy if there are rejects but *shrug* ;)
-
->  	fi
->  
-> 
+*shrug* I dunno. Maybe darrick can cast the tie-breaking vote.  ;)
