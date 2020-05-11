@@ -2,109 +2,109 @@ Return-Path: <SRS0=Jrso=6Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29698C47255
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 03:41:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3177EC47255
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 11:40:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E764F2082E
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 03:41:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10AE920708
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 11:40:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DJuvPN5s"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bvTtZRfU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727960AbgEKDlf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 10 May 2020 23:41:35 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54726 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727824AbgEKDlf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 10 May 2020 23:41:35 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04B3WtOh105403;
-        Mon, 11 May 2020 03:41:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=ckhSUQOucb4BDNBCevRmtv1nDmtoBDnuKXfiXXI+dUY=;
- b=DJuvPN5s+7Oofq/fnegXQJKqSfZdemUefYUZ/ConUtH1Vz8Aw6XE9Y0h0bEBcf+hITZ7
- jOrGARVU78v4RVkQJuA1HJ+RKaBmqRyCAhcvhdsQhh04BDh2psUoklnVeKJo+suTWmUq
- nsQHXw2SiDM1+qhqqfPJwtzOVGVsWn8up/6vFrO38cQ9fOdMOy7/T/Ae1+CevBjMJNnH
- ifrWEoXEd9nWMDaEPN8sXVY/WmbdEtts0Djq/0mljetZ76gJ0OqXGx7+5X7xhfhBZRyr
- o/6YDQHYIjTZcH5zkXM/16ZRcj9qUABpaZsb6hTiW15qMuliuwQHiZUAZQDH6FVHwxWz 1Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 30x3gsan3r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 11 May 2020 03:41:29 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04B3bUP9169318;
-        Mon, 11 May 2020 03:41:29 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 30x63ktdhc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 11 May 2020 03:41:28 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04B3fRCc008971;
-        Mon, 11 May 2020 03:41:27 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 10 May 2020 20:41:27 -0700
-Date:   Sun, 10 May 2020 20:41:25 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/8] db: cleanup attr_set_f and attr_remove_f
-Message-ID: <20200511034125.GY6714@magnolia>
-References: <20200509170125.952508-1-hch@lst.de>
- <20200509170125.952508-5-hch@lst.de>
- <e7c3ed39-d007-8d9c-d718-ed5c60f92225@sandeen.net>
- <20200510071104.GA17094@lst.de>
- <29f4bd53-6151-d58f-64ae-830b48ebb3cc@sandeen.net>
+        id S1729600AbgEKLkq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 May 2020 07:40:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41178 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729596AbgEKLkp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 May 2020 07:40:45 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A743C061A0C
+        for <linux-xfs@vger.kernel.org>; Mon, 11 May 2020 04:40:45 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id p25so4608886pfn.11
+        for <linux-xfs@vger.kernel.org>; Mon, 11 May 2020 04:40:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=dELuqzWhUAxPQcJP5fGhtjcAnIq04cGt4VYLIlLvHMc=;
+        b=bvTtZRfU17jh83dcbd9u4JniCnuJ09vJFY+eZ2N14UiLUQE8eQd/1km85EXrjEz8zt
+         b1IdP6G66jYB7kqpD+6bzNI9j0bp9HIzBWkEPMOGeIa8U4wZSOm/oZRmAy2/lovttXD3
+         QTWt7DSw6sNNk4vN3izfV4n5sJe1HfVQG0vx4O/h/+70A9EYYlHOFIduw6851b6aWy6e
+         oVrNHwqUANpOxD02H2t47bX6MWqQ6EVPlNkmnF2m25YnZLeY/t9004ENRIyFDJ/6MYyE
+         5UKRbWXBVBSHBaXAlcmrb+dbYWoF4aCH7EJEA6s7O74DTp1Zy8m415S5K31p1rRQtgP9
+         B+8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=dELuqzWhUAxPQcJP5fGhtjcAnIq04cGt4VYLIlLvHMc=;
+        b=JRLz2in3aM0pbEd3HqF/N3oPQb4qMbX/2GgEZVZiUFaufeU9vMuHSoytYCiH+WyGjw
+         z371kHwLxWmI6PoWEgR60FF2xEn7/zcbW54fch+o+b//afuPk1x5Z9jet8i/GT/CjIPa
+         eF1kTJc2yAXGCXDWasM7J/xjW+dSMpNdO6RKyFHLcyiOW63pC+NUGUgfwEfZ+pABX1TT
+         QeuyoL1TStrDISg3ys+nJpWHrIP1BQAgqBpOz73EwuyDAr+nKXB8jJL4NeyhwhCyJvea
+         dR18iDfc2Xjzij/hwERRSWP3xfVGfOBZbxnZ3jAEDiJqovwRzcwxdS5M5T+yxb2MdG4Y
+         6o2A==
+X-Gm-Message-State: AGi0PuauOmjMLzYNT4K6KPC1sAzgAzYCxosGKLfs4cqGMQQB5KuMgxmF
+        hOiRLwxaYB3c2walKmEJ5xltUCLI1Tc=
+X-Google-Smtp-Source: APiQypJ35rXkmBXXylUITHUu9+HwxZf0IvOKfo/exODylG1Lnt6TwxQXEdtLkI7gs0zdAzNTRtUBwg==
+X-Received: by 2002:a62:18c8:: with SMTP id 191mr15933565pfy.255.1589197245056;
+        Mon, 11 May 2020 04:40:45 -0700 (PDT)
+Received: from garuda.localnet ([122.171.220.131])
+        by smtp.gmail.com with ESMTPSA id a15sm9799634pju.3.2020.05.11.04.40.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 May 2020 04:40:44 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: use XFS_IFORK_BOFF xchk_bmap_check_rmaps
+Date:   Mon, 11 May 2020 17:10:04 +0530
+Message-ID: <2615851.ejxhajbSum@garuda>
+In-Reply-To: <20200510072404.986627-2-hch@lst.de>
+References: <20200510072404.986627-1-hch@lst.de> <20200510072404.986627-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <29f4bd53-6151-d58f-64ae-830b48ebb3cc@sandeen.net>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9617 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=1
- malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
- definitions=main-2005110027
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9617 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
- malwarescore=0 adultscore=0 mlxscore=0 priorityscore=1501
- lowpriorityscore=0 impostorscore=0 clxscore=1015 bulkscore=0 phishscore=0
- suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2003020000 definitions=main-2005110026
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, May 10, 2020 at 09:09:14AM -0500, Eric Sandeen wrote:
-> On 5/10/20 2:11 AM, Christoph Hellwig wrote:
-> > On Sat, May 09, 2020 at 12:23:42PM -0500, Eric Sandeen wrote:
-> >> On 5/9/20 12:01 PM, Christoph Hellwig wrote:
-> >>> Don't use local variables for information that is set in the da_args
-> >>> structure.
-> >>
-> >> I'm on the fence about this one; Darrick had missed setting a couple
-> >> of necessary structure members, so I actually see some value in assigning them
-> >> all right before we call into libxfs_attr_set .... it makes it very clear what's
-> >> being sent in to libxfs_attr_set.
-> > 
-> > But using additional local variables doesn't help with initialing
-> > the fields, it actually makes it easier to miss, which I guess is
-> > what happened.  I find the code much easier to verify without the
-> > extra variables.
+On Sunday 10 May 2020 12:53:59 PM IST Christoph Hellwig wrote:
+> XFS_IFORK_Q is to be used in boolean context, not for a size.  This
+> doesn't make a difference in practice as size is only checked for
+> 0, but this keeps the logic sane.
+>
+
+Wouldn't XFS_IFORK_ASIZE() be a better fit since it gives the space used by the
+attr fork inside an inode's literal area?
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/scrub/bmap.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> They seem a bit extraneous, but my problem is I can't keep track of how much
-> of the args structure is actually filled out when it's spread out over dozens
-> of lines ....  
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index add8598eacd5d..283424d6d2bb6 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -591,7 +591,7 @@ xchk_bmap_check_rmaps(
+>  		size = i_size_read(VFS_I(sc->ip));
+>  		break;
+>  	case XFS_ATTR_FORK:
+> -		size = XFS_IFORK_Q(sc->ip);
+> +		size = XFS_IFORK_BOFF(sc->ip);
+>  		break;
+>  	default:
+>  		size = 0;
 > 
-> *shrug* I dunno. Maybe darrick can cast the tie-breaking vote.  ;)
-
-I mean... I /did/ already RVB this one... :)
 
 
---D
+-- 
+chandan
+
+
+
