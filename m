@@ -2,119 +2,126 @@ Return-Path: <SRS0=Jrso=6Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A15C47255
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:00:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B1BDC47255
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:22:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B6FF206E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:00:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 269EC2070B
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:22:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hifD1oFJ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eNiuuD4d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729877AbgEKQAt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 May 2020 12:00:49 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:29171 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729550AbgEKQAt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 May 2020 12:00:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589212848;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zYkoZExKyvCcHdBmejCg4k8guvH/Tz5NrEZH1+evYtc=;
-        b=hifD1oFJHKkZ6oDc1LQw+0Waz38k7InshHihRMxMpXy9XuCMjnTONjEq0FIBCGnIY1F8Bw
-        RAO3lrw9C0YMzN3KksxJDJXdbKJpwkvUBhQhxwIPxOw+oK5ZRN2LWBQJ6JF3dXQ/EPGJxF
-        /P7k2FRSOKGQ35N1TLwx8IMeKm+mLWM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-484-gVHA4JFgOSu8nht_XQ0yfg-1; Mon, 11 May 2020 12:00:44 -0400
-X-MC-Unique: gVHA4JFgOSu8nht_XQ0yfg-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 751178730B2;
-        Mon, 11 May 2020 16:00:43 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3A7A960BF4;
-        Mon, 11 May 2020 16:00:43 +0000 (UTC)
-Subject: Re: [PATCH] xfs_quota: refactor code to generate id from name
+        id S1729956AbgEKQWs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 May 2020 12:22:48 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:53466 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726934AbgEKQWs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 May 2020 12:22:48 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04BGD1qW117052;
+        Mon, 11 May 2020 16:22:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=FG1xKKC1yhLYHGzC2v5eeBk0+vXLbA4/jKCkc/sqHoc=;
+ b=eNiuuD4dzYA2kt3o9lnTgtpw86tGSaCBzjXVxDhkGEeT1RBVnquZV0jNYXVkOKKlEK7B
+ hWDxdCv1r6EuXXxAcYZmYyAWS9aIgs1wBetJfzXYuoCOBglDeThkr1gTfQUjBrYPFiWr
+ eaofbDOm8P/H34kjEk1treMaSucRYHss7f48G4aSZgOiRde/ru1UKwFSUgt7hTHESeY5
+ 9/abc1IFIpIr+zqjDJh5bwtPheNCQYDH58zhcPcbYAFycya1mhZf0jGz2eHJmxYB1e7o
+ zkRw3dXQcKA65HJm4s1pM0hGap9hZOSRrHrpHHfew50ttFiWY/z6qD95Z+ekLO4ZBXL8 fg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 30x3mbp3pj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 11 May 2020 16:22:07 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04BGDZD9011375;
+        Mon, 11 May 2020 16:22:06 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 30x63n10jd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 May 2020 16:22:06 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04BGM4lP005803;
+        Mon, 11 May 2020 16:22:05 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 11 May 2020 09:22:04 -0700
+Date:   Mon, 11 May 2020 09:22:03 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <8b4b7edb-94b2-3bb1-9ede-73674db82330@redhat.com>
- <20200511153249.GA11320@infradead.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Message-ID: <4b3f4a0c-d04d-756d-8558-0f83e612bc2e@redhat.com>
-Date:   Mon, 11 May 2020 11:00:42 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/16] xfs_repair: convert to libxfs_verify_agbno
+Message-ID: <20200511162203.GZ6714@magnolia>
+References: <158904179213.982941.9666913277909349291.stgit@magnolia>
+ <158904185435.982941.16817943726460132539.stgit@magnolia>
+ <20200509171830.GC15381@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20200511153249.GA11320@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200509171830.GC15381@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9618 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=1
+ malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005110127
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9618 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 impostorscore=0
+ mlxscore=0 suspectscore=1 bulkscore=0 mlxlogscore=999 phishscore=0
+ malwarescore=0 lowpriorityscore=0 spamscore=0 adultscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005110127
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/11/20 10:32 AM, Christoph Hellwig wrote:
-> On Sat, May 09, 2020 at 12:18:42PM -0500, Eric Sandeen wrote:
-
-...
-
->> @@ -101,6 +101,42 @@ warn_help(void)
->>  "\n"));
->>  }
->>  
->> +static uint32_t
->> +id_from_string(
->> +	char	*name,
->> +	int	type)
->> +{
->> +	uint32_t	id = -1;
->> +
->> +	switch (type) {
->> +	case XFS_USER_QUOTA:
->> +		id = uid_from_string(name);
->> +		if (id == -1)
->> +			fprintf(stderr, _("%s: invalid user name: %s\n"),
->> +				progname, name);
->> +		break;
->> +	case XFS_GROUP_QUOTA:
->> +		id = gid_from_string(name);
->> +		if (id == -1)
->> +			fprintf(stderr, _("%s: invalid group name: %s\n"),
->> +				progname, name);
->> +		break;
->> +	case XFS_PROJ_QUOTA:
->> +		id = prid_from_string(name);
->> +		if (id == -1)
->> +			fprintf(stderr, _("%s: invalid project name: %s\n"),
->> +				progname, name);
->> +		break;
->> +	default:
->> +		ASSERT(0);
->> +		break;
->> +	}
->> +
->> +	if (id == -1)
->> +		exitcode = 1;
->> +	return id;
+On Sat, May 09, 2020 at 10:18:30AM -0700, Christoph Hellwig wrote:
+> On Sat, May 09, 2020 at 09:30:54AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Convert the homegrown verify_agbno callers to use the libxfs function,
+> > as needed.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> What about de-duplicating the error printk as well?
+> This looks mostly good, but there is one thing I wonder about:
+> 
+> >  	bno = be32_to_cpu(agf->agf_roots[XFS_BTNUM_BNO]);
+> > -	if (bno != 0 && verify_agbno(mp, agno, bno)) {
+> > +	if (libxfs_verify_agbno(mp, agno, bno)) {
+> 
+> Various of these block is non-zero check are going away.  Did you
+> audit if they weren't used as intentional escapes in a few places?
 
-Oh yeah, good idea, I'll do that and send V2.
+Yes.  Each of those "bno != 0" checks occurs in the context of checking
+an AG header's pointer to a btree root.  The roots should never be zero
+if the corresponding feature is enabled, and we're careful to check the
+feature bits first.
 
-for some reason I always forget about handling things like this in
-this way.  :)
+AFAICT that bno != 0 check is actually there to cover a deficiency in
+the verify_agbno function, which is that it only checked that the
+supplied argument didn't go past the end of the AG and did not check
+that the pointer didn't point into the AG header block(s).
 
-Thanks,
--Eric
+Checking for a nonzero value is also insufficient, since on a
+blocksize < sectorsize * 4 filesystem, the AGFL can end up in a nonzero
+agbno.  libxfs_verify_agbno covers all of these cases.
 
+> Either way this should probably be documented in the changelog.
+
+Ok, how about this for a commit message:
+
+"Convert the homegrown verify_agbno callers to use the libxfs function,
+as needed.  In some places we drop the "bno != 0" checks because those
+conditionals are checking btree roots; btree roots should never be
+zero if the corresponding feature bit is set; and repair skips the if
+clause entirely if the feature bit is disabled.
+
+"In effect, this strengthens repair to validate that AG btree pointers
+neither point to the AG headers nor point past the end of the AG."
+
+--D
