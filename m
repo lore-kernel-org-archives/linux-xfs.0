@@ -2,52 +2,30 @@ Return-Path: <SRS0=Jrso=6Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_TONAME_EQ_TOLOCAL_SHORT,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DACCEC54E8D
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 20:32:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74846C47255
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 21:41:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDD5B2078A
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 20:32:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Mfc0o6lj"
+	by mail.kernel.org (Postfix) with ESMTP id 59AEF206E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 21:41:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727873AbgEKUcw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 May 2020 16:32:52 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:48019 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1731629AbgEKUcv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 May 2020 16:32:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589229170;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=snBdxU2/cE5De93Oqlp946W1LxgJgIZiPQQ62+V20wE=;
-        b=Mfc0o6ljpmL4fzvgNTna4gHVL93FaH1dF2hiZeu9tzNL9Iwzv1jotzXb8dPJv/6qopgrhq
-        49qdewrz5hUxqNY/XdY6qMqVphqSmgtO1YEZ3OJPYv27gUlQtFVgOvPK7hJQQf8xtKN6V6
-        cuu/+PPauAjfIqcAGlIIheiaa0c/WXo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-64-oSStRNqYPpiPsu6FXJUR-A-1; Mon, 11 May 2020 16:32:48 -0400
-X-MC-Unique: oSStRNqYPpiPsu6FXJUR-A-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1725904AbgEKVlY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 May 2020 17:41:24 -0400
+Received: from sandeen.net ([63.231.237.45]:47952 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725860AbgEKVlY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 11 May 2020 17:41:24 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A4A2CBFD1
-        for <linux-xfs@vger.kernel.org>; Mon, 11 May 2020 20:32:43 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7D2C86E6F2
-        for <linux-xfs@vger.kernel.org>; Mon, 11 May 2020 20:32:43 +0000 (UTC)
-Subject: Re: [PATCH] xfs_repair: remove gratuitous code block in phase5
-From:   Eric Sandeen <sandeen@redhat.com>
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <1dc0bb1a-ce6f-5e22-77ff-b8bb408a3e03@redhat.com>
-Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
+        by sandeen.net (Postfix) with ESMTPSA id 150D3B77
+        for <linux-xfs@vger.kernel.org>; Mon, 11 May 2020 16:41:09 -0500 (CDT)
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 5d0807ad
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
  WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
@@ -57,64 +35,157 @@ Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
  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
- 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
-Message-ID: <3b728076-0454-104c-312f-511447235f61@redhat.com>
-Date:   Mon, 11 May 2020 15:32:42 -0500
+ dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
+ bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
+ aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
+ UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
+ EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
+ sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
+ 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
+ gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
+ 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
+ 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
+ WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
+ Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
+ X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
+ SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
+ 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
+ GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
+ 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
+ Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
+ ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
+ TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
+ gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
+ AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
+ YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
+ mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
+ LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
+ LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
+ MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
+ JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
+ Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
+ m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
+ fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <ec63ae12-41b0-26e7-0a60-72820f7385c6@sandeen.net>
+Date:   Mon, 11 May 2020 16:41:20 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <1dc0bb1a-ce6f-5e22-77ff-b8bb408a3e03@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="TWPU7mBj8kLXXmqftZHjl602PmjC8OiX1"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/11/20 2:20 PM, Eric Sandeen wrote:
-> A commit back in 2008 removed a "for" loop ahead of this code block, but
-> left the indented code block in place. Remove it for clarity and reflow
-> comments & lines as needed.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--TWPU7mBj8kLXXmqftZHjl602PmjC8OiX1
+Content-Type: multipart/mixed; boundary="o7TxYdrP0fTw2ElOUCnQzcMEO1Tqx5RsZ"
 
-Never mind, Darrick /just/ did this in his other series.  Weird.  I didn't
-see it there! ;)
+--o7TxYdrP0fTw2ElOUCnQzcMEO1Tqx5RsZ
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-So ignore this patch.
+Hi folks,
 
--Eric
+The for-next branch of the xfsprogs repository at:
 
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the for-next branch is commit:
+
+5d0807ad libxfs-apply: use git am instead of patch
+
+New Commits:
+
+Christoph Hellwig (11):
+      [bbe12eb9] xfsprogs: remove libreadline support
+      [d5b6e335] xfsprogs: remove xfs_dir_ops
+      [b98cd1f7] libxfs: use tabs instead of spaces in div_u64
+      [30f8e916] db: fix a comment in scan_freelist
+      [27cd356f] db: add a comment to agfl_crc_flds
+      [8e9a788f] db: cleanup attr_set_f and attr_remove_f
+      [38cff22d] db: validate name and namelen in attr_set_f and attr_rem=
+ove_f
+      [951e17bc] db: ensure that create and replace are exclusive in attr=
+_set_f
+      [0c02ef9b] repair: cleanup build_agf_agfl
+      [f19a627b] metadump: small cleanup for process_inode
+      [5d0807ad] libxfs-apply: use git am instead of patch
+
+Darrick J. Wong (3):
+      [b0c0cdb7] libxcmd: don't crash if el_gets returns null
+      [8c4d190e] find_api_violations: fix sed expression
+      [7161cd21] xfs_db: bounds-check access to the dbmap array
+
+Eric Sandeen (1):
+      [baed08dd] xfs_io: copy_range can take up to 8 arguments
+
+
+Code Diffstat:
+
+ configure.ac                 |  7 ----
+ db/Makefile                  |  5 ---
+ db/agfl.c                    |  1 +
+ db/attrset.c                 | 87 ++++++++++++++++++++++++--------------=
+------
+ db/check.c                   | 45 ++++++++++++++++++++++-
+ db/input.c                   | 26 +------------
+ db/metadump.c                |  3 +-
+ growfs/Makefile              |  3 --
+ include/builddefs.in         |  2 -
+ include/xfs_inode.h          |  2 -
+ include/xfs_mount.h          |  3 --
+ io/Makefile                  |  4 --
+ io/copy_file_range.c         |  2 +-
+ libxcmd/Makefile             |  5 ---
+ libxcmd/input.c              | 38 ++++++++-----------
+ libxfs/libxfs_priv.h         |  4 +-
+ libxfs/rdwr.c                |  8 ----
+ libxfs/util.c                |  8 ----
+ quota/Makefile               |  5 ---
+ repair/phase5.c              |  7 +---
+ repair/phase6.c              |  1 -
+ spaceman/Makefile            |  4 --
+ tools/find-api-violations.sh | 10 ++++-
+ tools/libxfs-apply           |  4 +-
+ 24 files changed, 126 insertions(+), 158 deletions(-)
+
+
+--o7TxYdrP0fTw2ElOUCnQzcMEO1Tqx5RsZ--
+
+--TWPU7mBj8kLXXmqftZHjl602PmjC8OiX1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl65xoEACgkQIK4WkuE9
+3uCmEQ/9FQ06sOYuOzgiBwQ580o6NE8LK62h2HxPsMpYt4amuXNUw0H/8/O0JuVJ
+sU7U2ZhuqaJOUyz16C04WEjCOp6zOtP2xGYddXtWPfUJc/gDV80nE6MGsVdOhtew
+OwunFZN/QBE8pGF09nmmOuaAqwReRQYyGVHLwgVi7wwZ/auBoVpbP6hDR0pV6j2r
+BuXZCcCbfbTCjVDdfG6ieuC7AZlPUzVFwmDT0pY9Ux6QlEs9rPJSUSX8OnZJVPiU
+ELTMh4c9EFCYYehCUIEBd7xoO6Z79FUE03lmgRHHWgXAwpBcmimebIQ0G2NCMcjb
+jeMB0E0XK10S1p5cl9aBB2Hmf5yLZssGsV4uvpN9RfwRvzNv0+2Tq9O0EjOCeyHA
+dTjio2cU5aeEnn6ZEg8NsHOJe7lbX2N3/hyjlIMhm/C0U8lS2pqyUwLM2XcNw+oH
+aBU4/0+XGo/KwRZBRUdMo1IVAsrZAGiusmZkTr+hK8gxp7CBFUranwZL9DHFFgxD
+ysX6Prx2euqaBimKUCBGsEPMPO+6lLOBUbouDC0CjHppxzCi0M50YEczS7rw3U9J
+RdfKVYGFjhGPPaFfyQSkChxvmuCcRoUOk5dkbYmEfBzVKZMskQaBadBQNrSShleW
+cWaZ/hxIr9p4hoFMEnvhG1BHKN7jZQ13RbKvsaWWyMQ2sPnmU/c=
+=NxM0
+-----END PGP SIGNATURE-----
+
+--TWPU7mBj8kLXXmqftZHjl602PmjC8OiX1--
