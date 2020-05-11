@@ -2,61 +2,119 @@ Return-Path: <SRS0=Jrso=6Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D62C47255
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 15:35:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A15C47255
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:00:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0468206DB
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 15:35:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B6FF206E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:00:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mAJe8CtF"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hifD1oFJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727994AbgEKPfd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 May 2020 11:35:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49856 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726173AbgEKPfd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 May 2020 11:35:33 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13950C061A0C
-        for <linux-xfs@vger.kernel.org>; Mon, 11 May 2020 08:35:33 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=mdXUqDkHLMbfYTTJOGy/y5Li8HJCTvdIf6xVfr17wFQ=; b=mAJe8CtFxD67PP26KAZVRVn5F9
-        nJlU4vC2KCglzEiWcWcjfnc0jFFQmFH5OMGk6EXpLGnXHFvMU/DJwp4jM9iTTA2VF66dK/YmPHiGf
-        urfko5VSvlcBXynYGvs/VKY8ckahsA3Vg8vqvsyHhBbDxTrv0AUqXkD021YxR8/VhCCjbWvv6prlz
-        lpFLV6NWoMnVQTDGvDI6gUgerZlwfUlQle11I5Z2HWp8x+5XR97iMaac4h/l7fDEGaNoy6x/pKLjI
-        /5FNIPHT52Yc2/9K4ydWdN16XwkVU34TYtHVyZqsZPraTD8tCdYSTe8XgrJGvUMxTv8dNIhgA7Q94
-        TDc9+40Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jYASq-0001NP-AF; Mon, 11 May 2020 15:35:32 +0000
-Date:   Mon, 11 May 2020 08:35:32 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH RFC] xfs: allow adjusting individual quota grace times
-Message-ID: <20200511153532.GB11320@infradead.org>
-References: <ca1d2bb6-6f37-255c-1015-a20c6060d81c@redhat.com>
+        id S1729877AbgEKQAt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 May 2020 12:00:49 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:29171 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729550AbgEKQAt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 May 2020 12:00:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589212848;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=zYkoZExKyvCcHdBmejCg4k8guvH/Tz5NrEZH1+evYtc=;
+        b=hifD1oFJHKkZ6oDc1LQw+0Waz38k7InshHihRMxMpXy9XuCMjnTONjEq0FIBCGnIY1F8Bw
+        RAO3lrw9C0YMzN3KksxJDJXdbKJpwkvUBhQhxwIPxOw+oK5ZRN2LWBQJ6JF3dXQ/EPGJxF
+        /P7k2FRSOKGQ35N1TLwx8IMeKm+mLWM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-484-gVHA4JFgOSu8nht_XQ0yfg-1; Mon, 11 May 2020 12:00:44 -0400
+X-MC-Unique: gVHA4JFgOSu8nht_XQ0yfg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 751178730B2;
+        Mon, 11 May 2020 16:00:43 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3A7A960BF4;
+        Mon, 11 May 2020 16:00:43 +0000 (UTC)
+Subject: Re: [PATCH] xfs_quota: refactor code to generate id from name
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <8b4b7edb-94b2-3bb1-9ede-73674db82330@redhat.com>
+ <20200511153249.GA11320@infradead.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Message-ID: <4b3f4a0c-d04d-756d-8558-0f83e612bc2e@redhat.com>
+Date:   Mon, 11 May 2020 11:00:42 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ca1d2bb6-6f37-255c-1015-a20c6060d81c@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200511153249.GA11320@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 09, 2020 at 02:47:02PM -0500, Eric Sandeen wrote:
-> So there's no real way to know that the grace period adjustment failed
-> on an older kernel.  We could consider that a bug and fix it, or
-> consider it a change in behavior that we can't just make without
-> at least some form of versioning.  Thoughts?
+On 5/11/20 10:32 AM, Christoph Hellwig wrote:
+> On Sat, May 09, 2020 at 12:18:42PM -0500, Eric Sandeen wrote:
 
-I'd consider a bug, as applications are very unlikely to rely on
-these ignored calls (famous last words..).
+...
+
+>> @@ -101,6 +101,42 @@ warn_help(void)
+>>  "\n"));
+>>  }
+>>  
+>> +static uint32_t
+>> +id_from_string(
+>> +	char	*name,
+>> +	int	type)
+>> +{
+>> +	uint32_t	id = -1;
+>> +
+>> +	switch (type) {
+>> +	case XFS_USER_QUOTA:
+>> +		id = uid_from_string(name);
+>> +		if (id == -1)
+>> +			fprintf(stderr, _("%s: invalid user name: %s\n"),
+>> +				progname, name);
+>> +		break;
+>> +	case XFS_GROUP_QUOTA:
+>> +		id = gid_from_string(name);
+>> +		if (id == -1)
+>> +			fprintf(stderr, _("%s: invalid group name: %s\n"),
+>> +				progname, name);
+>> +		break;
+>> +	case XFS_PROJ_QUOTA:
+>> +		id = prid_from_string(name);
+>> +		if (id == -1)
+>> +			fprintf(stderr, _("%s: invalid project name: %s\n"),
+>> +				progname, name);
+>> +		break;
+>> +	default:
+>> +		ASSERT(0);
+>> +		break;
+>> +	}
+>> +
+>> +	if (id == -1)
+>> +		exitcode = 1;
+>> +	return id;
+> 
+> What about de-duplicating the error printk as well?
+
+Oh yeah, good idea, I'll do that and send V2.
+
+for some reason I always forget about handling things like this in
+this way.  :)
+
+Thanks,
+-Eric
+
