@@ -2,146 +2,117 @@ Return-Path: <SRS0=Jrso=6Z=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E1DC47255
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:32:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C58DC47255
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:46:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D9AA2075E
-	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:32:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54D4A20708
+	for <linux-xfs@archiver.kernel.org>; Mon, 11 May 2020 16:46:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lKn4Da27"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nFpOJxkO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730684AbgEKQcu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 11 May 2020 12:32:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58754 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728556AbgEKQct (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 May 2020 12:32:49 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC134C061A0C
-        for <linux-xfs@vger.kernel.org>; Mon, 11 May 2020 09:32:49 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id x77so4981864pfc.0
-        for <linux-xfs@vger.kernel.org>; Mon, 11 May 2020 09:32:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=D/DUqh27mcxwMWIzwR6aHlHZ8zaqGs4vo9oFIGkTZ3U=;
-        b=lKn4Da27KCLDKRk3+Mlsx3bU3Nsz6ZdUoxEKaC9YONsowdnTdRB37cxuc4KGMeyNBa
-         21UzjwYhWpoGeJOgjFel4XBPoPbd6nwQvtmBDKuoYWmC/wEIANk9Mc2NBJXZgMisEPzL
-         EJ8KvWyzbXcChqDJC8accVfUt0fCjMFBtpX7PPy4s6wyKGZ0tz0PzbbHJxxLEkPFJsd3
-         mKhhUHRUpSNtBY2/W9U1ePiOhQ/bFVzcDtreMjypLj8Ue9vX3P9GAfj+vkqWoZXkNZo1
-         D3jAKOqd++KvC4C0iJ2c4behCmAgzRd1IoNmNd9cSKhzGa2rOSESFZkzZvEIa+me/OMJ
-         gPbQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=D/DUqh27mcxwMWIzwR6aHlHZ8zaqGs4vo9oFIGkTZ3U=;
-        b=eeXFFKhi0Q7P7CmcjPJFrUeQiXxVRVl/Mf6hz5HD0+sQBDOg2KEBRKWufajyN/KNqu
-         ufNJusSNfW+KLxCtXg9Id97xTzOEsVAGbVcnkPjSXHBFp1RBBWOb7UOr0y5j/tOOLLwJ
-         A8gSC4yhZ05to7gbRPpH47gAEHu9RIKgQBiUoOWZJuA9eGX7qVUcPi4OlYT63Pqi2rIZ
-         JXriKtpJL/3ejmIpxQkSvbUX1S2qSbO2fzkIWMWcplspQtdC6sT+qSRJU0ACHys6CRqp
-         9Gdec5fMz6OydxyBSg2yfGMHCoq6+XwgeB+qMrid64w2V1IhKPSP2Fwwjwcpz0zwIyly
-         cn0A==
-X-Gm-Message-State: AGi0PuYgLHcCV1vp9TLTnscjGaFsSKXYI5dg2q+GzqvQClTl63BZrvEL
-        R8MT0DMkhxadJpo7aryc3e0=
-X-Google-Smtp-Source: APiQypJM2M3d5jPR6yHTDdB5Z9thgvuOIoyIxfRnxYJdW1mZk0TDGkEzl5Qyg9r2QyvkmvBszgv0RQ==
-X-Received: by 2002:a63:dc09:: with SMTP id s9mr14175801pgg.95.1589214768462;
-        Mon, 11 May 2020 09:32:48 -0700 (PDT)
-Received: from garuda.localnet ([122.171.220.131])
-        by smtp.gmail.com with ESMTPSA id y6sm10400336pjw.15.2020.05.11.09.32.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 May 2020 09:32:48 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: remove xfs_ifree_local_data
-Date:   Mon, 11 May 2020 22:02:45 +0530
-Message-ID: <4581909.4UAE70Nold@garuda>
-In-Reply-To: <20200510072404.986627-4-hch@lst.de>
-References: <20200510072404.986627-1-hch@lst.de> <20200510072404.986627-4-hch@lst.de>
+        id S1728711AbgEKQqa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 11 May 2020 12:46:30 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:58146 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729120AbgEKQqa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 11 May 2020 12:46:30 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04BGgxh5056405;
+        Mon, 11 May 2020 16:46:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=CHy4BE8QPe35m0qPEKv7wR4dV8ykCygKiScMCuWPozM=;
+ b=nFpOJxkOI9kWFJgzKfanPd4LP8i1DmSViFc4txMVPetjm0cnHLcizgaSOMP9TQ03nof8
+ X9VGB1z2Kw49I/vC78hc8RiHDslMkfPH94XhZ0jFJfjZT5iY5qZlE8rDJowJz6rJIsmr
+ fuZF/fqQAe37QpDHsL14WVO2KqAMC4d2nqoYsMZmCZoBKGYoifuxB2h9QDHCQFbdg6Dz
+ Xme3R9eT82ZoLp6ArArH92kD5bg8gQE3zoDkCL6Z/guyOaflbGqmpC1QezoIXu/LWB+4
+ XNfFQwJFg22HvSbslfmiPN6Iw/prK7l//7dhvxDGvM6JkknM/5lEbMgkUGneQisbqRw3 9A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 30x3gse8es-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 11 May 2020 16:46:26 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04BGbrKr073942;
+        Mon, 11 May 2020 16:44:25 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 30x6ewcpcm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 11 May 2020 16:44:25 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04BGiMhD003644;
+        Mon, 11 May 2020 16:44:24 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 11 May 2020 09:44:22 -0700
+Date:   Mon, 11 May 2020 09:44:21 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/16] xfs_repair: fix missing dir buffer corruption
+ checks
+Message-ID: <20200511164421.GA6714@magnolia>
+References: <158904179213.982941.9666913277909349291.stgit@magnolia>
+ <158904179840.982941.17275782452712518850.stgit@magnolia>
+ <20200509170850.GA12777@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200509170850.GA12777@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9618 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
+ mlxlogscore=875 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005110131
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9618 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=905
+ malwarescore=0 adultscore=0 mlxscore=0 priorityscore=1501
+ lowpriorityscore=0 impostorscore=0 clxscore=1015 bulkscore=0 phishscore=0
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2003020000 definitions=main-2005110131
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sunday 10 May 2020 12:54:01 PM IST Christoph Hellwig wrote:
-> xfs_ifree only need to free inline data in the data fork, as we've
-> already taken care of the attr fork before (and in fact freed the
-> fork structure).  Just open code the freeing of the inline data.
->
-
-xfs_inactive() => xfs_attr_inactive() would have freed the attr fork. Hence
-the changes made in this patch are correct.
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_inode.c | 30 ++++++++++--------------------
->  1 file changed, 10 insertions(+), 20 deletions(-)
+On Sat, May 09, 2020 at 10:08:50AM -0700, Christoph Hellwig wrote:
+> On Sat, May 09, 2020 at 09:29:58AM -0700, Darrick J. Wong wrote:
+> > @@ -140,11 +140,24 @@ _("can't read %s block %u for inode %" PRIu64 "\n"),
+> >  		if (whichfork == XFS_DATA_FORK &&
+> >  		    (nodehdr.magic == XFS_DIR2_LEAFN_MAGIC ||
+> >  		    nodehdr.magic == XFS_DIR3_LEAFN_MAGIC)) {
+> > +			int bad = 0;
+> > +
+> >  			if (i != -1) {
+> >  				do_warn(
+> >  _("found non-root LEAFN node in inode %" PRIu64 " bno = %u\n"),
+> >  					da_cursor->ino, bno);
+> > +				bad++;
+> >  			}
+> > +
+> > +			/* corrupt leafn node; rebuild the dir. */
+> > +			if (!bad &&
+> > +			    (bp->b_error == -EFSBADCRC ||
+> > +			     bp->b_error == -EFSCORRUPTED)) {
+> > +				do_warn(
+> > +_("corrupt %s LEAFN block %u for inode %" PRIu64 "\n"),
+> > +					FORKNAME(whichfork), bno, da_cursor->ino);
+> > +			}
+> > +
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 549ff468b7b60..7d3144dc99b72 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2711,24 +2711,6 @@ xfs_ifree_cluster(
->  	return 0;
->  }
->  
-> -/*
-> - * Free any local-format buffers sitting around before we reset to
-> - * extents format.
-> - */
-> -static inline void
-> -xfs_ifree_local_data(
-> -	struct xfs_inode	*ip,
-> -	int			whichfork)
-> -{
-> -	struct xfs_ifork	*ifp;
-> -
-> -	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
-> -		return;
-> -
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> -	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-> -}
-> -
->  /*
->   * This is called to return an inode to the inode free list.
->   * The inode should already be truncated to 0 length and have
-> @@ -2765,8 +2747,16 @@ xfs_ifree(
->  	if (error)
->  		return error;
->  
-> -	xfs_ifree_local_data(ip, XFS_DATA_FORK);
-> -	xfs_ifree_local_data(ip, XFS_ATTR_FORK);
-> +	/*
-> +	 * Free any local-format data sitting around before we reset the
-> +	 * data fork to extents format.  Note that the attr fork data has
-> +	 * already been freed by xfs_attr_inactive.
-> +	 */
-> +	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-> +		kmem_free(ip->i_df.if_u1.if_data);
-> +		ip->i_df.if_u1.if_data = NULL;
-> +		ip->i_df.if_bytes = 0;
-> +	}
->  
->  	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
->  	ip->i_d.di_flags = 0;
-> 
+> So this doesn't really change any return value, but just the error
+> message.  But looking at this code I wonder why we don't check
+> b_error first thing after reading the buffer, as checking the magic
+> for a corrupt buffer seems a little pointless.
 
+<shrug> In the first hunk I was merely following what we did for DA_NODE
+blocks (check magic, then check for corruption errors) but I guess I
+could just pull that up in the file.  I'll have a look and see what
+happens if I do that.
 
--- 
-chandan
-
-
-
+--D
