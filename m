@@ -2,139 +2,101 @@ Return-Path: <SRS0=k9vQ=62=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C562CCA90AF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 16:14:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04670CA90AF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 16:21:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4490206B8
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 16:14:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D392E206B8
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 16:21:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OC+RxycW"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="flouKUZ2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727912AbgELQOR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 May 2020 12:14:17 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:30303 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726890AbgELQOQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 12:14:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589300056;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VWK1Vxby1jE8zZEmxDnVJ+ziwL7qs2zRVQkkkY5jbJ4=;
-        b=OC+RxycWBzyrFpGL5+jZle5js3owxqFUn24nqN83YcjKbSolNudhDaaVFicffqYsOitYFJ
-        lGPgX75z8ZAUNbsgwGtKrSXyt6YWFf1/nyhdpkvd7dsx2DRPLYd0p4IQInXVRX6P4zMF21
-        XE2NahxLI/eEc33f7U+JMLYAPc6Tfys=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-341-2P2WjKdsMVuPHJg9ktcvAw-1; Tue, 12 May 2020 12:14:14 -0400
-X-MC-Unique: 2P2WjKdsMVuPHJg9ktcvAw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 04C8E1841932;
-        Tue, 12 May 2020 16:14:13 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 72F22196AE;
-        Tue, 12 May 2020 16:14:12 +0000 (UTC)
-Date:   Tue, 12 May 2020 12:14:10 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] xfs: use XFS_IFORK_BOFF xchk_bmap_check_rmaps
-Message-ID: <20200512161410.GI37029@bfoster>
-References: <20200510072404.986627-1-hch@lst.de>
- <20200510072404.986627-2-hch@lst.de>
- <2615851.ejxhajbSum@garuda>
- <20200512153132.GE37029@bfoster>
- <20200512153854.GC6714@magnolia>
+        id S1726031AbgELQVP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 May 2020 12:21:15 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:53896 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725554AbgELQVP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 12:21:15 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CGD49s019079;
+        Tue, 12 May 2020 16:21:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=Kclc7X3DgJJhIRGIZwZwBX/5SegzJ5EoAxt5HAr878g=;
+ b=flouKUZ2e0zxMwF0ZstFxVve3dmCWvTh/yWNsUlRNWgk9qYNmQASV41ueG+WqGGjhPF8
+ ayk+o9dUxv92Ni49/DC7loQygFGwN/lb3Rq0hLpDQlVw86ZIwVp6OAo81rtE1SDEfWjr
+ M2OdNH1wXON81HjpLFeQsNPzQ1I5drKWUIo/l5hWklQJg6vnM0uLsvhA86RqRpg+croJ
+ EySk+M/c6WX0pGOONFbhVekKr1T9eJCS0GMFfTJ/SQXyvWmL3Rh2zS+uEAawKj8EXDMw
+ iXvuFrUEng8iW9+IrS9r1owTZ6jq2KXPznOK1fFWmEIJkIhMk0bwmyE/gte39fp5VdV1 Jg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 30x3mbv147-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 12 May 2020 16:21:10 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CGHl2Y195475;
+        Tue, 12 May 2020 16:19:09 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 30x63q4hsa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 12 May 2020 16:19:09 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04CGJ7M8030275;
+        Tue, 12 May 2020 16:19:08 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 12 May 2020 09:19:07 -0700
+Date:   Tue, 12 May 2020 09:19:06 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH RFC] xfs: warn instead of fail verifier on empty attr3
+ leaf block
+Message-ID: <20200512161906.GG6714@magnolia>
+References: <20200511185016.33684-1-bfoster@redhat.com>
+ <20200512081037.GB28206@infradead.org>
+ <20200512155320.GD6714@magnolia>
+ <20200512160300.GA4642@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200512153854.GC6714@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <20200512160300.GA4642@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=1
+ malwarescore=0 phishscore=0 adultscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005120124
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 impostorscore=0
+ mlxscore=0 suspectscore=1 bulkscore=0 mlxlogscore=999 phishscore=0
+ malwarescore=0 lowpriorityscore=0 spamscore=0 adultscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005120123
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 12, 2020 at 08:38:54AM -0700, Darrick J. Wong wrote:
-> On Tue, May 12, 2020 at 11:31:32AM -0400, Brian Foster wrote:
-> > On Mon, May 11, 2020 at 05:10:04PM +0530, Chandan Babu R wrote:
-> > > On Sunday 10 May 2020 12:53:59 PM IST Christoph Hellwig wrote:
-> > > > XFS_IFORK_Q is to be used in boolean context, not for a size.  This
-> > > > doesn't make a difference in practice as size is only checked for
-> > > > 0, but this keeps the logic sane.
-> > > >
-> > > 
-> > > Wouldn't XFS_IFORK_ASIZE() be a better fit since it gives the space used by the
-> > > attr fork inside an inode's literal area?
-> > > 
+On Tue, May 12, 2020 at 09:03:00AM -0700, Christoph Hellwig wrote:
+> On Tue, May 12, 2020 at 08:53:20AM -0700, Darrick J. Wong wrote:
+> > I was gonna say, I think we've messed this up enough that I think we
+> > just have to accept empty attr leaf blocks. :/
 > > 
-> > I had the same thought. It's not clear to me what size is really
-> > supposed to be between the file size for a data fork and fork offset for
-> > the attr fork. I was also wondering if this should use
-> > XFS_IFORK_DSIZE(), but that won't be conditional based on population of
-> > the fork. At the same time, I don't think i_size != 0 necessarily
-> > correlates with the existence of blocks. The file could be completely
-> > sparse or could have any number of post-eof preallocated extents.
+> > I also think we should improve the ability to scan for and invalidate
+> > incore buffers so that we can invalidate and truncate the attr fork
+> > extents directly from an extent walk loop.  It seems a little silly that
+> > we have to walk the dabtree just to find out where multiblock remote
+> > attr value structures might be hiding.
 > 
-> TBH I should have made that variable "bool empty" or something.
-> 
-> case XFS_DATA_FORK:
-> 	empty = i_size_read() == 0;
-> 
+> The buffers are indexed by the physical block number.  Unless you
+> want to move to logical indexing that's what we'll need to do.
 
-Even that is somewhat unclear because it's tied to i_size. What about
-size == 0 && <post-eof extents>?
+<shrug> I modded xfs_buf_incore and _xfs_buf_obj_cmp to return an
+xfs_buf that matches map->bm_bn regardless of length and it seems fine
+so far...
 
-Brian
-
-> case XFS_ATTR_FORK:
-> 	empty = !XFS_IFORK_Q();
-> 
-> default:
-> 	empty = true;
-> 
-> if ((is not btree) && (empty || nextents > 0))
-> 	return 0;
-> 
-> --D
-> 
-> > Brian
-> > 
-> > > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > > ---
-> > > >  fs/xfs/scrub/bmap.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> > > > index add8598eacd5d..283424d6d2bb6 100644
-> > > > --- a/fs/xfs/scrub/bmap.c
-> > > > +++ b/fs/xfs/scrub/bmap.c
-> > > > @@ -591,7 +591,7 @@ xchk_bmap_check_rmaps(
-> > > >  		size = i_size_read(VFS_I(sc->ip));
-> > > >  		break;
-> > > >  	case XFS_ATTR_FORK:
-> > > > -		size = XFS_IFORK_Q(sc->ip);
-> > > > +		size = XFS_IFORK_BOFF(sc->ip);
-> > > >  		break;
-> > > >  	default:
-> > > >  		size = 0;
-> > > > 
-> > > 
-> > > 
-> > > -- 
-> > > chandan
-> > > 
-> > > 
-> > > 
-> > 
-> 
-
+--D
