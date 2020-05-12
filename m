@@ -2,250 +2,135 @@ Return-Path: <SRS0=k9vQ=62=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 102B3C54E4A
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 09:48:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3F20C54E4A
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 10:25:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D304620661
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 09:48:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hgQrmAfU"
+	by mail.kernel.org (Postfix) with ESMTP id 9C826207FF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 10:25:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726193AbgELJsp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 May 2020 05:48:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50852 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725889AbgELJsp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 05:48:45 -0400
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1096AC061A0C
-        for <linux-xfs@vger.kernel.org>; Tue, 12 May 2020 02:48:45 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id f7so6116438pfa.9
-        for <linux-xfs@vger.kernel.org>; Tue, 12 May 2020 02:48:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=t8wHHvZywF7rCJiCMw0lr6HQes12Y+7wwRd4LGMGDf8=;
-        b=hgQrmAfUS3eXKO0HBldYFGuY6q16kiVeKa86oeFZP5ECKKehwpalIeZcTuwk2pNFg4
-         ZpIIL5XT6L/r2uHYyVI7fYiIx1vaHnE9NPJB2DGtGNZSLjGmHD0UlyC4JqscUCtNKRbs
-         G0Jo8k2lEqd3IgjP0FN+KdpHwWdaDoAl6LtchoxhNnMOZ+Mtadn601Nov2QX1W5klS0u
-         6ekV3hXNKiXGr0ph2Owq2MXvHkxqCWVkJaZTs5n2khixfdKiOLg5Hocifecd3ZGh7iWH
-         W+JdKqFzGcTYjLxNvqsuc+2BtIe8ONg1pt2FHMx1GEngJfrDPndHinEWb93z2ySqCJBC
-         OsMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=t8wHHvZywF7rCJiCMw0lr6HQes12Y+7wwRd4LGMGDf8=;
-        b=U9sj9YClul2MqwwijUePBCC1jDygVPYBFvYWxP6F6P3lWgvs0ubTgj0vBUGjqfrK84
-         3rxYmxEN6JREiWqPZk1zUxIkHd0Q4436qy6e59xCk7sWF0cqs/9ANaDe9jRNnMYHeRkB
-         Fi+CcJz+YJuzd+M562EallIcu/IP3zFt8Z6we/4aa7IMQnLWcyWjFTQbGccw0ihqYSXr
-         ox0BvtGPPLYf196fJpnZI/6DsIHrO6KnZVm8JL/D9BqxqFzKNyf+PaSH0vhK9ZgWzXD4
-         m17uMETOG25wtbv2oZViwr3xauYrE4JToF8QehbcuOJ0rzhu++K6s+n+r2EH5UEUIlu8
-         Lqnw==
-X-Gm-Message-State: AGi0PubM7Zx4nX1U0gwSszf/vf+2YfDmHeFjE5cpRbRJHyTPNRyVm4Te
-        McRzElW0YWAq6/d+ll3i500=
-X-Google-Smtp-Source: APiQypLDfNNokaJwgI2M0bwOaiRmiEfXwwNDgbkCxTlBRAJKiijpBbii59vniyuV5myXjXvdrqH9vg==
-X-Received: by 2002:a63:e602:: with SMTP id g2mr18750167pgh.380.1589276924447;
-        Tue, 12 May 2020 02:48:44 -0700 (PDT)
-Received: from garuda.localnet ([122.179.53.43])
-        by smtp.gmail.com with ESMTPSA id 1sm9812219pgy.77.2020.05.12.02.48.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 May 2020 02:48:43 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/6] xfs: cleanup xfs_idestroy_fork
-Date:   Tue, 12 May 2020 15:18:41 +0530
-Message-ID: <2391865.AtcxAzAOE0@garuda>
-In-Reply-To: <20200510072404.986627-7-hch@lst.de>
-References: <20200510072404.986627-1-hch@lst.de> <20200510072404.986627-7-hch@lst.de>
+        id S1729336AbgELKZu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 May 2020 06:25:50 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:51484 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726187AbgELKZt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 06:25:49 -0400
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 7FF371A8244
+        for <linux-xfs@vger.kernel.org>; Tue, 12 May 2020 20:25:45 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jYS6X-0004aD-RH
+        for linux-xfs@vger.kernel.org; Tue, 12 May 2020 20:25:41 +1000
+Date:   Tue, 12 May 2020 20:25:41 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/5 v2] xfs: fix a couple of performance issues
+Message-ID: <20200512102541.GS2040@dread.disaster.area>
+References: <20200512092811.1846252-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200512092811.1846252-1-david@fromorbit.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=7-415B0cAAAA:8
+        a=GqT1H4M-jUBrNjz5QGQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sunday 10 May 2020 12:54:04 PM IST Christoph Hellwig wrote:
-> Move freeing the dynamically allocated attr and COW fork, as well
-> as zeroing the pointers where actually needed into the callers, and
-> just pass the xfs_ifork structure to xfs_idestroy_fork.  Simplify
-> the kmem_free calls by not checking for NULL first, and not zeroing
-> the pointers in structure that are about to be freed (either the
-> ifork or the containing inode in case of the data fork).
->
-
-The changes look good to me.
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c  |  7 +++----
->  fs/xfs/libxfs/xfs_inode_buf.c  |  2 +-
->  fs/xfs/libxfs/xfs_inode_fork.c | 36 +++++++++-------------------------
->  fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
->  fs/xfs/xfs_attr_inactive.c     |  7 +++++--
->  fs/xfs/xfs_icache.c            | 15 ++++++++------
->  6 files changed, 28 insertions(+), 41 deletions(-)
+On Tue, May 12, 2020 at 07:28:06PM +1000, Dave Chinner wrote:
+> Hi folks,
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index d7f3173ce3c31..8d775942f1c6c 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -716,11 +716,10 @@ xfs_attr_fork_remove(
->  	struct xfs_inode	*ip,
->  	struct xfs_trans	*tp)
->  {
-> -	xfs_idestroy_fork(ip, XFS_ATTR_FORK);
-> +	xfs_idestroy_fork(ip->i_afp);
-> +	kmem_cache_free(xfs_ifork_zone, ip->i_afp);
-> +	ip->i_afp = NULL;
->  	ip->i_d.di_forkoff = 0;
-> -
-> -	ASSERT(ip->i_afp == NULL);
-> -
->  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
->  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index ab555671e1543..6f84ea85fdd83 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.c
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -271,7 +271,7 @@ xfs_inode_from_disk(
->  	return 0;
->  
->  out_destroy_data_fork:
-> -	xfs_idestroy_fork(ip, XFS_DATA_FORK);
-> +	xfs_idestroy_fork(&ip->i_df);
->  	return error;
->  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-> index 6562f2bcd15cc..577cc20e03170 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.c
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
-> @@ -495,38 +495,20 @@ xfs_idata_realloc(
->  
->  void
->  xfs_idestroy_fork(
-> -	xfs_inode_t	*ip,
-> -	int		whichfork)
-> +	struct xfs_ifork	*ifp)
->  {
-> -	struct xfs_ifork	*ifp;
-> -
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> -	if (ifp->if_broot != NULL) {
-> -		kmem_free(ifp->if_broot);
-> -		ifp->if_broot = NULL;
-> -	}
-> +	kmem_free(ifp->if_broot);
->  
->  	/*
-> -	 * If the format is local, then we can't have an extents
-> -	 * array so just look for an inline data array.  If we're
-> -	 * not local then we may or may not have an extents list,
-> -	 * so check and free it up if we do.
-> +	 * If the format is local, then we can't have an extents array so just
-> +	 * look for an inline data array.  If we're not local then we may or may
-> +	 * not have an extents list, so check and free it up if we do.
->  	 */
->  	if (ifp->if_format == XFS_DINODE_FMT_LOCAL) {
-> -		if (ifp->if_u1.if_data != NULL) {
-> -			kmem_free(ifp->if_u1.if_data);
-> -			ifp->if_u1.if_data = NULL;
-> -		}
-> -	} else if ((ifp->if_flags & XFS_IFEXTENTS) && ifp->if_height) {
-> -		xfs_iext_destroy(ifp);
-> -	}
-> -
-> -	if (whichfork == XFS_ATTR_FORK) {
-> -		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
-> -		ip->i_afp = NULL;
-> -	} else if (whichfork == XFS_COW_FORK) {
-> -		kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
-> -		ip->i_cowfp = NULL;
-> +		kmem_free(ifp->if_u1.if_data);
-> +	} else if (ifp->if_flags & XFS_IFEXTENTS) {
-> +		if (ifp->if_height)
-> +			xfs_iext_destroy(ifp);
->  	}
->  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> index d849cca103edd..a4953e95c4f3f 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> @@ -86,7 +86,7 @@ int		xfs_iformat_data_fork(struct xfs_inode *, struct xfs_dinode *);
->  int		xfs_iformat_attr_fork(struct xfs_inode *, struct xfs_dinode *);
->  void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
->  				struct xfs_inode_log_item *, int);
-> -void		xfs_idestroy_fork(struct xfs_inode *, int);
-> +void		xfs_idestroy_fork(struct xfs_ifork *ifp);
->  void		xfs_idata_realloc(struct xfs_inode *ip, int64_t byte_diff,
->  				int whichfork);
->  void		xfs_iroot_realloc(struct xfs_inode *, int, int);
-> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-> index 00ffc46c0bf71..bfad669e6b2f8 100644
-> --- a/fs/xfs/xfs_attr_inactive.c
-> +++ b/fs/xfs/xfs_attr_inactive.c
-> @@ -388,8 +388,11 @@ xfs_attr_inactive(
->  	xfs_trans_cancel(trans);
->  out_destroy_fork:
->  	/* kill the in-core attr fork before we drop the inode lock */
-> -	if (dp->i_afp)
-> -		xfs_idestroy_fork(dp, XFS_ATTR_FORK);
-> +	if (dp->i_afp) {
-> +		xfs_idestroy_fork(dp->i_afp);
-> +		kmem_cache_free(xfs_ifork_zone, dp->i_afp);
-> +		dp->i_afp = NULL;
-> +	}
->  	if (lock_mode)
->  		xfs_iunlock(dp, lock_mode);
->  	return error;
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index c09b3e9eab1da..d806d3bfa8936 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -87,15 +87,18 @@ xfs_inode_free_callback(
->  	case S_IFREG:
->  	case S_IFDIR:
->  	case S_IFLNK:
-> -		xfs_idestroy_fork(ip, XFS_DATA_FORK);
-> +		xfs_idestroy_fork(&ip->i_df);
->  		break;
->  	}
->  
-> -	if (ip->i_afp)
-> -		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
-> -	if (ip->i_cowfp)
-> -		xfs_idestroy_fork(ip, XFS_COW_FORK);
-> -
-> +	if (ip->i_afp) {
-> +		xfs_idestroy_fork(ip->i_afp);
-> +		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
-> +	}
-> +	if (ip->i_cowfp) {
-> +		xfs_idestroy_fork(ip->i_cowfp);
-> +		kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
-> +	}
->  	if (ip->i_itemp) {
->  		ASSERT(!test_bit(XFS_LI_IN_AIL,
->  				 &ip->i_itemp->ili_item.li_flags));
+> To follow up on the interesting performance gain I found, there's
+> three RFC patches that follow up the two I posted earlier. These get
+> rid of the CIL xc_cil_lock entirely by moving the entire CIL list
+> and accounting to percpu structures.
 > 
+> The result is that I'm topping out at about 1.12M transactions/s
+> and bottlenecking on VFS spinlocks in the dentry cache path walk
+> code and the superblock inode list lock. The XFS CIL commit path
+> mostly disappears from the profiles when creating about 600,000
+> inodes/s:
+> 
+> 
+> -   73.42%     0.12%  [kernel]               [k] path_openat
+>    - 11.29% path_openat
+>       - 7.12% xfs_vn_create
+>          - 7.18% xfs_vn_mknod
+>             - 7.30% xfs_generic_create
+>                - 6.73% xfs_create
+>                   - 2.69% xfs_dir_ialloc
+>                      - 2.98% xfs_ialloc
+>                         - 1.26% xfs_dialloc
+>                            - 1.04% xfs_dialloc_ag
+>                         - 1.02% xfs_setup_inode
+>                            - 0.90% inode_sb_list_add
+> >>>>>                         - 1.09% _raw_spin_lock
+>                                  - 4.47% do_raw_spin_lock
+>                                       4.05% __pv_queued_spin_lock_slowpath
+>                         - 0.75% xfs_iget
+>                   - 2.43% xfs_trans_commit
+>                      - 3.47% __xfs_trans_commit
+>                         - 7.47% xfs_log_commit_cil
+>                              1.60% memcpy_erms
+>                            - 1.35% xfs_buf_item_size
+>                                 0.99% xfs_buf_item_size_segment.isra.0
+>                              1.30% xfs_buf_item_format
+>                   - 1.44% xfs_dir_createname
+>                      - 1.60% xfs_dir2_node_addname
+>                         - 1.08% xfs_dir2_leafn_add
+>                              0.79% xfs_dir3_leaf_check_int
+>       - 1.09% terminate_walk
+>          - 1.09% dput
+> >>>>>>      - 1.42% _raw_spin_lock
+>                - 7.75% do_raw_spin_lock
+>                     7.19% __pv_queued_spin_lock_slowpath
+>       - 0.99% xfs_vn_lookup
+>          - 0.96% xfs_lookup
+>             - 1.01% xfs_dir_lookup
+>                - 1.24% xfs_dir2_node_lookup
+>                   - 1.09% xfs_da3_node_lookup_int
+>       - 0.90% unlazy_walk
+>          - 0.87% legitimize_root
+>             - 0.94% __legitimize_path.isra.0
+>                - 0.91% lockref_get_not_dead
+> >>>>>>>           - 1.28% _raw_spin_lock
+>                      - 6.85% do_raw_spin_lock
+>                           6.29% __pv_queued_spin_lock_slowpath
+>       - 0.82% d_lookup
+>            __d_lookup
+> .....
+> +   39.21%     6.76%  [kernel]               [k] do_raw_spin_lock
+> +   35.07%     0.16%  [kernel]               [k] _raw_spin_lock
+> +   32.35%    32.13%  [kernel]               [k] __pv_queued_spin_lock_slowpath
+> 
+> So we're going 3-4x faster on this machine than without these
+> patches, yet we're still burning about 40% of the CPU consumed by
+> the workload on spinlocks.  IOWs, the XFS code is running 3-4x
+> faster consuming half the CPU, and we're bashing on other locks
+> now...
 
+Just as a small followup, I started this with my usual 16-way
+create/unlink workload which ran at about 245k creates/s and unlinks
+at about 150k/s.
 
+With this patch set, I just ran 492k creates/s (1m54s) and 420k
+unlinks/s from just 16 threads (2m18s). IOWs, I didn't need to go to
+32 threads to see the perf improvement - as the above profiles
+indicate, those extra 16 threads are effectively just creating heat
+spinning on VFS locks...
+
+Cheers,
+
+Dave.
 -- 
-chandan
-
-
-
+Dave Chinner
+david@fromorbit.com
