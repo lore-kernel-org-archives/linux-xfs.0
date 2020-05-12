@@ -2,31 +2,33 @@ Return-Path: <SRS0=k9vQ=62=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE5A6C54E4A
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 15:08:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEC4AC54E4A
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 15:20:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0E1E206D3
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 15:08:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0433206D3
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 15:20:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727124AbgELPIH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 May 2020 11:08:07 -0400
-Received: from sandeen.net ([63.231.237.45]:41996 "EHLO sandeen.net"
+        id S1727778AbgELPUu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 May 2020 11:20:50 -0400
+Received: from sandeen.net ([63.231.237.45]:42622 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727086AbgELPIH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 May 2020 11:08:07 -0400
+        id S1725888AbgELPUu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 12 May 2020 11:20:50 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 95B1C2B49;
-        Tue, 12 May 2020 10:07:50 -0500 (CDT)
-Subject: Re: [PATCH] xfs_db: fix crc invalidation segfault
-To:     Anthony Iliopoulos <ailiop@suse.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200512141648.3569-1-ailiop@suse.com>
+        by sandeen.net (Postfix) with ESMTPSA id 1B79E2B49;
+        Tue, 12 May 2020 10:20:34 -0500 (CDT)
+Subject: Re: [PATCH V2] xfs_quota: refactor code to generate id from name
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <8b4b7edb-94b2-3bb1-9ede-73674db82330@redhat.com>
+ <b5668fd4-7070-4afc-f556-8445ef41fab7@redhat.com>
+ <20200512080929.GA28206@infradead.org>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -70,30 +72,37 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <1283f645-936b-0c42-367c-ce6702f6006e@sandeen.net>
-Date:   Tue, 12 May 2020 10:08:05 -0500
+Message-ID: <9e539a41-56bd-2af4-6586-24e9d6ff1ffb@sandeen.net>
+Date:   Tue, 12 May 2020 10:20:48 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200512141648.3569-1-ailiop@suse.com>
+In-Reply-To: <20200512080929.GA28206@infradead.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/12/20 9:16 AM, Anthony Iliopoulos wrote:
-> The nowrite_ops var is declared within nested block scope but used
-> outside that scope, causing xfs_db to crash while trying to defererence
-> the verify_write pointer. Fix it by lifting the declaration to the outer
-> scope, where it is accessed.
+On 5/12/20 3:09 AM, Christoph Hellwig wrote:
+>> +static uint32_t
+>> +id_from_string(
+>> +	char	*name,
+>> +	int	type)
+>> +{
+>> +	uint32_t	id = -1;
+>> +	const char	*type_name = "unknown type";
 > 
-> Fixes: b64af2c48220c8 ("xfs_db: add crc manipulation commands")
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Anthony Iliopoulos <ailiop@suse.com>
+> Any reason to align the arguments different from the local variables?
 
-Thank you for the reminder, this is staged now.
 
--Eric
+nah I'll fix that on the way in
+
+> Otherwise looks good:
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
+
+thanks!
