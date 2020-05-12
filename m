@@ -4,124 +4,145 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2DC3C54E4A
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 15:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F16BCCA90AF
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 15:39:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86523206B8
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 15:31:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCF1E206B8
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 15:39:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cEnIaOCO"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="srdKymy1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726922AbgELPby (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 May 2020 11:31:54 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:33944 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726492AbgELPby (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 11:31:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589297512;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=2DSBsIXd5qFYB/MeTnZBlOyzq/6V8crP7+jirrwYBfc=;
-        b=cEnIaOCOjs3+K4unWMzXKF/eO93B/wq5bqYBg9nDQIO4B8vYLQm0MrRljwN8NLsMO/yz2w
-        E401D5d+lcyB4KJKDCE5Hi/LqaArZ60MARK+ByuXLi+IUvvvV22TM/TlL1rC3sLB7NsqB/
-        xExoFXFBoW2B/dwPBpJ+NefSn/2wGu0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-441-K9iGlYGbPZ6Sxm4nD5wJlQ-1; Tue, 12 May 2020 11:31:51 -0400
-X-MC-Unique: K9iGlYGbPZ6Sxm4nD5wJlQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EF2E6107BA6C;
-        Tue, 12 May 2020 15:31:49 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 821BD60BF1;
-        Tue, 12 May 2020 15:31:49 +0000 (UTC)
-Date:   Tue, 12 May 2020 11:31:47 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/6] xfs: remove xfs_ifree_local_data
-Message-ID: <20200512153147.GG37029@bfoster>
+        id S1726300AbgELPjH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 May 2020 11:39:07 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:46862 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726055AbgELPjH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 11:39:07 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CFXNFg135899;
+        Tue, 12 May 2020 15:39:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=JUEO9ZoXxB2BoFtGpQagUthbsxKVIf4yyUgkHqt1WSE=;
+ b=srdKymy1gt2f8jrKEo+wbhwSc3KX3lX2juAbnlxVWF1eCcNzbiKLEICHTRn0BTr6MM/8
+ IFPzA0ddIPVa9QSRKATmvWp3u/H1Y3dCBZWK1d33hf3LdOTqTUR961qz5Chacna/e+L+
+ LEf2fphmsDtY60S2Cfl7J0I+0Y2Jia+ycLDoOmplXITcQN77ulMw+yDvjYjpzx6FyFi8
+ ZhXUTz5ifhEqkQ0I71zZG3TxSTFSGNEKhw5GMkRGO0QopxMvwOC4pBHhhHISpDr7VNpn
+ h6WmDauPP/LhSpp6vfEGEtYGkv+N5OGfpyXY69OsjyNWiX5nPxJmfHF1eKBdBJD/Z84s hQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 30x3mburwh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 12 May 2020 15:39:00 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04CFYOgL160245;
+        Tue, 12 May 2020 15:38:59 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 30x69tf292-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 12 May 2020 15:38:59 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04CFcuww024852;
+        Tue, 12 May 2020 15:38:57 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 12 May 2020 08:38:56 -0700
+Date:   Tue, 12 May 2020 08:38:54 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: use XFS_IFORK_BOFF xchk_bmap_check_rmaps
+Message-ID: <20200512153854.GC6714@magnolia>
 References: <20200510072404.986627-1-hch@lst.de>
- <20200510072404.986627-4-hch@lst.de>
+ <20200510072404.986627-2-hch@lst.de>
+ <2615851.ejxhajbSum@garuda>
+ <20200512153132.GE37029@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200510072404.986627-4-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20200512153132.GE37029@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 adultscore=0
+ spamscore=0 suspectscore=1 mlxscore=0 mlxlogscore=999 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005120117
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 impostorscore=0
+ mlxscore=0 suspectscore=1 bulkscore=0 mlxlogscore=999 phishscore=0
+ malwarescore=0 lowpriorityscore=0 spamscore=0 adultscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2003020000
+ definitions=main-2005120117
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, May 10, 2020 at 09:24:01AM +0200, Christoph Hellwig wrote:
-> xfs_ifree only need to free inline data in the data fork, as we've
-> already taken care of the attr fork before (and in fact freed the
-> fork structure).  Just open code the freeing of the inline data.
+On Tue, May 12, 2020 at 11:31:32AM -0400, Brian Foster wrote:
+> On Mon, May 11, 2020 at 05:10:04PM +0530, Chandan Babu R wrote:
+> > On Sunday 10 May 2020 12:53:59 PM IST Christoph Hellwig wrote:
+> > > XFS_IFORK_Q is to be used in boolean context, not for a size.  This
+> > > doesn't make a difference in practice as size is only checked for
+> > > 0, but this keeps the logic sane.
+> > >
+> > 
+> > Wouldn't XFS_IFORK_ASIZE() be a better fit since it gives the space used by the
+> > attr fork inside an inode's literal area?
+> > 
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> I had the same thought. It's not clear to me what size is really
+> supposed to be between the file size for a data fork and fork offset for
+> the attr fork. I was also wondering if this should use
+> XFS_IFORK_DSIZE(), but that won't be conditional based on population of
+> the fork. At the same time, I don't think i_size != 0 necessarily
+> correlates with the existence of blocks. The file could be completely
+> sparse or could have any number of post-eof preallocated extents.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+TBH I should have made that variable "bool empty" or something.
 
->  fs/xfs/xfs_inode.c | 30 ++++++++++--------------------
->  1 file changed, 10 insertions(+), 20 deletions(-)
+case XFS_DATA_FORK:
+	empty = i_size_read() == 0;
+
+case XFS_ATTR_FORK:
+	empty = !XFS_IFORK_Q();
+
+default:
+	empty = true;
+
+if ((is not btree) && (empty || nextents > 0))
+	return 0;
+
+--D
+
+> Brian
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 549ff468b7b60..7d3144dc99b72 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2711,24 +2711,6 @@ xfs_ifree_cluster(
->  	return 0;
->  }
->  
-> -/*
-> - * Free any local-format buffers sitting around before we reset to
-> - * extents format.
-> - */
-> -static inline void
-> -xfs_ifree_local_data(
-> -	struct xfs_inode	*ip,
-> -	int			whichfork)
-> -{
-> -	struct xfs_ifork	*ifp;
-> -
-> -	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_LOCAL)
-> -		return;
-> -
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> -	xfs_idata_realloc(ip, -ifp->if_bytes, whichfork);
-> -}
-> -
->  /*
->   * This is called to return an inode to the inode free list.
->   * The inode should already be truncated to 0 length and have
-> @@ -2765,8 +2747,16 @@ xfs_ifree(
->  	if (error)
->  		return error;
->  
-> -	xfs_ifree_local_data(ip, XFS_DATA_FORK);
-> -	xfs_ifree_local_data(ip, XFS_ATTR_FORK);
-> +	/*
-> +	 * Free any local-format data sitting around before we reset the
-> +	 * data fork to extents format.  Note that the attr fork data has
-> +	 * already been freed by xfs_attr_inactive.
-> +	 */
-> +	if (ip->i_d.di_format == XFS_DINODE_FMT_LOCAL) {
-> +		kmem_free(ip->i_df.if_u1.if_data);
-> +		ip->i_df.if_u1.if_data = NULL;
-> +		ip->i_df.if_bytes = 0;
-> +	}
->  
->  	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
->  	ip->i_d.di_flags = 0;
-> -- 
-> 2.26.2
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/scrub/bmap.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> > > index add8598eacd5d..283424d6d2bb6 100644
+> > > --- a/fs/xfs/scrub/bmap.c
+> > > +++ b/fs/xfs/scrub/bmap.c
+> > > @@ -591,7 +591,7 @@ xchk_bmap_check_rmaps(
+> > >  		size = i_size_read(VFS_I(sc->ip));
+> > >  		break;
+> > >  	case XFS_ATTR_FORK:
+> > > -		size = XFS_IFORK_Q(sc->ip);
+> > > +		size = XFS_IFORK_BOFF(sc->ip);
+> > >  		break;
+> > >  	default:
+> > >  		size = 0;
+> > > 
+> > 
+> > 
+> > -- 
+> > chandan
+> > 
+> > 
+> > 
 > 
-
