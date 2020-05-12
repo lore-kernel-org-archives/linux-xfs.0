@@ -2,144 +2,277 @@ Return-Path: <SRS0=k9vQ=62=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F38A4C2D0F8
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 23:35:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E73C2D0F8
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 23:36:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9764206F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 23:35:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18540206F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 23:36:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727104AbgELXfA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 May 2020 19:35:00 -0400
-Received: from sandeen.net ([63.231.237.45]:39636 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725938AbgELXfA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 12 May 2020 19:35:00 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5BD7314A1B;
-        Tue, 12 May 2020 18:34:43 -0500 (CDT)
-Subject: Re: [PATCH RFC] xfs: allow adjusting individual quota grace times
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>, Jan Kara <jack@suse.cz>
-References: <ca1d2bb6-6f37-255c-1015-a20c6060d81c@redhat.com>
- <20200512232928.GO6714@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <2bb4989f-c19b-85aa-86e6-6484125ca5e4@sandeen.net>
-Date:   Tue, 12 May 2020 18:34:58 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        id S1727104AbgELXgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 May 2020 19:36:33 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:60281 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726031AbgELXgd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 19:36:33 -0400
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 88FD2108182;
+        Wed, 13 May 2020 09:36:29 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jYeRo-0000td-0F; Wed, 13 May 2020 09:36:28 +1000
+Date:   Wed, 13 May 2020 09:36:27 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] [RFC] xfs: use percpu counters for CIL context
+ counters
+Message-ID: <20200512233627.GW2040@dread.disaster.area>
+References: <20200512092811.1846252-1-david@fromorbit.com>
+ <20200512092811.1846252-4-david@fromorbit.com>
+ <20200512140544.GD37029@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20200512232928.GO6714@magnolia>
 Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200512140544.GD37029@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=IkcTkHD0fZMA:10 a=sTwFKg_x9MkA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=Jz_xeEo1jXWets6QGoIA:9 a=xlsfCXzl7EKKGtjn:21 a=9n6JtNEmpB9VAvcK:21
+        a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/12/20 6:29 PM, Darrick J. Wong wrote:
-> On Sat, May 09, 2020 at 02:47:02PM -0500, Eric Sandeen wrote:
->> vfs/ext3/4 quota allows the administrator to push out the grace time
->> for soft quota with the setquota -T command:
->>
->> setquota -T [ -u | -g ] [ -F quotaformat ] name block-grace inode-grace -a | filesystem...
->>
->>        -T, --edit-times
->>               Alter times for individual user/group when softlimit is enforced.
->>               Times block-grace and inode-grace are specified in seconds or can
->>               be string 'unset'.
->>
->> Essentially, if you do "setquota -T -u username 1d 1d" and "username" is
->> over their soft quotas and into their grace time, it will extend the
->> grace time expiry to 1d from now.
->>
->> xfs can't do this, today.  The patch below is a first cut at allowing us
->> to do this, and userspace updates are needed as well (I have those in a
->> patch stack.)
->>
->> I'm not looking so much for patch review right now, though, what I'm
->> wondering is if this is a change we can make from the ABI perspective?
-
-...
-
->> +	 * For other IDs, userspace can bump out the grace period if over
->> +	 * the soft limit.
->> +	 */
->> +	if (newlim->d_fieldmask & QC_SPC_TIMER) {
->> +		if (!id)
->> +			defq->btimelimit = newlim->d_spc_timer;
->> +		ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
->> +	}
->> +	if (newlim->d_fieldmask & QC_INO_TIMER) {
->> +		printk("setting inode timer to %d\n", newlim->d_ino_timer);
+On Tue, May 12, 2020 at 10:05:44AM -0400, Brian Foster wrote:
+> On Tue, May 12, 2020 at 07:28:09PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > With the m_active_trans atomic bottleneck out of the way, the CIL
+> > xc_cil_lock is the next bottleneck that causes cacheline contention.
+> > This protects several things, the first of which is the CIL context
+> > reservation ticket and space usage counters.
+> > 
+> > We can lift them out of the xc_cil_lock by converting them to
+> > percpu counters. THis involves two things, the first of which is
+> > lifting calculations and samples that don't actually need protecting
+> > from races outside the xc_cil lock.
+> > 
+> > The second is converting the counters to percpu counters and lifting
+> > them outside the lock. This requires a couple of tricky things to
+> > minimise initial state races and to ensure we take into account
+> > split reservations. We do this by erring on the "take the
+> > reservation just in case" side, which largely lost in the noise of
+> > many frequent large transactions.
+> > 
+> > We use a trick with percpu_counter_add_batch() to ensure the global
+> > sum is updated immediately on first reservation, hence allowing us
+> > to use fast counter reads everywhere to determine if the CIL is
+> > empty or not, rather than using the list itself. This is important
+> > for later patches where the CIL is moved to percpu lists
+> > and hence cannot use list_empty() to detect an empty CIL. Hence we
+> > provide a low overhead, lockless mechanism for determining if the
+> > CIL is empty or not via this mechanisms. All other percpu counter
+> > updates use a large batch count so they aggregate on the local CPU
+> > and minimise global sum updates.
+> > 
+> > The xc_ctx_lock rwsem protects draining the percpu counters to the
+> > context's ticket, similar to the way it allows access to the CIL
+> > without using the xc_cil_lock. i.e. the CIL push has exclusive
+> > access to the CIL, the context and the percpu counters while holding
+> > the xc_ctx_lock. This ensures that we can sum and zero the counters
+> > atomically from the perspective of the transaction commit side of
+> > the push. i.e. they reset to zero atomically with the CIL context
+> > swap and hence we don't need to have the percpu counters attached to
+> > the CIL context.
+> > 
+> > Performance wise, this increases the transaction rate from
+> > ~620,000/s to around 750,000/second. Using a 32-way concurrent
+> > create instead of 16-way on a 32p/16GB virtual machine:
+> > 
+> > 		create time	rate		unlink time
+> > unpatched	  2m03s      472k/s+/-9k/s	 3m6s
+> > patched		  1m56s	     533k/s+/-28k/s	 2m34
+> > 
+> > Notably, the system time for the create went from 44m20s down to
+> > 38m37s, whilst going faster. There is more variance, but I think
+> > that is from the cacheline contention having inconsistent overhead.
+> > 
+> > XXX: probably should split into two patches
+> > 
 > 
-> Stray printk here.
+> Yes please. :)
 > 
->> +		if (!id)
->> +			defq->itimelimit = newlim->d_ino_timer;
->> +		ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
->> +	}
->> +	if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
->> +		if (!id)
->> +			defq->rtbtimelimit = newlim->d_rt_spc_timer;
->> +		ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
->> +	}
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_log_cil.c  | 99 ++++++++++++++++++++++++++++++-------------
+> >  fs/xfs/xfs_log_priv.h |  2 +
+> >  2 files changed, 72 insertions(+), 29 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > index b43f0e8f43f2e..746c841757ed1 100644
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -393,7 +393,7 @@ xlog_cil_insert_items(
+> >  	struct xfs_log_item	*lip;
+> >  	int			len = 0;
+> >  	int			diff_iovecs = 0;
+> > -	int			iclog_space;
+> > +	int			iclog_space, space_used;
+> >  	int			iovhdr_res = 0, split_res = 0, ctx_res = 0;
+> >  
 > 
-> Otherwise I guess this looks reasonable.  It might help to patchbomb all
-> the kernel/userspace/fstests changes together so I don't have to go
-> scurrying around to find the pieces(?)
+> fs/xfs//xfs_log_cil.c: In function ‘xlog_cil_insert_items’:
+> fs/xfs//xfs_log_cil.c:396:21: warning: unused variable ‘space_used’ [-Wunused-variable]
+> 
+> >  	ASSERT(tp);
+> > @@ -403,17 +403,16 @@ xlog_cil_insert_items(
+> >  	 * are done so it doesn't matter exactly how we update the CIL.
+> >  	 */
+> >  	xlog_cil_insert_format_items(log, tp, &len, &diff_iovecs);
+> > -
+> > -	spin_lock(&cil->xc_cil_lock);
+> > -
+> >  	/* account for space used by new iovec headers  */
+> > +
+> >  	iovhdr_res = diff_iovecs * sizeof(xlog_op_header_t);
+> >  	len += iovhdr_res;
+> >  	ctx->nvecs += diff_iovecs;
+> >  
+> > -	/* attach the transaction to the CIL if it has any busy extents */
+> > -	if (!list_empty(&tp->t_busy))
+> > -		list_splice_init(&tp->t_busy, &ctx->busy_extents);
+> > +	/*
+> > +	 * The ticket can't go away from us here, so we can do racy sampling
+> > +	 * and precalculate everything.
+> > +	 */
+> >  
+> >  	/*
+> >  	 * Now transfer enough transaction reservation to the context ticket
+> > @@ -421,27 +420,28 @@ xlog_cil_insert_items(
+> >  	 * reservation has to grow as well as the current reservation as we
+> >  	 * steal from tickets so we can correctly determine the space used
+> >  	 * during the transaction commit.
+> > +	 *
+> > +	 * We use percpu_counter_add_batch() here to force the addition into the
+> > +	 * global sum immediately. This will result in percpu_counter_read() now
+> > +	 * always returning a non-zero value, and hence we'll only ever have a
+> > +	 * very short race window on new contexts.
+> >  	 */
+> > -	if (ctx->ticket->t_curr_res == 0) {
+> > +	if (percpu_counter_read(&cil->xc_curr_res) == 0) {
+> >  		ctx_res = ctx->ticket->t_unit_res;
+> > -		ctx->ticket->t_curr_res = ctx_res;
+> >  		tp->t_ticket->t_curr_res -= ctx_res;
+> > +		percpu_counter_add_batch(&cil->xc_curr_res, ctx_res, ctx_res - 1);
+> >  	}
+> 
+> Ok, so we open a race here at the cost of stealing more reservation than
+> necessary from the transaction. Seems harmless, but I would like to see
+> some quantification/analysis on what a 'very short race window' is in
+> this context.
 
-yeah I will do that, this was more akin to pseudocode fo the larger
-"can I even change this behavior?" question.
+About 20 instructions when the value is zero. The number of racers
+will be dependent on how many threads are blocked in commit on the
+xc_ctx_lock while a CIL push is in progress. The unit reservation
+stolen here for the CIL is:
 
-Thanks,
--Eric
+	xfs_log_calc_unit_res(mp, 0)
+		~= 4 * sizeof(xlog_op_header) +
+		   sizeof(xlog_trans_header) +
+		   sizeof(sector) +
+		   log stripe unit roundoff
+
+So for a typical 4k log sector, we are talking about ~6kB of unit
+reservation per thread that races here. For a 256k log stripe unit,
+then it's going to be about 520kB per racing thread.
+
+That said, every thread that races has this reservation available,
+and the amount reserved adds to the space used in the CIL. Hence the
+only downside of racing here is that the CIL background pushes
+earlier because it hits the threshold sooner. That isn't a huge
+issue - if we can't push immediately then the CIL will
+run to the hard limit and block commits there; that overrun space is
+larger than amount of space "wasted" by racing commits here.
+
+> Particularly as it relates to percpu functionality. Does
+> the window scale with cpu count, for example? It might not matter either
+
+Not really. We need a thundering herd to cause issues, and this
+occurs after formatting an item so we won't get a huge thundering
+herd even when lots of threads block on the xc_ctx_lock waiting for
+a push to complete.
+
+> way because we expect any given transaction to accommodate the ctx res,
+> but it would be good to understand the behavior here so we can think
+> about potential side effects, if any.
+
+I haven't been able to come up with any adverse side effects except
+for "performance might drop a bit if we reserve too much and push
+early", but that is tempered by the fact that performance goes up
+much more than we might lose by getting rid of the xc_cil_lock
+bottleneck.
+
+> >  	/* do we need space for more log record headers? */
+> > -	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
+> > -	if (len > 0 && (ctx->space_used / iclog_space !=
+> > -				(ctx->space_used + len) / iclog_space)) {
+> > +	if (len > 0 && !ctx_res) {
+> > +		iclog_space = log->l_iclog_size - log->l_iclog_hsize;
+> >  		split_res = (len + iclog_space - 1) / iclog_space;
+> >  		/* need to take into account split region headers, too */
+> >  		split_res *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
+> > -		ctx->ticket->t_unit_res += split_res;
+> > -		ctx->ticket->t_curr_res += split_res;
+> >  		tp->t_ticket->t_curr_res -= split_res;
+> >  		ASSERT(tp->t_ticket->t_curr_res >= len);
+> >  	}
+> 
+> Similarly here, assume additional split reservation for every
+> context rather than checking each commit. Seems reasonable in
+> principle, but just from a cursory glance this doesn't cover the
+> case of the context expanding beyond more than two iclogs.  IOW,
+> the current logic adds split_res if the size increase from the
+> current transaction expands the ctx into another iclog than before
+> the transaction. The new logic only seems to add split_res for the
+> first transaction into the ctx. Also note
+
+No, I changed it to apply to any vector length longer than a single
+iclog except for transactions that have taken the unit reservation
+above.
+
+Sampling the space used isn't accurate here, and we do not want to
+be doing an accurate sum across all CPUs, hence trying to detect a
+reservation crossing an iclog boundary is difficult. Hence I just
+took the reservation for anything that is guaranteed to cross an
+iclog boundary. 
+
+> that len seems to be a factor in the calculation of split_res, but it's
+> not immediately clear to me what impact filtering the split_res
+> calculation as such has in that regard.
+
+The len used in the split_res calc guarantees that we always have at
+least 1 log and op header accounted for by a split, and if the
+vector length is greater than a single iclog it will include a
+header for every iclog that the vector may span. i.e. if len >
+iclog_space, it will reserve 2 extra iclog headers and op headers as
+it may split across 3 iclogs....
+
+> (BTW the comment above this hunk needs an update if we do end up with
+> some special logic here.)
+
+Definitely. :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
