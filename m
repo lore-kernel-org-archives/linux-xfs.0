@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E6D6C54E90
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 09:28:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FBCBC54E8E
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 09:28:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 486DE20714
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 09:28:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89EE32082E
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 09:28:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729027AbgELJ2T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1725889AbgELJ2T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 12 May 2020 05:28:19 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:52050 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729178AbgELJ2T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 05:28:19 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:40303 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728990AbgELJ2S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 05:28:18 -0400
 Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id D452010639A
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 1D1975AAD49
         for <linux-xfs@vger.kernel.org>; Tue, 12 May 2020 19:28:15 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jYRCw-0004H3-A0
+        id 1jYRCw-0004H8-DW
         for linux-xfs@vger.kernel.org; Tue, 12 May 2020 19:28:14 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jYRCw-007kYR-0j
+        id 1jYRCw-007kYg-5L
         for linux-xfs@vger.kernel.org; Tue, 12 May 2020 19:28:14 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/5] xfs: convert m_active_trans counter to per-cpu
-Date:   Tue, 12 May 2020 19:28:08 +1000
-Message-Id: <20200512092811.1846252-3-david@fromorbit.com>
+Subject: [PATCH 5/5] [RFC] xfs: make CIl busy extent lists per-cpu
+Date:   Tue, 12 May 2020 19:28:11 +1000
+Message-Id: <20200512092811.1846252-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.1.301.g55bc3eb7cb9
 In-Reply-To: <20200512092811.1846252-1-david@fromorbit.com>
 References: <20200512092811.1846252-1-david@fromorbit.com>
@@ -43,8 +43,7 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=sTwFKg_x9MkA:10 a=20KFwNOVAAAA:8 a=DQkj07otzc7_PMFSBPwA:9
-        a=8MshfPfKmnwD3r4O:21 a=ea1rjcbdGSVUsQv9:21
+        a=sTwFKg_x9MkA:10 a=20KFwNOVAAAA:8 a=VTcdlksUSm9lYBse5iYA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,147 +51,176 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-It's a global atomic counter, and we are hitting it at a rate of
-half a million transactions a second, so it's bouncing the counter
-cacheline all over the place on large machines. Convert it to a
-per-cpu counter.
+We use the same percpu list trick with the busy extents as we do
+with the CIL lists, and this gets rid of the last use of the
+xc_cil_lock in the commit fast path.
 
-And .... oh wow, that was unexpected!
+As noted in the previous patch, it looked like we were approaching
+another bottleneck, and that can be seen by the fact that
+performance didn't substantially increase even though there is now
+no lock contention in the commit path. The transaction rate
+only increases slightly to 1.12M/sec.
 
-Concurrent create, 50 million inodes, identical 16p/16GB virtual
-machines on different physical hosts. Machine A has twice the CPU
-cores per socket of machine B:
+Using a 32-way concurrent create/unlink on a 32p/16GB virtual
+machine:
 
-		unpatched	patched
-machine A:	3m45s		2m27s
-machine B:	4m13s		4m14s
+	     create time     rate            unlink time
+unpatched       1m49s      523k/s+/-14k/s      2m00s
+patched         1m48s      535k/s+/-24k/s      1m51s
 
-Create rates:
-		unpatched	patched
-machine A:	246k+/-15k	384k+/-10k
-machine B:	225k+/-13k	223k+/-11k
-
-Concurrent rm of same 50 million inodes:
-
-		unpatched	patched
-machine A:	8m30s		3m09s
-machine B:	5m02s		4m51s
-
-The transaction rate on the fast machine went from about 250k/sec to
-over 600k/sec, which indicates just how much of a bottleneck this
-atomic counter was.
+So variance went back up, and performance improved slightly.
+Profiling at this point indicates spinlock contention at the VFS
+level (inode_sb_list_add() and dentry cache pathwalking) so
+significant further gains will require VFS surgery.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_mount.h |  2 +-
- fs/xfs/xfs_super.c | 12 +++++++++---
- fs/xfs/xfs_trans.c |  6 +++---
- 3 files changed, 13 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_log_cil.c  | 35 ++++++++++++++++++-----------------
+ fs/xfs/xfs_log_priv.h | 12 +++++++++++-
+ 2 files changed, 29 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 712b3e2583316..af3d8b71e9591 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -84,6 +84,7 @@ typedef struct xfs_mount {
- 	 * extents or anything related to the rt device.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index af444bc69a7cd..d3a5f8478d64a 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -461,13 +461,9 @@ xlog_cil_insert_items(
+ 	percpu_counter_add_batch(&cil->xc_curr_res, split_res, 1000 * 1000);
+ 	percpu_counter_add_batch(&cil->xc_space_used, len, 1000 * 1000);
+ 
+-	spin_lock(&cil->xc_cil_lock);
+-
+ 	/* attach the transaction to the CIL if it has any busy extents */
+ 	if (!list_empty(&tp->t_busy))
+-		list_splice_init(&tp->t_busy, &ctx->busy_extents);
+-
+-	spin_unlock(&cil->xc_cil_lock);
++		list_splice_tail_init(&tp->t_busy, pcp_busy(cil));
+ 
+ 	/*
+ 	 * Now (re-)position everything modified at the tail of the CIL.
+@@ -486,7 +482,7 @@ xlog_cil_insert_items(
+ 		 */
+ 		if (!list_empty(&lip->li_cil))
+ 			continue;
+-		list_add_tail(&lip->li_cil, this_cpu_ptr(cil->xc_cil));
++		list_add_tail(&lip->li_cil, pcp_cil(cil));
+ 	}
+ 
+ 	if (tp->t_ticket->t_curr_res < 0)
+@@ -733,10 +729,14 @@ xlog_cil_push_work(
+ 	 * Remove the items from the per-cpu CIL lists and then pull all the
+ 	 * log vectors off the items. We hold the xc_ctx_lock exclusively here,
+ 	 * so nothing can be adding or removing from the per-cpu lists here.
++	 *
++	 * Also splice the busy extents onto the context while we are walking
++	 * the percpu structure.
  	 */
- 	struct percpu_counter	m_delalloc_blks;
-+	struct percpu_counter	m_active_trans;	/* in progress xact counter */
+ 	/* XXX: hotplug! */
+ 	for_each_online_cpu(cpu) {
+-		list_splice_tail_init(per_cpu_ptr(cil->xc_cil, cpu), &cil_items);
++		list_splice_tail_init(pcp_cil_cpu(cil, cpu), &cil_items);
++		list_splice_tail_init(pcp_busy_cpu(cil, cpu), &ctx->busy_extents);
+ 	}
  
- 	struct xfs_buf		*m_sb_bp;	/* buffer for superblock */
- 	char			*m_rtname;	/* realtime device name */
-@@ -164,7 +165,6 @@ typedef struct xfs_mount {
- 	uint64_t		m_resblks;	/* total reserved blocks */
- 	uint64_t		m_resblks_avail;/* available reserved blocks */
- 	uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
--	atomic_t		m_active_trans;	/* number trans frozen */
- 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
- 	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
- 	struct delayed_work	m_eofblocks_work; /* background eof blocks
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e80bd2c4c279e..bc4853525ce18 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -883,7 +883,7 @@ xfs_quiesce_attr(
- 	int	error = 0;
- 
- 	/* wait for all modifications to complete */
--	while (atomic_read(&mp->m_active_trans) > 0)
-+	while (percpu_counter_sum(&mp->m_active_trans) > 0)
- 		delay(100);
- 
- 	/* force the log to unpin objects from the now complete transactions */
-@@ -902,7 +902,7 @@ xfs_quiesce_attr(
- 	 * Just warn here till VFS can correctly support
- 	 * read-only remount without racing.
+ 	lv = NULL;
+@@ -933,7 +933,7 @@ xlog_cil_push_background(
+ 	 * The cil won't be empty because we are called while holding the
+ 	 * context lock so whatever we added to the CIL will still be there
  	 */
--	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
-+	WARN_ON(percpu_counter_sum(&mp->m_active_trans) != 0);
+-	ASSERT(space_used != 0);
++	ASSERT(percpu_counter_read(&cil->xc_curr_res) != 0);
  
- 	xfs_log_quiesce(mp);
- }
-@@ -1027,8 +1027,14 @@ xfs_init_percpu_counters(
+ 	/*
+ 	 * don't do a background push if we haven't used up all the
+@@ -1241,17 +1241,18 @@ xlog_cil_init(
+ 		goto out_free_cil;
+ 
+ 	/* XXX: CPU hotplug!!! */
+-	cil->xc_cil = alloc_percpu_gfp(struct list_head, GFP_KERNEL);
+-	if (!cil->xc_cil)
++	cil->xc_pcp = alloc_percpu_gfp(struct xfs_cil_pcpu, GFP_KERNEL);
++	if (!cil->xc_pcp)
+ 		goto out_free_ctx;
+ 
+ 	for_each_possible_cpu(cpu) {
+-		INIT_LIST_HEAD(per_cpu_ptr(cil->xc_cil, cpu));
++		INIT_LIST_HEAD(pcp_cil_cpu(cil, cpu));
++		INIT_LIST_HEAD(pcp_busy_cpu(cil, cpu));
+ 	}
+ 
+ 	error = percpu_counter_init(&cil->xc_space_used, 0, GFP_KERNEL);
  	if (error)
- 		goto free_fdblocks;
+-		goto out_free_pcp_cil;
++		goto out_free_pcp;
  
-+	error = percpu_counter_init(&mp->m_active_trans, 0, GFP_KERNEL);
-+	if (error)
-+		goto free_delalloc_blocks;
+ 	error = percpu_counter_init(&cil->xc_curr_res, 0, GFP_KERNEL);
+ 	if (error)
+@@ -1259,7 +1260,6 @@ xlog_cil_init(
+ 
+ 	INIT_WORK(&cil->xc_push_work, xlog_cil_push_work);
+ 	INIT_LIST_HEAD(&cil->xc_committing);
+-	spin_lock_init(&cil->xc_cil_lock);
+ 	spin_lock_init(&cil->xc_push_lock);
+ 	init_rwsem(&cil->xc_ctx_lock);
+ 	init_waitqueue_head(&cil->xc_commit_wait);
+@@ -1278,8 +1278,8 @@ xlog_cil_init(
+ 
+ out_free_space:
+ 	percpu_counter_destroy(&cil->xc_space_used);
+-out_free_pcp_cil:
+-	free_percpu(cil->xc_cil);
++out_free_pcp:
++	free_percpu(cil->xc_pcp);
+ out_free_ctx:
+ 	kmem_free(ctx);
+ out_free_cil:
+@@ -1303,9 +1303,10 @@ xlog_cil_destroy(
+ 	percpu_counter_destroy(&cil->xc_curr_res);
+ 
+ 	for_each_possible_cpu(cpu) {
+-		ASSERT(list_empty(per_cpu_ptr(cil->xc_cil, cpu)));
++		ASSERT(list_empty(pcp_cil_cpu(cil, cpu)));
++		ASSERT(list_empty(pcp_busy_cpu(cil, cpu)));
+ 	}
+-	free_percpu(cil->xc_cil);
++	free_percpu(cil->xc_pcp);
+ 	kmem_free(cil);
+ }
+ 
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 0bb982920d070..cfc22c9482ea4 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -260,11 +260,16 @@ struct xfs_cil_ctx {
+  * the commit LSN to be determined as well. This should make synchronous
+  * operations almost as efficient as the old logging methods.
+  */
++struct xfs_cil_pcpu {
++	struct list_head	p_cil;
++	struct list_head	p_busy_extents;
++};
 +
- 	return 0;
+ struct xfs_cil {
+ 	struct xlog		*xc_log;
+ 	struct percpu_counter	xc_space_used;
+ 	struct percpu_counter	xc_curr_res;
+-	struct list_head __percpu *xc_cil;
++	struct xfs_cil_pcpu __percpu *xc_pcp;
+ 	spinlock_t		xc_cil_lock;
  
-+free_delalloc_blocks:
-+	percpu_counter_destroy(&mp->m_delalloc_blks);
- free_fdblocks:
- 	percpu_counter_destroy(&mp->m_fdblocks);
- free_ifree:
-@@ -1057,6 +1063,7 @@ xfs_destroy_percpu_counters(
- 	ASSERT(XFS_FORCED_SHUTDOWN(mp) ||
- 	       percpu_counter_sum(&mp->m_delalloc_blks) == 0);
- 	percpu_counter_destroy(&mp->m_delalloc_blks);
-+	percpu_counter_destroy(&mp->m_active_trans);
- }
+ 	struct rw_semaphore	xc_ctx_lock ____cacheline_aligned_in_smp;
+@@ -278,6 +283,11 @@ struct xfs_cil {
+ 	struct work_struct	xc_push_work;
+ } ____cacheline_aligned_in_smp;
  
- static void
-@@ -1792,7 +1799,6 @@ static int xfs_init_fs_context(
- 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
- 	spin_lock_init(&mp->m_perag_lock);
- 	mutex_init(&mp->m_growlock);
--	atomic_set(&mp->m_active_trans, 0);
- 	INIT_WORK(&mp->m_flush_inodes_work, xfs_flush_inodes_worker);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 28b983ff8b113..636df5017782e 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -68,7 +68,7 @@ xfs_trans_free(
- 	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
- 
- 	trace_xfs_trans_free(tp, _RET_IP_);
--	atomic_dec(&tp->t_mountp->m_active_trans);
-+	percpu_counter_dec(&tp->t_mountp->m_active_trans);
- 	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_end_intwrite(tp->t_mountp->m_super);
- 	xfs_trans_free_dqinfo(tp);
-@@ -126,7 +126,7 @@ xfs_trans_dup(
- 
- 	xfs_trans_dup_dqinfo(tp, ntp);
- 
--	atomic_inc(&tp->t_mountp->m_active_trans);
-+	percpu_counter_inc(&tp->t_mountp->m_active_trans);
- 	return ntp;
- }
- 
-@@ -275,7 +275,7 @@ xfs_trans_alloc(
- 	 */
- 	WARN_ON(resp->tr_logres > 0 &&
- 		mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
--	atomic_inc(&mp->m_active_trans);
-+	percpu_counter_inc(&mp->m_active_trans);
- 
- 	tp->t_magic = XFS_TRANS_HEADER_MAGIC;
- 	tp->t_flags = flags;
++#define pcp_cil(cil)		&(this_cpu_ptr(cil->xc_pcp)->p_cil)
++#define pcp_cil_cpu(cil, cpu)	&(per_cpu_ptr(cil->xc_pcp, cpu)->p_cil)
++#define pcp_busy(cil)		&(this_cpu_ptr(cil->xc_pcp)->p_busy_extents)
++#define pcp_busy_cpu(cil, cpu)	&(per_cpu_ptr(cil->xc_pcp, cpu)->p_busy_extents)
++
+ /*
+  * The amount of log space we allow the CIL to aggregate is difficult to size.
+  * Whatever we choose, we have to make sure we can get a reservation for the
 -- 
 2.26.1.301.g55bc3eb7cb9
 
