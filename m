@@ -2,64 +2,72 @@ Return-Path: <SRS0=k9vQ=62=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D5D5C54E4A
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 08:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20D65C54E4A
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 09:11:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35C3A207FF
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 08:16:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XSLDu6sd"
+	by mail.kernel.org (Postfix) with ESMTP id F07D9206A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 09:11:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725823AbgELIQI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 May 2020 04:16:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35900 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725813AbgELIQI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 04:16:08 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C93FC061A0C
-        for <linux-xfs@vger.kernel.org>; Tue, 12 May 2020 01:16:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=p3Tqn5sVoChP1HSpcXP/243L3ZfFMpgGksyes+a0isc=; b=XSLDu6sdi6bsclV83p4/47FQ86
-        U3O+fc2qR3RM2qeIaD9oC/KsiGcv6YFVZ2VnJhqNTONOrcMnk1GZVPqEFnIY94wk9lyM9qe+vIZka
-        RSX/RD6p/uwPPgk9XwZIHz6tXsmb7LSJNLDJIw6wjki4DCty9wSohWP10/Dbo5Y0Lf0zu9VjS6nPd
-        xnto+d5EziQ/Xnc5vfh+OmGin6G9RnqKNqAnvWEIHC+x4Lj0MFF/frIXHRdchl8FS2YqbynXbRC6G
-        C/JNUutCMJNnEDnyvtdLIPyFEMkd3kBlpGrxYloOv7lu9RvV9ccqLgYheTATYai5UxG0XbhHzZE1B
-        +kJBhRSg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jYQ5A-00057v-A1; Tue, 12 May 2020 08:16:08 +0000
-Date:   Tue, 12 May 2020 01:16:08 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
+        id S1726187AbgELJLr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 May 2020 05:11:47 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:59026 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725889AbgELJLr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 05:11:47 -0400
+X-Greylist: delayed 338 seconds by postgrey-1.27 at vger.kernel.org; Tue, 12 May 2020 05:11:46 EDT
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 63012D78E45;
+        Tue, 12 May 2020 19:11:44 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jYQwx-00047N-Uj; Tue, 12 May 2020 19:11:43 +1000
+Date:   Tue, 12 May 2020 19:11:43 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: convert m_active_trans counter to per-cpu
-Message-ID: <20200512081608.GB7689@infradead.org>
+Subject: Re: [PATCH 1/2] xfs: separate read-only variables in struct xfs_mount
+Message-ID: <20200512091143.GR2040@dread.disaster.area>
 References: <20200512025949.1807131-1-david@fromorbit.com>
- <20200512025949.1807131-3-david@fromorbit.com>
+ <20200512025949.1807131-2-david@fromorbit.com>
+ <20200512081423.GA7689@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200512025949.1807131-3-david@fromorbit.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200512081423.GA7689@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=7-415B0cAAAA:8
+        a=kRsO2zt64whqoqbKdR4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 12, 2020 at 12:59:49PM +1000, Dave Chinner wrote:
-> Concurrent rm of same 50 million inodes:
-> 
-> 		unpatched	patched
-> machine A:	8m30s		3m09s
-> machine B:	4m02s		4m51s
+On Tue, May 12, 2020 at 01:14:23AM -0700, Christoph Hellwig wrote:
+> I'm surprised the difference is that big.  The moves look obviously
+> fine, but why do you put the precalculated fields in the middle
+> of struct xfs_mount instead of at the end?
 
-This actually is a significant slow down on machine B, which
-might be the more common one.  Can you find out how that happens
-and if we can mitigate it?
+Just because it was the minimum to move about and it clearly
+demonstrated the damage the contended cacheline was doing to
+performance of code accessing read-only variables.
+
+Really, there's a lot in the xfs_mount that might well be read only
+that I didn't consider. I'm thinking that most of the pointers to
+structures are read only (e.g. the log, ailp, buftargs, etc) as they
+do not change for the life of the structure. I don't really have the
+time to dig into this real deep (this is a quick, interesting
+diversion!) so I did the 99-percenter and moved on...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
