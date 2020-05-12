@@ -6,84 +6,64 @@ X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BECBC54E4A
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 08:07:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07285C54E4B
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 08:09:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27829206D6
-	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 08:07:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1B392078A
+	for <linux-xfs@archiver.kernel.org>; Tue, 12 May 2020 08:09:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OFzyyjvX"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XOrDe+Rb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726008AbgELIHs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 12 May 2020 04:07:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34612 "EHLO
+        id S1728986AbgELIJ3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 12 May 2020 04:09:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34868 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725813AbgELIHs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 04:07:48 -0400
+        by vger.kernel.org with ESMTP id S1726067AbgELIJ3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 12 May 2020 04:09:29 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66C55C061A0C
-        for <linux-xfs@vger.kernel.org>; Tue, 12 May 2020 01:07:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32C3BC061A0C
+        for <linux-xfs@vger.kernel.org>; Tue, 12 May 2020 01:09:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=HhyYzRSRQDXinBVB3XoZ50+RfOzOjwYQ452/BXadzZY=; b=OFzyyjvXDXdtey8I8uD7hLI0nM
-        x/RzbNVY/OYq4plqkbrXzspW11FNi8IIalKIOycYI+PXVNo25iJVMtkBiTUHbVM56bCQLxm1ObPWe
-        YZ+eMAEDLGWkar1Yg2xQb6gWom/y8ZSFhwO+ZOB2/Q3oNOvlndTzyxAuCuPO9iseC/7Yza2pEX7Ma
-        lcxyGYZMWD6qZMNVt2AHLp+sVMcuX6RZkEql0M51XXyHXlHfzZ9QT1rPlaDygSRr/lgW50a9deFPi
-        wdQ1Yjc3cvHizpxtkMeXA4a18TjI8ff9fT8qoE3g93YN7paVRXh+6pXHTqyjWKjb5ZxvKorDzLVpt
-        dC7Y/2Vg==;
+        bh=2FL4XatdMYXFNaViDoikwLcDQEDqJSW2Lp2rzyRGqSk=; b=XOrDe+RbL81ALCn3IaUosJAeWz
+        0Gf7ukwobAQokAX3HETNt311kz4nMtISNP3m9MVthM9+25xTWcjrAt1pyL1KDN4ClBtMQuvPrxwrw
+        qzUSPhfP1HYPzRSLvkiIo5gWWkH8gqp76QjxfLooRp83NlHcorXn5fMgFAo7QecMWtXONjOyFqeBn
+        Xm2vDfkwFciGkhZI4KqQYxQWFGzn4FQrYwvSdulSeUpdPeIIU9cjmCfczcXOQjL7E4TSt7+5JyD9I
+        O5B9HVLhTJw4mNhQ67mkTi3ZGmc0T2e0BzPNyXlheJejW9K75E5XAiHK+nyIdRXotxoox4kquIqqx
+        9DEFWzzg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jYPx2-0007E6-EK; Tue, 12 May 2020 08:07:44 +0000
-Date:   Tue, 12 May 2020 01:07:44 -0700
+        id 1jYPyj-0007d0-1Y; Tue, 12 May 2020 08:09:29 +0000
+Date:   Tue, 12 May 2020 01:09:29 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, sandeen@sandeen.net,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/16] xfs_repair: convert to libxfs_verify_agbno
-Message-ID: <20200512080744.GA26197@infradead.org>
-References: <158904179213.982941.9666913277909349291.stgit@magnolia>
- <158904185435.982941.16817943726460132539.stgit@magnolia>
- <20200509171830.GC15381@infradead.org>
- <20200511162203.GZ6714@magnolia>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH V2] xfs_quota: refactor code to generate id from name
+Message-ID: <20200512080929.GA28206@infradead.org>
+References: <8b4b7edb-94b2-3bb1-9ede-73674db82330@redhat.com>
+ <b5668fd4-7070-4afc-f556-8445ef41fab7@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200511162203.GZ6714@magnolia>
+In-Reply-To: <b5668fd4-7070-4afc-f556-8445ef41fab7@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 11, 2020 at 09:22:03AM -0700, Darrick J. Wong wrote:
-> Yes.  Each of those "bno != 0" checks occurs in the context of checking
-> an AG header's pointer to a btree root.  The roots should never be zero
-> if the corresponding feature is enabled, and we're careful to check the
-> feature bits first.
-> 
-> AFAICT that bno != 0 check is actually there to cover a deficiency in
-> the verify_agbno function, which is that it only checked that the
-> supplied argument didn't go past the end of the AG and did not check
-> that the pointer didn't point into the AG header block(s).
-> 
-> Checking for a nonzero value is also insufficient, since on a
-> blocksize < sectorsize * 4 filesystem, the AGFL can end up in a nonzero
-> agbno.  libxfs_verify_agbno covers all of these cases.
-> 
-> > Either way this should probably be documented in the changelog.
-> 
-> Ok, how about this for a commit message:
-> 
-> "Convert the homegrown verify_agbno callers to use the libxfs function,
-> as needed.  In some places we drop the "bno != 0" checks because those
-> conditionals are checking btree roots; btree roots should never be
-> zero if the corresponding feature bit is set; and repair skips the if
-> clause entirely if the feature bit is disabled.
-> 
-> "In effect, this strengthens repair to validate that AG btree pointers
-> neither point to the AG headers nor point past the end of the AG."
+> +static uint32_t
+> +id_from_string(
+> +	char	*name,
+> +	int	type)
+> +{
+> +	uint32_t	id = -1;
+> +	const char	*type_name = "unknown type";
 
-With the additional explanation in the commit log:
+Any reason to align the arguments different from the local variables?
+
+Otherwise looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
