@@ -4,142 +4,103 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-1.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82BCCC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 15:29:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3460EC433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 15:37:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96CE1207F5
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 15:29:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50A3020690
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 15:37:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tTazxQpE"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Fdhqq1jb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729219AbgEMP3n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 May 2020 11:29:43 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:58202 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728678AbgEMP3m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 May 2020 11:29:42 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04DFIYJB162888;
-        Wed, 13 May 2020 15:29:37 GMT
+        id S1729546AbgEMPhW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 May 2020 11:37:22 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:43992 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729483AbgEMPhV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 May 2020 11:37:21 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04DFb9vP076297;
+        Wed, 13 May 2020 15:37:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=zcvvB9nC3z59/NXQwJa+c0RmnWFMPJIaLSuWpYoWDq8=;
- b=tTazxQpEmfHNkeQ/yEGH4iOYpHEuJaBlI9b33ri39MnQlZHx37Twio2BJmbI91SKpM/A
- EdqDY9QUVohJk6phfSxBjEZarl7D5rv62nPefURs+Hh7KkeOqbB+O0/Npk+CBupQHnQe
- gyodU7qrt3xoqacA2E7ZujhDbqZqbQlfH8htu6KqzirqIHPgMBs+Pn3EO5Bt99lLV9Cd
- fb2iveWrrxPCOw/pc3UZd7N0cC7HtJEkvRqBtCjbywYqV2WxKicYrt0yqJY4T7UTnDlK
- iJpZ1YyA2hJjBojy9LfmARPLW3IQBfjKKC6ZiJOkCK5BcIj7T/IyXQpep7JVe+94Emv8 qQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 3100yfvwca-1
+ bh=5C5EcRIC6XldxXoBidQUcdGENIKxGpxI/LMzqkRpfaE=;
+ b=Fdhqq1jbNdVcyHtJymfM63dV+NtkBIfyMSkwWANd+QecJ/lRIBwrR4/WcCBKFf4XlEwh
+ 3cYsW3fBjotrF7OJh5ArgkT9VYlmB3If++DohJR/yIVZHQAAb/Ey0sVajsVPXkblzOsO
+ fRnzVmtb2/f+H6tb8lz/AF/cI6hA4TlMEW1VCoOV53dLMolrfPdcmLuGv7KJgokAzo6D
+ xdoDQNfEct9Xneph8LAZ69x+EOD3NJJq0eG9AbBUcH6LH8S3bElGu8XgwrqGZowu7cwN
+ NBZd8l78lSXT4Hc4kb5mMJ3vnlP2dy4efdin/fXPieeKzZTDC4Etr6jS00aWHSS4iaOf Yw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 3100xwmy8s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 13 May 2020 15:29:37 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04DFI3xR138473;
-        Wed, 13 May 2020 15:29:37 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 3100yes95y-1
+        Wed, 13 May 2020 15:37:13 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04DFXwSA156290;
+        Wed, 13 May 2020 15:35:12 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 3100yardj5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 May 2020 15:29:37 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04DFTZ7I032109;
-        Wed, 13 May 2020 15:29:35 GMT
+        Wed, 13 May 2020 15:35:12 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04DFZBv0002412;
+        Wed, 13 May 2020 15:35:12 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 13 May 2020 08:29:35 -0700
-Date:   Wed, 13 May 2020 08:29:34 -0700
+        with ESMTP ; Wed, 13 May 2020 08:35:11 -0700
+Date:   Wed, 13 May 2020 08:35:09 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/2] xfs: remove XFS_QMOPT_ENOSPC flag
-Message-ID: <20200513152934.GX6714@magnolia>
-References: <447d7fec-2eff-fa99-cd19-acdf353c80d4@redhat.com>
- <11a44fb8-d59d-2e57-73bd-06e216efa5e7@redhat.com>
- <20200508130154.GC27577@bfoster>
- <57c07fd1-9dd1-8a03-da29-2b1b99cfa2ed@sandeen.net>
- <20200508162129.GJ27577@bfoster>
- <20200512233443.GP6714@magnolia>
- <20200513110016.GA44225@bfoster>
- <5d9a041d-fb28-6629-8ca1-7f474f8c376b@sandeen.net>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 01/16] xfs_repair: fix missing dir buffer corruption
+ checks
+Message-ID: <20200513153509.GY6714@magnolia>
+References: <158904179213.982941.9666913277909349291.stgit@magnolia>
+ <158904179840.982941.17275782452712518850.stgit@magnolia>
+ <20200512172925.GJ6714@magnolia>
+ <20200513062216.GA24213@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5d9a041d-fb28-6629-8ca1-7f474f8c376b@sandeen.net>
+In-Reply-To: <20200513062216.GA24213@infradead.org>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9620 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 bulkscore=0
- phishscore=0 suspectscore=5 adultscore=0 mlxscore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 phishscore=0
+ adultscore=0 suspectscore=1 mlxscore=0 mlxlogscore=999 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005130137
+ definitions=main-2005130138
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9620 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- cotscore=-2147483648 mlxscore=0 suspectscore=5 spamscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 clxscore=1015 phishscore=0 bulkscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005130137
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 cotscore=-2147483648 bulkscore=0
+ phishscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0
+ impostorscore=0 spamscore=0 malwarescore=0 priorityscore=1501 mlxscore=0
+ suspectscore=1 clxscore=1015 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005130138
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 13, 2020 at 08:39:47AM -0500, Eric Sandeen wrote:
-> On 5/13/20 6:00 AM, Brian Foster wrote:
-> > On Tue, May 12, 2020 at 04:34:43PM -0700, Darrick J. Wong wrote:
-> >> On Fri, May 08, 2020 at 12:21:29PM -0400, Brian Foster wrote:
-> >>> On Fri, May 08, 2020 at 10:45:48AM -0500, Eric Sandeen wrote:
-> >>>> On 5/8/20 8:01 AM, Brian Foster wrote:
-> 
-> ...
-> 
-> >>>> You're right that my patch changes these to ENOSPC.
-> >>>>
-> >>>>> Is the intent to change behavior such that -ENOSPC is
-> >>>>> unconditional for project quota reservation failures?
-> >>>>
-> >>>> Now it's a conundrum.  I /think/ the current behavior is due to an oversight, but 
-> >>>>
-> >>>> a) I'm not certain, and
-> >>>> b) can we change it now?
-> >>>>
-> >>>
-> >>> Heh, I can't really tell what the intended/expected behavior is. For
-> >>> whatever it's worth, it seems reasonable enough to me to change it based
-> >>> on the fact that project quotas have been expected to return -ENOSPC in
-> >>> at least some common cases for many years. It seems unlikely that users
-> >>> would know or care about the change in behavior in the subset noted
-> >>> above, but who knows. It might be good to get some other opinions. :P
-> >>
-> >> "I bet you a beer at the next conference (if they ever happen again)
-> >> that nobody will notice"? :P
-> >>
-> > 
-> > Apocalypse aside, free beer is free beer. ;)
-> > 
-> >> TBH while I find it a little odd that project quota gets to return
-> >> ENOSPC instead of EDQUOT, I find it more odd that sometimes it doesn't.
-> >> This at least gets us to consistent behavior (EDQUOT for user/group,
-> >> ENOSPC for project) so for the series:
-> >>
-> > 
-> > Works for me, but can we update the commit log to describe the behavior
-> > change before this goes in? In fact, it might even make sense to retitle
-> > the patch to something like "xfs: always return -ENOSPC on project quota
-> > reservation failure" and let the flag removal be a side effect of that.
-> 
-> Yes that's a good plan. I'm also happy to just combine the 2 patches if
-> that's better.  I'll sync up w/ Darrick to see if this can still happen.e
-> 
-> Thanks again for spotting the difference,
+On Tue, May 12, 2020 at 11:22:16PM -0700, Christoph Hellwig wrote:
+> This looks ok, but it seems like da_read_buf should just return
+> the error instead of the b_error mess, at whih point we'd basically
+> have xfs_da_read_buf + the salvage flag.  But I guess we can apply
+> your patch first to let you make progress first and sort that
+> out later:
 
-Yeah, that's fine.  I haven't even had a chance to find out if last
-night's testing passed... :$
+<nod> I /think/ the value in repair's use of salvage mode here is to be
+able to pinpoint exactly which dirent in a directory data block went
+bad, and then to log that for the sysadmin as maybe a clue for renaming
+files out of lost+found.  We probably don't need salvage mode for
+dabtree blocks since that's just indexing data that users never see
+directly.
+
+In theory we don't need salvage mode at all, but it's less exciting to
+barf out the standard metadata verifier error and have nothing else to
+say.
+
+Anyway, thanks for the review.
 
 --D
 
-> -Eric
-> 
-> > Brian
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
