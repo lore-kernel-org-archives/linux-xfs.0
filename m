@@ -2,107 +2,163 @@ Return-Path: <SRS0=Dhh5=63=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82343C2D0FE
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 10:03:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 730A6CA90AF
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 11:00:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63282206D6
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 10:03:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4535220659
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 11:00:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ILTZ4qex"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M2ZTsHVx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733026AbgEMJsO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 May 2020 05:48:14 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:40022 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733024AbgEMJsN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 May 2020 05:48:13 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04D9h8LY021476;
-        Wed, 13 May 2020 09:48:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=M9f22pix6sGmZGJQEzn4zeCqKpeE34MvPJzVQ1yF3Ik=;
- b=ILTZ4qex3Htk/PwyQdKGLoJrbbHslJiC+rty0LUtcUnRzBjHSk8hlQZGJjcDNcP32hkc
- QHrFnxVKDudP2i/FSZ+gs8zh8LAzQGU3z4UvFfVFzWm449tQDWed7oWUO5Fg5YbRFddN
- dg7gQrYrKrLEGojewxXABbaTBHmOUtug4NwSCi7mt0QCDzRTD43IwWp5ydGdMw426hsY
- qweIIchvAG6KhIFL1KRFLrBHPqPs/NB9EhtYE1DtHCHEKIXhgulXI8zSkhdyq77i7ZhF
- H4o+SE/244Heov/5PTMPpY3505twCUOsl2Hy3apNqF9t01s/iMw2krIM38JEloJgPOz3 0Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 3100xwb6er-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 13 May 2020 09:48:10 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04D9gcVT116320;
-        Wed, 13 May 2020 09:48:10 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 3100yr1fes-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 13 May 2020 09:48:10 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04D9m9lm026506;
-        Wed, 13 May 2020 09:48:09 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 13 May 2020 02:48:09 -0700
-Date:   Wed, 13 May 2020 12:48:03 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] xfs: fix error code in xfs_iflush_cluster()
-Message-ID: <20200513094803.GF347693@mwanda>
+        id S1728964AbgEMLA1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 May 2020 07:00:27 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:48542 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726020AbgEMLA1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 May 2020 07:00:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589367624;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=J8HCUAJl3YWUi1bvz+f8CN3lNrUHyhTdBlGFJffZykU=;
+        b=M2ZTsHVxOLaOcHRysUsrWiPtguhozCpoAsvPzgPQqZXwjDp+dmCESEhsKQzfynGwkQYz4m
+        fAAQOBjNBlARcDGvMS3qmni/xYlSjg00LcZCUalAkVl+K8d4ScTED0C5qhAM/HlMSAHflM
+        xS3BZS26Ts30TRN1kLCqsdbLNO7xrW4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-474-XXF7Aj7RP8aCSLnJ1CqWmA-1; Wed, 13 May 2020 07:00:22 -0400
+X-MC-Unique: XXF7Aj7RP8aCSLnJ1CqWmA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E7EC8A0BDC;
+        Wed, 13 May 2020 11:00:21 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AC9C160C05;
+        Wed, 13 May 2020 11:00:18 +0000 (UTC)
+Date:   Wed, 13 May 2020 07:00:16 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>,
+        Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 2/2] xfs: remove XFS_QMOPT_ENOSPC flag
+Message-ID: <20200513110016.GA44225@bfoster>
+References: <447d7fec-2eff-fa99-cd19-acdf353c80d4@redhat.com>
+ <11a44fb8-d59d-2e57-73bd-06e216efa5e7@redhat.com>
+ <20200508130154.GC27577@bfoster>
+ <57c07fd1-9dd1-8a03-da29-2b1b99cfa2ed@sandeen.net>
+ <20200508162129.GJ27577@bfoster>
+ <20200512233443.GP6714@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
- malwarescore=0 mlxscore=0 mlxlogscore=999 spamscore=0 suspectscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005130088
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9619 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 lowpriorityscore=0
- suspectscore=0 mlxlogscore=999 clxscore=1011 cotscore=-2147483648
- mlxscore=0 phishscore=0 adultscore=0 impostorscore=0 bulkscore=0
- malwarescore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2005130088
+In-Reply-To: <20200512233443.GP6714@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Originally this function used to always return -EFSCORRUPTED on error
-but now we're trying to return more informative error codes.
-Unfortunately, there was one error path missed.  If this kmem_alloc()
-allocation fails then we need to return -ENOMEM instead of success.
+On Tue, May 12, 2020 at 04:34:43PM -0700, Darrick J. Wong wrote:
+> On Fri, May 08, 2020 at 12:21:29PM -0400, Brian Foster wrote:
+> > On Fri, May 08, 2020 at 10:45:48AM -0500, Eric Sandeen wrote:
+> > > On 5/8/20 8:01 AM, Brian Foster wrote:
+> > > > On Thu, May 07, 2020 at 11:00:34PM -0500, Eric Sandeen wrote:
+> > > >> The only place we return -EDQUOT, and therefore need to make a decision
+> > > >> about returning -ENOSPC for project quota instead, is in xfs_trans_dqresv().
+> > > >>
+> > > >> So there's no reason to be setting and clearing XFS_QMOPT_ENOSPC at higher
+> > > >> levels; if xfs_trans_dqresv has failed, test if the dqp we were were handed
+> > > >> is a project quota and if so, return -ENOSPC instead of EDQUOT.  The
+> > > >> complexity is just a leftover from when project & group quota were mutually
+> > > >> exclusive and shared some codepaths.
+> > > >>
+> > > >> The prior patch was the trivial bugfix, this is the slightly more involved
+> > > >> cleanup.
+> > > >>
+> > > >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > > >> ---
+> > > > 
+> > > > Hmm so what about callers that don't pass QMOPT_ENOSPC? For example, it
+> > > > looks like various xfs_trans_reserve_quota() calls pass a pdqp but don't
+> > > > set the flag.
+> > > 
+> > > Oh, interesting.  I bet that was an oversight, tbh, but let's see.
+> > > 
+> > > <rewinds 14 years>
+> > > 
+> > > commit 9a2a7de268f67fea0c450ed3e99a2d31f43d7166
+> > > Author: Nathan Scott <nathans@sgi.com>
+> > > Date:   Fri Mar 31 13:04:49 2006 +1000
+> > > 
+> > >     [XFS] Make project quota enforcement return an error code consistent with
+> > >     its use.
+> > > 
+> > > so yeah, even back then, stuff like xfs_symlink returned EDQUOT not ENOSPC.
+> > > 
+> > > Today, these call the reservation w/o the special ENOSPC flag:
+> > > 
+> > > xfs_unmap_extent
+> > > xfs_create
+> > > xfs_create_tmpfile
+> > > xfs_symlink
+> > > 
+> > > and so will return EDQUOT instead of ENOSPC even for project quota.
+> > > 
+> > > You're right that my patch changes these to ENOSPC.
+> > > 
+> > > > Is the intent to change behavior such that -ENOSPC is
+> > > > unconditional for project quota reservation failures?
+> > > 
+> > > Now it's a conundrum.  I /think/ the current behavior is due to an oversight, but 
+> > > 
+> > > a) I'm not certain, and
+> > > b) can we change it now?
+> > > 
+> > 
+> > Heh, I can't really tell what the intended/expected behavior is. For
+> > whatever it's worth, it seems reasonable enough to me to change it based
+> > on the fact that project quotas have been expected to return -ENOSPC in
+> > at least some common cases for many years. It seems unlikely that users
+> > would know or care about the change in behavior in the subset noted
+> > above, but who knows. It might be good to get some other opinions. :P
+> 
+> "I bet you a beer at the next conference (if they ever happen again)
+> that nobody will notice"? :P
+> 
 
-Fixes: f20192991d79 ("xfs: simplify inode flush error handling")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- fs/xfs/xfs_inode.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Apocalypse aside, free beer is free beer. ;)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index ab31a5dec7aab..63aeda7cbafb0 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3505,8 +3505,10 @@ xfs_iflush_cluster(
- 
- 	cilist_size = igeo->inodes_per_cluster * sizeof(struct xfs_inode *);
- 	cilist = kmem_alloc(cilist_size, KM_MAYFAIL|KM_NOFS);
--	if (!cilist)
-+	if (!cilist) {
-+		error = -ENOMEM;
- 		goto out_put;
-+	}
- 
- 	mask = ~(igeo->inodes_per_cluster - 1);
- 	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
--- 
-2.26.2
+> TBH while I find it a little odd that project quota gets to return
+> ENOSPC instead of EDQUOT, I find it more odd that sometimes it doesn't.
+> This at least gets us to consistent behavior (EDQUOT for user/group,
+> ENOSPC for project) so for the series:
+> 
+
+Works for me, but can we update the commit log to describe the behavior
+change before this goes in? In fact, it might even make sense to retitle
+the patch to something like "xfs: always return -ENOSPC on project quota
+reservation failure" and let the flag removal be a side effect of that.
+
+Brian
+
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> (Let's see what an fstests run spits out...)
+> 
+> --D
+> 
+> > Brian
+> > 
+> > > -Eric
+> > > 
+> > 
+> 
 
