@@ -2,105 +2,63 @@ Return-Path: <SRS0=Dhh5=63=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35633C2D0F9
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 05:44:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41CAAC2D0F8
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 06:22:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1FCD520659
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 05:44:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18C1C206F5
+	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 06:22:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JHrEAGTF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728967AbgEMFna (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 May 2020 01:43:30 -0400
-Received: from mga05.intel.com ([192.55.52.43]:40375 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728097AbgEMFn3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 13 May 2020 01:43:29 -0400
-IronPort-SDR: qGgY2PZKhs7nps/88OPZ8JI/v9pjVb6CYa00n/H4ZWhzaqA5OFW0eJiP1GhULS6wv4s6M43z64
- n1uKKcuqg6WA==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2020 22:43:29 -0700
-IronPort-SDR: SK59B42UbMYq2ls4ncVnwTImTJhK0cVzDiqBcnn6kBo26zDsrhp8LgIuVowGEwKjJKfpHifoyn
- Ls586/o5KqSg==
-X-IronPort-AV: E=Sophos;i="5.73,386,1583222400"; 
-   d="scan'208";a="265754104"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 May 2020 22:43:28 -0700
-From:   ira.weiny@intel.com
-To:     linux-ext4@vger.kernel.org,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/9] Enable ext4 support for per-file/directory DAX operations
-Date:   Tue, 12 May 2020 22:43:15 -0700
-Message-Id: <20200513054324.2138483-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.25.1
+        id S1728792AbgEMGWW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 May 2020 02:22:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45076 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728498AbgEMGWW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 May 2020 02:22:22 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D79EC061A0C
+        for <linux-xfs@vger.kernel.org>; Tue, 12 May 2020 23:22:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=OmjbLnqpzhHHYtk2/cRvhX5+DT3kE3tehQMfKZhfjfE=; b=JHrEAGTF6suIQEvxQCQfku7T9F
+        3RMa/Hum1MY18yuspqv4SViwaGv1LEMcySlDYpW46Ab7Sh96v2tKkh+csBKk5OkIOW4D8/uuqQ1kQ
+        +zbvA5PWVMuGJlk2IHH8ruEkdNimDsLtyqIWMayxvBfqYJ4jd4U3JPmA/vO3dq+anlEWM1W62NHFP
+        BX9ODewJd0Hm4WciAR8PcHlSUQM8AZSC9zWocpQE/KFSUALqGoaAeXDuUSpD5iVLtpRbB4aCcqLi7
+        bXXq5KFbZ1lA//ldLy4Q77cHoShytGTdqlFRNGrbLb2hGHLOsj0efgqL+r3a1svMKKnX/+nzdnpVK
+        Vxti4RFg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jYkmW-0000pp-2q; Wed, 13 May 2020 06:22:16 +0000
+Date:   Tue, 12 May 2020 23:22:16 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org, hch@infradead.org
+Subject: Re: [PATCH v2 01/16] xfs_repair: fix missing dir buffer corruption
+ checks
+Message-ID: <20200513062216.GA24213@infradead.org>
+References: <158904179213.982941.9666913277909349291.stgit@magnolia>
+ <158904179840.982941.17275782452712518850.stgit@magnolia>
+ <20200512172925.GJ6714@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200512172925.GJ6714@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+This looks ok, but it seems like da_read_buf should just return
+the error instead of the b_error mess, at whih point we'd basically
+have xfs_da_read_buf + the salvage flag.  But I guess we can apply
+your patch first to let you make progress first and sort that
+out later:
 
-Enable the same per file DAX support in ext4 as was done for xfs.  This series
-builds and depends on the V11 series for xfs.[1]
-
-This passes the same xfstests test as XFS.
-
-The only issue is that this modifies the old mount option parsing code rather
-than waiting for the new parsing code to be finalized.
-
-This series starts with 3 fixes which include making Verity and Encrypt truly
-mutually exclusive from DAX.  I think these first 3 patches should be picked up
-for 5.8 regardless of what is decided regarding the mount parsing.
-
-[1] https://lore.kernel.org/lkml/20200428002142.404144-1-ira.weiny@intel.com/
-
-To: linux-kernel@vger.kernel.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-
-Ira Weiny (9):
-  fs/ext4: Narrow scope of DAX check in setflags
-  fs/ext4: Disallow verity if inode is DAX
-  fs/ext4: Disallow encryption if inode is DAX
-  fs/ext4: Change EXT4_MOUNT_DAX to EXT4_MOUNT_DAX_ALWAYS
-  fs/ext4: Update ext4_should_use_dax()
-  fs/ext4: Only change S_DAX on inode load
-  fs/ext4: Make DAX mount option a tri-state
-  fs/ext4: Introduce DAX inode flag
-  Documentation/dax: Update DAX enablement for ext4
-
- Documentation/filesystems/dax.txt         |  6 +-
- Documentation/filesystems/ext4/verity.rst |  7 +++
- Documentation/filesystems/fscrypt.rst     |  4 +-
- fs/ext4/ext4.h                            | 20 ++++---
- fs/ext4/ialloc.c                          |  2 +-
- fs/ext4/inode.c                           | 27 +++++++--
- fs/ext4/ioctl.c                           | 32 +++++++++--
- fs/ext4/super.c                           | 67 +++++++++++++++--------
- fs/ext4/verity.c                          |  5 +-
- 9 files changed, 125 insertions(+), 45 deletions(-)
-
--- 
-2.25.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
