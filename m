@@ -2,89 +2,89 @@ Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3227C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 09:26:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C8C1C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 10:20:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BF0B2065D
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 09:26:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19486206A5
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 10:20:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725955AbgENJ0H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 May 2020 05:26:07 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:33124 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725935AbgENJ0G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 05:26:06 -0400
-Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 71931D78D5D;
-        Thu, 14 May 2020 19:26:04 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jZA7u-0004Ny-FM; Thu, 14 May 2020 19:26:02 +1000
-Date:   Thu, 14 May 2020 19:26:02 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Carlos Maiolino <cmaiolino@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/5] Remove/convert more kmem_* wrappers
-Message-ID: <20200514092602.GK2040@dread.disaster.area>
-References: <20191120104425.407213-1-cmaiolino@redhat.com>
+        id S1725955AbgENKUj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 06:20:39 -0400
+Received: from mx2.suse.de ([195.135.220.15]:54166 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725925AbgENKUj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 May 2020 06:20:39 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 03874B03C;
+        Thu, 14 May 2020 10:20:39 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id BA9481E12A8; Thu, 14 May 2020 12:20:36 +0200 (CEST)
+Date:   Thu, 14 May 2020 12:20:36 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>,
+        Petr =?utf-8?B?UMOtc2HFmQ==?= <ppisar@redhat.com>
+Subject: Re: [PATCH] quota-tools: Set FS_DQ_TIMER_MASK for individual xfs
+ grace times
+Message-ID: <20200514102036.GC9569@quack2.suse.cz>
+References: <72a454f1-c2ee-b777-90db-6bdfd4a8572c@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191120104425.407213-1-cmaiolino@redhat.com>
+In-Reply-To: <72a454f1-c2ee-b777-90db-6bdfd4a8572c@redhat.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=7-415B0cAAAA:8
-        a=P2sWjoT70lxd8KZmE0IA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 20, 2019 at 11:44:20AM +0100, Carlos Maiolino wrote:
-> Hi,
+On Wed 13-05-20 22:45:32, Eric Sandeen wrote:
+> xfs quota code doesn't currently allow increasing an individual
+> user's grace time, but kernel patches are in development for this.
 > 
-> in this new series, we remove most of the remaining kmem_* wrappers.
+> In order for setquota to be able to send this update via
+> setquota -T, we need to add the FS_DQ_TIMER_MASK when we are trying
+> to update the grace times on an individual user's dquot.
 > 
-> All of the wrappers being removed in this series can be directly replaced by
-> generic kernel kmalloc()/kzalloc() interface.
-> 
-> Only interface kept is kmem_alloc() but has been converted into a local helper.
-> 
-> This series should be applied on top of my previous series aiming to clean up
-> our memory allocation interface.
-> 
-> 
-> Darrick, I believe this is slightly different from what you suggested
-> previously, about converting kmem_* interfaces to use GFP flags directly. At
-> least I read that as keeping current kmem_* interface, and getting rid of KM_*
-> flags now.
-> 
-> But, I believe these patches does not change any allocation logic, and after the
-> series we are left with fewer users of KM_* flags users to get rid of, which
-> IMHO will be easier. And also I already had the patches mostly done :)
-> 
-> Let me know if this is ok for you.
-> 
-> 
-> Carlos Maiolino (5):
->   xfs: remove kmem_zone_zalloc()
->   xfs: Remove kmem_zone_alloc() wrapper
->   xfs: remove kmem_zalloc() wrapper
->   xfs: Remove kmem_realloc
->   xfs: Convert kmem_alloc() users
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Hmmm, just noticed that this never got merged. Whatever happened to
-this patchset?
+The patch looks good to me. I've added it to my tree.
 
-Cheers,
+> I wonder if we should only be setting the LIMIT_MASK only if
+> (flags & COMMIT_LIMITS), but it doesn't seem to be a problem and
+> is unrelated to this change I'm leaving it alone for now, though if
+> anyone thinks it's better I can update the patch.
+> 
+> I'm putting together xfstests cases for this, if you want to wait
+> for those, that's fine.  Thanks!
 
-Dave.
+Yeah, that looks like a good thing to do. Also FS_DQ_LIMIT_MASK contains
+real-time limits bits which quota tools aren't able to manipulate in any
+way so maybe not setting those bits would be wiser... Will you send a patch
+or should I just fix it?
+
+								Honza
+
+> 
+> diff --git a/quotaio_xfs.c b/quotaio_xfs.c
+> index b22c7b4..a4d6f67 100644
+> --- a/quotaio_xfs.c
+> +++ b/quotaio_xfs.c
+> @@ -166,6 +166,8 @@ static int xfs_commit_dquot(struct dquot *dquot, int flags)
+>  			xdqblk.d_fieldmask |= FS_DQ_BCOUNT;
+>  	} else {
+>  		xdqblk.d_fieldmask |= FS_DQ_LIMIT_MASK;
+> +		if (flags & COMMIT_TIMES) /* indiv grace period */
+> +			xdqblk.d_fieldmask |= FS_DQ_TIMER_MASK;
+>  	}
+>  
+>  	qcmd = QCMD(Q_XFS_SETQLIM, h->qh_type);
+> 
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
