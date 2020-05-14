@@ -2,169 +2,205 @@ Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17BD6C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 13:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 142B0C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 15:09:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CDCE920734
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 13:44:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6E16205CB
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 15:09:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IDx/NS5J"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BN1A2+QF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726067AbgENNox (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 May 2020 09:44:53 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:20651 "EHLO
+        id S1727915AbgENPJn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 11:09:43 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:58527 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726066AbgENNox (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 09:44:53 -0400
+        by vger.kernel.org with ESMTP id S1726240AbgENPJn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 11:09:43 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589463891;
+        s=mimecast20190719; t=1589468981;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=F5qdVfemB7v9BJXUFfCFzd6TCsvePQNWLAJiuKaDsNU=;
-        b=IDx/NS5JsBO2ZKLuoFKUd87ceR2IkSFtNYS5ZrJupWNRgLUA75z1wBHc4DuXigmJvOmPpE
-        BuiO9nsfs8jq+RskfxdCMCB07qvqaDwkOgsUOlI08npU1i3H9Q30wvpOP/J9q7XEk7YfII
-        hCk9JogR8EJdv9fKIb6er/tDYx48eCI=
+        bh=yN1mO46YLzeg66JlNFH1p8eG3vHpjfC/7S5Ou/onxc8=;
+        b=BN1A2+QFY9GuKhhYOUqT8tH8K70LA7Fja9GVSKZ1VTUy/3Bw0EW5ARoXxDiyPwjBq+s7IW
+        moS6oJFpZWjaA3vkqoqFeu6zhkjfatqYC0uq0rNkclilN3YtaG8L6VAxczS/1EtPFeOIAQ
+        rhM3B8dR2kSDMM8h8ofmMtvm/jZ/E7U=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-193-xkJmqrcRN2WNcTOlo4N-6A-1; Thu, 14 May 2020 09:44:49 -0400
-X-MC-Unique: xkJmqrcRN2WNcTOlo4N-6A-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-130-PJ_lTEsuPHerMeaHs9cRRg-1; Thu, 14 May 2020 11:09:36 -0400
+X-MC-Unique: PJ_lTEsuPHerMeaHs9cRRg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 459E280183C;
-        Thu, 14 May 2020 13:44:48 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id ADF92107ACF2;
+        Thu, 14 May 2020 15:09:35 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DC1A039E;
-        Thu, 14 May 2020 13:44:47 +0000 (UTC)
-Date:   Thu, 14 May 2020 09:44:46 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1372E60F8D;
+        Thu, 14 May 2020 15:09:34 +0000 (UTC)
+Date:   Thu, 14 May 2020 11:09:33 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] [RFC] xfs: per-cpu CIL lists
-Message-ID: <20200514134446.GC50441@bfoster>
-References: <20200512092811.1846252-1-david@fromorbit.com>
- <20200512092811.1846252-5-david@fromorbit.com>
- <20200513170237.GB45326@bfoster>
- <20200513233358.GH2040@dread.disaster.area>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] xfs_repair: port the online repair newbt structure
+Message-ID: <20200514150933.GA50849@bfoster>
+References: <158904190079.984305.707785748675261111.stgit@magnolia>
+ <158904190713.984305.3298591047333841655.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200513233358.GH2040@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <158904190713.984305.3298591047333841655.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 14, 2020 at 09:33:58AM +1000, Dave Chinner wrote:
-> On Wed, May 13, 2020 at 01:02:37PM -0400, Brian Foster wrote:
-> > On Tue, May 12, 2020 at 07:28:10PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > Next on the list to getting rid of the xc_cil_lock is making the CIL
-> > > itself per-cpu.
-> > > 
-> > > This requires a trade-off: we no longer move items forward in the
-> > > CIL; once they are on the CIL they remain there as we treat the
-> > > percpu lists as lockless.
-> > > 
-> > > XXX: preempt_disable() around the list operations to ensure they
-> > > stay local to the CPU.
-> > > 
-> > > XXX: this needs CPU hotplug notifiers to clean up when cpus go
-> > > offline.
-> > > 
-> > > Performance now increases substantially - the transaction rate goes
-> > > from 750,000/s to 1.05M/sec, and the unlink rate is over 500,000/s
-> > > for the first time.
-> > > 
-> > > Using a 32-way concurrent create/unlink on a 32p/16GB virtual
-> > > machine:
-> > > 
-> > > 	    create time     rate            unlink time
-> > > unpatched	1m56s      533k/s+/-28k/s      2m34s
-> > > patched		1m49s	   523k/s+/-14k/s      2m00s
-> > > 
-> > > Notably, the system time for the create went up, while variance went
-> > > down. This indicates we're starting to hit some other contention
-> > > limit as we reduce the amount of time we spend contending on the
-> > > xc_cil_lock.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_log_cil.c  | 66 ++++++++++++++++++++++++++++---------------
-> > >  fs/xfs/xfs_log_priv.h |  2 +-
-> > >  2 files changed, 45 insertions(+), 23 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > > index 746c841757ed1..af444bc69a7cd 100644
-> > > --- a/fs/xfs/xfs_log_cil.c
-> > > +++ b/fs/xfs/xfs_log_cil.c
-> > ...
-> > > @@ -687,7 +689,7 @@ xlog_cil_push_work(
-> > >  	 * move on to a new sequence number and so we have to be able to push
-> > >  	 * this sequence again later.
-> > >  	 */
-> > > -	if (list_empty(&cil->xc_cil)) {
-> > > +	if (percpu_counter_read(&cil->xc_curr_res) == 0) {
-> > 
-> > It seems reasonable, but I need to think a bit more about the whole
-> > percpu list thing. In the meantime, one thing that comes to mind is the
-> > more of these list_empty() -> percpu_counter_read() translations I see
-> > the less I like it because we're leaking this inherent raciness to
-> > different contexts. Whether it's ultimately safe or not, it's subject to
-> > change and far too subtle and indirect for my taste. 
+On Sat, May 09, 2020 at 09:31:47AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Well, all the critical list_empty(&cil->xc_cil) checks are done
-> under the xc_push_lock, so I'd suggest that if we zero the counters
-> under the push lock when switching contexts, and put the initial
-> zero->non-zero counter transition to under the same lock we'll get
-> exact checks without requiring a spinlock/atomic in the fast
-> path and have all the right memory barriers in place such that races
-> can't happen...
+> Port the new btree staging context and related block reservation helper
+> code from the kernel to repair.  We'll use this in subsequent patches to
+> implement btree bulk loading.
 > 
-
-That might work. We'd just have to audit the external checks and provide
-clear comments on the purpose of the lock in those cases.
-
-> > Could we replace all of the direct ->xc_cil list checks with an atomic
-> > bitop (i.e. XLOG_CIL_EMPTY) or something similar in the xfs_cil? AFAICT,
-> > that could be done in a separate patch and we could ultimately reuse it
-> > to close the race with the initial ctx reservation (via
-> > test_and_set_bit()) because it's otherwise set in the same function. Hm?
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  include/libxfs.h         |    1 
+>  libxfs/libxfs_api_defs.h |    2 
+>  repair/Makefile          |    4 -
+>  repair/bload.c           |  276 ++++++++++++++++++++++++++++++++++++++++++++++
+>  repair/bload.h           |   79 +++++++++++++
+>  repair/xfs_repair.c      |   17 +++
+>  6 files changed, 377 insertions(+), 2 deletions(-)
+>  create mode 100644 repair/bload.c
+>  create mode 100644 repair/bload.h
 > 
-> test_and_set_bit() still locks the memory bus and so requires
-> exclusive access to the cacheline. Avoiding locked bus ops
-> (atomics, spinlocks, etc) in the fast path is the problem
-> I'm trying to solve with this patchset. IOWs, this isn't a viable
-> solution to a scalability problem caused by many CPUs all trying to
-> access the same cacheline exclusively.
 > 
+...
+> diff --git a/repair/bload.c b/repair/bload.c
+> new file mode 100644
+> index 00000000..ab05815c
+> --- /dev/null
+> +++ b/repair/bload.c
+> @@ -0,0 +1,276 @@
+> +// SPDX-License-Identifier: GPL-2.0-or-later
+> +/*
+> + * Copyright (C) 2020 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + */
+> +#include <libxfs.h>
+> +#include "bload.h"
+> +
+> +#define trace_xrep_newbt_claim_block(...)	((void) 0)
+> +#define trace_xrep_newbt_reserve_space(...)	((void) 0)
+> +#define trace_xrep_newbt_unreserve_space(...)	((void) 0)
+> +#define trace_xrep_newbt_claim_block(...)	((void) 0)
+> +
+> +int bload_leaf_slack = -1;
+> +int bload_node_slack = -1;
+> +
+> +/* Ported routines from fs/xfs/scrub/repair.c */
+> +
 
-Of course I'd expect some hit from the added serialization, but it's not
-clear to me it would be as noticeable as an explicit lock in practice.
-For example, if we had an XLOG_CIL_EMPTY bit that was set at push time
-and had a test_and_clear_bit() in the commit/insert path, would we take
-that hit every time through the commit path or only until the cpu clears
-it or sees that it's been cleared?
+Any plans to generalize/lift more of this stuff into libxfs if it's
+going to be shared with xfsprogs?
 
-I'm not familiar enough with the bitops implementation to have
-expectations one way or the other, but I'd be happy to test it out if
-you can share the tests used to produce the documented results. :)
+...
+> +/* Free all the accounting infor and disk space we reserved for a new btree. */
+> +void
+> +xrep_newbt_destroy(
+> +	struct xrep_newbt	*xnr,
+> +	int			error)
+> +{
+> +	struct repair_ctx	*sc = xnr->sc;
+> +	struct xrep_newbt_resv	*resv, *n;
+> +
+> +	if (error)
+> +		goto junkit;
+
+Could use a comment on why we skip block freeing here..
+
+I'm also wondering if we can check error in the primary loop and kill
+the label and duplicate loop, but I guess that depends on whether the
+fields are always valid.
+
+> +
+> +	list_for_each_entry_safe(resv, n, &xnr->reservations, list) {
+> +		/* We don't have EFIs here so skip the EFD. */
+> +
+> +		/* Free every block we didn't use. */
+> +		resv->fsbno += resv->used;
+> +		resv->len -= resv->used;
+> +		resv->used = 0;
+> +
+> +		if (resv->len > 0) {
+> +			trace_xrep_newbt_unreserve_space(sc->mp,
+> +					XFS_FSB_TO_AGNO(sc->mp, resv->fsbno),
+> +					XFS_FSB_TO_AGBNO(sc->mp, resv->fsbno),
+> +					resv->len, xnr->oinfo.oi_owner);
+> +
+> +			__libxfs_bmap_add_free(sc->tp, resv->fsbno, resv->len,
+> +					&xnr->oinfo, true);
+> +		}
+> +
+> +		list_del(&resv->list);
+> +		kmem_free(resv);
+> +	}
+> +
+> +junkit:
+> +	list_for_each_entry_safe(resv, n, &xnr->reservations, list) {
+> +		list_del(&resv->list);
+> +		kmem_free(resv);
+> +	}
+> +
+> +	if (sc->ip) {
+> +		kmem_cache_free(xfs_ifork_zone, xnr->ifake.if_fork);
+> +		xnr->ifake.if_fork = NULL;
+> +	}
+> +}
+> +
+...
+> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> index 9d72fa8e..8fbd3649 100644
+> --- a/repair/xfs_repair.c
+> +++ b/repair/xfs_repair.c
+...
+> @@ -49,6 +52,8 @@ static char *o_opts[] = {
+>  	[AG_STRIDE]		= "ag_stride",
+>  	[FORCE_GEO]		= "force_geometry",
+>  	[PHASE2_THREADS]	= "phase2_threads",
+> +	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
+> +	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
+
+Why the "debug_" in the option names?
 
 Brian
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>  	[O_MAX_OPTS]		= NULL,
+>  };
+>  
+> @@ -260,6 +265,18 @@ process_args(int argc, char **argv)
+>  		_("-o phase2_threads requires a parameter\n"));
+>  					phase2_threads = (int)strtol(val, NULL, 0);
+>  					break;
+> +				case BLOAD_LEAF_SLACK:
+> +					if (!val)
+> +						do_abort(
+> +		_("-o debug_bload_leaf_slack requires a parameter\n"));
+> +					bload_leaf_slack = (int)strtol(val, NULL, 0);
+> +					break;
+> +				case BLOAD_NODE_SLACK:
+> +					if (!val)
+> +						do_abort(
+> +		_("-o debug_bload_node_slack requires a parameter\n"));
+> +					bload_node_slack = (int)strtol(val, NULL, 0);
+> +					break;
+>  				default:
+>  					unknown('o', val);
+>  					break;
 > 
 
