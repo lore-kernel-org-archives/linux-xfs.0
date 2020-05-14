@@ -2,245 +2,273 @@ Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B94F4C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:33:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3675C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:43:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78A692065D
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:33:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F1AC206A5
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:43:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TE9PonDF"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jxg7TnhD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726037AbgENQdb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 May 2020 12:33:31 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:59862 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726017AbgENQda (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 12:33:30 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGWVl0021966;
-        Thu, 14 May 2020 16:33:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=IVWX26Io6GXU/i+e/mmoAjWcse+5sQR0AvmZwOJ2zvM=;
- b=TE9PonDFZ+hcR3/xqR4tKTDq5m9qTBXHR9KR4A37cFL+oFEjlZErSvddU5nl+nXUl01s
- tusJSHOgKrfoGX9s1+Sg/HKOlVCiCGIdhDwXCvYcm+IkrBeVbssC324NbmI4EwC0Yvxj
- 3++LOzKZPIZ6K8PWo28hPYJTHSRcnAZD7Dmnv1/pq4fbXblQxP9C9Mr1n2pKXgFtYMbm
- hXroW9v79vZviSNfsfefKn1xzdVXLfURcvozCb8EkdUKyLeCShbWN4TSocRZ6IsjVaP3
- IPnuO02LAS3M2oX3rveCnihH0dM57VuGGtEKPiKLKdOKoARUHjM3Bhx66A0f/5G9Oe/k /Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 3100yg3nxm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 14 May 2020 16:33:20 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGWfjH073996;
-        Thu, 14 May 2020 16:33:20 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 310vjt6vmn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 May 2020 16:33:20 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04EGXI1n000369;
-        Thu, 14 May 2020 16:33:18 GMT
+        id S1726388AbgENQnG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 12:43:06 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50116 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726133AbgENQnF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 12:43:05 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGfQCD137122
+        for <linux-xfs@vger.kernel.org>; Thu, 14 May 2020 16:43:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=zjL+lrsAP+2f1IdIy1Y2w0wNny3nlWw2quoP9Kj3X/U=;
+ b=jxg7TnhDjbJBAfKtkiJ26nJ2jXJDboqM3lzpIpIizL6y+0KTEEhTeVuKoevpS78nK52C
+ RqlyrMfRr9tdwextLYdnExioguUDsUpUyHwWeO3zHjHMOiOJIogUt/f9SfpEsRtxX/Ea
+ KwLSXSnzM2+sAI1QoFZKXHuiI9rl1dhBI37izSmeW6/7KPQDFI3IrOjCayPifQR6DYQl
+ +SXX9UDn6R2GGX4eBA7uwSpIEVx4wEKhzt/N/kpU2PNZz8QVSmCxJgJCsU0WnsTJuRUF
+ IlWU0YBXqGiL5z7kdMVdu+ArImTDuCaNpL6kHVBnvQPHwpZW1lnX+0HlxdXyHMPez+d+ Aw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 3100xwkqyq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Thu, 14 May 2020 16:43:03 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGc5CF163253
+        for <linux-xfs@vger.kernel.org>; Thu, 14 May 2020 16:43:03 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 3100yd0mv2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 14 May 2020 16:43:02 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04EGh1JW027775
+        for <linux-xfs@vger.kernel.org>; Thu, 14 May 2020 16:43:01 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 14 May 2020 09:33:18 -0700
-Date:   Thu, 14 May 2020 09:33:17 -0700
+        with ESMTP ; Thu, 14 May 2020 09:43:01 -0700
+Date:   Thu, 14 May 2020 09:43:00 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        hch@infradead.org
-Subject: Re: [PATCH 1/2] xfs: force writes to delalloc regions to unwritten
-Message-ID: <20200514163317.GA6714@magnolia>
-References: <157915534429.2406747.2688273938645013888.stgit@magnolia>
- <157915535059.2406747.264640456606868955.stgit@magnolia>
- <20200119204925.GC9407@dread.disaster.area>
- <20200203201445.GA6870@magnolia>
- <20200507103232.GB9003@bfoster>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 508578f2f560
+Message-ID: <20200514164300.GB6714@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200507103232.GB9003@bfoster>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 phishscore=0
- spamscore=0 mlxlogscore=999 malwarescore=0 suspectscore=1 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 phishscore=0
+ adultscore=0 suspectscore=2 mlxscore=0 mlxlogscore=999 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005140146
+ definitions=main-2005140147
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- cotscore=-2147483648 mlxscore=0 suspectscore=1 spamscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 clxscore=1015 phishscore=0 bulkscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005140146
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 lowpriorityscore=0
+ suspectscore=2 mlxlogscore=999 clxscore=1015 cotscore=-2147483648
+ mlxscore=0 phishscore=0 adultscore=0 impostorscore=0 bulkscore=0
+ malwarescore=0 priorityscore=1501 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005140147
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 07, 2020 at 06:32:32AM -0400, Brian Foster wrote:
-> On Mon, Feb 03, 2020 at 12:14:45PM -0800, Darrick J. Wong wrote:
-> > On Mon, Jan 20, 2020 at 07:49:25AM +1100, Dave Chinner wrote:
-> > > On Wed, Jan 15, 2020 at 10:15:50PM -0800, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > When writing to a delalloc region in the data fork, commit the new
-> > > > allocations (of the da reservation) as unwritten so that the mappings
-> > > > are only marked written once writeback completes successfully.  This
-> > > > fixes the problem of stale data exposure if the system goes down during
-> > > > targeted writeback of a specific region of a file, as tested by
-> > > > generic/042.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  fs/xfs/libxfs/xfs_bmap.c |   28 +++++++++++++++++-----------
-> > > >  1 file changed, 17 insertions(+), 11 deletions(-)
-> > > > 
-> > > > 
-> > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > > index 4544732d09a5..220ea1dc67ab 100644
-> > > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > > @@ -4190,17 +4190,7 @@ xfs_bmapi_allocate(
-> > > >  	bma->got.br_blockcount = bma->length;
-> > > >  	bma->got.br_state = XFS_EXT_NORM;
-> > > >  
-> > > > -	/*
-> > > > -	 * In the data fork, a wasdelay extent has been initialized, so
-> > > > -	 * shouldn't be flagged as unwritten.
-> > > > -	 *
-> > > > -	 * For the cow fork, however, we convert delalloc reservations
-> > > > -	 * (extents allocated for speculative preallocation) to
-> > > > -	 * allocated unwritten extents, and only convert the unwritten
-> > > > -	 * extents to real extents when we're about to write the data.
-> > > > -	 */
-> > > > -	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
-> > > > -	    (bma->flags & XFS_BMAPI_PREALLOC))
-> > > > +	if (bma->flags & XFS_BMAPI_PREALLOC)
-> > > >  		bma->got.br_state = XFS_EXT_UNWRITTEN;
-> > > >  
-> > > >  	if (bma->wasdel)
-> > > > @@ -4608,8 +4598,24 @@ xfs_bmapi_convert_delalloc(
-> > > >  	bma.offset = bma.got.br_startoff;
-> > > >  	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount, MAXEXTLEN);
-> > > >  	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
-> > > > +
-> > > > +	/*
-> > > > +	 * When we're converting the delalloc reservations backing dirty pages
-> > > > +	 * in the page cache, we must be careful about how we create the new
-> > > > +	 * extents:
-> > > > +	 *
-> > > > +	 * New CoW fork extents are created unwritten, turned into real extents
-> > > > +	 * when we're about to write the data to disk, and mapped into the data
-> > > > +	 * fork after the write finishes.  End of story.
-> > > > +	 *
-> > > > +	 * New data fork extents must be mapped in as unwritten and converted
-> > > > +	 * to real extents after the write succeeds to avoid exposing stale
-> > > > +	 * disk contents if we crash.
-> > > > +	 */
-> > > >  	if (whichfork == XFS_COW_FORK)
-> > > >  		bma.flags = XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
-> > > > +	else
-> > > > +		bma.flags = XFS_BMAPI_PREALLOC;
-> > > 
-> > > 	bma.flags = XFS_BMAPI_PREALLOC;
-> > > 	if (whichfork == XFS_COW_FORK)
-> > > 		bma.flags |= XFS_BMAPI_COWFORK;
-> > > 
-> > > However, I'm still not convinced that this is the right/best
-> > > solution to the problem. It is the easiest, yes, but the down side
-> > > on fast/high iops storage and/or under low memory conditions has
-> > > potential to be extremely significant.
-> > > 
-> > > I suspect that heavy users of buffered O_DSYNC writes into sparse
-> > > files are going to notice this the most - there are databases out
-> > > there that work this way. And I suspect that most of the workloads
-> > > that use buffered O_DSYNC IO heavily won't see this change for years
-> > > as enterprise upgrade cycles are notoriously slow.
-> > > 
-> > > IOWs, all I see this change doing is kicking the can down the road
-> > > and guaranteeing that we'll still have to solve this stale data
-> > > exposure problem more efficiently in the future. And instead of
-> > > doing it now when we have the time and freedom to do the work, it
-> > > will have to be done urgently under high priority escalation
-> > > pressures...
-> > 
-> > FWIW I'm *already* under urgent high priority GA blocker escalation
-> > pressure, which is why this came up again.
-> > 
-> > Granted it did take 12 days of losing the battle with the distro folks
-> > that this really isn't a release blocker (but teh sekuritehs!!) but...oh
-> > right, I forgot that xfs actually /does/ crash more than once per day in
-> > our environment.
-> > 
-> > I guess *we* will find out how much performance really disappears if you
-> > do it this way. :P
-> > 
-> 
-> Sorry for resurrecting an old thread here, but I was thinking about this
-> problem a bit and realized I didn't have a great handle on the concerns
-> with using unwritten extents for delalloc writeback. Dave calls out the
-> O_DSYNC buffered writes into sparse files case above. I don't see any
-> numbers posted here so I ran some quick tests using a large ramdisk to
-> get low latency I/O.
-> 
-> I only seem to require a couple threads to max out single file, random
-> 4k dsync buffered write iops in this particular setup. I see ~30.6k iops
-> from a baseline 5.7.0-rc1 kernel and that drops to ~25.7k iops when
-> using unwritten extents for delalloc conversion. However, note that the
-> same workload through single threaded aio+dio (qd 32) runs at ~63.7k
-> iops. That's already using unwritten extents for dio so it's unaffected
-> by this patch. Also note that using a 10MB extent size hint puts the
-> dsync buffered write case at ~27k iops (again for both kernels because
-> we're already using unwritten extents in that case as well).
-> 
-> For reference, full file preallocation (i.e. no allocs, unwritten
-> extents) runs at ~27k iops for the buffered write case and ~87k iops for
-> aio+dio. The overwrite (no unwritten, no alloc) case gets to ~250k iops
-> with the same couple dsync buffered write threads and close to 300k iops
-> with single threaded aio+dio (which I think is maxing out my memory
-> bandwidth).
-> 
-> Altogether, this has me wondering whether it's really worth the
-> complexity of trying to avoid the overhead of unwritten extents for
-> delalloc conversion. There is a noticeable hit, but it's an already slow
-> path compared to async I/O mechanisms. Further, it's a workload that
-> typically comes with a recommendation to use extent size hints to avoid
-> fragmentation issues and minimize allocation overhead, and that feature
-> already bypasses delalloc extents in favor of unwritten extents.
-> Thoughts? Suggestions for other tests?
+Hi folks,
 
-4-5 months ago I ran more or less the same benchmark (albeit with
-$someproduct) and came to the same conclusion -- if you're really doing
-scattershot buffered O_DSYNC writes to a file, you'll lose about 15-20%
-with this patch added.  Then apparently I ... got buried in xmas and
-other bugs and forgot to send the results. :/
+The for-next branch of the xfs-linux repository at:
 
-Granted, you had to /force/ $someproduct to do this because it would
-typically do either synchronous aio+dio, or it could do async writes
-with an fsync at the important parts, or it could set an extent hint,
-or (the default) it writes zeroes ahead of time so that XFS will stay
-out of the way when checkpoints need to get done asap.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-I could say (glibly) that I'm so buried in bug triage that what's a few
-more? but maybe the rest of you have other opinions? :)
+has just been updated.
 
---D
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  I'm pretty sure there's at least the ifork cleanup
+series from Christoph that I haven't gotten around to testing. :(
 
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > Cheers,
-> > > 
-> > > Dave.
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > 
-> 
+The new head of the for-next branch is commit:
+
+508578f2f560 xfs: Use the correct style for SPDX License Identifier
+
+New Commits:
+
+Arnd Bergmann (1):
+      [166405f6b53b] xfs: stop CONFIG_XFS_DEBUG from changing compiler flags
+
+Brian Foster (18):
+      [cb6ad0993eb8] xfs: refactor failed buffer resubmission into xfsaild
+      [54b3b1f619ef] xfs: factor out buffer I/O failure code
+      [f20192991d79] xfs: simplify inode flush error handling
+      [15fab3b9be22] xfs: remove unnecessary shutdown check from xfs_iflush()
+      [b6983e80b03b] xfs: reset buffer write failure state on successful completion
+      [f9bccfcc3b59] xfs: refactor ratelimited buffer error messages into helper
+      [61948b6fb276] xfs: ratelimit unmount time per-buffer I/O error alert
+      [629dcb38dc35] xfs: fix duplicate verification from xfs_qm_dqflush()
+      [b707fffda6a3] xfs: abort consistently on dquot flush failure
+      [849274c103ae] xfs: acquire ->ail_lock from xfs_trans_ail_delete()
+      [655879290c28] xfs: use delete helper for items expected to be in AIL
+      [6af0479d8b6b] xfs: drop unused shutdown parameter from xfs_trans_ail_remove()
+      [2b3cf09356d5] xfs: combine xfs_trans_ail_[remove|delete]()
+      [88fc187984c9] xfs: remove unused iflush stale parameter
+      [7376d7454734] xfs: random buffer write failure errortag
+      [28d84620797e] xfs: remove unused shutdown types
+      [c199507993ed] xfs: remove unused iget_flags param from xfs_imap_to_bp()
+      [43dc0aa84ef7] xfs: fix unused variable warning in buffer completion on !DEBUG
+
+Chen Zhou (1):
+      [3d60548b216b] xfs: remove duplicate headers
+
+Christoph Hellwig (16):
+      [e968350aadf3] xfs: refactor the buffer cancellation table helpers
+      [5ce70b770d16] xfs: rename inode_list xlog_recover_reorder_trans
+      [7d4894b4ce07] xfs: factor out a xlog_buf_readahead helper
+      [f15ab3f60ef3] xfs: simplify xlog_recover_inode_ra_pass2
+      [98b69b1285be] xfs: refactor xlog_recover_buffer_pass1
+      [82ff450b2d93] xfs: remove the xfs_efi_log_item_t typedef
+      [c84e819090f3] xfs: remove the xfs_efd_log_item_t typedef
+      [fd9cbe512151] xfs: remove the xfs_inode_log_item_t typedef
+      [e046e949486e] xfs: factor out a xfs_defer_create_intent helper
+      [c1f09188e8de] xfs: merge the ->log_item defer op into ->create_intent
+      [d367a868e46b] xfs: merge the ->diff_items defer op into ->create_intent
+      [13a833333907] xfs: turn dfp_intent into a xfs_log_item
+      [bb47d79750f1] xfs: refactor xfs_defer_finish_noroll
+      [f09d167c2033] xfs: turn dfp_done into a xfs_log_item
+      [3ec1b26c04d4] xfs: use a xfs_btree_cur for the ->finish_cleanup state
+      [2f88f1efd02d] xfs: spell out the parameter name for ->cancel_item
+
+Darrick J. Wong (27):
+      [0d2d35a33ea7] xfs: report unrecognized log item type codes during recovery
+      [8bc3b5e4b70d] xfs: clean up the error handling in xfs_swap_extents
+      [35f4521fd3a0] xfs: convert xfs_log_recover_item_t to struct xfs_log_recover_item
+      [86ffa471d9ce] xfs: refactor log recovery item sorting into a generic dispatch structure
+      [8ea5682d0711] xfs: refactor log recovery item dispatch for pass2 readhead functions
+      [3304a4fabd09] xfs: refactor log recovery item dispatch for pass1 commit functions
+      [1094d3f12363] xfs: refactor log recovery buffer item dispatch for pass2 commit functions
+      [658fa68b6f34] xfs: refactor log recovery inode item dispatch for pass2 commit functions
+      [fcbdf91e0c9f] xfs: refactor log recovery dquot item dispatch for pass2 commit functions
+      [3ec6efa703cf] xfs: refactor log recovery icreate item dispatch for pass2 commit functions
+      [9817aa80dcdc] xfs: refactor log recovery EFI item dispatch for pass2 commit functions
+      [07590a9d38b8] xfs: refactor log recovery RUI item dispatch for pass2 commit functions
+      [9b4467e98340] xfs: refactor log recovery CUI item dispatch for pass2 commit functions
+      [3c6ba3cf90c7] xfs: refactor log recovery BUI item dispatch for pass2 commit functions
+      [2565a11b224b] xfs: remove log recovery quotaoff item dispatch for pass2 commit functions
+      [10d0c6e06fc8] xfs: refactor recovered EFI log item playback
+      [cba0ccac28a7] xfs: refactor recovered RUI log item playback
+      [c57ed2f5a2ff] xfs: refactor recovered CUI log item playback
+      [9329ba89cbb1] xfs: refactor recovered BUI log item playback
+      [bba7b1644a25] xfs: refactor xlog_item_is_intent now that we're done converting
+      [154c733a33d9] xfs: refactor releasing finished intents during log recovery
+      [86a371741386] xfs: refactor adding recovered intent items to the log
+      [889eb55dd68f] xfs: refactor intent item RECOVERED flag into the log item
+      [96b60f826713] xfs: refactor intent item iop_recover calls
+      [cc560a5a9540] xfs: hoist setting of XFS_LI_RECOVERED to caller
+      [17d29bf271ea] xfs: move log recovery buffer cancellation code to xfs_buf_item_recover.c
+      [6ea670ade207] xfs: remove unnecessary includes from xfs_log_recover.c
+
+Eric Sandeen (1):
+      [ec43f6da31f1] xfs: define printk_once variants for xfs messages
+
+Gustavo A. R. Silva (1):
+      [ee4064e56cd8] xfs: Replace zero-length array with flexible-array
+
+Ira Weiny (5):
+      [d45344d6c49c] fs/xfs: Remove unnecessary initialization of i_rwsem
+      [606723d98293] fs/xfs: Change XFS_MOUNT_DAX to XFS_MOUNT_DAX_ALWAYS
+      [8d6c3446ec23] fs/xfs: Make DAX mount option a tri-state
+      [32dbc5655f1c] fs/xfs: Create function xfs_inode_should_enable_dax()
+      [840d493dff1a] fs/xfs: Combine xfs_diflags_to_linux() and xfs_diflags_to_iflags()
+
+Kaixu Xia (7):
+      [c140735bbb65] xfs: trace quota allocations for all quota types
+      [d51bafe0d227] xfs: combine two if statements with same condition
+      [fb353ff19d34] xfs: reserve quota inode transaction space only when needed
+      [ea1c90403d5d] xfs: remove unnecessary variable udqp from xfs_ioctl_setattr
+      [7994aae8516a] xfs: remove unnecessary assertion from xfs_qm_vop_create_dqattach
+      [cd59455980f9] xfs: simplify the flags setting in xfs_qm_scall_quotaon
+      [57fd2d8f61a2] xfs: remove unnecessary check of the variable resblks in xfs_symlink
+
+Nishad Kamdar (1):
+      [508578f2f560] xfs: Use the correct style for SPDX License Identifier
+
+Zheng Bin (1):
+      [237aac4624aa] xfs: ensure f_bfree returned by statfs() is non-negative
+
+
+Code Diffstat:
+
+ fs/xfs/Makefile                 |    5 +-
+ fs/xfs/kmem.h                   |    2 +-
+ fs/xfs/libxfs/xfs_ag_resv.h     |    2 +-
+ fs/xfs/libxfs/xfs_alloc.h       |    2 +-
+ fs/xfs/libxfs/xfs_alloc_btree.h |    2 +-
+ fs/xfs/libxfs/xfs_attr.h        |    2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.h   |    2 +-
+ fs/xfs/libxfs/xfs_attr_remote.h |    2 +-
+ fs/xfs/libxfs/xfs_attr_sf.h     |    2 +-
+ fs/xfs/libxfs/xfs_bit.h         |    2 +-
+ fs/xfs/libxfs/xfs_bmap.h        |    2 +-
+ fs/xfs/libxfs/xfs_bmap_btree.h  |    2 +-
+ fs/xfs/libxfs/xfs_btree.h       |    2 +-
+ fs/xfs/libxfs/xfs_da_btree.h    |    2 +-
+ fs/xfs/libxfs/xfs_da_format.h   |    2 +-
+ fs/xfs/libxfs/xfs_defer.c       |  152 +--
+ fs/xfs/libxfs/xfs_defer.h       |   26 +-
+ fs/xfs/libxfs/xfs_dir2.h        |    2 +-
+ fs/xfs/libxfs/xfs_dir2_priv.h   |    2 +-
+ fs/xfs/libxfs/xfs_errortag.h    |    6 +-
+ fs/xfs/libxfs/xfs_format.h      |    4 +-
+ fs/xfs/libxfs/xfs_fs.h          |    2 +-
+ fs/xfs/libxfs/xfs_health.h      |    2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c   |   12 +-
+ fs/xfs/libxfs/xfs_inode_buf.h   |    2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c  |    2 +-
+ fs/xfs/libxfs/xfs_log_recover.h |   83 +-
+ fs/xfs/libxfs/xfs_trans_inode.c |    2 +-
+ fs/xfs/scrub/ialloc.c           |    3 +-
+ fs/xfs/xfs_bmap_item.c          |  237 +++-
+ fs/xfs/xfs_bmap_item.h          |   11 -
+ fs/xfs/xfs_bmap_util.c          |    2 +-
+ fs/xfs/xfs_buf.c                |   70 +-
+ fs/xfs/xfs_buf.h                |    2 +
+ fs/xfs/xfs_buf_item.c           |  106 +-
+ fs/xfs/xfs_buf_item.h           |    2 -
+ fs/xfs/xfs_buf_item_recover.c   |  984 ++++++++++++++
+ fs/xfs/xfs_dquot.c              |   47 +-
+ fs/xfs/xfs_dquot_item.c         |   17 +-
+ fs/xfs/xfs_dquot_item_recover.c |  201 +++
+ fs/xfs/xfs_error.c              |    3 +
+ fs/xfs/xfs_extfree_item.c       |  216 ++-
+ fs/xfs/xfs_extfree_item.h       |   25 +-
+ fs/xfs/xfs_fsops.c              |    5 +-
+ fs/xfs/xfs_icache.c             |    6 +-
+ fs/xfs/xfs_icreate_item.c       |  152 +++
+ fs/xfs/xfs_inode.c              |  143 +-
+ fs/xfs/xfs_inode.h              |    1 +
+ fs/xfs/xfs_inode_item.c         |   28 +-
+ fs/xfs/xfs_inode_item.h         |    6 +-
+ fs/xfs/xfs_inode_item_recover.c |  400 ++++++
+ fs/xfs/xfs_ioctl.c              |   40 +-
+ fs/xfs/xfs_iops.c               |   77 +-
+ fs/xfs/xfs_log_recover.c        | 2801 ++++-----------------------------------
+ fs/xfs/xfs_message.c            |   22 +
+ fs/xfs/xfs_message.h            |   24 +-
+ fs/xfs/xfs_mount.c              |    7 +-
+ fs/xfs/xfs_mount.h              |    6 +-
+ fs/xfs/xfs_pnfs.c               |    5 +-
+ fs/xfs/xfs_qm.c                 |    7 +-
+ fs/xfs/xfs_qm_syscalls.c        |    6 +-
+ fs/xfs/xfs_refcount_item.c      |  252 ++--
+ fs/xfs/xfs_refcount_item.h      |   11 -
+ fs/xfs/xfs_rmap_item.c          |  229 ++--
+ fs/xfs/xfs_rmap_item.h          |   13 -
+ fs/xfs/xfs_super.c              |   51 +-
+ fs/xfs/xfs_symlink.c            |    6 +-
+ fs/xfs/xfs_trans.h              |    6 +-
+ fs/xfs/xfs_trans_ail.c          |   79 +-
+ fs/xfs/xfs_trans_priv.h         |   21 +-
+ fs/xfs/xfs_xattr.c              |    1 -
+ 71 files changed, 3211 insertions(+), 3450 deletions(-)
+ create mode 100644 fs/xfs/xfs_buf_item_recover.c
+ create mode 100644 fs/xfs/xfs_dquot_item_recover.c
+ create mode 100644 fs/xfs/xfs_inode_item_recover.c
