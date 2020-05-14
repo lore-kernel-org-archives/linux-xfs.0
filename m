@@ -2,271 +2,251 @@ Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E36DC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 17:44:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A798C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 19:20:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CB122065D
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 17:44:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E09720643
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 19:20:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IGlBs7It"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Bh0ERX0G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726076AbgENRo4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 May 2020 13:44:56 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:56960 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726075AbgENRo4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 13:44:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589478294;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=TgCYn+zL68HAWTqWuPDJym6H6ZpbqqJO39V72aiBNf4=;
-        b=IGlBs7It0SG38AHXLuZ6P5fy8Nfl/jQKPb9N90dNDk2d2yZasyMIq/tl2fcQWgjFukUIqD
-        jO9RX7AmgTz1y7+zSPbjAqzuKj71n56D840ygBNytoKwll0A5PkuA/bV6z0FJ75LjAcX1g
-        ut9gVQyhSzZ0aRxyX35oaPZ00qGC1RU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-506-yDYqEhkIPte_MxSpChsWKQ-1; Thu, 14 May 2020 13:44:52 -0400
-X-MC-Unique: yDYqEhkIPte_MxSpChsWKQ-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1FC57EC1A1;
-        Thu, 14 May 2020 17:44:51 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7B2B55D9CA;
-        Thu, 14 May 2020 17:44:50 +0000 (UTC)
-Date:   Thu, 14 May 2020 13:44:48 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        hch@infradead.org
-Subject: Re: [PATCH 1/2] xfs: force writes to delalloc regions to unwritten
-Message-ID: <20200514174448.GE50849@bfoster>
-References: <157915534429.2406747.2688273938645013888.stgit@magnolia>
- <157915535059.2406747.264640456606868955.stgit@magnolia>
- <20200119204925.GC9407@dread.disaster.area>
- <20200203201445.GA6870@magnolia>
- <20200507103232.GB9003@bfoster>
- <20200514163317.GA6714@magnolia>
+        id S1727805AbgENTUq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 15:20:46 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:47750 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727777AbgENTUp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 15:20:45 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EJHAqo049386;
+        Thu, 14 May 2020 19:20:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=QiZ9X0VohvPlptvYwIrv32vXzlXNw1U9irGe8+f++5k=;
+ b=Bh0ERX0GJH0s/UzFDG+fRRyNmGFs/DZ0XqjvxV6fb0CJ33DxXJ4QMLIaedoe6KqyN9iU
+ eXVJmlgQYO1miqjhI3CwxKnU1J7eUgDpipD9+lozK4vja+4PtaxncbJuNnvLneDhR/eF
+ 0mo1Gu3M+0tTjVwDUwOzxsiIfuWJzuU0MdYR1eD5VAM86mvYZpf2uJak8GcWwW6KPIjt
+ zVsbBAK1mQUqaXLhBTFGvlo3C4IjZt6tsPwANY6tokuSUOnQ/bQt66vmeJafcq/752C0
+ LkDvZaBKeQlr7va72XiGhkfsPb6lW5EeOw5/R+FnGoVyiuMxqHDpn0V3ZZ/+CeoLQ3Ny 0g== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 3100xwvku8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 14 May 2020 19:20:40 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EJI6Iq179524;
+        Thu, 14 May 2020 19:20:39 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 3100yd8nna-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 14 May 2020 19:20:39 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04EJKckK032378;
+        Thu, 14 May 2020 19:20:38 GMT
+Received: from localhost (/10.159.232.175)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 14 May 2020 12:20:38 -0700
+Date:   Thu, 14 May 2020 12:20:37 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] xfs_repair: port the online repair newbt structure
+Message-ID: <20200514192037.GD6714@magnolia>
+References: <158904190079.984305.707785748675261111.stgit@magnolia>
+ <158904190713.984305.3298591047333841655.stgit@magnolia>
+ <20200514150933.GA50849@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200514163317.GA6714@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20200514150933.GA50849@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0 phishscore=0
+ adultscore=0 suspectscore=5 mlxscore=0 mlxlogscore=999 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005140169
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9621 signatures=668687
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 cotscore=-2147483648 bulkscore=0
+ phishscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0
+ impostorscore=0 spamscore=0 malwarescore=0 priorityscore=1501 mlxscore=0
+ suspectscore=5 clxscore=1015 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005140169
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, May 14, 2020 at 09:33:17AM -0700, Darrick J. Wong wrote:
-> On Thu, May 07, 2020 at 06:32:32AM -0400, Brian Foster wrote:
-> > On Mon, Feb 03, 2020 at 12:14:45PM -0800, Darrick J. Wong wrote:
-> > > On Mon, Jan 20, 2020 at 07:49:25AM +1100, Dave Chinner wrote:
-> > > > On Wed, Jan 15, 2020 at 10:15:50PM -0800, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > 
-> > > > > When writing to a delalloc region in the data fork, commit the new
-> > > > > allocations (of the da reservation) as unwritten so that the mappings
-> > > > > are only marked written once writeback completes successfully.  This
-> > > > > fixes the problem of stale data exposure if the system goes down during
-> > > > > targeted writeback of a specific region of a file, as tested by
-> > > > > generic/042.
-> > > > > 
-> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > ---
-> > > > >  fs/xfs/libxfs/xfs_bmap.c |   28 +++++++++++++++++-----------
-> > > > >  1 file changed, 17 insertions(+), 11 deletions(-)
-> > > > > 
-> > > > > 
-> > > > > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > > > > index 4544732d09a5..220ea1dc67ab 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > > > > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > > > > @@ -4190,17 +4190,7 @@ xfs_bmapi_allocate(
-> > > > >  	bma->got.br_blockcount = bma->length;
-> > > > >  	bma->got.br_state = XFS_EXT_NORM;
-> > > > >  
-> > > > > -	/*
-> > > > > -	 * In the data fork, a wasdelay extent has been initialized, so
-> > > > > -	 * shouldn't be flagged as unwritten.
-> > > > > -	 *
-> > > > > -	 * For the cow fork, however, we convert delalloc reservations
-> > > > > -	 * (extents allocated for speculative preallocation) to
-> > > > > -	 * allocated unwritten extents, and only convert the unwritten
-> > > > > -	 * extents to real extents when we're about to write the data.
-> > > > > -	 */
-> > > > > -	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
-> > > > > -	    (bma->flags & XFS_BMAPI_PREALLOC))
-> > > > > +	if (bma->flags & XFS_BMAPI_PREALLOC)
-> > > > >  		bma->got.br_state = XFS_EXT_UNWRITTEN;
-> > > > >  
-> > > > >  	if (bma->wasdel)
-> > > > > @@ -4608,8 +4598,24 @@ xfs_bmapi_convert_delalloc(
-> > > > >  	bma.offset = bma.got.br_startoff;
-> > > > >  	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount, MAXEXTLEN);
-> > > > >  	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
-> > > > > +
-> > > > > +	/*
-> > > > > +	 * When we're converting the delalloc reservations backing dirty pages
-> > > > > +	 * in the page cache, we must be careful about how we create the new
-> > > > > +	 * extents:
-> > > > > +	 *
-> > > > > +	 * New CoW fork extents are created unwritten, turned into real extents
-> > > > > +	 * when we're about to write the data to disk, and mapped into the data
-> > > > > +	 * fork after the write finishes.  End of story.
-> > > > > +	 *
-> > > > > +	 * New data fork extents must be mapped in as unwritten and converted
-> > > > > +	 * to real extents after the write succeeds to avoid exposing stale
-> > > > > +	 * disk contents if we crash.
-> > > > > +	 */
-> > > > >  	if (whichfork == XFS_COW_FORK)
-> > > > >  		bma.flags = XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
-> > > > > +	else
-> > > > > +		bma.flags = XFS_BMAPI_PREALLOC;
-> > > > 
-> > > > 	bma.flags = XFS_BMAPI_PREALLOC;
-> > > > 	if (whichfork == XFS_COW_FORK)
-> > > > 		bma.flags |= XFS_BMAPI_COWFORK;
-> > > > 
-> > > > However, I'm still not convinced that this is the right/best
-> > > > solution to the problem. It is the easiest, yes, but the down side
-> > > > on fast/high iops storage and/or under low memory conditions has
-> > > > potential to be extremely significant.
-> > > > 
-> > > > I suspect that heavy users of buffered O_DSYNC writes into sparse
-> > > > files are going to notice this the most - there are databases out
-> > > > there that work this way. And I suspect that most of the workloads
-> > > > that use buffered O_DSYNC IO heavily won't see this change for years
-> > > > as enterprise upgrade cycles are notoriously slow.
-> > > > 
-> > > > IOWs, all I see this change doing is kicking the can down the road
-> > > > and guaranteeing that we'll still have to solve this stale data
-> > > > exposure problem more efficiently in the future. And instead of
-> > > > doing it now when we have the time and freedom to do the work, it
-> > > > will have to be done urgently under high priority escalation
-> > > > pressures...
-> > > 
-> > > FWIW I'm *already* under urgent high priority GA blocker escalation
-> > > pressure, which is why this came up again.
-> > > 
-> > > Granted it did take 12 days of losing the battle with the distro folks
-> > > that this really isn't a release blocker (but teh sekuritehs!!) but...oh
-> > > right, I forgot that xfs actually /does/ crash more than once per day in
-> > > our environment.
-> > > 
-> > > I guess *we* will find out how much performance really disappears if you
-> > > do it this way. :P
-> > > 
+On Thu, May 14, 2020 at 11:09:33AM -0400, Brian Foster wrote:
+> On Sat, May 09, 2020 at 09:31:47AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Sorry for resurrecting an old thread here, but I was thinking about this
-> > problem a bit and realized I didn't have a great handle on the concerns
-> > with using unwritten extents for delalloc writeback. Dave calls out the
-> > O_DSYNC buffered writes into sparse files case above. I don't see any
-> > numbers posted here so I ran some quick tests using a large ramdisk to
-> > get low latency I/O.
+> > Port the new btree staging context and related block reservation helper
+> > code from the kernel to repair.  We'll use this in subsequent patches to
+> > implement btree bulk loading.
 > > 
-> > I only seem to require a couple threads to max out single file, random
-> > 4k dsync buffered write iops in this particular setup. I see ~30.6k iops
-> > from a baseline 5.7.0-rc1 kernel and that drops to ~25.7k iops when
-> > using unwritten extents for delalloc conversion. However, note that the
-> > same workload through single threaded aio+dio (qd 32) runs at ~63.7k
-> > iops. That's already using unwritten extents for dio so it's unaffected
-> > by this patch. Also note that using a 10MB extent size hint puts the
-> > dsync buffered write case at ~27k iops (again for both kernels because
-> > we're already using unwritten extents in that case as well).
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  include/libxfs.h         |    1 
+> >  libxfs/libxfs_api_defs.h |    2 
+> >  repair/Makefile          |    4 -
+> >  repair/bload.c           |  276 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  repair/bload.h           |   79 +++++++++++++
+> >  repair/xfs_repair.c      |   17 +++
+> >  6 files changed, 377 insertions(+), 2 deletions(-)
+> >  create mode 100644 repair/bload.c
+> >  create mode 100644 repair/bload.h
 > > 
-> > For reference, full file preallocation (i.e. no allocs, unwritten
-> > extents) runs at ~27k iops for the buffered write case and ~87k iops for
-> > aio+dio. The overwrite (no unwritten, no alloc) case gets to ~250k iops
-> > with the same couple dsync buffered write threads and close to 300k iops
-> > with single threaded aio+dio (which I think is maxing out my memory
-> > bandwidth).
 > > 
-> > Altogether, this has me wondering whether it's really worth the
-> > complexity of trying to avoid the overhead of unwritten extents for
-> > delalloc conversion. There is a noticeable hit, but it's an already slow
-> > path compared to async I/O mechanisms. Further, it's a workload that
-> > typically comes with a recommendation to use extent size hints to avoid
-> > fragmentation issues and minimize allocation overhead, and that feature
-> > already bypasses delalloc extents in favor of unwritten extents.
-> > Thoughts? Suggestions for other tests?
+> ...
+> > diff --git a/repair/bload.c b/repair/bload.c
+> > new file mode 100644
+> > index 00000000..ab05815c
+> > --- /dev/null
+> > +++ b/repair/bload.c
+> > @@ -0,0 +1,276 @@
+> > +// SPDX-License-Identifier: GPL-2.0-or-later
+> > +/*
+> > + * Copyright (C) 2020 Oracle.  All Rights Reserved.
+> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > + */
+> > +#include <libxfs.h>
+> > +#include "bload.h"
+> > +
+> > +#define trace_xrep_newbt_claim_block(...)	((void) 0)
+> > +#define trace_xrep_newbt_reserve_space(...)	((void) 0)
+> > +#define trace_xrep_newbt_unreserve_space(...)	((void) 0)
+> > +#define trace_xrep_newbt_claim_block(...)	((void) 0)
+> > +
+> > +int bload_leaf_slack = -1;
+> > +int bload_node_slack = -1;
+> > +
+> > +/* Ported routines from fs/xfs/scrub/repair.c */
+> > +
 > 
-> 4-5 months ago I ran more or less the same benchmark (albeit with
-> $someproduct) and came to the same conclusion -- if you're really doing
-> scattershot buffered O_DSYNC writes to a file, you'll lose about 15-20%
-> with this patch added.  Then apparently I ... got buried in xmas and
-> other bugs and forgot to send the results. :/
+> Any plans to generalize/lift more of this stuff into libxfs if it's
+> going to be shared with xfsprogs?
+
+That depends on what the final online repair code looks like.
+I suspect it'll be different enough that it's not worth sharing, but I
+wouldn't be opposed to sharing identical functions.
+
+> ...
+> > +/* Free all the accounting infor and disk space we reserved for a new btree. */
+> > +void
+> > +xrep_newbt_destroy(
+> > +	struct xrep_newbt	*xnr,
+> > +	int			error)
+> > +{
+> > +	struct repair_ctx	*sc = xnr->sc;
+> > +	struct xrep_newbt_resv	*resv, *n;
+> > +
+> > +	if (error)
+> > +		goto junkit;
 > 
+> Could use a comment on why we skip block freeing here..
 
-Heh. :P Thanks for following up..
+I wonder what was the original reason for that?
 
-> Granted, you had to /force/ $someproduct to do this because it would
-> typically do either synchronous aio+dio, or it could do async writes
-> with an fsync at the important parts, or it could set an extent hint,
-> or (the default) it writes zeroes ahead of time so that XFS will stay
-> out of the way when checkpoints need to get done asap.
+IIRC if we actually error out of btree rebuilds then we've done
+something totally wrong while setting up the btree loader, or the
+storage is so broken that writes failed.  Repair is just going to call
+do_error() to terminate (and leave us with a broken filesystem) so we
+could just terminate right there at the top.
+
+> I'm also wondering if we can check error in the primary loop and kill
+> the label and duplicate loop, but I guess that depends on whether the
+> fields are always valid.
+
+I think they are.
+
+> > +
+> > +	list_for_each_entry_safe(resv, n, &xnr->reservations, list) {
+> > +		/* We don't have EFIs here so skip the EFD. */
+> > +
+> > +		/* Free every block we didn't use. */
+> > +		resv->fsbno += resv->used;
+> > +		resv->len -= resv->used;
+> > +		resv->used = 0;
+> > +
+> > +		if (resv->len > 0) {
+> > +			trace_xrep_newbt_unreserve_space(sc->mp,
+> > +					XFS_FSB_TO_AGNO(sc->mp, resv->fsbno),
+> > +					XFS_FSB_TO_AGBNO(sc->mp, resv->fsbno),
+> > +					resv->len, xnr->oinfo.oi_owner);
+> > +
+> > +			__libxfs_bmap_add_free(sc->tp, resv->fsbno, resv->len,
+> > +					&xnr->oinfo, true);
+
+TBH for repair I don't even think we need this, since in theory we
+reserved *exactly* the correct number of blocks for the btree.  Hmm.
+
+> > +		}
+> > +
+> > +		list_del(&resv->list);
+> > +		kmem_free(resv);
+> > +	}
+> > +
+> > +junkit:
+> > +	list_for_each_entry_safe(resv, n, &xnr->reservations, list) {
+> > +		list_del(&resv->list);
+> > +		kmem_free(resv);
+> > +	}
+> > +
+> > +	if (sc->ip) {
+> > +		kmem_cache_free(xfs_ifork_zone, xnr->ifake.if_fork);
+> > +		xnr->ifake.if_fork = NULL;
+> > +	}
+> > +}
+> > +
+> ...
+> > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> > index 9d72fa8e..8fbd3649 100644
+> > --- a/repair/xfs_repair.c
+> > +++ b/repair/xfs_repair.c
+> ...
+> > @@ -49,6 +52,8 @@ static char *o_opts[] = {
+> >  	[AG_STRIDE]		= "ag_stride",
+> >  	[FORCE_GEO]		= "force_geometry",
+> >  	[PHASE2_THREADS]	= "phase2_threads",
+> > +	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
+> > +	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
 > 
+> Why the "debug_" in the option names?
 
-Right, all of which already utilize unwritten extents except for the
-explicit zeroing case.
+These are debugging knobs; there's no reason why any normal user would
+want to override the automatic slack sizing algorithms.  I also
+refrained from documenting them in the manpage. :P
 
-> I could say (glibly) that I'm so buried in bug triage that what's a few
-> more? but maybe the rest of you have other opinions? :)
+However, the knobs have been useful for stress-testing w/ fstests.
+
+--D
+
+> Brian
 > 
-
-In dwelling on this a bit more since my previous reply, I also realized
-that holding off this particular patch has kind of distorted the
-problem. For example, I'd been trying to think of clever ways to prevent
-stale data exposure on buffered writes, but that leads to ideas that
-tend to be specific to delayed allocation and thus of limited benefit
-for other write paths.
-
-IOW, it's not really the delayed allocation case we should be so focused
-on improving as much as the performance hit of unwritten extents in
-general. We've already accepted the corresponding performance hit in
-more common I/O paths in the name of correctness. The (preexisting)
-impact of preallocated unwritten extents in more efficient write paths
-vs. pure overwrites is far more prominent than the impact of unwritten
-extents on buffered writes.
-
-ISTM that the right thing to do here is merge this patch, finally fix
-the last known stale data exposure vector, and then perhaps step back
-and think about how we might improve performance of unwritten extents
-(or whatever alternate scheme to avoid stale data exposure we might
-think up) regardless of allocation policy or write path. That might even
-make a decent side topic associated with the SSD allocation policy topic
-proposal Dave recently posted.
-
-It looks like Christoph already reviewed the patch. I'm not sure if his
-opinion changed it all after the subsequent discussion, but otherwise
-that just leaves Dave's objection. Dave, any thoughts on this given the
-test results and broader context? What do you think about getting this
-patch merged and revisiting the whole unwritten extent thing
-independently?
-
-Brian
-
-> --D
-> 
-> > 
-> > Brian
-> > 
-> > > --D
-> > > 
-> > > > Cheers,
-> > > > 
-> > > > Dave.
-> > > > -- 
-> > > > Dave Chinner
-> > > > david@fromorbit.com
-> > > 
+> >  	[O_MAX_OPTS]		= NULL,
+> >  };
+> >  
+> > @@ -260,6 +265,18 @@ process_args(int argc, char **argv)
+> >  		_("-o phase2_threads requires a parameter\n"));
+> >  					phase2_threads = (int)strtol(val, NULL, 0);
+> >  					break;
+> > +				case BLOAD_LEAF_SLACK:
+> > +					if (!val)
+> > +						do_abort(
+> > +		_("-o debug_bload_leaf_slack requires a parameter\n"));
+> > +					bload_leaf_slack = (int)strtol(val, NULL, 0);
+> > +					break;
+> > +				case BLOAD_NODE_SLACK:
+> > +					if (!val)
+> > +						do_abort(
+> > +		_("-o debug_bload_node_slack requires a parameter\n"));
+> > +					bload_node_slack = (int)strtol(val, NULL, 0);
+> > +					break;
+> >  				default:
+> >  					unknown('o', val);
+> >  					break;
 > > 
 > 
-
