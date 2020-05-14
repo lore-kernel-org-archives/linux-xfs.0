@@ -1,132 +1,134 @@
-Return-Path: <SRS0=Dhh5=63=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2847C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 23:34:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71B47C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 01:51:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C862C2065C
-	for <linux-xfs@archiver.kernel.org>; Wed, 13 May 2020 23:34:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6684C20575
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 01:51:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732686AbgEMXeF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 May 2020 19:34:05 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:44256 "EHLO
+        id S1726070AbgENBvD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 13 May 2020 21:51:03 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:56450 "EHLO
         mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732705AbgEMXeE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 May 2020 19:34:04 -0400
+        by vger.kernel.org with ESMTP id S1725925AbgENBvC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 May 2020 21:51:02 -0400
 Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 979021087DC;
-        Thu, 14 May 2020 09:33:59 +1000 (AEST)
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 790CA108F4B;
+        Thu, 14 May 2020 11:50:57 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jZ0sw-00011v-8G; Thu, 14 May 2020 09:33:58 +1000
-Date:   Thu, 14 May 2020 09:33:58 +1000
+        id 1jZ31T-0001jR-7i; Thu, 14 May 2020 11:50:55 +1000
+Date:   Thu, 14 May 2020 11:50:55 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/5] [RFC] xfs: per-cpu CIL lists
-Message-ID: <20200513233358.GH2040@dread.disaster.area>
+Subject: Re: [PATCH 3/5] [RFC] xfs: use percpu counters for CIL context
+ counters
+Message-ID: <20200514015055.GI2040@dread.disaster.area>
 References: <20200512092811.1846252-1-david@fromorbit.com>
- <20200512092811.1846252-5-david@fromorbit.com>
- <20200513170237.GB45326@bfoster>
+ <20200512092811.1846252-4-david@fromorbit.com>
+ <20200512140544.GD37029@bfoster>
+ <20200512233627.GW2040@dread.disaster.area>
+ <20200513120959.GB44225@bfoster>
+ <20200513215241.GG2040@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200513170237.GB45326@bfoster>
+In-Reply-To: <20200513215241.GG2040@dread.disaster.area>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=_Y4RK2BSnBka7LqxYg0A:9 a=jHZlESlBkjjGtMxI:21 a=_VlKy759-wTcBFpL:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=7-415B0cAAAA:8
+        a=KVzVXZcqx2d3lZqGfoIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 13, 2020 at 01:02:37PM -0400, Brian Foster wrote:
-> On Tue, May 12, 2020 at 07:28:10PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Thu, May 14, 2020 at 07:52:41AM +1000, Dave Chinner wrote:
+> On Wed, May 13, 2020 at 08:09:59AM -0400, Brian Foster wrote:
+> > On Wed, May 13, 2020 at 09:36:27AM +1000, Dave Chinner wrote:
+> > > On Tue, May 12, 2020 at 10:05:44AM -0400, Brian Foster wrote:
+> > > > Particularly as it relates to percpu functionality. Does
+> > > > the window scale with cpu count, for example? It might not matter either
+> > > 
+> > > Not really. We need a thundering herd to cause issues, and this
+> > > occurs after formatting an item so we won't get a huge thundering
+> > > herd even when lots of threads block on the xc_ctx_lock waiting for
+> > > a push to complete.
+> > > 
 > > 
-> > Next on the list to getting rid of the xc_cil_lock is making the CIL
-> > itself per-cpu.
-> > 
-> > This requires a trade-off: we no longer move items forward in the
-> > CIL; once they are on the CIL they remain there as we treat the
-> > percpu lists as lockless.
-> > 
-> > XXX: preempt_disable() around the list operations to ensure they
-> > stay local to the CPU.
-> > 
-> > XXX: this needs CPU hotplug notifiers to clean up when cpus go
-> > offline.
-> > 
-> > Performance now increases substantially - the transaction rate goes
-> > from 750,000/s to 1.05M/sec, and the unlink rate is over 500,000/s
-> > for the first time.
-> > 
-> > Using a 32-way concurrent create/unlink on a 32p/16GB virtual
-> > machine:
-> > 
-> > 	    create time     rate            unlink time
-> > unpatched	1m56s      533k/s+/-28k/s      2m34s
-> > patched		1m49s	   523k/s+/-14k/s      2m00s
-> > 
-> > Notably, the system time for the create went up, while variance went
-> > down. This indicates we're starting to hit some other contention
-> > limit as we reduce the amount of time we spend contending on the
-> > xc_cil_lock.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_log_cil.c  | 66 ++++++++++++++++++++++++++++---------------
-> >  fs/xfs/xfs_log_priv.h |  2 +-
-> >  2 files changed, 45 insertions(+), 23 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> > index 746c841757ed1..af444bc69a7cd 100644
-> > --- a/fs/xfs/xfs_log_cil.c
-> > +++ b/fs/xfs/xfs_log_cil.c
-> ...
-> > @@ -687,7 +689,7 @@ xlog_cil_push_work(
-> >  	 * move on to a new sequence number and so we have to be able to push
-> >  	 * this sequence again later.
-> >  	 */
-> > -	if (list_empty(&cil->xc_cil)) {
-> > +	if (percpu_counter_read(&cil->xc_curr_res) == 0) {
+> > It would be nice to have some debug code somewhere that somehow or
+> > another asserts or warns if the CIL reservation exceeds some
+> > insane/unexpected heuristic based on the current size of the context. I
+> > don't know what that code or heuristic looks like (i.e. multiple factors
+> > of the ctx size?) so I'm obviously handwaving. Just something to think
+> > about if we can come up with a way to accomplish that opportunistically.
 > 
-> It seems reasonable, but I need to think a bit more about the whole
-> percpu list thing. In the meantime, one thing that comes to mind is the
-> more of these list_empty() -> percpu_counter_read() translations I see
-> the less I like it because we're leaking this inherent raciness to
-> different contexts. Whether it's ultimately safe or not, it's subject to
-> change and far too subtle and indirect for my taste. 
+> I don't think there is a reliable mechanism that can be used here.
+> At one end of the scale we have the valid case of a synchronous
+> inode modification on a log with a 256k stripe unit. So it's valid
+> to have a CIL reservation of ~550kB for a single item that consumes
+> ~700 bytes of log space.
+> 
+> OTOH, we might be freeing extents on a massively fragmented file and
+> filesystem, so we're pushing 200kB+ transactions into the CIL for
+> every rolling transaction. On a filesystem with a 512 byte log
+> sector size and no LSU, the CIL reservations are dwarfed by the
+> actual metadata being logged...
+> 
+> I'd suggest that looking at the ungrant trace for the CIL ticket
+> once it has committed will tell us exactly how much the reservation
+> was over-estimated, as the unused portion of the reservation will be
+> returned to the reserve grant head at this point in time.
 
-Well, all the critical list_empty(&cil->xc_cil) checks are done
-under the xc_push_lock, so I'd suggest that if we zero the counters
-under the push lock when switching contexts, and put the initial
-zero->non-zero counter transition to under the same lock we'll get
-exact checks without requiring a spinlock/atomic in the fast
-path and have all the right memory barriers in place such that races
-can't happen...
+Typical for this workload is a CIl ticket that looks like this at
+ungrant time:
 
-> Could we replace all of the direct ->xc_cil list checks with an atomic
-> bitop (i.e. XLOG_CIL_EMPTY) or something similar in the xfs_cil? AFAICT,
-> that could be done in a separate patch and we could ultimately reuse it
-> to close the race with the initial ctx reservation (via
-> test_and_set_bit()) because it's otherwise set in the same function. Hm?
+t_curr_res 13408 t_unit_res 231100
+t_curr_res 9240 t_unit_res 140724
+t_curr_res 46284 t_unit_res 263964
+t_curr_res 29780 t_unit_res 190020
+t_curr_res 38044 t_unit_res 342016
+t_curr_res 21636 t_unit_res 321476
+t_curr_res 21576 t_unit_res 263964
+t_curr_res 42200 t_unit_res 411852
+t_curr_res 21636 t_unit_res 292720
+t_curr_res 62740 t_unit_res 514552
+t_curr_res 17456 t_unit_res 284504
+t_curr_res 29852 t_unit_res 411852
+t_curr_res 13384 t_unit_res 206452
+t_curr_res 70956 t_unit_res 518660
+t_curr_res 70908 t_unit_res 333800
+t_curr_res 50404 t_unit_res 518660
+t_curr_res 17480 t_unit_res 321476
+t_curr_res 33948 t_unit_res 436500
+t_curr_res 17492 t_unit_res 317368
+t_curr_res 50392 t_unit_res 489904
+t_curr_res 13360 t_unit_res 325584
+t_curr_res 66812 t_unit_res 506336
+t_curr_res 33924 t_unit_res 366664
+t_curr_res 70932 t_unit_res 551524
+t_curr_res 29852 t_unit_res 374880
+t_curr_res 25720 t_unit_res 494012
+t_curr_res 42152 t_unit_res 506336
+t_curr_res 21684 t_unit_res 543308
+t_curr_res 29840 t_unit_res 440608
+t_curr_res 46320 t_unit_res 551524
+t_curr_res 21624 t_unit_res 387204
+t_curr_res 29840 t_unit_res 522768
 
-test_and_set_bit() still locks the memory bus and so requires
-exclusive access to the cacheline. Avoiding locked bus ops
-(atomics, spinlocks, etc) in the fast path is the problem
-I'm trying to solve with this patchset. IOWs, this isn't a viable
-solution to a scalability problem caused by many CPUs all trying to
-access the same cacheline exclusively.
+So we are looking at a reservation of up to 500KB, and typically
+using all but a few 10s of KB of it.
+
+I'll use this as the ballpark for the lockless code.
 
 Cheers,
 
