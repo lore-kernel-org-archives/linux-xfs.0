@@ -2,114 +2,89 @@ Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C1F4C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 06:53:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3227C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 09:26:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6EBF9206D8
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 06:53:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BF0B2065D
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 09:26:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725831AbgENGxU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 May 2020 02:53:20 -0400
-Received: from mga14.intel.com ([192.55.52.115]:43897 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725911AbgENGxU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 14 May 2020 02:53:20 -0400
-IronPort-SDR: 0mKsgizaAJBsC+Hh6bnuFMUdXQ5JuvE69941voollJVW8B6lMj2Y4Gu/IlkBT1rm6vvTUuq+FV
- KKruyyBCgk0w==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2020 23:53:19 -0700
-IronPort-SDR: xQA7GUCRkzw8iPfjj8bl4+ul4+nvOn1axPrDtT4pLTz1uuf5Ocze0gFCculivz2DSNuPh7Aswf
- ksmXH2yGcmhg==
-X-IronPort-AV: E=Sophos;i="5.73,390,1583222400"; 
-   d="scan'208";a="280757800"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2020 23:53:18 -0700
-From:   ira.weiny@intel.com
-To:     linux-ext4@vger.kernel.org,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Jeff Moyer <jmoyer@redhat.com>
-Subject: [PATCH V1 0/9] Enable ext4 support for per-file/directory DAX operations
-Date:   Wed, 13 May 2020 23:53:06 -0700
-Message-Id: <20200514065316.2500078-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.25.1
+        id S1725955AbgENJ0H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 05:26:07 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:33124 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725935AbgENJ0G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 05:26:06 -0400
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 71931D78D5D;
+        Thu, 14 May 2020 19:26:04 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jZA7u-0004Ny-FM; Thu, 14 May 2020 19:26:02 +1000
+Date:   Thu, 14 May 2020 19:26:02 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Carlos Maiolino <cmaiolino@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/5] Remove/convert more kmem_* wrappers
+Message-ID: <20200514092602.GK2040@dread.disaster.area>
+References: <20191120104425.407213-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191120104425.407213-1-cmaiolino@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=7-415B0cAAAA:8
+        a=P2sWjoT70lxd8KZmE0IA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Wed, Nov 20, 2019 at 11:44:20AM +0100, Carlos Maiolino wrote:
+> Hi,
+> 
+> in this new series, we remove most of the remaining kmem_* wrappers.
+> 
+> All of the wrappers being removed in this series can be directly replaced by
+> generic kernel kmalloc()/kzalloc() interface.
+> 
+> Only interface kept is kmem_alloc() but has been converted into a local helper.
+> 
+> This series should be applied on top of my previous series aiming to clean up
+> our memory allocation interface.
+> 
+> 
+> Darrick, I believe this is slightly different from what you suggested
+> previously, about converting kmem_* interfaces to use GFP flags directly. At
+> least I read that as keeping current kmem_* interface, and getting rid of KM_*
+> flags now.
+> 
+> But, I believe these patches does not change any allocation logic, and after the
+> series we are left with fewer users of KM_* flags users to get rid of, which
+> IMHO will be easier. And also I already had the patches mostly done :)
+> 
+> Let me know if this is ok for you.
+> 
+> 
+> Carlos Maiolino (5):
+>   xfs: remove kmem_zone_zalloc()
+>   xfs: Remove kmem_zone_alloc() wrapper
+>   xfs: remove kmem_zalloc() wrapper
+>   xfs: Remove kmem_realloc
+>   xfs: Convert kmem_alloc() users
 
-Enable the same per file DAX support in ext4 as was done for xfs.  This series
-builds and depends on the V11 series for xfs.[1]
+Hmmm, just noticed that this never got merged. Whatever happened to
+this patchset?
 
-This passes the same xfstests test as XFS.
+Cheers,
 
-The only issue is that this modifies the old mount option parsing code rather
-than waiting for the new parsing code to be finalized.
-
-This series starts with 3 fixes which include making Verity and Encrypt truly
-mutually exclusive from DAX.  I think these first 3 patches should be picked up
-for 5.8 regardless of what is decided regarding the mount parsing.
-
-[1] https://lore.kernel.org/lkml/20200428002142.404144-1-ira.weiny@intel.com/
-
-Changes from V0:
-	Collect reviews
-	Fix up setting don't cache in ioctl code
-	Add FS_DAX_FL flag for consistency
-
-
-To: linux-ext4@vger.kernel.org
-To: "Theodore Y. Ts'o" <tytso@mit.edu>
-To: Jan Kara <jack@suse.cz>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-
-
-Ira Weiny (9):
-  fs/ext4: Narrow scope of DAX check in setflags
-  fs/ext4: Disallow verity if inode is DAX
-  fs/ext4: Disallow encryption if inode is DAX
-  fs/ext4: Change EXT4_MOUNT_DAX to EXT4_MOUNT_DAX_ALWAYS
-  fs/ext4: Update ext4_should_use_dax()
-  fs/ext4: Only change S_DAX on inode load
-  fs/ext4: Make DAX mount option a tri-state
-  fs/ext4: Introduce DAX inode flag
-  Documentation/dax: Update DAX enablement for ext4
-
- Documentation/filesystems/dax.txt         |  6 +-
- Documentation/filesystems/ext4/verity.rst |  7 +++
- Documentation/filesystems/fscrypt.rst     |  4 +-
- fs/ext4/ext4.h                            | 20 ++++---
- fs/ext4/ialloc.c                          |  2 +-
- fs/ext4/inode.c                           | 27 +++++++--
- fs/ext4/ioctl.c                           | 31 +++++++++--
- fs/ext4/super.c                           | 67 +++++++++++++++--------
- fs/ext4/verity.c                          |  5 +-
- include/uapi/linux/fs.h                   |  1 +
- 10 files changed, 125 insertions(+), 45 deletions(-)
-
+Dave.
 -- 
-2.25.1
-
+Dave Chinner
+david@fromorbit.com
