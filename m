@@ -2,214 +2,224 @@ Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C0B7C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 11:44:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9DFCC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 13:43:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A3A2206DA
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 11:44:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B91D20727
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 13:43:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZoycGbj4"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VCwjBQvV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726037AbgENLoi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 May 2020 07:44:38 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:21171 "EHLO
+        id S1726225AbgENNnL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 09:43:11 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:51904 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725925AbgENLoi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 07:44:38 -0400
+        with ESMTP id S1726179AbgENNnK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 09:43:10 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589456676;
+        s=mimecast20190719; t=1589463788;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=V3s87ye72wv1aoKKmQFzjbT4xLBbWIhdX2UeDXTIFKs=;
-        b=ZoycGbj4B7xsIeZGgjwIwwF8tvnZJPi+Oh65aBK4QDaLCxp61uMGKpk6iIDmHAJ1SW303O
-        vk/ZTV45zxwidtXxTCK3/rs8yt0yPGQ18YdbPf8t0qyxrd1c4Qz/qwcj7G5Lhws06cWKrk
-        99e28pjNGCt55ztxfRuwE+y2oKMRT8o=
+        bh=/ljbjzzPuT5luVa2+wI6OrLuHvBs4LaTrgN2hGEbHPA=;
+        b=VCwjBQvVCG57tnJxL8hxs5OOW9MtFtH/X3xOO9WX8SnSzobZRsxJBETv082SgYzacUTGDo
+        SEyUYxw99PPziIJzaCuPKNFeGeXr/pJsRAxtvTigqv9kfeUJ5j2Aq3vDQacHCTWLIiLc74
+        Rqy8Ccy3F7b7KOgHzI5p1V7dNqFAfo8=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-445-Qn0FNxYlPTiQsbSASRhb0Q-1; Thu, 14 May 2020 07:44:34 -0400
-X-MC-Unique: Qn0FNxYlPTiQsbSASRhb0Q-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-355-izSVusqYPRyrnEFgU22vrg-1; Thu, 14 May 2020 09:43:07 -0400
+X-MC-Unique: izSVusqYPRyrnEFgU22vrg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EC42F8FBC0E
-        for <linux-xfs@vger.kernel.org>; Thu, 14 May 2020 11:43:53 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1C7A5106B259;
+        Thu, 14 May 2020 13:43:06 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7D1DB1A923;
-        Thu, 14 May 2020 11:43:53 +0000 (UTC)
-Date:   Thu, 14 May 2020 07:43:51 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B68B160BF1;
+        Thu, 14 May 2020 13:43:05 +0000 (UTC)
+Date:   Thu, 14 May 2020 09:43:03 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 2/2 V2] xfs: always return -ENOSPC on project quota
- reservation failure
-Message-ID: <20200514114351.GA50441@bfoster>
-References: <447d7fec-2eff-fa99-cd19-acdf353c80d4@redhat.com>
- <11a44fb8-d59d-2e57-73bd-06e216efa5e7@redhat.com>
- <535795f0-6eef-37d0-45de-f268e15a9b9f@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/5] [RFC] xfs: use percpu counters for CIL context
+ counters
+Message-ID: <20200514134303.GB50441@bfoster>
+References: <20200512092811.1846252-1-david@fromorbit.com>
+ <20200512092811.1846252-4-david@fromorbit.com>
+ <20200512140544.GD37029@bfoster>
+ <20200512233627.GW2040@dread.disaster.area>
+ <20200513120959.GB44225@bfoster>
+ <20200513215241.GG2040@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <535795f0-6eef-37d0-45de-f268e15a9b9f@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <20200513215241.GG2040@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 13, 2020 at 12:39:00PM -0500, Eric Sandeen wrote:
-> XFS project quota treats project hierarchies as "mini filesysems" and
-> so rather than -EDQUOT, the intent is to return -ENOSPC when a quota
-> reservation fails, but this behavior is not consistent.
+On Thu, May 14, 2020 at 07:52:41AM +1000, Dave Chinner wrote:
+> On Wed, May 13, 2020 at 08:09:59AM -0400, Brian Foster wrote:
+> > On Wed, May 13, 2020 at 09:36:27AM +1000, Dave Chinner wrote:
+> > > On Tue, May 12, 2020 at 10:05:44AM -0400, Brian Foster wrote:
+> > > > Particularly as it relates to percpu functionality. Does
+> > > > the window scale with cpu count, for example? It might not matter either
+> > > 
+> > > Not really. We need a thundering herd to cause issues, and this
+> > > occurs after formatting an item so we won't get a huge thundering
+> > > herd even when lots of threads block on the xc_ctx_lock waiting for
+> > > a push to complete.
+> > > 
+> > 
+> > It would be nice to have some debug code somewhere that somehow or
+> > another asserts or warns if the CIL reservation exceeds some
+> > insane/unexpected heuristic based on the current size of the context. I
+> > don't know what that code or heuristic looks like (i.e. multiple factors
+> > of the ctx size?) so I'm obviously handwaving. Just something to think
+> > about if we can come up with a way to accomplish that opportunistically.
 > 
-> The only place we make a decision between -EDQUOT and -ENOSPC
-> returns based on quota type is in xfs_trans_dqresv().
+> I don't think there is a reliable mechanism that can be used here.
+> At one end of the scale we have the valid case of a synchronous
+> inode modification on a log with a 256k stripe unit. So it's valid
+> to have a CIL reservation of ~550kB for a single item that consumes
+> ~700 bytes of log space.
 > 
-> This behavior is currently controlled by whether or not the
-> XFS_QMOPT_ENOSPC flag gets passed into the quota reservation.  However,
-> its use is not consistent; paths such as xfs_create() and xfs_symlink()
-> don't set the flag, so a reservation failure will return -EDQUOT for
-> project quota reservation failures rather than -ENOSPC for these sorts
-> of operations, even for project quota:
-> 
-> # mkdir mnt/project
-> # xfs_quota -x -c "project -s -p mnt/project 42" mnt
-> # xfs_quota -x -c 'limit -p isoft=2 ihard=3 42' mnt
-> # touch mnt/project/file{1,2,3}
-> touch: cannot touch ‘mnt/project/file3’: Disk quota exceeded
-> 
-> We can make this consistent by not requiring the flag to be set at the
-> top of the callchain; instead we can simply test whether we are
-> reserving a project quota with XFS_QM_ISPDQ in xfs_trans_dqresv and if
-> so, return -ENOSPC for that failure.  This removes the need for the
-> XFS_QMOPT_ENOSPC altogether and simplifies the code a fair bit.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
 
-Thanks for the update.
+Perhaps ctx size isn't a sufficient baseline by itself. That said, log
+stripe unit is still fixed and afaict centralized to the base unit res
+calculation of the CIL ctx and regular transaction tickets. So I'm not
+convinced we couldn't come up with something useful on the push side
+that factors lsunit into the metric. It doesn't have to be perfect, just
+something conservative enough to catch consuming reservation beyond
+expected worst case conditions without causing false positives.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Re: your followups, I'll put more thought into it when the percpu
+algorithm is more settled..
 
+> OTOH, we might be freeing extents on a massively fragmented file and
+> filesystem, so we're pushing 200kB+ transactions into the CIL for
+> every rolling transaction. On a filesystem with a 512 byte log
+> sector size and no LSU, the CIL reservations are dwarfed by the
+> actual metadata being logged...
 > 
-> V2: Change title and changelog to clearly reflect the bug and behavior
-> change, which wasn't really identified as a bug and behavior change until
-> Brian carefully reviewed V1.  :)
+> I'd suggest that looking at the ungrant trace for the CIL ticket
+> once it has committed will tell us exactly how much the reservation
+> was over-estimated, as the unused portion of the reservation will be
+> returned to the reserve grant head at this point in time.
 > 
-> No patch changes.
+
+Yeah, that works for me.
+
+> > > > way because we expect any given transaction to accommodate the ctx res,
+> > > > but it would be good to understand the behavior here so we can think
+> > > > about potential side effects, if any.
+> > > 
+> > > I haven't been able to come up with any adverse side effects except
+> > > for "performance might drop a bit if we reserve too much and push
+> > > early", but that is tempered by the fact that performance goes up
+> > > much more than we might lose by getting rid of the xc_cil_lock
+> > > bottleneck.
+> > > 
+> > 
+> > FWIW, a more extreme test vector could be to steal the remainder of the
+> > transaction reservation for the CIL ticket and see how that affects
+> > things. That's probably more suited for a local test than something to
+> > live in the upstream code, though.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-> index b2113b17e53c..56d9dd787e7b 100644
-> --- a/fs/xfs/libxfs/xfs_quota_defs.h
-> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
-> @@ -100,7 +100,6 @@ typedef uint16_t	xfs_qwarncnt_t;
->  #define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
->  #define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
->  #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
-> -#define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
->  
->  /*
->   * flags to xfs_trans_mod_dquot to indicate which field needs to be
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index c225691fad15..591779aa2fd0 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -1808,7 +1808,7 @@ xfs_qm_vop_chown_reserve(
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
->  	uint64_t		delblks;
-> -	unsigned int		blkflags, prjflags = 0;
-> +	unsigned int		blkflags;
->  	struct xfs_dquot	*udq_unres = NULL;
->  	struct xfs_dquot	*gdq_unres = NULL;
->  	struct xfs_dquot	*pdq_unres = NULL;
-> @@ -1849,7 +1849,6 @@ xfs_qm_vop_chown_reserve(
->  
->  	if (XFS_IS_PQUOTA_ON(ip->i_mount) && pdqp &&
->  	    ip->i_d.di_projid != be32_to_cpu(pdqp->q_core.d_id)) {
-> -		prjflags = XFS_QMOPT_ENOSPC;
->  		pdq_delblks = pdqp;
->  		if (delblks) {
->  			ASSERT(ip->i_pdquot);
-> @@ -1859,8 +1858,7 @@ xfs_qm_vop_chown_reserve(
->  
->  	error = xfs_trans_reserve_quota_bydquots(tp, ip->i_mount,
->  				udq_delblks, gdq_delblks, pdq_delblks,
-> -				ip->i_d.di_nblocks, 1,
-> -				flags | blkflags | prjflags);
-> +				ip->i_d.di_nblocks, 1, flags | blkflags);
->  	if (error)
->  		return error;
->  
-> @@ -1878,8 +1876,7 @@ xfs_qm_vop_chown_reserve(
->  		ASSERT(udq_unres || gdq_unres || pdq_unres);
->  		error = xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
->  			    udq_delblks, gdq_delblks, pdq_delblks,
-> -			    (xfs_qcnt_t)delblks, 0,
-> -			    flags | blkflags | prjflags);
-> +			    (xfs_qcnt_t)delblks, 0, flags | blkflags);
->  		if (error)
->  			return error;
->  		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index 2c3557a80e69..2c07897a3c37 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -711,7 +711,7 @@ xfs_trans_dqresv(
->  
->  error_return:
->  	xfs_dqunlock(dqp);
-> -	if (flags & XFS_QMOPT_ENOSPC)
-> +	if (XFS_QM_ISPDQ(dqp))
->  		return -ENOSPC;
->  	return -EDQUOT;
->  }
-> @@ -751,15 +751,13 @@ xfs_trans_reserve_quota_bydquots(
->  	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
->  
->  	if (udqp) {
-> -		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos,
-> -					(flags & ~XFS_QMOPT_ENOSPC));
-> +		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos, flags);
->  		if (error)
->  			return error;
->  	}
->  
->  	if (gdqp) {
-> -		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos,
-> -					(flags & ~XFS_QMOPT_ENOSPC));
-> +		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags);
->  		if (error)
->  			goto unwind_usr;
->  	}
-> @@ -804,16 +802,12 @@ xfs_trans_reserve_quota_nblks(
->  
->  	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
->  		return 0;
-> -	if (XFS_IS_PQUOTA_ON(mp))
-> -		flags |= XFS_QMOPT_ENOSPC;
->  
->  	ASSERT(!xfs_is_quota_inode(&mp->m_sb, ip->i_ino));
->  
->  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-> -	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
-> -				XFS_TRANS_DQ_RES_RTBLKS ||
-> -	       (flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
-> -				XFS_TRANS_DQ_RES_BLKS);
-> +	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES)) == XFS_TRANS_DQ_RES_RTBLKS ||
-> +	       (flags & ~(XFS_QMOPT_FORCE_RES)) == XFS_TRANS_DQ_RES_BLKS);
->  
->  	/*
->  	 * Reserve nblks against these dquots, with trans as the mediator.
+> It will only affect performance. Worst case is that it degrades the
+> CIL to behave like the original logging code that wrote direct to
+> iclogs. i.e. it defeats the in memory aggregation of delayed logging
+> and effectively writes directly to the iclogs.
 > 
+> Which, really, is what using the -o wsync or -o dirsync largely do
+> by making a large number of transactions synchrnonous.
 > 
+> In short, performance goes down if we reserve too much, but nothing
+> incorrect should occur.
+> 
+
+Ok.
+
+> > 
+> > > > >  	/* do we need space for more log record headers? */
+> > > > > -	iclog_space = log->l_iclog_size - log->l_iclog_hsize;
+> > > > > -	if (len > 0 && (ctx->space_used / iclog_space !=
+> > > > > -				(ctx->space_used + len) / iclog_space)) {
+> > > > > +	if (len > 0 && !ctx_res) {
+> > > > > +		iclog_space = log->l_iclog_size - log->l_iclog_hsize;
+> > > > >  		split_res = (len + iclog_space - 1) / iclog_space;
+> > > > >  		/* need to take into account split region headers, too */
+> > > > >  		split_res *= log->l_iclog_hsize + sizeof(struct xlog_op_header);
+> > > > > -		ctx->ticket->t_unit_res += split_res;
+> > > > > -		ctx->ticket->t_curr_res += split_res;
+> > > > >  		tp->t_ticket->t_curr_res -= split_res;
+> > > > >  		ASSERT(tp->t_ticket->t_curr_res >= len);
+> > > > >  	}
+> > > > 
+> > > > Similarly here, assume additional split reservation for every
+> > > > context rather than checking each commit. Seems reasonable in
+> > > > principle, but just from a cursory glance this doesn't cover the
+> > > > case of the context expanding beyond more than two iclogs.  IOW,
+> > > > the current logic adds split_res if the size increase from the
+> > > > current transaction expands the ctx into another iclog than before
+> > > > the transaction. The new logic only seems to add split_res for the
+> > > > first transaction into the ctx. Also note
+> > > 
+> > > No, I changed it to apply to any vector length longer than a single
+> > > iclog except for transactions that have taken the unit reservation
+> > > above.
+> > > 
+> > 
+> > Ok, I had the ctx_res logic inverted in my head. So it's not that
+> > split_res is only added for the first transaction, but rather we treat
+> > every transaction that didn't contribute unit res as if it crosses an
+> > iclog boundary. That seems much more reasonable, though it does add to
+> > the "overreservation" of the ticket so I'll reemphasize the request for
+> > some form of debug/trace check that helps analyze runtime CIL ticket
+> > reservation accounting. ;)
+> 
+> I can add some trace points, but I think we already have the
+> tracepoints we need to understand how much overestimation occurs.
+> i.e. trace_xfs_log_ticket_ungrant() from the CIL push worker
+> context.
+> 
+
+Sure..
+
+> > OTOH, this skips the split_res in the case where a single large
+> > multi-iclog transaction happens to be the first in the ctx, right?
+> 
+> True, that's easy enough to fix.
+> 
+> > That
+> > doesn't seem that unlikely a scenario considering minimum iclog and
+> > worst case transaction unit res sizes. It actually makes me wonder what
+> > happens if the CIL ticket underruns.. :P
+> 
+> xlog_write() will catch the underrun when we go to write the commit
+> record via xlog_commit_record(), dump the ticket and shutdown the
+> filesystem.
+> 
+
+Ah, right. Note that's not the last place we take from ->t_curr_res in
+the xlog_write() path. xlog_state_get_iclog_space() steals a bit as well
+if we're at the top of an iclog so it might be worth bolstering that
+check.
+
+Brian
+
+> CHeers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
 
