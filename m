@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71424C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:56:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC35EC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39D8120671
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:56:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A239F2074A
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:56:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0MSIeK0E"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hvnr/7eu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726032AbgENQ4d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 May 2020 12:56:33 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:56466 "EHLO
+        id S1726113AbgENQ4j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 12:56:39 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:56552 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725965AbgENQ4d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 12:56:33 -0400
+        with ESMTP id S1725965AbgENQ4i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 12:56:38 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGrFKq173799;
-        Thu, 14 May 2020 16:56:31 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGr9qD173735;
+        Thu, 14 May 2020 16:56:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=xYwd7EglabM1940rbdX4g3eqd2AUnNhIoY2H99UIsYs=;
- b=0MSIeK0E+/TAQLC2+hRxJsGJyaFJ4VhMVWsuOrKCfkk+ejGx6b6pFFbVPvvgUurqxwIn
- VOQbIHyeMLrFRLDv7UlwQzo1WLNBJjlLa8fS04w2XV4JJJYOuU+zCIljgqecUIt56ANJ
- Jfh8sUk6Yu+w+4syRjLzjIX73/1RIebOGnCVlLHlYwVMdcBa+r/vSYFqB29tBCuoBykx
- GgNsSFsqv+pXMLmN0xbYBDFNrB4w1J+ZCyF8J1MCAhGkbcYoq5XtTnM8Gvu2XLTtZrES
- CnpJyCi5xwoVm+y3SCjX2hfVMrfuXKF3XREVX3GJUNvQ/S1BCC/LGAUJO11eG02axKQp Xw== 
+ bh=ZFu59slLGSMPHS7WuNFCjxYikFIRBTvNEldet01Z7+w=;
+ b=hvnr/7euY627UqnW1DGYs0jZ8UmHi4R3boVFRuCr4djeTyhc75FP4IQEswzJqIyevsqT
+ KVNaV/lxQFPoJJSNiV3bw0teMkTSgIU/H/nc/n5BEUsyh1A/k+W4VPDdz3SjDPSUhFMW
+ mFvvDed8LBgDcflM+DZ/XpNfVSyMKFLKe9RuNH/Rzog0f0HaAayz/ca7Ofj62FIv5f6H
+ WA9y9OgsWLoLpa/Rh/4fG0PXQbxkxbcTG6T5UTvwKvivF6fFkFFlsA19L/qp6S3OGXSY
+ 1r6UKEbgLqSw603/V0B3hjHhBqO0cenvQtP1SN70s0b+h2sS5dgmUAUdnaHbcQhrjkVj KA== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 3100xwurq2-1
+        by userp2120.oracle.com with ESMTP id 3100xwurq9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 14 May 2020 16:56:31 +0000
+        Thu, 14 May 2020 16:56:36 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGs5sR154633;
-        Thu, 14 May 2020 16:56:31 GMT
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGs7jl154974;
+        Thu, 14 May 2020 16:56:36 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 3100yh5dey-1
+        by userp3030.oracle.com with ESMTP id 3100yh5dpb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 May 2020 16:56:31 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04EGuT34005477;
-        Thu, 14 May 2020 16:56:30 GMT
+        Thu, 14 May 2020 16:56:36 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04EGuZd1005583;
+        Thu, 14 May 2020 16:56:35 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 14 May 2020 09:56:29 -0700
-Subject: [PATCH 1/4] xfs_repair: alphabetize HFILES and CFILES
+        with ESMTP ; Thu, 14 May 2020 09:56:35 -0700
+Subject: [PATCH 2/4] xfs_repair: fix clearing of quota CHKD flags
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 14 May 2020 09:56:28 -0700
-Message-ID: <158947538814.2482564.831276969317955641.stgit@magnolia>
+Date:   Thu, 14 May 2020 09:56:34 -0700
+Message-ID: <158947539434.2482564.14967976160614785881.stgit@magnolia>
 In-Reply-To: <158947538149.2482564.3112804204578429865.stgit@magnolia>
 References: <158947538149.2482564.3112804204578429865.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -80,92 +80,53 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Convert the definitions of HFILES and CFILES to lists that can be sorted
-easily (in vim, anyway), then fix the alphabetization of the makefile
-targets.
+XFS_ALL_QUOTA_CHKD, being a OR of [UGP]QUOTA_CHKD, is a bitset of the
+possible *incore* quota checked flags.  This means that it cannot be
+used in a comparison with the *ondisk* quota checked flags because V4
+filesystems set OQUOTA_CHKD, not the [GU]QUOTA_CHKD flags (which are V5
+flags).
 
+If you have a V4 filesystem with user quotas disabled but either group
+or project quotas enabled, xfs_repair will /not/ claim that the quota
+info will be regenerated on the next mount like it does in any other
+situation.  This is because the ondisk qflags field has OQUOTA_CHKD set
+but repair fails to notice.
+
+Worse, if you have a V4 filesystem with user and group quotas enabled
+and mild corruption, repair will claim that the quota info will be
+regenerated.  If you then mount the fs with only group quotas enabled,
+quotacheck will not run to correct the data because repair failed to
+clear OQUOTA_CHKD properly.
+
+These are fairly benign and unlikely scenarios, but when we add
+quotacheck capabilities to xfs_repair, it will complain about the
+incorrect quota counts, which causes regressions in xfs/278.
+
+Fixes: 342aef1ec0ec ("xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/Makefile |   67 +++++++++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 57 insertions(+), 10 deletions(-)
+ repair/xfs_repair.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 
-diff --git a/repair/Makefile b/repair/Makefile
-index 8cc1ee68..78a521c5 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -9,16 +9,63 @@ LSRCFILES = README
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 8fbd3649..9ab3cafa 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -1100,10 +1100,13 @@ _("Warning:  project quota information would be cleared.\n"
  
- LTCOMMAND = xfs_repair
+ 	dsb = sbp->b_addr;
  
--HFILES = agheader.h attr_repair.h avl.h bload.h bmap.h btree.h \
--	da_util.h dinode.h dir2.h err_protos.h globals.h incore.h protos.h \
--	rt.h progress.h scan.h versions.h prefetch.h rmap.h slab.h threads.h
--
--CFILES = agheader.c attr_repair.c avl.c bload.c bmap.c btree.c \
--	da_util.c dino_chunks.c dinode.c dir2.c globals.c incore.c \
--	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
--	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c \
--	progress.c prefetch.c rmap.c rt.c sb.c scan.c slab.c threads.c \
--	versions.c xfs_repair.c
-+HFILES = \
-+	agheader.h \
-+	attr_repair.h \
-+	avl.h \
-+	bload.h \
-+	bmap.h \
-+	btree.h \
-+	da_util.h \
-+	dinode.h \
-+	dir2.h \
-+	err_protos.h \
-+	globals.h \
-+	incore.h \
-+	prefetch.h \
-+	progress.h \
-+	protos.h \
-+	rmap.h \
-+	rt.h \
-+	scan.h \
-+	slab.h \
-+	threads.h \
-+	versions.h
-+
-+CFILES = \
-+	agheader.c \
-+	attr_repair.c \
-+	avl.c \
-+	bload.c \
-+	bmap.c \
-+	btree.c \
-+	da_util.c \
-+	dino_chunks.c \
-+	dinode.c \
-+	dir2.c \
-+	globals.c \
-+	incore_bmc.c \
-+	incore.c \
-+	incore_ext.c \
-+	incore_ino.c \
-+	init.c \
-+	phase1.c \
-+	phase2.c \
-+	phase3.c \
-+	phase4.c \
-+	phase5.c \
-+	phase6.c \
-+	phase7.c \
-+	prefetch.c \
-+	progress.c \
-+	rmap.c \
-+	rt.c \
-+	sb.c \
-+	scan.c \
-+	slab.c \
-+	threads.c \
-+	versions.c \
-+	xfs_repair.c
+-	if (be16_to_cpu(dsb->sb_qflags) & XFS_ALL_QUOTA_CHKD) {
++	if (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD) {
+ 		do_warn(_("Note - quota info will be regenerated on next "
+ 			"quota mount.\n"));
+-		dsb->sb_qflags &= cpu_to_be16(~XFS_ALL_QUOTA_CHKD);
++		dsb->sb_qflags &= cpu_to_be16(~(XFS_UQUOTA_CHKD |
++						XFS_GQUOTA_CHKD |
++						XFS_PQUOTA_CHKD |
++						XFS_OQUOTA_CHKD));
+ 	}
  
- LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
- 	$(LIBPTHREAD) $(LIBBLKID)
+ 	if (copied_sunit) {
 
