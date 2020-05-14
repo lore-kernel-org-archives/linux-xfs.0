@@ -2,94 +2,114 @@ Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2D7FC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 03:45:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C1F4C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 06:53:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D590B206DC
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 03:45:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hUV5IL+H"
+	by mail.kernel.org (Postfix) with ESMTP id 6EBF9206D8
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 06:53:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726005AbgENDpj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 13 May 2020 23:45:39 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:43067 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725925AbgENDpj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 13 May 2020 23:45:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589427937;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=UyGxikIonJhpMWQ3koc441V7dMeldgLSaRZ1ligkcHU=;
-        b=hUV5IL+H7dFI8ZxcTHpfAvax7twDSdBR+ysZedMBJ/4z4Y7RhF4MSz60bj79QCTX4ckz/h
-        ypoEkUDnzS3x1vgawERL7vsnWc+fVwJrzrO4Dh/MP4/dpVijLMty0CNM65ka1BRdwvhHZr
-        zj+u8eO9bLc+jSwD9t7TTKA0snfdS+E=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-32-_FwneXJuOoSbAM37qY1JYQ-1; Wed, 13 May 2020 23:45:34 -0400
-X-MC-Unique: _FwneXJuOoSbAM37qY1JYQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 59E94107ACCA;
-        Thu, 14 May 2020 03:45:33 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 012132E174;
-        Thu, 14 May 2020 03:45:32 +0000 (UTC)
-To:     Jan Kara <jack@suse.cz>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc:     =?UTF-8?B?UGV0ciBQw61zYcWZ?= <ppisar@redhat.com>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] quota-tools: Set FS_DQ_TIMER_MASK for individual xfs grace
- times
-Message-ID: <72a454f1-c2ee-b777-90db-6bdfd4a8572c@redhat.com>
-Date:   Wed, 13 May 2020 22:45:32 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        id S1725831AbgENGxU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 02:53:20 -0400
+Received: from mga14.intel.com ([192.55.52.115]:43897 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725911AbgENGxU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 14 May 2020 02:53:20 -0400
+IronPort-SDR: 0mKsgizaAJBsC+Hh6bnuFMUdXQ5JuvE69941voollJVW8B6lMj2Y4Gu/IlkBT1rm6vvTUuq+FV
+ KKruyyBCgk0w==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2020 23:53:19 -0700
+IronPort-SDR: xQA7GUCRkzw8iPfjj8bl4+ul4+nvOn1axPrDtT4pLTz1uuf5Ocze0gFCculivz2DSNuPh7Aswf
+ ksmXH2yGcmhg==
+X-IronPort-AV: E=Sophos;i="5.73,390,1583222400"; 
+   d="scan'208";a="280757800"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 May 2020 23:53:18 -0700
+From:   ira.weiny@intel.com
+To:     linux-ext4@vger.kernel.org,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>
+Cc:     Ira Weiny <ira.weiny@intel.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Jeff Moyer <jmoyer@redhat.com>
+Subject: [PATCH V1 0/9] Enable ext4 support for per-file/directory DAX operations
+Date:   Wed, 13 May 2020 23:53:06 -0700
+Message-Id: <20200514065316.2500078-1-ira.weiny@intel.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs quota code doesn't currently allow increasing an individual
-user's grace time, but kernel patches are in development for this.
+From: Ira Weiny <ira.weiny@intel.com>
 
-In order for setquota to be able to send this update via
-setquota -T, we need to add the FS_DQ_TIMER_MASK when we are trying
-to update the grace times on an individual user's dquot.
+Enable the same per file DAX support in ext4 as was done for xfs.  This series
+builds and depends on the V11 series for xfs.[1]
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+This passes the same xfstests test as XFS.
 
-I wonder if we should only be setting the LIMIT_MASK only if
-(flags & COMMIT_LIMITS), but it doesn't seem to be a problem and
-is unrelated to this change I'm leaving it alone for now, though if
-anyone thinks it's better I can update the patch.
+The only issue is that this modifies the old mount option parsing code rather
+than waiting for the new parsing code to be finalized.
 
-I'm putting together xfstests cases for this, if you want to wait
-for those, that's fine.  Thanks!
+This series starts with 3 fixes which include making Verity and Encrypt truly
+mutually exclusive from DAX.  I think these first 3 patches should be picked up
+for 5.8 regardless of what is decided regarding the mount parsing.
 
-diff --git a/quotaio_xfs.c b/quotaio_xfs.c
-index b22c7b4..a4d6f67 100644
---- a/quotaio_xfs.c
-+++ b/quotaio_xfs.c
-@@ -166,6 +166,8 @@ static int xfs_commit_dquot(struct dquot *dquot, int flags)
- 			xdqblk.d_fieldmask |= FS_DQ_BCOUNT;
- 	} else {
- 		xdqblk.d_fieldmask |= FS_DQ_LIMIT_MASK;
-+		if (flags & COMMIT_TIMES) /* indiv grace period */
-+			xdqblk.d_fieldmask |= FS_DQ_TIMER_MASK;
- 	}
- 
- 	qcmd = QCMD(Q_XFS_SETQLIM, h->qh_type);
+[1] https://lore.kernel.org/lkml/20200428002142.404144-1-ira.weiny@intel.com/
+
+Changes from V0:
+	Collect reviews
+	Fix up setting don't cache in ioctl code
+	Add FS_DAX_FL flag for consistency
+
+
+To: linux-ext4@vger.kernel.org
+To: "Theodore Y. Ts'o" <tytso@mit.edu>
+To: Jan Kara <jack@suse.cz>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+
+
+Ira Weiny (9):
+  fs/ext4: Narrow scope of DAX check in setflags
+  fs/ext4: Disallow verity if inode is DAX
+  fs/ext4: Disallow encryption if inode is DAX
+  fs/ext4: Change EXT4_MOUNT_DAX to EXT4_MOUNT_DAX_ALWAYS
+  fs/ext4: Update ext4_should_use_dax()
+  fs/ext4: Only change S_DAX on inode load
+  fs/ext4: Make DAX mount option a tri-state
+  fs/ext4: Introduce DAX inode flag
+  Documentation/dax: Update DAX enablement for ext4
+
+ Documentation/filesystems/dax.txt         |  6 +-
+ Documentation/filesystems/ext4/verity.rst |  7 +++
+ Documentation/filesystems/fscrypt.rst     |  4 +-
+ fs/ext4/ext4.h                            | 20 ++++---
+ fs/ext4/ialloc.c                          |  2 +-
+ fs/ext4/inode.c                           | 27 +++++++--
+ fs/ext4/ioctl.c                           | 31 +++++++++--
+ fs/ext4/super.c                           | 67 +++++++++++++++--------
+ fs/ext4/verity.c                          |  5 +-
+ include/uapi/linux/fs.h                   |  1 +
+ 10 files changed, 125 insertions(+), 45 deletions(-)
+
+-- 
+2.25.1
 
