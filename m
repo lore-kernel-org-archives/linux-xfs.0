@@ -2,60 +2,62 @@ Return-Path: <SRS0=gMH0=64=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D9F3C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71424C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:56:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 733A42065F
-	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:56:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39D8120671
+	for <linux-xfs@archiver.kernel.org>; Thu, 14 May 2020 16:56:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SpPBRQMh"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0MSIeK0E"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726073AbgENQ41 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 14 May 2020 12:56:27 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:56400 "EHLO
+        id S1726032AbgENQ4d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 14 May 2020 12:56:33 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:56466 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726032AbgENQ40 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 12:56:26 -0400
+        with ESMTP id S1725965AbgENQ4d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 14 May 2020 12:56:33 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGrBkp173775;
-        Thu, 14 May 2020 16:56:24 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGrFKq173799;
+        Thu, 14 May 2020 16:56:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=nMwKqb4CRvedpVN/l27VoX6OOrl7LBWwkhbDEK0Vunk=;
- b=SpPBRQMhli2zPT1h+poqzdqqXrpUvrizZcv9b1uUipYW0lKbyj2FGQGzi3B5TYz0Jl2P
- 0/1ZRi0lr+BT/2D11jF88mPvSFFmlFH3FNa9cu5Eoc0JwjGxtkeDcA0J49xQzqBjIbmi
- WuHLB4FBZeR886jfjDLMmDn1RgiCzlnkKXCAu5RfZBy8oGDtFGfGCVza/0Ma9E/Kf47v
- cK0Bt/cJqYosvpHnif5mvNw4aqiEEp7u0RSzOAa7Pafd/QSBKDosVaxyzclZWvh2Yhtx
- sTuMbyxZyvp+d+7t2RC9MDbB9BWWaciP2dVIiVwQ4TxncrCy+hPoW7J1xAxXAYTDZXmY rA== 
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=xYwd7EglabM1940rbdX4g3eqd2AUnNhIoY2H99UIsYs=;
+ b=0MSIeK0E+/TAQLC2+hRxJsGJyaFJ4VhMVWsuOrKCfkk+ejGx6b6pFFbVPvvgUurqxwIn
+ VOQbIHyeMLrFRLDv7UlwQzo1WLNBJjlLa8fS04w2XV4JJJYOuU+zCIljgqecUIt56ANJ
+ Jfh8sUk6Yu+w+4syRjLzjIX73/1RIebOGnCVlLHlYwVMdcBa+r/vSYFqB29tBCuoBykx
+ GgNsSFsqv+pXMLmN0xbYBDFNrB4w1J+ZCyF8J1MCAhGkbcYoq5XtTnM8Gvu2XLTtZrES
+ CnpJyCi5xwoVm+y3SCjX2hfVMrfuXKF3XREVX3GJUNvQ/S1BCC/LGAUJO11eG02axKQp Xw== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 3100xwurpa-1
+        by userp2120.oracle.com with ESMTP id 3100xwurq2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 14 May 2020 16:56:24 +0000
+        Thu, 14 May 2020 16:56:31 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGs5iD154656;
-        Thu, 14 May 2020 16:56:24 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 3100yh5d6k-1
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04EGs5sR154633;
+        Thu, 14 May 2020 16:56:31 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 3100yh5dey-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 May 2020 16:56:24 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04EGuNSq022923;
-        Thu, 14 May 2020 16:56:23 GMT
+        Thu, 14 May 2020 16:56:31 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04EGuT34005477;
+        Thu, 14 May 2020 16:56:30 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 14 May 2020 09:56:22 -0700
-Subject: [PATCH v2 0/4] xfs_repair: check quota counters
+        with ESMTP ; Thu, 14 May 2020 09:56:29 -0700
+Subject: [PATCH 1/4] xfs_repair: alphabetize HFILES and CFILES
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 14 May 2020 09:56:21 -0700
-Message-ID: <158947538149.2482564.3112804204578429865.stgit@magnolia>
+Date:   Thu, 14 May 2020 09:56:28 -0700
+Message-ID: <158947538814.2482564.831276969317955641.stgit@magnolia>
+In-Reply-To: <158947538149.2482564.3112804204578429865.stgit@magnolia>
+References: <158947538149.2482564.3112804204578429865.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -76,26 +78,94 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-One of the larger gaps between xfs_check and xfs_repair is that repair
-doesn't have the ability to check quota counters against the filesystem
-contents.  This series adds that checking ability to repair pass7, which
-should suffice to drop xfs_check in fstests.  It also means that repair
-no longer forces a quotacheck on the next mount even if the quota counts
-were correct.
+Convert the definitions of HFILES and CFILES to lists that can be sorted
+easily (in vim, anyway), then fix the alphabetization of the makefile
+targets.
 
-For v2, I moved the makefile changes to a separate patch; fixed various
-labelling and error message things that Eric pointed out; and also fixed
-a bug where repair wasn't clearing the CHKD flags correctly on V4 fses.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ repair/Makefile |   67 +++++++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 57 insertions(+), 10 deletions(-)
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+diff --git a/repair/Makefile b/repair/Makefile
+index 8cc1ee68..78a521c5 100644
+--- a/repair/Makefile
++++ b/repair/Makefile
+@@ -9,16 +9,63 @@ LSRCFILES = README
+ 
+ LTCOMMAND = xfs_repair
+ 
+-HFILES = agheader.h attr_repair.h avl.h bload.h bmap.h btree.h \
+-	da_util.h dinode.h dir2.h err_protos.h globals.h incore.h protos.h \
+-	rt.h progress.h scan.h versions.h prefetch.h rmap.h slab.h threads.h
+-
+-CFILES = agheader.c attr_repair.c avl.c bload.c bmap.c btree.c \
+-	da_util.c dino_chunks.c dinode.c dir2.c globals.c incore.c \
+-	incore_bmc.c init.c incore_ext.c incore_ino.c phase1.c \
+-	phase2.c phase3.c phase4.c phase5.c phase6.c phase7.c \
+-	progress.c prefetch.c rmap.c rt.c sb.c scan.c slab.c threads.c \
+-	versions.c xfs_repair.c
++HFILES = \
++	agheader.h \
++	attr_repair.h \
++	avl.h \
++	bload.h \
++	bmap.h \
++	btree.h \
++	da_util.h \
++	dinode.h \
++	dir2.h \
++	err_protos.h \
++	globals.h \
++	incore.h \
++	prefetch.h \
++	progress.h \
++	protos.h \
++	rmap.h \
++	rt.h \
++	scan.h \
++	slab.h \
++	threads.h \
++	versions.h
++
++CFILES = \
++	agheader.c \
++	attr_repair.c \
++	avl.c \
++	bload.c \
++	bmap.c \
++	btree.c \
++	da_util.c \
++	dino_chunks.c \
++	dinode.c \
++	dir2.c \
++	globals.c \
++	incore_bmc.c \
++	incore.c \
++	incore_ext.c \
++	incore_ino.c \
++	init.c \
++	phase1.c \
++	phase2.c \
++	phase3.c \
++	phase4.c \
++	phase5.c \
++	phase6.c \
++	phase7.c \
++	prefetch.c \
++	progress.c \
++	rmap.c \
++	rt.c \
++	sb.c \
++	scan.c \
++	slab.c \
++	threads.c \
++	versions.c \
++	xfs_repair.c
+ 
+ LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
+ 	$(LIBPTHREAD) $(LIBBLKID)
 
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-quotacheck
