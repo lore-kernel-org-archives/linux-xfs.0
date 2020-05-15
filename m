@@ -2,112 +2,255 @@ Return-Path: <SRS0=g8AD=65=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 619F5C433E4
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 May 2020 04:42:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1E4EC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 May 2020 11:41:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3D2BA2065F
-	for <linux-xfs@archiver.kernel.org>; Fri, 15 May 2020 04:42:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 787E7206D4
+	for <linux-xfs@archiver.kernel.org>; Fri, 15 May 2020 11:41:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S8U3Zz/4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726228AbgEOEl1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 15 May 2020 00:41:27 -0400
-Received: from mga12.intel.com ([192.55.52.136]:45791 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726064AbgEOEl1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 15 May 2020 00:41:27 -0400
-IronPort-SDR: 4Z6AkquiHgTCJQEsv+vMsauIH7nn38UT/t2T0BI7pa3emCRqb7XndaML06d5BFwjlf0BMGwsDo
- ri7jsABsnuDw==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2020 21:41:26 -0700
-IronPort-SDR: XvCID+xrSHmqvNt9J29YB2SrWaVHM6cDjVEAKJ3qzIdoeexsMeCoAiDH1ayTXqGU+VAG+5A7Cm
- /NygluhkY13g==
-X-IronPort-AV: E=Sophos;i="5.73,394,1583222400"; 
-   d="scan'208";a="341858147"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 May 2020 21:41:25 -0700
-From:   ira.weiny@intel.com
-To:     linux-ext4@vger.kernel.org,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 0/9] Enable ext4 support for per-file/directory DAX operations
-Date:   Thu, 14 May 2020 21:41:12 -0700
-Message-Id: <20200515044121.2987940-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.25.1
+        id S1726047AbgEOLlY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 15 May 2020 07:41:24 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:21702 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726174AbgEOLlX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 15 May 2020 07:41:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589542881;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=0U7oqRVhiSAeC0aA4ydwUgbMzMudbxfkNyykG6yl3mI=;
+        b=S8U3Zz/4Nl2GYaWzL5QsLWyn46X8HDqa7fFNuLBuQ9YfqsSa2XiyNlA7TJhakk42lNMvoA
+        tg/WXbhqSsd9ZD6fJbMQsAPejiq2ZcRKELtzO2UTt9MUUcLjpg6mIrUM65A0IIKoRoLyAe
+        SvELO3b30ucY4Vuvu7XxlDT6tn7PFBc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-32-kooYTRbHOAKGGxUQ8qKkSA-1; Fri, 15 May 2020 07:41:20 -0400
+X-MC-Unique: kooYTRbHOAKGGxUQ8qKkSA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 557761005510;
+        Fri, 15 May 2020 11:41:19 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AB5A26FDD1;
+        Fri, 15 May 2020 11:41:18 +0000 (UTC)
+Date:   Fri, 15 May 2020 07:41:16 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] xfs_repair: port the online repair newbt structure
+Message-ID: <20200515114116.GA54804@bfoster>
+References: <158904190079.984305.707785748675261111.stgit@magnolia>
+ <158904190713.984305.3298591047333841655.stgit@magnolia>
+ <20200514150933.GA50849@bfoster>
+ <20200514192037.GD6714@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200514192037.GD6714@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Thu, May 14, 2020 at 12:20:37PM -0700, Darrick J. Wong wrote:
+> On Thu, May 14, 2020 at 11:09:33AM -0400, Brian Foster wrote:
+> > On Sat, May 09, 2020 at 09:31:47AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Port the new btree staging context and related block reservation helper
+> > > code from the kernel to repair.  We'll use this in subsequent patches to
+> > > implement btree bulk loading.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  include/libxfs.h         |    1 
+> > >  libxfs/libxfs_api_defs.h |    2 
+> > >  repair/Makefile          |    4 -
+> > >  repair/bload.c           |  276 ++++++++++++++++++++++++++++++++++++++++++++++
+> > >  repair/bload.h           |   79 +++++++++++++
+> > >  repair/xfs_repair.c      |   17 +++
+> > >  6 files changed, 377 insertions(+), 2 deletions(-)
+> > >  create mode 100644 repair/bload.c
+> > >  create mode 100644 repair/bload.h
+> > > 
+> > > 
+> > ...
+> > > diff --git a/repair/bload.c b/repair/bload.c
+> > > new file mode 100644
+> > > index 00000000..ab05815c
+> > > --- /dev/null
+> > > +++ b/repair/bload.c
+> > > @@ -0,0 +1,276 @@
+> > > +// SPDX-License-Identifier: GPL-2.0-or-later
+> > > +/*
+> > > + * Copyright (C) 2020 Oracle.  All Rights Reserved.
+> > > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > > + */
+> > > +#include <libxfs.h>
+> > > +#include "bload.h"
+> > > +
+> > > +#define trace_xrep_newbt_claim_block(...)	((void) 0)
+> > > +#define trace_xrep_newbt_reserve_space(...)	((void) 0)
+> > > +#define trace_xrep_newbt_unreserve_space(...)	((void) 0)
+> > > +#define trace_xrep_newbt_claim_block(...)	((void) 0)
+> > > +
+> > > +int bload_leaf_slack = -1;
+> > > +int bload_node_slack = -1;
+> > > +
+> > > +/* Ported routines from fs/xfs/scrub/repair.c */
+> > > +
+> > 
+> > Any plans to generalize/lift more of this stuff into libxfs if it's
+> > going to be shared with xfsprogs?
+> 
+> That depends on what the final online repair code looks like.
+> I suspect it'll be different enough that it's not worth sharing, but I
+> wouldn't be opposed to sharing identical functions.
+> 
 
-Enable the same per file DAX support in ext4 as was done for xfs.  This series
-builds and depends on the V11 series for xfs.[1]
+Ok, I was just going off the above note around porting existing code
+from kernel scrub. I think it's reasonable to consider generalizations
+later once both implementations are solidified.
 
-This passes the same xfstests test as XFS.
+> > ...
+> > > +/* Free all the accounting infor and disk space we reserved for a new btree. */
+> > > +void
+> > > +xrep_newbt_destroy(
+> > > +	struct xrep_newbt	*xnr,
+> > > +	int			error)
+> > > +{
+> > > +	struct repair_ctx	*sc = xnr->sc;
+> > > +	struct xrep_newbt_resv	*resv, *n;
+> > > +
+> > > +	if (error)
+> > > +		goto junkit;
+> > 
+> > Could use a comment on why we skip block freeing here..
+> 
+> I wonder what was the original reason for that?
+> 
+> IIRC if we actually error out of btree rebuilds then we've done
+> something totally wrong while setting up the btree loader, or the
+> storage is so broken that writes failed.  Repair is just going to call
+> do_error() to terminate (and leave us with a broken filesystem) so we
+> could just terminate right there at the top.
+> 
 
-The only issue is that this modifies the old mount option parsing code rather
-than waiting for the new parsing code to be finalized.
+Indeed.
 
-This series starts with 3 fixes which include making Verity and Encrypt truly
-mutually exclusive from DAX.  I think these first 3 patches should be picked up
-for 5.8 regardless of what is decided regarding the mount parsing.
+> > I'm also wondering if we can check error in the primary loop and kill
+> > the label and duplicate loop, but I guess that depends on whether the
+> > fields are always valid.
+> 
+> I think they are.
+> 
+> > > +
+> > > +	list_for_each_entry_safe(resv, n, &xnr->reservations, list) {
+> > > +		/* We don't have EFIs here so skip the EFD. */
+> > > +
+> > > +		/* Free every block we didn't use. */
+> > > +		resv->fsbno += resv->used;
+> > > +		resv->len -= resv->used;
+> > > +		resv->used = 0;
+> > > +
+> > > +		if (resv->len > 0) {
+> > > +			trace_xrep_newbt_unreserve_space(sc->mp,
+> > > +					XFS_FSB_TO_AGNO(sc->mp, resv->fsbno),
+> > > +					XFS_FSB_TO_AGBNO(sc->mp, resv->fsbno),
+> > > +					resv->len, xnr->oinfo.oi_owner);
+> > > +
+> > > +			__libxfs_bmap_add_free(sc->tp, resv->fsbno, resv->len,
+> > > +					&xnr->oinfo, true);
+> 
+> TBH for repair I don't even think we need this, since in theory we
+> reserved *exactly* the correct number of blocks for the btree.  Hmm.
+> 
 
-[1] https://lore.kernel.org/lkml/20200428002142.404144-1-ira.weiny@intel.com/
+Ok, well it would be good to clean up whether we remove it, clean it up
+or perhaps document why we wouldn't look at the resv fields on error if
+there turns out to be specific reason for that.
 
----
-Changes from V1:
-	Fix up mount options
-	Pick up reviews
+> > > +		}
+> > > +
+> > > +		list_del(&resv->list);
+> > > +		kmem_free(resv);
+> > > +	}
+> > > +
+> > > +junkit:
+> > > +	list_for_each_entry_safe(resv, n, &xnr->reservations, list) {
+> > > +		list_del(&resv->list);
+> > > +		kmem_free(resv);
+> > > +	}
+> > > +
+> > > +	if (sc->ip) {
+> > > +		kmem_cache_free(xfs_ifork_zone, xnr->ifake.if_fork);
+> > > +		xnr->ifake.if_fork = NULL;
+> > > +	}
+> > > +}
+> > > +
+> > ...
+> > > diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+> > > index 9d72fa8e..8fbd3649 100644
+> > > --- a/repair/xfs_repair.c
+> > > +++ b/repair/xfs_repair.c
+> > ...
+> > > @@ -49,6 +52,8 @@ static char *o_opts[] = {
+> > >  	[AG_STRIDE]		= "ag_stride",
+> > >  	[FORCE_GEO]		= "force_geometry",
+> > >  	[PHASE2_THREADS]	= "phase2_threads",
+> > > +	[BLOAD_LEAF_SLACK]	= "debug_bload_leaf_slack",
+> > > +	[BLOAD_NODE_SLACK]	= "debug_bload_node_slack",
+> > 
+> > Why the "debug_" in the option names?
+> 
+> These are debugging knobs; there's no reason why any normal user would
+> want to override the automatic slack sizing algorithms.  I also
+> refrained from documenting them in the manpage. :P
+> 
 
-To: linux-kernel@vger.kernel.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
+Oh, Ok. Perhaps that explains why they aren't in the usage() either. ;)
 
+Brian
 
-Ira Weiny (9):
-  fs/ext4: Narrow scope of DAX check in setflags
-  fs/ext4: Disallow verity if inode is DAX
-  fs/ext4: Disallow encryption if inode is DAX
-  fs/ext4: Change EXT4_MOUNT_DAX to EXT4_MOUNT_DAX_ALWAYS
-  fs/ext4: Update ext4_should_use_dax()
-  fs/ext4: Only change S_DAX on inode load
-  fs/ext4: Make DAX mount option a tri-state
-  fs/ext4: Introduce DAX inode flag
-  Documentation/dax: Update DAX enablement for ext4
-
- Documentation/filesystems/dax.txt         |  6 +-
- Documentation/filesystems/ext4/verity.rst |  7 ++
- Documentation/filesystems/fscrypt.rst     |  4 +-
- fs/ext4/ext4.h                            | 21 ++++--
- fs/ext4/ialloc.c                          |  2 +-
- fs/ext4/inode.c                           | 27 +++++--
- fs/ext4/ioctl.c                           | 31 ++++++--
- fs/ext4/super.c                           | 87 ++++++++++++++++-------
- fs/ext4/verity.c                          |  5 +-
- include/uapi/linux/fs.h                   |  1 +
- 10 files changed, 144 insertions(+), 47 deletions(-)
-
--- 
-2.25.1
+> However, the knobs have been useful for stress-testing w/ fstests.
+> 
+> --D
+> 
+> > Brian
+> > 
+> > >  	[O_MAX_OPTS]		= NULL,
+> > >  };
+> > >  
+> > > @@ -260,6 +265,18 @@ process_args(int argc, char **argv)
+> > >  		_("-o phase2_threads requires a parameter\n"));
+> > >  					phase2_threads = (int)strtol(val, NULL, 0);
+> > >  					break;
+> > > +				case BLOAD_LEAF_SLACK:
+> > > +					if (!val)
+> > > +						do_abort(
+> > > +		_("-o debug_bload_leaf_slack requires a parameter\n"));
+> > > +					bload_leaf_slack = (int)strtol(val, NULL, 0);
+> > > +					break;
+> > > +				case BLOAD_NODE_SLACK:
+> > > +					if (!val)
+> > > +						do_abort(
+> > > +		_("-o debug_bload_node_slack requires a parameter\n"));
+> > > +					bload_node_slack = (int)strtol(val, NULL, 0);
+> > > +					break;
+> > >  				default:
+> > >  					unknown('o', val);
+> > >  					break;
+> > > 
+> > 
+> 
 
