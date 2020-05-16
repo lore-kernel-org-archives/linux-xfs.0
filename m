@@ -2,102 +2,168 @@ Return-Path: <SRS0=gkwD=66=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5CDCC433DF
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 May 2020 17:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D0DC433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 May 2020 17:40:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CA0B20756
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 May 2020 17:26:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4165B206D8
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 May 2020 17:40:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qA5H9V/B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726259AbgEPR0t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 16 May 2020 13:26:49 -0400
-Received: from sandeen.net ([63.231.237.45]:60180 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726257AbgEPR0t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 May 2020 13:26:49 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 37B617B8C;
-        Sat, 16 May 2020 12:26:26 -0500 (CDT)
-Subject: Re: [PATCH v3] generic: per-type quota timers set/get test
-From:   Eric Sandeen <sandeen@sandeen.net>
-To:     Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-References: <20200329051801.8363-1-zlang@redhat.com>
- <31c4658a-5ae7-0bd7-5861-5f3e846314d3@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <be8c00cc-f49c-0b3b-e426-b15bde0bc021@sandeen.net>
-Date:   Sat, 16 May 2020 12:26:46 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        id S1726263AbgEPRkV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 16 May 2020 13:40:21 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38710 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726253AbgEPRkV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 16 May 2020 13:40:21 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04GHbsQK030692;
+        Sat, 16 May 2020 17:40:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=42c5fknY6DHEKcYiV1xIemcQXdQo/IXkx7TxJ7GtFrU=;
+ b=qA5H9V/BVruAxFbQ8OeP63efp1/dyI6wTCs5yCSFt+R1/3EluQ03zMg2j+rJYPWaQ/cB
+ 4oa77tn1WWXYKeKxCFHzNSlCC1Q0sDU5fqkB2nOuVLmP+BgcNybeQgrcc3bzsVmXxpWq
+ ia3PVW7cpZpKtlIVo1fW1QT5fbKo1v7VO0/ZRUHk47Zo20aAdi2Le4fLrdW2NB/ytRl7
+ VTmJBNnNk9M0qEnHSgYehbxmcb8X43Dkc/EZDLrU5EeM4IjB0zzjA1upQBPbGS46RXDb
+ SIfg3KZT6aj4IzkwskbZZwlUXA5vOodxSA9BvigH14ZfuGZFhUIp8eIkbHCPIX3Ag4na Xw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 3128tn1b4y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 16 May 2020 17:40:15 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04GHcCso002924;
+        Sat, 16 May 2020 17:40:15 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 31259rfq60-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 16 May 2020 17:40:15 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04GHeETG024871;
+        Sat, 16 May 2020 17:40:14 GMT
+Received: from localhost (/10.159.131.94)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 16 May 2020 10:40:14 -0700
+Date:   Sat, 16 May 2020 10:40:13 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 05/12] xfs: call xfs_dinode_verify from
+ xfs_inode_from_disk
+Message-ID: <20200516174013.GU6714@magnolia>
+References: <20200508063423.482370-1-hch@lst.de>
+ <20200508063423.482370-6-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <31c4658a-5ae7-0bd7-5861-5f3e846314d3@sandeen.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200508063423.482370-6-hch@lst.de>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9623 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 phishscore=0
+ adultscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 spamscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005160158
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9623 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 cotscore=-2147483648 suspectscore=1 lowpriorityscore=0
+ adultscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005160158
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/16/20 12:23 PM, Eric Sandeen wrote:
-> On 3/29/20 12:18 AM, Zorro Lang wrote:
->> Set different grace time, make sure each of quota (user, group and
->> project) timers can be set (by setquota) and get (by repquota)
->> correctly.
->>
+On Fri, May 08, 2020 at 08:34:16AM +0200, Christoph Hellwig wrote:
+> Keep the code dealing with the dinode together, and also ensure we verify
+> the dinode in the owner change log recovery case as well.
 > 
-> Sorry for the late review; this works now on xfs & ext4, with my
-> per-type patches in the kernel.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+Seems reasonable to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  .../xfs-self-describing-metadata.txt           | 10 +++++-----
+>  fs/xfs/libxfs/xfs_inode_buf.c                  | 18 ++++++++----------
+>  2 files changed, 13 insertions(+), 15 deletions(-)
 > 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-Oh, this is already merged.  o_O sorry, ignore my new RVB.
-
->> Signed-off-by: Zorro Lang <zlang@redhat.com>
->> ---
+> diff --git a/Documentation/filesystems/xfs-self-describing-metadata.txt b/Documentation/filesystems/xfs-self-describing-metadata.txt
+> index 8db0121d0980c..e912699d74301 100644
+> --- a/Documentation/filesystems/xfs-self-describing-metadata.txt
+> +++ b/Documentation/filesystems/xfs-self-describing-metadata.txt
+> @@ -337,11 +337,11 @@ buffer.
+>  
+>  The structure of the verifiers and the identifiers checks is very similar to the
+>  buffer code described above. The only difference is where they are called. For
+> -example, inode read verification is done in xfs_iread() when the inode is first
+> -read out of the buffer and the struct xfs_inode is instantiated. The inode is
+> -already extensively verified during writeback in xfs_iflush_int, so the only
+> -addition here is to add the LSN and CRC to the inode as it is copied back into
+> -the buffer.
+> +example, inode read verification is done in xfs_inode_from_disk() when the inode
+> +is first read out of the buffer and the struct xfs_inode is instantiated. The
+> +inode is already extensively verified during writeback in xfs_iflush_int, so the
+> +only addition here is to add the LSN and CRC to the inode as it is copied back
+> +into the buffer.
+>  
+>  XXX: inode unlinked list modification doesn't recalculate the inode CRC! None of
+>  the unlinked list modifications check or update CRCs, neither during unlink nor
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index 686a026b5f6ed..3aac22e892985 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -188,10 +188,18 @@ xfs_inode_from_disk(
+>  	struct xfs_icdinode	*to = &ip->i_d;
+>  	struct inode		*inode = VFS_I(ip);
+>  	int			error;
+> +	xfs_failaddr_t		fa;
+>  
+>  	ASSERT(ip->i_cowfp == NULL);
+>  	ASSERT(ip->i_afp == NULL);
+>  
+> +	fa = xfs_dinode_verify(ip->i_mount, ip->i_ino, from);
+> +	if (fa) {
+> +		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "dinode", from,
+> +				sizeof(*from), fa);
+> +		return -EFSCORRUPTED;
+> +	}
+> +
+>  	/*
+>  	 * First get the permanent information that is needed to allocate an
+>  	 * inode. If the inode is unused, mode is zero and we shouldn't mess
+> @@ -627,7 +635,6 @@ xfs_iread(
+>  {
+>  	xfs_buf_t	*bp;
+>  	xfs_dinode_t	*dip;
+> -	xfs_failaddr_t	fa;
+>  	int		error;
+>  
+>  	/*
+> @@ -652,15 +659,6 @@ xfs_iread(
+>  	if (error)
+>  		return error;
+>  
+> -	/* even unallocated inodes are verified */
+> -	fa = xfs_dinode_verify(mp, ip->i_ino, dip);
+> -	if (fa) {
+> -		xfs_inode_verifier_error(ip, -EFSCORRUPTED, "dinode", dip,
+> -				sizeof(*dip), fa);
+> -		error = -EFSCORRUPTED;
+> -		goto out_brelse;
+> -	}
+> -
+>  	error = xfs_inode_from_disk(ip, dip);
+>  	if (error)
+>  		goto out_brelse;
+> -- 
+> 2.26.2
+> 
