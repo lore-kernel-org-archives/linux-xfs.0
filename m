@@ -2,32 +2,33 @@ Return-Path: <SRS0=gkwD=66=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4123C433DF
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 May 2020 17:24:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5CDCC433DF
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 May 2020 17:26:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCE75207D8
-	for <linux-xfs@archiver.kernel.org>; Sat, 16 May 2020 17:24:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CA0B20756
+	for <linux-xfs@archiver.kernel.org>; Sat, 16 May 2020 17:26:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726341AbgEPRYB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 16 May 2020 13:24:01 -0400
-Received: from sandeen.net ([63.231.237.45]:60046 "EHLO sandeen.net"
+        id S1726259AbgEPR0t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 16 May 2020 13:26:49 -0400
+Received: from sandeen.net ([63.231.237.45]:60180 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726257AbgEPRYB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 16 May 2020 13:24:01 -0400
+        id S1726257AbgEPR0t (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 16 May 2020 13:26:49 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 210E417273;
-        Sat, 16 May 2020 12:23:38 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id 37B617B8C;
+        Sat, 16 May 2020 12:26:26 -0500 (CDT)
 Subject: Re: [PATCH v3] generic: per-type quota timers set/get test
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org
 References: <20200329051801.8363-1-zlang@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <31c4658a-5ae7-0bd7-5861-5f3e846314d3@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -70,229 +71,33 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <31c4658a-5ae7-0bd7-5861-5f3e846314d3@sandeen.net>
-Date:   Sat, 16 May 2020 12:23:58 -0500
+Message-ID: <be8c00cc-f49c-0b3b-e426-b15bde0bc021@sandeen.net>
+Date:   Sat, 16 May 2020 12:26:46 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200329051801.8363-1-zlang@redhat.com>
+In-Reply-To: <31c4658a-5ae7-0bd7-5861-5f3e846314d3@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 3/29/20 12:18 AM, Zorro Lang wrote:
-> Set different grace time, make sure each of quota (user, group and
-> project) timers can be set (by setquota) and get (by repquota)
-> correctly.
+On 5/16/20 12:23 PM, Eric Sandeen wrote:
+> On 3/29/20 12:18 AM, Zorro Lang wrote:
+>> Set different grace time, make sure each of quota (user, group and
+>> project) timers can be set (by setquota) and get (by repquota)
+>> correctly.
+>>
 > 
+> Sorry for the late review; this works now on xfs & ext4, with my
+> per-type patches in the kernel.
+> 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Sorry for the late review; this works now on xfs & ext4, with my
-per-type patches in the kernel.
+Oh, this is already merged.  o_O sorry, ignore my new RVB.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
-> 
-> V2 did below changes:
-> 1) Filter default quota timer (suggested by Eric Sandeen).
-> 2) Try to merge the case from Darrick (please review):
-> https://marc.info/?l=fstests&m=158207247224104&w=2
-> 
-> V3 did below changes:
-> 1) _require_scratch_xfs_crc if tests on XFS (suggested by Eryu Guan)
-> 
-> Thanks,
-> Zorro
-> 
->  tests/generic/594     | 108 ++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/594.out |  50 +++++++++++++++++++
->  tests/generic/group   |   1 +
->  3 files changed, 159 insertions(+)
->  create mode 100755 tests/generic/594
->  create mode 100644 tests/generic/594.out
-> 
-> diff --git a/tests/generic/594 b/tests/generic/594
-> new file mode 100755
-> index 00000000..e501d54c
-> --- /dev/null
-> +++ b/tests/generic/594
-> @@ -0,0 +1,108 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 594
-> +#
-> +# Test per-type(user, group and project) filesystem quota timers, make sure
-> +# each of grace time can be set/get properly.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/quota
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +# V4 XFS doesn't support to mount project and group quota together
-> +if [ "$FSTYP" = "xfs" ];then
-> +	_require_scratch_xfs_crc
-> +fi
-> +_require_quota
-> +
-> +_scratch_mkfs >$seqres.full 2>&1
-> +_scratch_enable_pquota
-> +_qmount_option "usrquota,grpquota,prjquota"
-> +_qmount
-> +_require_prjquota $SCRATCH_DEV
-> +
-> +MIN=60
-> +
-> +# get default time at first
-> +def_time=`repquota -u $SCRATCH_MNT | \
-> +		sed -n -e "/^Block/s/.* time: \(.*\); .* time: \(.*\)/\1 \2/p"`
-> +echo "Default block and inode grace timers are: $def_time" >> $seqres.full
-> +
-> +filter_repquota()
-> +{
-> +	local blocktime=$1
-> +	local inodetime=$2
-> +
-> +	_filter_scratch | sed -e "s,$blocktime,DEF_TIME,g" \
-> +			      -e "s,$inodetime,DEF_TIME,g"
-> +}
-> +
-> +echo "1. set project quota timer"
-> +setquota -t -P $((10 * MIN)) $((20 * MIN)) $SCRATCH_MNT
-> +repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $def_time
-> +echo
-> +
-> +echo "2. set group quota timer"
-> +setquota -t -g $((30 * MIN)) $((40 * MIN)) $SCRATCH_MNT
-> +repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $def_time
-> +echo
-> +
-> +echo "3. set user quota timer"
-> +setquota -t -u $((50 * MIN)) $((60 * MIN)) $SCRATCH_MNT
-> +repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $def_time
-> +echo
-> +
-> +# cycle mount, make sure the quota timers are still right
-> +echo "4. cycle mount test-1"
-> +_qmount
-> +repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $def_time
-> +echo
-> +
-> +# Run repair to force quota check
-> +echo "5. fsck to force quota check"
-> +_scratch_unmount
-> +_repair_scratch_fs >> $seqres.full 2>&1
-> +echo
-> +
-> +# Remount (this time to run quotacheck) and check the limits.  There's a bug
-> +# in quotacheck where we would reset the ondisk default grace period to zero
-> +# while the incore copy stays at whatever was read in prior to quotacheck.
-> +# This will show up after the /next/ remount.
-> +echo "6. cycle mount test-2"
-> +_qmount
-> +repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $def_time
-> +echo
-> +
-> +# Remount and check the limits
-> +echo "7. cycle mount test-3"
-> +_qmount
-> +repquota -ugP $SCRATCH_MNT | grep "Report\|^Block" | filter_repquota $def_time
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/594.out b/tests/generic/594.out
-> new file mode 100644
-> index 00000000..f25e0fac
-> --- /dev/null
-> +++ b/tests/generic/594.out
-> @@ -0,0 +1,50 @@
-> +QA output created by 594
-> +1. set project quota timer
-> +*** Report for user quotas on device SCRATCH_DEV
-> +Block grace time: DEF_TIME; Inode grace time: DEF_TIME
-> +*** Report for group quotas on device SCRATCH_DEV
-> +Block grace time: DEF_TIME; Inode grace time: DEF_TIME
-> +*** Report for project quotas on device SCRATCH_DEV
-> +Block grace time: 00:10; Inode grace time: 00:20
-> +
-> +2. set group quota timer
-> +*** Report for user quotas on device SCRATCH_DEV
-> +Block grace time: DEF_TIME; Inode grace time: DEF_TIME
-> +*** Report for group quotas on device SCRATCH_DEV
-> +Block grace time: 00:30; Inode grace time: 00:40
-> +*** Report for project quotas on device SCRATCH_DEV
-> +Block grace time: 00:10; Inode grace time: 00:20
-> +
-> +3. set user quota timer
-> +*** Report for user quotas on device SCRATCH_DEV
-> +Block grace time: 00:50; Inode grace time: 01:00
-> +*** Report for group quotas on device SCRATCH_DEV
-> +Block grace time: 00:30; Inode grace time: 00:40
-> +*** Report for project quotas on device SCRATCH_DEV
-> +Block grace time: 00:10; Inode grace time: 00:20
-> +
-> +4. cycle mount test-1
-> +*** Report for user quotas on device SCRATCH_DEV
-> +Block grace time: 00:50; Inode grace time: 01:00
-> +*** Report for group quotas on device SCRATCH_DEV
-> +Block grace time: 00:30; Inode grace time: 00:40
-> +*** Report for project quotas on device SCRATCH_DEV
-> +Block grace time: 00:10; Inode grace time: 00:20
-> +
-> +5. fsck to force quota check
-> +
-> +6. cycle mount test-2
-> +*** Report for user quotas on device SCRATCH_DEV
-> +Block grace time: 00:50; Inode grace time: 01:00
-> +*** Report for group quotas on device SCRATCH_DEV
-> +Block grace time: 00:30; Inode grace time: 00:40
-> +*** Report for project quotas on device SCRATCH_DEV
-> +Block grace time: 00:10; Inode grace time: 00:20
-> +
-> +7. cycle mount test-3
-> +*** Report for user quotas on device SCRATCH_DEV
-> +Block grace time: 00:50; Inode grace time: 01:00
-> +*** Report for group quotas on device SCRATCH_DEV
-> +Block grace time: 00:30; Inode grace time: 00:40
-> +*** Report for project quotas on device SCRATCH_DEV
-> +Block grace time: 00:10; Inode grace time: 00:20
-> diff --git a/tests/generic/group b/tests/generic/group
-> index dc95b77b..a83f95cb 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -595,3 +595,4 @@
->  591 auto quick rw pipe splice
->  592 auto quick encrypt
->  593 auto quick encrypt
-> +594 auto quick quota
-> 
+>> Signed-off-by: Zorro Lang <zlang@redhat.com>
+>> ---
