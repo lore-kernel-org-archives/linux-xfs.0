@@ -7,185 +7,223 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 591F9C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 13:28:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC6CC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 13:28:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38BBF2065F
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 13:28:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6AEB2065F
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 13:28:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EDnMb2kQ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NEvXMjnv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726726AbgERN2T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 09:28:19 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:32497 "EHLO
+        id S1726989AbgERN2X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 09:28:23 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:26603 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726775AbgERN2S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 09:28:18 -0400
+        with ESMTP id S1726775AbgERN2X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 09:28:23 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589808496;
+        s=mimecast20190719; t=1589808501;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=A4zOy/dDN7sqyl6VFFLrTMvZtXvBvlq+/aOZOgJZd+A=;
-        b=EDnMb2kQFU86SR4BU/ZsEUPIepv/gr/PEEwaidG/b+vaI91BMBpIr2RU3dtZdw59oCPZTk
-        ykJpqLF4GWB023/q5I8O5Zi3Otka9KJp+auhnYahO+ocUnJA/Mk3gnMJSyXMA8MysqDsoN
-        gxuEk2FNuxanK+u7OlkZvHQlhqsyEdc=
+        bh=/5CpdLFk72GqyGzYLeU8mv5Vn/H2WnCZWERAKVkvtyk=;
+        b=NEvXMjnveLh6y1i++ZBvzz6DnszywSJPQ9G3cJcyPeuowREIEOCzjEgpTsiJiXKt4LVAjT
+        mt64mOy8qh6wljLNk29+aWO7sJzd/fvFMQzyT5OKnbdnhp4Wf1L0ZeV/y5SS3sZdiZ6oYi
+        7BaY2PscaT+XuoE6DmOWfoPAHL7w1Gk=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-335-9UMfscbxM7SGN1DgOVDX7w-1; Mon, 18 May 2020 09:28:12 -0400
-X-MC-Unique: 9UMfscbxM7SGN1DgOVDX7w-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-61-MC2utneSOcuy-7gGSLSEUg-1; Mon, 18 May 2020 09:28:19 -0400
+X-MC-Unique: MC2utneSOcuy-7gGSLSEUg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 656BA1B2C983;
-        Mon, 18 May 2020 13:28:11 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CD12B18A0724;
+        Mon, 18 May 2020 13:28:18 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D148260BF3;
-        Mon, 18 May 2020 13:28:10 +0000 (UTC)
-Date:   Mon, 18 May 2020 09:28:08 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5EE425D9DC;
+        Mon, 18 May 2020 13:28:18 +0000 (UTC)
+Date:   Mon, 18 May 2020 09:28:16 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/6] xfs: clean up xchk_bmap_check_rmaps usage of
- XFS_IFORK_Q
-Message-ID: <20200518132808.GD10938@bfoster>
+Cc:     linux-xfs@vger.kernel.org, Chandan Babu R <chandanrlinux@gmail.com>
+Subject: Re: [PATCH 6/6] xfs: cleanup xfs_idestroy_fork
+Message-ID: <20200518132816.GE10938@bfoster>
 References: <20200518073358.760214-1-hch@lst.de>
- <20200518073358.760214-2-hch@lst.de>
+ <20200518073358.760214-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200518073358.760214-2-hch@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20200518073358.760214-7-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 18, 2020 at 09:33:53AM +0200, Christoph Hellwig wrote:
-> From: "Darrick J. Wong" <darrick.wong@oracle.com>
+On Mon, May 18, 2020 at 09:33:58AM +0200, Christoph Hellwig wrote:
+> Move freeing the dynamically allocated attr and COW fork, as well
+> as zeroing the pointers where actually needed into the callers, and
+> just pass the xfs_ifork structure to xfs_idestroy_fork.  Also simplify
+> the kmem_free calls by not checking for NULL first.
 > 
-> XFS_IFORK_Q is supposed to be a predicate, not a function returning a
-> value.  Its usage is in xchk_bmap_check_rmaps is incorrect, but that
-> function only cares about whether or not the "size" of the data is zero
-> or not.  Convert that logic to use a proper boolean, and teach the
-> caller to skip the call entirely if the end result would be that we'd do
-> nothing anyway.  This avoids a crash later in this series.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> [hch: generalized the NULL ifor check]
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 > ---
-
-I'm still rather confused about the i_size logic, but this seems like a
-good cleanup regardless:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/scrub/bmap.c | 35 +++++++++++++----------------------
->  1 file changed, 13 insertions(+), 22 deletions(-)
+>  fs/xfs/libxfs/xfs_attr_leaf.c  |  7 +++----
+>  fs/xfs/libxfs/xfs_inode_buf.c  |  2 +-
+>  fs/xfs/libxfs/xfs_inode_fork.c | 32 +++++++++-----------------------
+>  fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
+>  fs/xfs/xfs_attr_inactive.c     |  7 +++++--
+>  fs/xfs/xfs_icache.c            | 15 +++++++++------
+>  6 files changed, 28 insertions(+), 37 deletions(-)
 > 
-> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-> index add8598eacd5d..d0daf3de9fde5 100644
-> --- a/fs/xfs/scrub/bmap.c
-> +++ b/fs/xfs/scrub/bmap.c
-> @@ -566,8 +566,8 @@ xchk_bmap_check_rmaps(
->  	struct xfs_scrub	*sc,
->  	int			whichfork)
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index b279200519777..394805abb4535 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -718,11 +718,10 @@ xfs_attr_fork_remove(
 >  {
-> -	loff_t			size;
->  	xfs_agnumber_t		agno;
-> +	bool			zero_size;
->  	int			error;
+>  	ASSERT(ip->i_afp->if_nextents == 0);
 >  
->  	if (!xfs_sb_version_hasrmapbt(&sc->mp->m_sb) ||
-> @@ -579,6 +579,8 @@ xchk_bmap_check_rmaps(
->  	if (XFS_IS_REALTIME_INODE(sc->ip) && whichfork == XFS_DATA_FORK)
->  		return 0;
+> -	xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+> +	xfs_idestroy_fork(ip->i_afp);
+> +	kmem_cache_free(xfs_ifork_zone, ip->i_afp);
+> +	ip->i_afp = NULL;
+>  	ip->i_d.di_forkoff = 0;
+> -
+> -	ASSERT(ip->i_afp == NULL);
+> -
+>  	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+>  }
 >  
-> +	ASSERT(XFS_IFORK_PTR(sc->ip, whichfork) != NULL);
-> +
->  	/*
->  	 * Only do this for complex maps that are in btree format, or for
->  	 * situations where we would seem to have a size but zero extents.
-> @@ -586,19 +588,13 @@ xchk_bmap_check_rmaps(
->  	 * to flag this bmap as corrupt if there are rmaps that need to be
->  	 * reattached.
->  	 */
-> -	switch (whichfork) {
-> -	case XFS_DATA_FORK:
-> -		size = i_size_read(VFS_I(sc->ip));
-> -		break;
-> -	case XFS_ATTR_FORK:
-> -		size = XFS_IFORK_Q(sc->ip);
-> -		break;
-> -	default:
-> -		size = 0;
-> -		break;
-> -	}
-> +	if (whichfork == XFS_DATA_FORK)
-> +		zero_size = i_size_read(VFS_I(sc->ip)) == 0;
-> +	else
-> +		zero_size = false;
-> +
->  	if (XFS_IFORK_FORMAT(sc->ip, whichfork) != XFS_DINODE_FMT_BTREE &&
-> -	    (size == 0 || XFS_IFORK_NEXTENTS(sc->ip, whichfork) > 0))
-> +	    (zero_size || XFS_IFORK_NEXTENTS(sc->ip, whichfork) > 0))
->  		return 0;
+> diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> index ab555671e1543..6f84ea85fdd83 100644
+> --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> @@ -271,7 +271,7 @@ xfs_inode_from_disk(
+>  	return 0;
 >  
->  	for (agno = 0; agno < sc->mp->m_sb.sb_agcount; agno++) {
-> @@ -627,12 +623,14 @@ xchk_bmap(
->  	struct xchk_bmap_info	info = { NULL };
->  	struct xfs_mount	*mp = sc->mp;
->  	struct xfs_inode	*ip = sc->ip;
+>  out_destroy_data_fork:
+> -	xfs_idestroy_fork(ip, XFS_DATA_FORK);
+> +	xfs_idestroy_fork(&ip->i_df);
+>  	return error;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index ef43b4893766c..28b366275ae0e 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -503,38 +503,24 @@ xfs_idata_realloc(
+>  
+>  void
+>  xfs_idestroy_fork(
+> -	xfs_inode_t	*ip,
+> -	int		whichfork)
+> +	struct xfs_ifork	*ifp)
+>  {
 > -	struct xfs_ifork	*ifp;
-> +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
->  	xfs_fileoff_t		endoff;
->  	struct xfs_iext_cursor	icur;
->  	int			error = 0;
->  
+> -
 > -	ifp = XFS_IFORK_PTR(ip, whichfork);
-> +	/* Non-existent forks can be ignored. */
-> +	if (!ifp)
-> +		goto out;
->  
->  	info.is_rt = whichfork == XFS_DATA_FORK && XFS_IS_REALTIME_INODE(ip);
->  	info.whichfork = whichfork;
-> @@ -641,9 +639,6 @@ xchk_bmap(
->  
->  	switch (whichfork) {
->  	case XFS_COW_FORK:
-> -		/* Non-existent CoW forks are ignorable. */
-> -		if (!ifp)
-> -			goto out;
->  		/* No CoW forks on non-reflink inodes/filesystems. */
->  		if (!xfs_is_reflink_inode(ip)) {
->  			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
-> @@ -651,8 +646,6 @@ xchk_bmap(
->  		}
->  		break;
->  	case XFS_ATTR_FORK:
-> -		if (!ifp)
-> -			goto out_check_rmap;
->  		if (!xfs_sb_version_hasattr(&mp->m_sb) &&
->  		    !xfs_sb_version_hasattr2(&mp->m_sb))
->  			xchk_ino_set_corrupt(sc, sc->ip->i_ino);
-> @@ -700,7 +693,6 @@ xchk_bmap(
->  
->  	/* Scrub extent records. */
->  	info.lastoff = 0;
-> -	ifp = XFS_IFORK_PTR(ip, whichfork);
->  	for_each_xfs_iext(ifp, &icur, &irec) {
->  		if (xchk_should_terminate(sc, &error) ||
->  		    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
-> @@ -717,7 +709,6 @@ xchk_bmap(
->  			goto out;
+>  	if (ifp->if_broot != NULL) {
+>  		kmem_free(ifp->if_broot);
+>  		ifp->if_broot = NULL;
 >  	}
 >  
-> -out_check_rmap:
->  	error = xchk_bmap_check_rmaps(sc, whichfork);
->  	if (!xchk_fblock_xref_process_error(sc, whichfork, 0, &error))
->  		goto out;
+>  	/*
+> -	 * If the format is local, then we can't have an extents
+> -	 * array so just look for an inline data array.  If we're
+> -	 * not local then we may or may not have an extents list,
+> -	 * so check and free it up if we do.
+> +	 * If the format is local, then we can't have an extents array so just
+> +	 * look for an inline data array.  If we're not local then we may or may
+> +	 * not have an extents list, so check and free it up if we do.
+>  	 */
+>  	if (ifp->if_format == XFS_DINODE_FMT_LOCAL) {
+> -		if (ifp->if_u1.if_data != NULL) {
+> -			kmem_free(ifp->if_u1.if_data);
+> -			ifp->if_u1.if_data = NULL;
+> -		}
+> -	} else if ((ifp->if_flags & XFS_IFEXTENTS) && ifp->if_height) {
+> -		xfs_iext_destroy(ifp);
+> -	}
+> -
+> -	if (whichfork == XFS_ATTR_FORK) {
+> -		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
+> -		ip->i_afp = NULL;
+> -	} else if (whichfork == XFS_COW_FORK) {
+> -		kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
+> -		ip->i_cowfp = NULL;
+> +		kmem_free(ifp->if_u1.if_data);
+> +		ifp->if_u1.if_data = NULL;
+> +	} else if (ifp->if_flags & XFS_IFEXTENTS) {
+> +		if (ifp->if_height)
+> +			xfs_iext_destroy(ifp);
+>  	}
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index d849cca103edd..a4953e95c4f3f 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -86,7 +86,7 @@ int		xfs_iformat_data_fork(struct xfs_inode *, struct xfs_dinode *);
+>  int		xfs_iformat_attr_fork(struct xfs_inode *, struct xfs_dinode *);
+>  void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+>  				struct xfs_inode_log_item *, int);
+> -void		xfs_idestroy_fork(struct xfs_inode *, int);
+> +void		xfs_idestroy_fork(struct xfs_ifork *ifp);
+>  void		xfs_idata_realloc(struct xfs_inode *ip, int64_t byte_diff,
+>  				int whichfork);
+>  void		xfs_iroot_realloc(struct xfs_inode *, int, int);
+> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> index 00ffc46c0bf71..bfad669e6b2f8 100644
+> --- a/fs/xfs/xfs_attr_inactive.c
+> +++ b/fs/xfs/xfs_attr_inactive.c
+> @@ -388,8 +388,11 @@ xfs_attr_inactive(
+>  	xfs_trans_cancel(trans);
+>  out_destroy_fork:
+>  	/* kill the in-core attr fork before we drop the inode lock */
+> -	if (dp->i_afp)
+> -		xfs_idestroy_fork(dp, XFS_ATTR_FORK);
+> +	if (dp->i_afp) {
+> +		xfs_idestroy_fork(dp->i_afp);
+> +		kmem_cache_free(xfs_ifork_zone, dp->i_afp);
+> +		dp->i_afp = NULL;
+> +	}
+>  	if (lock_mode)
+>  		xfs_iunlock(dp, lock_mode);
+>  	return error;
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index c09b3e9eab1da..d806d3bfa8936 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -87,15 +87,18 @@ xfs_inode_free_callback(
+>  	case S_IFREG:
+>  	case S_IFDIR:
+>  	case S_IFLNK:
+> -		xfs_idestroy_fork(ip, XFS_DATA_FORK);
+> +		xfs_idestroy_fork(&ip->i_df);
+>  		break;
+>  	}
+>  
+> -	if (ip->i_afp)
+> -		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+> -	if (ip->i_cowfp)
+> -		xfs_idestroy_fork(ip, XFS_COW_FORK);
+> -
+> +	if (ip->i_afp) {
+> +		xfs_idestroy_fork(ip->i_afp);
+> +		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
+> +	}
+> +	if (ip->i_cowfp) {
+> +		xfs_idestroy_fork(ip->i_cowfp);
+> +		kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
+> +	}
+>  	if (ip->i_itemp) {
+>  		ASSERT(!test_bit(XFS_LI_IN_AIL,
+>  				 &ip->i_itemp->ili_item.li_flags));
 > -- 
 > 2.26.2
 > 
