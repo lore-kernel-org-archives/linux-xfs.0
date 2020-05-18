@@ -2,218 +2,159 @@ Return-Path: <SRS0=xgbg=7A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6424C433E1
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 07:34:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0888AC433E1
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 12:35:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B34D8207D8
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 07:34:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C925520878
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 12:35:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BwVCh09I"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GoGu7L5B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727831AbgERHeU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 03:34:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49200 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726489AbgERHeU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 03:34:20 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29D63C061A0C
-        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2020 00:34:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=S9bSTPTKkEZQj8aqobMXpWBmnHA72STcxtENaSdfS6M=; b=BwVCh09IZNcz/fZ43X4Wv0X1Bc
-        0WUIH/EPq7xTue3VNK7ER6GcLJk+coF72i1YcdTUi8ZeiLrgNtLdqhT0iceAhXH+MhjUHj3Hgdnak
-        bPI6HuwJ46LMiSOEmMvB5f2FYQIkSUHraOpyCVO2LcAS3w4iLwkhunTkXllP3mfs0BRd1qWPWkEOi
-        0TzDC9LYPbTclOlw1CwJHbPIRMX3Dq3zlz+cMl1y9j6EvQL++7xSJ9zUITKZaoyJkZlHzDV5C/0XE
-        Z/KSdMqtirhtSU562sIDGsrN8zaJaQfJ3X7okgrdOYaO4TJZ0LJcw4rTB+za9TxuavYWmEcF6v0Dp
-        /Fvg5NvQ==;
-Received: from [2001:4bb8:188:1506:c70:4a89:bc61:2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jaaHz-0002tD-GJ; Mon, 18 May 2020 07:34:20 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>
-Subject: [PATCH 6/6] xfs: cleanup xfs_idestroy_fork
-Date:   Mon, 18 May 2020 09:33:58 +0200
-Message-Id: <20200518073358.760214-7-hch@lst.de>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200518073358.760214-1-hch@lst.de>
-References: <20200518073358.760214-1-hch@lst.de>
+        id S1727853AbgERMfE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 08:35:04 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:33835 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727839AbgERMfD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 08:35:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589805302;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=4QgMLi/nyoG53Ykfy4+b1zeOCkIVUCEZqzERr8ml+58=;
+        b=GoGu7L5B+ElSK/D4bAXFI+1e36B8mzasmKG9R8/MiUiT769vZjM3YXTwHC7Az3ta2g7i0r
+        BYz/eyhxZw5a0jBg5mtjm4Lr/M32AVpGxzHEl3ZzInZ/CqXAsS+eAJThrjRBZvgwf/Of8z
+        jUpCxos68O/9fdJkE4bFQu/30LRXCTs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-322-lpHd8ZhsP0OwLorTBYuEIg-1; Mon, 18 May 2020 08:35:01 -0400
+X-MC-Unique: lpHd8ZhsP0OwLorTBYuEIg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 55CBE800D24
+        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2020 12:35:00 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DC6031001925;
+        Mon, 18 May 2020 12:34:56 +0000 (UTC)
+Date:   Mon, 18 May 2020 08:34:54 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH, RFCRAP] xfs: handle ENOSPC quota return in
+ xfs_file_buffered_aio_write
+Message-ID: <20200518123454.GB10938@bfoster>
+References: <e6b9090b-722a-c9d1-6c82-0dcb3f0be5a2@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e6b9090b-722a-c9d1-6c82-0dcb3f0be5a2@redhat.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move freeing the dynamically allocated attr and COW fork, as well
-as zeroing the pointers where actually needed into the callers, and
-just pass the xfs_ifork structure to xfs_idestroy_fork.  Also simplify
-the kmem_free calls by not checking for NULL first.
+On Thu, May 14, 2020 at 04:43:36PM -0500, Eric Sandeen wrote:
+> Since project quota returns ENOSPC rather than EDQUOT, the distinction
+> between those two error conditions in xfs_file_buffered_aio_write() is
+> incomplete.  If project quota is on, and we get ENOSPC, it seems that
+> we have no good way to know if it was due to quota, or due to actual
+> out of space conditions, and we may need to run both remediation options...
+> 
+> This is completely untested and not even built, because I'm really not sure
+> what the best way to go here is.  True ENOSPC is hopefully rare, pquota
+> ENOSPC is probably less so, so I'm not sure how far we should go digging
+> to figure out what the root cause of the ENOSPC condition is, when pquota
+> is on (on this inode).
+> 
+> If project quota is on on this inode and pquota enforced, should we look
+> to the super to make a determination about low free blocks in the fs?
+> 
+> Should we crack open the dquot and see if it's over limit?
+> 
+> Should we just run both conditions and hope for the best?
+> 
+> Is this all best effort anyway, so we just simply care if we take the
+> improper action for pquota+ENOSPC?
+> 
+> Probably-shouldn't-merge-this-sez: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 4b8bdecc3863..8cec826046ce 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -647,27 +647,31 @@ xfs_file_buffered_aio_write(
+>  	 * waits on dirty mappings. Since xfs_flush_inodes() is serialized, this
+>  	 * also behaves as a filter to prevent too many eofblocks scans from
+>  	 * running at the same time.
+> +	 *
+> +	 * Fun fact: Project quota returns -ENOSPC, so... complexity here.
+>  	 */
+> -	if (ret == -EDQUOT && !enospc) {
+> -		xfs_iunlock(ip, iolock);
+> -		enospc = xfs_inode_free_quota_eofblocks(ip);
+> -		if (enospc)
+> -			goto write_retry;
+> -		enospc = xfs_inode_free_quota_cowblocks(ip);
+> +	if (!enospc) {
+> +		if (ret == -ENOSPC) {
+> +			struct xfs_eofblocks eofb = {0};
+> +	
+> +			enospc = 1;
+> +			xfs_flush_inodes(ip->i_mount);
+> +	
+> +			xfs_iunlock(ip, iolock);
+> +			eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
+> +			xfs_icache_free_eofblocks(ip->i_mount, &eofb);
+> +			xfs_icache_free_cowblocks(ip->i_mount, &eofb);
+> +		}
+> +		if (ret == -EDQUOT ||
+> +		    (ret == -ENOSPC && ip->i_pdquot &&
+> +		     XFS_IS_PQUOTA_ENFORCED(mp) && ip->i_pdquot)) {
+> +			xfs_iunlock(ip, iolock);
+> +			enospc |= xfs_inode_free_quota_eofblocks(ip);
+> +			enospc |= xfs_inode_free_quota_cowblocks(ip);
+> +			iolock = 0;
+> +		}
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
----
- fs/xfs/libxfs/xfs_attr_leaf.c  |  7 +++----
- fs/xfs/libxfs/xfs_inode_buf.c  |  2 +-
- fs/xfs/libxfs/xfs_inode_fork.c | 32 +++++++++-----------------------
- fs/xfs/libxfs/xfs_inode_fork.h |  2 +-
- fs/xfs/xfs_attr_inactive.c     |  7 +++++--
- fs/xfs/xfs_icache.c            | 15 +++++++++------
- 6 files changed, 28 insertions(+), 37 deletions(-)
+Christoph's comment aside, note that the quota helpers here are filtered
+scans based on the dquots attached to the inode. It's basically an
+optimized scan when we know the failure was due to quota, so I don't
+think there should ever be a need to run a quota scan after running the
+-ENOSPC handling above. For project quota, it might make more sense to
+check if a pdquot is attached, check xfs_dquot_lowsp() and conditionally
+update the eofb to do a filtered pquota scan if appropriate (since
+calling the quota helper above would also affect other dquots attached
+to the inode, which I don't think we want to do). Then we can fall back
+to the global scan if the pquota optimization is not relevant or still
+returns -ENOSPC on the subsequent retry.
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b279200519777..394805abb4535 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -718,11 +718,10 @@ xfs_attr_fork_remove(
- {
- 	ASSERT(ip->i_afp->if_nextents == 0);
- 
--	xfs_idestroy_fork(ip, XFS_ATTR_FORK);
-+	xfs_idestroy_fork(ip->i_afp);
-+	kmem_cache_free(xfs_ifork_zone, ip->i_afp);
-+	ip->i_afp = NULL;
- 	ip->i_d.di_forkoff = 0;
--
--	ASSERT(ip->i_afp == NULL);
--
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index ab555671e1543..6f84ea85fdd83 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -271,7 +271,7 @@ xfs_inode_from_disk(
- 	return 0;
- 
- out_destroy_data_fork:
--	xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+	xfs_idestroy_fork(&ip->i_df);
- 	return error;
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
-index ef43b4893766c..28b366275ae0e 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.c
-+++ b/fs/xfs/libxfs/xfs_inode_fork.c
-@@ -503,38 +503,24 @@ xfs_idata_realloc(
- 
- void
- xfs_idestroy_fork(
--	xfs_inode_t	*ip,
--	int		whichfork)
-+	struct xfs_ifork	*ifp)
- {
--	struct xfs_ifork	*ifp;
--
--	ifp = XFS_IFORK_PTR(ip, whichfork);
- 	if (ifp->if_broot != NULL) {
- 		kmem_free(ifp->if_broot);
- 		ifp->if_broot = NULL;
- 	}
- 
- 	/*
--	 * If the format is local, then we can't have an extents
--	 * array so just look for an inline data array.  If we're
--	 * not local then we may or may not have an extents list,
--	 * so check and free it up if we do.
-+	 * If the format is local, then we can't have an extents array so just
-+	 * look for an inline data array.  If we're not local then we may or may
-+	 * not have an extents list, so check and free it up if we do.
- 	 */
- 	if (ifp->if_format == XFS_DINODE_FMT_LOCAL) {
--		if (ifp->if_u1.if_data != NULL) {
--			kmem_free(ifp->if_u1.if_data);
--			ifp->if_u1.if_data = NULL;
--		}
--	} else if ((ifp->if_flags & XFS_IFEXTENTS) && ifp->if_height) {
--		xfs_iext_destroy(ifp);
--	}
--
--	if (whichfork == XFS_ATTR_FORK) {
--		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
--		ip->i_afp = NULL;
--	} else if (whichfork == XFS_COW_FORK) {
--		kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
--		ip->i_cowfp = NULL;
-+		kmem_free(ifp->if_u1.if_data);
-+		ifp->if_u1.if_data = NULL;
-+	} else if (ifp->if_flags & XFS_IFEXTENTS) {
-+		if (ifp->if_height)
-+			xfs_iext_destroy(ifp);
- 	}
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index d849cca103edd..a4953e95c4f3f 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -86,7 +86,7 @@ int		xfs_iformat_data_fork(struct xfs_inode *, struct xfs_dinode *);
- int		xfs_iformat_attr_fork(struct xfs_inode *, struct xfs_dinode *);
- void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
- 				struct xfs_inode_log_item *, int);
--void		xfs_idestroy_fork(struct xfs_inode *, int);
-+void		xfs_idestroy_fork(struct xfs_ifork *ifp);
- void		xfs_idata_realloc(struct xfs_inode *ip, int64_t byte_diff,
- 				int whichfork);
- void		xfs_iroot_realloc(struct xfs_inode *, int, int);
-diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-index 00ffc46c0bf71..bfad669e6b2f8 100644
---- a/fs/xfs/xfs_attr_inactive.c
-+++ b/fs/xfs/xfs_attr_inactive.c
-@@ -388,8 +388,11 @@ xfs_attr_inactive(
- 	xfs_trans_cancel(trans);
- out_destroy_fork:
- 	/* kill the in-core attr fork before we drop the inode lock */
--	if (dp->i_afp)
--		xfs_idestroy_fork(dp, XFS_ATTR_FORK);
-+	if (dp->i_afp) {
-+		xfs_idestroy_fork(dp->i_afp);
-+		kmem_cache_free(xfs_ifork_zone, dp->i_afp);
-+		dp->i_afp = NULL;
-+	}
- 	if (lock_mode)
- 		xfs_iunlock(dp, lock_mode);
- 	return error;
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index c09b3e9eab1da..d806d3bfa8936 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -87,15 +87,18 @@ xfs_inode_free_callback(
- 	case S_IFREG:
- 	case S_IFDIR:
- 	case S_IFLNK:
--		xfs_idestroy_fork(ip, XFS_DATA_FORK);
-+		xfs_idestroy_fork(&ip->i_df);
- 		break;
- 	}
- 
--	if (ip->i_afp)
--		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
--	if (ip->i_cowfp)
--		xfs_idestroy_fork(ip, XFS_COW_FORK);
--
-+	if (ip->i_afp) {
-+		xfs_idestroy_fork(ip->i_afp);
-+		kmem_cache_free(xfs_ifork_zone, ip->i_afp);
-+	}
-+	if (ip->i_cowfp) {
-+		xfs_idestroy_fork(ip->i_cowfp);
-+		kmem_cache_free(xfs_ifork_zone, ip->i_cowfp);
-+	}
- 	if (ip->i_itemp) {
- 		ASSERT(!test_bit(XFS_LI_IN_AIL,
- 				 &ip->i_itemp->ili_item.li_flags));
--- 
-2.26.2
+Brian
+
+>  		if (enospc)
+>  			goto write_retry;
+> -		iolock = 0;
+> -	} else if (ret == -ENOSPC && !enospc) {
+> -		struct xfs_eofblocks eofb = {0};
+> -
+> -		enospc = 1;
+> -		xfs_flush_inodes(ip->i_mount);
+> -
+> -		xfs_iunlock(ip, iolock);
+> -		eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
+> -		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
+> -		xfs_icache_free_cowblocks(ip->i_mount, &eofb);
+> -		goto write_retry;
+>  	}
+>  
+>  	current->backing_dev_info = NULL;
+> 
 
