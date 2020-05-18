@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD04AC433E1
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 19:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A387C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 20:00:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B3C62083E
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 19:59:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15323207F9
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 20:00:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Zyu6IbFT"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="egp3LHbq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728628AbgERT7r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 15:59:47 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:39801 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728592AbgERT7q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 15:59:46 -0400
+        id S1726378AbgERUAS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 16:00:18 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:37981 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727938AbgERUAS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 16:00:18 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589831984;
+        s=mimecast20190719; t=1589832015;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=O22ZnOhuK7BEfDMk0dHYXju3qO0/jFq1UCkPd5OWRsw=;
-        b=Zyu6IbFT/zVW7agNSCpA4YdjNMYnIpr5RSPV40o3eiqA80alvRgk8l9SyJFrwBQ1YVIsXr
-        W/aC9sWdU3vAa6UWOyv3s/oq/ybnH9gevxMU+dz8YqLOjql1d348uB/3Qt6bZ09gOvDcbI
-        0Xyh3/JnUp4lo0ffcAN6XAv0wluw9Wg=
+        bh=BtU+U/LfupdBhFjEMxUATfaI3CkvipSgCx5PjBpML/s=;
+        b=egp3LHbqX2upnFYtbz66TwRiY54TYQOPYrNTLGUC73DDJJ9DH29Btc6E1z5NkRjUIEQHbn
+        FcTps3+wVF/JbaEWPwXzAUbMMhLGoNXBdIzSmX+3UytTwTrL/Hl7iz3IgN39iGLeZbquOl
+        TzGuKRMHBLJCQZ8lofndwKRRzznLdE0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-149-z3wKlkNQNnCrm6uEdGqqfg-1; Mon, 18 May 2020 15:59:41 -0400
-X-MC-Unique: z3wKlkNQNnCrm6uEdGqqfg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-151-6Y_N6Z3UM9Oa8dXIh0J45g-1; Mon, 18 May 2020 16:00:13 -0400
+X-MC-Unique: 6Y_N6Z3UM9Oa8dXIh0J45g-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7B4FB8018A5;
-        Mon, 18 May 2020 19:59:40 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1E5121005510;
+        Mon, 18 May 2020 20:00:12 +0000 (UTC)
 Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3527782A18;
-        Mon, 18 May 2020 19:59:40 +0000 (UTC)
-Subject: [PATCH 1/4] xfs: make sure our default quota warning limits and grace
- periods survive quotacheck
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A9E657526B;
+        Mon, 18 May 2020 20:00:11 +0000 (UTC)
+Subject: [PATCH 2/4] generic: test per-type quota softlimit enforcement
+ timeout
 From:   Eric Sandeen <sandeen@redhat.com>
 To:     linux-xfs <linux-xfs@vger.kernel.org>,
         fstests <fstests@vger.kernel.org>
@@ -92,8 +92,8 @@ Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
  XQLj5HUlzt3JSwqSwx+++FFfWFMheG2HzkfXrvTpud5NrJkGGVn+ErXy6pNf6zSicb+bUXe9
  i92UTina2zWaaLEwXspqM338TlFC2JICu8pNt+wHpPCjgy2Ei4u5/4zSYjiA+X1I+V99YJhU
  +FpT2jzfLUoVsP/6WHWmM/tsS79i50G/PsXYzKOHj/0ZQCKOsJM14NMMCC8gkONe4tek
-Message-ID: <4b264d49-c5d4-4e0f-3710-38a3e0c321a1@redhat.com>
-Date:   Mon, 18 May 2020 14:59:39 -0500
+Message-ID: <7102e1e3-bee6-7aa2-dce6-c0e7e0ce2983@redhat.com>
+Date:   Mon, 18 May 2020 15:00:11 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
@@ -101,54 +101,71 @@ In-Reply-To: <9c9a63f3-13ab-d5b6-923c-4ea684b6b2f8@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Zorro Lang <zlang@redhat.com>
 
-Make sure that the default quota grace period and maximum warning limits
-set by the administrator survive quotacheck.
+Set different block & inode grace timers for user, group and project
+quotas, then test softlimit enforcement timeout, make sure different
+grace timers as expected.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- tests/xfs/900     | 69 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/900.out | 13 +++++++++
- tests/xfs/group   |  1 +
- 3 files changed, 83 insertions(+)
- create mode 100755 tests/xfs/900
- create mode 100644 tests/xfs/900.out
+ common/quota          |   4 +
+ tests/generic/902     | 187 ++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/902.out |  41 +++++++++
+ tests/generic/group   |   1 +
+ 4 files changed, 233 insertions(+)
+ create mode 100755 tests/generic/902
+ create mode 100644 tests/generic/902.out
 
-diff --git a/tests/xfs/900 b/tests/xfs/900
+diff --git a/common/quota b/common/quota
+index 240e0bbc..1437d5f7 100644
+--- a/common/quota
++++ b/common/quota
+@@ -217,6 +217,10 @@ _qmount()
+     if [ "$FSTYP" != "xfs" ]; then
+         quotacheck -ug $SCRATCH_MNT >>$seqres.full 2>&1
+         quotaon -ug $SCRATCH_MNT >>$seqres.full 2>&1
++        # try to turn on project quota if it's supported
++        if quotaon --help 2>&1 | grep -q '\-\-project'; then
++            quotaon --project $SCRATCH_MNT >>$seqres.full 2>&1
++        fi
+     fi
+     chmod ugo+rwx $SCRATCH_MNT
+ }
+diff --git a/tests/generic/902 b/tests/generic/902
 new file mode 100755
-index 00000000..106a7367
+index 00000000..03b4dcb3
 --- /dev/null
-+++ b/tests/xfs/900
-@@ -0,0 +1,69 @@
++++ b/tests/generic/902
+@@ -0,0 +1,187 @@
 +#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
 +#
-+# FS QA Test No. 900
++# FS QA Test No. 902
 +#
-+# Make sure that the quota default grace period and maximum warning limits
-+# survive quotacheck.
-+
++# Test per-type(user, group and project) filesystem quota timers, make sure
++# enforcement
++#
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
 +echo "QA output created by $seq"
 +
 +here=`pwd`
 +tmp=/tmp/$$
-+status=1    # failure is the default!
++status=1	# failure is the default!
 +trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +_cleanup()
 +{
++	restore_project
 +	cd /
 +	rm -f $tmp.*
 +}
@@ -158,74 +175,219 @@ index 00000000..106a7367
 +. ./common/filter
 +. ./common/quota
 +
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_quota
-+
++# remove previous $seqres.full before test
 +rm -f $seqres.full
 +
-+# Format filesystem and set up quota limits
-+_scratch_mkfs > $seqres.full
-+_qmount_option "usrquota"
-+_scratch_mount >> $seqres.full
++require_project()
++{
++	rm -f $tmp.projects $tmp.projid
++	if [ -f /etc/projects ];then
++		cat /etc/projects > $tmp.projects
++	fi
++	if [ -f /etc/projid ];then
++		cat /etc/projid > $tmp.projid
++	fi
 +
-+$XFS_QUOTA_PROG -x -c 'timer -u 300m' $SCRATCH_MNT
-+$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-+_scratch_unmount
++	cat >/etc/projects <<EOF
++100:$SCRATCH_MNT/t
++EOF
++	cat >/etc/projid <<EOF
++$qa_user:100
++EOF
++	PROJECT_CHANGED=1
++}
 +
-+# Remount and check the limits
-+_scratch_mount >> $seqres.full
-+$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-+_scratch_unmount
++restore_project()
++{
++	if [ "$PROJECT_CHANGED" = "1" ];then
++		rm -f /etc/projects /etc/projid
++		if [ -f $tmp.projects ];then
++			cat $tmp.projects > /etc/projects
++		fi
++		if [ -f $tmp.projid ];then
++			cat $tmp.projid > /etc/projid
++		fi
++	fi
++}
 +
-+# Run repair to force quota check
-+_scratch_xfs_repair >> $seqres.full 2>&1
++init_files()
++{
++	local dir=$1
 +
-+# Remount (this time to run quotacheck) and check the limits.  There's a bug
-+# in quotacheck where we would reset the ondisk default grace period to zero
-+# while the incore copy stays at whatever was read in prior to quotacheck.
-+# This will show up after the /next/ remount.
-+_scratch_mount >> $seqres.full
-+$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-+_scratch_unmount
++	echo "### Initialize files, and their mode and ownership"
++	touch $dir/file{1,2} 2>/dev/null
++	chown $qa_user $dir/file{1,2} 2>/dev/null
++	chgrp $qa_user $dir/file{1,2} 2>/dev/null
++	chmod 777 $dir 2>/dev/null
++}
 +
-+# Remount and check the limits
-+_scratch_mount >> $seqres.full
-+$XFS_QUOTA_PROG -x -c 'state' $SCRATCH_MNT | grep 'grace time'
-+_scratch_unmount
++cleanup_files()
++{
++	echo "### Remove all files"
++	rm -f ${1}/file{1,2,3,4,5,6}
++}
++
++test_grace()
++{
++	local type=$1
++	local dir=$2
++	local bgrace=$3
++	local igrace=$4
++
++	init_files $dir
++	echo "--- Test block quota ---"
++	# Firstly fit below block soft limit
++	echo "Write 225 blocks..."
++	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' \
++		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
++		_filter_xfs_io_error | tee -a $seqres.full
++	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
++	# Secondly overcome block soft limit
++	echo "Rewrite 250 blocks plus 1 byte, over the block softlimit..."
++	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' \
++		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
++		_filter_xfs_io_error | tee -a $seqres.full
++	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
++	# Reset grace time here, make below grace time test more accurate
++	setquota -$type $qa_user -T $bgrace $igrace $SCRATCH_MNT 2>/dev/null
++	# Now sleep enough grace time and check that softlimit got enforced
++	sleep $((bgrace + 1))
++	echo "Try to write 1 one more block after grace..."
++	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
++		$dir/file2" 2>&1 >>$seqres.full | _filter_xfs_io_error | \
++		tee -a $seqres.full
++	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
++	echo "--- Test inode quota ---"
++	# And now the softlimit test for inodes
++	# First reset space limits so that we don't have problems with
++	# space reservations on XFS
++	setquota -$type $qa_user 0 0 3 100 $SCRATCH_MNT
++	echo "Create 2 more files, over the inode softlimit..."
++	su $qa_user -c "touch $dir/file3 $dir/file4" 2>&1 >>$seqres.full | \
++		_filter_scratch | tee -a $seqres.full
++	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
++	# Reset grace time here, make below grace time test more accurate
++	setquota -$type $qa_user -T $bgrace $igrace $SCRATCH_MNT 2>/dev/null
++	# Wait and check grace time enforcement
++	sleep $((igrace+1))
++	echo "Try to create one more inode after grace..."
++	su $qa_user -c "touch $dir/file5" 2>&1 >>$seqres.full |
++		_filter_scratch | tee -a $seqres.full
++	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
++	cleanup_files $dir
++}
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_setquota_project
++_require_quota
++_require_user
++_require_group
++
++_scratch_mkfs >$seqres.full 2>&1
++_scratch_enable_pquota
++_qmount_option "usrquota,grpquota,prjquota"
++_qmount
++_require_prjquota $SCRATCH_DEV
++BLOCK_SIZE=$(_get_file_block_size $SCRATCH_MNT)
++rm -rf $SCRATCH_MNT/t
++mkdir $SCRATCH_MNT/t
++$XFS_IO_PROG -r -c "chproj 100" -c "chattr +P" $SCRATCH_MNT/t
++require_project
++
++echo "### Set up different grace timers to each type of quota"
++UBGRACE=12
++UIGRACE=10
++GBGRACE=4
++GIGRACE=2
++PBGRACE=8
++PIGRACE=6
++
++setquota -u $qa_user $((250 * $BLOCK_SIZE / 1024)) \
++	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
++setquota -u -t $UBGRACE $UIGRACE $SCRATCH_MNT
++echo; echo "### Test user quota softlimit and grace time"
++test_grace u $SCRATCH_MNT $UBGRACE $UIGRACE
++# Reset the user quota space & inode limits, avoid it affect later test
++setquota -u $qa_user 0 0 0 0 $SCRATCH_MNT
++
++setquota -g $qa_user $((250 * $BLOCK_SIZE / 1024)) \
++	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
++setquota -g -t $GBGRACE $GIGRACE $SCRATCH_MNT
++echo; echo "### Test group quota softlimit and grace time"
++test_grace g $SCRATCH_MNT $GBGRACE $GIGRACE
++# Reset the group quota space & inode limits, avoid it affect later test
++setquota -g $qa_user 0 0 0 0 $SCRATCH_MNT
++
++setquota -P $qa_user $((250 * $BLOCK_SIZE / 1024)) \
++	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
++setquota -P -t $PBGRACE $PIGRACE $SCRATCH_MNT
++echo; echo "### Test project quota softlimit and grace time"
++test_grace P $SCRATCH_MNT/t $PBGRACE $PIGRACE
++# Reset the project quota space & inode limits
++setquota -P $qa_user 0 0 0 0 $SCRATCH_MNT
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/900.out b/tests/xfs/900.out
+diff --git a/tests/generic/902.out b/tests/generic/902.out
 new file mode 100644
-index 00000000..90d0482c
+index 00000000..6e15eaeb
 --- /dev/null
-+++ b/tests/xfs/900.out
-@@ -0,0 +1,13 @@
-+QA output created by 900
-+Blocks grace time: [0 days 05:00:00]
-+Inodes grace time: [0 days 05:00:00]
-+Realtime Blocks grace time: [0 days 05:00:00]
-+Blocks grace time: [0 days 05:00:00]
-+Inodes grace time: [0 days 05:00:00]
-+Realtime Blocks grace time: [0 days 05:00:00]
-+Blocks grace time: [0 days 05:00:00]
-+Inodes grace time: [0 days 05:00:00]
-+Realtime Blocks grace time: [0 days 05:00:00]
-+Blocks grace time: [0 days 05:00:00]
-+Inodes grace time: [0 days 05:00:00]
-+Realtime Blocks grace time: [0 days 05:00:00]
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 12eb55c9..0818c5c6 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -513,3 +513,4 @@
- 513 auto mount
- 514 auto quick db
- 515 auto quick quota
-+900 auto quick quota
++++ b/tests/generic/902.out
+@@ -0,0 +1,41 @@
++QA output created by 902
++### Set up different grace timers to each type of quota
++
++### Test user quota softlimit and grace time
++### Initialize files, and their mode and ownership
++--- Test block quota ---
++Write 225 blocks...
++Rewrite 250 blocks plus 1 byte, over the block softlimit...
++Try to write 1 one more block after grace...
++pwrite: Disk quota exceeded
++--- Test inode quota ---
++Create 2 more files, over the inode softlimit...
++Try to create one more inode after grace...
++touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
++### Remove all files
++
++### Test group quota softlimit and grace time
++### Initialize files, and their mode and ownership
++--- Test block quota ---
++Write 225 blocks...
++Rewrite 250 blocks plus 1 byte, over the block softlimit...
++Try to write 1 one more block after grace...
++pwrite: Disk quota exceeded
++--- Test inode quota ---
++Create 2 more files, over the inode softlimit...
++Try to create one more inode after grace...
++touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
++### Remove all files
++
++### Test project quota softlimit and grace time
++### Initialize files, and their mode and ownership
++--- Test block quota ---
++Write 225 blocks...
++Rewrite 250 blocks plus 1 byte, over the block softlimit...
++Try to write 1 one more block after grace...
++pwrite: Disk quota exceeded
++--- Test inode quota ---
++Create 2 more files, over the inode softlimit...
++Try to create one more inode after grace...
++touch: cannot touch 'SCRATCH_MNT/t/file5': Disk quota exceeded
++### Remove all files
+diff --git a/tests/generic/group b/tests/generic/group
+index 50c340a6..66e71a70 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -601,3 +601,4 @@
+ 596 auto quick
+ 900 auto quick perms
+ 901 auto quick perms
++902 auto quick quota
 -- 
 2.17.0
 
