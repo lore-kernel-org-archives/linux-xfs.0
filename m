@@ -2,49 +2,71 @@ Return-Path: <SRS0=xgbg=7A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4D6BC433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 06:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E5E5C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 07:32:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8320B20671
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 06:49:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43C3120825
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 07:32:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kheYAPnw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726357AbgERGtB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 02:49:01 -0400
-Received: from verein.lst.de ([213.95.11.211]:37065 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726180AbgERGtB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 May 2020 02:49:01 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 5281768AFE; Mon, 18 May 2020 08:48:59 +0200 (CEST)
-Date:   Mon, 18 May 2020 08:48:59 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: dinode reading cleanups v2
-Message-ID: <20200518064859.GA19510@lst.de>
-References: <20200508063423.482370-1-hch@lst.de>
+        id S1726876AbgERHcu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 03:32:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48938 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726729AbgERHcu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 03:32:50 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28EFBC061A0C
+        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2020 00:32:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=z5Fg4LFd74C2IVdoCFLYhu/gO4dv37T3w3na6I4zgy4=; b=kheYAPnw4CmMny8xGRAhyaeCgc
+        D8rplYabpVVJf37wsA+sPZ2QiiZOCQR3my3XAP9Wsk9ACRnjbMSZToJpq6GJtvabaIBjUkrS+K7Rl
+        bTK4Y0N39Q5UhlkGn7M/dbD/OotN6aF/H9NHzNEZl0F0IFiduXfRH6KC3Amp6sIv+0J6VlFPb/63C
+        f6wl/js+QwB8FtmGQqpKWQ/2MjI1npVrHIsQj3RItcqws5YRE9N+kHRsCZrTSMv53H6WJm46US4KR
+        XSGf+5DVc6re+9ysMwDDQKMJKUzB3KbQIQ7cltx/Xbuxnwib0Ei9HstgSdigNFKzFN/x0IH0dPme2
+        hDApN1xA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jaaGU-0002VO-77; Mon, 18 May 2020 07:32:46 +0000
+Date:   Mon, 18 May 2020 00:32:46 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [ANNOUNCE] xfsprogs for-next updated to 5d0807ad
+Message-ID: <20200518073246.GA7973@infradead.org>
+References: <ec63ae12-41b0-26e7-0a60-72820f7385c6@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200508063423.482370-1-hch@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <ec63ae12-41b0-26e7-0a60-72820f7385c6@sandeen.net>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-As there were some conflicts due to the code moves for the log
-refactoring I've pushed out a new v3 branch here:
+Btw, some time after xfsprogs 5.6, xfstests generic/590 start to fail
+with new xfs_check errors in the form of:
 
-    git://git.infradead.org/users/hch/xfs.git xfs-inode-read-cleanup.3
+rtblock 1048576 beyond end of expected area
+rtblock 1048576 beyond end of expected area
+rtblock 1048580 beyond end of expected area
+rtblock 1048580 beyond end of expected area
+rtblock 1048584 beyond end of expected area
+rtblock 1048584 beyond end of expected area
+rtblock 1048588 beyond end of expected area
+rtblock 1048588 beyond end of expected area
+rtblock 1048592 beyond end of expected area
+rtblock 1048592 beyond end of expected area
+rtblock 1048596 beyond end of expected area
+rtblock 1048596 beyond end of expected area
+rtblock 1048600 beyond end of expected area
 
-Gitweb:
 
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-inode-read-cleanup.3
-
-The only other change is extra indentation for the local fork verifiers.
-I don't think it is worth reposting for that, unless you want me to.
