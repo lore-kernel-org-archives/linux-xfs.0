@@ -2,149 +2,97 @@ Return-Path: <SRS0=xgbg=7A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB49C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 17:04:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFBC3C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 17:36:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09890207D8
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 17:04:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BFAA20674
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 17:36:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BaOUJDcY"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fTBfRiic"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728156AbgERREz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 13:04:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54028 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726958AbgERREz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 13:04:55 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DEA9C061A0C
-        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2020 10:04:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
-        Reply-To:Cc:Content-Type:Content-ID:Content-Description;
-        bh=5EMy9+oYbYg12SE1lZRiHId/u/E9CKToIIVzmaovMlc=; b=BaOUJDcYvLMKa/MKeoBM8P2z6v
-        sHKfdDrQD3IggKUdEm1mQAmHmT1ZLikQeN/42SwiRtTmRXOadlzxRTzAD7uO1glCtg4gDuIBu3W6c
-        WNBbR5VpUbQL3Bgd7faVWCO70blcvSz2XpHqG5O5CwCu5Hi0flDdWzBvxeW0UZ23SJeXHaUyBlCE3
-        jwNWDXiBxVy14emXcN7GXc/iGEznMSfyxofQLJWNZlHDaMJ422LqpFTV4JzuO1dCiGNb8bjJD09UA
-        JgrUVbyQiHNwsyMXOyMobIkqLaqwxws1N8SnKX5jfOoeJziA5kVrKZRjwHfk/yuinmtNHu6rjSbk3
-        3Q7Bknqw==;
-Received: from [2001:4bb8:188:1506:c70:4a89:bc61:2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jajCA-0001xU-Vd
-        for linux-xfs@vger.kernel.org; Mon, 18 May 2020 17:04:55 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/6] xfs: add a flags argument to xfs_icache_free_eofblocks
-Date:   Mon, 18 May 2020 19:04:37 +0200
-Message-Id: <20200518170437.1218883-7-hch@lst.de>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200518170437.1218883-1-hch@lst.de>
-References: <20200518170437.1218883-1-hch@lst.de>
+        id S1728213AbgERRg3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 13:36:29 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:40664 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727006AbgERRg3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 13:36:29 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04IHXQa2167817;
+        Mon, 18 May 2020 17:36:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=ZhwV6kq0+I4gCl4bZpEqldxfIg48DPCqM+TIozsGcsQ=;
+ b=fTBfRiicyo44eOXbIqqit+lJseKEOvG+GWn0c6KhPwshBg5Gzfm40H1T8DyUxk1TNhKH
+ iln2tx+QflR3pjAUYe3NPbt7UsWg+XqrPGSAayVa7Wmzg0ZL1xIucsmU2/t08bzxvrH8
+ 6b+D8G48ZPuCjrzb3dlhyQiRlA79/wFpk4o5R9dF9iVxkK9LWLfA7qY7iVneYiaDd8z+
+ XHFGaWJHiI3AdI7185esd6ODH1/zw6r22fEt8H2NT8qh3YvSCJVDmMNHdK1WdfGc7i8f
+ 4rIJXIRgJ9eI2fMxxnK/dnAyq7NiWuT/cKcI4LjEdLNNRFhlodHIE1tN4r4D8GfJfXcP Jg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 3128tn83fj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 18 May 2020 17:36:25 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04IHX3Y8141780;
+        Mon, 18 May 2020 17:36:25 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 312sxqvqxj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 18 May 2020 17:36:24 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04IHaOlM024357;
+        Mon, 18 May 2020 17:36:24 GMT
+Received: from localhost (/10.159.132.30)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 18 May 2020 10:36:23 -0700
+Date:   Mon, 18 May 2020 10:36:22 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: dinode reading cleanups v2
+Message-ID: <20200518173622.GE17627@magnolia>
+References: <20200508063423.482370-1-hch@lst.de>
+ <20200518064859.GA19510@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200518064859.GA19510@lst.de>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 malwarescore=0
+ mlxlogscore=734 bulkscore=0 mlxscore=0 suspectscore=2 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005180147
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 cotscore=-2147483648 suspectscore=2 lowpriorityscore=0
+ adultscore=0 phishscore=0 mlxlogscore=781 mlxscore=0 priorityscore=1501
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005180147
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Pass the SYNC_* flags directly instead of hiding the information in the
-eofblocks structure.
+On Mon, May 18, 2020 at 08:48:59AM +0200, Christoph Hellwig wrote:
+> As there were some conflicts due to the code moves for the log
+> refactoring I've pushed out a new v3 branch here:
+> 
+>     git://git.infradead.org/users/hch/xfs.git xfs-inode-read-cleanup.3
+> 
+> Gitweb:
+> 
+>     http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-inode-read-cleanup.3
+> 
+> The only other change is extra indentation for the local fork verifiers.
+> I don't think it is worth reposting for that, unless you want me to.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c   |  3 +--
- fs/xfs/xfs_icache.c | 11 ++++-------
- fs/xfs/xfs_icache.h |  3 ++-
- fs/xfs/xfs_ioctl.c  |  4 +++-
- 4 files changed, 10 insertions(+), 11 deletions(-)
+I already pulled in the v2 series (with the indentation changes); are
+there any additional changes in v3?  I didn't see any changes diffing
+your branch to mine, so I think everything is fine.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 6fc1a4a2f1966..62fbc0105e45d 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -661,8 +661,7 @@ xfs_file_buffered_aio_write(
- 		xfs_flush_inodes(ip->i_mount);
- 
- 		xfs_iunlock(ip, iolock);
--		eofb.eof_flags = XFS_EOF_FLAGS_SYNC;
--		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-+		xfs_icache_free_eofblocks(ip->i_mount, &eofb, SYNC_WAIT);
- 		xfs_icache_free_cowblocks(ip->i_mount, &eofb, SYNC_WAIT);
- 		goto write_retry;
- 	}
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 43273b809fa34..11bef3e349a68 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -912,7 +912,7 @@ xfs_eofblocks_worker(
- 
- 	if (!sb_start_write_trylock(mp->m_super))
- 		return;
--	xfs_icache_free_eofblocks(mp, NULL);
-+	xfs_icache_free_eofblocks(mp, NULL, SYNC_TRYLOCK);
- 	sb_end_write(mp->m_super);
- 
- 	xfs_queue_eofblocks(mp);
-@@ -1507,12 +1507,9 @@ xfs_inode_free_eofblocks(
- int
- xfs_icache_free_eofblocks(
- 	struct xfs_mount	*mp,
--	struct xfs_eofblocks	*eofb)
-+	struct xfs_eofblocks	*eofb,
-+	int			flags)
- {
--	int flags = SYNC_TRYLOCK;
--
--	if (eofb && (eofb->eof_flags & XFS_EOF_FLAGS_SYNC))
--		flags = SYNC_WAIT;
- 	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
- 					 eofb, XFS_ICI_EOFBLOCKS_TAG);
- }
-@@ -1556,7 +1553,7 @@ xfs_inode_free_quota_blocks(
- 	}
- 
- 	if (scan) {
--		xfs_icache_free_eofblocks(ip->i_mount, &eofb);
-+		xfs_icache_free_eofblocks(ip->i_mount, &eofb, SYNC_WAIT);
- 		xfs_icache_free_cowblocks(ip->i_mount, &eofb, SYNC_WAIT);
- 	}
- 
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index a850142769226..a82ff6457993b 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -59,7 +59,8 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- 
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
--int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
-+int xfs_icache_free_eofblocks(struct xfs_mount *mp, struct xfs_eofblocks *eofb,
-+		int flags);
- int xfs_inode_free_quota_blocks(struct xfs_inode *ip);
- void xfs_eofblocks_worker(struct work_struct *);
- void xfs_queue_eofblocks(struct xfs_mount *);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 4ee0d13232f3f..4aed4df98722f 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -2330,7 +2330,9 @@ xfs_file_ioctl(
- 			return error;
- 
- 		sb_start_write(mp->m_super);
--		error = xfs_icache_free_eofblocks(mp, &keofb);
-+		error = xfs_icache_free_eofblocks(mp, &keofb,
-+			(keofb.eof_flags & XFS_EOF_FLAGS_SYNC) ?
-+			 SYNC_WAIT : SYNC_TRYLOCK);
- 		sb_end_write(mp->m_super);
- 		return error;
- 	}
--- 
-2.26.2
-
+--D
