@@ -2,54 +2,53 @@ Return-Path: <SRS0=xgbg=7A=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 946A9C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 20:01:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4AD5C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 20:04:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63959206D4
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 20:01:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E5AD2081A
+	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 20:04:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dmtYFoWH"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WgUwo3jN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726386AbgERUBO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 16:01:14 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:57633 "EHLO
+        id S1726676AbgERUEz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 16:04:55 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:35182 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726369AbgERUBN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 16:01:13 -0400
+        by vger.kernel.org with ESMTP id S1726293AbgERUEy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 16:04:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589832072;
+        s=mimecast20190719; t=1589832292;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=ZLOA4z01ceJ5aOvYxHarIfpLYoT+JyFiuBv9Mze9XkM=;
-        b=dmtYFoWHoHE+0cc5qDjROlE0gz385EbcoBUjbCovY6/0sx86k+ikouyeZjbjjBwSepICsR
-        HQn+T6LnBQNofg/AeojSAHNXh4wYZdt4t0NgZFyebyvqlUoXbwOEcI8SkqOkWosqt2PEEh
-        VmeKDaSdiRsuoaj/xKFAG8gs8LyelME=
+        bh=ROL/gspeiFhGCSkdB4Nn97v1V8Atu7B7ZbgOiCigiH8=;
+        b=WgUwo3jNwWARVl/0kZSvXG3DBsRyO71QLGG82LlVpJLWltj2g/5KJbZDYU6dnMlSZ/dAQk
+        FFVOAxezoOjnzSZ6e3hHbTEo8R0fz0pflbcL8GDgKmEF3Em5iZ9ph+rSWhuopt4S+HV65L
+        MBuU+Z1wSJ8wDfMPyLjkH7mrc51hGIg=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-341-qmCndoW8Pn-Y_CgF44KFOQ-1; Mon, 18 May 2020 16:01:10 -0400
-X-MC-Unique: qmCndoW8Pn-Y_CgF44KFOQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+ us-mta-170-2TB0MaaBM3KyR0JXLtBf_w-1; Mon, 18 May 2020 16:04:50 -0400
+X-MC-Unique: 2TB0MaaBM3KyR0JXLtBf_w-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 82B09835B43;
-        Mon, 18 May 2020 20:01:09 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D267EBFC2
+        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2020 20:04:49 +0000 (UTC)
 Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1892819634;
-        Mon, 18 May 2020 20:01:09 +0000 (UTC)
-Subject: [PATCH 4/4] fstests: individual user grace period extension via
- xfs_quota
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A72526ED80
+        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2020 20:04:49 +0000 (UTC)
+Subject: Re: [PATCH 1/1] xfs_quota: allow individual timer extension
 From:   Eric Sandeen <sandeen@redhat.com>
-To:     linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
+To:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
- <9c9a63f3-13ab-d5b6-923c-4ea684b6b2f8@redhat.com>
+ <b75aef11-0e7a-7b2d-f6f0-d36af80d5e27@redhat.com>
+ <fb0b46ab-98a1-4427-fa5e-4a770c9d0805@redhat.com>
 Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -92,134 +91,78 @@ Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
  XQLj5HUlzt3JSwqSwx+++FFfWFMheG2HzkfXrvTpud5NrJkGGVn+ErXy6pNf6zSicb+bUXe9
  i92UTina2zWaaLEwXspqM338TlFC2JICu8pNt+wHpPCjgy2Ei4u5/4zSYjiA+X1I+V99YJhU
  +FpT2jzfLUoVsP/6WHWmM/tsS79i50G/PsXYzKOHj/0ZQCKOsJM14NMMCC8gkONe4tek
-Message-ID: <b4810aff-10c4-744a-2b36-053a1606e70f@redhat.com>
-Date:   Mon, 18 May 2020 15:01:08 -0500
+Message-ID: <cf2bd6ae-a42b-80a0-b340-d4b570341aa9@redhat.com>
+Date:   Mon, 18 May 2020 15:04:49 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <9c9a63f3-13ab-d5b6-923c-4ea684b6b2f8@redhat.com>
+In-Reply-To: <fb0b46ab-98a1-4427-fa5e-4a770c9d0805@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Test that we can extend an individual user's grace time once they
-reach their soft limit.
+On 5/18/20 2:24 PM, Eric Sandeen wrote:
+> The only grace period which can be set via xfs_quota today is for id 0,
+> i.e. the default grace period for all users.  However, setting an
+> individual grace period is useful; for example:
+> 
+>  Alice has a soft quota of 100 inodes, and a hard quota of 200 inodes
+>  Alice uses 150 inodes, and enters a short grace period
+>  Alice really needs to use those 150 inodes past the grace period
+>  The administrator extends Alice's grace period until next Monday
+> 
+> vfs quota users such as ext4 can do this today, with setquota -T
+> 
+> xfs_quota can now accept an optional user id or name (symmetric with
+> how warn limits are specified), in which case that user's grace period
+> is extended to expire the given amount of time from now(). 
+> 
+> To maintain compatibility with old command lines, if none of 
+> [-d|id|name] are specified, default limits are set as before.
+> 
+> (kernelspace requires updates to enable all this as well.)
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
- tests/generic/904     | 78 +++++++++++++++++++++++++++++++++++++++++++
- tests/generic/904.out |  1 +
- tests/generic/group   |  1 +
- 3 files changed, 80 insertions(+)
- create mode 100755 tests/generic/904
- create mode 100644 tests/generic/904.out
 
-diff --git a/tests/generic/904 b/tests/generic/904
-new file mode 100755
-index 00000000..8a3b52f2
---- /dev/null
-+++ b/tests/generic/904
-@@ -0,0 +1,78 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 902
-+#
-+# Test individual user ID quota grace period extension
-+# This is the xfs_quota version of the test
-+#
-+# This test only exercises user quota because it's not known whether the
-+# filesystem can set individual grace timers for each quota type
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/quota
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_require_quota
-+_require_user
-+# for xfs_quota on generic fs
-+_require_xfs_quota_foreign
-+# for repquota (if setquota supports it, repquota does too)
-+_require_setquota_project
-+
-+_scratch_mkfs >$seqres.full 2>&1
-+_qmount_option "usrquota"
-+_qmount
-+
-+# Test individual timer update functionality; if "-d" is accepted
-+# this is xfs_quota that can do default /or/ individual timers
-+$XFS_QUOTA_PROG -x -c "timer 0 -d" $SCRATCH_MNT 2>&1 \
-+	| grep -q ^timer \
-+	&& _notrun "xfs_quota does not support individual grace extension"
-+
-+# Set a default user inode grace period of 1 second
-+$XFS_QUOTA_PROG -x -c "timer -u -i -d 1" $SCRATCH_MNT
-+# Soft inode limit 1, hard limit 5
-+$XFS_QUOTA_PROG -x -c "limit -u isoft=1 ihard=5 $qa_user" $SCRATCH_MNT
-+# Run qa user over soft limit and go over grace period
-+su $qa_user -c "touch $SCRATCH_MNT/file1 $SCRATCH_MNT/file2"
-+sleep 3
-+# Extend grace to now + 100s
-+now=`date +%s`
-+let set=now+100
-+$XFS_QUOTA_PROG -x -c "timer -u -i 100 $qa_user" $SCRATCH_MNT
-+# XXX We use repquota because xfs_quota doesn't know how to return
-+# raw ("since epoch") grace expiry
-+get=`repquota -up $SCRATCH_MNT | grep  "^$qa_user" | awk '{print $NF}'`
-+
-+if [ "$get" != "$set" ]; then
-+	echo "set grace to $set but got grace $get"
-+fi
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/904.out b/tests/generic/904.out
-new file mode 100644
-index 00000000..c07a2a3c
---- /dev/null
-+++ b/tests/generic/904.out
-@@ -0,0 +1 @@
-+QA output created by 904
-diff --git a/tests/generic/group b/tests/generic/group
-index ab1b4b8f..d19271aa 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -603,3 +603,4 @@
- 901 auto quick perms
- 902 auto quick quota
- 903 auto quick quota
-+904 auto quick quota
--- 
-2.17.0
+> +	/*
+> +	 * If id is specified we are extending grace time by value
+> +	 * Otherwise we are setting the default grace time
+> +	 */
+> +	if (id) {
+> +		time_t	now;
+> +
+> +		if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
+> +			exitcode = 1;
+> +			fprintf(stderr, _("%s: cannot get quota: %s\n"),
+> +					progname, strerror(errno));
+> +				return;
+> +		}
+> +
+> +		time(&now);
+> +
+> +		if (d.d_blk_hardlimit && d.d_bcount > d.d_blk_hardlimit)
+> +			d.d_btimer = now + value;
+> +		if (d.d_ino_softlimit && d.d_icount > d.d_ino_softlimit)
+> +			d.d_itimer = now + value;
+> +		if (d.d_rtb_softlimit && d.d_rtbcount > d.d_rtb_softlimit)
+> +			d.d_rtbtimer = now + value;
 
+realized this might need some clarity (probably a comment).  The idea is that
+we don't extend (i.e set) grace period unless the user is already into their
+grace period. setquota -T does the same thing:
+
+                if (q->dq_dqb.dqb_bsoftlimit && toqb(q->dq_dqb.dqb_curspace) > q->dq_dqb.dqb_bsoftlimit)
+                        q->dq_dqb.dqb_btime = toset.dqb_btime;
+                else
+                        errstr(_("Not setting block grace time on %s because softlimit is not exceeded.\n"), q->dq_h->qh_quotadev);
+
+Ugh, but also just realized I have a hardlimit/softlimit typo in there, will resend.
+
+-Eric
 
