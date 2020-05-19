@@ -2,126 +2,134 @@ Return-Path: <SRS0=UH25=7B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36BD5C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 18:17:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FC7BC433E2
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 21:15:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D77420826
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 18:17:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M0B7KgpZ"
+	by mail.kernel.org (Postfix) with ESMTP id 86A75207D4
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 21:15:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727922AbgESSRS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 14:17:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35908 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726059AbgESSRR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 14:17:17 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FF4BC08C5C0;
-        Tue, 19 May 2020 11:17:17 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id l18so460024wrn.6;
-        Tue, 19 May 2020 11:17:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:mail-followup-to
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=9i8fE9UcQoMjC7gZk0f5UIj2Ufp+6XHlfmp4ao/4O3I=;
-        b=M0B7KgpZsBQt4E5X8OxXyD2yTNZWolR2/f+H8u41fyIpqXTQ/IBkg+PIk5pQaf9vVM
-         B7FvAhfWR1Ys+m0PgvW4bYZdhRkSN72vW+NPWuFXNjOut7tyAU1zAhCgo0t/tzzyScxo
-         7v428tVbz9c1onq0wHUsVOODP7mwAeG57d5EcWSgVjstv5AnNaRYDSg+IpUshqa4jCi0
-         ZY2uUsdYSopy9gG2dy9+JsJkNabpMVOrmLEYO8GpjMhHzvTmmQ5E1cffTvmnVK3bJfol
-         dRf+5Rb+dfJpS7ZkbpmYXVwTnfBgs42KLrH5bAIpl7PIt9yglAJbH2e4ykXBWz8d9oL3
-         neqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=9i8fE9UcQoMjC7gZk0f5UIj2Ufp+6XHlfmp4ao/4O3I=;
-        b=mFW6msmY4FYrToxgnLx8a5szJiSSh2psvYSGOO4BXmOi/k1Zwl6+TeSuLPTuD518Ac
-         oXJrC8+woD3ilShbWN84gpxt6NgHiSeybgCpqe283sm7vQEGxIURAoJfMCtgTfynBhfK
-         7yTnZknBpBQ0kjIssBmAPu7JSM6xfcpb7jShdB+Zi6XOUj6VpId67gXGZhI8145WQeMM
-         WRAhEj8RlURPIOW7lsC6btbGq33bfs+os/CS4IOd6qrfGl3CUi3B+/Dbc8ll5XJnSpjR
-         XgzDEit32QEeeGfk6E1cl6LJQ7tS77KhIqrUJA48QzJCKSLC0esg3MFy8OuO8fPJ6o33
-         Jzyg==
-X-Gm-Message-State: AOAM530W7GTnNqbAEIJm/vMGRn3QWhybP5ifeYRAq80Xx6PFkHbBMHh6
-        KxSGui0euEg7A0Rsa/IWnS4=
-X-Google-Smtp-Source: ABdhPJyxXQek9kmfiklyRswq34puGT0/qkq70Y1A0X+1ql8Y7CIbt8KUIclIUmKsIVrJHd1bSQywiA==
-X-Received: by 2002:adf:b301:: with SMTP id j1mr148805wrd.221.1589912236198;
-        Tue, 19 May 2020 11:17:16 -0700 (PDT)
-Received: from dumbo ([185.220.101.209])
-        by smtp.gmail.com with ESMTPSA id d4sm250548wre.22.2020.05.19.11.17.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 May 2020 11:17:15 -0700 (PDT)
-Received: from cavok by dumbo with local (Exim 4.92)
-        (envelope-from <cavok@dumbo>)
-        id 1jb6ni-0004ND-0s; Tue, 19 May 2020 20:17:14 +0200
-Date:   Tue, 19 May 2020 20:17:13 +0200
-From:   Domenico Andreoli <domenico.andreoli@linux.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Pavel Machek <pavel@ucw.cz>, Christoph Hellwig <hch@lst.de>,
-        Al Viro <viro@zeniv.linux.org.uk>, Ted Ts'o <tytso@mit.edu>,
-        Len Brown <len.brown@intel.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/1] hibernate: restrict writes to the snapshot device
-Message-ID: <20200519181713.GB1963@dumbo>
-Mail-Followup-To: "Rafael J. Wysocki" <rafael@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Pavel Machek <pavel@ucw.cz>, Christoph Hellwig <hch@lst.de>,
-        Al Viro <viro@zeniv.linux.org.uk>, Ted Ts'o <tytso@mit.edu>,
-        Len Brown <len.brown@intel.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <20200507080456.069724962@linux.com>
- <20200507080650.439636033@linux.com>
- <CAJZ5v0jnfeAQ4JDz+BTZp8P98h6emTizGWLYNL_QtbQ=3Nw03Q@mail.gmail.com>
+        id S1726824AbgESVP6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 17:15:58 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:50346 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726064AbgESVP6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 17:15:58 -0400
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id EA1A6D589D9;
+        Wed, 20 May 2020 07:15:52 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jb9aX-0008RP-RG; Wed, 20 May 2020 07:15:49 +1000
+Date:   Wed, 20 May 2020 07:15:49 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     kaixuxia <xiakaixu1987@gmail.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>,
+        Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH] mkfs: simplify the configured sector sizes setting in
+ validate_sectorsize
+Message-ID: <20200519211549.GQ2040@dread.disaster.area>
+References: <1589870320-29475-1-git-send-email-kaixuxia@tencent.com>
+ <BYAPR04MB49656AE414B13D704CCC6A6B86B90@BYAPR04MB4965.namprd04.prod.outlook.com>
+ <1b6748ad-249a-dbf0-efbd-c13edd344aaa@sandeen.net>
+ <64a8d225-1d55-e6f1-eed3-b9a04eb426d6@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJZ5v0jnfeAQ4JDz+BTZp8P98h6emTizGWLYNL_QtbQ=3Nw03Q@mail.gmail.com>
+In-Reply-To: <64a8d225-1d55-e6f1-eed3-b9a04eb426d6@gmail.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=pGLkceISAAAA:8 a=GvQkQWPkAAAA:8
+        a=7-415B0cAAAA:8 a=4v0zo-UC3V2FdUUC1c8A:9 a=CjuIK1q_8ugA:10
+        a=IZKFYfNWVLfQsFoIDbx0:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 19, 2020 at 05:59:15PM +0200, Rafael J. Wysocki wrote:
-> It would be better to paste the patch instead of attaching it.
-
-Done with v2.
-
-> Anyway, note that the snapshot special device is not the target block
-> device for saving the image, so it would be good to avoid that
-> confusion in the naming.
-
-I realize that it was a bit hazy in my head as well. It should be fixed
-in v2.
-
+On Tue, May 19, 2020 at 10:56:01PM +0800, kaixuxia wrote:
+> On 2020/5/19 21:03, Eric Sandeen wrote:
+> > On 5/19/20 3:38 AM, Chaitanya Kulkarni wrote:
+> >> On 5/18/20 11:39 PM, xiakaixu1987@gmail.com wrote:
+> >>> From: Kaixu Xia <kaixuxia@tencent.com>
+> >>>
+> >>> There are two places that set the configured sector sizes in validate_sectorsize,
+> >>> actually we can simplify them and combine into one if statement.
+> >>> Is it me or patch description seems to be longer than what is in the
+> >> tree ?
+> >>> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+> >>> ---
+> >>>   mkfs/xfs_mkfs.c | 14 ++++----------
+> >>>   1 file changed, 4 insertions(+), 10 deletions(-)
+> >>>
+> >>> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> >>> index 039b1dcc..e1904d57 100644
+> >>> --- a/mkfs/xfs_mkfs.c
+> >>> +++ b/mkfs/xfs_mkfs.c
+> >>> @@ -1696,14 +1696,6 @@ validate_sectorsize(
+> >>>   	int			dry_run,
+> >>>   	int			force_overwrite)
+> >>>   {
+> >>> -	/* set configured sector sizes in preparation for checks */
+> >>> -	if (!cli->sectorsize) {
+> >>> -		cfg->sectorsize = dft->sectorsize;
+> >>> -	} else {
+> >>> -		cfg->sectorsize = cli->sectorsize;
+> >>> -	}
+> >>> -	cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
+> >>> -
+> >>
+> >> If above logic is correct which I've not looked into it, then dft is
+> >> not used in validate_sectorsize(), how about something like this on
+> >> the top of this this patch (totally untested):-
+> > 
+> > Honestly if not set via commandline, and probing fails, we should fall
+> > back to dft->sectorsize so that all the defaults are still set in one place,
+> > i.e. the defaults structure mkfs_default_params.
 > 
-> I.e. I would rename is_hibernate_snapshot_dev() to something like
-> is_hibernate_image_dev() or is_hibernate_resume_dev() (for consistency
-> with the resume= kernel command line parameter name).
+> The original logic in validate_sectorsize() is:
+> 
+>   static void 
+>   validate_sectorsize(
+>     ...
+>     if (!cli->sectorsize) {
+> 	cfg->sectorsize = dft->sectorsize;
+>     } else {
+> 	cfg->sectorsize = cli->sectorsize;
+>     }
+>     ...
+>     if (!cli->sectorsize) {
+> 	if (!ft->lsectorsize)
+> 	   ft->lsectorsize = XFS_MIN_SECTORSIZE;
+> 	...
+> 	cfg->sectorsize = ft->psectorsize;
+> 	...
+>     } 
+>     ...
+>   }
+> 
+> Firstly, if not set via commandline and probing fails, we will use the
+> XFS_MIN_SECTORSIZE (actually equal to dft->sectorsize). 
 
-Done as well.
+Which is incorrect - this code should be using dft->sectorsize, not
+hard coding a default value. Defaults are set in the default value
+structure so they are all configured in one place, not strewn
+randomly through the code and hence are impossible to find and
+review.
 
-> Thanks!
+With the added change to use dft->sectorsize, the rest of the patch
+is fine.
 
-Thank you!
+Cheers,
 
-Dom
-
+Dave.
 -- 
-rsa4096: 3B10 0CA1 8674 ACBA B4FE  FCD2 CE5B CF17 9960 DE13
-ed25519: FFB4 0CC3 7F2E 091D F7DA  356E CC79 2832 ED38 CB05
+Dave Chinner
+david@fromorbit.com
