@@ -2,193 +2,261 @@ Return-Path: <SRS0=UH25=7B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D27FAC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 06:55:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33C55C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 07:03:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B46B7207FB
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 06:55:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E03F2075F
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 07:03:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="A8GsQxfk"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O1lWKTb5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726881AbgESGzv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 02:55:51 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:20846 "EHLO
+        id S1726881AbgESHDW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 03:03:22 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:44768 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726886AbgESGzt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 02:55:49 -0400
+        by vger.kernel.org with ESMTP id S1725864AbgESHDW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 03:03:22 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589871348;
+        s=mimecast20190719; t=1589871799;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=wuIvfYSdtktPzVhi/QY6YA5Y1CHyQsQPcHp0TrcxUlw=;
-        b=A8GsQxfkArqk+JppH/p6GOKFOj+OBlqQzZoHDRbAb4hJQijvwRxx0NLqz0RPtOQNnTMthd
-        JpRsrpeuwXF57Cjx5b0s/88/hWDvMOwFT/79X0HwWrI7/O3bAL/+KFMdpmpLOMTN3fGve6
-        KG0KRr4s4aLL8Ptaz3rFN8czUBFDPEI=
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com
- [209.85.210.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-264-CcKJt4dyMOu898r5TNuPvw-1; Tue, 19 May 2020 02:55:41 -0400
-X-MC-Unique: CcKJt4dyMOu898r5TNuPvw-1
-Received: by mail-pf1-f197.google.com with SMTP id 79so10983880pfv.18
-        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2020 23:55:41 -0700 (PDT)
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=bbxb8pdB26nRdLXtY4YQeRdfS1uzHcIGUnA77PK9Bhg=;
+        b=O1lWKTb52KJyU8KhGM6R/CXmZZW+WUDgP4BIXoMN1lgR+Nj2nNkMUMRCBX1psHpTPtg6iU
+        37JZgcOGXGvDWkC3LMNKlkzdZTEB52nAC+YLeMp9QdRSCxBUFWKpBv9TNiW8hm/DF0DM5X
+        4aQsSmrjhf682OIF58vYhu5Ho19MCVc=
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-486-9QxMFrqlOUmw0XXqy2ibQg-1; Tue, 19 May 2020 03:03:18 -0400
+X-MC-Unique: 9QxMFrqlOUmw0XXqy2ibQg-1
+Received: by mail-pl1-f200.google.com with SMTP id q7so9387362plr.4
+        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 00:03:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=wuIvfYSdtktPzVhi/QY6YA5Y1CHyQsQPcHp0TrcxUlw=;
-        b=Y6N22TmdzSOyoapLRGkbefo7HFUCHLILTrn1ZAyjPeQV9+zx5Eakeg6qSqc8Pqv0PZ
-         XHOxYn4DD2FpggEkCOgkLTZ0sdWN1xduxEMNInvPrR/gVZAIppjaiyB3Br+VEuFP/4NL
-         gHDvVr1Wn/0OyN1PoHuhIO19nMrWTb+T8AD+5DUNnPInqjStA6emqSktRnbWlbanbI94
-         XbNPoN5eeiryjOUBHxOssWiVLOxNuODzhw3MUWr34DEYX/yzb/pZqOsbVJW9DGhKreRG
-         1N2VjVV3wpAFhFLt0HDiqldGXnXNjU6ny7bZddaLaXdtazF0DEa1pgqy9pAB3tef7gpn
-         x18Q==
-X-Gm-Message-State: AOAM533aRfsRRXYin5oQu4hqKYMa0W9s7ZH15G4WFrsOcQv+GYxPjvqg
-        Ow85YRQMyVkg0gaAsRF9vJY24gznZAUT+hxhHXro6dzoy80m7PLLIVHj9Yi9eNKxcxec1L7XzrF
-        CCOhs+ewvqyyeWbfTOGSF
-X-Received: by 2002:a63:5b07:: with SMTP id p7mr18582963pgb.218.1589871340378;
-        Mon, 18 May 2020 23:55:40 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwE1QvXdx1rLkvdB3I5gvUW6Hcxww7lUWwrXPac3BYXilhgaeCuzdD+gbYaOWQkL6/kZXgcSw==
-X-Received: by 2002:a63:5b07:: with SMTP id p7mr18582945pgb.218.1589871340049;
-        Mon, 18 May 2020 23:55:40 -0700 (PDT)
-Received: from don.com ([60.224.129.195])
-        by smtp.gmail.com with ESMTPSA id y5sm5713080pge.50.2020.05.18.23.55.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 May 2020 23:55:39 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=bbxb8pdB26nRdLXtY4YQeRdfS1uzHcIGUnA77PK9Bhg=;
+        b=LaJY8d7FFctRcThiiSlSIt+h08Aw7Shv1ukVv0j6R18WV+bSpCtGGfsdjB8ZGZ7KwY
+         IYAqxjD/vhaiOiUUm7f3eWnsGcj+KFAgyrYe6hIDdb9mYDnos0T5c5EBmDf+/WpsxqiE
+         Wg7QbZGkT9/yPX3rJUqgskOIHv08lSTfUWVrbWwaczF23QjX2leB6kdzcVlc5oO265Ue
+         xXHpgjDUbkCfaVyxCeQ97p/3jaCJ8mRoZUa+9Vq4cm+So6bzfFCm25jvYJSD4s2OC/68
+         s9Tp+nkzwjRrAr0ujLliUhFbg2GxdQ93MrTlv/dV/+4eTHyx6YAYtS0ZPKFpsOUKiWAf
+         zt3g==
+X-Gm-Message-State: AOAM530DW1odF28iXi3/0Uf5/B0LNwNEoPKDwyMuU9YBTQdo2mhjijH4
+        58Q9WEcZ2C//c4Js9KIZZuU2GqpCa/t7vPrX0jDQmM9Z5xJYW93509xkYuNrTYjeDNRky5l9X7x
+        mbJtuVuIypAe6JmjTUTS/
+X-Received: by 2002:a17:90a:26d1:: with SMTP id m75mr1969246pje.27.1589871797145;
+        Tue, 19 May 2020 00:03:17 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyygdzGqWa3P0G4UwJlqmWBL/w9qJII//WPaSKwWH43+DWfonfzUqCy92xxUZPcZaB+kzgTNg==
+X-Received: by 2002:a17:90a:26d1:: with SMTP id m75mr1969225pje.27.1589871796870;
+        Tue, 19 May 2020 00:03:16 -0700 (PDT)
+Received: from don.don ([60.224.129.195])
+        by smtp.gmail.com with ESMTPSA id w192sm10818467pff.126.2020.05.19.00.03.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 19 May 2020 00:03:16 -0700 (PDT)
+Subject: Re: [PATCH V2] xfs_repair: fix progress reporting
+To:     Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Cc:     Leonardo Vaz <lvaz@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+References: <c4df68a7-706b-0216-b2a0-a177789f380f@redhat.com>
+ <be31d007-5104-e534-eec6-931ff5df5444@redhat.com>
 From:   Donald Douwsma <ddouwsma@redhat.com>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Cc:     Donald Douwsma <ddouwsma@redhat.com>
-Subject: [PATCH] xfstests: add test for xfs_repair progress reporting
-Date:   Tue, 19 May 2020 16:55:12 +1000
-Message-Id: <20200519065512.232760-1-ddouwsma@redhat.com>
-X-Mailer: git-send-email 2.18.4
+Message-ID: <8d81d09c-9bc7-5cf7-4114-85b1e8905940@redhat.com>
+Date:   Tue, 19 May 2020 17:03:11 +1000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
+MIME-Version: 1.0
+In-Reply-To: <be31d007-5104-e534-eec6-931ff5df5444@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_repair's interval based progress has been broken for
-some time, create a test based on dmdelay to stretch out
-the time and use ag_stride to force parallelism.
 
-Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
----
- tests/xfs/516     | 72 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/516.out | 15 ++++++++++
- tests/xfs/group   |  1 +
- 3 files changed, 88 insertions(+)
- create mode 100755 tests/xfs/516
- create mode 100644 tests/xfs/516.out
 
-diff --git a/tests/xfs/516 b/tests/xfs/516
-new file mode 100755
-index 00000000..5ad57fbc
---- /dev/null
-+++ b/tests/xfs/516
-@@ -0,0 +1,72 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test 516
-+#
-+# Test xfs_repair's progress reporting
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	_dmsetup_remove delay-test > /dev/null 2>&1
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmdelay
-+. ./common/populate
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs xfs
-+_supported_os Linux
-+_require_scratch
-+_require_dm_target delay
-+
-+# Filter output specific to the formatters in xfs_repair/progress.c
-+# Ideally we'd like to see hits on anything that matches
-+# awk '/{FMT/' repair/progress.c
-+_filter_repair()
-+{
-+	sed -ne '
-+	s/[0-9]\+/#/g;
-+	/#:#:#:/p
-+	'
-+}
-+
-+echo "Format and populate"
-+_scratch_populate_cached nofill > $seqres.full 2>&1
-+
-+echo "Introduce a dmdelay"
-+_init_delay
-+
-+# Introduce a read I/O delay
-+# The default in common/dmdelay is a bit too agressive
-+BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
-+DELAY_TABLE_RDELAY="0 $BLK_DEV_SIZE delay $SCRATCH_DEV 0 100 $SCRATCH_DEV 0 0"
-+_load_delay_table $DELAY_READ
-+
-+echo "Run repair"
-+$XFS_REPAIR_PROG -o ag_stride=4 -t 1 $DELAY_DEV >> $seqres.full 2>&1
-+cat $seqres.full | _filter_repair | sort -u
-+
-+_cleanup_delay
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/516.out b/tests/xfs/516.out
-new file mode 100644
-index 00000000..bc824d7f
---- /dev/null
-+++ b/tests/xfs/516.out
-@@ -0,0 +1,15 @@
-+QA output created by 516
-+Format and populate
-+Introduce a dmdelay
-+Run repair
-+	- #:#:#: Phase #: #% done - estimated remaining time # minutes, # seconds
-+	- #:#:#: Phase #: elapsed time # second - processed # inodes per minute
-+	- #:#:#: Phase #: elapsed time # seconds - processed # inodes per minute
-+        - #:#:#: check for inodes claiming duplicate blocks - # of # inodes done
-+        - #:#:#: process known inodes and inode discovery - # of # inodes done
-+        - #:#:#: process newly discovered inodes - # of # allocation groups done
-+        - #:#:#: rebuild AG headers and trees - # of # allocation groups done
-+        - #:#:#: scanning agi unlinked lists - # of # allocation groups done
-+        - #:#:#: scanning filesystem freespace - # of # allocation groups done
-+        - #:#:#: setting up duplicate extent list - # of # allocation groups done
-+        - #:#:#: verify and correct link counts - # of # allocation groups done
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 12eb55c9..aeeca23f 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -513,3 +513,4 @@
- 513 auto mount
- 514 auto quick db
- 515 auto quick quota
-+516 repair
--- 
-2.18.4
+On 19/05/2020 11:29, Eric Sandeen wrote:
+> The Fixes: commit tried to avoid a segfault in case the progress timer
+> went off before the first message type had been set up, but this
+> had the net effect of short-circuiting the pthread start routine,
+> and so the timer didn't get set up at all and we lost all fine-grained
+> progress reporting.
+> 
+> The initial problem occurred when log zeroing took more time than the
+> timer interval.
+> 
+> So, make a new log zeroing progress item and initialize it when we first
+> set up the timer thread, to be sure that if the timer goes off while we
+> are still zeroing the log, it will be initialized and correct.
+> 
+> (We can't offer fine-grained status on log zeroing, so it'll go from
+> zero to $LOGBLOCKS with nothing in between, but it's unlikely that log
+> zeroing will take so long that this really matters.)
+> 
+> Reported-by: Leonardo Vaz <lvaz@redhat.com>
+> Fixes: 7f2d6b811755 ("xfs_repair: avoid segfault if reporting progre...")
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+
+I've been looking at this myself, got stuck writing an xfstest, which this
+passes, though the fix I was trying missed at least one of the formatters
+that this fixes, and the log zeroing is a nice touch.
+
+Reviewed-by: Donald Douwsma <ddouwsma@redhat.com>
+
+--
+Don
+
+> 
+> diff --git a/repair/phase2.c b/repair/phase2.c
+> index 40ea2f84..952ac4a5 100644
+> --- a/repair/phase2.c
+> +++ b/repair/phase2.c
+> @@ -120,6 +120,9 @@ zero_log(
+>  			do_error(_("failed to clear log"));
+>  	}
+>  
+> +	/* And we are now magically complete! */
+> +	PROG_RPT_INC(prog_rpt_done[0], mp->m_sb.sb_logblocks);
+> +
+>  	/*
+>  	 * Finally, seed the max LSN from the current state of the log if this
+>  	 * is a v5 filesystem.
+> @@ -160,7 +163,10 @@ phase2(
+>  
+>  	/* Zero log if applicable */
+>  	do_log(_("        - zero log...\n"));
+> +
+> +	set_progress_msg(PROG_FMT_ZERO_LOG, (uint64_t)mp->m_sb.sb_logblocks);
+>  	zero_log(mp);
+> +	print_final_rpt();
+>  
+>  	do_log(_("        - scan filesystem freespace and inode maps...\n"));
+>  
+> diff --git a/repair/progress.c b/repair/progress.c
+> index 5ee08229..e5a9c1ef 100644
+> --- a/repair/progress.c
+> +++ b/repair/progress.c
+> @@ -49,35 +49,37 @@ typedef struct progress_rpt_s {
+>  
+>  static
+>  progress_rpt_t progress_rpt_reports[] = {
+> -{FMT1, N_("scanning filesystem freespace"),			/*  0 */
+> +{FMT1, N_("zeroing log"),					/*  0 */
+> +	&rpt_fmts[FMT1], &rpt_types[TYPE_BLOCK]},
+> +{FMT1, N_("scanning filesystem freespace"),			/*  1 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+> -{FMT1, N_("scanning agi unlinked lists"),			/*  1 */
+> +{FMT1, N_("scanning agi unlinked lists"),			/*  2 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+> -{FMT2, N_("check uncertain AG inodes"),				/*  2 */
+> +{FMT2, N_("check uncertain AG inodes"),				/*  3 */
+>  	&rpt_fmts[FMT2], &rpt_types[TYPE_AGI_BUCKET]},
+> -{FMT1, N_("process known inodes and inode discovery"),		/*  3 */
+> +{FMT1, N_("process known inodes and inode discovery"),		/*  4 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
+> -{FMT1, N_("process newly discovered inodes"),			/*  4 */
+> +{FMT1, N_("process newly discovered inodes"),			/*  5 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+> -{FMT1, N_("setting up duplicate extent list"),			/*  5 */
+> +{FMT1, N_("setting up duplicate extent list"),			/*  6 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+> -{FMT1, N_("initialize realtime bitmap"),			/*  6 */
+> +{FMT1, N_("initialize realtime bitmap"),			/*  7 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_BLOCK]},
+> -{FMT1, N_("reset realtime bitmaps"),				/*  7 */
+> +{FMT1, N_("reset realtime bitmaps"),				/*  8 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+> -{FMT1, N_("check for inodes claiming duplicate blocks"),	/*  8 */
+> +{FMT1, N_("check for inodes claiming duplicate blocks"),	/*  9 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
+> -{FMT1, N_("rebuild AG headers and trees"),	 		/*  9 */
+> +{FMT1, N_("rebuild AG headers and trees"),	 		/* 10 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+> -{FMT1, N_("traversing filesystem"),				/* 10 */
+> +{FMT1, N_("traversing filesystem"),				/* 12 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+> -{FMT2, N_("traversing all unattached subtrees"),		/* 11 */
+> +{FMT2, N_("traversing all unattached subtrees"),		/* 12 */
+>  	&rpt_fmts[FMT2], &rpt_types[TYPE_DIR]},
+> -{FMT2, N_("moving disconnected inodes to lost+found"),		/* 12 */
+> +{FMT2, N_("moving disconnected inodes to lost+found"),		/* 13 */
+>  	&rpt_fmts[FMT2], &rpt_types[TYPE_INODE]},
+> -{FMT1, N_("verify and correct link counts"),			/* 13 */
+> +{FMT1, N_("verify and correct link counts"),			/* 14 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
+> -{FMT1, N_("verify link counts"),				/* 14 */
+> +{FMT1, N_("verify link counts"),				/* 15 */
+>  	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]}
+>  };
+>  
+> @@ -125,7 +127,8 @@ init_progress_rpt (void)
+>  	 */
+>  
+>  	pthread_mutex_init(&global_msgs.mutex, NULL);
+> -	global_msgs.format = NULL;
+> +	/* Make sure the format is set to the first phase and not NULL */
+> +	global_msgs.format = &progress_rpt_reports[PROG_FMT_ZERO_LOG];
+>  	global_msgs.count = glob_agcount;
+>  	global_msgs.interval = report_interval;
+>  	global_msgs.done   = prog_rpt_done;
+> diff --git a/repair/progress.h b/repair/progress.h
+> index 9de9eb72..2c1690db 100644
+> --- a/repair/progress.h
+> +++ b/repair/progress.h
+> @@ -8,26 +8,27 @@
+>  #define	PHASE_END		1
+>  
+>  
+> -#define	PROG_FMT_SCAN_AG 	0	/* Phase 2 */
+> +#define	PROG_FMT_ZERO_LOG	0	/* Phase 2 */
+> +#define	PROG_FMT_SCAN_AG 	1
+>  
+> -#define	PROG_FMT_AGI_UNLINKED 	1	/* Phase 3 */
+> -#define	PROG_FMT_UNCERTAIN      2
+> -#define	PROG_FMT_PROCESS_INO	3
+> -#define	PROG_FMT_NEW_INODES	4
+> +#define	PROG_FMT_AGI_UNLINKED 	2	/* Phase 3 */
+> +#define	PROG_FMT_UNCERTAIN      3
+> +#define	PROG_FMT_PROCESS_INO	4
+> +#define	PROG_FMT_NEW_INODES	5
+>  
+> -#define	PROG_FMT_DUP_EXTENT	5	/* Phase 4 */
+> -#define	PROG_FMT_INIT_RTEXT	6
+> -#define	PROG_FMT_RESET_RTBM	7
+> -#define	PROG_FMT_DUP_BLOCKS	8
+> +#define	PROG_FMT_DUP_EXTENT	6	/* Phase 4 */
+> +#define	PROG_FMT_INIT_RTEXT	7
+> +#define	PROG_FMT_RESET_RTBM	8
+> +#define	PROG_FMT_DUP_BLOCKS	9
+>  
+> -#define	PROG_FMT_REBUILD_AG	9	/* Phase 5 */
+> +#define	PROG_FMT_REBUILD_AG	10	/* Phase 5 */
+>  
+> -#define	PROG_FMT_TRAVERSAL	10	/* Phase 6 */
+> -#define	PROG_FMT_TRAVERSSUB	11
+> -#define	PROG_FMT_DISCONINODE	12
+> +#define	PROG_FMT_TRAVERSAL	11	/* Phase 6 */
+> +#define	PROG_FMT_TRAVERSSUB	12
+> +#define	PROG_FMT_DISCONINODE	13
+>  
+> -#define	PROGRESS_FMT_CORR_LINK	13	/* Phase 7 */
+> -#define	PROGRESS_FMT_VRFY_LINK 	14
+> +#define	PROGRESS_FMT_CORR_LINK	14	/* Phase 7 */
+> +#define	PROGRESS_FMT_VRFY_LINK 	15
+>  
+>  #define	DURATION_BUF_SIZE	512
+>  
+> 
+> 
 
