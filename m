@@ -6,30 +6,31 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35CEFC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 17:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE68C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 17:21:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14CDC20709
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 17:19:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31932207D8
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 17:21:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729317AbgESRTQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 13:19:16 -0400
-Received: from sandeen.net ([63.231.237.45]:54666 "EHLO sandeen.net"
+        id S1729423AbgESRVK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 13:21:10 -0400
+Received: from sandeen.net ([63.231.237.45]:54768 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729001AbgESRTQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 May 2020 13:19:16 -0400
+        id S1729197AbgESRVJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 19 May 2020 13:21:09 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C6BFB323C01;
-        Tue, 19 May 2020 12:18:48 -0500 (CDT)
-Subject: Re: [PATCH] quota-tools: Set FS_DQ_TIMER_MASK for individual xfs
- grace times
-To:     Jan Kara <jack@suse.cz>, Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        =?UTF-8?B?UGV0ciBQw61zYcWZ?= <ppisar@redhat.com>
-References: <72a454f1-c2ee-b777-90db-6bdfd4a8572c@redhat.com>
- <20200514102036.GC9569@quack2.suse.cz>
+        by sandeen.net (Postfix) with ESMTPSA id 46633323C01;
+        Tue, 19 May 2020 12:20:42 -0500 (CDT)
+Subject: Re: [PATCH 6/6] xfs: allow individual quota grace period extension
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
+ <842a7671-b514-d698-b996-5c1ccf65a6ad@redhat.com>
+ <868cac51-800e-2051-1322-aa77302a65c2@redhat.com>
+ <20200519163908.GQ17627@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -73,33 +74,66 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <00c2c5d4-a584-ad7d-c602-e516a8015562@sandeen.net>
-Date:   Tue, 19 May 2020 12:19:14 -0500
+Message-ID: <c648d2e4-03f7-8ad4-6f60-3d1b5c8aa894@sandeen.net>
+Date:   Tue, 19 May 2020 12:21:07 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200514102036.GC9569@quack2.suse.cz>
+In-Reply-To: <20200519163908.GQ17627@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/14/20 5:20 AM, Jan Kara wrote:
->> I'm putting together xfstests cases for this, if you want to wait
->> for those, that's fine.  Thanks!
-> Yeah, that looks like a good thing to do. Also FS_DQ_LIMIT_MASK contains
-> real-time limits bits which quota tools aren't able to manipulate in any
-> way so maybe not setting those bits would be wiser... Will you send a patch
-> or should I just fix it?
+On 5/19/20 11:39 AM, Darrick J. Wong wrote:
+> On Mon, May 18, 2020 at 01:52:16PM -0500, Eric Sandeen wrote:
+>> The only grace period which can be set in the kernel today is for id 0,
+>> i.e. the default grace period for all users.  However, setting an
+>> individual grace period is useful; for example:
+>>
+>>  Alice has a soft quota of 100 inodes, and a hard quota of 200 inodes
+>>  Alice uses 150 inodes, and enters a short grace period
+>>  Alice really needs to use those 150 inodes past the grace period
+>>  The administrator extends Alice's grace period until next Monday
+>>
+>> vfs quota users such as ext4 can do this today, with setquota -T
+> 
+> Does setquota -T work on an XFS filesystem? 
 
-I've sent those tests now, btw.
+With 
 
-I agree that the whole section of flag-setting is a bit odd, I hadn't
-intended to clean it up right now.  I'd be happy to review though if you
-found the time.  :)
+[PATCH] quota-tools: Set FS_DQ_TIMER_MASK for individual xfs grace times
 
-Thanks,
+it does.
+
+> If so, does that mean that
+> xfs had a functionality gap where the admin could extend someone's grace
+> period on ext4 but trying the exact same command on xfs would do
+> nothing?  Or would it at least error out?
+
+The former; no error.  quota-tools didn't set the timer mask, so quotactl
+wasn't set up to change it.  In addition, we ignored the change for id !=0.
+ 
+>> To enable this for XFS, we simply move the timelimit assignment out
+>> from under the (id == 0) test.  Default setting remains under (id == 0).
+>> Note that this now is consistent with how we set warnings.
+>>
+>> (Userspace requires updates to enable this as well; xfs_quota needs to
+>> parse new options, and setquota needs to set appropriate field flags.)
+> 
+> So ... xfs_quota simply never had the ability to do this, but what does
+> "setquota needs to set appropriate field flags" mean exactly?
+
+It means:
+
+[PATCH] quota-tools: Set FS_DQ_TIMER_MASK for individual xfs grace times
+
++		if (flags & COMMIT_TIMES) /* indiv grace period */
++			xdqblk.d_fieldmask |= FS_DQ_TIMER_MASK;
+
 -Eric
+ 
+
