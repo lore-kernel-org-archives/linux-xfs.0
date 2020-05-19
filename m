@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE9BC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 01:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48BFBC433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 01:58:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8C3720758
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 01:57:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26AA5207D3
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 01:58:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726293AbgESB5h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 21:57:37 -0400
-Received: from sandeen.net ([63.231.237.45]:36218 "EHLO sandeen.net"
+        id S1726293AbgESB6l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 21:58:41 -0400
+Received: from sandeen.net ([63.231.237.45]:36296 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726285AbgESB5h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 18 May 2020 21:57:37 -0400
+        id S1726285AbgESB6l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 May 2020 21:58:41 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 169ACB77;
-        Mon, 18 May 2020 20:57:11 -0500 (CDT)
-Subject: Re: [PATCH 2/3] xfs_db: fix rdbmap_boundscheck
+        by sandeen.net (Postfix) with ESMTPSA id D2141B77;
+        Mon, 18 May 2020 20:58:15 -0500 (CDT)
+Subject: Re: [PATCH 3/3] debian: replace libreadline with libedit
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <158984953155.623441.15225705949586714685.stgit@magnolia>
- <158984954380.623441.11000410439582315428.stgit@magnolia>
+ <158984955088.623441.1505969186471077833.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,15 +71,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <6590fd47-f3f7-6cf5-ec28-4d37f9643e31@sandeen.net>
-Date:   Mon, 18 May 2020 20:57:35 -0500
+Message-ID: <fb419d89-05e4-817d-ba53-aed4199df004@sandeen.net>
+Date:   Mon, 18 May 2020 20:58:40 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <158984954380.623441.11000410439582315428.stgit@magnolia>
+In-Reply-To: <158984955088.623441.1505969186471077833.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -88,32 +88,45 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 5/18/20 7:52 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> This predicate should check the a rt block number against number of
-> rtblocks, not the number of AG blocks.  Ooops.
+> Now that upstream has dropped libreadline support entirely, switch the
+> debian package over to libedit.
 > 
-> Fixes: 7161cd21b3ed ("xfs_db: bounds-check access to the dbmap array")
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-welp, sorry I missed this on regression testing;.
+I don't really speak Debian, but this seems sane.
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  db/check.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  debian/control |    2 +-
+>  debian/rules   |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
 > 
-> diff --git a/db/check.c b/db/check.c
-> index c6fce605..12c03b6d 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -1490,7 +1490,7 @@ static inline bool
->  rdbmap_boundscheck(
->  	xfs_rfsblock_t	bno)
->  {
-> -	return bno < mp->m_sb.sb_agblocks;
-> +	return bno < mp->m_sb.sb_rblocks;
->  }
+> diff --git a/debian/control b/debian/control
+> index 0b3205f5..ddd17850 100644
+> --- a/debian/control
+> +++ b/debian/control
+> @@ -3,7 +3,7 @@ Section: admin
+>  Priority: optional
+>  Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+>  Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+> -Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config
+> +Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config
+>  Standards-Version: 4.0.0
+>  Homepage: https://xfs.wiki.kernel.org/
 >  
->  static void
+> diff --git a/debian/rules b/debian/rules
+> index e8509fb3..7304222c 100755
+> --- a/debian/rules
+> +++ b/debian/rules
+> @@ -25,7 +25,7 @@ stdenv = @GZIP=-q; export GZIP;
+>  
+>  options = export DEBUG=-DNDEBUG DISTRIBUTION=debian \
+>  	  INSTALL_USER=root INSTALL_GROUP=root \
+> -	  LOCAL_CONFIGURE_OPTIONS="--enable-readline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
+> +	  LOCAL_CONFIGURE_OPTIONS="--enable-editline=yes --enable-blkid=yes --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
+>  diopts  = $(options) \
+>  	  export OPTIMIZER=-Os LOCAL_CONFIGURE_OPTIONS="--enable-gettext=no --disable-ubsan --disable-addrsan --disable-threadsan --enable-lto" ;
+>  checkdir = test -f debian/rules
 > 
