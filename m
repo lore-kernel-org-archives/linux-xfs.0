@@ -2,138 +2,238 @@ Return-Path: <SRS0=UH25=7B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE68C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 17:21:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 619CDC433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 18:14:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31932207D8
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 17:21:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E70A20758
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 18:14:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aDw1q/Gc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729423AbgESRVK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 13:21:10 -0400
-Received: from sandeen.net ([63.231.237.45]:54768 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729197AbgESRVJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 May 2020 13:21:09 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 46633323C01;
-        Tue, 19 May 2020 12:20:42 -0500 (CDT)
-Subject: Re: [PATCH 6/6] xfs: allow individual quota grace period extension
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
- <842a7671-b514-d698-b996-5c1ccf65a6ad@redhat.com>
- <868cac51-800e-2051-1322-aa77302a65c2@redhat.com>
- <20200519163908.GQ17627@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <c648d2e4-03f7-8ad4-6f60-3d1b5c8aa894@sandeen.net>
-Date:   Tue, 19 May 2020 12:21:07 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        id S1727844AbgESSOQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 14:14:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35428 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726447AbgESSOQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 14:14:16 -0400
+Received: from mail-wm1-x342.google.com (mail-wm1-x342.google.com [IPv6:2a00:1450:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EC65FC08C5C0;
+        Tue, 19 May 2020 11:14:14 -0700 (PDT)
+Received: by mail-wm1-x342.google.com with SMTP id h4so198970wmb.4;
+        Tue, 19 May 2020 11:14:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:mail-followup-to
+         :mime-version:content-disposition:user-agent;
+        bh=Smbnh/HjJZfXW9umDTUlih066PFtxdapl55+liTkPwU=;
+        b=aDw1q/Gcg/iKskACjlVFyCLUCG7c7zqmH32bqk8M1zWcKSzmtRuNo9w3BCn0wKWsjL
+         AnyO3xoCyLsf8Z3YX7yykH4AXXIE5jJBgBnxOWWVWC+3jbal211Cy9p0XfM43vXfujG4
+         3VcVe+Q/UgcclgL0x5PHCog6v9iWU+ELVwCd+IKXGLFHpqahv2ReoXSbEhasm5iOzALt
+         hKFCaQKfogF6F8WskDDf0vWICcYHdARKj0Bz2lXc5otMmr4NHcpJ+8mOeRK2s0G0HIVn
+         KKAYICIqXJqkIrqzh9bvNkYZuSGO1VXcmZwGtJKZTxQ41KexhZ45pIrHGOp94wYAHf1t
+         Qo8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :mail-followup-to:mime-version:content-disposition:user-agent;
+        bh=Smbnh/HjJZfXW9umDTUlih066PFtxdapl55+liTkPwU=;
+        b=R5PZQAQtVMD1uzsLcrOEhisdJBO2Y3zVsqiyc4B+1nl1ZHXqgtxUa3IZp9Rw49l7OQ
+         WIxk9ybT8Hm4frqCPo4/CEhSLFdHw9pgnlwD6nDlIN3NLYbNesSoc28SWbhTs3JLHvjH
+         IHAWgEDlH1/bsxPlfGAavA6NdiqcxytxpaiB3kLa8cl7QdgGIP47E56IvMmK4bwVSxNl
+         yMj5ukBk3aJdZQvBhf+fGGdySJfagVDF5gNdcn13thdZeJGlwjdvaXmkVO5Vv/BnZb1X
+         qSJn5HB1c/j9pj8xjRkylo0+kFWtGib1wTiD4WLIZfRBN9TzrcENHnweTTCYyyS1hlvV
+         kfLA==
+X-Gm-Message-State: AOAM532x4oeRf8O2zFtqWuDIWKnxtuEJyfn+TY0XfL4Ho6zwffKx8zHH
+        E0D//G6eCqa0hm3+nFpush8=
+X-Google-Smtp-Source: ABdhPJwtwcBxa1z6T7T+kmhD2d0HQ+Omb3d13a8dvsF60CkMyXrE0dYCYUK7i1sDzO1JsSZN1YcYYQ==
+X-Received: by 2002:a1c:7e03:: with SMTP id z3mr670958wmc.88.1589912053600;
+        Tue, 19 May 2020 11:14:13 -0700 (PDT)
+Received: from dumbo ([185.220.101.209])
+        by smtp.gmail.com with ESMTPSA id s8sm265465wrg.34.2020.05.19.11.14.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 May 2020 11:14:12 -0700 (PDT)
+Received: from cavok by dumbo with local (Exim 4.92)
+        (envelope-from <cavok@dumbo>)
+        id 1jb6kk-0004L5-Q7; Tue, 19 May 2020 20:14:10 +0200
+Date:   Tue, 19 May 2020 20:14:10 +0200
+From:   Domenico Andreoli <domenico.andreoli@linux.com>
+To:     "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Pavel Machek <pavel@ucw.cz>, Christoph Hellwig <hch@lst.de>,
+        viro@zeniv.linux.org.uk, tytso@mit.edu, len.brown@intel.com,
+        linux-pm@vger.kernel.org, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Domenico Andreoli <domenico.andreoli@linux.com>
+Subject: [PATCH v2] PM: hibernate: restrict writes to the resume device
+Message-ID: <20200519181410.GA1963@dumbo>
+Mail-Followup-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Pavel Machek <pavel@ucw.cz>, Christoph Hellwig <hch@lst.de>,
+        viro@zeniv.linux.org.uk, tytso@mit.edu, len.brown@intel.com,
+        linux-pm@vger.kernel.org, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 MIME-Version: 1.0
-In-Reply-To: <20200519163908.GQ17627@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/19/20 11:39 AM, Darrick J. Wong wrote:
-> On Mon, May 18, 2020 at 01:52:16PM -0500, Eric Sandeen wrote:
->> The only grace period which can be set in the kernel today is for id 0,
->> i.e. the default grace period for all users.  However, setting an
->> individual grace period is useful; for example:
->>
->>  Alice has a soft quota of 100 inodes, and a hard quota of 200 inodes
->>  Alice uses 150 inodes, and enters a short grace period
->>  Alice really needs to use those 150 inodes past the grace period
->>  The administrator extends Alice's grace period until next Monday
->>
->> vfs quota users such as ext4 can do this today, with setquota -T
-> 
-> Does setquota -T work on an XFS filesystem? 
+From: Domenico Andreoli <domenico.andreoli@linux.com>
 
-With 
+Hibernation via snapshot device requires write permission to the swap
+block device, the one that more often (but not necessarily) is used to
+store the hibernation image.
 
-[PATCH] quota-tools: Set FS_DQ_TIMER_MASK for individual xfs grace times
+With this patch, such permissions are granted iff:
 
-it does.
+1) snapshot device config option is enabled
+2) swap partition is used as resume device
 
-> If so, does that mean that
-> xfs had a functionality gap where the admin could extend someone's grace
-> period on ext4 but trying the exact same command on xfs would do
-> nothing?  Or would it at least error out?
+In other circumstances the swap device is not writable from userspace.
 
-The former; no error.  quota-tools didn't set the timer mask, so quotactl
-wasn't set up to change it.  In addition, we ignored the change for id !=0.
+In order to achieve this, every write attempt to a swap device is
+checked against the device configured as part of the uswsusp API [0]
+using a pointer to the inode struct in memory. If the swap device being
+written was not configured for resuming, the write request is denied.
+
+NOTE: this implementation works only for swap block devices, where the
+inode configured by swapon (which sets S_SWAPFILE) is the same used
+by SNAPSHOT_SET_SWAP_AREA.
+
+In case of swap file, SNAPSHOT_SET_SWAP_AREA indeed receives the inode
+of the block device containing the filesystem where the swap file is
+located (+ offset in it) which is never passed to swapon and then has
+not set S_SWAPFILE.
+
+As result, the swap file itself (as a file) has never an option to be
+written from userspace. Instead it remains writable if accessed directly
+from the containing block device, which is always writeable from root.
+
+[0] Documentation/power/userland-swsusp.rst
+
+v2:
+ - rename is_hibernate_snapshot_dev() to is_hibernate_resume_dev()
+ - fix description so to correctly refer to the resume device
+
+Signed-off-by: Domenico Andreoli <domenico.andreoli@linux.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Pavel Machek <pavel@ucw.cz>
+Cc: Darrick J. Wong <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: viro@zeniv.linux.org.uk
+Cc: tytso@mit.edu
+Cc: len.brown@intel.com
+Cc: linux-pm@vger.kernel.org
+Cc: linux-mm@kvack.org
+Cc: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+
+---
+ fs/block_dev.c          |    3 +--
+ include/linux/suspend.h |    6 ++++++
+ kernel/power/user.c     |   14 +++++++++++++-
+ 3 files changed, 20 insertions(+), 3 deletions(-)
+
+Index: b/include/linux/suspend.h
+===================================================================
+--- a/include/linux/suspend.h
++++ b/include/linux/suspend.h
+@@ -466,6 +466,12 @@ static inline bool system_entering_hiber
+ static inline bool hibernation_available(void) { return false; }
+ #endif /* CONFIG_HIBERNATION */
  
->> To enable this for XFS, we simply move the timelimit assignment out
->> from under the (id == 0) test.  Default setting remains under (id == 0).
->> Note that this now is consistent with how we set warnings.
->>
->> (Userspace requires updates to enable this as well; xfs_quota needs to
->> parse new options, and setquota needs to set appropriate field flags.)
-> 
-> So ... xfs_quota simply never had the ability to do this, but what does
-> "setquota needs to set appropriate field flags" mean exactly?
-
-It means:
-
-[PATCH] quota-tools: Set FS_DQ_TIMER_MASK for individual xfs grace times
-
-+		if (flags & COMMIT_TIMES) /* indiv grace period */
-+			xdqblk.d_fieldmask |= FS_DQ_TIMER_MASK;
-
--Eric
++#ifdef CONFIG_HIBERNATION_SNAPSHOT_DEV
++int is_hibernate_resume_dev(const struct inode *);
++#else
++static inline int is_hibernate_resume_dev(const struct inode *i) { return 0; }
++#endif
++
+ /* Hibernation and suspend events */
+ #define PM_HIBERNATION_PREPARE	0x0001 /* Going to hibernate */
+ #define PM_POST_HIBERNATION	0x0002 /* Hibernation finished */
+Index: b/kernel/power/user.c
+===================================================================
+--- a/kernel/power/user.c
++++ b/kernel/power/user.c
+@@ -35,8 +35,14 @@ static struct snapshot_data {
+ 	bool ready;
+ 	bool platform_support;
+ 	bool free_bitmaps;
++	struct inode *bd_inode;
+ } snapshot_state;
  
++int is_hibernate_resume_dev(const struct inode *bd_inode)
++{
++	return hibernation_available() && snapshot_state.bd_inode == bd_inode;
++}
++
+ static int snapshot_open(struct inode *inode, struct file *filp)
+ {
+ 	struct snapshot_data *data;
+@@ -95,6 +101,7 @@ static int snapshot_open(struct inode *i
+ 	data->frozen = false;
+ 	data->ready = false;
+ 	data->platform_support = false;
++	data->bd_inode = NULL;
+ 
+  Unlock:
+ 	unlock_system_sleep();
+@@ -110,6 +117,7 @@ static int snapshot_release(struct inode
+ 
+ 	swsusp_free();
+ 	data = filp->private_data;
++	data->bd_inode = NULL;
+ 	free_all_swap_pages(data->swap);
+ 	if (data->frozen) {
+ 		pm_restore_gfp_mask();
+@@ -202,6 +210,7 @@ struct compat_resume_swap_area {
+ static int snapshot_set_swap_area(struct snapshot_data *data,
+ 		void __user *argp)
+ {
++	struct block_device *bdev;
+ 	sector_t offset;
+ 	dev_t swdev;
+ 
+@@ -232,9 +241,12 @@ static int snapshot_set_swap_area(struct
+ 		data->swap = -1;
+ 		return -EINVAL;
+ 	}
+-	data->swap = swap_type_of(swdev, offset, NULL);
++	data->swap = swap_type_of(swdev, offset, &bdev);
+ 	if (data->swap < 0)
+ 		return -ENODEV;
++
++	data->bd_inode = bdev->bd_inode;
++	bdput(bdev);
+ 	return 0;
+ }
+ 
+Index: b/fs/block_dev.c
+===================================================================
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -2023,8 +2023,7 @@ ssize_t blkdev_write_iter(struct kiocb *
+ 	if (bdev_read_only(I_BDEV(bd_inode)))
+ 		return -EPERM;
+ 
+-	/* uswsusp needs write permission to the swap */
+-	if (IS_SWAPFILE(bd_inode) && !hibernation_available())
++	if (IS_SWAPFILE(bd_inode) && !is_hibernate_resume_dev(bd_inode))
+ 		return -ETXTBSY;
+ 
+ 	if (!iov_iter_count(from))
 
+-- 
+rsa4096: 3B10 0CA1 8674 ACBA B4FE  FCD2 CE5B CF17 9960 DE13
+ed25519: FFB4 0CC3 7F2E 091D F7DA  356E CC79 2832 ED38 CB05
