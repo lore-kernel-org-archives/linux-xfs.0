@@ -7,394 +7,311 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F37C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 16:27:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 949C4C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 16:38:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B248A207FB
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 16:27:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D253207D3
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 16:38:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RFEEaQRL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="s5CSZKuG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728967AbgESQ1w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 12:27:52 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:42066 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728953AbgESQ1v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 12:27:51 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04JGR8Kb165658;
-        Tue, 19 May 2020 16:27:48 GMT
+        id S1729053AbgESQiQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 12:38:16 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:35100 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728775AbgESQiQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 12:38:16 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04JGVXOB023507;
+        Tue, 19 May 2020 16:38:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=yND3pgA3LNw9pPqRB0UVvjp0KXNEgCgDnKTB4XZAwaM=;
- b=RFEEaQRLaAw/r3ssjhteIsHdHa581E0/6PPPanc0QvxD98NmT0kcWzK5vn6WcdowjxmO
- p9G2rLlgXao/nEOa+SdCMzwE2/L3sZAYheqD54RZqYUb6ZU1rwX7Rn7waDzIP4+AkI+n
- kvjene7CVpLzXvrFShr+OcXkay9ZM8mBxdFpXelLWZFGh/kz3BGF5af1H18W/jyk7e9c
- XRkdinkE5ra1G+BKBOaVpiqMs7ZfeK1xmO7jXco5sn83SMt8slH1xt93BIS2Atp0Rwec
- KwBVOItfcn+ZV0jvPE9HtIweszcej5NwROYIec1hfdWSY2X8JMnQlaA5prBShZScK5kA /Q== 
+ bh=Annuw2dlEOysoqquwgfHDAXJOQeztKzxnLPDjTuouuw=;
+ b=s5CSZKuGPSrSRx5pDUXx1bmQJxcM1lGFiLOjGV8TFx2ltNR7H3UAqb1gP2AdkLao2YK3
+ ExMFRXLmpkD7cBo8obSkBqrwAucfPaPXp/VATiy73Qvtt0FWeh1+gIxMS0rJTdzPxt5/
+ +gO6XbcwvUd3BxgKVn/XmhJXUU+JladXQrolYsi+CkpK3fxhSAz6H7+6q3ZrSj82h5z6
+ whRQE/UlptbqkYOVWDdinugH9f3VhVWYyGDtUW316Lf/6XUC/lt7etNOJLB6PWQgWYvB
+ r55PHtpTKukJmK+GeiBQE232ZLAiXJrR5qN5uv/Xw8ONgYrAttdIffK8yFMQWRWF6ker Gg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 3127kr6ft7-1
+        by userp2120.oracle.com with ESMTP id 3128tnedqj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 19 May 2020 16:27:48 +0000
+        Tue, 19 May 2020 16:38:12 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04JGN6D4118439;
-        Tue, 19 May 2020 16:27:47 GMT
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04JGX2mh165664;
+        Tue, 19 May 2020 16:38:12 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 312t34r80b-1
+        by aserp3020.oracle.com with ESMTP id 312t34s1hc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 19 May 2020 16:27:47 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04JGRkgc016994;
-        Tue, 19 May 2020 16:27:46 GMT
+        Tue, 19 May 2020 16:38:11 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04JGcBn3022670;
+        Tue, 19 May 2020 16:38:11 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 19 May 2020 09:27:46 -0700
-Date:   Tue, 19 May 2020 09:27:45 -0700
+        with ESMTP ; Tue, 19 May 2020 09:38:11 -0700
+Date:   Tue, 19 May 2020 09:38:10 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Eric Sandeen <sandeen@redhat.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 5/6] xfs: per-type quota timers and warn limits
-Message-ID: <20200519162745.GO17627@magnolia>
+Subject: Re: [PATCH 1/1 V2] xfs_quota: allow individual timer extension
+Message-ID: <20200519163810.GP17627@magnolia>
 References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
- <842a7671-b514-d698-b996-5c1ccf65a6ad@redhat.com>
- <e27a2dff-f728-f69e-32b6-a83eee7effef@redhat.com>
+ <b75aef11-0e7a-7b2d-f6f0-d36af80d5e27@redhat.com>
+ <fb0b46ab-98a1-4427-fa5e-4a770c9d0805@redhat.com>
+ <37e9d7d7-d783-69a1-f44f-dfcc4baeb773@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e27a2dff-f728-f69e-32b6-a83eee7effef@redhat.com>
+In-Reply-To: <37e9d7d7-d783-69a1-f44f-dfcc4baeb773@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9626 signatures=668686
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=999
- phishscore=0 mlxscore=0 malwarescore=0 suspectscore=1 adultscore=0
+ phishscore=0 mlxscore=0 malwarescore=0 suspectscore=2 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005190139
+ definitions=main-2005190140
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9626 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
- bulkscore=0 clxscore=1015 priorityscore=1501 mlxscore=0 impostorscore=0
- suspectscore=1 mlxlogscore=999 malwarescore=0 cotscore=-2147483648
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005190139
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 cotscore=-2147483648 suspectscore=2 lowpriorityscore=0
+ adultscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005190140
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 18, 2020 at 01:51:44PM -0500, Eric Sandeen wrote:
-> From: Eric Sandeen <sandeen@redhat.com>
+On Mon, May 18, 2020 at 03:09:30PM -0500, Eric Sandeen wrote:
+> The only grace period which can be set via xfs_quota today is for id 0,
+> i.e. the default grace period for all users.  However, setting an
+> individual grace period is useful; for example:
 > 
-> Move timers and warnings out of xfs_quotainfo and into xfs_def_quota
-> so that we can utilize them on a per-type basis, rather than enforcing
-> them based on the values found in the first enabled quota type.
+>  Alice has a soft quota of 100 inodes, and a hard quota of 200 inodes
+>  Alice uses 150 inodes, and enters a short grace period
+>  Alice really needs to use those 150 inodes past the grace period
+>  The administrator extends Alice's grace period until next Monday
+> 
+> vfs quota users such as ext4 can do this today, with setquota -T
+> 
+> xfs_quota can now accept an optional user id or name (symmetric with
+> how warn limits are specified), in which case that user's grace period
+> is extended to expire the given amount of time from now(). 
+> 
+> To maintain compatibility with old command lines, if none of 
+> [-d|id|name] are specified, default limits are set as before.
+> 
+> (kernelspace requires updates to enable all this as well.)
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-> [zlang: new way to get defquota in xfs_qm_init_timelimits]
-> [zlang: remove redundant defq assign]
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+> 
+> V2: Add comments about only extending if past soft limits
+>     Fix typo/mistake checking block hard limits instead of soft
+> 
+> diff --git a/man/man8/xfs_quota.8 b/man/man8/xfs_quota.8
+> index e6fe7cd1..dd0479cd 100644
+> --- a/man/man8/xfs_quota.8
+> +++ b/man/man8/xfs_quota.8
+> @@ -457,14 +457,46 @@ must be specified.
+>  .B \-bir
+>  ]
+>  .I value
+> +[
+> +.B -d
+> +|
+> +.I id
+> +|
+> +.I name
+> +]
+>  .br
+>  Allows the quota enforcement timeout (i.e. the amount of time allowed
+>  to pass before the soft limits are enforced as the hard limits) to
+>  be modified. The current timeout setting can be displayed using the
+>  .B state
+> -command. The value argument is a number of seconds, but units of
+> -\&'minutes', 'hours', 'days', and 'weeks' are also understood
+> +command.
+> +.br
+> +When setting the default timer via the
+> +.B \-d
+> +option, or for
+> +.B id
+> +0, or if no argument is given after
+> +.I value
+> +the
+> +.I value
+> +argument is a number of seconds indicating the relative amount of time after
+> +soft limits are exceeded, before hard limits are enforced.
+> +.br
+> +When setting any other individual timer by
+> +.I id
+> +or
+> +.I name,
+> +the
+> +.I value
+> +is the number of seconds from now, at which time the hard limits will be enforced.
+> +This allows extending the grace time of an individual user who has exceeded soft
+> +limits.
+> +.br
+> +For
+> +.I value,
+> +units of \&'minutes', 'hours', 'days', and 'weeks' are also understood
+>  (as are their abbreviations 'm', 'h', 'd', and 'w').
+> +.br
+>  .HP
+>  .B warn
+>  [
+> diff --git a/quota/edit.c b/quota/edit.c
+> index 442b608c..5fdb8ce7 100644
+> --- a/quota/edit.c
+> +++ b/quota/edit.c
+> @@ -419,6 +419,7 @@ restore_f(
+>  
+>  static void
+>  set_timer(
+> +	uint32_t	id,
+>  	uint		type,
+>  	uint		mask,
+>  	char		*dev,
+> @@ -427,14 +428,43 @@ set_timer(
+>  	fs_disk_quota_t	d;
+>  
+>  	memset(&d, 0, sizeof(d));
+> +
+> +	/*
+> +	 * If id is specified we are extending grace time by value
+> +	 * Otherwise we are setting the default grace time
+> +	 */
+> +	if (id) {
+> +		time_t	now;
+> +
+> +		/* Get quota to find out whether user is past soft limits */
+> +		if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0) {
+> +			exitcode = 1;
+> +			fprintf(stderr, _("%s: cannot get quota: %s\n"),
+> +					progname, strerror(errno));
+> +				return;
+> +		}
+> +
+> +		time(&now);
+> +
+> +		/* Only set grace time if user is already past soft limit */
+> +		if (d.d_blk_softlimit && d.d_bcount > d.d_blk_softlimit)
+> +			d.d_btimer = now + value;
+> +		if (d.d_ino_softlimit && d.d_icount > d.d_ino_softlimit)
+> +			d.d_itimer = now + value;
+> +		if (d.d_rtb_softlimit && d.d_rtbcount > d.d_rtb_softlimit)
+> +			d.d_rtbtimer = now + value;
 
-Makes sense, I was always confused by the old behavior of picking the
-defaults from the first quota type we saw...
+Hmm, I /was/ going to complain about 32-bit wraparound, but then
+realized that the whole ioctl interface is totally __s32 and needs
+y2038 updates and meh.
+
+Someone looking for a project could work on either fixing the xfs quota
+ioctls, or the vfs quota ioctls, or both, assuming Arnd didn't already
+fix the VFS...
 
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> ---
->  fs/xfs/xfs_dquot.c       |  9 ++++---
->  fs/xfs/xfs_qm.c          | 54 +++++++++++++++++++---------------------
->  fs/xfs/xfs_qm.h          | 13 +++++-----
->  fs/xfs/xfs_qm_syscalls.c | 12 ++++-----
->  fs/xfs/xfs_quotaops.c    | 22 ++++++++--------
->  fs/xfs/xfs_trans_dquot.c |  6 ++---
->  6 files changed, 58 insertions(+), 58 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 6d6afc0297b3..0e0a15c17789 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -116,7 +116,10 @@ xfs_qm_adjust_dqtimers(
->  	struct xfs_mount	*mp,
->  	struct xfs_dquot	*dq)
+> +	} else {
+> +		d.d_btimer = value;
+> +		d.d_itimer = value;
+> +		d.d_rtbtimer = value;
+> +	}
+> +
+>  	d.d_version = FS_DQUOT_VERSION;
+>  	d.d_flags = type;
+>  	d.d_fieldmask = mask;
+> -	d.d_itimer = value;
+> -	d.d_btimer = value;
+> -	d.d_rtbtimer = value;
+> +	d.d_id = id;
+>  
+> -	if (xfsquotactl(XFS_SETQLIM, dev, type, 0, (void *)&d) < 0) {
+> +	if (xfsquotactl(XFS_SETQLIM, dev, type, id, (void *)&d) < 0) {
+>  		exitcode = 1;
+>  		fprintf(stderr, _("%s: cannot set timer: %s\n"),
+>  				progname, strerror(errno));
+> @@ -447,10 +477,15 @@ timer_f(
+>  	char		**argv)
 >  {
-> +	struct xfs_quotainfo	*qi = mp->m_quotainfo;
->  	struct xfs_disk_dquot	*d = &dq->q_core;
-> +	struct xfs_def_quota	*defq = xfs_get_defquota(dq, qi);
+>  	uint		value;
+> -	int		c, type = 0, mask = 0;
+> +	char		*name = NULL;
+> +	uint32_t	id = 0;
+> +	int		c, flags = 0, type = 0, mask = 0;
+>  
+> -	while ((c = getopt(argc, argv, "bgipru")) != EOF) {
+> +	while ((c = getopt(argc, argv, "bdgipru")) != EOF) {
+>  		switch (c) {
+> +		case 'd':
+> +			flags |= DEFAULTS_FLAG;
+> +			break;
+>  		case 'b':
+>  			mask |= FS_DQ_BTIMER;
+>  			break;
+> @@ -474,23 +509,45 @@ timer_f(
+>  		}
+>  	}
+>  
+> -	if (argc != optind + 1)
+> +	 /*
+> +	 * Older versions of the command did not accept -d|id|name,
+> +	 * so in that case we assume we're setting default timer,
+> +	 * and the last arg is the timer value.
+> +	 *
+> +	 * Otherwise, if the defaults flag is set, we expect 1 more arg for
+> +	 * timer value ; if not, 2 more args: 1 for value, one for id/name.
+> +	 */
+> +	if (!(flags & DEFAULTS_FLAG) && (argc == optind + 1)) {
+> +		value = cvttime(argv[optind++]);
+> +	} else if (flags & DEFAULTS_FLAG) {
+> +		if (argc != optind + 1)
+> +			return command_usage(&timer_cmd);
+> +		value = cvttime(argv[optind++]);
+> +	} else if (argc == optind + 2) {
+> +		value = cvttime(argv[optind++]);
+> +		name = (flags & DEFAULTS_FLAG) ? "0" : argv[optind++];
+> +	} else
+>  		return command_usage(&timer_cmd);
+>  
+> -	value = cvttime(argv[optind++]);
+>  
+> +	/* if none of -bir specified, set them all */
+>  	if (!mask)
+>  		mask = FS_DQ_TIMER_MASK;
+>  
+>  	if (!type) {
+>  		type = XFS_USER_QUOTA;
+>  	} else if (type != XFS_GROUP_QUOTA &&
+> -	           type != XFS_PROJ_QUOTA &&
+> -	           type != XFS_USER_QUOTA) {
+> +		   type != XFS_PROJ_QUOTA &&
+> +		   type != XFS_USER_QUOTA) {
+>  		return command_usage(&timer_cmd);
+>  	}
+>  
+> -	set_timer(type, mask, fs_path->fs_name, value);
+> +	if (name)
+> +		id = id_from_string(name, type);
 > +
->  	ASSERT(d->d_id);
->  
->  #ifdef DEBUG
-> @@ -139,7 +142,7 @@ xfs_qm_adjust_dqtimers(
->  		     (be64_to_cpu(d->d_bcount) >
->  		      be64_to_cpu(d->d_blk_hardlimit)))) {
->  			d->d_btimer = cpu_to_be32(ktime_get_real_seconds() +
-> -					mp->m_quotainfo->qi_btimelimit);
-> +					defq->btimelimit);
->  		} else {
->  			d->d_bwarns = 0;
->  		}
-> @@ -162,7 +165,7 @@ xfs_qm_adjust_dqtimers(
->  		     (be64_to_cpu(d->d_icount) >
->  		      be64_to_cpu(d->d_ino_hardlimit)))) {
->  			d->d_itimer = cpu_to_be32(ktime_get_real_seconds() +
-> -					mp->m_quotainfo->qi_itimelimit);
-> +					defq->itimelimit);
->  		} else {
->  			d->d_iwarns = 0;
->  		}
-> @@ -185,7 +188,7 @@ xfs_qm_adjust_dqtimers(
->  		     (be64_to_cpu(d->d_rtbcount) >
->  		      be64_to_cpu(d->d_rtb_hardlimit)))) {
->  			d->d_rtbtimer = cpu_to_be32(ktime_get_real_seconds() +
-> -					mp->m_quotainfo->qi_rtbtimelimit);
-> +					defq->rtbtimelimit);
->  		} else {
->  			d->d_rtbwarns = 0;
->  		}
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index e97a3802939c..9eaab2368d3d 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -577,19 +577,26 @@ xfs_qm_set_defquota(
->  static void
->  xfs_qm_init_timelimits(
->  	struct xfs_mount	*mp,
-> -	struct xfs_quotainfo	*qinf)
-> +	uint			type)
->  {
-> +	struct xfs_quotainfo	*qinf = mp->m_quotainfo;
-> +	struct xfs_def_quota	*defq;
->  	struct xfs_disk_dquot	*ddqp;
->  	struct xfs_dquot	*dqp;
-> -	uint			type;
->  	int			error;
->  
-> -	qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
-> -	qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
-> -	qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
-> -	qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
-> -	qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
-> -	qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
-> +	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
-> +	if (error)
-> +		return;
+> +	if (id >= 0)
+> +		set_timer(id, type, mask, fs_path->fs_name, value);
 > +
-> +	defq = xfs_get_defquota(dqp, qinf);
-> +
-> +	defq->btimelimit = XFS_QM_BTIMELIMIT;
-> +	defq->itimelimit = XFS_QM_ITIMELIMIT;
-> +	defq->rtbtimelimit = XFS_QM_RTBTIMELIMIT;
-> +	defq->bwarnlimit = XFS_QM_BWARNLIMIT;
-> +	defq->iwarnlimit = XFS_QM_IWARNLIMIT;
-> +	defq->rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
->  
->  	/*
->  	 * We try to get the limits from the superuser's limits fields.
-> @@ -597,39 +604,26 @@ xfs_qm_init_timelimits(
->  	 *
->  	 * Since we may not have done a quotacheck by this point, just read
->  	 * the dquot without attaching it to any hashtables or lists.
-> -	 *
-> -	 * Timers and warnings are globally set by the first timer found in
-> -	 * user/group/proj quota types, otherwise a default value is used.
-> -	 * This should be split into different fields per quota type.
->  	 */
-> -	if (XFS_IS_UQUOTA_RUNNING(mp))
-> -		type = XFS_DQ_USER;
-> -	else if (XFS_IS_GQUOTA_RUNNING(mp))
-> -		type = XFS_DQ_GROUP;
-> -	else
-> -		type = XFS_DQ_PROJ;
-> -	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
-> -	if (error)
-> -		return;
-> -
->  	ddqp = &dqp->q_core;
-> +
->  	/*
->  	 * The warnings and timers set the grace period given to
->  	 * a user or group before he or she can not perform any
->  	 * more writing. If it is zero, a default is used.
->  	 */
->  	if (ddqp->d_btimer)
-> -		qinf->qi_btimelimit = be32_to_cpu(ddqp->d_btimer);
-> +		defq->btimelimit = be32_to_cpu(ddqp->d_btimer);
->  	if (ddqp->d_itimer)
-> -		qinf->qi_itimelimit = be32_to_cpu(ddqp->d_itimer);
-> +		defq->itimelimit = be32_to_cpu(ddqp->d_itimer);
->  	if (ddqp->d_rtbtimer)
-> -		qinf->qi_rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
-> +		defq->rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
->  	if (ddqp->d_bwarns)
-> -		qinf->qi_bwarnlimit = be16_to_cpu(ddqp->d_bwarns);
-> +		defq->bwarnlimit = be16_to_cpu(ddqp->d_bwarns);
->  	if (ddqp->d_iwarns)
-> -		qinf->qi_iwarnlimit = be16_to_cpu(ddqp->d_iwarns);
-> +		defq->iwarnlimit = be16_to_cpu(ddqp->d_iwarns);
->  	if (ddqp->d_rtbwarns)
-> -		qinf->qi_rtbwarnlimit = be16_to_cpu(ddqp->d_rtbwarns);
-> +		defq->rtbwarnlimit = be16_to_cpu(ddqp->d_rtbwarns);
->  
->  	xfs_qm_dqdestroy(dqp);
->  }
-> @@ -675,7 +669,9 @@ xfs_qm_init_quotainfo(
->  
->  	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
->  
-> -	xfs_qm_init_timelimits(mp, qinf);
-> +	xfs_qm_init_timelimits(mp, XFS_DQ_USER);
-> +	xfs_qm_init_timelimits(mp, XFS_DQ_GROUP);
-> +	xfs_qm_init_timelimits(mp, XFS_DQ_PROJ);
->  
->  	if (XFS_IS_UQUOTA_RUNNING(mp))
->  		xfs_qm_set_defquota(mp, XFS_DQ_USER, qinf);
-> diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-> index 3a850401b102..761286bf7fb2 100644
-> --- a/fs/xfs/xfs_qm.h
-> +++ b/fs/xfs/xfs_qm.h
-> @@ -41,7 +41,14 @@ extern struct kmem_zone	*xfs_qm_dqtrxzone;
->   */
->  #define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
->  
-> +/* Defaults for each quota type: time limits, warn limits, usage limits */
->  struct xfs_def_quota {
-> +	time64_t	btimelimit;	/* limit for blks timer */
-> +	time64_t	itimelimit;	/* limit for inodes timer */
-> +	time64_t	rtbtimelimit;	/* limit for rt blks timer */
-> +	xfs_qwarncnt_t	bwarnlimit;	/* limit for blks warnings */
-> +	xfs_qwarncnt_t	iwarnlimit;	/* limit for inodes warnings */
-> +	xfs_qwarncnt_t	rtbwarnlimit;	/* limit for rt blks warnings */
->  	xfs_qcnt_t	bhardlimit;	/* default data blk hard limit */
->  	xfs_qcnt_t	bsoftlimit;	/* default data blk soft limit */
->  	xfs_qcnt_t	ihardlimit;	/* default inode count hard limit */
-> @@ -64,12 +71,6 @@ struct xfs_quotainfo {
->  	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
->  	struct list_lru		qi_lru;
->  	int			qi_dquots;
-> -	time64_t		qi_btimelimit;	/* limit for blks timer */
-> -	time64_t		qi_itimelimit;	/* limit for inodes timer */
-> -	time64_t		qi_rtbtimelimit;/* limit for rt blks timer */
-> -	xfs_qwarncnt_t		qi_bwarnlimit;	/* limit for blks warnings */
-> -	xfs_qwarncnt_t		qi_iwarnlimit;	/* limit for inodes warnings */
-> -	xfs_qwarncnt_t		qi_rtbwarnlimit;/* limit for rt blks warnings */
->  	struct mutex		qi_quotaofflock;/* to serialize quotaoff */
->  	xfs_filblks_t		qi_dqchunklen;	/* # BBs in a chunk of dqs */
->  	uint			qi_dqperchunk;	/* # ondisk dq in above chunk */
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index 301a284ee4f9..29c1d5d4104d 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -563,23 +563,23 @@ xfs_qm_scall_setqlim(
->  		 * for warnings.
->  		 */
->  		if (newlim->d_fieldmask & QC_SPC_TIMER) {
-> -			q->qi_btimelimit = newlim->d_spc_timer;
-> +			defq->btimelimit = newlim->d_spc_timer;
->  			ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
->  		}
->  		if (newlim->d_fieldmask & QC_INO_TIMER) {
-> -			q->qi_itimelimit = newlim->d_ino_timer;
-> +			defq->itimelimit = newlim->d_ino_timer;
->  			ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
->  		}
->  		if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
-> -			q->qi_rtbtimelimit = newlim->d_rt_spc_timer;
-> +			defq->rtbtimelimit = newlim->d_rt_spc_timer;
->  			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
->  		}
->  		if (newlim->d_fieldmask & QC_SPC_WARNS)
-> -			q->qi_bwarnlimit = newlim->d_spc_warns;
-> +			defq->bwarnlimit = newlim->d_spc_warns;
->  		if (newlim->d_fieldmask & QC_INO_WARNS)
-> -			q->qi_iwarnlimit = newlim->d_ino_warns;
-> +			defq->iwarnlimit = newlim->d_ino_warns;
->  		if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
-> -			q->qi_rtbwarnlimit = newlim->d_rt_spc_warns;
-> +			defq->rtbwarnlimit = newlim->d_rt_spc_warns;
->  	} else {
->  		/*
->  		 * If the user is now over quota, start the timelimit.
-> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> index cb16a91dd1d4..51be282d28b3 100644
-> --- a/fs/xfs/xfs_quotaops.c
-> +++ b/fs/xfs/xfs_quotaops.c
-> @@ -21,9 +21,9 @@ xfs_qm_fill_state(
->  	struct qc_type_state	*tstate,
->  	struct xfs_mount	*mp,
->  	struct xfs_inode	*ip,
-> -	xfs_ino_t		ino)
-> +	xfs_ino_t		ino,
-> +	struct xfs_def_quota	*defq)
->  {
-> -	struct xfs_quotainfo	*q = mp->m_quotainfo;
->  	bool			tempqip = false;
->  
->  	tstate->ino = ino;
-> @@ -37,12 +37,12 @@ xfs_qm_fill_state(
->  	tstate->flags |= QCI_SYSFILE;
->  	tstate->blocks = ip->i_d.di_nblocks;
->  	tstate->nextents = ip->i_d.di_nextents;
-> -	tstate->spc_timelimit = (u32)q->qi_btimelimit;
-> -	tstate->ino_timelimit = (u32)q->qi_itimelimit;
-> -	tstate->rt_spc_timelimit = (u32)q->qi_rtbtimelimit;
-> -	tstate->spc_warnlimit = q->qi_bwarnlimit;
-> -	tstate->ino_warnlimit = q->qi_iwarnlimit;
-> -	tstate->rt_spc_warnlimit = q->qi_rtbwarnlimit;
-> +	tstate->spc_timelimit = (u32)defq->btimelimit;
-> +	tstate->ino_timelimit = (u32)defq->itimelimit;
-> +	tstate->rt_spc_timelimit = (u32)defq->rtbtimelimit;
-> +	tstate->spc_warnlimit = defq->bwarnlimit;
-> +	tstate->ino_warnlimit = defq->iwarnlimit;
-> +	tstate->rt_spc_warnlimit = defq->rtbwarnlimit;
->  	if (tempqip)
->  		xfs_irele(ip);
->  }
-> @@ -77,11 +77,11 @@ xfs_fs_get_quota_state(
->  		state->s_state[PRJQUOTA].flags |= QCI_LIMITS_ENFORCED;
->  
->  	xfs_qm_fill_state(&state->s_state[USRQUOTA], mp, q->qi_uquotaip,
-> -			  mp->m_sb.sb_uquotino);
-> +			  mp->m_sb.sb_uquotino, &q->qi_usr_default);
->  	xfs_qm_fill_state(&state->s_state[GRPQUOTA], mp, q->qi_gquotaip,
-> -			  mp->m_sb.sb_gquotino);
-> +			  mp->m_sb.sb_gquotino, &q->qi_grp_default);
->  	xfs_qm_fill_state(&state->s_state[PRJQUOTA], mp, q->qi_pquotaip,
-> -			  mp->m_sb.sb_pquotino);
-> +			  mp->m_sb.sb_pquotino, &q->qi_prj_default);
 >  	return 0;
 >  }
 >  
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index 20542076e32a..aa25647e0864 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -602,7 +602,7 @@ xfs_trans_dqresv(
->  			softlimit = defq->bsoftlimit;
->  		timer = be32_to_cpu(dqp->q_core.d_btimer);
->  		warns = be16_to_cpu(dqp->q_core.d_bwarns);
-> -		warnlimit = dqp->q_mount->m_quotainfo->qi_bwarnlimit;
-> +		warnlimit = defq->bwarnlimit;
->  		resbcountp = &dqp->q_res_bcount;
->  	} else {
->  		ASSERT(flags & XFS_TRANS_DQ_RES_RTBLKS);
-> @@ -614,7 +614,7 @@ xfs_trans_dqresv(
->  			softlimit = defq->rtbsoftlimit;
->  		timer = be32_to_cpu(dqp->q_core.d_rtbtimer);
->  		warns = be16_to_cpu(dqp->q_core.d_rtbwarns);
-> -		warnlimit = dqp->q_mount->m_quotainfo->qi_rtbwarnlimit;
-> +		warnlimit = defq->rtbwarnlimit;
->  		resbcountp = &dqp->q_res_rtbcount;
->  	}
+> @@ -616,9 +673,9 @@ edit_init(void)
 >  
-> @@ -650,7 +650,7 @@ xfs_trans_dqresv(
->  			total_count = be64_to_cpu(dqp->q_core.d_icount) + ninos;
->  			timer = be32_to_cpu(dqp->q_core.d_itimer);
->  			warns = be16_to_cpu(dqp->q_core.d_iwarns);
-> -			warnlimit = dqp->q_mount->m_quotainfo->qi_iwarnlimit;
-> +			warnlimit = defq->iwarnlimit;
->  			hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
->  			if (!hardlimit)
->  				hardlimit = defq->ihardlimit;
-> -- 
-> 2.17.0
-> 
+>  	timer_cmd.name = "timer";
+>  	timer_cmd.cfunc = timer_f;
+> -	timer_cmd.argmin = 2;
+> +	timer_cmd.argmin = 1;
+>  	timer_cmd.argmax = -1;
+> -	timer_cmd.args = _("[-bir] [-g|-p|-u] value");
+> +	timer_cmd.args = _("[-bir] [-g|-p|-u] value [-d|id|name]");
+>  	timer_cmd.oneline = _("set quota enforcement timeouts");
+>  	timer_cmd.help = timer_help;
+>  	timer_cmd.flags = CMD_FLAG_FOREIGN_OK;
 > 
