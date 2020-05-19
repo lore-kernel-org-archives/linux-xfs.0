@@ -2,54 +2,34 @@ Return-Path: <SRS0=UH25=7B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71AA1C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 01:29:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 191B4C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 01:56:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36221207D8
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 01:29:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MakHPpxN"
+	by mail.kernel.org (Postfix) with ESMTP id 001A0206D4
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 01:55:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727006AbgESB3r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 21:29:47 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:41003 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726276AbgESB3r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 21:29:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589851784;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=KIvla5Oy65fDRs5AtMYYjopEMRBiFOvpZOLayh7OShU=;
-        b=MakHPpxNCHsQWU9IsRBE7Cr7pYPbSnJ+CHMgNoKiwnGhx71x3d8XsqthVRS43i7hmDrZiy
-        mBLOtocpQSBJP7inHsoI4pasTHoDyi/+1ZQJHZgyr9qMinh1N4KnoY/Rt6yPxQeMYa8bBA
-        4gA34PzE8dn3VyWTVUelNkW1hm8/A6k=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-260-Om5yJxcPNECLZ37CU0fgoQ-1; Mon, 18 May 2020 21:29:42 -0400
-X-MC-Unique: Om5yJxcPNECLZ37CU0fgoQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726532AbgESBz7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 21:55:59 -0400
+Received: from sandeen.net ([63.231.237.45]:36132 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726293AbgESBz7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 18 May 2020 21:55:59 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D79C7107ACF8;
-        Tue, 19 May 2020 01:29:41 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7FEEB261A1;
-        Tue, 19 May 2020 01:29:41 +0000 (UTC)
-Subject: [PATCH V2] xfs_repair: fix progress reporting
-From:   Eric Sandeen <sandeen@redhat.com>
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-Cc:     Leonardo Vaz <lvaz@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-References: <c4df68a7-706b-0216-b2a0-a177789f380f@redhat.com>
-Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
+        by sandeen.net (Postfix) with ESMTPSA id 6B9DB323BFE;
+        Mon, 18 May 2020 20:55:33 -0500 (CDT)
+Subject: Re: [PATCH 1/3] xfs_db: don't crash if el_gets returns null
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <158984953155.623441.15225705949586714685.stgit@magnolia>
+ <158984953767.623441.453227281468842512.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
  WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
@@ -59,213 +39,100 @@ Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
  BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
  gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
  LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
- 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
-Message-ID: <be31d007-5104-e534-eec6-931ff5df5444@redhat.com>
-Date:   Mon, 18 May 2020 20:29:40 -0500
+ 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 pA==
+Message-ID: <56359b9f-8774-67ef-9d6c-52627178929d@sandeen.net>
+Date:   Mon, 18 May 2020 20:55:57 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <c4df68a7-706b-0216-b2a0-a177789f380f@redhat.com>
+In-Reply-To: <158984953767.623441.453227281468842512.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The Fixes: commit tried to avoid a segfault in case the progress timer
-went off before the first message type had been set up, but this
-had the net effect of short-circuiting the pthread start routine,
-and so the timer didn't get set up at all and we lost all fine-grained
-progress reporting.
+On 5/18/20 7:52 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> el_gets returns NULL if it fails to read any characters (due to EOF or
+> errors occurred).  strdup will crash if it is fed a NULL string, so
+> check the return value to avoid segfaulting.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-The initial problem occurred when log zeroing took more time than the
-timer interval.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-So, make a new log zeroing progress item and initialize it when we first
-set up the timer thread, to be sure that if the timer goes off while we
-are still zeroing the log, it will be initialized and correct.
-
-(We can't offer fine-grained status on log zeroing, so it'll go from
-zero to $LOGBLOCKS with nothing in between, but it's unlikely that log
-zeroing will take so long that this really matters.)
-
-Reported-by: Leonardo Vaz <lvaz@redhat.com>
-Fixes: 7f2d6b811755 ("xfs_repair: avoid segfault if reporting progre...")
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/repair/phase2.c b/repair/phase2.c
-index 40ea2f84..952ac4a5 100644
---- a/repair/phase2.c
-+++ b/repair/phase2.c
-@@ -120,6 +120,9 @@ zero_log(
- 			do_error(_("failed to clear log"));
- 	}
- 
-+	/* And we are now magically complete! */
-+	PROG_RPT_INC(prog_rpt_done[0], mp->m_sb.sb_logblocks);
-+
- 	/*
- 	 * Finally, seed the max LSN from the current state of the log if this
- 	 * is a v5 filesystem.
-@@ -160,7 +163,10 @@ phase2(
- 
- 	/* Zero log if applicable */
- 	do_log(_("        - zero log...\n"));
-+
-+	set_progress_msg(PROG_FMT_ZERO_LOG, (uint64_t)mp->m_sb.sb_logblocks);
- 	zero_log(mp);
-+	print_final_rpt();
- 
- 	do_log(_("        - scan filesystem freespace and inode maps...\n"));
- 
-diff --git a/repair/progress.c b/repair/progress.c
-index 5ee08229..e5a9c1ef 100644
---- a/repair/progress.c
-+++ b/repair/progress.c
-@@ -49,35 +49,37 @@ typedef struct progress_rpt_s {
- 
- static
- progress_rpt_t progress_rpt_reports[] = {
--{FMT1, N_("scanning filesystem freespace"),			/*  0 */
-+{FMT1, N_("zeroing log"),					/*  0 */
-+	&rpt_fmts[FMT1], &rpt_types[TYPE_BLOCK]},
-+{FMT1, N_("scanning filesystem freespace"),			/*  1 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
--{FMT1, N_("scanning agi unlinked lists"),			/*  1 */
-+{FMT1, N_("scanning agi unlinked lists"),			/*  2 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
--{FMT2, N_("check uncertain AG inodes"),				/*  2 */
-+{FMT2, N_("check uncertain AG inodes"),				/*  3 */
- 	&rpt_fmts[FMT2], &rpt_types[TYPE_AGI_BUCKET]},
--{FMT1, N_("process known inodes and inode discovery"),		/*  3 */
-+{FMT1, N_("process known inodes and inode discovery"),		/*  4 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
--{FMT1, N_("process newly discovered inodes"),			/*  4 */
-+{FMT1, N_("process newly discovered inodes"),			/*  5 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
--{FMT1, N_("setting up duplicate extent list"),			/*  5 */
-+{FMT1, N_("setting up duplicate extent list"),			/*  6 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
--{FMT1, N_("initialize realtime bitmap"),			/*  6 */
-+{FMT1, N_("initialize realtime bitmap"),			/*  7 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_BLOCK]},
--{FMT1, N_("reset realtime bitmaps"),				/*  7 */
-+{FMT1, N_("reset realtime bitmaps"),				/*  8 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
--{FMT1, N_("check for inodes claiming duplicate blocks"),	/*  8 */
-+{FMT1, N_("check for inodes claiming duplicate blocks"),	/*  9 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_INODE]},
--{FMT1, N_("rebuild AG headers and trees"),	 		/*  9 */
-+{FMT1, N_("rebuild AG headers and trees"),	 		/* 10 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
--{FMT1, N_("traversing filesystem"),				/* 10 */
-+{FMT1, N_("traversing filesystem"),				/* 12 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
--{FMT2, N_("traversing all unattached subtrees"),		/* 11 */
-+{FMT2, N_("traversing all unattached subtrees"),		/* 12 */
- 	&rpt_fmts[FMT2], &rpt_types[TYPE_DIR]},
--{FMT2, N_("moving disconnected inodes to lost+found"),		/* 12 */
-+{FMT2, N_("moving disconnected inodes to lost+found"),		/* 13 */
- 	&rpt_fmts[FMT2], &rpt_types[TYPE_INODE]},
--{FMT1, N_("verify and correct link counts"),			/* 13 */
-+{FMT1, N_("verify and correct link counts"),			/* 14 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]},
--{FMT1, N_("verify link counts"),				/* 14 */
-+{FMT1, N_("verify link counts"),				/* 15 */
- 	&rpt_fmts[FMT1], &rpt_types[TYPE_AG]}
- };
- 
-@@ -125,7 +127,8 @@ init_progress_rpt (void)
- 	 */
- 
- 	pthread_mutex_init(&global_msgs.mutex, NULL);
--	global_msgs.format = NULL;
-+	/* Make sure the format is set to the first phase and not NULL */
-+	global_msgs.format = &progress_rpt_reports[PROG_FMT_ZERO_LOG];
- 	global_msgs.count = glob_agcount;
- 	global_msgs.interval = report_interval;
- 	global_msgs.done   = prog_rpt_done;
-diff --git a/repair/progress.h b/repair/progress.h
-index 9de9eb72..2c1690db 100644
---- a/repair/progress.h
-+++ b/repair/progress.h
-@@ -8,26 +8,27 @@
- #define	PHASE_END		1
- 
- 
--#define	PROG_FMT_SCAN_AG 	0	/* Phase 2 */
-+#define	PROG_FMT_ZERO_LOG	0	/* Phase 2 */
-+#define	PROG_FMT_SCAN_AG 	1
- 
--#define	PROG_FMT_AGI_UNLINKED 	1	/* Phase 3 */
--#define	PROG_FMT_UNCERTAIN      2
--#define	PROG_FMT_PROCESS_INO	3
--#define	PROG_FMT_NEW_INODES	4
-+#define	PROG_FMT_AGI_UNLINKED 	2	/* Phase 3 */
-+#define	PROG_FMT_UNCERTAIN      3
-+#define	PROG_FMT_PROCESS_INO	4
-+#define	PROG_FMT_NEW_INODES	5
- 
--#define	PROG_FMT_DUP_EXTENT	5	/* Phase 4 */
--#define	PROG_FMT_INIT_RTEXT	6
--#define	PROG_FMT_RESET_RTBM	7
--#define	PROG_FMT_DUP_BLOCKS	8
-+#define	PROG_FMT_DUP_EXTENT	6	/* Phase 4 */
-+#define	PROG_FMT_INIT_RTEXT	7
-+#define	PROG_FMT_RESET_RTBM	8
-+#define	PROG_FMT_DUP_BLOCKS	9
- 
--#define	PROG_FMT_REBUILD_AG	9	/* Phase 5 */
-+#define	PROG_FMT_REBUILD_AG	10	/* Phase 5 */
- 
--#define	PROG_FMT_TRAVERSAL	10	/* Phase 6 */
--#define	PROG_FMT_TRAVERSSUB	11
--#define	PROG_FMT_DISCONINODE	12
-+#define	PROG_FMT_TRAVERSAL	11	/* Phase 6 */
-+#define	PROG_FMT_TRAVERSSUB	12
-+#define	PROG_FMT_DISCONINODE	13
- 
--#define	PROGRESS_FMT_CORR_LINK	13	/* Phase 7 */
--#define	PROGRESS_FMT_VRFY_LINK 	14
-+#define	PROGRESS_FMT_CORR_LINK	14	/* Phase 7 */
-+#define	PROGRESS_FMT_VRFY_LINK 	15
- 
- #define	DURATION_BUF_SIZE	512
- 
-
-
+> ---
+>  db/input.c |   23 +++++++++++++++--------
+>  1 file changed, 15 insertions(+), 8 deletions(-)
+> 
+> 
+> diff --git a/db/input.c b/db/input.c
+> index 553025bc..448e84b0 100644
+> --- a/db/input.c
+> +++ b/db/input.c
+> @@ -230,14 +230,21 @@ fetchline(void)
+>  	}
+>  
+>  	if (inputstacksize == 1) {
+> -		line = xstrdup(el_gets(el, &count));
+> -		if (line) {
+> -			if (count > 0)
+> -				line[count-1] = '\0';
+> -			if (*line) {
+> -				history(hist, &hevent, H_ENTER, line);
+> -				logprintf("%s", line);
+> -			}
+> +		const char	*cmd;
+> +
+> +		cmd = el_gets(el, &count);
+> +		if (!cmd)
+> +			return NULL;
+> +
+> +		line = xstrdup(cmd);
+> +		if (!line)
+> +			return NULL;
+> +
+> +		if (count > 0)
+> +			line[count-1] = '\0';
+> +		if (*line) {
+> +			history(hist, &hevent, H_ENTER, line);
+> +			logprintf("%s", line);
+>  		}
+>  	} else {
+>  		line = fetchline_internal();
+> 
