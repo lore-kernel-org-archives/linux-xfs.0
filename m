@@ -2,128 +2,205 @@ Return-Path: <SRS0=UH25=7B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69547C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 12:54:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03CF8C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 12:54:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 495C62081A
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 12:54:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6BC420823
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 12:54:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bkIweTKF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726196AbgESMyA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 08:54:00 -0400
-Received: from sandeen.net ([63.231.237.45]:41050 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726169AbgESMyA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 19 May 2020 08:54:00 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 96792323C01;
-        Tue, 19 May 2020 07:53:32 -0500 (CDT)
-Subject: Re: [PATCH V2] xfs_repair: fix progress reporting
-To:     Donald Douwsma <ddouwsma@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Cc:     Leonardo Vaz <lvaz@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-References: <c4df68a7-706b-0216-b2a0-a177789f380f@redhat.com>
- <be31d007-5104-e534-eec6-931ff5df5444@redhat.com>
- <8d81d09c-9bc7-5cf7-4114-85b1e8905940@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <9b2caada-4057-b73f-ca54-87208084f266@sandeen.net>
-Date:   Tue, 19 May 2020 07:53:56 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        id S1726976AbgESMym (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 08:54:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41814 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726169AbgESMym (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 08:54:42 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 003FFC08C5C0
+        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 05:54:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=V9zYkvgQTdQwczYreKhhWQfjcLTB+aruaTifqHrjKc0=; b=bkIweTKFJS/HPIxc7dNaAGqxwE
+        2AURQrxHIxOaicQgxFxGOkzIC+omSknUoEft8lB/82KLM/j1iCChAJWY5YGCk5hG0cnrGIGK3mxJc
+        tHHi0IXtefydNGq6zL8CriI6VygpkMxq6B9CJPIy6BWk5bWkRpKOGHJtkaecafxbS/KgHynkByNhX
+        PVQEeyzD+Y+weah9d4qeKKkW371SMD+8BQZewC+h6Uqz/PZaXRdmh3DLQXANOBKL4V8O+Tlu4OVe3
+        clKI4n7GY7vucciMepYBc59YtnEsUNfQbaCaIY489v8H+NQy4FRDV4BLuTJmZ6YYAPAR/J2Qet6JD
+        p2CpcHFg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jb1lV-0004G6-2F; Tue, 19 May 2020 12:54:37 +0000
+Date:   Tue, 19 May 2020 05:54:37 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org, bfoster@redhat.com
+Subject: Re: [PATCH 3/3] xfs: measure all contiguous previous extents for
+ prealloc size
+Message-ID: <20200519125437.GA15081@infradead.org>
+References: <158984934500.619853.3585969653869086436.stgit@magnolia>
+ <158984936387.619853.12262802837092587871.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <8d81d09c-9bc7-5cf7-4114-85b1e8905940@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <158984936387.619853.12262802837092587871.stgit@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/19/20 2:03 AM, Donald Douwsma wrote:
-> 
-> On 19/05/2020 11:29, Eric Sandeen wrote:
->> The Fixes: commit tried to avoid a segfault in case the progress timer
->> went off before the first message type had been set up, but this
->> had the net effect of short-circuiting the pthread start routine,
->> and so the timer didn't get set up at all and we lost all fine-grained
->> progress reporting.
->>
->> The initial problem occurred when log zeroing took more time than the
->> timer interval.
->>
->> So, make a new log zeroing progress item and initialize it when we first
->> set up the timer thread, to be sure that if the timer goes off while we
->> are still zeroing the log, it will be initialized and correct.
->>
->> (We can't offer fine-grained status on log zeroing, so it'll go from
->> zero to $LOGBLOCKS with nothing in between, but it's unlikely that log
->> zeroing will take so long that this really matters.)
->>
->> Reported-by: Leonardo Vaz <lvaz@redhat.com>
->> Fixes: 7f2d6b811755 ("xfs_repair: avoid segfault if reporting progre...")
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
-> I've been looking at this myself, got stuck writing an xfstest, which this
-> passes, though the fix I was trying missed at least one of the formatters
-> that this fixes, and the log zeroing is a nice touch.
-> 
-> Reviewed-by: Donald Douwsma <ddouwsma@redhat.com>
+The actual logic looks good, but I think the new helper and another
+third set of comment explaining what is going on makes this area even
+more confusing.  What about something like this instead?
 
-Hm, serves you right for writing a validation test.  ;)  sorry :(
-
-But:  "the fix I was trying missed at least one of the formatters
-that this fixes" - which one is that?  I didn't think I fixed any existing
-thing.
-
--Eric
-
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index bb590a267a7f9..26f9874361cd3 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -352,22 +352,10 @@ xfs_quota_calc_throttle(
+ }
+ 
+ /*
+- * If we are doing a write at the end of the file and there are no allocations
+- * past this one, then extend the allocation out to the file system's write
+- * iosize.
+- *
+  * If we don't have a user specified preallocation size, dynamically increase
+  * the preallocation size as the size of the file grows.  Cap the maximum size
+  * at a single extent or less if the filesystem is near full. The closer the
+- * filesystem is to full, the smaller the maximum prealocation.
+- *
+- * As an exception we don't do any preallocation at all if the file is smaller
+- * than the minimum preallocation and we are using the default dynamic
+- * preallocation scheme, as it is likely this is the only write to the file that
+- * is going to be done.
+- *
+- * We clean up any extra space left over when the file is closed in
+- * xfs_inactive().
++ * filesystem is to full, the smaller the maximum preallocation.
+  */
+ STATIC xfs_fsblock_t
+ xfs_iomap_prealloc_size(
+@@ -380,52 +368,58 @@ xfs_iomap_prealloc_size(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+-	struct xfs_bmbt_irec	prev;
++	struct xfs_iext_cursor	ncur = *icur;
++	struct xfs_bmbt_irec	prev, got;
+ 	int			shift = 0;
+ 	int64_t			freesp;
+ 	xfs_fsblock_t		qblocks;
+ 	int			qshift = 0;
+-	xfs_fsblock_t		alloc_blocks = 0;
++	xfs_fsblock_t		alloc_blocks;
++	xfs_extlen_t		plen;
+ 
+-	if (offset + count <= XFS_ISIZE(ip))
+-		return 0;
+-
+-	if (!(mp->m_flags & XFS_MOUNT_ALLOCSIZE) &&
+-	    (XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_allocsize_blocks)))
++	/*
++	 * As an exception we don't do any preallocation at all if the file is
++	 * smaller than the minimum preallocation and we are using the default
++	 * dynamic preallocation scheme, as it is likely this is the only write
++	 * to the file that is going to be done.
++	 */
++	if (XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_allocsize_blocks))
+ 		return 0;
+ 
+ 	/*
+-	 * If an explicit allocsize is set, the file is small, or we
+-	 * are writing behind a hole, then use the minimum prealloc:
++	 * Otherwise use the minimum prealloca size for small files, or if we
++	 * are writing right after a hole.
+ 	 */
+-	if ((mp->m_flags & XFS_MOUNT_ALLOCSIZE) ||
+-	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
+-	    !xfs_iext_peek_prev_extent(ifp, icur, &prev) ||
++	if (XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
++	    !xfs_iext_prev_extent(ifp, &ncur, &prev) ||
+ 	    prev.br_startoff + prev.br_blockcount < offset_fsb)
+ 		return mp->m_allocsize_blocks;
+ 
+ 	/*
+-	 * Determine the initial size of the preallocation. We are beyond the
+-	 * current EOF here, but we need to take into account whether this is
+-	 * a sparse write or an extending write when determining the
+-	 * preallocation size.  Hence we need to look up the extent that ends
+-	 * at the current write offset and use the result to determine the
+-	 * preallocation size.
+-	 *
+-	 * If the extent is a hole, then preallocation is essentially disabled.
+-	 * Otherwise we take the size of the preceding data extent as the basis
+-	 * for the preallocation size. If the size of the extent is greater than
+-	 * half the maximum extent length, then use the current offset as the
+-	 * basis. This ensures that for large files the preallocation size
+-	 * always extends to MAXEXTLEN rather than falling short due to things
+-	 * like stripe unit/width alignment of real extents.
++	 * Take the size of the contiguous preceding data extents as the basis
++	 * for the preallocation size.  Note that we don't care if the previous
++	 * extents are written or not.
+ 	 */
+-	if (prev.br_blockcount <= (MAXEXTLEN >> 1))
+-		alloc_blocks = prev.br_blockcount << 1;
+-	else
++	plen = prev.br_blockcount;
++	while (xfs_iext_prev_extent(ifp, &ncur, &got)) {
++		if (plen > MAXEXTLEN / 2 ||
++		    got.br_startoff + got.br_blockcount != prev.br_startoff ||
++		    got.br_startblock + got.br_blockcount != prev.br_startblock)
++			break;
++		plen += got.br_blockcount;
++		prev = got;
++	}
++
++	/*
++	 * If the size of the extents is greater than half the maximum extent
++	 * length, then use the current offset as the basis.  This ensures that
++	 * for large files the preallocation size always extends to MAXEXTLEN
++	 * rather than falling short due to things like stripe unit/width
++	 * alignment of real extents.
++	 */
++	alloc_blocks = plen * 2;
++	if (alloc_blocks > MAXEXTLEN)
+ 		alloc_blocks = XFS_B_TO_FSB(mp, offset);
+-	if (!alloc_blocks)
+-		goto check_writeio;
+ 	qblocks = alloc_blocks;
+ 
+ 	/*
+@@ -494,7 +488,6 @@ xfs_iomap_prealloc_size(
+ 	 */
+ 	while (alloc_blocks && alloc_blocks >= freesp)
+ 		alloc_blocks >>= 4;
+-check_writeio:
+ 	if (alloc_blocks < mp->m_allocsize_blocks)
+ 		alloc_blocks = mp->m_allocsize_blocks;
+ 	trace_xfs_iomap_prealloc_size(ip, alloc_blocks, shift,
+@@ -961,9 +954,16 @@ xfs_buffered_write_iomap_begin(
+ 	if (error)
+ 		goto out_unlock;
+ 
+-	if (eof) {
+-		prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork, offset,
+-				count, &icur);
++	if (eof && offset + count > XFS_ISIZE(ip)) {
++		/*
++		 * Determine the initial size of the preallocation.
++ 		 * We clean up any extra preallocation when the file is closed.
++		 */
++		if (mp->m_flags & XFS_MOUNT_ALLOCSIZE)
++			prealloc_blocks = mp->m_allocsize_blocks;
++		else
++			prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork,
++						offset, count, &icur);
+ 		if (prealloc_blocks) {
+ 			xfs_extlen_t	align;
+ 			xfs_off_t	end_offset;
