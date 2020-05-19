@@ -7,171 +7,170 @@ X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D001BC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 06:23:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5C76C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 06:32:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A412520708
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 06:23:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF36A2070A
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 06:32:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zUAnqBaJ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ydBof4xn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727987AbgESGXr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 02:23:47 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:53704 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726605AbgESGXq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 02:23:46 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04J6LrvU028464;
-        Tue, 19 May 2020 06:23:43 GMT
+        id S1726870AbgESGcJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 02:32:09 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:39044 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726859AbgESGcJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 02:32:09 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04J6R5qc112175;
+        Tue, 19 May 2020 06:32:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=mwa7X0nTiFeCnzh3zxYX3+Mnt0kBSxzW+iVncXmYvKM=;
- b=zUAnqBaJ8FsZ7gjO4aaj3BjLk11O6zFeIGjM6wsYPn2wO7yciuezy7QoXNKn2FOyDY6z
- 70OZKnwQGdajYRj+/tcZCOMhUSQPcyRAJCDV+50vfpnowhe2nsUwK5JvluoNf+qfhJLr
- 3prIZmcHzAUHaSE9FsqCXO0Mc462znpnC8Iiy9HveWi89e0Ruh7sAeqm+O7sprPIGGN0
- N8eaAJ8ZY6iW1JRNKiLUMYjsh1+zzJmkuTZPEbPl/ETNUQJayNBhC/zQcEfoZtBSIA21
- xZx/OUOjTOPVW89HKVivcn1GKhgEIDek8hC0gtkNZIr6366RzFUs+oXLoRJWpwA9yXRP 8A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 31284ku498-1
+ bh=KrMBj7/Ahlgwu/rS7WMgv8+ZKxNto8qcIeBlnK5XiuE=;
+ b=ydBof4xn7nqBzTdG35lM2gPEmYHqiUBl3BtM2iJIbYBh+elguiYzwTnH4zYtOtngxGKv
+ yQCvXhNon9XL8FeIcw7eVQKB/nUF1Upjxzg1ktY3rOFqfnQ/zkxKHdYjAaD5UFGg2119
+ QxBGIkxFhyvhFaVwyyqqpsXQaiBR39PNPBfeol2eo0CPYh1yURMc9tzz77/iZh+8neRp
+ Mz8bSY92j2/ov9NxFBhBLe23vCTDqxm7MCSiHidlh0toyhsNcZ8+Ico6FpZfo/YygvcC
+ +smdKRVKNHrZ603VgBM7mijoMbT/xtAg4fv6iAX/RAonRf+PuKVLw6cZfMMRXGkRvSgO YA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 3127kr36uq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 19 May 2020 06:23:43 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04J6INPp037572;
-        Tue, 19 May 2020 06:23:42 GMT
+        Tue, 19 May 2020 06:32:06 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04J6SX1P167309;
+        Tue, 19 May 2020 06:32:06 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 312t3x9sj6-1
+        by aserp3030.oracle.com with ESMTP id 313gj15e2e-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 19 May 2020 06:23:42 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04J6Nds5019729;
-        Tue, 19 May 2020 06:23:39 GMT
+        Tue, 19 May 2020 06:32:06 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04J6W5IK023224;
+        Tue, 19 May 2020 06:32:05 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 18 May 2020 23:23:39 -0700
-Date:   Mon, 18 May 2020 23:23:38 -0700
+        with ESMTP ; Mon, 18 May 2020 23:32:05 -0700
+Date:   Mon, 18 May 2020 23:32:04 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [XFS SUMMIT] Deprecating V4 on-disk format
-Message-ID: <20200519062338.GH17627@magnolia>
-References: <20200513023618.GA2040@dread.disaster.area>
+Subject: Re: [XFS SUMMIT] SSD optimised allocation policy
+Message-ID: <20200519063204.GI17627@magnolia>
+References: <20200514103454.GL2040@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200513023618.GA2040@dread.disaster.area>
+In-Reply-To: <20200514103454.GL2040@dread.disaster.area>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- phishscore=0 bulkscore=0 suspectscore=1 mlxscore=0 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005190055
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 malwarescore=0
+ mlxscore=0 adultscore=0 bulkscore=0 suspectscore=5 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005190057
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxscore=0
- cotscore=-2147483648 impostorscore=0 malwarescore=0 mlxlogscore=999
- lowpriorityscore=0 phishscore=0 spamscore=0 bulkscore=0 adultscore=0
- priorityscore=1501 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2005190056
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ bulkscore=0 clxscore=1015 priorityscore=1501 mlxscore=0 impostorscore=0
+ suspectscore=5 mlxlogscore=999 malwarescore=0 cotscore=-2147483648
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005190057
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 13, 2020 at 12:36:18PM +1000, Dave Chinner wrote:
+On Thu, May 14, 2020 at 08:34:54PM +1000, Dave Chinner wrote:
 > 
-> Topic: Deprecating V4 On-disk Format
+> Topic:	SSD Optimised allocation policies
 > 
 > Scope:
-> 	Long term life cycle planning
-> 	Supporting old filesystems with new kernels.
-> 	Unfixable integrity issues in v4 format.
-> 	Reducing feature matrix for testing
+> 	Performance
+> 	Storage efficiency
 > 
 > Proposal:
 > 
-> The CRC-enabled V5 format has been the upstream default format now
-> since commit 566ebd5ae5fa ("mkfs: default to CRC enabled
-> filesystems") dated May 11 2015 (5 years ago!) and released in
-> xfsprogs v3.2.3. It is the default in all major distros, and has
-> been for some time.
+> Non-rotational storage is typically very fast. Our allocation
+> policies are all, fundamentally, based on very slow storage which
+> has extremely high latency between IO to different LBA regions. We
+> burn CPU to optimise for minimal seeks to minimise the expensive
+> physical movement of disk heads and platter rotation.
 > 
-> We know that the v4 format has unfixable integrity issues apart from
-> the obvious lack of CRCs and self-describing metadata structures; it
-> has race conditions in log recovery realted to inode creation and
-> other such issues that could only be solved with an on-disk format
-> change of some kind. We are not adding new features to v4 formats,
-> so anyone wanting to use new XFS features must use v5 format
-> filesystems.
+> We know when the underlying storage is solid state - there's a
+> "non-rotational" field in the block device config that tells us the
+> storage doesn't need physical seek optimisation. We should make use
+> of that.
 > 
-> We also know that the number of v4 filesysetms in production is
-> slowly decreasing as systems are replaced as part of the natural
-> life cycle of production systems.
+> My proposal is that we look towards arranging the filesystem
+> allocation policies into CPU-optimised silos. We start by making
+> filesystems on SSDs with AG counts that are multiples of the CPU
+> count in the system (e.g. 4x the number of CPUs) to drive
+
+I guess you and I have been doing this for years with seemingly few ill
+effects. ;)
+
+That said, I did encounter a wackass system with 104 CPUs, a 1.4T RAID
+array of spinning disks, 229 AGs sized ~6.5GB each, and a 50M log.  The
+~900 io writers were sinking thesystem, so clearly some people are still
+getting it wrong even with traditional storage. :(
+
+> parallelism at the allocation level, and then associate allocation
+> groups with specific CPUs in the system. Hence each CPU has a set of
+> allocation groups is selects between for the operations that are run
+> on it. Hence allocation is typically local to a specific CPU.
+> Optimisation proceeds from the basis of CPU locality optimisation,
+> not storage locality optimisation.
+
+I wonder how hard it would be to compile a locality map for storage and
+CPUs from whatever numa and bus topology information the kernel already
+knows about?
+
+> What this allows is processes on different CPUs to never contend for
+> allocation resources. Locality of objects just doesn't matter for
+> solid state storage, so we gain nothing by trying to group inodes,
+> directories, their metadata and data physically close together. We
+> want writes that happen at the same time to be physically close
+> together so we aggregate them into larger IOs, but we really
+> don't care about optimising write locality for best read performance
+> (i.e. must be contiguous for sequential access) for this storage.
 > 
-> All this adds up to the realisation that existing v4 filesystems are
-> effectively in the "Maintenance Mode" era of the software life
-> cycle. The next stage in the life cycle is "Phasing Out" before we
-> drop support for it altogether, also know around here as
-> "deprecated" which is a sign that support will "soon" cease.
+> Further, we can look at faster allocation strategies - we don't need
+> to find the "nearest" if we don't have a contiguous free extent to
+> allocate into, we just want the one that costs the least CPU to
+> find. This is because solid state storage is so fast that filesystem
+> performance is CPU limited, not storage limited. Hence we need to
+> think about allocation policies differently and start optimising
+> them for minimum CPU expenditure rather than best layout.
 > 
-> I'd like to move the v4 format to the "deprecated" state as a signal
-> to users that it should really not be considered viable for new
-> systems. New systems running modern kernels and userspace should
-> all be using the v5 format, so this mostly only affects existing
-> filesystems.
-> 
-> Note: I am not proposing that we drop support for the v4 format any
-> time soon. What I am proposing is an "end of lifecycle" tag similar
-> to the way we use EXPERIMENTAL to indicate that the functionality is
-> available but we don't recommend it for production systems yet.
-> 
-> Hence what I am proposing is that we introduce a DEPRECATED alert at
-> mount time to inform users that the functionality exists, but it
-> will not be maintained indefinitely into the future. For distros
-> with a ten year support life, this means that a near-future release
-> will pick up the DEPRECATED tag but still support the filesystem for
-> the support life of that release. A "future +1" release may not
-> support the v4 format at all.
+> Other things to discuss include:
+> 	- how do we convert metadata structures to write-once style
+> 	  behaviour rather than overwrite in place?
 
-/me regrets that he is frequently failing to clear enough space out of
-his schedule to respond to all of these adequately.  But here goes,
-random thoughts at 23:23. :/
+(Hm?)
 
-> Discussion points:
-> 
-> - How practical is this?
+> 	- extremely large block sizes for metadata (e.g. 4MB) to
+> 	  align better with SSD erase block sizes
 
-Well, we've killed off old features before... v1 inodes, v2 directories,
-etc.  So clearly this can be done, given enough preparation time.
+If we had metadata blocks that size, I'd advocate for studying how we
+could restructure the btree to log updates in the slack space and only
+checkpoint lower in the tree when necessary.
 
-And we probably ought to do it, before we start to resemble the ext4
-quota nightmare.
+> 	- what parts of the allocation algorithms don't we need
 
-> - What should we have mkfs do when directed to create a v4 format
->   filesystem?
+Brian reworked part of the allocator a couple of cycles ago to reduce
+the long tail latency of chasing through one free space btree when the
+other one would have given it a quick answer; how beneficial has that
+been?  Could it be more aggressive?
 
-It probably ought to print a warning...
+(Will have to ponder allocation issues in more depth when I'm more
+awake..)
 
-That said, way back when we were arguing with the syzbot people, one of
-us suggested that we hide V4 behind a CONFIG_XFS_DEPRECATED=y option, so
-that people who want to harden their kernel against the unfixable
-structural problems in the V4 format could effectively lose V4 support
-early.  Maybe we should add that for a few years?
+> 	- are we better off with huge numbers of small AGs rather
+> 	  than fewer large AGs?
 
-> - How long before we decide to remove v4 support from the upstream
->   kernel and tools? 5 years after deprecation? 10 years?
-
-That probably depends a lot on how much our respective employers want to
-keep those old XFSes going.  Some of our customers are about ready to
-certify that they can support their distro defaults changing from ext3
-to XFS v4, but those folks have support contracts that won't terminate
-until whenever the so^Hun goes out.
+There's probably some point of dimininishing returns, but this seems
+likely.  Has anyone studied this recently?
 
 --D
 
 > 
-> Cheers,
-> 
-> Dave.
 > -- 
 > Dave Chinner
 > david@fromorbit.com
