@@ -2,320 +2,247 @@ Return-Path: <SRS0=UH25=7B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 824FFC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 16:14:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46DDEC433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 16:18:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E87D2075F
-	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 16:14:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20CE72075F
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 16:18:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="n9nOOTgT"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jJk5k9lj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728953AbgESQOL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 12:14:11 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:60604 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728534AbgESQOL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 12:14:11 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04JGD9ES142719
-        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 16:14:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=VGq5QU4pr9O/GfNXJvw1EN9vY+FV39iZDV4kipUYENI=;
- b=n9nOOTgT4Aupk7kJuEC+czK3z3ERu+awxNGx3VyQJUZe7ZmTMDwKtc+al7yphRrqR0wl
- JurLN6wqnv7sgJVyub2uT/un0ypuLmcywC016ZE/AjxrFZYskRvn/aXdazt6BZ4gGqeH
- uxJdLEi3H5jgdU/knAH3A40ElF61kenPfHHK6KTaqScl+yxJ+KHzxvipvBB7u3hMTn5p
- OC4Q81s6XuqToiKZPfGN7p12ehRvDAQqgAdD2HaD3miQC758Vn9/E8YLDF9BUqN3rCru
- l0ts7Vwr97C1YXCsayKlA/YwknRwRg5YSx+E88tJKtp5ZrJIsI+lGEfXZtbeUDP1IJYf CA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 3127kr6dh0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 16:14:08 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04JGCaQM093604
-        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 16:14:08 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 313gj1xbsj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 16:14:07 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04JGE7UO008334
-        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 16:14:07 GMT
+        id S1729163AbgESQS4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 12:18:56 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:49534 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729360AbgESQSp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 12:18:45 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04JGHOj5195651;
+        Tue, 19 May 2020 16:18:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
+ bh=KjGI2rJcL43jkbPPCXQbA4FcfJl+4/Icmw/ihII9jS4=;
+ b=jJk5k9ljX/1LzGi3ouQCZH1vIKvh5kVCYMNZ6wVNpYOuq1/KeF+9FYSheVATIsY/Lg1q
+ WX2Xs3uW4uSrT24dWoAoKcOpUOEt2hNHyGFFJIFgVPz6aZKq+bC845CJvcGdlmNLrsoj
+ KivYG/DWaP5LbEFBFrv8MGMUh9Cinr3OfKGK1Sm6c7wZJOtbbWPWf/Z0sIL7sgza9eyO
+ /xjEC5sqZ1Hfw3ShOVbpLY04988hvqrfbc87HN0xskvinMaJDPbLFAYpPsYDlqwoK3YS
+ RFsvdO5/TMH0PSSmmRNo/y91j/ht4ekdFNz7hEk9oEoFgUpClzVziaOKpqw8bbneEhoI ww== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 3128tnea8h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 19 May 2020 16:18:41 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04JGIOLF159360;
+        Tue, 19 May 2020 16:18:41 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 314gm5909p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 19 May 2020 16:18:41 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04JGIeEa010193;
+        Tue, 19 May 2020 16:18:40 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 19 May 2020 09:14:07 -0700
-Date:   Tue, 19 May 2020 09:14:04 -0700
+        with ESMTP ; Tue, 19 May 2020 09:18:40 -0700
+Date:   Tue, 19 May 2020 09:18:37 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 188b1f949bde
-Message-ID: <20200519161404.GJ17627@magnolia>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 2/6] xfs: always return -ENOSPC on project quota
+ reservation failure
+Message-ID: <20200519161837.GK17627@magnolia>
+References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
+ <842a7671-b514-d698-b996-5c1ccf65a6ad@redhat.com>
+ <d1853cc9-f478-789d-a9f0-63cd87284828@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <d1853cc9-f478-789d-a9f0-63cd87284828@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9626 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 malwarescore=0
- mlxscore=0 adultscore=0 bulkscore=0 suspectscore=2 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005190137
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ adultscore=0 phishscore=0 mlxscore=0 spamscore=0 suspectscore=1
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005190138
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9626 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
- bulkscore=0 clxscore=1015 priorityscore=1501 mlxscore=0 impostorscore=0
- suspectscore=2 mlxlogscore=999 malwarescore=0 cotscore=-2147483648
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005190137
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 cotscore=-2147483648 suspectscore=1 lowpriorityscore=0
+ adultscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005190138
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Mon, May 18, 2020 at 01:49:14PM -0500, Eric Sandeen wrote:
+> XFS project quota treats project hierarchies as "mini filesysems" and
+> so rather than -EDQUOT, the intent is to return -ENOSPC when a quota
+> reservation fails, but this behavior is not consistent.
+> 
+> The only place we make a decision between -EDQUOT and -ENOSPC
+> returns based on quota type is in xfs_trans_dqresv().
+> 
+> This behavior is currently controlled by whether or not the
+> XFS_QMOPT_ENOSPC flag gets passed into the quota reservation.  However,
+> its use is not consistent; paths such as xfs_create() and xfs_symlink()
+> don't set the flag, so a reservation failure will return -EDQUOT for
+> project quota reservation failures rather than -ENOSPC for these sorts
+> of operations, even for project quota:
+> 
+> # mkdir mnt/project
+> # xfs_quota -x -c "project -s -p mnt/project 42" mnt
+> # xfs_quota -x -c 'limit -p isoft=2 ihard=3 42' mnt
+> # touch mnt/project/file{1,2,3}
+> touch: cannot touch ‘mnt/project/file3’: Disk quota exceeded
+> 
+> We can make this consistent by not requiring the flag to be set at the
+> top of the callchain; instead we can simply test whether we are
+> reserving a project quota with XFS_QM_ISPDQ in xfs_trans_dqresv and if
+> so, return -ENOSPC for that failure.  This removes the need for the
+> XFS_QMOPT_ENOSPC altogether and simplifies the code a fair bit.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-The for-next branch of the xfs-linux repository at:
+Random thoughts on this patch and the previous one--
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+I like the part where these two patches actually make xfs consistent
+about returning EDQUOT for user/group quota, and ENOSPC for project.
+Annoyingly, it looks like f2fs/ext4 return EDQUOT for project quotas,
+and fstests definitely trips a few regressions over the changing error
+message.
 
-has just been updated.
+So we have a bit of a mess wrt what the expected behavior is when you
+run out of project quota.  In theory XFS has precedence since it was
+there first, though somewhat eroded due to the inconsistencies that
+weren't fixed until now.  OTOH, does that just mean ext4/f2fs are
+broken?
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  Still clanking through Eric's quota series and the
-delalloc/unwritten series...
+What do others think?  The patch submitter probably ought to start a
+fsdevel thread about this. ;)
 
-The new head of the for-next branch is commit:
+For the kernel patch, I'll say:
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-188b1f949bde xfs: cleanup xfs_idestroy_fork
+--D
 
-New Commits:
-
-Arnd Bergmann (1):
-      [166405f6b53b] xfs: stop CONFIG_XFS_DEBUG from changing compiler flags
-
-Brian Foster (19):
-      [cb6ad0993eb8] xfs: refactor failed buffer resubmission into xfsaild
-      [54b3b1f619ef] xfs: factor out buffer I/O failure code
-      [f20192991d79] xfs: simplify inode flush error handling
-      [15fab3b9be22] xfs: remove unnecessary shutdown check from xfs_iflush()
-      [b6983e80b03b] xfs: reset buffer write failure state on successful completion
-      [f9bccfcc3b59] xfs: refactor ratelimited buffer error messages into helper
-      [61948b6fb276] xfs: ratelimit unmount time per-buffer I/O error alert
-      [629dcb38dc35] xfs: fix duplicate verification from xfs_qm_dqflush()
-      [b707fffda6a3] xfs: abort consistently on dquot flush failure
-      [849274c103ae] xfs: acquire ->ail_lock from xfs_trans_ail_delete()
-      [655879290c28] xfs: use delete helper for items expected to be in AIL
-      [6af0479d8b6b] xfs: drop unused shutdown parameter from xfs_trans_ail_remove()
-      [2b3cf09356d5] xfs: combine xfs_trans_ail_[remove|delete]()
-      [88fc187984c9] xfs: remove unused iflush stale parameter
-      [7376d7454734] xfs: random buffer write failure errortag
-      [28d84620797e] xfs: remove unused shutdown types
-      [c199507993ed] xfs: remove unused iget_flags param from xfs_imap_to_bp()
-      [43dc0aa84ef7] xfs: fix unused variable warning in buffer completion on !DEBUG
-      [c61b0b17a5c1] xfs: don't fail verifier on empty attr3 leaf block
-
-Chen Zhou (1):
-      [3d60548b216b] xfs: remove duplicate headers
-
-Christoph Hellwig (33):
-      [e968350aadf3] xfs: refactor the buffer cancellation table helpers
-      [5ce70b770d16] xfs: rename inode_list xlog_recover_reorder_trans
-      [7d4894b4ce07] xfs: factor out a xlog_buf_readahead helper
-      [f15ab3f60ef3] xfs: simplify xlog_recover_inode_ra_pass2
-      [98b69b1285be] xfs: refactor xlog_recover_buffer_pass1
-      [82ff450b2d93] xfs: remove the xfs_efi_log_item_t typedef
-      [c84e819090f3] xfs: remove the xfs_efd_log_item_t typedef
-      [fd9cbe512151] xfs: remove the xfs_inode_log_item_t typedef
-      [e046e949486e] xfs: factor out a xfs_defer_create_intent helper
-      [c1f09188e8de] xfs: merge the ->log_item defer op into ->create_intent
-      [d367a868e46b] xfs: merge the ->diff_items defer op into ->create_intent
-      [13a833333907] xfs: turn dfp_intent into a xfs_log_item
-      [bb47d79750f1] xfs: refactor xfs_defer_finish_noroll
-      [f09d167c2033] xfs: turn dfp_done into a xfs_log_item
-      [3ec1b26c04d4] xfs: use a xfs_btree_cur for the ->finish_cleanup state
-      [2f88f1efd02d] xfs: spell out the parameter name for ->cancel_item
-      [ee0d0dbcfe19] xfs: xfs_bmapi_read doesn't take a fork id as the last argument
-      [f5d7d422c81c] xfs: call xfs_iformat_fork from xfs_inode_from_disk
-      [980f26097db7] xfs: split xfs_iformat_fork
-      [deaae0f84fdc] xfs: handle unallocated inodes in xfs_inode_from_disk
-      [a0070f456d70] xfs: call xfs_dinode_verify from xfs_inode_from_disk
-      [0561e88beb54] xfs: don't reset i_delayed_blks in xfs_iread
-      [e700fa3913bb] xfs: remove xfs_iread
-      [63ec6a4b2d6a] xfs: remove xfs_ifork_ops
-      [411d0c362c44] xfs: refactor xfs_inode_verify_forks
-      [fdf080bf439c] xfs: improve local fork verification
-      [1405c18793c0] xfs: remove the special COW fork handling in xfs_bmapi_read
-      [1dd19ee9233d] xfs: remove the NULL fork handling in xfs_bmapi_read
-      [f0423a69ff83] xfs: remove the XFS_DFORK_Q macro
-      [a136c7a77ebd] xfs: remove xfs_ifree_local_data
-      [0042f9de0246] xfs: move the per-fork nextents fields into struct xfs_ifork
-      [d66bc96d2cb5] xfs: move the fork format fields into struct xfs_ifork
-      [188b1f949bde] xfs: cleanup xfs_idestroy_fork
-
-Darrick J. Wong (30):
-      [0d2d35a33ea7] xfs: report unrecognized log item type codes during recovery
-      [8bc3b5e4b70d] xfs: clean up the error handling in xfs_swap_extents
-      [35f4521fd3a0] xfs: convert xfs_log_recover_item_t to struct xfs_log_recover_item
-      [86ffa471d9ce] xfs: refactor log recovery item sorting into a generic dispatch structure
-      [8ea5682d0711] xfs: refactor log recovery item dispatch for pass2 readhead functions
-      [3304a4fabd09] xfs: refactor log recovery item dispatch for pass1 commit functions
-      [1094d3f12363] xfs: refactor log recovery buffer item dispatch for pass2 commit functions
-      [658fa68b6f34] xfs: refactor log recovery inode item dispatch for pass2 commit functions
-      [fcbdf91e0c9f] xfs: refactor log recovery dquot item dispatch for pass2 commit functions
-      [3ec6efa703cf] xfs: refactor log recovery icreate item dispatch for pass2 commit functions
-      [9817aa80dcdc] xfs: refactor log recovery EFI item dispatch for pass2 commit functions
-      [07590a9d38b8] xfs: refactor log recovery RUI item dispatch for pass2 commit functions
-      [9b4467e98340] xfs: refactor log recovery CUI item dispatch for pass2 commit functions
-      [3c6ba3cf90c7] xfs: refactor log recovery BUI item dispatch for pass2 commit functions
-      [2565a11b224b] xfs: remove log recovery quotaoff item dispatch for pass2 commit functions
-      [10d0c6e06fc8] xfs: refactor recovered EFI log item playback
-      [cba0ccac28a7] xfs: refactor recovered RUI log item playback
-      [c57ed2f5a2ff] xfs: refactor recovered CUI log item playback
-      [9329ba89cbb1] xfs: refactor recovered BUI log item playback
-      [bba7b1644a25] xfs: refactor xlog_item_is_intent now that we're done converting
-      [154c733a33d9] xfs: refactor releasing finished intents during log recovery
-      [86a371741386] xfs: refactor adding recovered intent items to the log
-      [889eb55dd68f] xfs: refactor intent item RECOVERED flag into the log item
-      [96b60f826713] xfs: refactor intent item iop_recover calls
-      [cc560a5a9540] xfs: hoist setting of XFS_LI_RECOVERED to caller
-      [17d29bf271ea] xfs: move log recovery buffer cancellation code to xfs_buf_item_recover.c
-      [6ea670ade207] xfs: remove unnecessary includes from xfs_log_recover.c
-      [4b1d64b072ac] xfs: use ordered buffers to initialize dquot buffers during quotacheck
-      [444f17be1a16] xfs: don't allow SWAPEXT if we'd screw up quota accounting
-      [1d5361955f18] xfs: clean up xchk_bmap_check_rmaps usage of XFS_IFORK_Q
-
-Eric Sandeen (1):
-      [ec43f6da31f1] xfs: define printk_once variants for xfs messages
-
-Gustavo A. R. Silva (1):
-      [ee4064e56cd8] xfs: Replace zero-length array with flexible-array
-
-Ira Weiny (5):
-      [d45344d6c49c] fs/xfs: Remove unnecessary initialization of i_rwsem
-      [606723d98293] fs/xfs: Change XFS_MOUNT_DAX to XFS_MOUNT_DAX_ALWAYS
-      [8d6c3446ec23] fs/xfs: Make DAX mount option a tri-state
-      [32dbc5655f1c] fs/xfs: Create function xfs_inode_should_enable_dax()
-      [840d493dff1a] fs/xfs: Combine xfs_diflags_to_linux() and xfs_diflags_to_iflags()
-
-Kaixu Xia (8):
-      [c140735bbb65] xfs: trace quota allocations for all quota types
-      [d51bafe0d227] xfs: combine two if statements with same condition
-      [fb353ff19d34] xfs: reserve quota inode transaction space only when needed
-      [ea1c90403d5d] xfs: remove unnecessary variable udqp from xfs_ioctl_setattr
-      [7994aae8516a] xfs: remove unnecessary assertion from xfs_qm_vop_create_dqattach
-      [cd59455980f9] xfs: simplify the flags setting in xfs_qm_scall_quotaon
-      [57fd2d8f61a2] xfs: remove unnecessary check of the variable resblks in xfs_symlink
-      [5f2d90d7d040] xfs: fix the warning message in xfs_validate_sb_common()
-
-Nishad Kamdar (1):
-      [508578f2f560] xfs: Use the correct style for SPDX License Identifier
-
-Zheng Bin (1):
-      [237aac4624aa] xfs: ensure f_bfree returned by statfs() is non-negative
-
-
-Code Diffstat:
-
- .../filesystems/xfs-self-describing-metadata.txt   |   10 +-
- fs/xfs/Makefile                                    |    5 +-
- fs/xfs/kmem.h                                      |    2 +-
- fs/xfs/libxfs/xfs_ag_resv.h                        |    2 +-
- fs/xfs/libxfs/xfs_alloc.h                          |    2 +-
- fs/xfs/libxfs/xfs_alloc_btree.h                    |    2 +-
- fs/xfs/libxfs/xfs_attr.c                           |   16 +-
- fs/xfs/libxfs/xfs_attr.h                           |    2 +-
- fs/xfs/libxfs/xfs_attr_leaf.c                      |   50 +-
- fs/xfs/libxfs/xfs_attr_leaf.h                      |    2 +-
- fs/xfs/libxfs/xfs_attr_remote.h                    |    2 +-
- fs/xfs/libxfs/xfs_attr_sf.h                        |    2 +-
- fs/xfs/libxfs/xfs_bit.h                            |    2 +-
- fs/xfs/libxfs/xfs_bmap.c                           |  281 +--
- fs/xfs/libxfs/xfs_bmap.h                           |    2 +-
- fs/xfs/libxfs/xfs_bmap_btree.c                     |    5 +-
- fs/xfs/libxfs/xfs_bmap_btree.h                     |    2 +-
- fs/xfs/libxfs/xfs_btree.h                          |    2 +-
- fs/xfs/libxfs/xfs_da_btree.h                       |    2 +-
- fs/xfs/libxfs/xfs_da_format.h                      |    2 +-
- fs/xfs/libxfs/xfs_defer.c                          |  162 +-
- fs/xfs/libxfs/xfs_defer.h                          |   26 +-
- fs/xfs/libxfs/xfs_dir2.c                           |    8 +-
- fs/xfs/libxfs/xfs_dir2.h                           |    2 +-
- fs/xfs/libxfs/xfs_dir2_block.c                     |    2 +-
- fs/xfs/libxfs/xfs_dir2_priv.h                      |    2 +-
- fs/xfs/libxfs/xfs_dir2_sf.c                        |   13 +-
- fs/xfs/libxfs/xfs_errortag.h                       |    6 +-
- fs/xfs/libxfs/xfs_format.h                         |    9 +-
- fs/xfs/libxfs/xfs_fs.h                             |    2 +-
- fs/xfs/libxfs/xfs_health.h                         |    2 +-
- fs/xfs/libxfs/xfs_inode_buf.c                      |  186 +-
- fs/xfs/libxfs/xfs_inode_buf.h                      |   10 +-
- fs/xfs/libxfs/xfs_inode_fork.c                     |  320 ++-
- fs/xfs/libxfs/xfs_inode_fork.h                     |   68 +-
- fs/xfs/libxfs/xfs_log_recover.h                    |   83 +-
- fs/xfs/libxfs/xfs_rtbitmap.c                       |    2 +-
- fs/xfs/libxfs/xfs_sb.c                             |    2 +-
- fs/xfs/libxfs/xfs_symlink_remote.c                 |   14 +-
- fs/xfs/libxfs/xfs_trans_inode.c                    |    2 +-
- fs/xfs/scrub/bmap.c                                |   40 +-
- fs/xfs/scrub/dabtree.c                             |    2 +-
- fs/xfs/scrub/dir.c                                 |    7 +-
- fs/xfs/scrub/ialloc.c                              |    3 +-
- fs/xfs/scrub/parent.c                              |    2 +-
- fs/xfs/xfs_aops.c                                  |    2 +-
- fs/xfs/xfs_attr_inactive.c                         |    9 +-
- fs/xfs/xfs_attr_list.c                             |    4 +-
- fs/xfs/xfs_bmap_item.c                             |  237 +-
- fs/xfs/xfs_bmap_item.h                             |   11 -
- fs/xfs/xfs_bmap_util.c                             |   79 +-
- fs/xfs/xfs_buf.c                                   |   70 +-
- fs/xfs/xfs_buf.h                                   |    2 +
- fs/xfs/xfs_buf_item.c                              |  106 +-
- fs/xfs/xfs_buf_item.h                              |    2 -
- fs/xfs/xfs_buf_item_recover.c                      |  984 ++++++++
- fs/xfs/xfs_dir2_readdir.c                          |    2 +-
- fs/xfs/xfs_dquot.c                                 |  103 +-
- fs/xfs/xfs_dquot_item.c                            |   17 +-
- fs/xfs/xfs_dquot_item_recover.c                    |  201 ++
- fs/xfs/xfs_error.c                                 |    3 +
- fs/xfs/xfs_extfree_item.c                          |  216 +-
- fs/xfs/xfs_extfree_item.h                          |   25 +-
- fs/xfs/xfs_file.c                                  |    2 +-
- fs/xfs/xfs_fsops.c                                 |    5 +-
- fs/xfs/xfs_icache.c                                |   58 +-
- fs/xfs/xfs_icreate_item.c                          |  152 ++
- fs/xfs/xfs_inode.c                                 |  263 +-
- fs/xfs/xfs_inode.h                                 |    6 +-
- fs/xfs/xfs_inode_item.c                            |   54 +-
- fs/xfs/xfs_inode_item.h                            |    6 +-
- fs/xfs/xfs_inode_item_recover.c                    |  394 +++
- fs/xfs/xfs_ioctl.c                                 |   65 +-
- fs/xfs/xfs_iomap.c                                 |    6 +-
- fs/xfs/xfs_iops.c                                  |   77 +-
- fs/xfs/xfs_itable.c                                |    6 +-
- fs/xfs/xfs_log_recover.c                           | 2561 ++------------------
- fs/xfs/xfs_message.c                               |   22 +
- fs/xfs/xfs_message.h                               |   24 +-
- fs/xfs/xfs_mount.c                                 |    7 +-
- fs/xfs/xfs_mount.h                                 |    6 +-
- fs/xfs/xfs_pnfs.c                                  |    5 +-
- fs/xfs/xfs_qm.c                                    |    7 +-
- fs/xfs/xfs_qm_syscalls.c                           |    8 +-
- fs/xfs/xfs_quotaops.c                              |    2 +-
- fs/xfs/xfs_refcount_item.c                         |  252 +-
- fs/xfs/xfs_refcount_item.h                         |   11 -
- fs/xfs/xfs_rmap_item.c                             |  229 +-
- fs/xfs/xfs_rmap_item.h                             |   13 -
- fs/xfs/xfs_super.c                                 |   51 +-
- fs/xfs/xfs_symlink.c                               |   10 +-
- fs/xfs/xfs_trace.h                                 |    4 +-
- fs/xfs/xfs_trans.h                                 |    6 +-
- fs/xfs/xfs_trans_ail.c                             |   79 +-
- fs/xfs/xfs_trans_priv.h                            |   21 +-
- fs/xfs/xfs_xattr.c                                 |    1 -
- 96 files changed, 3717 insertions(+), 4139 deletions(-)
- create mode 100644 fs/xfs/xfs_buf_item_recover.c
- create mode 100644 fs/xfs/xfs_dquot_item_recover.c
- create mode 100644 fs/xfs/xfs_inode_item_recover.c
+> ---
+>  fs/xfs/libxfs/xfs_quota_defs.h |  1 -
+>  fs/xfs/xfs_qm.c                |  9 +++------
+>  fs/xfs/xfs_trans_dquot.c       | 16 +++++-----------
+>  3 files changed, 8 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+> index b2113b17e53c..56d9dd787e7b 100644
+> --- a/fs/xfs/libxfs/xfs_quota_defs.h
+> +++ b/fs/xfs/libxfs/xfs_quota_defs.h
+> @@ -100,7 +100,6 @@ typedef uint16_t	xfs_qwarncnt_t;
+>  #define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
+>  #define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
+>  #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
+> -#define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
+>  
+>  /*
+>   * flags to xfs_trans_mod_dquot to indicate which field needs to be
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index c225691fad15..591779aa2fd0 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1808,7 +1808,7 @@ xfs_qm_vop_chown_reserve(
+>  {
+>  	struct xfs_mount	*mp = ip->i_mount;
+>  	uint64_t		delblks;
+> -	unsigned int		blkflags, prjflags = 0;
+> +	unsigned int		blkflags;
+>  	struct xfs_dquot	*udq_unres = NULL;
+>  	struct xfs_dquot	*gdq_unres = NULL;
+>  	struct xfs_dquot	*pdq_unres = NULL;
+> @@ -1849,7 +1849,6 @@ xfs_qm_vop_chown_reserve(
+>  
+>  	if (XFS_IS_PQUOTA_ON(ip->i_mount) && pdqp &&
+>  	    ip->i_d.di_projid != be32_to_cpu(pdqp->q_core.d_id)) {
+> -		prjflags = XFS_QMOPT_ENOSPC;
+>  		pdq_delblks = pdqp;
+>  		if (delblks) {
+>  			ASSERT(ip->i_pdquot);
+> @@ -1859,8 +1858,7 @@ xfs_qm_vop_chown_reserve(
+>  
+>  	error = xfs_trans_reserve_quota_bydquots(tp, ip->i_mount,
+>  				udq_delblks, gdq_delblks, pdq_delblks,
+> -				ip->i_d.di_nblocks, 1,
+> -				flags | blkflags | prjflags);
+> +				ip->i_d.di_nblocks, 1, flags | blkflags);
+>  	if (error)
+>  		return error;
+>  
+> @@ -1878,8 +1876,7 @@ xfs_qm_vop_chown_reserve(
+>  		ASSERT(udq_unres || gdq_unres || pdq_unres);
+>  		error = xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
+>  			    udq_delblks, gdq_delblks, pdq_delblks,
+> -			    (xfs_qcnt_t)delblks, 0,
+> -			    flags | blkflags | prjflags);
+> +			    (xfs_qcnt_t)delblks, 0, flags | blkflags);
+>  		if (error)
+>  			return error;
+>  		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index 2c3557a80e69..2c07897a3c37 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -711,7 +711,7 @@ xfs_trans_dqresv(
+>  
+>  error_return:
+>  	xfs_dqunlock(dqp);
+> -	if (flags & XFS_QMOPT_ENOSPC)
+> +	if (XFS_QM_ISPDQ(dqp))
+>  		return -ENOSPC;
+>  	return -EDQUOT;
+>  }
+> @@ -751,15 +751,13 @@ xfs_trans_reserve_quota_bydquots(
+>  	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
+>  
+>  	if (udqp) {
+> -		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos,
+> -					(flags & ~XFS_QMOPT_ENOSPC));
+> +		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos, flags);
+>  		if (error)
+>  			return error;
+>  	}
+>  
+>  	if (gdqp) {
+> -		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos,
+> -					(flags & ~XFS_QMOPT_ENOSPC));
+> +		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags);
+>  		if (error)
+>  			goto unwind_usr;
+>  	}
+> @@ -804,16 +802,12 @@ xfs_trans_reserve_quota_nblks(
+>  
+>  	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
+>  		return 0;
+> -	if (XFS_IS_PQUOTA_ON(mp))
+> -		flags |= XFS_QMOPT_ENOSPC;
+>  
+>  	ASSERT(!xfs_is_quota_inode(&mp->m_sb, ip->i_ino));
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> -	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
+> -				XFS_TRANS_DQ_RES_RTBLKS ||
+> -	       (flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
+> -				XFS_TRANS_DQ_RES_BLKS);
+> +	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES)) == XFS_TRANS_DQ_RES_RTBLKS ||
+> +	       (flags & ~(XFS_QMOPT_FORCE_RES)) == XFS_TRANS_DQ_RES_BLKS);
+>  
+>  	/*
+>  	 * Reserve nblks against these dquots, with trans as the mediator.
+> -- 
+> 2.17.0
+> 
