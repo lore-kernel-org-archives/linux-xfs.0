@@ -1,115 +1,103 @@
-Return-Path: <SRS0=xgbg=7A=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=UH25=7B=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D0DEC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 22:35:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3264EC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 00:41:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 755E720674
-	for <linux-xfs@archiver.kernel.org>; Mon, 18 May 2020 22:35:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DA122072C
+	for <linux-xfs@archiver.kernel.org>; Tue, 19 May 2020 00:41:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T5RGaqtC"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YDggkbmd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728231AbgERWfj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 18 May 2020 18:35:39 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:43292 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726959AbgERWfi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 18:35:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1589841337;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=ZX5aTHJUR5CvXaWNzkTy4eHkNkC19jCM5YVpZZOo5Eg=;
-        b=T5RGaqtCYuC/csDU2ziq3SaqED72jKP0KIuB7hLGfJ6CAULh4HG/IqF/+qQnWP0Ula8pJf
-        wR5BcnmF6VJn3ocFJGi3xVGt0lUV5po5AHNMw9tnQBWSxtzLbhgZWIiCV1nP+Sm4tnXjS6
-        i9kUP+/S7riNWvmXTDsU8+CRB688lPw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-269-B9yikO9ZP1Sxsy4v2JH18A-1; Mon, 18 May 2020 18:35:35 -0400
-X-MC-Unique: B9yikO9ZP1Sxsy4v2JH18A-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B763B80B71F
-        for <linux-xfs@vger.kernel.org>; Mon, 18 May 2020 22:35:34 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7B6731001B2B;
-        Mon, 18 May 2020 22:35:34 +0000 (UTC)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_repair: fix progress reporting
-Cc:     Leonardo Vaz <lvaz@redhat.com>
-Message-ID: <c4df68a7-706b-0216-b2a0-a177789f380f@redhat.com>
-Date:   Mon, 18 May 2020 17:35:33 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+        id S1726573AbgESAlH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 18 May 2020 20:41:07 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:54730 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726494AbgESAlH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 18 May 2020 20:41:07 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04J0b42V138241;
+        Tue, 19 May 2020 00:40:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=bBJPQ66aGpqdRMx1GdJXq4QiNjnIKaUMcA7zGkCVMkk=;
+ b=YDggkbmdM2XnhUOBZFwZhXLoUwL6qB0NwBoQz1LVyd8ms4j14TYXA35pz2Ko6qApEIw0
+ Wc9dOXcQecIbtH2dzxcXotlDHtATAEsMc8KptcMcMIQ6RkUGRr3MZfFltEzKZSf8crQv
+ MBXX+9v46dPVsg/yuYSS1l6gLKpVt+otlRy4HaLz4IEuECjwE18GoK3u/TH9wDzS5Rb9
+ 9DXUoCPgwZtic9Sl6N1HzbepAJ9RHk37z+ci9IQY6A9nDdNdF+dMLG6HdBhr4SpBiq1c
+ hXrHNLRx70e9uq7CSbEcpDtYvrEeKDoAI9v26bTxq5AWQ3NEk0NSPJnCRkM1INFUPIK2 mQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 3127kr269r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 19 May 2020 00:40:54 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04J0cLek097488;
+        Tue, 19 May 2020 00:40:54 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 312t3wr2fu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 19 May 2020 00:40:54 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04J0erT7030236;
+        Tue, 19 May 2020 00:40:53 GMT
+Received: from localhost (/10.159.132.30)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 18 May 2020 17:40:53 -0700
+Date:   Mon, 18 May 2020 17:40:51 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: force writes to delalloc regions to unwritten
+Message-ID: <20200519004051.GF17627@magnolia>
+References: <157915534429.2406747.2688273938645013888.stgit@magnolia>
+ <157915535059.2406747.264640456606868955.stgit@magnolia>
+ <20200119204925.GC9407@dread.disaster.area>
+ <20200203201445.GA6870@magnolia>
+ <20200507103232.GB9003@bfoster>
+ <20200514163317.GA6714@magnolia>
+ <20200514174448.GE50849@bfoster>
+ <20200517074843.GC32627@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200517074843.GC32627@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
+ phishscore=0 bulkscore=0 suspectscore=1 mlxscore=0 spamscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005190004
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9625 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ bulkscore=0 clxscore=1015 priorityscore=1501 mlxscore=0 impostorscore=0
+ suspectscore=1 mlxlogscore=999 malwarescore=0 cotscore=-2147483648
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005190004
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Long ago, a young developer tried to fix a segfault in xfs_repair where
-a short progress reporting interval could cause a timer to go off and try
-to print a progress mesage before any had been properly set up because
-we were still busy zeroing the log, and a NULL pointer dereference
-ensued.
+On Sun, May 17, 2020 at 12:48:43AM -0700, Christoph Hellwig wrote:
+> On Thu, May 14, 2020 at 01:44:48PM -0400, Brian Foster wrote:
+> > It looks like Christoph already reviewed the patch. I'm not sure if his
+> > opinion changed it all after the subsequent discussion, but otherwise
+> > that just leaves Dave's objection. Dave, any thoughts on this given the
+> > test results and broader context? What do you think about getting this
+> > patch merged and revisiting the whole unwritten extent thing
+> > independently?
+> 
+> Absolutely no change of mind.  I think we need to fix the issue ASAP
+> and then look into performance improvements as soon as we get to it.
 
-That young developer got it wrong, and completely broke progress
-reporting, because the change caused us to exit early from the pthread
-start routine, and not initialize the progress timer at all.
+Hm, well, I do have a couple more patches to fix a couple of minor
+regressions that fstests found...
 
-That developer is now slightly older and wiser, and finally realizes that
-the simple and correct solution here is to initialize the message format
-to the first one in the list, so that we will be ready to go with a
-progress message no matter when the first timer goes off.
-
-Reported-by: Leonardo Vaz <lvaz@redhat.com>
-Fixes: 7f2d6b811755 ("xfs_repair: avoid segfault if reporting progre...")
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-It might be nice to add progress reporting for the log zeroing, but that
-requires renumbering all these macros, and we don't/can't actually get
-any fine-grained progress at all, so probably not worth it.
-
-diff --git a/repair/progress.c b/repair/progress.c
-index 5ee08229..d7baa606 100644
---- a/repair/progress.c
-+++ b/repair/progress.c
-@@ -125,7 +125,11 @@ init_progress_rpt (void)
- 	 */
- 
- 	pthread_mutex_init(&global_msgs.mutex, NULL);
--	global_msgs.format = NULL;
-+	/*
-+	 * Ensure the format string is not NULL in case the first timer
-+	 * goes off before any stage calls set_progress_msg() to set it.
-+	 */
-+	global_msgs.format = &progress_rpt_reports[0];
- 	global_msgs.count = glob_agcount;
- 	global_msgs.interval = report_interval;
- 	global_msgs.done   = prog_rpt_done;
-@@ -171,10 +175,6 @@ progress_rpt_thread (void *p)
- 	msg_block_t *msgp = (msg_block_t *)p;
- 	uint64_t percent;
- 
--	/* It's possible to get here very early w/ no progress msg set */
--	if (!msgp->format)
--		return NULL;
--
- 	if ((msgbuf = (char *)malloc(DURATION_BUF_SIZE)) == NULL)
- 		do_error (_("progress_rpt: cannot malloc progress msg buffer\n"));
- 
-
+--D
