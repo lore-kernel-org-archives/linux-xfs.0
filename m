@@ -2,110 +2,50 @@ Return-Path: <SRS0=A2Vo=7C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBC6CC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 05:57:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5CA7C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 06:30:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1728207E8
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 05:57:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0CB820657
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 06:30:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726401AbgETF55 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 May 2020 01:57:57 -0400
-Received: from mga09.intel.com ([134.134.136.24]:55135 "EHLO mga09.intel.com"
+        id S1726643AbgETGaW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 May 2020 02:30:22 -0400
+Received: from verein.lst.de ([213.95.11.211]:47896 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725998AbgETF54 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 May 2020 01:57:56 -0400
-IronPort-SDR: NRerxWQn3JZ7nq7XxrX2N7tNIF8Naa7WPiGXdeAqmWR7qH/KGvNDR58AUKkmFbPorwwJltnAMW
- J1FhFcaIjXLA==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2020 22:57:56 -0700
-IronPort-SDR: yWLipC+hmd5lakfByb0Vq9XwPzKj4cmS+tJjAAirb7gYf7UDH2V+4CWg/XOL3iIIoJ5yVrN8Pw
- rF1mqJUHJbcg==
-X-IronPort-AV: E=Sophos;i="5.73,412,1583222400"; 
-   d="scan'208";a="282570629"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2020 22:57:55 -0700
-From:   ira.weiny@intel.com
-To:     linux-ext4@vger.kernel.org,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Eric Biggers <ebiggers@kernel.org>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-kernel@vger.kernel.org
-Subject: [PATCH V3 0/8] Enable ext4 support for per-file/directory DAX operations
-Date:   Tue, 19 May 2020 22:57:45 -0700
-Message-Id: <20200520055753.3733520-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.25.1
+        id S1726545AbgETGaW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 May 2020 02:30:22 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 5467D68C4E; Wed, 20 May 2020 08:30:18 +0200 (CEST)
+Date:   Wed, 20 May 2020 08:30:17 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 01/11] xfs: move eofblocks conversion function to
+ xfs_ioctl.c
+Message-ID: <20200520063017.GA2742@lst.de>
+References: <158993911808.976105.13679179790848338795.stgit@magnolia> <158993912447.976105.10249427349387670469.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <158993912447.976105.10249427349387670469.stgit@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Tue, May 19, 2020 at 06:45:24PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Move xfs_fs_eofblocks_from_user into the only file that actually uses
+> it, so that we don't have this function cluttering up the header file.
+> 
 
-Changes from V2:
-	Rework DAX exclusivity with verity and encryption based on feedback
-	from Eric
+Thanks, the strange inline function really irked me when looking over the
+code:
 
-Enable the same per file DAX support in ext4 as was done for xfs.  This series
-builds and depends on the V11 series for xfs.[1]
-
-This passes the same xfstests test as XFS.
-
-The only issue is that this modifies the old mount option parsing code rather
-than waiting for the new parsing code to be finalized.
-
-This series starts with 3 fixes which include making Verity and Encrypt truly
-mutually exclusive from DAX.  I think these first 3 patches should be picked up
-for 5.8 regardless of what is decided regarding the mount parsing.
-
-[1] https://lore.kernel.org/lkml/20200428002142.404144-1-ira.weiny@intel.com/
-
-To: linux-kernel@vger.kernel.org
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc: Jan Kara <jack@suse.cz>
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-
-
-Ira Weiny (8):
-  fs/ext4: Narrow scope of DAX check in setflags
-  fs/ext4: Disallow verity if inode is DAX
-  fs/ext4: Change EXT4_MOUNT_DAX to EXT4_MOUNT_DAX_ALWAYS
-  fs/ext4: Update ext4_should_use_dax()
-  fs/ext4: Only change S_DAX on inode load
-  fs/ext4: Make DAX mount option a tri-state
-  fs/ext4: Introduce DAX inode flag
-  Documentation/dax: Update DAX enablement for ext4
-
- Documentation/filesystems/dax.txt         |  6 +-
- Documentation/filesystems/ext4/verity.rst |  3 +
- fs/ext4/ext4.h                            | 22 +++++--
- fs/ext4/ialloc.c                          |  2 +-
- fs/ext4/inode.c                           | 25 +++++--
- fs/ext4/ioctl.c                           | 41 ++++++++++--
- fs/ext4/super.c                           | 80 ++++++++++++++++++-----
- fs/ext4/verity.c                          |  5 +-
- include/uapi/linux/fs.h                   |  1 +
- 9 files changed, 148 insertions(+), 37 deletions(-)
-
--- 
-2.25.1
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
