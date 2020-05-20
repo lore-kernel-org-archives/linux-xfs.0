@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29BFBC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 18:41:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CCD0C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 18:43:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C246207D4
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 18:41:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5EB72072C
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 18:43:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SGSzVjX+"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iVGGZIUY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbgETSlc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 May 2020 14:41:32 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:53585 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726737AbgETSla (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 May 2020 14:41:30 -0400
+        id S1726560AbgETSnX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 May 2020 14:43:23 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:45738 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726754AbgETSnW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 20 May 2020 14:43:22 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590000088;
+        s=mimecast20190719; t=1590000200;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=8lVG1Z8eD6oMQq626at/4vSYWWSVESgz6a7HbX1ubfc=;
-        b=SGSzVjX+Nh8REURPWhGaN9w2vQWeqcomT6cCbWO5powW3Ap5nA4ERygDLG3WDJXR2DFuki
-        VJA1IZ4tl2w1ghhM5DEtOdshp8oeYOEYbgf4oED5WlBZvw2wqlAC629z6zhA+fXDYpKb3Q
-        cftP3a5VBhFY5OQhJQIyTx7OaMutpmk=
+        bh=FDqEkuLYMtpk3kSq+jX0KuUHAEmTnC/mIAgs7u19lHQ=;
+        b=iVGGZIUY7l0nE8mF4M6frRAExGgEyaNge9CiEBgfLqwaTSDbKheVSk6mXTyixKIA7kcA7m
+        PvwLipZFsXhemxBPTtrpUjn1Lpq9wGIPmlVRjQ9K0XP+wVds1jaLCl2ncxQhrvDEGnQLTZ
+        ujMEjhxdSlVrdqFwB9ao4B6im9LFdyU=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-204-uUF1tZpXMZaaEyPk0Xvy9g-1; Wed, 20 May 2020 14:41:27 -0400
-X-MC-Unique: uUF1tZpXMZaaEyPk0Xvy9g-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+ us-mta-325-eCm7nx7SNIuTd5YgR7gQdg-1; Wed, 20 May 2020 14:43:17 -0400
+X-MC-Unique: eCm7nx7SNIuTd5YgR7gQdg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5DC8DEC1A1
-        for <linux-xfs@vger.kernel.org>; Wed, 20 May 2020 18:41:26 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C3DA8872FF0
+        for <linux-xfs@vger.kernel.org>; Wed, 20 May 2020 18:43:16 +0000 (UTC)
 Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id CC3575D9CA
-        for <linux-xfs@vger.kernel.org>; Wed, 20 May 2020 18:41:25 +0000 (UTC)
-Subject: [PATCH 4.5/6] xfs: switch xfs_get_defquota to take explicit type
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 97C27579A3
+        for <linux-xfs@vger.kernel.org>; Wed, 20 May 2020 18:43:16 +0000 (UTC)
+Subject: [PATCH 5/6 V2] xfs: per-type quota timers and warn limits
 From:   Eric Sandeen <sandeen@redhat.com>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
@@ -91,8 +91,8 @@ Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
  XQLj5HUlzt3JSwqSwx+++FFfWFMheG2HzkfXrvTpud5NrJkGGVn+ErXy6pNf6zSicb+bUXe9
  i92UTina2zWaaLEwXspqM338TlFC2JICu8pNt+wHpPCjgy2Ei4u5/4zSYjiA+X1I+V99YJhU
  +FpT2jzfLUoVsP/6WHWmM/tsS79i50G/PsXYzKOHj/0ZQCKOsJM14NMMCC8gkONe4tek
-Message-ID: <0368b615-37af-27fb-b267-b7846f3b73d9@redhat.com>
-Date:   Wed, 20 May 2020 13:41:25 -0500
+Message-ID: <95743095-0be7-a137-44f9-8a225b15d5db@redhat.com>
+Date:   Wed, 20 May 2020 13:43:15 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
@@ -100,127 +100,310 @@ In-Reply-To: <e27a2dff-f728-f69e-32b6-a83eee7effef@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_get_defquota() currently takes an xfs_dquot, and from that obtains
-the type of default quota we should get (user/group/project).
+From: Eric Sandeen <sandeen@redhat.com>
 
-But early in init, we don't have access to a fully set up quota, and
-so we will fail to set these defaults.
-
-Switch xfs_get_defquota to take an explicit type, and add a helper 
-function to obtain that type from an xfs_dquot for the existing
-callers.
+Move timers and warnings out of xfs_quotainfo and into xfs_def_quota
+so that we can utilize them on a per-type basis, rather than enforcing
+them based on the values found in the first enabled quota type.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+[zlang: new way to get defquota in xfs_qm_init_timelimits]
+[zlang: remove redundant defq assign]
+Signed-off-by: Zorro Lang <zlang@redhat.com>
 ---
 
+V2: Use the by-type defquota-getter
+
 diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 6d6afc0297b3..fdeaccc67d91 100644
+index fdeaccc67d91..49c235c5d42c 100644
 --- a/fs/xfs/xfs_dquot.c
 +++ b/fs/xfs/xfs_dquot.c
-@@ -75,7 +75,7 @@ xfs_qm_adjust_dqlimits(
- 	int			prealloc = 0;
- 
+@@ -116,8 +116,12 @@ xfs_qm_adjust_dqtimers(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_dquot	*dq)
+ {
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 	struct xfs_disk_dquot	*d = &dq->q_core;
++	struct xfs_def_quota	*defq;
++
  	ASSERT(d->d_id);
--	defq = xfs_get_defquota(dq, q);
-+	defq = xfs_get_defquota(q, xfs_dquot_type(dq));
++	*defq = xfs_get_defquota(qi, xfs_dquot_type(dq));
  
- 	if (defq->bsoftlimit && !d->d_blk_softlimit) {
- 		d->d_blk_softlimit = cpu_to_be64(defq->bsoftlimit);
+ #ifdef DEBUG
+ 	if (d->d_blk_hardlimit)
+@@ -139,7 +143,7 @@ xfs_qm_adjust_dqtimers(
+ 		     (be64_to_cpu(d->d_bcount) >
+ 		      be64_to_cpu(d->d_blk_hardlimit)))) {
+ 			d->d_btimer = cpu_to_be32(ktime_get_real_seconds() +
+-					mp->m_quotainfo->qi_btimelimit);
++					defq->btimelimit);
+ 		} else {
+ 			d->d_bwarns = 0;
+ 		}
+@@ -162,7 +166,7 @@ xfs_qm_adjust_dqtimers(
+ 		     (be64_to_cpu(d->d_icount) >
+ 		      be64_to_cpu(d->d_ino_hardlimit)))) {
+ 			d->d_itimer = cpu_to_be32(ktime_get_real_seconds() +
+-					mp->m_quotainfo->qi_itimelimit);
++					defq->itimelimit);
+ 		} else {
+ 			d->d_iwarns = 0;
+ 		}
+@@ -185,7 +189,7 @@ xfs_qm_adjust_dqtimers(
+ 		     (be64_to_cpu(d->d_rtbcount) >
+ 		      be64_to_cpu(d->d_rtb_hardlimit)))) {
+ 			d->d_rtbtimer = cpu_to_be32(ktime_get_real_seconds() +
+-					mp->m_quotainfo->qi_rtbtimelimit);
++					defq->rtbtimelimit);
+ 		} else {
+ 			d->d_rtbwarns = 0;
+ 		}
 diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index e97a3802939c..64ba943e0675 100644
+index 64ba943e0675..dd38c73ce36e 100644
 --- a/fs/xfs/xfs_qm.c
 +++ b/fs/xfs/xfs_qm.c
-@@ -558,7 +558,7 @@ xfs_qm_set_defquota(
+@@ -577,19 +577,22 @@ xfs_qm_set_defquota(
+ static void
+ xfs_qm_init_timelimits(
+ 	struct xfs_mount	*mp,
+-	struct xfs_quotainfo	*qinf)
++	uint			type)
+ {
++	struct xfs_quotainfo	*qinf = mp->m_quotainfo;
++	struct xfs_def_quota	*defq;
+ 	struct xfs_disk_dquot	*ddqp;
+ 	struct xfs_dquot	*dqp;
+-	uint			type;
+ 	int			error;
+ 
+-	qinf->qi_btimelimit = XFS_QM_BTIMELIMIT;
+-	qinf->qi_itimelimit = XFS_QM_ITIMELIMIT;
+-	qinf->qi_rtbtimelimit = XFS_QM_RTBTIMELIMIT;
+-	qinf->qi_bwarnlimit = XFS_QM_BWARNLIMIT;
+-	qinf->qi_iwarnlimit = XFS_QM_IWARNLIMIT;
+-	qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
++	defq = xfs_get_defquota(qinf, type);
++
++	defq->btimelimit = XFS_QM_BTIMELIMIT;
++	defq->itimelimit = XFS_QM_ITIMELIMIT;
++	defq->rtbtimelimit = XFS_QM_RTBTIMELIMIT;
++	defq->bwarnlimit = XFS_QM_BWARNLIMIT;
++	defq->iwarnlimit = XFS_QM_IWARNLIMIT;
++	defq->rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
+ 
+ 	/*
+ 	 * We try to get the limits from the superuser's limits fields.
+@@ -597,39 +600,30 @@ xfs_qm_init_timelimits(
+ 	 *
+ 	 * Since we may not have done a quotacheck by this point, just read
+ 	 * the dquot without attaching it to any hashtables or lists.
+-	 *
+-	 * Timers and warnings are globally set by the first timer found in
+-	 * user/group/proj quota types, otherwise a default value is used.
+-	 * This should be split into different fields per quota type.
+ 	 */
+-	if (XFS_IS_UQUOTA_RUNNING(mp))
+-		type = XFS_DQ_USER;
+-	else if (XFS_IS_GQUOTA_RUNNING(mp))
+-		type = XFS_DQ_GROUP;
+-	else
+-		type = XFS_DQ_PROJ;
+ 	error = xfs_qm_dqget_uncached(mp, 0, type, &dqp);
+ 	if (error)
  		return;
  
  	ddqp = &dqp->q_core;
--	defq = xfs_get_defquota(dqp, qinf);
-+	defq = xfs_get_defquota(qinf, xfs_dquot_type(dqp));
- 
++
  	/*
- 	 * Timers and warnings have been already set, let's just set the
+ 	 * The warnings and timers set the grace period given to
+ 	 * a user or group before he or she can not perform any
+ 	 * more writing. If it is zero, a default is used.
+ 	 */
+ 	if (ddqp->d_btimer)
+-		qinf->qi_btimelimit = be32_to_cpu(ddqp->d_btimer);
++		defq->btimelimit = be32_to_cpu(ddqp->d_btimer);
+ 	if (ddqp->d_itimer)
+-		qinf->qi_itimelimit = be32_to_cpu(ddqp->d_itimer);
++		defq->itimelimit = be32_to_cpu(ddqp->d_itimer);
+ 	if (ddqp->d_rtbtimer)
+-		qinf->qi_rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
++		defq->rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
+ 	if (ddqp->d_bwarns)
+-		qinf->qi_bwarnlimit = be16_to_cpu(ddqp->d_bwarns);
++		defq->bwarnlimit = be16_to_cpu(ddqp->d_bwarns);
+ 	if (ddqp->d_iwarns)
+-		qinf->qi_iwarnlimit = be16_to_cpu(ddqp->d_iwarns);
++		defq->iwarnlimit = be16_to_cpu(ddqp->d_iwarns);
+ 	if (ddqp->d_rtbwarns)
+-		qinf->qi_rtbwarnlimit = be16_to_cpu(ddqp->d_rtbwarns);
++		defq->rtbwarnlimit = be16_to_cpu(ddqp->d_rtbwarns);
+ 
+ 	xfs_qm_dqdestroy(dqp);
+ }
+@@ -675,7 +669,9 @@ xfs_qm_init_quotainfo(
+ 
+ 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
+ 
+-	xfs_qm_init_timelimits(mp, qinf);
++	xfs_qm_init_timelimits(mp, XFS_DQ_USER);
++	xfs_qm_init_timelimits(mp, XFS_DQ_GROUP);
++	xfs_qm_init_timelimits(mp, XFS_DQ_PROJ);
+ 
+ 	if (XFS_IS_UQUOTA_RUNNING(mp))
+ 		xfs_qm_set_defquota(mp, XFS_DQ_USER, qinf);
 diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 3a850401b102..06df406fdf72 100644
+index 06df406fdf72..c2d141715e91 100644
 --- a/fs/xfs/xfs_qm.h
 +++ b/fs/xfs/xfs_qm.h
-@@ -113,6 +113,19 @@ xfs_quota_inode(xfs_mount_t *mp, uint dq_flags)
- 	return NULL;
- }
+@@ -41,7 +41,14 @@ extern struct kmem_zone	*xfs_qm_dqtrxzone;
+  */
+ #define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
  
-+static inline int
-+xfs_dquot_type(struct xfs_dquot *dqp)
-+{
-+	if (XFS_QM_ISUDQ(dqp))
-+		return XFS_DQ_USER;
-+	else if (XFS_QM_ISGDQ(dqp))
-+		return XFS_DQ_GROUP;
-+	else {
-+		ASSERT(XFS_QM_ISPDQ(dqp));
-+		return XFS_DQ_PROJ;
-+	}
-+}
-+
- extern void	xfs_trans_mod_dquot(struct xfs_trans *tp, struct xfs_dquot *dqp,
- 				    uint field, int64_t delta);
- extern void	xfs_trans_dqjoin(struct xfs_trans *, struct xfs_dquot *);
-@@ -164,17 +177,22 @@ extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
- extern int		xfs_qm_scall_quotaoff(struct xfs_mount *, uint);
- 
- static inline struct xfs_def_quota *
--xfs_get_defquota(struct xfs_dquot *dqp, struct xfs_quotainfo *qi)
-+xfs_get_defquota(struct xfs_quotainfo *qi, int type)
- {
- 	struct xfs_def_quota *defq;
- 
--	if (XFS_QM_ISUDQ(dqp))
-+	switch (type) {
-+	case XFS_DQ_USER:
- 		defq = &qi->qi_usr_default;
--	else if (XFS_QM_ISGDQ(dqp))
-+		break;
-+	case XFS_DQ_GROUP:
- 		defq = &qi->qi_grp_default;
--	else {
--		ASSERT(XFS_QM_ISPDQ(dqp));
-+		break;
-+	case XFS_DQ_PROJ:
- 		defq = &qi->qi_prj_default;
-+		break;
-+	default:
-+		ASSERT(0);
- 	}
- 	return defq;
- }
++/* Defaults for each quota type: time limits, warn limits, usage limits */
+ struct xfs_def_quota {
++	time64_t	btimelimit;	/* limit for blks timer */
++	time64_t	itimelimit;	/* limit for inodes timer */
++	time64_t	rtbtimelimit;	/* limit for rt blks timer */
++	xfs_qwarncnt_t	bwarnlimit;	/* limit for blks warnings */
++	xfs_qwarncnt_t	iwarnlimit;	/* limit for inodes warnings */
++	xfs_qwarncnt_t	rtbwarnlimit;	/* limit for rt blks warnings */
+ 	xfs_qcnt_t	bhardlimit;	/* default data blk hard limit */
+ 	xfs_qcnt_t	bsoftlimit;	/* default data blk soft limit */
+ 	xfs_qcnt_t	ihardlimit;	/* default inode count hard limit */
+@@ -64,12 +71,6 @@ struct xfs_quotainfo {
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+ 	struct list_lru		qi_lru;
+ 	int			qi_dquots;
+-	time64_t		qi_btimelimit;	/* limit for blks timer */
+-	time64_t		qi_itimelimit;	/* limit for inodes timer */
+-	time64_t		qi_rtbtimelimit;/* limit for rt blks timer */
+-	xfs_qwarncnt_t		qi_bwarnlimit;	/* limit for blks warnings */
+-	xfs_qwarncnt_t		qi_iwarnlimit;	/* limit for inodes warnings */
+-	xfs_qwarncnt_t		qi_rtbwarnlimit;/* limit for rt blks warnings */
+ 	struct mutex		qi_quotaofflock;/* to serialize quotaoff */
+ 	xfs_filblks_t		qi_dqchunklen;	/* # BBs in a chunk of dqs */
+ 	uint			qi_dqperchunk;	/* # ondisk dq in above chunk */
 diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 301a284ee4f9..13196d07c84e 100644
+index 13196d07c84e..4dbcc27eba23 100644
 --- a/fs/xfs/xfs_qm_syscalls.c
 +++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -479,7 +479,7 @@ xfs_qm_scall_setqlim(
- 		goto out_unlock;
- 	}
+@@ -563,23 +563,23 @@ xfs_qm_scall_setqlim(
+ 		 * for warnings.
+ 		 */
+ 		if (newlim->d_fieldmask & QC_SPC_TIMER) {
+-			q->qi_btimelimit = newlim->d_spc_timer;
++			defq->btimelimit = newlim->d_spc_timer;
+ 			ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
+ 		}
+ 		if (newlim->d_fieldmask & QC_INO_TIMER) {
+-			q->qi_itimelimit = newlim->d_ino_timer;
++			defq->itimelimit = newlim->d_ino_timer;
+ 			ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
+ 		}
+ 		if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
+-			q->qi_rtbtimelimit = newlim->d_rt_spc_timer;
++			defq->rtbtimelimit = newlim->d_rt_spc_timer;
+ 			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
+ 		}
+ 		if (newlim->d_fieldmask & QC_SPC_WARNS)
+-			q->qi_bwarnlimit = newlim->d_spc_warns;
++			defq->bwarnlimit = newlim->d_spc_warns;
+ 		if (newlim->d_fieldmask & QC_INO_WARNS)
+-			q->qi_iwarnlimit = newlim->d_ino_warns;
++			defq->iwarnlimit = newlim->d_ino_warns;
+ 		if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
+-			q->qi_rtbwarnlimit = newlim->d_rt_spc_warns;
++			defq->rtbwarnlimit = newlim->d_rt_spc_warns;
+ 	} else {
+ 		/*
+ 		 * If the user is now over quota, start the timelimit.
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index cb16a91dd1d4..51be282d28b3 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -21,9 +21,9 @@ xfs_qm_fill_state(
+ 	struct qc_type_state	*tstate,
+ 	struct xfs_mount	*mp,
+ 	struct xfs_inode	*ip,
+-	xfs_ino_t		ino)
++	xfs_ino_t		ino,
++	struct xfs_def_quota	*defq)
+ {
+-	struct xfs_quotainfo	*q = mp->m_quotainfo;
+ 	bool			tempqip = false;
  
--	defq = xfs_get_defquota(dqp, q);
-+	defq = xfs_get_defquota(q, xfs_dquot_type(dqp));
- 	xfs_dqunlock(dqp);
+ 	tstate->ino = ino;
+@@ -37,12 +37,12 @@ xfs_qm_fill_state(
+ 	tstate->flags |= QCI_SYSFILE;
+ 	tstate->blocks = ip->i_d.di_nblocks;
+ 	tstate->nextents = ip->i_d.di_nextents;
+-	tstate->spc_timelimit = (u32)q->qi_btimelimit;
+-	tstate->ino_timelimit = (u32)q->qi_itimelimit;
+-	tstate->rt_spc_timelimit = (u32)q->qi_rtbtimelimit;
+-	tstate->spc_warnlimit = q->qi_bwarnlimit;
+-	tstate->ino_warnlimit = q->qi_iwarnlimit;
+-	tstate->rt_spc_warnlimit = q->qi_rtbwarnlimit;
++	tstate->spc_timelimit = (u32)defq->btimelimit;
++	tstate->ino_timelimit = (u32)defq->itimelimit;
++	tstate->rt_spc_timelimit = (u32)defq->rtbtimelimit;
++	tstate->spc_warnlimit = defq->bwarnlimit;
++	tstate->ino_warnlimit = defq->iwarnlimit;
++	tstate->rt_spc_warnlimit = defq->rtbwarnlimit;
+ 	if (tempqip)
+ 		xfs_irele(ip);
+ }
+@@ -77,11 +77,11 @@ xfs_fs_get_quota_state(
+ 		state->s_state[PRJQUOTA].flags |= QCI_LIMITS_ENFORCED;
  
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_setqlim, 0, 0, 0, &tp);
+ 	xfs_qm_fill_state(&state->s_state[USRQUOTA], mp, q->qi_uquotaip,
+-			  mp->m_sb.sb_uquotino);
++			  mp->m_sb.sb_uquotino, &q->qi_usr_default);
+ 	xfs_qm_fill_state(&state->s_state[GRPQUOTA], mp, q->qi_gquotaip,
+-			  mp->m_sb.sb_gquotino);
++			  mp->m_sb.sb_gquotino, &q->qi_grp_default);
+ 	xfs_qm_fill_state(&state->s_state[PRJQUOTA], mp, q->qi_pquotaip,
+-			  mp->m_sb.sb_pquotino);
++			  mp->m_sb.sb_pquotino, &q->qi_prj_default);
+ 	return 0;
+ }
+ 
 diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 20542076e32a..edde366ca8e9 100644
+index edde366ca8e9..c0f73b82c055 100644
 --- a/fs/xfs/xfs_trans_dquot.c
 +++ b/fs/xfs/xfs_trans_dquot.c
-@@ -591,7 +591,7 @@ xfs_trans_dqresv(
+@@ -602,7 +602,7 @@ xfs_trans_dqresv(
+ 			softlimit = defq->bsoftlimit;
+ 		timer = be32_to_cpu(dqp->q_core.d_btimer);
+ 		warns = be16_to_cpu(dqp->q_core.d_bwarns);
+-		warnlimit = dqp->q_mount->m_quotainfo->qi_bwarnlimit;
++		warnlimit = defq->bwarnlimit;
+ 		resbcountp = &dqp->q_res_bcount;
+ 	} else {
+ 		ASSERT(flags & XFS_TRANS_DQ_RES_RTBLKS);
+@@ -614,7 +614,7 @@ xfs_trans_dqresv(
+ 			softlimit = defq->rtbsoftlimit;
+ 		timer = be32_to_cpu(dqp->q_core.d_rtbtimer);
+ 		warns = be16_to_cpu(dqp->q_core.d_rtbwarns);
+-		warnlimit = dqp->q_mount->m_quotainfo->qi_rtbwarnlimit;
++		warnlimit = defq->rtbwarnlimit;
+ 		resbcountp = &dqp->q_res_rtbcount;
+ 	}
  
- 	xfs_dqlock(dqp);
- 
--	defq = xfs_get_defquota(dqp, q);
-+	defq = xfs_get_defquota(q, xfs_dquot_type(dqp));
- 
- 	if (flags & XFS_TRANS_DQ_RES_BLKS) {
- 		hardlimit = be64_to_cpu(dqp->q_core.d_blk_hardlimit);
+@@ -650,7 +650,7 @@ xfs_trans_dqresv(
+ 			total_count = be64_to_cpu(dqp->q_core.d_icount) + ninos;
+ 			timer = be32_to_cpu(dqp->q_core.d_itimer);
+ 			warns = be16_to_cpu(dqp->q_core.d_iwarns);
+-			warnlimit = dqp->q_mount->m_quotainfo->qi_iwarnlimit;
++			warnlimit = defq->iwarnlimit;
+ 			hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+ 			if (!hardlimit)
+ 				hardlimit = defq->ihardlimit;
+
 
