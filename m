@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 620E0C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 01:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF3AAC433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 01:51:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F9E420708
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 01:51:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B761B20829
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 01:51:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z9EPLvXD"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ETQzKO5Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726352AbgETBvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 21:51:36 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:42624 "EHLO
+        id S1728309AbgETBvm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 21:51:42 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:42738 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728309AbgETBvg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 21:51:36 -0400
+        with ESMTP id S1728300AbgETBvm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 21:51:42 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04K1llF9167880;
-        Wed, 20 May 2020 01:51:31 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04K1mAix168113;
+        Wed, 20 May 2020 01:51:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=PNQjnqBPQK6vfu/xq79kkwxf84gJ8mCQUSXRmg4+K5U=;
- b=Z9EPLvXDbjZh5m2aeD1dBM9UG6GF0MDOI0I4vs+xASNjUF1RGKFcivUogUUCD9747Md0
- DH4qrSOl0IXB4cCELFgGKEeH3IEGiHQdcWZ6Fj7kNvXq7KpJrtoxEJMduWpq44fKAEeg
- 800O3ZmA/pg6Ra/71R+YXqQpmI+tseB23Y3cQ/Hvc/0F4J9iQJ9d3MmaemqpkcdHF4xR
- QcGwEnFVbKJiIA0dhSV7s+tBZ+ohiJ8lJ0RFQeE5oPm9GjhRKWKcK9lyHVhPW5Fh/PMM
- 4kSRcYWwYv+1YXP7miC6/i1gay8nofuG7uJRCx75HHw7Zj2sdVp6pipGVp34QpCsO6sR Jw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 31284m0hq7-1
+ bh=iRpyM8Ehck7F5sPPL3IUc/4o47qBhCBTUbvDIo/9rvI=;
+ b=ETQzKO5Q1jjmJHhkWwHgSBxM4k68yzuk2eOCL7GM2pcLdjVNjG2SOfH0pwQtOnewXWjV
+ MzmqxT7d7XQqCJOfOwKw3pxNtu1kwneLm+QQOG2VmvO9LQ51hihe+iUaLRkP6AjE+Kcz
+ BOqstLTHfZmVi8WecaVHLRILvbMbSr2fZrx0IQRgfTXJrvawmyYCTjApU6tRWmLQ5V+H
+ +FJlAF0l5k7ZZy2mT0CIqHb73/sF9F5ZFhSOQ4xgYjpDouqZjUBt6b2VjfIF6tGTqXQR
+ kvAAFM2yFO1BMdpTp+I4GL9mQVrDtU70O+L3jQ8ieMYB5gHzzKy9FAk0Tgz4ZYhFvApj 5Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 31284m0hqe-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 20 May 2020 01:51:31 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04K1mZNq152172;
-        Wed, 20 May 2020 01:51:30 GMT
+        Wed, 20 May 2020 01:51:37 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04K1n25Z140932;
+        Wed, 20 May 2020 01:51:37 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 313gj2kfjf-1
+        by aserp3020.oracle.com with ESMTP id 312t35yt5g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 20 May 2020 01:51:30 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04K1pTZL026668;
-        Wed, 20 May 2020 01:51:29 GMT
+        Wed, 20 May 2020 01:51:37 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04K1pZkE026682;
+        Wed, 20 May 2020 01:51:35 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 19 May 2020 18:51:29 -0700
-Subject: [PATCH 7/9] xfs_repair: rebuild refcount btrees with bulk loader
+        with ESMTP ; Tue, 19 May 2020 18:51:35 -0700
+Subject: [PATCH 8/9] xfs_repair: remove old btree rebuild support code
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
-Date:   Tue, 19 May 2020 18:51:27 -0700
-Message-ID: <158993948791.983175.3866516220522016828.stgit@magnolia>
+Date:   Tue, 19 May 2020 18:51:34 -0700
+Message-ID: <158993949441.983175.8343368791978623478.stgit@magnolia>
 In-Reply-To: <158993944270.983175.4120094597556662259.stgit@magnolia>
 References: <158993944270.983175.4120094597556662259.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -63,8 +63,8 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9626 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 malwarescore=0
- mlxscore=0 adultscore=0 bulkscore=0 suspectscore=2 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=999
+ phishscore=0 mlxscore=0 malwarescore=0 suspectscore=2 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2005200012
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9626 signatures=668686
@@ -80,472 +80,286 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use the btree bulk loading functions to rebuild the refcount btrees
-and drop the open-coded implementation.
+This code isn't needed anymore, so get rid of it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/libxfs_api_defs.h |    1 
- repair/phase5.c          |  362 +++++++++-------------------------------------
- 2 files changed, 69 insertions(+), 294 deletions(-)
+ repair/phase5.c |  242 -------------------------------------------------------
+ 1 file changed, 242 deletions(-)
 
 
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 0026ca45..1a7cdbf9 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -135,6 +135,7 @@
- #define xfs_refcountbt_calc_reserves	libxfs_refcountbt_calc_reserves
- #define xfs_refcountbt_init_cursor	libxfs_refcountbt_init_cursor
- #define xfs_refcountbt_maxrecs		libxfs_refcountbt_maxrecs
-+#define xfs_refcountbt_stage_cursor	libxfs_refcountbt_stage_cursor
- #define xfs_refcount_get_rec		libxfs_refcount_get_rec
- #define xfs_refcount_lookup_le		libxfs_refcount_lookup_le
- 
 diff --git a/repair/phase5.c b/repair/phase5.c
-index bb32fd4f..797ad6c1 100644
+index 797ad6c1..72c6908a 100644
 --- a/repair/phase5.c
 +++ b/repair/phase5.c
-@@ -1160,309 +1160,85 @@ _("Error %d while writing rmap btree for AG %u.\n"), error, agno);
- 
- /* rebuild the refcount tree */
+@@ -20,52 +20,6 @@
+ #include "rmap.h"
+ #include "bload.h"
  
 -/*
-- * we don't have to worry here about how chewing up free extents
-- * may perturb things because reflink tree building happens before
-- * freespace tree building.
+- * we maintain the current slice (path from root to leaf)
+- * of the btree incore.  when we need a new block, we ask
+- * the block allocator for the address of a block on that
+- * level, map the block in, and set up the appropriate
+- * pointers (child, silbing, etc.) and keys that should
+- * point to the new block.
 - */
-+/* Set up the refcount rebuild parameters. */
- static void
- init_refc_cursor(
--	struct xfs_mount	*mp,
-+	struct repair_ctx	*sc,
- 	xfs_agnumber_t		agno,
--	struct bt_status	*btree_curs)
-+	unsigned int		free_space,
-+	struct bt_rebuild	*btr)
- {
--	size_t			num_recs;
--	int			level;
--	struct bt_stat_level	*lptr;
--	struct bt_stat_level	*p_lptr;
+-typedef struct bt_stat_level  {
+-	/*
+-	 * set in setup_cursor routine and maintained in the tree-building
+-	 * routines
+-	 */
+-	xfs_buf_t		*buf_p;		/* 2 buffer pointers to ... */
+-	xfs_buf_t		*prev_buf_p;
+-	xfs_agblock_t		agbno;		/* current block being filled */
+-	xfs_agblock_t		prev_agbno;	/* previous block */
+-	/*
+-	 * set in calculate/init cursor routines for each btree level
+-	 */
+-	int			num_recs_tot;	/* # tree recs in level */
+-	int			num_blocks;	/* # tree blocks in level */
+-	int			num_recs_pb;	/* num_recs_tot / num_blocks */
+-	int			modulo;		/* num_recs_tot % num_blocks */
+-} bt_stat_level_t;
+-
+-typedef struct bt_status  {
+-	int			init;		/* cursor set up once? */
+-	int			num_levels;	/* # of levels in btree */
+-	xfs_extlen_t		num_tot_blocks;	/* # blocks alloc'ed for tree */
+-	xfs_extlen_t		num_free_blocks;/* # blocks currently unused */
+-
+-	xfs_agblock_t		root;		/* root block */
+-	/*
+-	 * list of blocks to be used to set up this tree
+-	 * and pointer to the first unused block on the list
+-	 */
+-	xfs_agblock_t		*btree_blocks;		/* block list */
+-	xfs_agblock_t		*free_btree_blocks;	/* first unused block */
+-	/*
+-	 * per-level status info
+-	 */
+-	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
+-	uint64_t		owner;		/* owner */
+-} bt_status_t;
+-
+ /* Context for rebuilding a per-AG btree. */
+ struct bt_rebuild {
+ 	/* Fake root for staging and space preallocations. */
+@@ -197,148 +151,6 @@ mk_incore_fstree(
+ 	return(num_extents);
+ }
+ 
+-static xfs_agblock_t
+-get_next_blockaddr(xfs_agnumber_t agno, int level, bt_status_t *curs)
+-{
+-	ASSERT(curs->free_btree_blocks < curs->btree_blocks +
+-						curs->num_tot_blocks);
+-	ASSERT(curs->num_free_blocks > 0);
+-
+-	curs->num_free_blocks--;
+-	return(*curs->free_btree_blocks++);
+-}
+-
+-/*
+- * set up the dynamically allocated block allocation data in the btree
+- * cursor that depends on the info in the static portion of the cursor.
+- * allocates space from the incore bno/bcnt extent trees and sets up
+- * the first path up the left side of the tree.  Also sets up the
+- * cursor pointer to the btree root.   called by init_freespace_cursor()
+- * and init_ino_cursor()
+- */
+-static void
+-setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
+-{
+-	int			j;
+-	unsigned int		u;
+-	xfs_extlen_t		big_extent_len;
+-	xfs_agblock_t		big_extent_start;
+-	extent_tree_node_t	*ext_ptr;
+-	extent_tree_node_t	*bno_ext_ptr;
 -	xfs_extlen_t		blocks_allocated;
--
--	if (!xfs_sb_version_hasreflink(&mp->m_sb)) {
--		memset(btree_curs, 0, sizeof(struct bt_status));
--		return;
--	}
--
--	lptr = &btree_curs->level[0];
--	btree_curs->init = 1;
--	btree_curs->owner = XFS_RMAP_OWN_REFC;
+-	xfs_agblock_t		*agb_ptr;
+-	int			error;
 -
 -	/*
--	 * build up statistics
+-	 * get the number of blocks we need to allocate, then
+-	 * set up block number array, set the free block pointer
+-	 * to the first block in the array, and null the array
 -	 */
--	num_recs = refcount_record_count(mp, agno);
--	if (num_recs == 0) {
+-	big_extent_len = curs->num_tot_blocks;
+-	blocks_allocated = 0;
+-
+-	ASSERT(big_extent_len > 0);
+-
+-	if ((curs->btree_blocks = malloc(sizeof(xfs_agblock_t)
+-					* big_extent_len)) == NULL)
+-		do_error(_("could not set up btree block array\n"));
+-
+-	agb_ptr = curs->free_btree_blocks = curs->btree_blocks;
+-
+-	for (j = 0; j < curs->num_free_blocks; j++, agb_ptr++)
+-		*agb_ptr = NULLAGBLOCK;
+-
+-	/*
+-	 * grab the smallest extent and use it up, then get the
+-	 * next smallest.  This mimics the init_*_cursor code.
+-	 */
+-	ext_ptr =  findfirst_bcnt_extent(agno);
+-
+-	agb_ptr = curs->btree_blocks;
+-
+-	/*
+-	 * set up the free block array
+-	 */
+-	while (blocks_allocated < big_extent_len)  {
+-		if (!ext_ptr)
+-			do_error(
+-_("error - not enough free space in filesystem\n"));
 -		/*
--		 * easy corner-case -- no refcount records
+-		 * use up the extent we've got
 -		 */
--		lptr->num_blocks = 1;
--		lptr->modulo = 0;
--		lptr->num_recs_pb = 0;
--		lptr->num_recs_tot = 0;
--
--		btree_curs->num_levels = 1;
--		btree_curs->num_tot_blocks = btree_curs->num_free_blocks = 1;
--
--		setup_cursor(mp, agno, btree_curs);
--
--		return;
--	}
--
--	blocks_allocated = lptr->num_blocks = howmany(num_recs,
--					mp->m_refc_mxr[0]);
--
--	lptr->modulo = num_recs % lptr->num_blocks;
--	lptr->num_recs_pb = num_recs / lptr->num_blocks;
--	lptr->num_recs_tot = num_recs;
--	level = 1;
--
--	if (lptr->num_blocks > 1)  {
--		for (; btree_curs->level[level-1].num_blocks > 1
--				&& level < XFS_BTREE_MAXLEVELS;
--				level++)  {
--			lptr = &btree_curs->level[level];
--			p_lptr = &btree_curs->level[level - 1];
--			lptr->num_blocks = howmany(p_lptr->num_blocks,
--					mp->m_refc_mxr[1]);
--			lptr->modulo = p_lptr->num_blocks % lptr->num_blocks;
--			lptr->num_recs_pb = p_lptr->num_blocks
--					/ lptr->num_blocks;
--			lptr->num_recs_tot = p_lptr->num_blocks;
--
--			blocks_allocated += lptr->num_blocks;
+-		for (u = 0; u < ext_ptr->ex_blockcount &&
+-				blocks_allocated < big_extent_len; u++)  {
+-			ASSERT(agb_ptr < curs->btree_blocks
+-					+ curs->num_tot_blocks);
+-			*agb_ptr++ = ext_ptr->ex_startblock + u;
+-			blocks_allocated++;
 -		}
+-
+-		error = rmap_add_ag_rec(mp, agno, ext_ptr->ex_startblock, u,
+-				curs->owner);
+-		if (error)
+-			do_error(_("could not set up btree rmaps: %s\n"),
+-				strerror(-error));
+-
+-		/*
+-		 * if we only used part of this last extent, then we
+-		 * need only to reset the extent in the extent
+-		 * trees and we're done
+-		 */
+-		if (u < ext_ptr->ex_blockcount)  {
+-			big_extent_start = ext_ptr->ex_startblock + u;
+-			big_extent_len = ext_ptr->ex_blockcount - u;
+-
+-			ASSERT(big_extent_len > 0);
+-
+-			bno_ext_ptr = find_bno_extent(agno,
+-						ext_ptr->ex_startblock);
+-			ASSERT(bno_ext_ptr != NULL);
+-			get_bno_extent(agno, bno_ext_ptr);
+-			release_extent_tree_node(bno_ext_ptr);
+-
+-			ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
+-					ext_ptr->ex_blockcount);
+-			release_extent_tree_node(ext_ptr);
+-#ifdef XR_BLD_FREE_TRACE
+-			fprintf(stderr, "releasing extent: %u [%u %u]\n",
+-				agno, ext_ptr->ex_startblock,
+-				ext_ptr->ex_blockcount);
+-			fprintf(stderr, "blocks_allocated = %d\n",
+-				blocks_allocated);
+-#endif
+-
+-			add_bno_extent(agno, big_extent_start, big_extent_len);
+-			add_bcnt_extent(agno, big_extent_start, big_extent_len);
+-
+-			return;
+-		}
+-		/*
+-		 * delete the used-up extent from both extent trees and
+-		 * find next biggest extent
+-		 */
+-#ifdef XR_BLD_FREE_TRACE
+-		fprintf(stderr, "releasing extent: %u [%u %u]\n",
+-			agno, ext_ptr->ex_startblock, ext_ptr->ex_blockcount);
+-#endif
+-		bno_ext_ptr = find_bno_extent(agno, ext_ptr->ex_startblock);
+-		ASSERT(bno_ext_ptr != NULL);
+-		get_bno_extent(agno, bno_ext_ptr);
+-		release_extent_tree_node(bno_ext_ptr);
+-
+-		ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
+-				ext_ptr->ex_blockcount);
+-		ASSERT(ext_ptr != NULL);
+-		release_extent_tree_node(ext_ptr);
+-
+-		ext_ptr = findfirst_bcnt_extent(agno);
 -	}
--	ASSERT(lptr->num_blocks == 1);
--	btree_curs->num_levels = level;
+-#ifdef XR_BLD_FREE_TRACE
+-	fprintf(stderr, "blocks_allocated = %d\n",
+-		blocks_allocated);
+-#endif
+-}
 -
--	btree_curs->num_tot_blocks = btree_curs->num_free_blocks
--			= blocks_allocated;
+ /*
+  * Estimate proper slack values for a btree that's being reloaded.
+  *
+@@ -494,36 +306,6 @@ rebuild_claim_block(
+ 	return xrep_newbt_claim_block(cur, &btr->newbt, ptr);
+ }
+ 
+-static void
+-write_cursor(bt_status_t *curs)
+-{
+-	int i;
 -
--	setup_cursor(mp, agno, btree_curs);
+-	for (i = 0; i < curs->num_levels; i++)  {
+-#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
+-		fprintf(stderr, "writing bt block %u\n", curs->level[i].agbno);
+-#endif
+-		if (curs->level[i].prev_buf_p != NULL)  {
+-			ASSERT(curs->level[i].prev_agbno != NULLAGBLOCK);
+-#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
+-			fprintf(stderr, "writing bt prev block %u\n",
+-						curs->level[i].prev_agbno);
+-#endif
+-			libxfs_buf_mark_dirty(curs->level[i].prev_buf_p);
+-			libxfs_buf_relse(curs->level[i].prev_buf_p);
+-		}
+-		libxfs_buf_mark_dirty(curs->level[i].buf_p);
+-		libxfs_buf_relse(curs->level[i].buf_p);
+-	}
 -}
 -
 -static void
--prop_refc_cursor(
--	struct xfs_mount	*mp,
--	xfs_agnumber_t		agno,
--	struct bt_status	*btree_curs,
--	xfs_agblock_t		startbno,
--	int			level)
+-finish_cursor(bt_status_t *curs)
 -{
--	struct xfs_btree_block	*bt_hdr;
--	struct xfs_refcount_key	*bt_key;
--	xfs_refcount_ptr_t	*bt_ptr;
--	xfs_agblock_t		agbno;
--	struct bt_stat_level	*lptr;
--	const struct xfs_buf_ops *ops = btnum_to_ops(XFS_BTNUM_REFC);
- 	int			error;
- 
--	level++;
+-	ASSERT(curs->num_free_blocks == 0);
+-	free(curs->btree_blocks);
+-}
 -
--	if (level >= btree_curs->num_levels)
-+	if (!xfs_sb_version_hasreflink(&sc->mp->m_sb)) {
-+		skip_rebuild(btr);
- 		return;
--
--	lptr = &btree_curs->level[level];
--	bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
--
--	if (be16_to_cpu(bt_hdr->bb_numrecs) == 0)  {
--		/*
--		 * this only happens once to initialize the
--		 * first path up the left side of the tree
--		 * where the agbno's are already set up
--		 */
--		prop_refc_cursor(mp, agno, btree_curs, startbno, level);
- 	}
- 
--	if (be16_to_cpu(bt_hdr->bb_numrecs) ==
--				lptr->num_recs_pb + (lptr->modulo > 0))  {
--		/*
--		 * write out current prev block, grab us a new block,
--		 * and set the rightsib pointer of current block
--		 */
--#ifdef XR_BLD_INO_TRACE
--		fprintf(stderr, " ino prop agbno %d ", lptr->prev_agbno);
--#endif
--		if (lptr->prev_agbno != NULLAGBLOCK)  {
--			ASSERT(lptr->prev_buf_p != NULL);
--			libxfs_buf_mark_dirty(lptr->prev_buf_p);
--			libxfs_buf_relse(lptr->prev_buf_p);
--		}
--		lptr->prev_agbno = lptr->agbno;
--		lptr->prev_buf_p = lptr->buf_p;
--		agbno = get_next_blockaddr(agno, level, btree_curs);
--
--		bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(agbno);
--
--		error = -libxfs_buf_get(mp->m_dev,
--				XFS_AGB_TO_DADDR(mp, agno, agbno),
--				XFS_FSB_TO_BB(mp, 1), &lptr->buf_p);
--		if (error)
--			do_error(_("Cannot grab refcountbt buffer, err=%d"),
--					error);
--		lptr->agbno = agbno;
--
--		if (lptr->modulo)
--			lptr->modulo--;
-+	init_rebuild(sc, &XFS_RMAP_OINFO_REFC, free_space, btr);
-+	btr->cur = libxfs_refcountbt_stage_cursor(sc->mp, &btr->newbt.afake,
-+			agno);
- 
--		/*
--		 * initialize block header
--		 */
--		lptr->buf_p->b_ops = ops;
--		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
--		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
--		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_REFC,
--					level, 0, agno);
-+	/* Compute how many blocks we'll need. */
-+	error = -libxfs_btree_bload_compute_geometry(btr->cur, &btr->bload,
-+			refcount_record_count(sc->mp, agno));
-+	if (error)
-+		do_error(
-+_("Unable to compute refcount btree geometry, error %d.\n"), error);
- 
--		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
--
--		/*
--		 * propagate extent record for first extent in new block up
--		 */
--		prop_refc_cursor(mp, agno, btree_curs, startbno, level);
--	}
--	/*
--	 * add inode info to current block
--	 */
--	be16_add_cpu(&bt_hdr->bb_numrecs, 1);
--
--	bt_key = XFS_REFCOUNT_KEY_ADDR(bt_hdr,
--				    be16_to_cpu(bt_hdr->bb_numrecs));
--	bt_ptr = XFS_REFCOUNT_PTR_ADDR(bt_hdr,
--				    be16_to_cpu(bt_hdr->bb_numrecs),
--				    mp->m_refc_mxr[1]);
-+	setup_rebuild(sc->mp, agno, btr, btr->bload.nr_blocks);
-+}
- 
--	bt_key->rc_startblock = cpu_to_be32(startbno);
--	*bt_ptr = cpu_to_be32(btree_curs->level[level-1].agbno);
-+/* Grab one refcount record. */
-+static int
-+get_refcountbt_record(
-+	struct xfs_btree_cur		*cur,
-+	void				*priv)
-+{
-+	struct xfs_refcount_irec	*rec;
-+	struct bt_rebuild		*btr = priv;
-+
-+	rec = pop_slab_cursor(btr->slab_cursor);
-+	memcpy(&cur->bc_rec.rc, rec, sizeof(struct xfs_refcount_irec));
-+	return 0;
+ /*
+  * Scoop up leftovers from a rebuild cursor for later freeing, then free the
+  * rebuild context.
+@@ -552,30 +334,6 @@ _("Insufficient memory saving lost blocks.\n"));
+ 	xrep_newbt_destroy(&btr->newbt, 0);
  }
  
--/*
-- * rebuilds a refcount btree given a cursor.
-- */
-+/* Rebuild a refcount btree. */
- static void
- build_refcount_tree(
--	struct xfs_mount	*mp,
-+	struct repair_ctx	*sc,
- 	xfs_agnumber_t		agno,
--	struct bt_status	*btree_curs)
-+	struct bt_rebuild	*btr)
- {
--	xfs_agnumber_t		i;
--	xfs_agblock_t		j;
--	xfs_agblock_t		agbno;
--	struct xfs_btree_block	*bt_hdr;
--	struct xfs_refcount_irec	*refc_rec;
--	struct xfs_slab_cursor	*refc_cur;
--	struct xfs_refcount_rec	*bt_rec;
--	struct bt_stat_level	*lptr;
--	const struct xfs_buf_ops *ops = btnum_to_ops(XFS_BTNUM_REFC);
--	int			numrecs;
--	int			level = btree_curs->num_levels;
- 	int			error;
- 
--	for (i = 0; i < level; i++)  {
--		lptr = &btree_curs->level[i];
-+	btr->bload.get_record = get_refcountbt_record;
-+	btr->bload.claim_block = rebuild_claim_block;
- 
--		agbno = get_next_blockaddr(agno, i, btree_curs);
--		error = -libxfs_buf_get(mp->m_dev,
--				XFS_AGB_TO_DADDR(mp, agno, agbno),
--				XFS_FSB_TO_BB(mp, 1), &lptr->buf_p);
--		if (error)
--			do_error(_("Cannot grab refcountbt buffer, err=%d"),
--					error);
--
--		if (i == btree_curs->num_levels - 1)
--			btree_curs->root = agbno;
--
--		lptr->agbno = agbno;
--		lptr->prev_agbno = NULLAGBLOCK;
--		lptr->prev_buf_p = NULL;
--		/*
--		 * initialize block header
--		 */
--
--		lptr->buf_p->b_ops = ops;
--		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
--		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
--		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_REFC,
--					i, 0, agno);
+-/* Map btnum to buffer ops for the types that need it. */
+-static const struct xfs_buf_ops *
+-btnum_to_ops(
+-	xfs_btnum_t	btnum)
+-{
+-	switch (btnum) {
+-	case XFS_BTNUM_BNO:
+-		return &xfs_bnobt_buf_ops;
+-	case XFS_BTNUM_CNT:
+-		return &xfs_cntbt_buf_ops;
+-	case XFS_BTNUM_INO:
+-		return &xfs_inobt_buf_ops;
+-	case XFS_BTNUM_FINO:
+-		return &xfs_finobt_buf_ops;
+-	case XFS_BTNUM_RMAP:
+-		return &xfs_rmapbt_buf_ops;
+-	case XFS_BTNUM_REFC:
+-		return &xfs_refcountbt_buf_ops;
+-	default:
+-		ASSERT(0);
+-		return NULL;
 -	}
+-}
 -
--	/*
--	 * run along leaf, setting up records.  as we have to switch
--	 * blocks, call the prop_refc_cursor routine to set up the new
--	 * pointers for the parent.  that can recurse up to the root
--	 * if required.  set the sibling pointers for leaf level here.
--	 */
--	error = init_refcount_cursor(agno, &refc_cur);
-+	error = -libxfs_trans_alloc_empty(sc->mp, &sc->tp);
- 	if (error)
- 		do_error(
--_("Insufficient memory to construct refcount cursor."));
--	refc_rec = pop_slab_cursor(refc_cur);
--	lptr = &btree_curs->level[0];
--
--	for (i = 0; i < lptr->num_blocks; i++)  {
--		numrecs = lptr->num_recs_pb + (lptr->modulo > 0);
--		ASSERT(refc_rec != NULL || numrecs == 0);
--
--		/*
--		 * block initialization, lay in block header
--		 */
--		lptr->buf_p->b_ops = ops;
--		bt_hdr = XFS_BUF_TO_BLOCK(lptr->buf_p);
--		memset(bt_hdr, 0, mp->m_sb.sb_blocksize);
--		libxfs_btree_init_block(mp, lptr->buf_p, XFS_BTNUM_REFC,
--					0, 0, agno);
--
--		bt_hdr->bb_u.s.bb_leftsib = cpu_to_be32(lptr->prev_agbno);
--		bt_hdr->bb_numrecs = cpu_to_be16(numrecs);
--
--		if (lptr->modulo > 0)
--			lptr->modulo--;
-+_("Insufficient memory to construct refcount rebuild transaction.\n"));
- 
--		if (lptr->num_recs_pb > 0)
--			prop_refc_cursor(mp, agno, btree_curs,
--					refc_rec->rc_startblock, 0);
--
--		bt_rec = (struct xfs_refcount_rec *)
--			  ((char *)bt_hdr + XFS_REFCOUNT_BLOCK_LEN);
--		for (j = 0; j < be16_to_cpu(bt_hdr->bb_numrecs); j++) {
--			ASSERT(refc_rec != NULL);
--			bt_rec[j].rc_startblock =
--					cpu_to_be32(refc_rec->rc_startblock);
--			bt_rec[j].rc_blockcount =
--					cpu_to_be32(refc_rec->rc_blockcount);
--			bt_rec[j].rc_refcount = cpu_to_be32(refc_rec->rc_refcount);
--
--			refc_rec = pop_slab_cursor(refc_cur);
--		}
-+	error = init_refcount_cursor(agno, &btr->slab_cursor);
-+	if (error)
-+		do_error(
-+_("Insufficient memory to construct refcount cursor.\n"));
- 
--		if (refc_rec != NULL)  {
--			/*
--			 * get next leaf level block
--			 */
--			if (lptr->prev_buf_p != NULL)  {
--#ifdef XR_BLD_RL_TRACE
--				fprintf(stderr, "writing refcntbt agbno %u\n",
--					lptr->prev_agbno);
--#endif
--				ASSERT(lptr->prev_agbno != NULLAGBLOCK);
--				libxfs_buf_mark_dirty(lptr->prev_buf_p);
--				libxfs_buf_relse(lptr->prev_buf_p);
--			}
--			lptr->prev_buf_p = lptr->buf_p;
--			lptr->prev_agbno = lptr->agbno;
--			lptr->agbno = get_next_blockaddr(agno, 0, btree_curs);
--			bt_hdr->bb_u.s.bb_rightsib = cpu_to_be32(lptr->agbno);
-+	/* Add all observed refcount records. */
-+	error = -libxfs_btree_bload(btr->cur, &btr->bload, btr);
-+	if (error)
-+		do_error(
-+_("Error %d while creating refcount btree for AG %u.\n"), error, agno);
- 
--			error = -libxfs_buf_get(mp->m_dev,
--					XFS_AGB_TO_DADDR(mp, agno, lptr->agbno),
--					XFS_FSB_TO_BB(mp, 1),
--					&lptr->buf_p);
--			if (error)
--				do_error(
--	_("Cannot grab refcountbt buffer, err=%d"),
--						error);
--		}
--	}
--	free_slab_cursor(&refc_cur);
-+	/* Since we're not writing the AGF yet, no need to commit the cursor */
-+	libxfs_btree_del_cursor(btr->cur, 0);
-+	free_slab_cursor(&btr->slab_cursor);
-+	error = -libxfs_trans_commit(sc->tp);
-+	if (error)
-+		do_error(
-+_("Error %d while writing refcount btree for AG %u.\n"), error, agno);
-+	sc->tp = NULL;
- }
- 
- /* Fill the AGFL with any leftover bnobt rebuilder blocks. */
-@@ -1501,7 +1277,7 @@ build_agf_agfl(
- 	xfs_extlen_t		freeblks,	/* # free blocks in tree */
- 	int			lostblocks,	/* # blocks that will be lost */
- 	struct bt_rebuild	*btr_rmap,
--	struct bt_status	*refcnt_bt,
-+	struct bt_rebuild	*btr_refc,
- 	struct xfs_slab		*lost_fsb)
- {
- 	struct extent_tree_node	*ext_ptr;
-@@ -1559,10 +1335,14 @@ build_agf_agfl(
- 				cpu_to_be32(btr_rmap->newbt.afake.af_blocks);
- 	}
- 
--	agf->agf_refcount_root = cpu_to_be32(refcnt_bt->root);
--	agf->agf_refcount_level = cpu_to_be32(refcnt_bt->num_levels);
--	agf->agf_refcount_blocks = cpu_to_be32(refcnt_bt->num_tot_blocks -
--			refcnt_bt->num_free_blocks);
-+	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
-+		agf->agf_refcount_root =
-+				cpu_to_be32(btr_refc->newbt.afake.af_root);
-+		agf->agf_refcount_level =
-+				cpu_to_be32(btr_refc->newbt.afake.af_levels);
-+		agf->agf_refcount_blocks =
-+				cpu_to_be32(btr_refc->newbt.afake.af_blocks);
-+	}
- 
- 	/*
- 	 * Count and record the number of btree blocks consumed if required.
-@@ -1724,7 +1504,7 @@ phase5_func(
- 	struct bt_rebuild	btr_ino;
- 	struct bt_rebuild	btr_fino;
- 	struct bt_rebuild	btr_rmap;
--	bt_status_t		refcnt_btree_curs;
-+	struct bt_rebuild	btr_refc;
- 	int			extra_blocks = 0;
- 	uint			num_freeblocks;
- 	xfs_extlen_t		freeblks1;
-@@ -1762,11 +1542,7 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
- 
- 	init_rmapbt_cursor(&sc, agno, num_freeblocks, &btr_rmap);
- 
--	/*
--	 * Set up the btree cursors for the on-disk refcount btrees,
--	 * which includes pre-allocating all required blocks.
--	 */
--	init_refc_cursor(mp, agno, &refcnt_btree_curs);
-+	init_refc_cursor(&sc, agno, num_freeblocks, &btr_refc);
- 
- 	num_extents = count_bno_extents_blocks(agno, &num_freeblocks);
- 	/*
-@@ -1831,16 +1607,14 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
- 		sb_fdblocks_ag[agno] += btr_rmap.newbt.afake.af_blocks - 1;
- 	}
- 
--	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
--		build_refcount_tree(mp, agno, &refcnt_btree_curs);
--		write_cursor(&refcnt_btree_curs);
--	}
-+	if (xfs_sb_version_hasreflink(&mp->m_sb))
-+		build_refcount_tree(&sc, agno, &btr_refc);
- 
- 	/*
- 	 * set up agf and agfl
- 	 */
- 	build_agf_agfl(mp, agno, &btr_bno, &btr_cnt, freeblks1, extra_blocks,
--			&btr_rmap, &refcnt_btree_curs, lost_fsb);
-+			&btr_rmap, &btr_refc, lost_fsb);
- 
- 	/*
- 	 * build inode allocation trees.
-@@ -1863,7 +1637,7 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
- 		finish_rebuild(mp, &btr_rmap, lost_fsb);
- 	if (xfs_sb_version_hasreflink(&mp->m_sb))
--		finish_cursor(&refcnt_btree_curs);
-+		finish_rebuild(mp, &btr_refc, lost_fsb);
- 
- 	/*
- 	 * release the incore per-AG bno/bcnt trees so the extent nodes
+ /*
+  * Free Space Btrees
+  *
 
