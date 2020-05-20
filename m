@@ -2,36 +2,36 @@ Return-Path: <SRS0=A2Vo=7C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 297ABC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 20:41:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CC6FC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 20:42:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE383207D8
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 20:41:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1F9520829
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 20:42:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727919AbgETUlH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 May 2020 16:41:07 -0400
-Received: from sandeen.net ([63.231.237.45]:52536 "EHLO sandeen.net"
+        id S1727996AbgETUmc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 20 May 2020 16:42:32 -0400
+Received: from sandeen.net ([63.231.237.45]:52574 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727903AbgETUlH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 May 2020 16:41:07 -0400
+        id S1727998AbgETUmb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 May 2020 16:42:31 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4B773323C1A;
-        Wed, 20 May 2020 15:40:38 -0500 (CDT)
-Subject: Re: [PATCH 4.5/6] xfs: switch xfs_get_defquota to take explicit type
+        by sandeen.net (Postfix) with ESMTPSA id A5792323C1A;
+        Wed, 20 May 2020 15:42:02 -0500 (CDT)
+Subject: Re: [PATCH 5/6 V2] xfs: per-type quota timers and warn limits
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Eric Sandeen <sandeen@redhat.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
  <842a7671-b514-d698-b996-5c1ccf65a6ad@redhat.com>
  <e27a2dff-f728-f69e-32b6-a83eee7effef@redhat.com>
- <0368b615-37af-27fb-b267-b7846f3b73d9@redhat.com>
- <20200520203655.GC17627@magnolia>
+ <95743095-0be7-a137-44f9-8a225b15d5db@redhat.com>
+ <20200520203120.GB17627@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -75,62 +75,58 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <a969f025-9660-0e6c-3e4a-3b3f4cce1b53@sandeen.net>
-Date:   Wed, 20 May 2020 15:41:03 -0500
+Message-ID: <19fe05b4-eae6-9aca-2beb-d752a0778298@sandeen.net>
+Date:   Wed, 20 May 2020 15:42:30 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200520203655.GC17627@magnolia>
+In-Reply-To: <20200520203120.GB17627@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/20/20 3:36 PM, Darrick J. Wong wrote:
-> On Wed, May 20, 2020 at 01:41:25PM -0500, Eric Sandeen wrote:
->> xfs_get_defquota() currently takes an xfs_dquot, and from that obtains
->> the type of default quota we should get (user/group/project).
+On 5/20/20 3:31 PM, Darrick J. Wong wrote:
+> On Wed, May 20, 2020 at 01:43:15PM -0500, Eric Sandeen wrote:
+>> From: Eric Sandeen <sandeen@redhat.com>
 >>
->> But early in init, we don't have access to a fully set up quota, and
->> so we will fail to set these defaults.
+>> Move timers and warnings out of xfs_quotainfo and into xfs_def_quota
+>> so that we can utilize them on a per-type basis, rather than enforcing
+>> them based on the values found in the first enabled quota type.
 >>
->> Switch xfs_get_defquota to take an explicit type, and add a helper 
->> function to obtain that type from an xfs_dquot for the existing
->> callers.
-> 
-> Ah, so this patch isn't itself fixing anything, it's preparing code for
-> something that happens in the next patch.
-
-yeah sorry that could be clearer, "fix" on the brain, can edit commit log.
-
 >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-...
-
->>  
->> +static inline int
->> +xfs_dquot_type(struct xfs_dquot *dqp)
->> +{
->> +	if (XFS_QM_ISUDQ(dqp))
->> +		return XFS_DQ_USER;
->> +	else if (XFS_QM_ISGDQ(dqp))
->> +		return XFS_DQ_GROUP;
->> +	else {
->> +		ASSERT(XFS_QM_ISPDQ(dqp));
->> +		return XFS_DQ_PROJ;
+>> Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 > 
-> /me suspects this could be tidier, e.g.
+> There's been kind of a lot of changes to keep Allison's RVB, especially
+> since you didn't add mine...
 > 
-> if (UDQ)
-> 	return XFS_DQ_USER;
-> if (GDQ)
-> 	return XFS_DQ_GROUP;
-> ASSERT(PDQ);
-> return XFS_DQ_PROJ;
+> (...says the king of forgetting to apply RVBs :P)
 > 
-> Otherwise the rest looks ok.
+>> [zlang: new way to get defquota in xfs_qm_init_timelimits]
+>> [zlang: remove redundant defq assign]
+>> Signed-off-by: Zorro Lang <zlang@redhat.com>
+>> ---
+>>
+>> V2: Use the by-type defquota-getter
+>>
+>> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+>> index fdeaccc67d91..49c235c5d42c 100644
+>> --- a/fs/xfs/xfs_dquot.c
+>> +++ b/fs/xfs/xfs_dquot.c
+>> @@ -116,8 +116,12 @@ xfs_qm_adjust_dqtimers(
+>>  	struct xfs_mount	*mp,
+>>  	struct xfs_dquot	*dq)
+>>  {
+>> +	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+>>  	struct xfs_disk_dquot	*d = &dq->q_core;
+>> +	struct xfs_def_quota	*defq;
+>> +
+>>  	ASSERT(d->d_id);
+>> +	*defq = xfs_get_defquota(qi, xfs_dquot_type(dq));
+> 
+> This isn't supposed to be a structure copy, right?
 
-I suppose, so respin or no?
+Oh good grief (moved the original init-on-declare down and forgot to delete the *) :/
