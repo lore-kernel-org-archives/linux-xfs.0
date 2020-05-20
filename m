@@ -2,139 +2,208 @@ Return-Path: <SRS0=A2Vo=7C=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95DABC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 03:24:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66541C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 03:53:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B2A42070A
-	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 03:24:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 447492083E
+	for <linux-xfs@archiver.kernel.org>; Wed, 20 May 2020 03:53:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aK3IGuqg"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MJG7F6iD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726938AbgETDYN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 19 May 2020 23:24:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37040 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726352AbgETDYM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 23:24:12 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74346C061A0E
-        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 20:24:12 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id ci21so606128pjb.3
-        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 20:24:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=4NhX2uXgJL1LWI0tSsiqd5VdE3Q8GIQ9D1IoNheo0c0=;
-        b=aK3IGuqgK92z2qA8jdO6Wu5Ag5l+Q1Gt7e8SQFC85z0yVLPn0rdJ6hFqmzQW0bNIDB
-         IZOdEs5AAxdXcwJxUdT++78At4dQ8LxUv95+SfK9mpssqlsOXgp8et7GrupN87tZf4iF
-         07AMORtp9F/j8t92HhUqZEm00rN1HF8QOmqkrB/YQGyvih02HGt+O6nZ8YlhMDRb3TtT
-         1gGjhHNBnUAgdgOx74N/GD/8/59mICpi4ZWi6nxn9wP/5v6JOFDlpGPPZv56Fg5yIqOl
-         QbYHV1cJ+S0XgSYj49VGAQcKYGc7TQYLG7R9LBKdmiqmAtTnuFogU3dYcwFVR6kQ+ktL
-         F+8Q==
+        id S1728297AbgETDx3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 19 May 2020 23:53:29 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:46698 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726379AbgETDx3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 19 May 2020 23:53:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1589946806;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=Y3HTKPlIJbtBtMsP1jAkuNttAPTG0h+wqvf9AMksg5A=;
+        b=MJG7F6iDLHTEx/sEYMrVSmVO7txFBFeB8jJOCPehbwmo+j23530OYzULWatZpekB0ZKQ44
+        Vt1VDd0eS4ZgfuNw6utvX9GeEzucbO/81lGpxJ3ZJOz6gC//JvssE34VFKXp/zN+4xOWa1
+        ARtBBgLdCJ2C6ItkrRm90SCxfJqPKHY=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-284-eyQaSx_pNtaIy2Um3Co6Hw-1; Tue, 19 May 2020 23:53:25 -0400
+X-MC-Unique: eyQaSx_pNtaIy2Um3Co6Hw-1
+Received: by mail-pj1-f69.google.com with SMTP id gk8so1679674pjb.8
+        for <linux-xfs@vger.kernel.org>; Tue, 19 May 2020 20:53:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=4NhX2uXgJL1LWI0tSsiqd5VdE3Q8GIQ9D1IoNheo0c0=;
-        b=h91MPKr68AuquMHDzDaAcy5jUNMBOMxwHRoNichyIFttB7yMHIgRaP/uYot5G8na/4
-         te/rFrC0qgpgD5kALPUBWZ+OZWp66BgIHicAnfH6ZrE1x3nBQ6m4RP67cG+7jTyAfhIe
-         SGDPMEWEzm9JG/7DFFOGNJm1l0b9VWbJ41V41g11kbdMtJ9rPE6OF+WzQO/REl+9wQF5
-         m1/jNPSxNR9u7+o9YWjGyxzFO0+kvRAewyJBaf9/DVogix49sJFT1E2VgPBP+hj/OnI7
-         +/v8wCQopSwoAeJ8gEwec0Ko9kSwbBNKexismduSRQFvt2kJ2zTkfONLPk75EEbWSsiJ
-         VwSw==
-X-Gm-Message-State: AOAM533dczV9wmA7YuoVvDPVyAsvhC8BRcUqLucrdeNZ43v/0AEjQww5
-        j6i+Hqndw1Ay5Q9sXA6pCg==
-X-Google-Smtp-Source: ABdhPJwwxm4Knln9I33GpJgCNUrdFpyE4pTGUweWzF7/ECJrxXJlDUVwV1XZWUEVeLRJuGqyUfNFLQ==
-X-Received: by 2002:a17:90b:360c:: with SMTP id ml12mr2601712pjb.205.1589945051990;
-        Tue, 19 May 2020 20:24:11 -0700 (PDT)
-Received: from he-cluster.localdomain ([67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id z1sm710434pjn.43.2020.05.19.20.24.10
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 19 May 2020 20:24:11 -0700 (PDT)
-From:   xiakaixu1987@gmail.com
-X-Google-Original-From: kaixuxia@tencent.com
-To:     sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2] mkfs: simplify the configured sector sizes setting in validate_sectorsize
-Date:   Wed, 20 May 2020 11:24:00 +0800
-Message-Id: <1589945040-1207-1-git-send-email-kaixuxia@tencent.com>
-X-Mailer: git-send-email 1.8.3.1
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=Y3HTKPlIJbtBtMsP1jAkuNttAPTG0h+wqvf9AMksg5A=;
+        b=XgAo8jMRDlune21Mp/BDetPDpRQ/IHQS18MMhRVbU0D43ihwcYj+w0XTgphv794qel
+         oxHHmhQMVbaU0ofKkQ/Hlb9LU+PYQXKbnMAWhR23QMvrV6HJD/6apoEZRoBMDSLS/MhD
+         XDGgtr1CEBQEq0V9wCBM1ZzcewNGtLM/g86tSTV6gZxwlKQqvVLbSvk37MkkZGu/Aeml
+         kXuG10KoJjmQdSgAB+LcUTf/LvDh06PdQaquQV1DoQvLjqBvKC6Y380HU++DFX6Pa43H
+         oRfYgZq1snx8Ez4wOKSdCAlRL06IWVKfQPWR9KMmO+wh8YAJRsX9rr1I5N77Rt7vCYbC
+         ApZg==
+X-Gm-Message-State: AOAM532+kXrtAhChLCWk2m3O2t9bGntGj7/heRmILo8w45ZxPGOmLoyy
+        LA5ndmgHWvXdnBzQqMb9vhhSOFP7p0YPpOSvaYmElsZNJAbCcPRaTwyeE6ridjc7Aml9iSzCZFP
+        Cru33bHS3nFStX66DpQI8
+X-Received: by 2002:a17:90a:3262:: with SMTP id k89mr2935715pjb.33.1589946803550;
+        Tue, 19 May 2020 20:53:23 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyTJSIC2fSkoW1Mv4jAscRcz7moZ025Fsw3acYh1/dXPWSfufxy9P8/ijRq0yXoWa19tEMa2Q==
+X-Received: by 2002:a17:90a:3262:: with SMTP id k89mr2935699pjb.33.1589946803240;
+        Tue, 19 May 2020 20:53:23 -0700 (PDT)
+Received: from don.com ([60.224.129.195])
+        by smtp.gmail.com with ESMTPSA id t23sm769649pji.32.2020.05.19.20.53.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 19 May 2020 20:53:22 -0700 (PDT)
+From:   Donald Douwsma <ddouwsma@redhat.com>
+To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Donald Douwsma <ddouwsma@redhat.com>
+Subject: [PATCH v2] xfstests: add test for xfs_repair progress reporting
+Date:   Wed, 20 May 2020 13:52:58 +1000
+Message-Id: <20200520035258.298516-1-ddouwsma@redhat.com>
+X-Mailer: git-send-email 2.18.4
+In-Reply-To: <20200519160125.GB17621@magnolia>
+References: <20200519160125.GB17621@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kaixu Xia <kaixuxia@tencent.com>
+xfs_repair's interval based progress has been broken for
+some time, create a test based on dmdelay to stretch out
+the time and use ag_stride to force parallelism.
 
-There are two places that set the configured sector sizes in
-validate_sectorsize, actually we can simplify them and combine into one
-if statement. Use the default value structure to set the topology sectors
-when probing fails.
-
-Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
 ---
-v2:
- -Use the default value structure to set the topology sectors.
+Changes since v1:
+- Use _scratch_xfs_repair
+- Filter only repair output
+- Make the filter more tolerant of whitespace and plurals
+- Take golden output from 'xfs_repair: fix progress reporting'
 
- mkfs/xfs_mkfs.c | 17 +++++------------
- 1 file changed, 5 insertions(+), 12 deletions(-)
+ tests/xfs/516     | 76 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/516.out | 15 ++++++++++
+ tests/xfs/group   |  1 +
+ 3 files changed, 92 insertions(+)
+ create mode 100755 tests/xfs/516
+ create mode 100644 tests/xfs/516.out
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 039b1dcc..d553b0a0 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -1696,14 +1696,6 @@ validate_sectorsize(
- 	int			dry_run,
- 	int			force_overwrite)
- {
--	/* set configured sector sizes in preparation for checks */
--	if (!cli->sectorsize) {
--		cfg->sectorsize = dft->sectorsize;
--	} else {
--		cfg->sectorsize = cli->sectorsize;
--	}
--	cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
--
- 	/*
- 	 * Before anything else, verify that we are correctly operating on
- 	 * files or block devices and set the control parameters correctly.
-@@ -1730,6 +1722,7 @@ validate_sectorsize(
- 	memset(ft, 0, sizeof(*ft));
- 	get_topology(cli->xi, ft, force_overwrite);
- 
-+	/* set configured sector sizes in preparation for checks */
- 	if (!cli->sectorsize) {
- 		/*
- 		 * Unless specified manually on the command line use the
-@@ -1741,9 +1734,8 @@ validate_sectorsize(
- 		 * Set the topology sectors if they were not probed to the
- 		 * minimum supported sector size.
- 		 */
--
- 		if (!ft->lsectorsize)
--			ft->lsectorsize = XFS_MIN_SECTORSIZE;
-+			ft->lsectorsize = dft->sectorsize;
- 
- 		/* Older kernels may not have physical/logical distinction */
- 		if (!ft->psectorsize)
-@@ -1759,9 +1751,10 @@ _("specified blocksize %d is less than device physical sector size %d\n"
- 				ft->lsectorsize);
- 			cfg->sectorsize = ft->lsectorsize;
- 		}
-+	} else
-+		cfg->sectorsize = cli->sectorsize;
- 
--		cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
--	}
-+	cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
- 
- 	/* validate specified/probed sector size */
- 	if (cfg->sectorsize < XFS_MIN_SECTORSIZE ||
+diff --git a/tests/xfs/516 b/tests/xfs/516
+new file mode 100755
+index 00000000..1c0508ef
+--- /dev/null
++++ b/tests/xfs/516
+@@ -0,0 +1,76 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
++#
++# FS QA Test 516
++#
++# Test xfs_repair's progress reporting
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	_dmsetup_remove delay-test > /dev/null 2>&1
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/dmdelay
++. ./common/populate
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++_require_dm_target delay
++
++# Filter output specific to the formatters in xfs_repair/progress.c
++# Ideally we'd like to see hits on anything that matches
++# awk '/{FMT/' repair/progress.c
++_filter_repair()
++{
++	sed -ne '
++	s/[0-9]\+/#/g;
++	s/^\s\+/ /g;
++	s/\(second\|minute\)s/\1/g
++	/#:#:#:/p
++	'
++}
++
++echo "Format and populate"
++_scratch_populate_cached nofill > $seqres.full 2>&1
++
++echo "Introduce a dmdelay"
++_init_delay
++
++# Introduce a read I/O delay
++# The default in common/dmdelay is a bit too agressive
++BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
++DELAY_TABLE_RDELAY="0 $BLK_DEV_SIZE delay $SCRATCH_DEV 0 100 $SCRATCH_DEV 0 0"
++_load_delay_table $DELAY_READ
++
++echo "Run repair"
++SCRATCH_DEV=$DELAY_DEV _scratch_xfs_repair -o ag_stride=4 -t 1 2>&1 |
++        tee -a $seqres.full > $seqres.xfs_repair.out
++
++cat $seqres.xfs_repair.out | _filter_repair | sort -u
++
++_cleanup_delay
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/516.out b/tests/xfs/516.out
+new file mode 100644
+index 00000000..85018b93
+--- /dev/null
++++ b/tests/xfs/516.out
+@@ -0,0 +1,15 @@
++QA output created by 516
++Format and populate
++Introduce a dmdelay
++Run repair
++ - #:#:#: Phase #: #% done - estimated remaining time # minute, # second
++ - #:#:#: Phase #: elapsed time # second - processed # inodes per minute
++ - #:#:#: check for inodes claiming duplicate blocks - # of # inodes done
++ - #:#:#: process known inodes and inode discovery - # of # inodes done
++ - #:#:#: process newly discovered inodes - # of # allocation groups done
++ - #:#:#: rebuild AG headers and trees - # of # allocation groups done
++ - #:#:#: scanning agi unlinked lists - # of # allocation groups done
++ - #:#:#: scanning filesystem freespace - # of # allocation groups done
++ - #:#:#: setting up duplicate extent list - # of # allocation groups done
++ - #:#:#: verify and correct link counts - # of # allocation groups done
++ - #:#:#: zeroing log - # of # blocks done
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 12eb55c9..aeeca23f 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -513,3 +513,4 @@
+ 513 auto mount
+ 514 auto quick db
+ 515 auto quick quota
++516 repair
 -- 
-2.20.0
+2.18.4
 
