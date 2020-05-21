@@ -4,27 +4,27 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73DF6C433E5
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 02:35:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC18DC433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 02:35:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D42E20756
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 02:35:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4C6C20709
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 02:35:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727024AbgEUCft (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726871AbgEUCft (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 20 May 2020 22:35:49 -0400
-Received: from sandeen.net ([63.231.237.45]:41454 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:41446 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727776AbgEUCft (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 May 2020 22:35:49 -0400
+        id S1726944AbgEUCfs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 20 May 2020 22:35:48 -0400
 Received: by sandeen.net (Postfix, from userid 500)
-        id 5AA5A328A03; Wed, 20 May 2020 21:35:20 -0500 (CDT)
+        id DB7AA323C1B; Wed, 20 May 2020 21:35:19 -0500 (CDT)
 From:   Eric Sandeen <sandeen@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 7/7] xfs: allow individual quota grace period extension
-Date:   Wed, 20 May 2020 21:35:18 -0500
-Message-Id: <1590028518-6043-8-git-send-email-sandeen@redhat.com>
+Subject: [PATCH 3/7] xfs: fix up some whitespace in quota code
+Date:   Wed, 20 May 2020 21:35:14 -0500
+Message-Id: <1590028518-6043-4-git-send-email-sandeen@redhat.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1590028518-6043-1-git-send-email-sandeen@redhat.com>
 References: <1590028518-6043-1-git-send-email-sandeen@redhat.com>
@@ -33,94 +33,113 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The only grace period which can be set in the kernel today is for id 0,
-i.e. the default grace period for all users.  However, setting an
-individual grace period is useful; for example:
-
- Alice has a soft quota of 100 inodes, and a hard quota of 200 inodes
- Alice uses 150 inodes, and enters a short grace period
- Alice really needs to use those 150 inodes past the grace period
- The administrator extends Alice's grace period until next Monday
-
-vfs quota users such as ext4 can do this today, with setquota -T
-
-To enable this for XFS, we simply move the timelimit assignment out
-from under the (id == 0) test.  Default setting remains under (id == 0).
-Note that this now is consistent with how we set warnings.
-
-(Userspace requires updates to enable this as well; xfs_quota needs to
-parse new options, and setquota needs to set appropriate field flags.)
+There is a fair bit of whitespace damage in the quota code, so
+fix up enough of it that subsequent patches are restricted to
+functional change to aid review.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_qm_syscalls.c | 48 ++++++++++++++++++++++++++++--------------------
- 1 file changed, 28 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_qm.h       | 44 ++++++++++++++++++++++----------------------
+ fs/xfs/xfs_quotaops.c |  8 ++++----
+ 2 files changed, 26 insertions(+), 26 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 9b69ce1..362ccec 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -555,32 +555,40 @@
- 		ddq->d_rtbwarns = cpu_to_be16(newlim->d_rt_spc_warns);
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 4e57edc..3a85040 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -42,12 +42,12 @@
+ #define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
  
- 	if (id == 0) {
--		/*
--		 * Timelimits for the super user set the relative time
--		 * the other users can be over quota for this file system.
--		 * If it is zero a default is used.  Ditto for the default
--		 * soft and hard limit values (already done, above), and
--		 * for warnings.
--		 */
--		if (newlim->d_fieldmask & QC_SPC_TIMER) {
--			defq->btimelimit = newlim->d_spc_timer;
--			ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
--		}
--		if (newlim->d_fieldmask & QC_INO_TIMER) {
--			defq->itimelimit = newlim->d_ino_timer;
--			ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
--		}
--		if (newlim->d_fieldmask & QC_RT_SPC_TIMER) {
--			defq->rtbtimelimit = newlim->d_rt_spc_timer;
--			ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
--		}
- 		if (newlim->d_fieldmask & QC_SPC_WARNS)
- 			defq->bwarnlimit = newlim->d_spc_warns;
- 		if (newlim->d_fieldmask & QC_INO_WARNS)
- 			defq->iwarnlimit = newlim->d_ino_warns;
- 		if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
- 			defq->rtbwarnlimit = newlim->d_rt_spc_warns;
--	} else {
-+	}
-+
-+	/*
-+	 * Timelimits for the super user set the relative time the other users
-+	 * can be over quota for this file system. If it is zero a default is
-+	 * used.  Ditto for the default soft and hard limit values (already
-+	 * done, above), and for warnings.
-+	 *
-+	 * For other IDs, userspace can bump out the grace period if over
-+	 * the soft limit.
-+	 */
-+	if (newlim->d_fieldmask & QC_SPC_TIMER)
-+		ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
-+	if (newlim->d_fieldmask & QC_INO_TIMER)
-+		ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
-+	if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
-+		ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
-+
-+	if (id == 0) {
-+		if (newlim->d_fieldmask & QC_SPC_TIMER)
-+			defq->btimelimit = newlim->d_spc_timer;
-+		if (newlim->d_fieldmask & QC_INO_TIMER)
-+			defq->itimelimit = newlim->d_ino_timer;
-+		if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
-+			defq->rtbtimelimit = newlim->d_rt_spc_timer;
-+	}
-+
-+	if (id != 0) {
- 		/*
- 		 * If the user is now over quota, start the timelimit.
- 		 * The user will not be 'warned'.
+ struct xfs_def_quota {
+-	xfs_qcnt_t       bhardlimit;     /* default data blk hard limit */
+-	xfs_qcnt_t       bsoftlimit;	 /* default data blk soft limit */
+-	xfs_qcnt_t       ihardlimit;	 /* default inode count hard limit */
+-	xfs_qcnt_t       isoftlimit;	 /* default inode count soft limit */
+-	xfs_qcnt_t	 rtbhardlimit;   /* default realtime blk hard limit */
+-	xfs_qcnt_t	 rtbsoftlimit;   /* default realtime blk soft limit */
++	xfs_qcnt_t	bhardlimit;	/* default data blk hard limit */
++	xfs_qcnt_t	bsoftlimit;	/* default data blk soft limit */
++	xfs_qcnt_t	ihardlimit;	/* default inode count hard limit */
++	xfs_qcnt_t	isoftlimit;	/* default inode count soft limit */
++	xfs_qcnt_t	rtbhardlimit;	/* default realtime blk hard limit */
++	xfs_qcnt_t	rtbsoftlimit;	/* default realtime blk soft limit */
+ };
+ 
+ /*
+@@ -55,28 +55,28 @@ struct xfs_def_quota {
+  * The mount structure keeps a pointer to this.
+  */
+ struct xfs_quotainfo {
+-	struct radix_tree_root qi_uquota_tree;
+-	struct radix_tree_root qi_gquota_tree;
+-	struct radix_tree_root qi_pquota_tree;
+-	struct mutex qi_tree_lock;
++	struct radix_tree_root	qi_uquota_tree;
++	struct radix_tree_root	qi_gquota_tree;
++	struct radix_tree_root	qi_pquota_tree;
++	struct mutex		qi_tree_lock;
+ 	struct xfs_inode	*qi_uquotaip;	/* user quota inode */
+ 	struct xfs_inode	*qi_gquotaip;	/* group quota inode */
+ 	struct xfs_inode	*qi_pquotaip;	/* project quota inode */
+-	struct list_lru	 qi_lru;
+-	int		 qi_dquots;
+-	time64_t	 qi_btimelimit;	 /* limit for blks timer */
+-	time64_t	 qi_itimelimit;	 /* limit for inodes timer */
+-	time64_t	 qi_rtbtimelimit;/* limit for rt blks timer */
+-	xfs_qwarncnt_t	 qi_bwarnlimit;	 /* limit for blks warnings */
+-	xfs_qwarncnt_t	 qi_iwarnlimit;	 /* limit for inodes warnings */
+-	xfs_qwarncnt_t	 qi_rtbwarnlimit;/* limit for rt blks warnings */
+-	struct mutex	 qi_quotaofflock;/* to serialize quotaoff */
+-	xfs_filblks_t	 qi_dqchunklen;	 /* # BBs in a chunk of dqs */
+-	uint		 qi_dqperchunk;	 /* # ondisk dqs in above chunk */
++	struct list_lru		qi_lru;
++	int			qi_dquots;
++	time64_t		qi_btimelimit;	/* limit for blks timer */
++	time64_t		qi_itimelimit;	/* limit for inodes timer */
++	time64_t		qi_rtbtimelimit;/* limit for rt blks timer */
++	xfs_qwarncnt_t		qi_bwarnlimit;	/* limit for blks warnings */
++	xfs_qwarncnt_t		qi_iwarnlimit;	/* limit for inodes warnings */
++	xfs_qwarncnt_t		qi_rtbwarnlimit;/* limit for rt blks warnings */
++	struct mutex		qi_quotaofflock;/* to serialize quotaoff */
++	xfs_filblks_t		qi_dqchunklen;	/* # BBs in a chunk of dqs */
++	uint			qi_dqperchunk;	/* # ondisk dq in above chunk */
+ 	struct xfs_def_quota	qi_usr_default;
+ 	struct xfs_def_quota	qi_grp_default;
+ 	struct xfs_def_quota	qi_prj_default;
+-	struct shrinker	qi_shrinker;
++	struct shrinker		qi_shrinker;
+ };
+ 
+ static inline struct radix_tree_root *
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index b5d10ec..411eeef 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -23,8 +23,8 @@
+ 	struct xfs_inode	*ip,
+ 	xfs_ino_t		ino)
+ {
+-	struct xfs_quotainfo *q = mp->m_quotainfo;
+-	bool tempqip = false;
++	struct xfs_quotainfo	*q = mp->m_quotainfo;
++	bool			tempqip = false;
+ 
+ 	tstate->ino = ino;
+ 	if (!ip && ino == NULLFSINO)
+@@ -109,8 +109,8 @@
+ 	int			type,
+ 	struct qc_info		*info)
+ {
+-	struct xfs_mount *mp = XFS_M(sb);
+-	struct qc_dqblk newlim;
++	struct xfs_mount	*mp = XFS_M(sb);
++	struct qc_dqblk		newlim;
+ 
+ 	if (sb_rdonly(sb))
+ 		return -EROFS;
 -- 
 1.8.3.1
 
