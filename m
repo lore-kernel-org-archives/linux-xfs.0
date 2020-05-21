@@ -2,179 +2,152 @@ Return-Path: <SRS0=XxdV=7D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AF9BC433E4
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 02:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDC8FC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 08:22:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 25FC320759
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 02:35:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E0A02070A
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 08:22:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727776AbgEUCfu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 20 May 2020 22:35:50 -0400
-Received: from sandeen.net ([63.231.237.45]:41444 "EHLO sandeen.net"
+        id S1728129AbgEUIWH convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 May 2020 04:22:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37176 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726943AbgEUCft (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 20 May 2020 22:35:49 -0400
-Received: by sandeen.net (Postfix, from userid 500)
-        id BFD66323C1A; Wed, 20 May 2020 21:35:19 -0500 (CDT)
-From:   Eric Sandeen <sandeen@redhat.com>
+        id S1728374AbgEUIWG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 21 May 2020 04:22:06 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/7] xfs: always return -ENOSPC on project quota reservation failure
-Date:   Wed, 20 May 2020 21:35:13 -0500
-Message-Id: <1590028518-6043-3-git-send-email-sandeen@redhat.com>
-X-Mailer: git-send-email 1.8.3.1
-In-Reply-To: <1590028518-6043-1-git-send-email-sandeen@redhat.com>
-References: <1590028518-6043-1-git-send-email-sandeen@redhat.com>
+Subject: [Bug 207817] New: kworker using a lot of cpu
+Date:   Thu, 21 May 2020 08:22:05 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: high
+X-Bugzilla-Who: askjuise@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression attachments.created
+Message-ID: <bug-207817-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS project quota treats project hierarchies as "mini filesysems" and
-so rather than -EDQUOT, the intent is to return -ENOSPC when a quota
-reservation fails, but this behavior is not consistent.
+https://bugzilla.kernel.org/show_bug.cgi?id=207817
 
-The only place we make a decision between -EDQUOT and -ENOSPC
-returns based on quota type is in xfs_trans_dqresv().
+            Bug ID: 207817
+           Summary: kworker using a lot of cpu
+           Product: File System
+           Version: 2.5
+    Kernel Version: 4.19.69-1.el7.x86_64
+          Hardware: Intel
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: askjuise@gmail.com
+        Regression: No
 
-This behavior is currently controlled by whether or not the
-XFS_QMOPT_ENOSPC flag gets passed into the quota reservation.  However,
-its use is not consistent; paths such as xfs_create() and xfs_symlink()
-don't set the flag, so a reservation failure will return -EDQUOT for
-project quota reservation failures rather than -ENOSPC for these sorts
-of operations, even for project quota:
+Created attachment 289193
+  --> https://bugzilla.kernel.org/attachment.cgi?id=289193&action=edit
+files from description
 
-# mkdir mnt/project
-# xfs_quota -x -c "project -s -p mnt/project 42" mnt
-# xfs_quota -x -c 'limit -p isoft=2 ihard=3 42' mnt
-# touch mnt/project/file{1,2,3}
-touch: cannot touch ‘mnt/project/file3’: Disk quota exceeded
+Hello!
 
-We can make this consistent by not requiring the flag to be set at the
-top of the callchain; instead we can simply test whether we are
-reserving a project quota with XFS_QM_ISPDQ in xfs_trans_dqresv and if
-so, return -ENOSPC for that failure.  This removes the need for the
-XFS_QMOPT_ENOSPC altogether and simplifies the code a fair bit.
+I'm using CentOS Linux release 7.7.1908 (Core) with kernel 4.19.69 under VMWare
+hypervisor.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_quota_defs.h |  1 -
- fs/xfs/xfs_qm.c                |  9 +++------
- fs/xfs/xfs_trans_dquot.c       | 16 +++++-----------
- 3 files changed, 8 insertions(+), 18 deletions(-)
+During my application stress tests, this problem occurred twice over the last
+half-year. The last occurrence affected all three VM under the load at once.
 
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index b2113b1..56d9dd7 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -100,7 +100,6 @@
- #define XFS_QMOPT_FORCE_RES	0x0000010 /* ignore quota limits */
- #define XFS_QMOPT_SBVERSION	0x0000040 /* change superblock version num */
- #define XFS_QMOPT_GQUOTA	0x0002000 /* group dquot requested */
--#define XFS_QMOPT_ENOSPC	0x0004000 /* enospc instead of edquot (prj) */
- 
- /*
-  * flags to xfs_trans_mod_dquot to indicate which field needs to be
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index fc93f88..27a9076 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1808,7 +1808,7 @@ struct xfs_dquot *
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 	uint64_t		delblks;
--	unsigned int		blkflags, prjflags = 0;
-+	unsigned int		blkflags;
- 	struct xfs_dquot	*udq_unres = NULL;
- 	struct xfs_dquot	*gdq_unres = NULL;
- 	struct xfs_dquot	*pdq_unres = NULL;
-@@ -1849,7 +1849,6 @@ struct xfs_dquot *
- 
- 	if (XFS_IS_PQUOTA_ON(ip->i_mount) && pdqp &&
- 	    ip->i_d.di_projid != be32_to_cpu(pdqp->q_core.d_id)) {
--		prjflags = XFS_QMOPT_ENOSPC;
- 		pdq_delblks = pdqp;
- 		if (delblks) {
- 			ASSERT(ip->i_pdquot);
-@@ -1859,8 +1858,7 @@ struct xfs_dquot *
- 
- 	error = xfs_trans_reserve_quota_bydquots(tp, ip->i_mount,
- 				udq_delblks, gdq_delblks, pdq_delblks,
--				ip->i_d.di_nblocks, 1,
--				flags | blkflags | prjflags);
-+				ip->i_d.di_nblocks, 1, flags | blkflags);
- 	if (error)
- 		return error;
- 
-@@ -1878,8 +1876,7 @@ struct xfs_dquot *
- 		ASSERT(udq_unres || gdq_unres || pdq_unres);
- 		error = xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
- 			    udq_delblks, gdq_delblks, pdq_delblks,
--			    (xfs_qcnt_t)delblks, 0,
--			    flags | blkflags | prjflags);
-+			    (xfs_qcnt_t)delblks, 0, flags | blkflags);
- 		if (error)
- 			return error;
- 		xfs_trans_reserve_quota_bydquots(NULL, ip->i_mount,
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 2c3557a..2c07897 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -711,7 +711,7 @@
- 
- error_return:
- 	xfs_dqunlock(dqp);
--	if (flags & XFS_QMOPT_ENOSPC)
-+	if (XFS_QM_ISPDQ(dqp))
- 		return -ENOSPC;
- 	return -EDQUOT;
- }
-@@ -751,15 +751,13 @@
- 	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
- 
- 	if (udqp) {
--		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos,
--					(flags & ~XFS_QMOPT_ENOSPC));
-+		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos, flags);
- 		if (error)
- 			return error;
- 	}
- 
- 	if (gdqp) {
--		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos,
--					(flags & ~XFS_QMOPT_ENOSPC));
-+		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags);
- 		if (error)
- 			goto unwind_usr;
- 	}
-@@ -804,16 +802,12 @@
- 
- 	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
- 		return 0;
--	if (XFS_IS_PQUOTA_ON(mp))
--		flags |= XFS_QMOPT_ENOSPC;
- 
- 	ASSERT(!xfs_is_quota_inode(&mp->m_sb, ip->i_ino));
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
--				XFS_TRANS_DQ_RES_RTBLKS ||
--	       (flags & ~(XFS_QMOPT_FORCE_RES | XFS_QMOPT_ENOSPC)) ==
--				XFS_TRANS_DQ_RES_BLKS);
-+	ASSERT((flags & ~(XFS_QMOPT_FORCE_RES)) == XFS_TRANS_DQ_RES_RTBLKS ||
-+	       (flags & ~(XFS_QMOPT_FORCE_RES)) == XFS_TRANS_DQ_RES_BLKS);
- 
- 	/*
- 	 * Reserve nblks against these dquots, with trans as the mediator.
+
+# top -sH | head
+top - 16:16:14 up  4:49,  1 user,  load average: 1.01, 1.02, 1.00
+Threads: 290 total,   2 running, 186 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  1.5 us, 26.9 sy,  0.0 ni, 71.6 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem :  8168128 total,  5761540 free,  1267184 used,  1139404 buff/cache
+KiB Swap:        0 total,        0 free,        0 used.  6620652 avail Mem
+
+  PID USER      PR  NI    VIRT    RES    SHR S %CPU %MEM     TIME+ COMMAND
+  360 root      20   0       0      0      0 R 99.9  0.0 283:13.38
+kworker/u8:2+fl
+    1 root      20   0   43784   5592   3936 S  0.0  0.1   0:08.64 systemd
+    2 root      20   0       0      0      0 S  0.0  0.0   0:00.01 kthreadd
+
+# cat /proc/360/comm
+kworker/u8:2+flush-253:2
+
+# uname -a
+Linux hbr01 4.19.69-1.el7.x86_64 #1 SMP Thu Aug 29 11:11:09 UTC 2019 x86_64
+x86_64 x86_64 GNU/Linux
+
+# xfs_repair -V
+xfs_repair version 4.5.0
+
+> number of CPUs
+attached as 'cpuinfo' file
+
+> contents of /proc/meminfo
+attached as 'meminfo' file
+
+> contents of /proc/mounts
+attached as 'mounts' file
+please, not that /var/log is mounted from network storage to hypervisor
+
+> contents of /proc/partitions
+attached as 'partitions' file
+
+> RAID layout (hardware and/or software)
+not used
+
+> write cache status of drives
+# hdparm -W /dev/sd[a-d] | grep "write-caching"
+...
+ write-caching = not supported
+ write-caching = not supported
+ write-caching = not supported
+ write-caching = not supported
+
+> xfs_info output on the filesystem in question
+attached as 'xfs_info' file
+
+# echo w > /proc/sysrq-trigger
+# dmesg
+attached as 'w_sysrq-trigger' file
+
+# echo l > /proc/sysrq-trigger
+# dmesg
+attached as 'l_sysrq-trigger' file
+
+# perf record -g -a sleep 10
+attached as 'perf.data' file
+
+# trace-cmd record -e xfs\*
+the trace.dat has the size about 1.4Gb over +-10 second
+and
+the trace_report.txt has the size more 3+Gb over +-10 second
+I guess it's better to share it from some file storage?
+
 -- 
-1.8.3.1
-
+You are receiving this mail because:
+You are watching the assignee of the bug.
