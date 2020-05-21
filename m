@@ -2,112 +2,112 @@ Return-Path: <SRS0=XxdV=7D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB9D7C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 08:29:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 733F3C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 08:47:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A75552070A
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 08:29:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=googlemail.com header.i=@googlemail.com header.b="I4gqzcyc"
+	by mail.kernel.org (Postfix) with ESMTP id 4392D207FB
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 08:47:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728566AbgEUI35 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 May 2020 04:29:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55380 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728538AbgEUI35 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 04:29:57 -0400
-Received: from mail-qt1-x843.google.com (mail-qt1-x843.google.com [IPv6:2607:f8b0:4864:20::843])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AF04C061A0E
-        for <linux-xfs@vger.kernel.org>; Thu, 21 May 2020 01:29:55 -0700 (PDT)
-Received: by mail-qt1-x843.google.com with SMTP id m44so4838817qtm.8
-        for <linux-xfs@vger.kernel.org>; Thu, 21 May 2020 01:29:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=googlemail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=cllSm4spHwxIp84j3Fl4PSwTuufVNnDvq98SwVeJTAQ=;
-        b=I4gqzcycTFY6KXl1q1mVh51MLTnnqtICkkTaek7DSN9sV2EP/eXUoMO4IQ/2U7dSmH
-         W5ImCb6/JikVyh9Eb5jmAS5XJTU8ChRm4QcZg2o61Bc1a8SoFvihDdwEfTGz37XJwxgB
-         hVWB7iXsTXEdohl1D8vRuQpwWvN+rlUYm80gJJ2LZz6JLgZ/NuAYDdGHn4pm9V96otGr
-         fLZMnoxbWDaV0xQM95/v3ekcRFdCRnNFLxeJ9zl/O1cA6SEJwCBR1U/20K4LTcc1d17c
-         eH2iDtUtkMyKzaazUqe4dmDSQUlaiU9eodJXWJBEvXXkybmr8ZuJ/41dSYCwbvqAZkf8
-         qNMg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=cllSm4spHwxIp84j3Fl4PSwTuufVNnDvq98SwVeJTAQ=;
-        b=A6VyhT0NWxsgkdxghr0ZrgbRUejBLUPIJB3MHAIbE80KBMw8oBdP7njUaAUaE50X0H
-         XOmy0SKs8EinRzlsFp9k0kLqjnhygML1tgt/RicmfYXZKh+C5+k7C82onvH3uOZG1kPf
-         J/tSREOiIlLgllb9DfiOcOgydkVqfbrMSVsfYJq2/cFwxnTpVnCrZBOo+0EK+xnmBOqF
-         ST9RYOollYTx5CzRRx27Difx4fitTl+TZIHHU3wyseXiN2GPMj5XBF3FfUvR3U6+p2z+
-         6jeWpbhSWHmpkCMr2O5My1maLopPRnRSjLcBXJj98zDMQkANGMtHwfqfT+5n95akNeQq
-         q31g==
-X-Gm-Message-State: AOAM532rH2ZFAbz9vqk9KKoDJ7lgBlKsYjCJrzVaonXCIj1OIg56cqA8
-        IwcfAdUPq0e98wUI421MNKqAqyO0J5Rjmdy91qc=
-X-Google-Smtp-Source: ABdhPJw1KKbCvee44tFeYkk67m9F9UvjCQtF5tXdfr3PHF3GdF3/7x49JjjzesYT7fQWf8rD9UJ+1H3INoOIBaOEkjU=
-X-Received: by 2002:ac8:39a2:: with SMTP id v31mr9541939qte.33.1590049794911;
- Thu, 21 May 2020 01:29:54 -0700 (PDT)
+        id S1728694AbgEUIq4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 May 2020 04:46:56 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:54002 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727122AbgEUIq4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 04:46:56 -0400
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C54C07EBE54
+        for <linux-xfs@vger.kernel.org>; Thu, 21 May 2020 18:46:49 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jbgqm-00048l-1K
+        for linux-xfs@vger.kernel.org; Thu, 21 May 2020 18:46:48 +1000
+Date:   Thu, 21 May 2020 18:46:48 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [XFS SUMMIT] Data writeback scalability
+Message-ID: <20200521084648.GB2040@dread.disaster.area>
 MIME-Version: 1.0
-References: <20200513023618.GA2040@dread.disaster.area> <20200519062338.GH17627@magnolia>
- <20200520011430.GS2040@dread.disaster.area> <20200520151510.11837539@harpe.intellique.com>
-In-Reply-To: <20200520151510.11837539@harpe.intellique.com>
-From:   Mike Fleetwood <mike.fleetwood@googlemail.com>
-Date:   Thu, 21 May 2020 09:29:43 +0100
-Message-ID: <CAMU1PDjKGBVqog+JRB9OmYXTsT4y_chnDTHbF9P8xCJxN=aXqA@mail.gmail.com>
-Subject: Re: [XFS SUMMIT] Deprecating V4 on-disk format
-To:     Emmanuel Florac <eflorac@intellique.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=7-415B0cAAAA:8
+        a=vRrGZ9cf-SToGN4qhUkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 20 May 2020 at 14:25, Emmanuel Florac <eflorac@intellique.com> wrot=
-e:
->
-> Le Wed, 20 May 2020 11:14:30 +1000
-> Dave Chinner <david@fromorbit.com> =C3=A9crivait:
->
-> > Well, there's a difference between what a distro that heavily
-> > patches the upstream kernel is willing to support and what upstream
-> > supports. And, realistically, v4 is going to be around for at least
-> > one more major distro release, which means the distro support time
-> > window is still going to be in the order of 15 years.
->
-> IIRC, RedHat/CentOS v.7.x shipped with a v5-capable mkfs.xfs, but
-> defaulted to v4. That means that unless you were extremely cautious
-> (like I am :) 99% of RH/COs v7 will be running v4 volumes for the
-> coming years. How many years, would you ask?
 
-[Trying again hopefully without HTML]
+Topic:	Data writeback scalability
 
-So initial RHEL/CentOS 7 releases did create XFS v4 file systems.
-However from RHEL/CentOS 7.3 [1] (circa Nov 2016) they are creating XFS
-v5 file systems by default.
+Scope:	Performance
+	Generic writeback infrastructure limitations
+	Buffered IO sucks.
 
+Proposal:
 
-[1] RHEL 7.3 Release Notes > Chapter 9. File Systems
-https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/ht=
-ml/7.3_release_notes/new_features_file_systems
+This is largely a "how do we solve this" discussion topic.
 
+In running small file writeback tests recently, I've realised that
+the single biggest performance limitation is the single threaded BDI
+flush worker that builds data IOs from the page cache of dirty
+inodes. XFS does delayed allocation, so writeback overhead is
+largely determined by how many physical allocations need to be done
+to write back the dirty data.
 
-# cat /etc/centos-release
-CentOS Linux release 7.8.2003 (Core)
-# mkfs.xfs -V
-mkfs.xfs version 4.5.0
-# mkfs.xfs /dev/sdb13
-...
-# xfs_db -c version -r /dev/sdb13
-versionnum [0xb4a5+0x18a] =3D
-V5,NLINK,DIRV2,ALIGN,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT,CR=
-C,FTYPE
+It turns out that it's not that many. The BDI flusher becomes
+completely CPU bound at about 80-90k allocations per second, which
+means we are limited to writing back data to that many spearate
+regions per second. If we are writing back small files (say 4kB
+each), then the generic data writeback infrastructure cannot clean
+more than 100k files/s. I've got a device that can do 1.6M random
+4kB write IOPS every second with aio+dio, yet I can't use more than
+about 5% of that capacity through the page cache....
+
+SO I gamed the system: I set an extent size hint of the root
+directory of 4KB so that delayed allocation is never used. That got
+me to 160k files/s in about 40k IOPS and the flusher thread about
+70% busy. Everything was still blocking in
+balance_dirty_pages_ratelimited(), so there's still a huge amount of
+IO performance being left on the table because we just can't flush
+dirty pages fast enough to keep modern SSDs busy from a single
+thread.
+
+IOWs, this is a discussion topic for how we might work towards using
+multiple data flushing threads efficiently for XFS. Most efficient
+would be a flusher thread per AG, but that is unrealistic for high
+AG count filesystems. Similarly, per-CPU flushers does no good if
+we've only got 4 AGs in the filesystem.
+
+This is made more difficult because the high speed collision that
+occurred years ago between the BDI infrastructure, dirty inode
+tracking, dirty inode writeback and cgroups has left this code a
+complex, fragile tangle of esoteric, untestable code. There are
+enough subtle race conditions between a single BDI flusher thread,
+writeback, mounts and the block device life cycle that everything is
+likely to break if we try to add concurrency into this code.
+
+So there's a big architectural question here: do we start again and
+try to engineer something for XFS that does everything we need and
+then push that towards being a generic solution (like we did with
+iomap to replace bufferheads), or do we pull the loose string on the
+existing code and try to add IO concurrency into that code without
+making the mess worse?
+
+What other options do we have? What other approaches to the problem
+are there? Does this interact with SSD specific allocation policies
+in some way? Is delayed allocation even relevant anymore with SSDs
+that can do millions of IOPS?
+
+Food for thought.
+
+-- 
+Dave Chinner
+david@fromorbit.com
