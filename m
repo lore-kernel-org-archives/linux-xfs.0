@@ -2,230 +2,70 @@ Return-Path: <SRS0=XxdV=7D=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B45BC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 15:06:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B8E6C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 15:18:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4745A20748
-	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 15:06:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F1A7207D8
+	for <linux-xfs@archiver.kernel.org>; Thu, 21 May 2020 15:18:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MAV3Ops0"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="egDSbUO9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729470AbgEUPGB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 May 2020 11:06:01 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:53496 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728136AbgEUPGB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 11:06:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590073558;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=Kmy8jbrlAcXmcm4BgsVMNW1JCG2eCO0rjp8PYchHdkE=;
-        b=MAV3Ops0aHiUrIIbn58cp6vEcqYoqODocI9jXtOE34t/3E193mhNQDKZb6DkrP5TdETYTo
-        qq/toqC9p/vNAVuYSr9fI6wkD8h6P7sa0Wie/i4YV46osVE+ZddmbKseyz2J8MKcIPY1Ob
-        CqSDNOIgxTdkpqxBEcCT7dzjgMauw2s=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-60-qHHmZK2vME6zb6wuTPOalg-1; Thu, 21 May 2020 11:05:56 -0400
-X-MC-Unique: qHHmZK2vME6zb6wuTPOalg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D5919189955B;
-        Thu, 21 May 2020 15:05:41 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8173160C20;
-        Thu, 21 May 2020 15:05:41 +0000 (UTC)
-Subject: [PATCH 5/7 V2] xfs: switch xfs_get_defquota to take explicit type
-From:   Eric Sandeen <sandeen@redhat.com>
-To:     linux-xfs@vger.kernel.org
+        id S1727988AbgEUPSO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 May 2020 11:18:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34296 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727968AbgEUPSO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 11:18:14 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74851C061A0E
+        for <linux-xfs@vger.kernel.org>; Thu, 21 May 2020 08:18:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=vY5CqhnfxnaxarMwnjLDRYlkcDGuVwLtZz1MW8x1gD0=; b=egDSbUO9k2UTom07Lmi8Vc1Lwg
+        hzapOFiEKOajNFzr8qchVSxiygKhdIaiKvBAo7bpTTVbXIVF44705/Hpi8SEPYY93rkXIsGaxFLPu
+        Dbsuq0jkC1rhEN+j+BbjCVGZUcp23ujU4IMlPv9VIx/9vccSk5poXdO17W+ywCz8+UVLOp6aCFgS7
+        S1xn9Z8M1w0BJ7rOzYXpiS6+RTCsTrwi9vKmPSGBV9gqWY+L0SVFO0mzeehMNbBe5Fh6+rtNo7rmE
+        kSKksKJss6kNq5xBCKQ0TuleJRojsPPd95o/XmI3vg/tlyFyFGIVeIZP79AWa+znuOgcETLDlnNzc
+        YitypjRg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jbmxX-0000j1-JQ; Thu, 21 May 2020 15:18:11 +0000
+Date:   Thu, 21 May 2020 08:18:11 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 5/7 V2] xfs: switch xfs_get_defquota to take explicit type
+Message-ID: <20200521151811.GA2725@infradead.org>
 References: <1590028518-6043-1-git-send-email-sandeen@redhat.com>
  <1590028518-6043-6-git-send-email-sandeen@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>
-Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <58bbabff-ac0e-9ab4-8caa-9981ff7e2fe8@redhat.com>
-Date:   Thu, 21 May 2020 10:05:40 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.0
+ <58bbabff-ac0e-9ab4-8caa-9981ff7e2fe8@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1590028518-6043-6-git-send-email-sandeen@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <58bbabff-ac0e-9ab4-8caa-9981ff7e2fe8@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_get_defquota() currently takes an xfs_dquot, and from that obtains
-the type of default quota we should get (user/group/project).
+On Thu, May 21, 2020 at 10:05:40AM -0500, Eric Sandeen wrote:
+> xfs_get_defquota() currently takes an xfs_dquot, and from that obtains
+> the type of default quota we should get (user/group/project).
+> 
+> But early in init, we don't have access to a fully set up quota, so
+> that's not possible.  The next patch needs go set up default quota
+> timers early, so switch xfs_get_defquota to take an explicit type
+> and add a helper function to obtain that type from an xfs_dquot
+> for the existing callers.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-But early in init, we don't have access to a fully set up quota, so
-that's not possible.  The next patch needs go set up default quota
-timers early, so switch xfs_get_defquota to take an explicit type
-and add a helper function to obtain that type from an xfs_dquot
-for the existing callers.
+Looks good,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: Make hch's suggested tidiness changes.
-
-Yes I did run this through the quota tests again, still pass. :)
-
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 714eceacbab2..6196f7c52b24 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -75,7 +75,7 @@ xfs_qm_adjust_dqlimits(
- 	int			prealloc = 0;
- 
- 	ASSERT(d->d_id);
--	defq = xfs_get_defquota(dq, q);
-+	defq = xfs_get_defquota(q, xfs_dquot_type(dq));
- 
- 	if (defq->bsoftlimit && !d->d_blk_softlimit) {
- 		d->d_blk_softlimit = cpu_to_be64(defq->bsoftlimit);
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 6609b4bb1628..ac0b5e7f8522 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -558,7 +558,7 @@ xfs_qm_set_defquota(
- 		return;
- 
- 	ddqp = &dqp->q_core;
--	defq = xfs_get_defquota(dqp, qinf);
-+	defq = xfs_get_defquota(qinf, xfs_dquot_type(dqp));
- 
- 	/*
- 	 * Timers and warnings have been already set, let's just set the
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 3a850401b102..c6f83171357e 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -113,6 +113,17 @@ xfs_quota_inode(xfs_mount_t *mp, uint dq_flags)
- 	return NULL;
- }
- 
-+static inline int
-+xfs_dquot_type(struct xfs_dquot *dqp)
-+{
-+	if (XFS_QM_ISUDQ(dqp))
-+		return XFS_DQ_USER;
-+	if (XFS_QM_ISGDQ(dqp))
-+		return XFS_DQ_GROUP;
-+	ASSERT(XFS_QM_ISPDQ(dqp));
-+	return XFS_DQ_PROJ;
-+}
-+
- extern void	xfs_trans_mod_dquot(struct xfs_trans *tp, struct xfs_dquot *dqp,
- 				    uint field, int64_t delta);
- extern void	xfs_trans_dqjoin(struct xfs_trans *, struct xfs_dquot *);
-@@ -164,19 +175,19 @@ extern int		xfs_qm_scall_quotaon(struct xfs_mount *, uint);
- extern int		xfs_qm_scall_quotaoff(struct xfs_mount *, uint);
- 
- static inline struct xfs_def_quota *
--xfs_get_defquota(struct xfs_dquot *dqp, struct xfs_quotainfo *qi)
-+xfs_get_defquota(struct xfs_quotainfo *qi, int type)
- {
--	struct xfs_def_quota *defq;
--
--	if (XFS_QM_ISUDQ(dqp))
--		defq = &qi->qi_usr_default;
--	else if (XFS_QM_ISGDQ(dqp))
--		defq = &qi->qi_grp_default;
--	else {
--		ASSERT(XFS_QM_ISPDQ(dqp));
--		defq = &qi->qi_prj_default;
-+	switch (type) {
-+	case XFS_DQ_USER:
-+		return &qi->qi_usr_default;
-+	case XFS_DQ_GROUP:
-+		return &qi->qi_grp_default;
-+	case XFS_DQ_PROJ:
-+		return &qi->qi_prj_default;
-+	default:
-+		ASSERT(0);
-+		return NULL;
- 	}
--	return defq;
- }
- 
- #endif /* __XFS_QM_H__ */
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index bd0f005570af..6fa08ae0b5f5 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -479,7 +479,7 @@ xfs_qm_scall_setqlim(
- 		goto out_unlock;
- 	}
- 
--	defq = xfs_get_defquota(dqp, q);
-+	defq = xfs_get_defquota(q, xfs_dquot_type(dqp));
- 	xfs_dqunlock(dqp);
- 
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_setqlim, 0, 0, 0, &tp);
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 20542076e32a..edde366ca8e9 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -591,7 +591,7 @@ xfs_trans_dqresv(
- 
- 	xfs_dqlock(dqp);
- 
--	defq = xfs_get_defquota(dqp, q);
-+	defq = xfs_get_defquota(q, xfs_dquot_type(dqp));
- 
- 	if (flags & XFS_TRANS_DQ_RES_BLKS) {
- 		hardlimit = be64_to_cpu(dqp->q_core.d_blk_hardlimit);
-
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
