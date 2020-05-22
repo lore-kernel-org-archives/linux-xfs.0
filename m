@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4E2EC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 21:35:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 521F8C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 21:40:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CCC320679
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 21:35:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19C8620757
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 21:40:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="k3Uhiol0"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QdTCWGTO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731033AbgEVVfY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 May 2020 17:35:24 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47234 "EHLO
+        id S1731033AbgEVVko (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 May 2020 17:40:44 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50208 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731076AbgEVVfX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 May 2020 17:35:23 -0400
+        with ESMTP id S1731039AbgEVVko (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 May 2020 17:40:44 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MLHtBS174293;
-        Fri, 22 May 2020 21:35:20 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MLbsBs020235;
+        Fri, 22 May 2020 21:40:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=y90c8kPooLomDf19DOg7bH4uFekCY8+mvmwyuzGxCNA=;
- b=k3Uhiol0R4ijblMYOCDyUO90slR93yOIMf1OSKZZ6jMphZTlsjT7ovO5MlNOvNmMr8MY
- aVhNMk+Itmo8EjhXCU+AUzEjOpjxH7bPD02zppcFExSVrQrGs0397+yDlWqO8/aDf57r
- st7tIfauD0qfoUpFagGEXAjrSlcwIzLRla8Ul1uzObdHPceeL8vQRXJd0lDwwnbNMLpb
- LIyAfkoY2G5v9xzfW7sXmTMdA/LtolN7Vqo15xvLcXgjVAuxrPJcugR3qCUm/Z+GECMG
- hF6dZUllkwX9WA1vRlAwY2SyddTbeSNq8ZCGkaU7UcDEgfWYbHV2tH7NDwFywNTSDqhg vQ== 
+ bh=uam5nNa0w7LO5g9oIvzjTwpw95p+g0wUK1tBSLPmQq8=;
+ b=QdTCWGTOB61y29rkFV/9Az3yQmqk1bamT4+c6YHCBwmKJGUA6aWG6oohOR1swNPnKHgW
+ 64DFRdAyNH/xe+HHin9YZY9FmAVspQu3iKc3BtMWj63ZuAUlnC65+UZFsCJ7N7eqbsQX
+ 9ET5BXV78+RFnV6cc+tIfSz8l0XzctA0HIVYULCACbcq8fj3Fd3CbSHgwyR3fFfZR/dp
+ z0+26QPBUBWzCEBAcXcpfmtkH1DarZH4ijIYjB0Whiu+mh336PhmKk4nU45huS9EFw9U
+ f8cgJ8P4izay0e5eWWgXHrWOJQQwqawkPtQA6tS2pIBxQX97aiAKBKn3aS9/BaPAcn9T mA== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 31284mfuh1-1
+        by aserp2120.oracle.com with ESMTP id 31284mfuwf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 22 May 2020 21:35:20 +0000
+        Fri, 22 May 2020 21:40:42 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MLJLNj081858;
-        Fri, 22 May 2020 21:35:19 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 31502513vk-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MLJJ0C081674;
+        Fri, 22 May 2020 21:38:41 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 3150251a33-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 May 2020 21:35:19 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04MLZIqC022906;
-        Fri, 22 May 2020 21:35:18 GMT
+        Fri, 22 May 2020 21:38:41 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04MLcf8s013206;
+        Fri, 22 May 2020 21:38:41 GMT
 Received: from localhost (/10.159.153.228)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 22 May 2020 14:35:18 -0700
-Date:   Fri, 22 May 2020 14:35:17 -0700
+        with ESMTP ; Fri, 22 May 2020 14:38:40 -0700
+Date:   Fri, 22 May 2020 14:38:39 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 03/24] xfs: mark inode buffers in cache
-Message-ID: <20200522213517.GG8230@magnolia>
+Subject: Re: [PATCH 04/24] xfs: mark dquot buffers in cache
+Message-ID: <20200522213839.GH8230@magnolia>
 References: <20200522035029.3022405-1-david@fromorbit.com>
- <20200522035029.3022405-4-david@fromorbit.com>
+ <20200522035029.3022405-5-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200522035029.3022405-4-david@fromorbit.com>
+In-Reply-To: <20200522035029.3022405-5-david@fromorbit.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 bulkscore=0 suspectscore=1 phishscore=0 malwarescore=0
@@ -72,16 +72,14 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 ml
  cotscore=-2147483648 impostorscore=0 malwarescore=0 mlxlogscore=999
  lowpriorityscore=0 phishscore=0 spamscore=0 bulkscore=0 adultscore=0
  priorityscore=1501 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2005220166
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005220167
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 22, 2020 at 01:50:08PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Inode buffers always have write IO callbacks, so by marking them
+On Fri, May 22, 2020 at 01:50:09PM +1000, Dave Chinner wrote:
+> dquot buffers always have write IO callbacks, so by marking them
 > directly we can avoid needing to attach ->b_iodone functions to
 > them. This avoids an indirect call, and makes future modifications
 > much simpler.
@@ -92,279 +90,131 @@ On Fri, May 22, 2020 at 01:50:08PM +1000, Dave Chinner wrote:
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_buf.c       | 18 +++++++++++++-----
->  fs/xfs/xfs_buf.h       | 39 ++++++++++++++++++++++++++-------------
->  fs/xfs/xfs_buf_item.c  | 42 +++++++++++++++++++++++++++++++-----------
+>  fs/xfs/xfs_buf.c       | 12 +++++++++++-
+>  fs/xfs/xfs_buf.h       |  2 ++
+>  fs/xfs/xfs_buf_item.c  | 10 ++++++++++
 >  fs/xfs/xfs_buf_item.h  |  1 +
->  fs/xfs/xfs_inode.c     |  2 +-
->  fs/xfs/xfs_trans_buf.c |  3 +++
->  6 files changed, 75 insertions(+), 30 deletions(-)
+>  fs/xfs/xfs_dquot.c     |  1 +
+>  fs/xfs/xfs_trans_buf.c |  1 +
+>  6 files changed, 26 insertions(+), 1 deletion(-)
 > 
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 9c2fbb6bbf89d..6105b97028d6a 100644
+> index 6105b97028d6a..77d40eb4a11db 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -14,6 +14,8 @@
->  #include "xfs_mount.h"
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_buf_item.h"
->  #include "xfs_errortag.h"
->  #include "xfs_error.h"
->  
-> @@ -1202,12 +1204,18 @@ xfs_buf_ioend(
+> @@ -1204,17 +1204,27 @@ xfs_buf_ioend(
 >  		bp->b_flags |= XBF_DONE;
 >  	}
 >  
-> -	if (bp->b_iodone)
-> +	/* inodes always have a callback on write */
-> +	if (!read && (bp->b_flags & _XBF_INODES)) {
-
-I think this changes in the next patch.
-
-> +		xfs_buf_inode_iodone(bp);
-> +		return;
-> +	}
+> +	if (read)
+> +		goto out_finish;
 > +
-> +	if (bp->b_iodone) {
->  		(*(bp->b_iodone))(bp);
-> -	else if (bp->b_flags & XBF_ASYNC)
-> -		xfs_buf_relse(bp);
-> -	else
-> -		complete(&bp->b_iowait);
-> +		return;
-> +	}
-> +
-> +	xfs_buf_ioend_finish(bp);
->  }
->  
->  static void
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 050c53b739e24..b3e5d653d09f1 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -30,15 +30,19 @@
->  #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
->  #define XBF_WRITE_FAIL	 (1 << 7) /* async writes have failed on this buffer */
->  
-> -/* flags used only as arguments to access routines */
-> -#define XBF_TRYLOCK	 (1 << 16)/* lock requested, but do not wait */
-> -#define XBF_UNMAPPED	 (1 << 17)/* do not map the buffer */
-> +/* buffer type flags for write callbacks */
-> +#define _XBF_INODES	 (1 << 16)/* inode buffer */
->  
->  /* flags used only internally */
->  #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
->  #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
->  #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
->  
-> +/* flags used only as arguments to access routines */
-> +#define XBF_TRYLOCK	 (1 << 30)/* lock requested, but do not wait */
-> +#define XBF_UNMAPPED	 (1 << 31)/* do not map the buffer */
-> +
-> +
+>  	/* inodes always have a callback on write */
+> -	if (!read && (bp->b_flags & _XBF_INODES)) {
+> +	if (bp->b_flags & _XBF_INODES) {
 
-Double newline?
+Heh, yes, this does seem like it belongs in the previous patch.
 
->  typedef unsigned int xfs_buf_flags_t;
->  
->  #define XFS_BUF_FLAGS \
-> @@ -50,12 +54,13 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ XBF_DONE,		"DONE" }, \
->  	{ XBF_STALE,		"STALE" }, \
->  	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
-> -	{ XBF_TRYLOCK,		"TRYLOCK" },	/* should never be set */\
-> -	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
-> +	{ _XBF_INODES,		"INODES" }, \
-
-This a toughie.  On the one hand if you're going to go introducing what
-amounts to two-bit buffer io completion type in the middle of b_flags
-then (like Amir says) this ideally would have a mask and switch
-statements and whatnot.
-
-I also wonder if we could tell the buffer type given all the
-xfs_trans_buf_set_type calls, but I think the answer is that not every
-buffer is guaranteed to have a buffer log item attached and a type code
-set correctly?
-
-OTOH there's only three states, so who cares, maybe this is fine...
+With that moved,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+>  		xfs_buf_inode_iodone(bp);
+>  		return;
+>  	}
+>  
+> +	/* dquots always have a callback on write */
+> +	if (bp->b_flags & _XBF_DQUOTS) {
+> +		xfs_buf_dquot_iodone(bp);
+> +		return;
+> +	}
+> +
+>  	if (bp->b_iodone) {
+>  		(*(bp->b_iodone))(bp);
+>  		return;
+>  	}
+>  
+> +out_finish:
+>  	xfs_buf_ioend_finish(bp);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index b3e5d653d09f1..cbde44ecb3963 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -32,6 +32,7 @@
+>  
+>  /* buffer type flags for write callbacks */
+>  #define _XBF_INODES	 (1 << 16)/* inode buffer */
+> +#define _XBF_DQUOTS	 (1 << 17)/* dquot buffer */
+>  
+>  /* flags used only internally */
+>  #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+> @@ -55,6 +56,7 @@ typedef unsigned int xfs_buf_flags_t;
+>  	{ XBF_STALE,		"STALE" }, \
+>  	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
+>  	{ _XBF_INODES,		"INODES" }, \
+> +	{ _XBF_DQUOTS,		"DQUOTS" }, \
 >  	{ _XBF_PAGES,		"PAGES" }, \
 >  	{ _XBF_KMEM,		"KMEM" }, \
-> -	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
-> -
-> +	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
-> +	/* The following interface flags should never be set */ \
-> +	{ XBF_TRYLOCK,		"TRYLOCK" }, \
-> +	{ XBF_UNMAPPED,		"UNMAPPED" }
->  
->  /*
->   * Internal state flags.
-> @@ -257,9 +262,23 @@ extern void xfs_buf_unlock(xfs_buf_t *);
->  #define xfs_buf_islocked(bp) \
->  	((bp)->b_sema.count <= 0)
->  
-> +static inline void xfs_buf_relse(xfs_buf_t *bp)
-> +{
-> +	xfs_buf_unlock(bp);
-> +	xfs_buf_rele(bp);
-> +}
-> +
->  /* Buffer Read and Write Routines */
->  extern int xfs_bwrite(struct xfs_buf *bp);
->  extern void xfs_buf_ioend(struct xfs_buf *bp);
-> +static inline void xfs_buf_ioend_finish(struct xfs_buf *bp)
-> +{
-> +	if (bp->b_flags & XBF_ASYNC)
-> +		xfs_buf_relse(bp);
-> +	else
-> +		complete(&bp->b_iowait);
-> +}
-> +
->  extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
->  		xfs_failaddr_t failaddr);
->  #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
-> @@ -324,12 +343,6 @@ static inline int xfs_buf_ispinned(struct xfs_buf *bp)
->  	return atomic_read(&bp->b_pin_count);
->  }
->  
-> -static inline void xfs_buf_relse(xfs_buf_t *bp)
-> -{
-> -	xfs_buf_unlock(bp);
-> -	xfs_buf_rele(bp);
-> -}
-> -
->  static inline int
->  xfs_buf_verify_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
->  {
+>  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
 > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index 9e75e8d6042ec..8659cf4282a64 100644
+> index 8659cf4282a64..a42cdf9ccc47d 100644
 > --- a/fs/xfs/xfs_buf_item.c
 > +++ b/fs/xfs/xfs_buf_item.c
-> @@ -1158,20 +1158,15 @@ xfs_buf_iodone_callback_error(
->  	return false;
->  }
->  
-> -/*
-> - * This is the iodone() function for buffers which have had callbacks attached
-> - * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
-> - * callback list, mark the buffer as having no more callbacks and then push the
-> - * buffer through IO completion processing.
-> - */
-> -void
-> -xfs_buf_iodone_callbacks(
-> +static void
-> +xfs_buf_run_callbacks(
->  	struct xfs_buf		*bp)
->  {
-> +
->  	/*
-> -	 * If there is an error, process it. Some errors require us
-> -	 * to run callbacks after failure processing is done so we
-> -	 * detect that and take appropriate action.
-> +	 * If there is an error, process it. Some errors require us to run
-> +	 * callbacks after failure processing is done so we detect that and take
-> +	 * appropriate action.
->  	 */
->  	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
->  		return;
-> @@ -1188,9 +1183,34 @@ xfs_buf_iodone_callbacks(
->  	bp->b_log_item = NULL;
->  	list_del_init(&bp->b_li_list);
->  	bp->b_iodone = NULL;
-> +}
-> +
-> +/*
-> + * This is the iodone() function for buffers which have had callbacks attached
-> + * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
-> + * callback list, mark the buffer as having no more callbacks and then push the
-> + * buffer through IO completion processing.
-> + */
-> +void
-> +xfs_buf_iodone_callbacks(
-> +	struct xfs_buf		*bp)
-> +{
-> +	xfs_buf_run_callbacks(bp);
->  	xfs_buf_ioend(bp);
+> @@ -1210,6 +1210,16 @@ xfs_buf_inode_iodone(
+>  	xfs_buf_ioend_finish(bp);
 >  }
 >  
 > +/*
-> + * Inode buffer iodone callback function.
+> + * Dquot buffer iodone callback function.
 > + */
 > +void
-> +xfs_buf_inode_iodone(
+> +xfs_buf_dquot_iodone(
 > +	struct xfs_buf		*bp)
 > +{
 > +	xfs_buf_run_callbacks(bp);
 > +	xfs_buf_ioend_finish(bp);
 > +}
-> +
-> +
+>  
 >  /*
 >   * This is the iodone() function for buffers which have been
->   * logged.  It is called when they are eventually flushed out.
 > diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-> index c9c57e2da9327..a342933ad9b8d 100644
+> index a342933ad9b8d..27d13d29b5bbb 100644
 > --- a/fs/xfs/xfs_buf_item.h
 > +++ b/fs/xfs/xfs_buf_item.h
-> @@ -59,6 +59,7 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
->  			      struct xfs_log_item *);
+> @@ -60,6 +60,7 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
 >  void	xfs_buf_iodone_callbacks(struct xfs_buf *);
 >  void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
-> +void	xfs_buf_inode_iodone(struct xfs_buf *);
+>  void	xfs_buf_inode_iodone(struct xfs_buf *);
+> +void	xfs_buf_dquot_iodone(struct xfs_buf *);
 >  bool	xfs_buf_log_check_iovec(struct xfs_log_iovec *iovec);
 >  
 >  extern kmem_zone_t	*xfs_buf_item_zone;
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 57781c0dbbec5..607c9d9bb2b40 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3841,13 +3841,13 @@ xfs_iflush_int(
->  	 * completion on the buffer to remove the inode from the AIL and release
->  	 * the flush lock.
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 55b95d45303b8..25592b701db40 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -1174,6 +1174,7 @@ xfs_qm_dqflush(
+>  	 * Attach an iodone routine so that we can remove this dquot from the
+>  	 * AIL and release the flush lock once the dquot is synced to disk.
 >  	 */
-> +	bp->b_flags |= _XBF_INODES;
->  	xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
->  
->  	/* generate the checksum. */
->  	xfs_dinode_calc_crc(mp, dip);
->  
->  	ASSERT(!list_empty(&bp->b_li_list));
-> -	ASSERT(bp->b_iodone != NULL);
->  	return error;
->  }
+> +	bp->b_flags |= _XBF_DQUOTS;
+>  	xfs_buf_attach_iodone(bp, xfs_qm_dqflush_done,
+>  				  &dqp->q_logitem.qli_item);
 >  
 > diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-> index 08174ffa21189..552d0869aa0fe 100644
+> index 552d0869aa0fe..93d62cb864c15 100644
 > --- a/fs/xfs/xfs_trans_buf.c
 > +++ b/fs/xfs/xfs_trans_buf.c
-> @@ -626,6 +626,7 @@ xfs_trans_inode_buf(
->  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+> @@ -788,5 +788,6 @@ xfs_trans_dquot_buf(
+>  		break;
+>  	}
 >  
->  	bip->bli_flags |= XFS_BLI_INODE_BUF;
-> +	bp->b_flags |= _XBF_INODES;
->  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+> +	bp->b_flags |= _XBF_DQUOTS;
+>  	xfs_trans_buf_set_type(tp, bp, type);
 >  }
->  
-> @@ -651,6 +652,7 @@ xfs_trans_stale_inode_buf(
->  
->  	bip->bli_flags |= XFS_BLI_STALE_INODE;
->  	bip->bli_item.li_cb = xfs_buf_iodone;
-> +	bp->b_flags |= _XBF_INODES;
->  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
->  }
->  
-> @@ -675,6 +677,7 @@ xfs_trans_inode_alloc_buf(
->  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
->  
->  	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
-> +	bp->b_flags |= _XBF_INODES;
->  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
->  }
->  
 > -- 
 > 2.26.2.761.g0e0b3e54be
 > 
