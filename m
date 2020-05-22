@@ -6,44 +6,44 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1B00C433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CEDEC433DF
 	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 03:50:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8378B20812
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 03:50:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF3EF20759
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 03:50:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727914AbgEVDuk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1728267AbgEVDuk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 21 May 2020 23:50:40 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38991 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728230AbgEVDuk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 23:50:40 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:51970 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727914AbgEVDuj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 23:50:39 -0400
 Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 30FBE82082F
-        for <linux-xfs@vger.kernel.org>; Fri, 22 May 2020 13:50:33 +1000 (AEST)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 9DAE35AA1F7
+        for <linux-xfs@vger.kernel.org>; Fri, 22 May 2020 13:50:36 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jbyhb-0002W5-62
-        for linux-xfs@vger.kernel.org; Fri, 22 May 2020 13:50:31 +1000
+        id 1jbyha-0002VD-CG
+        for linux-xfs@vger.kernel.org; Fri, 22 May 2020 13:50:30 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jbyha-00CgJ1-TU
+        id 1jbyha-00CgHZ-34
         for linux-xfs@vger.kernel.org; Fri, 22 May 2020 13:50:30 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 23/24] xfs: factor xfs_iflush_done
-Date:   Fri, 22 May 2020 13:50:28 +1000
-Message-Id: <20200522035029.3022405-24-david@fromorbit.com>
+Subject: [PATCH 05/24] xfs: mark log recovery buffers for completion
+Date:   Fri, 22 May 2020 13:50:10 +1000
+Message-Id: <20200522035029.3022405-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
 In-Reply-To: <20200522035029.3022405-1-david@fromorbit.com>
 References: <20200522035029.3022405-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=sTwFKg_x9MkA:10 a=20KFwNOVAAAA:8 a=5dYq1025zWcnlPueRbEA:9
+        a=sTwFKg_x9MkA:10 a=20KFwNOVAAAA:8 a=J8PYUobFq9NN7i4cLVkA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -51,213 +51,135 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_iflush_done() does 3 distinct operations to the inodes attached
-to the buffer. Separate these operations out into functions so that
-it is easier to modify these operations independently in future.
+Log recovery has it's own buffer write completion handler for
+buffers that it directly recovers. Convert these to direct calls by
+flagging these buffers as being log recovery buffers. The flag will
+get cleared by the log recovery IO completion routine, so it will
+never leak out of log recovery.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode_item.c | 156 +++++++++++++++++++++-------------------
- 1 file changed, 82 insertions(+), 74 deletions(-)
+ fs/xfs/xfs_buf.c                | 10 ++++++++++
+ fs/xfs/xfs_buf.h                |  2 ++
+ fs/xfs/xfs_buf_item_recover.c   |  5 ++---
+ fs/xfs/xfs_dquot_item_recover.c |  2 +-
+ fs/xfs/xfs_inode_item_recover.c |  2 +-
+ fs/xfs/xfs_log_recover.c        |  5 ++---
+ 6 files changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index af4764f97a339..4dd4f45dcc46e 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -662,104 +662,67 @@ xfs_inode_item_destroy(
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 77d40eb4a11db..b89685ce8519d 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -14,6 +14,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_log_recover.h"
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_errortag.h"
+@@ -1207,6 +1208,15 @@ xfs_buf_ioend(
+ 	if (read)
+ 		goto out_finish;
  
++	/*
++	 * If this is a log recovery buffer, we aren't doing transactional IO
++	 * yet so we need to let it handle IO completions.
++	 */
++	if (bp->b_flags & _XBF_LOGRCVY) {
++		xlog_recover_iodone(bp);
++		return;
++	}
++
+ 	/* inodes always have a callback on write */
+ 	if (bp->b_flags & _XBF_INODES) {
+ 		xfs_buf_inode_iodone(bp);
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index cbde44ecb3963..c5fe4c48c9080 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -33,6 +33,7 @@
+ /* buffer type flags for write callbacks */
+ #define _XBF_INODES	 (1 << 16)/* inode buffer */
+ #define _XBF_DQUOTS	 (1 << 17)/* dquot buffer */
++#define _XBF_LOGRCVY	 (1 << 18)/* log recovery buffer */
  
- /*
-- * This is the inode flushing I/O completion routine.  It is called
-- * from interrupt level when the buffer containing the inode is
-- * flushed to disk.  It is responsible for removing the inode item
-- * from the AIL if it has not been re-logged, and unlocking the inode's
-- * flush lock.
-- *
-- * To reduce AIL lock traffic as much as possible, we scan the buffer log item
-- * list for other inodes that will run this function. We remove them from the
-- * buffer list so we can process all the inode IO completions in one AIL lock
-- * traversal.
-- *
-- * Note: Now that we attach the log item to the buffer when we first log the
-- * inode in memory, we can have unflushed inodes on the buffer list here. These
-- * inodes will have a zero ili_last_fields, so skip over them here.
-+ * We only want to pull the item from the AIL if it is actually there
-+ * and its location in the log has not changed since we started the
-+ * flush.  Thus, we only bother if the inode's lsn has not changed.
-  */
- void
--xfs_iflush_done(
--	struct xfs_buf		*bp)
-+xfs_iflush_ail_updates(
-+	struct xfs_ail		*ailp,
-+	struct list_head	*list)
- {
--	struct xfs_inode_log_item *iip;
--	struct xfs_log_item	*lip, *n;
--	struct xfs_ail		*ailp = bp->b_mount->m_ail;
--	int			need_ail = 0;
--	LIST_HEAD(tmp);
-+	struct xfs_log_item	*lip;
-+	xfs_lsn_t		tail_lsn = 0;
+ /* flags used only internally */
+ #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+@@ -57,6 +58,7 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
+ 	{ _XBF_INODES,		"INODES" }, \
+ 	{ _XBF_DQUOTS,		"DQUOTS" }, \
++	{ _XBF_LOGRCVY,		"LOG_RECOVERY" }, \
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+ 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 04faa7310c4f0..bfd50daa16606 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -419,8 +419,7 @@ xlog_recover_validate_buf_type(
+ 	if (bp->b_ops) {
+ 		struct xfs_buf_log_item	*bip;
  
--	/*
--	 * Pull the attached inodes from the buffer one at a time and take the
--	 * appropriate action on them.
--	 */
--	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
--		iip = INODE_ITEM(lip);
--		if (!iip->ili_last_fields)
--			continue;
-+	/* this is an opencoded batch version of xfs_trans_ail_delete */
-+	spin_lock(&ailp->ail_lock);
-+	list_for_each_entry(lip, list, li_bio_list) {
-+		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-+		xfs_lsn_t	lsn;
- 
--		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
--			xfs_iflush_abort(iip->ili_inode);
-+		if (iip->ili_flush_lsn != lip->li_lsn) {
-+			xfs_clear_li_failed(lip);
- 			continue;
- 		}
- 
--		list_move_tail(&lip->li_bio_list, &tmp);
--
--		/* Do an unlocked check for needing the AIL lock. */
--		if (iip->ili_flush_lsn == lip->li_lsn ||
--		    test_bit(XFS_LI_FAILED, &lip->li_flags))
--			need_ail++;
-+		lsn = xfs_ail_delete_one(ailp, lip);
-+		if (!tail_lsn && lsn)
-+			tail_lsn = lsn;
+-		ASSERT(!bp->b_iodone || bp->b_iodone == xlog_recover_iodone);
+-		bp->b_iodone = xlog_recover_iodone;
++		bp->b_flags |= _XBF_LOGRCVY;
+ 		xfs_buf_item_init(bp, mp);
+ 		bip = bp->b_log_item;
+ 		bip->bli_item.li_lsn = current_lsn;
+@@ -963,7 +962,7 @@ xlog_recover_buf_commit_pass2(
+ 		error = xfs_bwrite(bp);
+ 	} else {
+ 		ASSERT(bp->b_mount == mp);
+-		bp->b_iodone = xlog_recover_iodone;
++		bp->b_flags |= _XBF_LOGRCVY;
+ 		xfs_buf_delwri_queue(bp, buffer_list);
  	}
-+	xfs_ail_update_finish(ailp, tail_lsn);
-+}
  
--	/*
--	 * We only want to pull the item from the AIL if it is actually there
--	 * and its location in the log has not changed since we started the
--	 * flush.  Thus, we only bother if the inode's lsn has not changed.
--	 */
--	if (need_ail) {
--		xfs_lsn_t	tail_lsn = 0;
+diff --git a/fs/xfs/xfs_dquot_item_recover.c b/fs/xfs/xfs_dquot_item_recover.c
+index 3400be4c88f08..a0a4b089e0cdd 100644
+--- a/fs/xfs/xfs_dquot_item_recover.c
++++ b/fs/xfs/xfs_dquot_item_recover.c
+@@ -153,7 +153,7 @@ xlog_recover_dquot_commit_pass2(
+ 
+ 	ASSERT(dq_f->qlf_size == 2);
+ 	ASSERT(bp->b_mount == mp);
+-	bp->b_iodone = xlog_recover_iodone;
++	bp->b_flags |= _XBF_LOGRCVY;
+ 	xfs_buf_delwri_queue(bp, buffer_list);
+ 
+ out_release:
+diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+index dc3e26ff16c90..b67f1b7c5b65f 100644
+--- a/fs/xfs/xfs_inode_item_recover.c
++++ b/fs/xfs/xfs_inode_item_recover.c
+@@ -376,7 +376,7 @@ xlog_recover_inode_commit_pass2(
+ 	xfs_dinode_calc_crc(log->l_mp, dip);
+ 
+ 	ASSERT(bp->b_mount == mp);
+-	bp->b_iodone = xlog_recover_iodone;
++	bp->b_flags |= _XBF_LOGRCVY;
+ 	xfs_buf_delwri_queue(bp, buffer_list);
+ 
+ out_release:
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index ec015df55b77a..0aa823aeafca9 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -287,9 +287,8 @@ xlog_recover_iodone(
+ 	if (bp->b_log_item)
+ 		xfs_buf_item_relse(bp);
+ 	ASSERT(bp->b_log_item == NULL);
 -
--		/* this is an opencoded batch version of xfs_trans_ail_delete */
--		spin_lock(&ailp->ail_lock);
--		list_for_each_entry(lip, &tmp, li_bio_list) {
--			iip = INODE_ITEM(lip);
--			if (iip->ili_flush_lsn == lip->li_lsn) {
--				xfs_lsn_t lsn = xfs_ail_delete_one(ailp, lip);
--				if (!tail_lsn && lsn)
--					tail_lsn = lsn;
--			} else {
--				xfs_clear_li_failed(lip);
--			}
--		}
--		xfs_ail_update_finish(ailp, tail_lsn);
--	}
-+/*
-+ * Walk the list of inodes that have completed their IOs. If they are clean
-+ * remove them from the list and dissociate them from the buffer. Buffers that
-+ * are still dirty remain linked to the buffer and on the list. Caller must
-+ * handle them appropriately.
-+ */
-+void
-+xfs_iflush_finish(
-+	struct xfs_buf		*bp,
-+	struct list_head	*list)
-+{
-+	struct xfs_log_item	*lip, *n;
- 
--	/*
--	 * Clean up and unlock the flush lock now we are done. We can clear the
--	 * ili_last_fields bits now that we know that the data corresponding to
--	 * them is safely on disk.
--	 */
--	list_for_each_entry_safe(lip, n, &tmp, li_bio_list) {
-+	list_for_each_entry_safe(lip, n, list, li_bio_list) {
-+		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 		bool	drop_buffer = false;
- 
--		list_del_init(&lip->li_bio_list);
--		iip = INODE_ITEM(lip);
--
- 		spin_lock(&iip->ili_lock);
- 		iip->ili_last_fields = 0;
- 		iip->ili_flush_lsn = 0;
- 
- 		/*
- 		 * Remove the reference to the cluster buffer if the inode is
--		 * clean in memory. Drop the buffer reference once we've dropped
--		 * the locks we hold. If the inode is dirty in memory, we need
--		 * to put the inode item back on the buffer list for another
--		 * pass through the flush machinery.
-+		 * clean in memory and drop the buffer reference once we've
-+		 * dropped the locks we hold.
- 		 */
- 		ASSERT(iip->ili_item.li_buf == bp);
- 		if (!iip->ili_fields) {
- 			iip->ili_item.li_buf = NULL;
-+			list_del_init(&lip->li_bio_list);
- 			drop_buffer = true;
--		} else {
--			list_add(&lip->li_bio_list, &bp->b_li_list);
- 		}
- 		spin_unlock(&iip->ili_lock);
- 		xfs_ifunlock(iip->ili_inode);
-@@ -768,6 +731,51 @@ xfs_iflush_done(
- 	}
+-	bp->b_iodone = NULL;
+-	xfs_buf_ioend(bp);
++	bp->b_flags &= ~_XBF_LOGRCVY;
++	xfs_buf_ioend_finish(bp);
  }
  
-+/*
-+ * Inode buffer IO completion routine.  It is responsible for removing inodes
-+ * attached to the buffer from the AIL if they have not been re-logged, as well
-+ * as completing the flush and unlocking the inode.
-+ */
-+void
-+xfs_iflush_done(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_log_item	*lip, *n;
-+	LIST_HEAD(flushed_inodes);
-+	LIST_HEAD(ail_updates);
-+
-+	/*
-+	 * Pull the attached inodes from the buffer one at a time and take the
-+	 * appropriate action on them.
-+	 */
-+	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
-+		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-+		if (!iip->ili_last_fields)
-+			continue;
-+
-+		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
-+			xfs_iflush_abort(iip->ili_inode);
-+			continue;
-+		}
-+
-+		/* Do an unlocked check for needing the AIL lock. */
-+		if (iip->ili_flush_lsn == lip->li_lsn ||
-+		    test_bit(XFS_LI_FAILED, &lip->li_flags))
-+			list_move_tail(&lip->li_bio_list, &ail_updates);
-+		else
-+			list_move_tail(&lip->li_bio_list, &flushed_inodes);
-+	}
-+
-+	if (!list_empty(&ail_updates)) {
-+		xfs_iflush_ail_updates(bp->b_mount->m_ail, &ail_updates);
-+		list_splice_tail(&ail_updates, &flushed_inodes);
-+	}
-+
-+	xfs_iflush_finish(bp, &flushed_inodes);
-+	if (!list_empty(&flushed_inodes))
-+		list_splice_tail(&flushed_inodes, &bp->b_li_list);
-+}
-+
  /*
-  * This is the inode flushing abort routine.  It is called from xfs_iflush when
-  * the filesystem is shutting down to clean up the inode state.  It is
 -- 
 2.26.2.761.g0e0b3e54be
 
