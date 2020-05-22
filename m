@@ -7,198 +7,371 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23BBDC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 22:27:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CA1DC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 22:28:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E66D22100A
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 22:27:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF2DD2100A
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 22:28:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rZM6ApbL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tTV/HoSy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731122AbgEVW1Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 May 2020 18:27:25 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:40760 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731029AbgEVW1Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 May 2020 18:27:25 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MMLYK3041287;
-        Fri, 22 May 2020 22:27:22 GMT
+        id S1731029AbgEVW2S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 May 2020 18:28:18 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:51088 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731116AbgEVW2S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 May 2020 18:28:18 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MMOp2t095058;
+        Fri, 22 May 2020 22:28:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=gdyWEUZatYOMPj71m6kWWpvg6YkN1xe2eSBgjUSFiCg=;
- b=rZM6ApbLjAS0nt5YDq/6Y8W8ikJtDFjTur+QVkeAIqup/vvE3C8BBN5PGcgYZo2bmjYJ
- ttqoQQnbUt64L+7LLtb/PEZryOFeXt8LJzbiS8A+4tO8f21Rvt2/w22pwCw+/UMGwvjb
- Jj4+wOFM6W9nzaeFJhAjA35NYfd/Jw7+9hxhotI33S3BNjfazdtptjOzzjWnHflgiJtE
- V+B6IRXV1GL4vcPUCJ3yBKBVRcw1oul8q1DaRuSvY928UXmjVanyH9sZtEFRoWhf6Veg
- spKLzcTShWMHrdrXJH3dGNNmxpngq0FP7bBbuWzzWDsFEH15f6QOPzo1NnZH1pVm3bIB 3g== 
+ bh=EFRfUz2+xHfdN6hdkEKQY/KzxPgqPoW7pXAQR+uXY0A=;
+ b=tTV/HoSyCActC9X96KsLC+jq71xJVW39icH49tPMHp8nEt39CynuqAkrNWW0aO+4gYBJ
+ tQk7ldZ+GM6K0nerkm37emoTJfnuCrUByjkKa6OdcQp4xslNSdHUDuegK+cQtc6azELr
+ Ef7Ora7dkT4wr0tblQPcQ1p9aQgeAfjaFwux5B0o/QLP7bVEAzf4Vuzwcgg8aDVqI4kY
+ cGVa5PXAS79bZZxX49W1QKJdrQKlWcwwNBKy9ph/cQBtxDHVO+kvQ0GU3pn+3sjVP+Aa
+ s3ptPkc1+WrLFzbxp9OVO9oqxriJQ+88L/zrONy/habhL/2ESJSN3OhGES/4v9GbiPsk PA== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 31501rpgtk-1
+        by aserp2120.oracle.com with ESMTP id 31284mfyhm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 22 May 2020 22:27:22 +0000
+        Fri, 22 May 2020 22:28:14 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MMDIXw137530;
-        Fri, 22 May 2020 22:27:21 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 312t3fvpa0-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MMDJg2137676;
+        Fri, 22 May 2020 22:26:14 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 312t3fvm06-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 May 2020 22:27:21 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04MMRKTH014345;
-        Fri, 22 May 2020 22:27:20 GMT
+        Fri, 22 May 2020 22:26:14 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04MMQD1m001044;
+        Fri, 22 May 2020 22:26:13 GMT
 Received: from localhost (/10.159.153.228)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 22 May 2020 15:27:20 -0700
-Date:   Fri, 22 May 2020 15:27:19 -0700
+        with ESMTP ; Fri, 22 May 2020 15:26:12 -0700
+Date:   Fri, 22 May 2020 15:26:11 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/24] xfs: get rid of log item callbacks
-Message-ID: <20200522222719.GO8230@magnolia>
+Subject: Re: [PATCH 10/24] xfs: clean up the buffer iodone callback functions
+Message-ID: <20200522222611.GN8230@magnolia>
 References: <20200522035029.3022405-1-david@fromorbit.com>
- <20200522035029.3022405-12-david@fromorbit.com>
+ <20200522035029.3022405-11-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200522035029.3022405-12-david@fromorbit.com>
+In-Reply-To: <20200522035029.3022405-11-david@fromorbit.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=999
  phishscore=0 mlxscore=0 malwarescore=0 suspectscore=5 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2005220172
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 spamscore=0
- mlxlogscore=999 clxscore=1015 priorityscore=1501 cotscore=-2147483648
- impostorscore=0 bulkscore=0 adultscore=0 malwarescore=0 phishscore=0
- mlxscore=0 suspectscore=5 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005220174
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=5 mlxscore=0
+ cotscore=-2147483648 impostorscore=0 malwarescore=0 mlxlogscore=999
+ lowpriorityscore=0 phishscore=0 spamscore=0 bulkscore=0 adultscore=0
+ priorityscore=1501 clxscore=1015 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005220174
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 22, 2020 at 01:50:16PM +1000, Dave Chinner wrote:
+On Fri, May 22, 2020 at 01:50:15PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> They are not used anymore, so remove them from the log item and the
-> buffer iodone attachment interfaces.
+> Now that we've sorted inode and dquot buffers, we can apply the same
+> cleanups to dirty buffers with buffer log items. They only have one
+> callback, too, so we don't need the log item callback. Collapse the
+> iodone functions and remove all the now unnecessary infrastructure
+> around callback processing.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_buf_item.c | 17 -----------------
->  fs/xfs/xfs_buf_item.h |  3 ---
->  fs/xfs/xfs_dquot.c    |  6 +++---
->  fs/xfs/xfs_inode.c    |  5 +++--
->  fs/xfs/xfs_trans.h    |  3 ---
->  5 files changed, 6 insertions(+), 28 deletions(-)
+>  fs/xfs/xfs_buf_item.c  | 139 +++++++++--------------------------------
+>  fs/xfs/xfs_buf_item.h  |   1 -
+>  fs/xfs/xfs_trans_buf.c |   2 -
+>  3 files changed, 29 insertions(+), 113 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index d44b3e3f46613..d855a2b7486c5 100644
+> index 57e5d37f6852e..d44b3e3f46613 100644
 > --- a/fs/xfs/xfs_buf_item.c
 > +++ b/fs/xfs/xfs_buf_item.c
-> @@ -955,23 +955,6 @@ xfs_buf_item_relse(
->  	xfs_buf_item_free(bip);
+> @@ -30,7 +30,7 @@ static inline struct xfs_buf_log_item *BUF_ITEM(struct xfs_log_item *lip)
+>  	return container_of(lip, struct xfs_buf_log_item, bli_item);
 >  }
 >  
-> -
+> -STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
+> +static void xfs_buf_item_done(struct xfs_buf *bp);
+>  
+>  /* Is this log iovec plausibly large enough to contain the buffer log format? */
+>  bool
+> @@ -462,9 +462,8 @@ xfs_buf_item_unpin(
+>  		 * the AIL lock.
+>  		 */
+>  		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
+> -			lip->li_cb(bp, lip);
+> +			xfs_buf_item_done(bp);
+>  			xfs_iflush_done(bp);
+> -			bp->b_log_item = NULL;
+>  		} else {
+>  			xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
+>  			xfs_buf_item_relse(bp);
+> @@ -973,46 +972,6 @@ xfs_buf_attach_iodone(
+>  	list_add_tail(&lip->li_bio_list, &bp->b_li_list);
+>  }
+>  
 > -/*
-> - * Add the given log item with its callback to the list of callbacks
-> - * to be called when the buffer's I/O completes.
+> - * We can have many callbacks on a buffer. Running the callbacks individually
+> - * can cause a lot of contention on the AIL lock, so we allow for a single
+> - * callback to be able to scan the remaining items in bp->b_li_list for other
+> - * items of the same type and callback to be processed in the first call.
+> - *
+> - * As a result, the loop walking the callback list below will also modify the
+> - * list. it removes the first item from the list and then runs the callback.
+> - * The loop then restarts from the new first item int the list. This allows the
+> - * callback to scan and modify the list attached to the buffer and we don't
+> - * have to care about maintaining a next item pointer.
 > - */
-> -void
-> -xfs_buf_attach_iodone(
-> -	struct xfs_buf		*bp,
-> -	void			(*cb)(struct xfs_buf *, struct xfs_log_item *),
-> -	struct xfs_log_item	*lip)
+> -STATIC void
+> -xfs_buf_do_callbacks(
+> -	struct xfs_buf		*bp)
 > -{
-> -	ASSERT(xfs_buf_islocked(bp));
+> -	struct xfs_buf_log_item *blip = bp->b_log_item;
+> -	struct xfs_log_item	*lip;
 > -
-> -	lip->li_cb = cb;
-> -	list_add_tail(&lip->li_bio_list, &bp->b_li_list);
+> -	/* If there is a buf_log_item attached, run its callback */
+> -	if (blip) {
+> -		lip = &blip->bli_item;
+> -		lip->li_cb(bp, lip);
+> -	}
+> -
+> -	while (!list_empty(&bp->b_li_list)) {
+> -		lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
+> -				       li_bio_list);
+> -
+> -		/*
+> -		 * Remove the item from the list, so we don't have any
+> -		 * confusion if the item is added to another buf.
+> -		 * Don't touch the log item after calling its
+> -		 * callback, because it could have freed itself.
+> -		 */
+> -		list_del_init(&lip->li_bio_list);
+> -		lip->li_cb(bp, lip);
+> -	}
 > -}
 > -
 >  /*
 >   * Invoke the error state callback for each log item affected by the failed I/O.
 >   *
-> diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-> index 3f436efb0b67a..ecfad1915a86b 100644
-> --- a/fs/xfs/xfs_buf_item.h
-> +++ b/fs/xfs/xfs_buf_item.h
-> @@ -54,9 +54,6 @@ void	xfs_buf_item_relse(struct xfs_buf *);
->  bool	xfs_buf_item_put(struct xfs_buf_log_item *);
->  void	xfs_buf_item_log(struct xfs_buf_log_item *, uint, uint);
->  bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
-> -void	xfs_buf_attach_iodone(struct xfs_buf *,
-> -			      void(*)(struct xfs_buf *, struct xfs_log_item *),
-> -			      struct xfs_log_item *);
->  void	xfs_buf_inode_iodone(struct xfs_buf *);
->  void	xfs_buf_dquot_iodone(struct xfs_buf *);
->  void	xfs_buf_dirty_iodone(struct xfs_buf *);
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index 1d7f34a9bc989..34fc1bcb1eefd 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -1191,11 +1191,11 @@ xfs_qm_dqflush(
->  	}
+> @@ -1025,8 +984,8 @@ STATIC void
+>  xfs_buf_do_callbacks_fail(
+>  	struct xfs_buf		*bp)
+>  {
+> +	struct xfs_ail		*ailp = bp->b_mount->m_ail;
+>  	struct xfs_log_item	*lip;
+> -	struct xfs_ail		*ailp;
 >  
 >  	/*
-> -	 * Attach an iodone routine so that we can remove this dquot from the
-> -	 * AIL and release the flush lock once the dquot is synced to disk.
-> +	 * Attach the dquot to the buffer so that we can remove this dquot from
-> +	 * the AIL and release the flush lock once the dquot is synced to disk.
->  	 */
->  	bp->b_flags |= _XBF_DQUOTS;
-> -	xfs_buf_attach_iodone(bp, NULL, &dqp->q_logitem.qli_item);
-> +	list_add_tail(&dqp->q_logitem.qli_item.li_bio_list, &bp->b_li_list);
+>  	 * Buffer log item errors are handled directly by xfs_buf_item_push()
+> @@ -1036,9 +995,6 @@ xfs_buf_do_callbacks_fail(
+>  	if (list_empty(&bp->b_li_list))
+>  		return;
 >  
+> -	lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
+> -			li_bio_list);
+> -	ailp = lip->li_ailp;
+>  	spin_lock(&ailp->ail_lock);
+>  	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
+>  		if (lip->li_ops->iop_error)
+> @@ -1051,22 +1007,11 @@ static bool
+>  xfs_buf_iodone_callback_error(
+>  	struct xfs_buf		*bp)
+>  {
+> -	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> -	struct xfs_log_item	*lip;
+> -	struct xfs_mount	*mp;
+> +	struct xfs_mount	*mp = bp->b_mount;
+>  	static ulong		lasttime;
+>  	static xfs_buftarg_t	*lasttarg;
+>  	struct xfs_error_cfg	*cfg;
+>  
+> -	/*
+> -	 * The failed buffer might not have a buf_log_item attached or the
+> -	 * log_item list might be empty. Get the mp from the available
+> -	 * xfs_log_item
+> -	 */
+> -	lip = list_first_entry_or_null(&bp->b_li_list, struct xfs_log_item,
+> -				       li_bio_list);
+> -	mp = lip ? lip->li_mountp : bip->bli_item.li_mountp;
+> -
 >  	/*
->  	 * If the buffer is pinned then push on the log so we won't
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index c75d625de7945..c5529853f513c 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -2690,7 +2690,8 @@ xfs_ifree_cluster(
->  			xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
->  						&iip->ili_item.li_lsn);
+>  	 * If we've already decided to shutdown the filesystem because of
+>  	 * I/O errors, there's no point in giving this a retry.
+> @@ -1171,14 +1116,27 @@ xfs_buf_had_callback_errors(
+>  }
 >  
-> -			xfs_buf_attach_iodone(bp, NULL, &iip->ili_item);
-> +			list_add_tail(&iip->ili_item.li_bio_list,
-> +						&bp->b_li_list);
+>  static void
+> -xfs_buf_run_callbacks(
+> +xfs_buf_item_done(
+>  	struct xfs_buf		*bp)
+>  {
+> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
 >  
->  			if (ip != free_ip)
->  				xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> @@ -3840,7 +3841,7 @@ xfs_iflush_int(
->  	 * the flush lock.
->  	 */
->  	bp->b_flags |= _XBF_INODES;
-> -	xfs_buf_attach_iodone(bp, NULL, &iip->ili_item);
-> +	list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
+> -	if (xfs_buf_had_callback_errors(bp))
+> +	if (!bip)
+>  		return;
+> -	xfs_buf_do_callbacks(bp);
+> +
+> +	/*
+> +	 * If we are forcibly shutting down, this may well be off the AIL
+> +	 * already. That's because we simulate the log-committed callbacks to
+> +	 * unpin these buffers. Or we may never have put this item on AIL
+> +	 * because of the transaction was aborted forcibly.
+> +	 * xfs_trans_ail_delete() takes care of these.
+> +	 *
+> +	 * Either way, AIL is useless if we're forcing a shutdown.
+> +	 */
+> +	xfs_trans_ail_delete(&bip->bli_item, SHUTDOWN_CORRUPT_INCORE);
+>  	bp->b_log_item = NULL;
+> +	xfs_buf_item_free(bip);
+> +	xfs_buf_rele(bp);
+>  }
 >  
->  	/* generate the checksum. */
->  	xfs_dinode_calc_crc(mp, dip);
-> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> index 8308bf6d7e404..d27429e3a82a6 100644
-> --- a/fs/xfs/xfs_trans.h
-> +++ b/fs/xfs/xfs_trans.h
-> @@ -37,9 +37,6 @@ struct xfs_log_item {
->  	unsigned long			li_flags;	/* misc flags */
->  	struct xfs_buf			*li_buf;	/* real buffer pointer */
->  	struct list_head		li_bio_list;	/* buffer item list */
-> -	void				(*li_cb)(struct xfs_buf *,
-> -						 struct xfs_log_item *);
-> -							/* buffer item iodone */
->  							/* callback func */
+>  /*
+> @@ -1188,19 +1146,10 @@ void
+>  xfs_buf_inode_iodone(
+>  	struct xfs_buf		*bp)
+>  {
+> -	struct xfs_buf_log_item *blip = bp->b_log_item;
+> -	struct xfs_log_item	*lip;
+> -
+>  	if (xfs_buf_had_callback_errors(bp))
+>  		return;
+>  
+> -	/* If there is a buf_log_item attached, run its callback */
+> -	if (blip) {
+> -		lip = &blip->bli_item;
+> -		lip->li_cb(bp, lip);
+> -		bp->b_log_item = NULL;
+> -	}
+> -
+> +	xfs_buf_item_done(bp);
+>  	xfs_iflush_done(bp);
 
-You could get rid of this comment too.
+Just out of curiosity, we still have a reference to bp here even if
+xfs_buf_item_done calls xfs_buf_rele, right?  I think the answer is that yes
+we do still have the reference because the inodes themselves hold references
+to the cluster buffer, right?
 
-With that fixed,
+If so,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
->  	const struct xfs_item_ops	*li_ops;	/* function list */
+>  	xfs_buf_ioend_finish(bp);
+>  }
+> @@ -1212,59 +1161,29 @@ void
+>  xfs_buf_dquot_iodone(
+>  	struct xfs_buf		*bp)
+>  {
+> -	struct xfs_buf_log_item *blip = bp->b_log_item;
+> -	struct xfs_log_item	*lip;
+> -
+>  	if (xfs_buf_had_callback_errors(bp))
+>  		return;
 >  
+>  	/* a newly allocated dquot buffer might have a log item attached */
+> -	if (blip) {
+> -		lip = &blip->bli_item;
+> -		lip->li_cb(bp, lip);
+> -		bp->b_log_item = NULL;
+> -	}
+> -
+> +	xfs_buf_item_done(bp);
+>  	xfs_dquot_done(bp);
+>  	xfs_buf_ioend_finish(bp);
+>  }
+>  
+>  /*
+>   * Dirty buffer iodone callback function.
+> + *
+> + * Note that for things like remote attribute buffers, there may not be a buffer
+> + * log item here, so processing the buffer log item must remain be optional.
+>   */
+>  void
+>  xfs_buf_dirty_iodone(
+>  	struct xfs_buf		*bp)
+>  {
+> -	xfs_buf_run_callbacks(bp);
+> +	if (xfs_buf_had_callback_errors(bp))
+> +		return;
+> +
+> +	xfs_buf_item_done(bp);
+>  	xfs_buf_ioend_finish(bp);
+>  }
+>  
+> -/*
+> - * This is the iodone() function for buffers which have been
+> - * logged.  It is called when they are eventually flushed out.
+> - * It should remove the buf item from the AIL, and free the buf item.
+> - * It is called by xfs_buf_iodone_callbacks() above which will take
+> - * care of cleaning up the buffer itself.
+> - */
+> -void
+> -xfs_buf_iodone(
+> -	struct xfs_buf		*bp,
+> -	struct xfs_log_item	*lip)
+> -{
+> -	ASSERT(BUF_ITEM(lip)->bli_buf == bp);
+> -
+> -	xfs_buf_rele(bp);
+> -
+> -	/*
+> -	 * If we are forcibly shutting down, this may well be off the AIL
+> -	 * already. That's because we simulate the log-committed callbacks to
+> -	 * unpin these buffers. Or we may never have put this item on AIL
+> -	 * because of the transaction was aborted forcibly.
+> -	 * xfs_trans_ail_delete() takes care of these.
+> -	 *
+> -	 * Either way, AIL is useless if we're forcing a shutdown.
+> -	 */
+> -	xfs_trans_ail_delete(lip, SHUTDOWN_CORRUPT_INCORE);
+> -	xfs_buf_item_free(BUF_ITEM(lip));
+> -}
+> diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+> index 96f994ec90915..3f436efb0b67a 100644
+> --- a/fs/xfs/xfs_buf_item.h
+> +++ b/fs/xfs/xfs_buf_item.h
+> @@ -57,7 +57,6 @@ bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
+>  void	xfs_buf_attach_iodone(struct xfs_buf *,
+>  			      void(*)(struct xfs_buf *, struct xfs_log_item *),
+>  			      struct xfs_log_item *);
+> -void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
+>  void	xfs_buf_inode_iodone(struct xfs_buf *);
+>  void	xfs_buf_dquot_iodone(struct xfs_buf *);
+>  void	xfs_buf_dirty_iodone(struct xfs_buf *);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 69e0ebe94a915..11cd666cd99a6 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -475,7 +475,6 @@ xfs_trans_dirty_buf(
+>  	bp->b_flags |= XBF_DONE;
+>  
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+> -	bip->bli_item.li_cb = xfs_buf_iodone;
+>  
+>  	/*
+>  	 * If we invalidated the buffer within this transaction, then
+> @@ -644,7 +643,6 @@ xfs_trans_stale_inode_buf(
+>  	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  
+>  	bip->bli_flags |= XFS_BLI_STALE_INODE;
+> -	bip->bli_item.li_cb = xfs_buf_iodone;
+>  	bp->b_flags |= _XBF_INODES;
+>  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+>  }
 > -- 
 > 2.26.2.761.g0e0b3e54be
 > 
