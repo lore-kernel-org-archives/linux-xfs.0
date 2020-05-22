@@ -2,248 +2,271 @@ Return-Path: <SRS0=AE4z=7E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CAC3C433E1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE3F5C433E0
 	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 03:50:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E33C020825
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 03:50:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7CE520812
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 03:50:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728243AbgEVDui (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 May 2020 23:50:38 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:41633 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727914AbgEVDuh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 23:50:37 -0400
+        id S1728068AbgEVDuj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 May 2020 23:50:39 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:51968 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728215AbgEVDui (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 23:50:38 -0400
 Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id ADBC11A7FF9
-        for <linux-xfs@vger.kernel.org>; Fri, 22 May 2020 13:50:33 +1000 (AEST)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 9320C5AA98B
+        for <linux-xfs@vger.kernel.org>; Fri, 22 May 2020 13:50:32 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jbyha-0002Uy-3N
+        id 1jbyha-0002Ve-PW
         for linux-xfs@vger.kernel.org; Fri, 22 May 2020 13:50:30 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jbyhZ-00CgHC-Qc
-        for linux-xfs@vger.kernel.org; Fri, 22 May 2020 13:50:29 +1000
+        id 1jbyha-00CgII-H9
+        for linux-xfs@vger.kernel.org; Fri, 22 May 2020 13:50:30 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 00/24] xfs: rework inode flushing to make inode reclaim fully asynchronous
-Date:   Fri, 22 May 2020 13:50:05 +1000
-Message-Id: <20200522035029.3022405-1-david@fromorbit.com>
+Subject: [PATCH 14/24] xfs: remove IO submission from xfs_reclaim_inode()
+Date:   Fri, 22 May 2020 13:50:19 +1000
+Message-Id: <20200522035029.3022405-15-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
+In-Reply-To: <20200522035029.3022405-1-david@fromorbit.com>
+References: <20200522035029.3022405-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=IkcTkHD0fZMA:10 a=sTwFKg_x9MkA:10 a=pfZkFLegHasd9hrFUgAA:9
-        a=ip8bM0tYPaJAUXX5:21 a=VFjRgYAAaXMoEXme:21 a=QEXdDO2ut3YA:10
+        a=sTwFKg_x9MkA:10 a=20KFwNOVAAAA:8 a=n7WZG2qXDYMVRXiAmMUA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-Inode flushing requires that we first lock an inode, then check it,
-then lock the underlying buffer, flush the inode to the buffer and
-finally add the inode to the buffer to be unlocked on IO completion.
-We then walk all the other cached inodes in the buffer range and
-optimistically lock and flush them to the buffer without blocking.
+We no longer need to issue IO from shrinker based inode reclaim to
+prevent spurious OOM killer invocation. This leaves only the global
+filesystem management operations such as unmount needing to
+writeback dirty inodes and reclaim them.
 
-This cluster write effectively repeats the same code we do with the
-initial inode, except now it has to special case that initial inode
-that is already locked. Hence we have multiple copies of very
-similar code, and it is a result of inode cluster flushing being
-based on a specific inode rather than grabbing the buffer and
-flushing all available inodes to it.
+Instead of using the reclaim pass to write dirty inodes before
+reclaiming them, use the AIL to push all the dirty inodes before we
+try to reclaim them. This allows us to remove all the conditional
+SYNC_WAIT locking and the writeback code from xfs_reclaim_inode()
+and greatly simplify the checks we need to do to reclaim an inode.
 
-The problem with this at the moment is that we we can't look up the
-buffer until we have guaranteed that an inode is held exclusively
-and it's not going away while we get the buffer through an imap
-lookup. Hence we are kinda stuck locking an inode before we can look
-up the buffer.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_icache.c | 116 +++++++++++---------------------------------
+ 1 file changed, 29 insertions(+), 87 deletions(-)
 
-This is also a result of inodes being detached from the cluster
-buffer except when IO is being done. This has the further problem
-that the cluster buffer can be reclaimed from memory and then the
-inode can be dirtied. At this point cleaning the inode requires a
-read-modify-write cycle on the cluster buffer. If we then are put
-under memory pressure, cleaning that dirty inode to reclaim it
-requires allocating memory for the cluster buffer and this leads to
-all sorts of problems.
-
-We used synchronous inode writeback in reclaim as a throttle that
-provided a forwards progress mechanism when RMW cycles were required
-to clean inodes. Async writeback of inodes (e.g. via the AIL) would
-immediately exhaust remaining memory reserves trying to allocate
-inode cluster after inode cluster. The synchronous writeback of an
-inode cluster allowed reclaim to release the inode cluster and have
-it freed almost immediately which could then be used to allocate the
-next inode cluster buffer. Hence the IO based throttling mechanism
-largely guaranteed forwards progress in inode reclaim. By removing
-the requirement for require memory allocation for inode writeback
-filesystem level, we can issue writeback asynchrnously and not have
-to worry about the memory exhaustion anymore.
-
-Another issue is that if we have slow disks, we can build up dirty
-inodes in memory that can then take hours for an operation like
-unmount to flush. A RMW cycle per inode on a slow RAID6 device can
-mean we only clean 50 inodes a second, and when there are hundreds
-of thousands of dirty inodes that need to be cleaned this can take a
-long time. PInning the cluster buffers will greatly speed up inode
-writeback on slow storage systems like this.
-
-These limitations all stem from the same source: inode writeback is
-inode centric, And they are largely solved by the same architectural
-change: make inode writeback cluster buffer centric.  This series is
-makes that architectural change.
-
-Firstly, we start by pinning the inode backing buffer in memory
-when an inode is marked dirty (i.e. when it is logged). By tracking
-the number of dirty inodes on a buffer as a counter rather than a
-flag, we avoid the problem of overlapping inode dirtying and buffer
-flushing racing to set/clear the dirty flag. Hence as long as there
-is a dirty inode in memory, the buffer will not be able to be
-reclaimed. We can safely do this inode cluster buffer lookup when we
-dirty an inode as we do not hold the buffer locked - we merely take
-a reference to it and then release it - and hence we don't cause any
-new lock order issues.
-
-When the inode is finally cleaned, the reference to the buffer can
-be removed from the inode log item and the buffer released. This is
-done from the inode completion callbacks that are attached to the
-buffer when the inode is flushed.
-
-Pinning the cluster buffer in this way immediately avoids the RMW
-problem in inode writeback and reclaim contexts by moving the memory
-allocation and the blocking buffer read into the transaction context
-that dirties the inode.  This inverts our dirty inode throttling
-mechanism - we now throttle the rate at which we can dirty inodes to
-rate at which we can allocate memory and read inode cluster buffers
-into memory rather than via throttling reclaim to rate at which we
-can clean dirty inodes.
-
-Hence if we are under memory pressure, we'll block on memory
-allocation when trying to dirty the referenced inode, rather than in
-the memory reclaim path where we are trying to clean unreferenced
-inodes to free memory.  Hence we no longer have to guarantee
-forwards progress in inode reclaim as we aren't doing memory
-allocation, and that means we can remove inode writeback from the
-XFS inode shrinker completely without changing the system tolerance
-for low memory operation.
-
-Tracking the buffers via the inode log item also allows us to
-completely rework the inode flushing mechanism. While the inode log
-item is in the AIL, it is safe for the AIL to access any member of
-the log item. Hence the AIL push mechanisms can access the buffer
-attached to the inode without first having to lock the inode.
-
-This means we can essentially lock the buffer directly and then
-call xfs_iflush_cluster() without first going through xfs_iflush()
-to find the buffer. Hence we can remove xfs_iflush() altogether,
-because the two places that call it - the inode item push code and
-inode reclaim - no longer need to flush inodes directly.
-
-This can be further optimised by attaching the inode to the cluster
-buffer when the inode is dirtied. i.e. when we add the buffer
-reference to the inode log item, we also attach the inode to the
-buffer for IO processing. This leads to the dirty inodes always
-being attached to the buffer and hence we no longer need to add them
-when we flush the inode and remove them when IO completes. Instead
-the inodes are attached when the node log item is dirtied, and
-removed when the inode log item is cleaned.
-
-With this structure in place, we no longer need to do
-lookups to find the dirty inodes in the cache to attach to the
-buffer in xfs_iflush_cluster() - they are already attached to the
-buffer. Hence when the AIL pushes an inode, we just grab the buffer
-from the log item, and then walk the buffer log item list to lock
-and flush the dirty inodes attached to the buffer.
-
-This greatly simplifies inode writeback, and removes another memory
-allocation from the inode writeback path (the array used for the
-radix tree gang lookup). And while the radix tree lookups are fast,
-walking the linked list of dirty inodes is faster.
-
-There is followup work I am doing that uses the inode cluster buffer
-as a replacement in the AIL for tracking dirty inodes. This part of
-the series is not ready yet as it has some intricate locking
-requirements. That is an optimisation, so I've left that out because
-solving the inode reclaim blocking problems is the important part of
-this work.
-
-In short, this series simplifies inode writeback and fixes the long
-standing inode reclaim blocking issues without requiring any changes
-to the memory reclaim infrastructure.
-
-Note: dquots should probably be converted to cluster flushing in a
-similar way, as they have many of the same issues as inode flushing.
-
-Thoughts, comments and improvemnts welcome.
-
--Dave.
-
-
-
-Dave Chinner (24):
-  xfs: remove logged flag from inode log item
-  xfs: add an inode item lock
-  xfs: mark inode buffers in cache
-  xfs: mark dquot buffers in cache
-  xfs: mark log recovery buffers for completion
-  xfs: call xfs_buf_iodone directly
-  xfs: clean up whacky buffer log item list reinit
-  xfs: fold xfs_istale_done into xfs_iflush_done
-  xfs: use direct calls for dquot IO completion
-  xfs: clean up the buffer iodone callback functions
-  xfs: get rid of log item callbacks
-  xfs: pin inode backing buffer to the inode log item
-  xfs: make inode reclaim almost non-blocking
-  xfs: remove IO submission from xfs_reclaim_inode()
-  xfs: allow multiple reclaimers per AG
-  xfs: don't block inode reclaim on the ILOCK
-  xfs: remove SYNC_TRYLOCK from inode reclaim
-  xfs: clean up inode reclaim comments
-  xfs: attach inodes to the cluster buffer when dirtied
-  xfs: xfs_iflush() is no longer necessary
-  xfs: rename xfs_iflush_int()
-  xfs: rework xfs_iflush_cluster() dirty inode iteration
-  xfs: factor xfs_iflush_done
-  xfs: remove xfs_inobp_check()
-
- fs/xfs/libxfs/xfs_inode_buf.c   |  27 +-
- fs/xfs/libxfs/xfs_inode_buf.h   |   6 -
- fs/xfs/libxfs/xfs_trans_inode.c | 108 +++++--
- fs/xfs/xfs_buf.c                |  44 ++-
- fs/xfs/xfs_buf.h                |  49 +--
- fs/xfs/xfs_buf_item.c           | 205 +++++--------
- fs/xfs/xfs_buf_item.h           |   8 +-
- fs/xfs/xfs_buf_item_recover.c   |   5 +-
- fs/xfs/xfs_dquot.c              |  32 +-
- fs/xfs/xfs_dquot.h              |   1 +
- fs/xfs/xfs_dquot_item_recover.c |   2 +-
- fs/xfs/xfs_file.c               |   9 +-
- fs/xfs/xfs_icache.c             | 293 +++++-------------
- fs/xfs/xfs_inode.c              | 515 +++++++++++---------------------
- fs/xfs/xfs_inode.h              |   2 +-
- fs/xfs/xfs_inode_item.c         | 281 ++++++++---------
- fs/xfs/xfs_inode_item.h         |   9 +-
- fs/xfs/xfs_inode_item_recover.c |   2 +-
- fs/xfs/xfs_log_recover.c        |   5 +-
- fs/xfs/xfs_mount.c              |   4 -
- fs/xfs/xfs_mount.h              |   1 -
- fs/xfs/xfs_trans.h              |   3 -
- fs/xfs/xfs_trans_buf.c          |  15 +-
- fs/xfs/xfs_trans_priv.h         |  12 +-
- 24 files changed, 680 insertions(+), 958 deletions(-)
-
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 0f0f8fcd61b03..ee9bc82a0dfbe 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1130,24 +1130,17 @@ xfs_reclaim_inode_grab(
+  *	dirty, async	=> requeue
+  *	dirty, sync	=> flush, wait and reclaim
+  */
+-STATIC int
++static bool
+ xfs_reclaim_inode(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_perag	*pag,
+ 	int			sync_mode)
+ {
+-	struct xfs_buf		*bp = NULL;
+ 	xfs_ino_t		ino = ip->i_ino; /* for radix_tree_delete */
+-	int			error;
+ 
+-restart:
+-	error = 0;
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	if (!xfs_iflock_nowait(ip)) {
+-		if (!(sync_mode & SYNC_WAIT))
+-			goto out;
+-		xfs_iflock(ip);
+-	}
++	if (!xfs_iflock_nowait(ip))
++		goto out;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		xfs_iunpin_wait(ip);
+@@ -1155,51 +1148,19 @@ xfs_reclaim_inode(
+ 		xfs_iflush_abort(ip);
+ 		goto reclaim;
+ 	}
+-	if (xfs_ipincount(ip)) {
+-		if (!(sync_mode & SYNC_WAIT))
+-			goto out_ifunlock;
+-		xfs_iunpin_wait(ip);
+-	}
++	if (xfs_ipincount(ip))
++		goto out_ifunlock;
+ 	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
+ 		xfs_ifunlock(ip);
+ 		goto reclaim;
+ 	}
+ 
+-	/*
+-	 * Never flush out dirty data during non-blocking reclaim, as it would
+-	 * just contend with AIL pushing trying to do the same job.
+-	 */
+-	if (!(sync_mode & SYNC_WAIT))
+-		goto out_ifunlock;
+-
+-	/*
+-	 * Now we have an inode that needs flushing.
+-	 *
+-	 * Note that xfs_iflush will never block on the inode buffer lock, as
+-	 * xfs_ifree_cluster() can lock the inode buffer before it locks the
+-	 * ip->i_lock, and we are doing the exact opposite here.  As a result,
+-	 * doing a blocking xfs_imap_to_bp() to get the cluster buffer would
+-	 * result in an ABBA deadlock with xfs_ifree_cluster().
+-	 *
+-	 * As xfs_ifree_cluser() must gather all inodes that are active in the
+-	 * cache to mark them stale, if we hit this case we don't actually want
+-	 * to do IO here - we want the inode marked stale so we can simply
+-	 * reclaim it.  Hence if we get an EAGAIN error here,  just unlock the
+-	 * inode, back off and try again.  Hopefully the next pass through will
+-	 * see the stale flag set on the inode.
+-	 */
+-	error = xfs_iflush(ip, &bp);
+-	if (error == -EAGAIN) {
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		/* backoff longer than in xfs_ifree_cluster */
+-		delay(2);
+-		goto restart;
+-	}
+-
+-	if (!error) {
+-		error = xfs_bwrite(bp);
+-		xfs_buf_relse(bp);
+-	}
++out_ifunlock:
++	xfs_ifunlock(ip);
++out:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iflags_clear(ip, XFS_IRECLAIM);
++	return false;
+ 
+ reclaim:
+ 	ASSERT(!xfs_isiflocked(ip));
+@@ -1249,21 +1210,7 @@ xfs_reclaim_inode(
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+ 	__xfs_inode_free(ip);
+-	return error;
+-
+-out_ifunlock:
+-	xfs_ifunlock(ip);
+-out:
+-	xfs_iflags_clear(ip, XFS_IRECLAIM);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	/*
+-	 * We could return -EAGAIN here to make reclaim rescan the inode tree in
+-	 * a short while. However, this just burns CPU time scanning the tree
+-	 * waiting for IO to complete and the reclaim work never goes back to
+-	 * the idle state. Instead, return 0 to let the next scheduled
+-	 * background reclaim attempt to reclaim the inode again.
+-	 */
+-	return 0;
++	return true;
+ }
+ 
+ /*
+@@ -1272,20 +1219,17 @@ xfs_reclaim_inode(
+  * then a shut down during filesystem unmount reclaim walk leak all the
+  * unreclaimed inodes.
+  */
+-STATIC int
++static int
+ xfs_reclaim_inodes_ag(
+ 	struct xfs_mount	*mp,
+ 	int			flags,
+ 	int			*nr_to_scan)
+ {
+ 	struct xfs_perag	*pag;
+-	int			error = 0;
+-	int			last_error = 0;
+ 	xfs_agnumber_t		ag;
+ 	int			trylock = flags & SYNC_TRYLOCK;
+ 	int			skipped;
+ 
+-restart:
+ 	ag = 0;
+ 	skipped = 0;
+ 	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
+@@ -1359,9 +1303,8 @@ xfs_reclaim_inodes_ag(
+ 			for (i = 0; i < nr_found; i++) {
+ 				if (!batch[i])
+ 					continue;
+-				error = xfs_reclaim_inode(batch[i], pag, flags);
+-				if (error && last_error != -EFSCORRUPTED)
+-					last_error = error;
++				if (!xfs_reclaim_inode(batch[i], pag, flags))
++					skipped++;
+ 			}
+ 
+ 			*nr_to_scan -= XFS_LOOKUP_BATCH;
+@@ -1377,19 +1320,7 @@ xfs_reclaim_inodes_ag(
+ 		mutex_unlock(&pag->pag_ici_reclaim_lock);
+ 		xfs_perag_put(pag);
+ 	}
+-
+-	/*
+-	 * if we skipped any AG, and we still have scan count remaining, do
+-	 * another pass this time using blocking reclaim semantics (i.e
+-	 * waiting on the reclaim locks and ignoring the reclaim cursors). This
+-	 * ensure that when we get more reclaimers than AGs we block rather
+-	 * than spin trying to execute reclaim.
+-	 */
+-	if (skipped && (flags & SYNC_WAIT) && *nr_to_scan > 0) {
+-		trylock = 0;
+-		goto restart;
+-	}
+-	return last_error;
++	return skipped;
+ }
+ 
+ int
+@@ -1398,8 +1329,18 @@ xfs_reclaim_inodes(
+ 	int		mode)
+ {
+ 	int		nr_to_scan = INT_MAX;
++	int		skipped;
+ 
+-	return xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
++	skipped = xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
++	if (!(mode & SYNC_WAIT))
++		return 0;
++
++	do {
++		xfs_ail_push_all_sync(mp->m_ail);
++		skipped = xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
++	} while (skipped > 0);
++
++	return 0;
+ }
+ 
+ /*
+@@ -1420,7 +1361,8 @@ xfs_reclaim_inodes_nr(
+ 	xfs_reclaim_work_queue(mp);
+ 	xfs_ail_push_all(mp->m_ail);
+ 
+-	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
++	xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
++	return 0;
+ }
+ 
+ /*
 -- 
 2.26.2.761.g0e0b3e54be
 
