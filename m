@@ -2,134 +2,124 @@ Return-Path: <SRS0=AE4z=7E=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 303E7C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 17:18:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 022D4C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 20:43:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0837120738
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 17:18:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB5DE20723
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 20:43:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZDyDHYQM"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UqZD14cq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730554AbgEVRSg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 May 2020 13:18:36 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:22540 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730471AbgEVRSg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 May 2020 13:18:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590167914;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=s9nhXYl4ewDbem6zqXWAPp+atwRqCJBGAoE2u2n0pto=;
-        b=ZDyDHYQM13PeqlyCf9exZOaETHY5bDffoNLQ9rDkmsehHQMG8d/zYGOH+s8J4/3fxgTpK9
-        yIgoqiSFBDhMRvI330BkMkESC8ySpQqWZbVxaYd8EiEVVrp36GNrsqpzicFWj5n6KB6fx9
-        GaJaV6LK0B1d3qnHIcf9CnLu10ZuSno=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-152-fKBrlXnhM3-dPYgQaAfwAg-1; Fri, 22 May 2020 13:18:30 -0400
-X-MC-Unique: fKBrlXnhM3-dPYgQaAfwAg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4B1AF1853C6F;
-        Fri, 22 May 2020 17:18:29 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 05D38105913F;
-        Fri, 22 May 2020 17:18:28 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [RFC PATCH] xfs: transfer freed blocks to blk res when lazy accounting
-Date:   Fri, 22 May 2020 13:18:28 -0400
-Message-Id: <20200522171828.53440-1-bfoster@redhat.com>
+        id S1730963AbgEVUnR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 May 2020 16:43:17 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:42844 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730946AbgEVUnP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 May 2020 16:43:15 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MKcXPm149064;
+        Fri, 22 May 2020 20:43:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=quI2zEc1mVlKqo7MOUVtLur/RjisA9Xl2MQru5ETCoQ=;
+ b=UqZD14cqanSTf8g5Re/I286sgYOTxi84PYNeT69jEB7z1JkywfnVZRzrnAGjTCVL44zT
+ rdoqwiz9BRRD6VEbFnPQUuCVW8T2IPpQw1tZuIKYo+Z4SV+N28GgWZqB5qAwhAqf9KLh
+ TojCh0jjuqMxk3f8ppmoTCu0aIGHazQf1mw2VeMcHi8JcgkDxrsoB0olaiiTsF0z/+N5
+ BF5mv4NB8/okHBmE2tddImRu4erV8fjh0QfM4NJtMmIISvEpk4w7anDjwqH2CvwYVGKq
+ KKKOGEgYI9+qutd/QXZE1O4+mVwT+mt+tYClbloMdGIrQ0QoRcYwvkMAxv2tP3d5jeFG Ug== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 3127krqr9j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 22 May 2020 20:43:10 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04MKcbp0190645;
+        Fri, 22 May 2020 20:43:10 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 314gmbsn2j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 May 2020 20:43:10 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04MKh9We009064;
+        Fri, 22 May 2020 20:43:09 GMT
+Received: from localhost (/10.159.153.228)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 22 May 2020 13:43:09 -0700
+Date:   Fri, 22 May 2020 13:43:08 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Dave Airlie <airlied@gmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: lockdep trace with xfs + mm in it from 5.7.0-rc5
+Message-ID: <20200522204308.GC8230@magnolia>
+References: <CAPM=9tyy5vubggbcj32bGpA_h6yDaBNM3QeJPySTzci-etfBZw@mail.gmail.com>
+ <20200521231312.GJ17635@magnolia>
+ <20200522003027.GC2040@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200522003027.GC2040@dread.disaster.area>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ adultscore=0 phishscore=0 mlxscore=0 spamscore=0 suspectscore=1
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005220160
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9629 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ bulkscore=0 clxscore=1015 priorityscore=1501 mlxscore=0 impostorscore=0
+ suspectscore=1 mlxlogscore=999 malwarescore=0 cotscore=-2147483648
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005220159
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+On Fri, May 22, 2020 at 10:30:27AM +1000, Dave Chinner wrote:
+> On Thu, May 21, 2020 at 04:13:12PM -0700, Darrick J. Wong wrote:
+> > [cc linux-xfs]
+> > 
+> > On Fri, May 22, 2020 at 08:21:50AM +1000, Dave Airlie wrote:
+> > > Hi,
+> > > 
+> > > Just updated a rawhide VM to the Fedora 5.7.0-rc5 kernel, did some
+> > > package building,
+> > > 
+> > > got the below trace, not sure if it's known and fixed or unknown.
+> > 
+> > It's a known false-positive.  An inode can't simultaneously be getting
+> > reclaimed due to zero refcount /and/ be the target of a getxattr call.
+> > Unfortunately, lockdep can't tell the difference, and it seems a little
+> > strange to set NOFS on the allocation (which increases the chances of a
+> > runtime error) just to quiet that down.
+> 
+> __GFP_NOLOCKDEP is the intended flag to telling memory allocation
+> that lockdep is stupid.
+> 
+> However, it seems that the patches that were in progress some months
+> ago to convert XFS to kmalloc interfaces and using GFP flags
+> directly stalled - being able to mark locations like this with
+> __GFP_NOLOCKDEP was one of the main reasons for getting rid of all
+> the internal XFS memory allocation wrappers...
 
-Darrick mentioned on IRC a few days ago that he'd seen an issue that
-looked similar to the problem with the rmapbt based extent swap
-algorithm when the associated inodes happen to bounce between extent and
-btree format. That problem caused repeated bmapbt block allocations and
-frees that exhausted the transaction block reservation across the
-sequence of transaction rolls. The workaround for that was to use an
-oversized block reservation, but that is not a generic or efficient
-solution.
+Question is, should I spend time adding a GFP_NOLOCKDEP bandaid to XFS
+or would my time be better spent reviewing your async inode reclaim
+series to make this go away for real?
 
-I was originally playing around with some hacks to set an optional base
-block reservation on the transaction that we would attempt to replenish
-across transaction roll sequences as the block reservation depletes, but
-eventually noticed that there isn't much difference between stuffing
-block frees in the transaction reservation counter vs. the delta counter
-when lazy sb accounting is enabled (which is required for v5 supers). As
-such, the following patch seems to address the rmapbt issue in my
-isolated tests.
+(Dang, now that I phrase it that way, Imma go read that series.)
 
-I think one tradeoff with this logic is that chains of rolling/freeing
-transactions would now aggregate freed space until the final transaction
-commits vs. as transactions roll. It's not immediately clear to me how
-much of an issue that is, but it sounds a bit dicey when considering
-things like truncates of large files. This behavior could still be tied
-to a transaction flag to restrict its use to situations like rmapbt
-swapext, however. Anyways, this is mostly untested outside of the extent
-swap use case so I wanted to throw this on the list as an RFC for now
-and see if anybody has thoughts or other ideas.
+--D
 
-Brian
-
- fs/xfs/xfs_bmap_util.c | 11 -----------
- fs/xfs/xfs_trans.c     |  4 ++++
- 2 files changed, 4 insertions(+), 11 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index f37f5cc4b19f..74b3bad6c414 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1628,17 +1628,6 @@ xfs_swap_extents(
- 		 */
- 		resblks = XFS_SWAP_RMAP_SPACE_RES(mp, ipnext, w);
- 		resblks +=  XFS_SWAP_RMAP_SPACE_RES(mp, tipnext, w);
--
--		/*
--		 * Handle the corner case where either inode might straddle the
--		 * btree format boundary. If so, the inode could bounce between
--		 * btree <-> extent format on unmap -> remap cycles, freeing and
--		 * allocating a bmapbt block each time.
--		 */
--		if (ipnext == (XFS_IFORK_MAXEXT(ip, w) + 1))
--			resblks += XFS_IFORK_MAXEXT(ip, w);
--		if (tipnext == (XFS_IFORK_MAXEXT(tip, w) + 1))
--			resblks += XFS_IFORK_MAXEXT(tip, w);
- 	}
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
- 	if (error)
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 28b983ff8b11..b421d27445c1 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -370,6 +370,10 @@ xfs_trans_mod_sb(
- 			tp->t_blk_res_used += (uint)-delta;
- 			if (tp->t_blk_res_used > tp->t_blk_res)
- 				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+		} else if (delta > 0 &&
-+			   xfs_sb_version_haslazysbcount(&mp->m_sb)) {
-+			tp->t_blk_res += delta;
-+			delta = 0;
- 		}
- 		tp->t_fdblocks_delta += delta;
- 		if (xfs_sb_version_haslazysbcount(&mp->m_sb))
--- 
-2.21.1
-
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
