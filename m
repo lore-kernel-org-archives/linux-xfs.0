@@ -7,56 +7,57 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB809C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 02:56:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FCFEC433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 02:56:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95541207D8
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 02:56:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 490B3207D8
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 02:56:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KQiijahc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kQNTQOOL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727975AbgEVC40 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 21 May 2020 22:56:26 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:57394 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727770AbgEVC4Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 22:56:25 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04M2m28p082957;
-        Fri, 22 May 2020 02:54:22 GMT
+        id S1727770AbgEVC4i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 21 May 2020 22:56:38 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:36768 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727050AbgEVC4i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 21 May 2020 22:56:38 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04M2lmNi110958;
+        Fri, 22 May 2020 02:54:34 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=oSqirtTJtmii6wG/zJrjq3Z/DsodXGcRv4uZ5ezrL+g=;
- b=KQiijahc7ps4Jkz65HPGlCoMHLhUkq6qu2QrOR1B/VaV2hDdVFC1a69MbLC47v8vFilk
- QSU2ev1WVZa/YPjFIPuhg3x4mLmmVfX6Wiu+jFQtKJQC64yYfiOLRTzZk2PZTN+UrLm0
- +PRw3eNaYD01ZdHV/8dqDJwRcoxxh3cfp7yWxRM0sre49elrm1EdfKSDDs25ObwIrSP/
- IbIX8ncVJmHX6pGR7F3Q6uwZ0mIzbwL3Uji/Qftkq5ceCDurZr7PANwuVePu+sVWQQir
- L9BxAC/cAStnfHSxn4lwFakSXEhMX01KudseoNDhf0fjHVrcqsfa5E8Ros8PA2bjqyVa qw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 31284mbj1m-1
+ bh=dKKANqICKc2UVHW+GzGPLVcCKivJYMavij+f66dpKZs=;
+ b=kQNTQOOLXATa3gL80of3gSZGhU71Th7ognmvwHPiwyzeUbKDuuSX2dHokjlQ/LsKhxts
+ /OA1IMkobs+co+y9Zrwaum+EO7kkvUFFoTz1XAIWIxfcnUwbodc/pJwZ37d/5uGPbLiT
+ kTMwRiSfoAarKvajrRJN6j4UbQG7+ieWlweFwlYGsEipJ0b/0psMaUA+GNzTbNBDIKd0
+ NcIgk96cGADLigBxO4qowFRKIlc1umU3Nh/x5kagcF5tLJiqYIUEVlt3cPb/jUQ/2CsP
+ rBNd2NiN5fHiMNkWEJV1zxp6IW31rh5A9Z1e3fLtnT05Zguabz5Kxzv/0Ydz+w2kNu0M AQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 3127krkk2n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 22 May 2020 02:54:22 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04M2nEZb173910;
-        Fri, 22 May 2020 02:54:22 GMT
+        Fri, 22 May 2020 02:54:34 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04M2nGjJ151904;
+        Fri, 22 May 2020 02:54:34 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 312t3d3xxj-1
+        by userp3020.oracle.com with ESMTP id 315023h6uy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 May 2020 02:54:21 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04M2sKkv015500;
-        Fri, 22 May 2020 02:54:20 GMT
+        Fri, 22 May 2020 02:54:34 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04M2sXGO015580;
+        Fri, 22 May 2020 02:54:33 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 21 May 2020 19:54:20 -0700
-Subject: [PATCH 08/12] xfs: fix inode ag walk predicate function return values
+        with ESMTP ; Thu, 21 May 2020 19:54:33 -0700
+Subject: [PATCH 10/12] xfs: move xfs_inode_ag_iterator to be closer to the
+ perag walking code
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         hch@lst.de
-Date:   Thu, 21 May 2020 19:54:19 -0700
-Message-ID: <159011605915.77079.7480200493011915081.stgit@magnolia>
+Date:   Thu, 21 May 2020 19:54:32 -0700
+Message-ID: <159011607216.77079.15513788306075418133.stgit@magnolia>
 In-Reply-To: <159011600616.77079.14748275956667624732.stgit@magnolia>
 References: <159011600616.77079.14748275956667624732.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -64,16 +65,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9628 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=999
- phishscore=0 mlxscore=0 malwarescore=0 suspectscore=1 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 bulkscore=0 suspectscore=1 phishscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2005220021
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9628 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxscore=0
- cotscore=-2147483648 impostorscore=0 malwarescore=0 mlxlogscore=999
- lowpriorityscore=0 phishscore=0 spamscore=0 bulkscore=0 adultscore=0
- priorityscore=1501 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2005220021
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ bulkscore=0 clxscore=1015 priorityscore=1501 mlxscore=0 impostorscore=0
+ suspectscore=1 mlxlogscore=999 malwarescore=0 cotscore=-2147483648
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005220021
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -81,134 +82,128 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-There are a number of predicate functions that help the incore inode
-walking code decide if we really want to apply the iteration function to
-the inode.  These are boolean decisions, so change the return types to
-boolean to match.
+Move the xfs_inode_ag_iterator function to be nearer xfs_inode_ag_walk
+so that we don't have to scroll back and forth to figure out how the
+incore inode walking function works.  No functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_icache.c |   39 ++++++++++++++++++++++-----------------
- 1 file changed, 22 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_icache.c |   88 ++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 48 insertions(+), 40 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 3a45ec948c1a..31d85cc4bd8b 100644
+index 791544a1d54c..0e25d50372e2 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -741,7 +741,12 @@ xfs_icache_inode_is_allocated(
-  */
- #define XFS_LOOKUP_BATCH	32
+@@ -791,6 +791,10 @@ xfs_inode_ag_walk_grab(
+ 	return false;
+ }
  
--STATIC int
 +/*
-+ * Decide if the given @ip is eligible to be a part of the inode walk, and
-+ * grab it if so.  Returns true if it's ready to go or false if we should just
-+ * ignore it.
++ * For a given per-AG structure @pag, grab, @execute, and rele all incore
++ * inodes with the given radix tree @tag.
 + */
-+STATIC bool
- xfs_inode_ag_walk_grab(
- 	struct xfs_inode	*ip,
- 	int			flags)
-@@ -772,18 +777,18 @@ xfs_inode_ag_walk_grab(
- 
- 	/* nothing to sync during shutdown */
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
--		return -EFSCORRUPTED;
-+		return false;
- 
- 	/* If we can't grab the inode, it must on it's way to reclaim. */
- 	if (!igrab(inode))
--		return -ENOENT;
-+		return false;
- 
- 	/* inode is valid */
--	return 0;
-+	return true;
- 
- out_unlock_noent:
- 	spin_unlock(&ip->i_flags_lock);
--	return -ENOENT;
-+	return false;
- }
- 
  STATIC int
-@@ -835,7 +840,7 @@ xfs_inode_ag_walk(
- 		for (i = 0; i < nr_found; i++) {
- 			struct xfs_inode *ip = batch[i];
- 
--			if (done || xfs_inode_ag_walk_grab(ip, iter_flags))
-+			if (done || !xfs_inode_ag_walk_grab(ip, iter_flags))
- 				batch[i] = NULL;
- 
- 			/*
-@@ -1392,48 +1397,48 @@ xfs_reclaim_inodes_count(
- 	return reclaimable;
+ xfs_inode_ag_walk(
+ 	struct xfs_mount	*mp,
+@@ -896,6 +900,50 @@ xfs_inode_ag_walk(
+ 	return last_error;
  }
  
--STATIC int
-+STATIC bool
- xfs_inode_match_id(
- 	struct xfs_inode	*ip,
- 	struct xfs_eofblocks	*eofb)
- {
- 	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
- 	    !uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
--		return 0;
-+		return false;
- 
- 	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
- 	    !gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
--		return 0;
-+		return false;
- 
- 	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
- 	    ip->i_d.di_projid != eofb->eof_prid)
--		return 0;
-+		return false;
- 
--	return 1;
-+	return true;
- }
- 
++/* Fetch the next (possibly tagged) per-AG structure. */
++static inline struct xfs_perag *
++xfs_inode_walk_get_perag(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	int			tag)
++{
++	if (tag == XFS_ICI_NO_TAG)
++		return xfs_perag_get(mp, agno);
++	return xfs_perag_get_tag(mp, agno, tag);
++}
++
++/*
++ * Call the @execute function on all incore inodes matching the radix tree
++ * @tag.
++ */
++int
++xfs_inode_ag_iterator(
++	struct xfs_mount	*mp,
++	int			iter_flags,
++	int			(*execute)(struct xfs_inode *ip, void *args),
++	void			*args,
++	int			tag)
++{
++	struct xfs_perag	*pag;
++	int			error = 0;
++	int			last_error = 0;
++	xfs_agnumber_t		ag;
++
++	ag = 0;
++	while ((pag = xfs_inode_walk_get_perag(mp, ag, tag))) {
++		ag = pag->pag_agno + 1;
++		error = xfs_inode_ag_walk(mp, pag, execute, args, tag,
++				iter_flags);
++		xfs_perag_put(pag);
++		if (error) {
++			last_error = error;
++			if (error == -EFSCORRUPTED)
++				break;
++		}
++	}
++	return last_error;
++}
++
  /*
-  * A union-based inode filtering algorithm. Process the inode if any of the
-  * criteria match. This is for global/internal scans only.
-  */
--STATIC int
-+STATIC bool
- xfs_inode_match_id_union(
- 	struct xfs_inode	*ip,
- 	struct xfs_eofblocks	*eofb)
- {
- 	if ((eofb->eof_flags & XFS_EOF_FLAGS_UID) &&
- 	    uid_eq(VFS_I(ip)->i_uid, eofb->eof_uid))
--		return 1;
-+		return true;
- 
- 	if ((eofb->eof_flags & XFS_EOF_FLAGS_GID) &&
- 	    gid_eq(VFS_I(ip)->i_gid, eofb->eof_gid))
--		return 1;
-+		return true;
- 
- 	if ((eofb->eof_flags & XFS_EOF_FLAGS_PRID) &&
- 	    ip->i_d.di_projid == eofb->eof_prid)
--		return 1;
-+		return true;
- 
--	return 0;
-+	return false;
+  * Background scanning to trim post-EOF preallocated space. This is queued
+  * based on the 'speculative_prealloc_lifetime' tunable (5m by default).
+@@ -959,46 +1007,6 @@ xfs_cowblocks_worker(
+ 	xfs_queue_cowblocks(mp);
  }
  
+-/* Fetch the next (possibly tagged) per-AG structure. */
+-static inline struct xfs_perag *
+-xfs_inode_walk_get_perag(
+-	struct xfs_mount	*mp,
+-	xfs_agnumber_t		agno,
+-	int			tag)
+-{
+-	if (tag == XFS_ICI_NO_TAG)
+-		return xfs_perag_get(mp, agno);
+-	return xfs_perag_get_tag(mp, agno, tag);
+-}
+-
+-int
+-xfs_inode_ag_iterator(
+-	struct xfs_mount	*mp,
+-	int			iter_flags,
+-	int			(*execute)(struct xfs_inode *ip, void *args),
+-	void			*args,
+-	int			tag)
+-{
+-	struct xfs_perag	*pag;
+-	int			error = 0;
+-	int			last_error = 0;
+-	xfs_agnumber_t		ag;
+-
+-	ag = 0;
+-	while ((pag = xfs_inode_walk_get_perag(mp, ag, tag))) {
+-		ag = pag->pag_agno + 1;
+-		error = xfs_inode_ag_walk(mp, pag, execute, args, tag,
+-				iter_flags);
+-		xfs_perag_put(pag);
+-		if (error) {
+-			last_error = error;
+-			if (error == -EFSCORRUPTED)
+-				break;
+-		}
+-	}
+-	return last_error;
+-}
+-
  /*
-@@ -1446,7 +1451,7 @@ xfs_inode_matches_eofb(
- 	struct xfs_inode	*ip,
- 	struct xfs_eofblocks	*eofb)
- {
--	int			match;
-+	bool			match;
- 
- 	if (!eofb)
- 		return true;
+  * Grab the inode for reclaim exclusively.
+  * Return 0 if we grabbed it, non-zero otherwise.
 
