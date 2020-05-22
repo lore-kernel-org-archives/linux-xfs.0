@@ -5,62 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F506C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 07:45:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69038C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 07:46:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB072207FB
-	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 07:45:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F48F20825
+	for <linux-xfs@archiver.kernel.org>; Fri, 22 May 2020 07:46:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZZnFWm0Q"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O/nKX3YN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728606AbgEVHp2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 22 May 2020 03:45:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47448 "EHLO
+        id S1728590AbgEVHqh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 22 May 2020 03:46:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47622 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728304AbgEVHp2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 May 2020 03:45:28 -0400
-Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20B07C061A0E
-        for <linux-xfs@vger.kernel.org>; Fri, 22 May 2020 00:45:28 -0700 (PDT)
-Received: by mail-il1-x142.google.com with SMTP id n11so9835496ilj.4
-        for <linux-xfs@vger.kernel.org>; Fri, 22 May 2020 00:45:28 -0700 (PDT)
+        with ESMTP id S1728230AbgEVHqh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 22 May 2020 03:46:37 -0400
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5486DC061A0E
+        for <linux-xfs@vger.kernel.org>; Fri, 22 May 2020 00:46:37 -0700 (PDT)
+Received: by mail-io1-xd43.google.com with SMTP id f4so10359620iov.11
+        for <linux-xfs@vger.kernel.org>; Fri, 22 May 2020 00:46:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=aUuUoTRbbwDNFv9BXTvqdNNJ2rsJxKdDeElf0ukBGT4=;
-        b=ZZnFWm0QsH6BxPyT5ZHRgpF2rkOvISvNTlRS0tqYVGEWEj2J7Ua4Cg8SzRIyB0rk6I
-         EtRSXk4jjeglzlsh5TSQSaCKkZApHLCCvVGXXTG0pxGMPmzJjzCxuOAAfo4beeFtQVtb
-         VWB8hTfx0U6CKnkgLbuRX1L3K4bMakrf9sup/15/kJWwrVjlh/LjdwgZj4RP+qLWoDkC
-         gkVzvDtrgjrCrairR+/ShkjR0K6WRgZf6xT8u+lF3mVn15FVDHHX0iaxyFjEOV8gB5BX
-         G3b7vrE7ICY7VodxtTzgAxPHUGX6ftXkS7LM3GOcbXUmjY757LU37dD3QqCG0DDf6w10
-         U6yg==
+        bh=qyitknh8O6iPCJ7oErswixvslBReFKcTynQApgXWQGc=;
+        b=O/nKX3YNvQBhf/KKAsQ97EBgegENP86V5hInKR+kmfFHC255s9z2BeiZtcS8c15zaR
+         8Ho6IRyaZBUyT7ZXD5edOVf4ovsWYSQGMIGQB21RZHazzXG7CX+fiBR4xsPPcN25YXhe
+         227i8zyEuugHikXMuiJ4HahzjEiGuSd+TRoUbI1p8z1W03iYjUeTgOEqKu55ofTgXjqm
+         LPtQLXEo/gYhOqKXrBs0g7ljrf3GlqnIp6aaROmNFCfbUCrzW3POYDwXfotwqU4rfeTt
+         xKez9ogyCysHkoXWMg6oW13McXM7ED8WmRpGGpd/rPQSJmELPadD5hZu7Vz2d1uTxS8q
+         ko5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=aUuUoTRbbwDNFv9BXTvqdNNJ2rsJxKdDeElf0ukBGT4=;
-        b=fdkTLMJiFq6nlyzwIgzQDLLnErwrvzSndAopdymeD+3IM4rrtV8GQYSA+tavRJxKeQ
-         0Dzr3QEZA0e3WZ0+b530VFxi2gWBFeIH/xm1viIunZCrKPQoyUGB20tZfBFScgh0Qybj
-         RYp0Soxx5gkV5EYrzOr0CzY+ZBuwsoyLZmTez2rYya5UdPJoQwDa8FNaKsjzBnu4Iwak
-         CL+ujcYuwv/gzjrubTTRM4lm63lN8nZO/9AsKDdn6vCBz+0kewAnxOLCDEdxFsg6+Isv
-         t2/SqzdlUYKTavaiF95/Xm2SVl9qIMlxmWCpS/hd9r/Prc8nreZXG45oaBYaxW+QOUND
-         VLtg==
-X-Gm-Message-State: AOAM532/cafSRTaHWbrECbE+Kab0/76DxbKFrsiSkEQSz6lZj5wUMdYb
-        erxc4fLaczvWABW55wl2wtAml+vmM8/GgKyDRnc=
-X-Google-Smtp-Source: ABdhPJwEbE2HNJG7EyyiWkRYW1khWXib1AaPTxfZtlspE0EQz90k19tZBAh8UsJL9rFDH6AFdcJ6Y+GjVPQv6Pypq2E=
-X-Received: by 2002:a92:99cf:: with SMTP id t76mr12513363ilk.9.1590133527329;
- Fri, 22 May 2020 00:45:27 -0700 (PDT)
+        bh=qyitknh8O6iPCJ7oErswixvslBReFKcTynQApgXWQGc=;
+        b=Omgh31JCS/L7TqaUV0/R01a39+Mq8LJcAnYrq/roTgxB5Y5y6gMJxquvLf/6b9718U
+         ESkJ/NIPPrIDHwOG/A3r7oekRlt4O8SN/iC3GVKuXtqZoA+TUE3myhFWxY4YX9JscG9o
+         Y1YfB+Bx5ODBo7Bj7AP6sFowz5HkY3Rc55NuW3lw116mZiFTsxCNv45p24zdxVwUNCrc
+         C0y7i3RgL68X7qDm3eEDjAH+LrT3701jU3bwRdwqYiMCmOp/O6K4JmK0o/s9actDH/Dl
+         /zTxz1YdU6l4RXHcfSBdEYjkwY2psZIO8aaTSLTbH4S7VKOlV3vrL1EPgqmh8qZBV++P
+         qyPQ==
+X-Gm-Message-State: AOAM5319dtnLv2Ue89a5YZO0O/0h2BLiezIDYzqx+BRxx3jE7POk0oR9
+        gWyjHm7g26k0N/ZAOZgxYblv2S8ig/urX0evAa1TcX0K
+X-Google-Smtp-Source: ABdhPJwJ6QtVVWgnjpVf9rp8yRzlwn0Qx/XQGdFMTnMDVh6DDWoMP9fa/rwUm2R7K4Xdb8Mvh7NVh8Qw2p8JVHkva8I=
+X-Received: by 2002:a02:b141:: with SMTP id s1mr7071273jah.123.1590133596696;
+ Fri, 22 May 2020 00:46:36 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200522035029.3022405-1-david@fromorbit.com> <20200522035029.3022405-4-david@fromorbit.com>
-In-Reply-To: <20200522035029.3022405-4-david@fromorbit.com>
+References: <20200522035029.3022405-1-david@fromorbit.com> <20200522035029.3022405-5-david@fromorbit.com>
+In-Reply-To: <20200522035029.3022405-5-david@fromorbit.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 22 May 2020 10:45:16 +0300
-Message-ID: <CAOQ4uxiVMSHN8wmqpExZ9UvHEhopUAoYJTrbD_HwfSo9J39Mmw@mail.gmail.com>
-Subject: Re: [PATCH 03/24] xfs: mark inode buffers in cache
+Date:   Fri, 22 May 2020 10:46:25 +0300
+Message-ID: <CAOQ4uxihgdgCAUNAd3G7-Zzad0mMEcZruxvzTXPFRGhb38FpvA@mail.gmail.com>
+Subject: Re: [PATCH 04/24] xfs: mark dquot buffers in cache
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
@@ -71,9 +70,7 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Fri, May 22, 2020 at 6:51 AM Dave Chinner <david@fromorbit.com> wrote:
 >
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Inode buffers always have write IO callbacks, so by marking them
+> dquot buffers always have write IO callbacks, so by marking them
 > directly we can avoid needing to attach ->b_iodone functions to
 > them. This avoids an indirect call, and makes future modifications
 > much simpler.
@@ -84,69 +81,41 @@ On Fri, May 22, 2020 at 6:51 AM Dave Chinner <david@fromorbit.com> wrote:
 >
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_buf.c       | 18 +++++++++++++-----
->  fs/xfs/xfs_buf.h       | 39 ++++++++++++++++++++++++++-------------
->  fs/xfs/xfs_buf_item.c  | 42 +++++++++++++++++++++++++++++++-----------
+>  fs/xfs/xfs_buf.c       | 12 +++++++++++-
+>  fs/xfs/xfs_buf.h       |  2 ++
+>  fs/xfs/xfs_buf_item.c  | 10 ++++++++++
 >  fs/xfs/xfs_buf_item.h  |  1 +
->  fs/xfs/xfs_inode.c     |  2 +-
->  fs/xfs/xfs_trans_buf.c |  3 +++
->  6 files changed, 75 insertions(+), 30 deletions(-)
+>  fs/xfs/xfs_dquot.c     |  1 +
+>  fs/xfs/xfs_trans_buf.c |  1 +
+>  6 files changed, 26 insertions(+), 1 deletion(-)
 >
 > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 9c2fbb6bbf89d..6105b97028d6a 100644
+> index 6105b97028d6a..77d40eb4a11db 100644
 > --- a/fs/xfs/xfs_buf.c
 > +++ b/fs/xfs/xfs_buf.c
-> @@ -14,6 +14,8 @@
->  #include "xfs_mount.h"
->  #include "xfs_trace.h"
->  #include "xfs_log.h"
-> +#include "xfs_trans.h"
-> +#include "xfs_buf_item.h"
->  #include "xfs_errortag.h"
->  #include "xfs_error.h"
->
-> @@ -1202,12 +1204,18 @@ xfs_buf_ioend(
+> @@ -1204,17 +1204,27 @@ xfs_buf_ioend(
 >                 bp->b_flags |= XBF_DONE;
 >         }
 >
-> -       if (bp->b_iodone)
-> +       /* inodes always have a callback on write */
-> +       if (!read && (bp->b_flags & _XBF_INODES)) {
-> +               xfs_buf_inode_iodone(bp);
+> +       if (read)
+> +               goto out_finish;
+> +
+>         /* inodes always have a callback on write */
+> -       if (!read && (bp->b_flags & _XBF_INODES)) {
+> +       if (bp->b_flags & _XBF_INODES) {
+>                 xfs_buf_inode_iodone(bp);
+>                 return;
+>         }
+>
+> +       /* dquots always have a callback on write */
+> +       if (bp->b_flags & _XBF_DQUOTS) {
+> +               xfs_buf_dquot_iodone(bp);
 > +               return;
 > +       }
 > +
-> +       if (bp->b_iodone) {
->                 (*(bp->b_iodone))(bp);
-> -       else if (bp->b_flags & XBF_ASYNC)
-> -               xfs_buf_relse(bp);
-> -       else
-> -               complete(&bp->b_iowait);
-> +               return;
-> +       }
-> +
-> +       xfs_buf_ioend_finish(bp);
->  }
->
->  static void
-> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-> index 050c53b739e24..b3e5d653d09f1 100644
-> --- a/fs/xfs/xfs_buf.h
-> +++ b/fs/xfs/xfs_buf.h
-> @@ -30,15 +30,19 @@
->  #define XBF_STALE       (1 << 6) /* buffer has been staled, do not find it */
->  #define XBF_WRITE_FAIL  (1 << 7) /* async writes have failed on this buffer */
->
-> -/* flags used only as arguments to access routines */
-> -#define XBF_TRYLOCK     (1 << 16)/* lock requested, but do not wait */
-> -#define XBF_UNMAPPED    (1 << 17)/* do not map the buffer */
-> +/* buffer type flags for write callbacks */
-> +#define _XBF_INODES     (1 << 16)/* inode buffer */
 
-As I wrote on review of another type flag, best add a definition
-of XBF_BUFFER_TYPE_MASK and document that buffer type
-flags are mutually exclusive, maybe even ASSERT it in some
-places.
+As commented on another patch, this would look better as
+a switch statement.
 
 For not changing logic by rearranging code:
 
