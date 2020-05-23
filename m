@@ -3,102 +3,98 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 128FAC433E0
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 May 2020 23:23:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFC2FC433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 May 2020 23:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF411207FB
-	for <linux-xfs@archiver.kernel.org>; Sat, 23 May 2020 23:23:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8642220787
+	for <linux-xfs@archiver.kernel.org>; Sat, 23 May 2020 23:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388163AbgEWXX1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 23 May 2020 19:23:27 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:55373 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388047AbgEWXX1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 May 2020 19:23:27 -0400
+        id S2388175AbgEWXfd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 23 May 2020 19:35:33 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41977 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388010AbgEWXfc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 23 May 2020 19:35:32 -0400
 Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 3AD185AAC26;
-        Sun, 24 May 2020 09:23:24 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 089223A3457;
+        Sun, 24 May 2020 09:35:27 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jcdU7-00013X-Ld; Sun, 24 May 2020 09:23:19 +1000
-Date:   Sun, 24 May 2020 09:23:19 +1000
+        id 1jcdfp-0001EA-N4; Sun, 24 May 2020 09:35:25 +1000
+Date:   Sun, 24 May 2020 09:35:25 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 22/24] xfs: rework xfs_iflush_cluster() dirty inode
- iteration
-Message-ID: <20200523232319.GN2040@dread.disaster.area>
-References: <20200522035029.3022405-1-david@fromorbit.com>
- <20200522035029.3022405-23-david@fromorbit.com>
- <20200523113131.GA1421@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Airlie <airlied@gmail.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: lockdep trace with xfs + mm in it from 5.7.0-rc5
+Message-ID: <20200523233525.GO2040@dread.disaster.area>
+References: <CAPM=9tyy5vubggbcj32bGpA_h6yDaBNM3QeJPySTzci-etfBZw@mail.gmail.com>
+ <20200521231312.GJ17635@magnolia>
+ <20200522003027.GC2040@dread.disaster.area>
+ <20200522204308.GC8230@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200523113131.GA1421@infradead.org>
+In-Reply-To: <20200522204308.GC8230@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=ZwvmMwvMBbo4siNA7CYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=7-415B0cAAAA:8
+        a=SdnPbZQmd8PgC_pepjQA:9 a=rMy9fwq0lcmpeslW:21 a=whivUyDIyx5-Z5nh:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, May 23, 2020 at 04:31:31AM -0700, Christoph Hellwig wrote:
-> On Fri, May 22, 2020 at 01:50:27PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Fri, May 22, 2020 at 01:43:08PM -0700, Darrick J. Wong wrote:
+> On Fri, May 22, 2020 at 10:30:27AM +1000, Dave Chinner wrote:
+> > On Thu, May 21, 2020 at 04:13:12PM -0700, Darrick J. Wong wrote:
+> > > [cc linux-xfs]
+> > > 
+> > > On Fri, May 22, 2020 at 08:21:50AM +1000, Dave Airlie wrote:
+> > > > Hi,
+> > > > 
+> > > > Just updated a rawhide VM to the Fedora 5.7.0-rc5 kernel, did some
+> > > > package building,
+> > > > 
+> > > > got the below trace, not sure if it's known and fixed or unknown.
+> > > 
+> > > It's a known false-positive.  An inode can't simultaneously be getting
+> > > reclaimed due to zero refcount /and/ be the target of a getxattr call.
+> > > Unfortunately, lockdep can't tell the difference, and it seems a little
+> > > strange to set NOFS on the allocation (which increases the chances of a
+> > > runtime error) just to quiet that down.
 > > 
-> > Now that we have all the dirty inodes attached to the cluster
-> > buffer, we don't actually have to do radix tree lookups to find
-> > them. Sure, the radix tree is efficient, but walking a linked list
-> > of just the dirty inodes attached to the buffer is much better.
+> > __GFP_NOLOCKDEP is the intended flag to telling memory allocation
+> > that lockdep is stupid.
 > > 
-> > We are also no longer dependent on having a locked inode passed into
-> > the function to determine where to start the lookup. This means we
-> > can drop it from the function call and treat all inodes the same.
-> > 
-> > We also make xfs_iflush_cluster skip inodes marked with
-> > XFS_IRECLAIM. This we avoid races with inodes that reclaim is
-> > actively referencing or are being re-initialised by inode lookup. If
-> > they are actually dirty, they'll get written by a future cluster
-> > flush....
-> > 
-> > We also add a shutdown check after obtaining the flush lock so that
-> > we catch inodes that are dirty in memory and may have inconsistent
-> > state due to the shutdown in progress. We abort these inodes
-> > directly and so they remove themselves directly from the buffer list
-> > and the AIL rather than having to wait for the buffer to be failed
-> > and callbacks run to be processed correctly.
+> > However, it seems that the patches that were in progress some months
+> > ago to convert XFS to kmalloc interfaces and using GFP flags
+> > directly stalled - being able to mark locations like this with
+> > __GFP_NOLOCKDEP was one of the main reasons for getting rid of all
+> > the internal XFS memory allocation wrappers...
 > 
-> I suspect we should just kill off xfs_iflush_cluster with this, as it
-> is best split between xfs_iflush and xfs_inode_item_push.  POC patch
-> below, but as part of that I noticed some really odd error handling,
-> which I'll bring up separately.
+> Question is, should I spend time adding a GFP_NOLOCKDEP bandaid to XFS
+> or would my time be better spent reviewing your async inode reclaim
+> series to make this go away for real?
 
-That's the exact opposite way the follow-on patchset I have goes.
-xfs_inode_item_push() goes away entirely because tracking 30+ inodes
-in the AIL for a single writeback IO event is amazingly inefficient
-and consumes huge amounts of CPU unnecessarily.
+Heh. I started to write that async reclaim would make this go away,
+but then I realised it won't because we still do an XFS_ILOCK_EXCL
+call in xfs_inode_reclaim() right at the end to synchronise with
+anything that was blocked in the ILOCK during a lockless lookup
+waiting for reclaim to drop the lock after setting ip->i_ino = 0.
 
-IOWs, the original point of pinning the inode cluster buffer
-directly at inode dirtying was so we could track dirty inodes in the
-AIL via the cluster buffer instead of individually as inodes.  The
-AIL drops by a factor of 30 in size, and instead of seeing 10,000
-inode item push "success" reports and 300,000 "flushing" reports a
-second, we only see the 10,000 success reports.
-
-IOWs, the xfsaild is CPU bound in highly concurrent inode dirtying
-workloads because of the massive numbers of inodes we cycle through
-it. Tracking them by cluster buffer reduces the CPU over of the
-xfsaild substantially. The whole "hang on, this solves the OOM kill
-problem with async reclaim" was a happy accident - I didn't start
-this patch set with the intent of fixing inode reclaim, it started
-because inode tracking in the AIL is highly inefficient...
+So that patchset doesn't make the lockdep issues go away. I still
+need to work out if we can get rid of that ILOCK cycling in
+xfs_reclaim_inode() by changing the lockless lookup code, but that's
+a separate problem...
 
 Cheers,
 
