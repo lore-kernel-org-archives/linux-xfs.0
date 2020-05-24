@@ -2,221 +2,176 @@ Return-Path: <SRS0=zOU/=7G=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA93C433DF
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 May 2020 16:46:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF930C433DF
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 May 2020 17:16:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56D2820826
-	for <linux-xfs@archiver.kernel.org>; Sun, 24 May 2020 16:46:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6120206D5
+	for <linux-xfs@archiver.kernel.org>; Sun, 24 May 2020 17:16:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X8d9SiQh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728870AbgEXQqw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 24 May 2020 12:46:52 -0400
-Received: from out20-62.mail.aliyun.com ([115.124.20.62]:33842 "EHLO
-        out20-62.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728375AbgEXQqw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 May 2020 12:46:52 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.08165852|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.349807-0.00123312-0.64896;FP=0|0|0|0|0|-1|-1|-1;HT=e02c03293;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.HczEWtj_1590338808;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.HczEWtj_1590338808)
-          by smtp.aliyun-inc.com(10.147.42.22);
-          Mon, 25 May 2020 00:46:48 +0800
-Date:   Mon, 25 May 2020 00:46:48 +0800
-From:   Eryu Guan <guan@eryu.me>
-To:     Donald Douwsma <ddouwsma@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfstests: add test for xfs_repair progress reporting
-Message-ID: <20200524164648.GB3363@desktop>
-References: <20200519160125.GB17621@magnolia>
- <20200520035258.298516-1-ddouwsma@redhat.com>
+        id S2387718AbgEXRQy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 24 May 2020 13:16:54 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:43006 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387707AbgEXRQy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 24 May 2020 13:16:54 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04OHBd54052260;
+        Sun, 24 May 2020 17:16:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=0yyepkUp9YUqDNzDBRGO6el+sS1x/j+y8+cZI1G2508=;
+ b=X8d9SiQhFM34p8jtiDGmKL4oUYWUFJDfNf1l0Cb3xmRqCZLP1gKk2BOGIfF/tqDt4tF5
+ tPdAhJa8MvSrO5PWvmZ0nxZHhn8Y/EGBZvGBm8f/Ado9SXwwpPnibp7WQfzYjs3KcZNG
+ ++bYXv8GZ27vI4SAbZSBI8o8/3l5d36VfoanSfZvUPkOv3OaIDiW12arwAq+CfN24FAE
+ 3J8WLdSBZ7p1EQ559GAU93802T7YLTxJC0+IIriJbayHm2vx5G6M60nlUvJv410cMbD9
+ 16KS2UUioxGyIrkxJz6bCALBkELB6E6BZa7F9R/rp+8Nyvj1lsTyAHhkxNsbCmx67KAK jQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 316vfn3359-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sun, 24 May 2020 17:16:15 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04OHDnmQ083490;
+        Sun, 24 May 2020 17:16:15 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 317dkp61y2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 24 May 2020 17:16:15 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04OHGEQw023263;
+        Sun, 24 May 2020 17:16:14 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 24 May 2020 10:16:13 -0700
+Date:   Sun, 24 May 2020 10:16:12 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     linux-xfs@vger.kernel.org, hch@infradead.org, bfoster@redhat.com
+Subject: [PATCH v2 2/4] xfs: measure all contiguous previous extents for
+ prealloc size
+Message-ID: <20200524171612.GG8230@magnolia>
+References: <159025257178.493629.12621189512718182426.stgit@magnolia>
+ <159025258515.493629.3176219395358340970.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200520035258.298516-1-ddouwsma@redhat.com>
+In-Reply-To: <159025258515.493629.3176219395358340970.stgit@magnolia>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9631 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 bulkscore=0
+ spamscore=0 suspectscore=1 mlxscore=0 adultscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005240143
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9631 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 clxscore=1015
+ priorityscore=1501 mlxscore=0 malwarescore=0 spamscore=0 impostorscore=0
+ mlxlogscore=999 lowpriorityscore=0 bulkscore=0 adultscore=0 suspectscore=1
+ cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2005240143
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 20, 2020 at 01:52:58PM +1000, Donald Douwsma wrote:
-> xfs_repair's interval based progress has been broken for
-> some time, create a test based on dmdelay to stretch out
-> the time and use ag_stride to force parallelism.
-> 
-> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
-> ---
-> Changes since v1:
-> - Use _scratch_xfs_repair
-> - Filter only repair output
-> - Make the filter more tolerant of whitespace and plurals
-> - Take golden output from 'xfs_repair: fix progress reporting'
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I saw failures like below, and I'm using v5.7-rc4 kernel and v5.4.0
-xfsprogs, is this expected failure?
+When we're estimating a new speculative preallocation length for an
+extending write, we should walk backwards through the extent list to
+determine the number of number of blocks that are physically and
+logically contiguous with the write offset, and use that as an input to
+the preallocation size computation.
 
-@@ -2,8 +2,6 @@
- Format and populate
- Introduce a dmdelay
- Run repair
-- - #:#:#: Phase #: #% done - estimated remaining time # minute, # second
-- - #:#:#: Phase #: elapsed time # second - processed # inodes per minute
-  - #:#:#: check for inodes claiming duplicate blocks - # of # inodes done
-  - #:#:#: process known inodes and inode discovery - # of # inodes done
-  - #:#:#: process newly discovered inodes - # of # allocation groups done
-@@ -12,4 +10,3 @@
-  - #:#:#: scanning filesystem freespace - # of # allocation groups done
-  - #:#:#: setting up duplicate extent list - # of # allocation groups done
-  - #:#:#: verify and correct link counts - # of # allocation groups done
-- - #:#:#: zeroing log - # of # blocks done
+This way, preallocation length is truly measured by the effectiveness of
+the allocator in giving us contiguous allocations without being
+influenced by the state of a given extent.  This fixes both the problem
+where ZERO_RANGE within an EOF can reduce preallocation, and prevents
+the unnecessary shrinkage of preallocation when delalloc extents are
+turned into unwritten extents.
 
-> 
->  tests/xfs/516     | 76 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/516.out | 15 ++++++++++
->  tests/xfs/group   |  1 +
->  3 files changed, 92 insertions(+)
->  create mode 100755 tests/xfs/516
->  create mode 100644 tests/xfs/516.out
-> 
-> diff --git a/tests/xfs/516 b/tests/xfs/516
-> new file mode 100755
-> index 00000000..1c0508ef
-> --- /dev/null
-> +++ b/tests/xfs/516
-> @@ -0,0 +1,76 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 516
-> +#
-> +# Test xfs_repair's progress reporting
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
+This was found as a regression in xfs/014 after changing delalloc writes
+to create unwritten extents during writeback.
 
-	rm -f $tmp.*
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: multiplication instead of lshift
+---
+ fs/xfs/xfs_iomap.c |   40 +++++++++++++++++++++++++++-------------
+ 1 file changed, 27 insertions(+), 13 deletions(-)
 
-As some common helpers would use $tmp. files as well.
-
-> +	cd /
-> +	_dmsetup_remove delay-test > /dev/null 2>&1
-
-I think we could do _cleanup_delay here and discard the outputs.
-
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/dmdelay
-> +. ./common/populate
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +_require_dm_target delay
-> +
-> +# Filter output specific to the formatters in xfs_repair/progress.c
-> +# Ideally we'd like to see hits on anything that matches
-> +# awk '/{FMT/' repair/progress.c
-> +_filter_repair()
-
-Function names with the leading underscore are reserved for common
-helpers, filter_repair would be fine.
-
-> +{
-> +	sed -ne '
-> +	s/[0-9]\+/#/g;
-> +	s/^\s\+/ /g;
-> +	s/\(second\|minute\)s/\1/g
-> +	/#:#:#:/p
-> +	'
-> +}
-> +
-> +echo "Format and populate"
-> +_scratch_populate_cached nofill > $seqres.full 2>&1
-> +
-> +echo "Introduce a dmdelay"
-> +_init_delay
-> +
-> +# Introduce a read I/O delay
-> +# The default in common/dmdelay is a bit too agressive
-> +BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
-> +DELAY_TABLE_RDELAY="0 $BLK_DEV_SIZE delay $SCRATCH_DEV 0 100 $SCRATCH_DEV 0 0"
-> +_load_delay_table $DELAY_READ
-> +
-> +echo "Run repair"
-> +SCRATCH_DEV=$DELAY_DEV _scratch_xfs_repair -o ag_stride=4 -t 1 2>&1 |
-> +        tee -a $seqres.full > $seqres.xfs_repair.out
-> +
-> +cat $seqres.xfs_repair.out | _filter_repair | sort -u
-
-I agreed with Darrick here. redirect output to $tmp.repair is better, as
-we already cleanup $tmp.* in _cleanup, and no one is cleaning up
-$seqres.xfs_repair.out file.
-
-> +
-> +_cleanup_delay
-
-We could remove this one if do it in _cleanup.
-
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/516.out b/tests/xfs/516.out
-> new file mode 100644
-> index 00000000..85018b93
-> --- /dev/null
-> +++ b/tests/xfs/516.out
-> @@ -0,0 +1,15 @@
-> +QA output created by 516
-> +Format and populate
-> +Introduce a dmdelay
-> +Run repair
-> + - #:#:#: Phase #: #% done - estimated remaining time # minute, # second
-> + - #:#:#: Phase #: elapsed time # second - processed # inodes per minute
-> + - #:#:#: check for inodes claiming duplicate blocks - # of # inodes done
-> + - #:#:#: process known inodes and inode discovery - # of # inodes done
-> + - #:#:#: process newly discovered inodes - # of # allocation groups done
-> + - #:#:#: rebuild AG headers and trees - # of # allocation groups done
-> + - #:#:#: scanning agi unlinked lists - # of # allocation groups done
-> + - #:#:#: scanning filesystem freespace - # of # allocation groups done
-> + - #:#:#: setting up duplicate extent list - # of # allocation groups done
-> + - #:#:#: verify and correct link counts - # of # allocation groups done
-> + - #:#:#: zeroing log - # of # blocks done
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 12eb55c9..aeeca23f 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -513,3 +513,4 @@
->  513 auto mount
->  514 auto quick db
->  515 auto quick quota
-> +516 repair
-
-Should be in auto group as well? Only tests in auto (and quick, which is
-a sub-set of auto) will be run by default.
-
-Thanks,
-Eryu
-
-> -- 
-> 2.18.4
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 7d8966ce630a..e74a8c2c94ce 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -377,15 +377,17 @@ xfs_iomap_prealloc_size(
+ 	loff_t			count,
+ 	struct xfs_iext_cursor	*icur)
+ {
++	struct xfs_iext_cursor	ncur = *icur;
++	struct xfs_bmbt_irec	prev, got;
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+-	struct xfs_bmbt_irec	prev;
+-	int			shift = 0;
+ 	int64_t			freesp;
+ 	xfs_fsblock_t		qblocks;
+-	int			qshift = 0;
+ 	xfs_fsblock_t		alloc_blocks = 0;
++	xfs_extlen_t		plen;
++	int			shift = 0;
++	int			qshift = 0;
+ 
+ 	if (offset + count <= XFS_ISIZE(ip))
+ 		return 0;
+@@ -400,7 +402,7 @@ xfs_iomap_prealloc_size(
+ 	 */
+ 	if ((mp->m_flags & XFS_MOUNT_ALLOCSIZE) ||
+ 	    XFS_ISIZE(ip) < XFS_FSB_TO_B(mp, mp->m_dalign) ||
+-	    !xfs_iext_peek_prev_extent(ifp, icur, &prev) ||
++	    !xfs_iext_prev_extent(ifp, &ncur, &prev) ||
+ 	    prev.br_startoff + prev.br_blockcount < offset_fsb)
+ 		return mp->m_allocsize_blocks;
+ 
+@@ -413,16 +415,28 @@ xfs_iomap_prealloc_size(
+ 	 * preallocation size.
+ 	 *
+ 	 * If the extent is a hole, then preallocation is essentially disabled.
+-	 * Otherwise we take the size of the preceding data extent as the basis
+-	 * for the preallocation size. If the size of the extent is greater than
+-	 * half the maximum extent length, then use the current offset as the
+-	 * basis. This ensures that for large files the preallocation size
+-	 * always extends to MAXEXTLEN rather than falling short due to things
+-	 * like stripe unit/width alignment of real extents.
++	 * Otherwise we take the size of the preceding data extents as the basis
++	 * for the preallocation size. Note that we don't care if the previous
++	 * extents are written or not.
++	 *
++	 * If the size of the extents is greater than half the maximum extent
++	 * length, then use the current offset as the basis. This ensures that
++	 * for large files the preallocation size always extends to MAXEXTLEN
++	 * rather than falling short due to things like stripe unit/width
++	 * alignment of real extents.
+ 	 */
+-	if (prev.br_blockcount <= (MAXEXTLEN >> 1))
+-		alloc_blocks = prev.br_blockcount << 1;
+-	else
++	plen = prev.br_blockcount;
++	while (xfs_iext_prev_extent(ifp, &ncur, &got)) {
++		if (plen > MAXEXTLEN / 2 ||
++		    isnullstartblock(got.br_startblock) ||
++		    got.br_startoff + got.br_blockcount != prev.br_startoff ||
++		    got.br_startblock + got.br_blockcount != prev.br_startblock)
++			break;
++		plen += got.br_blockcount;
++		prev = got;
++	}
++	alloc_blocks = plen * 2;
++	if (alloc_blocks > MAXEXTLEN)
+ 		alloc_blocks = XFS_B_TO_FSB(mp, offset);
+ 	if (!alloc_blocks)
+ 		goto check_writeio;
