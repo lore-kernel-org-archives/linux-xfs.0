@@ -2,253 +2,211 @@ Return-Path: <SRS0=dAFJ=7I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A46C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 16:20:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 221A8C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 16:37:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C51220776
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 16:20:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFB5E20721
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 16:37:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="s2Af90im"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bhZpFPbM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388578AbgEZQUB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 May 2020 12:20:01 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:60240 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388447AbgEZQUA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 May 2020 12:20:00 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04QGHhbg075545;
-        Tue, 26 May 2020 16:19:41 GMT
+        id S1728472AbgEZQhC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 May 2020 12:37:02 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:58118 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728450AbgEZQhC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 May 2020 12:37:02 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04QGVgxw160087;
+        Tue, 26 May 2020 16:37:00 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=ZBzh/ybbV61B1Qei3812YPkuod4SSPrDyvvb4BUpNrU=;
- b=s2Af90imq+R8Ct3jec5smTb58lz3XYj28S2RmI5QOq1qrahWHRbSiWGEgByDxN4OWP+g
- xdi1+jm77RmAU5Z00zbI4yalzSEObd93gkYp8sRuDnQ5dTrBQKx4f4Oy5i3M8qdw6jFh
- qiqZgzZ4J4PtyuOHTkfhNkQd4nQMNXc/I1T2/SfTcsTbdhIEdlbXm58GLj5MJvCnw2G4
- ubfHKtPrpzNqTN9kKFYrfcQYR3feq0x323wC/Xyw+nWJ4iovYe2aS0Y9Z3MIGsgkjjBp
- CUOVJwL8tWedyytmhSu+KW0QfgZv0dnMGVnNsat2u9/qBriY3Jgr2EU2ZfEKvruH6OHu EQ== 
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=QbnJJNDlJuuIGw6+sY9sHqa630LNC7krG/IDPurv0e8=;
+ b=bhZpFPbMhOG34ihUYQwrJfcxBc7IVznuQvO8ohBWcSOR0CG81YuvcVG/MiSx4bSTLXDW
+ dwJnTlbS6xmmeTbmfMUc/2qxQV4c7XbCdQO7ALizPJNmZVLCz+I17W9hNg1UO9gCxc7l
+ dEbXpzmpdZ3SY54wpwZjfPYDU6hWo+UY5Oitg56fdW3TKf5dxGTmG5j7cBSjAbdgQ3eH
+ gBho7TH2JO7rHUBbS0KaK7vzkWbPgQtkAepO4afLbC1qJZyU71qWPGnOlIr2Jhp5Uo3n
+ BgY6VVrEVVIiVoyfbe4RVXIsDbsrcR2zh9vfR7uPhu288gs/znDOkGIDAAeKb5CIF5VB EA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 318xbjtvjg-1
+        by userp2130.oracle.com with ESMTP id 316u8qtwvr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 26 May 2020 16:19:41 +0000
+        Tue, 26 May 2020 16:37:00 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04QGJ0S0032213;
-        Tue, 26 May 2020 16:19:40 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 317ddp54r5-1
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04QGX079118823;
+        Tue, 26 May 2020 16:34:59 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 317ddp60p8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 May 2020 16:19:38 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04QGJYhv023079;
-        Tue, 26 May 2020 16:19:34 GMT
+        Tue, 26 May 2020 16:34:59 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04QGYxVC004412;
+        Tue, 26 May 2020 16:34:59 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 26 May 2020 09:19:34 -0700
-Date:   Tue, 26 May 2020 09:19:32 -0700
+        with ESMTP ; Tue, 26 May 2020 09:34:58 -0700
+Date:   Tue, 26 May 2020 09:34:57 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     Domenico Andreoli <domenico.andreoli@linux.com>,
-        Pavel Machek <pavel@ucw.cz>, Christoph Hellwig <hch@lst.de>,
-        Al Viro <viro@zeniv.linux.org.uk>, "Ted Ts'o" <tytso@mit.edu>,
-        Len Brown <len.brown@intel.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] PM: hibernate: restrict writes to the resume device
-Message-ID: <20200526161932.GD252930@magnolia>
-References: <20200519181410.GA1963@dumbo>
- <CAJZ5v0jgA3hh3nB60ANKN1WG9py9BoBqp8N8BuM2W-gpcUaPpg@mail.gmail.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Dave Airlie <airlied@gmail.com>
+Subject: [PATCH] xfs: more lockdep whackamole with kmem_alloc*
+Message-ID: <20200526163457.GK8230@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJZ5v0jgA3hh3nB60ANKN1WG9py9BoBqp8N8BuM2W-gpcUaPpg@mail.gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9633 signatures=668686
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0 mlxscore=0
- phishscore=0 adultscore=0 suspectscore=5 spamscore=0 malwarescore=0
+ phishscore=0 adultscore=0 suspectscore=1 spamscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005260126
+ definitions=main-2005260128
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9633 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0 mlxscore=0
- lowpriorityscore=0 priorityscore=1501 phishscore=0 cotscore=-2147483648
- suspectscore=5 bulkscore=0 clxscore=1011 impostorscore=0 malwarescore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2005260126
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
+ priorityscore=1501 spamscore=0 cotscore=-2147483648 suspectscore=1
+ phishscore=0 clxscore=1015 mlxlogscore=999 bulkscore=0 adultscore=0
+ lowpriorityscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005260128
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, May 25, 2020 at 12:52:17PM +0200, Rafael J. Wysocki wrote:
-> On Tue, May 19, 2020 at 8:14 PM Domenico Andreoli
-> <domenico.andreoli@linux.com> wrote:
-> >
-> > From: Domenico Andreoli <domenico.andreoli@linux.com>
-> >
-> > Hibernation via snapshot device requires write permission to the swap
-> > block device, the one that more often (but not necessarily) is used to
-> > store the hibernation image.
-> >
-> > With this patch, such permissions are granted iff:
-> >
-> > 1) snapshot device config option is enabled
-> > 2) swap partition is used as resume device
-> >
-> > In other circumstances the swap device is not writable from userspace.
-> >
-> > In order to achieve this, every write attempt to a swap device is
-> > checked against the device configured as part of the uswsusp API [0]
-> > using a pointer to the inode struct in memory. If the swap device being
-> > written was not configured for resuming, the write request is denied.
-> >
-> > NOTE: this implementation works only for swap block devices, where the
-> > inode configured by swapon (which sets S_SWAPFILE) is the same used
-> > by SNAPSHOT_SET_SWAP_AREA.
-> >
-> > In case of swap file, SNAPSHOT_SET_SWAP_AREA indeed receives the inode
-> > of the block device containing the filesystem where the swap file is
-> > located (+ offset in it) which is never passed to swapon and then has
-> > not set S_SWAPFILE.
-> >
-> > As result, the swap file itself (as a file) has never an option to be
-> > written from userspace. Instead it remains writable if accessed directly
-> > from the containing block device, which is always writeable from root.
-> >
-> > [0] Documentation/power/userland-swsusp.rst
-> >
-> > v2:
-> >  - rename is_hibernate_snapshot_dev() to is_hibernate_resume_dev()
-> >  - fix description so to correctly refer to the resume device
-> >
-> > Signed-off-by: Domenico Andreoli <domenico.andreoli@linux.com>
-> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> > Cc: Pavel Machek <pavel@ucw.cz>
-> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > Cc: Christoph Hellwig <hch@lst.de>
-> > Cc: viro@zeniv.linux.org.uk
-> > Cc: tytso@mit.edu
-> > Cc: len.brown@intel.com
-> > Cc: linux-pm@vger.kernel.org
-> > Cc: linux-mm@kvack.org
-> > Cc: linux-xfs@vger.kernel.org
-> > Cc: linux-fsdevel@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> >
-> > ---
-> >  fs/block_dev.c          |    3 +--
-> >  include/linux/suspend.h |    6 ++++++
-> >  kernel/power/user.c     |   14 +++++++++++++-
-> >  3 files changed, 20 insertions(+), 3 deletions(-)
-> >
-> > Index: b/include/linux/suspend.h
-> > ===================================================================
-> > --- a/include/linux/suspend.h
-> > +++ b/include/linux/suspend.h
-> > @@ -466,6 +466,12 @@ static inline bool system_entering_hiber
-> >  static inline bool hibernation_available(void) { return false; }
-> >  #endif /* CONFIG_HIBERNATION */
-> >
-> > +#ifdef CONFIG_HIBERNATION_SNAPSHOT_DEV
-> > +int is_hibernate_resume_dev(const struct inode *);
-> > +#else
-> > +static inline int is_hibernate_resume_dev(const struct inode *i) { return 0; }
-> > +#endif
-> > +
-> >  /* Hibernation and suspend events */
-> >  #define PM_HIBERNATION_PREPARE 0x0001 /* Going to hibernate */
-> >  #define PM_POST_HIBERNATION    0x0002 /* Hibernation finished */
-> > Index: b/kernel/power/user.c
-> > ===================================================================
-> > --- a/kernel/power/user.c
-> > +++ b/kernel/power/user.c
-> > @@ -35,8 +35,14 @@ static struct snapshot_data {
-> >         bool ready;
-> >         bool platform_support;
-> >         bool free_bitmaps;
-> > +       struct inode *bd_inode;
-> >  } snapshot_state;
-> >
-> > +int is_hibernate_resume_dev(const struct inode *bd_inode)
-> > +{
-> > +       return hibernation_available() && snapshot_state.bd_inode == bd_inode;
-> > +}
-> > +
-> >  static int snapshot_open(struct inode *inode, struct file *filp)
-> >  {
-> >         struct snapshot_data *data;
-> > @@ -95,6 +101,7 @@ static int snapshot_open(struct inode *i
-> >         data->frozen = false;
-> >         data->ready = false;
-> >         data->platform_support = false;
-> > +       data->bd_inode = NULL;
-> >
-> >   Unlock:
-> >         unlock_system_sleep();
-> > @@ -110,6 +117,7 @@ static int snapshot_release(struct inode
-> >
-> >         swsusp_free();
-> >         data = filp->private_data;
-> > +       data->bd_inode = NULL;
-> >         free_all_swap_pages(data->swap);
-> >         if (data->frozen) {
-> >                 pm_restore_gfp_mask();
-> > @@ -202,6 +210,7 @@ struct compat_resume_swap_area {
-> >  static int snapshot_set_swap_area(struct snapshot_data *data,
-> >                 void __user *argp)
-> >  {
-> > +       struct block_device *bdev;
-> >         sector_t offset;
-> >         dev_t swdev;
-> >
-> > @@ -232,9 +241,12 @@ static int snapshot_set_swap_area(struct
-> >                 data->swap = -1;
-> >                 return -EINVAL;
-> >         }
-> > -       data->swap = swap_type_of(swdev, offset, NULL);
-> > +       data->swap = swap_type_of(swdev, offset, &bdev);
-> >         if (data->swap < 0)
-> >                 return -ENODEV;
-> > +
-> > +       data->bd_inode = bdev->bd_inode;
-> > +       bdput(bdev);
-> >         return 0;
-> >  }
-> >
-> > Index: b/fs/block_dev.c
-> > ===================================================================
-> > --- a/fs/block_dev.c
-> > +++ b/fs/block_dev.c
-> > @@ -2023,8 +2023,7 @@ ssize_t blkdev_write_iter(struct kiocb *
-> >         if (bdev_read_only(I_BDEV(bd_inode)))
-> >                 return -EPERM;
-> >
-> > -       /* uswsusp needs write permission to the swap */
-> > -       if (IS_SWAPFILE(bd_inode) && !hibernation_available())
-> > +       if (IS_SWAPFILE(bd_inode) && !is_hibernate_resume_dev(bd_inode))
-> >                 return -ETXTBSY;
-> >
-> >         if (!iov_iter_count(from))
-> >
-> > --
-> 
-> The patch looks OK to me.
-> 
-> Darrick, what do you think?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Looks fine to me too.
+Dave Airlie reported the following lockdep complaint:
 
-I kinda wonder how uswsusp prevents the bdev from being swapoff'd (or
-just plain disappearing) such that bd_inode will never point to a
-recycled inode, but I guess since we're only comparing pointer values
-it's not a big deal for this patch...
+>  ======================================================
+>  WARNING: possible circular locking dependency detected
+>  5.7.0-0.rc5.20200515git1ae7efb38854.1.fc33.x86_64 #1 Not tainted
+>  ------------------------------------------------------
+>  kswapd0/159 is trying to acquire lock:
+>  ffff9b38d01a4470 (&xfs_nondir_ilock_class){++++}-{3:3},
+>  at: xfs_ilock+0xde/0x2c0 [xfs]
+>
+>  but task is already holding lock:
+>  ffffffffbbb8bd00 (fs_reclaim){+.+.}-{0:0}, at:
+>  __fs_reclaim_acquire+0x5/0x30
+>
+>  which lock already depends on the new lock.
+>
+>
+>  the existing dependency chain (in reverse order) is:
+>
+>  -> #1 (fs_reclaim){+.+.}-{0:0}:
+>         fs_reclaim_acquire+0x34/0x40
+>         __kmalloc+0x4f/0x270
+>         kmem_alloc+0x93/0x1d0 [xfs]
+>         kmem_alloc_large+0x4c/0x130 [xfs]
+>         xfs_attr_copy_value+0x74/0xa0 [xfs]
+>         xfs_attr_get+0x9d/0xc0 [xfs]
+>         xfs_get_acl+0xb6/0x200 [xfs]
+>         get_acl+0x81/0x160
+>         posix_acl_xattr_get+0x3f/0xd0
+>         vfs_getxattr+0x148/0x170
+>         getxattr+0xa7/0x240
+>         path_getxattr+0x52/0x80
+>         do_syscall_64+0x5c/0xa0
+>         entry_SYSCALL_64_after_hwframe+0x49/0xb3
+>
+>  -> #0 (&xfs_nondir_ilock_class){++++}-{3:3}:
+>         __lock_acquire+0x1257/0x20d0
+>         lock_acquire+0xb0/0x310
+>         down_write_nested+0x49/0x120
+>         xfs_ilock+0xde/0x2c0 [xfs]
+>         xfs_reclaim_inode+0x3f/0x400 [xfs]
+>         xfs_reclaim_inodes_ag+0x20b/0x410 [xfs]
+>         xfs_reclaim_inodes_nr+0x31/0x40 [xfs]
+>         super_cache_scan+0x190/0x1e0
+>         do_shrink_slab+0x184/0x420
+>         shrink_slab+0x182/0x290
+>         shrink_node+0x174/0x680
+>         balance_pgdat+0x2d0/0x5f0
+>         kswapd+0x21f/0x510
+>         kthread+0x131/0x150
+>         ret_from_fork+0x3a/0x50
+>
+>  other info that might help us debug this:
+>
+>   Possible unsafe locking scenario:
+>
+>         CPU0                    CPU1
+>         ----                    ----
+>    lock(fs_reclaim);
+>                                 lock(&xfs_nondir_ilock_class);
+>                                 lock(fs_reclaim);
+>    lock(&xfs_nondir_ilock_class);
+>
+>   *** DEADLOCK ***
+>
+>  4 locks held by kswapd0/159:
+>   #0: ffffffffbbb8bd00 (fs_reclaim){+.+.}-{0:0}, at:
+>  __fs_reclaim_acquire+0x5/0x30
+>   #1: ffffffffbbb7cef8 (shrinker_rwsem){++++}-{3:3}, at:
+>  shrink_slab+0x115/0x290
+>   #2: ffff9b39f07a50e8
+>  (&type->s_umount_key#56){++++}-{3:3}, at: super_cache_scan+0x38/0x1e0
+>   #3: ffff9b39f077f258
+>  (&pag->pag_ici_reclaim_lock){+.+.}-{3:3}, at:
+>  xfs_reclaim_inodes_ag+0x82/0x410 [xfs]
 
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+This is a known false positive because inodes cannot simultaneously be
+getting reclaimed and the target of a getxattr operation, but lockdep
+doesn't know that.  We can (selectively) shut up lockdep until either
+it gets smarter or we change inode reclaim not to require the ILOCK by
+applying a stupid GFP_NOLOCKDEP bandaid.
 
---D
+Reported-by: Dave Airlie <airlied@gmail.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Tested-by: Dave Airlie <airlied@gmail.com>
+---
+ fs/xfs/kmem.h                 |    6 +++++-
+ fs/xfs/libxfs/xfs_attr_leaf.c |    2 +-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index fc87ea9f6843..34cbcfde9228 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -19,6 +19,7 @@ typedef unsigned __bitwise xfs_km_flags_t;
+ #define KM_NOFS		((__force xfs_km_flags_t)0x0004u)
+ #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
+ #define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
++#define KM_NOLOCKDEP	((__force xfs_km_flags_t)0x0020u)
+ 
+ /*
+  * We use a special process flag to avoid recursive callbacks into
+@@ -30,7 +31,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ {
+ 	gfp_t	lflags;
+ 
+-	BUG_ON(flags & ~(KM_NOFS|KM_MAYFAIL|KM_ZERO));
++	BUG_ON(flags & ~(KM_NOFS | KM_MAYFAIL | KM_ZERO | KM_NOLOCKDEP));
+ 
+ 	lflags = GFP_KERNEL | __GFP_NOWARN;
+ 	if (flags & KM_NOFS)
+@@ -49,6 +50,9 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ 	if (flags & KM_ZERO)
+ 		lflags |= __GFP_ZERO;
+ 
++	if (flags & KM_NOLOCKDEP)
++		lflags |= __GFP_NOLOCKDEP;
++
+ 	return lflags;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index f3d18a1f5b20..2f7e89e4be3e 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -488,7 +488,7 @@ xfs_attr_copy_value(
+ 	}
+ 
+ 	if (!args->value) {
+-		args->value = kmem_alloc_large(valuelen, 0);
++		args->value = kmem_alloc_large(valuelen, KM_NOLOCKDEP);
+ 		if (!args->value)
+ 			return -ENOMEM;
+ 	}
