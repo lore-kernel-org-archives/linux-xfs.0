@@ -2,32 +2,32 @@ Return-Path: <SRS0=dAFJ=7I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F255C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 18:42:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A76D7C433E3
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 19:22:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04F5D206F1
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 18:42:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D73420849
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 19:22:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728945AbgEZSm0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 May 2020 14:42:26 -0400
-Received: from sandeen.net ([63.231.237.45]:38308 "EHLO sandeen.net"
+        id S2391515AbgEZTKD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 May 2020 15:10:03 -0400
+Received: from sandeen.net ([63.231.237.45]:39708 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728113AbgEZSm0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 26 May 2020 14:42:26 -0400
+        id S2403889AbgEZTKC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 May 2020 15:10:02 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 2BEC948C72D;
-        Tue, 26 May 2020 13:41:47 -0500 (CDT)
-Subject: Re: [PATCH v2] mkfs: simplify the configured sector sizes setting in
- validate_sectorsize
-To:     xiakaixu1987@gmail.com
-Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
-References: <1589945040-1207-1-git-send-email-kaixuxia@tencent.com>
+        by sandeen.net (Postfix) with ESMTPSA id 9785B48C730;
+        Tue, 26 May 2020 14:09:24 -0500 (CDT)
+Subject: Re: [PATCH 2/2] xfsprogs: remove the libxfs_* API redirections
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+References: <20200513140333.2479519-1-hch@lst.de>
+ <20200513140333.2479519-2-hch@lst.de>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <d621bace-34b3-a2c1-1f29-6ac95848d112@sandeen.net>
-Date:   Tue, 26 May 2020 13:42:23 -0500
+Message-ID: <7c6a3379-a4fc-97e8-ab31-34aa7dfd5a76@sandeen.net>
+Date:   Tue, 26 May 2020 14:10:01 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.0
 MIME-Version: 1.0
-In-Reply-To: <1589945040-1207-1-git-send-email-kaixuxia@tencent.com>
+In-Reply-To: <20200513140333.2479519-2-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -85,74 +85,19 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/19/20 10:24 PM, xiakaixu1987@gmail.com wrote:
-> From: Kaixu Xia <kaixuxia@tencent.com>
+On 5/13/20 9:03 AM, Christoph Hellwig wrote:
+> For historical reasons xfsprogs tries to renamed xfs_* symbols used
+> by tools (but not those used inside libxfs) to libxfs_.  Remove this
+> indirection to make it clear what function is being called, and to
+> avoid having to keep the renaming header uptodate.
 > 
-> There are two places that set the configured sector sizes in
-> validate_sectorsize, actually we can simplify them and combine into one
-> if statement. Use the default value structure to set the topology sectors
-> when probing fails.
-> 
-> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+I merged the first patch (scrub prefix removal) but I want to give this
+one a little more thought.  I'd be happy to get rid of this but I want
+to be certain that we stay robust and correct w.r.t. error sign problems
+and until I feel like I have that all in my brain, I'd like to leave this
+as is.
 
-> ---
-> v2:
->  -Use the default value structure to set the topology sectors.
-> 
->  mkfs/xfs_mkfs.c | 17 +++++------------
->  1 file changed, 5 insertions(+), 12 deletions(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 039b1dcc..d553b0a0 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -1696,14 +1696,6 @@ validate_sectorsize(
->  	int			dry_run,
->  	int			force_overwrite)
->  {
-> -	/* set configured sector sizes in preparation for checks */
-> -	if (!cli->sectorsize) {
-> -		cfg->sectorsize = dft->sectorsize;
-> -	} else {
-> -		cfg->sectorsize = cli->sectorsize;
-> -	}
-> -	cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
-> -
->  	/*
->  	 * Before anything else, verify that we are correctly operating on
->  	 * files or block devices and set the control parameters correctly.
-> @@ -1730,6 +1722,7 @@ validate_sectorsize(
->  	memset(ft, 0, sizeof(*ft));
->  	get_topology(cli->xi, ft, force_overwrite);
->  
-	
->  	if (!cli->sectorsize) {
->  		/*
->  		 * Unless specified manually on the command line use the
-> @@ -1741,9 +1734,8 @@ validate_sectorsize(
->  		 * Set the topology sectors if they were not probed to the
->  		 * minimum supported sector size.
->  		 */
-> -
->  		if (!ft->lsectorsize)
-> -			ft->lsectorsize = XFS_MIN_SECTORSIZE;
-> +			ft->lsectorsize = dft->sectorsize;
->  
->  		/* Older kernels may not have physical/logical distinction */
->  		if (!ft->psectorsize)
-> @@ -1759,9 +1751,10 @@ _("specified blocksize %d is less than device physical sector size %d\n"
->  				ft->lsectorsize);
->  			cfg->sectorsize = ft->lsectorsize;
->  		}
-> +	} else
-> +		cfg->sectorsize = cli->sectorsize;
->  
-> -		cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
-> -	}
-> +	cfg->sectorlog = libxfs_highbit32(cfg->sectorsize);
->  
->  	/* validate specified/probed sector size */
->  	if (cfg->sectorsize < XFS_MIN_SECTORSIZE ||
-> 
+Thanks,
+-Eric
