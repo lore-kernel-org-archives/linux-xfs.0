@@ -2,211 +2,113 @@ Return-Path: <SRS0=dAFJ=7I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 221A8C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 16:37:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 674E4C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 16:42:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFB5E20721
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 16:37:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 306F020723
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 16:42:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bhZpFPbM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MD634DwB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728472AbgEZQhC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 May 2020 12:37:02 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:58118 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728450AbgEZQhC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 May 2020 12:37:02 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04QGVgxw160087;
-        Tue, 26 May 2020 16:37:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=QbnJJNDlJuuIGw6+sY9sHqa630LNC7krG/IDPurv0e8=;
- b=bhZpFPbMhOG34ihUYQwrJfcxBc7IVznuQvO8ohBWcSOR0CG81YuvcVG/MiSx4bSTLXDW
- dwJnTlbS6xmmeTbmfMUc/2qxQV4c7XbCdQO7ALizPJNmZVLCz+I17W9hNg1UO9gCxc7l
- dEbXpzmpdZ3SY54wpwZjfPYDU6hWo+UY5Oitg56fdW3TKf5dxGTmG5j7cBSjAbdgQ3eH
- gBho7TH2JO7rHUBbS0KaK7vzkWbPgQtkAepO4afLbC1qJZyU71qWPGnOlIr2Jhp5Uo3n
- BgY6VVrEVVIiVoyfbe4RVXIsDbsrcR2zh9vfR7uPhu288gs/znDOkGIDAAeKb5CIF5VB EA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 316u8qtwvr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 26 May 2020 16:37:00 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04QGX079118823;
-        Tue, 26 May 2020 16:34:59 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 317ddp60p8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 May 2020 16:34:59 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04QGYxVC004412;
-        Tue, 26 May 2020 16:34:59 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 26 May 2020 09:34:58 -0700
-Date:   Tue, 26 May 2020 09:34:57 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Airlie <airlied@gmail.com>
-Subject: [PATCH] xfs: more lockdep whackamole with kmem_alloc*
-Message-ID: <20200526163457.GK8230@magnolia>
+        id S1728523AbgEZQmt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 May 2020 12:42:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39234 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728350AbgEZQmt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 May 2020 12:42:49 -0400
+Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26AAAC03E96D
+        for <linux-xfs@vger.kernel.org>; Tue, 26 May 2020 09:42:49 -0700 (PDT)
+Received: by mail-io1-xd42.google.com with SMTP id p20so9313879iop.11
+        for <linux-xfs@vger.kernel.org>; Tue, 26 May 2020 09:42:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=sYeCAyQMl2kZTCFyIgJ8T5aHtEt2FfJCvBf0D7z8mhc=;
+        b=MD634DwB76dBRidvN3JdgGCJgFtJkVhOyZ4SXeyeQZhswjyWC2jH8/Hm667OfXsI3w
+         ty6T/OmohuwZXI2rSG+/pFRI2dLKqZAIp23dXvPZ2Ri6vOOjJzGWbY27bO+eA96maOBw
+         VeHXLOwesJ+HQuP5ab29qdlqosYlsBSJoGFAjPjdKK/pRFxsOydQGxioL5EtU5d3Zdx9
+         YVmW4fQ77NQim60nf1fm1aHbwqj4At6j9irlt3mxvaZDyq87NQJkeaY7LMJ/8pY+/tmg
+         MEDQahw2/vJd/HJRplgggywZot4NVweF7i6LZZTGuUUUn+qKLTlfS9MAXl53S4FWLjGz
+         Fqhg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=sYeCAyQMl2kZTCFyIgJ8T5aHtEt2FfJCvBf0D7z8mhc=;
+        b=empUKhA0xFUchMjlSLCXzmssZOSDtYklkvIo3MDLvakRl8k30CqxDwKHg352Yuy4nV
+         ngoQlTzEPBiAhK7m9v4ul5SR55z3Gh4Qteor/8XDCWMGaEOrZPwhvK9h+sa8z61coQA6
+         PSQACdKfEFkaJmRJo8f0xd6tTj9w2JwfEbBTByWiF7kpU3KBpFjh3bPJa4y2G9AZyjuJ
+         7ThQGn8LfKeePVI7TF/B1RwyVK3YrEHqLcp5qO8UtPe4qrgBz4DOKydLChcDngVhnw1b
+         gZJNuT4+Yb09VVm64em1Sg3YxlxokMaUy3SdrZ3ozvinFmQ0S22wAvPVTcop43uQe3Mk
+         rKtw==
+X-Gm-Message-State: AOAM531VdHyLLvJTtBlj5BmR3gsy5na4SIGFEHfPKfSRJU4TpOOHSWxm
+        yJ8kCeceVVmk3GwcWDVqx2mXWXknbBJn7iLyjJ0=
+X-Google-Smtp-Source: ABdhPJw4z+pp/iGtoXlRX5mwI5Sn4fWYdRaNh5IDgGtb3obc4WQVtN4ATEyVI/HnWfVwSzw5CEDXqMW+iVEzCwgyqyo=
+X-Received: by 2002:a02:58c3:: with SMTP id f186mr1899946jab.120.1590511368156;
+ Tue, 26 May 2020 09:42:48 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9633 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0 mlxscore=0
- phishscore=0 adultscore=0 suspectscore=1 spamscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005260128
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9633 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
- priorityscore=1501 spamscore=0 cotscore=-2147483648 suspectscore=1
- phishscore=0 clxscore=1015 mlxlogscore=999 bulkscore=0 adultscore=0
- lowpriorityscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2005260128
+References: <157784106066.1364230.569420432829402226.stgit@magnolia>
+ <CAOQ4uxjhrW3EkzNm8y7TmCTWQS82VreAVy608X7naaLPfWSFeA@mail.gmail.com> <20200526155724.GJ8230@magnolia>
+In-Reply-To: <20200526155724.GJ8230@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 26 May 2020 19:42:37 +0300
+Message-ID: <CAOQ4uxgq+i1+q1=_bT=M_HoWWMuDaA8dqQK3m+iJZ8d+LBgA0w@mail.gmail.com>
+Subject: Re: [PATCH 00/14] xfs: widen timestamps to deal with y2038
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Eric Sandeen <sandeen@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, May 26, 2020 at 6:59 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Tue, May 26, 2020 at 12:20:59PM +0300, Amir Goldstein wrote:
+> > On Wed, Jan 1, 2020 at 3:11 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > >
+> > > Hi all,
+> > >
+> > > This series performs some refactoring of our timestamp and inode
+> > > encoding functions, then retrofits the timestamp union to handle
+> > > timestamps as a 64-bit nanosecond counter.  Next, it refactors the quota
+> > > grace period expiration timer code a bit before implementing bit
+> > > shifting to widen the effective counter size to 34 bits.  This enables
+> > > correct time handling on XFS through the year 2486.
+> > >
+> >
+> > I intend to start review of this series.
+> > I intend to focus on correctness of conversions and on backward
+> > forward compatibility.
+> >
+> > I saw Eric's comments on quota patches and that you mentioned
+> > you addressed some of them. I do not intend to review correctness
+> > of existing quota code anyway ;-)
+> >
+> > I see that you updated the branch 3 days ago and that patch 2/14
+> > was dropped. I assume the rest of the series is mostly unchanged,
+> > but I can verify that before reviewing each patch.
+> >
+> > As far as you are concerned, should I wait for v2 or can I continue
+> > to review this series?
+>
+> I plan to rebase the whole series after 5.8-rc1, but if you'd like to
+> look at the higher level details (particularly in the quota code, which
+> is a bit murky) sooner than later, I don't mind emailing out what I have
+> now.
+>
 
-Dave Airlie reported the following lockdep complaint:
+No need. I can look at high level details on your branch.
+Will hold off review comments until rebase unless I find something
+that calls for your attention.
 
->  ======================================================
->  WARNING: possible circular locking dependency detected
->  5.7.0-0.rc5.20200515git1ae7efb38854.1.fc33.x86_64 #1 Not tainted
->  ------------------------------------------------------
->  kswapd0/159 is trying to acquire lock:
->  ffff9b38d01a4470 (&xfs_nondir_ilock_class){++++}-{3:3},
->  at: xfs_ilock+0xde/0x2c0 [xfs]
->
->  but task is already holding lock:
->  ffffffffbbb8bd00 (fs_reclaim){+.+.}-{0:0}, at:
->  __fs_reclaim_acquire+0x5/0x30
->
->  which lock already depends on the new lock.
->
->
->  the existing dependency chain (in reverse order) is:
->
->  -> #1 (fs_reclaim){+.+.}-{0:0}:
->         fs_reclaim_acquire+0x34/0x40
->         __kmalloc+0x4f/0x270
->         kmem_alloc+0x93/0x1d0 [xfs]
->         kmem_alloc_large+0x4c/0x130 [xfs]
->         xfs_attr_copy_value+0x74/0xa0 [xfs]
->         xfs_attr_get+0x9d/0xc0 [xfs]
->         xfs_get_acl+0xb6/0x200 [xfs]
->         get_acl+0x81/0x160
->         posix_acl_xattr_get+0x3f/0xd0
->         vfs_getxattr+0x148/0x170
->         getxattr+0xa7/0x240
->         path_getxattr+0x52/0x80
->         do_syscall_64+0x5c/0xa0
->         entry_SYSCALL_64_after_hwframe+0x49/0xb3
->
->  -> #0 (&xfs_nondir_ilock_class){++++}-{3:3}:
->         __lock_acquire+0x1257/0x20d0
->         lock_acquire+0xb0/0x310
->         down_write_nested+0x49/0x120
->         xfs_ilock+0xde/0x2c0 [xfs]
->         xfs_reclaim_inode+0x3f/0x400 [xfs]
->         xfs_reclaim_inodes_ag+0x20b/0x410 [xfs]
->         xfs_reclaim_inodes_nr+0x31/0x40 [xfs]
->         super_cache_scan+0x190/0x1e0
->         do_shrink_slab+0x184/0x420
->         shrink_slab+0x182/0x290
->         shrink_node+0x174/0x680
->         balance_pgdat+0x2d0/0x5f0
->         kswapd+0x21f/0x510
->         kthread+0x131/0x150
->         ret_from_fork+0x3a/0x50
->
->  other info that might help us debug this:
->
->   Possible unsafe locking scenario:
->
->         CPU0                    CPU1
->         ----                    ----
->    lock(fs_reclaim);
->                                 lock(&xfs_nondir_ilock_class);
->                                 lock(fs_reclaim);
->    lock(&xfs_nondir_ilock_class);
->
->   *** DEADLOCK ***
->
->  4 locks held by kswapd0/159:
->   #0: ffffffffbbb8bd00 (fs_reclaim){+.+.}-{0:0}, at:
->  __fs_reclaim_acquire+0x5/0x30
->   #1: ffffffffbbb7cef8 (shrinker_rwsem){++++}-{3:3}, at:
->  shrink_slab+0x115/0x290
->   #2: ffff9b39f07a50e8
->  (&type->s_umount_key#56){++++}-{3:3}, at: super_cache_scan+0x38/0x1e0
->   #3: ffff9b39f077f258
->  (&pag->pag_ici_reclaim_lock){+.+.}-{3:3}, at:
->  xfs_reclaim_inodes_ag+0x82/0x410 [xfs]
-
-This is a known false positive because inodes cannot simultaneously be
-getting reclaimed and the target of a getxattr operation, but lockdep
-doesn't know that.  We can (selectively) shut up lockdep until either
-it gets smarter or we change inode reclaim not to require the ILOCK by
-applying a stupid GFP_NOLOCKDEP bandaid.
-
-Reported-by: Dave Airlie <airlied@gmail.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Tested-by: Dave Airlie <airlied@gmail.com>
----
- fs/xfs/kmem.h                 |    6 +++++-
- fs/xfs/libxfs/xfs_attr_leaf.c |    2 +-
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index fc87ea9f6843..34cbcfde9228 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -19,6 +19,7 @@ typedef unsigned __bitwise xfs_km_flags_t;
- #define KM_NOFS		((__force xfs_km_flags_t)0x0004u)
- #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
- #define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
-+#define KM_NOLOCKDEP	((__force xfs_km_flags_t)0x0020u)
- 
- /*
-  * We use a special process flag to avoid recursive callbacks into
-@@ -30,7 +31,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
- {
- 	gfp_t	lflags;
- 
--	BUG_ON(flags & ~(KM_NOFS|KM_MAYFAIL|KM_ZERO));
-+	BUG_ON(flags & ~(KM_NOFS | KM_MAYFAIL | KM_ZERO | KM_NOLOCKDEP));
- 
- 	lflags = GFP_KERNEL | __GFP_NOWARN;
- 	if (flags & KM_NOFS)
-@@ -49,6 +50,9 @@ kmem_flags_convert(xfs_km_flags_t flags)
- 	if (flags & KM_ZERO)
- 		lflags |= __GFP_ZERO;
- 
-+	if (flags & KM_NOLOCKDEP)
-+		lflags |= __GFP_NOLOCKDEP;
-+
- 	return lflags;
- }
- 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index f3d18a1f5b20..2f7e89e4be3e 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -488,7 +488,7 @@ xfs_attr_copy_value(
- 	}
- 
- 	if (!args->value) {
--		args->value = kmem_alloc_large(valuelen, 0);
-+		args->value = kmem_alloc_large(valuelen, KM_NOLOCKDEP);
- 		if (!args->value)
- 			return -ENOMEM;
- 	}
+Thanks,
+Amir.
