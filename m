@@ -2,73 +2,114 @@ Return-Path: <SRS0=dAFJ=7I=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 539ADC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 22:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F052AC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 23:33:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32EB920870
-	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 22:16:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFC1720849
+	for <linux-xfs@archiver.kernel.org>; Tue, 26 May 2020 23:33:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="YOuIYaIi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390953AbgEZWQu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 26 May 2020 18:16:50 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:38995 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389638AbgEZWQu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 26 May 2020 18:16:50 -0400
-Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 715E85AB177;
-        Wed, 27 May 2020 08:16:47 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jdhsJ-0000dt-Uz; Wed, 27 May 2020 08:16:43 +1000
-Date:   Wed, 27 May 2020 08:16:43 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     kbuild test robot <lkp@intel.com>
-Cc:     kbuild-all@lists.01.org, linux-xfs@vger.kernel.org
-Subject: Re: [dgc-xfs:xfs-async-inode-reclaim 28/30]
- fs/xfs/xfs_inode.c:3432:1: warning: no previous prototype for 'xfs_iflush'
-Message-ID: <20200526221643.GZ2040@dread.disaster.area>
-References: <202005261941.GNNi105g%lkp@intel.com>
+        id S1726025AbgEZXdJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 26 May 2020 19:33:09 -0400
+Received: from bilbo.ozlabs.org ([203.11.71.1]:57975 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725857AbgEZXdJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 26 May 2020 19:33:09 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 49WqyS2sVJz9sSF;
+        Wed, 27 May 2020 09:33:04 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1590535987;
+        bh=DS33VVEi3a4rS6s4CNOcItabnFGhtB/uHDdXCzu4lUo=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+        b=YOuIYaIiuYdbOb4zklo7nO1u90nFzQUgj1hECQGZxo3OlE98ttqDDcuL111D2xUvI
+         qhKiXTCdbjz4qLyW2E/YjHGvRTpz0dIaGhaKXEjAJFIvjiSqWwfXcRcySI2rB+8NEu
+         XVMRFk++IYuaduUnhhSAancSnmpXNYTV0vZyamr31dcoEoSlWQnnw/lieYRhFhPtNe
+         /MumaBAJ5f2yDQRnmZ9aOCFMWnZ7fmN6XZn76w7N8MkoaqcsYqFK6unbOf9+8BR9iM
+         D9Mm62YA5HCa0/ePenzfc8j6m2000ggXOv2UMk3U5WesFPR00JiJFwl1kgLp1+n3Vf
+         tdikSjS0+Bixw==
+Date:   Wed, 27 May 2020 09:33:02 +1000
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     Dmitry Vyukov <dvyukov@google.com>
+Cc:     Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        syzbot <syzbot+792dec47d693ccdc05a0@syzkaller.appspotmail.com>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>
+Subject: Re: linux-next build error (8)
+Message-ID: <20200527093302.16539593@canb.auug.org.au>
+In-Reply-To: <CACT4Y+ap21MXTjR3wF+3NhxEtgnKSm09tMsUnbKy2_EKEgh0kg@mail.gmail.com>
+References: <000000000000ae2ab305a123f146@google.com>
+        <3e1a0d59-4959-6250-9f81-3d6f75687c73@I-love.SAKURA.ne.jp>
+        <CACT4Y+ap21MXTjR3wF+3NhxEtgnKSm09tMsUnbKy2_EKEgh0kg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202005261941.GNNi105g%lkp@intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=HJ1Vpct1UyRcpP7KzgEA:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: multipart/signed; boundary="Sig_/MXZV/pG4aCD+L.fsW4oaXcu";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 26, 2020 at 07:46:45PM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/dgc/linux-xfs.git xfs-async-inode-reclaim
+--Sig_/MXZV/pG4aCD+L.fsW4oaXcu
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Hiya kbuild robot!
+Hi Dmitry,
 
-Can you drop all the list cc's from build failures for this repo?
-Nobody but me really needs to see all the breakage in this tree...
+On Tue, 26 May 2020 14:09:28 +0200 Dmitry Vyukov <dvyukov@google.com> wrote:
+>
+> On Fri, May 22, 2020 at 6:29 AM Tetsuo Handa
+> <penguin-kernel@i-love.sakura.ne.jp> wrote:
+> >
+> > Hello.
+> >
+> > This report is already reporting next problem. Since the location seems=
+ to be
+> > different, this might be caused by OOM due to too much parallel compila=
+tion.
+> > Maybe syzbot can detect "gcc: fatal error: Killed signal terminated pro=
+gram cc1"
+> > sequence and retry with reduced "make -j$NUM" settings.
+> >
+> >   gcc: fatal error: Killed signal terminated program cc1
+> >   compilation terminated.
+> >   scripts/Makefile.build:272: recipe for target 'fs/xfs/libxfs/xfs_btre=
+e.o' failed
+> >   make[2]: *** [fs/xfs/libxfs/xfs_btree.o] Error 1
+> >   make[2]: *** Waiting for unfinished jobs.... =20
+>=20
+> +linux-next and XFS maintainers
 
-> :::::: The code at line 3432 was first introduced by commit
-> :::::: 30ebf34422da6206608b0c6fba84b424f174b8c5 xfs: rename xfs_iflush_int()
-> 
-> :::::: TO: Dave Chinner <dchinner@redhat.com>
-> :::::: CC: Dave Chinner <david@fromorbit.com>
+What version of linux-next is this?  There was a problem last week with
+some changes in the tip tree that caused large memory usage.
 
-Also, I don't think this is doing what you expect, either, because
-this build error was only sent to david@fromorbit.com and was not
-CC'd to the author of the commit which is dchinner@redhat.com....
-
+--=20
 Cheers,
+Stephen Rothwell
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--Sig_/MXZV/pG4aCD+L.fsW4oaXcu
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl7Npy4ACgkQAVBC80lX
+0GzduggApjJQ+LNbc3K2h4h1mpk4aj6ZBHuwIH3/9GjMmkN39PXgy/+nGEX8t/RV
+dr1Y0z3SOwHXefDtuhuIBN5/KiP1ljqMDkye/fQXCAoH37oZbDS4yfARAcy2xVdp
+cb7iO9Ik9q0pfBdShRC+e+IybDlNyxvTveEhyWAuHGBmh8TyIV+LwUrJGhPjQYmH
+mdNfIjNta+G5whnP336rLOWdInvLI6XK/J6FjqFQ+xJpmdzXp0daDTsZ5l8qAE0P
+pD1VsVyfjN/G3eLqBAhZKclKjQjnFKJL8H+cQWgrUIJ2KDu0WURZKxC0XuF/aVKl
+nNRkeHXhbeoA0loQqIrZjH1vs6wQAw==
+=ussQ
+-----END PGP SIGNATURE-----
+
+--Sig_/MXZV/pG4aCD+L.fsW4oaXcu--
