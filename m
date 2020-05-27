@@ -2,159 +2,127 @@ Return-Path: <SRS0=YlU2=7J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B24BC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 17:34:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B2BC433E1
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 18:49:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 616B3207CB
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 17:34:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C2FF2089D
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 18:49:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pyht2KcX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390904AbgE0ReD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 May 2020 13:34:03 -0400
-Received: from sandeen.net ([63.231.237.45]:49490 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388017AbgE0ReD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 27 May 2020 13:34:03 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C364B48C729;
-        Wed, 27 May 2020 12:33:23 -0500 (CDT)
-Subject: Re: [PATCH] xfs_quota: fix unsigned int id comparisons
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <20200527172514.GK252930@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
- nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
- WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
- vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
- ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
- sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
- BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
- gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
- LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
- dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
- bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
- aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
- UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
- EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
- sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
- 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
- gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
- 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
- 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
- WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
- Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
- X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
- SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
- 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
- GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
- 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
- Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
- ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
- TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
- gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
- AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
- YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
- mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
- LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
- LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
- MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
- JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
- Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
- m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
- fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <71745f57-b677-2228-524a-0483bbf3328b@sandeen.net>
-Date:   Wed, 27 May 2020 12:34:02 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.1
+        id S1726450AbgE0StC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 May 2020 14:49:02 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:43980 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726467AbgE0StB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 May 2020 14:49:01 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04RIfcfA088898
+        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 18:49:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=aYyzXBc2wBIjnBV8MDNV2HVVEWN2eh/drmCoDK323hw=;
+ b=pyht2KcX+6dVn+WYKn/Pnh4o/Obtgk6JtGaJTxettpa6Y53DeZUJdFLIl12cJd5Uxs9E
+ iTSL/guA32wtgqEEoB/KXXPX1SDLVfFJBjYGWXBn4Jo+P7bb0LAFIL8NMEIqD2h1R2Gw
+ RCmKSSX+uXF69oxKufDkU33YutceqJ83C+l7MZDEvKnK5J4ij/ZasT9puo6rPGDP0bIH
+ QGcC/j1XA4xaWk89nunW5SmieQfaA1irgnkJ+H00Jq5Uc0tTOSozjzpk62sRVc9EhxFj
+ fU7uX7YyEDjwYZy9NAECc/4WkL0CURoU/ItBA0f6bE2iF/Hv2T3wRBHiMcSVNOilstq/ ZA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 316u8r15q5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 18:49:00 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04RIh3iA164417
+        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 18:49:00 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 317ddra6n6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 18:49:00 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 04RImxKZ018082
+        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 18:48:59 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 27 May 2020 11:48:59 -0700
+Date:   Wed, 27 May 2020 11:48:58 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [XFS SUMMIT] Ugh, Rebasing Sucks!
+Message-ID: <20200527184858.GM8230@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200527172514.GK252930@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9633 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0 mlxscore=0
+ phishscore=0 adultscore=0 suspectscore=1 spamscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005270143
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9633 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
+ priorityscore=1501 spamscore=0 cotscore=-2147483648 suspectscore=1
+ phishscore=0 clxscore=1015 mlxlogscore=999 bulkscore=0 adultscore=0
+ lowpriorityscore=0 impostorscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2005270143
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/27/20 12:25 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Fix compiler warnings about unsigned int comparisons by replacing them
-> with an explicit check for the one possible invalid value (-1U).
-> id_from_string sets exitcode to nonzero when it sees this value, so the
-> call sites don't have to do that.
+Hi everyone,
 
-[and skip exitcode setting because that happens in id_from_string()]
+Many of you have complained (both publicly and privately) about the
+heavy cost of rebasing your development trees, particularly when you're
+getting close to sending a series out for review.  I get it, there have
+been a lot of large refactoring patchsets coming in the past few kernel
+cycles, and this has caused a lot of treewide churn.  I don't mind
+cleanups of things that have been weird and wonky about XFS for years,
+but, frankly, rebasing is soul-grinding.
 
-Thanks for fixing this, now let's see if it's enough for Coverity :)
+To that end, I propose reducing the frequency of (my own) for-next
+pushes to reduce how often people feel compelled to rebase when they're
+trying to get a series ready for review.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Specifically, I would like to make an informal for-next push schedule as
+follows:
 
-> 
-> Coverity-id: 1463855, 1463856, 1463857
-> Fixes: 67a73d6139d0 ("xfs_quota: refactor code to generate id from name")
-> Fixes: 36dc471cc9bb ("xfs_quota: allow individual timer extension")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  quota/edit.c |   22 +++++++++++-----------
->  1 file changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/quota/edit.c b/quota/edit.c
-> index cf9508bf..01d358f7 100644
-> --- a/quota/edit.c
-> +++ b/quota/edit.c
-> @@ -307,11 +307,11 @@ limit_f(
->  
->  
->  	id = id_from_string(name, type);
-> -	if (id >= 0)
-> -		set_limits(id, type, mask, fs_path->fs_name,
-> -			   &bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
-> -	else
-> -		exitcode = -1;
-> +	if (id == -1)
-> +		return 0;
-> +
-> +	set_limits(id, type, mask, fs_path->fs_name,
-> +		   &bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
->  	return 0;
->  }
->  
-> @@ -545,9 +545,10 @@ timer_f(
->  	if (name)
->  		id = id_from_string(name, type);
->  
-> -	if (id >= 0)
-> -		set_timer(id, type, mask, fs_path->fs_name, value);
-> +	if (id == -1)
-> +		return 0;
->  
-> +	set_timer(id, type, mask, fs_path->fs_name, value);
->  	return 0;
->  }
->  
-> @@ -642,11 +643,10 @@ warn_f(
->  	}
->  
->  	id = id_from_string(name, type);
-> -	if (id >= 0)
-> -		set_warnings(id, type, mask, fs_path->fs_name, value);
-> -	else
-> -		exitcode = -1;
-> +	if (id == -1)
-> +		return 0;
->  
-> +	set_warnings(id, type, mask, fs_path->fs_name, value);
->  	return 0;
->  }
->  
-> 
+ 1 Between -rc1 and -rc4, I'll collect critical bug fixes for the
+   merge window that just closed.  These should be small changes, so
+   I'll put them out incrementally with the goal of landing everything
+   in -rc4, and they shouldn't cause major disruptions for anyone else
+   working on a big patchset.  This is more or less what I've been doing
+   up till now -- if it's been on the list for > 24h and someone's
+   reviewed it, I'll put it in for-next for wider testing.
+
+ 2 A day or two after -rc4 drops.  This push is targeted for the next
+   merge window.  Coming three weeks after -rc1, I hope this will give
+   everyone enough time for a round of rebase, review, and debugging of
+   large changesets after -rc1.  IOWs, the majority of patchsets should
+   be ready to go in before we get halfway to the next merge window.
+
+ 3 Another push a day or two after -rc6 drops.  This will hopefully give
+   everyone a second chance to land patchsets that were nearly ready but
+   didn't quite make it for -rc4; or other cleanups that would have
+   interfered with the first round.  Once this is out, we're more or
+   less finished with the big patchsets.
+
+ 4 Perhaps another big push a day or two after -rc8 drops?  I'm not keen
+   on doing this.  It's not often that the kernel goes beyond -rc6 and I
+   find it really stressful when the -rc's drag on but people keep
+   sending large new patchsets.  Talk about stumbling around in the
+   dark...
+
+ 5 Obviously, I wouldn't hold back on critical bug fixes to things that
+   are broken in for-next, since the goal is to promote testing, not
+   hinder it.
+
+Hopefully this will cut down on the "arrrgh I was almost ready to send
+this but then for-next jumped and nggghghghg" feelings. :/
+
+Thoughts?  Flames?
+
+--D
