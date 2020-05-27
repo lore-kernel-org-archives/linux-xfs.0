@@ -7,276 +7,208 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF76FC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 12:18:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B01C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 12:28:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5C7F20657
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 12:18:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8B5A207D8
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 12:27:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SmtvxtCZ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KM/Eo2g7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726944AbgE0MSO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 May 2020 08:18:14 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:45378 "EHLO
+        id S1729511AbgE0M17 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 May 2020 08:27:59 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:37801 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725872AbgE0MSO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 May 2020 08:18:14 -0400
+        with ESMTP id S1725872AbgE0M17 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 May 2020 08:27:59 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590581892;
+        s=mimecast20190719; t=1590582476;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=zBvcO6wGbCHXCnZkXdzXlEgBOHlY4nXmK+VisELNC+U=;
-        b=SmtvxtCZLBVz+y+OGKpCGaTFhWhNg8ABl1qjZx4iVDSTA7zRxR8gYYyA7CC49CvtmL9R/o
-        5B7EpX/EzMQIsKjXiwEeBgcMGPA4HlHtn4wfA6BTYSRhx1uBf+RqukHcnh/Kcu0TY3axvT
-        CAfFE1nKc19S8NbeX+a+lkRaTouFpvE=
+        bh=3XSfDQaAQqvJdt5ie0hSFg1Sq0I2YQ6UBhiDndc4MS4=;
+        b=KM/Eo2g7XwqTtDIK0r6j01jyA4M+t2aoYnY9KosoqltWnGnroKdHi6QcPOuUvyhqtGDtz4
+        e+lnYUMHd81s/aQ+xARR/Wqq8BhHgxS7b78wf0WiouPQLkLUUTwOLUhYVXJzK2Jw3bqX5J
+        4/BDgEn01QOhiLVUG21kkUVsYL41lBA=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-413-QnOT161eO4a66-V3bvwtjA-1; Wed, 27 May 2020 08:18:08 -0400
-X-MC-Unique: QnOT161eO4a66-V3bvwtjA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-305-u2GRwJpZOoqgSprJctOmMw-1; Wed, 27 May 2020 08:27:55 -0400
+X-MC-Unique: u2GRwJpZOoqgSprJctOmMw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2D1558014D4;
-        Wed, 27 May 2020 12:18:07 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 15FCB100CCDE;
+        Wed, 27 May 2020 12:27:54 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 990D710013D5;
-        Wed, 27 May 2020 12:18:06 +0000 (UTC)
-Date:   Wed, 27 May 2020 08:18:04 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C58875C1B0;
+        Wed, 27 May 2020 12:27:53 +0000 (UTC)
+Date:   Wed, 27 May 2020 08:27:52 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/9] xfs_repair: create a new class of btree rebuild
- cursors
-Message-ID: <20200527121804.GC12014@bfoster>
-References: <158993944270.983175.4120094597556662259.stgit@magnolia>
- <158993946213.983175.9823091723787830102.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH] xfs: transfer freed blocks to blk res when lazy
+ accounting
+Message-ID: <20200527122752.GD12014@bfoster>
+References: <20200522171828.53440-1-bfoster@redhat.com>
+ <20200523013614.GE8230@magnolia>
+ <20200526181629.GE5462@bfoster>
+ <20200526211154.GI252930@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <158993946213.983175.9823091723787830102.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20200526211154.GI252930@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, May 19, 2020 at 06:51:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, May 26, 2020 at 02:11:54PM -0700, Darrick J. Wong wrote:
+> On Tue, May 26, 2020 at 02:16:29PM -0400, Brian Foster wrote:
+> > On Fri, May 22, 2020 at 06:36:14PM -0700, Darrick J. Wong wrote:
+> > > On Fri, May 22, 2020 at 01:18:28PM -0400, Brian Foster wrote:
+> > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > ---
+> > > > 
+> > > > Darrick mentioned on IRC a few days ago that he'd seen an issue that
+> > > > looked similar to the problem with the rmapbt based extent swap
+> > > > algorithm when the associated inodes happen to bounce between extent and
+> > > > btree format. That problem caused repeated bmapbt block allocations and
+> > > > frees that exhausted the transaction block reservation across the
+> > > > sequence of transaction rolls. The workaround for that was to use an
+> > > > oversized block reservation, but that is not a generic or efficient
+> > > > solution.
+> > > > 
+> > > > I was originally playing around with some hacks to set an optional base
+> > > > block reservation on the transaction that we would attempt to replenish
+> > > > across transaction roll sequences as the block reservation depletes, but
+> > > > eventually noticed that there isn't much difference between stuffing
+> > > > block frees in the transaction reservation counter vs. the delta counter
+> > > > when lazy sb accounting is enabled (which is required for v5 supers). As
+> > > > such, the following patch seems to address the rmapbt issue in my
+> > > > isolated tests.
+> > > > 
+> > > > I think one tradeoff with this logic is that chains of rolling/freeing
+> > > > transactions would now aggregate freed space until the final transaction
+> > > > commits vs. as transactions roll. It's not immediately clear to me how
+> > > > much of an issue that is, but it sounds a bit dicey when considering
+> > > > things like truncates of large files. This behavior could still be tied
+> > > > to a transaction flag to restrict its use to situations like rmapbt
+> > > > swapext, however. Anyways, this is mostly untested outside of the extent
+> > > > swap use case so I wanted to throw this on the list as an RFC for now
+> > > > and see if anybody has thoughts or other ideas.
+> > > 
+> > > Hmm, well, this /would/ fix the immediate problem of running out of
+> > > block reservation, but I wonder if there are other weird subtleties.
+> > > If we're nearly out of space and we're mounted with -odiscard and the
+> > > disk is really slow at processing discard, can we encounter weird
+> > > failure cases where we end up stuck waiting for the extent busy tree to
+> > > say that one of our pingponged blocks is ok to use again?
+> > > 
+> > 
+> > Yeah, I think something like that could happen. I don't think it should
+> > be a failure scenario though as the busy extent list should involve a
+> > log force and retry in the worst case. Either way, we could always
+> > mitigate risk by making this an optional accounting mode for particular
+> > (extent swap) transactions...
 > 
-> Create some new support structures and functions to assist phase5 in
-> using the btree bulk loader to reconstruct metadata btrees.  This is the
-> first step in removing the open-coded rebuilding code.
+> Hmmm... OTOH I wonder how many people really run fsr?  Even I don't...
+> :)
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/phase5.c |  239 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
->  1 file changed, 218 insertions(+), 21 deletions(-)
+> > > In the meantime, I noticed that xfs/227 on a pmem fs (or possibly
+> > > anything with synchronous writes?) and reflink+rmap enabled seemed to
+> > > fail pretty consistently.  In a hastily done and incomprehensi{ve,ble}
+> > > survey I noted that I couldn't make the disastrous pingpong happen if
+> > > there were more than ~4 blocks in the bmapbt, so maybe this would help
+> > > there.
+> > > 
+> > 
+> > Do you mean with this patch or with current upstream? I don't see
+> > xfs/227 failures on my current setups (this patch passed a weekend auto
+> > test run), but I'll have to retry with something synchronous...
 > 
+> It happens semi-frequently with current upstream, and all the time with
+> the atomic file swap series.
 > 
-> diff --git a/repair/phase5.c b/repair/phase5.c
-> index 84c05a13..8f5e5f59 100644
-> --- a/repair/phase5.c
-> +++ b/repair/phase5.c
-> @@ -18,6 +18,7 @@
->  #include "progress.h"
->  #include "slab.h"
->  #include "rmap.h"
-> +#include "bload.h"
->  
->  /*
->   * we maintain the current slice (path from root to leaf)
-...
-> @@ -306,6 +324,156 @@ _("error - not enough free space in filesystem\n"));
->  #endif
->  }
->  
-...
-> +static void
-> +consume_freespace(
-> +	xfs_agnumber_t		agno,
-> +	struct extent_tree_node	*ext_ptr,
-> +	uint32_t		len)
-> +{
-> +	struct extent_tree_node	*bno_ext_ptr;
-> +	xfs_agblock_t		new_start = ext_ptr->ex_startblock + len;
-> +	xfs_extlen_t		new_len = ext_ptr->ex_blockcount - len;
-> +
-> +	/* Delete the used-up extent from both extent trees. */
-> +#ifdef XR_BLD_FREE_TRACE
-> +	fprintf(stderr, "releasing extent: %u [%u %u]\n", agno,
-> +			ext_ptr->ex_startblock, ext_ptr->ex_blockcount);
-> +#endif
-> +	bno_ext_ptr = find_bno_extent(agno, ext_ptr->ex_startblock);
-> +	ASSERT(bno_ext_ptr != NULL);
-> +	get_bno_extent(agno, bno_ext_ptr);
-> +	release_extent_tree_node(bno_ext_ptr);
-> +
-> +	ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
-> +			ext_ptr->ex_blockcount);
-> +	release_extent_tree_node(ext_ptr);
-> +
 
-Not having looked too deeply at the in-core extent tracking structures,
-is there any particular reason we unconditionally remove and reinsert
-new records each time around? Is it because we're basically changing the
-extent index in the tree? If so, comment please (an update to the
-comment below is probably fine). :)
+I repeated on a box using ramdisk devices and still don't reproduce
+after 30+ iters, FWIW. Perhaps it depends on pmem for some reason.
 
-> +	/*
-> +	 * If we only used part of this last extent, then we must reinsert the
-> +	 * extent in the extent trees.
-> +	 */
-> +	if (new_len > 0) {
-> +		add_bno_extent(agno, new_start, new_len);
-> +		add_bcnt_extent(agno, new_start, new_len);
-> +	}
-> +}
-> +
-> +/* Reserve blocks for the new btree. */
-> +static void
-> +setup_rebuild(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	struct bt_rebuild	*btr,
-> +	uint32_t		nr_blocks)
-> +{
-> +	struct extent_tree_node	*ext_ptr;
-> +	uint32_t		blocks_allocated = 0;
-> +	uint32_t		len;
-> +	int			error;
-> +
-> +	while (blocks_allocated < nr_blocks)  {
-> +		/*
-> +		 * Grab the smallest extent and use it up, then get the
-> +		 * next smallest.  This mimics the init_*_cursor code.
-> +		 */
-> +		ext_ptr =  findfirst_bcnt_extent(agno);
+> > BTW, is xfs/227 related to the problem you had mentioned on IRC? I
+> > wasn't quite sure what operation was involved with whatever error report
+> > you had. xfs/227 looks like an xfs_fsr test, so I'd have thought the
+> > upstream workaround would have addressed that.. (though I see some attr
+> > ops in there as well so perhaps this is related to the attr fork..?).
+> 
+> It's related, but only in the sense that the "zomg hundreds of thousands
+> of intents sitting around in memory" were a side effect of creating a
+> test that creates two files with ~50000 extents and fsr'ing them.
+> 
 
-Extra whitespace	  ^
-
-> +		if (!ext_ptr)
-> +			do_error(
-> +_("error - not enough free space in filesystem\n"));
-> +
-> +		/* Use up the extent we've got. */
-> +		len = min(ext_ptr->ex_blockcount, nr_blocks - blocks_allocated);
-> +		error = xrep_newbt_add_blocks(&btr->newbt,
-> +				XFS_AGB_TO_FSB(mp, agno,
-> +					       ext_ptr->ex_startblock),
-> +				len);
-
-Alignment.
-
-> +		if (error)
-> +			do_error(_("could not set up btree reservation: %s\n"),
-> +				strerror(-error));
-> +
-> +		error = rmap_add_ag_rec(mp, agno, ext_ptr->ex_startblock, len,
-> +				btr->newbt.oinfo.oi_owner);
-> +		if (error)
-> +			do_error(_("could not set up btree rmaps: %s\n"),
-> +				strerror(-error));
-> +
-> +		consume_freespace(agno, ext_ptr, len);
-> +		blocks_allocated += len;
-> +	}
-> +#ifdef XR_BLD_FREE_TRACE
-> +	fprintf(stderr, "blocks_allocated = %d\n",
-> +		blocks_allocated);
-> +#endif
-> +}
-> +
-> +/* Feed one of the new btree blocks to the bulk loader. */
-> +static int
-> +rebuild_claim_block(
-> +	struct xfs_btree_cur	*cur,
-> +	union xfs_btree_ptr	*ptr,
-> +	void			*priv)
-> +{
-> +	struct bt_rebuild	*btr = priv;
-> +
-> +	return xrep_newbt_claim_block(cur, &btr->newbt, ptr);
-> +}
-> +
-
-Seems like an unnecessary helper, unless this grows more code in later
-patches..?
-
->  static void
->  write_cursor(bt_status_t *curs)
->  {
-...
-> @@ -2287,28 +2483,29 @@ keep_fsinos(xfs_mount_t *mp)
->  
->  static void
->  phase5_func(
-> -	xfs_mount_t	*mp,
-> -	xfs_agnumber_t	agno,
-> -	struct xfs_slab	*lost_fsb)
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno,
-> +	struct xfs_slab		*lost_fsb)
->  {
-> -	uint64_t	num_inos;
-> -	uint64_t	num_free_inos;
-> -	uint64_t	finobt_num_inos;
-> -	uint64_t	finobt_num_free_inos;
-> -	bt_status_t	bno_btree_curs;
-> -	bt_status_t	bcnt_btree_curs;
-> -	bt_status_t	ino_btree_curs;
-> -	bt_status_t	fino_btree_curs;
-> -	bt_status_t	rmap_btree_curs;
-> -	bt_status_t	refcnt_btree_curs;
-> -	int		extra_blocks = 0;
-> -	uint		num_freeblocks;
-> -	xfs_extlen_t	freeblks1;
-> +	struct repair_ctx	sc = { .mp = mp, };
-
-I don't see any reason to add sc here when it's still unused. It's not
-as if a single variable is saving complexity somewhere else. I guess
-I'll defer to Eric on the approach wrt to the other unused warnings.
-
-Also, what's the purpose of the rmap change below? I'm wondering if that
-(along with all of the indentation cleanup) should be its own patch with
-appropriate explanation.
+Ok, well I'm a little confused then... do we have a user report of a
+block reservation exhaustion problem or is the primary issue the
+occasional failure of xfs/227?
 
 Brian
 
-> +	struct agi_stat		agi_stat = {0,};
-> +	uint64_t		num_inos;
-> +	uint64_t		num_free_inos;
-> +	uint64_t		finobt_num_inos;
-> +	uint64_t		finobt_num_free_inos;
-> +	bt_status_t		bno_btree_curs;
-> +	bt_status_t		bcnt_btree_curs;
-> +	bt_status_t		ino_btree_curs;
-> +	bt_status_t		fino_btree_curs;
-> +	bt_status_t		rmap_btree_curs;
-> +	bt_status_t		refcnt_btree_curs;
-> +	int			extra_blocks = 0;
-> +	uint			num_freeblocks;
-> +	xfs_extlen_t		freeblks1;
->  #ifdef DEBUG
-> -	xfs_extlen_t	freeblks2;
-> +	xfs_extlen_t		freeblks2;
->  #endif
-> -	xfs_agblock_t	num_extents;
-> -	struct agi_stat	agi_stat = {0,};
-> +	xfs_agblock_t		num_extents;
->  
->  	if (verbose)
->  		do_log(_("        - agno = %d\n"), agno);
-> @@ -2516,8 +2713,8 @@ inject_lost_blocks(
->  		if (error)
->  			goto out_cancel;
->  
-> -		error = -libxfs_free_extent(tp, *fsb, 1, &XFS_RMAP_OINFO_AG,
-> -					    XFS_AG_RESV_NONE);
-> +		error = -libxfs_free_extent(tp, *fsb, 1,
-> +				&XFS_RMAP_OINFO_ANY_OWNER, XFS_AG_RESV_NONE);
->  		if (error)
->  			goto out_cancel;
->  
+> --D
+> 
+> > Brian
+> > 
+> > > In unrelated news, I also tried fixing the log recovery defer ops chain
+> > > transactions to absorb the unused block reservations that the
+> > > xfs_*i_item_recover functions created, but that just made fdblocks be
+> > > wrong.  But it didn't otherwise blow up! :P
+> > > 
+> > > --D
+> > > 
+> > > > Brian
+> > > > 
+> > > >  fs/xfs/xfs_bmap_util.c | 11 -----------
+> > > >  fs/xfs/xfs_trans.c     |  4 ++++
+> > > >  2 files changed, 4 insertions(+), 11 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > > > index f37f5cc4b19f..74b3bad6c414 100644
+> > > > --- a/fs/xfs/xfs_bmap_util.c
+> > > > +++ b/fs/xfs/xfs_bmap_util.c
+> > > > @@ -1628,17 +1628,6 @@ xfs_swap_extents(
+> > > >  		 */
+> > > >  		resblks = XFS_SWAP_RMAP_SPACE_RES(mp, ipnext, w);
+> > > >  		resblks +=  XFS_SWAP_RMAP_SPACE_RES(mp, tipnext, w);
+> > > > -
+> > > > -		/*
+> > > > -		 * Handle the corner case where either inode might straddle the
+> > > > -		 * btree format boundary. If so, the inode could bounce between
+> > > > -		 * btree <-> extent format on unmap -> remap cycles, freeing and
+> > > > -		 * allocating a bmapbt block each time.
+> > > > -		 */
+> > > > -		if (ipnext == (XFS_IFORK_MAXEXT(ip, w) + 1))
+> > > > -			resblks += XFS_IFORK_MAXEXT(ip, w);
+> > > > -		if (tipnext == (XFS_IFORK_MAXEXT(tip, w) + 1))
+> > > > -			resblks += XFS_IFORK_MAXEXT(tip, w);
+> > > >  	}
+> > > >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+> > > >  	if (error)
+> > > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > > index 28b983ff8b11..b421d27445c1 100644
+> > > > --- a/fs/xfs/xfs_trans.c
+> > > > +++ b/fs/xfs/xfs_trans.c
+> > > > @@ -370,6 +370,10 @@ xfs_trans_mod_sb(
+> > > >  			tp->t_blk_res_used += (uint)-delta;
+> > > >  			if (tp->t_blk_res_used > tp->t_blk_res)
+> > > >  				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > > > +		} else if (delta > 0 &&
+> > > > +			   xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+> > > > +			tp->t_blk_res += delta;
+> > > > +			delta = 0;
+> > > >  		}
+> > > >  		tp->t_fdblocks_delta += delta;
+> > > >  		if (xfs_sb_version_haslazysbcount(&mp->m_sb))
+> > > > -- 
+> > > > 2.21.1
+> > > > 
+> > > 
+> > 
 > 
 
