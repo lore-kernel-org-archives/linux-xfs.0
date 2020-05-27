@@ -2,104 +2,159 @@ Return-Path: <SRS0=YlU2=7J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D999FC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 17:26:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B24BC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 17:34:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4ACD2065F
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 17:26:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cyFmyOZw"
+	by mail.kernel.org (Postfix) with ESMTP id 616B3207CB
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 17:34:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728234AbgE0R0V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 May 2020 13:26:21 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:24861 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728042AbgE0R0U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 May 2020 13:26:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590600379;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=4WIzwGvE0rYHEe1oivdeqdDndbIeLP4IthkubW34TM4=;
-        b=cyFmyOZw0IBWUuR79rG2/BkkvBzSdnzyc8wMEG8oLtuIPvw6Ak36R9I/TGSnsChUHBU2BS
-        85/i61eaNkJaoxyWAFxTiWyOvpOAeAwniRk1ocOMqOAtAue6E1shS2Y4KjiiSvNQNhROHv
-        LjIOLHARqy0sTSB/2/xA/Ml3dX1k970=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-458-22Bv_aO_OIeNf5_cAguIrw-1; Wed, 27 May 2020 13:26:17 -0400
-X-MC-Unique: 22Bv_aO_OIeNf5_cAguIrw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S2390904AbgE0ReD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 May 2020 13:34:03 -0400
+Received: from sandeen.net ([63.231.237.45]:49490 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388017AbgE0ReD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 27 May 2020 13:34:03 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 66A20835B44
-        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 17:26:16 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1434A1A8F5
-        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 17:26:16 +0000 (UTC)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH RFC] mkfs.xfs: do not set log stripe unit for probed sw <= 2
-Message-ID: <08ddc67b-392f-efe0-ffd2-a7295a42bac6@redhat.com>
-Date:   Wed, 27 May 2020 12:26:15 -0500
+        by sandeen.net (Postfix) with ESMTPSA id C364B48C729;
+        Wed, 27 May 2020 12:33:23 -0500 (CDT)
+Subject: Re: [PATCH] xfs_quota: fix unsigned int id comparisons
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+References: <20200527172514.GK252930@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <71745f57-b677-2228-524a-0483bbf3328b@sandeen.net>
+Date:   Wed, 27 May 2020 12:34:02 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.8.1
 MIME-Version: 1.0
+In-Reply-To: <20200527172514.GK252930@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If the stripe width of a device is only 2x or 1x the stripe unit, there
-is no parity disk on this device, and setting a larger log stripe unit
-will not avoid any RMW cycles.  However, a large log stripe unit does
-have significant penalties for IO amplification because every log write
-will be rounded up to the log stripe unit.
+On 5/27/20 12:25 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Fix compiler warnings about unsigned int comparisons by replacing them
+> with an explicit check for the one possible invalid value (-1U).
+> id_from_string sets exitcode to nonzero when it sees this value, so the
+> call sites don't have to do that.
 
-This was recently highlighted by a user running bonnie++ in sync mode,
-where the default RAID10 geometry of 256k/512k yielded results which
-were 4x slower than a smaller log stripe unit. While bonnie++ may not
-be the benchmark of choice, it does highlight this issue.
+[and skip exitcode setting because that happens in id_from_string()]
 
-Because a larger log stripe unit yields no RMW benefit on a device with
-no parity disks, avoid setting in these cases.
+Thanks for fixing this, now let's see if it's enough for Coverity :)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-... thoughts?
-
-Am I missing a reason why we /would/ still want lsunit in this case?
-
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 2e6cd280..4da69b29 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2407,13 +2407,15 @@ _("log stripe unit (%d) must be a multiple of the block size (%d)\n"),
- 	}
- 
- 	/*
--	 * check that log sunit is modulo fsblksize or default it to dsunit.
-+	 * check that log sunit is modulo fsblksize or default it to dsunit
-+	 * if this looks like a parity device (swidth > 2x sunit).
- 	 */
- 	if (lsunit) {
- 		/* convert from 512 byte blocks to fs blocks */
- 		cfg->lsunit = DTOBT(lsunit, cfg->blocklog);
- 	} else if (cfg->sb_feat.log_version == 2 &&
--		   cfg->loginternal && cfg->dsunit) {
-+		   cfg->loginternal && cfg->dsunit &&
-+		   (cfg->dswidth / cfg->dsunit > 2)) {
- 		/* lsunit and dsunit now in fs blocks */
- 		cfg->lsunit = cfg->dsunit;
- 	}
-
+> 
+> Coverity-id: 1463855, 1463856, 1463857
+> Fixes: 67a73d6139d0 ("xfs_quota: refactor code to generate id from name")
+> Fixes: 36dc471cc9bb ("xfs_quota: allow individual timer extension")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  quota/edit.c |   22 +++++++++++-----------
+>  1 file changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/quota/edit.c b/quota/edit.c
+> index cf9508bf..01d358f7 100644
+> --- a/quota/edit.c
+> +++ b/quota/edit.c
+> @@ -307,11 +307,11 @@ limit_f(
+>  
+>  
+>  	id = id_from_string(name, type);
+> -	if (id >= 0)
+> -		set_limits(id, type, mask, fs_path->fs_name,
+> -			   &bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
+> -	else
+> -		exitcode = -1;
+> +	if (id == -1)
+> +		return 0;
+> +
+> +	set_limits(id, type, mask, fs_path->fs_name,
+> +		   &bsoft, &bhard, &isoft, &ihard, &rtbsoft, &rtbhard);
+>  	return 0;
+>  }
+>  
+> @@ -545,9 +545,10 @@ timer_f(
+>  	if (name)
+>  		id = id_from_string(name, type);
+>  
+> -	if (id >= 0)
+> -		set_timer(id, type, mask, fs_path->fs_name, value);
+> +	if (id == -1)
+> +		return 0;
+>  
+> +	set_timer(id, type, mask, fs_path->fs_name, value);
+>  	return 0;
+>  }
+>  
+> @@ -642,11 +643,10 @@ warn_f(
+>  	}
+>  
+>  	id = id_from_string(name, type);
+> -	if (id >= 0)
+> -		set_warnings(id, type, mask, fs_path->fs_name, value);
+> -	else
+> -		exitcode = -1;
+> +	if (id == -1)
+> +		return 0;
+>  
+> +	set_warnings(id, type, mask, fs_path->fs_name, value);
+>  	return 0;
+>  }
+>  
+> 
