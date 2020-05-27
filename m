@@ -2,130 +2,330 @@ Return-Path: <SRS0=YlU2=7J=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FD4CC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 21:20:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA821C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 22:09:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6225E20776
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 21:20:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 735A82078C
+	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 22:09:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QI9W85wd"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NEZvxxhE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727787AbgE0VUZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 May 2020 17:20:25 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:40520 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726114AbgE0VUY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 May 2020 17:20:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590614422;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=ErNQvTzkNfEM4XoMrHCXcy0NREGD3415inzIet1uYvw=;
-        b=QI9W85wdFwaUvDyKE/kzrJMhR49DIWNZwzquN/lsaR+vgIqnnQdcaSlJTLFH9SXvO3BgBH
-        rnd0fKxeyI2hkMbs7/CfRhUnfWvahuIGvYC1yh5z6wB1fYtmHYwuWvto0Usd0DuSS768R3
-        bdq8sYHGGmXI3KrQmapXfKNzt29ETvw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-439-sSvVAL8IPOWNSCdwH3Dmqg-1; Wed, 27 May 2020 17:20:20 -0400
-X-MC-Unique: sSvVAL8IPOWNSCdwH3Dmqg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 52CA9EC1A0
-        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 21:20:19 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2AD8F1001B07
-        for <linux-xfs@vger.kernel.org>; Wed, 27 May 2020 21:20:19 +0000 (UTC)
-Subject: Re: [PATCH RFC] mkfs.xfs: do not set log stripe unit for probed sw <=
- 2
-From:   Eric Sandeen <sandeen@redhat.com>
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-References: <08ddc67b-392f-efe0-ffd2-a7295a42bac6@redhat.com>
-Autocrypt: addr=sandeen@redhat.com; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <c76bc583-5181-bcf0-e547-c13399f41074@redhat.com>
-Date:   Wed, 27 May 2020 16:20:18 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.8.1
+        id S1725613AbgE0WJn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 May 2020 18:09:43 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47130 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725385AbgE0WJm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 May 2020 18:09:42 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04RM2ueQ119445;
+        Wed, 27 May 2020 22:09:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=84kcLpwOF5XI6lx3lsgS/h1c6AhpbreadGxUqkQ5gEA=;
+ b=NEZvxxhEP+HVoxASuumN8/qS6GVk9W3ol191lyjmAj6MRrE01meVZIWk9yF/+Ry9Jnm4
+ E3HX9KRRHYEiUFuTg3GyVaVOwUePlNOYIy//eMw6zg+C/nrs5cNz34EvyMvLAE8e1Ds0
+ /QLpeGJNWVZmsJgvzHNvcRINFkhcolTwhvmAZUMv1QdNxWc/K727K26apnwfnPzKDk2V
+ JKuPbW8MyMWF5t+4xKmtQIUW/rHtWlqJpJvUM/eG6GGbwdPeIKe9I3+OQuBqjBK33EKo
+ RhSssc36rc6t+lGb8UDCNAEhdhkID2Wzw2/kiJHlsherbPd0EIwPcPjMwSG+SQumKXLH 1A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 318xe1hyr5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 27 May 2020 22:09:36 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04RM2tsl080316;
+        Wed, 27 May 2020 22:07:35 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 317ds197nf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 27 May 2020 22:07:35 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04RM7YPh003569;
+        Wed, 27 May 2020 22:07:34 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 27 May 2020 15:07:34 -0700
+Date:   Wed, 27 May 2020 15:07:33 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/9] xfs_repair: create a new class of btree rebuild
+ cursors
+Message-ID: <20200527220733.GN8230@magnolia>
+References: <158993944270.983175.4120094597556662259.stgit@magnolia>
+ <158993946213.983175.9823091723787830102.stgit@magnolia>
+ <20200527121804.GC12014@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <08ddc67b-392f-efe0-ffd2-a7295a42bac6@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200527121804.GC12014@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9634 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 malwarescore=0
+ mlxlogscore=999 adultscore=0 suspectscore=5 bulkscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005270169
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9634 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
+ adultscore=0 cotscore=-2147483648 mlxscore=0 bulkscore=0
+ priorityscore=1501 phishscore=0 lowpriorityscore=0 malwarescore=0
+ clxscore=1015 impostorscore=0 suspectscore=5 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2005270169
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/27/20 12:26 PM, Eric Sandeen wrote:
-> If the stripe width of a device is only 2x or 1x the stripe unit, there
-> is no parity disk on this device, and setting a larger log stripe unit
-> will not avoid any RMW cycles.  However, a large log stripe unit does
-> have significant penalties for IO amplification because every log write
-> will be rounded up to the log stripe unit.
+On Wed, May 27, 2020 at 08:18:04AM -0400, Brian Foster wrote:
+> On Tue, May 19, 2020 at 06:51:02PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create some new support structures and functions to assist phase5 in
+> > using the btree bulk loader to reconstruct metadata btrees.  This is the
+> > first step in removing the open-coded rebuilding code.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  repair/phase5.c |  239 ++++++++++++++++++++++++++++++++++++++++++++++++++-----
+> >  1 file changed, 218 insertions(+), 21 deletions(-)
+> > 
+> > 
+> > diff --git a/repair/phase5.c b/repair/phase5.c
+> > index 84c05a13..8f5e5f59 100644
+> > --- a/repair/phase5.c
+> > +++ b/repair/phase5.c
+> > @@ -18,6 +18,7 @@
+> >  #include "progress.h"
+> >  #include "slab.h"
+> >  #include "rmap.h"
+> > +#include "bload.h"
+> >  
+> >  /*
+> >   * we maintain the current slice (path from root to leaf)
+> ...
+> > @@ -306,6 +324,156 @@ _("error - not enough free space in filesystem\n"));
+> >  #endif
+> >  }
+> >  
+> ...
+> > +static void
+> > +consume_freespace(
+> > +	xfs_agnumber_t		agno,
+> > +	struct extent_tree_node	*ext_ptr,
+> > +	uint32_t		len)
+> > +{
+> > +	struct extent_tree_node	*bno_ext_ptr;
+> > +	xfs_agblock_t		new_start = ext_ptr->ex_startblock + len;
+> > +	xfs_extlen_t		new_len = ext_ptr->ex_blockcount - len;
+> > +
+> > +	/* Delete the used-up extent from both extent trees. */
+> > +#ifdef XR_BLD_FREE_TRACE
+> > +	fprintf(stderr, "releasing extent: %u [%u %u]\n", agno,
+> > +			ext_ptr->ex_startblock, ext_ptr->ex_blockcount);
+> > +#endif
+> > +	bno_ext_ptr = find_bno_extent(agno, ext_ptr->ex_startblock);
+> > +	ASSERT(bno_ext_ptr != NULL);
+> > +	get_bno_extent(agno, bno_ext_ptr);
+> > +	release_extent_tree_node(bno_ext_ptr);
+> > +
+> > +	ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
+> > +			ext_ptr->ex_blockcount);
+> > +	release_extent_tree_node(ext_ptr);
+> > +
 > 
-> This was recently highlighted by a user running bonnie++ in sync mode,
-> where the default RAID10 geometry of 256k/512k yielded results which
-> were 4x slower than a smaller log stripe unit. While bonnie++ may not
-> be the benchmark of choice, it does highlight this issue.
+> Not having looked too deeply at the in-core extent tracking structures,
+> is there any particular reason we unconditionally remove and reinsert
+> new records each time around? Is it because we're basically changing the
+> extent index in the tree? If so, comment please (an update to the
+> comment below is probably fine). :)
+
+Yes.  We're changing the free space tree records, and the incore bno and
+cnt trees maintain the records in sorted order.  Therefore, if we want
+to change a record we have to delete the record from the tree and
+reinsert it.
+
+> > +	/*
+> > +	 * If we only used part of this last extent, then we must reinsert the
+> > +	 * extent in the extent trees.
+
+/*
+ * If we only used part of this last extent, then we must reinsert the
+ * extent to maintain proper sorting order.
+ */
+
+How about that?
+
+> > +	 */
+> > +	if (new_len > 0) {
+> > +		add_bno_extent(agno, new_start, new_len);
+> > +		add_bcnt_extent(agno, new_start, new_len);
+> > +	}
+> > +}
+> > +
+> > +/* Reserve blocks for the new btree. */
+> > +static void
+> > +setup_rebuild(
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agnumber_t		agno,
+> > +	struct bt_rebuild	*btr,
+> > +	uint32_t		nr_blocks)
+> > +{
+> > +	struct extent_tree_node	*ext_ptr;
+> > +	uint32_t		blocks_allocated = 0;
+> > +	uint32_t		len;
+> > +	int			error;
+> > +
+> > +	while (blocks_allocated < nr_blocks)  {
+> > +		/*
+> > +		 * Grab the smallest extent and use it up, then get the
+> > +		 * next smallest.  This mimics the init_*_cursor code.
+> > +		 */
+> > +		ext_ptr =  findfirst_bcnt_extent(agno);
 > 
-> Because a larger log stripe unit yields no RMW benefit on a device with
-> no parity disks, avoid setting in these cases.
+> Extra whitespace	  ^
+> 
+> > +		if (!ext_ptr)
+> > +			do_error(
+> > +_("error - not enough free space in filesystem\n"));
+> > +
+> > +		/* Use up the extent we've got. */
+> > +		len = min(ext_ptr->ex_blockcount, nr_blocks - blocks_allocated);
+> > +		error = xrep_newbt_add_blocks(&btr->newbt,
+> > +				XFS_AGB_TO_FSB(mp, agno,
+> > +					       ext_ptr->ex_startblock),
+> > +				len);
+> 
+> Alignment.
 
-NAK
+Will fix both of these.
 
-I wasn't thinking about stacked parity raids like RAID50 (thanks Dave).
+> > +		if (error)
+> > +			do_error(_("could not set up btree reservation: %s\n"),
+> > +				strerror(-error));
+> > +
+> > +		error = rmap_add_ag_rec(mp, agno, ext_ptr->ex_startblock, len,
+> > +				btr->newbt.oinfo.oi_owner);
+> > +		if (error)
+> > +			do_error(_("could not set up btree rmaps: %s\n"),
+> > +				strerror(-error));
+> > +
+> > +		consume_freespace(agno, ext_ptr, len);
+> > +		blocks_allocated += len;
+> > +	}
+> > +#ifdef XR_BLD_FREE_TRACE
+> > +	fprintf(stderr, "blocks_allocated = %d\n",
+> > +		blocks_allocated);
+> > +#endif
+> > +}
+> > +
+> > +/* Feed one of the new btree blocks to the bulk loader. */
+> > +static int
+> > +rebuild_claim_block(
+> > +	struct xfs_btree_cur	*cur,
+> > +	union xfs_btree_ptr	*ptr,
+> > +	void			*priv)
+> > +{
+> > +	struct bt_rebuild	*btr = priv;
+> > +
+> > +	return xrep_newbt_claim_block(cur, &btr->newbt, ptr);
+> > +}
+> > +
+> 
+> Seems like an unnecessary helper, unless this grows more code in later
+> patches..?
 
-So we cannot infer anything about parity disks from the top-level geometry,
-and so the proposed optimization is not valid.
+It doesn't grow any more code, but keep in mind that get_record,
+claim_block, and iroot_size are all callbacks of xfs_btree_bload().  The
+priv parameter passed to that function are passed unchanged to the three
+callbacks.  The bulk load code doesn't know anything about where the
+blocks or the records come from, so this is how both repairs will pass
+that information to the callbacks.
 
--Eric
+> >  static void
+> >  write_cursor(bt_status_t *curs)
+> >  {
+> ...
+> > @@ -2287,28 +2483,29 @@ keep_fsinos(xfs_mount_t *mp)
+> >  
+> >  static void
+> >  phase5_func(
+> > -	xfs_mount_t	*mp,
+> > -	xfs_agnumber_t	agno,
+> > -	struct xfs_slab	*lost_fsb)
+> > +	struct xfs_mount	*mp,
+> > +	xfs_agnumber_t		agno,
+> > +	struct xfs_slab		*lost_fsb)
+> >  {
+> > -	uint64_t	num_inos;
+> > -	uint64_t	num_free_inos;
+> > -	uint64_t	finobt_num_inos;
+> > -	uint64_t	finobt_num_free_inos;
+> > -	bt_status_t	bno_btree_curs;
+> > -	bt_status_t	bcnt_btree_curs;
+> > -	bt_status_t	ino_btree_curs;
+> > -	bt_status_t	fino_btree_curs;
+> > -	bt_status_t	rmap_btree_curs;
+> > -	bt_status_t	refcnt_btree_curs;
+> > -	int		extra_blocks = 0;
+> > -	uint		num_freeblocks;
+> > -	xfs_extlen_t	freeblks1;
+> > +	struct repair_ctx	sc = { .mp = mp, };
+> 
+> I don't see any reason to add sc here when it's still unused. It's not
+> as if a single variable is saving complexity somewhere else. I guess
+> I'll defer to Eric on the approach wrt to the other unused warnings.
 
+<shrug> I'll ask.  It seems dumb to have a prep patch that adds a bunch
+of symbols that won't get used until the next patch, but OTOH combining
+the two will make for a ~40K patch.
+
+> Also, what's the purpose of the rmap change below? I'm wondering if that
+> (along with all of the indentation cleanup) should be its own patch with
+> appropriate explanation.
+
+Errk, that one definitely should be separate.
+
+> Brian
+> 
+> > +	struct agi_stat		agi_stat = {0,};
+> > +	uint64_t		num_inos;
+> > +	uint64_t		num_free_inos;
+> > +	uint64_t		finobt_num_inos;
+> > +	uint64_t		finobt_num_free_inos;
+> > +	bt_status_t		bno_btree_curs;
+> > +	bt_status_t		bcnt_btree_curs;
+> > +	bt_status_t		ino_btree_curs;
+> > +	bt_status_t		fino_btree_curs;
+> > +	bt_status_t		rmap_btree_curs;
+> > +	bt_status_t		refcnt_btree_curs;
+> > +	int			extra_blocks = 0;
+> > +	uint			num_freeblocks;
+> > +	xfs_extlen_t		freeblks1;
+> >  #ifdef DEBUG
+> > -	xfs_extlen_t	freeblks2;
+> > +	xfs_extlen_t		freeblks2;
+> >  #endif
+> > -	xfs_agblock_t	num_extents;
+> > -	struct agi_stat	agi_stat = {0,};
+> > +	xfs_agblock_t		num_extents;
+> >  
+> >  	if (verbose)
+> >  		do_log(_("        - agno = %d\n"), agno);
+> > @@ -2516,8 +2713,8 @@ inject_lost_blocks(
+> >  		if (error)
+> >  			goto out_cancel;
+> >  
+> > -		error = -libxfs_free_extent(tp, *fsb, 1, &XFS_RMAP_OINFO_AG,
+> > -					    XFS_AG_RESV_NONE);
+> > +		error = -libxfs_free_extent(tp, *fsb, 1,
+> > +				&XFS_RMAP_OINFO_ANY_OWNER, XFS_AG_RESV_NONE);
+> >  		if (error)
+> >  			goto out_cancel;
+> >  
+> > 
+> 
