@@ -1,233 +1,156 @@
-Return-Path: <SRS0=YlU2=7J=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=OPd9=7K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB1D6C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 22:39:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 485D3C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 May 2020 00:04:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79EC7207D8
-	for <linux-xfs@archiver.kernel.org>; Wed, 27 May 2020 22:39:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PYa4UkBg"
+	by mail.kernel.org (Postfix) with ESMTP id 271D7207D3
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 May 2020 00:04:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725815AbgE0Wjl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 27 May 2020 18:39:41 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:35208 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725385AbgE0Wjk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 May 2020 18:39:40 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04RMM9Tv156818;
-        Wed, 27 May 2020 22:39:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=oKDejOo/j364DsCMusTbd5S4WFiPlJXaPwvFYdrDWGM=;
- b=PYa4UkBgD2zYO1uQx5rKkkb3pyrsL1ZRAkSIODOt023j5vWBt+SOXuD7br/9txqIeKAb
- DIAvEpR3ptyQdiO4NgxT3c8QzV4VRLb0QoyK4DFMH4+PCmxHkVFi1nN82y/QBWuim66W
- l2yPxAfoTY5cRa3ysdCALKM1/HLE+sS+gS8cyE4+7DxxPgjPWADNYYlZCUOa+pjyCcme
- hGupXMfFC0bF/a7hFBzCr3UOa/xdUP/NtZmxjzPXaN0LCjLdM8IRTtiFr4qdCDn1Cn89
- mkfyj9oDba8OlxRLAkny3vbCK+r0gxTFVWjvB9e7P0OSihLybRRXDGb7Q2E8+D9hFY6J aA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 318xe1j295-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 27 May 2020 22:39:37 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 04RMHbuJ184348;
-        Wed, 27 May 2020 22:39:36 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 317dkv9kkb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 May 2020 22:39:36 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 04RMdZwb024390;
-        Wed, 27 May 2020 22:39:35 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 27 May 2020 15:39:35 -0700
-Date:   Wed, 27 May 2020 15:39:34 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: reduce log recovery transaction block
- reservations
-Message-ID: <20200527223934.GP8230@magnolia>
-References: <158752128766.2142108.8793264653760565688.stgit@magnolia>
- <158752130035.2142108.11825776210575708747.stgit@magnolia>
- <20200424140408.GE53690@bfoster>
- <20200428222247.GI6742@magnolia>
+        id S1725681AbgE1AE1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 27 May 2020 20:04:27 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:33770 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725294AbgE1AE1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 27 May 2020 20:04:27 -0400
+Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id F40705AC86A;
+        Thu, 28 May 2020 10:04:00 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1je61X-0001IB-A4; Thu, 28 May 2020 10:03:51 +1000
+Date:   Thu, 28 May 2020 10:03:51 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [XFS SUMMIT] Ugh, Rebasing Sucks!
+Message-ID: <20200528000351.GA2040@dread.disaster.area>
+References: <20200527184858.GM8230@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200428222247.GI6742@magnolia>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9634 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0 bulkscore=0
- spamscore=0 suspectscore=5 mlxscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005270170
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9634 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
- adultscore=0 cotscore=-2147483648 mlxscore=0 bulkscore=0
- priorityscore=1501 phishscore=0 lowpriorityscore=0 malwarescore=0
- clxscore=1015 impostorscore=0 suspectscore=5 classifier=spam adjust=0
- reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2005270170
+In-Reply-To: <20200527184858.GM8230@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
+        a=kj9zAlcOel0A:10 a=sTwFKg_x9MkA:10 a=7-415B0cAAAA:8
+        a=DHIEruG9mEWbTF_yWHUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Apr 28, 2020 at 03:22:47PM -0700, Darrick J. Wong wrote:
-> On Fri, Apr 24, 2020 at 10:04:08AM -0400, Brian Foster wrote:
-> > On Tue, Apr 21, 2020 at 07:08:20PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > On filesystems that support them, bmap intent log items can be used to
-> > > change mappings in inode data or attr forks.  However, if the bmbt must
-> > > expand, the enormous block reservations that we make for finishing
-> > > chains of deferred log items become a liability because the bmbt block
-> > > allocator sets minleft to the transaction reservation and there probably
-> > > aren't any AGs in the filesystem that have that much free space.
-> > > 
-> > > Whereas previously we would reserve 93% of the free blocks in the
-> > > filesystem, now we only want to reserve 7/8ths of the free space in the
-> > > least full AG, and no more than half of the usable blocks in an AG.  In
-> > > theory we shouldn't run out of space because (prior to the unclean
-> > > shutdown) all of the in-progress transactions successfully reserved the
-> > > worst case number of disk blocks.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_log_recover.c |   55 ++++++++++++++++++++++++++++++++++++----------
-> > >  1 file changed, 43 insertions(+), 12 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > > index e9b3e901d009..a416b028b320 100644
-> > > --- a/fs/xfs/xfs_log_recover.c
-> > > +++ b/fs/xfs/xfs_log_recover.c
-> > > @@ -2669,6 +2669,44 @@ xlog_recover_process_data(
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +/*
-> > > + * Estimate a block reservation for a log recovery transaction.  Since we run
-> > > + * separate transactions for each chain of deferred ops that get created as a
-> > > + * result of recovering unfinished log intent items, we must be careful not to
-> > > + * reserve so many blocks that block allocations fail because we can't satisfy
-> > > + * the minleft requirements (e.g. for bmbt blocks).
-> > > + */
-> > > +static int
-> > > +xlog_estimate_recovery_resblks(
-> > > +	struct xfs_mount	*mp,
-> > > +	unsigned int		*resblks)
-> > > +{
-> > > +	struct xfs_perag	*pag;
-> > > +	xfs_agnumber_t		agno;
-> > > +	unsigned int		free = 0;
-> > > +	int			error;
-> > > +
-> > > +	/* Don't use more than 7/8th of the free space in the least full AG. */
-> > > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> > > +		unsigned int	ag_free;
-> > > +
-> > > +		error = xfs_alloc_pagf_init(mp, NULL, agno, 0);
-> > > +		if (error)
-> > > +			return error;
-> > > +		pag = xfs_perag_get(mp, agno);
-> > > +		ag_free = pag->pagf_freeblks + pag->pagf_flcount;
-> > > +		free = max(free, (ag_free * 7) / 8);
-> > > +		xfs_perag_put(pag);
-> > > +	}
-> > > +
-> > 
-> > Somewhat unfortunate that we have to iterate all AGs for each chain. I'm
-> > wondering if that has any effect on a large recovery on fs' with an
-> > inordinate AG count. Have you tested under those particular conditions?
-> > I suppose it's possible the recovery is slow enough that this won't
-> > matter...
+On Wed, May 27, 2020 at 11:48:58AM -0700, Darrick J. Wong wrote:
+> Hi everyone,
 > 
-> I admit I haven't actually looked at that.  A more precise way to handle
-> this would be for each intent recovery function to store its own worst
-> case resblks estimation in the recovery freezer so that we'd be using
-> roughly the same space requirements as the pre-crash transaction, but
-> that's also a lot more complicated than this kludge.
-
-I've been testing a new patch that rips out all of this in favor of
-stealing the unused block reservation from the transaction that the log
-item recovery function creates instead of this hokey AG iteration mess.
-The results look promising, and I think I'll do this instead.
-
-Granted, this now means that log intent item recovery must be very
-careful to reserve enough blocks for the entire chain of operations that
-could be created.  This shouldn't be too heavy a lift since we don't
-have that many intent types yet, and at least at first glance the
-resblks we ask for now looked ok to me.
-
---D
-
-> > Also, perhaps not caused by this patch but does this
-> > outsized/manufactured reservation have the effect of artificially
-> > steering allocations to a particular AG if one happens to be notably
-> > larger than the rest?
+> Many of you have complained (both publicly and privately) about the
+> heavy cost of rebasing your development trees, particularly when you're
+> getting close to sending a series out for review.  I get it, there have
+> been a lot of large refactoring patchsets coming in the past few kernel
+> cycles, and this has caused a lot of treewide churn.  I don't mind
+> cleanups of things that have been weird and wonky about XFS for years,
+> but, frankly, rebasing is soul-grinding.
 > 
-> It tends to steer allocations towards whichever AGs were less full at
-> the start of each transaction.  Were we to shift to scanning the AGs
-> once for the entire recovery cycle, I think I'd probably pick a smaller
-> ratio.
+> To that end, I propose reducing the frequency of (my own) for-next
+> pushes to reduce how often people feel compelled to rebase when they're
+> trying to get a series ready for review.
 > 
-> --D
+> Specifically, I would like to make an informal for-next push schedule as
+> follows:
 > 
-> > Brian
-> > 
-> > > +	/* Don't try to reserve more than half the usable AG blocks. */
-> > > +	*resblks = min(free, xfs_alloc_ag_max_usable(mp) / 2);
-> > > +	if (*resblks == 0)
-> > > +		return -ENOSPC;
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > >  /* Take all the collected deferred ops and finish them in order. */
-> > >  static int
-> > >  xlog_finish_defer_ops(
-> > > @@ -2677,27 +2715,20 @@ xlog_finish_defer_ops(
-> > >  {
-> > >  	struct xfs_defer_freezer *dff, *next;
-> > >  	struct xfs_trans	*tp;
-> > > -	int64_t			freeblks;
-> > >  	uint			resblks;
-> > >  	int			error = 0;
-> > >  
-> > >  	list_for_each_entry_safe(dff, next, dfops_freezers, dff_list) {
-> > > +		error = xlog_estimate_recovery_resblks(mp, &resblks);
-> > > +		if (error)
-> > > +			break;
-> > > +
-> > >  		/*
-> > >  		 * We're finishing the defer_ops that accumulated as a result
-> > >  		 * of recovering unfinished intent items during log recovery.
-> > >  		 * We reserve an itruncate transaction because it is the
-> > > -		 * largest permanent transaction type.  Since we're the only
-> > > -		 * user of the fs right now, take 93% (15/16) of the available
-> > > -		 * free blocks.  Use weird math to avoid a 64-bit division.
-> > > +		 * largest permanent transaction type.
-> > >  		 */
-> > > -		freeblks = percpu_counter_sum(&mp->m_fdblocks);
-> > > -		if (freeblks <= 0) {
-> > > -			error = -ENOSPC;
-> > > -			break;
-> > > -		}
-> > > -
-> > > -		resblks = min_t(int64_t, UINT_MAX, freeblks);
-> > > -		resblks = (resblks * 15) >> 4;
-> > >  		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
-> > >  				0, XFS_TRANS_RESERVE, &tp);
-> > >  		if (error)
-> > > 
-> > 
+>  1 Between -rc1 and -rc4, I'll collect critical bug fixes for the
+>    merge window that just closed.  These should be small changes, so
+>    I'll put them out incrementally with the goal of landing everything
+>    in -rc4, and they shouldn't cause major disruptions for anyone else
+>    working on a big patchset.  This is more or less what I've been doing
+>    up till now -- if it's been on the list for > 24h and someone's
+>    reviewed it, I'll put it in for-next for wider testing.
+> 
+>  2 A day or two after -rc4 drops.  This push is targeted for the next
+>    merge window.  Coming three weeks after -rc1, I hope this will give
+>    everyone enough time for a round of rebase, review, and debugging of
+>    large changesets after -rc1.  IOWs, the majority of patchsets should
+>    be ready to go in before we get halfway to the next merge window.
+> 
+>  3 Another push a day or two after -rc6 drops.  This will hopefully give
+>    everyone a second chance to land patchsets that were nearly ready but
+>    didn't quite make it for -rc4; or other cleanups that would have
+>    interfered with the first round.  Once this is out, we're more or
+>    less finished with the big patchsets.
+
+This seems like a reasonable compromise - knowing when updates are
+expected goes a long way to being able to plan development and
+schedule dev tree updates to avoid repeated rebasing.
+
+>  4 Perhaps another big push a day or two after -rc8 drops?  I'm not keen
+>    on doing this.  It's not often that the kernel goes beyond -rc6 and I
+>    find it really stressful when the -rc's drag on but people keep
+>    sending large new patchsets.  Talk about stumbling around in the
+>    dark...
+
+IMO it's too late at -rc8 to be including big new changes for the
+merge window. Bug fixes are fine, but not cleanups or features at
+this point because there's too little test and soak time to catch
+brown paper bag bugs before it's in the mainline tree and in much
+more widespread use.
+
+Same goes for merging new stuff during the merge window - last time
+around we had updates right up to the merge window, then an update
+during the merge window for a second pull request. There just wasn't
+any time when the tree wasn't actively moving forward.
+
+From my perspective, an update from for-next after the -rc6 update
+gets me all the stuff that will be in the next release. That's the
+major rebase for my work, and everything pulled in from for-next
+starts getting test coverage a couple of weeks out from the merge
+window.  Once the merge window closes, another local update to the
+-rc1 kernel (which should be a no-op for all XFS work) then gets
+test coverage for the next release. -rc1 to -rc4 is when
+review/rework for whatever I want merged in -rc4/-rc6 would get
+posted to the list....
+
+This means there's a single rebase event a cycle at -rc6, and the
+rest of the time the tree is pretty stable and the base tree I'm
+testing is almost always the tree that we need to focus dev testing
+on. That is, just before the merge window everyone should be testing
+for-next on a -rc6/-rc7 base, and once -rc1 is out, everyone should
+be testing that kernel through to ~-rc4 at which point it has
+largely stabilised and the cycle starts again....
+
+>  5 Obviously, I wouldn't hold back on critical bug fixes to things that
+>    are broken in for-next, since the goal is to promote testing, not
+>    hinder it.
+
+*nod*
+
+> Hopefully this will cut down on the "arrrgh I was almost ready to send
+> this but then for-next jumped and nggghghghg" feelings. :/
+> 
+> Thoughts?  Flames?
+
+Perhaps:
+
+- each patch set that is posted should start with "this is aimed at
+  a 5.x.y-rc4/-rc6 merge" or "still work in progress" so that
+  everyone has some expectation of when changes are likely to land.
+
+or:
+
+- aim to land features and complex bug fixes in -rc4 and cleanups in
+  -rc6, that way we naturally minimise the rebase work for the
+  features/bug fixes that are being landed. This may mean that -rc4
+  is a small merge if there are no features/bug fixes that meet the
+  -rc4 merge criteria...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
