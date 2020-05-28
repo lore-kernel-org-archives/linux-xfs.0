@@ -2,229 +2,256 @@ Return-Path: <SRS0=OPd9=7K=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35581C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 May 2020 12:57:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C992C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 May 2020 13:05:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CFFC206F1
-	for <linux-xfs@archiver.kernel.org>; Thu, 28 May 2020 12:57:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62088206C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 28 May 2020 13:05:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M3+xvjqT"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LOOXra8b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389935AbgE1M5M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 28 May 2020 08:57:12 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:34673 "EHLO
+        id S2390078AbgE1NFi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 28 May 2020 09:05:38 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:32455 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2389884AbgE1M5L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 May 2020 08:57:11 -0400
+        with ESMTP id S2390011AbgE1NFa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 28 May 2020 09:05:30 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1590670628;
+        s=mimecast20190719; t=1590671127;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=RPxvEcG7+Wcbxo4jCZheNSj88o4BbiOC7rUPzZj8W/M=;
-        b=M3+xvjqTVdx10KU58qx2AFKlyPQibTTnkMb59yzN7Lp1NTYc9qhoQ6xZaNZU1qUXGVYQCO
-        gOGh5GC0O/QFbKXjO9E+LNYWhRiT+ScalOfl0+O7T9lRujOk4iJl9VpIvAFNRnPVL22Y1P
-        xY9WwqZmTONAv8Nr4L3KqgxoHWYXfzs=
+        bh=miPJwdR6fCqTBkMX4Z2HC9dC6o2VlfJnbtm/DdE42B4=;
+        b=LOOXra8buVG4rn7+/7ELDvJNNbC9fBo8/NZWHqumtssgn/qK/OoMNDZX7vupkC2u7S8wwm
+        cQ5VYAkfzvXoUPvC/7+VyFs2pVufq2LUCbQg52x7A1+nMjKsZXL6fX9ShBlsyEtiGhvOBZ
+        mspZoEBDMDPbV4d9x+vB0nHl4YEF7m4=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-302-gmgLo7fWNfuW3HHxP1SZBw-1; Thu, 28 May 2020 08:57:06 -0400
-X-MC-Unique: gmgLo7fWNfuW3HHxP1SZBw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+ us-mta-14-70Iv8D7cNf2tfxUKvUTbvA-1; Thu, 28 May 2020 09:05:22 -0400
+X-MC-Unique: 70Iv8D7cNf2tfxUKvUTbvA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 99ADA835B41;
-        Thu, 28 May 2020 12:57:05 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CE0F8BFC6;
+        Thu, 28 May 2020 13:05:21 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 166025D9F3;
-        Thu, 28 May 2020 12:57:04 +0000 (UTC)
-Date:   Thu, 28 May 2020 08:57:03 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 481BF60C05;
+        Thu, 28 May 2020 13:05:21 +0000 (UTC)
+Date:   Thu, 28 May 2020 09:05:19 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [XFS SUMMIT] Ugh, Rebasing Sucks!
-Message-ID: <20200528125703.GB16657@bfoster>
-References: <20200527184858.GM8230@magnolia>
- <20200528000351.GA2040@dread.disaster.area>
- <20200528024410.GM252930@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH] xfs: transfer freed blocks to blk res when lazy
+ accounting
+Message-ID: <20200528130519.GC16657@bfoster>
+References: <20200522171828.53440-1-bfoster@redhat.com>
+ <20200523013614.GE8230@magnolia>
+ <20200526181629.GE5462@bfoster>
+ <20200526211154.GI252930@magnolia>
+ <20200527122752.GD12014@bfoster>
+ <20200527153146.GJ252930@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200528024410.GM252930@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20200527153146.GJ252930@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, May 27, 2020 at 07:44:10PM -0700, Darrick J. Wong wrote:
-> On Thu, May 28, 2020 at 10:03:51AM +1000, Dave Chinner wrote:
-> > On Wed, May 27, 2020 at 11:48:58AM -0700, Darrick J. Wong wrote:
-> > > Hi everyone,
+On Wed, May 27, 2020 at 08:31:46AM -0700, Darrick J. Wong wrote:
+> On Wed, May 27, 2020 at 08:27:52AM -0400, Brian Foster wrote:
+> > On Tue, May 26, 2020 at 02:11:54PM -0700, Darrick J. Wong wrote:
+> > > On Tue, May 26, 2020 at 02:16:29PM -0400, Brian Foster wrote:
+> > > > On Fri, May 22, 2020 at 06:36:14PM -0700, Darrick J. Wong wrote:
+> > > > > On Fri, May 22, 2020 at 01:18:28PM -0400, Brian Foster wrote:
+> > > > > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > > > > ---
+> > > > > > 
+> > > > > > Darrick mentioned on IRC a few days ago that he'd seen an issue that
+> > > > > > looked similar to the problem with the rmapbt based extent swap
+> > > > > > algorithm when the associated inodes happen to bounce between extent and
+> > > > > > btree format. That problem caused repeated bmapbt block allocations and
+> > > > > > frees that exhausted the transaction block reservation across the
+> > > > > > sequence of transaction rolls. The workaround for that was to use an
+> > > > > > oversized block reservation, but that is not a generic or efficient
+> > > > > > solution.
+> > > > > > 
+> > > > > > I was originally playing around with some hacks to set an optional base
+> > > > > > block reservation on the transaction that we would attempt to replenish
+> > > > > > across transaction roll sequences as the block reservation depletes, but
+> > > > > > eventually noticed that there isn't much difference between stuffing
+> > > > > > block frees in the transaction reservation counter vs. the delta counter
+> > > > > > when lazy sb accounting is enabled (which is required for v5 supers). As
+> > > > > > such, the following patch seems to address the rmapbt issue in my
+> > > > > > isolated tests.
+> > > > > > 
+> > > > > > I think one tradeoff with this logic is that chains of rolling/freeing
+> > > > > > transactions would now aggregate freed space until the final transaction
+> > > > > > commits vs. as transactions roll. It's not immediately clear to me how
+> > > > > > much of an issue that is, but it sounds a bit dicey when considering
+> > > > > > things like truncates of large files. This behavior could still be tied
+> > > > > > to a transaction flag to restrict its use to situations like rmapbt
+> > > > > > swapext, however. Anyways, this is mostly untested outside of the extent
+> > > > > > swap use case so I wanted to throw this on the list as an RFC for now
+> > > > > > and see if anybody has thoughts or other ideas.
+> > > > > 
+> > > > > Hmm, well, this /would/ fix the immediate problem of running out of
+> > > > > block reservation, but I wonder if there are other weird subtleties.
+> > > > > If we're nearly out of space and we're mounted with -odiscard and the
+> > > > > disk is really slow at processing discard, can we encounter weird
+> > > > > failure cases where we end up stuck waiting for the extent busy tree to
+> > > > > say that one of our pingponged blocks is ok to use again?
+> > > > > 
+> > > > 
+> > > > Yeah, I think something like that could happen. I don't think it should
+> > > > be a failure scenario though as the busy extent list should involve a
+> > > > log force and retry in the worst case. Either way, we could always
+> > > > mitigate risk by making this an optional accounting mode for particular
+> > > > (extent swap) transactions...
 > > > 
-> > > Many of you have complained (both publicly and privately) about the
-> > > heavy cost of rebasing your development trees, particularly when you're
-> > > getting close to sending a series out for review.  I get it, there have
-> > > been a lot of large refactoring patchsets coming in the past few kernel
-> > > cycles, and this has caused a lot of treewide churn.  I don't mind
-> > > cleanups of things that have been weird and wonky about XFS for years,
-> > > but, frankly, rebasing is soul-grinding.
+> > > Hmmm... OTOH I wonder how many people really run fsr?  Even I don't...
+> > > :)
 > > > 
-> > > To that end, I propose reducing the frequency of (my own) for-next
-> > > pushes to reduce how often people feel compelled to rebase when they're
-> > > trying to get a series ready for review.
+> > > > > In the meantime, I noticed that xfs/227 on a pmem fs (or possibly
+> > > > > anything with synchronous writes?) and reflink+rmap enabled seemed to
+> > > > > fail pretty consistently.  In a hastily done and incomprehensi{ve,ble}
+> > > > > survey I noted that I couldn't make the disastrous pingpong happen if
+> > > > > there were more than ~4 blocks in the bmapbt, so maybe this would help
+> > > > > there.
+> > > > > 
+> > > > 
+> > > > Do you mean with this patch or with current upstream? I don't see
+> > > > xfs/227 failures on my current setups (this patch passed a weekend auto
+> > > > test run), but I'll have to retry with something synchronous...
 > > > 
-> > > Specifically, I would like to make an informal for-next push schedule as
-> > > follows:
+> > > It happens semi-frequently with current upstream, and all the time with
+> > > the atomic file swap series.
 > > > 
-> > >  1 Between -rc1 and -rc4, I'll collect critical bug fixes for the
-> > >    merge window that just closed.  These should be small changes, so
-> > >    I'll put them out incrementally with the goal of landing everything
-> > >    in -rc4, and they shouldn't cause major disruptions for anyone else
-> > >    working on a big patchset.  This is more or less what I've been doing
-> > >    up till now -- if it's been on the list for > 24h and someone's
-> > >    reviewed it, I'll put it in for-next for wider testing.
-> > > 
-> > >  2 A day or two after -rc4 drops.  This push is targeted for the next
-> > >    merge window.  Coming three weeks after -rc1, I hope this will give
-> > >    everyone enough time for a round of rebase, review, and debugging of
-> > >    large changesets after -rc1.  IOWs, the majority of patchsets should
-> > >    be ready to go in before we get halfway to the next merge window.
-> > > 
-> > >  3 Another push a day or two after -rc6 drops.  This will hopefully give
-> > >    everyone a second chance to land patchsets that were nearly ready but
-> > >    didn't quite make it for -rc4; or other cleanups that would have
-> > >    interfered with the first round.  Once this is out, we're more or
-> > >    less finished with the big patchsets.
 > > 
-> > This seems like a reasonable compromise - knowing when updates are
-> > expected goes a long way to being able to plan development and
-> > schedule dev tree updates to avoid repeated rebasing.
-> > 
-> > >  4 Perhaps another big push a day or two after -rc8 drops?  I'm not keen
-> > >    on doing this.  It's not often that the kernel goes beyond -rc6 and I
-> > >    find it really stressful when the -rc's drag on but people keep
-> > >    sending large new patchsets.  Talk about stumbling around in the
-> > >    dark...
-> > 
-> > IMO it's too late at -rc8 to be including big new changes for the
-> > merge window. Bug fixes are fine, but not cleanups or features at
-> > this point because there's too little test and soak time to catch
-> > brown paper bag bugs before it's in the mainline tree and in much
-> > more widespread use.
+> > I repeated on a box using ramdisk devices and still don't reproduce
+> > after 30+ iters, FWIW. Perhaps it depends on pmem for some reason.
 > 
-> Fair enough.  I didn't really like this #4 anyway.  Withdrawn. :)
-> 
-> > Same goes for merging new stuff during the merge window - last time
-> > around we had updates right up to the merge window, then an update
-> > during the merge window for a second pull request. There just wasn't
-> > any time when the tree wasn't actively moving forward.
-> 
-> Urk, sorry about that... I was hoping to land a fix for $largeclient
-> but then the crazy just kept coming.  Never gonna do /that/ again. :/
-> 
-> > From my perspective, an update from for-next after the -rc6 update
-> > gets me all the stuff that will be in the next release. That's the
-> > major rebase for my work, and everything pulled in from for-next
-> > starts getting test coverage a couple of weeks out from the merge
-> > window.  Once the merge window closes, another local update to the
-> > -rc1 kernel (which should be a no-op for all XFS work) then gets
-> > test coverage for the next release. -rc1 to -rc4 is when
-> > review/rework for whatever I want merged in -rc4/-rc6 would get
-> > posted to the list....
-> 
-> <nod>
-> 
-> My workflow is rather different -- I rebase my dev tree off the latest
-> rc every week, and when a series is ready I port it to a branch off of
-> for-next.  Occasionally I'll port a refactoring from for-next into my
-> dev tree to keep the code bases similar.  Both trees get run through
-> fstests and $whatnot whenever they change, which mean that most mornings
-> I'm looking at nightlies.
-> 
-> > This means there's a single rebase event a cycle at -rc6, and the
-> > rest of the time the tree is pretty stable and the base tree I'm
-> > testing is almost always the tree that we need to focus dev testing
-> > on. That is, just before the merge window everyone should be testing
-> > for-next on a -rc6/-rc7 base, and once -rc1 is out, everyone should
-> > be testing that kernel through to ~-rc4 at which point it has
-> > largely stabilised and the cycle starts again....
-> > 
-> > >  5 Obviously, I wouldn't hold back on critical bug fixes to things that
-> > >    are broken in for-next, since the goal is to promote testing, not
-> > >    hinder it.
-> > 
-> > *nod*
-> > 
-> > > Hopefully this will cut down on the "arrrgh I was almost ready to send
-> > > this but then for-next jumped and nggghghghg" feelings. :/
-> > > 
-> > > Thoughts?  Flames?
-> > 
-> > Perhaps:
-> > 
-> > - each patch set that is posted should start with "this is aimed at
-> >   a 5.x.y-rc4/-rc6 merge" or "still work in progress" so that
-> >   everyone has some expectation of when changes are likely to land.
-> 
-> <nod> This would probably help with peoples' ability to distinguish
-> djwong patchbombs for submission vs. making backups on NYE. ;)
+> Ah.  Yes, it does depend on the synchronous file io nature of pmem.  I
+> /think/ you could simulate the same thing (which is to say the lack of
+> delalloc writes) by mounting with -osync.
 > 
 
-ISTM that anything posted that isn't intended to go through the typical
-review -> merge cycle should simply be tagged RFC. That includes things
-with obvious implementation gaps, prototypes looking for design
-discussion, patchbomb backups, etc. The details can always be described
-in the cover letter, but RFC helps reviewers prioritize based on that
-information and immediately indicates to the maintainer that this isn't
-on the merge track.
+Ok. I ran a similar test w/ -osync and still couldn't reproduce, fwiw.
 
-That's a bit different than an explicit release target, which I
-personally find a bit dubious given that I think it could discourage
-wider review on patches. IOW, I'd be a little concerned that patches
-would start being merged ASAP after meeting some minimum criteria for
-the current release (i.e. 24 hours + a review, noted above) as opposed
-to more common sense behavior where more reviews might be ideal (and/or
-likely based on time on list) based on the complexity of a particular
-feature, etc. Just my .02, though.
+> > > > BTW, is xfs/227 related to the problem you had mentioned on IRC? I
+> > > > wasn't quite sure what operation was involved with whatever error report
+> > > > you had. xfs/227 looks like an xfs_fsr test, so I'd have thought the
+> > > > upstream workaround would have addressed that.. (though I see some attr
+> > > > ops in there as well so perhaps this is related to the attr fork..?).
+> > > 
+> > > It's related, but only in the sense that the "zomg hundreds of thousands
+> > > of intents sitting around in memory" were a side effect of creating a
+> > > test that creates two files with ~50000 extents and fsr'ing them.
+> > > 
+> > 
+> > Ok, well I'm a little confused then... do we have a user report of a
+> > block reservation exhaustion problem or is the primary issue the
+> > occasional failure of xfs/227?
+> 
+> The primary issue is the occasional failure of x/227 on the maintainer's
+> testing system. :P
+> 
 
-Do note that I personally rarely ever know or care at what point in a
-release we're at when posting patches to the list. I post patches when
-ready for review, acknowledge that merge is dependent on review and
-expect further review feedback can come at any time (not immediately)
-and lead to any number of releases for a particular series. Therefore, I
-ultimately care more about getting something merged into the pipeline
-such that release is imminent vs. whether it lands in this release or
-the next. IMO, the purpose of the rolling release cycle is to separate
-the development process from the release process as such. That aside, my
-main point here is to indicate that if I do happen to post something
-"last minute" as such, I most likely have no idea, have no expectation
-beyond hitting the next "reasonable deadline" and thus do not intend to
-put implicit pressure on the maintainer. :)
+Ok.
+
+> The secondary issue is sporadic undiagnosed internal complaints which
+> are nearly impossible to do much triage on, due to an amazingly s****y
+> iscsi network that drops so much traffic you can't collect any
+> telemetry.
+> 
+
+Heh.
+
+In any event, I can't reproduce so I don't have enough information to
+determine whether there's value in this kind of fix. It's more efficient
+than the current approach for rmapbt swapext, but reserving an extra
+fixed number of blocks for forks that straddle smaller format boundaries
+isn't that terrible either for a one-off case IMO. Let me know if you
+happen to get more information and/or can effectively give this a test
+with any of your sporadic reproducers...
 
 Brian
 
-> > or:
-> > 
-> > - aim to land features and complex bug fixes in -rc4 and cleanups in
-> >   -rc6, that way we naturally minimise the rebase work for the
-> >   features/bug fixes that are being landed. This may mean that -rc4
-> >   is a small merge if there are no features/bug fixes that meet the
-> >   -rc4 merge criteria...
-> 
-> I like that idea.
+> The tertiary(?) issue is that "fortunately" the atomic file update
+> series + fsx have proven good at testing the weaknesses of the block
+> reservation calculations for swap extents.
 > 
 > --D
 > 
-> > Cheers,
+> > Brian
 > > 
-> > Dave.
-> > -- 
-> > Dave Chinner
-> > david@fromorbit.com
+> > > --D
+> > > 
+> > > > Brian
+> > > > 
+> > > > > In unrelated news, I also tried fixing the log recovery defer ops chain
+> > > > > transactions to absorb the unused block reservations that the
+> > > > > xfs_*i_item_recover functions created, but that just made fdblocks be
+> > > > > wrong.  But it didn't otherwise blow up! :P
+> > > > > 
+> > > > > --D
+> > > > > 
+> > > > > > Brian
+> > > > > > 
+> > > > > >  fs/xfs/xfs_bmap_util.c | 11 -----------
+> > > > > >  fs/xfs/xfs_trans.c     |  4 ++++
+> > > > > >  2 files changed, 4 insertions(+), 11 deletions(-)
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> > > > > > index f37f5cc4b19f..74b3bad6c414 100644
+> > > > > > --- a/fs/xfs/xfs_bmap_util.c
+> > > > > > +++ b/fs/xfs/xfs_bmap_util.c
+> > > > > > @@ -1628,17 +1628,6 @@ xfs_swap_extents(
+> > > > > >  		 */
+> > > > > >  		resblks = XFS_SWAP_RMAP_SPACE_RES(mp, ipnext, w);
+> > > > > >  		resblks +=  XFS_SWAP_RMAP_SPACE_RES(mp, tipnext, w);
+> > > > > > -
+> > > > > > -		/*
+> > > > > > -		 * Handle the corner case where either inode might straddle the
+> > > > > > -		 * btree format boundary. If so, the inode could bounce between
+> > > > > > -		 * btree <-> extent format on unmap -> remap cycles, freeing and
+> > > > > > -		 * allocating a bmapbt block each time.
+> > > > > > -		 */
+> > > > > > -		if (ipnext == (XFS_IFORK_MAXEXT(ip, w) + 1))
+> > > > > > -			resblks += XFS_IFORK_MAXEXT(ip, w);
+> > > > > > -		if (tipnext == (XFS_IFORK_MAXEXT(tip, w) + 1))
+> > > > > > -			resblks += XFS_IFORK_MAXEXT(tip, w);
+> > > > > >  	}
+> > > > > >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+> > > > > >  	if (error)
+> > > > > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > > > > index 28b983ff8b11..b421d27445c1 100644
+> > > > > > --- a/fs/xfs/xfs_trans.c
+> > > > > > +++ b/fs/xfs/xfs_trans.c
+> > > > > > @@ -370,6 +370,10 @@ xfs_trans_mod_sb(
+> > > > > >  			tp->t_blk_res_used += (uint)-delta;
+> > > > > >  			if (tp->t_blk_res_used > tp->t_blk_res)
+> > > > > >  				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > > > > > +		} else if (delta > 0 &&
+> > > > > > +			   xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+> > > > > > +			tp->t_blk_res += delta;
+> > > > > > +			delta = 0;
+> > > > > >  		}
+> > > > > >  		tp->t_fdblocks_delta += delta;
+> > > > > >  		if (xfs_sb_version_haslazysbcount(&mp->m_sb))
+> > > > > > -- 
+> > > > > > 2.21.1
+> > > > > > 
+> > > > > 
+> > > > 
+> > > 
+> > 
 > 
 
