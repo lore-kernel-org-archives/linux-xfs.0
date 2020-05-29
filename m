@@ -2,68 +2,32 @@ Return-Path: <SRS0=/boU=7L=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C99C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 May 2020 14:13:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D82D6C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 May 2020 14:16:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5494320814
-	for <linux-xfs@archiver.kernel.org>; Fri, 29 May 2020 14:13:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="eE5upXYz"
+	by mail.kernel.org (Postfix) with ESMTP id C07FE208B8
+	for <linux-xfs@archiver.kernel.org>; Fri, 29 May 2020 14:16:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726549AbgE2ONn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 29 May 2020 10:13:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37990 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726866AbgE2ONj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 29 May 2020 10:13:39 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3DF7C08C5CB
-        for <linux-xfs@vger.kernel.org>; Fri, 29 May 2020 07:13:38 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id q24so1383662pjd.1
-        for <linux-xfs@vger.kernel.org>; Fri, 29 May 2020 07:13:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=sstDEw2eR7/x5s00uzGBoVK1nqE9b65b7cAMAqhOjao=;
-        b=eE5upXYzk0pow1GTjkztlADM6NfVbrh/uHt+G1jl9EulITHptpOGivfgZ9UM2DZPeT
-         QzDSBImSr62zvHA4fpZjPKoOgIad9kZyPX2Pg/8nuAQTJ3/2yu1dOc5WcOu99Kko/uk+
-         JHHjcQeYVXofPi/9w67mwpp7taL/v8rnEtFjiUQt2+5HJT1HNIqLVfzk8C15zK0dRQDM
-         HprQkgIl0QIfcdgkulZv6c2+BpjhhJc39zy3lRejrUhTw58N+xFCRBzYs65EUgEZZaQb
-         C23jReqIIypb479CHVfyFfIhwVVplo1+96n+FWZRlsJS/ZWLbHO247w+VeMKyAtOGXp+
-         Nwmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=sstDEw2eR7/x5s00uzGBoVK1nqE9b65b7cAMAqhOjao=;
-        b=QSNkA9oOP7blmVVOG/g5oeLOJeW5KOqCWMV1ze85jfuS4uv8jGMH/QsjsRmhOHMFwC
-         nttYJx5VSQcncYgFbCYN5j3TPWY5gu82ez/4Y8lqsEWY+gu9MFQDlhZ7LZmE658rW4WX
-         nWVQ8IDeX/7f/qTr6pFPPzQZoMH1NOs0s/07ewbqqlALn6l82c7UDDGLKGuTJvTQPP6k
-         fszBRGy5UPJ/n5k8oylZn/PB/3YoJwFr6Uw90nDtappBgk8QPBeJE0l9LpD22DWBR7Ej
-         BW2nsXWvkNCA0eMCV/xG6qGECWGhoW2Z7WTwS7Vm0kJVL1j08UcJrOfBfHuldpRjwI/c
-         M2MA==
-X-Gm-Message-State: AOAM5307qVM+RNQ19NUzggorhRl7UwIxmN4d+pIfYPhnP+FrOn4xYngL
-        WTTWDNuz80HdfVnJIq//YbJlYA==
-X-Google-Smtp-Source: ABdhPJx/vZKTQwjkEYDfjCmjXR8SsS9x7O54I1G0OhUxjA27obWAm6HjQIWQQc+C6Ua+WQEtGiJQ1Q==
-X-Received: by 2002:a17:90a:bf18:: with SMTP id c24mr9827989pjs.171.1590761617982;
-        Fri, 29 May 2020 07:13:37 -0700 (PDT)
-Received: from [192.168.1.159] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id d2sm6688603pgp.56.2020.05.29.07.13.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 29 May 2020 07:13:37 -0700 (PDT)
-Subject: Re: [PATCH v2] blkdev: Replace blksize_bits() with ilog2()
-To:     Kaitao Cheng <pilgrimtao@gmail.com>, hch@lst.de, sth@linux.ibm.com,
+        id S1726955AbgE2OQC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 29 May 2020 10:16:02 -0400
+Received: from verein.lst.de ([213.95.11.211]:33237 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726593AbgE2OQB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 29 May 2020 10:16:01 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 0963868B02; Fri, 29 May 2020 16:15:56 +0200 (CEST)
+Date:   Fri, 29 May 2020 16:15:55 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Kaitao Cheng <pilgrimtao@gmail.com>
+Cc:     axboe@kernel.dk, hch@lst.de, sth@linux.ibm.com,
         viro@zeniv.linux.org.uk, clm@fb.com, jaegeuk@kernel.org,
         hch@infradead.org, mark@fasheh.com, dhowells@redhat.com,
-        balbi@kernel.org
-Cc:     damien.lemoal@wdc.com, bvanassche@acm.org, ming.lei@redhat.com,
-        martin.petersen@oracle.com, satyat@google.com,
+        balbi@kernel.org, damien.lemoal@wdc.com, bvanassche@acm.org,
+        ming.lei@redhat.com, martin.petersen@oracle.com, satyat@google.com,
         chaitanya.kulkarni@wdc.com, houtao1@huawei.com,
         asml.silence@gmail.com, ajay.joshi@wdc.com,
         linux-kernel@vger.kernel.org, songmuchun@bytedance.com,
@@ -77,37 +41,101 @@ Cc:     damien.lemoal@wdc.com, bvanassche@acm.org, ming.lei@redhat.com,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         jlbec@evilplan.org, joseph.qi@linux.alibaba.com,
         ocfs2-devel@oss.oracle.com, deepa.kernel@gmail.com
+Subject: Re: [PATCH v2] blkdev: Replace blksize_bits() with ilog2()
+Message-ID: <20200529141555.GA3249@lst.de>
 References: <20200529141100.37519-1-pilgrimtao@gmail.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <c8412d98-0328-0976-e5f9-5beddc148a35@kernel.dk>
-Date:   Fri, 29 May 2020 08:13:34 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <20200529141100.37519-1-pilgrimtao@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 5/29/20 8:11 AM, Kaitao Cheng wrote:
-> There is a function named ilog2() exist which can replace blksize.
-> The generated code will be shorter and more efficient on some
-> architecture, such as arm64. And ilog2() can be optimized according
-> to different architecture.
+>  	ns->size = i_size_read(ns->bdev->bd_inode);
+> -	ns->blksize_shift = blksize_bits(bdev_logical_block_size(ns->bdev));
+> +	ns->blksize_shift = ilog2(bdev_logical_block_size(ns->bdev));
 
-When you posted this last time, I said:
+This should just be:
 
-"I like the simplification, but do you have any results to back up
- that claim? Is the generated code shorter? Runs faster?"
+	ns->blksize_shift = ns->bdev->bd_inode->i_blkbits;
 
-which you handily ignored, yet sending out a new version. I'm not
-going to apply this without justification, your commit message is
-handwavy at best.
+> diff --git a/drivers/s390/block/dasd_ioctl.c b/drivers/s390/block/dasd_ioctl.c
+> index 777734d1b4e5..55adb134451b 100644
+> --- a/drivers/s390/block/dasd_ioctl.c
+> +++ b/drivers/s390/block/dasd_ioctl.c
+> @@ -228,7 +228,7 @@ dasd_format(struct dasd_block *block, struct format_data_t *fdata)
+>  	 */
+>  	if (fdata->start_unit == 0) {
+>  		struct block_device *bdev = bdget_disk(block->gdp, 0);
+> -		bdev->bd_inode->i_blkbits = blksize_bits(fdata->blksize);
+> +		bdev->bd_inode->i_blkbits = ilog2(fdata->blksize);
 
--- 
-Jens Axboe
+This also needs to set bdev->bd_block_size, so this probably warrants
+a separate fix that be backported.  It might be nice to split out
+a helper that sets bd_block_size and bd_inode->i_blkbits together
+so that such a use is more obvious.
 
+>  	} else if (inode->i_bdev) {
+>  		blksize = bdev_logical_block_size(inode->i_bdev);
+> -		blkbits = blksize_bits(blksize);
+> +		blkbits = ilog2(blksize);
+
+This can just use inode->i_bdev->bd_inode->i_blkbits.
+
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index fc8831c392d7..fa92e0afe349 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -907,7 +907,7 @@ static sector_t blkdev_max_block(struct block_device *bdev, unsigned int size)
+>  	loff_t sz = i_size_read(bdev->bd_inode);
+>  
+>  	if (sz) {
+> -		unsigned int sizebits = blksize_bits(size);
+> +		unsigned int sizebits = ilog2(size);
+
+bdev->bd_inode->i_blkbits.
+
+> diff --git a/fs/direct-io.c b/fs/direct-io.c
+> index 1543b5af400e..7ea2cd3effcc 100644
+> --- a/fs/direct-io.c
+> +++ b/fs/direct-io.c
+> @@ -1148,7 +1148,7 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+>  
+>  	if (align & blocksize_mask) {
+>  		if (bdev)
+> -			blkbits = blksize_bits(bdev_logical_block_size(bdev));
+> +			blkbits = ilog2(bdev_logical_block_size(bdev));
+
+bdev->bd_inode->i_blkbits.
+
+> diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
+> index cb05f71cf850..b896da27942a 100644
+> --- a/fs/f2fs/data.c
+> +++ b/fs/f2fs/data.c
+> @@ -3458,7 +3458,7 @@ static int check_direct_IO(struct inode *inode, struct iov_iter *iter,
+>  
+>  	if (align & blocksize_mask) {
+>  		if (bdev)
+> -			blkbits = blksize_bits(bdev_logical_block_size(bdev));
+> +			blkbits = ilog2(bdev_logical_block_size(bdev));
+
+bdev->bd_inode->i_blkbits.
+
+>  		blocksize_mask = (1 << blkbits) - 1;
+>  		if (align & blocksize_mask)
+>  			return -EINVAL;
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index ec7b78e6feca..2a807657d544 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -203,7 +203,7 @@ static loff_t
+>  iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  		struct iomap_dio *dio, struct iomap *iomap)
+>  {
+> -	unsigned int blkbits = blksize_bits(bdev_logical_block_size(iomap->bdev));
+> +	unsigned int blkbits = ilog2(bdev_logical_block_size(iomap->bdev));
+
+iomap->bdev->bd_inode->i_blkbits.
