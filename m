@@ -2,337 +2,382 @@ Return-Path: <SRS0=XPcr=7O=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7FA5C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Jun 2020 12:05:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B94B5C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Jun 2020 12:37:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C8A320772
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Jun 2020 12:05:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C775207FB
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Jun 2020 12:37:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CELNtuso"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fkP0NPgF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727095AbgFAMFg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Jun 2020 08:05:36 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:31614 "EHLO
+        id S1728146AbgFAMhm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Jun 2020 08:37:42 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:36419 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725838AbgFAMFg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jun 2020 08:05:36 -0400
+        with ESMTP id S1727815AbgFAMhT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jun 2020 08:37:19 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1591013133;
+        s=mimecast20190719; t=1591015036;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=36kYL3h2dQnzCKZ3uIx2kilZtsFzLD7WlDShM+UAbOQ=;
-        b=CELNtusoxuiCfuThrjPt9oVevFmdk5hUqJ2rEgAvZOpRw7TR7HTR8p40edC7C9+pJqy6eM
-        vuaSxKBbDKqK+Yimor0mqur4MBK1uDgC/+CVs+/Hl4EE34RlSZy3ilpQ/EZIwrKVgkJxJI
-        i2VMaZx50p9XDAqLUAAutYbdp1ZT27Q=
+        bh=QMyU790Dv9Tlphr+2cB8CDwO8tB2xHqnPfjVbnFDHRU=;
+        b=fkP0NPgFpoF2CCA51qZw7L9oXFVOmcdohAbCCG6dIFajvVPMrdUW2WXc1ggj8OkmprwA2F
+        oZ1v3/R2BOzUBtAUOlrF6YlwcOGeRO8T1GfFIUzZFboGnFe0XXi0uvQwMW/krGo6bmJ7K8
+        A1JKZHjEQsSxAfN1vTsdWmHb6pij+vQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-67-fiMRTM0zN-GNeuXNezUkyg-1; Mon, 01 Jun 2020 08:05:29 -0400
-X-MC-Unique: fiMRTM0zN-GNeuXNezUkyg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-226-8WEm15HwONaV9pfsbNQwTQ-1; Mon, 01 Jun 2020 08:37:12 -0400
+X-MC-Unique: 8WEm15HwONaV9pfsbNQwTQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4F29D18FE861;
-        Mon,  1 Jun 2020 12:05:28 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A1E3710013D9;
-        Mon,  1 Jun 2020 12:05:27 +0000 (UTC)
-Date:   Mon, 1 Jun 2020 08:05:25 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/9] xfs_repair: rebuild free space btrees with bulk
- loader
-Message-ID: <20200601120525.GB2012@bfoster>
-References: <158993944270.983175.4120094597556662259.stgit@magnolia>
- <158993946854.983175.10392092867098415197.stgit@magnolia>
- <20200528151044.GC17794@bfoster>
- <20200529213937.GT8230@magnolia>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 09734800053;
+        Mon,  1 Jun 2020 12:37:11 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A4BB22DE8E;
+        Mon,  1 Jun 2020 12:37:07 +0000 (UTC)
+Date:   Mon, 1 Jun 2020 20:48:44 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Eryu Guan <guan@eryu.me>
+Cc:     Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [PATCH 2/4] generic: test per-type quota softlimit enforcement
+ timeout
+Message-ID: <20200601124844.GI1938@dhcp-12-102.nay.redhat.com>
+Mail-Followup-To: Eryu Guan <guan@eryu.me>,
+        Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
+ <9c9a63f3-13ab-d5b6-923c-4ea684b6b2f8@redhat.com>
+ <7102e1e3-bee6-7aa2-dce6-c0e7e0ce2983@redhat.com>
+ <20200531161517.GC3363@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200529213937.GT8230@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20200531161517.GC3363@desktop>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, May 29, 2020 at 02:39:37PM -0700, Darrick J. Wong wrote:
-> On Thu, May 28, 2020 at 11:10:44AM -0400, Brian Foster wrote:
-> > On Tue, May 19, 2020 at 06:51:08PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Use the btree bulk loading functions to rebuild the free space btrees
-> > > and drop the open-coded implementation.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  libxfs/libxfs_api_defs.h |    3 
-> > >  repair/phase5.c          |  870 +++++++++++++---------------------------------
-> > >  2 files changed, 254 insertions(+), 619 deletions(-)
-> > > 
-> > > 
-> > ...
-> > > diff --git a/repair/phase5.c b/repair/phase5.c
-> > > index 8f5e5f59..e69b042c 100644
-> > > --- a/repair/phase5.c
-> > > +++ b/repair/phase5.c
-> > ...
-> > > @@ -837,268 +567,202 @@ btnum_to_ops(
-...
-> > > +
-> > > +		/* Ok, now how many free space records do we have? */
-> > > +		*nr_extents = count_bno_extents_blocks(agno, &num_freeblocks);
-> > > +	} while (1);
-> > > +
-> > > +	*extra_blocks = (bno_blocks - btr_bno->bload.nr_blocks) +
-> > > +			(cnt_blocks - btr_cnt->bload.nr_blocks);
-> > > +}
-> > > +
-> > > +static void
-> > > +get_freesp_data(
-> > > +	struct xfs_btree_cur		*cur,
-> > > +	struct extent_tree_node		*bno_rec,
-> > > +	xfs_agblock_t			*freeblks)
-> > > +{
-> > > +	struct xfs_alloc_rec_incore	*arec = &cur->bc_rec.a;
-> > > +
-> > > +	arec->ar_startblock = bno_rec->ex_startblock;
-> > > +	arec->ar_blockcount = bno_rec->ex_blockcount;
-> > > +	if (freeblks)
-> > > +		*freeblks += bno_rec->ex_blockcount;
-> > > +}
-> > > +
-> > > +/* Grab one bnobt record. */
-> > > +static int
-> > > +get_bnobt_record(
-> > > +	struct xfs_btree_cur		*cur,
-> > > +	void				*priv)
-> > > +{
-> > > +	struct bt_rebuild		*btr = priv;
-> > > +
-> > > +	get_freesp_data(cur, btr->bno_rec, btr->freeblks);
-> > > +	btr->bno_rec = findnext_bno_extent(btr->bno_rec);
+On Mon, Jun 01, 2020 at 12:15:17AM +0800, Eryu Guan wrote:
+> On Mon, May 18, 2020 at 03:00:11PM -0500, Eric Sandeen wrote:
+> > From: Zorro Lang <zlang@redhat.com>
 > > 
-> > We should probably check for NULL here even if we don't expect it to
-> > happen.
+> > Set different block & inode grace timers for user, group and project
+> > quotas, then test softlimit enforcement timeout, make sure different
+> > grace timers as expected.
 > > 
-> > Also, this logic where we load the current pointer and get the next had
-> > my eyes crossed for a bit. Can we just check the pointer state here to
-> > determine whether to find the first record or the next?
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > ---
 > 
-> Hm, I did that, and the logic ends up more cluttered looking:
+> I saw the following failure as well on xfs (as Zorro mentioned in his v3
+> patch)
 > 
-> 	if (cur->bc_btnum == XFS_BTNUM_BNO) {
-> 		if (btr->bno_rec == NULL)
-> 			btr->bno_rec = findfirst_bno_extent(agno);
-> 		else
-> 			btr->bno_rec = findnext_bno_extent(btr->bno_rec);
-> 	} else {
-> 		if (btr->bno_rec == NULL)
-> 			btr->bno_rec = findfirst_bcnt_extent(agno);
-> 		else
-> 			btr->bno_rec = findnext_bcnt_extent(cur->bc_ag.agno,
-> 							    btr->bno_rec);
-> 	}
+>      -pwrite: Disk quota exceeded
+>      +pwrite: No space left on device
 > 
+> So this is an xfs issue that needs to be fixed? Just want to make sure
+> the current expected test result.
 
-Yeah, I figured this approach would boil down to something like this in
-the record feeding code. For one, I'd stick that in a function with a
-brief comment. Otherwise, despite the cluttered look, the logic itself
-is simple and much easier to read IMO. I had to stare at the current
-code for a few minutes before I recognized what was going on, then read
-through the iteration thing again to make sure I had it correct. This
-eliminates that confusion entirely and thus simplifies the broader
-implementation. I think it also facilitates reducing the amount of code
-even more if we can generalize the build_*() functions a bit more..
+Hmm.... I think I'd better to filter ENOSPC|EDQUOT. I can't be sure all
+filesystems will return EDQUOT or ENOSPC 100%, especially for group and project
+quota.
 
-> OTOH I think you do have a good point that splitting the code that sets
-> bno_rec across three functions is not easy to understand.
-> 
+But I think Eric's trying to change a return value of XFS quota. I don't know the
+current status.
 
-Exactly.
+Thanks,
+Zorro
 
-> > Finally, I notice we duplicate the build_[bno|cnt]bt() functions for
-> > what amounts to a different get_record() callback specific to the tree
-> > type. If we also generalize get_record() to use the tree type (it
-> > already has the cursor), it seems that much of the duplication can be
-> > reduced and the logic simplified.
 > 
-> Ok, done.
-> 
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +/* Rebuild a free space by block number btree. */
-> > > +static void
-> > > +build_bnobt(
-> > > +	struct repair_ctx	*sc,
-> > > +	xfs_agnumber_t		agno,
-> > > +	struct bt_rebuild	*btr_bno,
-> > > +	xfs_agblock_t		*freeblks)
-> > > +{
-> > > +	int			error;
-> > > +
-> > > +	*freeblks = 0;
-> > > +	btr_bno->bload.get_record = get_bnobt_record;
-> > > +	btr_bno->bload.claim_block = rebuild_claim_block;
+> >  common/quota          |   4 +
+> >  tests/generic/600     | 187 ++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/600.out |  41 +++++++++
+> >  tests/generic/group   |   1 +
+> >  4 files changed, 233 insertions(+)
+> >  create mode 100755 tests/generic/600
+> >  create mode 100644 tests/generic/600.out
 > > 
-> > Note that one of these callbacks is introduced in this patch and the
-> > other in the previous. I've no issue with splitting the patches as noted
-> > in the previous patch, but these should probably be consistent one way
-> > or the other.
+> > diff --git a/common/quota b/common/quota
+> > index 240e0bbc..1437d5f7 100644
+> > --- a/common/quota
+> > +++ b/common/quota
+> > @@ -217,6 +217,10 @@ _qmount()
+> >      if [ "$FSTYP" != "xfs" ]; then
+> >          quotacheck -ug $SCRATCH_MNT >>$seqres.full 2>&1
+> >          quotaon -ug $SCRATCH_MNT >>$seqres.full 2>&1
+> > +        # try to turn on project quota if it's supported
+> > +        if quotaon --help 2>&1 | grep -q '\-\-project'; then
+> > +            quotaon --project $SCRATCH_MNT >>$seqres.full 2>&1
+> > +        fi
+> >      fi
+> >      chmod ugo+rwx $SCRATCH_MNT
+> >  }
+> > diff --git a/tests/generic/600 b/tests/generic/600
+> > new file mode 100755
+> > index 00000000..03b4dcb3
+> > --- /dev/null
+> > +++ b/tests/generic/600
+> > @@ -0,0 +1,187 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 600
+> > +#
+> > +# Test per-type(user, group and project) filesystem quota timers, make sure
+> > +# enforcement
+> > +#
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	restore_project
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +. ./common/quota
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +require_project()
+> > +{
+> > +	rm -f $tmp.projects $tmp.projid
+> > +	if [ -f /etc/projects ];then
+> > +		cat /etc/projects > $tmp.projects
+> > +	fi
+> > +	if [ -f /etc/projid ];then
+> > +		cat /etc/projid > $tmp.projid
+> > +	fi
+> > +
+> > +	cat >/etc/projects <<EOF
+> > +100:$SCRATCH_MNT/t
+> > +EOF
+> > +	cat >/etc/projid <<EOF
+> > +$qa_user:100
+> > +EOF
+> > +	PROJECT_CHANGED=1
+> > +}
+> > +
+> > +restore_project()
+> > +{
+> > +	if [ "$PROJECT_CHANGED" = "1" ];then
+> > +		rm -f /etc/projects /etc/projid
+> > +		if [ -f $tmp.projects ];then
+> > +			cat $tmp.projects > /etc/projects
+> > +		fi
+> > +		if [ -f $tmp.projid ];then
+> > +			cat $tmp.projid > /etc/projid
+> > +		fi
+> > +	fi
+> > +}
+> > +
+> > +init_files()
+> > +{
+> > +	local dir=$1
+> > +
+> > +	echo "### Initialize files, and their mode and ownership"
+> > +	touch $dir/file{1,2} 2>/dev/null
+> > +	chown $qa_user $dir/file{1,2} 2>/dev/null
+> > +	chgrp $qa_user $dir/file{1,2} 2>/dev/null
+> > +	chmod 777 $dir 2>/dev/null
+> > +}
+> > +
+> > +cleanup_files()
+> > +{
+> > +	echo "### Remove all files"
+> > +	rm -f ${1}/file{1,2,3,4,5,6}
+> > +}
+> > +
+> > +test_grace()
+> > +{
+> > +	local type=$1
+> > +	local dir=$2
+> > +	local bgrace=$3
+> > +	local igrace=$4
+> > +
+> > +	init_files $dir
+> > +	echo "--- Test block quota ---"
+> > +	# Firstly fit below block soft limit
+> > +	echo "Write 225 blocks..."
+> > +	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' \
+> > +		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
+> > +		_filter_xfs_io_error | tee -a $seqres.full
+> > +	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+> > +	# Secondly overcome block soft limit
+> > +	echo "Rewrite 250 blocks plus 1 byte, over the block softlimit..."
+> > +	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' \
+> > +		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
+> > +		_filter_xfs_io_error | tee -a $seqres.full
+> > +	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+> > +	# Reset grace time here, make below grace time test more accurate
+> > +	setquota -$type $qa_user -T $bgrace $igrace $SCRATCH_MNT 2>/dev/null
+> > +	# Now sleep enough grace time and check that softlimit got enforced
+> > +	sleep $((bgrace + 1))
+> > +	echo "Try to write 1 one more block after grace..."
+> > +	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
+> > +		$dir/file2" 2>&1 >>$seqres.full | _filter_xfs_io_error | \
+> > +		tee -a $seqres.full
+> > +	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+> > +	echo "--- Test inode quota ---"
+> > +	# And now the softlimit test for inodes
+> > +	# First reset space limits so that we don't have problems with
+> > +	# space reservations on XFS
+> > +	setquota -$type $qa_user 0 0 3 100 $SCRATCH_MNT
+> > +	echo "Create 2 more files, over the inode softlimit..."
+> > +	su $qa_user -c "touch $dir/file3 $dir/file4" 2>&1 >>$seqres.full | \
+> > +		_filter_scratch | tee -a $seqres.full
+> > +	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+> > +	# Reset grace time here, make below grace time test more accurate
+> > +	setquota -$type $qa_user -T $bgrace $igrace $SCRATCH_MNT 2>/dev/null
+> > +	# Wait and check grace time enforcement
+> > +	sleep $((igrace+1))
+> > +	echo "Try to create one more inode after grace..."
+> > +	su $qa_user -c "touch $dir/file5" 2>&1 >>$seqres.full |
+> > +		_filter_scratch | tee -a $seqres.full
+> > +	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+> > +	cleanup_files $dir
+> > +}
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch
+> > +_require_setquota_project
+> > +_require_quota
+> > +_require_user
+> > +_require_group
 > 
-> All the btree types set ->claim_block to rebuild_claim_block, whereas
-> ->get_record is specific to the particular type of btree.
+> Hmm, also needs _require_scratch_xfs_crc when FSTYP is xfs, otherwise v4
+> xfs fails as
 > 
-
-Ok, seems more reasonable in hindsight.
-
-Brian
-
-> > > +	btr_bno->bno_rec = findfirst_bno_extent(agno);
-> > > +	btr_bno->freeblks = freeblks;
-> > > +
-> > > +	error = -libxfs_trans_alloc_empty(sc->mp, &sc->tp);
-> > > +	if (error)
-> > > +		do_error(
-> > > +_("Insufficient memory to construct bnobt rebuild transaction.\n"));
-> > > +
-> > > +	/* Add all observed bnobt records. */
-> > > +	error = -libxfs_btree_bload(btr_bno->cur, &btr_bno->bload, btr_bno);
-> > > +	if (error)
-> > > +		do_error(
-> > > +_("Error %d while creating bnobt btree for AG %u.\n"), error, agno);
-> > > +
-> > > +	/* Since we're not writing the AGF yet, no need to commit the cursor */
-> > > +	libxfs_btree_del_cursor(btr_bno->cur, 0);
-> > > +	error = -libxfs_trans_commit(sc->tp);
-> > > +	if (error)
-> > > +		do_error(
-> > > +_("Error %d while writing bnobt btree for AG %u.\n"), error, agno);
-> > > +	sc->tp = NULL;
-> > > +}
-> > > +
-> > ...
-> > > @@ -2354,48 +2041,14 @@ build_agf_agfl(
-> > >  			freelist[i] = cpu_to_be32(NULLAGBLOCK);
-> > >  	}
-> > >  
-> > > -	/*
-> > > -	 * do we have left-over blocks in the btree cursors that should
-> > > -	 * be used to fill the AGFL?
-> > > -	 */
-> > > -	if (bno_bt->num_free_blocks > 0 || bcnt_bt->num_free_blocks > 0)  {
-> > > -		/*
-> > > -		 * yes, now grab as many blocks as we can
-> > > -		 */
-> > > -		i = 0;
-> > > -		while (bno_bt->num_free_blocks > 0 && i < libxfs_agfl_size(mp))
-> > > -		{
-> > > -			freelist[i] = cpu_to_be32(
-> > > -					get_next_blockaddr(agno, 0, bno_bt));
-> > > -			i++;
-> > > -		}
-> > > -
-> > > -		while (bcnt_bt->num_free_blocks > 0 && i < libxfs_agfl_size(mp))
-> > > -		{
-> > > -			freelist[i] = cpu_to_be32(
-> > > -					get_next_blockaddr(agno, 0, bcnt_bt));
-> > > -			i++;
-> > > -		}
-> > > -		/*
-> > > -		 * now throw the rest of the blocks away and complain
-> > > -		 */
-> > > -		while (bno_bt->num_free_blocks > 0) {
-> > > -			fsb = XFS_AGB_TO_FSB(mp, agno,
-> > > -					get_next_blockaddr(agno, 0, bno_bt));
-> > > -			error = slab_add(lost_fsb, &fsb);
-> > > -			if (error)
-> > > -				do_error(
-> > > -_("Insufficient memory saving lost blocks.\n"));
-> > > -		}
-> > > -		while (bcnt_bt->num_free_blocks > 0) {
-> > > -			fsb = XFS_AGB_TO_FSB(mp, agno,
-> > > -					get_next_blockaddr(agno, 0, bcnt_bt));
-> > > -			error = slab_add(lost_fsb, &fsb);
-> > > -			if (error)
-> > > -				do_error(
-> > > -_("Insufficient memory saving lost blocks.\n"));
-> > > -		}
-> > > +	/* Fill the AGFL with leftover blocks or save them for later. */
-> > > +	i = 0;
-> > 
-> > How about agfl_idx or something since this variable is passed down into
-> > a function?
+> +mount: /mnt/scratch: wrong fs type, bad option, bad superblock on /dev/mapper/testvg-lv2, missing codepage or helper program, or other error.
+> +qmount failed
 > 
-> The 'i' variable existed before this patch.  I can add a new cleanup to
-> fix the name...
+> and dmesg says
 > 
-> > > +	freelist = xfs_buf_to_agfl_bno(agfl_buf);
-> > > +	fill_agfl(btr_bno, freelist, &i);
-> > > +	fill_agfl(btr_cnt, freelist, &i);
-> > >  
-> > > +	/* Set the AGF counters for the AGFL. */
-> > > +	if (i > 0) {
-> > >  		agf->agf_flfirst = 0;
-> > >  		agf->agf_fllast = cpu_to_be32(i - 1);
-> > >  		agf->agf_flcount = cpu_to_be32(i);
-> > ...
-> > > @@ -2650,9 +2283,9 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
-> > >  	/*
-> > >  	 * set up agf and agfl
-> > >  	 */
-> > > -	build_agf_agfl(mp, agno, &bno_btree_curs,
-> > > -		&bcnt_btree_curs, freeblks1, extra_blocks,
-> > > -		&rmap_btree_curs, &refcnt_btree_curs, lost_fsb);
-> > > +	build_agf_agfl(mp, agno, &btr_bno, &btr_cnt, freeblks1, extra_blocks,
-> > > +			&rmap_btree_curs, &refcnt_btree_curs, lost_fsb);
-> > > +
-> > 
-> > I was trying to figure out what extra_blocks was used for and noticed
-> > that it's not even used by this function. Perhaps a preceding cleanup
-> > patch to drop it?
+> XFS (dm-2): Super block does not support project and group quota together
 > 
-> Ok.
+> Thanks,
+> Eryu
 > 
-> > >  	/*
-> > >  	 * build inode allocation tree.
-> > >  	 */
-> > > @@ -2674,15 +2307,14 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
-> > >  	/*
-> > >  	 * tear down cursors
-> > >  	 */
-> > > -	finish_cursor(&bno_btree_curs);
-> > > -	finish_cursor(&ino_btree_curs);
-> > 
-> > Looks like this one shouldn't be going away here.
-> 
-> Oops, good catch.
-> 
-> --D
-> 
-> > Brian
-> > 
-> > > +	finish_rebuild(mp, &btr_bno, lost_fsb);
-> > > +	finish_rebuild(mp, &btr_cnt, lost_fsb);
-> > >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > >  		finish_cursor(&rmap_btree_curs);
-> > >  	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > >  		finish_cursor(&refcnt_btree_curs);
-> > >  	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-> > >  		finish_cursor(&fino_btree_curs);
-> > > -	finish_cursor(&bcnt_btree_curs);
-> > >  
-> > >  	/*
-> > >  	 * release the incore per-AG bno/bcnt trees so the extent nodes
-> > > 
-> > 
+> > +
+> > +_scratch_mkfs >$seqres.full 2>&1
+> > +_scratch_enable_pquota
+> > +_qmount_option "usrquota,grpquota,prjquota"
+> > +_qmount
+> > +_require_prjquota $SCRATCH_DEV
+> > +BLOCK_SIZE=$(_get_file_block_size $SCRATCH_MNT)
+> > +rm -rf $SCRATCH_MNT/t
+> > +mkdir $SCRATCH_MNT/t
+> > +$XFS_IO_PROG -r -c "chproj 100" -c "chattr +P" $SCRATCH_MNT/t
+> > +require_project
+> > +
+> > +echo "### Set up different grace timers to each type of quota"
+> > +UBGRACE=12
+> > +UIGRACE=10
+> > +GBGRACE=4
+> > +GIGRACE=2
+> > +PBGRACE=8
+> > +PIGRACE=6
+> > +
+> > +setquota -u $qa_user $((250 * $BLOCK_SIZE / 1024)) \
+> > +	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
+> > +setquota -u -t $UBGRACE $UIGRACE $SCRATCH_MNT
+> > +echo; echo "### Test user quota softlimit and grace time"
+> > +test_grace u $SCRATCH_MNT $UBGRACE $UIGRACE
+> > +# Reset the user quota space & inode limits, avoid it affect later test
+> > +setquota -u $qa_user 0 0 0 0 $SCRATCH_MNT
+> > +
+> > +setquota -g $qa_user $((250 * $BLOCK_SIZE / 1024)) \
+> > +	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
+> > +setquota -g -t $GBGRACE $GIGRACE $SCRATCH_MNT
+> > +echo; echo "### Test group quota softlimit and grace time"
+> > +test_grace g $SCRATCH_MNT $GBGRACE $GIGRACE
+> > +# Reset the group quota space & inode limits, avoid it affect later test
+> > +setquota -g $qa_user 0 0 0 0 $SCRATCH_MNT
+> > +
+> > +setquota -P $qa_user $((250 * $BLOCK_SIZE / 1024)) \
+> > +	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
+> > +setquota -P -t $PBGRACE $PIGRACE $SCRATCH_MNT
+> > +echo; echo "### Test project quota softlimit and grace time"
+> > +test_grace P $SCRATCH_MNT/t $PBGRACE $PIGRACE
+> > +# Reset the project quota space & inode limits
+> > +setquota -P $qa_user 0 0 0 0 $SCRATCH_MNT
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/600.out b/tests/generic/600.out
+> > new file mode 100644
+> > index 00000000..6e15eaeb
+> > --- /dev/null
+> > +++ b/tests/generic/600.out
+> > @@ -0,0 +1,41 @@
+> > +QA output created by 600
+> > +### Set up different grace timers to each type of quota
+> > +
+> > +### Test user quota softlimit and grace time
+> > +### Initialize files, and their mode and ownership
+> > +--- Test block quota ---
+> > +Write 225 blocks...
+> > +Rewrite 250 blocks plus 1 byte, over the block softlimit...
+> > +Try to write 1 one more block after grace...
+> > +pwrite: Disk quota exceeded
+> > +--- Test inode quota ---
+> > +Create 2 more files, over the inode softlimit...
+> > +Try to create one more inode after grace...
+> > +touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
+> > +### Remove all files
+> > +
+> > +### Test group quota softlimit and grace time
+> > +### Initialize files, and their mode and ownership
+> > +--- Test block quota ---
+> > +Write 225 blocks...
+> > +Rewrite 250 blocks plus 1 byte, over the block softlimit...
+> > +Try to write 1 one more block after grace...
+> > +pwrite: Disk quota exceeded
+> > +--- Test inode quota ---
+> > +Create 2 more files, over the inode softlimit...
+> > +Try to create one more inode after grace...
+> > +touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
+> > +### Remove all files
+> > +
+> > +### Test project quota softlimit and grace time
+> > +### Initialize files, and their mode and ownership
+> > +--- Test block quota ---
+> > +Write 225 blocks...
+> > +Rewrite 250 blocks plus 1 byte, over the block softlimit...
+> > +Try to write 1 one more block after grace...
+> > +pwrite: Disk quota exceeded
+> > +--- Test inode quota ---
+> > +Create 2 more files, over the inode softlimit...
+> > +Try to create one more inode after grace...
+> > +touch: cannot touch 'SCRATCH_MNT/t/file5': Disk quota exceeded
+> > +### Remove all files
 > 
 
