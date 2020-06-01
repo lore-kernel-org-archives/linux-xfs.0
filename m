@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B77CEC433E3
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Jun 2020 21:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60674C433E1
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Jun 2020 21:43:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A1723206E2
-	for <linux-xfs@archiver.kernel.org>; Mon,  1 Jun 2020 21:43:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EE11206E2
+	for <linux-xfs@archiver.kernel.org>; Mon,  1 Jun 2020 21:43:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728788AbgFAVnB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Jun 2020 17:43:01 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:40008 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728779AbgFAVnA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jun 2020 17:43:00 -0400
+        id S1728478AbgFAVnE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 1 Jun 2020 17:43:04 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58194 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728546AbgFAVnB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jun 2020 17:43:01 -0400
 Received: from dread.disaster.area (pa49-195-157-175.pa.nsw.optusnet.com.au [49.195.157.175])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 03D905AABE4
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 93F483A440E
         for <linux-xfs@vger.kernel.org>; Tue,  2 Jun 2020 07:42:54 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jfsCq-0000Ww-Hx
-        for linux-xfs@vger.kernel.org; Tue, 02 Jun 2020 07:42:52 +1000
+        id 1jfsCr-0000XW-54
+        for linux-xfs@vger.kernel.org; Tue, 02 Jun 2020 07:42:53 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jfsCq-00HU60-9G
+        id 1jfsCq-00HU6y-Sg
         for linux-xfs@vger.kernel.org; Tue, 02 Jun 2020 07:42:52 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 17/30] xfs: make inode reclaim almost non-blocking
-Date:   Tue,  2 Jun 2020 07:42:38 +1000
-Message-Id: <20200601214251.4167140-18-david@fromorbit.com>
+Subject: [PATCH 29/30] xfs: factor xfs_iflush_done
+Date:   Tue,  2 Jun 2020 07:42:50 +1000
+Message-Id: <20200601214251.4167140-30-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
 In-Reply-To: <20200601214251.4167140-1-david@fromorbit.com>
 References: <20200601214251.4167140-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
         a=ONQRW0k9raierNYdzxQi9Q==:117 a=ONQRW0k9raierNYdzxQi9Q==:17
-        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=pGLkceISAAAA:8 a=yPCof4ZbAAAA:8
-        a=A2ig2MbBs_zKB9zLTN4A:9
+        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
+        a=5dYq1025zWcnlPueRbEA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,88 +52,210 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that dirty inode writeback doesn't cause read-modify-write
-cycles on the inode cluster buffer under memory pressure, the need
-to throttle memory reclaim to the rate at which we can clean dirty
-inodes goes away. That is due to the fact that we no longer thrash
-inode cluster buffers under memory pressure to clean dirty inodes.
-
-This means inode writeback no longer stalls on memory allocation
-or read IO, and hence can be done asynchronously without generating
-memory pressure. As a result, blocking inode writeback in reclaim is
-no longer necessary to prevent reclaim priority windup as cleaning
-dirty inodes is no longer dependent on having memory reserves
-available for the filesystem to make progress reclaiming inodes.
-
-Hence we can convert inode reclaim to be non-blocking for shrinker
-callouts, both for direct reclaim and kswapd.
-
-On a vanilla kernel, running a 16-way fsmark create workload on a
-4 node/16p/16GB RAM machine, I can reliably pin 14.75GB of RAM via
-userspace mlock(). The OOM killer gets invoked at 15GB of
-pinned RAM.
-
-With this patch alone, pinning memory triggers premature OOM
-killer invocation, sometimes with as much as 45% of RAM being free.
-It's trivially easy to trigger the OOM killer when reclaim does not
-block.
-
-With pinning inode clusters in RAM and then adding this patch, I can
-reliably pin 14.5GB of RAM and still have the fsmark workload run to
-completion. The OOM killer gets invoked 14.75GB of pinned RAM, which
-is only a small amount of memory less than the vanilla kernel. It is
-much more reliable than just with async reclaim alone.
-
-simoops shows that allocation stalls go away when async reclaim is
-used. Vanilla kernel:
-
-Run time: 1924 seconds
-Read latency (p50: 3,305,472) (p95: 3,723,264) (p99: 4,001,792)
-Write latency (p50: 184,064) (p95: 553,984) (p99: 807,936)
-Allocation latency (p50: 2,641,920) (p95: 3,911,680) (p99: 4,464,640)
-work rate = 13.45/sec (avg 13.44/sec) (p50: 13.46) (p95: 13.58) (p99: 13.70)
-alloc stall rate = 3.80/sec (avg: 2.59) (p50: 2.54) (p95: 2.96) (p99: 3.02)
-
-With inode cluster pinning and async reclaim:
-
-Run time: 1924 seconds
-Read latency (p50: 3,305,472) (p95: 3,715,072) (p99: 3,977,216)
-Write latency (p50: 187,648) (p95: 553,984) (p99: 789,504)
-Allocation latency (p50: 2,748,416) (p95: 3,919,872) (p99: 4,448,256)
-work rate = 13.28/sec (avg 13.32/sec) (p50: 13.26) (p95: 13.34) (p99: 13.34)
-alloc stall rate = 0.02/sec (avg: 0.02) (p50: 0.01) (p95: 0.03) (p99: 0.03)
-
-Latencies don't really change much, nor does the work rate. However,
-allocation almost never stalls with these changes, whilst the
-vanilla kernel is sometimes reporting 20 stalls/s over a 60s sample
-period. This difference is due to inode reclaim being largely
-non-blocking now.
-
-IOWs, once we have pinned inode cluster buffers, we can make inode
-reclaim non-blocking without a major risk of premature and/or
-spurious OOM killer invocation, and without any changes to memory
-reclaim infrastructure.
+xfs_iflush_done() does 3 distinct operations to the inodes attached
+to the buffer. Separate these operations out into functions so that
+it is easier to modify these operations independently in future.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_inode_item.c | 154 +++++++++++++++++++++-------------------
+ 1 file changed, 81 insertions(+), 73 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index dbba4c1946386..a6780942034fc 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1402,7 +1402,7 @@ xfs_reclaim_inodes_nr(
- 	xfs_reclaim_work_queue(mp);
- 	xfs_ail_push_all(mp->m_ail);
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index a3a8ae5e39e12..1749420a9cb97 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -642,101 +642,64 @@ xfs_inode_item_destroy(
  
--	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
-+	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
- }
  
  /*
+- * This is the inode flushing I/O completion routine.  It is called
+- * from interrupt level when the buffer containing the inode is
+- * flushed to disk.  It is responsible for removing the inode item
+- * from the AIL if it has not been re-logged, and unlocking the inode's
+- * flush lock.
+- *
+- * To reduce AIL lock traffic as much as possible, we scan the buffer log item
+- * list for other inodes that will run this function. We remove them from the
+- * buffer list so we can process all the inode IO completions in one AIL lock
+- * traversal.
+- *
+- * Note: Now that we attach the log item to the buffer when we first log the
+- * inode in memory, we can have unflushed inodes on the buffer list here. These
+- * inodes will have a zero ili_last_fields, so skip over them here.
++ * We only want to pull the item from the AIL if it is actually there
++ * and its location in the log has not changed since we started the
++ * flush.  Thus, we only bother if the inode's lsn has not changed.
+  */
+ void
+-xfs_iflush_done(
+-	struct xfs_buf		*bp)
++xfs_iflush_ail_updates(
++	struct xfs_ail		*ailp,
++	struct list_head	*list)
+ {
+-	struct xfs_inode_log_item *iip;
+-	struct xfs_log_item	*lip, *n;
+-	struct xfs_ail		*ailp = bp->b_mount->m_ail;
+-	int			need_ail = 0;
+-	LIST_HEAD(tmp);
++	struct xfs_log_item	*lip;
++	xfs_lsn_t		tail_lsn = 0;
+ 
+-	/*
+-	 * Pull the attached inodes from the buffer one at a time and take the
+-	 * appropriate action on them.
+-	 */
+-	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
+-		iip = INODE_ITEM(lip);
++	/* this is an opencoded batch version of xfs_trans_ail_delete */
++	spin_lock(&ailp->ail_lock);
++	list_for_each_entry(lip, list, li_bio_list) {
++		xfs_lsn_t	lsn;
+ 
+-		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
+-			xfs_iflush_abort(iip->ili_inode);
++		if (INODE_ITEM(lip)->ili_flush_lsn != lip->li_lsn) {
++			clear_bit(XFS_LI_FAILED, &lip->li_flags);
+ 			continue;
+ 		}
+ 
+-		if (!iip->ili_last_fields)
+-			continue;
+-
+-		list_move_tail(&lip->li_bio_list, &tmp);
+-
+-		/* Do an unlocked check for needing the AIL lock. */
+-		if (iip->ili_flush_lsn == lip->li_lsn ||
+-		    test_bit(XFS_LI_FAILED, &lip->li_flags))
+-			need_ail++;
++		lsn = xfs_ail_delete_one(ailp, lip);
++		if (!tail_lsn && lsn)
++			tail_lsn = lsn;
+ 	}
++	xfs_ail_update_finish(ailp, tail_lsn);
++}
+ 
+-	/*
+-	 * We only want to pull the item from the AIL if it is actually there
+-	 * and its location in the log has not changed since we started the
+-	 * flush.  Thus, we only bother if the inode's lsn has not changed.
+-	 */
+-	if (need_ail) {
+-		xfs_lsn_t	tail_lsn = 0;
+-
+-		/* this is an opencoded batch version of xfs_trans_ail_delete */
+-		spin_lock(&ailp->ail_lock);
+-		list_for_each_entry(lip, &tmp, li_bio_list) {
+-			clear_bit(XFS_LI_FAILED, &lip->li_flags);
+-			if (lip->li_lsn == INODE_ITEM(lip)->ili_flush_lsn) {
+-				xfs_lsn_t lsn = xfs_ail_delete_one(ailp, lip);
+-				if (!tail_lsn && lsn)
+-					tail_lsn = lsn;
+-			}
+-		}
+-		xfs_ail_update_finish(ailp, tail_lsn);
+-	}
++/*
++ * Walk the list of inodes that have completed their IOs. If they are clean
++ * remove them from the list and dissociate them from the buffer. Buffers that
++ * are still dirty remain linked to the buffer and on the list. Caller must
++ * handle them appropriately.
++ */
++void
++xfs_iflush_finish(
++	struct xfs_buf		*bp,
++	struct list_head	*list)
++{
++	struct xfs_log_item	*lip, *n;
+ 
+-	/*
+-	 * Clean up and unlock the flush lock now we are done. We can clear the
+-	 * ili_last_fields bits now that we know that the data corresponding to
+-	 * them is safely on disk.
+-	 */
+-	list_for_each_entry_safe(lip, n, &tmp, li_bio_list) {
++	list_for_each_entry_safe(lip, n, list, li_bio_list) {
++		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 		bool	drop_buffer = false;
+ 
+-		list_del_init(&lip->li_bio_list);
+-		iip = INODE_ITEM(lip);
+-
+ 		spin_lock(&iip->ili_lock);
+ 
+ 		/*
+ 		 * Remove the reference to the cluster buffer if the inode is
+-		 * clean in memory. Drop the buffer reference once we've dropped
+-		 * the locks we hold. If the inode is dirty in memory, we need
+-		 * to put the inode item back on the buffer list for another
+-		 * pass through the flush machinery.
++		 * clean in memory and drop the buffer reference once we've
++		 * dropped the locks we hold.
+ 		 */
+ 		ASSERT(iip->ili_item.li_buf == bp);
+ 		if (!iip->ili_fields) {
+ 			iip->ili_item.li_buf = NULL;
++			list_del_init(&lip->li_bio_list);
+ 			drop_buffer = true;
+-		} else {
+-			list_add(&lip->li_bio_list, &bp->b_li_list);
+ 		}
+ 		iip->ili_last_fields = 0;
+ 		iip->ili_flush_lsn = 0;
+@@ -747,6 +710,51 @@ xfs_iflush_done(
+ 	}
+ }
+ 
++/*
++ * Inode buffer IO completion routine.  It is responsible for removing inodes
++ * attached to the buffer from the AIL if they have not been re-logged, as well
++ * as completing the flush and unlocking the inode.
++ */
++void
++xfs_iflush_done(
++	struct xfs_buf		*bp)
++{
++	struct xfs_log_item	*lip, *n;
++	LIST_HEAD(flushed_inodes);
++	LIST_HEAD(ail_updates);
++
++	/*
++	 * Pull the attached inodes from the buffer one at a time and take the
++	 * appropriate action on them.
++	 */
++	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
++		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
++
++		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
++			xfs_iflush_abort(iip->ili_inode);
++			continue;
++		}
++		if (!iip->ili_last_fields)
++			continue;
++
++		/* Do an unlocked check for needing the AIL lock. */
++		if (iip->ili_flush_lsn == lip->li_lsn ||
++		    test_bit(XFS_LI_FAILED, &lip->li_flags))
++			list_move_tail(&lip->li_bio_list, &ail_updates);
++		else
++			list_move_tail(&lip->li_bio_list, &flushed_inodes);
++	}
++
++	if (!list_empty(&ail_updates)) {
++		xfs_iflush_ail_updates(bp->b_mount->m_ail, &ail_updates);
++		list_splice_tail(&ail_updates, &flushed_inodes);
++	}
++
++	xfs_iflush_finish(bp, &flushed_inodes);
++	if (!list_empty(&flushed_inodes))
++		list_splice_tail(&flushed_inodes, &bp->b_li_list);
++}
++
+ /*
+  * This is the inode flushing abort routine.  It is called from xfs_iflush when
+  * the filesystem is shutting down to clean up the inode state.  It is
 -- 
 2.26.2.761.g0e0b3e54be
 
