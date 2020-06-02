@@ -4,49 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CA7CC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 16:09:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C7AC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 16:26:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F6B920772
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 16:09:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 19B9E2072F
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 16:26:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591114151;
-	bh=rTJPZCvA0p/88wMBOtqJyn8UePWXK3p2ytaSMTjexd4=;
+	s=default; t=1591115207;
+	bh=3/le4j93lulevphUTItA/BquMCkwRnK3iz2LOiB4lSk=;
 	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=xrZ9kcmOELIhrUCFDK1IURtDfFOCvWCdaR1Eb7xajaAIRU1m5H4FJxzTdrEYvCKD3
-	 6hY6XypspkhzspP2GC2CV0QWBfJi3ISuFzPSvKAN7ivlrvwriD16Qkysgz/JNszcMR
-	 MD8xAypE2PFjag3QwPMHsH2Jfn7e9ETicvoubOmw=
+	b=hpf/9BD8v5jHNz73h8CNjLA1pQzeu85L4dc/T5deRgH9L3OjIT2wejV8zY3VFD004
+	 EHPTQhh9fMk2/imZ45sc+IWTbPoTXAcvpZac2Hp2MIjgXkaW5Ye1YOibuWaqaF/+GV
+	 1Gt/LMZsXdslD/wHl1SDxE32+ybfFgGh76IVxF9k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726223AbgFBQJK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Jun 2020 12:09:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53892 "EHLO mail.kernel.org"
+        id S1726000AbgFBQ0q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Jun 2020 12:26:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59222 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726000AbgFBQJK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 2 Jun 2020 12:09:10 -0400
+        id S1726894AbgFBQ0q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Jun 2020 12:26:46 -0400
 Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 661EA206E2;
-        Tue,  2 Jun 2020 16:09:09 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B0694206C3;
+        Tue,  2 Jun 2020 16:26:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591114149;
-        bh=rTJPZCvA0p/88wMBOtqJyn8UePWXK3p2ytaSMTjexd4=;
+        s=default; t=1591115204;
+        bh=3/le4j93lulevphUTItA/BquMCkwRnK3iz2LOiB4lSk=;
         h=Date:From:To:Cc:Subject:From;
-        b=sO7YA4jEcsaAyLUe3cMa/4udrahF+LDXD8lXko1pzr4OsgigcuYJ2/AqGVW/tP+0I
-         HJO0fHEnsEliyq4S6hxsgxgobIh67ydwYieTLBs4E4ANJ9NjPl1d9J3R5ikwZU6N6A
-         m3wGo5WcUS5Ge2Uj8zLoljDlYc5ib5r/RJHiuYDU=
-Date:   Tue, 2 Jun 2020 09:09:08 -0700
+        b=OuiMzPBh5bC+wyJc16TyZAifpzqZXpXnalT4hsHqbi+90nhlDTrRcZUsklGE8CYTr
+         6bTIPo+S+UeMhUWjFwgLsST6rUXIB4uv472DKuRlU2hXzNvZBYDRxyOkwEtDl/vz/l
+         FHgt79ndrZC1ud95tmHOtXL5V3whU48h1geh+UjM=
+Date:   Tue, 2 Jun 2020 09:26:44 -0700
 From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         david@fromorbit.com, linux-kernel@vger.kernel.org,
         sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: new code for 5.8
-Message-ID: <20200602160908.GA8230@magnolia>
+Subject: [GIT PULL] xfs: new code for 5.8 (now with fixed To line)
+Message-ID: <20200602162644.GE8204@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -54,6 +53,14 @@ Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
+
+Sorry Linus, I totally FUBARed the addressing on the pull request.
+Resending directly to you so that it doesn't get lost in the spam
+folder.
+
+--D
+
+---
 
 Hi Linus,
 
@@ -396,3 +403,5 @@ Zheng Bin (1):
  create mode 100644 fs/xfs/xfs_buf_item_recover.c
  create mode 100644 fs/xfs/xfs_dquot_item_recover.c
  create mode 100644 fs/xfs/xfs_inode_item_recover.c
+
+----- End forwarded message -----
