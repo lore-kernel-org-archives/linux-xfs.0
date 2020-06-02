@@ -2,104 +2,116 @@ Return-Path: <SRS0=pQq2=7P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8558FC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 16:47:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 423D5C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 16:58:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5765920738
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 16:47:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VU+0lqts"
+	by mail.kernel.org (Postfix) with ESMTP id 1FE732068D
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 16:58:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1591117138;
+	bh=RQxLCdFPTOP083pc5DFpqNSDZGa6rjjYrzRRGuGc3zQ=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=lm2DhLnf9grbwg8DYSQM/mtV7LXIJ40LAC7a969B7gvecw7Su+rkxSaCGyxxluHqs
+	 5Pr7FctAeUvWpjIOgxQzQBSnH1JYsCGdMYi3pLP/cTL0OQIxoYiVKedEyOHX/8QG7j
+	 AMdiFz7kwUL/Pl1SS0tnzjuf78t1NP0w91D1GjSI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726112AbgFBQr6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Jun 2020 12:47:58 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:30172 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725940AbgFBQr5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 12:47:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1591116476;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=K2ldsEzLZc/xUKhitIUNp1QTtAiBA0fFXXn07Hu/vVI=;
-        b=VU+0lqtsZyTu42TzBf+7plv1cN8HG8Jky86VDrNAugIoSAZml6IxiY0G1kU0UjnyzPJVlP
-        bKp5i/WvGZ1aP/elqDfttY93d2AJVbPlOM32HB4xkC9JfX4j8MFCcmT9qduqpPlxYPnD0I
-        oEbqsiBA2dpfjqpsdYN0fcNq5yqE/Oc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-47-9Q9BHEOUOE6TxcCi9vo2LA-1; Tue, 02 Jun 2020 12:47:54 -0400
-X-MC-Unique: 9Q9BHEOUOE6TxcCi9vo2LA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726037AbgFBQ6x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Jun 2020 12:58:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40940 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725969AbgFBQ6x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 2 Jun 2020 12:58:53 -0400
+Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 97F9B100CCC2;
-        Tue,  2 Jun 2020 16:47:53 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3E9E561980;
-        Tue,  2 Jun 2020 16:47:53 +0000 (UTC)
-Date:   Tue, 2 Jun 2020 12:47:51 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 08/30] xfs: clean up whacky buffer log item list reinit
-Message-ID: <20200602164751.GH7967@bfoster>
-References: <20200601214251.4167140-1-david@fromorbit.com>
- <20200601214251.4167140-9-david@fromorbit.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 835452068D;
+        Tue,  2 Jun 2020 16:58:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1591117132;
+        bh=RQxLCdFPTOP083pc5DFpqNSDZGa6rjjYrzRRGuGc3zQ=;
+        h=Date:From:To:Cc:Subject:From;
+        b=GUPXnfsHB9+bqVwuHbBBc04gDBCK0G0AMtbR1nUCzSaIRgYKRhVajThaxmHTSmuZL
+         hBSSNoUk9AeMmqyYDsuaFx9LJHNs11/pq5CmZTOvR8gTnTXhWCczoWFR0qegRWhf7Q
+         5MybUpXZPV/8sHQx9oVkdYZr2lJ+wzRgBQ3o6VUc=
+Date:   Tue, 2 Jun 2020 09:58:52 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>, ira.weiny@intel.com
+Subject: [GIT PULL] vfs: improve DAX behavior for 5.8, part 1
+Message-ID: <20200602165852.GB8230@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200601214251.4167140-9-david@fromorbit.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 02, 2020 at 07:42:29AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we've emptied the buffer log item list, it does a list_del_init
-> on itself to reset it's pointers to itself. This is unnecessary as
-> the list is already empty at this point - it was a left-over
-> fragment from the list_head conversion of the buffer log item list.
-> Remove them.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
+Hi Linus,
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+After many years of LKML-wrangling about how to enable programs to query
+and influence the file data access mode (DAX) when a filesystem resides
+on storage devices such as persistent memory, Ira Weiny has emerged with
+a proposed set of standard behaviors that has not been shot down by
+anyone!  We're more or less standardizing on the current XFS behavior
+and adapting ext4 to do the same.
 
->  fs/xfs/xfs_buf_item.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index d87ae6363a130..5b3cd5e90947c 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -459,7 +459,6 @@ xfs_buf_item_unpin(
->  		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
->  			xfs_buf_do_callbacks(bp);
->  			bp->b_log_item = NULL;
-> -			list_del_init(&bp->b_li_list);
->  		} else {
->  			xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
->  			xfs_buf_item_relse(bp);
-> @@ -1165,7 +1164,6 @@ xfs_buf_run_callbacks(
->  
->  	xfs_buf_do_callbacks(bp);
->  	bp->b_log_item = NULL;
-> -	list_del_init(&bp->b_li_list);
->  }
->  
->  /*
-> -- 
-> 2.26.2.761.g0e0b3e54be
-> 
+This pull request is the first of a handful that will make ext4 and XFS
+present a consistent interface for user programs that care about DAX.
+We add a statx attribute that programs can check to see if DAX is
+enabled on a particular file.  Then, we update the DAX documentation to
+spell out the user-visible behaviors that filesystems will guarantee
+(until the next storage industry shakeup).  The on-disk inode flag has
+been in XFS for a few years now.
 
+Note that Stephen Rothwell reported a minor merge conflict[1] between
+the first cleanup patch and a different change in the block layer.  The
+resolution looks pretty straightforward, but let me know if you
+encounter problems.
+
+--D
+
+[1] https://lore.kernel.org/linux-next/20200522145848.38cdcf54@canb.auug.org.au/
+
+The following changes since commit 0e698dfa282211e414076f9dc7e83c1c288314fd:
+
+  Linux 5.7-rc4 (2020-05-03 14:56:04 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.8-merge-1
+
+for you to fetch changes up to 83d9088659e8f113741bb197324bd9554d159657:
+
+  Documentation/dax: Update Usage section (2020-05-04 08:49:39 -0700)
+
+----------------------------------------------------------------
+New code for 5.8:
+- Clean up io_is_direct.
+- Add a new statx flag to indicate when file data access is being done
+  via DAX (as opposed to the page cache).
+- Update the documentation for how system administrators and application
+  programmers can take advantage of the (still experimental DAX) feature.
+
+----------------------------------------------------------------
+Ira Weiny (3):
+      fs: Remove unneeded IS_DAX() check in io_is_direct()
+      fs/stat: Define DAX statx attribute
+      Documentation/dax: Update Usage section
+
+ Documentation/filesystems/dax.txt | 142 +++++++++++++++++++++++++++++++++++++-
+ drivers/block/loop.c              |   6 +-
+ fs/stat.c                         |   3 +
+ include/linux/fs.h                |   7 +-
+ include/uapi/linux/stat.h         |   1 +
+ 5 files changed, 147 insertions(+), 12 deletions(-)
