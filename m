@@ -2,365 +2,190 @@ Return-Path: <SRS0=pQq2=7P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05D15C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 00:24:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15FD8C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:04:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCEC92073B
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 00:24:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC8572086A
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:04:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="afauOMum"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BfL6qEQz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725841AbgFBAYG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 1 Jun 2020 20:24:06 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:44854 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725446AbgFBAYF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jun 2020 20:24:05 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0520GtRw134409;
-        Tue, 2 Jun 2020 00:23:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=fu7DEnipL6gIAuPcbbsuXTE4pi17dU/DALvhSVsoY9s=;
- b=afauOMum1JqpaRv/qMYmR28S61q/fhKNlfPPhvdlTREanbUmcQMNkkHcR3DgbdWmp16V
- 4gNcAkhbERqdqJtlHhj5F+qsEox6yVLwsvlMma8kYjC7PlzAOi2L3JMR3U+h5/OagyaN
- qJj56Z5s0CC3EMZlYP6T7Ph9xDqTtpa8a5fbjgTr9HjNPKtsu5oGc0Bnxzx4gqF5Em/W
- 7eV2CSPK6rW5wdEhrnfSBHwmuQf/F2zxtSDOtYhAnz919t1lLRqCOBsPjbL03bCuVbxx
- Y6PAbu/P8AxLy5rRTXyzKxJ8FOzwUwdkEWf1ioPJHk+kmr9KFSS4wB6JnE23jjPxIy35 +g== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 31bfem1aka-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 02 Jun 2020 00:23:59 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0520DsSD145916;
-        Tue, 2 Jun 2020 00:21:58 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 31c25m5mef-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 02 Jun 2020 00:21:58 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0520Lvfl019281;
-        Tue, 2 Jun 2020 00:21:58 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 01 Jun 2020 17:21:57 -0700
-Date:   Mon, 1 Jun 2020 17:21:56 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/9] xfs_repair: rebuild free space btrees with bulk
- loader
-Message-ID: <20200602002156.GH2162697@magnolia>
-References: <158993944270.983175.4120094597556662259.stgit@magnolia>
- <158993946854.983175.10392092867098415197.stgit@magnolia>
- <20200528151044.GC17794@bfoster>
- <20200529213937.GT8230@magnolia>
- <20200601120525.GB2012@bfoster>
+        id S1725835AbgFBEEh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Jun 2020 00:04:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47140 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725793AbgFBEEh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 00:04:37 -0400
+Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07C5FC061A0E
+        for <linux-xfs@vger.kernel.org>; Mon,  1 Jun 2020 21:04:37 -0700 (PDT)
+Received: by mail-il1-x143.google.com with SMTP id p5so10504133ile.6
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Jun 2020 21:04:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=fifCfaZW/GsCIL1D5aAtR9JeZYH5AKHn1Hsk1/Pt9V8=;
+        b=BfL6qEQzJeOCb4/NYcEZIVJrvIAQg51ML1X+3R1k1mplHBO5PO7G4+GYnWjgmxgmyA
+         HuJlcI6W6a6m4YPpGtbcjfCffutzdZq1PjCyjd9xpe1livJkZBtSMeRIen2cdgIOdcON
+         rA6liOx5wePllSg33hP8AdKExZLlgrSX+xqEnNxYIHfA7oQ8abJQdExrX57rosQ6bYx1
+         FEyeWWjF9gmDVnRqCqJeNQGA5ongx6eESzR/ZtOV+SASA+zk8n/38xzwF7hCV1qyI79c
+         jaYitL9ewMXAnd7Y5h9CX+z5vGhs5tYa0fA0ECDMkq5gP0CJMF1u+HqkIz/ytjzMd2PA
+         kYKQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=fifCfaZW/GsCIL1D5aAtR9JeZYH5AKHn1Hsk1/Pt9V8=;
+        b=RbnKFP365L6NGCw/CDZBD2Qr1B19jAI/WNXy3OScO0klbEGW4ZuLi2lmkJh//q6COd
+         ulgOnUSQdx1jxlM4A9rvXTcBLoF0xocQ9Z44S7Okdl3C1kgzjp3+rJfcc9VGBaXy5Yfj
+         CcFC+R4sXGmajaIULt2DulZ1u+ZqpAMLzfIbyaxxIBDw1+kW5lqnidHfBFfMXLB/e/VH
+         7YyKc3XoEV3vPLXeLdFzHZ9jDgW1QcuKfv5RoI/BdaF2KljtSg0+I7d2jdKah9IeiH8/
+         /JWyOzmiOSDvAEKJe2RVdiE3AitM4k9jkzgIrhhjcHPJPtFUz/A0+5yj3FAVQCRR6Kh1
+         jjGQ==
+X-Gm-Message-State: AOAM530OhEeCZKbJPdBm+SbzYXyqWE7sWOj7tWMWPLRTgiuebilgkv47
+        2f+P4LbxEwubEnNUzFYXeGYDJXYUSViTSN5Ev+8=
+X-Google-Smtp-Source: ABdhPJzEDLfEHRo3zSUMoa+tjOOEtHyRyeU8dm5xoRO7A0wwfdhWrFj9VhlKDjQhQo/iUYRWmm31tVqvPsSICC3h/4I=
+X-Received: by 2002:a92:1b86:: with SMTP id f6mr24951216ill.9.1591070676240;
+ Mon, 01 Jun 2020 21:04:36 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200601120525.GB2012@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9639 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=5 spamscore=0
- malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006020000
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9639 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=5
- mlxlogscore=999 priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1015
- impostorscore=0 adultscore=0 spamscore=0 mlxscore=0 lowpriorityscore=0
- cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006020000
+References: <157784106066.1364230.569420432829402226.stgit@magnolia>
+ <157784114490.1364230.7521571821422773694.stgit@magnolia> <CAOQ4uxgvnuVtfxz41W+FuTxy2GZ5QZwwUhacHgfMzJMKJ_db1g@mail.gmail.com>
+ <20200602000917.GE2162697@magnolia>
+In-Reply-To: <20200602000917.GE2162697@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 2 Jun 2020 07:04:24 +0300
+Message-ID: <CAOQ4uxj9OEEo4SdPAnY231+t5v_niR8vQ3a1ZTZJ14oJtFJ1Sg@mail.gmail.com>
+Subject: Re: [PATCH 13/14] xfs: enable bigtime for quota timers
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 01, 2020 at 08:05:25AM -0400, Brian Foster wrote:
-> On Fri, May 29, 2020 at 02:39:37PM -0700, Darrick J. Wong wrote:
-> > On Thu, May 28, 2020 at 11:10:44AM -0400, Brian Foster wrote:
-> > > On Tue, May 19, 2020 at 06:51:08PM -0700, Darrick J. Wong wrote:
-> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > 
-> > > > Use the btree bulk loading functions to rebuild the free space btrees
-> > > > and drop the open-coded implementation.
-> > > > 
-> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > ---
-> > > >  libxfs/libxfs_api_defs.h |    3 
-> > > >  repair/phase5.c          |  870 +++++++++++++---------------------------------
-> > > >  2 files changed, 254 insertions(+), 619 deletions(-)
-> > > > 
-> > > > 
-> > > ...
-> > > > diff --git a/repair/phase5.c b/repair/phase5.c
-> > > > index 8f5e5f59..e69b042c 100644
-> > > > --- a/repair/phase5.c
-> > > > +++ b/repair/phase5.c
-> > > ...
-> > > > @@ -837,268 +567,202 @@ btnum_to_ops(
-> ...
-> > > > +
-> > > > +		/* Ok, now how many free space records do we have? */
-> > > > +		*nr_extents = count_bno_extents_blocks(agno, &num_freeblocks);
-> > > > +	} while (1);
-> > > > +
-> > > > +	*extra_blocks = (bno_blocks - btr_bno->bload.nr_blocks) +
-> > > > +			(cnt_blocks - btr_cnt->bload.nr_blocks);
-> > > > +}
-> > > > +
-> > > > +static void
-> > > > +get_freesp_data(
-> > > > +	struct xfs_btree_cur		*cur,
-> > > > +	struct extent_tree_node		*bno_rec,
-> > > > +	xfs_agblock_t			*freeblks)
-> > > > +{
-> > > > +	struct xfs_alloc_rec_incore	*arec = &cur->bc_rec.a;
-> > > > +
-> > > > +	arec->ar_startblock = bno_rec->ex_startblock;
-> > > > +	arec->ar_blockcount = bno_rec->ex_blockcount;
-> > > > +	if (freeblks)
-> > > > +		*freeblks += bno_rec->ex_blockcount;
-> > > > +}
-> > > > +
-> > > > +/* Grab one bnobt record. */
-> > > > +static int
-> > > > +get_bnobt_record(
-> > > > +	struct xfs_btree_cur		*cur,
-> > > > +	void				*priv)
-> > > > +{
-> > > > +	struct bt_rebuild		*btr = priv;
-> > > > +
-> > > > +	get_freesp_data(cur, btr->bno_rec, btr->freeblks);
-> > > > +	btr->bno_rec = findnext_bno_extent(btr->bno_rec);
-> > > 
-> > > We should probably check for NULL here even if we don't expect it to
-> > > happen.
-> > > 
-> > > Also, this logic where we load the current pointer and get the next had
-> > > my eyes crossed for a bit. Can we just check the pointer state here to
-> > > determine whether to find the first record or the next?
-> > 
-> > Hm, I did that, and the logic ends up more cluttered looking:
-> > 
-> > 	if (cur->bc_btnum == XFS_BTNUM_BNO) {
-> > 		if (btr->bno_rec == NULL)
-> > 			btr->bno_rec = findfirst_bno_extent(agno);
-> > 		else
-> > 			btr->bno_rec = findnext_bno_extent(btr->bno_rec);
-> > 	} else {
-> > 		if (btr->bno_rec == NULL)
-> > 			btr->bno_rec = findfirst_bcnt_extent(agno);
-> > 		else
-> > 			btr->bno_rec = findnext_bcnt_extent(cur->bc_ag.agno,
-> > 							    btr->bno_rec);
-> > 	}
-> > 
-> 
-> Yeah, I figured this approach would boil down to something like this in
-> the record feeding code. For one, I'd stick that in a function with a
-> brief comment. Otherwise, despite the cluttered look, the logic itself
-> is simple and much easier to read IMO. I had to stare at the current
-> code for a few minutes before I recognized what was going on, then read
-> through the iteration thing again to make sure I had it correct. This
-> eliminates that confusion entirely and thus simplifies the broader
-> implementation. I think it also facilitates reducing the amount of code
-> even more if we can generalize the build_*() functions a bit more..
+On Tue, Jun 2, 2020 at 3:09 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Sun, May 31, 2020 at 08:07:59PM +0300, Amir Goldstein wrote:
+> > On Wed, Jan 1, 2020 at 3:12 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > >
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > >
+> > > Enable the bigtime feature for quota timers.  We decrease the accuracy
+> > > of the timers to ~4s in exchange for being able to set timers up to the
+> > > bigtime maximum.
+> > >
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_dquot_buf.c  |   72 ++++++++++++++++++++++++++++++++++++++--
+> > >  fs/xfs/libxfs/xfs_format.h     |   22 ++++++++++++
+> > >  fs/xfs/libxfs/xfs_quota_defs.h |   11 ++++--
+> > >  fs/xfs/scrub/quota.c           |    5 +++
+> > >  fs/xfs/xfs_dquot.c             |   71 +++++++++++++++++++++++++++++++--------
+> > >  fs/xfs/xfs_ondisk.h            |    6 +++
+> > >  fs/xfs/xfs_qm.c                |   13 ++++---
+> > >  fs/xfs/xfs_qm.h                |    8 ++--
+> > >  fs/xfs/xfs_qm_syscalls.c       |   19 ++++++-----
+> > >  9 files changed, 186 insertions(+), 41 deletions(-)
+> > >
+> > >
+> > > diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+> > > index 72e0fcfef580..2b5d51a6d64b 100644
+> > > --- a/fs/xfs/libxfs/xfs_dquot_buf.c
+> > > +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+> > > @@ -40,6 +40,8 @@ xfs_dquot_verify(
+> > >         xfs_dqid_t              id,
+> > >         uint                    type)   /* used only during quotacheck */
+> > >  {
+> > > +       uint8_t                 dtype;
+> > > +
+> > >         /*
+> > >          * We can encounter an uninitialized dquot buffer for 2 reasons:
+> > >          * 1. If we crash while deleting the quotainode(s), and those blks got
+> > > @@ -60,11 +62,22 @@ xfs_dquot_verify(
+> > >         if (ddq->d_version != XFS_DQUOT_VERSION)
+> > >                 return __this_address;
+> > >
+> > > -       if (type && ddq->d_flags != type)
+> > > +       dtype = ddq->d_flags & XFS_DQ_ALLTYPES;
+> >
+> > Suggest dtype = XFS_DQ_TYPE(ddq->d_flags);
+> >
+> > [...]
+> >
+> > > @@ -540,13 +551,28 @@ xfs_dquot_from_disk(
+> > >         dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
+> > >         dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
+> > >
+> > > -       xfs_dquot_from_disk_timestamp(&tv, ddqp->d_btimer);
+> > > +       xfs_dquot_from_disk_timestamp(ddqp, &tv, ddqp->d_btimer);
+> > >         dqp->q_btimer = tv.tv_sec;
+> > > -       xfs_dquot_from_disk_timestamp(&tv, ddqp->d_itimer);
+> > > +       xfs_dquot_from_disk_timestamp(ddqp, &tv, ddqp->d_itimer);
+> > >         dqp->q_itimer = tv.tv_sec;
+> > > -       xfs_dquot_from_disk_timestamp(&tv, ddqp->d_rtbtimer);
+> > > +       xfs_dquot_from_disk_timestamp(ddqp, &tv, ddqp->d_rtbtimer);
+> > >         dqp->q_rtbtimer = tv.tv_sec;
+> > >
+> > > +       /* Upgrade to bigtime if possible. */
+> > > +       if (xfs_dquot_add_bigtime(dqp->q_mount, iddq)) {
+> > > +               tv.tv_sec = xfs_dquot_clamp_timer(iddq, dqp->q_btimer);
+> > > +               xfs_dquot_to_disk_timestamp(iddq, &iddq->d_btimer, &tv);
+> > > +               dqp->q_btimer = tv.tv_sec;
+> > > +
+> > > +               tv.tv_sec = xfs_dquot_clamp_timer(iddq, dqp->q_itimer);
+> > > +               xfs_dquot_to_disk_timestamp(iddq, &iddq->d_itimer, &tv);
+> > > +               dqp->q_itimer = tv.tv_sec;
+> > > +
+> > > +               tv.tv_sec = xfs_dquot_clamp_timer(iddq, dqp->q_rtbtimer);
+> > > +               xfs_dquot_to_disk_timestamp(iddq, &iddq->d_rtbtimer, &tv);
+> > > +               dqp->q_rtbtimer = tv.tv_sec;
+> > > +       }
+> > > +
+> >
+> > This is better than the inode timestamp conversion because at
+> > least the bigtime flag incore is always consistent with the incore values.
+> > But I think it would be safer if the conversion happened inside the helper.
+>
+> This code, like the inode timestamp handling code, reads the ondisk
+> timer value into the incore dquot, and sets the bigtime flag on the
+> incore dquot.  We then wait until someone dirties the dquot to transform
+> the ondisk dquot to be in bigtime format with the flag set.
+>
+> The dquot conversion is /much/ messier than the inode, because the dquot
+> infrastructure maintains an incore copy of the ondisk dquot as well as
+> an incore time64_t value, and we have to keep that whole mess
+> consistent.
+>
 
-<nod>
+I see. That's what got me confused about how the inode timestamp incore
+values are stored.
 
+> TBH someone should probably go fix the incore dquots to have only the
+> incore values (instead of the embedded xfs_disk_dquot) but I'd rather
+> that go in as a cleanup after adding this series, because this series is
+> already 13 patches, and if you combine cleaning up dquots with hch's
+> incore inode removal now we have Yet Another Friggin 40-patch series.
+>
 
-> > OTOH I think you do have a good point that splitting the code that sets
-> > bno_rec across three functions is not easy to understand.
-> > 
-> 
-> Exactly.
-> 
-> > > Finally, I notice we duplicate the build_[bno|cnt]bt() functions for
-> > > what amounts to a different get_record() callback specific to the tree
-> > > type. If we also generalize get_record() to use the tree type (it
-> > > already has the cursor), it seems that much of the duplication can be
-> > > reduced and the logic simplified.
-> > 
-> > Ok, done.
-> > 
-> > > > +	return 0;
-> > > > +}
-> > > > +
-> > > > +/* Rebuild a free space by block number btree. */
-> > > > +static void
-> > > > +build_bnobt(
-> > > > +	struct repair_ctx	*sc,
-> > > > +	xfs_agnumber_t		agno,
-> > > > +	struct bt_rebuild	*btr_bno,
-> > > > +	xfs_agblock_t		*freeblks)
-> > > > +{
-> > > > +	int			error;
-> > > > +
-> > > > +	*freeblks = 0;
-> > > > +	btr_bno->bload.get_record = get_bnobt_record;
-> > > > +	btr_bno->bload.claim_block = rebuild_claim_block;
-> > > 
-> > > Note that one of these callbacks is introduced in this patch and the
-> > > other in the previous. I've no issue with splitting the patches as noted
-> > > in the previous patch, but these should probably be consistent one way
-> > > or the other.
-> > 
-> > All the btree types set ->claim_block to rebuild_claim_block, whereas
-> > ->get_record is specific to the particular type of btree.
-> > 
-> 
-> Ok, seems more reasonable in hindsight.
+Fare enough, but until someone does go and fix this code, my comment
+still stands.
 
-<nod> FWIW I also put the new code in its own file to declutter phase5.c
-further.
+This patch calls xfs_dquot_add_bigtime() in three call sites.
 
---D
+Two of them are correct because the values of timers is 0.
+The one above is correct because it shifts the embedded timer
+values right after the call.
 
-> Brian
-> 
-> > > > +	btr_bno->bno_rec = findfirst_bno_extent(agno);
-> > > > +	btr_bno->freeblks = freeblks;
-> > > > +
-> > > > +	error = -libxfs_trans_alloc_empty(sc->mp, &sc->tp);
-> > > > +	if (error)
-> > > > +		do_error(
-> > > > +_("Insufficient memory to construct bnobt rebuild transaction.\n"));
-> > > > +
-> > > > +	/* Add all observed bnobt records. */
-> > > > +	error = -libxfs_btree_bload(btr_bno->cur, &btr_bno->bload, btr_bno);
-> > > > +	if (error)
-> > > > +		do_error(
-> > > > +_("Error %d while creating bnobt btree for AG %u.\n"), error, agno);
-> > > > +
-> > > > +	/* Since we're not writing the AGF yet, no need to commit the cursor */
-> > > > +	libxfs_btree_del_cursor(btr_bno->cur, 0);
-> > > > +	error = -libxfs_trans_commit(sc->tp);
-> > > > +	if (error)
-> > > > +		do_error(
-> > > > +_("Error %d while writing bnobt btree for AG %u.\n"), error, agno);
-> > > > +	sc->tp = NULL;
-> > > > +}
-> > > > +
-> > > ...
-> > > > @@ -2354,48 +2041,14 @@ build_agf_agfl(
-> > > >  			freelist[i] = cpu_to_be32(NULLAGBLOCK);
-> > > >  	}
-> > > >  
-> > > > -	/*
-> > > > -	 * do we have left-over blocks in the btree cursors that should
-> > > > -	 * be used to fill the AGFL?
-> > > > -	 */
-> > > > -	if (bno_bt->num_free_blocks > 0 || bcnt_bt->num_free_blocks > 0)  {
-> > > > -		/*
-> > > > -		 * yes, now grab as many blocks as we can
-> > > > -		 */
-> > > > -		i = 0;
-> > > > -		while (bno_bt->num_free_blocks > 0 && i < libxfs_agfl_size(mp))
-> > > > -		{
-> > > > -			freelist[i] = cpu_to_be32(
-> > > > -					get_next_blockaddr(agno, 0, bno_bt));
-> > > > -			i++;
-> > > > -		}
-> > > > -
-> > > > -		while (bcnt_bt->num_free_blocks > 0 && i < libxfs_agfl_size(mp))
-> > > > -		{
-> > > > -			freelist[i] = cpu_to_be32(
-> > > > -					get_next_blockaddr(agno, 0, bcnt_bt));
-> > > > -			i++;
-> > > > -		}
-> > > > -		/*
-> > > > -		 * now throw the rest of the blocks away and complain
-> > > > -		 */
-> > > > -		while (bno_bt->num_free_blocks > 0) {
-> > > > -			fsb = XFS_AGB_TO_FSB(mp, agno,
-> > > > -					get_next_blockaddr(agno, 0, bno_bt));
-> > > > -			error = slab_add(lost_fsb, &fsb);
-> > > > -			if (error)
-> > > > -				do_error(
-> > > > -_("Insufficient memory saving lost blocks.\n"));
-> > > > -		}
-> > > > -		while (bcnt_bt->num_free_blocks > 0) {
-> > > > -			fsb = XFS_AGB_TO_FSB(mp, agno,
-> > > > -					get_next_blockaddr(agno, 0, bcnt_bt));
-> > > > -			error = slab_add(lost_fsb, &fsb);
-> > > > -			if (error)
-> > > > -				do_error(
-> > > > -_("Insufficient memory saving lost blocks.\n"));
-> > > > -		}
-> > > > +	/* Fill the AGFL with leftover blocks or save them for later. */
-> > > > +	i = 0;
-> > > 
-> > > How about agfl_idx or something since this variable is passed down into
-> > > a function?
-> > 
-> > The 'i' variable existed before this patch.  I can add a new cleanup to
-> > fix the name...
-> > 
-> > > > +	freelist = xfs_buf_to_agfl_bno(agfl_buf);
-> > > > +	fill_agfl(btr_bno, freelist, &i);
-> > > > +	fill_agfl(btr_cnt, freelist, &i);
-> > > >  
-> > > > +	/* Set the AGF counters for the AGFL. */
-> > > > +	if (i > 0) {
-> > > >  		agf->agf_flfirst = 0;
-> > > >  		agf->agf_fllast = cpu_to_be32(i - 1);
-> > > >  		agf->agf_flcount = cpu_to_be32(i);
-> > > ...
-> > > > @@ -2650,9 +2283,9 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
-> > > >  	/*
-> > > >  	 * set up agf and agfl
-> > > >  	 */
-> > > > -	build_agf_agfl(mp, agno, &bno_btree_curs,
-> > > > -		&bcnt_btree_curs, freeblks1, extra_blocks,
-> > > > -		&rmap_btree_curs, &refcnt_btree_curs, lost_fsb);
-> > > > +	build_agf_agfl(mp, agno, &btr_bno, &btr_cnt, freeblks1, extra_blocks,
-> > > > +			&rmap_btree_curs, &refcnt_btree_curs, lost_fsb);
-> > > > +
-> > > 
-> > > I was trying to figure out what extra_blocks was used for and noticed
-> > > that it's not even used by this function. Perhaps a preceding cleanup
-> > > patch to drop it?
-> > 
-> > Ok.
-> > 
-> > > >  	/*
-> > > >  	 * build inode allocation tree.
-> > > >  	 */
-> > > > @@ -2674,15 +2307,14 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
-> > > >  	/*
-> > > >  	 * tear down cursors
-> > > >  	 */
-> > > > -	finish_cursor(&bno_btree_curs);
-> > > > -	finish_cursor(&ino_btree_curs);
-> > > 
-> > > Looks like this one shouldn't be going away here.
-> > 
-> > Oops, good catch.
-> > 
-> > --D
-> > 
-> > > Brian
-> > > 
-> > > > +	finish_rebuild(mp, &btr_bno, lost_fsb);
-> > > > +	finish_rebuild(mp, &btr_cnt, lost_fsb);
-> > > >  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
-> > > >  		finish_cursor(&rmap_btree_curs);
-> > > >  	if (xfs_sb_version_hasreflink(&mp->m_sb))
-> > > >  		finish_cursor(&refcnt_btree_curs);
-> > > >  	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-> > > >  		finish_cursor(&fino_btree_curs);
-> > > > -	finish_cursor(&bcnt_btree_curs);
-> > > >  
-> > > >  	/*
-> > > >  	 * release the incore per-AG bno/bcnt trees so the extent nodes
-> > > > 
-> > > 
-> > 
-> 
+IMO it would be a better practice to keep this conversion
+containers in a helper xfs_dquot_upgrade_bigtime() and
+explicitly check for the 0 value case.
+
+Thanks,
+Amir.
