@@ -4,207 +4,246 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1B60C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:30:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52399C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:30:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABB25206C3
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:30:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27927206C3
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:30:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jnm0++/g"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B299GyGe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725919AbgFBEa0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Jun 2020 00:30:26 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:48430 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725793AbgFBEa0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 00:30:26 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0524I2J6121433;
-        Tue, 2 Jun 2020 04:28:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=txP3NwgyJoEAunm6pAdqdtMEcNC34AmBQ0nS60+YkQI=;
- b=jnm0++/g2KOwNBfkBXDc+XBKoI4sosHI2YBdn40+ijAkxRO8J7K5COjtrv1NqjCCdPci
- Fc+BZJ6JavQ3kPtKi2cjtg9NWb2Hs/9PrcM9HKxGYLmLO6Y8JvKv3/9nx4zoVJyPfvGa
- x0wdwk9u002yUMhGBYtML5OVUYJps9SGScciBDQ97tVbsUN7UYRo7F1WCtoKqHxtWYdX
- Kre97URJZO/2z2VPODyjw5oAJcLzhFUVfQq6J9qsdXltC1q/ZubDe/1pGPnfawV2Lb39
- NFGXBGb6g+r9xhJbV9NuaF4uDaIF9Z13UPYQNg+GYbzLhCPji/7/9fzRfZ83rvA8NPQ9 fg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 31d5qr20tf-1
+        id S1725930AbgFBEa5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Jun 2020 00:30:57 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:49950 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725793AbgFBEa5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 00:30:57 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0524HuGf106403;
+        Tue, 2 Jun 2020 04:30:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=LkiyFBItBCgdI+BgXT3Skih7F2Aipuga1lejsfAogsU=;
+ b=B299GyGekL8cfVWFDht3xHnh9/jr8VEeKtaDP41o7sVN1bYhWBe2gTx3KkznORqVHM59
+ 5SbuWpyKD4MJVpbP6nxTjDi9Z3j5lPFafmd7fe+VUQ5TF//sQlAqBfQW9tEf1WOJs5m5
+ AFCkcVbPtxCrOR2d/g5KFmE7r5tq9d/No48aNguZEuvE1ORX6wABmuIQKhu8DiqmxXaB
+ kn8bhIKgwLos856JDsLCY9MhSCZQ7fAxE/GEFLl14CJCuEhVHzqbrAa/73wgde8KX7d1
+ 0ldKicBvHkqaHSpKOxAzn3Tvossgobk8WEcrQTumPfya2/5nYXFC3NMv5DMXRBfuTFOY Uw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 31bewqswte-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 02 Jun 2020 04:28:21 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0524Huks126748;
-        Tue, 2 Jun 2020 04:26:20 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 31c25mnh94-1
+        Tue, 02 Jun 2020 04:30:54 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0524HvSw039996;
+        Tue, 2 Jun 2020 04:30:54 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 31c18sgnb0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 02 Jun 2020 04:26:20 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0524QK90019890;
-        Tue, 2 Jun 2020 04:26:20 GMT
+        Tue, 02 Jun 2020 04:30:54 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0524UraJ022609;
+        Tue, 2 Jun 2020 04:30:53 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 01 Jun 2020 21:26:20 -0700
-Subject: [PATCH 12/17] xfs_repair: remove verify_dfsbno
+        with ESMTP ; Mon, 01 Jun 2020 21:30:53 -0700
+Date:   Mon, 1 Jun 2020 21:30:52 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Mon, 01 Jun 2020 21:26:18 -0700
-Message-ID: <159107197805.313760.6515122377279848689.stgit@magnolia>
-In-Reply-To: <159107190111.313760.8056083399475334567.stgit@magnolia>
-References: <159107190111.313760.8056083399475334567.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/30] xfs: Don't allow logging of XFS_ISTALE inodes
+Message-ID: <20200602043052.GZ8230@magnolia>
+References: <20200601214251.4167140-1-david@fromorbit.com>
+ <20200601214251.4167140-2-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200601214251.4167140-2-david@fromorbit.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9639 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=2 spamscore=0
- malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 mlxscore=0
+ adultscore=0 mlxlogscore=999 suspectscore=5 spamscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2006020024
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9639 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 cotscore=-2147483648
- mlxscore=0 lowpriorityscore=0 suspectscore=2 spamscore=0 adultscore=0
- clxscore=1015 impostorscore=0 bulkscore=0 phishscore=0 priorityscore=1501
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006020024
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 bulkscore=0
+ phishscore=0 suspectscore=5 impostorscore=0 cotscore=-2147483648
+ lowpriorityscore=0 mlxscore=0 adultscore=0 spamscore=0 mlxlogscore=999
+ malwarescore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2006020024
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jun 02, 2020 at 07:42:22AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> In tracking down a problem in this patchset, I discovered we are
+> reclaiming dirty stale inodes. This wasn't discovered until inodes
+> were always attached to the cluster buffer and then the rcu callback
+> that freed inodes was assert failing because the inode still had an
+> active pointer to the cluster buffer after it had been reclaimed.
+> 
+> Debugging the issue indicated that this was a pre-existing issue
+> resulting from the way the inodes are handled in xfs_inactive_ifree.
+> When we free a cluster buffer from xfs_ifree_cluster, all the inodes
+> in cache are marked XFS_ISTALE. Those that are clean have nothing
+> else done to them and so eventually get cleaned up by background
+> reclaim. i.e. it is assumed we'll never dirty/relog an inode marked
+> XFS_ISTALE.
+> 
+> On journal commit dirty stale inodes as are handled by both
+> buffer and inode log items to run though xfs_istale_done() and
+> removed from the AIL (buffer log item commit) or the log item will
+> simply unpin it because the buffer log item will clean it. What happens
+> to any specific inode is entirely dependent on which log item wins
+> the commit race, but the result is the same - stale inodes are
+> clean, not attached to the cluster buffer, and not in the AIL. Hence
+> inode reclaim can just free these inodes without further care.
+> 
+> However, if the stale inode is relogged, it gets dirtied again and
+> relogged into the CIL. Most of the time this isn't an issue, because
+> relogging simply changes the inode's location in the current
+> checkpoint. Problems arise, however, when the CIL checkpoints
+> between two transactions in the xfs_inactive_ifree() deferops
+> processing. This results in the XFS_ISTALE inode being redirtied
+> and inserted into the CIL without any of the other stale cluster
+> buffer infrastructure being in place.
+> 
+> Hence on journal commit, it simply gets unpinned, so it remains
+> dirty in memory. Everything in inode writeback avoids XFS_ISTALE
+> inodes so it can't be written back, and it is not tracked in the AIL
+> so there's not even a trigger to attempt to clean the inode. Hence
+> the inode just sits dirty in memory until inode reclaim comes along,
+> sees that it is XFS_ISTALE, and goes to reclaim it. This reclaiming
+> of a dirty inode caused use after free, list corruptions and other
+> nasty issues later in this patchset.
+> 
+> Hence this patch addresses a violation of the "never log XFS_ISTALE
+> inodes" caused by the deferops processing rolling a transaction
+> and relogging a stale inode in xfs_inactive_free. It also adds a
+> bunch of asserts to catch this problem in debug kernels so that
+> we don't reintroduce this problem in future.
+> 
+> Reproducer for this issue was generic/558 on a v4 filesystem.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/libxfs/xfs_trans_inode.c |  2 ++
+>  fs/xfs/xfs_icache.c             |  3 ++-
+>  fs/xfs/xfs_inode.c              | 25 ++++++++++++++++++++++---
+>  3 files changed, 26 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+> index b5dfb66548422..4504d215cd590 100644
+> --- a/fs/xfs/libxfs/xfs_trans_inode.c
+> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
+> @@ -36,6 +36,7 @@ xfs_trans_ijoin(
+>  
+>  	ASSERT(iip->ili_lock_flags == 0);
+>  	iip->ili_lock_flags = lock_flags;
+> +	ASSERT(!xfs_iflags_test(ip, XFS_ISTALE));
+>  
+>  	/*
+>  	 * Get a log_item_desc to point at the new item.
+> @@ -89,6 +90,7 @@ xfs_trans_log_inode(
+>  
+>  	ASSERT(ip->i_itemp != NULL);
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> +	ASSERT(!xfs_iflags_test(ip, XFS_ISTALE));
+>  
+>  	/*
+>  	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 0a5ac6f9a5834..dbba4c1946386 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1141,7 +1141,7 @@ xfs_reclaim_inode(
+>  			goto out_ifunlock;
+>  		xfs_iunpin_wait(ip);
+>  	}
+> -	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
+> +	if (xfs_inode_clean(ip)) {
+>  		xfs_ifunlock(ip);
+>  		goto reclaim;
+>  	}
+> @@ -1228,6 +1228,7 @@ xfs_reclaim_inode(
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_qm_dqdetach(ip);
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	ASSERT(xfs_inode_clean(ip));
+>  
+>  	__xfs_inode_free(ip);
+>  	return error;
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 64f5f9a440aed..53a1d64782c35 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1740,10 +1740,31 @@ xfs_inactive_ifree(
+>  		return error;
+>  	}
+>  
+> +	/*
+> +	 * We do not hold the inode locked across the entire rolling transaction
+> +	 * here. We only need to hold it for the first transaction that
+> +	 * xfs_ifree() builds, which may mark the inode XFS_ISTALE if the
+> +	 * underlying cluster buffer is freed. Relogging an XFS_ISTALE inode
+> +	 * here breaks the relationship between cluster buffer invalidation and
+> +	 * stale inode invalidation on cluster buffer item journal commit
+> +	 * completion, and can result in leaving dirty stale inodes hanging
+> +	 * around in memory.
+> +	 *
+> +	 * We have no need for serialising this inode operation against other
+> +	 * operations - we freed the inode and hence reallocation is required
+> +	 * and that will serialise on reallocating the space the deferops need
+> +	 * to free. Hence we can unlock the inode on the first commit of
+> +	 * the transaction rather than roll it right through the deferops. This
+> +	 * avoids relogging the XFS_ISTALE inode.
 
-Replace this homegrown helper with its libxfs equivalent.
+Hmm.  What defer ops causes a transaction roll?  Is it the EFI that
+frees the inode cluster blocks?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- repair/attr_repair.c |    2 +-
- repair/dinode.c      |   21 +--------------------
- repair/dinode.h      |    4 ----
- repair/prefetch.c    |    9 +++++----
- repair/scan.c        |    2 +-
- 5 files changed, 8 insertions(+), 30 deletions(-)
+> +	 *
+> +	 * We check that xfs_ifree() hasn't grown an internal transaction roll
+> +	 * by asserting that the inode is still locked when it returns.
+> +	 */
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -	xfs_trans_ijoin(tp, ip, 0);
+> +	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+
+This looks right to me since we should be marking the inode free in the
+first transaction and therefore should not keep it attached to the
+transaction...
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
 
 
-diff --git a/repair/attr_repair.c b/repair/attr_repair.c
-index 5f884033..6cec0f70 100644
---- a/repair/attr_repair.c
-+++ b/repair/attr_repair.c
-@@ -1092,7 +1092,7 @@ process_longform_attr(
- 	}
- 
- 	/* FIX FOR bug 653709 -- EKN */
--	if (!xfs_verify_fsbno(mp, bno)) {
-+	if (!libxfs_verify_fsbno(mp, bno)) {
- 		do_warn(
- 	_("block in attribute fork of inode %" PRIu64 " is not valid\n"), ino);
- 		return 1;
-diff --git a/repair/dinode.c b/repair/dinode.c
-index 135703d9..67adddd7 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -203,25 +203,6 @@ verify_aginum(xfs_mount_t	*mp,
- 	return verify_ag_bno(sbp, agno, agbno);
- }
- 
--/*
-- * return 1 if block number is good, 0 if out of range
-- */
--int
--verify_dfsbno(xfs_mount_t	*mp,
--		xfs_fsblock_t	fsbno)
--{
--	xfs_agnumber_t	agno;
--	xfs_agblock_t	agbno;
--	xfs_sb_t	*sbp = &mp->m_sb;;
--
--	/* range check ag #, ag block.  range-checking offset is pointless */
--
--	agno = XFS_FSB_TO_AGNO(mp, fsbno);
--	agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
--
--	return verify_ag_bno(sbp, agno, agbno) == 0;
--}
--
- #define XR_DFSBNORANGE_VALID	0
- #define XR_DFSBNORANGE_BADSTART	1
- #define XR_DFSBNORANGE_BADEND	2
-@@ -835,7 +816,7 @@ _("bad numrecs 0 in inode %" PRIu64 " bmap btree root block\n"),
- 		 * btree, we'd do it right here.  For now, if there's a
- 		 * problem, we'll bail out and presumably clear the inode.
- 		 */
--		if (!verify_dfsbno(mp, get_unaligned_be64(&pp[i])))  {
-+		if (!libxfs_verify_fsbno(mp, get_unaligned_be64(&pp[i])))  {
- 			do_warn(
- _("bad bmap btree ptr 0x%" PRIx64 " in ino %" PRIu64 "\n"),
- 				get_unaligned_be64(&pp[i]), lino);
-diff --git a/repair/dinode.h b/repair/dinode.h
-index c8e563b5..4bf7affd 100644
---- a/repair/dinode.h
-+++ b/repair/dinode.h
-@@ -9,10 +9,6 @@
- struct blkmap;
- struct prefetch_args;
- 
--int
--verify_dfsbno(xfs_mount_t	*mp,
--		xfs_fsblock_t	fsbno);
--
- void
- convert_extent(
- 	xfs_bmbt_rec_t		*rp,
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 3ac49db1..686bf7be 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -188,8 +188,9 @@ pf_read_bmbt_reclist(
- 				(irec.br_startoff >= fs_max_file_offset))
- 			goto out_free;
- 
--		if (!verify_dfsbno(mp, irec.br_startblock) || !verify_dfsbno(mp,
--				irec.br_startblock + irec.br_blockcount - 1))
-+		if (!libxfs_verify_fsbno(mp, irec.br_startblock) ||
-+		    !libxfs_verify_fsbno(mp, irec.br_startblock +
-+					     irec.br_blockcount - 1))
- 			goto out_free;
- 
- 		if (!args->dirs_only && ((irec.br_startoff +
-@@ -337,7 +338,7 @@ pf_scanfunc_bmap(
- 
- 	for (i = 0; i < numrecs; i++) {
- 		dbno = get_unaligned_be64(&pp[i]);
--		if (!verify_dfsbno(mp, dbno))
-+		if (!libxfs_verify_fsbno(mp, dbno))
- 			return 0;
- 		if (!pf_scan_lbtree(dbno, level, isadir, args, pf_scanfunc_bmap))
- 			return 0;
-@@ -379,7 +380,7 @@ pf_read_btinode(
- 
- 	for (i = 0; i < numrecs; i++) {
- 		dbno = get_unaligned_be64(&pp[i]);
--		if (!verify_dfsbno(mp, dbno))
-+		if (!libxfs_verify_fsbno(mp, dbno))
- 			break;
- 		if (!pf_scan_lbtree(dbno, level, isadir, args, pf_scanfunc_bmap))
- 			break;
-diff --git a/repair/scan.c b/repair/scan.c
-index 8e81c552..dcd4864d 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -491,7 +491,7 @@ _("inode %" PRIu64 " bad # of bmap records (%u, min - %u, max - %u)\n"),
- 		 * we'd do it right here.  For now, if there's a problem,
- 		 * we'll bail out and presumably clear the inode.
- 		 */
--		if (!verify_dfsbno(mp, be64_to_cpu(pp[i])))  {
-+		if (!libxfs_verify_fsbno(mp, be64_to_cpu(pp[i])))  {
- 			do_warn(
- _("bad bmap btree ptr 0x%llx in ino %" PRIu64 "\n"),
- 			       (unsigned long long) be64_to_cpu(pp[i]), ino);
-
+>  	error = xfs_ifree(tp, ip);
+> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+>  	if (error) {
+>  		/*
+>  		 * If we fail to free the inode, shut down.  The cancel
+> @@ -1756,7 +1777,6 @@ xfs_inactive_ifree(
+>  			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+>  		}
+>  		xfs_trans_cancel(tp);
+> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  		return error;
+>  	}
+>  
+> @@ -1774,7 +1794,6 @@ xfs_inactive_ifree(
+>  		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
+>  			__func__, error);
+>  
+> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.26.2.761.g0e0b3e54be
+> 
