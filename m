@@ -2,190 +2,198 @@ Return-Path: <SRS0=pQq2=7P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15FD8C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC503C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:25:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC8572086A
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:04:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B79EB20659
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 04:25:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BfL6qEQz"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bfgI+zi3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725835AbgFBEEh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Jun 2020 00:04:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47140 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725793AbgFBEEh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 00:04:37 -0400
-Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07C5FC061A0E
-        for <linux-xfs@vger.kernel.org>; Mon,  1 Jun 2020 21:04:37 -0700 (PDT)
-Received: by mail-il1-x143.google.com with SMTP id p5so10504133ile.6
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Jun 2020 21:04:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=fifCfaZW/GsCIL1D5aAtR9JeZYH5AKHn1Hsk1/Pt9V8=;
-        b=BfL6qEQzJeOCb4/NYcEZIVJrvIAQg51ML1X+3R1k1mplHBO5PO7G4+GYnWjgmxgmyA
-         HuJlcI6W6a6m4YPpGtbcjfCffutzdZq1PjCyjd9xpe1livJkZBtSMeRIen2cdgIOdcON
-         rA6liOx5wePllSg33hP8AdKExZLlgrSX+xqEnNxYIHfA7oQ8abJQdExrX57rosQ6bYx1
-         FEyeWWjF9gmDVnRqCqJeNQGA5ongx6eESzR/ZtOV+SASA+zk8n/38xzwF7hCV1qyI79c
-         jaYitL9ewMXAnd7Y5h9CX+z5vGhs5tYa0fA0ECDMkq5gP0CJMF1u+HqkIz/ytjzMd2PA
-         kYKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=fifCfaZW/GsCIL1D5aAtR9JeZYH5AKHn1Hsk1/Pt9V8=;
-        b=RbnKFP365L6NGCw/CDZBD2Qr1B19jAI/WNXy3OScO0klbEGW4ZuLi2lmkJh//q6COd
-         ulgOnUSQdx1jxlM4A9rvXTcBLoF0xocQ9Z44S7Okdl3C1kgzjp3+rJfcc9VGBaXy5Yfj
-         CcFC+R4sXGmajaIULt2DulZ1u+ZqpAMLzfIbyaxxIBDw1+kW5lqnidHfBFfMXLB/e/VH
-         7YyKc3XoEV3vPLXeLdFzHZ9jDgW1QcuKfv5RoI/BdaF2KljtSg0+I7d2jdKah9IeiH8/
-         /JWyOzmiOSDvAEKJe2RVdiE3AitM4k9jkzgIrhhjcHPJPtFUz/A0+5yj3FAVQCRR6Kh1
-         jjGQ==
-X-Gm-Message-State: AOAM530OhEeCZKbJPdBm+SbzYXyqWE7sWOj7tWMWPLRTgiuebilgkv47
-        2f+P4LbxEwubEnNUzFYXeGYDJXYUSViTSN5Ev+8=
-X-Google-Smtp-Source: ABdhPJzEDLfEHRo3zSUMoa+tjOOEtHyRyeU8dm5xoRO7A0wwfdhWrFj9VhlKDjQhQo/iUYRWmm31tVqvPsSICC3h/4I=
-X-Received: by 2002:a92:1b86:: with SMTP id f6mr24951216ill.9.1591070676240;
- Mon, 01 Jun 2020 21:04:36 -0700 (PDT)
+        id S1725787AbgFBEZY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Jun 2020 00:25:24 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:33526 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725781AbgFBEZY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 00:25:24 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0524HLmn106921;
+        Tue, 2 Jun 2020 04:25:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=YDcCzvPWwIOrFQb6qFvuy7GbWhGiPNN5BAHmj0HSvSs=;
+ b=bfgI+zi3xlJm7+sE+wr3eZGYmViIAUe/dmerJt9ZB7gpAJVFPUK5dpRVx3lNkSsKekxu
+ y4A9noLPJYgHkIXrvvbjjdjSwzujeTpq/snTmT3+Xb6v0BYrPPnuN2yqakm24fyi4hZV
+ o1qZ79XMchkglrfFI6omJloi+SYX056A71YIZ0cCDTSPLIOrVzAW3m/FG8S72D4+jQdp
+ iNByJjmzjj5VDm4CCXA6nApVJbWoIpiojRXwfSRuFE1JreJ/cSdpY/LA7AvVCJYXVWFZ
+ Zh5ZLtWgncdHQkLCW3Qb0aJjorDkAKdsxhGtUpPUn2Wxpbw1Ogh1FkCGizP1l8Mr5jVF BQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 31bfem1t7r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 02 Jun 2020 04:25:18 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0524I1fd040399;
+        Tue, 2 Jun 2020 04:25:17 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 31c18sgg34-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 02 Jun 2020 04:25:17 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0524PGQd020761;
+        Tue, 2 Jun 2020 04:25:16 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 01 Jun 2020 21:25:16 -0700
+Subject: [PATCH 02/17] xfs_repair: fix missing dir buffer corruption checks
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     sandeen@sandeen.net, darrick.wong@oracle.com
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Date:   Mon, 01 Jun 2020 21:25:15 -0700
+Message-ID: <159107191545.313760.9884644443421173377.stgit@magnolia>
+In-Reply-To: <159107190111.313760.8056083399475334567.stgit@magnolia>
+References: <159107190111.313760.8056083399475334567.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-References: <157784106066.1364230.569420432829402226.stgit@magnolia>
- <157784114490.1364230.7521571821422773694.stgit@magnolia> <CAOQ4uxgvnuVtfxz41W+FuTxy2GZ5QZwwUhacHgfMzJMKJ_db1g@mail.gmail.com>
- <20200602000917.GE2162697@magnolia>
-In-Reply-To: <20200602000917.GE2162697@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 2 Jun 2020 07:04:24 +0300
-Message-ID: <CAOQ4uxj9OEEo4SdPAnY231+t5v_niR8vQ3a1ZTZJ14oJtFJ1Sg@mail.gmail.com>
-Subject: Re: [PATCH 13/14] xfs: enable bigtime for quota timers
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9639 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 mlxscore=0
+ adultscore=0 mlxlogscore=999 suspectscore=0 spamscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006020024
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9639 signatures=668686
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
+ mlxlogscore=999 priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1015
+ impostorscore=0 adultscore=0 spamscore=0 mlxscore=0 lowpriorityscore=0
+ cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006020024
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 2, 2020 at 3:09 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Sun, May 31, 2020 at 08:07:59PM +0300, Amir Goldstein wrote:
-> > On Wed, Jan 1, 2020 at 3:12 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > Enable the bigtime feature for quota timers.  We decrease the accuracy
-> > > of the timers to ~4s in exchange for being able to set timers up to the
-> > > bigtime maximum.
-> > >
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/libxfs/xfs_dquot_buf.c  |   72 ++++++++++++++++++++++++++++++++++++++--
-> > >  fs/xfs/libxfs/xfs_format.h     |   22 ++++++++++++
-> > >  fs/xfs/libxfs/xfs_quota_defs.h |   11 ++++--
-> > >  fs/xfs/scrub/quota.c           |    5 +++
-> > >  fs/xfs/xfs_dquot.c             |   71 +++++++++++++++++++++++++++++++--------
-> > >  fs/xfs/xfs_ondisk.h            |    6 +++
-> > >  fs/xfs/xfs_qm.c                |   13 ++++---
-> > >  fs/xfs/xfs_qm.h                |    8 ++--
-> > >  fs/xfs/xfs_qm_syscalls.c       |   19 ++++++-----
-> > >  9 files changed, 186 insertions(+), 41 deletions(-)
-> > >
-> > >
-> > > diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> > > index 72e0fcfef580..2b5d51a6d64b 100644
-> > > --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> > > +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> > > @@ -40,6 +40,8 @@ xfs_dquot_verify(
-> > >         xfs_dqid_t              id,
-> > >         uint                    type)   /* used only during quotacheck */
-> > >  {
-> > > +       uint8_t                 dtype;
-> > > +
-> > >         /*
-> > >          * We can encounter an uninitialized dquot buffer for 2 reasons:
-> > >          * 1. If we crash while deleting the quotainode(s), and those blks got
-> > > @@ -60,11 +62,22 @@ xfs_dquot_verify(
-> > >         if (ddq->d_version != XFS_DQUOT_VERSION)
-> > >                 return __this_address;
-> > >
-> > > -       if (type && ddq->d_flags != type)
-> > > +       dtype = ddq->d_flags & XFS_DQ_ALLTYPES;
-> >
-> > Suggest dtype = XFS_DQ_TYPE(ddq->d_flags);
-> >
-> > [...]
-> >
-> > > @@ -540,13 +551,28 @@ xfs_dquot_from_disk(
-> > >         dqp->q_res_icount = be64_to_cpu(ddqp->d_icount);
-> > >         dqp->q_res_rtbcount = be64_to_cpu(ddqp->d_rtbcount);
-> > >
-> > > -       xfs_dquot_from_disk_timestamp(&tv, ddqp->d_btimer);
-> > > +       xfs_dquot_from_disk_timestamp(ddqp, &tv, ddqp->d_btimer);
-> > >         dqp->q_btimer = tv.tv_sec;
-> > > -       xfs_dquot_from_disk_timestamp(&tv, ddqp->d_itimer);
-> > > +       xfs_dquot_from_disk_timestamp(ddqp, &tv, ddqp->d_itimer);
-> > >         dqp->q_itimer = tv.tv_sec;
-> > > -       xfs_dquot_from_disk_timestamp(&tv, ddqp->d_rtbtimer);
-> > > +       xfs_dquot_from_disk_timestamp(ddqp, &tv, ddqp->d_rtbtimer);
-> > >         dqp->q_rtbtimer = tv.tv_sec;
-> > >
-> > > +       /* Upgrade to bigtime if possible. */
-> > > +       if (xfs_dquot_add_bigtime(dqp->q_mount, iddq)) {
-> > > +               tv.tv_sec = xfs_dquot_clamp_timer(iddq, dqp->q_btimer);
-> > > +               xfs_dquot_to_disk_timestamp(iddq, &iddq->d_btimer, &tv);
-> > > +               dqp->q_btimer = tv.tv_sec;
-> > > +
-> > > +               tv.tv_sec = xfs_dquot_clamp_timer(iddq, dqp->q_itimer);
-> > > +               xfs_dquot_to_disk_timestamp(iddq, &iddq->d_itimer, &tv);
-> > > +               dqp->q_itimer = tv.tv_sec;
-> > > +
-> > > +               tv.tv_sec = xfs_dquot_clamp_timer(iddq, dqp->q_rtbtimer);
-> > > +               xfs_dquot_to_disk_timestamp(iddq, &iddq->d_rtbtimer, &tv);
-> > > +               dqp->q_rtbtimer = tv.tv_sec;
-> > > +       }
-> > > +
-> >
-> > This is better than the inode timestamp conversion because at
-> > least the bigtime flag incore is always consistent with the incore values.
-> > But I think it would be safer if the conversion happened inside the helper.
->
-> This code, like the inode timestamp handling code, reads the ondisk
-> timer value into the incore dquot, and sets the bigtime flag on the
-> incore dquot.  We then wait until someone dirties the dquot to transform
-> the ondisk dquot to be in bigtime format with the flag set.
->
-> The dquot conversion is /much/ messier than the inode, because the dquot
-> infrastructure maintains an incore copy of the ondisk dquot as well as
-> an incore time64_t value, and we have to keep that whole mess
-> consistent.
->
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I see. That's what got me confused about how the inode timestamp incore
-values are stored.
+The da_read_buf() function operates in "salvage" mode, which means that
+if the verifiers fail, it will return a buffer with b_error set.  The
+callers of da_read_buf, however, do not adequately check for verifier
+errors, which means that repair can fail to flag a corrupt filesystem.
 
-> TBH someone should probably go fix the incore dquots to have only the
-> incore values (instead of the embedded xfs_disk_dquot) but I'd rather
-> that go in as a cleanup after adding this series, because this series is
-> already 13 patches, and if you combine cleaning up dquots with hch's
-> incore inode removal now we have Yet Another Friggin 40-patch series.
->
+Fix the callers to do this properly.  The dabtree block walker and the
+dabtree path checker functions to complain any time the da node / leafn
+verifiers fail.  Fix the directory block walking functions to complain
+about EFSCORRUPTED, since they already dealt with EFSBADCRC.
 
-Fare enough, but until someone does go and fix this code, my comment
-still stands.
+Found by running xfs/496 against lhdr.stale = middlebit.
 
-This patch calls xfs_dquot_add_bigtime() in three call sites.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ repair/da_util.c |   25 ++++++++++++++++---------
+ repair/dir2.c    |   21 +++++++++++++++++++++
+ 2 files changed, 37 insertions(+), 9 deletions(-)
 
-Two of them are correct because the values of timers is 0.
-The one above is correct because it shifts the embedded timer
-values right after the call.
 
-IMO it would be a better practice to keep this conversion
-containers in a helper xfs_dquot_upgrade_bigtime() and
-explicitly check for the 0 value case.
+diff --git a/repair/da_util.c b/repair/da_util.c
+index 5061880f..7239c2e2 100644
+--- a/repair/da_util.c
++++ b/repair/da_util.c
+@@ -134,6 +134,15 @@ _("can't read %s block %u for inode %" PRIu64 "\n"),
+ 			goto error_out;
+ 		}
+ 
++		/* corrupt leafn/node; rebuild the dir. */
++		if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
++			do_warn(
++_("corrupt %s tree block %u for inode %" PRIu64 "\n"),
++				FORKNAME(whichfork), bno, da_cursor->ino);
++			libxfs_buf_relse(bp);
++			goto error_out;
++		}
++
+ 		node = bp->b_addr;
+ 		libxfs_da3_node_hdr_from_disk(mp, &nodehdr, node);
+ 
+@@ -160,15 +169,6 @@ _("bad %s magic number 0x%x in inode %" PRIu64 " bno = %u\n"),
+ 			goto error_out;
+ 		}
+ 
+-		/* corrupt node; rebuild the dir. */
+-		if (bp->b_error == -EFSBADCRC || bp->b_error == -EFSCORRUPTED) {
+-			libxfs_buf_relse(bp);
+-			do_warn(
+-_("corrupt %s tree block %u for inode %" PRIu64 "\n"),
+-				FORKNAME(whichfork), bno, da_cursor->ino);
+-			goto error_out;
+-		}
+-
+ 		if (nodehdr.count > geo->node_ents) {
+ 			do_warn(
+ _("bad %s record count in inode %" PRIu64 ", count = %d, max = %d\n"),
+@@ -562,6 +562,13 @@ _("can't read %s block %u for inode %" PRIu64 "\n"),
+ 				FORKNAME(whichfork), dabno, cursor->ino);
+ 			return 1;
+ 		}
++		if (bp->b_error == -EFSCORRUPTED || bp->b_error == -EFSBADCRC) {
++			do_warn(
++_("corrupt %s tree block %u for inode %" PRIu64 "\n"),
++				FORKNAME(whichfork), dabno, cursor->ino);
++			libxfs_buf_relse(bp);
++			return 1;
++		}
+ 
+ 		newnode = bp->b_addr;
+ 		libxfs_da3_node_hdr_from_disk(mp, &nodehdr, newnode);
+diff --git a/repair/dir2.c b/repair/dir2.c
+index cbbce601..b374bc7b 100644
+--- a/repair/dir2.c
++++ b/repair/dir2.c
+@@ -983,6 +983,13 @@ _("can't read block %u for directory inode %" PRIu64 "\n"),
+ 			mp->m_dir_geo->datablk, ino);
+ 		return 1;
+ 	}
++	if (bp->b_error == -EFSCORRUPTED) {
++		do_warn(
++_("corrupt directory block %u for inode %" PRIu64 "\n"),
++			mp->m_dir_geo->datablk, ino);
++		libxfs_buf_relse(bp);
++		return 1;
++	}
+ 	/*
+ 	 * Verify the block
+ 	 */
+@@ -1122,6 +1129,13 @@ _("can't read file block %u for directory inode %" PRIu64 "\n"),
+ 				da_bno, ino);
+ 			goto error_out;
+ 		}
++		if (bp->b_error == -EFSCORRUPTED) {
++			do_warn(
++_("corrupt directory leafn block %u for inode %" PRIu64 "\n"),
++				da_bno, ino);
++			libxfs_buf_relse(bp);
++			goto error_out;
++		}
+ 		leaf = bp->b_addr;
+ 		libxfs_dir2_leaf_hdr_from_disk(mp, &leafhdr, leaf);
+ 		/*
+@@ -1324,6 +1338,13 @@ _("can't read block %" PRIu64 " for directory inode %" PRIu64 "\n"),
+ 				dbno, ino);
+ 			continue;
+ 		}
++		if (bp->b_error == -EFSCORRUPTED) {
++			do_warn(
++_("corrupt directory data block %lu for inode %" PRIu64 "\n"),
++				dbno, ino);
++			libxfs_buf_relse(bp);
++			continue;
++		}
+ 		data = bp->b_addr;
+ 		if (!(be32_to_cpu(data->magic) == XFS_DIR2_DATA_MAGIC ||
+ 		      be32_to_cpu(data->magic) == XFS_DIR3_DATA_MAGIC))
 
-Thanks,
-Amir.
