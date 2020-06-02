@@ -2,165 +2,106 @@ Return-Path: <SRS0=pQq2=7P=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09CAFC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 20:47:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9F2FC433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 21:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3A8B206A2
-	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 20:47:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VGsHSgVx"
+	by mail.kernel.org (Postfix) with ESMTP id B4EBA206E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  2 Jun 2020 21:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726174AbgFBUrt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Jun 2020 16:47:49 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:51174 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726130AbgFBUrt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 16:47:49 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 052Kbt78037388;
-        Tue, 2 Jun 2020 20:47:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=OFzOb5+rUpfr7+C50+qA/zj5c6LATnt8VFIDPdafs58=;
- b=VGsHSgVxFrWOh17xWs5FcBIwCynHf7U1sZUpURlmHEzEs/QZlAM9Us4Hw5NiYPeYeOj/
- 1PDeVIUCt8iWZ6b1Cs3VSHGhmJ8EDHSLiIoGyC7QtrzIs6d9idKh5X1l2s4iv0DYPwXO
- erfYbVxhEmVeSdX1WZqJLZVp+i1IyeFCjLZHtHaYcP6KKClJORhwoLWLioRQjHhXOYwr
- xsCrgC2mXymzZCGqLDSpVfcrCHkFHUY0kvh8p3rvgA8PNTTNKDW0YAsrZvdWh14/3CYT
- FS3VqRr4AR3aBzDP5LrkNiR1vSgVuzKnAV3OB0oHUMVb64naEx6w0ZfDmfwUlw8nIqGc Ew== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 31bewqx453-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 02 Jun 2020 20:47:47 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 052KdQvL147306;
-        Tue, 2 Jun 2020 20:47:46 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 31c12ptsvr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 02 Jun 2020 20:47:46 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 052KljE6005081;
-        Tue, 2 Jun 2020 20:47:45 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 02 Jun 2020 13:47:45 -0700
-Date:   Tue, 2 Jun 2020 13:47:44 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
+        id S1726174AbgFBV30 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Jun 2020 17:29:26 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:56128 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726130AbgFBV3Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 17:29:25 -0400
+Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 370A1D58A91;
+        Wed,  3 Jun 2020 07:29:22 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jgETG-0000bS-DM; Wed, 03 Jun 2020 07:29:18 +1000
+Date:   Wed, 3 Jun 2020 07:29:18 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 15/30] xfs: move xfs_clear_li_failed out of
- xfs_ail_delete_one()
-Message-ID: <20200602204744.GL8230@magnolia>
+Subject: Re: [PATCH 04/30] xfs: mark inode buffers in cache
+Message-ID: <20200602212918.GF2040@dread.disaster.area>
 References: <20200601214251.4167140-1-david@fromorbit.com>
- <20200601214251.4167140-16-david@fromorbit.com>
+ <20200601214251.4167140-5-david@fromorbit.com>
+ <20200602164535.GD7967@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200601214251.4167140-16-david@fromorbit.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
- adultscore=0 suspectscore=1 spamscore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006020150
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 bulkscore=0
- phishscore=0 suspectscore=1 impostorscore=0 cotscore=-2147483648
- lowpriorityscore=0 mlxscore=0 adultscore=0 spamscore=0 mlxlogscore=999
- malwarescore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2006020150
+In-Reply-To: <20200602164535.GD7967@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=iPWPx_TKfXr-Lg8gg2EA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 02, 2020 at 07:42:36AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jun 02, 2020 at 12:45:35PM -0400, Brian Foster wrote:
+> On Tue, Jun 02, 2020 at 07:42:25AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Inode buffers always have write IO callbacks, so by marking them
+> > directly we can avoid needing to attach ->b_iodone functions to
+> > them. This avoids an indirect call, and makes future modifications
+> > much simpler.
+> > 
+> > This is largely a rearrangement of the code at this point - no IO
+> > completion functionality changes at this point, just how the
+> > code is run is modified.
+> > 
 > 
-> xfs_ail_delete_one() is called directly from dquot and inode IO
-> completion, as well as from the generic xfs_trans_ail_delete()
-> function. Inodes are about to have their own failure handling, and
-> dquots will in future, too. Pull the clearing of the LI_FAILED flag
-> up into the callers so we can customise the code appropriately.
+> Ok, I was initially thinking this patch looked incomplete in that we
+> continue to set ->b_iodone() on inode buffers even though we'd never
+> call it. Looking ahead, I see that the next few patches continue to
+> clean that up to eventually remove ->b_iodone(), so that addresses that.
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> My only other curiosity is that while there may not be any functional
+> difference, this technically changes callback behavior in that we set
+> the new flag in some contexts that don't currently attach anything to
+> the buffer, right? E.g., xfs_trans_inode_alloc_buf() sets the flag on
+> inode chunk init, which means we can write out an inode buffer without
+> any attached/flushed inodes.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Yes, it can happen, and it happens before this patch, too, because
+the AIL can push the buffer log item directly and that does not
+flush dirty inodes to the buffer before it writes back(*).
 
---D
+As it is, xfs_buf_inode_iodone() on a buffer with no inode attached
+if functionally identical to the existing xfs_buf_iodone() callback
+that would otherwise be done. i.e. it just runs the buffer log item
+completion callback. Hence the change here rearranges code, but it
+does not change behaviour at all.
 
-> ---
->  fs/xfs/xfs_dquot.c      | 6 +-----
->  fs/xfs/xfs_inode_item.c | 3 +--
->  fs/xfs/xfs_trans_ail.c  | 2 +-
->  3 files changed, 3 insertions(+), 8 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> index d5984a926d1d0..76353c9a723ee 100644
-> --- a/fs/xfs/xfs_dquot.c
-> +++ b/fs/xfs/xfs_dquot.c
-> @@ -1070,16 +1070,12 @@ xfs_qm_dqflush_done(
->  	     test_bit(XFS_LI_FAILED, &lip->li_flags))) {
->  
->  		spin_lock(&ailp->ail_lock);
-> +		xfs_clear_li_failed(lip);
->  		if (lip->li_lsn == qip->qli_flush_lsn) {
->  			/* xfs_ail_update_finish() drops the AIL lock */
->  			tail_lsn = xfs_ail_delete_one(ailp, lip);
->  			xfs_ail_update_finish(ailp, tail_lsn);
->  		} else {
-> -			/*
-> -			 * Clear the failed state since we are about to drop the
-> -			 * flush lock
-> -			 */
-> -			xfs_clear_li_failed(lip);
->  			spin_unlock(&ailp->ail_lock);
->  		}
->  	}
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 86c783dec2bac..0ba75764a8dc5 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -690,12 +690,11 @@ xfs_iflush_done(
->  		/* this is an opencoded batch version of xfs_trans_ail_delete */
->  		spin_lock(&ailp->ail_lock);
->  		list_for_each_entry(lip, &tmp, li_bio_list) {
-> +			xfs_clear_li_failed(lip);
->  			if (lip->li_lsn == INODE_ITEM(lip)->ili_flush_lsn) {
->  				xfs_lsn_t lsn = xfs_ail_delete_one(ailp, lip);
->  				if (!tail_lsn && lsn)
->  					tail_lsn = lsn;
-> -			} else {
-> -				xfs_clear_li_failed(lip);
->  			}
->  		}
->  		xfs_ail_update_finish(ailp, tail_lsn);
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index ac5019361a139..ac33f6393f99c 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -843,7 +843,6 @@ xfs_ail_delete_one(
->  
->  	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
->  	xfs_ail_delete(ailp, lip);
-> -	xfs_clear_li_failed(lip);
->  	clear_bit(XFS_LI_IN_AIL, &lip->li_flags);
->  	lip->li_lsn = 0;
->  
-> @@ -874,6 +873,7 @@ xfs_trans_ail_delete(
->  	}
->  
->  	/* xfs_ail_update_finish() drops the AIL lock */
-> +	xfs_clear_li_failed(lip);
->  	tail_lsn = xfs_ail_delete_one(ailp, lip);
->  	xfs_ail_update_finish(ailp, tail_lsn);
->  }
-> -- 
-> 2.26.2.761.g0e0b3e54be
-> 
+(*) this is a double-write bug that this patch set does not address.
+i.e. buffer log item flushes the buffer without flushing inodes, IO
+compeletes, then inode flush to the buffer and we do another IO to
+clean them.  This is addressed by a follow-on patchset that tracks
+dirty inodes via ordered cluster buffers, such that pushing the
+buffer always triggers xfs_iflush_cluster() on buffers tagged
+_XBF_INODES...
+
+> Is the intent of that to support future
+> changes? If so, a note about that in the commit log would be helpful.
+
+That's part of it, as you can see from the (*) above. But the commit
+log already says "..., and makes future modifications much simpler."
+Was that insufficient to indicate that it will be used later on?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
