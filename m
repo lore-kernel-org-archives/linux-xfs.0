@@ -4,169 +4,160 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEC1FC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 03:51:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE292C433E1
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 07:58:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A45F620674
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 03:51:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96F31206C3
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 07:58:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xy2oKhR+"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hrLw30Pj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726119AbgFCDvY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Jun 2020 23:51:24 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55354 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725926AbgFCDvY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 23:51:24 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0533mFXx106894;
-        Wed, 3 Jun 2020 03:51:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=SJ6Xy9EhhO1mahYBwFQo6lySQegNoTnkZHQ5lceiC3E=;
- b=xy2oKhR+YdTN8HSbkhjBP4oL+y1wFKDBlnPtTuMd9vJlp3hpHCGBcZysDPWuD/W3vKUU
- fZWsx4SU9zretsUJgXDt8Bzd6tDDnlcmsysQ54jIQzWSOXFgh/KoGpM9z0KaSTt2sYmO
- 40JzzBJvgfodLJrI4EBHpipih7Kjrt2RtnX0Ja2h5h5+RYAkRmOqY/t7BXliXfqIdL0w
- F/p9eleUj3wEu4V2yRk30Nd6t4SflCR3IuoISPSZ1N9kkaDojRDtUrBgiEkZgflr2N3s
- C+D2e9ywJT+60c0u65NjgXCsli6rzg+E0QFDhsKyfKD8ZtOC7FfdM0JeaGpddaKgICyj nA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 31dkrum2ds-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 03 Jun 2020 03:51:06 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0533hwFj115116;
-        Wed, 3 Jun 2020 03:49:06 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 31c25que0n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 03 Jun 2020 03:49:06 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0533n2ma024413;
-        Wed, 3 Jun 2020 03:49:02 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 02 Jun 2020 20:49:02 -0700
-Date:   Tue, 2 Jun 2020 20:49:00 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc:     ira.weiny@intel.com, fstests@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] xfs/XXX: Add xfs/XXX
-Message-ID: <20200603034900.GZ8230@magnolia>
-References: <20200413054419.1560503-1-ira.weiny@intel.com>
- <20200413163025.GB6742@magnolia>
- <5ED61324.6010300@cn.fujitsu.com>
- <20200602181444.GD8230@magnolia>
- <5ED7033D.7020009@cn.fujitsu.com>
+        id S1726066AbgFCH6q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Jun 2020 03:58:46 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:47673 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726120AbgFCH6p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jun 2020 03:58:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1591171122;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=LFhF9EeMzwFrPIjEyJ6kWuDjj1Jy4QiMagkG3VLJv54=;
+        b=hrLw30PjPJGM0AouhH6TQj5ysgGv9lxUdPhvK/pEfLAMWf56w0wHtRHPLZgaObmdm7lUqD
+        Tg75xkMRSM58dAI/R/DYc8DQyie5o9sgiR50SQcg4sc/XoYal4il4N36LbVZF5K4ouNzgs
+        kqXA9MDRko/gjxWt9Jibbrqe6JxkCxg=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-182-QgxpF7dtOHO1_w09rvbMPg-1; Wed, 03 Jun 2020 03:58:41 -0400
+X-MC-Unique: QgxpF7dtOHO1_w09rvbMPg-1
+Received: by mail-wr1-f70.google.com with SMTP id e1so770473wrm.3
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Jun 2020 00:58:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=LFhF9EeMzwFrPIjEyJ6kWuDjj1Jy4QiMagkG3VLJv54=;
+        b=nDwMZrENe6cm3OpgtWlJ+BTmwgNfIMrcgcKxbtBwHVGfovnKx6iTUhawnqkVYyUGRt
+         BWD3QMHtHNe0gTx8nM43zxE706OxKvVjlz2Xa9NZeuXx4mF75Ley/vgxhO3vFFIMveyb
+         54aJgDL7NKjINxmn01DLaK747niJ0hsJd2CZOyWR1xvV+6ePTDEGQScA0mhDn0nx0gyl
+         q6Z+eX0v02BxA1EXeN89+LfvkXHR9KzzswYtayqLpDOUaUplWj45kO+34RtE9ktOcMVe
+         GVd4sLDhfyg1yXxIm0jthxlwjKzPaNxy5gQuKDCxG5nZ9eV+94ErySva3VANJ/8TCVZl
+         8s7A==
+X-Gm-Message-State: AOAM5332B9plfm3AryAht9z9/mqC1IQQHxbCpcei52WZ/jBVCBvrauyy
+        EFPREnv6/aQ+pWyqDkGaSaNhPklwnk+hhuJwKbWtBqJ97HpWHi2+e3s6z/JZjOzCLoABpsu0e/o
+        buH/UoVtvJ1YsAFxRTomf
+X-Received: by 2002:a5d:608d:: with SMTP id w13mr29463338wrt.298.1591171119653;
+        Wed, 03 Jun 2020 00:58:39 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzRfGJSd1b0W59jsmlLd3byCAosExmZF+6b1DZS6lWKr+Avq3S+nbP2lkiYg5DZjxd9XZ5wIQ==
+X-Received: by 2002:a5d:608d:: with SMTP id w13mr29461529wrt.298.1591171089489;
+        Wed, 03 Jun 2020 00:58:09 -0700 (PDT)
+Received: from eorzea (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id d18sm2077583wrn.34.2020.06.03.00.58.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 03 Jun 2020 00:58:08 -0700 (PDT)
+Date:   Wed, 3 Jun 2020 09:58:06 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: Bypass sb alignment checks when custom values
+ are used
+Message-ID: <20200603075806.wloczwn6tus37vli@eorzea>
+Mail-Followup-To: Dave Chinner <david@fromorbit.com>,
+        linux-xfs@vger.kernel.org
+References: <20200601140153.200864-1-cmaiolino@redhat.com>
+ <20200601140153.200864-3-cmaiolino@redhat.com>
+ <20200601212115.GC2040@dread.disaster.area>
+ <20200602091844.nsi63ixzm6zgxy76@eorzea>
+ <20200602231235.GJ2040@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5ED7033D.7020009@cn.fujitsu.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=1 spamscore=0
- malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006030027
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9640 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 priorityscore=1501
- mlxscore=0 lowpriorityscore=0 suspectscore=1 malwarescore=0 clxscore=1015
- adultscore=0 mlxlogscore=999 cotscore=-2147483648 phishscore=0 bulkscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006030027
+In-Reply-To: <20200602231235.GJ2040@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 03, 2020 at 09:56:13AM +0800, Xiao Yang wrote:
-> On 2020/6/3 2:14, Darrick J. Wong wrote:
-> > On Tue, Jun 02, 2020 at 04:51:48PM +0800, Xiao Yang wrote:
-> > > On 2020/4/14 0:30, Darrick J. Wong wrote:
-> > > > This might be a good time to introduce a few new helpers:
-> > > > 
-> > > > _require_scratch_dax ("Does $SCRATCH_DEV support DAX?")
-> > > > _require_scratch_dax_mountopt ("Does the fs support the DAX mount options?")
-> > > > _require_scratch_daX_iflag ("Does the fs support FS_XFLAG_DAX?")
-> > > Hi Darrick,
+On Wed, Jun 03, 2020 at 09:12:35AM +1000, Dave Chinner wrote:
+> On Tue, Jun 02, 2020 at 11:18:44AM +0200, Carlos Maiolino wrote:
+> > Hi Dave.
+> > 
+> > On Tue, Jun 02, 2020 at 07:21:15AM +1000, Dave Chinner wrote:
+> > > On Mon, Jun 01, 2020 at 04:01:53PM +0200, Carlos Maiolino wrote:
+> > > > index 4df87546bd40..72dae95a5e4a 100644
+> > > > --- a/fs/xfs/libxfs/xfs_sb.c
+> > > > +++ b/fs/xfs/libxfs/xfs_sb.c
+> > > > @@ -360,19 +360,27 @@ xfs_validate_sb_common(
+> > > >  		}
+> > > >  	}
+> > > >  
+> > > > -	if (sbp->sb_unit) {
+> > > > -		if (!xfs_sb_version_hasdalign(sbp) ||
+> > > > -		    sbp->sb_unit > sbp->sb_width ||
+> > > > -		    (sbp->sb_width % sbp->sb_unit) != 0) {
+> > > > -			xfs_notice(mp, "SB stripe unit sanity check failed");
+> > > > +	/*
+> > > > +	 * Ignore superblock alignment checks if sunit/swidth mount options
+> > > > +	 * were used or alignment turned off.
+> > > > +	 * The custom alignment validation will happen later on xfs_mountfs()
+> > > > +	 */
+> > > > +	if (!(mp->m_flags & XFS_MOUNT_ALIGN) &&
+> > > > +	    !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
 > > > 
-> > > Now, I am trying to introduce these new helpers and have some questions:
-> > > 1) There are five testcases related to old dax implementation, should we
-> > > only convert them to new dax implementation or make them compatible with old
-> > > and new dax implementation?
+> > > mp->m_dalign tells us at this point if a user specified sunit as a
+> > > mount option.  That's how xfs_fc_validate_params() determines the user
+> > > specified a custom sunit, so there is no need for a new mount flag
+> > > here to indicate that mp->m_dalign was set by the user....
 > > 
-> > What is the 'old' DAX implementation?  ext2 XIP?
-> Hi Darrick,
+> > At a first glance, I thought about it too, but, there is nothing preventing an
+> > user to mount a filesystem passing sunit=0,swidth=0. So, this means we can't
+> > really rely on the m_dalign/m_swidth values to check an user passed in (or not)
+> > alignment values. Unless we first deny users to pass 0 values into it.
 > 
-> Thanks for your quick feedback.
-> 
-> Right, the 'old' DAX implementation means old dax mount option(i.e. -o dax)
-> 
-> Compare new and old dax mount option on ext4 and xfs, is the following logic
-> right?
-> -o dax=always == -o dax
-> -o dax=never == without dax
-> -o dax=inode == nothing
+> Sure we can. We do this sort of "was the mount option set" detection
+> with m_logbufs and m_logbsize by initialising them to -1. Hence if
+> they are set by mount options, they'll have a valid, in-range value
+> instead of "-1".
 
-No.  -o dax=always is the same as -o dax.
-dax=inode was and still is the behavior you got with no option at all.
--o dax=never is a new option.
+Funny thing is I thought about "let's initialize to -1" and gave up because it
+seemed ugly :)
 
-> Of course, we should uses new option if ext4/xfs supports new dax mount
-> option on distros.  But should we fallback to use old option if ext4/xfs
-> doesn't support new dax mount option on some old distros?
-> btw:
-> it seems hard for testcases to use two different sets of mount options(i.e.
-> old and new) so do you have any suggestion?
+> 
+> That said, if you want users passing in sunit=0,swidth=0 to
+> correctly override existing on-disk values (i.e. effectively mean -o
+> noalign), then you are going to need to modify
+> xfs_update_alignment() and xfs_validate_new_dalign() to handle
+> mp->m_dalign == 0 as a valid value instead of "sunit/swidth mount
+> option not set, use existing superblock values".....
+> 
+> IOWs, there are deeper changes needed here than just setting a new
+> flag to say "mount option was set" for it to function correctly and
+> consistently as you intend. This is why I think we should just fix
+> this situation automatically, and not require the user to manually
+> override the bad values.
 
-Try dax=never, it should work on any type of storage device if the
-kernel implements the "new" mount options at all.
+Sure, I'm not opposed to fix things automatically, I just thought it wasn't an
+acceptable solution, but looks like I'm wrong.
 
---D
+> 
+> Thinking bigger picture, I'd like to see the mount options
+> deprecated and new xfs_admin options added to change the values on a
+> live, mounted filesystem.
+I haven't been following this development. So, you meant geometry mount options
+or mount options as a whole?
 
-> > 
-> > > 2) I think _require_xfs_io_command "chattr" "x" is enough to check if fs
-> > > supports FS_XFLAG_DAX.  Is it necessary to add _require_scratch_dax_iflag()?
-> > > like this:
-> > > _require_scratch_dax_iflag()
-> > > {
-> > > 	_require_xfs_io_command "chattr" "x"
-> > > }
-> > 
-> > I suggested that list based on the major control knobs that will be
-> > visible to userspace programs.  Even if this is just a one-line helper,
-> > its name is useful for recognizing which of those knobs we're looking
-> > for.
-> > 
-> > Yes, you could probably save a trivial amount of time by skipping one
-> > iteration of bash function calling, but now everyone has to remember
-> > that the xfs_io chattr "x" flag means the dax inode flag, and not
-> > confuse it for chmod +x or something else.
-> 
-> Got it, thanks for your detailed explanation.
-> 
-> Best Regards,
-> Xiao Yang
-> > 
-> > --D
-> > 
-> > > Best Regards,
-> > > Xiao Yang
-> > > 
-> > > 
-> > 
-> > 
-> > .
-> > 
-> 
-> 
-> 
+> That way users who have issues like this
+> don't need to unmount the filesystem to fix it,
+
+Sure, but it doesn't fix those filesystems which were already unmounted. But,
+fixing it automatically during mount seem to cover this part.
+
+cheers.
+
+-- 
+Carlos
+
