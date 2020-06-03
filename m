@@ -2,104 +2,81 @@ Return-Path: <SRS0=rMVI=7Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 422CFC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 09:27:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B3CBC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 10:10:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 16ED22074B
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 09:27:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YQdGWuGo"
+	by mail.kernel.org (Postfix) with ESMTP id 0C04C2067B
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 10:10:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726527AbgFCJ1R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Jun 2020 05:27:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37524 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725854AbgFCJ1R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jun 2020 05:27:17 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47F70C05BD43;
-        Wed,  3 Jun 2020 02:27:16 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id v2so1229819pfv.7;
-        Wed, 03 Jun 2020 02:27:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=uh2CKAA4+lcpMvZ24+L9hYveJ/3JZkbF6Yf7EybVd6s=;
-        b=YQdGWuGordLPzE9Cs5yVmg7PFnqFXO+M9bXphmjjZkm52DStTJ3xCvvgytG8oC1Lm8
-         E5z4Oac02CW4acOzTzqT7QkI5j97vUpW/F+z6DwHMlelO6fAKgQ7Zoh69vk4zKgWKFg9
-         2jjpreQ88K9ijscsgf5VQAL2Mv9VSfSOqrAipBAVuma75ujbGP9b2MoZi45f6HXpbbOg
-         x0St/Uvc5v+Dmx2SSZrDyGu6LQHokI0HJ/3x3/dQ4fRnd8PUjpfn2njhOqNAPh7C4TGc
-         HPtZ3iWefRIcbzh38ArPhicLGcD+fTW1cwMp6tXudGHkpoEDi5vHMHnxsxknAFbYsjXy
-         Lx0Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=uh2CKAA4+lcpMvZ24+L9hYveJ/3JZkbF6Yf7EybVd6s=;
-        b=F5z7CqxcIcBVNhAqkAJ9lG5IRQKwpc4NpNhGoaUOkJTnqX/BokZVRztQK3TwsL3H46
-         CH2uYv7+yGixv9eswHzhv0vkUidezkm9FWktgtV2j3dRHJ73BcSFRBocmAePxvlrRfb+
-         MRnBphTsfHGGDEleY0VX3qAZqYsce7e+FlFg9oYEfibeFRu0oPIFXyX+b0jP1tUARK06
-         YvZAEc+YQZ6q8q3lylizkiIRJoHi7dk/KKc5uvlwaB/3bJ+9js4PkpZ64BxBrnH9Rg/l
-         JsnwIMAaJOENFSNO62bZHfwVpTHI07yCMRvb0Ks/7RhNzxnW8NhY5TjRGKwSr8irLT3h
-         4yNw==
-X-Gm-Message-State: AOAM532EPXl/p+a8CqKeobHPynQ8vn2Rdw2WTQ+pbMvadVacqb20lIeJ
-        Pv5HeXrxonQzIkwnuwlTYJQ=
-X-Google-Smtp-Source: ABdhPJwoDIi3DdmE4T8lAZgJEwIf5YqN2uLpA5tmOepULiKyZnNGulhA/gbk5mJIzJDoiGOjuxJetQ==
-X-Received: by 2002:a17:90a:4809:: with SMTP id a9mr4657256pjh.196.1591176435847;
-        Wed, 03 Jun 2020 02:27:15 -0700 (PDT)
-Received: from suzukaze.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
-        by smtp.gmail.com with ESMTPSA id c195sm1411816pfc.203.2020.06.03.02.27.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Jun 2020 02:27:15 -0700 (PDT)
-From:   Chuhong Yuan <hslester96@gmail.com>
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
-        linux-kernel@vger.kernel.org, Chuhong Yuan <hslester96@gmail.com>
-Subject: [PATCH] xfs: Add the missed xfs_perag_put() for xfs_ifree_cluster()
-Date:   Wed,  3 Jun 2020 17:27:07 +0800
-Message-Id: <20200603092707.1424619-1-hslester96@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        id S1726890AbgFCKK1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Jun 2020 06:10:27 -0400
+Received: from mx2.suse.de ([195.135.220.15]:47920 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726744AbgFCKK1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Jun 2020 06:10:27 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id BBAB4ABCF;
+        Wed,  3 Jun 2020 10:10:27 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 077581E1281; Wed,  3 Jun 2020 12:10:24 +0200 (CEST)
+Date:   Wed, 3 Jun 2020 12:10:24 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>,
+        Jan Kara <jack@suse.cz>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jeff Moyer <jmoyer@redhat.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-api@vger.kernel.org
+Subject: Re: [PATCH V11 11/11] fs/xfs: Update
+ xfs_ioctl_setattr_dax_invalidate()
+Message-ID: <20200603101024.GG19165@quack2.suse.cz>
+References: <20200428002142.404144-1-ira.weiny@intel.com>
+ <20200428002142.404144-12-ira.weiny@intel.com>
+ <20200428201138.GD6742@magnolia>
+ <20200602172353.GC8230@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-To:     unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200602172353.GC8230@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_ifree_cluster() calls xfs_perag_get() at the beginning, but forgets to
-call xfs_perag_put() in one failed path.
-Add the missed function call to fix it.
+On Tue 02-06-20 10:23:53, Darrick J. Wong wrote:
+> On Tue, Apr 28, 2020 at 01:11:38PM -0700, Darrick J. Wong wrote:
+> > > -out_unlock:
+> > > -	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+> > > -	return error;
+> > > +	if ((mp->m_flags & XFS_MOUNT_DAX_ALWAYS) ||
+> > > +	    (mp->m_flags & XFS_MOUNT_DAX_NEVER))
+> > > +		return;
+> > >  
+> > > +	if (((fa->fsx_xflags & FS_XFLAG_DAX) &&
+> > > +	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)) ||
+> > > +	    (!(fa->fsx_xflags & FS_XFLAG_DAX) &&
+> > > +	     (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)))
+> > > +		d_mark_dontcache(inode);
+> 
+> Now that I think about this further, are we /really/ sure that we want
+> to let unprivileged userspace cause inode evictions?
 
-Fixes: ce92464c180b ("xfs: make xfs_trans_get_buf return an error code")
-Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
----
- fs/xfs/xfs_inode.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+You have to have an equivalent of write access to the file to be able to
+trigger d_mark_dontcache(). So you can e.g. delete it.  Or you could
+fadvise / madvise regarding its page cache. I don't see the ability to push
+inode out of cache as stronger than the abilities you already have...
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d1772786af29..8845faa8161a 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2639,8 +2639,10 @@ xfs_ifree_cluster(
- 		error = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
- 				mp->m_bsize * igeo->blocks_per_cluster,
- 				XBF_UNMAPPED, &bp);
--		if (error)
-+		if (error) {
-+			xfs_perag_put(pag);
- 			return error;
-+		}
- 
- 		/*
- 		 * This buffer may not have been correctly initialised as we
+								Honza
 -- 
-2.26.2
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
