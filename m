@@ -2,131 +2,125 @@ Return-Path: <SRS0=rMVI=7Q=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A745C433E2
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 01:56:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E270CC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 02:41:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29F9E20663
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 01:56:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2C90207D0
+	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 02:41:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1591152063;
+	bh=hMTZ0FxqVIqwxc4DoXgBc2TMxu3MOb8j4MrnOnw+cJY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=yxPnIx8kYYq0HDpWJIHyJ/L9iRjC+QljD50CngVfz34+hE+Q5bK15wsTj1tal/ERC
+	 wyySp6o3iIX6kg7Kb4fa6WMFxLoN41zS97+lcqCsz97bCwON9/Ge+Rij2tiuDOzcvY
+	 qyULWPgW6pjNfRw0IkOPW83bSPdcWU484Fj7rSAY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725823AbgFCB41 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 2 Jun 2020 21:56:27 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:65353 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725777AbgFCB41 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 21:56:27 -0400
-X-IronPort-AV: E=Sophos;i="5.73,466,1583164800"; 
-   d="scan'208";a="93708776"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 03 Jun 2020 09:56:23 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id A46C150A996E;
-        Wed,  3 Jun 2020 09:56:18 +0800 (CST)
-Received: from [10.167.220.69] (10.167.220.69) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Wed, 3 Jun 2020 09:56:16 +0800
-Message-ID: <5ED7033D.7020009@cn.fujitsu.com>
-Date:   Wed, 3 Jun 2020 09:56:13 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.2; zh-CN; rv:1.9.2.18) Gecko/20110616 Thunderbird/3.1.11
+        id S1726016AbgFCCk6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 2 Jun 2020 22:40:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59480 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725823AbgFCCk4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jun 2020 22:40:56 -0400
+Received: from mail-lf1-x143.google.com (mail-lf1-x143.google.com [IPv6:2a00:1450:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 081A7C08C5C0
+        for <linux-xfs@vger.kernel.org>; Tue,  2 Jun 2020 19:40:56 -0700 (PDT)
+Received: by mail-lf1-x143.google.com with SMTP id h188so317256lfd.7
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Jun 2020 19:40:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=zTgMCCg/n7vIKmnl7JnJOYWZtJtsVV/Gf24uT9lr2Aw=;
+        b=QcTPtcnEFRe4wGMNruzjSvrdchyjYkSAIk5hEnLYVqjEeoZ4zrQs/W1xUpzehhnR8c
+         P327F8+VJu1M6lTDNEqANb4RW5ovuuGTM3+tD1GzoEYxzJget2it2p/ORrwwDG6+0K97
+         N/TKfXmUqCnobORfjbBlOHbJDMbbld37vZe0A=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=zTgMCCg/n7vIKmnl7JnJOYWZtJtsVV/Gf24uT9lr2Aw=;
+        b=kIzt61Q4iWgmymrK9F0laz0NE1IZMmxGahKNvQSu9McGSXMWs++4cnT7TSGhWE9WNF
+         7YNceInFCf/9UpiiqPpxpTGRK+La31+znOt4zCtV6fGDil4Yw6oA4DflECi/eccob70F
+         5noPBfKfCJOoDhoan08DSH91Qp0Dixk0yEoBOfRP1HmumRQ0mDK9yERWLk6Wld1IPhOt
+         zJPAg4HHt/VMx18ZkkoCmmaNbP2qJWO7Lg/Kz5+0mjC+utWnR1OujRD7pAY/Sjw3ui7B
+         iIrX7HK9bWOWyPrbEJo54XLmjBcOjLoMB+Hw5G8m8/rULQeNJI6/iYCuZPCl5fjbx2Aw
+         M4OA==
+X-Gm-Message-State: AOAM530FcqDOFNlXvJGu7ToPsgl5/e5aKG3evgPz1uMMHvLWJ3Gsv7Yg
+        4UAsp6yhzv5fT84kogvv2FCait0cWHo=
+X-Google-Smtp-Source: ABdhPJzBgfPUa5nJNVIvjnFghzuTgxXVHcGfhvajh+eWC/9H3cHCd0mFd/oCRLpFrQJuv/YJ7/AhGw==
+X-Received: by 2002:a19:23d2:: with SMTP id j201mr1167211lfj.83.1591152053520;
+        Tue, 02 Jun 2020 19:40:53 -0700 (PDT)
+Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com. [209.85.167.43])
+        by smtp.gmail.com with ESMTPSA id a7sm226031lfm.4.2020.06.02.19.40.51
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 02 Jun 2020 19:40:52 -0700 (PDT)
+Received: by mail-lf1-f43.google.com with SMTP id c12so310657lfc.10
+        for <linux-xfs@vger.kernel.org>; Tue, 02 Jun 2020 19:40:51 -0700 (PDT)
+X-Received: by 2002:a05:6512:62:: with SMTP id i2mr1173928lfo.152.1591152051293;
+ Tue, 02 Jun 2020 19:40:51 -0700 (PDT)
 MIME-Version: 1.0
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-CC:     <ira.weiny@intel.com>, <fstests@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
+References: <20200602162644.GE8204@magnolia>
+In-Reply-To: <20200602162644.GE8204@magnolia>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Tue, 2 Jun 2020 19:40:35 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wgeiqB0TH_V2uTd2CX2hks+3TW344j73ftJFjqUteTxXA@mail.gmail.com>
+Message-ID: <CAHk-=wgeiqB0TH_V2uTd2CX2hks+3TW344j73ftJFjqUteTxXA@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: new code for 5.8 (now with fixed To line)
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
         Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        Jeff Moyer <jmoyer@redhat.com>, <linux-ext4@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>
-Subject: Re: [PATCH] xfs/XXX: Add xfs/XXX
-References: <20200413054419.1560503-1-ira.weiny@intel.com> <20200413163025.GB6742@magnolia> <5ED61324.6010300@cn.fujitsu.com> <20200602181444.GD8230@magnolia>
-In-Reply-To: <20200602181444.GD8230@magnolia>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.220.69]
-X-ClientProxiedBy: G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) To
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206)
-X-yoursite-MailScanner-ID: A46C150A996E.ACF0C
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/6/3 2:14, Darrick J. Wong wrote:
-> On Tue, Jun 02, 2020 at 04:51:48PM +0800, Xiao Yang wrote:
->> On 2020/4/14 0:30, Darrick J. Wong wrote:
->>> This might be a good time to introduce a few new helpers:
->>>
->>> _require_scratch_dax ("Does $SCRATCH_DEV support DAX?")
->>> _require_scratch_dax_mountopt ("Does the fs support the DAX mount options?")
->>> _require_scratch_daX_iflag ("Does the fs support FS_XFLAG_DAX?")
->> Hi Darrick,
->>
->> Now, I am trying to introduce these new helpers and have some questions:
->> 1) There are five testcases related to old dax implementation, should we
->> only convert them to new dax implementation or make them compatible with old
->> and new dax implementation?
+On Tue, Jun 2, 2020 at 9:26 AM Darrick J. Wong <djwong@kernel.org> wrote:
 >
-> What is the 'old' DAX implementation?  ext2 XIP?
-Hi Darrick,
+> fs/xfs/xfs_log_recover.c                           | 2561 ++------------------
+>  102 files changed, 4244 insertions(+), 4817 deletions(-)
 
-Thanks for your quick feedback.
+Interestingly, the changes to that xfs_log_recover.c file really seem
+to break the default git diff algorithm (the linear-space Myers'
+algorithm)
 
-Right, the 'old' DAX implementation means old dax mount option(i.e. -o dax)
+The default settings give me
 
-Compare new and old dax mount option on ext4 and xfs, is the following 
-logic right?
--o dax=always == -o dax
--o dax=never == without dax
--o dax=inode == nothing
+ fs/xfs/xfs_log_recover.c                           | 2801 ++------------------
+ 102 files changed, 4366 insertions(+), 4939 deletions(-)
 
-Of course, we should uses new option if ext4/xfs supports new dax mount 
-option on distros.  But should we fallback to use old option if ext4/xfs 
-doesn't support new dax mount option on some old distros?
-btw:
-it seems hard for testcases to use two different sets of mount 
-options(i.e. old and new) so do you have any suggestion?
+which is not very close to yours. With the extra effort "--minimal" I get
 
->
->> 2) I think _require_xfs_io_command "chattr" "x" is enough to check if fs
->> supports FS_XFLAG_DAX.  Is it necessary to add _require_scratch_dax_iflag()?
->> like this:
->> _require_scratch_dax_iflag()
->> {
->> 	_require_xfs_io_command "chattr" "x"
->> }
->
-> I suggested that list based on the major control knobs that will be
-> visible to userspace programs.  Even if this is just a one-line helper,
-> its name is useful for recognizing which of those knobs we're looking
-> for.
->
-> Yes, you could probably save a trivial amount of time by skipping one
-> iteration of bash function calling, but now everyone has to remember
-> that the xfs_io chattr "x" flag means the dax inode flag, and not
-> confuse it for chmod +x or something else.
+ fs/xfs/xfs_log_recover.c                           | 2561 ++------------------
+ 102 files changed, 4246 insertions(+), 4819 deletions(-)
 
-Got it, thanks for your detailed explanation.
+but based on your output, I suspect you used "--patience", which gives that
 
-Best Regards,
-Xiao Yang
->
-> --D
->
->> Best Regards,
->> Xiao Yang
->>
->>
->
->
-> .
->
+ fs/xfs/xfs_log_recover.c                           | 2561 ++------------------
+ 102 files changed, 4244 insertions(+), 4817 deletions(-)
 
+output (the difference there wrt minimal came from
+fs/xfs/libxfs/xfs_symlink_remote.c).
 
+I'm used to seeing small differences in the line counts due to
+different diff heuristics, but that 250 line difference for
+"--patience" is more than you usually get.
 
+None of this matters, and I'm not at all suggesting you change any of
+your workflow.
+
+I'm just commenting because I was going "why am I not getting a
+matching diffstat", and while I'm used to seeing small differences
+from diff algorithms, that 240 line-count change was really a lot more
+than I normally encounter.
+
+                      Linus
