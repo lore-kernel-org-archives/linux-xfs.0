@@ -1,54 +1,75 @@
-Return-Path: <SRS0=rMVI=7Q=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=uikP=7R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3098C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 22:27:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 114E5C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 01:22:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F19D20734
-	for <linux-xfs@archiver.kernel.org>; Wed,  3 Jun 2020 22:27:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CED5E20679
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 01:22:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="O+x9rshA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727879AbgFCW1q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 3 Jun 2020 18:27:46 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:49843 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727872AbgFCW1q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jun 2020 18:27:46 -0400
-Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id E75A7108C95;
-        Thu,  4 Jun 2020 08:27:41 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jgbrJ-0000wS-2Y; Thu, 04 Jun 2020 08:27:41 +1000
-Date:   Thu, 4 Jun 2020 08:27:41 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Yafang Shao <laoar.shao@gmail.com>, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs: avoid deadlock when tigger memory reclam in
- xfs_map_blocks()
-Message-ID: <20200603222741.GQ2040@dread.disaster.area>
-References: <1591179035-9270-1-git-send-email-laoar.shao@gmail.com>
- <20200603172355.GP2162697@magnolia>
+        id S1726135AbgFDBW2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 3 Jun 2020 21:22:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44330 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725946AbgFDBW2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jun 2020 21:22:28 -0400
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E75FC03E96D
+        for <linux-xfs@vger.kernel.org>; Wed,  3 Jun 2020 18:22:28 -0700 (PDT)
+Received: by mail-io1-xd43.google.com with SMTP id j8so4486418iog.13
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Jun 2020 18:22:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=4WriEwgfm8pHF9JBoY8Er3+yARQGQMQIzJc77P0RKRw=;
+        b=O+x9rshABTWBYe+pojr7imX9WkBx2BYYOxzXWVAwWwFt0B3xWRJBfMIhzwjuUuFFLn
+         IiGfw7Sg3Rmj6HVBjg5oR+otq+WjpKGXMxdhbF1nCZvEZ1ezQhiuh9B/mvDUGcrZCipB
+         Av1yJNxTZNP8Uu9jlNdsV1hIUZfUtInn5Cdk0qtHJsK0sMa/JKE4Gg6ibHMdo5WooYXG
+         ELCYGqoGdznsS38/l0ApCtLtQqPAD4+yBahvOAeN8ze67aPkZreQCeme6JXC0YvIxZNu
+         dBHx3CGMR6v122kobjyiXOGFJAMXLVr2HU59lUUHns5o2yOyQwMM4lFQuFHtpz583pe4
+         3+ow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=4WriEwgfm8pHF9JBoY8Er3+yARQGQMQIzJc77P0RKRw=;
+        b=CktCkHwUxs8KtjMovZOaAsx1c1AhkGTD5K+1ayCLd74+5N9uxXIknX963g+SHxl8Hd
+         6kVtGw0R+UDa4yhSkRXH6KIA6Zp87Ni1PxbitvC8xvFI3qXsr8FP5UOjgK7HcArJkOOF
+         ZvWAqobyvIMK+P+gn8ABP5XqxwmUrJb5w4BiP+AqjwTwbjltYVOrqDTwJYSt86I4Yg8R
+         6oCz9hI/gf9NFdnMaEWovCTSU0PoPo73MYXy2EqY2eO0vh9ThhnflNB/Sn+G88t/v/+j
+         MjcCvLNDUZ2YArQDSLIiRbOZyTpl3F/qGA3b0awIx4+MqwCS5v8yY1LePTb9SdlsFpkc
+         LvYw==
+X-Gm-Message-State: AOAM532H6AYC2LZ/qvB/8EhNzo3WVNehFimuj2VRtfb2dVrB/Zfg72Di
+        xgItDz+FaV2WUMx1aQoxPjwN3BlM6LM79yhCjzM=
+X-Google-Smtp-Source: ABdhPJzIcPWbICX5+8HliIdJhbFvSbpOGKBZgAs4MlfUxfLRvwD6Xoov1DEU3vQklzUL+JWWoBIqIic0V9ZXxzcOAKA=
+X-Received: by 2002:a02:ac0a:: with SMTP id a10mr2360269jao.97.1591233747051;
+ Wed, 03 Jun 2020 18:22:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <1591179035-9270-1-git-send-email-laoar.shao@gmail.com> <20200603172355.GP2162697@magnolia>
 In-Reply-To: <20200603172355.GP2162697@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8
-        a=wBMB_3lc1ql3Zin1_Q8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Thu, 4 Jun 2020 09:21:51 +0800
+Message-ID: <CALOAHbBq-5k+dfj-oOmHnDtbok2wQ6QhW02hifs0HaTMXcbNZw@mail.gmail.com>
+Subject: Re: [RFC PATCH] xfs: avoid deadlock when tigger memory reclam in xfs_map_blocks()
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 03, 2020 at 10:23:55AM -0700, Darrick J. Wong wrote:
+On Thu, Jun 4, 2020 at 1:26 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
 > On Wed, Jun 03, 2020 at 06:10:35AM -0400, Yafang Shao wrote:
 > > Recently there is an XFS deadlock on our server with an old kernel.
 > > The deadlock is caused by allocating memory xfs_map_blocks() while doing
@@ -56,11 +77,11 @@ On Wed, Jun 03, 2020 at 10:23:55AM -0700, Darrick J. Wong wrote:
 > > old kernel, I think it could happen on the newest kernel as well. This
 > > issue only happence once and can't be reproduced, so I haven't tried to
 > > produce it on the newesr kernel.
-> > 
+> >
 > > Bellow is the call trace of this deadlock. Note that
 > > xfs_iomap_write_allocate() is replaced by xfs_convert_blocks() in
 > > commit 4ad765edb02a ("xfs: move xfs_iomap_write_allocate to xfs_aops.c").
-> > 
+> >
 > > [480594.790087] INFO: task redis-server:16212 blocked for more than 120 seconds.
 > > [480594.790087] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
 > > [480594.790088] redis-server    D ffffffff8168bd60     0 16212  14347 0x00000004
@@ -96,19 +117,66 @@ On Wed, Jun 03, 2020 at 10:23:55AM -0700, Darrick J. Wong wrote:
 > > [480594.790276]  [<ffffffffa04e958b>] xfs_iomap_write_allocate+0x1cb/0x390 [xfs]
 > > [480594.790299]  [<ffffffffa04d3616>] xfs_map_blocks+0x1a6/0x210 [xfs]
 > > [480594.790312]  [<ffffffffa04d416b>] xfs_do_writepage+0x17b/0x550 [xfs]
-> 
+>
 > xfs_do_writepages doesn't exist anymore.  Does upstream have this
 > problem?  What kernel is this patch targeting?
+>
 
-It does via xfs_bmapi_convert_delalloc() -> xfs_trans_alloc().
+I think the upstream has this issue as well. This patch is targeted
+for Linus's current tree.
 
-I suspect the entire iomap_do_writepage() path should be run under
-GFP_NOFS context given that it is called with a locked page
-cache page and calls ->map_blocks from that context...
+> --D
+>
+> > [480594.790314]  [<ffffffff8118d881>] write_cache_pages+0x251/0x4d0 [xfs]
+> > [480594.790338]  [<ffffffffa04d3e05>] xfs_vm_writepages+0xc5/0xe0 [xfs]
+> > [480594.790341]  [<ffffffff8118ebfe>] do_writepages+0x1e/0x40
+> > [480594.790343]  [<ffffffff811837b5>] __filemap_fdatawrite_range+0x65/0x80
+> > [480594.790346]  [<ffffffff81183901>] filemap_write_and_wait_range+0x41/0x90
+> > [480594.790360]  [<ffffffffa04df2c6>] xfs_file_fsync+0x66/0x1e0 [xfs]
+> > [480594.790363]  [<ffffffff81231cf5>] do_fsync+0x65/0xa0
+> > [480594.790365]  [<ffffffff81231fe3>] SyS_fdatasync+0x13/0x20
+> > [480594.790367]  [<ffffffff81698d09>] system_call_fastpath+0x16/0x1b
+> >
+> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> > ---
+> >  fs/xfs/xfs_aops.c | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> >
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 1fd4fb7..3f60766 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -352,6 +352,7 @@ static inline bool xfs_ioend_needs_workqueue(struct iomap_ioend *ioend)
+> >       struct xfs_iext_cursor  icur;
+> >       int                     retries = 0;
+> >       int                     error = 0;
+> > +     unsigned int            nofs_flag;
+> >
+> >       if (XFS_FORCED_SHUTDOWN(mp))
+> >               return -EIO;
+> > @@ -445,8 +446,16 @@ static inline bool xfs_ioend_needs_workqueue(struct iomap_ioend *ioend)
+> >       xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0);
+> >       trace_xfs_map_blocks_found(ip, offset, count, whichfork, &imap);
+> >       return 0;
+> > +
+> >  allocate_blocks:
+> > +     /*
+> > +      * We can allocate memory here while doing writeback on behalf of
+> > +      * memory reclaim.  To avoid memory allocation deadlocks set the
+> > +      * task-wide nofs context for the following operations.
+> > +      */
+> > +     nofs_flag = memalloc_nofs_save();
+> >       error = xfs_convert_blocks(wpc, ip, whichfork, offset);
+> > +     memalloc_nofs_restore(nofs_flag);
+> >       if (error) {
+> >               /*
+> >                * If we failed to find the extent in the COW fork we might have
+> > --
+> > 1.8.3.1
+> >
 
-Cheers,
 
-Dave.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Thanks
+Yafang
