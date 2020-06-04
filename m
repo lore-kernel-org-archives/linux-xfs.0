@@ -2,82 +2,127 @@ Return-Path: <SRS0=uikP=7R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D360AC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 23:12:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28CEBC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 23:13:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A721820663
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 23:12:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E9BARcPt"
+	by mail.kernel.org (Postfix) with ESMTP id 08B5C20663
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 23:13:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726027AbgFDXMt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 19:12:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49802 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725863AbgFDXMt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 19:12:49 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41C20C08C5C1;
-        Thu,  4 Jun 2020 16:05:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=vLkbveTzLrm+1mGeplB+ePn3QIH8H7o1DVPIYYdiRK4=; b=E9BARcPtQWALfSiXDWtgpM6WrE
-        i9SCajNKsOHN3OIlAKCN8L+EXFCmTQfZFDkPB9dsuSvNB1GEuDhe2b6JMcAQs1ebIB9YC287ZeqVm
-        8Mu/IN6GcVUsXXLw7ojs5NN1ckyOD5Xjk4YCEcRFM/Svsuqw2G1Bzzoe3ecj0pKqXocCzsI+tOTVh
-        gx4vLL2jzB+v1k2zmSbEaZw6yfYt5NhxXANP5pAMu18eSx83Lw8LDr3lxaPO1gM4g+kSomsDyt0rc
-        NrBM4jaz5upjrR+VoRbIN6nyZADbQuRT0XOgeECGztuYiBO0Adj0GqWpesV3Y7RkHm9SJJOKQUMCc
-        Jmhar29Q==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jgyvH-0006iF-G0; Thu, 04 Jun 2020 23:05:19 +0000
-Date:   Thu, 4 Jun 2020 16:05:19 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iomap: Handle I/O errors gracefully in page_mkwrite
-Message-ID: <20200604230519.GW19604@bombadil.infradead.org>
-References: <20200604202340.29170-1-willy@infradead.org>
- <20200604225726.GU2040@dread.disaster.area>
+        id S1726147AbgFDXNc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 19:13:32 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:42689 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725943AbgFDXNc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 19:13:32 -0400
+Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 4CE42D58EA5;
+        Fri,  5 Jun 2020 09:13:28 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jgz39-0001Dx-F2; Fri, 05 Jun 2020 09:13:27 +1000
+Date:   Fri, 5 Jun 2020 09:13:27 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Waiman Long <longman@redhat.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Qian Cai <cai@lca.pw>, Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [PATCH v2] xfs: Fix false positive lockdep warning with
+ sb_internal & fs_reclaim
+Message-ID: <20200604231327.GV2040@dread.disaster.area>
+References: <20200604210130.697-1-longman@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200604225726.GU2040@dread.disaster.area>
+In-Reply-To: <20200604210130.697-1-longman@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8
+        a=BOxwD6q5GxyBsbH42-YA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 05, 2020 at 08:57:26AM +1000, Dave Chinner wrote:
-> On Thu, Jun 04, 2020 at 01:23:40PM -0700, Matthew Wilcox wrote:
-> > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> > 
-> > Test generic/019 often results in:
-> > 
-> > WARNING: at fs/iomap/buffered-io.c:1069 iomap_page_mkwrite_actor+0x57/0x70
-> > 
-> > Since this can happen due to a storage error, we should not WARN for it.
-> > Just return -EIO, which will be converted to a SIGBUS for the hapless
-> > task attempting to write to the page that we can't read.
+On Thu, Jun 04, 2020 at 05:01:30PM -0400, Waiman Long wrote:
+> ---
+>  fs/xfs/xfs_log.c   | 3 ++-
+>  fs/xfs/xfs_trans.c | 8 +++++++-
+>  2 files changed, 9 insertions(+), 2 deletions(-)
 > 
-> Why didn't the "read" part of the fault which had the EIO error fail
-> the page fault? i.e. why are we waiting until deep inside the write
-> fault path to error out on a failed page read?
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 00fda2e8e738..d273d4e74ef8 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -433,7 +433,8 @@ xfs_log_reserve(
+>  	XFS_STATS_INC(mp, xs_try_logspace);
+>  
+>  	ASSERT(*ticp == NULL);
+> -	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent, 0);
+> +	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent,
+> +			mp->m_super->s_writers.frozen ? KM_NOLOCKDEP : 0);
+>  	*ticp = tic;
 
-I have a hypothesis that I don't know how to verify.
+Hi Waiman,
 
-First the task does a load from the page and we put a read-only PTE in
-the page tables.  Then it writes to the page using write().  The page
-gets written back, but hits an error in iomap_writepage_map()
-which calls ClearPageUptodate().  Then the task with it mapped attempts
-to store to it.
+As I originally stated when you posted this the first time 6 months
+ago: we are not going to spread this sort of conditional gunk though
+the XFS codebase just to shut up lockdep false positives.
 
-I haven't dug through what generic/019 does, so I don't know how plausible
-this is.
+I pointed you at the way to conditionally turn of lockdep for
+operations where we are doing transactions when the filesystem has
+already frozen the transaction subsystem. That is:
+
+>  
+>  	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 3c94e5ff4316..3a9f394a0f02 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -261,8 +261,14 @@ xfs_trans_alloc(
+>  	 * Allocate the handle before we do our freeze accounting and setting up
+>  	 * GFP_NOFS allocation context so that we avoid lockdep false positives
+>  	 * by doing GFP_KERNEL allocations inside sb_start_intwrite().
+> +	 *
+> +	 * To prevent false positive lockdep warning of circular locking
+> +	 * dependency between sb_internal and fs_reclaim, disable the
+> +	 * acquisition of the fs_reclaim pseudo-lock when the superblock
+> +	 * has been frozen or in the process of being frozen.
+>  	 */
+> -	tp = kmem_zone_zalloc(xfs_trans_zone, 0);
+> +	tp = kmem_zone_zalloc(xfs_trans_zone,
+> +		mp->m_super->s_writers.frozen ? KM_NOLOCKDEP : 0);
+>  	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
+
+We only should be setting KM_NOLOCKDEP when XFS_TRANS_NO_WRITECOUNT
+is set.  That's the flag that transactions set when they run in a
+fully frozen context to avoid deadlocking with the freeze in
+progress, and that's the only case where we should be turning off
+lockdep.
+
+And, as I also mentioned, this should be done via a process flag -
+PF_MEMALLOC_NOLOCKDEP - so that it is automatically inherited by
+all subsequent memory allocations done in this path. That way we
+only need this wrapping code in xfs_trans_alloc():
+
+	if (flags & XFS_TRANS_NO_WRITECOUNT)
+		memalloc_nolockdep_save()
+
+	.....
+
+	if (flags & XFS_TRANS_NO_WRITECOUNT)
+		memalloc_nolockdep_restore()
+
+and nothing else needs to change.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
