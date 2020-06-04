@@ -6,45 +6,44 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1E97C433E8
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C86CC433DF
 	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADDFA2067B
+	by mail.kernel.org (Postfix) with ESMTP id 559382067B
 	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728042AbgFDHqU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727043AbgFDHqU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 4 Jun 2020 03:46:20 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:34417 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726246AbgFDHqS (ORCPT
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:49998 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727941AbgFDHqS (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 03:46:18 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 7F722107C04
-        for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2020 17:46:12 +1000 (AEST)
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 4F1A25AAE7A
+        for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2020 17:46:09 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jgkZk-0004B9-M2
-        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:08 +1000
+        id 1jgkZj-0004A5-Um
+        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:07 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jgkZk-0017Io-DM
-        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:08 +1000
+        id 1jgkZj-0017HV-Lw
+        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:07 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 29/30] xfs: factor xfs_iflush_done
-Date:   Thu,  4 Jun 2020 17:46:05 +1000
-Message-Id: <20200604074606.266213-30-david@fromorbit.com>
+Subject: [PATCH 13/30] xfs: handle buffer log item IO errors directly
+Date:   Thu,  4 Jun 2020 17:45:49 +1000
+Message-Id: <20200604074606.266213-14-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
 In-Reply-To: <20200604074606.266213-1-david@fromorbit.com>
 References: <20200604074606.266213-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=5dYq1025zWcnlPueRbEA:9
+        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=1Txx6-oBkrdBIOE7CJkA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,210 +51,328 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_iflush_done() does 3 distinct operations to the inodes attached
-to the buffer. Separate these operations out into functions so that
-it is easier to modify these operations independently in future.
+Currently when a buffer with attached log items has an IO error
+it called ->iop_error for each attched log item. These all call
+xfs_set_li_failed() to handle the error, but we are about to change
+the way log items manage buffers. hence we first need to remove the
+per-item dependency on buffer handling done by xfs_set_li_failed().
+
+We already have specific buffer type IO completion routines, so move
+the log item error handling out of the generic error handling and
+into the log item specific functions so we can implement per-type
+error handling easily.
+
+This requires a more complex return value from the error handling
+code so that we can take the correct action the failure handling
+requires.  This results in some repeated boilerplate in the
+functions, but that can be cleaned up later once all the changes
+cascade through this code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_inode_item.c | 154 +++++++++++++++++++++-------------------
- 1 file changed, 81 insertions(+), 73 deletions(-)
+ fs/xfs/xfs_buf_item.c | 215 ++++++++++++++++++++++++++++--------------
+ 1 file changed, 145 insertions(+), 70 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index dee7385466f83..3894d190ea5b9 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -640,101 +640,64 @@ xfs_inode_item_destroy(
- 
- 
- /*
-- * This is the inode flushing I/O completion routine.  It is called
-- * from interrupt level when the buffer containing the inode is
-- * flushed to disk.  It is responsible for removing the inode item
-- * from the AIL if it has not been re-logged, and unlocking the inode's
-- * flush lock.
-- *
-- * To reduce AIL lock traffic as much as possible, we scan the buffer log item
-- * list for other inodes that will run this function. We remove them from the
-- * buffer list so we can process all the inode IO completions in one AIL lock
-- * traversal.
-- *
-- * Note: Now that we attach the log item to the buffer when we first log the
-- * inode in memory, we can have unflushed inodes on the buffer list here. These
-- * inodes will have a zero ili_last_fields, so skip over them here.
-+ * We only want to pull the item from the AIL if it is actually there
-+ * and its location in the log has not changed since we started the
-+ * flush.  Thus, we only bother if the inode's lsn has not changed.
-  */
- void
--xfs_iflush_done(
--	struct xfs_buf		*bp)
-+xfs_iflush_ail_updates(
-+	struct xfs_ail		*ailp,
-+	struct list_head	*list)
- {
--	struct xfs_inode_log_item *iip;
--	struct xfs_log_item	*lip, *n;
--	struct xfs_ail		*ailp = bp->b_mount->m_ail;
--	int			need_ail = 0;
--	LIST_HEAD(tmp);
-+	struct xfs_log_item	*lip;
-+	xfs_lsn_t		tail_lsn = 0;
- 
--	/*
--	 * Pull the attached inodes from the buffer one at a time and take the
--	 * appropriate action on them.
--	 */
--	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
--		iip = INODE_ITEM(lip);
-+	/* this is an opencoded batch version of xfs_trans_ail_delete */
-+	spin_lock(&ailp->ail_lock);
-+	list_for_each_entry(lip, list, li_bio_list) {
-+		xfs_lsn_t	lsn;
- 
--		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
--			xfs_iflush_abort(iip->ili_inode);
-+		if (INODE_ITEM(lip)->ili_flush_lsn != lip->li_lsn) {
-+			clear_bit(XFS_LI_FAILED, &lip->li_flags);
- 			continue;
- 		}
- 
--		if (!iip->ili_last_fields)
--			continue;
--
--		list_move_tail(&lip->li_bio_list, &tmp);
--
--		/* Do an unlocked check for needing the AIL lock. */
--		if (iip->ili_flush_lsn == lip->li_lsn ||
--		    test_bit(XFS_LI_FAILED, &lip->li_flags))
--			need_ail++;
-+		lsn = xfs_ail_delete_one(ailp, lip);
-+		if (!tail_lsn && lsn)
-+			tail_lsn = lsn;
- 	}
-+	xfs_ail_update_finish(ailp, tail_lsn);
-+}
- 
--	/*
--	 * We only want to pull the item from the AIL if it is actually there
--	 * and its location in the log has not changed since we started the
--	 * flush.  Thus, we only bother if the inode's lsn has not changed.
--	 */
--	if (need_ail) {
--		xfs_lsn_t	tail_lsn = 0;
--
--		/* this is an opencoded batch version of xfs_trans_ail_delete */
--		spin_lock(&ailp->ail_lock);
--		list_for_each_entry(lip, &tmp, li_bio_list) {
--			clear_bit(XFS_LI_FAILED, &lip->li_flags);
--			if (lip->li_lsn == INODE_ITEM(lip)->ili_flush_lsn) {
--				xfs_lsn_t lsn = xfs_ail_delete_one(ailp, lip);
--				if (!tail_lsn && lsn)
--					tail_lsn = lsn;
--			}
--		}
--		xfs_ail_update_finish(ailp, tail_lsn);
--	}
-+/*
-+ * Walk the list of inodes that have completed their IOs. If they are clean
-+ * remove them from the list and dissociate them from the buffer. Buffers that
-+ * are still dirty remain linked to the buffer and on the list. Caller must
-+ * handle them appropriately.
-+ */
-+void
-+xfs_iflush_finish(
-+	struct xfs_buf		*bp,
-+	struct list_head	*list)
-+{
-+	struct xfs_log_item	*lip, *n;
- 
--	/*
--	 * Clean up and unlock the flush lock now we are done. We can clear the
--	 * ili_last_fields bits now that we know that the data corresponding to
--	 * them is safely on disk.
--	 */
--	list_for_each_entry_safe(lip, n, &tmp, li_bio_list) {
-+	list_for_each_entry_safe(lip, n, list, li_bio_list) {
-+		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
- 		bool	drop_buffer = false;
- 
--		list_del_init(&lip->li_bio_list);
--		iip = INODE_ITEM(lip);
--
- 		spin_lock(&iip->ili_lock);
- 
- 		/*
- 		 * Remove the reference to the cluster buffer if the inode is
--		 * clean in memory. Drop the buffer reference once we've dropped
--		 * the locks we hold. If the inode is dirty in memory, we need
--		 * to put the inode item back on the buffer list for another
--		 * pass through the flush machinery.
-+		 * clean in memory and drop the buffer reference once we've
-+		 * dropped the locks we hold.
- 		 */
- 		ASSERT(iip->ili_item.li_buf == bp);
- 		if (!iip->ili_fields) {
- 			iip->ili_item.li_buf = NULL;
-+			list_del_init(&lip->li_bio_list);
- 			drop_buffer = true;
--		} else {
--			list_add(&lip->li_bio_list, &bp->b_li_list);
- 		}
- 		iip->ili_last_fields = 0;
- 		iip->ili_flush_lsn = 0;
-@@ -745,6 +708,51 @@ xfs_iflush_done(
- 	}
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 09bfe9c52dbdb..3560993847b7c 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -986,21 +986,24 @@ xfs_buf_do_callbacks_fail(
+ 	spin_unlock(&ailp->ail_lock);
  }
  
 +/*
-+ * Inode buffer IO completion routine.  It is responsible for removing inodes
-+ * attached to the buffer from the AIL if they have not been re-logged, as well
-+ * as completing the flush and unlocking the inode.
++ * Decide if we're going to retry the write after a failure, and prepare
++ * the buffer for retrying the write.
 + */
-+void
-+xfs_iflush_done(
+ static bool
+-xfs_buf_iodone_callback_error(
++xfs_buf_ioerror_fail_without_retry(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_mount;
+ 	static ulong		lasttime;
+ 	static xfs_buftarg_t	*lasttarg;
+-	struct xfs_error_cfg	*cfg;
+ 
+ 	/*
+ 	 * If we've already decided to shutdown the filesystem because of
+ 	 * I/O errors, there's no point in giving this a retry.
+ 	 */
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+-		goto out_stale;
++		return true;
+ 
+ 	if (bp->b_target != lasttarg ||
+ 	    time_after(jiffies, (lasttime + 5*HZ))) {
+@@ -1011,91 +1014,115 @@ xfs_buf_iodone_callback_error(
+ 
+ 	/* synchronous writes will have callers process the error */
+ 	if (!(bp->b_flags & XBF_ASYNC))
+-		goto out_stale;
+-
+-	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+-
+-	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
++		return true;
++	return false;
++}
+ 
+-	/*
+-	 * If the write was asynchronous then no one will be looking for the
+-	 * error.  If this is the first failure of this type, clear the error
+-	 * state and write the buffer out again. This means we always retry an
+-	 * async write failure at least once, but we also need to set the buffer
+-	 * up to behave correctly now for repeated failures.
+-	 */
+-	if (!(bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) ||
+-	     bp->b_last_error != bp->b_error) {
+-		bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
+-		bp->b_last_error = bp->b_error;
+-		if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+-		    !bp->b_first_retry_time)
+-			bp->b_first_retry_time = jiffies;
++static bool
++xfs_buf_ioerror_retry(
++	struct xfs_buf		*bp,
++	struct xfs_error_cfg	*cfg)
++{
++	if (bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL))
++		return false;
++	if (bp->b_last_error == bp->b_error)
++		return false;
+ 
+-		xfs_buf_ioerror(bp, 0);
+-		xfs_buf_submit(bp);
+-		return true;
+-	}
++	bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
++	bp->b_last_error = bp->b_error;
++	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
++	    !bp->b_first_retry_time)
++		bp->b_first_retry_time = jiffies;
++	return true;
++}
+ 
+-	/*
+-	 * Repeated failure on an async write. Take action according to the
+-	 * error configuration we have been set up to use.
+-	 */
++/*
++ * Account for this latest trip around the retry handler, and decide if
++ * we've failed enough times to constitute a permanent failure.
++ */
++static bool
++xfs_buf_ioerror_permanent(
++	struct xfs_buf		*bp,
++	struct xfs_error_cfg	*cfg)
++{
++	struct xfs_mount	*mp = bp->b_mount;
+ 
+ 	if (cfg->max_retries != XFS_ERR_RETRY_FOREVER &&
+ 	    ++bp->b_retries > cfg->max_retries)
+-			goto permanent_error;
++		return true;
+ 	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+ 	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
+-			goto permanent_error;
++		return true;
+ 
+ 	/* At unmount we may treat errors differently */
+ 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+-		goto permanent_error;
+-
+-	/*
+-	 * Still a transient error, run IO completion failure callbacks and let
+-	 * the higher layers retry the buffer.
+-	 */
+-	xfs_buf_do_callbacks_fail(bp);
+-	xfs_buf_ioerror(bp, 0);
+-	xfs_buf_relse(bp);
+-	return true;
++		return true;
+ 
+-	/*
+-	 * Permanent error - we need to trigger a shutdown if we haven't already
+-	 * to indicate that inconsistency will result from this action.
+-	 */
+-permanent_error:
+-	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+-out_stale:
+-	xfs_buf_stale(bp);
+-	bp->b_flags |= XBF_DONE;
+-	trace_xfs_buf_error_relse(bp, _RET_IP_);
+ 	return false;
+ }
+ 
+-static inline bool
+-xfs_buf_had_callback_errors(
++/*
++ * On a sync write or shutdown we just want to stale the buffer and let the
++ * caller handle the error in bp->b_error appropriately.
++ *
++ * If the write was asynchronous then no one will be looking for the error.  If
++ * this is the first failure of this type, clear the error state and write the
++ * buffer out again. This means we always retry an async write failure at least
++ * once, but we also need to set the buffer up to behave correctly now for
++ * repeated failures.
++ *
++ * If we get repeated async write failures, then we take action according to the
++ * error configuration we have been set up to use.
++ *
++ * Multi-state return value:
++ *
++ * XBF_IOERROR_FINISH: clear IO error retry state and run callback completions
++ * XBF_IOERROR_DONE: resubmitted immediately, do not run any completions
++ * XBF_IOERROR_FAIL: transient error, run failure callback completions and then
++ *    release the buffer
++ */
++enum {
++	XBF_IOERROR_FINISH,
++	XBF_IOERROR_DONE,
++	XBF_IOERROR_FAIL,
++};
++
++static int
++xfs_buf_iodone_error(
+ 	struct xfs_buf		*bp)
+ {
++	struct xfs_mount	*mp = bp->b_mount;
++	struct xfs_error_cfg	*cfg;
+ 
+-	/*
+-	 * If there is an error, process it. Some errors require us to run
+-	 * callbacks after failure processing is done so we detect that and take
+-	 * appropriate action.
+-	 */
+-	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
+-		return true;
++	if (xfs_buf_ioerror_fail_without_retry(bp))
++		goto out_stale;
++
++	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
++
++	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
++	if (xfs_buf_ioerror_retry(bp, cfg)) {
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_submit(bp);
++		return XBF_IOERROR_DONE;
++	}
+ 
+ 	/*
+-	 * Successful IO or permanent error. Either way, we can clear the
+-	 * retry state here in preparation for the next error that may occur.
++	 * Permanent error - we need to trigger a shutdown if we haven't already
++	 * to indicate that inconsistency will result from this action.
+ 	 */
+-	bp->b_last_error = 0;
+-	bp->b_retries = 0;
+-	bp->b_first_retry_time = 0;
+-	return false;
++	if (xfs_buf_ioerror_permanent(bp, cfg)) {
++		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++		goto out_stale;
++	}
++
++	/* Still considered a transient error. Caller will schedule retries. */
++	return XBF_IOERROR_FAIL;
++
++out_stale:
++	xfs_buf_stale(bp);
++	bp->b_flags |= XBF_DONE;
++	trace_xfs_buf_error_relse(bp, _RET_IP_);
++	return XBF_IOERROR_FINISH;
+ }
+ 
+ static void
+@@ -1122,6 +1149,15 @@ xfs_buf_item_done(
+ 	xfs_buf_rele(bp);
+ }
+ 
++static inline void
++xfs_buf_clear_ioerror_retry_state(
 +	struct xfs_buf		*bp)
 +{
-+	struct xfs_log_item	*lip, *n;
-+	LIST_HEAD(flushed_inodes);
-+	LIST_HEAD(ail_updates);
-+
-+	/*
-+	 * Pull the attached inodes from the buffer one at a time and take the
-+	 * appropriate action on them.
-+	 */
-+	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
-+		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-+
-+		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
-+			xfs_iflush_abort(iip->ili_inode);
-+			continue;
-+		}
-+		if (!iip->ili_last_fields)
-+			continue;
-+
-+		/* Do an unlocked check for needing the AIL lock. */
-+		if (iip->ili_flush_lsn == lip->li_lsn ||
-+		    test_bit(XFS_LI_FAILED, &lip->li_flags))
-+			list_move_tail(&lip->li_bio_list, &ail_updates);
-+		else
-+			list_move_tail(&lip->li_bio_list, &flushed_inodes);
-+	}
-+
-+	if (!list_empty(&ail_updates)) {
-+		xfs_iflush_ail_updates(bp->b_mount->m_ail, &ail_updates);
-+		list_splice_tail(&ail_updates, &flushed_inodes);
-+	}
-+
-+	xfs_iflush_finish(bp, &flushed_inodes);
-+	if (!list_empty(&flushed_inodes))
-+		list_splice_tail(&flushed_inodes, &bp->b_li_list);
++	bp->b_last_error = 0;
++	bp->b_retries = 0;
++	bp->b_first_retry_time = 0;
 +}
 +
  /*
-  * This is the inode flushing abort routine.  It is called from xfs_iflush when
-  * the filesystem is shutting down to clean up the inode state.  It is
+  * Inode buffer iodone callback function.
+  */
+@@ -1129,9 +1165,22 @@ void
+ xfs_buf_inode_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_buf_had_callback_errors(bp))
++	if (bp->b_error) {
++		int ret = xfs_buf_iodone_error(bp);
++
++		if (ret == XBF_IOERROR_FINISH)
++			goto finish_iodone;
++		if (ret == XBF_IOERROR_DONE)
++			return;
++		ASSERT(ret == XBF_IOERROR_FAIL);
++		xfs_buf_do_callbacks_fail(bp);
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_relse(bp);
+ 		return;
++	}
+ 
++finish_iodone:
++	xfs_buf_clear_ioerror_retry_state(bp);
+ 	xfs_buf_item_done(bp);
+ 	xfs_iflush_done(bp);
+ 	xfs_buf_ioend_finish(bp);
+@@ -1144,9 +1193,22 @@ void
+ xfs_buf_dquot_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_buf_had_callback_errors(bp))
++	if (bp->b_error) {
++		int ret = xfs_buf_iodone_error(bp);
++
++		if (ret == XBF_IOERROR_FINISH)
++			goto finish_iodone;
++		if (ret == XBF_IOERROR_DONE)
++			return;
++		ASSERT(ret == XBF_IOERROR_FAIL);
++		xfs_buf_do_callbacks_fail(bp);
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_relse(bp);
+ 		return;
++	}
+ 
++finish_iodone:
++	xfs_buf_clear_ioerror_retry_state(bp);
+ 	/* a newly allocated dquot buffer might have a log item attached */
+ 	xfs_buf_item_done(bp);
+ 	xfs_dquot_done(bp);
+@@ -1163,9 +1225,22 @@ void
+ xfs_buf_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_buf_had_callback_errors(bp))
++	if (bp->b_error) {
++		int ret = xfs_buf_iodone_error(bp);
++
++		if (ret == XBF_IOERROR_FINISH)
++			goto finish_iodone;
++		if (ret == XBF_IOERROR_DONE)
++			return;
++		ASSERT(ret == XBF_IOERROR_FAIL);
++		xfs_buf_do_callbacks_fail(bp);
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_relse(bp);
+ 		return;
++	}
+ 
++finish_iodone:
++	xfs_buf_clear_ioerror_retry_state(bp);
+ 	xfs_buf_item_done(bp);
+ 	xfs_buf_ioend_finish(bp);
+ }
 -- 
 2.26.2.761.g0e0b3e54be
 
