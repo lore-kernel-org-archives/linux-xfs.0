@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B4E4C433F4
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBA33C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C3782067B
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FF662067B
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728025AbgFDHq0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 03:46:26 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41578 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728043AbgFDHqZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 03:46:25 -0400
+        id S1728019AbgFDHqY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 03:46:24 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:49322 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727997AbgFDHqW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 03:46:22 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E3B733A3D34
-        for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2020 17:46:14 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 83E9ED597B4
+        for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2020 17:46:13 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jgkZk-0004Av-Dv
+        id 1jgkZk-0004B6-KR
         for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:08 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jgkZk-0017IP-5S
+        id 1jgkZk-0017Ij-C6
         for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:08 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 24/30] xfs: rework stale inodes in xfs_ifree_cluster
-Date:   Thu,  4 Jun 2020 17:46:00 +1000
-Message-Id: <20200604074606.266213-25-david@fromorbit.com>
+Subject: [PATCH 28/30] xfs: rework xfs_iflush_cluster() dirty inode iteration
+Date:   Thu,  4 Jun 2020 17:46:04 +1000
+Message-Id: <20200604074606.266213-29-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
 In-Reply-To: <20200604074606.266213-1-david@fromorbit.com>
 References: <20200604074606.266213-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
         a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=sEHBG_JH86uubuPEzfwA:9 a=EmdybhaG4RS5P0Sq:21 a=QT12gNWgP9Hs2AXr:21
+        a=ccWGV2Zw5G_KkjRFBUYA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,270 +52,256 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Once we have inodes pinning the cluster buffer and attached whenever
-they are dirty, we no longer have a guarantee that the items are
-flush locked when we lock the cluster buffer. Hence we cannot just
-walk the buffer log item list and modify the attached inodes.
+Now that we have all the dirty inodes attached to the cluster
+buffer, we don't actually have to do radix tree lookups to find
+them. Sure, the radix tree is efficient, but walking a linked list
+of just the dirty inodes attached to the buffer is much better.
 
-If the inode is not flush locked, we have to ILOCK it first and then
-flush lock it to do all the prerequisite checks needed to avoid
-races with other code. This is already handled by
-xfs_ifree_get_one_inode(), so rework the inode iteration loop and
-function to update all inodes in cache whether they are attached to
-the buffer or not.
+We are also no longer dependent on having a locked inode passed into
+the function to determine where to start the lookup. This means we
+can drop it from the function call and treat all inodes the same.
 
-Note: we also remove the copying of the log item lsn to the
-ili_flush_lsn as xfs_iflush_done() now uses the XFS_ISTALE flag to
-trigger aborts and so flush lsn matching is not needed in IO
-completion for processing freed inodes.
+We also make xfs_iflush_cluster skip inodes marked with
+XFS_IRECLAIM. This we avoid races with inodes that reclaim is
+actively referencing or are being re-initialised by inode lookup. If
+they are actually dirty, they'll get written by a future cluster
+flush....
+
+We also add a shutdown check after obtaining the flush lock so that
+we catch inodes that are dirty in memory and may have inconsistent
+state due to the shutdown in progress. We abort these inodes
+directly and so they remove themselves directly from the buffer list
+and the AIL rather than having to wait for the buffer to be failed
+and callbacks run to be processed correctly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_inode.c | 158 ++++++++++++++++++---------------------------
- 1 file changed, 62 insertions(+), 96 deletions(-)
+ fs/xfs/xfs_inode.c      | 148 ++++++++++++++++------------------------
+ fs/xfs/xfs_inode.h      |   2 +-
+ fs/xfs/xfs_inode_item.c |   2 +-
+ 3 files changed, 62 insertions(+), 90 deletions(-)
 
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 272b54cf97000..fb4c614c64fda 100644
+index 8566bd0f4334d..931a483d5b316 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2517,17 +2517,19 @@ xfs_iunlink_remove(
- }
- 
- /*
-- * Look up the inode number specified and mark it stale if it is found. If it is
-- * dirty, return the inode so it can be attached to the cluster buffer so it can
-- * be processed appropriately when the cluster free transaction completes.
-+ * Look up the inode number specified and if it is not already marked XFS_ISTALE
-+ * mark it stale. We should only find clean inodes in this lookup that aren't
-+ * already stale.
+@@ -3611,117 +3611,94 @@ xfs_iflush(
   */
--static struct xfs_inode *
--xfs_ifree_get_one_inode(
--	struct xfs_perag	*pag,
-+static void
-+xfs_ifree_mark_inode_stale(
-+	struct xfs_buf		*bp,
- 	struct xfs_inode	*free_ip,
- 	xfs_ino_t		inum)
+ int
+ xfs_iflush_cluster(
+-	struct xfs_inode	*ip,
+ 	struct xfs_buf		*bp)
  {
--	struct xfs_mount	*mp = pag->pag_mount;
-+	struct xfs_mount	*mp = bp->b_mount;
-+	struct xfs_perag	*pag = bp->b_pag;
-+	struct xfs_inode_log_item *iip;
- 	struct xfs_inode	*ip;
- 
- retry:
-@@ -2535,8 +2537,10 @@ xfs_ifree_get_one_inode(
- 	ip = radix_tree_lookup(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, inum));
- 
- 	/* Inode not in memory, nothing to do */
--	if (!ip)
--		goto out_rcu_unlock;
-+	if (!ip) {
-+		rcu_read_unlock();
-+		return;
-+	}
- 
- 	/*
- 	 * because this is an RCU protected lookup, we could find a recently
-@@ -2547,9 +2551,9 @@ xfs_ifree_get_one_inode(
- 	spin_lock(&ip->i_flags_lock);
- 	if (ip->i_ino != inum || __xfs_iflags_test(ip, XFS_ISTALE)) {
- 		spin_unlock(&ip->i_flags_lock);
--		goto out_rcu_unlock;
-+		rcu_read_unlock();
-+		return;
- 	}
--	spin_unlock(&ip->i_flags_lock);
- 
- 	/*
- 	 * Don't try to lock/unlock the current inode, but we _cannot_ skip the
-@@ -2559,43 +2563,53 @@ xfs_ifree_get_one_inode(
- 	 */
- 	if (ip != free_ip) {
- 		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-+			spin_unlock(&ip->i_flags_lock);
- 			rcu_read_unlock();
- 			delay(1);
- 			goto retry;
- 		}
--
--		/*
--		 * Check the inode number again in case we're racing with
--		 * freeing in xfs_reclaim_inode().  See the comments in that
--		 * function for more information as to why the initial check is
--		 * not sufficient.
--		 */
--		if (ip->i_ino != inum) {
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--			goto out_rcu_unlock;
--		}
- 	}
-+	ip->i_flags |= XFS_ISTALE;
-+	spin_unlock(&ip->i_flags_lock);
- 	rcu_read_unlock();
- 
--	xfs_iflock(ip);
--	xfs_iflags_set(ip, XFS_ISTALE);
-+	/*
-+	 * If we can't get the flush lock, the inode is already attached.  All
-+	 * we needed to do here is mark the inode stale so buffer IO completion
-+	 * will remove it from the AIL.
-+	 */
-+	iip = ip->i_itemp;
-+	if (!xfs_iflock_nowait(ip)) {
-+		ASSERT(!list_empty(&iip->ili_item.li_bio_list));
-+		ASSERT(iip->ili_last_fields);
-+		goto out_iunlock;
-+	}
-+	ASSERT(!iip || list_empty(&iip->ili_item.li_bio_list));
- 
- 	/*
--	 * We don't need to attach clean inodes or those only with unlogged
--	 * changes (which we throw away, anyway).
-+	 * Clean inodes can be released immediately.  Everything else has to go
-+	 * through xfs_iflush_abort() on journal commit as the flock
-+	 * synchronises removal of the inode from the cluster buffer against
-+	 * inode reclaim.
- 	 */
--	if (!ip->i_itemp || xfs_inode_clean(ip)) {
--		ASSERT(ip != free_ip);
-+	if (xfs_inode_clean(ip)) {
- 		xfs_ifunlock(ip);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		goto out_no_inode;
-+		goto out_iunlock;
- 	}
--	return ip;
- 
--out_rcu_unlock:
--	rcu_read_unlock();
--out_no_inode:
--	return NULL;
-+	/* we have a dirty inode in memory that has not yet been flushed. */
-+	ASSERT(iip->ili_fields);
-+	spin_lock(&iip->ili_lock);
-+	iip->ili_last_fields = iip->ili_fields;
-+	iip->ili_fields = 0;
-+	iip->ili_fsync_fields = 0;
-+	spin_unlock(&iip->ili_lock);
-+	list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
-+	ASSERT(iip->ili_last_fields);
-+
-+out_iunlock:
-+	if (ip != free_ip)
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- }
- 
- /*
-@@ -2605,26 +2619,20 @@ xfs_ifree_get_one_inode(
-  */
- STATIC int
- xfs_ifree_cluster(
--	xfs_inode_t		*free_ip,
--	xfs_trans_t		*tp,
-+	struct xfs_inode	*free_ip,
-+	struct xfs_trans	*tp,
- 	struct xfs_icluster	*xic)
- {
--	xfs_mount_t		*mp = free_ip->i_mount;
-+	struct xfs_mount	*mp = free_ip->i_mount;
-+	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-+	struct xfs_buf		*bp;
-+	xfs_daddr_t		blkno;
-+	xfs_ino_t		inum = xic->first_ino;
- 	int			nbufs;
- 	int			i, j;
- 	int			ioffset;
--	xfs_daddr_t		blkno;
--	xfs_buf_t		*bp;
--	xfs_inode_t		*ip;
--	struct xfs_inode_log_item *iip;
--	struct xfs_log_item	*lip;
+-	struct xfs_mount	*mp = ip->i_mount;
 -	struct xfs_perag	*pag;
+-	unsigned long		first_index, mask;
+-	int			cilist_size;
+-	struct xfs_inode	**cilist;
+-	struct xfs_inode	*cip;
 -	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
--	xfs_ino_t		inum;
- 	int			error;
+-	int			error = 0;
+-	int			nr_found;
++	struct xfs_mount	*mp = bp->b_mount;
++	struct xfs_log_item	*lip, *n;
++	struct xfs_inode	*ip;
++	struct xfs_inode_log_item *iip;
+ 	int			clcount = 0;
+-	int			i;
+-
+-	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
+-
+-	cilist_size = igeo->inodes_per_cluster * sizeof(struct xfs_inode *);
+-	cilist = kmem_alloc(cilist_size, KM_MAYFAIL|KM_NOFS);
+-	if (!cilist)
+-		goto out_put;
+-
+-	mask = ~(igeo->inodes_per_cluster - 1);
+-	first_index = XFS_INO_TO_AGINO(mp, ip->i_ino) & mask;
+-	rcu_read_lock();
+-	/* really need a gang lookup range call here */
+-	nr_found = radix_tree_gang_lookup(&pag->pag_ici_root, (void**)cilist,
+-					first_index, igeo->inodes_per_cluster);
+-	if (nr_found == 0)
+-		goto out_free;
++	int			error = 0;
  
--	inum = xic->first_ino;
--	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
- 	nbufs = igeo->ialloc_blks / igeo->blocks_per_cluster;
- 
- 	for (j = 0; j < nbufs; j++, inum += igeo->inodes_per_cluster) {
-@@ -2668,59 +2676,16 @@ xfs_ifree_cluster(
- 		bp->b_ops = &xfs_inode_buf_ops;
+-	for (i = 0; i < nr_found; i++) {
+-		cip = cilist[i];
++	/*
++	 * We must use the safe variant here as on shutdown xfs_iflush_abort()
++	 * can remove itself from the list.
++	 */
++	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
++		iip = (struct xfs_inode_log_item *)lip;
++		ip = iip->ili_inode;
  
  		/*
--		 * Walk the inodes already attached to the buffer and mark them
--		 * stale. These will all have the flush locks held, so an
--		 * in-memory inode walk can't lock them. By marking them all
--		 * stale first, we will not attempt to lock them in the loop
--		 * below as the XFS_ISTALE flag will be set.
--		 */
--		list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
--			if (lip->li_type == XFS_LI_INODE) {
--				iip = (struct xfs_inode_log_item *)lip;
--				xfs_trans_ail_copy_lsn(mp->m_ail,
--							&iip->ili_flush_lsn,
--							&iip->ili_item.li_lsn);
--				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
--			}
--		}
--
--
--		/*
--		 * For each inode in memory attempt to add it to the inode
--		 * buffer and set it up for being staled on buffer IO
--		 * completion.  This is safe as we've locked out tail pushing
--		 * and flushing by locking the buffer.
--		 *
--		 * We have already marked every inode that was part of a
--		 * transaction stale above, which means there is no point in
--		 * even trying to lock them.
-+		 * Now we need to set all the cached clean inodes as XFS_ISTALE,
-+		 * too. This requires lookups, and will skip inodes that we've
-+		 * already marked XFS_ISTALE.
+-		 * because this is an RCU protected lookup, we could find a
+-		 * recently freed or even reallocated inode during the lookup.
+-		 * We need to check under the i_flags_lock for a valid inode
+-		 * here. Skip it if it is not valid or the wrong inode.
++		 * Quick and dirty check to avoid locks if possible.
  		 */
--		for (i = 0; i < igeo->inodes_per_cluster; i++) {
--			ip = xfs_ifree_get_one_inode(pag, free_ip, inum + i);
--			if (!ip)
--				continue;
--
--			iip = ip->i_itemp;
--			spin_lock(&iip->ili_lock);
--			iip->ili_last_fields = iip->ili_fields;
--			iip->ili_fields = 0;
--			iip->ili_fsync_fields = 0;
--			spin_unlock(&iip->ili_lock);
--			xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
--						&iip->ili_item.li_lsn);
--
--			list_add_tail(&iip->ili_item.li_bio_list,
--						&bp->b_li_list);
--
--			if (ip != free_ip)
--				xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		spin_lock(&cip->i_flags_lock);
+-		if (!cip->i_ino ||
+-		    __xfs_iflags_test(cip, XFS_ISTALE)) {
+-			spin_unlock(&cip->i_flags_lock);
++		if (__xfs_iflags_test(ip, XFS_IRECLAIM | XFS_IFLOCK))
++			continue;
++		if (xfs_ipincount(ip))
+ 			continue;
 -		}
-+		for (i = 0; i < igeo->inodes_per_cluster; i++)
-+			xfs_ifree_mark_inode_stale(bp, free_ip, inum + i);
  
- 		xfs_trans_stale_inode_buf(tp, bp);
- 		xfs_trans_binval(tp, bp);
- 	}
+ 		/*
+-		 * Once we fall off the end of the cluster, no point checking
+-		 * any more inodes in the list because they will also all be
+-		 * outside the cluster.
++		 * The inode is still attached to the buffer, which means it is
++		 * dirty but reclaim might try to grab it. Check carefully for
++		 * that, and grab the ilock while still holding the i_flags_lock
++		 * to guarantee reclaim will not be able to reclaim this inode
++		 * once we drop the i_flags_lock.
+ 		 */
+-		if ((XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
+-			spin_unlock(&cip->i_flags_lock);
+-			break;
++		spin_lock(&ip->i_flags_lock);
++		ASSERT(!__xfs_iflags_test(ip, XFS_ISTALE));
++		if (__xfs_iflags_test(ip, XFS_IRECLAIM | XFS_IFLOCK)) {
++			spin_unlock(&ip->i_flags_lock);
++			continue;
+ 		}
+-		spin_unlock(&cip->i_flags_lock);
+ 
+ 		/*
+-		 * Do an un-protected check to see if the inode is dirty and
+-		 * is a candidate for flushing.  These checks will be repeated
+-		 * later after the appropriate locks are acquired.
++		 * ILOCK will pin the inode against reclaim and prevent
++		 * concurrent transactions modifying the inode while we are
++		 * flushing the inode.
+ 		 */
+-		if (xfs_inode_clean(cip) && xfs_ipincount(cip) == 0)
++		if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED)) {
++			spin_unlock(&ip->i_flags_lock);
+ 			continue;
++		}
++		spin_unlock(&ip->i_flags_lock);
+ 
+ 		/*
+-		 * Try to get locks.  If any are unavailable or it is pinned,
+-		 * then this inode cannot be flushed and is skipped.
++		 * Skip inodes that are already flush locked as they have
++		 * already been written to the buffer.
+ 		 */
 -
+-		if (!xfs_ilock_nowait(cip, XFS_ILOCK_SHARED))
+-			continue;
+-		if (!xfs_iflock_nowait(cip)) {
+-			xfs_iunlock(cip, XFS_ILOCK_SHARED);
+-			continue;
+-		}
+-		if (xfs_ipincount(cip)) {
+-			xfs_ifunlock(cip);
+-			xfs_iunlock(cip, XFS_ILOCK_SHARED);
++		if (!xfs_iflock_nowait(ip)) {
++			xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 			continue;
+ 		}
+ 
+-
+ 		/*
+-		 * Check the inode number again, just to be certain we are not
+-		 * racing with freeing in xfs_reclaim_inode(). See the comments
+-		 * in that function for more information as to why the initial
+-		 * check is not sufficient.
++		 * If we are shut down, unpin and abort the inode now as there
++		 * is no point in flushing it to the buffer just to get an IO
++		 * completion to abort the buffer and remove it from the AIL.
+ 		 */
+-		if (!cip->i_ino) {
+-			xfs_ifunlock(cip);
+-			xfs_iunlock(cip, XFS_ILOCK_SHARED);
++		if (XFS_FORCED_SHUTDOWN(mp)) {
++			xfs_iunpin_wait(ip);
++			/* xfs_iflush_abort() drops the flush lock */
++			xfs_iflush_abort(ip);
++			xfs_iunlock(ip, XFS_ILOCK_SHARED);
++			error = -EIO;
+ 			continue;
+ 		}
+ 
+-		/*
+-		 * arriving here means that this inode can be flushed.  First
+-		 * re-check that it's dirty before flushing.
+-		 */
+-		if (!xfs_inode_clean(cip)) {
+-			error = xfs_iflush(cip, bp);
+-			if (error) {
+-				xfs_iunlock(cip, XFS_ILOCK_SHARED);
+-				goto out_free;
+-			}
+-			clcount++;
+-		} else {
+-			xfs_ifunlock(cip);
++		/* don't block waiting on a log force to unpin dirty inodes */
++		if (xfs_ipincount(ip)) {
++			xfs_ifunlock(ip);
++			xfs_iunlock(ip, XFS_ILOCK_SHARED);
++			continue;
+ 		}
+-		xfs_iunlock(cip, XFS_ILOCK_SHARED);
++
++		if (!xfs_inode_clean(ip))
++			error = xfs_iflush(ip, bp);
++		else
++			xfs_ifunlock(ip);
++		xfs_iunlock(ip, XFS_ILOCK_SHARED);
++		if (error)
++			break;
++		clcount++;
+ 	}
+ 
+ 	if (clcount) {
+@@ -3729,11 +3706,6 @@ xfs_iflush_cluster(
+ 		XFS_STATS_ADD(mp, xs_icluster_flushinode, clcount);
+ 	}
+ 
+-out_free:
+-	rcu_read_unlock();
+-	kmem_free(cilist);
+-out_put:
 -	xfs_perag_put(pag);
- 	return 0;
- }
+ 	if (error) {
+ 		bp->b_flags |= XBF_ASYNC;
+ 		xfs_buf_ioend_fail(bp);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index d1109eb13ba2e..b93cf9076df8a 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -427,7 +427,7 @@ int		xfs_log_force_inode(struct xfs_inode *ip);
+ void		xfs_iunpin_wait(xfs_inode_t *);
+ #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
  
-@@ -3845,6 +3810,7 @@ xfs_iflush_int(
- 	iip->ili_fields = 0;
- 	iip->ili_fsync_fields = 0;
- 	spin_unlock(&iip->ili_lock);
-+	ASSERT(iip->ili_last_fields);
+-int		xfs_iflush_cluster(struct xfs_inode *, struct xfs_buf *);
++int		xfs_iflush_cluster(struct xfs_buf *);
+ void		xfs_lock_two_inodes(struct xfs_inode *ip0, uint ip0_mode,
+ 				struct xfs_inode *ip1, uint ip1_mode);
  
- 	/*
- 	 * Store the current LSN of the inode so that we can tell whether the
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 326547e89cb6b..dee7385466f83 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -511,7 +511,7 @@ xfs_inode_item_push(
+ 	 * reference for IO until we queue the buffer for delwri submission.
+ 	 */
+ 	xfs_buf_hold(bp);
+-	error = xfs_iflush_cluster(ip, bp);
++	error = xfs_iflush_cluster(bp);
+ 	if (!error) {
+ 		if (!xfs_buf_delwri_queue(bp, buffer_list))
+ 			rval = XFS_ITEM_FLUSHING;
 -- 
 2.26.2.761.g0e0b3e54be
 
