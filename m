@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EE47C433F2
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05BACC433E4
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67D0A2072E
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E24FB206C3
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727921AbgFDHqX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 03:46:23 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:49320 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728021AbgFDHqV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 03:46:21 -0400
+        id S1727944AbgFDHqU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 03:46:20 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41140 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727043AbgFDHqR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 03:46:17 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 57EE8D5995F
-        for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2020 17:46:13 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id BBA773A459A
+        for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2020 17:46:12 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jgkZk-0004Ak-9Q
-        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:08 +1000
+        id 1jgkZj-00049e-Hh
+        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:07 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jgkZk-0017I9-16
-        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:08 +1000
+        id 1jgkZj-0017Gm-8t
+        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:07 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 21/30] xfs: remove SYNC_TRYLOCK from inode reclaim
-Date:   Thu,  4 Jun 2020 17:45:57 +1000
-Message-Id: <20200604074606.266213-22-david@fromorbit.com>
+Subject: [PATCH 04/30] xfs: mark inode buffers in cache
+Date:   Thu,  4 Jun 2020 17:45:40 +1000
+Message-Id: <20200604074606.266213-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
 In-Reply-To: <20200604074606.266213-1-david@fromorbit.com>
 References: <20200604074606.266213-1-david@fromorbit.com>
@@ -43,8 +43,7 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=wwBL6EluFSDcluHKyHoA:9
+        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=k2ft56n7lZIwALnzbJ4A:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,119 +51,274 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-All background reclaim is SYNC_TRYLOCK already, and even blocking
-reclaim (SYNC_WAIT) can use trylock mechanisms as
-xfs_reclaim_inodes_ag() will keep cycling until there are no more
-reclaimable inodes. Hence we can kill SYNC_TRYLOCK from inode
-reclaim and make everything unconditionally non-blocking.
+Inode buffers always have write IO callbacks, so by marking them
+directly we can avoid needing to attach ->b_iodone functions to
+them. This avoids an indirect call, and makes future modifications
+much simpler.
+
+While this is largely a refactor of existing functionality, we
+broaden the scope of the flag to beyond where inodes are explicitly
+attached because future changes need to know what type of log items
+are attached to the buffer. Adding this buffer flag may invoke the
+inode iodone callback in cases where it wouldn't have been
+previously, but this is not a functional change because the callback
+is identical to the normal buffer write iodone callback when inodes
+are not attached.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_icache.c | 29 ++++++++++++-----------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_buf.c       | 21 ++++++++++++++++-----
+ fs/xfs/xfs_buf.h       | 38 +++++++++++++++++++++++++-------------
+ fs/xfs/xfs_buf_item.c  | 42 +++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_buf_item.h  |  1 +
+ fs/xfs/xfs_inode.c     |  2 +-
+ fs/xfs/xfs_trans_buf.c |  3 +++
+ 6 files changed, 77 insertions(+), 30 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index d1c47a0e0b0ec..ebe55124d6cb8 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -174,7 +174,7 @@ xfs_reclaim_worker(
- 	struct xfs_mount *mp = container_of(to_delayed_work(work),
- 					struct xfs_mount, m_reclaim_work);
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 9c2fbb6bbf89d..fcf650575be61 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -14,6 +14,8 @@
+ #include "xfs_mount.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_buf_item.h"
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
  
--	xfs_reclaim_inodes(mp, SYNC_TRYLOCK);
-+	xfs_reclaim_inodes(mp, 0);
- 	xfs_reclaim_work_queue(mp);
+@@ -1202,12 +1204,21 @@ xfs_buf_ioend(
+ 		bp->b_flags |= XBF_DONE;
+ 	}
+ 
+-	if (bp->b_iodone)
++	if (read)
++		goto out_finish;
++
++	if (bp->b_flags & _XBF_INODES) {
++		xfs_buf_inode_iodone(bp);
++		return;
++	}
++
++	if (bp->b_iodone) {
+ 		(*(bp->b_iodone))(bp);
+-	else if (bp->b_flags & XBF_ASYNC)
+-		xfs_buf_relse(bp);
+-	else
+-		complete(&bp->b_iowait);
++		return;
++	}
++
++out_finish:
++	xfs_buf_ioend_finish(bp);
  }
  
-@@ -1030,10 +1030,9 @@ xfs_cowblocks_worker(
-  * Grab the inode for reclaim exclusively.
-  * Return 0 if we grabbed it, non-zero otherwise.
-  */
--STATIC int
-+static int
- xfs_reclaim_inode_grab(
--	struct xfs_inode	*ip,
--	int			flags)
-+	struct xfs_inode	*ip)
+ static void
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 050c53b739e24..2400cb90a04c6 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -30,15 +30,18 @@
+ #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
+ #define XBF_WRITE_FAIL	 (1 << 7) /* async writes have failed on this buffer */
+ 
+-/* flags used only as arguments to access routines */
+-#define XBF_TRYLOCK	 (1 << 16)/* lock requested, but do not wait */
+-#define XBF_UNMAPPED	 (1 << 17)/* do not map the buffer */
++/* buffer type flags for write callbacks */
++#define _XBF_INODES	 (1 << 16)/* inode buffer */
+ 
+ /* flags used only internally */
+ #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+ #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
+ #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
+ 
++/* flags used only as arguments to access routines */
++#define XBF_TRYLOCK	 (1 << 30)/* lock requested, but do not wait */
++#define XBF_UNMAPPED	 (1 << 31)/* do not map the buffer */
++
+ typedef unsigned int xfs_buf_flags_t;
+ 
+ #define XFS_BUF_FLAGS \
+@@ -50,12 +53,13 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_DONE,		"DONE" }, \
+ 	{ XBF_STALE,		"STALE" }, \
+ 	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
+-	{ XBF_TRYLOCK,		"TRYLOCK" },	/* should never be set */\
+-	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
++	{ _XBF_INODES,		"INODES" }, \
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+-	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
+-
++	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
++	/* The following interface flags should never be set */ \
++	{ XBF_TRYLOCK,		"TRYLOCK" }, \
++	{ XBF_UNMAPPED,		"UNMAPPED" }
+ 
+ /*
+  * Internal state flags.
+@@ -257,9 +261,23 @@ extern void xfs_buf_unlock(xfs_buf_t *);
+ #define xfs_buf_islocked(bp) \
+ 	((bp)->b_sema.count <= 0)
+ 
++static inline void xfs_buf_relse(xfs_buf_t *bp)
++{
++	xfs_buf_unlock(bp);
++	xfs_buf_rele(bp);
++}
++
+ /* Buffer Read and Write Routines */
+ extern int xfs_bwrite(struct xfs_buf *bp);
+ extern void xfs_buf_ioend(struct xfs_buf *bp);
++static inline void xfs_buf_ioend_finish(struct xfs_buf *bp)
++{
++	if (bp->b_flags & XBF_ASYNC)
++		xfs_buf_relse(bp);
++	else
++		complete(&bp->b_iowait);
++}
++
+ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
+ 		xfs_failaddr_t failaddr);
+ #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
+@@ -324,12 +342,6 @@ static inline int xfs_buf_ispinned(struct xfs_buf *bp)
+ 	return atomic_read(&bp->b_pin_count);
+ }
+ 
+-static inline void xfs_buf_relse(xfs_buf_t *bp)
+-{
+-	xfs_buf_unlock(bp);
+-	xfs_buf_rele(bp);
+-}
+-
+ static inline int
+ xfs_buf_verify_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
  {
- 	ASSERT(rcu_read_lock_held());
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 9e75e8d6042ec..8659cf4282a64 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1158,20 +1158,15 @@ xfs_buf_iodone_callback_error(
+ 	return false;
+ }
  
-@@ -1042,12 +1041,10 @@ xfs_reclaim_inode_grab(
- 		return 1;
- 
+-/*
+- * This is the iodone() function for buffers which have had callbacks attached
+- * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
+- * callback list, mark the buffer as having no more callbacks and then push the
+- * buffer through IO completion processing.
+- */
+-void
+-xfs_buf_iodone_callbacks(
++static void
++xfs_buf_run_callbacks(
+ 	struct xfs_buf		*bp)
+ {
++
  	/*
--	 * If we are asked for non-blocking operation, do unlocked checks to
--	 * see if the inode already is being flushed or in reclaim to avoid
--	 * lock traffic.
-+	 * Do unlocked checks to see if the inode already is being flushed or in
-+	 * reclaim to avoid lock traffic.
+-	 * If there is an error, process it. Some errors require us
+-	 * to run callbacks after failure processing is done so we
+-	 * detect that and take appropriate action.
++	 * If there is an error, process it. Some errors require us to run
++	 * callbacks after failure processing is done so we detect that and take
++	 * appropriate action.
  	 */
--	if ((flags & SYNC_TRYLOCK) &&
--	    __xfs_iflags_test(ip, XFS_IFLOCK | XFS_IRECLAIM))
-+	if (__xfs_iflags_test(ip, XFS_IFLOCK | XFS_IRECLAIM))
- 		return 1;
+ 	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
+ 		return;
+@@ -1188,9 +1183,34 @@ xfs_buf_iodone_callbacks(
+ 	bp->b_log_item = NULL;
+ 	list_del_init(&bp->b_li_list);
+ 	bp->b_iodone = NULL;
++}
++
++/*
++ * This is the iodone() function for buffers which have had callbacks attached
++ * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
++ * callback list, mark the buffer as having no more callbacks and then push the
++ * buffer through IO completion processing.
++ */
++void
++xfs_buf_iodone_callbacks(
++	struct xfs_buf		*bp)
++{
++	xfs_buf_run_callbacks(bp);
+ 	xfs_buf_ioend(bp);
+ }
  
- 	/*
-@@ -1114,8 +1111,7 @@ xfs_reclaim_inode_grab(
- static bool
- xfs_reclaim_inode(
- 	struct xfs_inode	*ip,
--	struct xfs_perag	*pag,
--	int			sync_mode)
-+	struct xfs_perag	*pag)
- {
- 	xfs_ino_t		ino = ip->i_ino; /* for radix_tree_delete */
++/*
++ * Inode buffer iodone callback function.
++ */
++void
++xfs_buf_inode_iodone(
++	struct xfs_buf		*bp)
++{
++	xfs_buf_run_callbacks(bp);
++	xfs_buf_ioend_finish(bp);
++}
++
++
+ /*
+  * This is the iodone() function for buffers which have been
+  * logged.  It is called when they are eventually flushed out.
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index c9c57e2da9327..a342933ad9b8d 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -59,6 +59,7 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
+ 			      struct xfs_log_item *);
+ void	xfs_buf_iodone_callbacks(struct xfs_buf *);
+ void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
++void	xfs_buf_inode_iodone(struct xfs_buf *);
+ bool	xfs_buf_log_check_iovec(struct xfs_log_iovec *iovec);
  
-@@ -1209,7 +1205,6 @@ xfs_reclaim_inode(
- static int
- xfs_reclaim_inodes_ag(
- 	struct xfs_mount	*mp,
--	int			flags,
- 	int			*nr_to_scan)
- {
- 	struct xfs_perag	*pag;
-@@ -1254,7 +1249,7 @@ xfs_reclaim_inodes_ag(
- 			for (i = 0; i < nr_found; i++) {
- 				struct xfs_inode *ip = batch[i];
+ extern kmem_zone_t	*xfs_buf_item_zone;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index ac3c8af8c9a14..d5dee57f914a9 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3860,13 +3860,13 @@ xfs_iflush_int(
+ 	 * completion on the buffer to remove the inode from the AIL and release
+ 	 * the flush lock.
+ 	 */
++	bp->b_flags |= _XBF_INODES;
+ 	xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
  
--				if (done || xfs_reclaim_inode_grab(ip, flags))
-+				if (done || xfs_reclaim_inode_grab(ip))
- 					batch[i] = NULL;
+ 	/* generate the checksum. */
+ 	xfs_dinode_calc_crc(mp, dip);
  
- 				/*
-@@ -1285,7 +1280,7 @@ xfs_reclaim_inodes_ag(
- 			for (i = 0; i < nr_found; i++) {
- 				if (!batch[i])
- 					continue;
--				if (!xfs_reclaim_inode(batch[i], pag, flags))
-+				if (!xfs_reclaim_inode(batch[i], pag))
- 					skipped++;
- 			}
+ 	ASSERT(!list_empty(&bp->b_li_list));
+-	ASSERT(bp->b_iodone != NULL);
+ 	return error;
+ }
  
-@@ -1311,13 +1306,13 @@ xfs_reclaim_inodes(
- 	int		nr_to_scan = INT_MAX;
- 	int		skipped;
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 08174ffa21189..552d0869aa0fe 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -626,6 +626,7 @@ xfs_trans_inode_buf(
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
  
--	xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
-+	xfs_reclaim_inodes_ag(mp, &nr_to_scan);
- 	if (!(mode & SYNC_WAIT))
- 		return 0;
+ 	bip->bli_flags |= XFS_BLI_INODE_BUF;
++	bp->b_flags |= _XBF_INODES;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+ }
  
- 	do {
- 		xfs_ail_push_all_sync(mp->m_ail);
--		skipped = xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
-+		skipped = xfs_reclaim_inodes_ag(mp, &nr_to_scan);
- 	} while (skipped > 0);
+@@ -651,6 +652,7 @@ xfs_trans_stale_inode_buf(
  
- 	return 0;
-@@ -1341,7 +1336,7 @@ xfs_reclaim_inodes_nr(
- 	xfs_reclaim_work_queue(mp);
- 	xfs_ail_push_all(mp->m_ail);
+ 	bip->bli_flags |= XFS_BLI_STALE_INODE;
+ 	bip->bli_item.li_cb = xfs_buf_iodone;
++	bp->b_flags |= _XBF_INODES;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+ }
  
--	xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
-+	xfs_reclaim_inodes_ag(mp, &nr_to_scan);
- 	return 0;
+@@ -675,6 +677,7 @@ xfs_trans_inode_alloc_buf(
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+ 	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
++	bp->b_flags |= _XBF_INODES;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
  }
  
 -- 
