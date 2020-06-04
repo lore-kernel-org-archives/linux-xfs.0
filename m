@@ -2,155 +2,187 @@ Return-Path: <SRS0=uikP=7R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65828C433E1
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:38:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D06AC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46AA7206C3
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:38:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BAAB2067B
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 07:46:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727909AbgFDHiD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 03:38:03 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:12570 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726422AbgFDHiD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 03:38:03 -0400
-X-IronPort-AV: E=Sophos;i="5.73,471,1583164800"; 
-   d="scan'208";a="93814171"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 04 Jun 2020 15:37:58 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 4E00950A9975;
-        Thu,  4 Jun 2020 15:37:58 +0800 (CST)
-Received: from [10.167.225.141] (10.167.225.141) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 4 Jun 2020 15:37:58 +0800
-Subject: =?UTF-8?B?UmU6IOWbnuWkjTogUmU6IFtSRkMgUEFUQ0ggMC84XSBkYXg6IEFkZCBh?=
- =?UTF-8?Q?_dax-rmap_tree_to_support_reflink?=
-To:     Dave Chinner <david@fromorbit.com>
-CC:     Matthew Wilcox <willy@infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "Qi, Fuli" <qi.fuli@fujitsu.com>,
-        "Gotou, Yasunori" <y-goto@fujitsu.com>
-References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
- <20200427122836.GD29705@bombadil.infradead.org>
- <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
- <20200428064318.GG2040@dread.disaster.area>
-From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Message-ID: <153e13e6-8685-fb0d-6bd3-bb553c06bf51@cn.fujitsu.com>
-Date:   Thu, 4 Jun 2020 15:37:42 +0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S1727768AbgFDHqL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 03:46:11 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33589 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726537AbgFDHqL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 03:46:11 -0400
+Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5724382122B
+        for <linux-xfs@vger.kernel.org>; Thu,  4 Jun 2020 17:46:08 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jgkZj-00049k-KS
+        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:07 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.93)
+        (envelope-from <david@fromorbit.com>)
+        id 1jgkZj-0017Gw-BS
+        for linux-xfs@vger.kernel.org; Thu, 04 Jun 2020 17:46:07 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 06/30] xfs: mark log recovery buffers for completion
+Date:   Thu,  4 Jun 2020 17:45:42 +1000
+Message-Id: <20200604074606.266213-7-david@fromorbit.com>
+X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
+In-Reply-To: <20200604074606.266213-1-david@fromorbit.com>
+References: <20200604074606.266213-1-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <20200428064318.GG2040@dread.disaster.area>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.167.225.141]
-X-ClientProxiedBy: G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) To
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
-X-yoursite-MailScanner-ID: 4E00950A9975.AB7F6
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
+        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
+        a=J8PYUobFq9NN7i4cLVkA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Dave Chinner <dchinner@redhat.com>
 
+Log recovery has it's own buffer write completion handler for
+buffers that it directly recovers. Convert these to direct calls by
+flagging these buffers as being log recovery buffers. The flag will
+get cleared by the log recovery IO completion routine, so it will
+never leak out of log recovery.
 
-On 2020/4/28 下午2:43, Dave Chinner wrote:
-> On Tue, Apr 28, 2020 at 06:09:47AM +0000, Ruan, Shiyang wrote:
->>
->> 在 2020/4/27 20:28:36, "Matthew Wilcox" <willy@infradead.org> 写道:
->>
->>> On Mon, Apr 27, 2020 at 04:47:42PM +0800, Shiyang Ruan wrote:
->>>>   This patchset is a try to resolve the shared 'page cache' problem for
->>>>   fsdax.
->>>>
->>>>   In order to track multiple mappings and indexes on one page, I
->>>>   introduced a dax-rmap rb-tree to manage the relationship.  A dax entry
->>>>   will be associated more than once if is shared.  At the second time we
->>>>   associate this entry, we create this rb-tree and store its root in
->>>>   page->private(not used in fsdax).  Insert (->mapping, ->index) when
->>>>   dax_associate_entry() and delete it when dax_disassociate_entry().
->>>
->>> Do we really want to track all of this on a per-page basis?  I would
->>> have thought a per-extent basis was more useful.  Essentially, create
->>> a new address_space for each shared extent.  Per page just seems like
->>> a huge overhead.
->>>
->> Per-extent tracking is a nice idea for me.  I haven't thought of it
->> yet...
->>
->> But the extent info is maintained by filesystem.  I think we need a way
->> to obtain this info from FS when associating a page.  May be a bit
->> complicated.  Let me think about it...
-> 
-> That's why I want the -user of this association- to do a filesystem
-> callout instead of keeping it's own naive tracking infrastructure.
-> The filesystem can do an efficient, on-demand reverse mapping lookup
-> from it's own extent tracking infrastructure, and there's zero
-> runtime overhead when there are no errors present.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_buf.c                | 10 ++++++++++
+ fs/xfs/xfs_buf.h                |  2 ++
+ fs/xfs/xfs_buf_item_recover.c   |  5 ++---
+ fs/xfs/xfs_dquot_item_recover.c |  2 +-
+ fs/xfs/xfs_inode_item_recover.c |  2 +-
+ fs/xfs/xfs_log_recover.c        |  5 ++---
+ 6 files changed, 18 insertions(+), 8 deletions(-)
 
-Hi Dave,
-
-I ran into some difficulties when trying to implement the per-extent 
-rmap tracking.  So, I re-read your comments and found that I was 
-misunderstanding what you described here.
-
-I think what you mean is: we don't need the in-memory dax-rmap tracking 
-now.  Just ask the FS for the owner's information that associate with 
-one page when memory-failure.  So, the per-page (even per-extent) 
-dax-rmap is needless in this case.  Is this right?
-
-Based on this, we only need to store the extent information of a fsdax 
-page in its ->mapping (by searching from FS).  Then obtain the owners of 
-this page (also by searching from FS) when memory-failure or other rmap 
-case occurs.
-
-So, a fsdax page is no longer associated with a specific file, but with 
-a FS(or the pmem device).  I think it's easier to understand and implement.
-
-
---
-Thanks,
-Ruan Shiyang.
-> 
-> At the moment, this "dax association" is used to "report" a storage
-> media error directly to userspace. I say "report" because what it
-> does is kill userspace processes dead. The storage media error
-> actually needs to be reported to the owner of the storage media,
-> which in the case of FS-DAX is the filesytem.
-> 
-> That way the filesystem can then look up all the owners of that bad
-> media range (i.e. the filesystem block it corresponds to) and take
-> appropriate action. e.g.
-> 
-> - if it falls in filesytem metadata, shutdown the filesystem
-> - if it falls in user data, call the "kill userspace dead" routines
->    for each mapping/index tuple the filesystem finds for the given
->    LBA address that the media error occurred.
-> 
-> Right now if the media error is in filesystem metadata, the
-> filesystem isn't even told about it. The filesystem can't even shut
-> down - the error is just dropped on the floor and it won't be until
-> the filesystem next tries to reference that metadata that we notice
-> there is an issue.
-> 
-> Cheers,
-> 
-> Dave.
-> 
-
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 3bffde8640a52..0a69de674af9d 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -14,6 +14,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_log_recover.h"
+ #include "xfs_trans.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_errortag.h"
+@@ -1207,6 +1208,15 @@ xfs_buf_ioend(
+ 	if (read)
+ 		goto out_finish;
+ 
++	/*
++	 * If this is a log recovery buffer, we aren't doing transactional IO
++	 * yet so we need to let it handle IO completions.
++	 */
++	if (bp->b_flags & _XBF_LOGRECOVERY) {
++		xlog_recover_iodone(bp);
++		return;
++	}
++
+ 	if (bp->b_flags & _XBF_INODES) {
+ 		xfs_buf_inode_iodone(bp);
+ 		return;
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index c1d0843206dd6..30dabc5bae96d 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -33,6 +33,7 @@
+ /* buffer type flags for write callbacks */
+ #define _XBF_INODES	 (1 << 16)/* inode buffer */
+ #define _XBF_DQUOTS	 (1 << 17)/* dquot buffer */
++#define _XBF_LOGRECOVERY	 (1 << 18)/* log recovery buffer */
+ 
+ /* flags used only internally */
+ #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+@@ -56,6 +57,7 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
+ 	{ _XBF_INODES,		"INODES" }, \
+ 	{ _XBF_DQUOTS,		"DQUOTS" }, \
++	{ _XBF_LOGRECOVERY,		"LOG_RECOVERY" }, \
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+ 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+index 04faa7310c4f0..74c851f60eeeb 100644
+--- a/fs/xfs/xfs_buf_item_recover.c
++++ b/fs/xfs/xfs_buf_item_recover.c
+@@ -419,8 +419,7 @@ xlog_recover_validate_buf_type(
+ 	if (bp->b_ops) {
+ 		struct xfs_buf_log_item	*bip;
+ 
+-		ASSERT(!bp->b_iodone || bp->b_iodone == xlog_recover_iodone);
+-		bp->b_iodone = xlog_recover_iodone;
++		bp->b_flags |= _XBF_LOGRECOVERY;
+ 		xfs_buf_item_init(bp, mp);
+ 		bip = bp->b_log_item;
+ 		bip->bli_item.li_lsn = current_lsn;
+@@ -963,7 +962,7 @@ xlog_recover_buf_commit_pass2(
+ 		error = xfs_bwrite(bp);
+ 	} else {
+ 		ASSERT(bp->b_mount == mp);
+-		bp->b_iodone = xlog_recover_iodone;
++		bp->b_flags |= _XBF_LOGRECOVERY;
+ 		xfs_buf_delwri_queue(bp, buffer_list);
+ 	}
+ 
+diff --git a/fs/xfs/xfs_dquot_item_recover.c b/fs/xfs/xfs_dquot_item_recover.c
+index 3400be4c88f08..f9ea9f55aa7cc 100644
+--- a/fs/xfs/xfs_dquot_item_recover.c
++++ b/fs/xfs/xfs_dquot_item_recover.c
+@@ -153,7 +153,7 @@ xlog_recover_dquot_commit_pass2(
+ 
+ 	ASSERT(dq_f->qlf_size == 2);
+ 	ASSERT(bp->b_mount == mp);
+-	bp->b_iodone = xlog_recover_iodone;
++	bp->b_flags |= _XBF_LOGRECOVERY;
+ 	xfs_buf_delwri_queue(bp, buffer_list);
+ 
+ out_release:
+diff --git a/fs/xfs/xfs_inode_item_recover.c b/fs/xfs/xfs_inode_item_recover.c
+index dc3e26ff16c90..5e0d291835b35 100644
+--- a/fs/xfs/xfs_inode_item_recover.c
++++ b/fs/xfs/xfs_inode_item_recover.c
+@@ -376,7 +376,7 @@ xlog_recover_inode_commit_pass2(
+ 	xfs_dinode_calc_crc(log->l_mp, dip);
+ 
+ 	ASSERT(bp->b_mount == mp);
+-	bp->b_iodone = xlog_recover_iodone;
++	bp->b_flags |= _XBF_LOGRECOVERY;
+ 	xfs_buf_delwri_queue(bp, buffer_list);
+ 
+ out_release:
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index ec015df55b77a..52a65a74208ff 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -287,9 +287,8 @@ xlog_recover_iodone(
+ 	if (bp->b_log_item)
+ 		xfs_buf_item_relse(bp);
+ 	ASSERT(bp->b_log_item == NULL);
+-
+-	bp->b_iodone = NULL;
+-	xfs_buf_ioend(bp);
++	bp->b_flags &= ~_XBF_LOGRECOVERY;
++	xfs_buf_ioend_finish(bp);
+ }
+ 
+ /*
+-- 
+2.26.2.761.g0e0b3e54be
 
