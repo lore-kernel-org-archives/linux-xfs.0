@@ -2,194 +2,161 @@ Return-Path: <SRS0=uikP=7R=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1253DC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 14:51:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02911C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 18:07:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEA8E20663
-	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 14:51:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D195B206C3
+	for <linux-xfs@archiver.kernel.org>; Thu,  4 Jun 2020 18:07:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Y3gp9V2V"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hKmvgKB5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729089AbgFDOvn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 10:51:43 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:55026 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729038AbgFDOvn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 10:51:43 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 054EmRN1006694;
-        Thu, 4 Jun 2020 14:51:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=yZ/+ZJnzGnmR7xhhJsmwnbo92NBRhvNckmqD86Sq/yw=;
- b=Y3gp9V2VSFZ5CQzf0bwJEoNtW2VsYWuDv10PHG4vOY9tJtXkCuZY0UNWqXph/Ymwlm+m
- VTK+37yFHeqNgd7lXN81KtlfGdj5Fnj5JT9SSD4VAx+quVwNrrplZAvnX1QTPNpyCYhc
- uEKm48/mrUCaq3oeFnxYZVz8JehshmL+Lta/nYK2AYVt9TqaH5t0m66cWXFdkTy0YX2k
- 4mJAkH0Xhqgdv4qBoIMWyIV9hxaj6y7J7x5cl/KL3P48WOnCRnXPLH0LHukU2X5+Ohqg
- vFXpSG/9HMgYO9PjeGzLCcJ00CrnGJSXf/UamHDxXpzqFNUg1f7TpgpHwdV9jQrbqNOq Sg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 31evvn1ygm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 04 Jun 2020 14:51:16 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 054Em3vE111522;
-        Thu, 4 Jun 2020 14:51:15 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 31c25vffjj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 04 Jun 2020 14:51:15 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 054Ep9Dr003969;
-        Thu, 4 Jun 2020 14:51:09 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 04 Jun 2020 07:51:09 -0700
-Date:   Thu, 4 Jun 2020 07:51:07 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "Qi, Fuli" <qi.fuli@fujitsu.com>,
-        "Gotou, Yasunori" <y-goto@fujitsu.com>
-Subject: Re: =?utf-8?B?5Zue5aSNOiBSZQ==?= =?utf-8?Q?=3A?= [RFC PATCH 0/8]
- dax: Add a dax-rmap tree to support reflink
-Message-ID: <20200604145107.GA1334206@magnolia>
-References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
- <20200427122836.GD29705@bombadil.infradead.org>
- <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
- <20200428064318.GG2040@dread.disaster.area>
- <153e13e6-8685-fb0d-6bd3-bb553c06bf51@cn.fujitsu.com>
+        id S1730148AbgFDSHD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 14:07:03 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:57792 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730008AbgFDSHD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 14:07:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1591294021;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RoneP3PWIkcKg8e6X9KoU8mL7DeaoohaY8AUHsn6OSc=;
+        b=hKmvgKB5tXfHUwO6y0tCgLIs4nGZAf3uBWHHxw5gbYlW/9LgmPsj227ys7upQevZGUp56r
+        3o9T9qnd+pFRI8+L9jUqx8ypYB9GgD0rQI4M2ska0XkgNy4QANJALqSAuVoQVmMINj7y3g
+        iYwakuSPuz+8fod9J+AvodRde8bvgpc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-327-jtO7gOqpMWKUmT772NNaVQ-1; Thu, 04 Jun 2020 14:06:58 -0400
+X-MC-Unique: jtO7gOqpMWKUmT772NNaVQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8332510954DF;
+        Thu,  4 Jun 2020 18:06:46 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3CAC57CCC4;
+        Thu,  4 Jun 2020 18:06:46 +0000 (UTC)
+Date:   Thu, 4 Jun 2020 14:06:44 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 17/30] xfs: make inode reclaim almost non-blocking
+Message-ID: <20200604180644.GF17815@bfoster>
+References: <20200604074606.266213-1-david@fromorbit.com>
+ <20200604074606.266213-18-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <153e13e6-8685-fb0d-6bd3-bb553c06bf51@cn.fujitsu.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9641 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=1 spamscore=0
- malwarescore=0 bulkscore=0 mlxscore=0 phishscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006040102
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9641 signatures=668686
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 cotscore=-2147483648 suspectscore=1
- phishscore=0 clxscore=1011 malwarescore=0 mlxscore=0 priorityscore=1501
- bulkscore=0 impostorscore=0 adultscore=0 mlxlogscore=999 spamscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006040102
+In-Reply-To: <20200604074606.266213-18-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 04, 2020 at 03:37:42PM +0800, Ruan Shiyang wrote:
+On Thu, Jun 04, 2020 at 05:45:53PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
+> Now that dirty inode writeback doesn't cause read-modify-write
+> cycles on the inode cluster buffer under memory pressure, the need
+> to throttle memory reclaim to the rate at which we can clean dirty
+> inodes goes away. That is due to the fact that we no longer thrash
+> inode cluster buffers under memory pressure to clean dirty inodes.
 > 
-> On 2020/4/28 下午2:43, Dave Chinner wrote:
-> > On Tue, Apr 28, 2020 at 06:09:47AM +0000, Ruan, Shiyang wrote:
-> > > 
-> > > 在 2020/4/27 20:28:36, "Matthew Wilcox" <willy@infradead.org> 写道:
-> > > 
-> > > > On Mon, Apr 27, 2020 at 04:47:42PM +0800, Shiyang Ruan wrote:
-> > > > >   This patchset is a try to resolve the shared 'page cache' problem for
-> > > > >   fsdax.
-> > > > > 
-> > > > >   In order to track multiple mappings and indexes on one page, I
-> > > > >   introduced a dax-rmap rb-tree to manage the relationship.  A dax entry
-> > > > >   will be associated more than once if is shared.  At the second time we
-> > > > >   associate this entry, we create this rb-tree and store its root in
-> > > > >   page->private(not used in fsdax).  Insert (->mapping, ->index) when
-> > > > >   dax_associate_entry() and delete it when dax_disassociate_entry().
-> > > > 
-> > > > Do we really want to track all of this on a per-page basis?  I would
-> > > > have thought a per-extent basis was more useful.  Essentially, create
-> > > > a new address_space for each shared extent.  Per page just seems like
-> > > > a huge overhead.
-> > > > 
-> > > Per-extent tracking is a nice idea for me.  I haven't thought of it
-> > > yet...
-> > > 
-> > > But the extent info is maintained by filesystem.  I think we need a way
-> > > to obtain this info from FS when associating a page.  May be a bit
-> > > complicated.  Let me think about it...
-> > 
-> > That's why I want the -user of this association- to do a filesystem
-> > callout instead of keeping it's own naive tracking infrastructure.
-> > The filesystem can do an efficient, on-demand reverse mapping lookup
-> > from it's own extent tracking infrastructure, and there's zero
-> > runtime overhead when there are no errors present.
+> This means inode writeback no longer stalls on memory allocation
+> or read IO, and hence can be done asynchronously without generating
+> memory pressure. As a result, blocking inode writeback in reclaim is
+> no longer necessary to prevent reclaim priority windup as cleaning
+> dirty inodes is no longer dependent on having memory reserves
+> available for the filesystem to make progress reclaiming inodes.
 > 
-> Hi Dave,
+> Hence we can convert inode reclaim to be non-blocking for shrinker
+> callouts, both for direct reclaim and kswapd.
 > 
-> I ran into some difficulties when trying to implement the per-extent rmap
-> tracking.  So, I re-read your comments and found that I was misunderstanding
-> what you described here.
+> On a vanilla kernel, running a 16-way fsmark create workload on a
+> 4 node/16p/16GB RAM machine, I can reliably pin 14.75GB of RAM via
+> userspace mlock(). The OOM killer gets invoked at 15GB of
+> pinned RAM.
 > 
-> I think what you mean is: we don't need the in-memory dax-rmap tracking now.
-> Just ask the FS for the owner's information that associate with one page
-> when memory-failure.  So, the per-page (even per-extent) dax-rmap is
-> needless in this case.  Is this right?
+> With this patch alone, pinning memory triggers premature OOM
+> killer invocation, sometimes with as much as 45% of RAM being free.
+> It's trivially easy to trigger the OOM killer when reclaim does not
+> block.
+> 
 
-Right.  XFS already has its own rmap tree.
+Nit, but I had to reread this a couple times to grok what "With this
+patch alone ..." meant. I think it means "With non-blocking inode
+reclaim without cluster buffer pinning ...," based on the next
+paragraph. If so, I think the explicit wording is a little more clear.
 
-> Based on this, we only need to store the extent information of a fsdax page
-> in its ->mapping (by searching from FS).  Then obtain the owners of this
-> page (also by searching from FS) when memory-failure or other rmap case
-> occurs.
-
-I don't even think you need that much.  All you need is the "physical"
-offset of that page within the pmem device (e.g. 'this is the 307th 4k
-page == offset 1257472 since the start of /dev/pmem0') and xfs can look
-up the owner of that range of physical storage and deal with it as
-needed.
-
-> So, a fsdax page is no longer associated with a specific file, but with a
-> FS(or the pmem device).  I think it's easier to understand and implement.
-
-Yes.  I also suspect this will be necessary to support reflink...
-
---D
-
+> With pinning inode clusters in RAM and then adding this patch, I can
+> reliably pin 14.5GB of RAM and still have the fsmark workload run to
+> completion. The OOM killer gets invoked 14.75GB of pinned RAM, which
+> is only a small amount of memory less than the vanilla kernel. It is
+> much more reliable than just with async reclaim alone.
 > 
-> --
-> Thanks,
-> Ruan Shiyang.
-> > 
-> > At the moment, this "dax association" is used to "report" a storage
-> > media error directly to userspace. I say "report" because what it
-> > does is kill userspace processes dead. The storage media error
-> > actually needs to be reported to the owner of the storage media,
-> > which in the case of FS-DAX is the filesytem.
-> > 
-> > That way the filesystem can then look up all the owners of that bad
-> > media range (i.e. the filesystem block it corresponds to) and take
-> > appropriate action. e.g.
-> > 
-> > - if it falls in filesytem metadata, shutdown the filesystem
-> > - if it falls in user data, call the "kill userspace dead" routines
-> >    for each mapping/index tuple the filesystem finds for the given
-> >    LBA address that the media error occurred.
-> > 
-> > Right now if the media error is in filesystem metadata, the
-> > filesystem isn't even told about it. The filesystem can't even shut
-> > down - the error is just dropped on the floor and it won't be until
-> > the filesystem next tries to reference that metadata that we notice
-> > there is an issue.
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > 
+> simoops shows that allocation stalls go away when async reclaim is
+> used. Vanilla kernel:
 > 
+> Run time: 1924 seconds
+> Read latency (p50: 3,305,472) (p95: 3,723,264) (p99: 4,001,792)
+> Write latency (p50: 184,064) (p95: 553,984) (p99: 807,936)
+> Allocation latency (p50: 2,641,920) (p95: 3,911,680) (p99: 4,464,640)
+> work rate = 13.45/sec (avg 13.44/sec) (p50: 13.46) (p95: 13.58) (p99: 13.70)
+> alloc stall rate = 3.80/sec (avg: 2.59) (p50: 2.54) (p95: 2.96) (p99: 3.02)
 > 
+> With inode cluster pinning and async reclaim:
+> 
+> Run time: 1924 seconds
+> Read latency (p50: 3,305,472) (p95: 3,715,072) (p99: 3,977,216)
+> Write latency (p50: 187,648) (p95: 553,984) (p99: 789,504)
+> Allocation latency (p50: 2,748,416) (p95: 3,919,872) (p99: 4,448,256)
+> work rate = 13.28/sec (avg 13.32/sec) (p50: 13.26) (p95: 13.34) (p99: 13.34)
+> alloc stall rate = 0.02/sec (avg: 0.02) (p50: 0.01) (p95: 0.03) (p99: 0.03)
+> 
+> Latencies don't really change much, nor does the work rate. However,
+> allocation almost never stalls with these changes, whilst the
+> vanilla kernel is sometimes reporting 20 stalls/s over a 60s sample
+> period. This difference is due to inode reclaim being largely
+> non-blocking now.
+> 
+> IOWs, once we have pinned inode cluster buffers, we can make inode
+> reclaim non-blocking without a major risk of premature and/or
+> spurious OOM killer invocation, and without any changes to memory
+> reclaim infrastructure.
+> 
+
+Very interesting result:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_icache.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index dbba4c1946386..a6780942034fc 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1402,7 +1402,7 @@ xfs_reclaim_inodes_nr(
+>  	xfs_reclaim_work_queue(mp);
+>  	xfs_ail_push_all(mp->m_ail);
+>  
+> -	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
+> +	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
+>  }
+>  
+>  /*
+> -- 
+> 2.26.2.761.g0e0b3e54be
+> 
+
