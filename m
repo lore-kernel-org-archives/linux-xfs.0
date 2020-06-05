@@ -2,176 +2,396 @@ Return-Path: <SRS0=6H2z=7S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56F47C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 16:19:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD329C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 16:25:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B0D2206DB
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 16:19:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D7782074B
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 16:25:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dDH8AMjV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z0yIXMLs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726265AbgFEQTJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Jun 2020 12:19:09 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:49896 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726099AbgFEQTJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jun 2020 12:19:09 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 055GCsgS156348;
-        Fri, 5 Jun 2020 16:18:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=aBdfKaTXhF7hzd2MYEhJyVNS1XcyS/zHMmaC1In3i5M=;
- b=dDH8AMjV0lZlpRusueChse3h0K6XZJXeIxKPgKy0najDU5cVeqrhpFVsGJ056rIrmC5M
- GUra11wjaSkG960uTWxxVHX74fZt2VOqHr4vr7JnF39jPkX5Y31UgfaZHLgC/EFaxvwx
- vPrsmIKNfuZkUGPU+9wItzoiI/RCCKHmQ7+h32P5UywNTVPMrAgmGPmoLEOJ5QTLvJse
- fAvsoMRQ+0T1D+cc4FukAcWBbV6NjDLwDnJX/kMvhS/1oYJxTMXNMzZFtNyn5LJHy/cj
- W5mCQBAtD8PlzNu36Eh0brFB6EfYbuuBE0EzZHdiBKhqJrubCkGCUIwMVrs6a6RqEqtL kw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 31f91dupq7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 05 Jun 2020 16:18:55 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 055GIALp092154;
-        Fri, 5 Jun 2020 16:18:54 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 31f927euas-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 05 Jun 2020 16:18:54 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 055GIru0000523;
-        Fri, 5 Jun 2020 16:18:53 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 05 Jun 2020 09:18:53 -0700
-Date:   Fri, 5 Jun 2020 09:18:52 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iomap: Handle I/O errors gracefully in page_mkwrite
-Message-ID: <20200605161852.GB1334206@magnolia>
-References: <20200604202340.29170-1-willy@infradead.org>
- <20200604225726.GU2040@dread.disaster.area>
- <20200604230519.GW19604@bombadil.infradead.org>
- <20200604233053.GW2040@dread.disaster.area>
- <20200604235050.GX19604@bombadil.infradead.org>
- <20200605003159.GX2040@dread.disaster.area>
- <20200605022451.GZ19604@bombadil.infradead.org>
- <20200605030758.GB2040@dread.disaster.area>
- <20200605124826.GF19604@bombadil.infradead.org>
+        id S1726068AbgFEQZD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Jun 2020 12:25:03 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:38265 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726039AbgFEQZC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jun 2020 12:25:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1591374300;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lCmkxymm6xnKjnDSaGxLPoG8GrGLgWHvHPmz6UGUhIw=;
+        b=Z0yIXMLs27JPxE4pQC8yL27rAcg/lBPhhGNz+83ofE2C5N/jGXKg5Grp0dqEO/e49+9Llp
+        2a6LmBxbJ0D3p0uCf4PNB5+upLvJeVTqRxgjzWdVRMpaFbY17SDlosWd3drWRhu636TXpY
+        2WPtIbBe45i0n8lL4ZgO0gRLE070Nak=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-201-n-1Zt2PXMmSdUeBxjcQ5nQ-1; Fri, 05 Jun 2020 12:24:55 -0400
+X-MC-Unique: n-1Zt2PXMmSdUeBxjcQ5nQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DEBCD835B4A;
+        Fri,  5 Jun 2020 16:24:54 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7022D891C2;
+        Fri,  5 Jun 2020 16:24:54 +0000 (UTC)
+Date:   Fri, 5 Jun 2020 12:24:52 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 13/30 V2] xfs: handle buffer log item IO errors directly
+Message-ID: <20200605162452.GA23747@bfoster>
+References: <20200604074606.266213-1-david@fromorbit.com>
+ <20200604074606.266213-14-david@fromorbit.com>
+ <20200605013238.GA2040@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200605124826.GF19604@bombadil.infradead.org>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9643 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0
- mlxlogscore=999 bulkscore=0 suspectscore=5 adultscore=0 malwarescore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006050122
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9643 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 bulkscore=0
- clxscore=1015 cotscore=-2147483648 malwarescore=0 adultscore=0
- priorityscore=1501 suspectscore=5 phishscore=0 spamscore=0 mlxscore=0
- impostorscore=0 mlxlogscore=999 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2004280000 definitions=main-2006050121
+In-Reply-To: <20200605013238.GA2040@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 05, 2020 at 05:48:26AM -0700, Matthew Wilcox wrote:
-> On Fri, Jun 05, 2020 at 01:07:58PM +1000, Dave Chinner wrote:
-> > On Thu, Jun 04, 2020 at 07:24:51PM -0700, Matthew Wilcox wrote:
-> > > On Fri, Jun 05, 2020 at 10:31:59AM +1000, Dave Chinner wrote:
-> > > > On Thu, Jun 04, 2020 at 04:50:50PM -0700, Matthew Wilcox wrote:
-> > > > > > Sure, but that's not really what I was asking: why isn't this
-> > > > > > !uptodate state caught before the page fault code calls
-> > > > > > ->page_mkwrite? The page fault code has a reference to the page,
-> > > > > > after all, and in a couple of paths it even has the page locked.
-> > > > > 
-> > > > > If there's already a PTE present, then the page fault code doesn't
-> > > > > check the uptodate bit.  Here's the path I'm looking at:
-> > > > > 
-> > > > > do_wp_page()
-> > > > >  -> vm_normal_page()
-> > > > >  -> wp_page_shared()
-> > > > >      -> do_page_mkwrite()
-> > > > > 
-> > > > > I don't see anything in there that checked Uptodate.
-> > > > 
-> > > > Yup, exactly the code I was looking at when I asked this question.
-> > > > The kernel has invalidated the contents of a page, yet we still have
-> > > > it mapped into userspace as containing valid contents, and we don't
-> > > > check it at all when userspace generates a protection fault on the
-> > > > page?
-> > > 
-> > > Right.  The iomap error path only clears PageUptodate.  It doesn't go
-> > > to the effort of unmapping the page from userspace, so userspace has a
-> > > read-only view of a !Uptodate page.
-> > 
-> > Hmmm - did you miss the ->discard_page() callout just before we call
-> > ClearPageUptodate() on error in iomap_writepage_map()? That results
-> > in XFS calling iomap_invalidatepage() on the page, which ....
+On Fri, Jun 05, 2020 at 11:32:38AM +1000, Dave Chinner wrote:
 > 
-> ... I don't think that's the interesting path.  I mean, that's
-> the submission path, and usually we discover errors in the completion
-> path, not the submission path.
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> > /me sighs as he realises that ->invalidatepage doesn't actually
-> > invalidate page mappings but only clears the page dirty state and
-> > releases filesystem references to the page.
-
-<nod> Yes, we have preserved the old feebleness.
-
-I've long felt that we should leave the page dirty and retry the write,
-but that was objectionable because we could run out of memory and
-reclaim will stall and OOM on pages it can't clean if IO is still
-broken.
-
-I can't remember the exact reasons for leaving a /clean/ page in memory,
-but I think it had to do with preserving mmap'd page contents long
-enough that a program could redirty the mapping <bluh bluh race
-conditions><this is glitchy><blarghallthisisstupid>.
-
-> > Yay. We leave -invalidated page cache pages- mapped into userspace,
-> > and page faults on those pages don't catch access to invalidated
-> > pages.
+> Currently when a buffer with attached log items has an IO error
+> it called ->iop_error for each attched log item. These all call
+> xfs_set_li_failed() to handle the error, but we are about to change
+> the way log items manage buffers. hence we first need to remove the
+> per-item dependency on buffer handling done by xfs_set_li_failed().
 > 
-> More than that ... by clearing Uptodate, you're trying to prevent
-> future reads to this page from succeeding without verifying the data
-> is still on storage, but a task that had it mapped before can still
-> load the data that was written but never made it to storage.
-> So at some point it'll teleport backwards when another task has a
-> successful read().  Funfunfun.
-
-Let's just invalidate the mapping and see if anyone complains. :D
-
-> > Geez, we really suck at this whole software thing, don't we?
+> We already have specific buffer type IO completion routines, so move
+> the log item error handling out of the generic error handling and
+> into the log item specific functions so we can implement per-type
+> error handling easily.
 > 
-> Certainly at handling errors ...
+> This requires a more complex return value from the error handling
+> code so that we can take the correct action the failure handling
+> requires.  This results in some repeated boilerplate in the
+> functions, but that can be cleaned up later once all the changes
+> cascade through this code.
 > 
-> > It's not clear to me that we can actually unmap those pages safely
-> > in a race free manner from this code - can we actually do that from
-> > the page writeback path?
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+> V2: fix buffer retry selection logic braino.
 > 
-> I don't see why it can't be done from the submission path.
-> unmap_mapping_range() calls i_mmap_lock_write(), which is
-> down_write(i_mmap_rwsem) in drag.  There might be a lock ordering
-> issue there, although lockdep should find it pretty quickly.
-> 
-> The bigger problem is the completion path.  We're in softirq context,
-> so that will have to punt to a thread that can take mutexes.
 
-<nod> It's more workqueue punting, but I guess at least errors ought to
-be infrequent.
+Looks good:
 
---D
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_buf_item.c | 214 +++++++++++++++++++++++++++++++++-----------------
+>  1 file changed, 144 insertions(+), 70 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 09bfe9c52dbdb..f80fc5bd3bffa 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -986,21 +986,24 @@ xfs_buf_do_callbacks_fail(
+>  	spin_unlock(&ailp->ail_lock);
+>  }
+>  
+> +/*
+> + * Decide if we're going to retry the write after a failure, and prepare
+> + * the buffer for retrying the write.
+> + */
+>  static bool
+> -xfs_buf_iodone_callback_error(
+> +xfs_buf_ioerror_fail_without_retry(
+>  	struct xfs_buf		*bp)
+>  {
+>  	struct xfs_mount	*mp = bp->b_mount;
+>  	static ulong		lasttime;
+>  	static xfs_buftarg_t	*lasttarg;
+> -	struct xfs_error_cfg	*cfg;
+>  
+>  	/*
+>  	 * If we've already decided to shutdown the filesystem because of
+>  	 * I/O errors, there's no point in giving this a retry.
+>  	 */
+>  	if (XFS_FORCED_SHUTDOWN(mp))
+> -		goto out_stale;
+> +		return true;
+>  
+>  	if (bp->b_target != lasttarg ||
+>  	    time_after(jiffies, (lasttime + 5*HZ))) {
+> @@ -1011,91 +1014,114 @@ xfs_buf_iodone_callback_error(
+>  
+>  	/* synchronous writes will have callers process the error */
+>  	if (!(bp->b_flags & XBF_ASYNC))
+> -		goto out_stale;
+> -
+> -	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> -
+> -	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
+> +		return true;
+> +	return false;
+> +}
+>  
+> -	/*
+> -	 * If the write was asynchronous then no one will be looking for the
+> -	 * error.  If this is the first failure of this type, clear the error
+> -	 * state and write the buffer out again. This means we always retry an
+> -	 * async write failure at least once, but we also need to set the buffer
+> -	 * up to behave correctly now for repeated failures.
+> -	 */
+> -	if (!(bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) ||
+> -	     bp->b_last_error != bp->b_error) {
+> -		bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
+> -		bp->b_last_error = bp->b_error;
+> -		if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+> -		    !bp->b_first_retry_time)
+> -			bp->b_first_retry_time = jiffies;
+> +static bool
+> +xfs_buf_ioerror_retry(
+> +	struct xfs_buf		*bp,
+> +	struct xfs_error_cfg	*cfg)
+> +{
+> +	if ((bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) &&
+> +	    bp->b_last_error == bp->b_error)
+> +		return false;
+>  
+> -		xfs_buf_ioerror(bp, 0);
+> -		xfs_buf_submit(bp);
+> -		return true;
+> -	}
+> +	bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
+> +	bp->b_last_error = bp->b_error;
+> +	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+> +	    !bp->b_first_retry_time)
+> +		bp->b_first_retry_time = jiffies;
+> +	return true;
+> +}
+>  
+> -	/*
+> -	 * Repeated failure on an async write. Take action according to the
+> -	 * error configuration we have been set up to use.
+> -	 */
+> +/*
+> + * Account for this latest trip around the retry handler, and decide if
+> + * we've failed enough times to constitute a permanent failure.
+> + */
+> +static bool
+> +xfs_buf_ioerror_permanent(
+> +	struct xfs_buf		*bp,
+> +	struct xfs_error_cfg	*cfg)
+> +{
+> +	struct xfs_mount	*mp = bp->b_mount;
+>  
+>  	if (cfg->max_retries != XFS_ERR_RETRY_FOREVER &&
+>  	    ++bp->b_retries > cfg->max_retries)
+> -			goto permanent_error;
+> +		return true;
+>  	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+>  	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
+> -			goto permanent_error;
+> +		return true;
+>  
+>  	/* At unmount we may treat errors differently */
+>  	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+> -		goto permanent_error;
+> -
+> -	/*
+> -	 * Still a transient error, run IO completion failure callbacks and let
+> -	 * the higher layers retry the buffer.
+> -	 */
+> -	xfs_buf_do_callbacks_fail(bp);
+> -	xfs_buf_ioerror(bp, 0);
+> -	xfs_buf_relse(bp);
+> -	return true;
+> +		return true;
+>  
+> -	/*
+> -	 * Permanent error - we need to trigger a shutdown if we haven't already
+> -	 * to indicate that inconsistency will result from this action.
+> -	 */
+> -permanent_error:
+> -	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+> -out_stale:
+> -	xfs_buf_stale(bp);
+> -	bp->b_flags |= XBF_DONE;
+> -	trace_xfs_buf_error_relse(bp, _RET_IP_);
+>  	return false;
+>  }
+>  
+> -static inline bool
+> -xfs_buf_had_callback_errors(
+> +/*
+> + * On a sync write or shutdown we just want to stale the buffer and let the
+> + * caller handle the error in bp->b_error appropriately.
+> + *
+> + * If the write was asynchronous then no one will be looking for the error.  If
+> + * this is the first failure of this type, clear the error state and write the
+> + * buffer out again. This means we always retry an async write failure at least
+> + * once, but we also need to set the buffer up to behave correctly now for
+> + * repeated failures.
+> + *
+> + * If we get repeated async write failures, then we take action according to the
+> + * error configuration we have been set up to use.
+> + *
+> + * Multi-state return value:
+> + *
+> + * XBF_IOERROR_FINISH: clear IO error retry state and run callback completions
+> + * XBF_IOERROR_DONE: resubmitted immediately, do not run any completions
+> + * XBF_IOERROR_FAIL: transient error, run failure callback completions and then
+> + *    release the buffer
+> + */
+> +enum {
+> +	XBF_IOERROR_FINISH,
+> +	XBF_IOERROR_DONE,
+> +	XBF_IOERROR_FAIL,
+> +};
+> +
+> +static int
+> +xfs_buf_iodone_error(
+>  	struct xfs_buf		*bp)
+>  {
+> +	struct xfs_mount	*mp = bp->b_mount;
+> +	struct xfs_error_cfg	*cfg;
+>  
+> -	/*
+> -	 * If there is an error, process it. Some errors require us to run
+> -	 * callbacks after failure processing is done so we detect that and take
+> -	 * appropriate action.
+> -	 */
+> -	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
+> -		return true;
+> +	if (xfs_buf_ioerror_fail_without_retry(bp))
+> +		goto out_stale;
+> +
+> +	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+> +
+> +	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
+> +	if (xfs_buf_ioerror_retry(bp, cfg)) {
+> +		xfs_buf_ioerror(bp, 0);
+> +		xfs_buf_submit(bp);
+> +		return XBF_IOERROR_DONE;
+> +	}
+>  
+>  	/*
+> -	 * Successful IO or permanent error. Either way, we can clear the
+> -	 * retry state here in preparation for the next error that may occur.
+> +	 * Permanent error - we need to trigger a shutdown if we haven't already
+> +	 * to indicate that inconsistency will result from this action.
+>  	 */
+> -	bp->b_last_error = 0;
+> -	bp->b_retries = 0;
+> -	bp->b_first_retry_time = 0;
+> -	return false;
+> +	if (xfs_buf_ioerror_permanent(bp, cfg)) {
+> +		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+> +		goto out_stale;
+> +	}
+> +
+> +	/* Still considered a transient error. Caller will schedule retries. */
+> +	return XBF_IOERROR_FAIL;
+> +
+> +out_stale:
+> +	xfs_buf_stale(bp);
+> +	bp->b_flags |= XBF_DONE;
+> +	trace_xfs_buf_error_relse(bp, _RET_IP_);
+> +	return XBF_IOERROR_FINISH;
+>  }
+>  
+>  static void
+> @@ -1122,6 +1148,15 @@ xfs_buf_item_done(
+>  	xfs_buf_rele(bp);
+>  }
+>  
+> +static inline void
+> +xfs_buf_clear_ioerror_retry_state(
+> +	struct xfs_buf		*bp)
+> +{
+> +	bp->b_last_error = 0;
+> +	bp->b_retries = 0;
+> +	bp->b_first_retry_time = 0;
+> +}
+> +
+>  /*
+>   * Inode buffer iodone callback function.
+>   */
+> @@ -1129,9 +1164,22 @@ void
+>  xfs_buf_inode_iodone(
+>  	struct xfs_buf		*bp)
+>  {
+> -	if (xfs_buf_had_callback_errors(bp))
+> +	if (bp->b_error) {
+> +		int ret = xfs_buf_iodone_error(bp);
+> +
+> +		if (ret == XBF_IOERROR_FINISH)
+> +			goto finish_iodone;
+> +		if (ret == XBF_IOERROR_DONE)
+> +			return;
+> +		ASSERT(ret == XBF_IOERROR_FAIL);
+> +		xfs_buf_do_callbacks_fail(bp);
+> +		xfs_buf_ioerror(bp, 0);
+> +		xfs_buf_relse(bp);
+>  		return;
+> +	}
+>  
+> +finish_iodone:
+> +	xfs_buf_clear_ioerror_retry_state(bp);
+>  	xfs_buf_item_done(bp);
+>  	xfs_iflush_done(bp);
+>  	xfs_buf_ioend_finish(bp);
+> @@ -1144,9 +1192,22 @@ void
+>  xfs_buf_dquot_iodone(
+>  	struct xfs_buf		*bp)
+>  {
+> -	if (xfs_buf_had_callback_errors(bp))
+> +	if (bp->b_error) {
+> +		int ret = xfs_buf_iodone_error(bp);
+> +
+> +		if (ret == XBF_IOERROR_FINISH)
+> +			goto finish_iodone;
+> +		if (ret == XBF_IOERROR_DONE)
+> +			return;
+> +		ASSERT(ret == XBF_IOERROR_FAIL);
+> +		xfs_buf_do_callbacks_fail(bp);
+> +		xfs_buf_ioerror(bp, 0);
+> +		xfs_buf_relse(bp);
+>  		return;
+> +	}
+>  
+> +finish_iodone:
+> +	xfs_buf_clear_ioerror_retry_state(bp);
+>  	/* a newly allocated dquot buffer might have a log item attached */
+>  	xfs_buf_item_done(bp);
+>  	xfs_dquot_done(bp);
+> @@ -1163,9 +1224,22 @@ void
+>  xfs_buf_iodone(
+>  	struct xfs_buf		*bp)
+>  {
+> -	if (xfs_buf_had_callback_errors(bp))
+> +	if (bp->b_error) {
+> +		int ret = xfs_buf_iodone_error(bp);
+> +
+> +		if (ret == XBF_IOERROR_FINISH)
+> +			goto finish_iodone;
+> +		if (ret == XBF_IOERROR_DONE)
+> +			return;
+> +		ASSERT(ret == XBF_IOERROR_FAIL);
+> +		xfs_buf_do_callbacks_fail(bp);
+> +		xfs_buf_ioerror(bp, 0);
+> +		xfs_buf_relse(bp);
+>  		return;
+> +	}
+>  
+> +finish_iodone:
+> +	xfs_buf_clear_ioerror_retry_state(bp);
+>  	xfs_buf_item_done(bp);
+>  	xfs_buf_ioend_finish(bp);
+>  }
+> 
+
