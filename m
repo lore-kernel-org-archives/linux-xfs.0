@@ -2,179 +2,156 @@ Return-Path: <SRS0=6H2z=7S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E00C1C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 21:32:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7890FC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 21:48:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C45742065C
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 21:32:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62525206E6
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 21:48:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728227AbgFEVcS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Jun 2020 17:32:18 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33004 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728189AbgFEVcS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jun 2020 17:32:18 -0400
+        id S1726105AbgFEVsq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Jun 2020 17:48:46 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:51044 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728083AbgFEVsq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jun 2020 17:48:46 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 16DBD3A3E09;
-        Sat,  6 Jun 2020 07:32:15 +1000 (AEST)
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 46722D78F72;
+        Sat,  6 Jun 2020 07:48:42 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jhJwg-0000mr-Dz; Sat, 06 Jun 2020 07:32:10 +1000
-Date:   Sat, 6 Jun 2020 07:32:10 +1000
+        id 1jhKCf-0000nV-LW; Sat, 06 Jun 2020 07:48:41 +1000
+Date:   Sat, 6 Jun 2020 07:48:41 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 24/30] xfs: rework stale inodes in xfs_ifree_cluster
-Message-ID: <20200605213210.GE2040@dread.disaster.area>
-References: <20200604074606.266213-1-david@fromorbit.com>
- <20200604074606.266213-25-david@fromorbit.com>
- <20200605182722.GH23747@bfoster>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iomap: Handle I/O errors gracefully in page_mkwrite
+Message-ID: <20200605214841.GF2040@dread.disaster.area>
+References: <20200604202340.29170-1-willy@infradead.org>
+ <20200604225726.GU2040@dread.disaster.area>
+ <20200604230519.GW19604@bombadil.infradead.org>
+ <20200604233053.GW2040@dread.disaster.area>
+ <20200604235050.GX19604@bombadil.infradead.org>
+ <20200605003159.GX2040@dread.disaster.area>
+ <20200605022451.GZ19604@bombadil.infradead.org>
+ <20200605030758.GB2040@dread.disaster.area>
+ <20200605124826.GF19604@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200605182722.GH23747@bfoster>
+In-Reply-To: <20200605124826.GF19604@bombadil.infradead.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=7-415B0cAAAA:8 a=w4og3I-1AE9Kmp6XOFsA:9 a=dSdfdfH4zrP7Fqlg:21
-        a=tQRF3Na-3rpy2DYP:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8
+        a=5k1WLetKFTAGHca7CXYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 05, 2020 at 02:27:22PM -0400, Brian Foster wrote:
-> On Thu, Jun 04, 2020 at 05:46:00PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 05, 2020 at 05:48:26AM -0700, Matthew Wilcox wrote:
+> On Fri, Jun 05, 2020 at 01:07:58PM +1000, Dave Chinner wrote:
+> > On Thu, Jun 04, 2020 at 07:24:51PM -0700, Matthew Wilcox wrote:
+> > > On Fri, Jun 05, 2020 at 10:31:59AM +1000, Dave Chinner wrote:
+> > > > On Thu, Jun 04, 2020 at 04:50:50PM -0700, Matthew Wilcox wrote:
+> > > > > > Sure, but that's not really what I was asking: why isn't this
+> > > > > > !uptodate state caught before the page fault code calls
+> > > > > > ->page_mkwrite? The page fault code has a reference to the page,
+> > > > > > after all, and in a couple of paths it even has the page locked.
+> > > > > 
+> > > > > If there's already a PTE present, then the page fault code doesn't
+> > > > > check the uptodate bit.  Here's the path I'm looking at:
+> > > > > 
+> > > > > do_wp_page()
+> > > > >  -> vm_normal_page()
+> > > > >  -> wp_page_shared()
+> > > > >      -> do_page_mkwrite()
+> > > > > 
+> > > > > I don't see anything in there that checked Uptodate.
+> > > > 
+> > > > Yup, exactly the code I was looking at when I asked this question.
+> > > > The kernel has invalidated the contents of a page, yet we still have
+> > > > it mapped into userspace as containing valid contents, and we don't
+> > > > check it at all when userspace generates a protection fault on the
+> > > > page?
+> > > 
+> > > Right.  The iomap error path only clears PageUptodate.  It doesn't go
+> > > to the effort of unmapping the page from userspace, so userspace has a
+> > > read-only view of a !Uptodate page.
 > > 
-> > Once we have inodes pinning the cluster buffer and attached whenever
-> > they are dirty, we no longer have a guarantee that the items are
-> > flush locked when we lock the cluster buffer. Hence we cannot just
-> > walk the buffer log item list and modify the attached inodes.
-> > 
-> > If the inode is not flush locked, we have to ILOCK it first and then
-> > flush lock it to do all the prerequisite checks needed to avoid
-> > races with other code. This is already handled by
-> > xfs_ifree_get_one_inode(), so rework the inode iteration loop and
-> > function to update all inodes in cache whether they are attached to
-> > the buffer or not.
-> > 
-> > Note: we also remove the copying of the log item lsn to the
-> > ili_flush_lsn as xfs_iflush_done() now uses the XFS_ISTALE flag to
-> > trigger aborts and so flush lsn matching is not needed in IO
-> > completion for processing freed inodes.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_inode.c | 158 ++++++++++++++++++---------------------------
-> >  1 file changed, 62 insertions(+), 96 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 272b54cf97000..fb4c614c64fda 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> ...
-> > @@ -2559,43 +2563,53 @@ xfs_ifree_get_one_inode(
-> >  	 */
-> >  	if (ip != free_ip) {
-> >  		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-> > +			spin_unlock(&ip->i_flags_lock);
-> >  			rcu_read_unlock();
-> >  			delay(1);
-> >  			goto retry;
-> >  		}
-> > -
-> > -		/*
-> > -		 * Check the inode number again in case we're racing with
-> > -		 * freeing in xfs_reclaim_inode().  See the comments in that
-> > -		 * function for more information as to why the initial check is
-> > -		 * not sufficient.
-> > -		 */
-> > -		if (ip->i_ino != inum) {
-> > -			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> > -			goto out_rcu_unlock;
-> > -		}
+> > Hmmm - did you miss the ->discard_page() callout just before we call
+> > ClearPageUptodate() on error in iomap_writepage_map()? That results
+> > in XFS calling iomap_invalidatepage() on the page, which ....
 > 
-> Why is the recheck under ILOCK_EXCL no longer necessary? It looks like
-> reclaim decides whether to proceed or not under the ilock and doesn't
-> acquire the spinlock until it decides to reclaim. Hm?
+> ... I don't think that's the interesting path.  I mean, that's
+> the submission path, and usually we discover errors in the completion
+> path, not the submission path.
 
-Because we now take the ILOCK while still holding the i_flags_lock
-instead of dropping the spin lock then trying to get the ILOCK.
-Hence with this change, if we get the ILOCK we are guaranteed that
-the inode number has not changed and don't need to recheck it.
+Where in the iomap write IO completion path do we call
+ClearPageUptodate()?
 
-This is guaranteed by xfs_reclaim_inode() because it locks in
-the order of ILOCK -> i_flags_lock and it zeroes the ip->i_ino
-while holding both these locks. Hence if we've got the i_flags_lock
-and we try to get the ILOCK, the inode is either going to be valid and
-reclaim will skip the inode (because we hold locks) or the inode
-will already be in reclaim and the ip->i_ino will be zero....
+I mean, it ends up in iomap_finish_page_writeback(), which does:
 
+static void
+iomap_finish_page_writeback(struct inode *inode, struct page *page,
+                int error)
+{
+        struct iomap_page *iop = to_iomap_page(page);
 
-> >  	}
-> > +	ip->i_flags |= XFS_ISTALE;
-> > +	spin_unlock(&ip->i_flags_lock);
-> >  	rcu_read_unlock();
-> >  
-> > -	xfs_iflock(ip);
-> > -	xfs_iflags_set(ip, XFS_ISTALE);
-> > +	/*
-> > +	 * If we can't get the flush lock, the inode is already attached.  All
-> > +	 * we needed to do here is mark the inode stale so buffer IO completion
-> > +	 * will remove it from the AIL.
-> > +	 */
+        if (error) {
+                SetPageError(page);
+                mapping_set_error(inode->i_mapping, -EIO);
+        }
+
+        WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE && !iop);
+        WARN_ON_ONCE(iop && atomic_read(&iop->write_count) <= 0);
+
+        if (!iop || atomic_dec_and_test(&iop->write_count))
+                end_page_writeback(page);
+}
+
+I mean, we call SetPageError() and tag the mapping, but we most
+certainly don't clear the PageUptodate state here.
+
+So AFAICT, the -only- places that iomap clears the uptodate state on
+a page is on -read- errors and on write submission failures.
+
+If it's a read error, the page fault should already be failing. If
+it's on submission, we invalidate it as we currently do and punch
+out the user mappings, and then when userspace refaults it can be
+killed by a read IO failure.
+
+But I just don't see how this problem results from errors reported
+at IO completion.
+
+This comes back to my original, underlying worry about the fragility
+of the page fault path: the page fault path is not even checking for
+PageError during faults, and I'm betting that almost no
+->page_mkwrite implementation is checking it, either....
+
+> > It's not clear to me that we can actually unmap those pages safely
+> > in a race free manner from this code - can we actually do that from
+> > the page writeback path?
 > 
-> To make sure I'm following this correctly, we can assume the inode is
-> attached based on an iflock_nowait() failure because we hold the ilock,
-> right?
-
-Actually, because we hold the buffer lock. We only flush the inode
-to the buffer when we are holding the buffer lock, so all flush
-locking shold nest inside the buffer lock. So for taking the flock,
-the lock order is bp->b_sema -> ILOCK_EXCL -> iflock. We drop the
-flush lock before we drop the buffer lock in IO completion, and
-hence if we hold the buffer lock, nothing else can actually unlock
-the inode flush lock.
-
-> IOW, any other task doing a similar iflock check would have to do
-> so under ilock and release the flush lock first if the inode didn't end
-> up flushed, for whatever reason.
-
-Yes, anything taking the flush lock needs to first hold the ILOCK -
-that's always been the case and we've always done that because the
-ILOCK is needed to provides serialisation against a) other
-modifications while we are accessing/flushing the inode, and b)
-inode reclaim.
-
-/me checks.
-
-After this patchset nothing calls xfs_iflock() at all - everything
-uses xfs_iflock_nowait(), so it might be time to turn this back into
-a plain status flag and get rid of the iflock stuff altogether as
-it's just a state flag now...
-
-> > +	ASSERT(iip->ili_fields);
-> > +	spin_lock(&iip->ili_lock);
-> > +	iip->ili_last_fields = iip->ili_fields;
-> > +	iip->ili_fields = 0;
-> > +	iip->ili_fsync_fields = 0;
-> > +	spin_unlock(&iip->ili_lock);
-> > +	list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
-> > +	ASSERT(iip->ili_last_fields);
+> I don't see why it can't be done from the submission path.
+> unmap_mapping_range() calls i_mmap_lock_write(), which is
+> down_write(i_mmap_rwsem) in drag.  There might be a lock ordering
+> issue there, although lockdep should find it pretty quickly.
 > 
-> We already asserted ->ili_fields and assigned ->ili_fields to
-> ->ili_last_fields, so this assert seems spurious.
+> The bigger problem is the completion path.  We're in softirq context,
+> so that will have to punt to a thread that can take mutexes.
 
-Ah, the first ASSERT goes away in the next patch, I think. It was
-debug, and I may have removed it from the wrong patch...
+Punt to workqueue if we aren't already in a workqueue context -
+for a lot of writes on XFS we already will be running completion in
+a workqueue context....
 
 Cheers,
 
