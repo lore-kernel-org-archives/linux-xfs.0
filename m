@@ -2,166 +2,148 @@ Return-Path: <SRS0=6H2z=7S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F40B1C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 00:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF6A5C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 00:46:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB594206A2
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 00:32:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B614206DC
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 00:46:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MHWSvPHl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726062AbgFEAcF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 20:32:05 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:34804 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725955AbgFEAcE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 20:32:04 -0400
-Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 7B736760FFA;
-        Fri,  5 Jun 2020 10:32:00 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jh0H9-0001kj-6L; Fri, 05 Jun 2020 10:31:59 +1000
-Date:   Fri, 5 Jun 2020 10:31:59 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iomap: Handle I/O errors gracefully in page_mkwrite
-Message-ID: <20200605003159.GX2040@dread.disaster.area>
-References: <20200604202340.29170-1-willy@infradead.org>
- <20200604225726.GU2040@dread.disaster.area>
- <20200604230519.GW19604@bombadil.infradead.org>
- <20200604233053.GW2040@dread.disaster.area>
- <20200604235050.GX19604@bombadil.infradead.org>
+        id S1726151AbgFEAqh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 20:46:37 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:21642 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725943AbgFEAqg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 20:46:36 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1591317994;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=qN6FayC+qA0+96UlgWwhkCkAADNK7Ccaqf13OR7p4ao=;
+        b=MHWSvPHlXULNj+oRYPY4QxPiVL/zjzj5jQ1Q5IhPRHZPVhITOQb5sy40fJ6MB7UD8fh8uB
+        t6kkHP7tGgPfcH4BJ9615Zv9du2ScMiySU2JBiP5u+UNhgWUVZYQ5M0T7mB+Ku9HiV4fIF
+        tPh+DZUZ2rdAJ0/t0trG1Jj0KBFIFqA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-489-64GWhhW_M9apNEvChjZi1Q-1; Thu, 04 Jun 2020 20:46:28 -0400
+X-MC-Unique: 64GWhhW_M9apNEvChjZi1Q-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AD567800C78;
+        Fri,  5 Jun 2020 00:46:27 +0000 (UTC)
+Received: from llong.remote.csb (ovpn-114-13.rdu2.redhat.com [10.10.114.13])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id ACEE35D9D3;
+        Fri,  5 Jun 2020 00:46:23 +0000 (UTC)
+Subject: Re: [PATCH v2] xfs: Fix false positive lockdep warning with
+ sb_internal & fs_reclaim
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Qian Cai <cai@lca.pw>, Eric Sandeen <sandeen@redhat.com>
+References: <20200604210130.697-1-longman@redhat.com>
+ <20200604231327.GV2040@dread.disaster.area>
+From:   Waiman Long <longman@redhat.com>
+Organization: Red Hat
+Message-ID: <cd66acb9-2129-2a21-936c-9cce3d9dba4e@redhat.com>
+Date:   Thu, 4 Jun 2020 20:46:23 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200604235050.GX19604@bombadil.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8
-        a=9wqegnsVgnHrCx7oVSgA:9 a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200604231327.GV2040@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 04, 2020 at 04:50:50PM -0700, Matthew Wilcox wrote:
-> On Fri, Jun 05, 2020 at 09:30:53AM +1000, Dave Chinner wrote:
-> > On Thu, Jun 04, 2020 at 04:05:19PM -0700, Matthew Wilcox wrote:
-> > > On Fri, Jun 05, 2020 at 08:57:26AM +1000, Dave Chinner wrote:
-> > > > On Thu, Jun 04, 2020 at 01:23:40PM -0700, Matthew Wilcox wrote:
-> > > > > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> > > > > 
-> > > > > Test generic/019 often results in:
-> > > > > 
-> > > > > WARNING: at fs/iomap/buffered-io.c:1069 iomap_page_mkwrite_actor+0x57/0x70
-> > > > > 
-> > > > > Since this can happen due to a storage error, we should not WARN for it.
-> > > > > Just return -EIO, which will be converted to a SIGBUS for the hapless
-> > > > > task attempting to write to the page that we can't read.
-> > > > 
-> > > > Why didn't the "read" part of the fault which had the EIO error fail
-> > > > the page fault? i.e. why are we waiting until deep inside the write
-> > > > fault path to error out on a failed page read?
-> > > 
-> > > I have a hypothesis that I don't know how to verify.
-> > > 
-> > > First the task does a load from the page and we put a read-only PTE in
-> > > the page tables.  Then it writes to the page using write().  The page
-> > > gets written back, but hits an error in iomap_writepage_map()
-> > > which calls ClearPageUptodate().  Then the task with it mapped attempts
-> > > to store to it.
-> > 
-> > Sure, but that's not really what I was asking: why isn't this
-> > !uptodate state caught before the page fault code calls
-> > ->page_mkwrite? The page fault code has a reference to the page,
-> > after all, and in a couple of paths it even has the page locked.
-> 
-> If there's already a PTE present, then the page fault code doesn't
-> check the uptodate bit.  Here's the path I'm looking at:
-> 
-> do_wp_page()
->  -> vm_normal_page()
->  -> wp_page_shared()
->      -> do_page_mkwrite()
-> 
-> I don't see anything in there that checked Uptodate.
+On 6/4/20 7:13 PM, Dave Chinner wrote:
+> On Thu, Jun 04, 2020 at 05:01:30PM -0400, Waiman Long wrote:
+>> ---
+>>   fs/xfs/xfs_log.c   | 3 ++-
+>>   fs/xfs/xfs_trans.c | 8 +++++++-
+>>   2 files changed, 9 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+>> index 00fda2e8e738..d273d4e74ef8 100644
+>> --- a/fs/xfs/xfs_log.c
+>> +++ b/fs/xfs/xfs_log.c
+>> @@ -433,7 +433,8 @@ xfs_log_reserve(
+>>   	XFS_STATS_INC(mp, xs_try_logspace);
+>>   
+>>   	ASSERT(*ticp == NULL);
+>> -	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent, 0);
+>> +	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent,
+>> +			mp->m_super->s_writers.frozen ? KM_NOLOCKDEP : 0);
+>>   	*ticp = tic;
+> Hi Waiman,
+>
+> As I originally stated when you posted this the first time 6 months
+> ago: we are not going to spread this sort of conditional gunk though
+> the XFS codebase just to shut up lockdep false positives.
+>
+> I pointed you at the way to conditionally turn of lockdep for
+> operations where we are doing transactions when the filesystem has
+> already frozen the transaction subsystem. That is:
+>
+>>   
+>>   	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
+>> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+>> index 3c94e5ff4316..3a9f394a0f02 100644
+>> --- a/fs/xfs/xfs_trans.c
+>> +++ b/fs/xfs/xfs_trans.c
+>> @@ -261,8 +261,14 @@ xfs_trans_alloc(
+>>   	 * Allocate the handle before we do our freeze accounting and setting up
+>>   	 * GFP_NOFS allocation context so that we avoid lockdep false positives
+>>   	 * by doing GFP_KERNEL allocations inside sb_start_intwrite().
+>> +	 *
+>> +	 * To prevent false positive lockdep warning of circular locking
+>> +	 * dependency between sb_internal and fs_reclaim, disable the
+>> +	 * acquisition of the fs_reclaim pseudo-lock when the superblock
+>> +	 * has been frozen or in the process of being frozen.
+>>   	 */
+>> -	tp = kmem_zone_zalloc(xfs_trans_zone, 0);
+>> +	tp = kmem_zone_zalloc(xfs_trans_zone,
+>> +		mp->m_super->s_writers.frozen ? KM_NOLOCKDEP : 0);
+>>   	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
+> We only should be setting KM_NOLOCKDEP when XFS_TRANS_NO_WRITECOUNT
+> is set.  That's the flag that transactions set when they run in a
+> fully frozen context to avoid deadlocking with the freeze in
+> progress, and that's the only case where we should be turning off
+> lockdep.
+>
+> And, as I also mentioned, this should be done via a process flag -
+> PF_MEMALLOC_NOLOCKDEP - so that it is automatically inherited by
+> all subsequent memory allocations done in this path. That way we
+> only need this wrapping code in xfs_trans_alloc():
+>
+> 	if (flags & XFS_TRANS_NO_WRITECOUNT)
+> 		memalloc_nolockdep_save()
+>
+> 	.....
+>
+> 	if (flags & XFS_TRANS_NO_WRITECOUNT)
+> 		memalloc_nolockdep_restore()
+>
+> and nothing else needs to change.
+>
+> Cheers,
+>
+> Dave.
 
-Yup, exactly the code I was looking at when I asked this question.
-The kernel has invalidated the contents of a page, yet we still have
-it mapped into userspace as containing valid contents, and we don't
-check it at all when userspace generates a protection fault on the
-page?
-
-> > What I'm trying to understand is why this needs to be fixed inside
-> > ->page_mkwrite, because AFAICT if we have to fix this in the iomap
-> > code, we have the same "we got handed a bad page by the page fault"
-> > problem in every single ->page_mkwrite implementation....
-> 
-> I think the iomap code is the only filesystem which clears PageUptodate
-> on errors. 
-
-I don't think you looked very hard. A quick scan shows at least
-btrfs, f2fs, hostfs, jffs2, reiserfs, vboxfs and anything using the
-iomap path will call ClearPageUptodate() on a write IO error. Some
-of them also call SetPageError(), too. The above fault path doesn't
-check for that, either. AFAICT, It doesn't check for any adverse
-page state at all that has occurred since the last time the PTE
-changed state, and it doesn't check the mapping for error state,
-either. It just hands ->page_mkwrite() a completely unchecked page.
-
-Which again, is kinda what I'm getting at here: why should all
-the ->page_mkwrite implementations be forced to check that the page
-handed to it is in a valid state?
-
-> I know we've argued about whether that's appropriate or not
-> in the past.
-
-Sure, but that's largely irrelevant here. The fact is that we are
-taking a fault on a user page marked by the kernel with invalid
-contents, and it's not being caught by the common page fault code
-path. Ignore where the page contents are marked invalid, and instead
-ask "what should a write fault do on a page with invalid contents?".
-
-e.g. Maybe it actually read the contents of the page from disk
-again, rather than have page_mkwrite fail and end up killing the
-application?
-
-Really, all I want is for all filesystems to have the same behaviour
-in response to the same page state error conditions. Requiring every
-filesystem to detect and handle the error deep in it's IO path is
-not going to result in consistent behaviour....
-
-> > > I haven't dug through what generic/019 does, so I don't know how plausible
-> > > this is.
-> > 
-> > # Run fsstress and fio(dio/aio and mmap) and simulate disk failure
-> > # check filesystem consistency at the end.
-> > 
-> > I don't think it is mixing buffered writes and mmap writes on the
-> > same file via fio. Maybe fsstress is triggering that, but the
-> > fsstress workload is single threaded so, again, I'm not sure it will
-> > do this.
-> 
-> Maybe that's not how we end up with a read-only PTE in the process's
-> page tables.  Perhaps it starts out with a store, then on an fsync()
-> we mark it read-only, then try to do another store.
-
-True. Normal background writeback will mark pages clean, so it
-probably doesn't need fsync at all.
+Thanks for the reminder, I will look into that.
 
 Cheers,
+Longman
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
