@@ -2,135 +2,188 @@ Return-Path: <SRS0=6H2z=7S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02DA2C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:45:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C0A9C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 02:12:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB40B2074B
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:45:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C/UVxeVB"
+	by mail.kernel.org (Postfix) with ESMTP id 3E046207ED
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 02:12:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725883AbgFEBpC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 21:45:02 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:47337 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725863AbgFEBpB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 21:45:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1591321500;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=f/TCsD0DgpoPE3QWXJH5c+Zt8vsWf9D7Rw44sdCwBU0=;
-        b=C/UVxeVBe/geqdTQ18jefbluoX5leLuUwgO8LnqBLpu6s+ZDQCVrK1e4AV0m7yAmU5w/yn
-        QZtgGMB8Zv90qj7FFPlt/pNYJ+bs3fBEdD9dGzBJBH/4H2AalgysLvcCyrT+PXFn2G2nJb
-        0a/axicyLld/9+edTqNf5XAtg3eEAv8=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-458-kSRHODoWN_KAg1SsQ4Zssw-1; Thu, 04 Jun 2020 21:44:59 -0400
-X-MC-Unique: kSRHODoWN_KAg1SsQ4Zssw-1
-Received: by mail-pf1-f198.google.com with SMTP id m11so2536894pfh.22
-        for <linux-xfs@vger.kernel.org>; Thu, 04 Jun 2020 18:44:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=f/TCsD0DgpoPE3QWXJH5c+Zt8vsWf9D7Rw44sdCwBU0=;
-        b=XZlhE0Z7z3wt+rFuudiPHliUSb3DXwATFnWTZPAKTD7ag7P8lmF3KbXGVLmy8E2Jey
-         IChfDFQfH5uzXsfVGRndcrA67w4vV+Py9cwTeGtPRRTIt6+50XA0MY9uSo4UUioGUf2N
-         7bbRu9dwdUMym85T+hUmyGp5qBAFk7qX9bkuIpa7sh7Khj7Fzy+4SzThTmhPel5qtkAr
-         x+m2hxfQ3mT4WQsWe9gx4UVambbfMtsSNlq86r+1fVrxpGyrWIET1Wm7YCYJyYNRI355
-         2CRrz7vBgVjvmDeFV0Ft1d0urC8aHlu4IO6maIxNsxfIamhLntGSb0yciifuj61JTtKT
-         69iw==
-X-Gm-Message-State: AOAM533gan3pa+Q8dReRa/b9B6rifwG1mhEyQlriykGmqSL+s0Gs080k
-        JOd2V2GRFCuiG9qQ9NvBGknPdXQnqq6TJ0i2zh2KNIgmVYH8Kmr/wuWIJu4MOy+n6ancNv8O8p4
-        OcIxrD3HjY1LMpB1aZEyh
-X-Received: by 2002:a63:4b0a:: with SMTP id y10mr7190479pga.57.1591321498328;
-        Thu, 04 Jun 2020 18:44:58 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyXkWrD5FcDA/SQTB5j6whFpEIxgWr+Uvu5JQb0NGj8hXekB/BcOCsNRjPwRjGFzcZI8dVa9A==
-X-Received: by 2002:a63:4b0a:: with SMTP id y10mr7190463pga.57.1591321498075;
-        Thu, 04 Jun 2020 18:44:58 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id x14sm1217317pfq.80.2020.06.04.18.44.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2020 18:44:57 -0700 (PDT)
-Date:   Fri, 5 Jun 2020 09:44:47 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2] xfs: get rid of unnecessary xfs_perag_{get,put} pairs
-Message-ID: <20200605014447.GA25293@xiangao.remote.csb>
-References: <20200602145238.1512-1-hsiangkao@redhat.com>
- <20200603121156.3399-1-hsiangkao@redhat.com>
- <20200604215917.GS2040@dread.disaster.area>
+        id S1726016AbgFECMQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 22:12:16 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:16941 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725601AbgFECMQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 22:12:16 -0400
+X-IronPort-AV: E=Sophos;i="5.73,474,1583164800"; 
+   d="scan'208";a="93871124"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 05 Jun 2020 10:12:12 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id DF8CC4BCC8A8;
+        Fri,  5 Jun 2020 10:12:07 +0800 (CST)
+Received: from [10.167.225.141] (10.167.225.141) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Fri, 5 Jun 2020 10:12:08 +0800
+Subject: =?UTF-8?B?UmU6IOWbnuWkjTogUmU6IFtSRkMgUEFUQ0ggMC84XSBkYXg6IEFkZCBh?=
+ =?UTF-8?Q?_dax-rmap_tree_to_support_reflink?=
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+CC:     Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
+        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
+        "Qi, Fuli" <qi.fuli@fujitsu.com>,
+        "Gotou, Yasunori" <y-goto@fujitsu.com>
+References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
+ <20200427122836.GD29705@bombadil.infradead.org>
+ <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
+ <20200428064318.GG2040@dread.disaster.area>
+ <153e13e6-8685-fb0d-6bd3-bb553c06bf51@cn.fujitsu.com>
+ <20200604145107.GA1334206@magnolia>
+From:   Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <b9f3e089-476d-b31f-c2f2-0dfb8741b584@cn.fujitsu.com>
+Date:   Fri, 5 Jun 2020 10:11:51 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200604215917.GS2040@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200604145107.GA1334206@magnolia>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.167.225.141]
+X-ClientProxiedBy: G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) To
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204)
+X-yoursite-MailScanner-ID: DF8CC4BCC8A8.AF5BC
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 05, 2020 at 07:59:17AM +1000, Dave Chinner wrote:
-> On Wed, Jun 03, 2020 at 08:11:56PM +0800, Gao Xiang wrote:
 
-...
+
+On 2020/6/4 下午10:51, Darrick J. Wong wrote:
+> On Thu, Jun 04, 2020 at 03:37:42PM +0800, Ruan Shiyang wrote:
+>>
+>>
+>> On 2020/4/28 下午2:43, Dave Chinner wrote:
+>>> On Tue, Apr 28, 2020 at 06:09:47AM +0000, Ruan, Shiyang wrote:
+>>>>
+>>>> 在 2020/4/27 20:28:36, "Matthew Wilcox" <willy@infradead.org> 写道:
+>>>>
+>>>>> On Mon, Apr 27, 2020 at 04:47:42PM +0800, Shiyang Ruan wrote:
+>>>>>>    This patchset is a try to resolve the shared 'page cache' problem for
+>>>>>>    fsdax.
+>>>>>>
+>>>>>>    In order to track multiple mappings and indexes on one page, I
+>>>>>>    introduced a dax-rmap rb-tree to manage the relationship.  A dax entry
+>>>>>>    will be associated more than once if is shared.  At the second time we
+>>>>>>    associate this entry, we create this rb-tree and store its root in
+>>>>>>    page->private(not used in fsdax).  Insert (->mapping, ->index) when
+>>>>>>    dax_associate_entry() and delete it when dax_disassociate_entry().
+>>>>>
+>>>>> Do we really want to track all of this on a per-page basis?  I would
+>>>>> have thought a per-extent basis was more useful.  Essentially, create
+>>>>> a new address_space for each shared extent.  Per page just seems like
+>>>>> a huge overhead.
+>>>>>
+>>>> Per-extent tracking is a nice idea for me.  I haven't thought of it
+>>>> yet...
+>>>>
+>>>> But the extent info is maintained by filesystem.  I think we need a way
+>>>> to obtain this info from FS when associating a page.  May be a bit
+>>>> complicated.  Let me think about it...
+>>>
+>>> That's why I want the -user of this association- to do a filesystem
+>>> callout instead of keeping it's own naive tracking infrastructure.
+>>> The filesystem can do an efficient, on-demand reverse mapping lookup
+>>> from it's own extent tracking infrastructure, and there's zero
+>>> runtime overhead when there are no errors present.
+>>
+>> Hi Dave,
+>>
+>> I ran into some difficulties when trying to implement the per-extent rmap
+>> tracking.  So, I re-read your comments and found that I was misunderstanding
+>> what you described here.
+>>
+>> I think what you mean is: we don't need the in-memory dax-rmap tracking now.
+>> Just ask the FS for the owner's information that associate with one page
+>> when memory-failure.  So, the per-page (even per-extent) dax-rmap is
+>> needless in this case.  Is this right?
+> 
+> Right.  XFS already has its own rmap tree.
+> 
+>> Based on this, we only need to store the extent information of a fsdax page
+>> in its ->mapping (by searching from FS).  Then obtain the owners of this
+>> page (also by searching from FS) when memory-failure or other rmap case
+>> occurs.
+> 
+> I don't even think you need that much.  All you need is the "physical"
+> offset of that page within the pmem device (e.g. 'this is the 307th 4k
+> page == offset 1257472 since the start of /dev/pmem0') and xfs can look
+> up the owner of that range of physical storage and deal with it as
+> needed.
+
+Yes, I think so.
 
 > 
-> Ok, I think we had a small misunderstanding there. I was trying to
-> say the asserts that were in the first patch were fine, but we
-> didn't really need any more because the new asserts mostly matched
-> an existing pattern.
+>> So, a fsdax page is no longer associated with a specific file, but with a
+>> FS(or the pmem device).  I think it's easier to understand and implement.
 > 
-> I wasn't suggesting that we do this everywhere:
+> Yes.  I also suspect this will be necessary to support reflink...
 > 
-> > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
-> > index 9d84007a5c65..4b8c7cb87b84 100644
-> > --- a/fs/xfs/libxfs/xfs_ag.c
-> > +++ b/fs/xfs/libxfs/xfs_ag.c
-> > @@ -563,7 +563,9 @@ xfs_ag_get_geometry(
-> >  	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
-> >  	if (error)
-> >  		goto out_agi;
-> > -	pag = xfs_perag_get(mp, agno);
-> > +
-> > +	pag = agi_bp->b_pag;
-> > +	ASSERT(pag->pag_agno == agno);
-> 
-> .... because we've already checked this in xfs_ialloc_read_agi() a
-> few lines of code back up the function.
-> 
-> That's the pattern I was refering to - we tend to check
-> relationships when they are first brought into a context, then we
-> don't need to check them again in that context.  Hence the asserts
-> in xfs_ialloc_read_agi() and xfs_alloc_read_agf() effectively cover
-> all the places where we pull the pag from those buffers, and so
-> there's no need to validate the correct perag is attached to the
-> buffer every time we access it....
+> --D
 
-Sorry about that, I folded in ASSERTs of my debugging code at that time.
-Because that is the straight way to check if somewhere has strange due
-to my modification, but some are unnecessary really, I didn't check that,
-sorry about that. I will check again and remove unneeded ASSERTs
-in the next version.
+OK, Thank you very much.
 
+
+--
 Thanks,
-Gao Xiang
+Ruan Shiyang.
 
 > 
-> Cheers,
+>>
+>> --
+>> Thanks,
+>> Ruan Shiyang.
+>>>
+>>> At the moment, this "dax association" is used to "report" a storage
+>>> media error directly to userspace. I say "report" because what it
+>>> does is kill userspace processes dead. The storage media error
+>>> actually needs to be reported to the owner of the storage media,
+>>> which in the case of FS-DAX is the filesytem.
+>>>
+>>> That way the filesystem can then look up all the owners of that bad
+>>> media range (i.e. the filesystem block it corresponds to) and take
+>>> appropriate action. e.g.
+>>>
+>>> - if it falls in filesytem metadata, shutdown the filesystem
+>>> - if it falls in user data, call the "kill userspace dead" routines
+>>>     for each mapping/index tuple the filesystem finds for the given
+>>>     LBA address that the media error occurred.
+>>>
+>>> Right now if the media error is in filesystem metadata, the
+>>> filesystem isn't even told about it. The filesystem can't even shut
+>>> down - the error is just dropped on the floor and it won't be until
+>>> the filesystem next tries to reference that metadata that we notice
+>>> there is an issue.
+>>>
+>>> Cheers,
+>>>
+>>> Dave.
+>>>
+>>
+>>
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
 > 
+
 
