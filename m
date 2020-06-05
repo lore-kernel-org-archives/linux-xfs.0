@@ -2,158 +2,375 @@ Return-Path: <SRS0=6H2z=7S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 907E1C433E2
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:30:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 283EEC433DF
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:32:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 731B1207ED
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:30:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F34AD207DA
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:32:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726167AbgFEBak (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 21:30:40 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:50240 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726060AbgFEBaj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 21:30:39 -0400
+        id S1726072AbgFEBcs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 21:32:48 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45080 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726068AbgFEBcs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 21:32:48 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id CA2095AB25B;
-        Fri,  5 Jun 2020 11:30:32 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 44C673A3A41
+        for <linux-xfs@vger.kernel.org>; Fri,  5 Jun 2020 11:32:43 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jh1Bf-00026O-Bh; Fri, 05 Jun 2020 11:30:23 +1000
-Date:   Fri, 5 Jun 2020 11:30:23 +1000
+        id 1jh1Dq-00026j-Vx
+        for linux-xfs@vger.kernel.org; Fri, 05 Jun 2020 11:32:38 +1000
+Date:   Fri, 5 Jun 2020 11:32:38 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "dan.j.williams@intel.com" <dan.j.williams@intel.com>,
-        "hch@lst.de" <hch@lst.de>, "rgoldwyn@suse.de" <rgoldwyn@suse.de>,
-        "Qi, Fuli" <qi.fuli@fujitsu.com>,
-        "Gotou, Yasunori" <y-goto@fujitsu.com>
-Subject: Re: =?utf-8?B?5Zue5aSNOiBSZQ==?= =?utf-8?Q?=3A?= [RFC PATCH 0/8]
- dax: Add a dax-rmap tree to support reflink
-Message-ID: <20200605013023.GZ2040@dread.disaster.area>
-References: <20200427084750.136031-1-ruansy.fnst@cn.fujitsu.com>
- <20200427122836.GD29705@bombadil.infradead.org>
- <em33c55fa5-15ca-4c46-8c27-6b0300fa4e51@g08fnstd180058>
- <20200428064318.GG2040@dread.disaster.area>
- <153e13e6-8685-fb0d-6bd3-bb553c06bf51@cn.fujitsu.com>
- <20200604145107.GA1334206@magnolia>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 13/30 V2] xfs: handle buffer log item IO errors directly
+Message-ID: <20200605013238.GA2040@dread.disaster.area>
+References: <20200604074606.266213-1-david@fromorbit.com>
+ <20200604074606.266213-14-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200604145107.GA1334206@magnolia>
+In-Reply-To: <20200604074606.266213-14-david@fromorbit.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=IkcTkHD0fZMA:10 a=nTHF0DUjJn0A:10 a=5KLPUuaC_9wA:10 a=JfrnYn6hAAAA:8
-        a=7-415B0cAAAA:8 a=Ta0clAhtVI-YSBJ3DlQA:9 a=J8Q19hsgq330FmqU:21
-        a=uNIap141QPGCy0-l:21 a=QEXdDO2ut3YA:10 a=1CNFftbPRP8L7MoqJWF3:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8
+        a=1Txx6-oBkrdBIOE7CJkA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
+        a=CjuIK1q_8ugA:10
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 04, 2020 at 07:51:07AM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 04, 2020 at 03:37:42PM +0800, Ruan Shiyang wrote:
-> > 
-> > 
-> > On 2020/4/28 下午2:43, Dave Chinner wrote:
-> > > On Tue, Apr 28, 2020 at 06:09:47AM +0000, Ruan, Shiyang wrote:
-> > > > 
-> > > > 在 2020/4/27 20:28:36, "Matthew Wilcox" <willy@infradead.org> 写道:
-> > > > 
-> > > > > On Mon, Apr 27, 2020 at 04:47:42PM +0800, Shiyang Ruan wrote:
-> > > > > >   This patchset is a try to resolve the shared 'page cache' problem for
-> > > > > >   fsdax.
-> > > > > > 
-> > > > > >   In order to track multiple mappings and indexes on one page, I
-> > > > > >   introduced a dax-rmap rb-tree to manage the relationship.  A dax entry
-> > > > > >   will be associated more than once if is shared.  At the second time we
-> > > > > >   associate this entry, we create this rb-tree and store its root in
-> > > > > >   page->private(not used in fsdax).  Insert (->mapping, ->index) when
-> > > > > >   dax_associate_entry() and delete it when dax_disassociate_entry().
-> > > > > 
-> > > > > Do we really want to track all of this on a per-page basis?  I would
-> > > > > have thought a per-extent basis was more useful.  Essentially, create
-> > > > > a new address_space for each shared extent.  Per page just seems like
-> > > > > a huge overhead.
-> > > > > 
-> > > > Per-extent tracking is a nice idea for me.  I haven't thought of it
-> > > > yet...
-> > > > 
-> > > > But the extent info is maintained by filesystem.  I think we need a way
-> > > > to obtain this info from FS when associating a page.  May be a bit
-> > > > complicated.  Let me think about it...
-> > > 
-> > > That's why I want the -user of this association- to do a filesystem
-> > > callout instead of keeping it's own naive tracking infrastructure.
-> > > The filesystem can do an efficient, on-demand reverse mapping lookup
-> > > from it's own extent tracking infrastructure, and there's zero
-> > > runtime overhead when there are no errors present.
-> > 
-> > Hi Dave,
-> > 
-> > I ran into some difficulties when trying to implement the per-extent rmap
-> > tracking.  So, I re-read your comments and found that I was misunderstanding
-> > what you described here.
-> > 
-> > I think what you mean is: we don't need the in-memory dax-rmap tracking now.
-> > Just ask the FS for the owner's information that associate with one page
-> > when memory-failure.  So, the per-page (even per-extent) dax-rmap is
-> > needless in this case.  Is this right?
-> 
-> Right.  XFS already has its own rmap tree.
 
-*nod*
+From: Dave Chinner <dchinner@redhat.com>
 
-> > Based on this, we only need to store the extent information of a fsdax page
-> > in its ->mapping (by searching from FS).  Then obtain the owners of this
-> > page (also by searching from FS) when memory-failure or other rmap case
-> > occurs.
-> 
-> I don't even think you need that much.  All you need is the "physical"
-> offset of that page within the pmem device (e.g. 'this is the 307th 4k
-> page == offset 1257472 since the start of /dev/pmem0') and xfs can look
-> up the owner of that range of physical storage and deal with it as
-> needed.
+Currently when a buffer with attached log items has an IO error
+it called ->iop_error for each attched log item. These all call
+xfs_set_li_failed() to handle the error, but we are about to change
+the way log items manage buffers. hence we first need to remove the
+per-item dependency on buffer handling done by xfs_set_li_failed().
 
-Right. If we have the dax device associated with the page that had
-the failure, then we can determine the offset of the page into the
-block device address space and that's all we need to find the owner
-of the page in the filesystem.
+We already have specific buffer type IO completion routines, so move
+the log item error handling out of the generic error handling and
+into the log item specific functions so we can implement per-type
+error handling easily.
 
-Note that there may actually be no owner - the page that had the
-fault might land in free space, in which case we can simply zero
-the page and clear the error.
+This requires a more complex return value from the error handling
+code so that we can take the correct action the failure handling
+requires.  This results in some repeated boilerplate in the
+functions, but that can be cleaned up later once all the changes
+cascade through this code.
 
-> > So, a fsdax page is no longer associated with a specific file, but with a
-> > FS(or the pmem device).  I think it's easier to understand and implement.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+V2: fix buffer retry selection logic braino.
 
-Effectively, yes. But we shouldn't need to actually associate the
-page with anything at the filesystem level because it is already
-associated with a DAX device at a lower level via a dev_pagemap.
-The hardware page fault already runs thought this code
-memory_failure_dev_pagemap() before it gets to the DAX code, so
-really all we need to is have that function pass us the page, offset
-into the device and, say, the struct dax_device associated with that
-page so we can get to the filesystem superblock we can then use for
-rmap lookups on...
+ fs/xfs/xfs_buf_item.c | 214 +++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 144 insertions(+), 70 deletions(-)
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 09bfe9c52dbdb..f80fc5bd3bffa 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -986,21 +986,24 @@ xfs_buf_do_callbacks_fail(
+ 	spin_unlock(&ailp->ail_lock);
+ }
+ 
++/*
++ * Decide if we're going to retry the write after a failure, and prepare
++ * the buffer for retrying the write.
++ */
+ static bool
+-xfs_buf_iodone_callback_error(
++xfs_buf_ioerror_fail_without_retry(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_mount;
+ 	static ulong		lasttime;
+ 	static xfs_buftarg_t	*lasttarg;
+-	struct xfs_error_cfg	*cfg;
+ 
+ 	/*
+ 	 * If we've already decided to shutdown the filesystem because of
+ 	 * I/O errors, there's no point in giving this a retry.
+ 	 */
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+-		goto out_stale;
++		return true;
+ 
+ 	if (bp->b_target != lasttarg ||
+ 	    time_after(jiffies, (lasttime + 5*HZ))) {
+@@ -1011,91 +1014,114 @@ xfs_buf_iodone_callback_error(
+ 
+ 	/* synchronous writes will have callers process the error */
+ 	if (!(bp->b_flags & XBF_ASYNC))
+-		goto out_stale;
+-
+-	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
+-
+-	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
++		return true;
++	return false;
++}
+ 
+-	/*
+-	 * If the write was asynchronous then no one will be looking for the
+-	 * error.  If this is the first failure of this type, clear the error
+-	 * state and write the buffer out again. This means we always retry an
+-	 * async write failure at least once, but we also need to set the buffer
+-	 * up to behave correctly now for repeated failures.
+-	 */
+-	if (!(bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) ||
+-	     bp->b_last_error != bp->b_error) {
+-		bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
+-		bp->b_last_error = bp->b_error;
+-		if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+-		    !bp->b_first_retry_time)
+-			bp->b_first_retry_time = jiffies;
++static bool
++xfs_buf_ioerror_retry(
++	struct xfs_buf		*bp,
++	struct xfs_error_cfg	*cfg)
++{
++	if ((bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) &&
++	    bp->b_last_error == bp->b_error)
++		return false;
+ 
+-		xfs_buf_ioerror(bp, 0);
+-		xfs_buf_submit(bp);
+-		return true;
+-	}
++	bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
++	bp->b_last_error = bp->b_error;
++	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
++	    !bp->b_first_retry_time)
++		bp->b_first_retry_time = jiffies;
++	return true;
++}
+ 
+-	/*
+-	 * Repeated failure on an async write. Take action according to the
+-	 * error configuration we have been set up to use.
+-	 */
++/*
++ * Account for this latest trip around the retry handler, and decide if
++ * we've failed enough times to constitute a permanent failure.
++ */
++static bool
++xfs_buf_ioerror_permanent(
++	struct xfs_buf		*bp,
++	struct xfs_error_cfg	*cfg)
++{
++	struct xfs_mount	*mp = bp->b_mount;
+ 
+ 	if (cfg->max_retries != XFS_ERR_RETRY_FOREVER &&
+ 	    ++bp->b_retries > cfg->max_retries)
+-			goto permanent_error;
++		return true;
+ 	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+ 	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
+-			goto permanent_error;
++		return true;
+ 
+ 	/* At unmount we may treat errors differently */
+ 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
+-		goto permanent_error;
+-
+-	/*
+-	 * Still a transient error, run IO completion failure callbacks and let
+-	 * the higher layers retry the buffer.
+-	 */
+-	xfs_buf_do_callbacks_fail(bp);
+-	xfs_buf_ioerror(bp, 0);
+-	xfs_buf_relse(bp);
+-	return true;
++		return true;
+ 
+-	/*
+-	 * Permanent error - we need to trigger a shutdown if we haven't already
+-	 * to indicate that inconsistency will result from this action.
+-	 */
+-permanent_error:
+-	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+-out_stale:
+-	xfs_buf_stale(bp);
+-	bp->b_flags |= XBF_DONE;
+-	trace_xfs_buf_error_relse(bp, _RET_IP_);
+ 	return false;
+ }
+ 
+-static inline bool
+-xfs_buf_had_callback_errors(
++/*
++ * On a sync write or shutdown we just want to stale the buffer and let the
++ * caller handle the error in bp->b_error appropriately.
++ *
++ * If the write was asynchronous then no one will be looking for the error.  If
++ * this is the first failure of this type, clear the error state and write the
++ * buffer out again. This means we always retry an async write failure at least
++ * once, but we also need to set the buffer up to behave correctly now for
++ * repeated failures.
++ *
++ * If we get repeated async write failures, then we take action according to the
++ * error configuration we have been set up to use.
++ *
++ * Multi-state return value:
++ *
++ * XBF_IOERROR_FINISH: clear IO error retry state and run callback completions
++ * XBF_IOERROR_DONE: resubmitted immediately, do not run any completions
++ * XBF_IOERROR_FAIL: transient error, run failure callback completions and then
++ *    release the buffer
++ */
++enum {
++	XBF_IOERROR_FINISH,
++	XBF_IOERROR_DONE,
++	XBF_IOERROR_FAIL,
++};
++
++static int
++xfs_buf_iodone_error(
+ 	struct xfs_buf		*bp)
+ {
++	struct xfs_mount	*mp = bp->b_mount;
++	struct xfs_error_cfg	*cfg;
+ 
+-	/*
+-	 * If there is an error, process it. Some errors require us to run
+-	 * callbacks after failure processing is done so we detect that and take
+-	 * appropriate action.
+-	 */
+-	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
+-		return true;
++	if (xfs_buf_ioerror_fail_without_retry(bp))
++		goto out_stale;
++
++	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
++
++	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
++	if (xfs_buf_ioerror_retry(bp, cfg)) {
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_submit(bp);
++		return XBF_IOERROR_DONE;
++	}
+ 
+ 	/*
+-	 * Successful IO or permanent error. Either way, we can clear the
+-	 * retry state here in preparation for the next error that may occur.
++	 * Permanent error - we need to trigger a shutdown if we haven't already
++	 * to indicate that inconsistency will result from this action.
+ 	 */
+-	bp->b_last_error = 0;
+-	bp->b_retries = 0;
+-	bp->b_first_retry_time = 0;
+-	return false;
++	if (xfs_buf_ioerror_permanent(bp, cfg)) {
++		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
++		goto out_stale;
++	}
++
++	/* Still considered a transient error. Caller will schedule retries. */
++	return XBF_IOERROR_FAIL;
++
++out_stale:
++	xfs_buf_stale(bp);
++	bp->b_flags |= XBF_DONE;
++	trace_xfs_buf_error_relse(bp, _RET_IP_);
++	return XBF_IOERROR_FINISH;
+ }
+ 
+ static void
+@@ -1122,6 +1148,15 @@ xfs_buf_item_done(
+ 	xfs_buf_rele(bp);
+ }
+ 
++static inline void
++xfs_buf_clear_ioerror_retry_state(
++	struct xfs_buf		*bp)
++{
++	bp->b_last_error = 0;
++	bp->b_retries = 0;
++	bp->b_first_retry_time = 0;
++}
++
+ /*
+  * Inode buffer iodone callback function.
+  */
+@@ -1129,9 +1164,22 @@ void
+ xfs_buf_inode_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_buf_had_callback_errors(bp))
++	if (bp->b_error) {
++		int ret = xfs_buf_iodone_error(bp);
++
++		if (ret == XBF_IOERROR_FINISH)
++			goto finish_iodone;
++		if (ret == XBF_IOERROR_DONE)
++			return;
++		ASSERT(ret == XBF_IOERROR_FAIL);
++		xfs_buf_do_callbacks_fail(bp);
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_relse(bp);
+ 		return;
++	}
+ 
++finish_iodone:
++	xfs_buf_clear_ioerror_retry_state(bp);
+ 	xfs_buf_item_done(bp);
+ 	xfs_iflush_done(bp);
+ 	xfs_buf_ioend_finish(bp);
+@@ -1144,9 +1192,22 @@ void
+ xfs_buf_dquot_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_buf_had_callback_errors(bp))
++	if (bp->b_error) {
++		int ret = xfs_buf_iodone_error(bp);
++
++		if (ret == XBF_IOERROR_FINISH)
++			goto finish_iodone;
++		if (ret == XBF_IOERROR_DONE)
++			return;
++		ASSERT(ret == XBF_IOERROR_FAIL);
++		xfs_buf_do_callbacks_fail(bp);
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_relse(bp);
+ 		return;
++	}
+ 
++finish_iodone:
++	xfs_buf_clear_ioerror_retry_state(bp);
+ 	/* a newly allocated dquot buffer might have a log item attached */
+ 	xfs_buf_item_done(bp);
+ 	xfs_dquot_done(bp);
+@@ -1163,9 +1224,22 @@ void
+ xfs_buf_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	if (xfs_buf_had_callback_errors(bp))
++	if (bp->b_error) {
++		int ret = xfs_buf_iodone_error(bp);
++
++		if (ret == XBF_IOERROR_FINISH)
++			goto finish_iodone;
++		if (ret == XBF_IOERROR_DONE)
++			return;
++		ASSERT(ret == XBF_IOERROR_FAIL);
++		xfs_buf_do_callbacks_fail(bp);
++		xfs_buf_ioerror(bp, 0);
++		xfs_buf_relse(bp);
+ 		return;
++	}
+ 
++finish_iodone:
++	xfs_buf_clear_ioerror_retry_state(bp);
+ 	xfs_buf_item_done(bp);
+ 	xfs_buf_ioend_finish(bp);
+ }
