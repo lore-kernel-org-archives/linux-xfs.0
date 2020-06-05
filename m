@@ -7,159 +7,158 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98B11C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 16:25:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B638C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 16:26:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74FA82074B
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 16:25:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A5812074B
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 16:26:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vy83ry+q"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AZgK/Mg3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726040AbgFEQZv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 5 Jun 2020 12:25:51 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:40911 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726024AbgFEQZu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jun 2020 12:25:50 -0400
+        id S1727120AbgFEQ0V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 5 Jun 2020 12:26:21 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:51435 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727081AbgFEQ0R (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jun 2020 12:26:17 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1591374349;
+        s=mimecast20190719; t=1591374376;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=XWHf3303o24b93+WocBKkZTEpUapxdeN6iqSCQ2Y2Fs=;
-        b=Vy83ry+qn/6H1zXHu+43Y7kYt3mB/UTW80XgO2FljMrIfKDs+ZVhweVdjCWUvBJRsLQNsO
-        ICCLzPRK9fQkxWOHi/uwMBgN42UxH8s8SpB0BA6iOYSL1iFFp1YXmqQTmSYrSLaemvjSHY
-        mIpKC3J2MoK4s4QsrwLrQB6m9oDXQGU=
+        bh=qzdDp4WGyQ6SHKJNB4/xXlXw59avDOeUSv8Rb5xajaU=;
+        b=AZgK/Mg3R1IFa5aix1kBcHExmjmQ/LtmENPRVbSHjlx0xlitt8oonwdNO2lgFGnes6xlNM
+        ndpUEA/Dw8vT1mmhWqyvJOFRfsah+ra4jemrWipngfSTK4hgwm+XB0TynIOMHcPIc9TGbW
+        vJI2hjl7ortQbw25vGf8SlGhJR58FkY=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-128-wbKGthHpMlOZa1T8ckGFRQ-1; Fri, 05 Jun 2020 12:25:47 -0400
-X-MC-Unique: wbKGthHpMlOZa1T8ckGFRQ-1
+ us-mta-263-jOVef61NPIWHBJzFDGQFQw-1; Fri, 05 Jun 2020 12:26:14 -0400
+X-MC-Unique: jOVef61NPIWHBJzFDGQFQw-1
 Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5A419800688;
-        Fri,  5 Jun 2020 16:25:46 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A0CC5107ACCA;
+        Fri,  5 Jun 2020 16:26:13 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 146F3108BA;
-        Fri,  5 Jun 2020 16:25:45 +0000 (UTC)
-Date:   Fri, 5 Jun 2020 12:25:44 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 33ADC19932;
+        Fri,  5 Jun 2020 16:26:13 +0000 (UTC)
+Date:   Fri, 5 Jun 2020 12:26:11 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 18/30] xfs: remove IO submission from xfs_reclaim_inode()
-Message-ID: <20200605162544.GB23747@bfoster>
+Subject: Re: [PATCH 19/30] xfs: allow multiple reclaimers per AG
+Message-ID: <20200605162611.GC23747@bfoster>
 References: <20200604074606.266213-1-david@fromorbit.com>
- <20200604074606.266213-19-david@fromorbit.com>
- <20200604180814.GG17815@bfoster>
- <20200604225342.GT2040@dread.disaster.area>
+ <20200604074606.266213-20-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200604225342.GT2040@dread.disaster.area>
+In-Reply-To: <20200604074606.266213-20-david@fromorbit.com>
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 05, 2020 at 08:53:42AM +1000, Dave Chinner wrote:
-> On Thu, Jun 04, 2020 at 02:08:14PM -0400, Brian Foster wrote:
-> > On Thu, Jun 04, 2020 at 05:45:54PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > We no longer need to issue IO from shrinker based inode reclaim to
-> > > prevent spurious OOM killer invocation. This leaves only the global
-> > > filesystem management operations such as unmount needing to
-> > > writeback dirty inodes and reclaim them.
-> > > 
-> > > Instead of using the reclaim pass to write dirty inodes before
-> > > reclaiming them, use the AIL to push all the dirty inodes before we
-> > > try to reclaim them. This allows us to remove all the conditional
-> > > SYNC_WAIT locking and the writeback code from xfs_reclaim_inode()
-> > > and greatly simplify the checks we need to do to reclaim an inode.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_icache.c | 117 ++++++++++++--------------------------------
-> > >  1 file changed, 31 insertions(+), 86 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> > > index a6780942034fc..74032316ce5cc 100644
-> > > --- a/fs/xfs/xfs_icache.c
-> > > +++ b/fs/xfs/xfs_icache.c
-> > ...
-> > > @@ -1341,9 +1288,8 @@ xfs_reclaim_inodes_ag(
-> > >  			for (i = 0; i < nr_found; i++) {
-> > >  				if (!batch[i])
-> > >  					continue;
-> > > -				error = xfs_reclaim_inode(batch[i], pag, flags);
-> > > -				if (error && last_error != -EFSCORRUPTED)
-> > > -					last_error = error;
-> > > +				if (!xfs_reclaim_inode(batch[i], pag, flags))
-> > > +					skipped++;
-> > 
-> > Just a note that I find it a little bit of a landmine that skipped is
-> > bumped on trylock failure of the perag reclaim lock when the
-> > xfs_reclaim_inodes() caller can now spin on that.
+On Thu, Jun 04, 2020 at 05:45:55PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Intentional, because without bumping skipped on perag reclaim lock
-> failure we can silently skip entire AGs when doing blocking reclaim
-> and xfs_reclaim_inodes() fails to reclaim all inodes in the cache.
+> Inode reclaim will still throttle direct reclaim on the per-ag
+> reclaim locks. This is no longer necessary as reclaim can run
+> non-blocking now. Hence we can remove these locks so that we don't
+> arbitrarily block reclaimers just because there are more direct
+> reclaimers than there are AGs.
 > 
-> It's only necessary to work around fatal bugs this patch exposes
-> for the brief period that this infrastructure is being torn down by
-> this patchset....
+> This can result in multiple reclaimers working on the same range of
+> an AG, but this doesn't cause any apparent issues. Optimising the
+> spread of concurrent reclaimers for best efficiency can be done in a
+> future patchset.
 > 
-> > It doesn't appear to
-> > be an issue with current users, though (xfs_reclaim_workers() passes
-> > SYNC_TRYLOCK but not SYNC_WAIT).
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_icache.c | 31 ++++++++++++-------------------
+>  fs/xfs/xfs_mount.c  |  4 ----
+>  fs/xfs/xfs_mount.h  |  1 -
+>  3 files changed, 12 insertions(+), 24 deletions(-)
 > 
-> xfs_reclaim_workers() is optimisitic, background reclaim, so we
-> just don't care if it skips over things. We just don't want it to
-> block.
-> 
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index 74032316ce5cc..c4ba8d7bc45bc 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+...
+> @@ -1298,11 +1293,9 @@ xfs_reclaim_inodes_ag(
+>  
+>  		} while (nr_found && !done && *nr_to_scan > 0);
+>  
+> -		if (trylock && !done)
+> -			pag->pag_ici_reclaim_cursor = first_index;
+> -		else
+> -			pag->pag_ici_reclaim_cursor = 0;
+> -		mutex_unlock(&pag->pag_ici_reclaim_lock);
+> +		if (done)
+> +			first_index = 0;
+> +		WRITE_ONCE(pag->pag_ici_reclaim_cursor, first_index);
 
-Sure, I'm just warning that this puts in place infrastructure that is
-easily possible to misuse in a way that could lead to livelocks. If it's
-torn done by the end of the series then it's not a problem. If not, we
-should probably consider hardening it somehow or another after the
-series so we don't leave ourselves a landmine to step on.
+I thought the [READ|WRITE]_ONCE() macros had to do with ordering, not
+necessarily atomicity. Is this write safe if we're running a 32-bit
+kernel, for example? Outside of that the broader functional change seems
+reasonable.
 
 Brian
 
-> > >  			}
-> > >  
-> > >  			*nr_to_scan -= XFS_LOOKUP_BATCH;
-> > ...
-> > > @@ -1380,8 +1314,18 @@ xfs_reclaim_inodes(
-> > >  	int		mode)
-> > >  {
-> > >  	int		nr_to_scan = INT_MAX;
-> > > +	int		skipped;
-> > >  
-> > > -	return xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
-> > > +	xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
-> > > +	if (!(mode & SYNC_WAIT))
-> > > +		return 0;
-> > > +
-> > 
-> > Any reason we fall into the loop below if SYNC_WAIT was passed but the
-> > above xfs_reclaim_inodes_ag() call would have returned 0?
-> 
-> Same thing again. It's temporary to maintain correctness while one
-> thing at time is removed from the reclaim code. This code goes away
-> in the same patch that makes SYNC_WAIT go away.
-> 
-> > Looks reasonable other than that inefficiency:
-> > 
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> Thanks!
-> 
-> -Dave.
+>  		xfs_perag_put(pag);
+>  	}
+>  	return skipped;
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index d5dcf98698600..03158b42a1943 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -148,7 +148,6 @@ xfs_free_perag(
+>  		ASSERT(atomic_read(&pag->pag_ref) == 0);
+>  		xfs_iunlink_destroy(pag);
+>  		xfs_buf_hash_destroy(pag);
+> -		mutex_destroy(&pag->pag_ici_reclaim_lock);
+>  		call_rcu(&pag->rcu_head, __xfs_free_perag);
+>  	}
+>  }
+> @@ -200,7 +199,6 @@ xfs_initialize_perag(
+>  		pag->pag_agno = index;
+>  		pag->pag_mount = mp;
+>  		spin_lock_init(&pag->pag_ici_lock);
+> -		mutex_init(&pag->pag_ici_reclaim_lock);
+>  		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
+>  		if (xfs_buf_hash_init(pag))
+>  			goto out_free_pag;
+> @@ -242,7 +240,6 @@ xfs_initialize_perag(
+>  out_hash_destroy:
+>  	xfs_buf_hash_destroy(pag);
+>  out_free_pag:
+> -	mutex_destroy(&pag->pag_ici_reclaim_lock);
+>  	kmem_free(pag);
+>  out_unwind_new_pags:
+>  	/* unwind any prior newly initialized pags */
+> @@ -252,7 +249,6 @@ xfs_initialize_perag(
+>  			break;
+>  		xfs_buf_hash_destroy(pag);
+>  		xfs_iunlink_destroy(pag);
+> -		mutex_destroy(&pag->pag_ici_reclaim_lock);
+>  		kmem_free(pag);
+>  	}
+>  	return error;
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 3725d25ad97e8..a72cfcaa4ad12 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -354,7 +354,6 @@ typedef struct xfs_perag {
+>  	spinlock_t	pag_ici_lock;	/* incore inode cache lock */
+>  	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
+>  	int		pag_ici_reclaimable;	/* reclaimable inodes */
+> -	struct mutex	pag_ici_reclaim_lock;	/* serialisation point */
+>  	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
+>  
+>  	/* buffer cache index */
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.26.2.761.g0e0b3e54be
 > 
 
