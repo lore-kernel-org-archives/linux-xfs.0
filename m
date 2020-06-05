@@ -2,375 +2,135 @@ Return-Path: <SRS0=6H2z=7S=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 283EEC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:32:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02DA2C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:45:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F34AD207DA
-	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:32:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB40B2074B
+	for <linux-xfs@archiver.kernel.org>; Fri,  5 Jun 2020 01:45:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C/UVxeVB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726072AbgFEBcs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 4 Jun 2020 21:32:48 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45080 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726068AbgFEBcs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 21:32:48 -0400
-Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 44C673A3A41
-        for <linux-xfs@vger.kernel.org>; Fri,  5 Jun 2020 11:32:43 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jh1Dq-00026j-Vx
-        for linux-xfs@vger.kernel.org; Fri, 05 Jun 2020 11:32:38 +1000
-Date:   Fri, 5 Jun 2020 11:32:38 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 13/30 V2] xfs: handle buffer log item IO errors directly
-Message-ID: <20200605013238.GA2040@dread.disaster.area>
-References: <20200604074606.266213-1-david@fromorbit.com>
- <20200604074606.266213-14-david@fromorbit.com>
+        id S1725883AbgFEBpC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 4 Jun 2020 21:45:02 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:47337 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725863AbgFEBpB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jun 2020 21:45:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1591321500;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=f/TCsD0DgpoPE3QWXJH5c+Zt8vsWf9D7Rw44sdCwBU0=;
+        b=C/UVxeVBe/geqdTQ18jefbluoX5leLuUwgO8LnqBLpu6s+ZDQCVrK1e4AV0m7yAmU5w/yn
+        QZtgGMB8Zv90qj7FFPlt/pNYJ+bs3fBEdD9dGzBJBH/4H2AalgysLvcCyrT+PXFn2G2nJb
+        0a/axicyLld/9+edTqNf5XAtg3eEAv8=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-458-kSRHODoWN_KAg1SsQ4Zssw-1; Thu, 04 Jun 2020 21:44:59 -0400
+X-MC-Unique: kSRHODoWN_KAg1SsQ4Zssw-1
+Received: by mail-pf1-f198.google.com with SMTP id m11so2536894pfh.22
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Jun 2020 18:44:59 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=f/TCsD0DgpoPE3QWXJH5c+Zt8vsWf9D7Rw44sdCwBU0=;
+        b=XZlhE0Z7z3wt+rFuudiPHliUSb3DXwATFnWTZPAKTD7ag7P8lmF3KbXGVLmy8E2Jey
+         IChfDFQfH5uzXsfVGRndcrA67w4vV+Py9cwTeGtPRRTIt6+50XA0MY9uSo4UUioGUf2N
+         7bbRu9dwdUMym85T+hUmyGp5qBAFk7qX9bkuIpa7sh7Khj7Fzy+4SzThTmhPel5qtkAr
+         x+m2hxfQ3mT4WQsWe9gx4UVambbfMtsSNlq86r+1fVrxpGyrWIET1Wm7YCYJyYNRI355
+         2CRrz7vBgVjvmDeFV0Ft1d0urC8aHlu4IO6maIxNsxfIamhLntGSb0yciifuj61JTtKT
+         69iw==
+X-Gm-Message-State: AOAM533gan3pa+Q8dReRa/b9B6rifwG1mhEyQlriykGmqSL+s0Gs080k
+        JOd2V2GRFCuiG9qQ9NvBGknPdXQnqq6TJ0i2zh2KNIgmVYH8Kmr/wuWIJu4MOy+n6ancNv8O8p4
+        OcIxrD3HjY1LMpB1aZEyh
+X-Received: by 2002:a63:4b0a:: with SMTP id y10mr7190479pga.57.1591321498328;
+        Thu, 04 Jun 2020 18:44:58 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyXkWrD5FcDA/SQTB5j6whFpEIxgWr+Uvu5JQb0NGj8hXekB/BcOCsNRjPwRjGFzcZI8dVa9A==
+X-Received: by 2002:a63:4b0a:: with SMTP id y10mr7190463pga.57.1591321498075;
+        Thu, 04 Jun 2020 18:44:58 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id x14sm1217317pfq.80.2020.06.04.18.44.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 04 Jun 2020 18:44:57 -0700 (PDT)
+Date:   Fri, 5 Jun 2020 09:44:47 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2] xfs: get rid of unnecessary xfs_perag_{get,put} pairs
+Message-ID: <20200605014447.GA25293@xiangao.remote.csb>
+References: <20200602145238.1512-1-hsiangkao@redhat.com>
+ <20200603121156.3399-1-hsiangkao@redhat.com>
+ <20200604215917.GS2040@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200604074606.266213-14-david@fromorbit.com>
+In-Reply-To: <20200604215917.GS2040@dread.disaster.area>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8
-        a=1Txx6-oBkrdBIOE7CJkA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
-        a=CjuIK1q_8ugA:10
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, Jun 05, 2020 at 07:59:17AM +1000, Dave Chinner wrote:
+> On Wed, Jun 03, 2020 at 08:11:56PM +0800, Gao Xiang wrote:
 
-From: Dave Chinner <dchinner@redhat.com>
+...
 
-Currently when a buffer with attached log items has an IO error
-it called ->iop_error for each attched log item. These all call
-xfs_set_li_failed() to handle the error, but we are about to change
-the way log items manage buffers. hence we first need to remove the
-per-item dependency on buffer handling done by xfs_set_li_failed().
+> 
+> Ok, I think we had a small misunderstanding there. I was trying to
+> say the asserts that were in the first patch were fine, but we
+> didn't really need any more because the new asserts mostly matched
+> an existing pattern.
+> 
+> I wasn't suggesting that we do this everywhere:
+> 
+> > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> > index 9d84007a5c65..4b8c7cb87b84 100644
+> > --- a/fs/xfs/libxfs/xfs_ag.c
+> > +++ b/fs/xfs/libxfs/xfs_ag.c
+> > @@ -563,7 +563,9 @@ xfs_ag_get_geometry(
+> >  	error = xfs_alloc_read_agf(mp, NULL, agno, 0, &agf_bp);
+> >  	if (error)
+> >  		goto out_agi;
+> > -	pag = xfs_perag_get(mp, agno);
+> > +
+> > +	pag = agi_bp->b_pag;
+> > +	ASSERT(pag->pag_agno == agno);
+> 
+> .... because we've already checked this in xfs_ialloc_read_agi() a
+> few lines of code back up the function.
+> 
+> That's the pattern I was refering to - we tend to check
+> relationships when they are first brought into a context, then we
+> don't need to check them again in that context.  Hence the asserts
+> in xfs_ialloc_read_agi() and xfs_alloc_read_agf() effectively cover
+> all the places where we pull the pag from those buffers, and so
+> there's no need to validate the correct perag is attached to the
+> buffer every time we access it....
 
-We already have specific buffer type IO completion routines, so move
-the log item error handling out of the generic error handling and
-into the log item specific functions so we can implement per-type
-error handling easily.
+Sorry about that, I folded in ASSERTs of my debugging code at that time.
+Because that is the straight way to check if somewhere has strange due
+to my modification, but some are unnecessary really, I didn't check that,
+sorry about that. I will check again and remove unneeded ASSERTs
+in the next version.
 
-This requires a more complex return value from the error handling
-code so that we can take the correct action the failure handling
-requires.  This results in some repeated boilerplate in the
-functions, but that can be cleaned up later once all the changes
-cascade through this code.
+Thanks,
+Gao Xiang
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
-V2: fix buffer retry selection logic braino.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
- fs/xfs/xfs_buf_item.c | 214 +++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 144 insertions(+), 70 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 09bfe9c52dbdb..f80fc5bd3bffa 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -986,21 +986,24 @@ xfs_buf_do_callbacks_fail(
- 	spin_unlock(&ailp->ail_lock);
- }
- 
-+/*
-+ * Decide if we're going to retry the write after a failure, and prepare
-+ * the buffer for retrying the write.
-+ */
- static bool
--xfs_buf_iodone_callback_error(
-+xfs_buf_ioerror_fail_without_retry(
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_mount	*mp = bp->b_mount;
- 	static ulong		lasttime;
- 	static xfs_buftarg_t	*lasttarg;
--	struct xfs_error_cfg	*cfg;
- 
- 	/*
- 	 * If we've already decided to shutdown the filesystem because of
- 	 * I/O errors, there's no point in giving this a retry.
- 	 */
- 	if (XFS_FORCED_SHUTDOWN(mp))
--		goto out_stale;
-+		return true;
- 
- 	if (bp->b_target != lasttarg ||
- 	    time_after(jiffies, (lasttime + 5*HZ))) {
-@@ -1011,91 +1014,114 @@ xfs_buf_iodone_callback_error(
- 
- 	/* synchronous writes will have callers process the error */
- 	if (!(bp->b_flags & XBF_ASYNC))
--		goto out_stale;
--
--	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
--
--	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
-+		return true;
-+	return false;
-+}
- 
--	/*
--	 * If the write was asynchronous then no one will be looking for the
--	 * error.  If this is the first failure of this type, clear the error
--	 * state and write the buffer out again. This means we always retry an
--	 * async write failure at least once, but we also need to set the buffer
--	 * up to behave correctly now for repeated failures.
--	 */
--	if (!(bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) ||
--	     bp->b_last_error != bp->b_error) {
--		bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
--		bp->b_last_error = bp->b_error;
--		if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
--		    !bp->b_first_retry_time)
--			bp->b_first_retry_time = jiffies;
-+static bool
-+xfs_buf_ioerror_retry(
-+	struct xfs_buf		*bp,
-+	struct xfs_error_cfg	*cfg)
-+{
-+	if ((bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) &&
-+	    bp->b_last_error == bp->b_error)
-+		return false;
- 
--		xfs_buf_ioerror(bp, 0);
--		xfs_buf_submit(bp);
--		return true;
--	}
-+	bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
-+	bp->b_last_error = bp->b_error;
-+	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
-+	    !bp->b_first_retry_time)
-+		bp->b_first_retry_time = jiffies;
-+	return true;
-+}
- 
--	/*
--	 * Repeated failure on an async write. Take action according to the
--	 * error configuration we have been set up to use.
--	 */
-+/*
-+ * Account for this latest trip around the retry handler, and decide if
-+ * we've failed enough times to constitute a permanent failure.
-+ */
-+static bool
-+xfs_buf_ioerror_permanent(
-+	struct xfs_buf		*bp,
-+	struct xfs_error_cfg	*cfg)
-+{
-+	struct xfs_mount	*mp = bp->b_mount;
- 
- 	if (cfg->max_retries != XFS_ERR_RETRY_FOREVER &&
- 	    ++bp->b_retries > cfg->max_retries)
--			goto permanent_error;
-+		return true;
- 	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
- 	    time_after(jiffies, cfg->retry_timeout + bp->b_first_retry_time))
--			goto permanent_error;
-+		return true;
- 
- 	/* At unmount we may treat errors differently */
- 	if ((mp->m_flags & XFS_MOUNT_UNMOUNTING) && mp->m_fail_unmount)
--		goto permanent_error;
--
--	/*
--	 * Still a transient error, run IO completion failure callbacks and let
--	 * the higher layers retry the buffer.
--	 */
--	xfs_buf_do_callbacks_fail(bp);
--	xfs_buf_ioerror(bp, 0);
--	xfs_buf_relse(bp);
--	return true;
-+		return true;
- 
--	/*
--	 * Permanent error - we need to trigger a shutdown if we haven't already
--	 * to indicate that inconsistency will result from this action.
--	 */
--permanent_error:
--	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
--out_stale:
--	xfs_buf_stale(bp);
--	bp->b_flags |= XBF_DONE;
--	trace_xfs_buf_error_relse(bp, _RET_IP_);
- 	return false;
- }
- 
--static inline bool
--xfs_buf_had_callback_errors(
-+/*
-+ * On a sync write or shutdown we just want to stale the buffer and let the
-+ * caller handle the error in bp->b_error appropriately.
-+ *
-+ * If the write was asynchronous then no one will be looking for the error.  If
-+ * this is the first failure of this type, clear the error state and write the
-+ * buffer out again. This means we always retry an async write failure at least
-+ * once, but we also need to set the buffer up to behave correctly now for
-+ * repeated failures.
-+ *
-+ * If we get repeated async write failures, then we take action according to the
-+ * error configuration we have been set up to use.
-+ *
-+ * Multi-state return value:
-+ *
-+ * XBF_IOERROR_FINISH: clear IO error retry state and run callback completions
-+ * XBF_IOERROR_DONE: resubmitted immediately, do not run any completions
-+ * XBF_IOERROR_FAIL: transient error, run failure callback completions and then
-+ *    release the buffer
-+ */
-+enum {
-+	XBF_IOERROR_FINISH,
-+	XBF_IOERROR_DONE,
-+	XBF_IOERROR_FAIL,
-+};
-+
-+static int
-+xfs_buf_iodone_error(
- 	struct xfs_buf		*bp)
- {
-+	struct xfs_mount	*mp = bp->b_mount;
-+	struct xfs_error_cfg	*cfg;
- 
--	/*
--	 * If there is an error, process it. Some errors require us to run
--	 * callbacks after failure processing is done so we detect that and take
--	 * appropriate action.
--	 */
--	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
--		return true;
-+	if (xfs_buf_ioerror_fail_without_retry(bp))
-+		goto out_stale;
-+
-+	trace_xfs_buf_item_iodone_async(bp, _RET_IP_);
-+
-+	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
-+	if (xfs_buf_ioerror_retry(bp, cfg)) {
-+		xfs_buf_ioerror(bp, 0);
-+		xfs_buf_submit(bp);
-+		return XBF_IOERROR_DONE;
-+	}
- 
- 	/*
--	 * Successful IO or permanent error. Either way, we can clear the
--	 * retry state here in preparation for the next error that may occur.
-+	 * Permanent error - we need to trigger a shutdown if we haven't already
-+	 * to indicate that inconsistency will result from this action.
- 	 */
--	bp->b_last_error = 0;
--	bp->b_retries = 0;
--	bp->b_first_retry_time = 0;
--	return false;
-+	if (xfs_buf_ioerror_permanent(bp, cfg)) {
-+		xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
-+		goto out_stale;
-+	}
-+
-+	/* Still considered a transient error. Caller will schedule retries. */
-+	return XBF_IOERROR_FAIL;
-+
-+out_stale:
-+	xfs_buf_stale(bp);
-+	bp->b_flags |= XBF_DONE;
-+	trace_xfs_buf_error_relse(bp, _RET_IP_);
-+	return XBF_IOERROR_FINISH;
- }
- 
- static void
-@@ -1122,6 +1148,15 @@ xfs_buf_item_done(
- 	xfs_buf_rele(bp);
- }
- 
-+static inline void
-+xfs_buf_clear_ioerror_retry_state(
-+	struct xfs_buf		*bp)
-+{
-+	bp->b_last_error = 0;
-+	bp->b_retries = 0;
-+	bp->b_first_retry_time = 0;
-+}
-+
- /*
-  * Inode buffer iodone callback function.
-  */
-@@ -1129,9 +1164,22 @@ void
- xfs_buf_inode_iodone(
- 	struct xfs_buf		*bp)
- {
--	if (xfs_buf_had_callback_errors(bp))
-+	if (bp->b_error) {
-+		int ret = xfs_buf_iodone_error(bp);
-+
-+		if (ret == XBF_IOERROR_FINISH)
-+			goto finish_iodone;
-+		if (ret == XBF_IOERROR_DONE)
-+			return;
-+		ASSERT(ret == XBF_IOERROR_FAIL);
-+		xfs_buf_do_callbacks_fail(bp);
-+		xfs_buf_ioerror(bp, 0);
-+		xfs_buf_relse(bp);
- 		return;
-+	}
- 
-+finish_iodone:
-+	xfs_buf_clear_ioerror_retry_state(bp);
- 	xfs_buf_item_done(bp);
- 	xfs_iflush_done(bp);
- 	xfs_buf_ioend_finish(bp);
-@@ -1144,9 +1192,22 @@ void
- xfs_buf_dquot_iodone(
- 	struct xfs_buf		*bp)
- {
--	if (xfs_buf_had_callback_errors(bp))
-+	if (bp->b_error) {
-+		int ret = xfs_buf_iodone_error(bp);
-+
-+		if (ret == XBF_IOERROR_FINISH)
-+			goto finish_iodone;
-+		if (ret == XBF_IOERROR_DONE)
-+			return;
-+		ASSERT(ret == XBF_IOERROR_FAIL);
-+		xfs_buf_do_callbacks_fail(bp);
-+		xfs_buf_ioerror(bp, 0);
-+		xfs_buf_relse(bp);
- 		return;
-+	}
- 
-+finish_iodone:
-+	xfs_buf_clear_ioerror_retry_state(bp);
- 	/* a newly allocated dquot buffer might have a log item attached */
- 	xfs_buf_item_done(bp);
- 	xfs_dquot_done(bp);
-@@ -1163,9 +1224,22 @@ void
- xfs_buf_iodone(
- 	struct xfs_buf		*bp)
- {
--	if (xfs_buf_had_callback_errors(bp))
-+	if (bp->b_error) {
-+		int ret = xfs_buf_iodone_error(bp);
-+
-+		if (ret == XBF_IOERROR_FINISH)
-+			goto finish_iodone;
-+		if (ret == XBF_IOERROR_DONE)
-+			return;
-+		ASSERT(ret == XBF_IOERROR_FAIL);
-+		xfs_buf_do_callbacks_fail(bp);
-+		xfs_buf_ioerror(bp, 0);
-+		xfs_buf_relse(bp);
- 		return;
-+	}
- 
-+finish_iodone:
-+	xfs_buf_clear_ioerror_retry_state(bp);
- 	xfs_buf_item_done(bp);
- 	xfs_buf_ioend_finish(bp);
- }
