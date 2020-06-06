@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF1EBC433DF
-	for <linux-xfs@archiver.kernel.org>; Sat,  6 Jun 2020 08:28:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8CE7C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat,  6 Jun 2020 08:28:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0B2F20810
-	for <linux-xfs@archiver.kernel.org>; Sat,  6 Jun 2020 08:28:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F4E920810
+	for <linux-xfs@archiver.kernel.org>; Sat,  6 Jun 2020 08:28:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="I4tiR3Xv"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kUMEY0Vf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728632AbgFFI2X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 6 Jun 2020 04:28:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49430 "EHLO
+        id S1728628AbgFFI23 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 6 Jun 2020 04:28:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49448 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725283AbgFFI2U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Jun 2020 04:28:20 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2384C08C5C2
-        for <linux-xfs@vger.kernel.org>; Sat,  6 Jun 2020 01:28:19 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id p21so6264611pgm.13
-        for <linux-xfs@vger.kernel.org>; Sat, 06 Jun 2020 01:28:19 -0700 (PDT)
+        with ESMTP id S1725283AbgFFI2Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 6 Jun 2020 04:28:25 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85C3FC08C5C2
+        for <linux-xfs@vger.kernel.org>; Sat,  6 Jun 2020 01:28:24 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id v24so4638135plo.6
+        for <linux-xfs@vger.kernel.org>; Sat, 06 Jun 2020 01:28:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=cGwjIzOF/wLm6AC3DNPM0M+L+3oZz86vyou6DH5FeNQ=;
-        b=I4tiR3XvXKeCbZrbxqIZeRhs/8N/YxznIBBxsrk+ucrMkWVK1OaTg5Mg0OCNp8JxTs
-         ANkeKcpahEq5RUycLJsMRcRe15lJrmzdRS53YJed+v3aKn3jFugv3DUC+J8AZxPymVbT
-         YgOIJrFfpxeXpKkdF4Yt8Nx23Asb1U44k/DE/eUPQxxb/cSwqhkwFoZ3sXBTbLpjmSVm
-         CCdnq8BUAtktBxZ6kELadNl34BJfwM3dgHdtkCLR4gzEa0R+cuswM2sRqAtwXmjbP1Fr
-         xXL9GgJSaW9z4/JhYHhJ8tSRjGYGLCWap+Dz4hi2pyxy4jXu4Er+PUOZvb08N3gAy4rE
-         wCQg==
+        bh=9JcFcO7SozB9TEjPs/+E22bMQiEI+K7EyLJdu9Kdm+c=;
+        b=kUMEY0VfTdKHtOZfRZ7xZUji6cgpOOuNHsLSY/D5lJWQnAOO/sav2m+HJvp9GjtXEj
+         L2+Z/f/rGYn/UTGieRJQoyRJz0ZnZU09tDiAM2lW6n0jOFOywwIEHeFeOVz94ytAN+v9
+         T52iPug8kGxDL6BxuCbnqIoO6A1qrqGY98XRY8vzoLxQ2RaVxnu8CsNH0OuPvymTypk8
+         A/7cAxEIooj1adidoGue67GkQaese2hOVmep2i2YwbQZn7/v8QFpHipb3FjchAdWK699
+         SujxScHetpwH5z5hiySBhIlPL8DmUI7azn22G/vhP707IV9/LF3P3QO3MxStWvKSPxdj
+         QZ/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cGwjIzOF/wLm6AC3DNPM0M+L+3oZz86vyou6DH5FeNQ=;
-        b=aB8Idav+OJs0tC1d6qiEI5IkPLMl6AWmtM+b4pGifVKOYy2JE+Z4A83wtHILEH82SO
-         mj/PwwY2eyASxHpLRuV4y8sGLxQ94a2bMPwuDl2h1mJ0LC5O7MFbLm5ltL9GXZ2y9kz9
-         jUjVeL2aRdh6ZH/59loZM+iJJa61AgLumLRkS3xUhXUFJim+0k+MGXynM8ph4asSEEtm
-         Bn9t5QyujSUYk+7TnMa2BIyEHww6vl50GWQtE/ahUjeRyShRggblMjpkmwoF8Lxfuf63
-         IwljV+IqP45qmVVxC0ZiGRW9Xtgk+/Fmzv+WvJRDbTFM/RnQdv2N/MIuIpMiDFC+5Oes
-         GJKA==
-X-Gm-Message-State: AOAM5315SpBxaklYPXPXBRIolmksjCBEfbWCQYkQs0NLHBL15TiZF+58
-        El5sEvatKkrwvbl19J6x4c5ZCH0c
-X-Google-Smtp-Source: ABdhPJxZTV1OvkkMzhkIjNjI4XltkdPux7XjtXbA2oB4kSVoxaeri758xzqAoahLKAR6tDOHjXZobQ==
-X-Received: by 2002:aa7:804a:: with SMTP id y10mr12776849pfm.186.1591432099260;
-        Sat, 06 Jun 2020 01:28:19 -0700 (PDT)
+        bh=9JcFcO7SozB9TEjPs/+E22bMQiEI+K7EyLJdu9Kdm+c=;
+        b=oGcVy3chUFKT3SwBYT4F7uq9qke2EusFJKkJJifP8eh7u5x1qypzOPB0isygWsER6z
+         z1sTVcJxa/pG7s6d05vxGWPlmSgo2IdefvkwHmu4LKux4DUk6BeF4jhUZxQnnOLHsd3v
+         yMvjAvYbEv8Zv7Jpf54B2ya+9c+/Niz64uOYtxCT4KSnrH08ovBRMFNvctuBhNKZ0VIQ
+         JV+kbL2IGPRVUW6DOloxKr7/HfdoGbaLoByYXMfKZgUySsyjuASBL2Q4dlhzBP+Xb2ON
+         4qYukClDAGij224wbf4sstLZuMBztt9xpPVzM8czyjWcIyZt7CVYuTq6zjsh+IAzdZ/t
+         4AjQ==
+X-Gm-Message-State: AOAM531GpgnfhoaLSLJ0nPCVczZl/O9VpqF21RbbEne0KQEIiYc3m8jO
+        ZoPyh3jqJzsBSbxZUUoLE+La4AtE
+X-Google-Smtp-Source: ABdhPJygiU7fLbR62YCblv/E4C2RK1ja1FCknz+GXO47uKHDLO3/uhPj7WFF+d4te7RPWoB/usbmPQ==
+X-Received: by 2002:a17:90b:3690:: with SMTP id mj16mr7174550pjb.104.1591432103660;
+        Sat, 06 Jun 2020 01:28:23 -0700 (PDT)
 Received: from localhost.localdomain ([122.167.144.243])
-        by smtp.gmail.com with ESMTPSA id j3sm1678130pfh.87.2020.06.06.01.28.15
+        by smtp.gmail.com with ESMTPSA id j3sm1678130pfh.87.2020.06.06.01.28.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 06 Jun 2020 01:28:18 -0700 (PDT)
+        Sat, 06 Jun 2020 01:28:23 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, david@fromorbit.com,
         darrick.wong@oracle.com, bfoster@redhat.com, hch@infradead.org
-Subject: [PATCH 3/7] xfs: Compute maximum height of directory BMBT separately
-Date:   Sat,  6 Jun 2020 13:57:41 +0530
-Message-Id: <20200606082745.15174-4-chandanrlinux@gmail.com>
+Subject: [PATCH 4/7] xfs: Add "Use Dir BMBT height" argument to XFS_BM_MAXLEVELS()
+Date:   Sat,  6 Jun 2020 13:57:42 +0530
+Message-Id: <20200606082745.15174-5-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200606082745.15174-1-chandanrlinux@gmail.com>
 References: <20200606082745.15174-1-chandanrlinux@gmail.com>
@@ -75,232 +75,313 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs/306 causes the following call trace when using a data fork with a
-maximum extent count of 2^47,
+XFS_BM_MAXLEVELS() returns the maximum possible height of BMBT tree for
+either data or attribute fork. For data forks, this commit adds a new
+argument to XFS_BM_MAXLEVELS() to let the users choose between the
+maximum heights of dir and non-dir BMBTs.
 
- XFS (loop0): Mounting V5 Filesystem
- XFS (loop0): Log size 8906 blocks too small, minimum size is 9075 blocks
- XFS (loop0): AAIEEE! Log failed size checks. Abort!
- XFS: Assertion failed: 0, file: fs/xfs/xfs_log.c, line: 711
- ------------[ cut here ]------------
- WARNING: CPU: 0 PID: 12821 at fs/xfs/xfs_message.c:112 assfail+0x25/0x28
- Modules linked in:
- CPU: 0 PID: 12821 Comm: mount Tainted: G        W         5.6.0-rc6-next-20200320-chandan-00003-g071c2af3f4de #1
- Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
- RIP: 0010:assfail+0x25/0x28
- Code: ff ff 0f 0b c3 0f 1f 44 00 00 41 89 c8 48 89 d1 48 89 f2 48 c7 c6 40 b7 4b b3 e8 82 f9 ff ff 80 3d 83 d6 64 01 00 74 02 0f $
- RSP: 0018:ffffb05b414cbd78 EFLAGS: 00010246
- RAX: 0000000000000000 RBX: ffff9d9d501d5000 RCX: 0000000000000000
- RDX: 00000000ffffffc0 RSI: 000000000000000a RDI: ffffffffb346dc65
- RBP: ffff9da444b49a80 R08: 0000000000000000 R09: 0000000000000000
- R10: 000000000000000a R11: f000000000000000 R12: 00000000ffffffea
- R13: 000000000000000e R14: 0000000000004594 R15: ffff9d9d501d5628
- FS:  00007fd6c5d17c80(0000) GS:ffff9da44d800000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 0000000000000002 CR3: 00000008a48c0000 CR4: 00000000000006f0
- Call Trace:
-  xfs_log_mount+0xf8/0x300
-  xfs_mountfs+0x46e/0x950
-  xfs_fc_fill_super+0x318/0x510
-  ? xfs_mount_free+0x30/0x30
-  get_tree_bdev+0x15c/0x250
-  vfs_get_tree+0x25/0xb0
-  do_mount+0x740/0x9b0
-  ? memdup_user+0x41/0x80
-  __x64_sys_mount+0x8e/0xd0
-  do_syscall_64+0x48/0x110
-  entry_SYSCALL_64_after_hwframe+0x44/0xa9
- RIP: 0033:0x7fd6c5f2ccda
- Code: 48 8b 0d b9 e1 0b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f $
- RSP: 002b:00007ffe00dfb9f8 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
- RAX: ffffffffffffffda RBX: 0000560c1aaa92c0 RCX: 00007fd6c5f2ccda
- RDX: 0000560c1aaae110 RSI: 0000560c1aaad040 RDI: 0000560c1aaa94d0
- RBP: 00007fd6c607d204 R08: 0000000000000000 R09: 0000560c1aaadde0
- R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
- R13: 0000000000000000 R14: 0000560c1aaa94d0 R15: 0000560c1aaae110
- ---[ end trace 6436391b468bc652 ]---
- XFS (loop0): log mount failed
-
-The corresponding filesystem was created using mkfs options
-"-m rmapbt=1,reflink=1 -b size=1k -d size=20m -n size=64k".
-
-i.e. We have a filesystem of size 20MiB, data block size of 1KiB and
-directory block size of 64KiB. Filesystems of size < 1GiB can have less
-than 10MiB on-disk log (Please refer to calculate_log_size() in
-xfsprogs).
-
-The largest reservation space was contributed by the rename
-operation. The corresponding calculation is done inside
-xfs_calc_rename_reservation(). In this case, the value returned by this
-function is,
-
-xfs_calc_inode_res(mp, 4)
-+ xfs_calc_buf_res(2 * XFS_DIROP_LOG_COUNT(mp), XFS_FSB_TO_B(mp, 1))
-
-xfs_calc_inode_res(mp, 4) returns a constant value of 3040 bytes
-regardless of the maximum data fork extent count.
-
-The largest contribution to the rename operation was by "2 *
-XFS_DIROP_LOG_COUNT(mp)" and it is a function of maximum height of a
-directory's BMBT tree.
-
-XFS_DIROP_LOG_COUNT() is a sum of,
-
-1. The maximum number of dabtree blocks that needs to be logged
-   i.e. XFS_DAENTER_BLOCKS() = XFS_DAENTER_1B(mp,w) *
-   XFS_DAENTER_DBS(mp,w).  For directories, this evaluates
-   to (64 * (XFS_DA_NODE_MAXDEPTH + 2)) = (64 * (5 + 2)) = 448.
-
-2. The corresponding maximum number of BMBT blocks that needs to be
-   logged i.e. XFS_DAENTER_BMAPS() = XFS_DAENTER_DBS(mp,w) *
-   XFS_DAENTER_BMAP1B(mp,w)
-
-   XFS_DAENTER_DBS(mp,w) = XFS_DA_NODE_MAXDEPTH + 2 = 7
-
-   XFS_DAENTER_BMAP1B(mp,w)
-   = XFS_NEXTENTADD_SPACE_RES(mp, XFS_DAENTER_1B(mp, w), w)
-   = XFS_NEXTENTADD_SPACE_RES(mp, 64, w)
-   = ((64 + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) /
-   XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * XFS_EXTENTADD_SPACE_RES(mp, w)
-
-   XFS_MAX_CONTIG_EXTENTS_PER_BLOCK() =
-   mp->m_alloc_mxr[0] - mp->m_alloc_mnr[0] = 121 - 60 = 61
-
-   XFS_DAENTER_BMAP1B(mp,w) =
-   ((64 + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) /
-   XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * XFS_EXTENTADD_SPACE_RES(mp, w)
-   = ((64 + 61 - 1) / 61) * XFS_EXTENTADD_SPACE_RES(mp, w)
-   = 2 * XFS_EXTENTADD_SPACE_RES(mp, w)
-   = 2 * (XFS_BM_MAXLEVELS(mp,w) - 1)
-   = 2 * (8 - 1)
-   = 14
-
-   With 2^32 as the maximum extent count the maximum height of the bmap btree
-   was 7. Now with 2^47 maximum extent count, the height has increased to 8.
-
-   Therefore, XFS_DAENTER_BMAPS() = 7 * 14 = 98.
-
-XFS_DIROP_LOG_COUNT() = 448 + 98 = 546.
-2 * XFS_DIROP_LOG_COUNT() = 2 * 546 = 1092.
-
-With 2^32 max extent count, XFS_DIROP_LOG_COUNT() evaluates to
-533. Hence 2 * XFS_DIROP_LOG_COUNT() = 2 * 533 = 1066.
-
-This small difference of 1092 - 1066 = 26 fs blocks is sufficient to
-trip us over the minimum log size check.
-
-A future commit in this series will use 2^27 as the maximum directory
-extent count. This will result in a shorter directory BMBT tree.  Log
-reservation calculations that are applicable only to
-directories (e.g. XFS_DIROP_LOG_COUNT()) can then choose this instead of
-non-dir data fork BMBT height.
-
-This commit introduces a new member in 'struct xfs_mount' to hold the
-maximum BMBT height of a directory. At present, the maximum height of a
-directory BMBT is the same as a the maximum height of a non-directory
-BMBT. A future commit will change the parameters used as input for
-computing the maximum height of a directory BMBT.
+As of this commit, both dir and non-dir BMBTs have the same maximum
+height. A future commit in this series will use 2^27 extent count as the
+input to compute the maximum height of a directory BMBT which will in
+turn cause the maximum heights of dir and non-dir BMBTs to differ.
 
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 17 ++++++++++++++---
- fs/xfs/libxfs/xfs_bmap.h |  3 ++-
- fs/xfs/xfs_mount.c       |  5 +++--
- fs/xfs/xfs_mount.h       |  1 +
- 4 files changed, 20 insertions(+), 6 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c        |  5 ++--
+ fs/xfs/libxfs/xfs_bmap.c        |  5 ++--
+ fs/xfs/libxfs/xfs_bmap_btree.h  |  4 +++-
+ fs/xfs/libxfs/xfs_trans_resv.c  | 25 +++++++++++---------
+ fs/xfs/libxfs/xfs_trans_resv.h  |  4 ++--
+ fs/xfs/libxfs/xfs_trans_space.h | 41 +++++++++++++++++----------------
+ fs/xfs/xfs_bmap_item.c          |  3 ++-
+ fs/xfs/xfs_reflink.c            |  4 ++--
+ 8 files changed, 50 insertions(+), 41 deletions(-)
 
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index a4b23edf887e..357e29a5a167 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -150,7 +150,7 @@ xfs_attr_calc_size(
+ 	 * "local" or "remote" (note: local != inline).
+ 	 */
+ 	size = xfs_attr_leaf_newentsize(args, local);
+-	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK);
++	nblks = XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK, 0);
+ 	if (*local) {
+ 		if (size > (args->geo->blksize / 2)) {
+ 			/* Double split possible */
+@@ -163,7 +163,8 @@ xfs_attr_calc_size(
+ 		 */
+ 		uint	dblocks = xfs_attr3_rmt_blocks(mp, args->valuelen);
+ 		nblks += dblocks;
+-		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks, XFS_ATTR_FORK);
++		nblks += XFS_NEXTENTADD_SPACE_RES(mp, dblocks,
++				XFS_ATTR_FORK, 0);
+ 	}
+ 
+ 	return nblks;
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 798fca5c52af..01e2b543b139 100644
+index 01e2b543b139..8b0029b3cecf 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -50,7 +50,8 @@ kmem_zone_t		*xfs_bmap_free_item_zone;
- void
- xfs_bmap_compute_maxlevels(
- 	xfs_mount_t	*mp,		/* file system mount structure */
--	int		whichfork)	/* data or attr fork */
-+	int		whichfork,	/* data or attr fork */
-+	int		dir_bmbt)	/* Dir or non-dir data fork */
+@@ -182,13 +182,14 @@ xfs_bmap_worst_indlen(
+ 	mp = ip->i_mount;
+ 	maxrecs = mp->m_bmap_dmxr[0];
+ 	for (level = 0, rval = 0;
+-	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK);
++	     level < XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK, 0);
+ 	     level++) {
+ 		len += maxrecs - 1;
+ 		do_div(len, maxrecs);
+ 		rval += len;
+ 		if (len == 1)
+-			return rval + XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) -
++			return rval +
++				XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK, 0) -
+ 				level - 1;
+ 		if (level == 0)
+ 			maxrecs = mp->m_bmap_dmxr[1];
+diff --git a/fs/xfs/libxfs/xfs_bmap_btree.h b/fs/xfs/libxfs/xfs_bmap_btree.h
+index 72bf74c79fb9..a047be5883d1 100644
+--- a/fs/xfs/libxfs/xfs_bmap_btree.h
++++ b/fs/xfs/libxfs/xfs_bmap_btree.h
+@@ -79,7 +79,9 @@ struct xfs_trans;
+ /*
+  * Maximum number of bmap btree levels.
+  */
+-#define XFS_BM_MAXLEVELS(mp,w)		((mp)->m_bm_maxlevels[(w)])
++#define XFS_BM_MAXLEVELS(mp,w,use_dir_bmbt) \
++	((!(use_dir_bmbt)) ? \
++		(mp)->m_bm_maxlevels[(w)] : (mp)->m_bm_dir_maxlevel)
+ 
+ /*
+  * Prototypes for xfs_bmap.c to call.
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index b44b521c605c..39cfca1b71b6 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -265,14 +265,14 @@ xfs_calc_write_reservation(
+ 	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
+ 
+ 	t1 = xfs_calc_inode_res(mp, 1) +
+-	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), blksz) +
++	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK, 0), blksz) +
+ 	     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+ 	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2), blksz);
+ 
+ 	if (xfs_sb_version_hasrealtime(&mp->m_sb)) {
+ 		t2 = xfs_calc_inode_res(mp, 1) +
+-		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
+-				     blksz) +
++		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK, 0),
++			blksz) +
+ 		     xfs_calc_buf_res(3, mp->m_sb.sb_sectsize) +
+ 		     xfs_calc_buf_res(xfs_rtalloc_log_count(mp, 1), blksz) +
+ 		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1), blksz);
+@@ -313,7 +313,8 @@ xfs_calc_itruncate_reservation(
+ 	unsigned int		blksz = XFS_FSB_TO_B(mp, 1);
+ 
+ 	t1 = xfs_calc_inode_res(mp, 1) +
+-	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK) + 1, blksz);
++	     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK, 0) + 1,
++			     blksz);
+ 
+ 	t2 = xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+ 	     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4), blksz);
+@@ -592,7 +593,7 @@ xfs_calc_growrtalloc_reservation(
+ 	struct xfs_mount	*mp)
  {
- 	int		level;		/* btree level */
- 	uint		maxblocks;	/* max blocks at this level */
-@@ -60,6 +61,9 @@ xfs_bmap_compute_maxlevels(
- 	int		minnoderecs;	/* min records in node block */
- 	int		sz;		/* root block size */
+ 	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+-		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK),
++		xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK, 0),
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+@@ -669,7 +670,7 @@ xfs_calc_addafork_reservation(
+ 		xfs_calc_inode_res(mp, 1) +
+ 		xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
+ 		xfs_calc_buf_res(1, mp->m_dir_geo->blksize) +
+-		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK) + 1,
++		xfs_calc_buf_res(XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK, 0) + 1,
+ 				 XFS_FSB_TO_B(mp, 1)) +
+ 		xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+ 				 XFS_FSB_TO_B(mp, 1));
+@@ -691,7 +692,7 @@ xfs_calc_attrinval_reservation(
+ 	struct xfs_mount	*mp)
+ {
+ 	return max((xfs_calc_inode_res(mp, 1) +
+-		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK),
++		    xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK, 0),
+ 				     XFS_FSB_TO_B(mp, 1))),
+ 		   (xfs_calc_buf_res(9, mp->m_sb.sb_sectsize) +
+ 		    xfs_calc_buf_res(xfs_allocfree_log_count(mp, 4),
+@@ -717,10 +718,11 @@ xfs_calc_attrset_reservation(
+ 	int			bmbt_blks;
  
-+	if (whichfork == XFS_ATTR_FORK)
-+		ASSERT(dir_bmbt == 0);
-+
- 	/*
- 	 * The maximum number of extents in a file, hence the maximum number of
- 	 * leaf entries, is controlled by the size of the on-disk extent count,
-@@ -75,8 +79,11 @@ xfs_bmap_compute_maxlevels(
- 	 * of a minimum size available.
- 	 */
- 	if (whichfork == XFS_DATA_FORK) {
--		maxleafents = MAXEXTNUM;
- 		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
-+		if (dir_bmbt)
-+			maxleafents = MAXEXTNUM;
-+		else
-+			maxleafents = MAXEXTNUM;
- 	} else {
- 		maxleafents = MAXAEXTNUM;
- 		sz = XFS_BMDR_SPACE_CALC(MINABTPTRS);
-@@ -91,7 +98,11 @@ xfs_bmap_compute_maxlevels(
- 		else
- 			maxblocks = (maxblocks + minnoderecs - 1) / minnoderecs;
+ 	da_blks = XFS_DAENTER_BLOCKS(mp, XFS_ATTR_FORK);
+-	bmbt_blks = XFS_DAENTER_BMAPS(mp, XFS_ATTR_FORK);
++	bmbt_blks = XFS_DAENTER_BMAPS(mp, XFS_ATTR_FORK, 0);
+ 
+ 	max_rmt_blks = xfs_attr3_rmt_blocks(mp, XATTR_SIZE_MAX);
+-	bmbt_blks += XFS_NEXTENTADD_SPACE_RES(mp, max_rmt_blks, XFS_ATTR_FORK);
++	bmbt_blks += XFS_NEXTENTADD_SPACE_RES(mp, max_rmt_blks,
++			XFS_ATTR_FORK, 0);
+ 
+ 	return XFS_DQUOT_LOGRES(mp) +
+ 		xfs_calc_inode_res(mp, 1) +
+@@ -752,8 +754,9 @@ xfs_calc_attrrm_reservation(
+ 		     xfs_calc_buf_res(XFS_DA_NODE_MAXDEPTH,
+ 				      XFS_FSB_TO_B(mp, 1)) +
+ 		     (uint)XFS_FSB_TO_B(mp,
+-					XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK)) +
+-		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK), 0)),
++				XFS_BM_MAXLEVELS(mp, XFS_ATTR_FORK, 0)) +
++		     xfs_calc_buf_res(XFS_BM_MAXLEVELS(mp, XFS_DATA_FORK, 0),
++				     0)),
+ 		    (xfs_calc_buf_res(5, mp->m_sb.sb_sectsize) +
+ 		     xfs_calc_buf_res(xfs_allocfree_log_count(mp, 2),
+ 				      XFS_FSB_TO_B(mp, 1))));
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index f50996ae18e6..d64989eeebd7 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -61,10 +61,10 @@ struct xfs_trans_resv {
+  */
+ #define	XFS_DIROP_LOG_RES(mp)	\
+ 	(XFS_FSB_TO_B(mp, XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK)) + \
+-	 (XFS_FSB_TO_B(mp, XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)))
++	 (XFS_FSB_TO_B(mp, XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK, 1) + 1)))
+ #define	XFS_DIROP_LOG_COUNT(mp)	\
+ 	(XFS_DAENTER_BLOCKS(mp, XFS_DATA_FORK) + \
+-	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK) + 1)
++	 XFS_DAENTER_BMAPS(mp, XFS_DATA_FORK, 1) + 1)
+ 
+ /*
+  * Various log count values.
+diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
+index b559af70cf51..c51d809a16b1 100644
+--- a/fs/xfs/libxfs/xfs_trans_space.h
++++ b/fs/xfs/libxfs/xfs_trans_space.h
+@@ -25,15 +25,16 @@
+ 
+ #define XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)    \
+ 		(((mp)->m_alloc_mxr[0]) - ((mp)->m_alloc_mnr[0]))
+-#define	XFS_EXTENTADD_SPACE_RES(mp,w)	(XFS_BM_MAXLEVELS(mp,w) - 1)
+-#define XFS_NEXTENTADD_SPACE_RES(mp,b,w)\
++#define	XFS_EXTENTADD_SPACE_RES(mp,w,dbmbt)	\
++	(XFS_BM_MAXLEVELS(mp,w,dbmbt) - 1)
++#define XFS_NEXTENTADD_SPACE_RES(mp,b,w,dbmbt)		   \
+ 	(((b + XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp) - 1) / \
+ 	  XFS_MAX_CONTIG_EXTENTS_PER_BLOCK(mp)) * \
+-	  XFS_EXTENTADD_SPACE_RES(mp,w))
++		XFS_EXTENTADD_SPACE_RES(mp,w,dbmbt))
+ 
+ /* Blocks we might need to add "b" mappings & rmappings to a file. */
+-#define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)\
+-	(XFS_NEXTENTADD_SPACE_RES((mp), (b), (w)) + \
++#define XFS_SWAP_RMAP_SPACE_RES(mp,b,w)	    \
++	(XFS_NEXTENTADD_SPACE_RES((mp), (b), (w), 0) +	\
+ 	 XFS_NRMAPADD_SPACE_RES((mp), (b)))
+ 
+ #define	XFS_DAENTER_1B(mp,w)	\
+@@ -47,19 +48,19 @@
+ 	(XFS_DA_NODE_MAXDEPTH + (((w) == XFS_DATA_FORK) ? 2 : 1))
+ #define	XFS_DAENTER_BLOCKS(mp,w)	\
+ 	(XFS_DAENTER_1B(mp,w) * XFS_DAENTER_DBS(mp,w))
+-#define	XFS_DAENTER_BMAP1B(mp,w)	\
+-	XFS_NEXTENTADD_SPACE_RES(mp, XFS_DAENTER_1B(mp, w), w)
+-#define	XFS_DAENTER_BMAPS(mp,w)		\
+-	(XFS_DAENTER_DBS(mp,w) * XFS_DAENTER_BMAP1B(mp,w))
+-#define	XFS_DAENTER_SPACE_RES(mp,w)	\
+-	(XFS_DAENTER_BLOCKS(mp,w) + XFS_DAENTER_BMAPS(mp,w))
+-#define	XFS_DAREMOVE_SPACE_RES(mp,w)	XFS_DAENTER_BMAPS(mp,w)
++#define	XFS_DAENTER_BMAP1B(mp,w,dbmbt)	\
++	XFS_NEXTENTADD_SPACE_RES(mp, XFS_DAENTER_1B(mp, w), w, dbmbt)
++#define	XFS_DAENTER_BMAPS(mp,w,dbmbt)	\
++	(XFS_DAENTER_DBS(mp,w) * XFS_DAENTER_BMAP1B(mp,w,dbmbt))
++#define	XFS_DAENTER_SPACE_RES(mp,w,dbmbt)	\
++	(XFS_DAENTER_BLOCKS(mp,w) + XFS_DAENTER_BMAPS(mp,w,dbmbt))
++#define	XFS_DAREMOVE_SPACE_RES(mp,w,dbmbt)	XFS_DAENTER_BMAPS(mp,w,dbmbt)
+ #define	XFS_DIRENTER_MAX_SPLIT(mp,nl)	1
+ #define	XFS_DIRENTER_SPACE_RES(mp,nl)	\
+-	(XFS_DAENTER_SPACE_RES(mp, XFS_DATA_FORK) * \
++	(XFS_DAENTER_SPACE_RES(mp, XFS_DATA_FORK, 1) *	\
+ 	 XFS_DIRENTER_MAX_SPLIT(mp,nl))
+ #define	XFS_DIRREMOVE_SPACE_RES(mp)	\
+-	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK)
++	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK, 1)
+ #define	XFS_IALLOC_SPACE_RES(mp)	\
+ 	(M_IGEO(mp)->ialloc_blks + \
+ 	 (xfs_sb_version_hasfinobt(&mp->m_sb) ? 2 : 1 * \
+@@ -69,26 +70,26 @@
+  * Space reservation values for various transactions.
+  */
+ #define	XFS_ADDAFORK_SPACE_RES(mp)	\
+-	((mp)->m_dir_geo->fsbcount + XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK))
++	((mp)->m_dir_geo->fsbcount + XFS_DAENTER_BMAP1B(mp, XFS_DATA_FORK, 0))
+ #define	XFS_ATTRRM_SPACE_RES(mp)	\
+-	XFS_DAREMOVE_SPACE_RES(mp, XFS_ATTR_FORK)
++	XFS_DAREMOVE_SPACE_RES(mp, XFS_ATTR_FORK, 0)
+ /* This macro is not used - see inline code in xfs_attr_set */
+ #define	XFS_ATTRSET_SPACE_RES(mp, v)	\
+-	(XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK) + XFS_B_TO_FSB(mp, v))
++	(XFS_DAENTER_SPACE_RES(mp, XFS_ATTR_FORK, 0) + XFS_B_TO_FSB(mp, v))
+ #define	XFS_CREATE_SPACE_RES(mp,nl)	\
+ 	(XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
+ #define	XFS_DIOSTRAT_SPACE_RES(mp, v)	\
+-	(XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK) + (v))
++	(XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK, 0) + (v))
+ #define	XFS_GROWFS_SPACE_RES(mp)	\
+ 	(2 * (mp)->m_ag_maxlevels)
+ #define	XFS_GROWFSRT_SPACE_RES(mp,b)	\
+-	((b) + XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK))
++	((b) + XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK, 0))
+ #define	XFS_LINK_SPACE_RES(mp,nl)	\
+ 	XFS_DIRENTER_SPACE_RES(mp,nl)
+ #define	XFS_MKDIR_SPACE_RES(mp,nl)	\
+ 	(XFS_IALLOC_SPACE_RES(mp) + XFS_DIRENTER_SPACE_RES(mp,nl))
+ #define	XFS_QM_DQALLOC_SPACE_RES(mp)	\
+-	(XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK) + \
++	(XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK, 0) + \
+ 	 XFS_DQUOT_CLUSTER_SIZE_FSB)
+ #define	XFS_QM_QINOCREATE_SPACE_RES(mp)	\
+ 	XFS_IALLOC_SPACE_RES(mp)
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 6736c5ab188f..0a8a8377a150 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -482,7 +482,8 @@ xfs_bui_item_recover(
  	}
--	mp->m_bm_maxlevels[whichfork] = level;
-+
-+	if (whichfork == XFS_DATA_FORK && dir_bmbt)
-+		mp->m_bm_dir_maxlevel = level;
-+	else
-+		mp->m_bm_maxlevels[whichfork] = level;
- }
  
- STATIC int				/* error */
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index 6028a3c825ba..4250c9ab4b75 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -187,7 +187,8 @@ void	xfs_bmap_local_to_extents_empty(struct xfs_trans *tp,
- void	__xfs_bmap_add_free(struct xfs_trans *tp, xfs_fsblock_t bno,
- 		xfs_filblks_t len, const struct xfs_owner_info *oinfo,
- 		bool skip_discard);
--void	xfs_bmap_compute_maxlevels(struct xfs_mount *mp, int whichfork);
-+void	xfs_bmap_compute_maxlevels(struct xfs_mount *mp, int whichfork,
-+		int dir_bmbt);
- int	xfs_bmap_first_unused(struct xfs_trans *tp, struct xfs_inode *ip,
- 		xfs_extlen_t len, xfs_fileoff_t *unused, int whichfork);
- int	xfs_bmap_last_before(struct xfs_trans *tp, struct xfs_inode *ip,
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index bb91f04266b9..d8ebfc67bb63 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -711,8 +711,9 @@ xfs_mountfs(
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
+-			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
++			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK, 0), 0,
++			0, &tp);
+ 	if (error)
+ 		return error;
+ 	/*
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 107bf2a2f344..fd35a0bf2c47 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -614,7 +614,7 @@ xfs_reflink_end_cow_extent(
+ 		return 0;
+ 	}
+ 
+-	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
++	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK, 0);
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
+ 			XFS_TRANS_RESERVE, &tp);
+ 	if (error)
+@@ -1017,7 +1017,7 @@ xfs_reflink_remap_extent(
+ 	}
+ 
+ 	/* Start a rolling transaction to switch the mappings */
+-	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
++	resblks = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK, 0);
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0, 0, &tp);
+ 	if (error)
  		goto out;
- 
- 	xfs_alloc_compute_maxlevels(mp);
--	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK);
--	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK);
-+	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK, 0);
-+	xfs_bmap_compute_maxlevels(mp, XFS_DATA_FORK, 1);
-+	xfs_bmap_compute_maxlevels(mp, XFS_ATTR_FORK, 0);
- 	xfs_ialloc_setup_geometry(mp);
- 	xfs_rmapbt_compute_maxlevels(mp);
- 	xfs_refcountbt_compute_maxlevels(mp);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index aba5a1579279..9dbf036ddace 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -133,6 +133,7 @@ typedef struct xfs_mount {
- 	uint			m_refc_mnr[2];	/* min refc btree records */
- 	uint			m_ag_maxlevels;	/* XFS_AG_MAXLEVELS */
- 	uint			m_bm_maxlevels[2]; /* XFS_BM_MAXLEVELS */
-+	uint			m_bm_dir_maxlevel;
- 	uint			m_rmap_maxlevels; /* max rmap btree levels */
- 	uint			m_refc_maxlevels; /* max refcount btree level */
- 	xfs_extlen_t		m_ag_prealloc_blocks; /* reserved ag blocks */
 -- 
 2.20.1
 
