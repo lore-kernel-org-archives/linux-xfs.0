@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDB2FC433DF
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 23:41:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A2EDC433E2
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 23:46:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B83E120760
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 23:41:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52D5F2078D
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 23:46:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591659687;
-	bh=fPVshrlSNTS6fyDkB0RG43f2uaJhun3DjBAjXW6z2rU=;
+	s=default; t=1591659982;
+	bh=jr4y0FqC6EzFR9DSbJVEAwtyJiD+PqXbyFjYuU2yvuU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=aIV3As1oRNdsRs17E51bjreDlG1oC9Y5rfZNNr3K4lRV85782o1ABsuk9wg2xIQJH
-	 eTWdGI2Xlmt7CES4zJmV6obnHN0LkBX8F4Y0k0VYwLXRPMtVO8Y6QsZMtXIAPX0toS
-	 AagpUww5FvOrais//w7L1Y7gXfQTEJ7k6famGSRU=
+	b=Fe6uk83U+MgbaRH7PTOYO7CPeMXdVfIdR7a7oP+gTOoG1zyUGQinQxlsn4cTyszoI
+	 ldw64pnDuS+/xrdzYkO0A06Ml10qrnJznEudcFmwsuQSKTuumKwCleY+3GPZMN9Py0
+	 TmmnPbvj+O54UYOZBBW3CxtDw8nxNgWA8FKfRzto=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731620AbgFHXl0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Jun 2020 19:41:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56090 "EHLO mail.kernel.org"
+        id S1732280AbgFHXp7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Jun 2020 19:45:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53916 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731840AbgFHX1l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:27:41 -0400
+        id S1731968AbgFHX01 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:26:27 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 06B2820775;
-        Mon,  8 Jun 2020 23:27:39 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 52C182064C;
+        Mon,  8 Jun 2020 23:26:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658860;
-        bh=fPVshrlSNTS6fyDkB0RG43f2uaJhun3DjBAjXW6z2rU=;
+        s=default; t=1591658786;
+        bh=jr4y0FqC6EzFR9DSbJVEAwtyJiD+PqXbyFjYuU2yvuU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=CgDQ5j0GzTcdktmVqvZfHsQb2pMRgKA+UTjuC1oHi6hqwD9XNkH0Q5PUDY7ro74q/
-         itNXXr9W0Z7US0JXNfkkVJ9FIHIp5ClHp/rsebYtz/vo6YKPuZlowfoXfSxD0xzCIz
-         DmT1uUXHOKZWzLpwpX438ajs7bQhh0MAt79ZFJbI=
+        b=oFgnI+ImVivq1vbWqGNqEfoIMYzTLWXN9b9PrxFhlRJAMKBdGa0L8X906Ytsuzql2
+         HU8Rgr7SRv+xPUOZ4h40IqopGt7qA4xHscrhRczXz6o0N0t2QVX9+qyr+fYgfc0Crk
+         oq8OmQNNSM1aQEKr3AhIFxQhu0+YoYGdoqkTvwwc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dave Chinner <david@fromorbit.com>,
@@ -45,12 +45,12 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 44/50] xfs: gut error handling in xfs_trans_unreserve_and_mod_sb()
-Date:   Mon,  8 Jun 2020 19:26:34 -0400
-Message-Id: <20200608232640.3370262-44-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 62/72] xfs: gut error handling in xfs_trans_unreserve_and_mod_sb()
+Date:   Mon,  8 Jun 2020 19:24:50 -0400
+Message-Id: <20200608232500.3369581-62-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200608232640.3370262-1-sashal@kernel.org>
-References: <20200608232640.3370262-1-sashal@kernel.org>
+In-Reply-To: <20200608232500.3369581-1-sashal@kernel.org>
+References: <20200608232500.3369581-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -92,7 +92,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 20 insertions(+), 143 deletions(-)
 
 diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index a280e126491f..fb208944d77b 100644
+index a87f657f59c9..cad4b04e31a7 100644
 --- a/fs/xfs/xfs_trans.c
 +++ b/fs/xfs/xfs_trans.c
 @@ -493,57 +493,9 @@ xfs_trans_apply_sb_deltas(
