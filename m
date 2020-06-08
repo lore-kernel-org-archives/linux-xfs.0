@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1654AC433E2
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:49:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D49A3C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:52:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8E35207ED
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:49:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B1EA320760
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:52:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591663755;
-	bh=dvPNjkEX0FRyQBVGbL9mveFmQllKPKlqmbk8N+PJ+1o=;
+	s=default; t=1591663965;
+	bh=iJmO4xHRje2jpVeG+/TAXg5Tl4+PC6G/lsyYhTcVaoA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=B/1AgrkT9gzIsLyf146rgpEH0KzrWykBeNeuqecMLkrmtbZP+W02NYY5hw+yLANx4
-	 LHxBqyObxHf1C+B3O7zmco+v+luV/SbP0y2SDkUJAz6f0Dgbh0jKrZzsDbnN8CLHuP
-	 v2VEtwTlAsFCYbbVpzYWP+OqSvbEf65Pm/SKSTFI=
+	b=kSbECfuCfYri2SsMpSC8plOniEx1VmIQ0L7P8O+zgOxNGKG+LoDRoPKeY7CA4h576
+	 cJ3MyCMJ9hiySxo5SRaDk2EkI8u7Gtyfn+KwyBU7zJkcSA0B/73Dz0Gv3KBCHWzMHl
+	 Gp0FexAFsfV2fnmzym9QZQSz+A/CJIgdtxWnonyM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729084AbgFIAtO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Jun 2020 20:49:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57206 "EHLO mail.kernel.org"
+        id S1730374AbgFIAwo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Jun 2020 20:52:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55872 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728773AbgFHXKs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:10:48 -0400
+        id S1728531AbgFHXJz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:09:55 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 82B6A20897;
-        Mon,  8 Jun 2020 23:10:47 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A352B20B80;
+        Mon,  8 Jun 2020 23:09:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591657848;
-        bh=dvPNjkEX0FRyQBVGbL9mveFmQllKPKlqmbk8N+PJ+1o=;
+        s=default; t=1591657794;
+        bh=iJmO4xHRje2jpVeG+/TAXg5Tl4+PC6G/lsyYhTcVaoA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tbqZljDgp0br6CsAunnVnprxXiFjawfgh8pSeJWATURW6D24Yytg59ZlOmgpi1aQx
-         jTBzbG3rwYKjIQ+24+hPtJFg0aYhHY9YuYDGIhmKZkV3n13pgMEpjJIGaQkwg1TXkI
-         2oXidCR8sJc/FxZQrUNSWqbRNndqUNF/cK+71Jac=
+        b=scF3xgVf19nDtR1M/xV7AS0fPaUdcvgkuPotxMjwwIyBy5faxGwepJojSyYsQQnTF
+         EXaXT/Wan4Tc5zx6X8RJiEMSdkRKUrsihD9Ftgn6n7EJJjTA04dvmoq1bSvroLeyfj
+         kBl5QoK5FGisrL1Kmfxr6VFqjRUGsL3iDi0mw3M0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Brian Foster <bfoster@redhat.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
+        Allison Collins <allison.henderson@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 214/274] xfs: don't fail verifier on empty attr3 leaf block
-Date:   Mon,  8 Jun 2020 19:05:07 -0400
-Message-Id: <20200608230607.3361041-214-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 173/274] xfs: reset buffer write failure state on successful completion
+Date:   Mon,  8 Jun 2020 19:04:26 -0400
+Message-Id: <20200608230607.3361041-173-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608230607.3361041-1-sashal@kernel.org>
 References: <20200608230607.3361041-1-sashal@kernel.org>
@@ -61,78 +62,79 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Brian Foster <bfoster@redhat.com>
 
-[ Upstream commit f28cef9e4daca11337cb9f144cdebedaab69d78c ]
+[ Upstream commit b6983e80b03bd4fd42de71993b3ac7403edac758 ]
 
-The attr fork can transition from shortform to leaf format while
-empty if the first xattr doesn't fit in shortform. While this empty
-leaf block state is intended to be transient, it is technically not
-due to the transactional implementation of the xattr set operation.
+The buffer write failure flag is intended to control the internal
+write retry that XFS has historically implemented to help mitigate
+the severity of transient I/O errors. The flag is set when a buffer
+is resubmitted from the I/O completion path due to a previous
+failure. It is checked on subsequent I/O completions to skip the
+internal retry and fall through to the higher level configurable
+error handling mechanism. The flag is cleared in the synchronous and
+delwri submission paths and also checked in various places to log
+write failure messages.
 
-We historically have a couple of bandaids to work around this
-problem. The first is to hold the buffer after the format conversion
-to prevent premature writeback of the empty leaf buffer and the
-second is to bypass the xattr count check in the verifier during
-recovery. The latter assumes that the xattr set is also in the log
-and will be recovered into the buffer soon after the empty leaf
-buffer is reconstructed. This is not guaranteed, however.
+There are a couple minor problems with the current usage of this
+flag. One is that we issue an internal retry after every submission
+from xfsaild due to how delwri submission clears the flag. This
+results in double the expected or configured number of write
+attempts when under sustained failures. Another more subtle issue is
+that the flag is never cleared on successful I/O completion. This
+can cause xfs_wait_buftarg() to suggest that dirty buffers are being
+thrown away due to the existence of the flag, when the reality is
+that the flag might still be set because the write succeeded on the
+retry.
 
-If the filesystem crashes after the format conversion but before the
-xattr set that induced it, only the format conversion may exist in
-the log. When recovered, this creates a latent corrupted state on
-the inode as any subsequent attempts to read the buffer fail due to
-verifier failure. This includes further attempts to set xattrs on
-the inode or attempts to destroy the attr fork, which prevents the
-inode from ever being removed from the unlinked list.
-
-To avoid this condition, accept that an empty attr leaf block is a
-valid state and remove the count check from the verifier. This means
-that on rare occasions an attr fork might exist in an unexpected
-state, but is otherwise consistent and functional. Note that we
-retain the logic to avoid racing with metadata writeback to reduce
-the window where this can occur.
+Clear the write failure flag on successful I/O completion to address
+both of these problems. This means that the internal retry attempt
+occurs once since the last time a buffer write failed and that
+various other contexts only see the flag set when the immediately
+previous write attempt has failed.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_buf.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 1d67cc9f4209..5d0b55281f9d 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -308,14 +308,6 @@ xfs_attr3_leaf_verify(
- 	if (fa)
- 		return fa;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 9ec3eaf1c618..afa73a19caa1 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1197,8 +1197,10 @@ xfs_buf_ioend(
+ 		bp->b_ops->verify_read(bp);
+ 	}
  
--	/*
--	 * In recovery there is a transient state where count == 0 is valid
--	 * because we may have transitioned an empty shortform attr to a leaf
--	 * if the attr didn't fit in shortform.
--	 */
--	if (!xfs_log_in_recovery(mp) && ichdr.count == 0)
--		return __this_address;
--
- 	/*
- 	 * firstused is the block offset of the first name info structure.
- 	 * Make sure it doesn't go off the block or crash into the header.
-@@ -331,6 +323,13 @@ xfs_attr3_leaf_verify(
- 	    (char *)bp->b_addr + ichdr.firstused)
- 		return __this_address;
+-	if (!bp->b_error)
++	if (!bp->b_error) {
++		bp->b_flags &= ~XBF_WRITE_FAIL;
+ 		bp->b_flags |= XBF_DONE;
++	}
  
-+	/*
-+	 * NOTE: This verifier historically failed empty leaf buffers because
-+	 * we expect the fork to be in another format. Empty attr fork format
-+	 * conversions are possible during xattr set, however, and format
-+	 * conversion is not atomic with the xattr set that triggers it. We
-+	 * cannot assume leaf blocks are non-empty until that is addressed.
-+	*/
- 	buf_end = (char *)bp->b_addr + mp->m_attr_geo->blksize;
- 	for (i = 0, ent = entries; i < ichdr.count; ent++, i++) {
- 		fa = xfs_attr3_leaf_verify_entry(mp, buf_end, leaf, &ichdr,
+ 	if (bp->b_iodone)
+ 		(*(bp->b_iodone))(bp);
+@@ -1258,7 +1260,7 @@ xfs_bwrite(
+ 
+ 	bp->b_flags |= XBF_WRITE;
+ 	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q |
+-			 XBF_WRITE_FAIL | XBF_DONE);
++			 XBF_DONE);
+ 
+ 	error = xfs_buf_submit(bp);
+ 	if (error)
+@@ -1983,7 +1985,7 @@ xfs_buf_delwri_submit_buffers(
+ 		 * synchronously. Otherwise, drop the buffer from the delwri
+ 		 * queue and submit async.
+ 		 */
+-		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
++		bp->b_flags &= ~_XBF_DELWRI_Q;
+ 		bp->b_flags |= XBF_WRITE;
+ 		if (wait_list) {
+ 			bp->b_flags &= ~XBF_ASYNC;
 -- 
 2.25.1
 
