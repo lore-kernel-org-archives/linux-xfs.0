@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 975CAC433E1
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 23:24:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E174EC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 23:28:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B1F020CC7
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 23:24:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9AF020814
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 23:28:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591658686;
-	bh=FHtGawH0TjQcTuYJjPPT2lGpA/0yJm0D5hOLbhJG35c=;
+	s=default; t=1591658919;
+	bh=4YRfAq+rtQuqty9LNpNsgrzO7Qs0uRzEQHvkDNNxyrs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=VHDmRHc0H2dFWI2RvU3JchgCIlLHyJ7HczjcYBthn3NNLPXDgBlilb1ArWxcR2zj3
-	 /fDHeexgK8F3cfmXJC+SlgikJy4sboFGl5RZeUk9q1G9zoX0bB5mxHZRFcsw01hW7U
-	 r6IYTtKJa03n6IeERa7RtQpHQ8UTOGpcwo3eYzdw=
+	b=ZPn4kflAaMTkka8vR3KmlyovJK1tjJwb7/xtMSSllNjvDzxXotW1UwVAwPkc++YfD
+	 d8wVy06lbHntG9pKfHuQXR0gOAj3iA3xLC7OY/oCbMEcS0opRTOGyhEUm7tS62UGRW
+	 KtpU82oMWqiexRFiz5v1FaeCYgtDfvPlO5GMmBEg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731660AbgFHXYo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Jun 2020 19:24:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50860 "EHLO mail.kernel.org"
+        id S1732238AbgFHX2i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Jun 2020 19:28:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58346 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731653AbgFHXYm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:24:42 -0400
+        id S1732230AbgFHX2h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:28:37 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 96CD320899;
-        Mon,  8 Jun 2020 23:24:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id ECD3D20775;
+        Mon,  8 Jun 2020 23:28:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658681;
-        bh=FHtGawH0TjQcTuYJjPPT2lGpA/0yJm0D5hOLbhJG35c=;
+        s=default; t=1591658916;
+        bh=4YRfAq+rtQuqty9LNpNsgrzO7Qs0uRzEQHvkDNNxyrs=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=wXIrLWyIbe6cUjfvAOxAF7HcggdiRfM4rZ3pBb4K+srfaRay2vDg4tMtdg/FnnnSy
-         6aNUVCd0PVE/73HCdekQGhvP8c4jjpoN9VZ5SMpxQoyaG9XZ3JrDIdc7Eb33PbD/rK
-         TY/IAggLfhX+v2KaFsw77yKk1iGi58O9UW1skdDE=
+        b=u3AdsEh6G35CzhK3YAAE0tPW4A3INhcpixjPqHa96CWPQ7S74kl/1rxIlkZmSLd8O
+         t9K7/IGqqp2ToDHdutc4KhCnF3/dd4WLFmBkJMc+8RSs4taxlk6O45652YPsIXfqSd
+         QRXbxbMPZjLSl77agMo60gHlVro/2DaFhEvfePDQ=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dave Chinner <david@fromorbit.com>,
@@ -45,12 +45,12 @@ Cc:     Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@lst.de>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 092/106] xfs: gut error handling in xfs_trans_unreserve_and_mod_sb()
-Date:   Mon,  8 Jun 2020 19:22:24 -0400
-Message-Id: <20200608232238.3368589-92-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 33/37] xfs: gut error handling in xfs_trans_unreserve_and_mod_sb()
+Date:   Mon,  8 Jun 2020 19:27:45 -0400
+Message-Id: <20200608232750.3370747-33-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200608232238.3368589-1-sashal@kernel.org>
-References: <20200608232238.3368589-1-sashal@kernel.org>
+In-Reply-To: <20200608232750.3370747-1-sashal@kernel.org>
+References: <20200608232750.3370747-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -92,10 +92,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 20 insertions(+), 143 deletions(-)
 
 diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 912b42f5fe4a..6da25cfadf30 100644
+index 748b16aff45a..921fd09d019d 100644
 --- a/fs/xfs/xfs_trans.c
 +++ b/fs/xfs/xfs_trans.c
-@@ -530,57 +530,9 @@ xfs_trans_apply_sb_deltas(
+@@ -478,57 +478,9 @@ xfs_trans_apply_sb_deltas(
  				  sizeof(sbp->sb_frextents) - 1);
  }
  
@@ -155,7 +155,7 @@ index 912b42f5fe4a..6da25cfadf30 100644
   * t_res_fdblocks_delta and t_res_frextents_delta fields are explicitly NOT
   * applied to the in-core superblock.  The idea is that that has already been
   * done.
-@@ -625,20 +577,17 @@ xfs_trans_unreserve_and_mod_sb(
+@@ -573,20 +525,17 @@ xfs_trans_unreserve_and_mod_sb(
  	/* apply the per-cpu counters */
  	if (blkdelta) {
  		error = xfs_mod_fdblocks(mp, blkdelta, rsvd);
@@ -179,7 +179,7 @@ index 912b42f5fe4a..6da25cfadf30 100644
  	}
  
  	if (rtxdelta == 0 && !(tp->t_flags & XFS_TRANS_SB_DIRTY))
-@@ -646,95 +595,23 @@ xfs_trans_unreserve_and_mod_sb(
+@@ -594,95 +543,23 @@ xfs_trans_unreserve_and_mod_sb(
  
  	/* apply remaining deltas */
  	spin_lock(&mp->m_sb_lock);
