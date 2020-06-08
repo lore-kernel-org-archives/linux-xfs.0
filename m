@@ -4,51 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3117BC433E2
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:07:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 188CDC433E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:46:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A5B22072F
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:07:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E57B820774
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:46:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591661228;
-	bh=GBr6lo6dKfe4RZ2WPZnbUBTyniXVN/QBPvZbF4eMus0=;
+	s=default; t=1591663618;
+	bh=ccKiDK3evDF3ELMAGfBKIcswpEkX5T9uPmZmUMJvvZo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=KSbwZPjBG/hGhbZdohlPhTUlaEh17ImwJf/YIczlB2HCUDpGVsyqJzLv10s9W9VJB
-	 E92l5oVj/FkCYxFfOeFkHSnqQIXxdS+TofPLaTcek4G0TpvuKtoslGulG/f9+z3EhT
-	 fv7f9+BBVKnB5rKym7hISmr+9sisJKK0QXI3qbQc=
+	b=lHvKGgQMceMTLST8vtX057u53+icToAjP6yllGb/dgonUrN0+iQUmuSADVjD2RmqU
+	 AWmP58+DcfEfRrpR/vVUQPkw/HnhvpR958MFZySF50Q1thCVmZJLNZ8rqbLRStSqEg
+	 b8lPBGdSlNQAyCtgWUTL2E72qtDBD0All1lgcA0o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731073AbgFIAHF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Jun 2020 20:07:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44976 "EHLO mail.kernel.org"
+        id S1728921AbgFIAqt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Jun 2020 20:46:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58368 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730712AbgFHXVA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:21:00 -0400
+        id S1727865AbgFHXL3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:11:29 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9E6B120814;
-        Mon,  8 Jun 2020 23:20:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id D12D120E65;
+        Mon,  8 Jun 2020 23:11:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658460;
-        bh=GBr6lo6dKfe4RZ2WPZnbUBTyniXVN/QBPvZbF4eMus0=;
+        s=default; t=1591657888;
+        bh=ccKiDK3evDF3ELMAGfBKIcswpEkX5T9uPmZmUMJvvZo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OPwfALpGAAi6xV/S/pIY2uv+XFXxrIWhHGmppsZvXyEkr0YPp2SLSN5PvZQsekByX
-         aysJ/RXfraW2B1YE94r1eDWy7hK7M+6uAfd+IrMkQWFI4Eoaasv8yc4ejbbmO8CP4h
-         iCgy/cqheVJd2gdeA4AcMk97I3iVx0Vp7H19AaCE=
+        b=lDxyYuoobH/7VMXroh5HSlWA6BzBLsKRsdrnzBzgft+m6is/QX8VtaF8WvyYVgW09
+         vlfrp02zTtgf3SUfj8QQQjLwg2Z18mqT0QkTW7YViI1wKeJQmY9nC0/WO89N6dhC6x
+         rtuTOlgyIA2YxQk9IGCFtvs6+pDy0K4XDqHMS+bM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
+        Brian Foster <bfoster@redhat.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 100/175] xfs: clean up the error handling in xfs_swap_extents
-Date:   Mon,  8 Jun 2020 19:17:33 -0400
-Message-Id: <20200608231848.3366970-100-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 244/274] xfs: force writes to delalloc regions to unwritten
+Date:   Mon,  8 Jun 2020 19:05:37 -0400
+Message-Id: <20200608230607.3361041-244-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200608231848.3366970-1-sashal@kernel.org>
-References: <20200608231848.3366970-1-sashal@kernel.org>
+In-Reply-To: <20200608230607.3361041-1-sashal@kernel.org>
+References: <20200608230607.3361041-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -60,32 +61,71 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-[ Upstream commit 8bc3b5e4b70d28f8edcafc3c9e4de515998eea9e ]
+[ Upstream commit a5949d3faedf492fa7863b914da408047ab46eb0 ]
 
-Make sure we release resources properly if we cannot clean out the COW
-extents in preparation for an extent swap.
+When writing to a delalloc region in the data fork, commit the new
+allocations (of the da reservation) as unwritten so that the mappings
+are only marked written once writeback completes successfully.  This
+fixes the problem of stale data exposure if the system goes down during
+targeted writeback of a specific region of a file, as tested by
+generic/042.
 
-Fixes: 96987eea537d6c ("xfs: cancel COW blocks before swapext")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_bmap.c | 29 +++++++++++++++++------------
+ 1 file changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 4f443703065e..0c71acc1b831 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1760,7 +1760,7 @@ xfs_swap_extents(
- 	if (xfs_inode_has_cow_data(tip)) {
- 		error = xfs_reflink_cancel_cow_range(tip, 0, NULLFILEOFF, true);
- 		if (error)
--			return error;
-+			goto out_unlock;
- 	}
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index fda13cd7add0..f8fe83c9348d 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -4193,17 +4193,7 @@ xfs_bmapi_allocate(
+ 	bma->got.br_blockcount = bma->length;
+ 	bma->got.br_state = XFS_EXT_NORM;
  
- 	/*
+-	/*
+-	 * In the data fork, a wasdelay extent has been initialized, so
+-	 * shouldn't be flagged as unwritten.
+-	 *
+-	 * For the cow fork, however, we convert delalloc reservations
+-	 * (extents allocated for speculative preallocation) to
+-	 * allocated unwritten extents, and only convert the unwritten
+-	 * extents to real extents when we're about to write the data.
+-	 */
+-	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
+-	    (bma->flags & XFS_BMAPI_PREALLOC))
++	if (bma->flags & XFS_BMAPI_PREALLOC)
+ 		bma->got.br_state = XFS_EXT_UNWRITTEN;
+ 
+ 	if (bma->wasdel)
+@@ -4611,8 +4601,23 @@ xfs_bmapi_convert_delalloc(
+ 	bma.offset = bma.got.br_startoff;
+ 	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount, MAXEXTLEN);
+ 	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
++
++	/*
++	 * When we're converting the delalloc reservations backing dirty pages
++	 * in the page cache, we must be careful about how we create the new
++	 * extents:
++	 *
++	 * New CoW fork extents are created unwritten, turned into real extents
++	 * when we're about to write the data to disk, and mapped into the data
++	 * fork after the write finishes.  End of story.
++	 *
++	 * New data fork extents must be mapped in as unwritten and converted
++	 * to real extents after the write succeeds to avoid exposing stale
++	 * disk contents if we crash.
++	 */
++	bma.flags = XFS_BMAPI_PREALLOC;
+ 	if (whichfork == XFS_COW_FORK)
+-		bma.flags = XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
++		bma.flags |= XFS_BMAPI_COWFORK;
+ 
+ 	if (!xfs_iext_peek_prev_extent(ifp, &bma.icur, &bma.prev))
+ 		bma.prev.br_startoff = NULLFILEOFF;
 -- 
 2.25.1
 
