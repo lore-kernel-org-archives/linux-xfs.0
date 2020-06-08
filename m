@@ -4,51 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C096C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:06:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3117BC433E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:07:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E4EA20820
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:06:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A5B22072F
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:07:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591661195;
-	bh=FnRMOEIPw0Jmq2vCdbN2xV/1mRpWx72lg9XT0VL3xVM=;
+	s=default; t=1591661228;
+	bh=GBr6lo6dKfe4RZ2WPZnbUBTyniXVN/QBPvZbF4eMus0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=u+s9YMuZzYxyN3MZc2xrJpBGx/cPFIyAzGfOXuCbu8LR7Y0ZA+t5bMRBA8ohmjNmz
-	 2cVZysJCdFRahb6dOSTG1dukShgiNTbXfXsrbVWeKS1qIF+/CwZLpDgSlXd/wG9QJC
-	 gmRp9WO+jt/chvLYlyRpYqT2/8UQmziFeJtxyMb4=
+	b=KSbwZPjBG/hGhbZdohlPhTUlaEh17ImwJf/YIczlB2HCUDpGVsyqJzLv10s9W9VJB
+	 E92l5oVj/FkCYxFfOeFkHSnqQIXxdS+TofPLaTcek4G0TpvuKtoslGulG/f9+z3EhT
+	 fv7f9+BBVKnB5rKym7hISmr+9sisJKK0QXI3qbQc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732646AbgFIAGU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Jun 2020 20:06:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45308 "EHLO mail.kernel.org"
+        id S1731073AbgFIAHF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Jun 2020 20:07:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44976 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731107AbgFHXVJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:21:09 -0400
+        id S1730712AbgFHXVA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:21:00 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CA9062087E;
-        Mon,  8 Jun 2020 23:21:08 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 9E6B120814;
+        Mon,  8 Jun 2020 23:20:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658469;
-        bh=FnRMOEIPw0Jmq2vCdbN2xV/1mRpWx72lg9XT0VL3xVM=;
+        s=default; t=1591658460;
+        bh=GBr6lo6dKfe4RZ2WPZnbUBTyniXVN/QBPvZbF4eMus0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=0bQRAt1eIjNwC6aywhB048dZesv81HdKZcU6huq8yp4fPEgK5LKE8Fx42wx3nKPN5
-         FcQtIe9DlWpzmoFUvesxmt7VYMrAWk8qUOIPMkZ1UVsQsfLnUako6mKBBSwq90l3Qj
-         APeusb46c0ylN9a6s+4oBs3IUQICm1mPS7lcmxtQ=
+        b=OPwfALpGAAi6xV/S/pIY2uv+XFXxrIWhHGmppsZvXyEkr0YPp2SLSN5PvZQsekByX
+         aysJ/RXfraW2B1YE94r1eDWy7hK7M+6uAfd+IrMkQWFI4Eoaasv8yc4ejbbmO8CP4h
+         iCgy/cqheVJd2gdeA4AcMk97I3iVx0Vp7H19AaCE=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
-        Allison Collins <allison.henderson@oracle.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 107/175] xfs: fix duplicate verification from xfs_qm_dqflush()
-Date:   Mon,  8 Jun 2020 19:17:40 -0400
-Message-Id: <20200608231848.3366970-107-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 100/175] xfs: clean up the error handling in xfs_swap_extents
+Date:   Mon,  8 Jun 2020 19:17:33 -0400
+Message-Id: <20200608231848.3366970-100-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608231848.3366970-1-sashal@kernel.org>
 References: <20200608231848.3366970-1-sashal@kernel.org>
@@ -61,48 +58,34 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-[ Upstream commit 629dcb38dc351947ed6a26a997d4b587f3bd5c7e ]
+[ Upstream commit 8bc3b5e4b70d28f8edcafc3c9e4de515998eea9e ]
 
-The pre-flush dquot verification in xfs_qm_dqflush() duplicates the
-read verifier by checking the dquot in the on-disk buffer. Instead,
-verify the in-core variant before it is flushed to the buffer.
+Make sure we release resources properly if we cannot clean out the COW
+extents in preparation for an extent swap.
 
-Fixes: 7224fa482a6d ("xfs: add full xfs_dqblk verifier")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Fixes: 96987eea537d6c ("xfs: cancel COW blocks before swapext")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/xfs_dquot.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_bmap_util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index aeb95e7391c1..3cbf248af51f 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1116,13 +1116,12 @@ xfs_qm_dqflush(
- 	dqb = bp->b_addr + dqp->q_bufoffset;
- 	ddqp = &dqb->dd_diskdq;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 4f443703065e..0c71acc1b831 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1760,7 +1760,7 @@ xfs_swap_extents(
+ 	if (xfs_inode_has_cow_data(tip)) {
+ 		error = xfs_reflink_cancel_cow_range(tip, 0, NULLFILEOFF, true);
+ 		if (error)
+-			return error;
++			goto out_unlock;
+ 	}
  
--	/*
--	 * A simple sanity check in case we got a corrupted dquot.
--	 */
--	fa = xfs_dqblk_verify(mp, dqb, be32_to_cpu(ddqp->d_id), 0);
-+	/* sanity check the in-core structure before we flush */
-+	fa = xfs_dquot_verify(mp, &dqp->q_core, be32_to_cpu(dqp->q_core.d_id),
-+			      0);
- 	if (fa) {
- 		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
--				be32_to_cpu(ddqp->d_id), fa);
-+				be32_to_cpu(dqp->q_core.d_id), fa);
- 		xfs_buf_relse(bp);
- 		xfs_dqfunlock(dqp);
- 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ 	/*
 -- 
 2.25.1
 
