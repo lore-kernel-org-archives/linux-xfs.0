@@ -2,54 +2,78 @@ Return-Path: <SRS0=8d1d=7V=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E23AC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 06:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAB3DC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 16:16:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67B6720774
-	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 06:20:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D339206D5
+	for <linux-xfs@archiver.kernel.org>; Mon,  8 Jun 2020 16:16:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sZgSa6+i"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WHltGvXU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728334AbgFHGUo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Jun 2020 02:20:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51276 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726929AbgFHGUo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jun 2020 02:20:44 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C743C08C5C3;
-        Sun,  7 Jun 2020 23:20:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=F6KQARBWnhLvbW+hxsj446Ur56hXK5lCtDmjbXN4+dU=; b=sZgSa6+ibLKXjgq82B/rR2d3xp
-        ym/EpzjeLtGzwSIGMBcOTpy/TEt7I6hUzeayrtc2oAQthTsiV/i7OTN1J8AP3hKjlp1i7ZaSf6OTD
-        I3euzkyuMQhEZKRqeGWPhYj5FIRnWGjgknb/YmrX4QZwR020FglYf09AF57VM9lfFMV2/NdHP9BSO
-        SBUEw5NFiYGIQLtqrY9PdyxRMJrgLsfYOyrBnAN75imoshxHNKfAxFwcFXBrMY7toqUYGQoAMw6o0
-        qdDSeojAfx4ijW74OmfRVL4GYicwmPwJrWneY1AQ7ODqQmHVrcK35O32Dxc7lsxBA5FybesKxVqfa
-        p2sx4f6A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jiB9E-0003fH-4J; Mon, 08 Jun 2020 06:20:40 +0000
-Date:   Sun, 7 Jun 2020 23:20:40 -0700
-From:   Christoph Hellwig <hch@infradead.org>
+        id S1730333AbgFHQQl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Jun 2020 12:16:41 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:39822 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730267AbgFHQQl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jun 2020 12:16:41 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 058G8UH7065871;
+        Mon, 8 Jun 2020 16:16:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=HHRFXu/PCOEWFmyos370eOgdoHcGkVPFbRZIoCPNwdk=;
+ b=WHltGvXUGsZwrSPxIRNR30psiX6+Y2ORx4d30cpqAwnTRvXqeBfV83PRvbJSkvV+gH+B
+ YQUyTxtmUWLYHtJyJLApfXfh1C0qzpWhFEN3dNSA6EUNIRxJjXnH/A6Dnx/EGCOmbYTf
+ T//YW9dqIlBXm2ZdDq3yTPGPoxpy33nSzt3cU1hoawWxNX2st8NcU2XuGoG4N+NA8TCE
+ zzcdZecmUk0Az/o43z+CZs19kvYstpe4iYAHLnZ+zFBIDRcIMBS+R47wt035dBHDVoma
+ V5Dtoi6jh9Dn/2oJ3oQyzuPXQTByAuxxem2u3iVRAykFxZvrWd4mBG9RgKJN2vasi5cK jA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 31g2jqyseb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 08 Jun 2020 16:16:31 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 058GDqt8012177;
+        Mon, 8 Jun 2020 16:16:31 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 31gn2ved05-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 08 Jun 2020 16:16:31 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 058GGPS5003304;
+        Mon, 8 Jun 2020 16:16:25 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 08 Jun 2020 09:16:24 -0700
+Date:   Mon, 8 Jun 2020 09:16:23 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH] iomap: Fix unsharing of an extent >2GB on a 32-bit
  machine
-Message-ID: <20200608062040.GA14861@infradead.org>
+Message-ID: <20200608161623.GV2162697@magnolia>
 References: <20200607103536.26508-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20200607103536.26508-1-willy@infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9646 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
+ bulkscore=0 adultscore=0 mlxlogscore=999 spamscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006080116
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9646 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 impostorscore=0
+ cotscore=-2147483648 priorityscore=1501 spamscore=0 suspectscore=1
+ lowpriorityscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0
+ phishscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006080116
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -59,8 +83,31 @@ On Sun, Jun 07, 2020 at 03:35:36AM -0700, Matthew Wilcox wrote:
 > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
 > Widen the type used for counting the number of bytes unshared.
+> 
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-Looks good, although at least for XFS we can't have that large
-extents anyway:
+Makes sense,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--D
+
+> ---
+>  fs/iomap/buffered-io.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index ae6c5e38f0e8..9f90d2394535 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -909,7 +909,7 @@ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	long status = 0;
+> -	ssize_t written = 0;
+> +	loff_t written = 0;
+>  
+>  	/* don't bother with blocks that are not shared to start with */
+>  	if (!(iomap->flags & IOMAP_F_SHARED))
+> -- 
+> 2.26.2
+> 
