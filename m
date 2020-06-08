@@ -4,49 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE94C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:02:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DD11C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:06:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6A8F2083E
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:02:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EA9720775
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 00:06:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591660952;
-	bh=O7PVaNIsTX7N/Glc5io4/4BBOM14gpk27nb95OJX0LA=;
+	s=default; t=1591661183;
+	bh=QAMWE1/DBYx5+V1FZnPPGk7MNCHZVe3zjX7evAGd5dE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=cArzWbXLkCN2v/CYxgR+n1Kw81/goaioV602FWf/qfBjBaftrtQbqxU5W0XXblawU
-	 M5SoOTvvc7scjXm98C7lt1nQPZ0ACXI+AFyWacuv90ihoWECuxSHbdExXCPNu+VWyp
-	 itjeac3dw54mr3pxNycLKjoT0Q62DLdBg6smw30c=
+	b=vB1yJaWZHOYrz/3BzQ+owTfP9PBvM4FWTn0N4Ox85WUaQVDl7fgtglYc9WPq1xlkH
+	 ZGNN6PfrvG9mBMBHo/mTtvlI4gUdWZODTaTWZdCI2mY7sKffzm+xMtxDkNvKDETit7
+	 m6BCx7L362wueoflfjNLphqCwBU2qZ0a3HQJz31k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732610AbgFIACO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 8 Jun 2020 20:02:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46572 "EHLO mail.kernel.org"
+        id S1732868AbgFIAGU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 8 Jun 2020 20:06:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45286 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730010AbgFHXWI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 8 Jun 2020 19:22:08 -0400
+        id S1728187AbgFHXVI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jun 2020 19:21:08 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id B885E208C9;
-        Mon,  8 Jun 2020 23:22:07 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 93C1020872;
+        Mon,  8 Jun 2020 23:21:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591658528;
-        bh=O7PVaNIsTX7N/Glc5io4/4BBOM14gpk27nb95OJX0LA=;
+        s=default; t=1591658468;
+        bh=QAMWE1/DBYx5+V1FZnPPGk7MNCHZVe3zjX7evAGd5dE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VyG2CwHBRnYvi+6R8vJd0NGedA29VS7cTJGO2kH/1w/i2wN5igiQZX5PwFtbQwOiH
-         lQ8v4ttnVMvxZF+RjS5D5/rZ+H8HkiYbD4eFDt3HPdWgZermZdxIj5gfjxrP9CkpR/
-         iESQc5A+ky38nGZ9wAj0brXbFq4sjNr/80B0qIWk=
+        b=FOJQ4xYGnWEZUZ7tzqkQiAC1FTbNzRp9HnFjgn7ygDxSDUEptSdyRXGAsAEidIVUp
+         5Q9au3TGd25nwLiTl/Uy3Y7DLVEb83cTAoja8Wx+1akVguFhOrTOmbclfAJsvgCzyP
+         Nl5gdubDovZ6qjLY675fIjYtciXhXycTe5WN6Fno=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+Cc:     Brian Foster <bfoster@redhat.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
-        Brian Foster <bfoster@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 153/175] xfs: force writes to delalloc regions to unwritten
-Date:   Mon,  8 Jun 2020 19:18:26 -0400
-Message-Id: <20200608231848.3366970-153-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 106/175] xfs: reset buffer write failure state on successful completion
+Date:   Mon,  8 Jun 2020 19:17:39 -0400
+Message-Id: <20200608231848.3366970-106-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200608231848.3366970-1-sashal@kernel.org>
 References: <20200608231848.3366970-1-sashal@kernel.org>
@@ -59,73 +60,81 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Brian Foster <bfoster@redhat.com>
 
-[ Upstream commit a5949d3faedf492fa7863b914da408047ab46eb0 ]
+[ Upstream commit b6983e80b03bd4fd42de71993b3ac7403edac758 ]
 
-When writing to a delalloc region in the data fork, commit the new
-allocations (of the da reservation) as unwritten so that the mappings
-are only marked written once writeback completes successfully.  This
-fixes the problem of stale data exposure if the system goes down during
-targeted writeback of a specific region of a file, as tested by
-generic/042.
+The buffer write failure flag is intended to control the internal
+write retry that XFS has historically implemented to help mitigate
+the severity of transient I/O errors. The flag is set when a buffer
+is resubmitted from the I/O completion path due to a previous
+failure. It is checked on subsequent I/O completions to skip the
+internal retry and fall through to the higher level configurable
+error handling mechanism. The flag is cleared in the synchronous and
+delwri submission paths and also checked in various places to log
+write failure messages.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+There are a couple minor problems with the current usage of this
+flag. One is that we issue an internal retry after every submission
+from xfsaild due to how delwri submission clears the flag. This
+results in double the expected or configured number of write
+attempts when under sustained failures. Another more subtle issue is
+that the flag is never cleared on successful I/O completion. This
+can cause xfs_wait_buftarg() to suggest that dirty buffers are being
+thrown away due to the existence of the flag, when the reality is
+that the flag might still be set because the write succeeded on the
+retry.
+
+Clear the write failure flag on successful I/O completion to address
+both of these problems. This means that the internal retry attempt
+occurs once since the last time a buffer write failed and that
+various other contexts only see the flag set when the immediately
+previous write attempt has failed.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 29 +++++++++++++++++------------
- 1 file changed, 17 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_buf.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3f76da11197c..7e7ebfcef5e0 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4090,17 +4090,7 @@ xfs_bmapi_allocate(
- 	bma->got.br_blockcount = bma->length;
- 	bma->got.br_state = XFS_EXT_NORM;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 0abba171aa89..1264ac63e4e5 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1162,8 +1162,10 @@ xfs_buf_ioend(
+ 		bp->b_ops->verify_read(bp);
+ 	}
  
--	/*
--	 * In the data fork, a wasdelay extent has been initialized, so
--	 * shouldn't be flagged as unwritten.
--	 *
--	 * For the cow fork, however, we convert delalloc reservations
--	 * (extents allocated for speculative preallocation) to
--	 * allocated unwritten extents, and only convert the unwritten
--	 * extents to real extents when we're about to write the data.
--	 */
--	if ((!bma->wasdel || (bma->flags & XFS_BMAPI_COWFORK)) &&
--	    (bma->flags & XFS_BMAPI_PREALLOC))
-+	if (bma->flags & XFS_BMAPI_PREALLOC)
- 		bma->got.br_state = XFS_EXT_UNWRITTEN;
+-	if (!bp->b_error)
++	if (!bp->b_error) {
++		bp->b_flags &= ~XBF_WRITE_FAIL;
+ 		bp->b_flags |= XBF_DONE;
++	}
  
- 	if (bma->wasdel)
-@@ -4507,8 +4497,23 @@ xfs_bmapi_convert_delalloc(
- 	bma.length = max_t(xfs_filblks_t, bma.got.br_blockcount, MAXEXTLEN);
- 	bma.total = XFS_EXTENTADD_SPACE_RES(ip->i_mount, XFS_DATA_FORK);
- 	bma.minleft = xfs_bmapi_minleft(tp, ip, whichfork);
-+
-+	/*
-+	 * When we're converting the delalloc reservations backing dirty pages
-+	 * in the page cache, we must be careful about how we create the new
-+	 * extents:
-+	 *
-+	 * New CoW fork extents are created unwritten, turned into real extents
-+	 * when we're about to write the data to disk, and mapped into the data
-+	 * fork after the write finishes.  End of story.
-+	 *
-+	 * New data fork extents must be mapped in as unwritten and converted
-+	 * to real extents after the write succeeds to avoid exposing stale
-+	 * disk contents if we crash.
-+	 */
-+	bma.flags = XFS_BMAPI_PREALLOC;
- 	if (whichfork == XFS_COW_FORK)
--		bma.flags = XFS_BMAPI_COWFORK | XFS_BMAPI_PREALLOC;
-+		bma.flags |= XFS_BMAPI_COWFORK;
+ 	if (bp->b_iodone)
+ 		(*(bp->b_iodone))(bp);
+@@ -1223,7 +1225,7 @@ xfs_bwrite(
  
- 	if (!xfs_iext_peek_prev_extent(ifp, &bma.icur, &bma.prev))
- 		bma.prev.br_startoff = NULLFILEOFF;
+ 	bp->b_flags |= XBF_WRITE;
+ 	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q |
+-			 XBF_WRITE_FAIL | XBF_DONE);
++			 XBF_DONE);
+ 
+ 	error = xfs_buf_submit(bp);
+ 	if (error)
+@@ -1929,7 +1931,7 @@ xfs_buf_delwri_submit_buffers(
+ 		 * synchronously. Otherwise, drop the buffer from the delwri
+ 		 * queue and submit async.
+ 		 */
+-		bp->b_flags &= ~(_XBF_DELWRI_Q | XBF_WRITE_FAIL);
++		bp->b_flags &= ~_XBF_DELWRI_Q;
+ 		bp->b_flags |= XBF_WRITE;
+ 		if (wait_list) {
+ 			bp->b_flags &= ~XBF_ASYNC;
 -- 
 2.25.1
 
