@@ -2,131 +2,97 @@ Return-Path: <SRS0=Wnnb=7W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB5AFC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 14:24:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B68C5C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 14:28:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 997DC206D5
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 14:24:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CB4920774
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 14:28:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HSecd4ec"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pUd67zGs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730562AbgFIOYj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Jun 2020 10:24:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37852 "EHLO
+        id S1729894AbgFIO2q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Jun 2020 10:28:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730004AbgFIOYi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jun 2020 10:24:38 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6422EC05BD1E
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Jun 2020 07:24:38 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id d10so10386648pgn.4
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Jun 2020 07:24:38 -0700 (PDT)
+        with ESMTP id S1728601AbgFIO2o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jun 2020 10:28:44 -0400
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC049C05BD1E;
+        Tue,  9 Jun 2020 07:28:43 -0700 (PDT)
+Received: by mail-io1-xd43.google.com with SMTP id p20so22883071iop.11;
+        Tue, 09 Jun 2020 07:28:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=ZFX1F3OkHqup99RqOqaVUUo0fic7h5CCqWt4it2jh1Q=;
-        b=HSecd4ecZ3UA+zI6MzbenOSWVoKXAlu1ABWz+qjvdksjTeobJG/ggM5a0nhVSydxb9
-         O72+lp9sN+EyghhHvCZ7JnOUNvhtbJhSJ46noyAbdvcNZhBQSGPpj7Va2qIBMYL7m5xw
-         T/HP8Acjf2f0et4Uyg6jUKHHAPl6ek6VmskpYpdejHBDWKlF6Sw/TdM/R16Zt9o3cR37
-         ZKVEFBjNJ2rF/8XFWAquMItj3hjwGbqr5Mkw0FdiE7kjv37WRcZ9X8BUI23Mj1jevmOL
-         MfmurNPDm0G5CXnb4kgqs6c5iD1niQ3it+5iwy1OaB/0xIwlwzi1gtar+LhS9i9oLPS2
-         3bZA==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=CHleEGQvwth+DWFFAZh2cL0FL4PTrqO8oJ2xru0YtMA=;
+        b=pUd67zGsjy+kxiVT5oLzIOJmDyKXkWL/r/t5e145O2QSN+AjKyoVYwU7I4IfUxDE+u
+         JKBzt9OaMa/tSMOzjcKTxUUEY8c4NAM3RZoR1kNd2p215gJOTugu+WTZvjEj1rvaKOKk
+         gAAc84OalvjBc0ZsPWi+G9nhRZCjvtpWoUUV0YDdvbQmt0WitVHq4pohZ/Xy2P7VcZPQ
+         au76hFXCES+vG7AhVhfJlxYAqNOg6DisW7rUqImREOye/KwB7sgvyQRP1hNVZGIjjD8v
+         Ul1UtSvcSDamUF2xSzkTmgFkca6iqQeQrenxD8oyEN3u0BxYl628qjHaNJjSBxsu4fTN
+         t/1g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=ZFX1F3OkHqup99RqOqaVUUo0fic7h5CCqWt4it2jh1Q=;
-        b=EK96+mfkjtgZU9r3vyy1dKDYmRZ4cuP2WhALP8sbQra118XvX21g+EjH7ulYvquh9Z
-         Vq8NoQV/u3hXtwM0ItW9g0XarD8T7J8IF/v9awXCaL8GZWoST985y4AkVslD06+gwlpx
-         zf8ANYOjHVPz3K1fqtIQQ1JJq4QduepfGZUxnpmacFZsTFCIjk1buHMHL3Jsi8NP+2vh
-         yNC0uSOEfMjYCwzwXFAjPCJwFSLn1X00HOj3kMDDXC1iLcNKw3tWApTvzQAofd3VwbdY
-         ym+9m3DNIFvc/SLBsIy14iRJRRXe6Riy6k060qABGvhE33PKHzbl0hGQD4DWuKSe7ipc
-         qK3Q==
-X-Gm-Message-State: AOAM5305ncKObAlHsbbtQOnVuPXDiEzWaUCfcy0kTAx9AWhbRY8LI+Ej
-        HsKcUvgip+bkUabxL2zl3yg=
-X-Google-Smtp-Source: ABdhPJyzs8a1cneCtGu62ejodi/pgQRRMyKkUiMJ+gr2ghwtGzJt79l+/h7pVDIoSGnVRa247VVggg==
-X-Received: by 2002:a65:5285:: with SMTP id y5mr25810497pgp.271.1591712677997;
-        Tue, 09 Jun 2020 07:24:37 -0700 (PDT)
-Received: from garuda.localnet ([171.48.18.33])
-        by smtp.gmail.com with ESMTPSA id m10sm2817036pjs.27.2020.06.09.07.24.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2020 07:24:37 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, bfoster@redhat.com,
-        hch@infradead.org
-Subject: Re: [PATCH 0/7] xfs: Extend per-inode extent counters.
-Date:   Tue, 09 Jun 2020 19:52:20 +0530
-Message-ID: <4246468.YyLm5IjERU@garuda>
-In-Reply-To: <20200608173103.GH1334206@magnolia>
-References: <20200606082745.15174-1-chandanrlinux@gmail.com> <20200608173103.GH1334206@magnolia>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=CHleEGQvwth+DWFFAZh2cL0FL4PTrqO8oJ2xru0YtMA=;
+        b=LZm3GHm4KBQmsvVh0HxpMKgErtT34x9lzYfhZXGjiYlaDCCfLC/65SF2n9h6ZfFhMT
+         /jS71LB9EtyPX1Xb0gktBY7CrN0GsLzBm1xY/OTN7AHbxCUC74ptPwZ7wL3YoqlHmaah
+         MH5U/XQpDPizKJHxCcsbde3LhnDO9xIJilzMSa4Rwn4vnTr39CX+IJDhHzLCvjovz0im
+         MyjX4BM5XCaGSkdoIjF/HZn/QiR9aQfQHKMYIkkAmBGlDxkYTfohRRJhhA9hDjQ+tYGX
+         9KmTD6jKRT6HDfvrOo1gThxPzeR0aFlsdBHnaT20/rVLj5rUJak98hCJJBHWEEiUmhut
+         CB/g==
+X-Gm-Message-State: AOAM533fS68QkeRr1ZpsOy6lJXMhlaixv7MfTpmX57Vow9y5miS3d/Ge
+        JTMhb1iwnv7j3AFVU/CY41x7oB/j2VldWXPLwhREanr9RlJ0BQ==
+X-Google-Smtp-Source: ABdhPJxj53r9fJMQoUdiO8ZXSy+k/8PtAYxUNGUbGwLjh4GNQYtVZAr6428Kuv4ftdjP8UBRWMU3rgbimqXmR+80/+E=
+X-Received: by 2002:a02:cc71:: with SMTP id j17mr25858487jaq.94.1591712923004;
+ Tue, 09 Jun 2020 07:28:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+References: <1591254347-15912-1-git-send-email-laoar.shao@gmail.com> <20200609140304.GA11626@infradead.org>
+In-Reply-To: <20200609140304.GA11626@infradead.org>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Tue, 9 Jun 2020 22:28:06 +0800
+Message-ID: <CALOAHbCeFFPCVS-toSC32qtLqQsEF1KG6p0OBXkQb=T2g6YpYw@mail.gmail.com>
+Subject: Re: [PATCH v2] iomap: avoid deadlock if memory reclaim is triggered
+ in writepage path
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Monday 8 June 2020 11:01:03 PM IST Darrick J. Wong wrote:
-> On Sat, Jun 06, 2020 at 01:57:38PM +0530, Chandan Babu R wrote:
-> > The commit xfs: fix inode fork extent count overflow
-> > (3f8a4f1d876d3e3e49e50b0396eaffcc4ba71b08) mentions that 10 billion
-> > per-inode data fork extents should be possible to create. However the
-> > corresponding on-disk field has an signed 32-bit type. Hence this
-> > patchset extends the on-disk field to 64-bit length out of which only
-> > the first 47-bits are valid.
-> > 
-> > Also, XFS has a per-inode xattr extent counter which is 16 bits
-> > wide. A workload which
-> > 1. Creates 1 million 255-byte sized xattrs,
-> > 2. Deletes 50% of these xattrs in an alternating manner,
-> > 3. Tries to insert 400,000 new 255-byte sized xattrs
-> > causes the following message to be printed on the console,
-> > 
-> > XFS (loop0): xfs_iflush_int: detected corrupt incore inode 131, total extents = -19916, nblocks = 102937, ptr ffff9ce33b098c00
-> > XFS (loop0): xfs_do_force_shutdown(0x8) called from line 3739 of file fs/xfs/xfs_inode.c. Return address = ffffffffa4a94173
-> > 
-> > This indicates that we overflowed the 16-bits wide xattr extent
-> > counter.
-> > 
-> > I have been informed that there are instances where a single file
-> > has > 100 million hardlinks. With parent pointers being stored in xattr,
-> > we will overflow the 16-bits wide xattr extent counter when large
-> > number of hardlinks are created. Hence this patchset extends the
-> > on-disk field to 32-bit length.
-> > 
-> > This patchset also includes the previously posted "Fix log reservation
-> > calculation for xattr insert operation" patch as a bug fix. It
-> > replaces the xattr set "mount" and "runtime" reservations with just
-> > one static reservation. Hence we don't need the functionality to
-> > calculate maximum sized 'xattr set' reservation separately anymore.
-> > 
-> > The patches can also be obtained from
-> > https://github.com/chandanr/linux.git at branch xfs-extend-extent-counters.
-> > 
-> > Chandan Babu R (7):
-> >   xfs: Fix log reservation calculation for xattr insert operation
-> 
-> What happened to that whole patchset with struct xfs_attr_set_resv
-> and whatnot?  Did all that get condensed down to this single patch?
+On Tue, Jun 9, 2020 at 10:03 PM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Thu, Jun 04, 2020 at 03:05:47AM -0400, Yafang Shao wrote:
+> > Recently there is a XFS deadlock on our server with an old kernel.
+> > This deadlock is caused by allocating memory in xfs_map_blocks() while
+> > doing writeback on behalf of memroy reclaim. Although this deadlock happens
+> > on an old kernel, I think it could happen on the upstream as well. This
+> > issue only happens once and can't be reproduced, so I haven't tried to
+> > reproduce it on upsteam kernel.
+>
+> The report looks sensible, but I don't think the iomap code is the
+> right place for this.  Until/unless the VM people agree that
+> ->writepages(s) generally should not recurse into the fs I think the
+> low-level file system allocating is the right place, so xfs_map_blocks
+> would seem like the correct place.
 
-Yes, with the new method, we have just one static log reservation rather than
-having "mount" and "runtime" reservations for the xattr set operation. The
-single static log reservation takes into account the worst case
-possible. i.e.
-- Double split of the Dabtree for large local xattrs.
-- Bmbt blocks required for mapping the contents of a maximum sized
-  (i.e. XATTR_SIZE_MAX bytes in size) remote attribute.
+Thanks for your comment.
+That is what I did in the previous version [1].
+So should I resend the v1 ?
+
+[1]. https://lore.kernel.org/linux-xfs/1591179035-9270-1-git-send-email-laoar.shao@gmail.com/
 
 -- 
-chandan
-
-
-
+Thanks
+Yafang
