@@ -2,131 +2,296 @@ Return-Path: <SRS0=Wnnb=7W=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4A9C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 04:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00DF8C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 11:41:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6885207ED
-	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 04:28:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C13CA2068D
+	for <linux-xfs@archiver.kernel.org>; Tue,  9 Jun 2020 11:41:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H1O/0E9m"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g1gGVh4W"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726546AbgFIE2P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Jun 2020 00:28:15 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:39230 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725770AbgFIE2O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jun 2020 00:28:14 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0594QkpE168999;
-        Tue, 9 Jun 2020 04:28:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=Jt2kiv390E1D+m0oPc+Qsbk4ZBhT+v1fnFnvl4GqKxQ=;
- b=H1O/0E9mi9Fs7ul0NstbE9S6I5duvQclMeEkZjuCm+M+u4KO4cjBVJs7Eks1sWHRW+eB
- p0/Xl8fHi2moN2zCczqy3mgHjRN2NOtqsiP8zYHQ9wQttnxFIvMxvrDwbSSIHEHFQwHa
- Qittgy3dIECCZhRLpcNHzvcgHcB3EdNj4yQxZVkBYMha32ZwFlDr7THBLEFRu7KfcrnZ
- PQOooJRgnd3QuHIoKTeJyfP0pSO+Uq5kIyHn6uc3Cxyb6YmbCU0sn83EubmkKW19SGeW
- vE4n1OZMoxJP7Yhm9qRbyn8veNf1F5xkwK38aU01J1Dg1J3Sib/Ewm7BZlVTJ09AP4SU 3Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 31g33m2c56-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 09 Jun 2020 04:28:07 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0594OJMY194136;
-        Tue, 9 Jun 2020 04:28:06 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 31gn24qvce-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 09 Jun 2020 04:28:06 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0594S0JL026608;
-        Tue, 9 Jun 2020 04:28:00 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 08 Jun 2020 21:27:59 -0700
-Date:   Mon, 8 Jun 2020 21:27:58 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Sasha Levin <sashal@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 5.7 244/274] xfs: force writes to delalloc
- regions to unwritten
-Message-ID: <20200609042758.GQ1334206@magnolia>
-References: <20200608230607.3361041-1-sashal@kernel.org>
- <20200608230607.3361041-244-sashal@kernel.org>
- <20200609010727.GN1334206@magnolia>
- <20200609021021.GU1407771@sasha-vm>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200609021021.GU1407771@sasha-vm>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9646 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1 mlxscore=0
- phishscore=0 adultscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006090032
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9646 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0 spamscore=0
- cotscore=-2147483648 malwarescore=0 phishscore=0 mlxscore=0 clxscore=1031
- lowpriorityscore=0 impostorscore=0 priorityscore=1501 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006090033
+        id S1728973AbgFILlv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 9 Jun 2020 07:41:51 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:41291 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726116AbgFILlt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jun 2020 07:41:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1591702907;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=PyJWsFpyd87Rk3FvIQm1A9u1OwV7g4iVUg3Hzfm1A6c=;
+        b=g1gGVh4WiiigBLG4lsOvI5YUwadmN4tNAsPlBmhfBYRMZzPtxjFzCE1KaVjS3dX5VpMxv8
+        JRV+CQMqa2qRx7DU49tRMgtWG01ja2axB6bW17tTpfTEK0IYXE0pgyGOKNitZwwqOyNruO
+        ac7PT85gt0B0QQxZx/OnLvDERr6YSlw=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-5-h2miEwEWMc6_hsX13cfdUA-1; Tue, 09 Jun 2020 07:41:40 -0400
+X-MC-Unique: h2miEwEWMc6_hsX13cfdUA-1
+Received: by mail-pf1-f198.google.com with SMTP id f14so5111797pfd.2
+        for <linux-xfs@vger.kernel.org>; Tue, 09 Jun 2020 04:41:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=PyJWsFpyd87Rk3FvIQm1A9u1OwV7g4iVUg3Hzfm1A6c=;
+        b=RBJYECYMsU6dNO5sydc1T4QeckIr/kv7dwzla73navGFSoSOBjkVay8vBq9SaVFq9e
+         p2oR8y2Enpxc2lqMWH8QbO8fytR/P+pZK8TWhPLEwI05pmIUm610NMmEDy519+Wr5w3O
+         9+Q7gvI4OBvYtrl8uSmeYaXOTObBedeuW5StfbcTmdn9BsOQ9RU69fhxekyQ00D/uTUV
+         2Xe7izTzMtdfxGfUTLeB/dUqvZDYpcj2rKzDVvAi/JD4JYnvl2+XUG/zBbNh+UqR8Dkk
+         Qr9g7GwhBru0Z55OCUmiVdSnOtIvliZXvfAKzNNj4i/LZ48vnxVFCQ+uV1OK/dyuix2s
+         SGyQ==
+X-Gm-Message-State: AOAM531u/Hv0VTU3+vtxZRoJwqw+ZFAn0zs4dHLG7jpmeJOjvS1UFwye
+        XHiKH1QxHNwwH6Y4mYLnoxLfo3NI292Q5tBt9uHjBEKNfJmPOwt35nAo0zMCmcGGVg70scBc0j0
+        Y1BAyRlzzCedBap0/ulln
+X-Received: by 2002:a63:1114:: with SMTP id g20mr23952212pgl.3.1591702898426;
+        Tue, 09 Jun 2020 04:41:38 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyJeMz5E6aglG9dWKEsWNzCSg3DNg8jwYih1mgEOzi3yK/4oyDDJNMGLB0wLJesTUaELbz8xQ==
+X-Received: by 2002:a63:1114:: with SMTP id g20mr23952198pgl.3.1591702898056;
+        Tue, 09 Jun 2020 04:41:38 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id x25sm8346666pge.23.2020.06.09.04.41.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Jun 2020 04:41:36 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Gao Xiang <hsiangkao@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: [RFC PATCH] xfs_repair: fix rebuilding btree node block less than minrecs
+Date:   Tue,  9 Jun 2020 19:40:53 +0800
+Message-Id: <20200609114053.31924-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 08, 2020 at 10:10:21PM -0400, Sasha Levin wrote:
-> On Mon, Jun 08, 2020 at 06:07:27PM -0700, Darrick J. Wong wrote:
-> > On Mon, Jun 08, 2020 at 07:05:37PM -0400, Sasha Levin wrote:
-> > > From: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > > 
-> > > [ Upstream commit a5949d3faedf492fa7863b914da408047ab46eb0 ]
-> > > 
-> > > When writing to a delalloc region in the data fork, commit the new
-> > > allocations (of the da reservation) as unwritten so that the mappings
-> > > are only marked written once writeback completes successfully.  This
-> > > fixes the problem of stale data exposure if the system goes down during
-> > > targeted writeback of a specific region of a file, as tested by
-> > > generic/042.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > > Signed-off-by: Sasha Levin <sashal@kernel.org>
-> > 
-> > Err, this doesn't have a Fixes: tag attached to it.  Does it pass
-> > fstests?  Because it doesn't look like you've pulled in "xfs: don't fail
-> > unwritten extent conversion on writeback due to edquot", which is needed
-> > to avoid regressing fstests...
-> > 
-> > ...waitaminute, that whole series lacks Fixes: tags because it wasn't
-> > considered a good enough candidate for automatic backport.
-> 
-> AUTOSEL doesn't look just at the Fixes tag :)
-> 
-> > Ummm, does the autosel fstests driver turn on quotas? ;)
-> 
-> Uh, apparently not :/ Is it okay to just enable it across all tests?
+In production, we found that sometimes xfs_repair phase 5
+rebuilds freespace node block with pointers less than minrecs
+and if we trigger xfs_repair again it would report such
+the following message:
 
-It should be at this point.
+bad btree nrecs (39, min=40, max=80) in btbno block 0/7882
 
-> While I go fix that up, would you rather drop the series, or pick up
-> 1edd2c055dff ("xfs: don't fail unwritten extent conversion on writeback
-> due to edquot")?`
+The background is that xfs_repair starts to rebuild AGFL
+after the freespace btree is settled in phase 5 so we may
+need to leave necessary room in advance for each btree
+leaves in order to avoid freespace btree split and then
+result in AGFL rebuild fails. The old mathematics uses
+ceil(num_extents / maxrecs) to decide the number of node
+blocks. That would be fine without leaving extra space
+since minrecs = maxrecs / 2 but if some slack was decreased
+from maxrecs, the result would be larger than what is
+expected and cause num_recs_pb less than minrecs, i.e:
 
-Let's drop it for now, please.  There might be a few more tweaks needed
-to get that bit just right.
+num_extents = 79, adj_maxrecs = 80 - 2 (slack) = 78
 
---D
+so we'd get
 
-> -- 
-> Thanks,
-> Sasha
+num_blocks = ceil(79 / 78) = 2,
+num_recs_pb = 79 / 2 = 39, which is less than
+minrecs = 80 / 2 = 40
+
+OTOH, btree bulk loading code behaves in a different way.
+As in xfs_btree_bload_level_geometry it wrote
+
+num_blocks = floor(num_extents / maxrecs)
+
+which will never go below minrecs. And when it goes
+above maxrecs, just increment num_blocks and recalculate
+so we can get the reasonable results.
+
+In the long term, btree bulk loader will replace the current
+repair code as well as to resolve AGFL dependency issue.
+But we may still want to look for a backportable solution
+for stable versions. Hence, use the same logic to avoid the
+freespace btree minrecs underflow for now.
+
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Dave Chinner <dchinner@redhat.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>
+Fixes: 9851fd79bfb1 ("repair: AGFL rebuild fails if btree split required")
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+---
+not heavy tested yet..
+
+ repair/phase5.c | 101 +++++++++++++++++++++---------------------------
+ 1 file changed, 45 insertions(+), 56 deletions(-)
+
+diff --git a/repair/phase5.c b/repair/phase5.c
+index abae8a08..997804a5 100644
+--- a/repair/phase5.c
++++ b/repair/phase5.c
+@@ -348,11 +348,29 @@ finish_cursor(bt_status_t *curs)
+  * failure at runtime. Hence leave a couple of records slack space in
+  * each block to allow immediate modification of the tree without
+  * requiring splits to be done.
+- *
+- * XXX(hch): any reason we don't just look at mp->m_alloc_mxr?
+  */
+-#define XR_ALLOC_BLOCK_MAXRECS(mp, level) \
+-	(libxfs_allocbt_maxrecs((mp), (mp)->m_sb.sb_blocksize, (level) == 0) - 2)
++static void
++compute_level_geometry(xfs_mount_t *mp, bt_stat_level_t *lptr,
++		       uint64_t nr_this_level, bool leaf)
++{
++	unsigned int		maxrecs = mp->m_alloc_mxr[!leaf];
++	int			slack = leaf ? 2 : 0;
++	unsigned int		desired_npb;
++
++	desired_npb = max(mp->m_alloc_mnr[!leaf], maxrecs - slack);
++	lptr->num_recs_tot = nr_this_level;
++	lptr->num_blocks = max(1ULL, nr_this_level / desired_npb);
++
++	lptr->num_recs_pb = nr_this_level / lptr->num_blocks;
++	lptr->modulo = nr_this_level % lptr->num_blocks;
++	if (lptr->num_recs_pb > maxrecs || (lptr->num_recs_pb == maxrecs &&
++			lptr->modulo)) {
++		lptr->num_blocks++;
++
++		lptr->num_recs_pb = nr_this_level / lptr->num_blocks;
++		lptr->modulo = nr_this_level % lptr->num_blocks;
++	}
++}
+ 
+ /*
+  * this calculates a freespace cursor for an ag.
+@@ -370,6 +388,7 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	int			i;
+ 	int			extents_used;
+ 	int			extra_blocks;
++	uint64_t		old_blocks;
+ 	bt_stat_level_t		*lptr;
+ 	bt_stat_level_t		*p_lptr;
+ 	extent_tree_node_t	*ext_ptr;
+@@ -388,10 +407,7 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	 * of the tree and set up the cursor for the leaf level
+ 	 * (note that the same code is duplicated further down)
+ 	 */
+-	lptr->num_blocks = howmany(num_extents, XR_ALLOC_BLOCK_MAXRECS(mp, 0));
+-	lptr->num_recs_pb = num_extents / lptr->num_blocks;
+-	lptr->modulo = num_extents % lptr->num_blocks;
+-	lptr->num_recs_tot = num_extents;
++	compute_level_geometry(mp, lptr, num_extents, true);
+ 	level = 1;
+ 
+ #ifdef XR_BLD_FREE_TRACE
+@@ -406,18 +422,12 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	 * per level is the # of blocks in the level below it
+ 	 */
+ 	if (lptr->num_blocks > 1)  {
+-		for (; btree_curs->level[level - 1].num_blocks > 1
+-				&& level < XFS_BTREE_MAXLEVELS;
+-				level++)  {
++		do {
++			p_lptr = lptr;
+ 			lptr = &btree_curs->level[level];
+-			p_lptr = &btree_curs->level[level - 1];
+-			lptr->num_blocks = howmany(p_lptr->num_blocks,
+-					XR_ALLOC_BLOCK_MAXRECS(mp, level));
+-			lptr->modulo = p_lptr->num_blocks
+-					% lptr->num_blocks;
+-			lptr->num_recs_pb = p_lptr->num_blocks
+-					/ lptr->num_blocks;
+-			lptr->num_recs_tot = p_lptr->num_blocks;
++
++			compute_level_geometry(mp, lptr,
++					p_lptr->num_blocks, false);
+ #ifdef XR_BLD_FREE_TRACE
+ 			fprintf(stderr, "%s %d %d %d %d %d\n", __func__,
+ 					level,
+@@ -426,7 +436,9 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 					lptr->modulo,
+ 					lptr->num_recs_tot);
+ #endif
+-		}
++			level++;
++		} while (lptr->num_blocks > 1);
++		ASSERT (level < XFS_BTREE_MAXLEVELS);
+ 	}
+ 
+ 	ASSERT(lptr->num_blocks == 1);
+@@ -496,8 +508,11 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 	 * see if the number of leaf blocks will change as a result
+ 	 * of the number of extents changing
+ 	 */
+-	if (howmany(num_extents, XR_ALLOC_BLOCK_MAXRECS(mp, 0))
+-			!= btree_curs->level[0].num_blocks)  {
++	old_blocks = btree_curs->level[0].num_blocks;
++	compute_level_geometry(mp, &btree_curs->level[0], num_extents, true);
++	extra_blocks = 0;
++
++	if (old_blocks != btree_curs->level[0].num_blocks)  {
+ 		/*
+ 		 * yes -- recalculate the cursor.  If the number of
+ 		 * excess (overallocated) blocks is < xfs_agfl_size/2, we're ok.
+@@ -553,30 +568,20 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 		}
+ 
+ 		lptr = &btree_curs->level[0];
+-		lptr->num_blocks = howmany(num_extents,
+-					XR_ALLOC_BLOCK_MAXRECS(mp, 0));
+-		lptr->num_recs_pb = num_extents / lptr->num_blocks;
+-		lptr->modulo = num_extents % lptr->num_blocks;
+-		lptr->num_recs_tot = num_extents;
+ 		level = 1;
+ 
+ 		/*
+ 		 * if we need more levels, set them up
+ 		 */
+ 		if (lptr->num_blocks > 1)  {
+-			for (level = 1; btree_curs->level[level-1].num_blocks
+-					> 1 && level < XFS_BTREE_MAXLEVELS;
+-					level++)  {
+-				lptr = &btree_curs->level[level];
+-				p_lptr = &btree_curs->level[level-1];
+-				lptr->num_blocks = howmany(p_lptr->num_blocks,
+-					XR_ALLOC_BLOCK_MAXRECS(mp, level));
+-				lptr->modulo = p_lptr->num_blocks
+-						% lptr->num_blocks;
+-				lptr->num_recs_pb = p_lptr->num_blocks
+-						/ lptr->num_blocks;
+-				lptr->num_recs_tot = p_lptr->num_blocks;
+-			}
++			do {
++				p_lptr = lptr;
++				lptr = &btree_curs->level[level++];
++
++				compute_level_geometry(mp, lptr,
++						p_lptr->num_blocks, false);
++			} while (lptr->num_blocks > 1);
++			ASSERT (level < XFS_BTREE_MAXLEVELS);
+ 		}
+ 		ASSERT(lptr->num_blocks == 1);
+ 		btree_curs->num_levels = level;
+@@ -591,22 +596,6 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
+ 
+ 		ASSERT(blocks_allocated_total >= blocks_needed);
+ 		extra_blocks = blocks_allocated_total - blocks_needed;
+-	} else  {
+-		if (extents_used > 0) {
+-			/*
+-			 * reset the leaf level geometry to account
+-			 * for consumed extents.  we can leave the
+-			 * rest of the cursor alone since the number
+-			 * of leaf blocks hasn't changed.
+-			 */
+-			lptr = &btree_curs->level[0];
+-
+-			lptr->num_recs_pb = num_extents / lptr->num_blocks;
+-			lptr->modulo = num_extents % lptr->num_blocks;
+-			lptr->num_recs_tot = num_extents;
+-		}
+-
+-		extra_blocks = 0;
+ 	}
+ 
+ 	btree_curs->num_tot_blocks = blocks_allocated_pt;
+-- 
+2.18.1
+
