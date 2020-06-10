@@ -4,243 +4,176 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 765CFC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 13:08:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDD25C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 16:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C10E206F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 13:08:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9F2E206F4
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 16:02:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CZ6bEMtg"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qjlnAs5M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729120AbgFJNIn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Jun 2020 09:08:43 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:39359 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728844AbgFJNIm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jun 2020 09:08:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1591794520;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ac0bmf3eUabA/iKQgTW8GkTBJTijLOSVKc9r0FJpxAA=;
-        b=CZ6bEMtg8uu4H17aoa3+BM+5Kn041nsadVfjj1ehUHg8eJyN9yivciBmhXnlZAmNG/xVVN
-        NGqrSRKfqAdTf3+h44onV9iGP6GNlppgp16G7ASNB+DnGcOkHQvm+z9mjAR6dkUQDxPTjl
-        Wlr/OsYFwTLIkn3jhAjbuTgpcTbTnOI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-228-n0odbhRLP7uAapIc8gbgJw-1; Wed, 10 Jun 2020 09:08:36 -0400
-X-MC-Unique: n0odbhRLP7uAapIc8gbgJw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AB40D107ACF4;
-        Wed, 10 Jun 2020 13:08:35 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 30D567BA10;
-        Wed, 10 Jun 2020 13:08:35 +0000 (UTC)
-Date:   Wed, 10 Jun 2020 09:08:33 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 29/30] xfs: factor xfs_iflush_done
-Message-ID: <20200610130833.GB50747@bfoster>
-References: <20200604074606.266213-1-david@fromorbit.com>
- <20200604074606.266213-30-david@fromorbit.com>
- <20200609131249.GC40899@bfoster>
- <20200609221431.GK2040@dread.disaster.area>
+        id S1730459AbgFJQCg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Jun 2020 12:02:36 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:43578 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726754AbgFJQCf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jun 2020 12:02:35 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05AFrALr137192;
+        Wed, 10 Jun 2020 16:02:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=htFnvm7oZfEBFI2RT2kk9kJaL2tOurokob7gJHUjLTY=;
+ b=qjlnAs5MIAKsCSYKAomMF7EYn+57OENAtDn7fVUmXlkECWm8LCYDNZjZfP/SL4zpkHQo
+ uxgrCv7Suar4nv/V6nfTeoe6vA+FNrcWVdIaA7E7oI0VZsiVQ3jBIJ0QDqePMScY4AID
+ 28rJrMWx3ds5rXmKVy8LqpJ4U7tzzy0yTSotnRTX6ypzFpyPiTNZpyo6m54EZXvb0Ks2
+ fA6J12Qyg5O0ZJeYjHV35OJtfchVVo+bw91zKwaiX6XpgSIaAqAxnPWZMHAvWVV5ddcX
+ GiWqM83IkiM6wDcx1VOqhSLEbnZVEDSCZj3s+frmKEvpaYh0KPlQ7Rps5N3af1rjpm5u rg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 31jepnw43m-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 10 Jun 2020 16:02:29 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05AFvkEa090579;
+        Wed, 10 Jun 2020 16:02:29 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 31gn2yqdq3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 10 Jun 2020 16:02:27 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05AG2PqW012637;
+        Wed, 10 Jun 2020 16:02:26 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 10 Jun 2020 09:02:24 -0700
+Date:   Wed, 10 Jun 2020 09:02:23 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] xfs_copy: flush target devices before exiting
+Message-ID: <20200610160223.GF11245@magnolia>
+References: <20200608184757.GL1334206@magnolia>
+ <1397005d-04a7-0a06-0549-7633da125ba0@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200609221431.GK2040@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <1397005d-04a7-0a06-0549-7633da125ba0@sandeen.net>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9647 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
+ bulkscore=0 adultscore=0 mlxlogscore=999 spamscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006100121
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9647 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=1
+ priorityscore=1501 bulkscore=0 clxscore=1015 phishscore=0 impostorscore=0
+ malwarescore=0 mlxscore=0 cotscore=-2147483648 adultscore=0 spamscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006100120
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 10, 2020 at 08:14:31AM +1000, Dave Chinner wrote:
-> On Tue, Jun 09, 2020 at 09:12:49AM -0400, Brian Foster wrote:
-> > On Thu, Jun 04, 2020 at 05:46:05PM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > xfs_iflush_done() does 3 distinct operations to the inodes attached
-> > > to the buffer. Separate these operations out into functions so that
-> > > it is easier to modify these operations independently in future.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/xfs_inode_item.c | 154 +++++++++++++++++++++-------------------
-> > >  1 file changed, 81 insertions(+), 73 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> > > index dee7385466f83..3894d190ea5b9 100644
-> > > --- a/fs/xfs/xfs_inode_item.c
-> > > +++ b/fs/xfs/xfs_inode_item.c
-> > > @@ -640,101 +640,64 @@ xfs_inode_item_destroy(
-> > >  
-> > >  
-> > >  /*
-> > > - * This is the inode flushing I/O completion routine.  It is called
-> > > - * from interrupt level when the buffer containing the inode is
-> > > - * flushed to disk.  It is responsible for removing the inode item
-> > > - * from the AIL if it has not been re-logged, and unlocking the inode's
-> > > - * flush lock.
-> > > - *
-> > > - * To reduce AIL lock traffic as much as possible, we scan the buffer log item
-> > > - * list for other inodes that will run this function. We remove them from the
-> > > - * buffer list so we can process all the inode IO completions in one AIL lock
-> > > - * traversal.
-> > > - *
-> > > - * Note: Now that we attach the log item to the buffer when we first log the
-> > > - * inode in memory, we can have unflushed inodes on the buffer list here. These
-> > > - * inodes will have a zero ili_last_fields, so skip over them here.
-> > > + * We only want to pull the item from the AIL if it is actually there
-> > > + * and its location in the log has not changed since we started the
-> > > + * flush.  Thus, we only bother if the inode's lsn has not changed.
-> > >   */
-> > >  void
-> > > -xfs_iflush_done(
-> > > -	struct xfs_buf		*bp)
-> > > +xfs_iflush_ail_updates(
-> > > +	struct xfs_ail		*ailp,
-> > > +	struct list_head	*list)
-> > >  {
-> > > -	struct xfs_inode_log_item *iip;
-> > > -	struct xfs_log_item	*lip, *n;
-> > > -	struct xfs_ail		*ailp = bp->b_mount->m_ail;
-> > > -	int			need_ail = 0;
-> > > -	LIST_HEAD(tmp);
-> > > +	struct xfs_log_item	*lip;
-> > > +	xfs_lsn_t		tail_lsn = 0;
-> > >  
-> > > -	/*
-> > > -	 * Pull the attached inodes from the buffer one at a time and take the
-> > > -	 * appropriate action on them.
-> > > -	 */
-> > > -	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
-> > > -		iip = INODE_ITEM(lip);
-> > > +	/* this is an opencoded batch version of xfs_trans_ail_delete */
-> > > +	spin_lock(&ailp->ail_lock);
-> > > +	list_for_each_entry(lip, list, li_bio_list) {
-> > > +		xfs_lsn_t	lsn;
-> > >  
-> > > -		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
-> > > -			xfs_iflush_abort(iip->ili_inode);
-> > > +		if (INODE_ITEM(lip)->ili_flush_lsn != lip->li_lsn) {
-> > > +			clear_bit(XFS_LI_FAILED, &lip->li_flags);
-> > >  			continue;
-> > >  		}
+On Tue, Jun 09, 2020 at 11:31:52PM -0500, Eric Sandeen wrote:
+> 
+> On 6/8/20 1:47 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > That seems like strange logic. Shouldn't we clear LI_FAILED regardless?
+> > Flush the devices we're copying to before exiting, so that we can report
+> > any write errors.
 > 
-> It's the same logic as before this patch series:
+> Hm, I hadn't really looked at xfs_copy in depth, funky stuff.
 > 
->                        if (INODE_ITEM(blip)->ili_logged &&
->                             blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn) {
->                                 /*
->                                  * xfs_ail_update_finish() only cares about the
->                                  * lsn of the first tail item removed, any
->                                  * others will be at the same or higher lsn so
->                                  * we just ignore them.
->                                  */
->                                 xfs_lsn_t lsn = xfs_ail_delete_one(ailp, blip);
->                                 if (!tail_lsn && lsn)
->                                         tail_lsn = lsn;
->                         } else {
->                                 xfs_clear_li_failed(blip);
+> So normally errors look something like:
+> 
+> THE FOLLOWING COPIES FAILED TO COMPLETE
+>     $TARGET -- write error at offset ABC
+>     $TARGET -- seek error at offset XYZ
+> 
+> if for some reason we didn't detect any errors until this final
+> device flush, we'll only see:
+> 
+>     $TARGET -- flush error -Q
+> 
+> and no header...
+> 
+> Seems like this error needs to be integrated w/ the other error reporting,
+> something like:
+> 
+> check_errors(void)
+> {
+>         int     i, flush_error, first_error = 0;
+> 
+>         for (i = 0; i < num_targets; i++)  {
+>                 flush_error = platform_flush_device(target[i].fd, 0);
+
+<shrug> I was gonna skip the flush error if the target already died,
+but yeah I agree this should come before THE FOLLOWING COPIES WERE EATEN
+BY CIRCUMSTANCE.
+
+--D
+
+> 
+>                 if (flush_error || target[i].state == INACTIVE)  {
+>                         if (first_error == 0)  {
+>                                 first_error++;
+>                                 do_log(
+>                                 _("THE FOLLOWING COPIES FAILED TO COMPLETE\n"));
 >                         }
+>                         if (target[i].state == INACTIVE) {
+>                                 do_log("    %s -- ", target[i].name);
+>                                 if (target[i].err_type == 0)
+>                                         do_log(_("write error"));
+>                                 else
+>                                         do_log(_("lseek error"));
+>                                 do_log(_(" at offset %lld\n"), target[i].position);
+>                         }
+>                         if (flush_error)
+>                                 do_log(_("    %s -- flush error %d"),
+>                                                 target[i].name, errno);
+>                 }
+>         }
+>         if (first_error == 0)  {
+>                 fprintf(stdout, _("All copies completed.\n"));
+>                 fflush(NULL);
+>         } else  {
+>                 fprintf(stderr, _("See \"%s\" for more details.\n"),
+>                         logfile_name);
+>                 exit(1);
+>         }
+> }
 > 
-> I've just re-ordered it to check for relogged inodes first instead
-> of handling that in the else branch.
 > 
-
-Hmm.. I guess I'm confused why the logic seems to be swizzled around. An
-earlier patch lifted the bit clear outside of this check, then we seem
-to put it back in place in a different order for some reason..?
-
-> i.e. we do clear XFS_LI_FAILED always: xfs_ail_delete_one() does it
-> for the log items that are being removed from the AIL....
-> 
-> > > +/*
-> > > + * Inode buffer IO completion routine.  It is responsible for removing inodes
-> > > + * attached to the buffer from the AIL if they have not been re-logged, as well
-> > > + * as completing the flush and unlocking the inode.
-> > > + */
-> > > +void
-> > > +xfs_iflush_done(
-> > > +	struct xfs_buf		*bp)
-> > > +{
-> > > +	struct xfs_log_item	*lip, *n;
-> > > +	LIST_HEAD(flushed_inodes);
-> > > +	LIST_HEAD(ail_updates);
-> > > +
-> > > +	/*
-> > > +	 * Pull the attached inodes from the buffer one at a time and take the
-> > > +	 * appropriate action on them.
-> > > +	 */
-> > > +	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
-> > > +		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-> > > +
-> > > +		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
-> > > +			xfs_iflush_abort(iip->ili_inode);
-> > > +			continue;
-> > > +		}
-> > > +		if (!iip->ili_last_fields)
-> > > +			continue;
-> > > +
-> > > +		/* Do an unlocked check for needing the AIL lock. */
-> > > +		if (iip->ili_flush_lsn == lip->li_lsn ||
-> > > +		    test_bit(XFS_LI_FAILED, &lip->li_flags))
-> > > +			list_move_tail(&lip->li_bio_list, &ail_updates);
-> > > +		else
-> > > +			list_move_tail(&lip->li_bio_list, &flushed_inodes);
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  copy/xfs_copy.c |    5 +++++
+> >  1 file changed, 5 insertions(+)
 > > 
-> > Not sure I see the point of having two lists here, particularly since
-> > this is all based on lockless logic.
-> 
-> It's not lockless - it's all done under the buffer lock which
-> protects the buffer log item list...
-> 
-> > At the very least it's a subtle
-> > change in AIL processing logic and I don't think that should be buried
-> > in a refactoring patch.
-> 
-> I don't think it changes logic at all - what am I missing?
-> 
-
-I'm referring to the fact that we no longer check the lsn of each
-(flushed) log item attached to the buffer under the ail lock. Note that
-I am not saying it's necessarily wrong, but rather that IMO it's too
-subtle a change to silently squash into a refactoring patch.
-
-> FWIW, I untangled the function this way because the "track dirty
-> inodes by ordered buffers" patchset completely removes the AIL stuff
-> - the ail_updates list and the xfs_iflush_ail_updates() function go
-> away completely and the rest of the refactoring remains unchanged.
-> i.e.  as the commit messages says, this change makes follow-on
-> patches much easier to understand...
-> 
-
-The general function breakdown seems fine to me. I find the multiple
-list processing to be a bit overdone, particularly if it doesn't serve a
-current functional purpose. If the purpose is to support a future patch
-series, I'd suggest to continue using the existing logic of moving all
-flushed inodes to a single list and leave the separate list bits to the
-start of the series where it's useful so it's possible to review with
-the associated context (or alternatively just defer the entire patch).
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+> > diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+> > index 2d087f71..7657ad3e 100644
+> > --- a/copy/xfs_copy.c
+> > +++ b/copy/xfs_copy.c
+> > @@ -12,6 +12,7 @@
+> >  #include <stdarg.h>
+> >  #include "xfs_copy.h"
+> >  #include "libxlog.h"
+> > +#include "libfrog/platform.h"
+> >  
+> >  #define	rounddown(x, y)	(((x)/(y))*(y))
+> >  #define uuid_equal(s,d) (platform_uuid_compare((s),(d)) == 0)
+> > @@ -150,6 +151,10 @@ check_errors(void)
+> >  			else
+> >  				do_log(_("lseek error"));
+> >  			do_log(_(" at offset %lld\n"), target[i].position);
+> > +		} else if (platform_flush_device(target[i].fd, 0)) {
+> > +			do_log(_("    %s -- flush error %d"),
+> > +					target[i].name, errno);
+> > +			first_error++;
+> >  		}
+> >  	}
+> >  	if (first_error == 0)  {
+> > 
