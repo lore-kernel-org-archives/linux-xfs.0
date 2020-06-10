@@ -2,370 +2,177 @@ Return-Path: <SRS0=2CQE=7X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85C41C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 03:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E67F5C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 04:31:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C5392076A
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 03:59:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z8WwzTWw"
+	by mail.kernel.org (Postfix) with ESMTP id C41052074B
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 04:31:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725988AbgFJD7b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 9 Jun 2020 23:59:31 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:40629 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725927AbgFJD7a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jun 2020 23:59:30 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1591761568;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=M0t9Fwj3Gla8Q66HipRgfZnG6sLR4txLg7UuLyUmKVY=;
-        b=Z8WwzTWwTBw/HErMDJwVE2ELu21WbXProvZmLWuQ0PBs0Gmez8WayI0vGLfMziTpeQfclG
-        IBFJMpf8Tp2lrfyFL6rMrhaSEMik3jroUVpT8CTOpjV2UV8kSPRBi/e1F/cRwagwTO25Hr
-        M45f8+XfsjHcaSYRTa3TFXtt0q8xNpE=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-434--I2P-UytOsqu_tQ5PbqKbw-1; Tue, 09 Jun 2020 23:59:26 -0400
-X-MC-Unique: -I2P-UytOsqu_tQ5PbqKbw-1
-Received: by mail-pl1-f197.google.com with SMTP id w8so594728plq.10
-        for <linux-xfs@vger.kernel.org>; Tue, 09 Jun 2020 20:59:26 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=M0t9Fwj3Gla8Q66HipRgfZnG6sLR4txLg7UuLyUmKVY=;
-        b=IHau/+vXbnp0bQSNyuZhhcUhFyETads6l05zA+Q1dO/X+3dYzfKTp4uUK+F8bTc0kt
-         qJPCnt2XM5XRLCq8PMWxydiyiSQ7MQtJCUbHrWrTFY31i5gWL2BwTMTsNHiIfGEisPMk
-         8oFe2AT7Saj1L+Vj1JD3xWb4M4LKNThsVtoHARUQWgEeTmgtGiWckbRCfKMxBobIFRs7
-         1su8NLL78b4oKn1PqmbMG1PcjRrokfNAI92HFdqTYlWx2hWOi9ReHQC5ODB+6jOR4kK7
-         mkA88UNAo3h3fudlL9SNrW3t9sCgTl4i/h4WZjXSHefTHWvpyRXq4oGaGVJy5wVZZuy5
-         6L0g==
-X-Gm-Message-State: AOAM530vAmG5/tk6bfsCVfll2zlMw5Yu7luQW6gLL0wqL1nV0wFsFClw
-        FOOAUaMXWe5fGxM2vtxCBghG+nXB7N8mLDHPuCdMVz34O2Zs5N4kNCxvoPEiASvJY8JyOrjQJCr
-        GPTDSQgkx21V29n+Dj1rm
-X-Received: by 2002:a62:2545:: with SMTP id l66mr949094pfl.12.1591761565423;
-        Tue, 09 Jun 2020 20:59:25 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJw4hbTB/RgQZzILS0wU2uvCbaDxY8r45Upg+yuBop0tD4M30f0PszGSqd+fj5oMMx9qk1Asaw==
-X-Received: by 2002:a62:2545:: with SMTP id l66mr949075pfl.12.1591761564997;
-        Tue, 09 Jun 2020 20:59:24 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id f29sm9838994pgf.63.2020.06.09.20.59.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Jun 2020 20:59:24 -0700 (PDT)
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Gao Xiang <hsiangkao@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>
-Subject: [RFC PATCH v2] xfs_repair: fix rebuilding btree block less than minrecs
-Date:   Wed, 10 Jun 2020 11:58:42 +0800
-Message-Id: <20200610035842.22785-1-hsiangkao@redhat.com>
-X-Mailer: git-send-email 2.18.1
-In-Reply-To: <20200609114053.31924-1-hsiangkao@redhat.com>
-References: <20200609114053.31924-1-hsiangkao@redhat.com>
+        id S1725270AbgFJEb4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Jun 2020 00:31:56 -0400
+Received: from sandeen.net ([63.231.237.45]:42256 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725268AbgFJEbz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Jun 2020 00:31:55 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 6BC9548352E;
+        Tue,  9 Jun 2020 23:31:44 -0500 (CDT)
+Subject: Re: [PATCH v2] xfs_copy: flush target devices before exiting
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+References: <20200608184757.GL1334206@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <1397005d-04a7-0a06-0549-7633da125ba0@sandeen.net>
+Date:   Tue, 9 Jun 2020 23:31:52 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.9.0
+MIME-Version: 1.0
+In-Reply-To: <20200608184757.GL1334206@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In production, we found that sometimes xfs_repair phase 5
-rebuilds freespace node block with pointers less than minrecs
-and if we trigger xfs_repair again it would report such
-the following message:
 
-bad btree nrecs (39, min=40, max=80) in btbno block 0/7882
+On 6/8/20 1:47 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Flush the devices we're copying to before exiting, so that we can report
+> any write errors.
 
-The background is that xfs_repair starts to rebuild AGFL
-after the freespace btree is settled in phase 5 so we may
-need to leave necessary room in advance for each btree
-leaves in order to avoid freespace btree split and then
-result in AGFL rebuild fails. The old mathematics uses
-ceil(num_extents / maxrecs) to decide the number of node
-blocks. That would be fine without leaving extra space
-since minrecs = maxrecs / 2 but if some slack was decreased
-from maxrecs, the result would be larger than what is
-expected and cause num_recs_pb less than minrecs, i.e:
+Hm, I hadn't really looked at xfs_copy in depth, funky stuff.
 
-num_extents = 79, adj_maxrecs = 80 - 2 (slack) = 78
+So normally errors look something like:
 
-so we'd get
+THE FOLLOWING COPIES FAILED TO COMPLETE
+    $TARGET -- write error at offset ABC
+    $TARGET -- seek error at offset XYZ
 
-num_blocks = ceil(79 / 78) = 2,
-num_recs_pb = 79 / 2 = 39, which is less than
-minrecs = 80 / 2 = 40
+if for some reason we didn't detect any errors until this final
+device flush, we'll only see:
 
-OTOH, btree bulk loading code behaves in a different way.
-As in xfs_btree_bload_level_geometry it wrote
+    $TARGET -- flush error -Q
 
-num_blocks = floor(num_extents / maxrecs)
+and no header...
 
-which will never go below minrecs. And when it goes above
-maxrecs, just increment num_blocks and recalculate so we
-can get the reasonable results.
+Seems like this error needs to be integrated w/ the other error reporting,
+something like:
 
-Later, btree bulk loader will replace the current repair
-code. But we may still want to look for a backportable
-solution for stable versions. Hense, keep the same logic
-to avoid the freespace as well as rmap btree minrecs
-underflow for now.
+check_errors(void)
+{
+        int     i, flush_error, first_error = 0;
 
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <dchinner@redhat.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>
-Fixes: 9851fd79bfb1 ("repair: AGFL rebuild fails if btree split required")
-Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
----
-changes since v1:
- - fix indentation, typedefs, etc code styling problem
-   pointed out by Darrick;
+        for (i = 0; i < num_targets; i++)  {
+                flush_error = platform_flush_device(target[i].fd, 0);
 
- - adapt init_rmapbt_cursor to the new algorithm since
-   it's similar pointed out by Darrick; thus the function
-   name remains the origin compute_level_geometry...
-   and hence, adjust the subject a bit as well.
+                if (flush_error || target[i].state == INACTIVE)  {
+                        if (first_error == 0)  {
+                                first_error++;
+                                do_log(
+                                _("THE FOLLOWING COPIES FAILED TO COMPLETE\n"));
+                        }
+                        if (target[i].state == INACTIVE) {
+                                do_log("    %s -- ", target[i].name);
+                                if (target[i].err_type == 0)
+                                        do_log(_("write error"));
+                                else
+                                        do_log(_("lseek error"));
+                                do_log(_(" at offset %lld\n"), target[i].position);
+                        }
+                        if (flush_error)
+                                do_log(_("    %s -- flush error %d"),
+                                                target[i].name, errno);
+                }
+        }
+        if (first_error == 0)  {
+                fprintf(stdout, _("All copies completed.\n"));
+                fflush(NULL);
+        } else  {
+                fprintf(stderr, _("See \"%s\" for more details.\n"),
+                        logfile_name);
+                exit(1);
+        }
+}
 
- repair/phase5.c | 151 ++++++++++++++++++++----------------------------
- 1 file changed, 63 insertions(+), 88 deletions(-)
 
-diff --git a/repair/phase5.c b/repair/phase5.c
-index abae8a08..278de7a4 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -348,11 +348,32 @@ finish_cursor(bt_status_t *curs)
-  * failure at runtime. Hence leave a couple of records slack space in
-  * each block to allow immediate modification of the tree without
-  * requiring splits to be done.
-- *
-- * XXX(hch): any reason we don't just look at mp->m_alloc_mxr?
-  */
--#define XR_ALLOC_BLOCK_MAXRECS(mp, level) \
--	(libxfs_allocbt_maxrecs((mp), (mp)->m_sb.sb_blocksize, (level) == 0) - 2)
-+static void
-+compute_level_geometry(
-+	struct xfs_mount *	mp,
-+	struct bt_stat_level *	lptr,
-+	uint64_t		nr_this_level,
-+	int			slack,
-+	bool			leaf)
-+{
-+	unsigned int		maxrecs = mp->m_alloc_mxr[!leaf];
-+	unsigned int		desired_npb;
-+
-+	desired_npb = max(mp->m_alloc_mnr[!leaf], maxrecs - slack);
-+	lptr->num_recs_tot = nr_this_level;
-+	lptr->num_blocks = max(1ULL, nr_this_level / desired_npb);
-+
-+	lptr->num_recs_pb = nr_this_level / lptr->num_blocks;
-+	lptr->modulo = nr_this_level % lptr->num_blocks;
-+	if (lptr->num_recs_pb > maxrecs ||
-+	    (lptr->num_recs_pb == maxrecs && lptr->modulo)) {
-+		lptr->num_blocks++;
-+
-+		lptr->num_recs_pb = nr_this_level / lptr->num_blocks;
-+		lptr->modulo = nr_this_level % lptr->num_blocks;
-+	}
-+}
- 
- /*
-  * this calculates a freespace cursor for an ag.
-@@ -370,6 +391,7 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	int			i;
- 	int			extents_used;
- 	int			extra_blocks;
-+	uint64_t		old_blocks;
- 	bt_stat_level_t		*lptr;
- 	bt_stat_level_t		*p_lptr;
- 	extent_tree_node_t	*ext_ptr;
-@@ -388,10 +410,7 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	 * of the tree and set up the cursor for the leaf level
- 	 * (note that the same code is duplicated further down)
- 	 */
--	lptr->num_blocks = howmany(num_extents, XR_ALLOC_BLOCK_MAXRECS(mp, 0));
--	lptr->num_recs_pb = num_extents / lptr->num_blocks;
--	lptr->modulo = num_extents % lptr->num_blocks;
--	lptr->num_recs_tot = num_extents;
-+	compute_level_geometry(mp, lptr, num_extents, 2, true);
- 	level = 1;
- 
- #ifdef XR_BLD_FREE_TRACE
-@@ -405,29 +424,23 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	 * if we need more levels, set them up.  # of records
- 	 * per level is the # of blocks in the level below it
- 	 */
--	if (lptr->num_blocks > 1)  {
--		for (; btree_curs->level[level - 1].num_blocks > 1
--				&& level < XFS_BTREE_MAXLEVELS;
--				level++)  {
--			lptr = &btree_curs->level[level];
--			p_lptr = &btree_curs->level[level - 1];
--			lptr->num_blocks = howmany(p_lptr->num_blocks,
--					XR_ALLOC_BLOCK_MAXRECS(mp, level));
--			lptr->modulo = p_lptr->num_blocks
--					% lptr->num_blocks;
--			lptr->num_recs_pb = p_lptr->num_blocks
--					/ lptr->num_blocks;
--			lptr->num_recs_tot = p_lptr->num_blocks;
-+	while (lptr->num_blocks > 1) {
-+		p_lptr = lptr;
-+		lptr = &btree_curs->level[level];
-+
-+		compute_level_geometry(mp, lptr,
-+				p_lptr->num_blocks, 0, false);
- #ifdef XR_BLD_FREE_TRACE
--			fprintf(stderr, "%s %d %d %d %d %d\n", __func__,
--					level,
--					lptr->num_blocks,
--					lptr->num_recs_pb,
--					lptr->modulo,
--					lptr->num_recs_tot);
-+		fprintf(stderr, "%s %d %d %d %d %d\n", __func__,
-+				level,
-+				lptr->num_blocks,
-+				lptr->num_recs_pb,
-+				lptr->modulo,
-+				lptr->num_recs_tot);
- #endif
--		}
-+		level++;
- 	}
-+	ASSERT (level < XFS_BTREE_MAXLEVELS);
- 
- 	ASSERT(lptr->num_blocks == 1);
- 	btree_curs->num_levels = level;
-@@ -496,8 +509,11 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 	 * see if the number of leaf blocks will change as a result
- 	 * of the number of extents changing
- 	 */
--	if (howmany(num_extents, XR_ALLOC_BLOCK_MAXRECS(mp, 0))
--			!= btree_curs->level[0].num_blocks)  {
-+	old_blocks = btree_curs->level[0].num_blocks;
-+	compute_level_geometry(mp, &btree_curs->level[0], num_extents, 2, true);
-+	extra_blocks = 0;
-+
-+	if (old_blocks != btree_curs->level[0].num_blocks)  {
- 		/*
- 		 * yes -- recalculate the cursor.  If the number of
- 		 * excess (overallocated) blocks is < xfs_agfl_size/2, we're ok.
-@@ -553,31 +569,19 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 		}
- 
- 		lptr = &btree_curs->level[0];
--		lptr->num_blocks = howmany(num_extents,
--					XR_ALLOC_BLOCK_MAXRECS(mp, 0));
--		lptr->num_recs_pb = num_extents / lptr->num_blocks;
--		lptr->modulo = num_extents % lptr->num_blocks;
--		lptr->num_recs_tot = num_extents;
- 		level = 1;
- 
- 		/*
- 		 * if we need more levels, set them up
- 		 */
--		if (lptr->num_blocks > 1)  {
--			for (level = 1; btree_curs->level[level-1].num_blocks
--					> 1 && level < XFS_BTREE_MAXLEVELS;
--					level++)  {
--				lptr = &btree_curs->level[level];
--				p_lptr = &btree_curs->level[level-1];
--				lptr->num_blocks = howmany(p_lptr->num_blocks,
--					XR_ALLOC_BLOCK_MAXRECS(mp, level));
--				lptr->modulo = p_lptr->num_blocks
--						% lptr->num_blocks;
--				lptr->num_recs_pb = p_lptr->num_blocks
--						/ lptr->num_blocks;
--				lptr->num_recs_tot = p_lptr->num_blocks;
--			}
-+		while (lptr->num_blocks > 1) {
-+			p_lptr = lptr;
-+			lptr = &btree_curs->level[level++];
-+
-+			compute_level_geometry(mp, lptr,
-+					p_lptr->num_blocks, 0, false);
- 		}
-+		ASSERT (level < XFS_BTREE_MAXLEVELS);
- 		ASSERT(lptr->num_blocks == 1);
- 		btree_curs->num_levels = level;
- 
-@@ -591,22 +595,6 @@ calculate_freespace_cursor(xfs_mount_t *mp, xfs_agnumber_t agno,
- 
- 		ASSERT(blocks_allocated_total >= blocks_needed);
- 		extra_blocks = blocks_allocated_total - blocks_needed;
--	} else  {
--		if (extents_used > 0) {
--			/*
--			 * reset the leaf level geometry to account
--			 * for consumed extents.  we can leave the
--			 * rest of the cursor alone since the number
--			 * of leaf blocks hasn't changed.
--			 */
--			lptr = &btree_curs->level[0];
--
--			lptr->num_recs_pb = num_extents / lptr->num_blocks;
--			lptr->modulo = num_extents % lptr->num_blocks;
--			lptr->num_recs_tot = num_extents;
--		}
--
--		extra_blocks = 0;
- 	}
- 
- 	btree_curs->num_tot_blocks = blocks_allocated_pt;
-@@ -1376,7 +1364,6 @@ init_rmapbt_cursor(
- 	struct bt_stat_level	*lptr;
- 	struct bt_stat_level	*p_lptr;
- 	xfs_extlen_t		blocks_allocated;
--	int			maxrecs;
- 
- 	if (!xfs_sb_version_hasrmapbt(&mp->m_sb)) {
- 		memset(btree_curs, 0, sizeof(struct bt_status));
-@@ -1412,32 +1399,20 @@ init_rmapbt_cursor(
- 	 * Leave enough slack in the rmapbt that we can insert the
- 	 * metadata AG entries without too many splits.
- 	 */
--	maxrecs = mp->m_rmap_mxr[0];
--	if (num_recs > maxrecs)
--		maxrecs -= 10;
--	blocks_allocated = lptr->num_blocks = howmany(num_recs, maxrecs);
--
--	lptr->modulo = num_recs % lptr->num_blocks;
--	lptr->num_recs_pb = num_recs / lptr->num_blocks;
--	lptr->num_recs_tot = num_recs;
-+	compute_level_geometry(mp, lptr, num_recs,
-+			num_recs > mp->m_rmap_mxr[0] ? 10 : 0, true);
-+	blocks_allocated = lptr->num_blocks;
- 	level = 1;
- 
--	if (lptr->num_blocks > 1)  {
--		for (; btree_curs->level[level-1].num_blocks > 1
--				&& level < XFS_BTREE_MAXLEVELS;
--				level++)  {
--			lptr = &btree_curs->level[level];
--			p_lptr = &btree_curs->level[level - 1];
--			lptr->num_blocks = howmany(p_lptr->num_blocks,
--				mp->m_rmap_mxr[1]);
--			lptr->modulo = p_lptr->num_blocks % lptr->num_blocks;
--			lptr->num_recs_pb = p_lptr->num_blocks
--					/ lptr->num_blocks;
--			lptr->num_recs_tot = p_lptr->num_blocks;
-+	while (lptr->num_blocks > 1) {
-+		p_lptr = lptr;
-+		lptr = &btree_curs->level[level++];
- 
--			blocks_allocated += lptr->num_blocks;
--		}
-+		compute_level_geometry(mp, lptr,
-+				p_lptr->num_blocks, 0, false);
-+		blocks_allocated += lptr->num_blocks;
- 	}
-+	ASSERT(level < XFS_BTREE_MAXLEVELS);
- 	ASSERT(lptr->num_blocks == 1);
- 	btree_curs->num_levels = level;
- 
--- 
-2.18.1
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  copy/xfs_copy.c |    5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+> index 2d087f71..7657ad3e 100644
+> --- a/copy/xfs_copy.c
+> +++ b/copy/xfs_copy.c
+> @@ -12,6 +12,7 @@
+>  #include <stdarg.h>
+>  #include "xfs_copy.h"
+>  #include "libxlog.h"
+> +#include "libfrog/platform.h"
+>  
+>  #define	rounddown(x, y)	(((x)/(y))*(y))
+>  #define uuid_equal(s,d) (platform_uuid_compare((s),(d)) == 0)
+> @@ -150,6 +151,10 @@ check_errors(void)
+>  			else
+>  				do_log(_("lseek error"));
+>  			do_log(_(" at offset %lld\n"), target[i].position);
+> +		} else if (platform_flush_device(target[i].fd, 0)) {
+> +			do_log(_("    %s -- flush error %d"),
+> +					target[i].name, errno);
+> +			first_error++;
+>  		}
+>  	}
+>  	if (first_error == 0)  {
+> 
