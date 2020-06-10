@@ -2,178 +2,107 @@ Return-Path: <SRS0=2CQE=7X=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDD25C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 16:02:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FD84C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 23:40:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B9F2E206F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 16:02:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qjlnAs5M"
+	by mail.kernel.org (Postfix) with ESMTP id 309652074B
+	for <linux-xfs@archiver.kernel.org>; Wed, 10 Jun 2020 23:40:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730459AbgFJQCg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Jun 2020 12:02:36 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43578 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726754AbgFJQCf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jun 2020 12:02:35 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05AFrALr137192;
-        Wed, 10 Jun 2020 16:02:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=htFnvm7oZfEBFI2RT2kk9kJaL2tOurokob7gJHUjLTY=;
- b=qjlnAs5MIAKsCSYKAomMF7EYn+57OENAtDn7fVUmXlkECWm8LCYDNZjZfP/SL4zpkHQo
- uxgrCv7Suar4nv/V6nfTeoe6vA+FNrcWVdIaA7E7oI0VZsiVQ3jBIJ0QDqePMScY4AID
- 28rJrMWx3ds5rXmKVy8LqpJ4U7tzzy0yTSotnRTX6ypzFpyPiTNZpyo6m54EZXvb0Ks2
- fA6J12Qyg5O0ZJeYjHV35OJtfchVVo+bw91zKwaiX6XpgSIaAqAxnPWZMHAvWVV5ddcX
- GiWqM83IkiM6wDcx1VOqhSLEbnZVEDSCZj3s+frmKEvpaYh0KPlQ7Rps5N3af1rjpm5u rg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 31jepnw43m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 10 Jun 2020 16:02:29 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05AFvkEa090579;
-        Wed, 10 Jun 2020 16:02:29 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 31gn2yqdq3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 10 Jun 2020 16:02:27 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05AG2PqW012637;
-        Wed, 10 Jun 2020 16:02:26 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 10 Jun 2020 09:02:24 -0700
-Date:   Wed, 10 Jun 2020 09:02:23 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs_copy: flush target devices before exiting
-Message-ID: <20200610160223.GF11245@magnolia>
-References: <20200608184757.GL1334206@magnolia>
- <1397005d-04a7-0a06-0549-7633da125ba0@sandeen.net>
+        id S1726835AbgFJXkY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Jun 2020 19:40:24 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:45031 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726782AbgFJXkY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jun 2020 19:40:24 -0400
+Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C942F820FBC;
+        Thu, 11 Jun 2020 09:40:21 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jjAKG-0001O9-K4; Thu, 11 Jun 2020 09:40:08 +1000
+Date:   Thu, 11 Jun 2020 09:40:08 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 28/30] xfs: rework xfs_iflush_cluster() dirty inode
+ iteration
+Message-ID: <20200610234008.GM2040@dread.disaster.area>
+References: <20200604074606.266213-1-david@fromorbit.com>
+ <20200604074606.266213-29-david@fromorbit.com>
+ <20200609131155.GB40899@bfoster>
+ <20200609220139.GJ2040@dread.disaster.area>
+ <20200610130628.GA50747@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1397005d-04a7-0a06-0549-7633da125ba0@sandeen.net>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9647 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
- bulkscore=0 adultscore=0 mlxlogscore=999 spamscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006100121
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9647 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 suspectscore=1
- priorityscore=1501 bulkscore=0 clxscore=1015 phishscore=0 impostorscore=0
- malwarescore=0 mlxscore=0 cotscore=-2147483648 adultscore=0 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006100120
+In-Reply-To: <20200610130628.GA50747@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8
+        a=TmuYs_TZynHkUtMz8tQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 09, 2020 at 11:31:52PM -0500, Eric Sandeen wrote:
-> 
-> On 6/8/20 1:47 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jun 10, 2020 at 09:06:28AM -0400, Brian Foster wrote:
+> On Wed, Jun 10, 2020 at 08:01:39AM +1000, Dave Chinner wrote:
+> > On Tue, Jun 09, 2020 at 09:11:55AM -0400, Brian Foster wrote:
+> > > On Thu, Jun 04, 2020 at 05:46:04PM +1000, Dave Chinner wrote:
+> > > > -		 * check is not sufficient.
+> > > > +		 * If we are shut down, unpin and abort the inode now as there
+> > > > +		 * is no point in flushing it to the buffer just to get an IO
+> > > > +		 * completion to abort the buffer and remove it from the AIL.
+> > > >  		 */
+> > > > -		if (!cip->i_ino) {
+> > > > -			xfs_ifunlock(cip);
+> > > > -			xfs_iunlock(cip, XFS_ILOCK_SHARED);
+> > > > +		if (XFS_FORCED_SHUTDOWN(mp)) {
+> > > > +			xfs_iunpin_wait(ip);
+> > > 
+> > > Note that we have an unlocked check above that skips pinned inodes.
 > > 
-> > Flush the devices we're copying to before exiting, so that we can report
-> > any write errors.
-> 
-> Hm, I hadn't really looked at xfs_copy in depth, funky stuff.
-> 
-> So normally errors look something like:
-> 
-> THE FOLLOWING COPIES FAILED TO COMPLETE
->     $TARGET -- write error at offset ABC
->     $TARGET -- seek error at offset XYZ
-> 
-> if for some reason we didn't detect any errors until this final
-> device flush, we'll only see:
-> 
->     $TARGET -- flush error -Q
-> 
-> and no header...
-> 
-> Seems like this error needs to be integrated w/ the other error reporting,
-> something like:
-> 
-> check_errors(void)
-> {
->         int     i, flush_error, first_error = 0;
-> 
->         for (i = 0; i < num_targets; i++)  {
->                 flush_error = platform_flush_device(target[i].fd, 0);
-
-<shrug> I was gonna skip the flush error if the target already died,
-but yeah I agree this should come before THE FOLLOWING COPIES WERE EATEN
-BY CIRCUMSTANCE.
-
---D
-
-> 
->                 if (flush_error || target[i].state == INACTIVE)  {
->                         if (first_error == 0)  {
->                                 first_error++;
->                                 do_log(
->                                 _("THE FOLLOWING COPIES FAILED TO COMPLETE\n"));
->                         }
->                         if (target[i].state == INACTIVE) {
->                                 do_log("    %s -- ", target[i].name);
->                                 if (target[i].err_type == 0)
->                                         do_log(_("write error"));
->                                 else
->                                         do_log(_("lseek error"));
->                                 do_log(_(" at offset %lld\n"), target[i].position);
->                         }
->                         if (flush_error)
->                                 do_log(_("    %s -- flush error %d"),
->                                                 target[i].name, errno);
->                 }
->         }
->         if (first_error == 0)  {
->                 fprintf(stdout, _("All copies completed.\n"));
->                 fflush(NULL);
->         } else  {
->                 fprintf(stderr, _("See \"%s\" for more details.\n"),
->                         logfile_name);
->                 exit(1);
->         }
-> }
-> 
-> 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  copy/xfs_copy.c |    5 +++++
-> >  1 file changed, 5 insertions(+)
+> > Right, but we could be racing with a transaction commit that pinned
+> > the inode and a shutdown. As the comment says: it's a quick and
+> > dirty check to avoid trying to get locks when we know that it is
+> > unlikely we can flush the inode without blocking. We still have to
+> > recheck that state once we have the ILOCK....
 > > 
-> > diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-> > index 2d087f71..7657ad3e 100644
-> > --- a/copy/xfs_copy.c
-> > +++ b/copy/xfs_copy.c
-> > @@ -12,6 +12,7 @@
-> >  #include <stdarg.h>
-> >  #include "xfs_copy.h"
-> >  #include "libxlog.h"
-> > +#include "libfrog/platform.h"
-> >  
-> >  #define	rounddown(x, y)	(((x)/(y))*(y))
-> >  #define uuid_equal(s,d) (platform_uuid_compare((s),(d)) == 0)
-> > @@ -150,6 +151,10 @@ check_errors(void)
-> >  			else
-> >  				do_log(_("lseek error"));
-> >  			do_log(_(" at offset %lld\n"), target[i].position);
-> > +		} else if (platform_flush_device(target[i].fd, 0)) {
-> > +			do_log(_("    %s -- flush error %d"),
-> > +					target[i].name, errno);
-> > +			first_error++;
-> >  		}
-> >  	}
-> >  	if (first_error == 0)  {
-> > 
+> 
+> Right, but that means we can just as easily skip the shutdown processing
+> (which waits for unpin) if a particular inode is pinned. So which is
+> supposed to happen in the shutdown case?
+>
+> ISTM that either could happen. As a result this kind of looks like
+> random logic to me.
+
+Yes, shutdown is racy, so it could be either. However, I'm not
+changing the shutdown logic or handling here. If the shutdown race
+could happen before this patchset (and it can), it can still happen
+after the patchset, and this patchset does not change the way we
+handle the shutdown race at all.
+
+IOWs, while this shutdown logic may appear "random", that's not a
+result of this patchset - it a result of design decisions made in
+the last major shutdown rework/cleanup that required checks to be
+added to places that could hang waiting for an event that would
+never occur because shutdown state prevented it from occurring.
+
+There's already enough complexity in this patchset that adding
+shutdown logic changes is just too much to ask for.  If we want to
+change how various shutdown logics work, lets do it as a separate
+set of changes so all the subtle bugs that result from the changes
+bisect to the isolated shutdown logic changes...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
