@@ -2,151 +2,109 @@ Return-Path: <SRS0=ihlG=7Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7CD1C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 02:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99E35C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 02:43:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B812120747
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 02:28:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E6C4206FA
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 02:43:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1591843388;
+	bh=uM3dzCIwaaLTHi9qlTTMuvqdx9nz3dpFhWZaS11i1xA=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=ZP6S2sgwQPJvJymkg6LVbGPFYCJNKVp5YKy6A7s379/eiKH5OtVAluc1hDjjxBqc2
+	 xuzmnRTTTVdEGLzeicoXgAXxdxd8DphJdN27QrUQ2qZZZN5eI4X3fQoaxJgyv1ww2B
+	 m7lrIyqKQ/dgoASkSrlQuU77mBb2Nq7r1sLknRS4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726377AbgFKC2y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Jun 2020 22:28:54 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:58165 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726279AbgFKC2y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jun 2020 22:28:54 -0400
-Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 53C71760B7A;
-        Thu, 11 Jun 2020 12:28:49 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jjCxU-0002QN-7L; Thu, 11 Jun 2020 12:28:48 +1000
-Date:   Thu, 11 Jun 2020 12:28:48 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Yu Kuai <yukuai3@huawei.com>
-Cc:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com
-Subject: Re: [RFC PATCH] fix use after free in xlog_wait()
-Message-ID: <20200611022848.GQ2040@dread.disaster.area>
-References: <20200611013952.2589997-1-yukuai3@huawei.com>
+        id S1726454AbgFKCnD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Jun 2020 22:43:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47588 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726312AbgFKCnC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Jun 2020 22:43:02 -0400
+Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 798A6206FA;
+        Thu, 11 Jun 2020 02:43:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1591843382;
+        bh=uM3dzCIwaaLTHi9qlTTMuvqdx9nz3dpFhWZaS11i1xA=;
+        h=Date:From:To:Cc:Subject:From;
+        b=c9mzM4KjTrYLQdNgmyeOEQ2rmtQ6gNNP8wJVJv0rQ/lVtYlCTa+6peAb5UzKZu0XO
+         x60Sm0bKJEQZUsFlS85fmoWvvkYGukWZxEcedS7NXzl0LbRjx8Hwj9qHCArhDRIz5c
+         PMyqM+TPsnD5eG/YSnt1ZhlBYld8s8NHjKbb3238=
+Date:   Wed, 10 Jun 2020 19:42:48 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>, ira.weiny@intel.com
+Subject: [GIT PULL] vfs: improve DAX behavior for 5.8, part 3
+Message-ID: <20200611024248.GG11245@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200611013952.2589997-1-yukuai3@huawei.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=i0EeH86SAAAA:8 a=7-415B0cAAAA:8
-        a=lJGGXNzYajzh12HJQzkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 11, 2020 at 09:39:52AM +0800, Yu Kuai wrote:
-> I recently got UAF by running generic/019 in qemu:
-> 
-> ==================================================================
->   BUG: KASAN: use-after-free in __lock_acquire+0x4508/0x68c0
->   Read of size 8 at addr ffff88811327f080 by task fio/11147
-....
->    remove_wait_queue+0x1d/0x180
->    xfs_log_commit_cil+0x1d9e/0x2a50
->    __xfs_trans_commit+0x292/0xec0
+Hi Linus,
 
-Ok, so this is waking up from a the CIL context overrunning the hard
-size limit....
+Please pull this third part of the 5.8 DAX changes.  Now that the xfs
+changes have landed, this third piece changes the FS_XFLAG_DAX ioctl
+code in xfs to request that the inode be reloaded after the last program
+closes the file, if doing so would make a S_DAX change happen.  This
+goal here is to make dax access mode switching quicker when possible.
 
->    Freed by task 6826:
->    save_stack+0x1b/0x40
->    __kasan_slab_free+0x12c/0x170
->    kfree+0xd6/0x300
->    kvfree+0x42/0x50
->    xlog_cil_committed+0xa9c/0xf30
->    xlog_cil_push_work+0xa8c/0x1250
->    process_one_work+0xa3e/0x17a0
->    worker_thread+0x8e2/0x1050
->    kthread+0x355/0x470
->    ret_from_fork+0x22/0x30
+I did a test merge of this branch against upstream this evening and
+there weren't any conflicts.  The first five patches in the series were
+already in the xfs merge, so it's only the last one that should change
+anything.  Please let us know if you have any complaints about pulling
+this, since I can rework the branch.
 
-Hmmmm. The CIL push work freed the context which means somethign
-went wrong somewhere - we must be in CIL commit error path here...
+--D
 
-/me checks generic/019
+The following changes since commit 2c567af418e3f9380c2051aada58b4e5a4b5c2ad:
 
-Oh, it's a repeated shutdown test. Right, so we're getting a
-shutdown in the middle of a CIL push when the CIL is hard throttling
-callers and the CIL context gets freed before the throttled tasks
-can be woken.
+  fs: Introduce DCACHE_DONTCACHE (2020-05-13 08:44:35 -0700)
 
-Gotcha. Yup, that's a real issue, thanks for reporting it!
+are available in the Git repository at:
 
-> I think the reason is that when 'ctx' is freed in xlog_cil_committed(),
-> a previous call to xlog_wait(&ctx->xc_ctx->push_wait, ...) hasn't finished
-> yet. Thus when remove_wait_queue() is called, UAF will be triggered
-> since 'ctx' was freed:
-> 
-> thread1		    thread2             thread3
-> 
-> __xfs_trans_commit
->  xfs_log_commit_cil
->   xlog_wait
->    schedule
->                     xlog_cil_push_work
-> 		     wake_up_all
-> 		                        xlog_cil_committed
-> 					 kmem_free
->    remove_wait_queue
->     spin_lock_irqsave --> UAF
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.8-merge-3
 
-Actually, it's a lot simpler:
+for you to fetch changes up to e4f9ba20d3b8c2b86ec71f326882e1a3c4e47953:
 
-thread1			thread2
+  fs/xfs: Update xfs_ioctl_setattr_dax_invalidate() (2020-05-29 20:13:20 -0700)
 
-__xfs_trans_commit
- xfs_log_commit_cil
-  xlog_wait
-   schedule
-			xlog_cil_push_work
-			wake_up_all
-			<shutdown aborts commit>
-			xlog_cil_committed
-			kmem_free
+----------------------------------------------------------------
+Third part of new DAX code for 5.8:
+- Teach XFS to ask the VFS to drop an inode if the administrator changes
+  the FS_XFLAG_DAX inode flag such that the S_DAX state would change.
+  This can result in files changing access modes without requiring an
+  unmount cycle.
 
-   remove_wait_queue
-    spin_lock_irqsave --> UAF
+----------------------------------------------------------------
+Ira Weiny (6):
+      fs/xfs: Remove unnecessary initialization of i_rwsem
+      fs/xfs: Change XFS_MOUNT_DAX to XFS_MOUNT_DAX_ALWAYS
+      fs/xfs: Make DAX mount option a tri-state
+      fs/xfs: Create function xfs_inode_should_enable_dax()
+      fs/xfs: Combine xfs_diflags_to_linux() and xfs_diflags_to_iflags()
+      fs/xfs: Update xfs_ioctl_setattr_dax_invalidate()
 
-> Instead, make sure waitqueue_active(&ctx->push_wait) return false before
-> freeing 'ctx'.
-> 
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
-> ---
->  fs/xfs/xfs_log_cil.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index b43f0e8f43f2..59b21485b0fc 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -607,7 +607,7 @@ xlog_cil_committed(
->  
->  	if (!list_empty(&ctx->busy_extents))
->  		xlog_discard_busy_extents(mp, ctx);
-> -	else
-> +	else if (!waitqueue_active(&ctx->push_wait))
->  		kmem_free(ctx);
-
-That will just leak the memory instead, which is no better.
-
-Let me go write a patch to fix this.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+ fs/xfs/xfs_icache.c |   4 +-
+ fs/xfs/xfs_inode.h  |   1 +
+ fs/xfs/xfs_ioctl.c  | 141 ++++++++--------------------------------------------
+ fs/xfs/xfs_iops.c   |  70 +++++++++++++++++---------
+ fs/xfs/xfs_mount.h  |   4 +-
+ fs/xfs/xfs_super.c  |  48 ++++++++++++++++--
+ 6 files changed, 115 insertions(+), 153 deletions(-)
