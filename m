@@ -2,116 +2,72 @@ Return-Path: <SRS0=ihlG=7Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE930C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 18:01:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F2EDC433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 18:25:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B203820836
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 18:01:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70DAA20836
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 18:25:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591898465;
-	bh=ZvB6xGLGbaXd7GYLGjnjcoJ6qL/EFOX+NtFTVjvcGz8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=jGnGldRVXbjwkEMliGKGvoxM5RS8rofR7dOols/KT80uEg5yQvBrQb4rBNF8Mngo+
-	 YuNUbwdPo193saood8G3T5kKSXlkO2825BOGBuqR4qUCr4zok8IpuWRg9g74pO4wra
-	 1uk2BoMLpIaB48hj0QagayRExVQMIAQifA1MplMM=
+	s=default; t=1591899910;
+	bh=jrJp4ZqPE5v8VDCl/9oK5kM1s0ZCRrL7U8KwCou7PgQ=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=TWeL4nlNT3YKG6CzC5FSTkohB2msgTBQgWxnouA/ilRGmquGcKqwIs6eiz7ho3hT0
+	 LCdu3k+pCzk6vgj4DTXB6vWaQ/GZiM9ygwGpAW0kuFpZbcaVqa6liIZQYaelw++heT
+	 OMyHNIhUeC7Kl5UV/Ei7nbEWkI78MtUynijdWMDo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726799AbgFKSBF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Jun 2020 14:01:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36218 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726321AbgFKSBE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jun 2020 14:01:04 -0400
-Received: from mail-lf1-x144.google.com (mail-lf1-x144.google.com [IPv6:2a00:1450:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C27DC03E96F
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2020 11:01:04 -0700 (PDT)
-Received: by mail-lf1-x144.google.com with SMTP id x22so4012992lfd.4
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2020 11:01:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=BulRtyYimxYCM3JqpK8tF3IaJrXUR0A9VD3QaE4GUiU=;
-        b=F+EXHlVbvkMTRVWWzv8ZcPEHGpfAID2Da8N5jJ9jwq/Sk5UFdV4BndnY890mbolBO3
-         xJbuERV3mR0f+F5yKntH8xwiKR2kUGoUueLXNO5RnIgcO1PBh7DEHUydmD5yKAclq+vQ
-         balMdqIjrUuK2NFsEurmgSTtX0E/N5pRMm69I=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=BulRtyYimxYCM3JqpK8tF3IaJrXUR0A9VD3QaE4GUiU=;
-        b=hC9II7rQ30a+KsHfOEDpW7LmMiC0sG40evkMI4xpwIJ0EaGWZXG+GC93QzVGAUR5J2
-         zKBNg6CEHlcXm2wVMYGJxLZksb4MyFbDgaug7PkiwUWURow0r/5zINgMNcJlHvuSJxnd
-         h2OMTxac685vMr43dcQRm/m7yHDfq1oehDtus95WRDkKPF97HuoX3q3976qW9XtyypNF
-         eOrfDj1ud+3kYz6IqVyappAu7BvPP2YLWUptlw9zc/uLkF/hDu8G8vEpP9Lah5cxNBEY
-         j3w39SGTK/Fo2QBE0+iCHHs/6FsE88YSdnp0gWOM7qOmgzdka+5pSI/ylJ7vMz1fjTo1
-         NC6Q==
-X-Gm-Message-State: AOAM531FQo9iUmkAPa8ImzEiIYzrncbGWzfZ1scDioUBvEiUas6zHLFb
-        Ai29WCIbK5OmHe/LSPWV6lSXx1q3SK4=
-X-Google-Smtp-Source: ABdhPJw19yFnzvPCcVGb5XJzoGF68JW5yZJnE6hRqTpHsTxqoIanGcCani04ijwdF416E0MI+ZZsCw==
-X-Received: by 2002:a05:6512:104c:: with SMTP id c12mr4890318lfb.200.1591898462133;
-        Thu, 11 Jun 2020 11:01:02 -0700 (PDT)
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com. [209.85.208.178])
-        by smtp.gmail.com with ESMTPSA id f18sm990380lfh.49.2020.06.11.11.01.00
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 11 Jun 2020 11:01:00 -0700 (PDT)
-Received: by mail-lj1-f178.google.com with SMTP id i27so7966291ljb.12
-        for <linux-xfs@vger.kernel.org>; Thu, 11 Jun 2020 11:01:00 -0700 (PDT)
-X-Received: by 2002:a2e:8e78:: with SMTP id t24mr4854187ljk.314.1591898459839;
- Thu, 11 Jun 2020 11:00:59 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200611024248.GG11245@magnolia>
-In-Reply-To: <20200611024248.GG11245@magnolia>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Thu, 11 Jun 2020 11:00:43 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wgTMxCAHVgtKkbSJt=1pBm+86bz=RbZiZE-2sszwmcKvQ@mail.gmail.com>
-Message-ID: <CAHk-=wgTMxCAHVgtKkbSJt=1pBm+86bz=RbZiZE-2sszwmcKvQ@mail.gmail.com>
+        id S1728029AbgFKSZE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Jun 2020 14:25:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45794 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726386AbgFKSZE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jun 2020 14:25:04 -0400
 Subject: Re: [GIT PULL] vfs: improve DAX behavior for 5.8, part 3
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1591899904;
+        bh=jrJp4ZqPE5v8VDCl/9oK5kM1s0ZCRrL7U8KwCou7PgQ=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=xjhyNYXxHxAfNqLH4GenoExENXh3wXnILAFjYf/uVYBLdiGRHEgWPN9pVcmr1mOv0
+         90NC81kwd286nKI0I6iETzct5bwzl131Kw1MkXNGi6Opdyor+X58C8DM3qzLHmHl87
+         BzpE5aZz7u6r149GHKZ7cHrSy8ih0mmgETEKPh3Y=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20200611024248.GG11245@magnolia>
+References: <20200611024248.GG11245@magnolia>
+X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20200611024248.GG11245@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+ tags/vfs-5.8-merge-3
+X-PR-Tracked-Commit-Id: e4f9ba20d3b8c2b86ec71f326882e1a3c4e47953
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 7cf035cc8326066a514146065b6ee8fc2c30fc21
+Message-Id: <159189990428.7248.14261911727623489238.pr-tracker-bot@kernel.org>
+Date:   Thu, 11 Jun 2020 18:25:04 +0000
 To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Christoph Hellwig <hch@lst.de>,
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de,
         linux-ext4 <linux-ext4@vger.kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>, ira.weiny@intel.com
-Content-Type: text/plain; charset="UTF-8"
+        Theodore Ts'o <tytso@mit.edu>, ira.weiny@intel.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 10, 2020 at 7:43 PM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> I did a test merge of this branch against upstream this evening and
-> there weren't any conflicts.  The first five patches in the series were
-> already in the xfs merge, so it's only the last one that should change
-> anything.  Please let us know if you have any complaints about pulling
-> this, since I can rework the branch.
+The pull request you sent on Wed, 10 Jun 2020 19:42:48 -0700:
 
-I've taken this, but I hate how the patches apparently got duplicated.
-It feels like they should have been a cleanly separated branch that
-was just pulled into whoever needed them when they were ready, rather
-than applied in two different places.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.8-merge-3
 
-So this is just a note for future work - duplicating the patches like
-this can cause annoyances down the line. No merge issues this time
-(they often happen when duplicate patches then have other work done on
-top of them), but things like "git bisect" now don't have quite as
-black-and-white a situation etc etc.,
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/7cf035cc8326066a514146065b6ee8fc2c30fc21
 
-("git bisect" will still find _one_ of the duplicate commits if it
-introduced a problem, so it's usually not a huge deal, but it can
-cause the bug to be then repeated if people revert that one, but
-nobody ever notices that the other commit that did the same thing is
-still around and it gets back-ported to stable or whatever..)
+Thank you!
 
-So part of this is just in general about confusing duplicate history,
-and part of it is that the duplication can then cause later confusion.
-
-                Linus
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
