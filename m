@@ -2,208 +2,207 @@ Return-Path: <SRS0=ihlG=7Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4385CC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 00:16:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CEA3C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 01:38:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24E262078D
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 00:16:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E0262072F
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 01:38:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726977AbgFKAQf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 10 Jun 2020 20:16:35 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:45853 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726820AbgFKAQf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jun 2020 20:16:35 -0400
-Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id E70F9D7CB2E;
-        Thu, 11 Jun 2020 10:16:28 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jjAtK-0001Ya-Rj; Thu, 11 Jun 2020 10:16:22 +1000
-Date:   Thu, 11 Jun 2020 10:16:22 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 29/30] xfs: factor xfs_iflush_done
-Message-ID: <20200611001622.GN2040@dread.disaster.area>
-References: <20200604074606.266213-1-david@fromorbit.com>
- <20200604074606.266213-30-david@fromorbit.com>
- <20200609131249.GC40899@bfoster>
- <20200609221431.GK2040@dread.disaster.area>
- <20200610130833.GB50747@bfoster>
+        id S1726306AbgFKBij (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 10 Jun 2020 21:38:39 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:5875 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726163AbgFKBij (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Jun 2020 21:38:39 -0400
+Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 1F0512A4472B092BA99A;
+        Thu, 11 Jun 2020 09:38:37 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by DGGEMS411-HUB.china.huawei.com
+ (10.3.19.211) with Microsoft SMTP Server id 14.3.487.0; Thu, 11 Jun 2020
+ 09:38:26 +0800
+From:   Yu Kuai <yukuai3@huawei.com>
+To:     <darrick.wong@oracle.com>
+CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <yukuai3@huawei.com>, <yi.zhang@huawei.com>
+Subject: [RFC PATCH] fix use after free in xlog_wait()
+Date:   Thu, 11 Jun 2020 09:39:52 +0800
+Message-ID: <20200611013952.2589997-1-yukuai3@huawei.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200610130833.GB50747@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8
-        a=Jrg-JWUTNLOELscTFNEA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 10, 2020 at 09:08:33AM -0400, Brian Foster wrote:
-> On Wed, Jun 10, 2020 at 08:14:31AM +1000, Dave Chinner wrote:
-> > On Tue, Jun 09, 2020 at 09:12:49AM -0400, Brian Foster wrote:
-> > > On Thu, Jun 04, 2020 at 05:46:05PM +1000, Dave Chinner wrote:
-> > > > -		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
-> > > > -			xfs_iflush_abort(iip->ili_inode);
-> > > > +		if (INODE_ITEM(lip)->ili_flush_lsn != lip->li_lsn) {
-> > > > +			clear_bit(XFS_LI_FAILED, &lip->li_flags);
-> > > >  			continue;
-> > > >  		}
-> > > 
-> > > That seems like strange logic. Shouldn't we clear LI_FAILED regardless?
-> > 
-> > It's the same logic as before this patch series:
-> > 
-> >                        if (INODE_ITEM(blip)->ili_logged &&
-> >                             blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn) {
-> >                                 /*
-> >                                  * xfs_ail_update_finish() only cares about the
-> >                                  * lsn of the first tail item removed, any
-> >                                  * others will be at the same or higher lsn so
-> >                                  * we just ignore them.
-> >                                  */
-> >                                 xfs_lsn_t lsn = xfs_ail_delete_one(ailp, blip);
-> >                                 if (!tail_lsn && lsn)
-> >                                         tail_lsn = lsn;
-> >                         } else {
-> >                                 xfs_clear_li_failed(blip);
-> >                         }
-> > 
-> > I've just re-ordered it to check for relogged inodes first instead
-> > of handling that in the else branch.
-> 
-> Hmm.. I guess I'm confused why the logic seems to be swizzled around. An
-> earlier patch lifted the bit clear outside of this check, then we seem
-> to put it back in place in a different order for some reason..?
+I recently got UAF by running generic/019 in qemu:
 
-Oh, you're right - xfs_ail_delete_one() doesn't do that anymore - it
-got pulled up into xfs_trans_ail_delete() instead. So much stuff
-has changed in this patchset and I've largely moved on to all the
-followup stuff now, I'm starting to lose track of what this patchset
-does and the reasons why I did stuff a couple of months ago...
+==================================================================
+  BUG: KASAN: use-after-free in __lock_acquire+0x4508/0x68c0
+  Read of size 8 at addr ffff88811327f080 by task fio/11147
 
-I'll fix that up.
+  CPU: 6 PID: 11147 Comm: fio Tainted: G        W         5.7.0-next-20200602+ #8
+  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
+  Call Trace:
+   dump_stack+0xf6/0x16e
+   ? __lock_acquire+0x4508/0x68c0
+   ? __lock_acquire+0x4508/0x68c0
+   print_address_description.constprop.0+0x1a/0x210
+   ? __lock_acquire+0x4508/0x68c0
+   kasan_report.cold+0x1f/0x37
+   ? lockdep_hardirqs_on_prepare+0x480/0x550
+   ? __lock_acquire+0x4508/0x68c0
+   __lock_acquire+0x4508/0x68c0
+   ? print_usage_bug+0x1f0/0x1f0
+   ? finish_task_switch+0x126/0x5e0
+   ? lockdep_hardirqs_on_prepare+0x550/0x550
+   ? mark_held_locks+0x9e/0xe0
+   ? __schedule+0x801/0x1d90
+   ? _raw_spin_unlock_irq+0x1f/0x30
+   lock_acquire+0x182/0x790
+   ? remove_wait_queue+0x1d/0x180
+   ? __switch_to_asm+0x42/0x70
+   ? lock_release+0x710/0x710
+   ? __schedule+0x85c/0x1d90
+   ? xfs_log_commit_cil+0x1d8e/0x2a50
+   ? __sched_text_start+0x8/0x8
+   _raw_spin_lock_irqsave+0x32/0x50
+   ? remove_wait_queue+0x1d/0x180
+   remove_wait_queue+0x1d/0x180
+   xfs_log_commit_cil+0x1d9e/0x2a50
+   ? xlog_cil_empty+0x90/0x90
+   ? wake_up_q+0x140/0x140
+   ? rcu_read_lock_sched_held+0x9c/0xd0
+   ? rcu_read_lock_bh_held+0xb0/0xb0
+   __xfs_trans_commit+0x292/0xec0
+   ? xfs_trans_unreserve_and_mod_sb+0xab0/0xab0
+   ? rcu_read_lock_bh_held+0xb0/0xb0
+   ? xfs_isilocked+0x87/0x2e0
+   ? xfs_trans_log_inode+0x1ad/0x480
+   xfs_vn_update_time+0x3eb/0x6d0
+   ? xfs_setattr_mode.isra.0+0xa0/0xa0
+   ? current_time+0xa8/0x110
+   ? timestamp_truncate+0x2f0/0x2f0
+   ? xfs_setattr_mode.isra.0+0xa0/0xa0
+   update_time+0x70/0xc0
+   file_update_time+0x2b7/0x490
+   ? update_time+0xc0/0xc0
+   ? __sb_start_write+0x197/0x3e0
+   __xfs_filemap_fault.constprop.0+0x1b7/0x480
+   do_page_mkwrite+0x1ac/0x470
+   do_wp_page+0x9e2/0x1b10
+   ? do_raw_spin_lock+0x121/0x290
+   ? finish_mkwrite_fault+0x4a0/0x4a0
+   ? rwlock_bug.part.0+0x90/0x90
+   ? handle_mm_fault+0xa81/0x3570
+   handle_mm_fault+0x1c65/0x3570
+   ? __pmd_alloc+0x4c0/0x4c0
+   ? vmacache_find+0x55/0x2a0
+   do_user_addr_fault+0x635/0xd42
+   exc_page_fault+0xdd/0x5b0
+   ? asm_common_interrupt+0x8/0x40
+   ? asm_exc_page_fault+0x8/0x30
+   asm_exc_page_fault+0x1e/0x30
+  RIP: 0033:0x7f40e022336a
+  Code: Bad RIP value.
+  RSP: 002b:00007ffedefb0218 EFLAGS: 00010206
+  RAX: 00007f40b7a5a000 RBX: 0000000002562280 RCX: 00000000025633d0
+  RDX: 0000000000000fc0 RSI: 0000000002562420 RDI: 00007f40b7a5a000
+  RBP: 00007f40b8620190 R08: 0000000000000000 R09: 00007f40b7a5aff0
+  R10: 00007ffedeff8000 R11: 00007f40b7a5aff0 R12: 0000000000000001
+  R13: 0000000000001000 R14: 00000000025622a8 R15: 00007f40b8620198
 
-> > > > + * Inode buffer IO completion routine.  It is responsible for removing inodes
-> > > > + * attached to the buffer from the AIL if they have not been re-logged, as well
-> > > > + * as completing the flush and unlocking the inode.
-> > > > + */
-> > > > +void
-> > > > +xfs_iflush_done(
-> > > > +	struct xfs_buf		*bp)
-> > > > +{
-> > > > +	struct xfs_log_item	*lip, *n;
-> > > > +	LIST_HEAD(flushed_inodes);
-> > > > +	LIST_HEAD(ail_updates);
-> > > > +
-> > > > +	/*
-> > > > +	 * Pull the attached inodes from the buffer one at a time and take the
-> > > > +	 * appropriate action on them.
-> > > > +	 */
-> > > > +	list_for_each_entry_safe(lip, n, &bp->b_li_list, li_bio_list) {
-> > > > +		struct xfs_inode_log_item *iip = INODE_ITEM(lip);
-> > > > +
-> > > > +		if (xfs_iflags_test(iip->ili_inode, XFS_ISTALE)) {
-> > > > +			xfs_iflush_abort(iip->ili_inode);
-> > > > +			continue;
-> > > > +		}
-> > > > +		if (!iip->ili_last_fields)
-> > > > +			continue;
-> > > > +
-> > > > +		/* Do an unlocked check for needing the AIL lock. */
-> > > > +		if (iip->ili_flush_lsn == lip->li_lsn ||
-> > > > +		    test_bit(XFS_LI_FAILED, &lip->li_flags))
-> > > > +			list_move_tail(&lip->li_bio_list, &ail_updates);
-> > > > +		else
-> > > > +			list_move_tail(&lip->li_bio_list, &flushed_inodes);
-> > > 
-> > > Not sure I see the point of having two lists here, particularly since
-> > > this is all based on lockless logic.
-> > 
-> > It's not lockless - it's all done under the buffer lock which
-> > protects the buffer log item list...
-> > 
-> > > At the very least it's a subtle
-> > > change in AIL processing logic and I don't think that should be buried
-> > > in a refactoring patch.
-> > 
-> > I don't think it changes logic at all - what am I missing?
-> > 
-> 
-> I'm referring to the fact that we no longer check the lsn of each
-> (flushed) log item attached to the buffer under the ail lock.
+  Allocated by task 6826:
+   save_stack+0x1b/0x40
+   __kasan_kmalloc.constprop.0+0xc2/0xd0
+   kmem_alloc+0x154/0x450
+   xlog_cil_push_work+0xff/0x1250
+   process_one_work+0xa3e/0x17a0
+   worker_thread+0x8e2/0x1050
+   kthread+0x355/0x470
+   ret_from_fork+0x22/0x30
 
-That whole loop in xfs_iflush_ail_updates() runs under the AIL
-lock, so it does the right thing for anything that is moved to the
-"ail_updates" list.
+   Freed by task 6826:
+   save_stack+0x1b/0x40
+   __kasan_slab_free+0x12c/0x170
+   kfree+0xd6/0x300
+   kvfree+0x42/0x50
+   xlog_cil_committed+0xa9c/0xf30
+   xlog_cil_push_work+0xa8c/0x1250
+   process_one_work+0xa3e/0x17a0
+   worker_thread+0x8e2/0x1050
+   kthread+0x355/0x470
+   ret_from_fork+0x22/0x30
 
-If we win the unlocked race (li_lsn does not change) then we move
-the inode to the ail update list and it gets rechecked under the AIL
-lock and does the right thing. If we lose the race (li_lsn changes)
-then the inode has been redirtied and we *don't need to check it
-under the AIL* - all we need to do is leave it attached to the
-buffer.
+  The buggy address belongs to the object at ffff88811327f000
+   which belongs to the cache kmalloc-256 of size 256
+  The buggy address is located 128 bytes inside of
+   256-byte region [ffff88811327f000, ffff88811327f100)
+  The buggy address belongs to the page:
+  page:ffffea00044c9f00 refcount:1 mapcount:0 mapping:0000000000000000 index:0x0 head:ffffea00044c9f00 order:2 compound_mapcount:0 compound_pincount:0
+  flags: 0x200000000010200(slab|head)
+  raw: 0200000000010200 dead000000000100 dead000000000122 ffff88811a40e800
+  raw: 0000000000000000 0000000080200020 00000001ffffffff 0000000000000000
+  page dumped because: kasan: bad access detected
 
-This is the same as the old code: win the race, need_ail is
-incremented and we recheck under the AIL lock. Lose the race and
-we don't recheck under the AIL because we don't need to. This
-happened less under the old code, because it typically only happened
-with single dirty inodes on a cluster buffer (think directory inode
-under long running large directory modification operations), but
-that race most definitely existed and the code most definitely
-handled it correctly.
+  Memory state around the buggy address:
+   ffff88811327ef80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+   ffff88811327f000: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+  >ffff88811327f080: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+                     ^
+   ffff88811327f100: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+   ffff88811327f180: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+  ==================================================================
 
-Keep in mind that this inode redirtying/AIL repositioning race can
-even occur /after/ we've locked and removed items from the AIL but
-before we've run xfs_iflush_finish(). i.e. we can remove it from the
-AIL but by the time xfs_iflush_finish() runs it's back in the AIL.
+I think the reason is that when 'ctx' is freed in xlog_cil_committed(),
+a previous call to xlog_wait(&ctx->xc_ctx->push_wait, ...) hasn't finished
+yet. Thus when remove_wait_queue() is called, UAF will be triggered
+since 'ctx' was freed:
 
-> Note that
-> I am not saying it's necessarily wrong, but rather that IMO it's too
-> subtle a change to silently squash into a refactoring patch.
+thread1		    thread2             thread3
 
-Except it isn't a change at all. The same subtle issue exists in the
-code before this patch. It's just that this refactoring makes subtle
-race conditions that were previously unknown to reviewers so much
-more obvious they can now see them clearly. That tells me the code
-is much improved by this refactoring, not that there's a problem
-that needs reworking....
+__xfs_trans_commit
+ xfs_log_commit_cil
+  xlog_wait
+   schedule
+                    xlog_cil_push_work
+		     wake_up_all
+		                        xlog_cil_committed
+					 kmem_free
+   remove_wait_queue
+    spin_lock_irqsave --> UAF
 
-> > FWIW, I untangled the function this way because the "track dirty
-> > inodes by ordered buffers" patchset completely removes the AIL stuff
-> > - the ail_updates list and the xfs_iflush_ail_updates() function go
-> > away completely and the rest of the refactoring remains unchanged.
-> > i.e.  as the commit messages says, this change makes follow-on
-> > patches much easier to understand...
-> > 
-> 
-> The general function breakdown seems fine to me. I find the multiple
-> list processing to be a bit overdone, particularly if it doesn't serve a
-> current functional purpose. If the purpose is to support a future patch
-> series, I'd suggest to continue using the existing logic of moving all
-> flushed inodes to a single list and leave the separate list bits to the
-> start of the series where it's useful so it's possible to review with
-> the associated context (or alternatively just defer the entire patch).
+I tried to fix the problem by using autoremove_wake_function() in
+xlog_wait(), however, soft lockup will be triggered this way.
 
-That's how I originally did it, and it was a mess. it didn't
-separate cleanly at all, and didn't make future patches much easier
-at all. Hence I don't think reworking the patch just to look
-different gains us anything at this point...
+Instead, make sure waitqueue_active(&ctx->push_wait) return false before
+freeing 'ctx'.
 
-Cheers,
+Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+---
+ fs/xfs/xfs_log_cil.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Dave.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index b43f0e8f43f2..59b21485b0fc 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -607,7 +607,7 @@ xlog_cil_committed(
+ 
+ 	if (!list_empty(&ctx->busy_extents))
+ 		xlog_discard_busy_extents(mp, ctx);
+-	else
++	else if (!waitqueue_active(&ctx->push_wait))
+ 		kmem_free(ctx);
+ }
+ 
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.4
+
