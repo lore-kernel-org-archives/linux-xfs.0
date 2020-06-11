@@ -2,183 +2,428 @@ Return-Path: <SRS0=ihlG=7Y=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B7DC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 15:11:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A30D5C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 15:40:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDC1120691
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 15:11:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 827952075E
+	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 15:40:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UQQjM2vp"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="K5MN94T9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728458AbgFKPLb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Jun 2020 11:11:31 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:40021 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728327AbgFKPLb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jun 2020 11:11:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1591888289;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=dCrUsFjr5nTo7YMbuo6naT5rMcveBqItH9g4ZRhLhDU=;
-        b=UQQjM2vpHVgkYABnd33viNk0eQPueJLlOSa7qDFcVtj6VYU9Ytx2+weIlEC1FyWSsrMpLY
-        TKBRVG2UCl4HiIjzzRKyD5279kubu0v4vgSe8HXnrc3E2FWQwkaXRaDto2D1xsmOV67V4e
-        MylAwJP7vLondq7Bp8q+qsoTiHUwVJI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-134-hZKXzjXEOfSX68ojmbc1Yw-1; Thu, 11 Jun 2020 11:11:26 -0400
-X-MC-Unique: hZKXzjXEOfSX68ojmbc1Yw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 83D3580572E;
-        Thu, 11 Jun 2020 15:11:25 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4B54610013D7;
-        Thu, 11 Jun 2020 15:11:24 +0000 (UTC)
-Date:   Thu, 11 Jun 2020 11:11:22 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Yu Kuai <yukuai3@huawei.com>, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com
-Subject: Re: [PATCH] xfs: fix use-after-free on CIL context on shutdown
-Message-ID: <20200611151122.GA57603@bfoster>
-References: <20200611013952.2589997-1-yukuai3@huawei.com>
- <20200611022848.GQ2040@dread.disaster.area>
- <20200611024503.GR2040@dread.disaster.area>
+        id S1728540AbgFKPkr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 11 Jun 2020 11:40:47 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:50446 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728104AbgFKPkr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jun 2020 11:40:47 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05BFcZhO178568;
+        Thu, 11 Jun 2020 15:40:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=DPGQGVWH0ceEZdam2Po4+6TeAabvCReFRxiGA1R48os=;
+ b=K5MN94T9KTR6FDDKEgynfjiCmCRqdrqg66fw5EbebuQBfykdlpnnMe2f3+8MsBODBXkC
+ rci+PYM5pRF0SbwZ5OsuLBTCqldc07ufNePLkKEIZjLB7FSgHYHI4Q0hFgfB6Dy/VELj
+ lgQInAQYEUem+2SJP4tDnTbVGuJbjGR5Iqd8/zY0HDXjbIB6g61PjioXSwnlT8wVqQqr
+ WgEco8v5ZtFjesLrEXeE0oLpPIPfLAwxiyEQiK7IW/KdiUvYguVm+gkqxvIFhpXu6BdP
+ zsh02HZi5uscnIubOznH0WQI5s9nSmYsXLrRiPfxUEKg+ox06AdKDTaEVRt2YWK1wHh7 TA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 31g2jrgmsh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 11 Jun 2020 15:40:40 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05BFc63a069958;
+        Thu, 11 Jun 2020 15:40:40 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 31gn31xxtw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 11 Jun 2020 15:40:39 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05BFeb9K027328;
+        Thu, 11 Jun 2020 15:40:39 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 11 Jun 2020 08:40:37 -0700
+Date:   Thu, 11 Jun 2020 08:40:36 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eryu Guan <guan@eryu.me>, Eric Sandeen <sandeen@redhat.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [PATCH 2/4] generic: test per-type quota softlimit enforcement
+ timeout
+Message-ID: <20200611154036.GH11245@magnolia>
+References: <ea649599-f8a9-deb9-726e-329939befade@redhat.com>
+ <9c9a63f3-13ab-d5b6-923c-4ea684b6b2f8@redhat.com>
+ <7102e1e3-bee6-7aa2-dce6-c0e7e0ce2983@redhat.com>
+ <20200531161517.GC3363@desktop>
+ <20200601124844.GI1938@dhcp-12-102.nay.redhat.com>
+ <20200601163957.GX8230@magnolia>
+ <20200611051243.GM1938@dhcp-12-102.nay.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200611024503.GR2040@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20200611051243.GM1938@dhcp-12-102.nay.redhat.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9649 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 malwarescore=0
+ bulkscore=0 adultscore=0 mlxlogscore=999 spamscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006110122
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9649 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 impostorscore=0
+ cotscore=-2147483648 priorityscore=1501 spamscore=0 suspectscore=1
+ lowpriorityscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0 mlxscore=0
+ phishscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2006110122
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 11, 2020 at 12:45:03PM +1000, Dave Chinner wrote:
+On Thu, Jun 11, 2020 at 01:12:43PM +0800, Zorro Lang wrote:
+> On Mon, Jun 01, 2020 at 09:39:57AM -0700, Darrick J. Wong wrote:
+> > On Mon, Jun 01, 2020 at 08:48:44PM +0800, Zorro Lang wrote:
+> > > On Mon, Jun 01, 2020 at 12:15:17AM +0800, Eryu Guan wrote:
+> > > > On Mon, May 18, 2020 at 03:00:11PM -0500, Eric Sandeen wrote:
+> > > > > From: Zorro Lang <zlang@redhat.com>
+> > > > > 
+> > > > > Set different block & inode grace timers for user, group and project
+> > > > > quotas, then test softlimit enforcement timeout, make sure different
+> > > > > grace timers as expected.
+> > > > > 
+> > > > > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > > > > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > > > > ---
+> > > > 
+> > > > I saw the following failure as well on xfs (as Zorro mentioned in his v3
+> > > > patch)
+> > > > 
+> > > >      -pwrite: Disk quota exceeded
+> > > >      +pwrite: No space left on device
+> > > > 
+> > > > So this is an xfs issue that needs to be fixed? Just want to make sure
+> > > > the current expected test result.
+> > > 
+> > > Hmm.... I think I'd better to filter ENOSPC|EDQUOT. I can't be sure all
+> > > filesystems will return EDQUOT or ENOSPC 100%, especially for group and project
+> > > quota.
+> > > 
+> > > But I think Eric's trying to change a return value of XFS quota. I don't know the
+> > > current status.
+> > 
+> > Yeah, Eric fixed a few problems where a group quota overage would return
+> > ENOSPC instead of EDQUOT; and a few more problems where a project quota
+> > overage would return EDQUOT instead of ENOSPC.
+> > 
+> > That'll be coming in the 5.8 merge, which I should get on...
 > 
-> From: Dave Chinner <dchinner@redhat.com>
+> To make sure I don't misunderstand, so the expected output is as below?
+> 1) User quota test:
+> pwrite: Disk quota exceeded
 > 
-> xlog_wait() on the CIL context can reference a freed context if the
-> waiter doesn't get scheduled before the CIL context is freed. This
-> can happen when a task is on the hard throttle and the CIL push
-> aborts due to a shutdown. This was detected by generic/019:
+> 2) Group quota test:
+> pwrite: Disk quota exceeded
 > 
-> thread 1			thread 2
-> 
-> __xfs_trans_commit
->  xfs_log_commit_cil
->   <CIL size over hard throttle limit>
->   xlog_wait
->    schedule
-> 				xlog_cil_push_work
-> 				wake_up_all
-> 				<shutdown aborts commit>
-> 				xlog_cil_committed
-> 				kmem_free
-> 
->    remove_wait_queue
->     spin_lock_irqsave --> UAF
-> 
-> Fix it by moving the wait queue to the CIL rather than keeping it in
-> in the CIL context that gets freed on push completion. Because the
-> wait queue is now independent of the CIL context and we might have
-> multiple contexts in flight at once, only wake the waiters on the
-> push throttle when the context we are pushing is over the hard
-> throttle size threshold.
-> 
-> Fixes: 0e7ab7efe7745 ("xfs: Throttle commits on delayed background CIL push")
-> Reported-by: Yu Kuai <yukuai3@huawei.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+> 3) Project quota test:
+> pwrite: No space left on device / Disk quota exceeded (need a filter)
 
-Looks reasonable:
+Yes, that's my understanding of the *intended* behavior. :)
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+--D
 
->  fs/xfs/xfs_log_cil.c  | 10 +++++-----
->  fs/xfs/xfs_log_priv.h |  2 +-
->  2 files changed, 6 insertions(+), 6 deletions(-)
+> Thanks,
+> Zorro
 > 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index b43f0e8f43f2e..9ed90368ab311 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -671,7 +671,8 @@ xlog_cil_push_work(
->  	/*
->  	 * Wake up any background push waiters now this context is being pushed.
->  	 */
-> -	wake_up_all(&ctx->push_wait);
-> +	if (ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log))
-> +		wake_up_all(&cil->xc_push_wait);
->  
->  	/*
->  	 * Check if we've anything to push. If there is nothing, then we don't
-> @@ -743,13 +744,12 @@ xlog_cil_push_work(
->  
->  	/*
->  	 * initialise the new context and attach it to the CIL. Then attach
-> -	 * the current context to the CIL committing lsit so it can be found
-> +	 * the current context to the CIL committing list so it can be found
->  	 * during log forces to extract the commit lsn of the sequence that
->  	 * needs to be forced.
->  	 */
->  	INIT_LIST_HEAD(&new_ctx->committing);
->  	INIT_LIST_HEAD(&new_ctx->busy_extents);
-> -	init_waitqueue_head(&new_ctx->push_wait);
->  	new_ctx->sequence = ctx->sequence + 1;
->  	new_ctx->cil = cil;
->  	cil->xc_ctx = new_ctx;
-> @@ -937,7 +937,7 @@ xlog_cil_push_background(
->  	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
->  		trace_xfs_log_cil_wait(log, cil->xc_ctx->ticket);
->  		ASSERT(cil->xc_ctx->space_used < log->l_logsize);
-> -		xlog_wait(&cil->xc_ctx->push_wait, &cil->xc_push_lock);
-> +		xlog_wait(&cil->xc_push_wait, &cil->xc_push_lock);
->  		return;
->  	}
->  
-> @@ -1216,12 +1216,12 @@ xlog_cil_init(
->  	INIT_LIST_HEAD(&cil->xc_committing);
->  	spin_lock_init(&cil->xc_cil_lock);
->  	spin_lock_init(&cil->xc_push_lock);
-> +	init_waitqueue_head(&cil->xc_push_wait);
->  	init_rwsem(&cil->xc_ctx_lock);
->  	init_waitqueue_head(&cil->xc_commit_wait);
->  
->  	INIT_LIST_HEAD(&ctx->committing);
->  	INIT_LIST_HEAD(&ctx->busy_extents);
-> -	init_waitqueue_head(&ctx->push_wait);
->  	ctx->sequence = 1;
->  	ctx->cil = cil;
->  	cil->xc_ctx = ctx;
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index ec22c7a3867f1..75a62870b63af 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -240,7 +240,6 @@ struct xfs_cil_ctx {
->  	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
->  	struct list_head	iclog_entry;
->  	struct list_head	committing;	/* ctx committing list */
-> -	wait_queue_head_t	push_wait;	/* background push throttle */
->  	struct work_struct	discard_endio_work;
->  };
->  
-> @@ -274,6 +273,7 @@ struct xfs_cil {
->  	wait_queue_head_t	xc_commit_wait;
->  	xfs_lsn_t		xc_current_sequence;
->  	struct work_struct	xc_push_work;
-> +	wait_queue_head_t	xc_push_wait;	/* background push throttle */
->  } ____cacheline_aligned_in_smp;
->  
->  /*
+> > 
+> > --D
+> > 
+> > > Thanks,
+> > > Zorro
+> > > 
+> > > > 
+> > > > >  common/quota          |   4 +
+> > > > >  tests/generic/600     | 187 ++++++++++++++++++++++++++++++++++++++++++
+> > > > >  tests/generic/600.out |  41 +++++++++
+> > > > >  tests/generic/group   |   1 +
+> > > > >  4 files changed, 233 insertions(+)
+> > > > >  create mode 100755 tests/generic/600
+> > > > >  create mode 100644 tests/generic/600.out
+> > > > > 
+> > > > > diff --git a/common/quota b/common/quota
+> > > > > index 240e0bbc..1437d5f7 100644
+> > > > > --- a/common/quota
+> > > > > +++ b/common/quota
+> > > > > @@ -217,6 +217,10 @@ _qmount()
+> > > > >      if [ "$FSTYP" != "xfs" ]; then
+> > > > >          quotacheck -ug $SCRATCH_MNT >>$seqres.full 2>&1
+> > > > >          quotaon -ug $SCRATCH_MNT >>$seqres.full 2>&1
+> > > > > +        # try to turn on project quota if it's supported
+> > > > > +        if quotaon --help 2>&1 | grep -q '\-\-project'; then
+> > > > > +            quotaon --project $SCRATCH_MNT >>$seqres.full 2>&1
+> > > > > +        fi
+> > > > >      fi
+> > > > >      chmod ugo+rwx $SCRATCH_MNT
+> > > > >  }
+> > > > > diff --git a/tests/generic/600 b/tests/generic/600
+> > > > > new file mode 100755
+> > > > > index 00000000..03b4dcb3
+> > > > > --- /dev/null
+> > > > > +++ b/tests/generic/600
+> > > > > @@ -0,0 +1,187 @@
+> > > > > +#! /bin/bash
+> > > > > +# SPDX-License-Identifier: GPL-2.0
+> > > > > +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
+> > > > > +#
+> > > > > +# FS QA Test No. 600
+> > > > > +#
+> > > > > +# Test per-type(user, group and project) filesystem quota timers, make sure
+> > > > > +# enforcement
+> > > > > +#
+> > > > > +seq=`basename $0`
+> > > > > +seqres=$RESULT_DIR/$seq
+> > > > > +echo "QA output created by $seq"
+> > > > > +
+> > > > > +here=`pwd`
+> > > > > +tmp=/tmp/$$
+> > > > > +status=1	# failure is the default!
+> > > > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > > > +
+> > > > > +_cleanup()
+> > > > > +{
+> > > > > +	restore_project
+> > > > > +	cd /
+> > > > > +	rm -f $tmp.*
+> > > > > +}
+> > > > > +
+> > > > > +# get standard environment, filters and checks
+> > > > > +. ./common/rc
+> > > > > +. ./common/filter
+> > > > > +. ./common/quota
+> > > > > +
+> > > > > +# remove previous $seqres.full before test
+> > > > > +rm -f $seqres.full
+> > > > > +
+> > > > > +require_project()
+> > > > > +{
+> > > > > +	rm -f $tmp.projects $tmp.projid
+> > > > > +	if [ -f /etc/projects ];then
+> > > > > +		cat /etc/projects > $tmp.projects
+> > > > > +	fi
+> > > > > +	if [ -f /etc/projid ];then
+> > > > > +		cat /etc/projid > $tmp.projid
+> > > > > +	fi
+> > > > > +
+> > > > > +	cat >/etc/projects <<EOF
+> > > > > +100:$SCRATCH_MNT/t
+> > > > > +EOF
+> > > > > +	cat >/etc/projid <<EOF
+> > > > > +$qa_user:100
+> > > > > +EOF
+> > > > > +	PROJECT_CHANGED=1
+> > > > > +}
+> > > > > +
+> > > > > +restore_project()
+> > > > > +{
+> > > > > +	if [ "$PROJECT_CHANGED" = "1" ];then
+> > > > > +		rm -f /etc/projects /etc/projid
+> > > > > +		if [ -f $tmp.projects ];then
+> > > > > +			cat $tmp.projects > /etc/projects
+> > > > > +		fi
+> > > > > +		if [ -f $tmp.projid ];then
+> > > > > +			cat $tmp.projid > /etc/projid
+> > > > > +		fi
+> > > > > +	fi
+> > > > > +}
+> > > > > +
+> > > > > +init_files()
+> > > > > +{
+> > > > > +	local dir=$1
+> > > > > +
+> > > > > +	echo "### Initialize files, and their mode and ownership"
+> > > > > +	touch $dir/file{1,2} 2>/dev/null
+> > > > > +	chown $qa_user $dir/file{1,2} 2>/dev/null
+> > > > > +	chgrp $qa_user $dir/file{1,2} 2>/dev/null
+> > > > > +	chmod 777 $dir 2>/dev/null
+> > > > > +}
+> > > > > +
+> > > > > +cleanup_files()
+> > > > > +{
+> > > > > +	echo "### Remove all files"
+> > > > > +	rm -f ${1}/file{1,2,3,4,5,6}
+> > > > > +}
+> > > > > +
+> > > > > +test_grace()
+> > > > > +{
+> > > > > +	local type=$1
+> > > > > +	local dir=$2
+> > > > > +	local bgrace=$3
+> > > > > +	local igrace=$4
+> > > > > +
+> > > > > +	init_files $dir
+> > > > > +	echo "--- Test block quota ---"
+> > > > > +	# Firstly fit below block soft limit
+> > > > > +	echo "Write 225 blocks..."
+> > > > > +	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((225 * $BLOCK_SIZE))' \
+> > > > > +		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
+> > > > > +		_filter_xfs_io_error | tee -a $seqres.full
+> > > > > +	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+> > > > > +	# Secondly overcome block soft limit
+> > > > > +	echo "Rewrite 250 blocks plus 1 byte, over the block softlimit..."
+> > > > > +	su $qa_user -c "$XFS_IO_PROG -c 'pwrite 0 $((250 * $BLOCK_SIZE + 1))' \
+> > > > > +		-c fsync $dir/file1" 2>&1 >>$seqres.full | \
+> > > > > +		_filter_xfs_io_error | tee -a $seqres.full
+> > > > > +	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+> > > > > +	# Reset grace time here, make below grace time test more accurate
+> > > > > +	setquota -$type $qa_user -T $bgrace $igrace $SCRATCH_MNT 2>/dev/null
+> > > > > +	# Now sleep enough grace time and check that softlimit got enforced
+> > > > > +	sleep $((bgrace + 1))
+> > > > > +	echo "Try to write 1 one more block after grace..."
+> > > > > +	su $qa_user -c "$XFS_IO_PROG -c 'truncate 0' -c 'pwrite 0 $BLOCK_SIZE' \
+> > > > > +		$dir/file2" 2>&1 >>$seqres.full | _filter_xfs_io_error | \
+> > > > > +		tee -a $seqres.full
+> > > > > +	repquota -v -$type $SCRATCH_MNT | grep -v "^root" >>$seqres.full 2>&1
+> > > > > +	echo "--- Test inode quota ---"
+> > > > > +	# And now the softlimit test for inodes
+> > > > > +	# First reset space limits so that we don't have problems with
+> > > > > +	# space reservations on XFS
+> > > > > +	setquota -$type $qa_user 0 0 3 100 $SCRATCH_MNT
+> > > > > +	echo "Create 2 more files, over the inode softlimit..."
+> > > > > +	su $qa_user -c "touch $dir/file3 $dir/file4" 2>&1 >>$seqres.full | \
+> > > > > +		_filter_scratch | tee -a $seqres.full
+> > > > > +	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+> > > > > +	# Reset grace time here, make below grace time test more accurate
+> > > > > +	setquota -$type $qa_user -T $bgrace $igrace $SCRATCH_MNT 2>/dev/null
+> > > > > +	# Wait and check grace time enforcement
+> > > > > +	sleep $((igrace+1))
+> > > > > +	echo "Try to create one more inode after grace..."
+> > > > > +	su $qa_user -c "touch $dir/file5" 2>&1 >>$seqres.full |
+> > > > > +		_filter_scratch | tee -a $seqres.full
+> > > > > +	repquota -v -$type $SCRATCH_MNT  | grep -v "^root" >>$seqres.full 2>&1
+> > > > > +	cleanup_files $dir
+> > > > > +}
+> > > > > +
+> > > > > +# real QA test starts here
+> > > > > +_supported_fs generic
+> > > > > +_supported_os Linux
+> > > > > +_require_scratch
+> > > > > +_require_setquota_project
+> > > > > +_require_quota
+> > > > > +_require_user
+> > > > > +_require_group
+> > > > 
+> > > > Hmm, also needs _require_scratch_xfs_crc when FSTYP is xfs, otherwise v4
+> > > > xfs fails as
+> > > > 
+> > > > +mount: /mnt/scratch: wrong fs type, bad option, bad superblock on /dev/mapper/testvg-lv2, missing codepage or helper program, or other error.
+> > > > +qmount failed
+> > > > 
+> > > > and dmesg says
+> > > > 
+> > > > XFS (dm-2): Super block does not support project and group quota together
+> > > > 
+> > > > Thanks,
+> > > > Eryu
+> > > > 
+> > > > > +
+> > > > > +_scratch_mkfs >$seqres.full 2>&1
+> > > > > +_scratch_enable_pquota
+> > > > > +_qmount_option "usrquota,grpquota,prjquota"
+> > > > > +_qmount
+> > > > > +_require_prjquota $SCRATCH_DEV
+> > > > > +BLOCK_SIZE=$(_get_file_block_size $SCRATCH_MNT)
+> > > > > +rm -rf $SCRATCH_MNT/t
+> > > > > +mkdir $SCRATCH_MNT/t
+> > > > > +$XFS_IO_PROG -r -c "chproj 100" -c "chattr +P" $SCRATCH_MNT/t
+> > > > > +require_project
+> > > > > +
+> > > > > +echo "### Set up different grace timers to each type of quota"
+> > > > > +UBGRACE=12
+> > > > > +UIGRACE=10
+> > > > > +GBGRACE=4
+> > > > > +GIGRACE=2
+> > > > > +PBGRACE=8
+> > > > > +PIGRACE=6
+> > > > > +
+> > > > > +setquota -u $qa_user $((250 * $BLOCK_SIZE / 1024)) \
+> > > > > +	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
+> > > > > +setquota -u -t $UBGRACE $UIGRACE $SCRATCH_MNT
+> > > > > +echo; echo "### Test user quota softlimit and grace time"
+> > > > > +test_grace u $SCRATCH_MNT $UBGRACE $UIGRACE
+> > > > > +# Reset the user quota space & inode limits, avoid it affect later test
+> > > > > +setquota -u $qa_user 0 0 0 0 $SCRATCH_MNT
+> > > > > +
+> > > > > +setquota -g $qa_user $((250 * $BLOCK_SIZE / 1024)) \
+> > > > > +	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
+> > > > > +setquota -g -t $GBGRACE $GIGRACE $SCRATCH_MNT
+> > > > > +echo; echo "### Test group quota softlimit and grace time"
+> > > > > +test_grace g $SCRATCH_MNT $GBGRACE $GIGRACE
+> > > > > +# Reset the group quota space & inode limits, avoid it affect later test
+> > > > > +setquota -g $qa_user 0 0 0 0 $SCRATCH_MNT
+> > > > > +
+> > > > > +setquota -P $qa_user $((250 * $BLOCK_SIZE / 1024)) \
+> > > > > +	$((1000 * $BLOCK_SIZE / 1024)) 3 100 $SCRATCH_MNT
+> > > > > +setquota -P -t $PBGRACE $PIGRACE $SCRATCH_MNT
+> > > > > +echo; echo "### Test project quota softlimit and grace time"
+> > > > > +test_grace P $SCRATCH_MNT/t $PBGRACE $PIGRACE
+> > > > > +# Reset the project quota space & inode limits
+> > > > > +setquota -P $qa_user 0 0 0 0 $SCRATCH_MNT
+> > > > > +
+> > > > > +# success, all done
+> > > > > +status=0
+> > > > > +exit
+> > > > > diff --git a/tests/generic/600.out b/tests/generic/600.out
+> > > > > new file mode 100644
+> > > > > index 00000000..6e15eaeb
+> > > > > --- /dev/null
+> > > > > +++ b/tests/generic/600.out
+> > > > > @@ -0,0 +1,41 @@
+> > > > > +QA output created by 600
+> > > > > +### Set up different grace timers to each type of quota
+> > > > > +
+> > > > > +### Test user quota softlimit and grace time
+> > > > > +### Initialize files, and their mode and ownership
+> > > > > +--- Test block quota ---
+> > > > > +Write 225 blocks...
+> > > > > +Rewrite 250 blocks plus 1 byte, over the block softlimit...
+> > > > > +Try to write 1 one more block after grace...
+> > > > > +pwrite: Disk quota exceeded
+> > > > > +--- Test inode quota ---
+> > > > > +Create 2 more files, over the inode softlimit...
+> > > > > +Try to create one more inode after grace...
+> > > > > +touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
+> > > > > +### Remove all files
+> > > > > +
+> > > > > +### Test group quota softlimit and grace time
+> > > > > +### Initialize files, and their mode and ownership
+> > > > > +--- Test block quota ---
+> > > > > +Write 225 blocks...
+> > > > > +Rewrite 250 blocks plus 1 byte, over the block softlimit...
+> > > > > +Try to write 1 one more block after grace...
+> > > > > +pwrite: Disk quota exceeded
+> > > > > +--- Test inode quota ---
+> > > > > +Create 2 more files, over the inode softlimit...
+> > > > > +Try to create one more inode after grace...
+> > > > > +touch: cannot touch 'SCRATCH_MNT/file5': Disk quota exceeded
+> > > > > +### Remove all files
+> > > > > +
+> > > > > +### Test project quota softlimit and grace time
+> > > > > +### Initialize files, and their mode and ownership
+> > > > > +--- Test block quota ---
+> > > > > +Write 225 blocks...
+> > > > > +Rewrite 250 blocks plus 1 byte, over the block softlimit...
+> > > > > +Try to write 1 one more block after grace...
+> > > > > +pwrite: Disk quota exceeded
+> > > > > +--- Test inode quota ---
+> > > > > +Create 2 more files, over the inode softlimit...
+> > > > > +Try to create one more inode after grace...
+> > > > > +touch: cannot touch 'SCRATCH_MNT/t/file5': Disk quota exceeded
+> > > > > +### Remove all files
+> > > > 
+> > > 
+> > 
 > 
-
