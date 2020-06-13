@@ -1,73 +1,124 @@
-Return-Path: <SRS0=ihlG=7Y=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=EwQn=72=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F2EDC433E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 18:25:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EAE2C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Jun 2020 05:32:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70DAA20836
-	for <linux-xfs@archiver.kernel.org>; Thu, 11 Jun 2020 18:25:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1591899910;
-	bh=jrJp4ZqPE5v8VDCl/9oK5kM1s0ZCRrL7U8KwCou7PgQ=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=TWeL4nlNT3YKG6CzC5FSTkohB2msgTBQgWxnouA/ilRGmquGcKqwIs6eiz7ho3hT0
-	 LCdu3k+pCzk6vgj4DTXB6vWaQ/GZiM9ygwGpAW0kuFpZbcaVqa6liIZQYaelw++heT
-	 OMyHNIhUeC7Kl5UV/Ei7nbEWkI78MtUynijdWMDo=
+	by mail.kernel.org (Postfix) with ESMTP id 778C3207D8
+	for <linux-xfs@archiver.kernel.org>; Sat, 13 Jun 2020 05:32:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="K/4wtvDg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728029AbgFKSZE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 11 Jun 2020 14:25:04 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45794 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726386AbgFKSZE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jun 2020 14:25:04 -0400
-Subject: Re: [GIT PULL] vfs: improve DAX behavior for 5.8, part 3
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1591899904;
-        bh=jrJp4ZqPE5v8VDCl/9oK5kM1s0ZCRrL7U8KwCou7PgQ=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=xjhyNYXxHxAfNqLH4GenoExENXh3wXnILAFjYf/uVYBLdiGRHEgWPN9pVcmr1mOv0
-         90NC81kwd286nKI0I6iETzct5bwzl131Kw1MkXNGi6Opdyor+X58C8DM3qzLHmHl87
-         BzpE5aZz7u6r149GHKZ7cHrSy8ih0mmgETEKPh3Y=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20200611024248.GG11245@magnolia>
-References: <20200611024248.GG11245@magnolia>
-X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20200611024248.GG11245@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
- tags/vfs-5.8-merge-3
-X-PR-Tracked-Commit-Id: e4f9ba20d3b8c2b86ec71f326882e1a3c4e47953
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 7cf035cc8326066a514146065b6ee8fc2c30fc21
-Message-Id: <159189990428.7248.14261911727623489238.pr-tracker-bot@kernel.org>
-Date:   Thu, 11 Jun 2020 18:25:04 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de,
+        id S1725875AbgFMFcg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 13 Jun 2020 01:32:36 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:33104 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725272AbgFMFcg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Jun 2020 01:32:36 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05D5Qukh042565;
+        Sat, 13 Jun 2020 05:32:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=plALFDZZcmaS0uCQ6YZRLDke2NoBOzFfSft5jKfN/2g=;
+ b=K/4wtvDgn+INUFWBTV9JNULbQaVRJuY31EVWPB2O8AotR3c2Pn40qukXJWY2aSCVRSKt
+ flb8zduguROE4A7Hgft5v9lTBUqC/EiFdmS27feiABOdnHjsV13SC4Bg0H8VhPDNEUAv
+ jUSH3wCYxIsyHdAa9GqQUNxjJJiOhXYV2RNCXH2rfooh+gNeXyQXOaYxpdXFmOuD8Bfz
+ QkUPdNhsEq2FGzCFd2ZOM8rDjjJTlfztWYWgOEqiVeWrDZWx3vc4MWnCDlcjw5iUWkcm
+ FzrwkrBM68zCM3OHCLA0ZdlrFfz2KRA4ukGQYqVLUR2JrTEUJSdNMyyTO1A2U3NKw4Kp eg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 31mqemr3y6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 13 Jun 2020 05:32:23 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05D5T9qB049268;
+        Sat, 13 Jun 2020 05:32:22 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 31mkwq8hak-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 13 Jun 2020 05:32:22 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05D5WHdg014240;
+        Sat, 13 Jun 2020 05:32:17 GMT
+Received: from localhost (/10.159.130.238)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 13 Jun 2020 05:32:17 +0000
+Date:   Fri, 12 Jun 2020 22:32:15 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Christoph Hellwig <hch@lst.de>,
         linux-ext4 <linux-ext4@vger.kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>, ira.weiny@intel.com
+        "Theodore Ts'o" <tytso@mit.edu>, ira.weiny@intel.com
+Subject: Re: [GIT PULL] vfs: improve DAX behavior for 5.8, part 3
+Message-ID: <20200613053215.GI11245@magnolia>
+References: <20200611024248.GG11245@magnolia>
+ <CAHk-=wgTMxCAHVgtKkbSJt=1pBm+86bz=RbZiZE-2sszwmcKvQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wgTMxCAHVgtKkbSJt=1pBm+86bz=RbZiZE-2sszwmcKvQ@mail.gmail.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9650 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 phishscore=0
+ spamscore=0 mlxlogscore=999 malwarescore=0 bulkscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006130045
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9650 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 suspectscore=1
+ priorityscore=1501 bulkscore=0 mlxlogscore=999 adultscore=0 phishscore=0
+ malwarescore=0 clxscore=1011 lowpriorityscore=0 impostorscore=0
+ spamscore=0 cotscore=-2147483648 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2004280000 definitions=main-2006130045
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Wed, 10 Jun 2020 19:42:48 -0700:
+On Thu, Jun 11, 2020 at 11:00:43AM -0700, Linus Torvalds wrote:
+> On Wed, Jun 10, 2020 at 7:43 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > I did a test merge of this branch against upstream this evening and
+> > there weren't any conflicts.  The first five patches in the series were
+> > already in the xfs merge, so it's only the last one that should change
+> > anything.  Please let us know if you have any complaints about pulling
+> > this, since I can rework the branch.
+> 
+> I've taken this, but I hate how the patches apparently got duplicated.
+> It feels like they should have been a cleanly separated branch that
+> was just pulled into whoever needed them when they were ready, rather
+> than applied in two different places.
+> 
+> So this is just a note for future work - duplicating the patches like
+> this can cause annoyances down the line. No merge issues this time
+> (they often happen when duplicate patches then have other work done on
+> top of them), but things like "git bisect" now don't have quite as
+> black-and-white a situation etc etc.,
+> 
+> ("git bisect" will still find _one_ of the duplicate commits if it
+> introduced a problem, so it's usually not a huge deal, but it can
+> cause the bug to be then repeated if people revert that one, but
+> nobody ever notices that the other commit that did the same thing is
+> still around and it gets back-ported to stable or whatever..)
+> 
+> So part of this is just in general about confusing duplicate history,
+> and part of it is that the duplication can then cause later confusion.
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.8-merge-3
+Urgh, sorry.  I /was/ careful to make sure the patches matched, but I'll
+be more careful the next time this (hopefully never) happens again. :/
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/7cf035cc8326066a514146065b6ee8fc2c30fc21
+--D
 
-Thank you!
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+>                 Linus
