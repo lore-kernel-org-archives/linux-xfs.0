@@ -2,140 +2,191 @@ Return-Path: <SRS0=I2eC=74=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 292F0C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Jun 2020 05:20:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 676D9C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Jun 2020 11:57:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 044E9206D7
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Jun 2020 05:20:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3607A20739
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Jun 2020 11:57:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DNZ6JKGs"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BTfNvIMf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728236AbgFOFU0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Jun 2020 01:20:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37948 "EHLO
+        id S1729699AbgFOL5G (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Jun 2020 07:57:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42466 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727067AbgFOFUZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jun 2020 01:20:25 -0400
-Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 409E2C061A0E
-        for <linux-xfs@vger.kernel.org>; Sun, 14 Jun 2020 22:20:25 -0700 (PDT)
-Received: by mail-io1-xd42.google.com with SMTP id i25so16499632iog.0
-        for <linux-xfs@vger.kernel.org>; Sun, 14 Jun 2020 22:20:25 -0700 (PDT)
+        with ESMTP id S1729630AbgFOL5F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jun 2020 07:57:05 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8326C061A0E;
+        Mon, 15 Jun 2020 04:57:05 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id ne5so6723483pjb.5;
+        Mon, 15 Jun 2020 04:57:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Le9ILI/UBxYfwYQQH/bq9ozgMgyVwNkbtsCsqyKAQeM=;
-        b=DNZ6JKGsfwB3eSUfqC2U5rFriTokhfsHjEOPtjQH08mAbX3jkitlEcRaozSdlSKL3W
-         dDeGR0n0Av++5z7nONy4HSBchmbianmgEWGiWzgKEgkLivP/FOENUXqyCz8QHu2vs0/v
-         s6ojFQGBnn3GP9FfAU2z1kkd5i2G03AS5qKy3qzQGhwBOSqD1Fc5RgFeWoOc62+5+uXT
-         eAfWEsfX4rZpbJHNUx280uhGNAxNv8CI4vYBP8cMdBLVAAt7Yictp6dRHNAycF7o7ueU
-         vd4uRUyduAAaRftjxVHIR9zx1+Zh6XkD91Saebw+ezCZxV53ke15J+1Kg8QyCRjANbVy
-         /x2Q==
+        h=from:to:cc:subject:date:message-id;
+        bh=gVcbcyTlRqPazeasAkwcsrlUVsAvkK8+VEUn4G1iSYY=;
+        b=BTfNvIMfJ6gr9Pfw99J9zJus+tDUlzNJVQjNucghwPj/0M2qYvowXv/Y4eQ4WxT9Px
+         uymmW1nSeEY26v8R9ee3X6iSrO70Tc1V49/tosmISr5MztnvGMPJoSPWxPas29H6S6hX
+         WmYhbnRUeV4iP20v8U+ZOjq/N4JtN4/XwFCPqerfmcij6rYW0x7IVlm5JKetoXuvis06
+         kyIhaRmoZ9QDQu1xFK01TMBJ0hX9WMtHFWYIURHmzX+LNvKclJScrXE0OVzWKOrDrM6W
+         2m76F39plzUqu8rEBMyjdGgYhL7fzG7JLVdGQxExFfCAsPO9pfKYJVWHQctQin33EjOw
+         o0Jg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Le9ILI/UBxYfwYQQH/bq9ozgMgyVwNkbtsCsqyKAQeM=;
-        b=rXVs10nbvJ3aRQytneiYMadN4qpXWaAxkS7zLdjxmNUDALYfRNoOKhCQOhHFLYwx59
-         qtVPuC+VIgD/SOTgmvkUcf1UTaRfihgsgaKDIQPZBtNwhvYuGhPuc5lXH0Xyeso8JnCk
-         fEHVrePd6cUyE5xLp5on39w2N3s+gppu4a3dM4h02jYTgKb3E1CSREnmq26dznJL9r9c
-         ZL0VGVZG9jkpIpSWxC0XZiC7ZSFzKCKBuAKf7MFm3ChC1s/K2Qnddv8UdEF8QaKJzE02
-         9hU4Q5gGqwZM5x2cicCjOaBBfyrLH4lGoLFzz2uCdlpfME39u1I/ZEIBPPIOqmLn9tIB
-         Pm1Q==
-X-Gm-Message-State: AOAM530aoHZji5nOMmtNPAetTZ01YENEeKSxl6zwErB45Kf+u1wHMKtB
-        qfZonVxB3kWYii4QkN6f5fMzQItpdIU67SoczodK+d2l
-X-Google-Smtp-Source: ABdhPJwDaZUFmrYvIblu+yk4XT96qVk/mJCI+lYUgZ/CBUI8pw0627/A/URJgTqWmYoPrTSWd5GrXF4bjSPS1B0OS2M=
-X-Received: by 2002:a05:6602:491:: with SMTP id y17mr25914877iov.72.1592198424638;
- Sun, 14 Jun 2020 22:20:24 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200604074606.266213-1-david@fromorbit.com> <20200604074606.266213-30-david@fromorbit.com>
- <20200609131249.GC40899@bfoster> <20200609221431.GK2040@dread.disaster.area>
- <20200610130833.GB50747@bfoster> <20200611001622.GN2040@dread.disaster.area>
- <20200611140709.GB56572@bfoster> <20200615014957.GU2040@dread.disaster.area>
-In-Reply-To: <20200615014957.GU2040@dread.disaster.area>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Mon, 15 Jun 2020 08:20:13 +0300
-Message-ID: <CAOQ4uxhzd5T39NQ=SD85ahvQ3ZMy3ZNXNTksABBotERGvGCG2w@mail.gmail.com>
-Subject: Re: [PATCH 29/30] xfs: factor xfs_iflush_done
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=gVcbcyTlRqPazeasAkwcsrlUVsAvkK8+VEUn4G1iSYY=;
+        b=grcH0MlieRgi4ACnO7+cRZ5zvb8PKWfzhIbRweSglKFYRfO2QmlMzQBBO8RyioCIJf
+         mD6KW5YWnpWGuRf7cQUpEbKej7sreImHynbhNDaReWUVXVZ4in6GXPOhX7Yi0mB5WrNN
+         9BKwxZiAmkyYnd6Y7h1+jwL/VjKiXtzXYv59Y3FeKu+dgmC3wwQ7FHu6KcH9gvvBcFsZ
+         1AbkofE8daz0ZrnSLO989z6nqnZrUgKRaLh3MuPyCyqhgXxCOjW1yh580ajh2QN/wla8
+         GwMn6CmYUpMEXLmDVgWm3oMHRATpqMVq/aOZjbvFDfcEG2bmZOjppC2AlRoJBNgUi0/b
+         zD2w==
+X-Gm-Message-State: AOAM532xDmu/hL2bqlmkeyexIUiJsJBlvbp3M6uxCrI55t9IIjbV1zKk
+        RqnNUMFBxYr4ecG2aWF5zjA=
+X-Google-Smtp-Source: ABdhPJxKQTo8bq8Xf3TZd6VqFqeI5sqDhieN9bPGZg/PQolNFYwYe1PEhAgrTOda1rc6ynBhP33ujA==
+X-Received: by 2002:a17:90a:74cb:: with SMTP id p11mr12030279pjl.89.1592222224668;
+        Mon, 15 Jun 2020 04:57:04 -0700 (PDT)
+Received: from dev.localdomain ([203.100.54.194])
+        by smtp.gmail.com with ESMTPSA id dw17sm12442392pjb.40.2020.06.15.04.57.01
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 15 Jun 2020 04:57:03 -0700 (PDT)
+From:   Yafang Shao <laoar.shao@gmail.com>
+To:     hch@infradead.org, david@fromorbit.com, darrick.wong@oracle.com,
+        mhocko@kernel.org, akpm@linux-foundation.org
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, Yafang Shao <laoar.shao@gmail.com>
+Subject: [PATCH v3] xfs: avoid deadlock when trigger memory reclaim in ->writepages
+Date:   Mon, 15 Jun 2020 07:56:21 -0400
+Message-Id: <1592222181-9832-1-git-send-email-laoar.shao@gmail.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 15, 2020 at 4:50 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Thu, Jun 11, 2020 at 10:07:09AM -0400, Brian Foster wrote:
-> >
-> > TBH, I think this patch should probably be broken down into two or three
-> > independent patches anyways.
->
-> To what end? The patch is already small, it's simple to understand
-> and it's been tested. What does breaking it up into a bunch more
-> smaller patches actually gain us?
->
-> It means hours more work on my side without any change in the end
-> result. It's -completely wasted effort- if all I'm doing this for is
-> to get you to issue a RVB on it. Fine grained patches do not come
-> for free, and in a patch series that is already 30 patches long
-> making it even longer just increases the time and resources it costs
-> *me* to maintian it until it is merged.
->
+Recently there is a XFS deadlock on our server with an old kernel.
+This deadlock is caused by allocating memory in xfs_map_blocks() while
+doing writeback on behalf of memroy reclaim. Although this deadlock happens
+on an old kernel, I think it could happen on the upstream as well. This
+issue only happens once and can't be reproduced, so I haven't tried to
+reproduce it on upsteam kernel.
 
-This links back to a conversation we started about improving the
-review process.
+Bellow is the call trace of this deadlock.
+[480594.790087] INFO: task redis-server:16212 blocked for more than 120 seconds.
+[480594.790087] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[480594.790088] redis-server    D ffffffff8168bd60     0 16212  14347 0x00000004
+[480594.790090]  ffff880da128f070 0000000000000082 ffff880f94a2eeb0 ffff880da128ffd8
+[480594.790092]  ffff880da128ffd8 ffff880da128ffd8 ffff880f94a2eeb0 ffff88103f9d6c40
+[480594.790094]  0000000000000000 7fffffffffffffff ffff88207ffc0ee8 ffffffff8168bd60
+[480594.790096] Call Trace:
+[480594.790101]  [<ffffffff8168dce9>] schedule+0x29/0x70
+[480594.790103]  [<ffffffff8168b749>] schedule_timeout+0x239/0x2c0
+[480594.790111]  [<ffffffff8168d28e>] io_schedule_timeout+0xae/0x130
+[480594.790114]  [<ffffffff8168d328>] io_schedule+0x18/0x20
+[480594.790116]  [<ffffffff8168bd71>] bit_wait_io+0x11/0x50
+[480594.790118]  [<ffffffff8168b895>] __wait_on_bit+0x65/0x90
+[480594.790121]  [<ffffffff811814e1>] wait_on_page_bit+0x81/0xa0
+[480594.790125]  [<ffffffff81196ad2>] shrink_page_list+0x6d2/0xaf0
+[480594.790130]  [<ffffffff811975a3>] shrink_inactive_list+0x223/0x710
+[480594.790135]  [<ffffffff81198225>] shrink_lruvec+0x3b5/0x810
+[480594.790139]  [<ffffffff8119873a>] shrink_zone+0xba/0x1e0
+[480594.790141]  [<ffffffff81198c20>] do_try_to_free_pages+0x100/0x510
+[480594.790143]  [<ffffffff8119928d>] try_to_free_mem_cgroup_pages+0xdd/0x170
+[480594.790145]  [<ffffffff811f32de>] mem_cgroup_reclaim+0x4e/0x120
+[480594.790147]  [<ffffffff811f37cc>] __mem_cgroup_try_charge+0x41c/0x670
+[480594.790153]  [<ffffffff811f5cb6>] __memcg_kmem_newpage_charge+0xf6/0x180
+[480594.790157]  [<ffffffff8118c72d>] __alloc_pages_nodemask+0x22d/0x420
+[480594.790162]  [<ffffffff811d0c7a>] alloc_pages_current+0xaa/0x170
+[480594.790165]  [<ffffffff811db8fc>] new_slab+0x30c/0x320
+[480594.790168]  [<ffffffff811dd17c>] ___slab_alloc+0x3ac/0x4f0
+[480594.790204]  [<ffffffff81685656>] __slab_alloc+0x40/0x5c
+[480594.790206]  [<ffffffff811dfc43>] kmem_cache_alloc+0x193/0x1e0
+[480594.790233]  [<ffffffffa04fab67>] kmem_zone_alloc+0x97/0x130 [xfs]
+[480594.790247]  [<ffffffffa04f90ba>] _xfs_trans_alloc+0x3a/0xa0 [xfs]
+[480594.790261]  [<ffffffffa04f915c>] xfs_trans_alloc+0x3c/0x50 [xfs]
+[480594.790276]  [<ffffffffa04e958b>] xfs_iomap_write_allocate+0x1cb/0x390 [xfs]
+[480594.790299]  [<ffffffffa04d3616>] xfs_map_blocks+0x1a6/0x210 [xfs]
+[480594.790312]  [<ffffffffa04d416b>] xfs_do_writepage+0x17b/0x550 [xfs]
+[480594.790314]  [<ffffffff8118d881>] write_cache_pages+0x251/0x4d0 [xfs]
+[480594.790338]  [<ffffffffa04d3e05>] xfs_vm_writepages+0xc5/0xe0 [xfs]
+[480594.790341]  [<ffffffff8118ebfe>] do_writepages+0x1e/0x40
+[480594.790343]  [<ffffffff811837b5>] __filemap_fdatawrite_range+0x65/0x80
+[480594.790346]  [<ffffffff81183901>] filemap_write_and_wait_range+0x41/0x90
+[480594.790360]  [<ffffffffa04df2c6>] xfs_file_fsync+0x66/0x1e0 [xfs]
+[480594.790363]  [<ffffffff81231cf5>] do_fsync+0x65/0xa0
+[480594.790365]  [<ffffffff81231fe3>] SyS_fdatasync+0x13/0x20
+[480594.790367]  [<ffffffff81698d09>] system_call_fastpath+0x16/0x1b
 
-One of the questions was regarding RVB being too "binary".
-If I am new to the subsystem, obviously my RVB weights less, but
-both Darrick and Dave expressed their desire to get review by more
-eyes to double check the "small details".
+Note that xfs_iomap_write_allocate() is replaced by xfs_convert_blocks() in
+commit 4ad765edb02a ("xfs: move xfs_iomap_write_allocate to xfs_aops.c")
+and write_cache_pages() is replaced by iomap_writepages() in
+commit 598ecfbaa742 ("iomap: lift the xfs writeback code to iomap").
+So for upsteam, the call trace should be,
+xfs_vm_writepages
+  -> iomap_writepages
+     -> write_cache_pages
+        -> iomap_do_writepage
+           -> xfs_map_blocks
+              -> xfs_convert_blocks
+                 -> xfs_bmapi_convert_delalloc
+                    -> xfs_trans_alloc //It should alloc page with GFP_NOFS
 
-To that end, Darrick has suggested the RVB be accompanied with
-"verified correctness" "verified design" or whatnot.
+I'm not sure whether it is proper to add the GFP_NOFS to all the
+->writepags, so I only add it for XFS.
 
-So instead of a binary RVB, Brian could express his review
-outcome in a machine friendly way, because this:
-"TBH, I think this patch should probably be broken down..."
-would be interpreted quite differently depending on culture.
+Stefan also reported that he saw this issue two times while under memory
+pressure, So I add his reported-by.
 
-My interpretation is: "ACK on correctness", "ACK on design",
-"not happy about patch breakdown", "not a NACK", but I could
-be wrong.
+Reported-by: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
 
-Then, instead of a rigid rule for maintainer to require two RVB
-per patch, we can employ more fine grained rules, for example:
-- No NACKs
-- Two RVB for correctness
-- One RVB for design
-- etc..
+---
+v2 -> v3:
+- retitle the subject from "iomap: avoid deadlock if memory reclaim is
+  triggered in writepage path"
+- set GFP_NOFS only for XFS ->writepages
 
-Also, it could help to write down review rules for the subsystem
-in a bureaucratic document that can be agreed on, so that not
-every patch needs to have the discussion about whether breaking
-this patch up is mandatory or not.
+v1 -> v2:
+- retitle the subject from "xfs: avoid deadlock when tigger memory reclam
+  in xfs_map_blocks()"
+- set GFP_NOFS in iomap_do_writepage(), per Dave
+---
+ fs/xfs/xfs_aops.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-There is a big difference between saying: "this patch is too big for
-me to review, I will not be doing as good a job of review if it isn't
-split into patches" and "this patch has already been reviewed,
-I already know everything there is to know about it, there are no
-bisect-ability issues, but for aesthetics, I think it should be broken down".
-I am not saying that latter opinion should not be voiced, but when said
-it should be said explicitly.
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index b356118..1ccfbf2 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -573,9 +573,21 @@ static inline bool xfs_ioend_needs_workqueue(struct iomap_ioend *ioend)
+ 	struct writeback_control *wbc)
+ {
+ 	struct xfs_writepage_ctx wpc = { };
++	unsigned int nofs_flag;
++	int ret;
+ 
+ 	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
+-	return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
++
++	/*
++	 * We can allocate memory here while doing writeback on behalf of
++	 * memory reclaim.  To avoid memory allocation deadlocks set the
++	 * task-wide nofs context for the following operations.
++	 */
++	nofs_flag = memalloc_nofs_save();
++	ret = iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_ops);
++	memalloc_nofs_restore(nofs_flag);
++
++	return ret;
+ }
+ 
+ STATIC int
+-- 
+1.8.3.1
 
-High coding standards have gotten xfs very far, but failing to maintain a
-healthy balance with pragmatism will inevitably come with a price.
-Need I remind you that the issue that Dave is fixing has been affecting
-real users and it has been reported over three years ago?
-
-Thanks,
-Amir.
