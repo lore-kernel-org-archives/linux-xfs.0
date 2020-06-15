@@ -2,161 +2,101 @@ Return-Path: <SRS0=I2eC=74=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56FF9C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Jun 2020 15:08:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74CCCC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Jun 2020 16:11:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 303FB2063A
-	for <linux-xfs@archiver.kernel.org>; Mon, 15 Jun 2020 15:08:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D9B3207D3
+	for <linux-xfs@archiver.kernel.org>; Mon, 15 Jun 2020 16:11:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="erBmHgGu"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T7ZHVXN4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730797AbgFOPI6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 15 Jun 2020 11:08:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44134 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730794AbgFOPI6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jun 2020 11:08:58 -0400
-Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54242C061A0E;
-        Mon, 15 Jun 2020 08:08:58 -0700 (PDT)
-Received: by mail-il1-x143.google.com with SMTP id c75so15572227ila.8;
-        Mon, 15 Jun 2020 08:08:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=CdXI19ffeyY6WRTLT9+esIHJP/80L+l0kkbdQuiJhrY=;
-        b=erBmHgGuqLDESD9mdlhGoK0umkwSwqGQksoZMaU1fN7M7L+2VlZx02Q/HGKNBymkQS
-         VX4G9rbcVbbB/4c7M0Njf3ts+1GMUw6/5DzQ2xiWq2TYNdqBKK+mjahsn/P2wQFWPJbZ
-         ahsLZ6U3cKbHclwh56uw02SxPBmRoNLw2mX17l1+G6FIvT1DhsLrq1ttlD9areZSwM5J
-         kkAvOyQ+DnwxQud+xABW/x14FMM2EKJcWkB1v3f5GxKwen/SPb55DC2YRurvbf97yFCr
-         x37VXNN7ZFx2wC68vCqPMKy4shgcuRzJmKxyjJseEJ8gQ1VYMEIvR7sq5CpruFTo8T/D
-         U2vg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=CdXI19ffeyY6WRTLT9+esIHJP/80L+l0kkbdQuiJhrY=;
-        b=GlHzGKMIQYZT7GbotuLYCxr+zeZp6h61bSYsb4VRgpjuLn2teisULRIHyuGO/DmjzD
-         Ap6fP0GZdCJhcpVRvqEx4TIyjBkDMjGuV7IpDtWAmRylIbcU387I19RpNSNjbc9fYPgE
-         vGMCw+k4Ey0YtFhkLZPkF4Do7AjUSeWQ86KqCvK1qR1yFrWqlYzyQjLa5A1OMqLfmn7V
-         aM0TXc5806FwWIqOIFzf8w5V0HDCzUAxMyvr1zgGMLT+k3uqjd9IeqhVCZvaqbPJtUEP
-         7h9BU8nEBIcGCNxWzoKby1fAxpyF33CU42Dau5MXbCvFT5P/z//zEnBkACuswnDpSpg2
-         Un6A==
-X-Gm-Message-State: AOAM531sqrpdbeXXcJ975UZTHVgqSM9sm0HrzSY7NJMaB0IIbF2jJX8r
-        FYyCUPNofIWQOInCBLwZLlYiPVycJetkhTNRE0Q=
-X-Google-Smtp-Source: ABdhPJwRCc/XqfycakbU+ys1K6CJUetTIQW6G++/2ptBcZjrvKZV3xBG2Xg8WE0ZVi8o2Qm26i6QvN10kG2yF53HRI8=
-X-Received: by 2002:a92:cf52:: with SMTP id c18mr26766350ilr.142.1592233737645;
- Mon, 15 Jun 2020 08:08:57 -0700 (PDT)
+        id S1729966AbgFOQLk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 15 Jun 2020 12:11:40 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:53821 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729949AbgFOQLk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jun 2020 12:11:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592237499;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=AFpokfWrHaipWh7YJWyhlDrGpwMEhWoMK+9HrZUUdI4=;
+        b=T7ZHVXN41X30W2qmLZOPZK4nieZEQF8MFTBzW1ZaXxNGQ9EXKv2OMGHDG+2Mr9I1mhA9lH
+        QuVpBieCrFdiO4wUT11z495fLMhIPn8GnIcqYVIRTXCS2EgLIuq535RBdyoNtEEKq/XvmZ
+        xoACG+wsM1LPix/OiIrjfwiJXf+JDE8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-228-2T1UwQj2Ocqvg3-Q18Dsew-1; Mon, 15 Jun 2020 12:11:37 -0400
+X-MC-Unique: 2T1UwQj2Ocqvg3-Q18Dsew-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C7F51901D06;
+        Mon, 15 Jun 2020 16:02:49 +0000 (UTC)
+Received: from max.home.com (unknown [10.40.195.140])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 49EFD5D9CD;
+        Mon, 15 Jun 2020 16:02:46 +0000 (UTC)
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc:     Bob Peterson <rpeterso@redhat.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH] iomap: Make sure iomap_end is called after iomap_begin
+Date:   Mon, 15 Jun 2020 18:02:44 +0200
+Message-Id: <20200615160244.741244-1-agruenba@redhat.com>
 MIME-Version: 1.0
-References: <1592222181-9832-1-git-send-email-laoar.shao@gmail.com>
- <e4c7868a-9107-573f-c1f4-24c3aa4c9d1f@applied-asynchrony.com> <20200615145331.GK25296@dhcp22.suse.cz>
-In-Reply-To: <20200615145331.GK25296@dhcp22.suse.cz>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Mon, 15 Jun 2020 23:08:21 +0800
-Message-ID: <CALOAHbBcpYbMBoN+edEa5wp1VCf4mcbR8+SQTjVjRGpx7_v43A@mail.gmail.com>
-Subject: Re: [PATCH v3] xfs: avoid deadlock when trigger memory reclaim in ->writepages
-To:     Michal Hocko <mhocko@kernel.org>
-Cc:     =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux MM <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 15, 2020 at 10:53 PM Michal Hocko <mhocko@kernel.org> wrote:
->
-> On Mon 15-06-20 16:25:52, Holger Hoffst=C3=A4tte wrote:
-> > On 2020-06-15 13:56, Yafang Shao wrote:
-> [...]
-> > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > > index b356118..1ccfbf2 100644
-> > > --- a/fs/xfs/xfs_aops.c
-> > > +++ b/fs/xfs/xfs_aops.c
-> > > @@ -573,9 +573,21 @@ static inline bool xfs_ioend_needs_workqueue(str=
-uct iomap_ioend *ioend)
-> > >     struct writeback_control *wbc)
-> > >   {
-> > >     struct xfs_writepage_ctx wpc =3D { };
-> > > +   unsigned int nofs_flag;
-> > > +   int ret;
-> > >     xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-> > > -   return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_op=
-s);
-> > > +
-> > > +   /*
-> > > +    * We can allocate memory here while doing writeback on behalf of
-> > > +    * memory reclaim.  To avoid memory allocation deadlocks set the
-> > > +    * task-wide nofs context for the following operations.
-> > > +    */
-> > > +   nofs_flag =3D memalloc_nofs_save();
-> > > +   ret =3D iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_o=
-ps);
-> > > +   memalloc_nofs_restore(nofs_flag);
-> > > +
-> > > +   return ret;
-> > >   }
-> > >   STATIC int
-> > >
-> >
-> > Not sure if I did something wrong, but while the previous version of th=
-is patch
-> > worked fine, this one gave me (with v2 removed obviously):
-> >
-> > [  +0.000004] WARNING: CPU: 0 PID: 2811 at fs/iomap/buffered-io.c:1544 =
-iomap_do_writepage+0x6b4/0x780
->
-> This corresponds to
->         /*
->          * Given that we do not allow direct reclaim to call us, we shoul=
-d
->          * never be called in a recursive filesystem reclaim context.
->          */
->         if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
->                 goto redirty;
->
-> which effectivelly says that memalloc_nofs_save/restore cannot be used
-> for that code path.
+Make sure iomap_end is always called when iomap_begin succeeds: the
+filesystem may take locks in iomap_begin and release them in iomap_end,
+for example.
 
-Hi Michal,
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/iomap/apply.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-My understanding is that this warning is to tell us we don't want a
-recursive filesystem reclaim with PF_MEMALLOC_NOFS being specifically
-set, but unfortunately PF_MEMALLOC_NOFS doesn't work so it comes here
-again.
+diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+index 76925b40b5fd..c00a14d825db 100644
+--- a/fs/iomap/apply.c
++++ b/fs/iomap/apply.c
+@@ -46,10 +46,10 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
+ 	if (ret)
+ 		return ret;
+-	if (WARN_ON(iomap.offset > pos))
+-		return -EIO;
+-	if (WARN_ON(iomap.length == 0))
+-		return -EIO;
++	if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0)) {
++		written = -EIO;
++		goto out;
++	}
+ 
+ 	trace_iomap_apply_dstmap(inode, &iomap);
+ 	if (srcmap.type != IOMAP_HOLE)
+@@ -80,6 +80,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	written = actor(inode, pos, length, data, &iomap,
+ 			srcmap.type != IOMAP_HOLE ? &srcmap : &iomap);
+ 
++out:
+ 	/*
+ 	 * Now the data has been copied, commit the range we've copied.  This
+ 	 * should not fail unless the filesystem has had a fatal error.
 
-IOW, PF_MEMALLOC_NOFS can be set after this check, like what I did in v2. [=
-1]
+base-commit: 97e0204907ac4c42c6e94ef466a047523f34b853
+-- 
+2.26.2
 
-
-> Your stack trace doesn't point to a reclaim path
-> which shows that this path is shared and also underlines that this is
-> not really an intended use of the api. Please refer to
-> Documentation/core-api/gfp_mask-from-fs-io.rst for more details but
-> shortly the API should be used at the layer which defines a context
-> which shouldn't allow to recurse. E.g. a lock which would be problematic
-> in the reclaim recursion path.
-
-Thanks for your information.
-As pointed out by Dave in v1[2] that iomap_do_writepage() can be
-called with a locked page
-cache page and calls ->map_blocks from that context.
-
-[1]. https://lore.kernel.org/linux-xfs/1591254347-15912-1-git-send-email-la=
-oar.shao@gmail.com/
-[2] https://lore.kernel.org/linux-xfs/20200603222741.GQ2040@dread.disaster.=
-area/
-
-
-
---=20
-Thanks
-Yafang
