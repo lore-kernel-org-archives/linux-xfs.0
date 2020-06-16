@@ -2,231 +2,175 @@ Return-Path: <SRS0=cXLJ=75=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 955B0C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Jun 2020 10:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1AD0C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Jun 2020 10:48:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66C8120707
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Jun 2020 10:17:47 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VFuoQMDp"
+	by mail.kernel.org (Postfix) with ESMTP id AF7B820734
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Jun 2020 10:48:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1592304492;
+	bh=UvJuhXNoY2TurjmUgHtgammwhqAVuGI3abI18dsJeag=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=oa9F5dWDn7hwmAlV/6Ua+JK1KIe9P+xIknIS0qYYw3SdIbYJxxdnYc2eTsGeu7c2s
+	 LMLUV7uwpqRxZIyTGG69qbf7wl+icCqQDdytMp/0hi/h2A6xLIs5KDWoS+28dRgRPY
+	 XJ02tVph7wVNcWQn+d3zj6KqNue+WP2KwpgslB18=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726467AbgFPKRq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Jun 2020 06:17:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51674 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726052AbgFPKRp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jun 2020 06:17:45 -0400
-Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7233CC08C5C2;
-        Tue, 16 Jun 2020 03:17:45 -0700 (PDT)
-Received: by mail-il1-x143.google.com with SMTP id t8so1827274ilm.7;
-        Tue, 16 Jun 2020 03:17:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=ClvGezN/jILcyWyyGs0/Rt2CB3tC7TLkLhNuWV+hMG8=;
-        b=VFuoQMDppfECs4750kBTDddr5Q0xep48HMtbY3K2P9XcCrtIPmZy80S9vftY6+Fgug
-         CK5NuxesnRW83QLnJGZxEI1cPsKArb6hjcB4gBK+6QpMosAhSxWt7hvfL564LG8aTbFf
-         XUqU60XDASYQ8ry2wRwLRXSmgxzYYBDCr7BKYhv9zQ2dr2iU9OLvCedE/UYCk76JLqv9
-         ePomG6GvJgMfHDmt22TxEf9AQiowvsdRYzlUl1LXP49Hs2iEnHuo5a7LrODDFocX1BcL
-         Qd4w31r/iFPe6igBT1S0kmuZOkP4yd+ja/smcOfzpbL8lBdPrQBP1cpo9q/vt7zJD6iO
-         aY8w==
+        id S1728049AbgFPKsM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Jun 2020 06:48:12 -0400
+Received: from mail-ej1-f65.google.com ([209.85.218.65]:37830 "EHLO
+        mail-ej1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728259AbgFPKsL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jun 2020 06:48:11 -0400
+Received: by mail-ej1-f65.google.com with SMTP id mb16so20973067ejb.4;
+        Tue, 16 Jun 2020 03:48:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=ClvGezN/jILcyWyyGs0/Rt2CB3tC7TLkLhNuWV+hMG8=;
-        b=Hw7xxQ/IDcCSQ3cMkTQeECBk5ojd4fR5Di3LWoA08llvF41/J+fF7KaEFkSQWaNN3I
-         q9wo4PF49ExlNnMOpKJmnrCgl5IvOShAZnIGREL3KMHyLWTwn8b5j/9M1OpLkbRCxDSM
-         Twn/nn7OTAaZs48DnB2/VRPaIlPSYvjVqlYnML+MvZqGXkBV0AbQPE4RRG7NjdHA7gq3
-         Hru/i6OW0pe32OvSEr9wH7fIwB//PDSQuKXPk4eBVIqQUqf94uyaJajFO9jK25Tk6BwL
-         /NXiCnr0NfaxW/QlfCm/5vniEGUS+Gbmib4F4CgCFnh71zbG1Da2ntF7aNecYFx2KOMB
-         b8kQ==
-X-Gm-Message-State: AOAM532uGGdL1WRqxN3fy3Adeob0+88LUQUM/oLq98A5AsVPW9KbCKM8
-        mwS3e2AGMRGO4Yg0fQtI/QkX0m1w6PPs0noWISc=
-X-Google-Smtp-Source: ABdhPJzXVAgiCACjUYmsq8WCd22HZHDsC4jVtYcuQ9Gws7A7vDWzdqOqnzto/i+H5Bo2Pzy+HWKG59oXntP8M1FCknY=
-X-Received: by 2002:a05:6e02:13cd:: with SMTP id v13mr2252314ilj.93.1592302664627;
- Tue, 16 Jun 2020 03:17:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <1592222181-9832-1-git-send-email-laoar.shao@gmail.com>
- <e4c7868a-9107-573f-c1f4-24c3aa4c9d1f@applied-asynchrony.com>
- <20200615145331.GK25296@dhcp22.suse.cz> <20200615230605.GV2040@dread.disaster.area>
-In-Reply-To: <20200615230605.GV2040@dread.disaster.area>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Tue, 16 Jun 2020 18:17:08 +0800
-Message-ID: <CALOAHbBSa77_KajnFnWdb3q8_1KrmXXzs3J9T_OGtU3Fn8=7Yw@mail.gmail.com>
-Subject: Re: [PATCH v3] xfs: avoid deadlock when trigger memory reclaim in ->writepages
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Michal Hocko <mhocko@kernel.org>,
-        =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>,
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Wn8Av5dDlalkJCGx3/Swfk7G/0jgZ2XgqWlfq+N9QfI=;
+        b=LHg5ACO7IGaEDOz1i1JWKUqNa/Jcp2SSur1vrJ4fShtGg8Z44PMiDimFu7RXmGZn4j
+         f5DumWcBK3Yf5fCGZBpKcMEL1/IqKFtpMPJO2iH6rm+KEUafzMhoQAqxVyhfciSMwWa2
+         6T+HP6zUvszk7+lCC3XmXBMQkNREDlXLP1L7G3V93L3kNrr0jNCbfM5u5EMxN1f4x6q0
+         ZVn1vKQMAawzvLxZ5SGeZ/bFPo09MS0TVy6o0/ijLfWoRBkfQFxZLEjfx+/kCVxsgckY
+         lJqKjE4xXx2v9i5y9J7digtnGITnnmo9R9onlnwsqc+fiT6/76JmF87tlcH9n6QvtBrx
+         4O7A==
+X-Gm-Message-State: AOAM530VrVKNY+WHhRtfjhTX9eBWsEVnkhOIJRvR3H7d5jfMQ/dhGNH8
+        21A201UbApc5GgE1/5npC90=
+X-Google-Smtp-Source: ABdhPJztlh8vZC1TsjE7ZjWj8hovMXMz20EDM2Xd72cqwjWJ6X8vr3Ebm2HI+rVnaMtOWztT9CddIQ==
+X-Received: by 2002:a17:906:4756:: with SMTP id j22mr2261351ejs.490.1592304488792;
+        Tue, 16 Jun 2020 03:48:08 -0700 (PDT)
+Received: from localhost (ip-37-188-174-201.eurotel.cz. [37.188.174.201])
+        by smtp.gmail.com with ESMTPSA id k23sm10851549ejk.114.2020.06.16.03.48.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 16 Jun 2020 03:48:07 -0700 (PDT)
+Date:   Tue, 16 Jun 2020 12:48:06 +0200
+From:   Michal Hocko <mhocko@kernel.org>
+To:     Yafang Shao <laoar.shao@gmail.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Linux MM <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH v3] xfs: avoid deadlock when trigger memory reclaim in
+ ->writepages
+Message-ID: <20200616104806.GE9499@dhcp22.suse.cz>
+References: <1592222181-9832-1-git-send-email-laoar.shao@gmail.com>
+ <20200616081628.GC9499@dhcp22.suse.cz>
+ <CALOAHbDsCB1yZE6m96xiX1KiUWJW-8Hn0eqGcuEipkf9R6_L2A@mail.gmail.com>
+ <20200616092727.GD9499@dhcp22.suse.cz>
+ <CALOAHbD8x3sULHpGe=t58cBU2u1vuqrBRtAB3-+oR7TQNwOxwg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CALOAHbD8x3sULHpGe=t58cBU2u1vuqrBRtAB3-+oR7TQNwOxwg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 16, 2020 at 7:06 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Mon, Jun 15, 2020 at 04:53:31PM +0200, Michal Hocko wrote:
-> > On Mon 15-06-20 16:25:52, Holger Hoffst=C3=A4tte wrote:
-> > > On 2020-06-15 13:56, Yafang Shao wrote:
-> > [...]
-> > > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > > > index b356118..1ccfbf2 100644
-> > > > --- a/fs/xfs/xfs_aops.c
-> > > > +++ b/fs/xfs/xfs_aops.c
-> > > > @@ -573,9 +573,21 @@ static inline bool xfs_ioend_needs_workqueue(s=
-truct iomap_ioend *ioend)
-> > > >           struct writeback_control *wbc)
-> > > >   {
-> > > >           struct xfs_writepage_ctx wpc =3D { };
-> > > > + unsigned int nofs_flag;
-> > > > + int ret;
-> > > >           xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-> > > > - return iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_op=
-s);
-> > > > +
-> > > > + /*
-> > > > +  * We can allocate memory here while doing writeback on behalf of
-> > > > +  * memory reclaim.  To avoid memory allocation deadlocks set the
-> > > > +  * task-wide nofs context for the following operations.
-> > > > +  */
-> > > > + nofs_flag =3D memalloc_nofs_save();
-> > > > + ret =3D iomap_writepages(mapping, wbc, &wpc.ctx, &xfs_writeback_o=
-ps);
-> > > > + memalloc_nofs_restore(nofs_flag);
-> > > > +
-> > > > + return ret;
-> > > >   }
-> > > >   STATIC int
+On Tue 16-06-20 17:39:33, Yafang Shao wrote:
+> On Tue, Jun 16, 2020 at 5:27 PM Michal Hocko <mhocko@kernel.org> wrote:
+> >
+> > On Tue 16-06-20 17:05:25, Yafang Shao wrote:
+> > > On Tue, Jun 16, 2020 at 4:16 PM Michal Hocko <mhocko@kernel.org> wrote:
 > > > >
+> > > > On Mon 15-06-20 07:56:21, Yafang Shao wrote:
+> > > > > Recently there is a XFS deadlock on our server with an old kernel.
+> > > > > This deadlock is caused by allocating memory in xfs_map_blocks() while
+> > > > > doing writeback on behalf of memroy reclaim. Although this deadlock happens
+> > > > > on an old kernel, I think it could happen on the upstream as well. This
+> > > > > issue only happens once and can't be reproduced, so I haven't tried to
+> > > > > reproduce it on upsteam kernel.
+> > > > >
+> > > > > Bellow is the call trace of this deadlock.
+> > > > > [480594.790087] INFO: task redis-server:16212 blocked for more than 120 seconds.
+> > > > > [480594.790087] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > > > > [480594.790088] redis-server    D ffffffff8168bd60     0 16212  14347 0x00000004
+> > > > > [480594.790090]  ffff880da128f070 0000000000000082 ffff880f94a2eeb0 ffff880da128ffd8
+> > > > > [480594.790092]  ffff880da128ffd8 ffff880da128ffd8 ffff880f94a2eeb0 ffff88103f9d6c40
+> > > > > [480594.790094]  0000000000000000 7fffffffffffffff ffff88207ffc0ee8 ffffffff8168bd60
+> > > > > [480594.790096] Call Trace:
+> > > > > [480594.790101]  [<ffffffff8168dce9>] schedule+0x29/0x70
+> > > > > [480594.790103]  [<ffffffff8168b749>] schedule_timeout+0x239/0x2c0
+> > > > > [480594.790111]  [<ffffffff8168d28e>] io_schedule_timeout+0xae/0x130
+> > > > > [480594.790114]  [<ffffffff8168d328>] io_schedule+0x18/0x20
+> > > > > [480594.790116]  [<ffffffff8168bd71>] bit_wait_io+0x11/0x50
+> > > > > [480594.790118]  [<ffffffff8168b895>] __wait_on_bit+0x65/0x90
+> > > > > [480594.790121]  [<ffffffff811814e1>] wait_on_page_bit+0x81/0xa0
+> > > > > [480594.790125]  [<ffffffff81196ad2>] shrink_page_list+0x6d2/0xaf0
+> > > > > [480594.790130]  [<ffffffff811975a3>] shrink_inactive_list+0x223/0x710
+> > > > > [480594.790135]  [<ffffffff81198225>] shrink_lruvec+0x3b5/0x810
+> > > > > [480594.790139]  [<ffffffff8119873a>] shrink_zone+0xba/0x1e0
+> > > > > [480594.790141]  [<ffffffff81198c20>] do_try_to_free_pages+0x100/0x510
+> > > > > [480594.790143]  [<ffffffff8119928d>] try_to_free_mem_cgroup_pages+0xdd/0x170
+> > > > > [480594.790145]  [<ffffffff811f32de>] mem_cgroup_reclaim+0x4e/0x120
+> > > > > [480594.790147]  [<ffffffff811f37cc>] __mem_cgroup_try_charge+0x41c/0x670
+> > > > > [480594.790153]  [<ffffffff811f5cb6>] __memcg_kmem_newpage_charge+0xf6/0x180
+> > > > > [480594.790157]  [<ffffffff8118c72d>] __alloc_pages_nodemask+0x22d/0x420
+> > > > > [480594.790162]  [<ffffffff811d0c7a>] alloc_pages_current+0xaa/0x170
+> > > > > [480594.790165]  [<ffffffff811db8fc>] new_slab+0x30c/0x320
+> > > > > [480594.790168]  [<ffffffff811dd17c>] ___slab_alloc+0x3ac/0x4f0
+> > > > > [480594.790204]  [<ffffffff81685656>] __slab_alloc+0x40/0x5c
+> > > > > [480594.790206]  [<ffffffff811dfc43>] kmem_cache_alloc+0x193/0x1e0
+> > > > > [480594.790233]  [<ffffffffa04fab67>] kmem_zone_alloc+0x97/0x130 [xfs]
+> > > > > [480594.790247]  [<ffffffffa04f90ba>] _xfs_trans_alloc+0x3a/0xa0 [xfs]
+> > > > > [480594.790261]  [<ffffffffa04f915c>] xfs_trans_alloc+0x3c/0x50 [xfs]
+> > > >
+> > > > Now with a more explanation from Dave I have got back to the original
+> > > > backtrace. Not sure which kernel version you are using but this path
+> > > > should have passed xfs_trans_reserve which sets PF_MEMALLOC_NOFS and
+> > > > this in turn should have made __alloc_pages_nodemask to use __GFP_NOFS
+> > > > and the memcg reclaim shouldn't ever wait_on_page_writeback (pressumably
+> > > > this is what the io_schedule is coming from).
 > > >
-> > > Not sure if I did something wrong, but while the previous version of =
-this patch
-> > > worked fine, this one gave me (with v2 removed obviously):
+> > > Hi Michal,
 > > >
-> > > [  +0.000004] WARNING: CPU: 0 PID: 2811 at fs/iomap/buffered-io.c:154=
-4 iomap_do_writepage+0x6b4/0x780
+> > > The page is allocated before calling xfs_trans_reserve, so the
+> > > PF_MEMALLOC_NOFS hasn't been set yet.
+> > > See bellow,
+> > >
+> > > xfs_trans_alloc
+> > >     kmem_zone_zalloc() <<< GPF_NOFS hasn't been set yet, but it may
+> > > trigger memory reclaim
+> > >     xfs_trans_reserve() <<<< GPF_NOFS is set here (for the kernel
+> > > prior to commit 9070733b4efac, it is PF_FSTRANS)
 > >
-> > This corresponds to
-> >         /*
-> >          * Given that we do not allow direct reclaim to call us, we sho=
-uld
-> >          * never be called in a recursive filesystem reclaim context.
-> >          */
-> >         if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
-> >                 goto redirty;
+> > You are right, I have misread the actual allocation side. 8683edb7755b8
+> > has added KM_NOFS and 73d30d48749f8 has removed it. I cannot really
+> > judge the correctness here.
 > >
-> > which effectivelly says that memalloc_nofs_save/restore cannot be used
-> > for that code path.
->
-> No it doesn't. Everyone is ignoring the -context- of this code, most
-> especially the previous 3 lines of code and it's comment:
->
->         /*
->          * Refuse to write the page out if we are called from reclaim con=
-text.
->          *
->          * This avoids stack overflows when called from deeply used stack=
-s in
->          * random callers for direct reclaim or memcg reclaim.  We explic=
-itly
->          * allow reclaim from kswapd as the stack usage there is relative=
-ly low.
->          *
->          * This should never happen except in the case of a VM regression=
- so
->          * warn about it.
->          */
->         if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) =3D=
-=3D
->                         PF_MEMALLOC))
->                 goto redirty;
->
-> You will see that we specifically avoid this path from reclaim
-> context except for kswapd. And kswapd always runs with GFP_KERNEL
-> context so we allow writeback from it, so it will pass both this
-> check and the NOFS check above.
->
-> IOws, we can't trigger to the WARN_ON_ONCE(current->flags &
-> PF_MEMALLOC_NOFS)) check from a memory reclaim context: this
-> PF_MEMALLOC_NOFS check here is not doing what people think it is.
->
-> History lesson time, eh?
->
-> The recursion protection here -used- to use PF_FSTRANS, not
-> PF_MEMALLOC_NOFS. See commit 9070733b4efac ("xfs: abstract
-> PF_FSTRANS to PF_MEMALLOC_NOFS"). This hunk is most instructive
-> when you look at the comment:
->
->          * Given that we do not allow direct reclaim to call us, we shoul=
-d
->          * never be called while in a filesystem transaction.
->          */
+> 
+> The history is complicated, but it doesn't matter.
+> Let's  turn back to the upstream kernel now. As I explained in the commit log,
+> xfs_vm_writepages
+>   -> iomap_writepages.
+>      -> write_cache_pages
+>         -> lock_page <<<< This page is locked.
+>         -> writepages ( which is  iomap_do_writepage)
+>            -> xfs_map_blocks
+>               -> xfs_convert_blocks
+>                  -> xfs_bmapi_convert_delalloc
+>                     -> xfs_trans_alloc
+>                          -> kmem_zone_zalloc //It should alloc page
+> with GFP_NOFS
+> 
+> If GFP_NOFS isn't set in xfs_trans_alloc(), the kmem_zone_zalloc() may
+> trigger the memory reclaim then it may wait on the page locked in
+> write_cache_pages() ...
 
-This comment is more clear.
+This cannot happen because the memory reclaim backs off on locked pages.
+Have a look at trylock_page at the very beginning of the shrink_page_list
+loop. You are likely waiting on a different page which is not being
+flushed because of the FS ordering requirement or something like that.
 
-> -       if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
-> +       if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
->                 goto redirty;
->
-> It wasn't for memory allocation recursion protection in XFS - it was
-> for transaction reservation recursion protection by something trying
-> to flush data pages while holding a transaction reservation. Doing
-> this could deadlock the journal because the existing reservation
-> could prevent the nested reservation for being able to reserve space
-> in the journal and that is a self-deadlock vector.
->
-> IOWs, this check is not protecting against memory reclaim recursion
-> bugs at all (that's the previous check I quoted). This check is
-> protecting against the filesystem calling writepages directly from a
-> context where it can self-deadlock.
->
-> So what we are seeing here is that the PF_FSTRANS ->
-> PF_MEMALLOC_NOFS abstraction lost all the actual useful information
-> about what type of error this check was protecting against.
->
+> That means the ->writepages should be set with GFP_NOFS to avoid this
+> recursive filesystem reclaim.
 
-Agreed. The check of PF_MEMALLOC_NOFS here really confused me before.
-I think it will confuse others as well.
-
-> > Your stack trace doesn't point to a reclaim path
-> > which shows that this path is shared and also underlines that this is
-> > not really an intended use of the api.
->
-> Actually, Michal, it was your PF_FSTRANS -> PF_MEMALLOC_NOFS
-> abstraction of this code that turned this from "exactly what
-> PF_FSTRANS was intended to catch" to what you call "unintended use
-> of the API"....
->
-> IOWs, putting the iomap_writepage path under NOFS context is the
-> right thing to do from a "prevent memory reclaim" perspective, but
-> now we are hitting against the problems of repurposing filesystem
-> specific flags for subtlely different generic semantics...
->
-> I suspect we need to re-introduce PF_FSTRANS, set/clear/transfer it
-> again in all the places XFS used to transfer it, and change this
-> iomap check to use PF_FSTRANS and not PF_MEMALLOC_NOFS, because it's
-> clearly not and never has been a memory reclaim recursion warning
-> check....
->
-
-Agree with you that it's better to convert it back to PF_FSTRANS,
-otherwise it will mislead more people.
-I would like to send a patch to change it back if there is no
-objection to this proposal.
-
-
-
---
-Thanks
-Yafang
+-- 
+Michal Hocko
+SUSE Labs
