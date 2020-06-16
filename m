@@ -2,192 +2,87 @@ Return-Path: <SRS0=cXLJ=75=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CD6FC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Jun 2020 11:43:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D4FCC433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Jun 2020 12:17:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BD5920B1F
-	for <linux-xfs@archiver.kernel.org>; Tue, 16 Jun 2020 11:43:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D48C20B80
+	for <linux-xfs@archiver.kernel.org>; Tue, 16 Jun 2020 12:17:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lPAIhkyn"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q5UhV61z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726467AbgFPLnc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 16 Jun 2020 07:43:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36706 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725775AbgFPLnc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jun 2020 07:43:32 -0400
-Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 54125C08C5C2;
-        Tue, 16 Jun 2020 04:43:32 -0700 (PDT)
-Received: by mail-io1-xd42.google.com with SMTP id r2so2215447ioo.4;
-        Tue, 16 Jun 2020 04:43:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=55VUJ3B84s7Ijj+V3LyqwVbMrqjK9bK5N0wopU4cd7A=;
-        b=lPAIhkyn6b/RZpw+xNQcOir+zyb5QNBt3VHfYwxHzgrBQjSZ9qeL3gS9dflXphC/e6
-         DqY/HP3jsSsHTxLymkpYHGY6XCzDqQI0ZjzlDNFTAfLIQKI5YoJDFTgaV0sesnt2zN0e
-         XQXRcPHBZxQ4wRZtYf1k0CHUJckjOKq1klESEFimD/XBU4a0HFOEQOLZBmxUH3e7cxop
-         Rj7ki5UvXMR419BXzgZCVveZWyS3Vff3lr4Els8EsFLe539V0u4fnsujBkcifwarauRX
-         wNIj1Ru5S2FAZzE35UE+7vZ1xdj8z+68G/td1HcPJykayFFenLnM0/mFgFqWnQmjjrxD
-         D71A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=55VUJ3B84s7Ijj+V3LyqwVbMrqjK9bK5N0wopU4cd7A=;
-        b=VCY6B30mblK5O1yr6xXTuj9Wg5j9kpNJUi0IZa31LLN2OIRvaspWT0raaVt94o/Jvh
-         uWuiDoyWXuaHQiZgi9sA4+npwTTCMdc8AuJEnTYZs/jY7VsPvIE/91EAC9sEF8lBqVb7
-         fPHi30f//uRyACkfBRJl1RFg3IYemyWD9A1JEiqLt/Fxb0lLVZudXfF6Cp186HmW7sDZ
-         txuiPxV02gTkXOslBBmv75gTtTYVaIvovDhC8hwnHnaiuv1adWA0+7QmgTUdbXXlE8gN
-         ag9wCwsyqk+4YP7OZyVb+UvUOLlmNr6gX4yzv9SBrBulqqsvTSmpF72s4hVUYu1uaQGq
-         /9iA==
-X-Gm-Message-State: AOAM532M0ViQba7EUBHGEIPNdjjRordKe55VYiABJysLb5EwGJ7UUOyo
-        axhpTMl6JxRJ0yUhO3t7J7hALXj4qfyL2Sd1HWS+u0oncQ0=
-X-Google-Smtp-Source: ABdhPJw6H/21uw0Ae6LzBYfC5N6SmyBcVb3RDEe8kJozAlSCShTB8Sce5sr2cIQ/LAkb1gjrzMCRP798sSOq+hQOAnc=
-X-Received: by 2002:a5d:9b03:: with SMTP id y3mr2173151ion.81.1592307811640;
- Tue, 16 Jun 2020 04:43:31 -0700 (PDT)
+        id S1728760AbgFPMR4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 16 Jun 2020 08:17:56 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:26021 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728699AbgFPMRk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jun 2020 08:17:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592309858;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=ALxbec16ACec59XBUz3lxih0+JjDkzRnQj2wRSNF7zM=;
+        b=Q5UhV61zTLysXR42wziMVb7022+QSp/TJMwNWHK6Zrurh/1IkkzC5u6hBC5F7Kj7PTr6lJ
+        zs5ZPB6ip9/z//OmRXzv8lYyiDh5r8BWs5C7mhkSNomekZzv8anuzZYgmf2R1h09O0qftd
+        PwQIzfxhJXnkEG0hR2CLHZT7wdCcxws=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-175-b-yjdPF-PTK-esfOHyqPkA-1; Tue, 16 Jun 2020 08:17:32 -0400
+X-MC-Unique: b-yjdPF-PTK-esfOHyqPkA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 39B781009445;
+        Tue, 16 Jun 2020 12:17:31 +0000 (UTC)
+Received: from colo-mx.corp.redhat.com (colo-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2ED9D7C375;
+        Tue, 16 Jun 2020 12:17:31 +0000 (UTC)
+Received: from zmail21.collab.prod.int.phx2.redhat.com (zmail21.collab.prod.int.phx2.redhat.com [10.5.83.24])
+        by colo-mx.corp.redhat.com (Postfix) with ESMTP id 1F8D81809543;
+        Tue, 16 Jun 2020 12:17:31 +0000 (UTC)
+Date:   Tue, 16 Jun 2020 08:17:28 -0400 (EDT)
+From:   Bob Peterson <rpeterso@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Message-ID: <315900873.34076732.1592309848873.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20200616003903.GC2005@dread.disaster.area>
+References: <20200615160244.741244-1-agruenba@redhat.com> <20200615233239.GY2040@dread.disaster.area> <20200615234437.GX8681@bombadil.infradead.org> <20200616003903.GC2005@dread.disaster.area>
+Subject: Re: [PATCH] iomap: Make sure iomap_end is called after iomap_begin
 MIME-Version: 1.0
-References: <1592222181-9832-1-git-send-email-laoar.shao@gmail.com>
- <20200616081628.GC9499@dhcp22.suse.cz> <CALOAHbDsCB1yZE6m96xiX1KiUWJW-8Hn0eqGcuEipkf9R6_L2A@mail.gmail.com>
- <20200616092727.GD9499@dhcp22.suse.cz> <CALOAHbD8x3sULHpGe=t58cBU2u1vuqrBRtAB3-+oR7TQNwOxwg@mail.gmail.com>
- <20200616104806.GE9499@dhcp22.suse.cz>
-In-Reply-To: <20200616104806.GE9499@dhcp22.suse.cz>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Tue, 16 Jun 2020 19:42:55 +0800
-Message-ID: <CALOAHbA_yXDzzni7Pn5RUjSAyyGrniW9Aq1iJC4AsxuJ0Abgow@mail.gmail.com>
-Subject: Re: [PATCH v3] xfs: avoid deadlock when trigger memory reclaim in ->writepages
-To:     Michal Hocko <mhocko@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux MM <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.3.115.80, 10.4.195.27]
+Thread-Topic: iomap: Make sure iomap_end is called after iomap_begin
+Thread-Index: WWz+urK5/eoXxwmGC0zTU+oujNHV9w==
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 16, 2020 at 6:48 PM Michal Hocko <mhocko@kernel.org> wrote:
->
-> On Tue 16-06-20 17:39:33, Yafang Shao wrote:
-> > On Tue, Jun 16, 2020 at 5:27 PM Michal Hocko <mhocko@kernel.org> wrote:
-> > >
-> > > On Tue 16-06-20 17:05:25, Yafang Shao wrote:
-> > > > On Tue, Jun 16, 2020 at 4:16 PM Michal Hocko <mhocko@kernel.org> wrote:
-> > > > >
-> > > > > On Mon 15-06-20 07:56:21, Yafang Shao wrote:
-> > > > > > Recently there is a XFS deadlock on our server with an old kernel.
-> > > > > > This deadlock is caused by allocating memory in xfs_map_blocks() while
-> > > > > > doing writeback on behalf of memroy reclaim. Although this deadlock happens
-> > > > > > on an old kernel, I think it could happen on the upstream as well. This
-> > > > > > issue only happens once and can't be reproduced, so I haven't tried to
-> > > > > > reproduce it on upsteam kernel.
-> > > > > >
-> > > > > > Bellow is the call trace of this deadlock.
-> > > > > > [480594.790087] INFO: task redis-server:16212 blocked for more than 120 seconds.
-> > > > > > [480594.790087] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> > > > > > [480594.790088] redis-server    D ffffffff8168bd60     0 16212  14347 0x00000004
-> > > > > > [480594.790090]  ffff880da128f070 0000000000000082 ffff880f94a2eeb0 ffff880da128ffd8
-> > > > > > [480594.790092]  ffff880da128ffd8 ffff880da128ffd8 ffff880f94a2eeb0 ffff88103f9d6c40
-> > > > > > [480594.790094]  0000000000000000 7fffffffffffffff ffff88207ffc0ee8 ffffffff8168bd60
-> > > > > > [480594.790096] Call Trace:
-> > > > > > [480594.790101]  [<ffffffff8168dce9>] schedule+0x29/0x70
-> > > > > > [480594.790103]  [<ffffffff8168b749>] schedule_timeout+0x239/0x2c0
-> > > > > > [480594.790111]  [<ffffffff8168d28e>] io_schedule_timeout+0xae/0x130
-> > > > > > [480594.790114]  [<ffffffff8168d328>] io_schedule+0x18/0x20
-> > > > > > [480594.790116]  [<ffffffff8168bd71>] bit_wait_io+0x11/0x50
-> > > > > > [480594.790118]  [<ffffffff8168b895>] __wait_on_bit+0x65/0x90
-> > > > > > [480594.790121]  [<ffffffff811814e1>] wait_on_page_bit+0x81/0xa0
-> > > > > > [480594.790125]  [<ffffffff81196ad2>] shrink_page_list+0x6d2/0xaf0
-> > > > > > [480594.790130]  [<ffffffff811975a3>] shrink_inactive_list+0x223/0x710
-> > > > > > [480594.790135]  [<ffffffff81198225>] shrink_lruvec+0x3b5/0x810
-> > > > > > [480594.790139]  [<ffffffff8119873a>] shrink_zone+0xba/0x1e0
-> > > > > > [480594.790141]  [<ffffffff81198c20>] do_try_to_free_pages+0x100/0x510
-> > > > > > [480594.790143]  [<ffffffff8119928d>] try_to_free_mem_cgroup_pages+0xdd/0x170
-> > > > > > [480594.790145]  [<ffffffff811f32de>] mem_cgroup_reclaim+0x4e/0x120
-> > > > > > [480594.790147]  [<ffffffff811f37cc>] __mem_cgroup_try_charge+0x41c/0x670
-> > > > > > [480594.790153]  [<ffffffff811f5cb6>] __memcg_kmem_newpage_charge+0xf6/0x180
-> > > > > > [480594.790157]  [<ffffffff8118c72d>] __alloc_pages_nodemask+0x22d/0x420
-> > > > > > [480594.790162]  [<ffffffff811d0c7a>] alloc_pages_current+0xaa/0x170
-> > > > > > [480594.790165]  [<ffffffff811db8fc>] new_slab+0x30c/0x320
-> > > > > > [480594.790168]  [<ffffffff811dd17c>] ___slab_alloc+0x3ac/0x4f0
-> > > > > > [480594.790204]  [<ffffffff81685656>] __slab_alloc+0x40/0x5c
-> > > > > > [480594.790206]  [<ffffffff811dfc43>] kmem_cache_alloc+0x193/0x1e0
-> > > > > > [480594.790233]  [<ffffffffa04fab67>] kmem_zone_alloc+0x97/0x130 [xfs]
-> > > > > > [480594.790247]  [<ffffffffa04f90ba>] _xfs_trans_alloc+0x3a/0xa0 [xfs]
-> > > > > > [480594.790261]  [<ffffffffa04f915c>] xfs_trans_alloc+0x3c/0x50 [xfs]
-> > > > >
-> > > > > Now with a more explanation from Dave I have got back to the original
-> > > > > backtrace. Not sure which kernel version you are using but this path
-> > > > > should have passed xfs_trans_reserve which sets PF_MEMALLOC_NOFS and
-> > > > > this in turn should have made __alloc_pages_nodemask to use __GFP_NOFS
-> > > > > and the memcg reclaim shouldn't ever wait_on_page_writeback (pressumably
-> > > > > this is what the io_schedule is coming from).
-> > > >
-> > > > Hi Michal,
-> > > >
-> > > > The page is allocated before calling xfs_trans_reserve, so the
-> > > > PF_MEMALLOC_NOFS hasn't been set yet.
-> > > > See bellow,
-> > > >
-> > > > xfs_trans_alloc
-> > > >     kmem_zone_zalloc() <<< GPF_NOFS hasn't been set yet, but it may
-> > > > trigger memory reclaim
-> > > >     xfs_trans_reserve() <<<< GPF_NOFS is set here (for the kernel
-> > > > prior to commit 9070733b4efac, it is PF_FSTRANS)
-> > >
-> > > You are right, I have misread the actual allocation side. 8683edb7755b8
-> > > has added KM_NOFS and 73d30d48749f8 has removed it. I cannot really
-> > > judge the correctness here.
-> > >
-> >
-> > The history is complicated, but it doesn't matter.
-> > Let's  turn back to the upstream kernel now. As I explained in the commit log,
-> > xfs_vm_writepages
-> >   -> iomap_writepages.
-> >      -> write_cache_pages
-> >         -> lock_page <<<< This page is locked.
-> >         -> writepages ( which is  iomap_do_writepage)
-> >            -> xfs_map_blocks
-> >               -> xfs_convert_blocks
-> >                  -> xfs_bmapi_convert_delalloc
-> >                     -> xfs_trans_alloc
-> >                          -> kmem_zone_zalloc //It should alloc page
-> > with GFP_NOFS
-> >
-> > If GFP_NOFS isn't set in xfs_trans_alloc(), the kmem_zone_zalloc() may
-> > trigger the memory reclaim then it may wait on the page locked in
-> > write_cache_pages() ...
->
-> This cannot happen because the memory reclaim backs off on locked pages.
-> Have a look at trylock_page at the very beginning of the shrink_page_list
-> loop. You are likely waiting on a different page which is not being
-> flushed because of the FS ordering requirement or something like that.
->
+----- Original Message -----
+> > I'd assume Andreas is looking at converting a filesystem to use iomap,
+> > since this problem only occurs for filesystems which have returned an
+> > invalid extent.
+> 
+> Well, I can assume it's gfs2, but you know what happens when you
+> assume something....
 
-Right, there should be multiple-pages, some of which are already under
-PG_writeback. When a new page in these multiple-pages is being
-processed the reclaim is triggered and then a page already under
-PG_writeback in these multiple-pages is reclaimed and then waited.
+Yes, it's gfs2, which already has iomap. I found the bug while just browsing
+the code: gfs2 takes a lock in the begin code. If there's an error,
+however unlikely, the end code is never called, so we would never unlock.
+It doesn't matter to me whether the error is -EIO because it's very unlikely
+in the first place. I haven't looked back to see where the problem was
+introduced, but I suspect it should be ported back to stable releases.
 
-> > That means the ->writepages should be set with GFP_NOFS to avoid this
-> > recursive filesystem reclaim.
->
-> --
-> Michal Hocko
-> SUSE Labs
+Bob Peterson
 
-
-
--- 
-Thanks
-Yafang
