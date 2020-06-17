@@ -2,246 +2,180 @@ Return-Path: <SRS0=Ja7n=76=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFCCBC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Jun 2020 17:53:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 810E4C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Jun 2020 17:55:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABD6B21556
-	for <linux-xfs@archiver.kernel.org>; Wed, 17 Jun 2020 17:53:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Mb1P1tdb"
+	by mail.kernel.org (Postfix) with ESMTP id 623B321707
+	for <linux-xfs@archiver.kernel.org>; Wed, 17 Jun 2020 17:55:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726594AbgFQRxm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Jun 2020 13:53:42 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:24053 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726972AbgFQRxj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jun 2020 13:53:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592416416;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=B+UlJ4P87byIkRZMfG/um1z/JjWpEWmUueHIhB4rGvM=;
-        b=Mb1P1tdbElepKMRlfZBmUT6/t4wfDnDfEH+r3WyTn+wuEvGU1foBWcBYIBZOz4hIAWk7C/
-        wHCy9a06z3KalZvmiSgvbQJ/UPUUBJIVpXPeXLvfHyfxExziQFO8QGclyfrxi939G5tInK
-        zmc/rHA+BafLDzE/JGL2J8UQT20KXxo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-179-KawU4X3xMuWXkkwKMo-YEA-1; Wed, 17 Jun 2020 13:53:34 -0400
-X-MC-Unique: KawU4X3xMuWXkkwKMo-YEA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726919AbgFQRz1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Jun 2020 13:55:27 -0400
+Received: from sandeen.net ([63.231.237.45]:55906 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726864AbgFQRz0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 17 Jun 2020 13:55:26 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 40AE2107ACCA;
-        Wed, 17 Jun 2020 17:53:33 +0000 (UTC)
-Received: from llong.com (ovpn-117-167.rdu2.redhat.com [10.10.117.167])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D3FB56ED96;
-        Wed, 17 Jun 2020 17:53:31 +0000 (UTC)
-From:   Waiman Long <longman@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Juri Lelli <juri.lelli@redhat.com>,
-        Vincent Guittot <vincent.guittot@linaro.org>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Waiman Long <longman@redhat.com>
-Subject: [PATCH v2 2/2] xfs: Fix false positive lockdep warning with sb_internal & fs_reclaim
-Date:   Wed, 17 Jun 2020 13:53:10 -0400
-Message-Id: <20200617175310.20912-3-longman@redhat.com>
-In-Reply-To: <20200617175310.20912-1-longman@redhat.com>
-References: <20200617175310.20912-1-longman@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+        by sandeen.net (Postfix) with ESMTPSA id CC64A15B27;
+        Wed, 17 Jun 2020 12:55:03 -0500 (CDT)
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Masayoshi Mizuma <msys.mizuma@gmail.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>
+References: <20200616202123.12656-1-msys.mizuma@gmail.com>
+ <20200617080314.GA7147@infradead.org> <20200617155836.GD13815@fieldses.org>
+ <24692989-2ee0-3dcc-16d8-aa436114f5fb@sandeen.net>
+ <20200617172456.GP11245@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
+Date:   Wed, 17 Jun 2020 12:55:24 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.9.0
+MIME-Version: 1.0
+In-Reply-To: <20200617172456.GP11245@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Depending on the workloads, the following circular locking dependency
-warning between sb_internal (a percpu rwsem) and fs_reclaim (a pseudo
-lock) may show up:
+On 6/17/20 12:24 PM, Darrick J. Wong wrote:
+> On Wed, Jun 17, 2020 at 12:14:28PM -0500, Eric Sandeen wrote:
+>>
+>>
+>> On 6/17/20 10:58 AM, J. Bruce Fields wrote:
+>>> On Wed, Jun 17, 2020 at 01:03:14AM -0700, Christoph Hellwig wrote:
+>>>> On Tue, Jun 16, 2020 at 04:21:23PM -0400, Masayoshi Mizuma wrote:
+>>>>> From: Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>
+>>>>>
+>>>>> /proc/mounts doesn't show 'i_version' even if iversion
+>>>>> mount option is set to XFS.
+>>>>>
+>>>>> iversion mount option is a VFS option, not ext4 specific option.
+>>>>> Move the handler to show_sb_opts() so that /proc/mounts can show
+>>>>> 'i_version' on not only ext4 but also the other filesystem.
+>>>>
+>>>> SB_I_VERSION is a kernel internal flag.  XFS doesn't have an i_version
+>>>> mount option.
+>>>
+>>> It probably *should* be a kernel internal flag, but it seems to work as
+>>> a mount option too.
+>>
+>> Not on XFS AFAICT:
+>>
+>> [600280.685810] xfs: Unknown parameter 'i_version'
+> 
+> Yeah, because the mount option is 'iversion', not 'i_version'.  Even if
 
-======================================================
-WARNING: possible circular locking dependency detected
-5.0.0-rc1+ #60 Tainted: G        W
-------------------------------------------------------
-fsfreeze/4346 is trying to acquire lock:
-0000000026f1d784 (fs_reclaim){+.+.}, at:
-fs_reclaim_acquire.part.19+0x5/0x30
+unless you're ext4:
 
-but task is already holding lock:
-0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
+{Opt_i_version, "i_version"},
 
-which lock already depends on the new lock.
-  :
- Possible unsafe locking scenario:
+ok "iversion" is what mount(8) takes and translates into MS_I_VERSION (thanks Darrick)
 
-       CPU0                    CPU1
-       ----                    ----
-  lock(sb_internal);
-                               lock(fs_reclaim);
-                               lock(sb_internal);
-  lock(fs_reclaim);
+# strace -vv -emount mount -oloop,iversion fsfile mnt
+mount("/dev/loop0", "/tmp/mnt", "xfs", MS_I_VERSION, NULL) = 0
 
- *** DEADLOCK ***
+FWIW, mount actually seems to pass what it finds in /proc/mounts back in on remount for ext4:
 
-4 locks held by fsfreeze/4346:
- #0: 00000000b478ef56 (sb_writers#8){++++}, at: percpu_down_write+0xb4/0x650
- #1: 000000001ec487a9 (&type->s_umount_key#28){++++}, at: freeze_super+0xda/0x290
- #2: 000000003edbd5a0 (sb_pagefaults){++++}, at: percpu_down_write+0xb4/0x650
- #3: 0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
+# strace -vv -emount mount -o remount mnt
+mount("/dev/loop0", "/tmp/mnt", 0x55bfcbdca150, MS_REMOUNT|MS_RELATIME, "seclabel,i_version,data=ordered") = 0
 
-stack backtrace:
-Call Trace:
- dump_stack+0xe0/0x19a
- print_circular_bug.isra.10.cold.34+0x2f4/0x435
- check_prev_add.constprop.19+0xca1/0x15f0
- validate_chain.isra.14+0x11af/0x3b50
- __lock_acquire+0x728/0x1200
- lock_acquire+0x269/0x5a0
- fs_reclaim_acquire.part.19+0x29/0x30
- fs_reclaim_acquire+0x19/0x20
- kmem_cache_alloc+0x3e/0x3f0
- kmem_zone_alloc+0x79/0x150
- xfs_trans_alloc+0xfa/0x9d0
- xfs_sync_sb+0x86/0x170
- xfs_log_sbcount+0x10f/0x140
- xfs_quiesce_attr+0x134/0x270
- xfs_fs_freeze+0x4a/0x70
- freeze_super+0x1af/0x290
- do_vfs_ioctl+0xedc/0x16c0
- ksys_ioctl+0x41/0x80
- __x64_sys_ioctl+0x73/0xa9
- do_syscall_64+0x18f/0xd23
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
+but it still looks unhandled on remount.  Perhaps if /proc/mounts exposed
+"iversion" (not "i_version") then mount -o remount would DTRT.
 
-This is a false positive as all the dirty pages are flushed out before
-the filesystem can be frozen.
+-Eric
 
-Perhaps breaking the fs_reclaim pseudo lock into a per filesystem lock
-may fix the issue. However, that will greatly complicate the logic and
-may not be worth it.
+> you were going to expose the flag state in /proc/mounts, the text string
+> should match the mount option.
+> 
+>> so we can't be exporting "mount options" for xfs that aren't actually
+>> going to be accepted by the filesystem.
+>>
+>>> By coincidence I've just been looking at a bug report showing that
+>>> i_version support is getting accidentally turned off on XFS whenever
+>>> userspace does a read-write remount.
+>>>
+>>> Is there someplace in the xfs mount code where it should be throwing out
+>>> SB_I_VERSION?
+>>
+>> <cc xfs list>
+>>
+>> XFS doesn't manipulate that flag on remount.  We just turn it on by default
+>> for modern filesystem formats:
+>>
+>>         /* version 5 superblocks support inode version counters. */
+>>         if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+>>                 sb->s_flags |= SB_I_VERSION;
+>>
+>> Also, this behavior doesn't seem unique to xfs:
+>>
+>> # mount -o loop,i_version fsfile test_iversion
+>> # grep test_iversion /proc/mounts
+>> /dev/loop4 /tmp/test_iversion ext4 rw,seclabel,relatime,i_version 0 0
+>> # mount -o remount test_iversion
+>> # grep test_iversion /proc/mounts
+>> /dev/loop4 /tmp/test_iversion ext4 rw,seclabel,relatime 0 0
+>> # uname -a
+>> Linux <hostname> 5.7.0-rc4+ #7 SMP Wed Jun 10 14:01:34 EDT 2020 x86_64 x86_64 x86_64 GNU/Linux
+> 
+> Probably because do_mount clears it and I guess xfs don't re-enable
+> it in any of their remount functions...
 
-Another way to fix it is to disable the taking of the fs_reclaim
-pseudo lock when in the freezing code path as a reclaim on the
-freezed filesystem is not possible. By using the newly introduced
-PF_MEMALLOC_NOLOCKDEP flag, lockdep checking is disabled in
-xfs_trans_alloc() if both XFS_TRANS_NO_WRITECOUNT flag and the
-frozen flag are set.
-
-In the freezing path, there is another path where memory allocation
-is being done without the XFS_TRANS_NO_WRITECOUNT flag:
-
-  xfs_fs_freeze()
-  => xfs_quiesce_attr()
-     => xfs_log_quiesce()
-        => xfs_log_unmount_write()
-           => xlog_unmount_write()
-              => xfs_log_reserve()
-	         => xlog_ticket_alloc()
-
-In this case, we just disable fs reclaim for this particular 600 bytes
-memory allocation.
-
-Without this patch, the command sequence below will show that the lock
-dependency chain sb_internal -> fs_reclaim exists.
-
- # fsfreeze -f /home
- # fsfreeze --unfreeze /home
- # grep -i fs_reclaim -C 3 /proc/lockdep_chains | grep -C 5 sb_internal
-
-After applying the patch, such sb_internal -> fs_reclaim lock dependency
-chain can no longer be found. Because of that, the locking dependency
-warning will not be shown.
-
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- fs/xfs/xfs_log.c   |  9 +++++++++
- fs/xfs/xfs_trans.c | 31 +++++++++++++++++++++++++++----
- 2 files changed, 36 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 00fda2e8e738..33244680d0d4 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -830,8 +830,17 @@ xlog_unmount_write(
- 	xfs_lsn_t		lsn;
- 	uint			flags = XLOG_UNMOUNT_TRANS;
- 	int			error;
-+	unsigned long		pflags;
- 
-+	/*
-+	 * xfs_log_reserve() allocates memory. This can lead to fs reclaim
-+	 * which may conflicts with the unmount process. To avoid that,
-+	 * disable fs reclaim for this allocation.
-+	 */
-+	current_set_flags_nested(&pflags, PF_MEMALLOC_NOFS);
- 	error = xfs_log_reserve(mp, 600, 1, &tic, XFS_LOG, 0);
-+	current_restore_flags_nested(&pflags, PF_MEMALLOC_NOFS);
-+
- 	if (error)
- 		goto out_err;
- 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 3c94e5ff4316..ecb46939b276 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -255,7 +255,28 @@ xfs_trans_alloc(
- 	struct xfs_trans	**tpp)
- {
- 	struct xfs_trans	*tp;
--	int			error;
-+	int			error = 0;
-+	unsigned long		pflags = -1;
-+
-+	/*
-+	 * When both XFS_TRANS_NO_WRITECOUNT and the frozen flag are set,
-+	 * it means there are no dirty data pages in the filesystem at this
-+	 * point. So even if fs reclaim is being done, it won't happen to
-+	 * this filesystem. In this case, PF_MEMALLOC_NOLOCKDEP should be
-+	 * set to avoid false positive lockdep splat like:
-+	 *
-+	 *       CPU0                    CPU1
-+	 *       ----                    ----
-+	 *  lock(sb_internal);
-+	 *                               lock(fs_reclaim);
-+	 *                               lock(sb_internal);
-+	 *  lock(fs_reclaim);
-+	 *
-+	 *  *** DEADLOCK ***
-+	 */
-+	if (PF_MEMALLOC_NOLOCKDEP && (flags & XFS_TRANS_NO_WRITECOUNT) &&
-+	    mp->m_super->s_writers.frozen)
-+		current_set_flags_nested(&pflags, PF_MEMALLOC_NOLOCKDEP);
- 
- 	/*
- 	 * Allocate the handle before we do our freeze accounting and setting up
-@@ -284,13 +305,15 @@ xfs_trans_alloc(
- 	error = xfs_trans_reserve(tp, resp, blocks, rtextents);
- 	if (error) {
- 		xfs_trans_cancel(tp);
--		return error;
-+		goto out;
- 	}
- 
- 	trace_xfs_trans_alloc(tp, _RET_IP_);
--
- 	*tpp = tp;
--	return 0;
-+out:
-+	if (PF_MEMALLOC_NOLOCKDEP && (pflags != -1))
-+		current_restore_flags_nested(&pflags, PF_MEMALLOC_NOLOCKDEP);
-+	return error;
- }
- 
- /*
--- 
-2.18.1
 
