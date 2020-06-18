@@ -2,86 +2,126 @@ Return-Path: <SRS0=OEwr=77=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99364C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 13:56:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E91FCC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 14:46:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DDB8206C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 13:56:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B943B20888
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 14:46:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jTJkvgIO"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PClfs+4l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727801AbgFRN4m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Jun 2020 09:56:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50058 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725987AbgFRN4m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 09:56:42 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52481C06174E;
-        Thu, 18 Jun 2020 06:56:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=m7789sLCyjbHjOAuLr012wW0yNomx7QoVtM2ofWyOX0=; b=jTJkvgIORv1ov8++MY6At1I8xl
-        n6QHj230U1RbaQrLrT8mxtyaxFmAaI9vSqBaiJDkU2rB5wUehFHWEPuFnNcohi+Ua7qRL5ubbw4Cz
-        fgys0Syn5plsSo58iEKLTSrKygOHqvHlfy4GjVVyKP0mTbWoojnOJKENvgvtnq3UyiHINCRP9Hzfd
-        BWt1RuRnRMnrxTKQ4eiYb5EhMMBdEA74FoNDAgV/nxy6cuOoI9nkcwQsun+lWQrz30ut87x1dNEhg
-        v50o94/McQrWsRYcU/AxYFZLBpG/6dg1tvF5ZfyEHRd9V1B/enRNzOYR6VaZWgFuYx4ShX7lNPOwo
-        KBzYn6Gw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jlv1z-0004AS-Qx; Thu, 18 Jun 2020 13:56:39 +0000
-Date:   Thu, 18 Jun 2020 06:56:39 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Bob Peterson <rpeterso@redhat.com>
-Subject: Re: [PATCH] iomap: Make sure iomap_end is called after iomap_begin
-Message-ID: <20200618135639.GA15658@infradead.org>
-References: <20200615160244.741244-1-agruenba@redhat.com>
- <20200618013901.GR11245@magnolia>
- <20200618123227.GO8681@bombadil.infradead.org>
- <CAHc6FU5x8+54zX5NWEDdsf5HV5qXLnjS1SM+oYmX1yMrh_mDfA@mail.gmail.com>
+        id S1730965AbgFROqI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Jun 2020 10:46:08 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:51045 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731167AbgFROp7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 10:45:59 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592491553;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=D6zbSc00k9IagM0Tu0eQdpKrYAuRAh5cfvVkxU4L3/8=;
+        b=PClfs+4lXLQEj5rgLrnnkNioaKDtN0qbd3z3ans8yingLL8MDbqV4uW7M86hv/AJPL8J8e
+        VX1d8FiLoyvaO71MX3pMXzCsSVUypyX+X+G9DieneMuriU/HP97uFBhPFFfOW5nsii95oF
+        tXWzO47bSGsR6+P204clksLzJSnJqws=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-289-HpI7Dis2PTKkwqYzMXG6Kw-1; Thu, 18 Jun 2020 10:45:51 -0400
+X-MC-Unique: HpI7Dis2PTKkwqYzMXG6Kw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F2C8A107B267
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2020 14:45:50 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-114-36.rdu2.redhat.com [10.10.114.36])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AA0E210190DF
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2020 14:45:50 +0000 (UTC)
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfsprogs: xfs_quota command error message improvement
+Date:   Thu, 18 Jun 2020 09:45:49 -0500
+Message-Id: <20200618144549.192547-1-billodo@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHc6FU5x8+54zX5NWEDdsf5HV5qXLnjS1SM+oYmX1yMrh_mDfA@mail.gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 02:37:37PM +0200, Andreas Gruenbacher wrote:
-> On Thu, Jun 18, 2020 at 2:32 PM Matthew Wilcox <willy@infradead.org> wrote:
-> > On Wed, Jun 17, 2020 at 06:39:01PM -0700, Darrick J. Wong wrote:
-> > > > -   if (WARN_ON(iomap.offset > pos))
-> > > > -           return -EIO;
-> > > > -   if (WARN_ON(iomap.length == 0))
-> > > > -           return -EIO;
-> > > > +   if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0)) {
-> > >
-> > > Why combine these WARN_ON?  Before, you could distinguish between your
-> > > iomap_begin method returning zero length vs. bad offset.
-> >
-> > Does it matter?  They're both the same problem -- the filesystem has
-> > returned an invalid iomap.  I'd go further and combine the two:
-> >
-> >         if (WARN_ON(iomap.offset > pos || iomap.length == 0)) {
-> >
-> > that'll save a few bytes of .text
-> 
-> That would be fine by me as well. Christoph may have wanted separate
-> warnings for a particular reason though.
+Make the error messages for rudimentary xfs_quota commands
+(off, enable, disable) more user friendly, instead of the
+terse sys error outputs.
 
-Yes.  The line number in the WARN_ON will tell you which condition
-you if they are separate, which is really useful to diagnose what is
-going on.
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+ quota/state.c | 33 +++++++++++++++++++++++++++------
+ 1 file changed, 27 insertions(+), 6 deletions(-)
+
+diff --git a/quota/state.c b/quota/state.c
+index 8f9718f1..90406251 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -306,8 +306,15 @@ enable_enforcement(
+ 		return;
+ 	}
+ 	dir = mount->fs_name;
+-	if (xfsquotactl(XFS_QUOTAON, dir, type, 0, (void *)&qflags) < 0)
+-		perror("XFS_QUOTAON");
++	if (xfsquotactl(XFS_QUOTAON, dir, type, 0, (void *)&qflags) < 0) {
++		if (errno == EEXIST)
++			fprintf(stderr, "quota enforcement already enabled.\n");
++		else if (errno == EINVAL)
++			fprintf(stderr,
++				"can't enable when quotas are off.\n");
++		else
++			perror("XFS_QUOTAON");
++	}
+ 	else if (flags & VERBOSE_FLAG)
+ 		state_quotafile_mount(stdout, type, mount, flags);
+ }
+@@ -328,8 +335,15 @@ disable_enforcement(
+ 		return;
+ 	}
+ 	dir = mount->fs_name;
+-	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0)
+-		perror("XFS_QUOTAOFF");
++	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0) {
++		if (errno == EEXIST)
++			fprintf(stderr, "quota enforcement already disabled.\n");
++		else if (errno == EINVAL)
++			fprintf(stderr,
++				"can't disable when quotas are off.\n");
++		else
++			perror("XFS_QUOTAOFF");
++	}
+ 	else if (flags & VERBOSE_FLAG)
+ 		state_quotafile_mount(stdout, type, mount, flags);
+ }
+@@ -350,8 +364,15 @@ quotaoff(
+ 		return;
+ 	}
+ 	dir = mount->fs_name;
+-	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0)
+-		perror("XFS_QUOTAOFF");
++	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0) {
++		if (errno == EEXIST)
++			fprintf(stderr, "quota already off.\n");
++		else if (errno == EINVAL)
++			fprintf(stderr,
++				"can't disable when quotas are off.\n");
++		else
++			perror("XFS_QUOTAOFF");
++	}
+ 	else if (flags & VERBOSE_FLAG)
+ 		state_quotafile_mount(stdout, type, mount, flags);
+ }
+-- 
+2.26.2
+
