@@ -7,94 +7,151 @@ X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BC20C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:37:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10246C433E3
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:46:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0998F2070A
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:37:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0FE52067D
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:46:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eRUd0HWw"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VEQ08N2R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729030AbgFRMhy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Jun 2020 08:37:54 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:38708 "EHLO
+        id S1729911AbgFRMq1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Jun 2020 08:46:27 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:46149 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729864AbgFRMhw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 08:37:52 -0400
+        with ESMTP id S1728255AbgFRMqX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 08:46:23 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592483871;
+        s=mimecast20190719; t=1592484381;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=eG358ofoUnmsLE/Y5rjQIbnjgCn65iK1IVr7NWl3TcA=;
-        b=eRUd0HWws5O2RmkGUQ5rfskPnPPR5lO0lFtAMlETP5aJBolQJy9OQvmdp8rebDndp+uttu
-        sed8p/jkskw4B9rZ/l3X1btia8uW/FzEd5Sxb1A+bS1ePS2+onhfFrtS+tMcgTzKgbNQ/A
-        quq5IVaLhZQRdADIYdhvaaE+GTtwTu4=
-Received: from mail-oi1-f200.google.com (mail-oi1-f200.google.com
- [209.85.167.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-445-F0-_oypGO--tErqPqRl4JA-1; Thu, 18 Jun 2020 08:37:49 -0400
-X-MC-Unique: F0-_oypGO--tErqPqRl4JA-1
-Received: by mail-oi1-f200.google.com with SMTP id a17so2626659oid.19
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2020 05:37:49 -0700 (PDT)
+        bh=Jx2chy+DXXXPslp3yfr/ExQZEB8p36U9cp+dBBsmha4=;
+        b=VEQ08N2RxxQRq8ZCTegoiztEIHAQkUcLIRjH250eKIOLd41ACGp6lRKxP7B9jDmp/Yd3pX
+        pKAmRD/foruDviJAMeOtbYGIO86+xClO3IbZ9oEg2OgRc9+JHg3khlEmrKj0xee9O1r6Cw
+        0G8yNBvgRQFe7v8J1E2MTh9Pgi4ggy0=
+Received: from mail-oi1-f199.google.com (mail-oi1-f199.google.com
+ [209.85.167.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-184-VeWcdjX0MyikrU_ZucUGvA-1; Thu, 18 Jun 2020 08:46:15 -0400
+X-MC-Unique: VeWcdjX0MyikrU_ZucUGvA-1
+Received: by mail-oi1-f199.google.com with SMTP id l197so2648994oih.11
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2020 05:46:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=eG358ofoUnmsLE/Y5rjQIbnjgCn65iK1IVr7NWl3TcA=;
-        b=TzloUn2DVLMaXc5XjeyBqYvM4LW2ruwXvX8hVW8w4YgTXat7UteYYqNKhDgJmk8YMq
-         goSkYhGkQzmMtxGr0xdzhtt5z4J/k+uXxFOttXBLqpXvkHzwI1q0eZ/kCFx3b9NCK8Ya
-         4r6iMSVO4TMk8xH9hcVSY9wXgEeaVGh2CVVLWiHYe0HyaXOdnw2aS4fC1rBfYfiZusrS
-         wfvzRV6nVnWjtqX3haqAF9Y77h+iVE2tHVR06UlE9CkSiP1UIqfddvQ3wDLopffWYkR4
-         YbBL56hbLUYxdutBWO3kZLxThtzZ9xoTmyPVmaMCPrWo1Lw4gBTTwtKdGh9x7mXLQXIx
-         AAGg==
-X-Gm-Message-State: AOAM533AOJXWS6KfXX6iachnnkxibq3IxwB57OECPESKi77e1dDF7Dje
-        FMmXsjnoman704nUtj+oOeqAjkF7OJy+xrA0qWIN7vyzabaGmcPeujNbv0gJAfs1y8ZXgddiSZD
-        HDqJsfa/yWH8IL8eYPXoonjeFzi2+fjYtel0C
-X-Received: by 2002:a4a:d1ca:: with SMTP id a10mr3811829oos.31.1592483868759;
-        Thu, 18 Jun 2020 05:37:48 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwLwUtT1EDG5M+CYqt7D1khEZwMXhLHQ9HprBeCqCod5nLvYnyxPsw1MOMrXkwBZTHrtsIKoJzZUv37sqjz46s=
-X-Received: by 2002:a4a:d1ca:: with SMTP id a10mr3811816oos.31.1592483868548;
- Thu, 18 Jun 2020 05:37:48 -0700 (PDT)
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=Jx2chy+DXXXPslp3yfr/ExQZEB8p36U9cp+dBBsmha4=;
+        b=qu/eQyX6mLmIqim6Al+IVeNt77M96Rfa4V5RFvy4HgDC2VkIQchSugUaBZ4Niuc9Xy
+         JVPDfY48rJNuvRdFwfIVTtEE6zWw3YcXVqSX9i4Hqq/QqXrKI6MtKc5AZyIbC74EoJYu
+         yqW/HInboRNdClLlhI4H/H3xa/s9uADli0kKwZExRtOG6dMdKndq/8Zn7X88x1CToM5Q
+         EjTFOwRHnbw7KjRkxtum5sr9u9WM5gQdhI+GJDQnlpV7ak9ZA+XgHkRbPIy+IzOCmIcd
+         Ho4x1EKK+MyOr/C8jvRP9lZppelQuCKeV2MwUA1fqnDcsV+iwzkAq78Vt0Fb6Xyh3l9m
+         f9ig==
+X-Gm-Message-State: AOAM532s5tSpNkxHNhhh8Sd6eOqLBvZKDzThSYJJNK6zF/tVHdoQRe1v
+        npMJ5G22Y0VH9MHm4cEVSCvvzgCLQlAhnco1YLQ233OYFkEK4v6QkgylQQE3HzmAzFtrnG/9ssD
+        W+U4gc/Q08QIZpy5WgG3trZw7FgjLUd/p9ld/
+X-Received: by 2002:a05:6830:10c8:: with SMTP id z8mr3014456oto.95.1592484374640;
+        Thu, 18 Jun 2020 05:46:14 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzOwYhxZwvrmXCEEJ4lNIcITT1uhrr+sNqXkjoRh5QLgqAWYsSVfGAkiWuBNYfSRh2ekFx49DQ8VN9O2a7lFfU=
+X-Received: by 2002:a05:6830:10c8:: with SMTP id z8mr3014426oto.95.1592484374383;
+ Thu, 18 Jun 2020 05:46:14 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200615160244.741244-1-agruenba@redhat.com> <20200618013901.GR11245@magnolia>
- <20200618123227.GO8681@bombadil.infradead.org>
-In-Reply-To: <20200618123227.GO8681@bombadil.infradead.org>
+References: <20200414150233.24495-1-willy@infradead.org> <20200414150233.24495-17-willy@infradead.org>
+ <CAHc6FU4m1M7Tv4scX0UxSiVBqkL=Vcw_z-R7SufL8k7Bw=qPOw@mail.gmail.com>
+ <20200617003216.GC8681@bombadil.infradead.org> <CAHpGcMK6Yu0p-FO8CciiySqh+qcWLG-t3hEaUg-rqJnS=2uhqg@mail.gmail.com>
+ <20200617022157.GF8681@bombadil.infradead.org>
+In-Reply-To: <20200617022157.GF8681@bombadil.infradead.org>
 From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Thu, 18 Jun 2020 14:37:37 +0200
-Message-ID: <CAHc6FU5x8+54zX5NWEDdsf5HV5qXLnjS1SM+oYmX1yMrh_mDfA@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Make sure iomap_end is called after iomap_begin
+Date:   Thu, 18 Jun 2020 14:46:03 +0200
+Message-ID: <CAHc6FU7NLRHKRJJ6c2kQT0ig8ed1n+3qR-YcSCWzXOeJCUsLbA@mail.gmail.com>
+Subject: Re: [Cluster-devel] [PATCH v11 16/25] fs: Convert mpage_readpages to mpage_readahead
 To:     Matthew Wilcox <willy@infradead.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org,
+Cc:     =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Junxiao Bi <junxiao.bi@oracle.com>,
+        William Kucharski <william.kucharski@oracle.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        cluster-devel <cluster-devel@redhat.com>,
+        Linux-MM <linux-mm@kvack.org>, ocfs2-devel@oss.oracle.com,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-erofs@lists.ozlabs.org, Christoph Hellwig <hch@lst.de>,
+        linux-btrfs@vger.kernel.org,
+        Steven Whitehouse <swhiteho@redhat.com>,
         Bob Peterson <rpeterso@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 2:32 PM Matthew Wilcox <willy@infradead.org> wrote:
-> On Wed, Jun 17, 2020 at 06:39:01PM -0700, Darrick J. Wong wrote:
-> > > -   if (WARN_ON(iomap.offset > pos))
-> > > -           return -EIO;
-> > > -   if (WARN_ON(iomap.length == 0))
-> > > -           return -EIO;
-> > > +   if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0)) {
+On Wed, Jun 17, 2020 at 4:22 AM Matthew Wilcox <willy@infradead.org> wrote:
+> On Wed, Jun 17, 2020 at 02:57:14AM +0200, Andreas Gr=C3=BCnbacher wrote:
+> > Am Mi., 17. Juni 2020 um 02:33 Uhr schrieb Matthew Wilcox <willy@infrad=
+ead.org>:
+> > >
+> > > On Wed, Jun 17, 2020 at 12:36:13AM +0200, Andreas Gruenbacher wrote:
+> > > > Am Mi., 15. Apr. 2020 um 23:39 Uhr schrieb Matthew Wilcox <willy@in=
+fradead.org>:
+> > > > > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> > > > >
+> > > > > Implement the new readahead aop and convert all callers (block_de=
+v,
+> > > > > exfat, ext2, fat, gfs2, hpfs, isofs, jfs, nilfs2, ocfs2, omfs, qn=
+x6,
+> > > > > reiserfs & udf).  The callers are all trivial except for GFS2 & O=
+CFS2.
+> > > >
+> > > > This patch leads to an ABBA deadlock in xfstest generic/095 on gfs2=
+.
+> > > >
+> > > > Our lock hierarchy is such that the inode cluster lock ("inode gloc=
+k")
+> > > > for an inode needs to be taken before any page locks in that inode'=
+s
+> > > > address space.
+> > >
+> > > How does that work for ...
+> > >
+> > > writepage:              yes, unlocks (see below)
+> > > readpage:               yes, unlocks
+> > > invalidatepage:         yes
+> > > releasepage:            yes
+> > > freepage:               yes
+> > > isolate_page:           yes
+> > > migratepage:            yes (both)
+> > > putback_page:           yes
+> > > launder_page:           yes
+> > > is_partially_uptodate:  yes
+> > > error_remove_page:      yes
+> > >
+> > > Is there a reason that you don't take the glock in the higher level
+> > > ops which are called before readhead gets called?  I'm looking at XFS=
+,
+> > > and it takes the xfs_ilock SHARED in xfs_file_buffered_aio_read()
+> > > (called from xfs_file_read_iter).
 > >
-> > Why combine these WARN_ON?  Before, you could distinguish between your
-> > iomap_begin method returning zero length vs. bad offset.
+> > Right, the approach from the following thread might fix this:
+> >
+> > https://lore.kernel.org/linux-fsdevel/20191122235324.17245-1-agruenba@r=
+edhat.com/T/#t
 >
-> Does it matter?  They're both the same problem -- the filesystem has
-> returned an invalid iomap.  I'd go further and combine the two:
+> In general, I think this is a sound approach.
 >
->         if (WARN_ON(iomap.offset > pos || iomap.length == 0)) {
->
-> that'll save a few bytes of .text
+> Specifically, I think FAULT_FLAG_CACHED can go away.  map_pages()
+> will bring in the pages which are in the page cache, so when we get to
+> gfs2_fault(), we know there's a reason to acquire the glock.
 
-That would be fine by me as well. Christoph may have wanted separate
-warnings for a particular reason though.
+We'd still be grabbing a glock while holding a dependent page lock.
+Another process could be holding the glock and could try to grab the
+same page lock (i.e., a concurrent writer), leading to the same kind
+of deadlock.
 
 Andreas
 
