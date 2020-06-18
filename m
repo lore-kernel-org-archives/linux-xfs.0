@@ -4,107 +4,108 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9162CC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:21:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 667C4C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:24:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FA0620776
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:21:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36C2620776
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:24:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J/DN6BZS"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AvEMy08v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727106AbgFRMVl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Jun 2020 08:21:41 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:51693 "EHLO
+        id S1727093AbgFRMYQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Jun 2020 08:24:16 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:45277 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726909AbgFRMVj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 08:21:39 -0400
+        with ESMTP id S1726909AbgFRMYP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 08:24:15 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592482898;
+        s=mimecast20190719; t=1592483055;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=zVIx3Lw3mCtvicq1Con/Tph1Hck+YrpwlfvxN0WeRQA=;
-        b=J/DN6BZSvzdN9abhvs2S0wzX+2nwhdiHBw3NOOzeq/q+d7NwTJ/0K7CJPzhMzxDKMwQw4d
-        FUBbJKTl63NmnclxJ8rWHuJGyO/x5bk5lS/NLc1UzemSYEO5oX/RuYIcYBKe+dd5DGzuC8
-        Vqo2Hiize4hhcDRnLtMEz2AEw8FsxCc=
-Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com
- [209.85.161.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-102-3v-_HgQRO_mZSUSI4i8THw-1; Thu, 18 Jun 2020 08:21:36 -0400
-X-MC-Unique: 3v-_HgQRO_mZSUSI4i8THw-1
-Received: by mail-oo1-f69.google.com with SMTP id p15so2587575oov.17
-        for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2020 05:21:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=zVIx3Lw3mCtvicq1Con/Tph1Hck+YrpwlfvxN0WeRQA=;
-        b=nbFHv0e5htPc4z0Y8L3BdStPK0cM6kSGuFHxwDGurP+PEdnxW5wBbLn9g/Dwv557t0
-         SkR3sGmV3JUOzBddt1tkWIX+3wIOIy1K76ozpEz89T6bzeIUl+Kr2/NYr0HRFUU8LpR0
-         AR/i5hdFaK+tuN70MtWMlBwryTMe7JBRo95xAJJ9jf3zedJJB1V1hCE/J0V4DGXnRCjc
-         +ICTVwerm9bSVOdv6HuVO6MmYGL02fnlOgzYRZs2DcrFoKmF/CiFyVnVaONvdfwHlfgR
-         v5/7TeYeT8G+vYhUv+X3fZjFQ4EHJ9AqgcMNtD4uBiYRCtv1N326Fae1fIgfkM2Ai8qi
-         rfuQ==
-X-Gm-Message-State: AOAM533aT9b8G9HORyjZ6DpQ1q3yh9W2InxoKPrDgcQu1/TdWUSOKmII
-        7bAXsdDkCjR0T/Y+N+3qvPNCL+DXHiBOfGfmXohOvAswM/TTBE4OyNfa3j9SQp4tRMDmVS3rEaO
-        hXLu30Bip/4A0a1dAAHmc5Rv+rMsNPQ0hqE4G
-X-Received: by 2002:a4a:e049:: with SMTP id v9mr3772924oos.22.1592482895726;
-        Thu, 18 Jun 2020 05:21:35 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJx8Vz5RoMaRMnhgrKw5BwObY2thiM8ANkKOLKrEUi3X7FXXUq1RapjKFAWIzm+QaaDyB5zq65OkmBNh89rmsAU=
-X-Received: by 2002:a4a:e049:: with SMTP id v9mr3772904oos.22.1592482895397;
- Thu, 18 Jun 2020 05:21:35 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200615160244.741244-1-agruenba@redhat.com> <20200618013901.GR11245@magnolia>
-In-Reply-To: <20200618013901.GR11245@magnolia>
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=yPVHlKRsFrSZNn3IJFrG3whV+618Yr3uyXoo1MoST1k=;
+        b=AvEMy08vOXaIRWRyY3LHsp4ylu9/L0lrtE5UGnwnQKqjmY1wKkbN+QMvhCacD/s9jMzOsR
+        J4ey0LfjMh6ybyEhDrgPT+xNspGBK1sj95lnDIB39d+gHT+TP2QbGGJE+mWn0H5cNv3nCG
+        KBkyl7DgpzICvfF6e+JD4eSo6ixKAaQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-178-naZsk118N7uGyiO776mB3g-1; Thu, 18 Jun 2020 08:24:13 -0400
+X-MC-Unique: naZsk118N7uGyiO776mB3g-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2D937107ACF4;
+        Thu, 18 Jun 2020 12:24:12 +0000 (UTC)
+Received: from max.home.com (unknown [10.40.195.140])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 94D891002393;
+        Thu, 18 Jun 2020 12:24:10 +0000 (UTC)
 From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Thu, 18 Jun 2020 14:21:23 +0200
-Message-ID: <CAHc6FU714HhtJdbfZXL26fxQ1_AV7rpsOVbhx8sLrdqwOUJBzg@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Make sure iomap_end is called after iomap_begin
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         Bob Peterson <rpeterso@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH v2] iomap: Make sure iomap_end is called after iomap_begin
+Date:   Thu, 18 Jun 2020 14:24:08 +0200
+Message-Id: <20200618122408.1054092-1-agruenba@redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 3:39 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> On Mon, Jun 15, 2020 at 06:02:44PM +0200, Andreas Gruenbacher wrote:
-> > Make sure iomap_end is always called when iomap_begin succeeds: the
-> > filesystem may take locks in iomap_begin and release them in iomap_end,
-> > for example.
-> >
-> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> > ---
-> >  fs/iomap/apply.c | 9 +++++----
-> >  1 file changed, 5 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
-> > index 76925b40b5fd..c00a14d825db 100644
-> > --- a/fs/iomap/apply.c
-> > +++ b/fs/iomap/apply.c
-> > @@ -46,10 +46,10 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
-> >       ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
-> >       if (ret)
-> >               return ret;
-> > -     if (WARN_ON(iomap.offset > pos))
-> > -             return -EIO;
-> > -     if (WARN_ON(iomap.length == 0))
-> > -             return -EIO;
-> > +     if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0)) {
->
-> <urk> Forgot to actually review the original patch. :P
->
-> Why combine these WARN_ON?  Before, you could distinguish between your
-> iomap_begin method returning zero length vs. bad offset.
+Make sure iomap_end is always called when iomap_begin succeeds.
 
-Right, the WARN_ONs shouldn't both report the same line number. I'll
-send an update.
+Without this fix, iomap_end won't be called when a filesystem's
+iomap_begin operation returns an invalid mapping, bypassing any
+unlocking done in iomap_end.  With this fix, the unlocking would
+at least still happen.
 
-Thanks,
-Andreas
+This iomap_apply bug was found by Bob Peterson during code review.
+It's unlikely that such iomap_begin bugs will survive to affect
+users, so backporting this fix seems unnecessary.
+
+Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure")
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/iomap/apply.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+index 76925b40b5fd..32daf8cb411c 100644
+--- a/fs/iomap/apply.c
++++ b/fs/iomap/apply.c
+@@ -46,10 +46,11 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
+ 	if (ret)
+ 		return ret;
+-	if (WARN_ON(iomap.offset > pos))
+-		return -EIO;
+-	if (WARN_ON(iomap.length == 0))
+-		return -EIO;
++	if (WARN_ON(iomap.offset > pos) ||
++	    WARN_ON(iomap.length == 0)) {
++		written = -EIO;
++		goto out;
++	}
+ 
+ 	trace_iomap_apply_dstmap(inode, &iomap);
+ 	if (srcmap.type != IOMAP_HOLE)
+@@ -80,6 +81,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	written = actor(inode, pos, length, data, &iomap,
+ 			srcmap.type != IOMAP_HOLE ? &srcmap : &iomap);
+ 
++out:
+ 	/*
+ 	 * Now the data has been copied, commit the range we've copied.  This
+ 	 * should not fail unless the filesystem has had a fatal error.
+
+base-commit: 69119673bd50b176ded34032fadd41530fb5af21
+-- 
+2.26.2
 
