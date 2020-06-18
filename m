@@ -2,95 +2,157 @@ Return-Path: <SRS0=OEwr=77=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE56C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 02:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86560C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 03:06:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00CB820776
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 02:47:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592448449;
-	bh=jplWrG6bk/PzGY0EE3Y+lK5ZNOODKNsKti9Z3BApBr4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=rMel3v4QlexJEPTBR1fOzatPxz7pFalkgy55y5B7Hz946uUJzvJ2O6MGcAsVnmPMi
-	 FP0Ojv8zdei/ojV0TYtyAEfpL4c5ObDtk8kzXuhPyP5eLyp7QwZ7hCWw3IhBZBKsat
-	 k0k19MUtaYgpji+NhzYZ0Sdugm5MPepV/Jwt7osQ=
+	by mail.kernel.org (Postfix) with ESMTP id 6C0642100A
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 03:06:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728493AbgFRCrQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Jun 2020 22:47:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37532 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728481AbgFRBKX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 17 Jun 2020 21:10:23 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5BCEF214DB;
-        Thu, 18 Jun 2020 01:10:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592442623;
-        bh=jplWrG6bk/PzGY0EE3Y+lK5ZNOODKNsKti9Z3BApBr4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nRAYCS3NkeeuzetBi+y7fUdvnJwMWnM7ZMyP5jly6rP5jYGLu/gEQTFIuls+Ts4dN
-         g8JgtKZCwcBPuWWOTSFVe7zoOdYyFn8tvP+eFIzN+77gvqTW8aXQGEwNn9UspgDqxf
-         Nja2SMLAKuA59j4gHcV2l8D2L+XJKDI0gIDocAOk=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chuhong Yuan <hslester96@gmail.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 102/388] xfs: Add the missed xfs_perag_put() for xfs_ifree_cluster()
-Date:   Wed, 17 Jun 2020 21:03:19 -0400
-Message-Id: <20200618010805.600873-102-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
-References: <20200618010805.600873-1-sashal@kernel.org>
+        id S1727011AbgFRDGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Jun 2020 23:06:14 -0400
+Received: from [211.29.132.246] ([211.29.132.246]:57138 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-FAIL-FAIL-OK-OK)
+        by vger.kernel.org with ESMTP id S1726952AbgFRDGN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jun 2020 23:06:13 -0400
+Received: from dread.disaster.area (unknown [49.180.124.177])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B8369821885;
+        Thu, 18 Jun 2020 13:05:47 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jlkrz-0002Nn-SF; Thu, 18 Jun 2020 13:05:39 +1000
+Date:   Thu, 18 Jun 2020 13:05:39 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Masayoshi Mizuma <msys.mizuma@gmail.com>
+Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+Message-ID: <20200618030539.GH2005@dread.disaster.area>
+References: <20200616202123.12656-1-msys.mizuma@gmail.com>
+ <20200617080314.GA7147@infradead.org>
+ <20200617155836.GD13815@fieldses.org>
+ <24692989-2ee0-3dcc-16d8-aa436114f5fb@sandeen.net>
+ <20200617172456.GP11245@magnolia>
+ <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
+ <20200617181816.GA18315@fieldses.org>
+ <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
+ <20200617184507.GB18315@fieldses.org>
+ <20200618013026.ewnhvf64nb62k2yx@gabell>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200618013026.ewnhvf64nb62k2yx@gabell>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8
+        a=yHdZGDY2jtx0MHS2ggIA:9 a=aBMfwiDfj0bUOVTI:21 a=1xHCqXNt3GIuuEAb:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Chuhong Yuan <hslester96@gmail.com>
+On Wed, Jun 17, 2020 at 09:30:26PM -0400, Masayoshi Mizuma wrote:
+> On Wed, Jun 17, 2020 at 02:45:07PM -0400, J. Bruce Fields wrote:
+> > On Wed, Jun 17, 2020 at 01:28:11PM -0500, Eric Sandeen wrote:
+> > > but mount(8) has already exposed this interface:
+> > > 
+> > >        iversion
+> > >               Every time the inode is modified, the i_version field will be incremented.
+> > > 
+> > >        noiversion
+> > >               Do not increment the i_version inode field.
+> > > 
+> > > so now what?
+> > 
+> > It's not like anyone's actually depending on i_version *not* being
+> > incremented.  (Can you even observe it from userspace other than over
+> > NFS?)
+> > 
+> > So, just silently turn on the "iversion" behavior and ignore noiversion,
+> > and I doubt you're going to break any real application.
+> 
+> I suppose it's probably good to remain the options for user compatibility,
+> however, it seems that iversion and noiversiont are useful for
+> only ext4.
+> How about moving iversion and noiversion description on mount(8)
+> to ext4 specific option?
+> 
+> And fixing the remount issue for XFS (maybe btrfs has the same
+> issue as well)?
+> For XFS like as:
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 379cbff438bc..2ddd634cfb0b 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1748,6 +1748,9 @@ xfs_fc_reconfigure(
+>                         return error;
+>         }
+> 
+> +       if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+> +               mp->m_super->s_flags |= SB_I_VERSION;
+> +
+>         return 0;
+>  }
 
-[ Upstream commit 8cc0072469723459dc6bd7beff81b2b3149f4cf4 ]
+no this doesn't work, because the sueprblock flags are modified
+after ->reconfigure is called.
 
-xfs_ifree_cluster() calls xfs_perag_get() at the beginning, but forgets to
-call xfs_perag_put() in one failed path.
-Add the missed function call to fix it.
+i.e. reconfigure_super() does this:
 
-Fixes: ce92464c180b ("xfs: make xfs_trans_get_buf return an error code")
-Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/xfs/xfs_inode.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+	if (fc->ops->reconfigure) {
+		retval = fc->ops->reconfigure(fc);
+		if (retval) {
+			if (!force)
+				goto cancel_readonly;
+			/* If forced remount, go ahead despite any errors */
+			WARN(1, "forced remount of a %s fs returned %i\n",
+			     sb->s_type->name, retval);
+		}
+	}
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index d1772786af29..8845faa8161a 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2639,8 +2639,10 @@ xfs_ifree_cluster(
- 		error = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
- 				mp->m_bsize * igeo->blocks_per_cluster,
- 				XBF_UNMAPPED, &bp);
--		if (error)
-+		if (error) {
-+			xfs_perag_put(pag);
- 			return error;
-+		}
- 
- 		/*
- 		 * This buffer may not have been correctly initialised as we
+	WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
+				 (fc->sb_flags & fc->sb_flags_mask)));
+
+And it's the WRITE_ONCE() line that clears SB_I_VERSION out of
+sb->s_flags. Hence adding it in ->reconfigure doesn't help.
+
+What we actually want to do here in xfs_fc_reconfigure() is this:
+
+	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+		fc->sb_flags_mask |= SB_I_VERSION;
+
+So that the SB_I_VERSION is not cleared from sb->s_flags.
+
+I'll also note that btrfs will need the same fix, because it also
+sets SB_I_VERSION unconditionally, as will any other filesystem that
+does this, too.
+
+Really, this is just indicative of the mess that the mount
+flags vs superblock feature flags are. Filesystems can choose to
+unconditionally support various superblock features, and no mount
+option futzing from userspace should -ever- be able to change that
+feature. Filesystems really do need to be able to override mount
+options that were parsed in userspace and turned into a binary
+flag...
+
+Cheers,
+
+Dave.
 -- 
-2.25.1
-
+Dave Chinner
+david@fromorbit.com
