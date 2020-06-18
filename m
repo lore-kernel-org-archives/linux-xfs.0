@@ -2,147 +2,95 @@ Return-Path: <SRS0=OEwr=77=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A246CC433E4
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 01:44:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE56C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 02:47:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8197622201
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 01:44:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZQ79Lr/n"
+	by mail.kernel.org (Postfix) with ESMTP id 00CB820776
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 02:47:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1592448449;
+	bh=jplWrG6bk/PzGY0EE3Y+lK5ZNOODKNsKti9Z3BApBr4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=rMel3v4QlexJEPTBR1fOzatPxz7pFalkgy55y5B7Hz946uUJzvJ2O6MGcAsVnmPMi
+	 FP0Ojv8zdei/ojV0TYtyAEfpL4c5ObDtk8kzXuhPyP5eLyp7QwZ7hCWw3IhBZBKsat
+	 k0k19MUtaYgpji+NhzYZ0Sdugm5MPepV/Jwt7osQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728459AbgFRBou (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Jun 2020 21:44:50 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:59408 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731882AbgFRBos (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jun 2020 21:44:48 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05I1hKkH045757;
-        Thu, 18 Jun 2020 01:44:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=5X00ZJpGkm2D/zskn/YigNSmctslOOmCYVArBKtpGog=;
- b=ZQ79Lr/nEr0DFZiACUEMndR3onRqUE0mV9ccvdrF562efk6LtE+ATJwwLAgFzzSCBk9U
- De7pxVwAMYc6yW1gL62gsx3qruyjRZRA7PzxJwMBP9cBOabvFdl2gefCy39qK/SNcykI
- 0xJZ1ZaDmwXbmujcpNrcnoY8sEw49s21tfLjSOnJvq1bA4lYU0NiYl2nHfxPPRKsoKXg
- nJi+nvse01mploRKeNCv/XNFeqniB3Zn8BCEmTLRH23A/a2uqXjFbPZ/nNeowVdsYG07
- tySWVAAq1KYffu2fAHb6kP/90iEctV2NVFgPDRlpg7OdmgMFG3oahU/o4PNTlbdlC97y FA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 31qeckw0wc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 18 Jun 2020 01:44:35 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05I1hhr3085176;
-        Thu, 18 Jun 2020 01:44:35 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 31q65yn412-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 18 Jun 2020 01:44:35 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05I1iTNJ013625;
-        Thu, 18 Jun 2020 01:44:29 GMT
-Received: from localhost (/10.159.233.73)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 17 Jun 2020 18:44:29 -0700
-Date:   Wed, 17 Jun 2020 18:44:29 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Masayoshi Mizuma <msys.mizuma@gmail.com>
-Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
-Message-ID: <20200618014429.GS11245@magnolia>
-References: <20200616202123.12656-1-msys.mizuma@gmail.com>
- <20200617080314.GA7147@infradead.org>
- <20200617155836.GD13815@fieldses.org>
- <24692989-2ee0-3dcc-16d8-aa436114f5fb@sandeen.net>
- <20200617172456.GP11245@magnolia>
- <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
- <20200617181816.GA18315@fieldses.org>
- <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
- <20200617184507.GB18315@fieldses.org>
- <20200618013026.ewnhvf64nb62k2yx@gabell>
+        id S1728493AbgFRCrQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Jun 2020 22:47:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37532 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728481AbgFRBKX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 17 Jun 2020 21:10:23 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5BCEF214DB;
+        Thu, 18 Jun 2020 01:10:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1592442623;
+        bh=jplWrG6bk/PzGY0EE3Y+lK5ZNOODKNsKti9Z3BApBr4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=nRAYCS3NkeeuzetBi+y7fUdvnJwMWnM7ZMyP5jly6rP5jYGLu/gEQTFIuls+Ts4dN
+         g8JgtKZCwcBPuWWOTSFVe7zoOdYyFn8tvP+eFIzN+77gvqTW8aXQGEwNn9UspgDqxf
+         Nja2SMLAKuA59j4gHcV2l8D2L+XJKDI0gIDocAOk=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Chuhong Yuan <hslester96@gmail.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.7 102/388] xfs: Add the missed xfs_perag_put() for xfs_ifree_cluster()
+Date:   Wed, 17 Jun 2020 21:03:19 -0400
+Message-Id: <20200618010805.600873-102-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200618010805.600873-1-sashal@kernel.org>
+References: <20200618010805.600873-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200618013026.ewnhvf64nb62k2yx@gabell>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9655 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
- phishscore=0 bulkscore=0 malwarescore=0 mlxscore=0 adultscore=0
- suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006180010
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9655 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 cotscore=-2147483648 malwarescore=0
- clxscore=1015 adultscore=0 suspectscore=1 spamscore=0 lowpriorityscore=0
- mlxlogscore=999 priorityscore=1501 bulkscore=0 phishscore=0 mlxscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006180010
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 17, 2020 at 09:30:26PM -0400, Masayoshi Mizuma wrote:
-> On Wed, Jun 17, 2020 at 02:45:07PM -0400, J. Bruce Fields wrote:
-> > On Wed, Jun 17, 2020 at 01:28:11PM -0500, Eric Sandeen wrote:
-> > > but mount(8) has already exposed this interface:
-> > > 
-> > >        iversion
-> > >               Every time the inode is modified, the i_version field will be incremented.
-> > > 
-> > >        noiversion
-> > >               Do not increment the i_version inode field.
-> > > 
-> > > so now what?
-> > 
-> > It's not like anyone's actually depending on i_version *not* being
-> > incremented.  (Can you even observe it from userspace other than over
-> > NFS?)
-> > 
-> > So, just silently turn on the "iversion" behavior and ignore noiversion,
-> > and I doubt you're going to break any real application.
-> 
-> I suppose it's probably good to remain the options for user compatibility,
-> however, it seems that iversion and noiversiont are useful for
-> only ext4.
-> How about moving iversion and noiversion description on mount(8)
-> to ext4 specific option?
-> 
-> And fixing the remount issue for XFS (maybe btrfs has the same
-> issue as well)?
-> For XFS like as:
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 379cbff438bc..2ddd634cfb0b 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1748,6 +1748,9 @@ xfs_fc_reconfigure(
->                         return error;
->         }
-> 
-> +       if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-> +               mp->m_super->s_flags |= SB_I_VERSION;
-> +
+From: Chuhong Yuan <hslester96@gmail.com>
 
-I wonder, does this have to be done at the top of this function because
-the vfs already removed S_I_VERSION from s_flags?
+[ Upstream commit 8cc0072469723459dc6bd7beff81b2b3149f4cf4 ]
 
---D
+xfs_ifree_cluster() calls xfs_perag_get() at the beginning, but forgets to
+call xfs_perag_put() in one failed path.
+Add the missed function call to fix it.
 
->         return 0;
->  }
-> 
-> Thanks,
-> Masa
+Fixes: ce92464c180b ("xfs: make xfs_trans_get_buf return an error code")
+Signed-off-by: Chuhong Yuan <hslester96@gmail.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/xfs/xfs_inode.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d1772786af29..8845faa8161a 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2639,8 +2639,10 @@ xfs_ifree_cluster(
+ 		error = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
+ 				mp->m_bsize * igeo->blocks_per_cluster,
+ 				XBF_UNMAPPED, &bp);
+-		if (error)
++		if (error) {
++			xfs_perag_put(pag);
+ 			return error;
++		}
+ 
+ 		/*
+ 		 * This buffer may not have been correctly initialised as we
+-- 
+2.25.1
+
