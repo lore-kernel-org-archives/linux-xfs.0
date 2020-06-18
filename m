@@ -2,34 +2,66 @@ Return-Path: <SRS0=OEwr=77=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86560C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 03:06:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9999C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 03:33:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C0642100A
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 03:06:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE6D2208D5
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 03:33:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B5STWmrx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727011AbgFRDGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Jun 2020 23:06:14 -0400
-Received: from [211.29.132.246] ([211.29.132.246]:57138 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-FAIL-FAIL-OK-OK)
-        by vger.kernel.org with ESMTP id S1726952AbgFRDGN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jun 2020 23:06:13 -0400
-Received: from dread.disaster.area (unknown [49.180.124.177])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B8369821885;
-        Thu, 18 Jun 2020 13:05:47 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jlkrz-0002Nn-SF; Thu, 18 Jun 2020 13:05:39 +1000
-Date:   Thu, 18 Jun 2020 13:05:39 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Masayoshi Mizuma <msys.mizuma@gmail.com>
+        id S1726909AbgFRDdi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 17 Jun 2020 23:33:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38994 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726854AbgFRDdi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jun 2020 23:33:38 -0400
+Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B37C2C06174E;
+        Wed, 17 Jun 2020 20:33:36 -0700 (PDT)
+Received: by mail-qk1-x744.google.com with SMTP id g28so4335199qkl.0;
+        Wed, 17 Jun 2020 20:33:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=OoGq+FbHXhkUIYYO0cKkpjXlMzq0R7M8oWnjs3wd6/g=;
+        b=B5STWmrxBQaJU3C0JXJqsqIqNABchqBvHBYWJcJ53FvHzMuMzfpnxUKD2u3BUQwnYs
+         ZgcV7gsP+S51/zgaLJGYFIRQLK9lqV9vD8K/SVxJ9RIYDXPIOUs9sKPguYQzy2vvv6mv
+         4Qt1RexZ+zfC1hFJEdxUPfZdKP0su8EqAc0JEhlIsOcvHkTpriWdfZz9vcpVKCpwTM8F
+         cKmSHuux2Y4LVYW9heh2d6GDKdD8jvasnPGxeIdhFjm5aBIT/Nnyf5x1uVWITx9A67Wm
+         TIRliwVtw7WtpFaSNVd6HTeuNuSYQt6Bnh84QesHmMPnh7Gbjrp9rplcfLRickPYhHIp
+         w8vQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=OoGq+FbHXhkUIYYO0cKkpjXlMzq0R7M8oWnjs3wd6/g=;
+        b=akFAvzoj+6wSK4zBpCHT7gV8LRT9FlPtnCQNTepM5xlX9kpX3bHxwsHZsenUlPOuWT
+         462coWllRUlu0Gbd3yf3o9URjrbb9RS0ln4RsO4IjDpLTs8Fg7fuQ9y+GwNRu9Rfjkvf
+         vdCQc/9OyhPVRlIPdAcNJtxZYI87dr3c/kvKsjEGHTPa5/+mRLNkcDp7RCqtuzvI+Kt8
+         XTYOiDUx6YWPmzo7lTrGd+iUPjIlNQdxCNYdpl8s2uSDZBXMHBebsn6HJsZOfjsltB4Z
+         OTiKBvk7rfzS28EabOUkyExpPZEcLyykb2bxV66N3fQYxcGCm+ujhy9d+CvdTHIvhZQv
+         pPIQ==
+X-Gm-Message-State: AOAM533i3MB6yXQyDNT5b/ArBR+LUQJ9uH6Og9Gt+e962mRr9rRX8Co8
+        ibRf4At/Nv+rWk3pKtfV4w==
+X-Google-Smtp-Source: ABdhPJxP7wNoRACtNB32MUkgM+XF1uBwJq7g9VkCrGQRyKbOkBnQMUNHGX2taLMbOj0zYoce2SdIzw==
+X-Received: by 2002:a37:985:: with SMTP id 127mr1881135qkj.297.1592451216003;
+        Wed, 17 Jun 2020 20:33:36 -0700 (PDT)
+Received: from gabell (209-6-122-159.s2973.c3-0.arl-cbr1.sbo-arl.ma.cable.rcncustomer.com. [209.6.122.159])
+        by smtp.gmail.com with ESMTPSA id z46sm589913qtb.57.2020.06.17.20.33.35
+        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
+        Wed, 17 Jun 2020 20:33:35 -0700 (PDT)
+Date:   Wed, 17 Jun 2020 23:33:33 -0400
+From:   Masayoshi Mizuma <msys.mizuma@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
         Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
         Theodore Ts'o <tytso@mit.edu>,
         Andreas Dilger <adilger.kernel@dilger.ca>,
@@ -38,9 +70,8 @@ Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
         linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-xfs <linux-xfs@vger.kernel.org>
 Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
-Message-ID: <20200618030539.GH2005@dread.disaster.area>
-References: <20200616202123.12656-1-msys.mizuma@gmail.com>
- <20200617080314.GA7147@infradead.org>
+Message-ID: <20200618033333.py7dikfbu6sryzjd@gabell>
+References: <20200617080314.GA7147@infradead.org>
  <20200617155836.GD13815@fieldses.org>
  <24692989-2ee0-3dcc-16d8-aa436114f5fb@sandeen.net>
  <20200617172456.GP11245@magnolia>
@@ -49,110 +80,83 @@ References: <20200616202123.12656-1-msys.mizuma@gmail.com>
  <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
  <20200617184507.GB18315@fieldses.org>
  <20200618013026.ewnhvf64nb62k2yx@gabell>
+ <20200618014429.GS11245@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200618013026.ewnhvf64nb62k2yx@gabell>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8
-        a=yHdZGDY2jtx0MHS2ggIA:9 a=aBMfwiDfj0bUOVTI:21 a=1xHCqXNt3GIuuEAb:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200618014429.GS11245@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 17, 2020 at 09:30:26PM -0400, Masayoshi Mizuma wrote:
-> On Wed, Jun 17, 2020 at 02:45:07PM -0400, J. Bruce Fields wrote:
-> > On Wed, Jun 17, 2020 at 01:28:11PM -0500, Eric Sandeen wrote:
-> > > but mount(8) has already exposed this interface:
+On Wed, Jun 17, 2020 at 06:44:29PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 17, 2020 at 09:30:26PM -0400, Masayoshi Mizuma wrote:
+> > On Wed, Jun 17, 2020 at 02:45:07PM -0400, J. Bruce Fields wrote:
+> > > On Wed, Jun 17, 2020 at 01:28:11PM -0500, Eric Sandeen wrote:
+> > > > but mount(8) has already exposed this interface:
+> > > > 
+> > > >        iversion
+> > > >               Every time the inode is modified, the i_version field will be incremented.
+> > > > 
+> > > >        noiversion
+> > > >               Do not increment the i_version inode field.
+> > > > 
+> > > > so now what?
 > > > 
-> > >        iversion
-> > >               Every time the inode is modified, the i_version field will be incremented.
+> > > It's not like anyone's actually depending on i_version *not* being
+> > > incremented.  (Can you even observe it from userspace other than over
+> > > NFS?)
 > > > 
-> > >        noiversion
-> > >               Do not increment the i_version inode field.
-> > > 
-> > > so now what?
+> > > So, just silently turn on the "iversion" behavior and ignore noiversion,
+> > > and I doubt you're going to break any real application.
 > > 
-> > It's not like anyone's actually depending on i_version *not* being
-> > incremented.  (Can you even observe it from userspace other than over
-> > NFS?)
+> > I suppose it's probably good to remain the options for user compatibility,
+> > however, it seems that iversion and noiversiont are useful for
+> > only ext4.
+> > How about moving iversion and noiversion description on mount(8)
+> > to ext4 specific option?
 > > 
-> > So, just silently turn on the "iversion" behavior and ignore noiversion,
-> > and I doubt you're going to break any real application.
+> > And fixing the remount issue for XFS (maybe btrfs has the same
+> > issue as well)?
+> > For XFS like as:
+> > 
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 379cbff438bc..2ddd634cfb0b 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -1748,6 +1748,9 @@ xfs_fc_reconfigure(
+> >                         return error;
+> >         }
+> > 
+> > +       if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+> > +               mp->m_super->s_flags |= SB_I_VERSION;
+> > +
 > 
-> I suppose it's probably good to remain the options for user compatibility,
-> however, it seems that iversion and noiversiont are useful for
-> only ext4.
-> How about moving iversion and noiversion description on mount(8)
-> to ext4 specific option?
-> 
-> And fixing the remount issue for XFS (maybe btrfs has the same
-> issue as well)?
-> For XFS like as:
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 379cbff438bc..2ddd634cfb0b 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1748,6 +1748,9 @@ xfs_fc_reconfigure(
->                         return error;
->         }
-> 
-> +       if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-> +               mp->m_super->s_flags |= SB_I_VERSION;
-> +
->         return 0;
->  }
+> I wonder, does this have to be done at the top of this function because
+> the vfs already removed S_I_VERSION from s_flags?
 
-no this doesn't work, because the sueprblock flags are modified
-after ->reconfigure is called.
+Ah, I found the above code doesn't work...
+sb->s_flags will be updated after reconfigure():
 
-i.e. reconfigure_super() does this:
+int reconfigure_super(struct fs_context *fc)
+{
+...
+        if (fc->ops->reconfigure) {
+                retval = fc->ops->reconfigure(fc);
+                if (retval) {
+                        if (!force)
+                                goto cancel_readonly;
+                        /* If forced remount, go ahead despite any errors */
+                        WARN(1, "forced remount of a %s fs returned %i\n",
+                             sb->s_type->name, retval);
+                }
+        }
 
-	if (fc->ops->reconfigure) {
-		retval = fc->ops->reconfigure(fc);
-		if (retval) {
-			if (!force)
-				goto cancel_readonly;
-			/* If forced remount, go ahead despite any errors */
-			WARN(1, "forced remount of a %s fs returned %i\n",
-			     sb->s_type->name, retval);
-		}
-	}
+        WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
+                                 (fc->sb_flags & fc->sb_flags_mask)));
 
-	WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
-				 (fc->sb_flags & fc->sb_flags_mask)));
+Here, fc->sb_flags_mask should be MS_RMT_MASK, so SB_I_VERSION will be
+dropped except iversion mount opstion (MS_I_VERSION) is set.
 
-And it's the WRITE_ONCE() line that clears SB_I_VERSION out of
-sb->s_flags. Hence adding it in ->reconfigure doesn't help.
-
-What we actually want to do here in xfs_fc_reconfigure() is this:
-
-	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-		fc->sb_flags_mask |= SB_I_VERSION;
-
-So that the SB_I_VERSION is not cleared from sb->s_flags.
-
-I'll also note that btrfs will need the same fix, because it also
-sets SB_I_VERSION unconditionally, as will any other filesystem that
-does this, too.
-
-Really, this is just indicative of the mess that the mount
-flags vs superblock feature flags are. Filesystems can choose to
-unconditionally support various superblock features, and no mount
-option futzing from userspace should -ever- be able to change that
-feature. Filesystems really do need to be able to override mount
-options that were parsed in userspace and turned into a binary
-flag...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+- Masa
