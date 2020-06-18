@@ -2,206 +2,152 @@ Return-Path: <SRS0=OEwr=77=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E18FFC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 03:45:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D385DC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 11:05:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE1E221707
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 03:45:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B43132085B
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 11:05:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iXr3J1+C"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X8DQwMbc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726971AbgFRDpj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 17 Jun 2020 23:45:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40822 "EHLO
+        id S1727825AbgFRLFa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Jun 2020 07:05:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726853AbgFRDpi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jun 2020 23:45:38 -0400
-Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 717B2C06174E;
-        Wed, 17 Jun 2020 20:45:38 -0700 (PDT)
-Received: by mail-qk1-x744.google.com with SMTP id b4so4277217qkn.11;
-        Wed, 17 Jun 2020 20:45:38 -0700 (PDT)
+        with ESMTP id S1726899AbgFRLF2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 07:05:28 -0400
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31F65C06174E;
+        Thu, 18 Jun 2020 04:05:26 -0700 (PDT)
+Received: by mail-io1-xd43.google.com with SMTP id m81so6563346ioa.1;
+        Thu, 18 Jun 2020 04:05:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=E4WVx3mfVHTIynvqaASmx3kJDP8cMZcWWMKXBtc+T4g=;
-        b=iXr3J1+CE8J2EENEerAJeaGxzwxK53TqDIe0XrX+GpdlGkNUiQEjTO+tR2qF8N4r9Z
-         ESm8iPliifxmoAGXNYkb7s0Y1ib4VGmLy1dLODbx8/4KWRVuEaqy1aTZtEywf84cwFYo
-         ZO07YENnRduzyec5XGCL8FJ5yUI+Kfjp+fP2T5aBHBO1LAVn3dfdYj2iQ8p299xIaRnQ
-         fW7vW53qGzecwsmdruAGIDBK/QR0odkL8riCV78Z/6jacBIBLezg+M58dsm31CtcVSZT
-         BKjXBx9hG1PKRPlppPEBwVqyxkhIO0tv+NJwq0K2E2Mda3H/hnqKLWe1Ijvk355dsIQV
-         HLCQ==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=lvd3pIj+tWBoeTv5FpltPgwLvfskcVybHdrc5kKxO6Y=;
+        b=X8DQwMbcf5Krh9k+oLulHjiUuvnnxP2Z4E13xrA/lO3Tlh/9roxRFYolP0cY9EnFjw
+         WFowAyOz9DvtNu76Pygkksd/D3PGcqVfQAZ5Ujkb0q0tLCEwvXTY2CWUEVQpTw3Dilf8
+         qprA16JC2kUDs29OzvCVVHYbWK1cKgx79/vAyLv4q+Q2G/Wxcm7+8FVc5ff/Tn7oBDj/
+         r1SmyITtQEvbxUlIJMuph7seUNw5TcpX6vFb8q/ZN/u7iGggXgD9uvHoTqJnO2ZIQRUu
+         MhGUu4biC2V+acZsUm/b8LpsypuH9DMpISZCCE+Is3UmD0tEuMNdrd3XZEjOfqCSBdx3
+         yN6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=E4WVx3mfVHTIynvqaASmx3kJDP8cMZcWWMKXBtc+T4g=;
-        b=N5Hzvxo/HrIAzfAmnMlnDsMOiXDjiqTsqrjFP9MwuzYc+K+JsHpUUH/uYJ085B2aMo
-         PsebWzcWotv9lHZfYSI/oLvr1zseuqOfrrKYyDPU/HP+AwImawnLW1qsKCdToAm2KrJU
-         Aixx5fU4fBfQES9/M/gT5MgWGdtZYPQ6HLD1+auSyy1o6VfTd71MHxNoQDOnEKHE1dav
-         ZpPCS6HTbIp1vUJP2SB9u5o/Kn91bcaTsEVfOhByn8BCC/WCVgrBSLOB5+IBYW5254YK
-         p2APpkrZZLzylUSKcao/BMPMrUF/Mr0Rnm7XgO1YBFYlpbMJmAwt5GpePhpfnavzyzdl
-         z3yg==
-X-Gm-Message-State: AOAM532BlsO6DJ3k29LIoq8PHpwJIuvq/WAaqiIhVwXmV7TPepyzOMnc
-        SsAIgXK+MRNVObpV+jxZOg==
-X-Google-Smtp-Source: ABdhPJzmzJcLMNdXiXwFVwuG7zJYOdkJoVtqYvTWSC+lNuvpUirXNk8inAz4bramoCVCKWmaUEjXNA==
-X-Received: by 2002:a37:7645:: with SMTP id r66mr1836780qkc.397.1592451937715;
-        Wed, 17 Jun 2020 20:45:37 -0700 (PDT)
-Received: from gabell (209-6-122-159.s2973.c3-0.arl-cbr1.sbo-arl.ma.cable.rcncustomer.com. [209.6.122.159])
-        by smtp.gmail.com with ESMTPSA id v14sm2012859qtj.31.2020.06.17.20.45.36
-        (version=TLS1_2 cipher=ECDHE-ECDSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 17 Jun 2020 20:45:37 -0700 (PDT)
-Date:   Wed, 17 Jun 2020 23:45:35 -0400
-From:   Masayoshi Mizuma <msys.mizuma@gmail.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
-Message-ID: <20200618034535.h5ho7pd4eilpbj3f@gabell>
-References: <20200617080314.GA7147@infradead.org>
- <20200617155836.GD13815@fieldses.org>
- <24692989-2ee0-3dcc-16d8-aa436114f5fb@sandeen.net>
- <20200617172456.GP11245@magnolia>
- <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
- <20200617181816.GA18315@fieldses.org>
- <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
- <20200617184507.GB18315@fieldses.org>
- <20200618013026.ewnhvf64nb62k2yx@gabell>
- <20200618030539.GH2005@dread.disaster.area>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=lvd3pIj+tWBoeTv5FpltPgwLvfskcVybHdrc5kKxO6Y=;
+        b=lpmDwYrosX+FCaR+1WXV9NKZQRqRuoYzvPbBcyaruzic/bMI7tHaD2wlFdLB1lXRMt
+         j4N/xs9RpmZbDSs66MjPRyWbbZsS06IZJ+8Oeyz0hB944GFnidRhVZWG4RR5ESdUuDSu
+         zdN195vpBtHFcvYUw5OJZtYD1KfYuwLmFR/AqQb+iUarDSFVbFqbxCzr9FI1EUA1A2w5
+         MXPbIevUVIVqwW+SEBJM8sDvYUrl0NPtnP33RcojF6ni1oFyhXIiXVSbIpBiBOxtPGtC
+         KlyEqnIse+r7vrupWXmXnX74k8D6v8OiKMDEsQYh6n0Syb0O4oboqvDRBnDK69Ow5/I2
+         7BkQ==
+X-Gm-Message-State: AOAM530qkDw9Vh8YaJ89VAozXgituDSkUyo/GceTs+z1PN8cD7gD6soI
+        cjpPR8PJuVMfSIswudWfzq7RNjeFWwsXD+wg4HQ=
+X-Google-Smtp-Source: ABdhPJxF7QN7rHiGQq2iqDeLUd0PNzN1JOcG99q/rVp9Wrjhswig4yTInE8Kk+BVnb+KWzAteZUcOup3r2agEL3iCKE=
+X-Received: by 2002:a05:6638:10b:: with SMTP id x11mr3729129jao.109.1592478325264;
+ Thu, 18 Jun 2020 04:05:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200618030539.GH2005@dread.disaster.area>
+References: <1592222181-9832-1-git-send-email-laoar.shao@gmail.com>
+ <20200616081628.GC9499@dhcp22.suse.cz> <CALOAHbDsCB1yZE6m96xiX1KiUWJW-8Hn0eqGcuEipkf9R6_L2A@mail.gmail.com>
+ <20200616092727.GD9499@dhcp22.suse.cz> <CALOAHbD8x3sULHpGe=t58cBU2u1vuqrBRtAB3-+oR7TQNwOxwg@mail.gmail.com>
+ <20200616104806.GE9499@dhcp22.suse.cz> <20200618003427.GZ2040@dread.disaster.area>
+In-Reply-To: <20200618003427.GZ2040@dread.disaster.area>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Thu, 18 Jun 2020 19:04:49 +0800
+Message-ID: <CALOAHbAtmSzyj-r3ghX311+BLmHHT-Bb0WRmzmAFRV6SuvevGw@mail.gmail.com>
+Subject: Re: [PATCH v3] xfs: avoid deadlock when trigger memory reclaim in ->writepages
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Michal Hocko <mhocko@kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Linux MM <linux-mm@kvack.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 01:05:39PM +1000, Dave Chinner wrote:
-> On Wed, Jun 17, 2020 at 09:30:26PM -0400, Masayoshi Mizuma wrote:
-> > On Wed, Jun 17, 2020 at 02:45:07PM -0400, J. Bruce Fields wrote:
-> > > On Wed, Jun 17, 2020 at 01:28:11PM -0500, Eric Sandeen wrote:
-> > > > but mount(8) has already exposed this interface:
-> > > > 
-> > > >        iversion
-> > > >               Every time the inode is modified, the i_version field will be incremented.
-> > > > 
-> > > >        noiversion
-> > > >               Do not increment the i_version inode field.
-> > > > 
-> > > > so now what?
-> > > 
-> > > It's not like anyone's actually depending on i_version *not* being
-> > > incremented.  (Can you even observe it from userspace other than over
-> > > NFS?)
-> > > 
-> > > So, just silently turn on the "iversion" behavior and ignore noiversion,
-> > > and I doubt you're going to break any real application.
-> > 
-> > I suppose it's probably good to remain the options for user compatibility,
-> > however, it seems that iversion and noiversiont are useful for
-> > only ext4.
-> > How about moving iversion and noiversion description on mount(8)
-> > to ext4 specific option?
-> > 
-> > And fixing the remount issue for XFS (maybe btrfs has the same
-> > issue as well)?
-> > For XFS like as:
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 379cbff438bc..2ddd634cfb0b 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1748,6 +1748,9 @@ xfs_fc_reconfigure(
-> >                         return error;
-> >         }
-> > 
-> > +       if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-> > +               mp->m_super->s_flags |= SB_I_VERSION;
-> > +
-> >         return 0;
-> >  }
-> 
-> no this doesn't work, because the sueprblock flags are modified
-> after ->reconfigure is called.
-> 
-> i.e. reconfigure_super() does this:
-> 
-> 	if (fc->ops->reconfigure) {
-> 		retval = fc->ops->reconfigure(fc);
-> 		if (retval) {
-> 			if (!force)
-> 				goto cancel_readonly;
-> 			/* If forced remount, go ahead despite any errors */
-> 			WARN(1, "forced remount of a %s fs returned %i\n",
-> 			     sb->s_type->name, retval);
-> 		}
-> 	}
-> 
-> 	WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
-> 				 (fc->sb_flags & fc->sb_flags_mask)));
-> 
-> And it's the WRITE_ONCE() line that clears SB_I_VERSION out of
-> sb->s_flags. Hence adding it in ->reconfigure doesn't help.
-> 
-> What we actually want to do here in xfs_fc_reconfigure() is this:
-> 
-> 	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-> 		fc->sb_flags_mask |= SB_I_VERSION;
-> 
-> So that the SB_I_VERSION is not cleared from sb->s_flags.
-> 
-> I'll also note that btrfs will need the same fix, because it also
-> sets SB_I_VERSION unconditionally, as will any other filesystem that
-> does this, too.
+On Thu, Jun 18, 2020 at 8:34 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Tue, Jun 16, 2020 at 12:48:06PM +0200, Michal Hocko wrote:
+> > On Tue 16-06-20 17:39:33, Yafang Shao wrote:
+> > > The history is complicated, but it doesn't matter.
+> > > Let's  turn back to the upstream kernel now. As I explained in the commit log,
+> > > xfs_vm_writepages
+> > >   -> iomap_writepages.
+> > >      -> write_cache_pages
+> > >         -> lock_page <<<< This page is locked.
+> > >         -> writepages ( which is  iomap_do_writepage)
+> > >            -> xfs_map_blocks
+> > >               -> xfs_convert_blocks
+> > >                  -> xfs_bmapi_convert_delalloc
+> > >                     -> xfs_trans_alloc
+> > >                          -> kmem_zone_zalloc //It should alloc page
+> > > with GFP_NOFS
+> > >
+> > > If GFP_NOFS isn't set in xfs_trans_alloc(), the kmem_zone_zalloc() may
+> > > trigger the memory reclaim then it may wait on the page locked in
+> > > write_cache_pages() ...
+> >
+> > This cannot happen because the memory reclaim backs off on locked pages.
+>
+> ->writepages can hold a bio with multiple PageWriteback pages
+> already attached to it. Direct GFP_KERNEL page reclaim can wait on
+> them - if that happens the the bio will never be issued and so
+> reclaim will deadlock waiting for the writeback state to clear...
+>
 
-Thank you for pointed it out.
-How about following change? I believe it works both xfs and btrfs...
+Thanks for the explanation.
 
-diff --git a/fs/super.c b/fs/super.c
-index b0a511bef4a0..42fc6334d384 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -973,6 +973,9 @@ int reconfigure_super(struct fs_context *fc)
-                }
-        }
+> > > That means the ->writepages should be set with GFP_NOFS to avoid this
+> > > recursive filesystem reclaim.
+>
+> Indeed. We already have parts of the IO submission path under
+> PF_MEMALLOC_NOFS so we can do transaction allocation, etc. See
+> xfs_prepare_ioend(), which is called from iomap via:
+>
+> iomap_submit_ioend()
+>   ->prepare_ioend()
+>     xfs_prepare_ioend()
+>
+> we can get there from:
+>
+> iomap_writepage()
+>   iomap_do_writepage()
+>     iomap_writepage_map()
+>       iomap_submit_ioend()
+>   iomap_submit_ioend()
+>
+> and:
+>
+> iomap_writepages()
+>   write_cache_pages()
+>     iomap_do_writepage()
+>       iomap_writepage_map()
+>         iomap_submit_ioend()
+>   iomap_submit_ioend()
+>
+> Which says that we really should be putting both iomap_writepage()
+> and iomap_writepages() under PF_MEMALLOC_NOFS context so that
+> filesystem callouts don't have to repeatedly enter and exit
+> PF_MEMALLOC_NOFS context to avoid memory reclaim recursion...
+>
 
-+       if (sb->s_flags & SB_I_VERSION)
-+               fc->sb_flags |= MS_I_VERSION;
-+
-        WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
-                                 (fc->sb_flags & fc->sb_flags_mask)));
-        /* Needs to be ordered wrt mnt_is_readonly() */
+Looks reasonable.
+I will update this patch to put both iomap_writepage() and
+iomap_writepages() under PF_MEMALLOC_NOFS context and try to remove
+the usage of PF_MEMALLOC_NOFS from the filesystem callouts.
 
 
-- Masa
-
-> 
-> Really, this is just indicative of the mess that the mount
-> flags vs superblock feature flags are. Filesystems can choose to
-> unconditionally support various superblock features, and no mount
-> option futzing from userspace should -ever- be able to change that
-> feature. Filesystems really do need to be able to override mount
-> options that were parsed in userspace and turned into a binary
-> flag...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+-- 
+Thanks
+Yafang
