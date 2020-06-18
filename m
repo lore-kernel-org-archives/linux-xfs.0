@@ -2,152 +2,109 @@ Return-Path: <SRS0=OEwr=77=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D385DC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 11:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9162CC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:21:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B43132085B
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 11:05:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FA0620776
+	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 12:21:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X8DQwMbc"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J/DN6BZS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727825AbgFRLFa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Jun 2020 07:05:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51842 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726899AbgFRLF2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 07:05:28 -0400
-Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31F65C06174E;
-        Thu, 18 Jun 2020 04:05:26 -0700 (PDT)
-Received: by mail-io1-xd43.google.com with SMTP id m81so6563346ioa.1;
-        Thu, 18 Jun 2020 04:05:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=lvd3pIj+tWBoeTv5FpltPgwLvfskcVybHdrc5kKxO6Y=;
-        b=X8DQwMbcf5Krh9k+oLulHjiUuvnnxP2Z4E13xrA/lO3Tlh/9roxRFYolP0cY9EnFjw
-         WFowAyOz9DvtNu76Pygkksd/D3PGcqVfQAZ5Ujkb0q0tLCEwvXTY2CWUEVQpTw3Dilf8
-         qprA16JC2kUDs29OzvCVVHYbWK1cKgx79/vAyLv4q+Q2G/Wxcm7+8FVc5ff/Tn7oBDj/
-         r1SmyITtQEvbxUlIJMuph7seUNw5TcpX6vFb8q/ZN/u7iGggXgD9uvHoTqJnO2ZIQRUu
-         MhGUu4biC2V+acZsUm/b8LpsypuH9DMpISZCCE+Is3UmD0tEuMNdrd3XZEjOfqCSBdx3
-         yN6A==
+        id S1727106AbgFRMVl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Jun 2020 08:21:41 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:51693 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726909AbgFRMVj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 08:21:39 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592482898;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=zVIx3Lw3mCtvicq1Con/Tph1Hck+YrpwlfvxN0WeRQA=;
+        b=J/DN6BZSvzdN9abhvs2S0wzX+2nwhdiHBw3NOOzeq/q+d7NwTJ/0K7CJPzhMzxDKMwQw4d
+        FUBbJKTl63NmnclxJ8rWHuJGyO/x5bk5lS/NLc1UzemSYEO5oX/RuYIcYBKe+dd5DGzuC8
+        Vqo2Hiize4hhcDRnLtMEz2AEw8FsxCc=
+Received: from mail-oo1-f69.google.com (mail-oo1-f69.google.com
+ [209.85.161.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-102-3v-_HgQRO_mZSUSI4i8THw-1; Thu, 18 Jun 2020 08:21:36 -0400
+X-MC-Unique: 3v-_HgQRO_mZSUSI4i8THw-1
+Received: by mail-oo1-f69.google.com with SMTP id p15so2587575oov.17
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jun 2020 05:21:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=lvd3pIj+tWBoeTv5FpltPgwLvfskcVybHdrc5kKxO6Y=;
-        b=lpmDwYrosX+FCaR+1WXV9NKZQRqRuoYzvPbBcyaruzic/bMI7tHaD2wlFdLB1lXRMt
-         j4N/xs9RpmZbDSs66MjPRyWbbZsS06IZJ+8Oeyz0hB944GFnidRhVZWG4RR5ESdUuDSu
-         zdN195vpBtHFcvYUw5OJZtYD1KfYuwLmFR/AqQb+iUarDSFVbFqbxCzr9FI1EUA1A2w5
-         MXPbIevUVIVqwW+SEBJM8sDvYUrl0NPtnP33RcojF6ni1oFyhXIiXVSbIpBiBOxtPGtC
-         KlyEqnIse+r7vrupWXmXnX74k8D6v8OiKMDEsQYh6n0Syb0O4oboqvDRBnDK69Ow5/I2
-         7BkQ==
-X-Gm-Message-State: AOAM530qkDw9Vh8YaJ89VAozXgituDSkUyo/GceTs+z1PN8cD7gD6soI
-        cjpPR8PJuVMfSIswudWfzq7RNjeFWwsXD+wg4HQ=
-X-Google-Smtp-Source: ABdhPJxF7QN7rHiGQq2iqDeLUd0PNzN1JOcG99q/rVp9Wrjhswig4yTInE8Kk+BVnb+KWzAteZUcOup3r2agEL3iCKE=
-X-Received: by 2002:a05:6638:10b:: with SMTP id x11mr3729129jao.109.1592478325264;
- Thu, 18 Jun 2020 04:05:25 -0700 (PDT)
+        bh=zVIx3Lw3mCtvicq1Con/Tph1Hck+YrpwlfvxN0WeRQA=;
+        b=nbFHv0e5htPc4z0Y8L3BdStPK0cM6kSGuFHxwDGurP+PEdnxW5wBbLn9g/Dwv557t0
+         SkR3sGmV3JUOzBddt1tkWIX+3wIOIy1K76ozpEz89T6bzeIUl+Kr2/NYr0HRFUU8LpR0
+         AR/i5hdFaK+tuN70MtWMlBwryTMe7JBRo95xAJJ9jf3zedJJB1V1hCE/J0V4DGXnRCjc
+         +ICTVwerm9bSVOdv6HuVO6MmYGL02fnlOgzYRZs2DcrFoKmF/CiFyVnVaONvdfwHlfgR
+         v5/7TeYeT8G+vYhUv+X3fZjFQ4EHJ9AqgcMNtD4uBiYRCtv1N326Fae1fIgfkM2Ai8qi
+         rfuQ==
+X-Gm-Message-State: AOAM533aT9b8G9HORyjZ6DpQ1q3yh9W2InxoKPrDgcQu1/TdWUSOKmII
+        7bAXsdDkCjR0T/Y+N+3qvPNCL+DXHiBOfGfmXohOvAswM/TTBE4OyNfa3j9SQp4tRMDmVS3rEaO
+        hXLu30Bip/4A0a1dAAHmc5Rv+rMsNPQ0hqE4G
+X-Received: by 2002:a4a:e049:: with SMTP id v9mr3772924oos.22.1592482895726;
+        Thu, 18 Jun 2020 05:21:35 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx8Vz5RoMaRMnhgrKw5BwObY2thiM8ANkKOLKrEUi3X7FXXUq1RapjKFAWIzm+QaaDyB5zq65OkmBNh89rmsAU=
+X-Received: by 2002:a4a:e049:: with SMTP id v9mr3772904oos.22.1592482895397;
+ Thu, 18 Jun 2020 05:21:35 -0700 (PDT)
 MIME-Version: 1.0
-References: <1592222181-9832-1-git-send-email-laoar.shao@gmail.com>
- <20200616081628.GC9499@dhcp22.suse.cz> <CALOAHbDsCB1yZE6m96xiX1KiUWJW-8Hn0eqGcuEipkf9R6_L2A@mail.gmail.com>
- <20200616092727.GD9499@dhcp22.suse.cz> <CALOAHbD8x3sULHpGe=t58cBU2u1vuqrBRtAB3-+oR7TQNwOxwg@mail.gmail.com>
- <20200616104806.GE9499@dhcp22.suse.cz> <20200618003427.GZ2040@dread.disaster.area>
-In-Reply-To: <20200618003427.GZ2040@dread.disaster.area>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Thu, 18 Jun 2020 19:04:49 +0800
-Message-ID: <CALOAHbAtmSzyj-r3ghX311+BLmHHT-Bb0WRmzmAFRV6SuvevGw@mail.gmail.com>
-Subject: Re: [PATCH v3] xfs: avoid deadlock when trigger memory reclaim in ->writepages
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Michal Hocko <mhocko@kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux MM <linux-mm@kvack.org>
+References: <20200615160244.741244-1-agruenba@redhat.com> <20200618013901.GR11245@magnolia>
+In-Reply-To: <20200618013901.GR11245@magnolia>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Thu, 18 Jun 2020 14:21:23 +0200
+Message-ID: <CAHc6FU714HhtJdbfZXL26fxQ1_AV7rpsOVbhx8sLrdqwOUJBzg@mail.gmail.com>
+Subject: Re: [PATCH] iomap: Make sure iomap_end is called after iomap_begin
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Bob Peterson <rpeterso@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 8:34 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Tue, Jun 16, 2020 at 12:48:06PM +0200, Michal Hocko wrote:
-> > On Tue 16-06-20 17:39:33, Yafang Shao wrote:
-> > > The history is complicated, but it doesn't matter.
-> > > Let's  turn back to the upstream kernel now. As I explained in the commit log,
-> > > xfs_vm_writepages
-> > >   -> iomap_writepages.
-> > >      -> write_cache_pages
-> > >         -> lock_page <<<< This page is locked.
-> > >         -> writepages ( which is  iomap_do_writepage)
-> > >            -> xfs_map_blocks
-> > >               -> xfs_convert_blocks
-> > >                  -> xfs_bmapi_convert_delalloc
-> > >                     -> xfs_trans_alloc
-> > >                          -> kmem_zone_zalloc //It should alloc page
-> > > with GFP_NOFS
-> > >
-> > > If GFP_NOFS isn't set in xfs_trans_alloc(), the kmem_zone_zalloc() may
-> > > trigger the memory reclaim then it may wait on the page locked in
-> > > write_cache_pages() ...
+On Thu, Jun 18, 2020 at 3:39 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Mon, Jun 15, 2020 at 06:02:44PM +0200, Andreas Gruenbacher wrote:
+> > Make sure iomap_end is always called when iomap_begin succeeds: the
+> > filesystem may take locks in iomap_begin and release them in iomap_end,
+> > for example.
 > >
-> > This cannot happen because the memory reclaim backs off on locked pages.
+> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> > ---
+> >  fs/iomap/apply.c | 9 +++++----
+> >  1 file changed, 5 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+> > index 76925b40b5fd..c00a14d825db 100644
+> > --- a/fs/iomap/apply.c
+> > +++ b/fs/iomap/apply.c
+> > @@ -46,10 +46,10 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+> >       ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
+> >       if (ret)
+> >               return ret;
+> > -     if (WARN_ON(iomap.offset > pos))
+> > -             return -EIO;
+> > -     if (WARN_ON(iomap.length == 0))
+> > -             return -EIO;
+> > +     if (WARN_ON(iomap.offset > pos) || WARN_ON(iomap.length == 0)) {
 >
-> ->writepages can hold a bio with multiple PageWriteback pages
-> already attached to it. Direct GFP_KERNEL page reclaim can wait on
-> them - if that happens the the bio will never be issued and so
-> reclaim will deadlock waiting for the writeback state to clear...
+> <urk> Forgot to actually review the original patch. :P
 >
+> Why combine these WARN_ON?  Before, you could distinguish between your
+> iomap_begin method returning zero length vs. bad offset.
 
-Thanks for the explanation.
+Right, the WARN_ONs shouldn't both report the same line number. I'll
+send an update.
 
-> > > That means the ->writepages should be set with GFP_NOFS to avoid this
-> > > recursive filesystem reclaim.
->
-> Indeed. We already have parts of the IO submission path under
-> PF_MEMALLOC_NOFS so we can do transaction allocation, etc. See
-> xfs_prepare_ioend(), which is called from iomap via:
->
-> iomap_submit_ioend()
->   ->prepare_ioend()
->     xfs_prepare_ioend()
->
-> we can get there from:
->
-> iomap_writepage()
->   iomap_do_writepage()
->     iomap_writepage_map()
->       iomap_submit_ioend()
->   iomap_submit_ioend()
->
-> and:
->
-> iomap_writepages()
->   write_cache_pages()
->     iomap_do_writepage()
->       iomap_writepage_map()
->         iomap_submit_ioend()
->   iomap_submit_ioend()
->
-> Which says that we really should be putting both iomap_writepage()
-> and iomap_writepages() under PF_MEMALLOC_NOFS context so that
-> filesystem callouts don't have to repeatedly enter and exit
-> PF_MEMALLOC_NOFS context to avoid memory reclaim recursion...
->
+Thanks,
+Andreas
 
-Looks reasonable.
-I will update this patch to put both iomap_writepage() and
-iomap_writepages() under PF_MEMALLOC_NOFS context and try to remove
-the usage of PF_MEMALLOC_NOFS from the filesystem callouts.
-
-
--- 
-Thanks
-Yafang
