@@ -2,166 +2,110 @@ Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D959CC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 17:03:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 505C7C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 20:40:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE07920707
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 17:03:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B02120CC7
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 20:40:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=fieldses.org header.i=@fieldses.org header.b="BPPgIJGr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391373AbgFSRDj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jun 2020 13:03:39 -0400
-Received: from sandeen.net ([63.231.237.45]:51022 "EHLO sandeen.net"
+        id S2390711AbgFSUkf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 16:40:35 -0400
+Received: from fieldses.org ([173.255.197.46]:44106 "EHLO fieldses.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733192AbgFSRDi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 Jun 2020 13:03:38 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 2893211643;
-        Fri, 19 Jun 2020 12:03:12 -0500 (CDT)
-Subject: Re: Bug#953537: xfsdump fails to install in /usr merged system.
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        peter green <plugwash@p10link.net>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
- <20200619044734.GB11245@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <ea662f0b-7e73-0bbe-33aa-963389b9e215@sandeen.net>
-Date:   Fri, 19 Jun 2020 12:03:35 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.9.0
+        id S2390600AbgFSUke (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 Jun 2020 16:40:34 -0400
+Received: by fieldses.org (Postfix, from userid 2815)
+        id E69319240; Fri, 19 Jun 2020 16:40:33 -0400 (EDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org E69319240
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
+        s=default; t=1592599233;
+        bh=Nwr2TjWR0twmyJl4g+UHE0HD65IQmQxNQBQDjG7MlL4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=BPPgIJGrSMzEicjrkX4pBRymXvBe6MpVKIEAB1esLdlGr3BBvEWp1y/aSguGD7R/g
+         Kz2J1O0yxRcYsQiQL6J0nIbYiM79juBpk4yV+FyHfvnk4yoUPdy2+olfelnoz3pWCl
+         4ilaucsIZStRcjFQ/vPmuMILvKZ0MlxEkgcUvy2U=
+Date:   Fri, 19 Jun 2020 16:40:33 -0400
+From:   "J. Bruce Fields" <bfields@fieldses.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+Message-ID: <20200619204033.GB1564@fieldses.org>
+References: <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
+ <20200617181816.GA18315@fieldses.org>
+ <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
+ <20200617184507.GB18315@fieldses.org>
+ <20200618013026.ewnhvf64nb62k2yx@gabell>
+ <20200618030539.GH2005@dread.disaster.area>
+ <20200618034535.h5ho7pd4eilpbj3f@gabell>
+ <20200618223948.GI2005@dread.disaster.area>
+ <20200619022005.GA25414@fieldses.org>
+ <20200619024455.GN2005@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20200619044734.GB11245@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200619024455.GN2005@dread.disaster.area>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/18/20 11:47 PM, Darrick J. Wong wrote:
-> On Fri, Jun 19, 2020 at 05:05:00AM +0100, peter green wrote:
->> (original message was sent to nathans@redhat.com
->> 953537@bugs.debian.org and linux-xfs@vger.kernel.org re-sending as
->> plain-text only to linux-xfs@vger.kernel.org)
->>
->> This bug has now caused xfsdump to be kicked out of testing which is
->> making amanda unbuildable in testing.
+On Fri, Jun 19, 2020 at 12:44:55PM +1000, Dave Chinner wrote:
+> On Thu, Jun 18, 2020 at 10:20:05PM -0400, J. Bruce Fields wrote:
+> > My memory was that after Jeff Layton's i_version patches, there wasn't
+> > really a significant performance hit any more, so the ability to turn it
+> > off is no longer useful.
 > 
-> Uhoh...
+> Yes, I completely agree with you here. However, with some
+> filesystems allowing it to be turned off, we can't just wave our
+> hands and force enable the option. Those filesystems - if the
+> maintainers chose to always enable iversion - will have to go
+> through a mount option deprecation period before permanently
+> enabling it.
+
+I don't understand why.
+
+The filesystem can continue to let people set iversion or noiversion as
+they like, while under the covers behaving as if iversion is always set.
+I can't see how that would break any application.  (Or even how an
+application would be able to detect that the filesystem was doing this.)
+
+--b.
+
 > 
->>
->>
->>> Yes, what's really needed here is for a change to be merged upstream
->>> (as all other deb packaging artifacts are) otherwise this will keep
->>> getting lost in time.
->> To make it easier to upstream this I whipped up a patch that should
->> solve the issue while only modifying the debian packaging and not
->> touching the upstream makefiles. It is attached to this message and if
->> I get no response I will likely do some further testing and then NMU
->> it in Debian.
->>
->> One issue I noticed is it's not all all obvious who upstream is. The
->> sgi website listed in README seems to be long dead and there are no
->> obvious upstream results in a google search for xfsdump. Gentoos page
->> on xfsdump links to https://xfs.wiki.kernel.org but that page makes no
->> mention of xfsdump.
->>
->> I eventually poked around on git.kernel.org and my best guess is that
->> https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git/ is the upstream
->> git repository and linux-xfs@vger.kernel.org is the appropriate
->> mailing list, I would appreciate comments on whether or not this is
->> correct and updates to the documentation to reflect whatever the
->> correct location is.
+> > But looking back through Jeff's postings, I don't see him claiming that;
+> > e.g. in:
+> > 
+> > 	https://lore.kernel.org/lkml/20171222120556.7435-1-jlayton@kernel.org/
+> > 	https://lore.kernel.org/linux-nfs/20180109141059.25929-1-jlayton@kernel.org/
+> > 	https://lore.kernel.org/linux-nfs/1517228795.5965.24.camel@redhat.com/
+> > 
+> > he reports comparing old iversion behavior to new iversion behavior, but
+> > not new iversion behavior to new noiversion behavior.
 > 
-> Yep, you've found us. :)
+> Yeah, it's had to compare noiversion behaviour on filesystems where
+> it was understood that it couldn't actually be turned off. And,
+> realistically, the comaprison to noiversion wasn't really relevant
+> to the problem Jeff's patchset was addressing...
 > 
-> Uh... seeing how /sbin seems to be a symlink to /usr/sbin on more and
-> more distros now, how about we just change the upstream makefile to dump
-> them in /usr/sbin and forget all about the symlinks?
+> Cheers,
 > 
-> (He says, wondering what the actual maintainer will say...)
-
-I wonder too :P
-
-So, FWIW, fedora/rhel packaging also hacks this up :(
-
-xfsdump does:
-
-%install
-rm -rf $RPM_BUILD_ROOT
-make DIST_ROOT=$RPM_BUILD_ROOT install
-# remove non-versioned docs location
-rm -rf $RPM_BUILD_ROOT/%{_datadir}/doc/xfsdump/
-
-# Bit of a hack to move files from /sbin to /usr/sbin
-(cd $RPM_BUILD_ROOT/%{_sbindir}; rm xfsdump xfsrestore)
-(cd $RPM_BUILD_ROOT/%{_sbindir}; mv ../../sbin/xfsdump .)
-(cd $RPM_BUILD_ROOT/%{_sbindir}; mv ../../sbin/xfsrestore .)
-
-xfsprogs does:
-
-%install
-make DIST_ROOT=$RPM_BUILD_ROOT install install-dev \
-        PKG_ROOT_SBIN_DIR=%{_sbindir} PKG_ROOT_LIB_DIR=%{_libdir}
-
-Both of these work around the default location of /sbin:
-
-# grep PKG_ROOT_SBIN_DIR xfsprogs-maint/include/builddefs xfsdump/include/builddefs
-xfsprogs-maint/include/builddefs:PKG_ROOT_SBIN_DIR = /sbin
-xfsdump/include/builddefs:PKG_ROOT_SBIN_DIR = /sbin
-
-On one hand, it'd be easy enough to change the upstream defaults I guess.
-On the other hand, I think the PKG_ROOT_SBIN_DIR method is easy too.
-
-How does debian fix this for xfsprogs?  Doesn't the same issue exist?
-
--Eric
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
