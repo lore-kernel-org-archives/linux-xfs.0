@@ -2,337 +2,196 @@ Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36D15C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 11:12:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87540C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 11:56:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E4462080C
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 11:12:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67C5620CC7
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 11:56:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KupfXalQ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YmQH+Tq3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732421AbgFSLMA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jun 2020 07:12:00 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:41818 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1732579AbgFSLLQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 07:11:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592565027;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+b52EmLzFbFtvMGenDZzcpyng7astSGRx8nMCdwT+mY=;
-        b=KupfXalQs1cU+aC9Wd+/XuVB0nu32aR8LcsB/ViTdrSsunpyicEdWvLxGD7Bvl3M0nr9v/
-        iYnpxif5LGlbfw6uFZWXPEdGk5Y6jylV495ZXCVEUKUnMYGWiAC8WVmbw6Yd3Ypy1wh4MW
-        X12brPuOCytEodOl9fYvnaifba33sdY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-483-05znPT8FMhKSJFSeXl4-Xw-1; Fri, 19 Jun 2020 07:10:25 -0400
-X-MC-Unique: 05znPT8FMhKSJFSeXl4-Xw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E8B79800053;
-        Fri, 19 Jun 2020 11:10:23 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 589207166A;
-        Fri, 19 Jun 2020 11:10:23 +0000 (UTC)
-Date:   Fri, 19 Jun 2020 07:10:21 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/12] xfs_repair: remove old btree rebuild support code
-Message-ID: <20200619111021.GA36770@bfoster>
-References: <159107201290.315004.4447998785149331259.stgit@magnolia>
- <159107208399.315004.5025037583246701950.stgit@magnolia>
+        id S1732343AbgFSL4D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 07:56:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55424 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732225AbgFSL4B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 07:56:01 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97E19C06174E;
+        Fri, 19 Jun 2020 04:56:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=qkiSuMBHq1jJPg79H69BLQzOTNgh3NSXy1sjSUD7sso=; b=YmQH+Tq34JCOA4Fpp+Ct6KEZnt
+        8L0h3XQhFTfcl+EZx9PD/QmFfjIZnpy4HoPgNnfBqHv64Iq5KfuRrtvHpLcfBtAlvvzZLZIa6wd8f
+        WBdUMayWL2szYgJzuQAOr0qIZuM5ocftxFPIzNGVjJSWVMSlvpoZeOYI4S4AGQO8Nb0yis8YPFDTs
+        gFrJkRAnXtTDuea5wOUzzuns5noEUpSfRbZfvMS0JhmrqudLco3NaWgMJzebBPpoOvVOvwgRaFW3F
+        NclEHximP3q4U57rebPA25c4PcGKBj5TM+IBkvwcGuWphYM+ITP6Po2I7wixaC/wuvOd6BghDK1It
+        5dgYN/wg==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jmFcc-0002c8-O0; Fri, 19 Jun 2020 11:55:50 +0000
+Date:   Fri, 19 Jun 2020 04:55:50 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Junxiao Bi <junxiao.bi@oracle.com>,
+        William Kucharski <william.kucharski@oracle.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-mm@kvack.org, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, Christoph Hellwig <hch@lst.de>,
+        linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] gfs2: Rework read and page fault locking
+Message-ID: <20200619115550.GY8681@bombadil.infradead.org>
+References: <20200619093916.1081129-1-agruenba@redhat.com>
+ <20200619093916.1081129-3-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <159107208399.315004.5025037583246701950.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <20200619093916.1081129-3-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 01, 2020 at 09:28:04PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> This code isn't needed anymore, so get rid of it.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  repair/phase5.c |  242 -------------------------------------------------------
->  1 file changed, 242 deletions(-)
-> 
-> 
-> diff --git a/repair/phase5.c b/repair/phase5.c
-> index ad009416..439c1065 100644
-> --- a/repair/phase5.c
-> +++ b/repair/phase5.c
-> @@ -21,52 +21,6 @@
->  #include "bulkload.h"
->  #include "agbtree.h"
+On Fri, Jun 19, 2020 at 11:39:16AM +0200, Andreas Gruenbacher wrote:
+>  static int gfs2_readpage(struct file *file, struct page *page)
+>  {
+> -	struct address_space *mapping = page->mapping;
+> -	struct gfs2_inode *ip = GFS2_I(mapping->host);
+> -	struct gfs2_holder gh;
+>  	int error;
 >  
-> -/*
-> - * we maintain the current slice (path from root to leaf)
-> - * of the btree incore.  when we need a new block, we ask
-> - * the block allocator for the address of a block on that
-> - * level, map the block in, and set up the appropriate
-> - * pointers (child, silbing, etc.) and keys that should
-> - * point to the new block.
-> - */
-> -typedef struct bt_stat_level  {
-> -	/*
-> -	 * set in setup_cursor routine and maintained in the tree-building
-> -	 * routines
-> -	 */
-> -	xfs_buf_t		*buf_p;		/* 2 buffer pointers to ... */
-> -	xfs_buf_t		*prev_buf_p;
-> -	xfs_agblock_t		agbno;		/* current block being filled */
-> -	xfs_agblock_t		prev_agbno;	/* previous block */
-> -	/*
-> -	 * set in calculate/init cursor routines for each btree level
-> -	 */
-> -	int			num_recs_tot;	/* # tree recs in level */
-> -	int			num_blocks;	/* # tree blocks in level */
-> -	int			num_recs_pb;	/* num_recs_tot / num_blocks */
-> -	int			modulo;		/* num_recs_tot % num_blocks */
-> -} bt_stat_level_t;
-> -
-> -typedef struct bt_status  {
-> -	int			init;		/* cursor set up once? */
-> -	int			num_levels;	/* # of levels in btree */
-> -	xfs_extlen_t		num_tot_blocks;	/* # blocks alloc'ed for tree */
-> -	xfs_extlen_t		num_free_blocks;/* # blocks currently unused */
-> -
-> -	xfs_agblock_t		root;		/* root block */
-> -	/*
-> -	 * list of blocks to be used to set up this tree
-> -	 * and pointer to the first unused block on the list
-> -	 */
-> -	xfs_agblock_t		*btree_blocks;		/* block list */
-> -	xfs_agblock_t		*free_btree_blocks;	/* first unused block */
-> -	/*
-> -	 * per-level status info
-> -	 */
-> -	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
-> -	uint64_t		owner;		/* owner */
-> -} bt_status_t;
-> -
->  static uint64_t	*sb_icount_ag;		/* allocated inodes per ag */
->  static uint64_t	*sb_ifree_ag;		/* free inodes per ag */
->  static uint64_t	*sb_fdblocks_ag;	/* free data blocks per ag */
-> @@ -164,202 +118,6 @@ mk_incore_fstree(
->  	return(num_extents);
+> -	unlock_page(page);
+> -	gfs2_holder_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
+> -	error = gfs2_glock_nq(&gh);
+> -	if (unlikely(error))
+> -		goto out;
+> -	error = AOP_TRUNCATED_PAGE;
+> -	lock_page(page);
+> -	if (page->mapping == mapping && !PageUptodate(page))
+> -		error = __gfs2_readpage(file, page);
+> -	else
+> -		unlock_page(page);
+> -	gfs2_glock_dq(&gh);
+> -out:
+> -	gfs2_holder_uninit(&gh);
+> -	if (error && error != AOP_TRUNCATED_PAGE)
+> +	error = __gfs2_readpage(file, page);
+> +	if (error)
+>  		lock_page(page);
+>  	return error;
+
+I don't think this is right.  If you return an error from ->readpage, I'm
+pretty sure you're supposed to unlock that page.  Looking at
+generic_file_buffered_read():
+
+                error = mapping->a_ops->readpage(filp, page);
+                if (unlikely(error)) {
+                        if (error == AOP_TRUNCATED_PAGE) {
+                                put_page(page);
+                                error = 0;
+                                goto find_page;
+                        }
+                        goto readpage_error;
+                }
+...
+readpage_error:
+                put_page(page);
+                goto out;
+...
+out:
+        ra->prev_pos = prev_index;
+        ra->prev_pos <<= PAGE_SHIFT;
+        ra->prev_pos |= prev_offset;
+
+        *ppos = ((loff_t)index << PAGE_SHIFT) + offset;
+        file_accessed(filp);
+        return written ? written : error;
+
+so we don't call unlock_page() in generic code, which means the next time
+we try to get this page, we'll do ...
+
+                page = find_get_page(mapping, index);
+...
+                if (!PageUptodate(page)) {
+                        error = wait_on_page_locked_killable(page);
+and presumably we'll wait forever because nobody is going to unlock this
+page?
+
+> @@ -598,16 +582,9 @@ static void gfs2_readahead(struct readahead_control *rac)
+>  {
+>  	struct inode *inode = rac->mapping->host;
+>  	struct gfs2_inode *ip = GFS2_I(inode);
+> -	struct gfs2_holder gh;
+>  
+> -	gfs2_holder_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
+> -	if (gfs2_glock_nq(&gh))
+> -		goto out_uninit;
+>  	if (!gfs2_is_stuffed(ip))
+>  		mpage_readahead(rac, gfs2_block_map);
+> -	gfs2_glock_dq(&gh);
+> -out_uninit:
+> -	gfs2_holder_uninit(&gh);
 >  }
+
+Not for this patch, obviously, but why do you go to the effort of using
+iomap_readpage() to implement gfs2_readpage(), but don't use iomap for
+gfs2_readahead()?  Far more pages are brought in through ->readahead
+than are brought in through ->readpage.
+
+>  static ssize_t gfs2_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+>  {
+> +	struct gfs2_inode *ip;
+> +	struct gfs2_holder gh;
+> +	size_t written = 0;
+>  	ssize_t ret;
 >  
-> -static xfs_agblock_t
-> -get_next_blockaddr(xfs_agnumber_t agno, int level, bt_status_t *curs)
-> -{
-> -	ASSERT(curs->free_btree_blocks < curs->btree_blocks +
-> -						curs->num_tot_blocks);
-> -	ASSERT(curs->num_free_blocks > 0);
-> -
-> -	curs->num_free_blocks--;
-> -	return(*curs->free_btree_blocks++);
-> -}
-> -
-> -/*
-> - * set up the dynamically allocated block allocation data in the btree
-> - * cursor that depends on the info in the static portion of the cursor.
-> - * allocates space from the incore bno/bcnt extent trees and sets up
-> - * the first path up the left side of the tree.  Also sets up the
-> - * cursor pointer to the btree root.   called by init_freespace_cursor()
-> - * and init_ino_cursor()
-> - */
-> -static void
-> -setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
-> -{
-> -	int			j;
-> -	unsigned int		u;
-> -	xfs_extlen_t		big_extent_len;
-> -	xfs_agblock_t		big_extent_start;
-> -	extent_tree_node_t	*ext_ptr;
-> -	extent_tree_node_t	*bno_ext_ptr;
-> -	xfs_extlen_t		blocks_allocated;
-> -	xfs_agblock_t		*agb_ptr;
-> -	int			error;
-> -
-> -	/*
-> -	 * get the number of blocks we need to allocate, then
-> -	 * set up block number array, set the free block pointer
-> -	 * to the first block in the array, and null the array
-> -	 */
-> -	big_extent_len = curs->num_tot_blocks;
-> -	blocks_allocated = 0;
-> -
-> -	ASSERT(big_extent_len > 0);
-> -
-> -	if ((curs->btree_blocks = malloc(sizeof(xfs_agblock_t)
-> -					* big_extent_len)) == NULL)
-> -		do_error(_("could not set up btree block array\n"));
-> -
-> -	agb_ptr = curs->free_btree_blocks = curs->btree_blocks;
-> -
-> -	for (j = 0; j < curs->num_free_blocks; j++, agb_ptr++)
-> -		*agb_ptr = NULLAGBLOCK;
-> -
-> -	/*
-> -	 * grab the smallest extent and use it up, then get the
-> -	 * next smallest.  This mimics the init_*_cursor code.
-> -	 */
-> -	ext_ptr =  findfirst_bcnt_extent(agno);
-> -
-> -	agb_ptr = curs->btree_blocks;
-> -
-> -	/*
-> -	 * set up the free block array
-> -	 */
-> -	while (blocks_allocated < big_extent_len)  {
-> -		if (!ext_ptr)
-> -			do_error(
-> -_("error - not enough free space in filesystem\n"));
-> -		/*
-> -		 * use up the extent we've got
-> -		 */
-> -		for (u = 0; u < ext_ptr->ex_blockcount &&
-> -				blocks_allocated < big_extent_len; u++)  {
-> -			ASSERT(agb_ptr < curs->btree_blocks
-> -					+ curs->num_tot_blocks);
-> -			*agb_ptr++ = ext_ptr->ex_startblock + u;
-> -			blocks_allocated++;
-> -		}
-> -
-> -		error = rmap_add_ag_rec(mp, agno, ext_ptr->ex_startblock, u,
-> -				curs->owner);
-> -		if (error)
-> -			do_error(_("could not set up btree rmaps: %s\n"),
-> -				strerror(-error));
-> -
-> -		/*
-> -		 * if we only used part of this last extent, then we
-> -		 * need only to reset the extent in the extent
-> -		 * trees and we're done
-> -		 */
-> -		if (u < ext_ptr->ex_blockcount)  {
-> -			big_extent_start = ext_ptr->ex_startblock + u;
-> -			big_extent_len = ext_ptr->ex_blockcount - u;
-> -
-> -			ASSERT(big_extent_len > 0);
-> -
-> -			bno_ext_ptr = find_bno_extent(agno,
-> -						ext_ptr->ex_startblock);
-> -			ASSERT(bno_ext_ptr != NULL);
-> -			get_bno_extent(agno, bno_ext_ptr);
-> -			release_extent_tree_node(bno_ext_ptr);
-> -
-> -			ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
-> -					ext_ptr->ex_blockcount);
-> -			release_extent_tree_node(ext_ptr);
-> -#ifdef XR_BLD_FREE_TRACE
-> -			fprintf(stderr, "releasing extent: %u [%u %u]\n",
-> -				agno, ext_ptr->ex_startblock,
-> -				ext_ptr->ex_blockcount);
-> -			fprintf(stderr, "blocks_allocated = %d\n",
-> -				blocks_allocated);
-> -#endif
-> -
-> -			add_bno_extent(agno, big_extent_start, big_extent_len);
-> -			add_bcnt_extent(agno, big_extent_start, big_extent_len);
-> -
-> -			return;
-> -		}
-> -		/*
-> -		 * delete the used-up extent from both extent trees and
-> -		 * find next biggest extent
-> -		 */
-> -#ifdef XR_BLD_FREE_TRACE
-> -		fprintf(stderr, "releasing extent: %u [%u %u]\n",
-> -			agno, ext_ptr->ex_startblock, ext_ptr->ex_blockcount);
-> -#endif
-> -		bno_ext_ptr = find_bno_extent(agno, ext_ptr->ex_startblock);
-> -		ASSERT(bno_ext_ptr != NULL);
-> -		get_bno_extent(agno, bno_ext_ptr);
-> -		release_extent_tree_node(bno_ext_ptr);
-> -
-> -		ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
-> -				ext_ptr->ex_blockcount);
-> -		ASSERT(ext_ptr != NULL);
-> -		release_extent_tree_node(ext_ptr);
-> -
-> -		ext_ptr = findfirst_bcnt_extent(agno);
-> -	}
-> -#ifdef XR_BLD_FREE_TRACE
-> -	fprintf(stderr, "blocks_allocated = %d\n",
-> -		blocks_allocated);
-> -#endif
-> -}
-> -
-> -static void
-> -write_cursor(bt_status_t *curs)
-> -{
-> -	int i;
-> -
-> -	for (i = 0; i < curs->num_levels; i++)  {
-> -#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
-> -		fprintf(stderr, "writing bt block %u\n", curs->level[i].agbno);
-> -#endif
-> -		if (curs->level[i].prev_buf_p != NULL)  {
-> -			ASSERT(curs->level[i].prev_agbno != NULLAGBLOCK);
-> -#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
-> -			fprintf(stderr, "writing bt prev block %u\n",
-> -						curs->level[i].prev_agbno);
-> -#endif
-> -			libxfs_buf_mark_dirty(curs->level[i].prev_buf_p);
-> -			libxfs_buf_relse(curs->level[i].prev_buf_p);
-> -		}
-> -		libxfs_buf_mark_dirty(curs->level[i].buf_p);
-> -		libxfs_buf_relse(curs->level[i].buf_p);
-> -	}
-> -}
-> -
-> -static void
-> -finish_cursor(bt_status_t *curs)
-> -{
-> -	ASSERT(curs->num_free_blocks == 0);
-> -	free(curs->btree_blocks);
-> -}
-> -
-> -/* Map btnum to buffer ops for the types that need it. */
-> -static const struct xfs_buf_ops *
-> -btnum_to_ops(
-> -	xfs_btnum_t	btnum)
-> -{
-> -	switch (btnum) {
-> -	case XFS_BTNUM_BNO:
-> -		return &xfs_bnobt_buf_ops;
-> -	case XFS_BTNUM_CNT:
-> -		return &xfs_cntbt_buf_ops;
-> -	case XFS_BTNUM_INO:
-> -		return &xfs_inobt_buf_ops;
-> -	case XFS_BTNUM_FINO:
-> -		return &xfs_finobt_buf_ops;
-> -	case XFS_BTNUM_RMAP:
-> -		return &xfs_rmapbt_buf_ops;
-> -	case XFS_BTNUM_REFC:
-> -		return &xfs_refcountbt_buf_ops;
-> -	default:
-> -		ASSERT(0);
-> -		return NULL;
-> -	}
-> -}
-> -
->  /*
->   * XXX: yet more code that can be shared with mkfs, growfs.
->   */
-> 
+> +	gfs2_holder_mark_uninitialized(&gh);
+>  	if (iocb->ki_flags & IOCB_DIRECT) {
+>  		ret = gfs2_file_direct_read(iocb, to);
+
+Again, future work, but you probably want to pass in &gh here so you
+don't have to eat up another 32 bytes or so of stack space on an unused
+gfs2_holder.
+
+>  		if (likely(ret != -ENOTBLK))
+>  			return ret;
+>  		iocb->ki_flags &= ~IOCB_DIRECT;
+>  	}
+> -	return generic_file_read_iter(iocb, to);
+> +	iocb->ki_flags |= IOCB_CACHED;
+> +	ret = generic_file_read_iter(iocb, to);
+> +	iocb->ki_flags &= ~IOCB_CACHED;
+> +	if (ret >= 0) {
+> +		if (!iov_iter_count(to))
+> +			return ret;
+> +		written = ret;
+> +	} else {
+> +		switch(ret) {
+> +		case -EAGAIN:
+> +			if (iocb->ki_flags & IOCB_NOWAIT)
+> +				return ret;
+> +			break;
+> +		case -ECANCELED:
+> +			break;
+> +		default:
+> +			return ret;
+> +		}
+> +	}
+
+I'm wondering if we want to do this in common code rather than making it
+something special only a few filesystems do (either because they care
+about workloads with many threads accessing the same file, or because
+their per-file locks are very heavy-weight).
 
