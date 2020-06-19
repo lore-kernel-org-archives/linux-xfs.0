@@ -1,75 +1,111 @@
-Return-Path: <SRS0=OEwr=77=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF325C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 23:54:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39657C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 02:20:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AFEA220771
-	for <linux-xfs@archiver.kernel.org>; Thu, 18 Jun 2020 23:54:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1876C20899
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 02:20:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=fieldses.org header.i=@fieldses.org header.b="nLr3ZJr5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726899AbgFRXyh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Jun 2020 19:54:37 -0400
-Received: from [211.29.132.249] ([211.29.132.249]:55388 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-FAIL-FAIL-OK-OK)
-        by vger.kernel.org with ESMTP id S1726001AbgFRXyh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 19:54:37 -0400
-Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4CD343A75DB;
-        Fri, 19 Jun 2020 09:54:13 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jm4MF-0001IW-Lp; Fri, 19 Jun 2020 09:54:11 +1000
-Date:   Fri, 19 Jun 2020 09:54:11 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        id S1729161AbgFSCUH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 18 Jun 2020 22:20:07 -0400
+Received: from fieldses.org ([173.255.197.46]:52028 "EHLO fieldses.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726517AbgFSCUG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 18 Jun 2020 22:20:06 -0400
+Received: by fieldses.org (Postfix, from userid 2815)
+        id D77A814D8; Thu, 18 Jun 2020 22:20:05 -0400 (EDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org D77A814D8
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
+        s=default; t=1592533205;
+        bh=tPBUrS2dw2CNJJWnlKPuvieHEc3u/i6Wc5TU2ZESPC0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=nLr3ZJr5/23V2Y5xzN5XfJB1JaO/LXjJBJuS+O9NwynuGAP6WZCnDsmGJwbFzBeu7
+         2+PmhFrjYHVYcPEwhS1oEEaCN089NnTXR8009D++ZJHgKiTSZrj3ZVUK7gfouBnZMZ
+         /ZnVxmQsv1Fntbiv/ofG3OoLwKStJVESrWdppses=
+Date:   Thu, 18 Jun 2020 22:20:05 -0400
+From:   "J. Bruce Fields" <bfields@fieldses.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Bob Peterson <rpeterso@redhat.com>
-Subject: Re: [PATCH v2] iomap: Make sure iomap_end is called after iomap_begin
-Message-ID: <20200618235411.GM2005@dread.disaster.area>
-References: <20200618122408.1054092-1-agruenba@redhat.com>
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+Message-ID: <20200619022005.GA25414@fieldses.org>
+References: <24692989-2ee0-3dcc-16d8-aa436114f5fb@sandeen.net>
+ <20200617172456.GP11245@magnolia>
+ <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
+ <20200617181816.GA18315@fieldses.org>
+ <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
+ <20200617184507.GB18315@fieldses.org>
+ <20200618013026.ewnhvf64nb62k2yx@gabell>
+ <20200618030539.GH2005@dread.disaster.area>
+ <20200618034535.h5ho7pd4eilpbj3f@gabell>
+ <20200618223948.GI2005@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200618122408.1054092-1-agruenba@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=GTJ3AWLjlxiO5Q93NkkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200618223948.GI2005@dread.disaster.area>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 02:24:08PM +0200, Andreas Gruenbacher wrote:
-> Make sure iomap_end is always called when iomap_begin succeeds.
+On Fri, Jun 19, 2020 at 08:39:48AM +1000, Dave Chinner wrote:
+> On Wed, Jun 17, 2020 at 11:45:35PM -0400, Masayoshi Mizuma wrote:
+> > Thank you for pointed it out.
+> > How about following change? I believe it works both xfs and btrfs...
+> > 
+> > diff --git a/fs/super.c b/fs/super.c
+> > index b0a511bef4a0..42fc6334d384 100644
+> > --- a/fs/super.c
+> > +++ b/fs/super.c
+> > @@ -973,6 +973,9 @@ int reconfigure_super(struct fs_context *fc)
+> >                 }
+> >         }
+> > 
+> > +       if (sb->s_flags & SB_I_VERSION)
+> > +               fc->sb_flags |= MS_I_VERSION;
+> > +
+> >         WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
+> >                                  (fc->sb_flags & fc->sb_flags_mask)));
+> >         /* Needs to be ordered wrt mnt_is_readonly() */
 > 
-> Without this fix, iomap_end won't be called when a filesystem's
-> iomap_begin operation returns an invalid mapping, bypassing any
-> unlocking done in iomap_end.  With this fix, the unlocking would
-> at least still happen.
+> This will prevent SB_I_VERSION from being turned off at all. That
+> will break existing filesystems that allow SB_I_VERSION to be turned
+> off on remount, such as ext4.
 > 
-> This iomap_apply bug was found by Bob Peterson during code review.
-> It's unlikely that such iomap_begin bugs will survive to affect
-> users, so backporting this fix seems unnecessary.
-> 
-> Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure")
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> The manipulations here need to be in the filesystem specific code;
+> we screwed this one up so badly there is no "one size fits all"
+> behaviour that we can implement in the generic code...
 
-Thanks for the updated commit message, Andreas. :)
+My memory was that after Jeff Layton's i_version patches, there wasn't
+really a significant performance hit any more, so the ability to turn it
+off is no longer useful.
 
-Patch looks good to me.
+But looking back through Jeff's postings, I don't see him claiming that;
+e.g. in:
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+	https://lore.kernel.org/lkml/20171222120556.7435-1-jlayton@kernel.org/
+	https://lore.kernel.org/linux-nfs/20180109141059.25929-1-jlayton@kernel.org/
+	https://lore.kernel.org/linux-nfs/1517228795.5965.24.camel@redhat.com/
 
--- 
-Dave Chinner
-david@fromorbit.com
+he reports comparing old iversion behavior to new iversion behavior, but
+not new iversion behavior to new noiversion behavior.
+
+--b.
