@@ -2,106 +2,201 @@ Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00661C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 22:28:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCE66C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 22:43:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF2F1222E8
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 22:28:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fieldses.org header.i=@fieldses.org header.b="TxHnuQrC"
+	by mail.kernel.org (Postfix) with ESMTP id B08612231B
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 22:43:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729377AbgFSW2o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jun 2020 18:28:44 -0400
-Received: from fieldses.org ([173.255.197.46]:36586 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729364AbgFSW2o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 Jun 2020 18:28:44 -0400
-Received: by fieldses.org (Postfix, from userid 2815)
-        id A5CCB9238; Fri, 19 Jun 2020 18:28:43 -0400 (EDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org A5CCB9238
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
-        s=default; t=1592605723;
-        bh=pnhuMgvSD1GD/tZdHnDUyuziixDCqg7yWc0/+nh60VA=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=TxHnuQrCOr95EL7w2sUwzbD+FLGVeqS1nmjw43M/NpxPXiP8j0rsV1OtRLdQnM9Dy
-         O4/OZ0pFeXnzcMDFuCefnp4nI88RM3j7wy7rUmPc+2yLKavISC3mL+a27tdNPM+7tA
-         XBPkSBUVaT+L4zZN4PLxlnRevdfgcSHwPIX6gRK0=
-Date:   Fri, 19 Jun 2020 18:28:43 -0400
-From:   "J. Bruce Fields" <bfields@fieldses.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
-Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
-Message-ID: <20200619222843.GB2650@fieldses.org>
-References: <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
- <20200617184507.GB18315@fieldses.org>
- <20200618013026.ewnhvf64nb62k2yx@gabell>
- <20200618030539.GH2005@dread.disaster.area>
- <20200618034535.h5ho7pd4eilpbj3f@gabell>
- <20200618223948.GI2005@dread.disaster.area>
- <20200619022005.GA25414@fieldses.org>
- <20200619024455.GN2005@dread.disaster.area>
- <20200619204033.GB1564@fieldses.org>
- <20200619221044.GO2005@dread.disaster.area>
+        id S1729499AbgFSWnh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 18:43:37 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:50530 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726900AbgFSWng (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 18:43:36 -0400
+Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id C66341002A3;
+        Sat, 20 Jun 2020 08:43:31 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jmPjJ-0000y9-S2; Sat, 20 Jun 2020 08:43:25 +1000
+Date:   Sat, 20 Jun 2020 08:43:25 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        peter green <plugwash@p10link.net>,
+        Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: Bug#953537: xfsdump fails to install in /usr merged system.
+Message-ID: <20200619224325.GP2005@dread.disaster.area>
+References: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
+ <20200619044734.GB11245@magnolia>
+ <ea662f0b-7e73-0bbe-33aa-963389b9e215@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200619221044.GO2005@dread.disaster.area>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <ea662f0b-7e73-0bbe-33aa-963389b9e215@sandeen.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=xNf9USuDAAAA:8
+        a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=7_gqYDg1-YOlvv8Dm2kA:9
+        a=CjuIK1q_8ugA:10 a=SEwjQc04WA-l_NiBhQ7s:22 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 20, 2020 at 08:10:44AM +1000, Dave Chinner wrote:
-> On Fri, Jun 19, 2020 at 04:40:33PM -0400, J. Bruce Fields wrote:
-> > On Fri, Jun 19, 2020 at 12:44:55PM +1000, Dave Chinner wrote:
-> > > On Thu, Jun 18, 2020 at 10:20:05PM -0400, J. Bruce Fields wrote:
-> > > > My memory was that after Jeff Layton's i_version patches, there wasn't
-> > > > really a significant performance hit any more, so the ability to turn it
-> > > > off is no longer useful.
-> > > 
-> > > Yes, I completely agree with you here. However, with some
-> > > filesystems allowing it to be turned off, we can't just wave our
-> > > hands and force enable the option. Those filesystems - if the
-> > > maintainers chose to always enable iversion - will have to go
-> > > through a mount option deprecation period before permanently
-> > > enabling it.
+On Fri, Jun 19, 2020 at 12:03:35PM -0500, Eric Sandeen wrote:
+> On 6/18/20 11:47 PM, Darrick J. Wong wrote:
+> > On Fri, Jun 19, 2020 at 05:05:00AM +0100, peter green wrote:
+> >> (original message was sent to nathans@redhat.com
+> >> 953537@bugs.debian.org and linux-xfs@vger.kernel.org re-sending as
+> >> plain-text only to linux-xfs@vger.kernel.org)
+> >>
+> >> This bug has now caused xfsdump to be kicked out of testing which is
+> >> making amanda unbuildable in testing.
 > > 
-> > I don't understand why.
+> > Uhoh...
 > > 
-> > The filesystem can continue to let people set iversion or noiversion as
-> > they like, while under the covers behaving as if iversion is always set.
-> > I can't see how that would break any application.  (Or even how an
-> > application would be able to detect that the filesystem was doing this.)
+> >>
+> >>
+> >>> Yes, what's really needed here is for a change to be merged upstream
+> >>> (as all other deb packaging artifacts are) otherwise this will keep
+> >>> getting lost in time.
+> >> To make it easier to upstream this I whipped up a patch that should
+> >> solve the issue while only modifying the debian packaging and not
+> >> touching the upstream makefiles. It is attached to this message and if
+> >> I get no response I will likely do some further testing and then NMU
+> >> it in Debian.
+> >>
+> >> One issue I noticed is it's not all all obvious who upstream is. The
+> >> sgi website listed in README seems to be long dead and there are no
+> >> obvious upstream results in a google search for xfsdump. Gentoos page
+> >> on xfsdump links to https://xfs.wiki.kernel.org but that page makes no
+> >> mention of xfsdump.
+> >>
+> >> I eventually poked around on git.kernel.org and my best guess is that
+> >> https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git/ is the upstream
+> >> git repository and linux-xfs@vger.kernel.org is the appropriate
+> >> mailing list, I would appreciate comments on whether or not this is
+> >> correct and updates to the documentation to reflect whatever the
+> >> correct location is.
+> > 
+> > Yep, you've found us. :)
+> > 
+> > Uh... seeing how /sbin seems to be a symlink to /usr/sbin on more and
+> > more distros now, how about we just change the upstream makefile to dump
+> > them in /usr/sbin and forget all about the symlinks?
+> > 
+> > (He says, wondering what the actual maintainer will say...)
 > 
-> It doesn't break functionality, but it affects performance.
+> I wonder too :P
+> 
+> So, FWIW, fedora/rhel packaging also hacks this up :(
 
-I thought you just agreed above that any performance hit was not
-"significant".
+Isn't the configure script supposed to handle install locations?
+Both xfsprogs and xfsdump have this in their include/builddefs.in:
 
-> IOWs, it can make certain workloads go a lot slower in some
-> circumstances.  And that can result in unexectedly breaking SLAs or
-> slow down a complex, finely tuned data center wide workload to the
-> point it no longer meets requirements.  Such changes in behaviour are
-> considered a regression, especially if they result from a change that
-> just ignores the mount option that turned off that specific feature.
+PKG_ROOT_SBIN_DIR = @root_sbindir@
+PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
 
-I get that, but, what's the threshhold here for a significant risk of
-regression?
+So the actual install locations are coming from the autoconf setup
+the build runs under. Looking in configure.ac in xfsprogs and
+xfsdump, they both do the same thing:
 
-The "noiversion" behavior is kinda painful for NFS.
+.....
+#
+# Some important tools should be installed into the root partitions.
+#
+# Check whether exec_prefix=/usr: and install them to /sbin in that
+# case.  If the user choses a different prefix assume he just wants
+# a local install for testing and not a system install.
+#
+case $exec_prefix:$prefix in
+NONE:NONE | NONE:/usr | /usr:*)
+  root_sbindir='/sbin'
+  root_libdir="/${base_libdir}"
+  ;;
+*)
+  root_sbindir="${sbindir}"
+  root_libdir="${libdir}"
+  ;;
+esac
 
---b.
+AC_SUBST([root_sbindir])
+AC_SUBST([root_libdir])
+
+....
+
+I suspect that this "system install" logic - which once made sense -
+doesn't work at all with symlinked /sbin setups.
+
+IIRC debian is in a transistion stage where it will accept either
+types of package, but people trying to install a "linked /sbin only"
+system will be reporting issues where pacakges do the wrong thing...
+
+> xfsdump does:
+> 
+> %install
+> rm -rf $RPM_BUILD_ROOT
+> make DIST_ROOT=$RPM_BUILD_ROOT install
+> # remove non-versioned docs location
+> rm -rf $RPM_BUILD_ROOT/%{_datadir}/doc/xfsdump/
+> 
+> # Bit of a hack to move files from /sbin to /usr/sbin
+> (cd $RPM_BUILD_ROOT/%{_sbindir}; rm xfsdump xfsrestore)
+> (cd $RPM_BUILD_ROOT/%{_sbindir}; mv ../../sbin/xfsdump .)
+> (cd $RPM_BUILD_ROOT/%{_sbindir}; mv ../../sbin/xfsrestore .)
+> 
+> xfsprogs does:
+> 
+> %install
+> make DIST_ROOT=$RPM_BUILD_ROOT install install-dev \
+>         PKG_ROOT_SBIN_DIR=%{_sbindir} PKG_ROOT_LIB_DIR=%{_libdir}
+
+So the fedora rpm package build is overriding the locations that
+autoconf set in include/builddefs for the install on the make
+command line?
+
+> Both of these work around the default location of /sbin:
+> 
+> # grep PKG_ROOT_SBIN_DIR xfsprogs-maint/include/builddefs xfsdump/include/builddefs
+> xfsprogs-maint/include/builddefs:PKG_ROOT_SBIN_DIR = /sbin
+> xfsdump/include/builddefs:PKG_ROOT_SBIN_DIR = /sbin
+
+Ok, it is.
+
+So my question is this: what magic should we be putting in autoconf
+to have it automatically detect that the package should build for a
+linked /sbin and have the build always do the right thing via "make
+install"?
+
+> On one hand, it'd be easy enough to change the upstream defaults I guess.
+> On the other hand, I think the PKG_ROOT_SBIN_DIR method is easy too.
+> 
+> How does debian fix this for xfsprogs?  Doesn't the same issue exist?
+
+AFAICT, yes, it does exist. The buildroot from a recent package
+build:
+
+$ ls -l xfsprogs-5.7.0-rc0/debian/xfsprogs/sbin
+total 928
+-rwxr-xr-x 1 dave dave   1968 May 21 15:41 fsck.xfs
+-rwxr-xr-x 1 dave dave 367584 May 21 15:42 mkfs.xfs
+-rwxr-xr-x 1 dave dave 573536 May 21 15:42 xfs_repair
+$
+
+xfsprogs also appears to be packaging binaries in /sbin, too.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
