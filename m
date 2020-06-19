@@ -2,109 +2,231 @@ Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C4FAC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 09:40:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AEE0C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 11:12:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6AD9020786
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 09:40:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D77892080C
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 11:12:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i/c7Aj1n"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dQoOgfGT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731525AbgFSJkp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jun 2020 05:40:45 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:55568 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731027AbgFSJkp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 05:40:45 -0400
+        id S1732574AbgFSLL5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 07:11:57 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:33975 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1732588AbgFSLLQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 07:11:16 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592559643;
+        s=mimecast20190719; t=1592565052;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=owa0qFAPsKpu74jXgvEbAGd5tDvX5jYwWR6WKxTC83E=;
-        b=i/c7Aj1n1FNNHjecNMi3NofSRXcNkVOh0GV3EMqh8cb3AZBSjUjtFagBTpYa95yFdi9J0w
-        xX7VpO/KRQXGGvhcXTCaOjkCwRl7HOufxRHVFrlEOafUf75ZIs1B3FOwXyFxb19Yk+uFMr
-        SpfGxSjUEIvfUzedbQ4cE6+PxKuGbiU=
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yNxawvTutXZ+5uJfem1ze84V209XLEUo3wX7SsgbaE0=;
+        b=dQoOgfGTsI5zMWWBqZbFvuh1LpHx5/JWRjmie58e9cTMs8Qv5a0a0wW2CbpPD1FpXY4oLR
+        DDKgzmZIde8mLFCWJnChUAcz+iGgjRFaiMtVpwtLChh4028UHciGzO5s5xGPA+HbyPNGt1
+        SozhTqyp5B5Y6D1l0seKw6r/6NNrz8s=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-263-E2DQ6Q59N3WWMbSJVCOn4A-1; Fri, 19 Jun 2020 05:39:29 -0400
-X-MC-Unique: E2DQ6Q59N3WWMbSJVCOn4A-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+ us-mta-364-qvN41upeOiu4CQAcWL9jdg-1; Fri, 19 Jun 2020 07:10:50 -0400
+X-MC-Unique: qvN41upeOiu4CQAcWL9jdg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BE7B8107B265;
-        Fri, 19 Jun 2020 09:39:26 +0000 (UTC)
-Received: from max.home.com (unknown [10.40.195.140])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4E9A15D9E8;
-        Fri, 19 Jun 2020 09:39:18 +0000 (UTC)
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-To:     Matthew Wilcox <willy@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Junxiao Bi <junxiao.bi@oracle.com>,
-        William Kucharski <william.kucharski@oracle.com>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        John Hubbard <jhubbard@nvidia.com>,
-        linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
-        linux-mm@kvack.org, ocfs2-devel@oss.oracle.com,
-        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, Christoph Hellwig <hch@lst.de>,
-        linux-btrfs@vger.kernel.org
-Subject: [RFC PATCH 0/2] gfs2 readahead regression in v5.8-rc1
-Date:   Fri, 19 Jun 2020 11:39:14 +0200
-Message-Id: <20200619093916.1081129-1-agruenba@redhat.com>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 95A281800D42;
+        Fri, 19 Jun 2020 11:10:49 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3F60019D61;
+        Fri, 19 Jun 2020 11:10:49 +0000 (UTC)
+Date:   Fri, 19 Jun 2020 07:10:47 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 12/12] xfs_repair: use bitmap to track blocks lost during
+ btree construction
+Message-ID: <20200619111047.GB36770@bfoster>
+References: <159107201290.315004.4447998785149331259.stgit@magnolia>
+ <159107209039.315004.11590903544086845302.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <159107209039.315004.11590903544086845302.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On Mon, Jun 01, 2020 at 09:28:10PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Use the incore bitmap structure to track blocks that were lost
+> during btree construction.  This makes it somewhat more efficient.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  repair/agbtree.c |   21 ++++++++--------
+>  repair/agbtree.h |    2 +-
+>  repair/phase5.c  |   72 ++++++++++++++++++++++--------------------------------
+>  3 files changed, 41 insertions(+), 54 deletions(-)
+> 
+> 
+...
+> diff --git a/repair/phase5.c b/repair/phase5.c
+> index 439c1065..446f7ec0 100644
+> --- a/repair/phase5.c
+> +++ b/repair/phase5.c
+...
+> @@ -211,7 +212,7 @@ build_agf_agfl(
+>  	struct bt_rebuild	*btr_cnt,
+>  	struct bt_rebuild	*btr_rmap,
+>  	struct bt_rebuild	*btr_refc,
+> -	struct xfs_slab		*lost_fsb)
+> +	struct bitmap		*lost_blocks)
+>  {
 
-can the two patches in this set still be considered for v5.8?
+Looks like another case of an unused parameter here, otherwise looks
+good:
 
-Commit d4388340ae0b ("fs: convert mpage_readpages to mpage_readahead")
-which converts gfs2 and other filesystems to use the new ->readahead
-address space operation is leading to deadlocks between the inode glocks
-and page locks: ->readahead is called with the pages to readahead
-already locked.  When gfs2_readahead then tries to lock the associated
-inode glock, another process already holding the inode glock may be
-trying to lock the same pages.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-We could work around this in gfs by using a LM_FLAG_TRY lock in
-->readahead for now.  The real reason for this deadlock is that gfs2
-shouldn't be taking the inode glock in ->readahead in the first place
-though, so I'd prefer to fix this "properly" instead.  Unfortunately,
-this depends on a new IOCB_CACHED flag for generic_file_read_iter.
-
-A previous version was posted in November:
-
-https://lore.kernel.org/linux-fsdevel/20191122235324.17245-1-agruenba@redhat.com/
-
-Thanks,
-Andreas
-
-Andreas Gruenbacher (2):
-  fs: Add IOCB_CACHED flag for generic_file_read_iter
-  gfs2: Rework read and page fault locking
-
- fs/gfs2/aops.c     | 27 ++------------------
- fs/gfs2/file.c     | 61 ++++++++++++++++++++++++++++++++++++++++++++--
- include/linux/fs.h |  1 +
- mm/filemap.c       | 16 ++++++++++--
- 4 files changed, 76 insertions(+), 29 deletions(-)
-
-
-base-commit: af42d3466bdc8f39806b26f593604fdc54140bcb
--- 
-2.26.2
+>  	struct extent_tree_node	*ext_ptr;
+>  	struct xfs_buf		*agf_buf, *agfl_buf;
+> @@ -428,7 +429,7 @@ static void
+>  phase5_func(
+>  	struct xfs_mount	*mp,
+>  	xfs_agnumber_t		agno,
+> -	struct xfs_slab		*lost_fsb)
+> +	struct bitmap		*lost_blocks)
+>  {
+>  	struct repair_ctx	sc = { .mp = mp, };
+>  	struct bt_rebuild	btr_bno;
+> @@ -543,7 +544,7 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
+>  	 * set up agf and agfl
+>  	 */
+>  	build_agf_agfl(mp, agno, &btr_bno, &btr_cnt, &btr_rmap, &btr_refc,
+> -			lost_fsb);
+> +			lost_blocks);
+>  
+>  	build_inode_btrees(&sc, agno, &btr_ino, &btr_fino);
+>  
+> @@ -553,15 +554,15 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
+>  	/*
+>  	 * tear down cursors
+>  	 */
+> -	finish_rebuild(mp, &btr_bno, lost_fsb);
+> -	finish_rebuild(mp, &btr_cnt, lost_fsb);
+> -	finish_rebuild(mp, &btr_ino, lost_fsb);
+> +	finish_rebuild(mp, &btr_bno, lost_blocks);
+> +	finish_rebuild(mp, &btr_cnt, lost_blocks);
+> +	finish_rebuild(mp, &btr_ino, lost_blocks);
+>  	if (xfs_sb_version_hasfinobt(&mp->m_sb))
+> -		finish_rebuild(mp, &btr_fino, lost_fsb);
+> +		finish_rebuild(mp, &btr_fino, lost_blocks);
+>  	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+> -		finish_rebuild(mp, &btr_rmap, lost_fsb);
+> +		finish_rebuild(mp, &btr_rmap, lost_blocks);
+>  	if (xfs_sb_version_hasreflink(&mp->m_sb))
+> -		finish_rebuild(mp, &btr_refc, lost_fsb);
+> +		finish_rebuild(mp, &btr_refc, lost_blocks);
+>  
+>  	/*
+>  	 * release the incore per-AG bno/bcnt trees so the extent nodes
+> @@ -572,48 +573,33 @@ _("unable to rebuild AG %u.  Not enough free space in on-disk AG.\n"),
+>  	PROG_RPT_INC(prog_rpt_done[agno], 1);
+>  }
+>  
+> -/* Inject lost blocks back into the filesystem. */
+> +/* Inject this unused space back into the filesystem. */
+>  static int
+> -inject_lost_blocks(
+> -	struct xfs_mount	*mp,
+> -	struct xfs_slab		*lost_fsbs)
+> +inject_lost_extent(
+> +	uint64_t		start,
+> +	uint64_t		length,
+> +	void			*arg)
+>  {
+> -	struct xfs_trans	*tp = NULL;
+> -	struct xfs_slab_cursor	*cur = NULL;
+> -	xfs_fsblock_t		*fsb;
+> +	struct xfs_mount	*mp = arg;
+> +	struct xfs_trans	*tp;
+>  	int			error;
+>  
+> -	error = init_slab_cursor(lost_fsbs, NULL, &cur);
+> +	error = -libxfs_trans_alloc_rollable(mp, 16, &tp);
+>  	if (error)
+>  		return error;
+>  
+> -	while ((fsb = pop_slab_cursor(cur)) != NULL) {
+> -		error = -libxfs_trans_alloc_rollable(mp, 16, &tp);
+> -		if (error)
+> -			goto out_cancel;
+> -
+> -		error = -libxfs_free_extent(tp, *fsb, 1,
+> -				&XFS_RMAP_OINFO_ANY_OWNER, XFS_AG_RESV_NONE);
+> -		if (error)
+> -			goto out_cancel;
+> -
+> -		error = -libxfs_trans_commit(tp);
+> -		if (error)
+> -			goto out_cancel;
+> -		tp = NULL;
+> -	}
+> +	error = -libxfs_free_extent(tp, start, length,
+> +			&XFS_RMAP_OINFO_ANY_OWNER, XFS_AG_RESV_NONE);
+> +	if (error)
+> +		return error;
+>  
+> -out_cancel:
+> -	if (tp)
+> -		libxfs_trans_cancel(tp);
+> -	free_slab_cursor(&cur);
+> -	return error;
+> +	return -libxfs_trans_commit(tp);
+>  }
+>  
+>  void
+>  phase5(xfs_mount_t *mp)
+>  {
+> -	struct xfs_slab		*lost_fsb;
+> +	struct bitmap		*lost_blocks = NULL;
+>  	xfs_agnumber_t		agno;
+>  	int			error;
+>  
+> @@ -656,12 +642,12 @@ phase5(xfs_mount_t *mp)
+>  	if (sb_fdblocks_ag == NULL)
+>  		do_error(_("cannot alloc sb_fdblocks_ag buffers\n"));
+>  
+> -	error = init_slab(&lost_fsb, sizeof(xfs_fsblock_t));
+> +	error = bitmap_alloc(&lost_blocks);
+>  	if (error)
+> -		do_error(_("cannot alloc lost block slab\n"));
+> +		do_error(_("cannot alloc lost block bitmap\n"));
+>  
+>  	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
+> -		phase5_func(mp, agno, lost_fsb);
+> +		phase5_func(mp, agno, lost_blocks);
+>  
+>  	print_final_rpt();
+>  
+> @@ -704,10 +690,10 @@ _("unable to add AG %u reverse-mapping data to btree.\n"), agno);
+>  	 * Put blocks that were unnecessarily reserved for btree
+>  	 * reconstruction back into the filesystem free space data.
+>  	 */
+> -	error = inject_lost_blocks(mp, lost_fsb);
+> +	error = bitmap_iterate(lost_blocks, inject_lost_extent, mp);
+>  	if (error)
+>  		do_error(_("Unable to reinsert lost blocks into filesystem.\n"));
+> -	free_slab(&lost_fsb);
+> +	bitmap_free(&lost_blocks);
+>  
+>  	bad_ino_btree = 0;
+>  
+> 
 
