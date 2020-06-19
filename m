@@ -2,93 +2,82 @@ Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30451C433E2
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 13:14:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCF03C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 13:17:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 062DC20DD4
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 13:14:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC4AC208C7
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 13:17:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QXaPewcf"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PVOkZfJT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732560AbgFSNNv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jun 2020 09:13:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39172 "EHLO
+        id S1732225AbgFSNR1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 09:17:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732503AbgFSNNt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 09:13:49 -0400
+        with ESMTP id S1731600AbgFSNRY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 09:17:24 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3EEAAC06174E;
-        Fri, 19 Jun 2020 06:13:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 826D2C06174E;
+        Fri, 19 Jun 2020 06:17:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=G4RUDuCAHK+Un7YwD1qGbgaTvIXNiS2OBRIs2mhOgXU=; b=QXaPewcfN/1Z+wWq3RAkYS4Fsl
-        X4mvCPI4LnFv7TLuS0dPZy1guPTOOwC6D2mEAwwuWbNdsh2ikLoV1kWsXKijXVBuaeuoEsMG1cA/e
-        qer1BJj+N5IVJrV7rf2HeOfGkpHpdUfwVZfq8nFa6YknDVOALG5cap0pCzIOKKWCn7tR+jBz3gH/h
-        JEV0ffjpFoAifS9C4ueU7labKxrF/VXBMqxCrn4pLcDM9QnXTCndKXgSAsLzJB7MlbZqTKOLLW7Zp
-        hKRoLKLfkNx8OCqLy6QQycuz14RRTm9gdsohR7KK1nvhkdYQg9d34UjL9VHm178QzYZqZevr3ynTh
-        XUyPSkbw==;
+        bh=nk4pUac2lDNTajxLog7MnFC0ty5sPArKeQyTpTonniE=; b=PVOkZfJT6ytrDRAE5mCX88ZpvZ
+        lvRgDfWk79jZWlHsEmjQNISZHl3un1MJcmB+Kz61yO/K+lqo7z1trEgNZWXNLKsjTAsT8rQCO+dn4
+        VUqBaEOanAS62dXjFbFhFdf5NTqmKxIEwgF0ijPIlr+J3C/msE/dCN1SS8tPY9yJORCObWJvAC97E
+        KcE45JBuPsDUhb3UenlVYRf5l01v23mVHwIfByBnS1j/TRMY/ffxsEp0jbyTKD7BVrhau5YmUubfP
+        pmbStFswGLHO919sNEDLG0Yi3prfJm0I27WOLN+TO7FKTH7DdwbEXeFGlRDFrqO+YAPu0aNXv3KGf
+        hQPWCnvw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jmGq3-000433-3P; Fri, 19 Jun 2020 13:13:47 +0000
-Date:   Fri, 19 Jun 2020 06:13:47 -0700
+        id 1jmGtN-0006oh-4P; Fri, 19 Jun 2020 13:17:13 +0000
+Date:   Fri, 19 Jun 2020 06:17:13 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Bob Peterson <rpeterso@redhat.com>
-Subject: Re: [PATCH v2] iomap: Make sure iomap_end is called after iomap_begin
-Message-ID: <20200619131347.GA22412@infradead.org>
-References: <20200618122408.1054092-1-agruenba@redhat.com>
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+Message-ID: <20200619131713.GA15982@infradead.org>
+References: <24692989-2ee0-3dcc-16d8-aa436114f5fb@sandeen.net>
+ <20200617172456.GP11245@magnolia>
+ <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
+ <20200617181816.GA18315@fieldses.org>
+ <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
+ <20200617184507.GB18315@fieldses.org>
+ <20200618013026.ewnhvf64nb62k2yx@gabell>
+ <20200618030539.GH2005@dread.disaster.area>
+ <20200618034535.h5ho7pd4eilpbj3f@gabell>
+ <20200618223948.GI2005@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200618122408.1054092-1-agruenba@redhat.com>
+In-Reply-To: <20200618223948.GI2005@dread.disaster.area>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 02:24:08PM +0200, Andreas Gruenbacher wrote:
-> Make sure iomap_end is always called when iomap_begin succeeds.
+On Fri, Jun 19, 2020 at 08:39:48AM +1000, Dave Chinner wrote:
+> This will prevent SB_I_VERSION from being turned off at all. That
+> will break existing filesystems that allow SB_I_VERSION to be turned
+> off on remount, such as ext4.
 > 
-> Without this fix, iomap_end won't be called when a filesystem's
-> iomap_begin operation returns an invalid mapping, bypassing any
-> unlocking done in iomap_end.  With this fix, the unlocking would
-> at least still happen.
-> 
-> This iomap_apply bug was found by Bob Peterson during code review.
-> It's unlikely that such iomap_begin bugs will survive to affect
-> users, so backporting this fix seems unnecessary.
-> 
-> Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure")
-> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
-> ---
->  fs/iomap/apply.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
-> index 76925b40b5fd..32daf8cb411c 100644
-> --- a/fs/iomap/apply.c
-> +++ b/fs/iomap/apply.c
-> @@ -46,10 +46,11 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
->  	ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
->  	if (ret)
->  		return ret;
-> -	if (WARN_ON(iomap.offset > pos))
-> -		return -EIO;
-> -	if (WARN_ON(iomap.length == 0))
-> -		return -EIO;
-> +	if (WARN_ON(iomap.offset > pos) ||
-> +	    WARN_ON(iomap.length == 0)) {
-> +		written = -EIO;
-> +		goto out;
-> +	}
+> The manipulations here need to be in the filesystem specific code;
+> we screwed this one up so badly there is no "one size fits all"
+> behaviour that we can implement in the generic code...
 
-As said before please don't merge these for no good reason.
+Yes.  SB_I_VERSION should never be set by common code.
