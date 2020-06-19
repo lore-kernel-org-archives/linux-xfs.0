@@ -2,127 +2,106 @@ Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BCE5C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 02:45:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0343BC433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 04:05:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E3D62071A
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 02:45:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA990208C3
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 04:05:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727109AbgFSCpZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 18 Jun 2020 22:45:25 -0400
-Received: from [211.29.132.246] ([211.29.132.246]:35947 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-FAIL-FAIL-OK-OK)
-        by vger.kernel.org with ESMTP id S1726906AbgFSCpZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jun 2020 22:45:25 -0400
-Received: from dread.disaster.area (unknown [49.180.124.177])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 55C568236D9;
-        Fri, 19 Jun 2020 12:44:58 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jm71T-0002Jl-8d; Fri, 19 Jun 2020 12:44:55 +1000
-Date:   Fri, 19 Jun 2020 12:44:55 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "J. Bruce Fields" <bfields@fieldses.org>
-Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
-Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
-Message-ID: <20200619024455.GN2005@dread.disaster.area>
-References: <20200617172456.GP11245@magnolia>
- <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
- <20200617181816.GA18315@fieldses.org>
- <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
- <20200617184507.GB18315@fieldses.org>
- <20200618013026.ewnhvf64nb62k2yx@gabell>
- <20200618030539.GH2005@dread.disaster.area>
- <20200618034535.h5ho7pd4eilpbj3f@gabell>
- <20200618223948.GI2005@dread.disaster.area>
- <20200619022005.GA25414@fieldses.org>
+        id S1725778AbgFSEFE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 00:05:04 -0400
+Received: from p10link.net ([80.68.89.68]:43205 "EHLO P10Link.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725290AbgFSEFE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 Jun 2020 00:05:04 -0400
+Received: from [192.168.1.2] (unknown [94.2.179.121])
+        by P10Link.net (Postfix) with ESMTPSA id 2AB8D40C001
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Jun 2020 05:05:01 +0100 (BST)
+From:   peter green <plugwash@p10link.net>
+Subject: Re: Bug#953537: xfsdump fails to install in /usr merged system.
+To:     linux-xfs@vger.kernel.org
+Message-ID: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
+Date:   Fri, 19 Jun 2020 05:05:00 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200619022005.GA25414@fieldses.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=Ddvq-uZmtdYEE3EvMV8A:9 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: multipart/mixed;
+ boundary="------------1C1586CF930C6B7241EAD04C"
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 10:20:05PM -0400, J. Bruce Fields wrote:
-> On Fri, Jun 19, 2020 at 08:39:48AM +1000, Dave Chinner wrote:
-> > On Wed, Jun 17, 2020 at 11:45:35PM -0400, Masayoshi Mizuma wrote:
-> > > Thank you for pointed it out.
-> > > How about following change? I believe it works both xfs and btrfs...
-> > > 
-> > > diff --git a/fs/super.c b/fs/super.c
-> > > index b0a511bef4a0..42fc6334d384 100644
-> > > --- a/fs/super.c
-> > > +++ b/fs/super.c
-> > > @@ -973,6 +973,9 @@ int reconfigure_super(struct fs_context *fc)
-> > >                 }
-> > >         }
-> > > 
-> > > +       if (sb->s_flags & SB_I_VERSION)
-> > > +               fc->sb_flags |= MS_I_VERSION;
-> > > +
-> > >         WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
-> > >                                  (fc->sb_flags & fc->sb_flags_mask)));
-> > >         /* Needs to be ordered wrt mnt_is_readonly() */
-> > 
-> > This will prevent SB_I_VERSION from being turned off at all. That
-> > will break existing filesystems that allow SB_I_VERSION to be turned
-> > off on remount, such as ext4.
-> > 
-> > The manipulations here need to be in the filesystem specific code;
-> > we screwed this one up so badly there is no "one size fits all"
-> > behaviour that we can implement in the generic code...
-> 
-> My memory was that after Jeff Layton's i_version patches, there wasn't
-> really a significant performance hit any more, so the ability to turn it
-> off is no longer useful.
+This is a multi-part message in MIME format.
+--------------1C1586CF930C6B7241EAD04C
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Yes, I completely agree with you here. However, with some
-filesystems allowing it to be turned off, we can't just wave our
-hands and force enable the option. Those filesystems - if the
-maintainers chose to always enable iversion - will have to go
-through a mount option deprecation period before permanently
-enabling it.
+(original message was sent to nathans@redhat.com 953537@bugs.debian.org and linux-xfs@vger.kernel.org re-sending as plain-text only to linux-xfs@vger.kernel.org)
 
-> But looking back through Jeff's postings, I don't see him claiming that;
-> e.g. in:
-> 
-> 	https://lore.kernel.org/lkml/20171222120556.7435-1-jlayton@kernel.org/
-> 	https://lore.kernel.org/linux-nfs/20180109141059.25929-1-jlayton@kernel.org/
-> 	https://lore.kernel.org/linux-nfs/1517228795.5965.24.camel@redhat.com/
-> 
-> he reports comparing old iversion behavior to new iversion behavior, but
-> not new iversion behavior to new noiversion behavior.
+This bug has now caused xfsdump to be kicked out of testing which is making amanda unbuildable in testing.
 
-Yeah, it's had to compare noiversion behaviour on filesystems where
-it was understood that it couldn't actually be turned off. And,
-realistically, the comaprison to noiversion wasn't really relevant
-to the problem Jeff's patchset was addressing...
 
-Cheers,
+> Yes, what's really needed here is for a change to be merged upstream
+> (as all other deb packaging artifacts are) otherwise this will keep
+> getting lost in time.
+To make it easier to upstream this I whipped up a patch that should solve the issue while only modifying the debian packaging and not touching the upstream makefiles. It is attached to this message and if I get no response I will likely do some further testing and then NMU it in Debian.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+One issue I noticed is it's not all all obvious who upstream is. The sgi website listed in README seems to be long dead and there are no obvious upstream results in a google search for xfsdump. Gentoos page on xfsdump links to https://xfs.wiki.kernel.org but that page makes no mention of xfsdump.
+
+I eventually poked around on git.kernel.org and my best guess is that https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git/ is the upstream git repository and linux-xfs@vger.kernel.org is the appropriate mailing list, I would appreciate comments on whether or not this is correct and updates to the documentation to reflect whatever the correct location is.
+
+--------------1C1586CF930C6B7241EAD04C
+Content-Type: text/plain; charset=UTF-8;
+ name="xfsdump.debdiff"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="xfsdump.debdiff"
+
+ZGlmZiAtTnJ1IHhmc2R1bXAtMy4xLjkvZGViaWFuL2NoYW5nZWxvZyB4ZnNkdW1wLTMuMS45
+K25tdTEvZGViaWFuL2NoYW5nZWxvZwotLS0geGZzZHVtcC0zLjEuOS9kZWJpYW4vY2hhbmdl
+bG9nCTIwMjAtMDEtMzEgMTc6MzA6NTguMDAwMDAwMDAwICswMDAwCisrKyB4ZnNkdW1wLTMu
+MS45K25tdTEvZGViaWFuL2NoYW5nZWxvZwkyMDIwLTA2LTE5IDAxOjAxOjE4LjAwMDAwMDAw
+MCArMDAwMApAQCAtMSwzICsxLDEzIEBACit4ZnNkdW1wICgzLjEuOStubXUxKSBVTlJFTEVB
+U0VEOyB1cmdlbmN5PW1lZGl1bQorCisgICogTm9uLW1haW50YWluZXIgdXBsb2FkLgorICAq
+IENyZWF0ZSBhbmQgcmVtb3ZlIHN5bWxpbmtzIGluIHBvc3RpbnN0L3ByZWluc3QgcmF0aGVy
+IHRoYW4gaW5jbHVkaW5nIHRoZW0KKyAgICBpbiB0aGUgcGFja2FnZSB0byBzdXBwb3J0IG1l
+cmdlZCB1c2VyIHN5c3RlbXMuIEJhc2VkIG9uIGEgcGF0Y2ggZnJvbQorICAgIEdvZmZyZWRv
+IEJhcm9uY2VsbGkgYnV0IGFkanVzdGVkIHRvIGF2b2lkIHRoZSBuZWVkIGZvciBtb2RpZnlp
+bmcgdXBzdHJlYW0KKyAgICBub24tZGViaWFuIGZpbGVzLiAoIENsb3NlczogOTUzNTM3ICkK
+KworIC0tIFBldGVyIE1pY2hhZWwgR3JlZW4gPHBsdWd3YXNoQGRlYmlhbi5vcmc+ICBGcmks
+IDE5IEp1biAyMDIwIDAxOjAxOjE4ICswMDAwCisKIHhmc2R1bXAgKDMuMS45KSB1bnN0YWJs
+ZTsgdXJnZW5jeT1sb3cKIAogICAqIE5ldyB1cHN0cmVhbSByZWxlYXNlCmRpZmYgLU5ydSB4
+ZnNkdW1wLTMuMS45L2RlYmlhbi9ydWxlcyB4ZnNkdW1wLTMuMS45K25tdTEvZGViaWFuL3J1
+bGVzCi0tLSB4ZnNkdW1wLTMuMS45L2RlYmlhbi9ydWxlcwkyMDIwLTAxLTMxIDE3OjMwOjU4
+LjAwMDAwMDAwMCArMDAwMAorKysgeGZzZHVtcC0zLjEuOStubXUxL2RlYmlhbi9ydWxlcwky
+MDIwLTA2LTE5IDAxOjAxOjE4LjAwMDAwMDAwMCArMDAwMApAQCAtNDQsNiArNDQsOSBAQAog
+CS1ybSAtcmYgJChkaXJtZSkKIAkkKHBrZ21lKSAkKE1BS0UpIC1DIC4gaW5zdGFsbAogCSQo
+cGtnbWUpICQoTUFLRSkgZGlzdAorCSNyZW1vdmUgdGhlIHN5bWxpbmtzIGluIC91c3Ivc2Jp
+biwgdGhlIHBvc3RpbnN0IHdpbGwgY3JlYXRlIHRoZW0KKwkjaWYgYXBwcm9wcmlhdGUgZm9y
+IHRoZSB1c2VycyBzeXN0ZW0gCisJcm0gLWYgZGViaWFuL3hmc2R1bXAvdXNyL3NiaW4veGZz
+ZHVtcCBkZWJpYW4veGZzZHVtcC91c3Ivc2Jpbi94ZnNyZXN0b3JlCiAJZGhfaW5zdGFsbGRv
+Y3MKIAlkaF9pbnN0YWxsY2hhbmdlbG9ncwogCWRoX3N0cmlwCmRpZmYgLU5ydSB4ZnNkdW1w
+LTMuMS45L2RlYmlhbi94ZnNkdW1wLnBvc3RpbnN0IHhmc2R1bXAtMy4xLjkrbm11MS9kZWJp
+YW4veGZzZHVtcC5wb3N0aW5zdAotLS0geGZzZHVtcC0zLjEuOS9kZWJpYW4veGZzZHVtcC5w
+b3N0aW5zdAkxOTcwLTAxLTAxIDAwOjAwOjAwLjAwMDAwMDAwMCArMDAwMAorKysgeGZzZHVt
+cC0zLjEuOStubXUxL2RlYmlhbi94ZnNkdW1wLnBvc3RpbnN0CTIwMjAtMDYtMTkgMDA6NTk6
+MzIuMDAwMDAwMDAwICswMDAwCkBAIC0wLDAgKzEsMTIgQEAKKyMhL2Jpbi9zaAorc2V0IC1l
+CisKK2lmIFsgIiQxIiA9ICdjb25maWd1cmUnIF07IHRoZW4KKyAgZm9yIGZpbGUgaW4geGZz
+ZHVtcCB4ZnNyZXN0b3JlOyBkbworICAgIGlmIFsgISAtZSAvdXNyL3NiaW4vJGZpbGUgXTsg
+dGhlbgorICAgICAgbG4gLXMgL3NiaW4vJGZpbGUgL3Vzci9zYmluLyRmaWxlCisgICAgZmkK
+KyAgZG9uZQorZmkKKworI0RFQkhFTFBFUiMKZGlmZiAtTnJ1IHhmc2R1bXAtMy4xLjkvZGVi
+aWFuL3hmc2R1bXAucHJlaW5zdCB4ZnNkdW1wLTMuMS45K25tdTEvZGViaWFuL3hmc2R1bXAu
+cHJlaW5zdAotLS0geGZzZHVtcC0zLjEuOS9kZWJpYW4veGZzZHVtcC5wcmVpbnN0CTE5NzAt
+MDEtMDEgMDA6MDA6MDAuMDAwMDAwMDAwICswMDAwCisrKyB4ZnNkdW1wLTMuMS45K25tdTEv
+ZGViaWFuL3hmc2R1bXAucHJlaW5zdAkyMDIwLTA2LTE5IDAxOjAxOjE4LjAwMDAwMDAwMCAr
+MDAwMApAQCAtMCwwICsxLDEyIEBACisjIS9iaW4vc2gKK3NldCAtZQorCitpZiBbICIkMSIg
+PSAncmVtb3ZlJyBdOyB0aGVuCisgIGZvciBmaWxlIGluIHhmc2R1bXAgeGZzcmVzdG9yZTsg
+ZG8KKyAgICBpZiBbIC1MIC91c3Ivc2Jpbi8kZmlsZSBdOyB0aGVuCisgICAgICBybSAvdXNy
+L3NiaW4vJGZpbGUKKyAgICBmaQorICBkb25lCitmaQorCisjREVCSEVMUEVSIwo=
+--------------1C1586CF930C6B7241EAD04C--
