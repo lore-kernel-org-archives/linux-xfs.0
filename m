@@ -2,186 +2,239 @@ Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88DBAC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 04:47:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89F5DC433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 09:39:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F71720CC7
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 04:47:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65D3E20890
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 09:39:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tStn+cjJ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FAsuoiNH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725446AbgFSErm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jun 2020 00:47:42 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:38414 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725290AbgFSErm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 00:47:42 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05J4gUJr070413;
-        Fri, 19 Jun 2020 04:47:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=3J2oETwsXiNOLram6rYS34PrIGCRJJRD72P4x/eLKOY=;
- b=tStn+cjJdRMjeVXe3v72XCjJQueFFMUZ290G9htLpDMQsmEnZO4GMtQ6mhKdxegIKAJQ
- WI06wV3isVEtLXOWhCemm500o1QpeINOAay/f9aobwcIkuJus8fAMFe35R+awtWywwdR
- UT0w1bwlnIHtxRiARmpMOo4QYZ1nsBykcFW6wrBiPPelS5zD8N8UdB+x7coXTKIIHaCA
- Nu4wq4zyWJzMHs6BxqS+NXV+GHop6DiT5lm3RnEPr+njAWVtioD4EnapMCCC7FrbeMB1
- D2PrcFY7km6JJAWxJsL+rwnCxPP+BPr48ntMjBcnC9ZwYGpo2mhglTBmcbtwG15gwDGy DA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 31q6604ns6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 19 Jun 2020 04:47:37 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05J4lNTe074775;
-        Fri, 19 Jun 2020 04:47:36 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 31q66uaaqw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 19 Jun 2020 04:47:36 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05J4lZih020824;
-        Fri, 19 Jun 2020 04:47:35 GMT
-Received: from localhost (/10.159.234.138)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 18 Jun 2020 21:47:35 -0700
-Date:   Thu, 18 Jun 2020 21:47:34 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     peter green <plugwash@p10link.net>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Bug#953537: xfsdump fails to install in /usr merged system.
-Message-ID: <20200619044734.GB11245@magnolia>
-References: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
+        id S1731949AbgFSJjx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 05:39:53 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:55207 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731771AbgFSJjs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 05:39:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592559587;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lrk5imypRvlh6Xm/35IKdaRrF7e1DPYFegz850ZqocU=;
+        b=FAsuoiNHcNmUwIz37zk3buBhWE7kbqTYbDHltjqnlFRQtNabw4K5na7GIJKArK8XvVy24M
+        loBUOEVD232OHZqoTOi1VKAmN99McsBqQDL2iHdg3e2GgcfGhg6ejeq494kAqkWwcVLYmj
+        m3VgKqZ8fiZ9Q17VJ6pXNA1ABkHPnr8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-146-jYi5da2QMoKUefxLZ_07RQ-1; Fri, 19 Jun 2020 05:39:43 -0400
+X-MC-Unique: jYi5da2QMoKUefxLZ_07RQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C7066107B274;
+        Fri, 19 Jun 2020 09:39:40 +0000 (UTC)
+Received: from max.home.com (unknown [10.40.195.140])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 494C05D9CA;
+        Fri, 19 Jun 2020 09:39:35 +0000 (UTC)
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+To:     Matthew Wilcox <willy@infradead.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Andreas Gruenbacher <agruenba@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Junxiao Bi <junxiao.bi@oracle.com>,
+        William Kucharski <william.kucharski@oracle.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        John Hubbard <jhubbard@nvidia.com>,
+        linux-kernel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com,
+        linux-mm@kvack.org, ocfs2-devel@oss.oracle.com,
+        linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, Christoph Hellwig <hch@lst.de>,
+        linux-btrfs@vger.kernel.org
+Subject: [PATCH 2/2] gfs2: Rework read and page fault locking
+Date:   Fri, 19 Jun 2020 11:39:16 +0200
+Message-Id: <20200619093916.1081129-3-agruenba@redhat.com>
+In-Reply-To: <20200619093916.1081129-1-agruenba@redhat.com>
+References: <20200619093916.1081129-1-agruenba@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9656 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- bulkscore=0 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006190031
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9656 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 malwarescore=0
- bulkscore=0 phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0
- spamscore=0 clxscore=1011 mlxlogscore=999 suspectscore=0 impostorscore=0
- cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006190030
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 19, 2020 at 05:05:00AM +0100, peter green wrote:
-> (original message was sent to nathans@redhat.com
-> 953537@bugs.debian.org and linux-xfs@vger.kernel.org re-sending as
-> plain-text only to linux-xfs@vger.kernel.org)
-> 
-> This bug has now caused xfsdump to be kicked out of testing which is
-> making amanda unbuildable in testing.
+The cache consistency model of filesystems like gfs2 is such that if
+data is found in the page cache, the data is up to date and can be used
+without taking any filesystem locks.  If a page is not cached,
+filesystem locks must be taken before populating the page cache.
 
-Uhoh...
+Thus far,  gfs2 has taken the filesystem locks inside the ->readpage and
+->readpages address space operations.  This was already causing lock
+ordering problems, but commit d4388340ae0b ("fs: convert mpage_readpages
+to mpage_readahead") made things worse: the ->readahead operation is
+called with the pages to readahead locked, so grabbing the inode's glock
+can now deadlock with processes which are holding the inode glock while
+trying to lock the same pages.
 
-> 
-> 
-> > Yes, what's really needed here is for a change to be merged upstream
-> > (as all other deb packaging artifacts are) otherwise this will keep
-> > getting lost in time.
-> To make it easier to upstream this I whipped up a patch that should
-> solve the issue while only modifying the debian packaging and not
-> touching the upstream makefiles. It is attached to this message and if
-> I get no response I will likely do some further testing and then NMU
-> it in Debian.
-> 
-> One issue I noticed is it's not all all obvious who upstream is. The
-> sgi website listed in README seems to be long dead and there are no
-> obvious upstream results in a google search for xfsdump. Gentoos page
-> on xfsdump links to https://xfs.wiki.kernel.org but that page makes no
-> mention of xfsdump.
-> 
-> I eventually poked around on git.kernel.org and my best guess is that
-> https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git/ is the upstream
-> git repository and linux-xfs@vger.kernel.org is the appropriate
-> mailing list, I would appreciate comments on whether or not this is
-> correct and updates to the documentation to reflect whatever the
-> correct location is.
+Fix this by taking the inode glock in the ->read_iter file and ->fault
+vm operations.  To avoid taking the inode glock when the data is already
+cached, the ->read_iter file operation first tries to read the data with
+the IOCB_CACHED flag set.  If that fails, the inode glock is locked and
+the operation is repeated without the IOCB_CACHED flag.
 
-Yep, you've found us. :)
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/gfs2/aops.c | 27 ++--------------------
+ fs/gfs2/file.c | 61 ++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 61 insertions(+), 27 deletions(-)
 
-Uh... seeing how /sbin seems to be a symlink to /usr/sbin on more and
-more distros now, how about we just change the upstream makefile to dump
-them in /usr/sbin and forget all about the symlinks?
-
-(He says, wondering what the actual maintainer will say...)
-
---D
-
-> diff -Nru xfsdump-3.1.9/debian/changelog xfsdump-3.1.9+nmu1/debian/changelog
-> --- xfsdump-3.1.9/debian/changelog	2020-01-31 17:30:58.000000000 +0000
-> +++ xfsdump-3.1.9+nmu1/debian/changelog	2020-06-19 01:01:18.000000000 +0000
-> @@ -1,3 +1,13 @@
-> +xfsdump (3.1.9+nmu1) UNRELEASED; urgency=medium
-> +
-> +  * Non-maintainer upload.
-> +  * Create and remove symlinks in postinst/preinst rather than including them
-> +    in the package to support merged user systems. Based on a patch from
-> +    Goffredo Baroncelli but adjusted to avoid the need for modifying upstream
-> +    non-debian files. ( Closes: 953537 )
-> +
-> + -- Peter Michael Green <plugwash@debian.org>  Fri, 19 Jun 2020 01:01:18 +0000
-> +
->  xfsdump (3.1.9) unstable; urgency=low
->  
->    * New upstream release
-> diff -Nru xfsdump-3.1.9/debian/rules xfsdump-3.1.9+nmu1/debian/rules
-> --- xfsdump-3.1.9/debian/rules	2020-01-31 17:30:58.000000000 +0000
-> +++ xfsdump-3.1.9+nmu1/debian/rules	2020-06-19 01:01:18.000000000 +0000
-> @@ -44,6 +44,9 @@
->  	-rm -rf $(dirme)
->  	$(pkgme) $(MAKE) -C . install
->  	$(pkgme) $(MAKE) dist
-> +	#remove the symlinks in /usr/sbin, the postinst will create them
-> +	#if appropriate for the users system 
-> +	rm -f debian/xfsdump/usr/sbin/xfsdump debian/xfsdump/usr/sbin/xfsrestore
->  	dh_installdocs
->  	dh_installchangelogs
->  	dh_strip
-> diff -Nru xfsdump-3.1.9/debian/xfsdump.postinst xfsdump-3.1.9+nmu1/debian/xfsdump.postinst
-> --- xfsdump-3.1.9/debian/xfsdump.postinst	1970-01-01 00:00:00.000000000 +0000
-> +++ xfsdump-3.1.9+nmu1/debian/xfsdump.postinst	2020-06-19 00:59:32.000000000 +0000
-> @@ -0,0 +1,12 @@
-> +#!/bin/sh
-> +set -e
-> +
-> +if [ "$1" = 'configure' ]; then
-> +  for file in xfsdump xfsrestore; do
-> +    if [ ! -e /usr/sbin/$file ]; then
-> +      ln -s /sbin/$file /usr/sbin/$file
-> +    fi
-> +  done
-> +fi
-> +
-> +#DEBHELPER#
-> diff -Nru xfsdump-3.1.9/debian/xfsdump.preinst xfsdump-3.1.9+nmu1/debian/xfsdump.preinst
-> --- xfsdump-3.1.9/debian/xfsdump.preinst	1970-01-01 00:00:00.000000000 +0000
-> +++ xfsdump-3.1.9+nmu1/debian/xfsdump.preinst	2020-06-19 01:01:18.000000000 +0000
-> @@ -0,0 +1,12 @@
-> +#!/bin/sh
-> +set -e
-> +
-> +if [ "$1" = 'remove' ]; then
-> +  for file in xfsdump xfsrestore; do
-> +    if [ -L /usr/sbin/$file ]; then
-> +      rm /usr/sbin/$file
-> +    fi
-> +  done
-> +fi
-> +
-> +#DEBHELPER#
+diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+index 72c9560f4467..73c2fe768a3f 100644
+--- a/fs/gfs2/aops.c
++++ b/fs/gfs2/aops.c
+@@ -513,26 +513,10 @@ static int __gfs2_readpage(void *file, struct page *page)
+ 
+ static int gfs2_readpage(struct file *file, struct page *page)
+ {
+-	struct address_space *mapping = page->mapping;
+-	struct gfs2_inode *ip = GFS2_I(mapping->host);
+-	struct gfs2_holder gh;
+ 	int error;
+ 
+-	unlock_page(page);
+-	gfs2_holder_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
+-	error = gfs2_glock_nq(&gh);
+-	if (unlikely(error))
+-		goto out;
+-	error = AOP_TRUNCATED_PAGE;
+-	lock_page(page);
+-	if (page->mapping == mapping && !PageUptodate(page))
+-		error = __gfs2_readpage(file, page);
+-	else
+-		unlock_page(page);
+-	gfs2_glock_dq(&gh);
+-out:
+-	gfs2_holder_uninit(&gh);
+-	if (error && error != AOP_TRUNCATED_PAGE)
++	error = __gfs2_readpage(file, page);
++	if (error)
+ 		lock_page(page);
+ 	return error;
+ }
+@@ -598,16 +582,9 @@ static void gfs2_readahead(struct readahead_control *rac)
+ {
+ 	struct inode *inode = rac->mapping->host;
+ 	struct gfs2_inode *ip = GFS2_I(inode);
+-	struct gfs2_holder gh;
+ 
+-	gfs2_holder_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
+-	if (gfs2_glock_nq(&gh))
+-		goto out_uninit;
+ 	if (!gfs2_is_stuffed(ip))
+ 		mpage_readahead(rac, gfs2_block_map);
+-	gfs2_glock_dq(&gh);
+-out_uninit:
+-	gfs2_holder_uninit(&gh);
+ }
+ 
+ /**
+diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
+index fe305e4bfd37..f729b0ff2a3c 100644
+--- a/fs/gfs2/file.c
++++ b/fs/gfs2/file.c
+@@ -558,8 +558,29 @@ static vm_fault_t gfs2_page_mkwrite(struct vm_fault *vmf)
+ 	return block_page_mkwrite_return(ret);
+ }
+ 
++static vm_fault_t gfs2_fault(struct vm_fault *vmf)
++{
++	struct inode *inode = file_inode(vmf->vma->vm_file);
++	struct gfs2_inode *ip = GFS2_I(inode);
++	struct gfs2_holder gh;
++	vm_fault_t ret;
++	int err;
++
++	gfs2_holder_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
++	err = gfs2_glock_nq(&gh);
++	if (err) {
++		ret = block_page_mkwrite_return(err);
++		goto out_uninit;
++	}
++	ret = filemap_fault(vmf);
++	gfs2_glock_dq(&gh);
++out_uninit:
++	gfs2_holder_uninit(&gh);
++	return ret;
++}
++
+ static const struct vm_operations_struct gfs2_vm_ops = {
+-	.fault = filemap_fault,
++	.fault = gfs2_fault,
+ 	.map_pages = filemap_map_pages,
+ 	.page_mkwrite = gfs2_page_mkwrite,
+ };
+@@ -824,15 +845,51 @@ static ssize_t gfs2_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
+ 
+ static ssize_t gfs2_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
+ {
++	struct gfs2_inode *ip;
++	struct gfs2_holder gh;
++	size_t written = 0;
+ 	ssize_t ret;
+ 
++	gfs2_holder_mark_uninitialized(&gh);
+ 	if (iocb->ki_flags & IOCB_DIRECT) {
+ 		ret = gfs2_file_direct_read(iocb, to);
+ 		if (likely(ret != -ENOTBLK))
+ 			return ret;
+ 		iocb->ki_flags &= ~IOCB_DIRECT;
+ 	}
+-	return generic_file_read_iter(iocb, to);
++	iocb->ki_flags |= IOCB_CACHED;
++	ret = generic_file_read_iter(iocb, to);
++	iocb->ki_flags &= ~IOCB_CACHED;
++	if (ret >= 0) {
++		if (!iov_iter_count(to))
++			return ret;
++		written = ret;
++	} else {
++		switch(ret) {
++		case -EAGAIN:
++			if (iocb->ki_flags & IOCB_NOWAIT)
++				return ret;
++			break;
++		case -ECANCELED:
++			break;
++		default:
++			return ret;
++		}
++	}
++	ip = GFS2_I(iocb->ki_filp->f_mapping->host);
++	gfs2_holder_init(ip->i_gl, LM_ST_SHARED, 0, &gh);
++	ret = gfs2_glock_nq(&gh);
++	if (ret)
++		goto out_uninit;
++	ret = generic_file_read_iter(iocb, to);
++	if (ret > 0)
++		written += ret;
++	if (gfs2_holder_initialized(&gh))
++		gfs2_glock_dq(&gh);
++out_uninit:
++	if (gfs2_holder_initialized(&gh))
++		gfs2_holder_uninit(&gh);
++	return written ? written : ret;
+ }
+ 
+ /**
+-- 
+2.26.2
 
