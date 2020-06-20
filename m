@@ -1,202 +1,132 @@
-Return-Path: <SRS0=O+9a=AA=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=7N5F=AB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCE66C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 22:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A679C433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 00:17:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B08612231B
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jun 2020 22:43:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F66022574
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 00:17:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="amJf92Zx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729499AbgFSWnh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jun 2020 18:43:37 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:50530 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726900AbgFSWng (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 18:43:36 -0400
-Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id C66341002A3;
-        Sat, 20 Jun 2020 08:43:31 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jmPjJ-0000y9-S2; Sat, 20 Jun 2020 08:43:25 +1000
-Date:   Sat, 20 Jun 2020 08:43:25 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        peter green <plugwash@p10link.net>,
-        Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: Bug#953537: xfsdump fails to install in /usr merged system.
-Message-ID: <20200619224325.GP2005@dread.disaster.area>
-References: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
- <20200619044734.GB11245@magnolia>
- <ea662f0b-7e73-0bbe-33aa-963389b9e215@sandeen.net>
+        id S1730728AbgFTARv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 20:17:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56948 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730616AbgFTARv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jun 2020 20:17:51 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59514C06174E;
+        Fri, 19 Jun 2020 17:17:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=fFSEXflWreKo1G1cvrL7drqCbz0HejuYmmv7qSFZe1Q=; b=amJf92ZxjtaHFV4K+AAc7E7qmY
+        a8VrQUsa/3eN2z89ypqXo7Tx4arU1THWVR2OvHnA1dpOoquREie4Ya5OCL2QlAlTLbmfqV3jtB86o
+        egkpFP6J2o6Pl4MFzk8UmoiFIHE4QfRQOtGYUpkjkzrmZL4cZqiJ5D88+01j3y58fObgRfYL4JosR
+        7pyIvc7URFW+5TU5VKNR2TK34rKUJR5pvcRzSVqEYK+ZQZ8EoghVKWDatQVk4uiNStKthzdQDQgON
+        siPVZDq3dT4Oq68R8IuihmxsCstJjJ25xpjBqJnctP8Fqhcr2xpQNimX8R5wxyF20JiByAWO19iLT
+        UWad3Ogg==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jmRCd-0002PY-D0; Sat, 20 Jun 2020 00:17:47 +0000
+Date:   Fri, 19 Jun 2020 17:17:47 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Qian Cai <cai@lca.pw>
+Cc:     darrick.wong@oracle.com, hch@infradead.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: WARN_ON_ONCE(1) in iomap_dio_actor()
+Message-ID: <20200620001747.GC8681@bombadil.infradead.org>
+References: <20200619211750.GA1027@lca.pw>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ea662f0b-7e73-0bbe-33aa-963389b9e215@sandeen.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=xNf9USuDAAAA:8
-        a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=7_gqYDg1-YOlvv8Dm2kA:9
-        a=CjuIK1q_8ugA:10 a=SEwjQc04WA-l_NiBhQ7s:22 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200619211750.GA1027@lca.pw>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 19, 2020 at 12:03:35PM -0500, Eric Sandeen wrote:
-> On 6/18/20 11:47 PM, Darrick J. Wong wrote:
-> > On Fri, Jun 19, 2020 at 05:05:00AM +0100, peter green wrote:
-> >> (original message was sent to nathans@redhat.com
-> >> 953537@bugs.debian.org and linux-xfs@vger.kernel.org re-sending as
-> >> plain-text only to linux-xfs@vger.kernel.org)
-> >>
-> >> This bug has now caused xfsdump to be kicked out of testing which is
-> >> making amanda unbuildable in testing.
-> > 
-> > Uhoh...
-> > 
-> >>
-> >>
-> >>> Yes, what's really needed here is for a change to be merged upstream
-> >>> (as all other deb packaging artifacts are) otherwise this will keep
-> >>> getting lost in time.
-> >> To make it easier to upstream this I whipped up a patch that should
-> >> solve the issue while only modifying the debian packaging and not
-> >> touching the upstream makefiles. It is attached to this message and if
-> >> I get no response I will likely do some further testing and then NMU
-> >> it in Debian.
-> >>
-> >> One issue I noticed is it's not all all obvious who upstream is. The
-> >> sgi website listed in README seems to be long dead and there are no
-> >> obvious upstream results in a google search for xfsdump. Gentoos page
-> >> on xfsdump links to https://xfs.wiki.kernel.org but that page makes no
-> >> mention of xfsdump.
-> >>
-> >> I eventually poked around on git.kernel.org and my best guess is that
-> >> https://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev.git/ is the upstream
-> >> git repository and linux-xfs@vger.kernel.org is the appropriate
-> >> mailing list, I would appreciate comments on whether or not this is
-> >> correct and updates to the documentation to reflect whatever the
-> >> correct location is.
-> > 
-> > Yep, you've found us. :)
-> > 
-> > Uh... seeing how /sbin seems to be a symlink to /usr/sbin on more and
-> > more distros now, how about we just change the upstream makefile to dump
-> > them in /usr/sbin and forget all about the symlinks?
-> > 
-> > (He says, wondering what the actual maintainer will say...)
+On Fri, Jun 19, 2020 at 05:17:50PM -0400, Qian Cai wrote:
+> Running a syscall fuzzer by a normal user could trigger this,
 > 
-> I wonder too :P
+> [55649.329999][T515839] WARNING: CPU: 6 PID: 515839 at fs/iomap/direct-io.c:391 iomap_dio_actor+0x29c/0x420
+...
+> 371 static loff_t
+> 372 iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+> 373                 void *data, struct iomap *iomap, struct iomap *srcmap)
+> 374 {
+> 375         struct iomap_dio *dio = data;
+> 376
+> 377         switch (iomap->type) {
+> 378         case IOMAP_HOLE:
+> 379                 if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
+> 380                         return -EIO;
+> 381                 return iomap_dio_hole_actor(length, dio);
+> 382         case IOMAP_UNWRITTEN:
+> 383                 if (!(dio->flags & IOMAP_DIO_WRITE))
+> 384                         return iomap_dio_hole_actor(length, dio);
+> 385                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
+> 386         case IOMAP_MAPPED:
+> 387                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
+> 388         case IOMAP_INLINE:
+> 389                 return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
+> 390         default:
+> 391                 WARN_ON_ONCE(1);
+> 392                 return -EIO;
+> 393         }
+> 394 }
 > 
-> So, FWIW, fedora/rhel packaging also hacks this up :(
+> Could that be iomap->type == IOMAP_DELALLOC ? Looking throught the logs,
+> it contains a few pread64() calls until this happens,
 
-Isn't the configure script supposed to handle install locations?
-Both xfsprogs and xfsdump have this in their include/builddefs.in:
+It _shouldn't_ be able to happen.  XFS writes back ranges which exist
+in the page cache upon seeing an O_DIRECT I/O.  So it's not supposed to
+be possible for there to be an extent which is waiting for the contents
+of the page cache to be written back.
 
-PKG_ROOT_SBIN_DIR = @root_sbindir@
-PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
-
-So the actual install locations are coming from the autoconf setup
-the build runs under. Looking in configure.ac in xfsprogs and
-xfsdump, they both do the same thing:
-
-.....
-#
-# Some important tools should be installed into the root partitions.
-#
-# Check whether exec_prefix=/usr: and install them to /sbin in that
-# case.  If the user choses a different prefix assume he just wants
-# a local install for testing and not a system install.
-#
-case $exec_prefix:$prefix in
-NONE:NONE | NONE:/usr | /usr:*)
-  root_sbindir='/sbin'
-  root_libdir="/${base_libdir}"
-  ;;
-*)
-  root_sbindir="${sbindir}"
-  root_libdir="${libdir}"
-  ;;
-esac
-
-AC_SUBST([root_sbindir])
-AC_SUBST([root_libdir])
-
-....
-
-I suspect that this "system install" logic - which once made sense -
-doesn't work at all with symlinked /sbin setups.
-
-IIRC debian is in a transistion stage where it will accept either
-types of package, but people trying to install a "linked /sbin only"
-system will be reporting issues where pacakges do the wrong thing...
-
-> xfsdump does:
-> 
-> %install
-> rm -rf $RPM_BUILD_ROOT
-> make DIST_ROOT=$RPM_BUILD_ROOT install
-> # remove non-versioned docs location
-> rm -rf $RPM_BUILD_ROOT/%{_datadir}/doc/xfsdump/
-> 
-> # Bit of a hack to move files from /sbin to /usr/sbin
-> (cd $RPM_BUILD_ROOT/%{_sbindir}; rm xfsdump xfsrestore)
-> (cd $RPM_BUILD_ROOT/%{_sbindir}; mv ../../sbin/xfsdump .)
-> (cd $RPM_BUILD_ROOT/%{_sbindir}; mv ../../sbin/xfsrestore .)
-> 
-> xfsprogs does:
-> 
-> %install
-> make DIST_ROOT=$RPM_BUILD_ROOT install install-dev \
->         PKG_ROOT_SBIN_DIR=%{_sbindir} PKG_ROOT_LIB_DIR=%{_libdir}
-
-So the fedora rpm package build is overriding the locations that
-autoconf set in include/builddefs for the install on the make
-command line?
-
-> Both of these work around the default location of /sbin:
-> 
-> # grep PKG_ROOT_SBIN_DIR xfsprogs-maint/include/builddefs xfsdump/include/builddefs
-> xfsprogs-maint/include/builddefs:PKG_ROOT_SBIN_DIR = /sbin
-> xfsdump/include/builddefs:PKG_ROOT_SBIN_DIR = /sbin
-
-Ok, it is.
-
-So my question is this: what magic should we be putting in autoconf
-to have it automatically detect that the package should build for a
-linked /sbin and have the build always do the right thing via "make
-install"?
-
-> On one hand, it'd be easy enough to change the upstream defaults I guess.
-> On the other hand, I think the PKG_ROOT_SBIN_DIR method is easy too.
-> 
-> How does debian fix this for xfsprogs?  Doesn't the same issue exist?
-
-AFAICT, yes, it does exist. The buildroot from a recent package
-build:
-
-$ ls -l xfsprogs-5.7.0-rc0/debian/xfsprogs/sbin
-total 928
--rwxr-xr-x 1 dave dave   1968 May 21 15:41 fsck.xfs
--rwxr-xr-x 1 dave dave 367584 May 21 15:42 mkfs.xfs
--rwxr-xr-x 1 dave dave 573536 May 21 15:42 xfs_repair
-$
-
-xfsprogs also appears to be packaging binaries in /sbin, too.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> [child21:124180] [17] pread64(fd=353, buf=0x0, count=0x59b5, pos=0xe0e0e0e) = -1 (Illegal seek)
+> [child21:124180] [339] pread64(fd=339, buf=0xffffbcc40000, count=0xbd71, pos=0xff26) = -1 (Illegal seek)
+> [child21:124627] [136] pread64(fd=69, buf=0xffffbd290000, count=0xee42, pos=2) = -1 (Illegal seek)
+> [child21:124627] [196] pread64(fd=83, buf=0x1, count=0x62f8, pos=0x15390000) = -1 (Illegal seek)
+> [child21:125127] [154] pread64(fd=345, buf=0xffffbcc40000, count=9332, pos=0xffbd) = 9332
+> [child21:125169] [188] pread64(fd=69, buf=0xffffbce90000, count=0x4d47, pos=0) = -1 (Illegal seek)
+> [child21:125169] [227] pread64(fd=345, buf=0x1, count=0xe469, pos=1046) = -1 (Bad address)
+> [child21:125569] [354] pread64(fd=87, buf=0xffffbcc50000, count=0x4294, pos=0x16161616) = -1 (Illegal seek)
+> [child21:125569] [655] pread64(fd=341, buf=0xffffbcc70000, count=2210, pos=0xffff) = -1 (Illegal seek)
+> [child21:125569] [826] pread64(fd=343, buf=0x8, count=0xeb22, pos=0xc090c202e598b) = 0
+> [child21:126233] [261] pread64(fd=338, buf=0xffffbcc40000, count=0xe8fe, pos=105) = -1 (Illegal seek)
+> [child21:126233] [275] pread64(fd=190, buf=0x8, count=0x9c24, pos=116) = -1 (Is a directory)
+> [child21:126882] [32] pread64(fd=86, buf=0xffffbcc40000, count=0x7fc2, pos=2) = -1 (Illegal seek)
+> [child21:127448] [14] pread64(fd=214, buf=0x4, count=11371, pos=0x9b26) = 0
+> [child21:127489] [70] pread64(fd=339, buf=0xffffbcc70000, count=0xb07a, pos=8192) = -1 (Illegal seek)
+> [child21:127489] [80] pread64(fd=339, buf=0x0, count=6527, pos=205) = -1 (Illegal seek)
+> [child21:127489] [245] pread64(fd=69, buf=0x8, count=0xbba2, pos=47) = -1 (Illegal seek)
+> [child21:128098] [334] pread64(fd=353, buf=0xffffbcc90000, count=0x4540, pos=168) = -1 (Illegal seek)
+> [child21:129079] [157] pread64(fd=422, buf=0x0, count=0x80df, pos=0xdfef6378b650aa) = 0
+> [child21:134700] [275] pread64(fd=397, buf=0xffffbcc50000, count=0xdee6, pos=0x887b1e74a2) = -1 (Illegal seek)
+> [child21:135042] [7] pread64(fd=80, buf=0x8, count=0xc494, pos=216) = -1 (Illegal seek)
+> [child21:135056] [188] pread64(fd=430, buf=0xffffbd090000, count=0xbe66, pos=0x3a3a3a3a) = -1 (Illegal seek)
+> [child21:135442] [143] pread64(fd=226, buf=0xffffbd390000, count=11558, pos=0x1000002d) = 0
+> [child21:135513] [275] pread64(fd=69, buf=0x4, count=4659, pos=0x486005206c2986) = -1 (Illegal seek)
+> [child21:135513] [335] pread64(fd=339, buf=0xffffbd090000, count=0x90fd, pos=253) = -1 (Illegal seek)
+> [child21:135513] [392] pread64(fd=76, buf=0xffffbcc40000, count=0xf324, pos=0x5d5d5d5d) = -1 (Illegal seek)
+> [child21:135665] [5] pread64(fd=431, buf=0xffffbcc70000, count=10545, pos=16384) = -1 (Illegal seek)
+> [child21:135665] [293] pread64(fd=349, buf=0x4, count=0xd2ad, pos=0x2000000) = -1 (Illegal seek)
+> [child21:135790] [99] pread64(fd=76, buf=0x8, count=0x70d7, pos=0x21000440) = -1 (Illegal seek)
+> [child21:135790] [149] pread64(fd=70, buf=0xffffbd5b0000, count=0x53f3, pos=255) = -1 (Illegal seek)
+> [child21:135790] [301] pread64(fd=348, buf=0x4, count=5713, pos=0x6c00401a) = -1 (Illegal seek)
+> [child21:136162] [570] pread64(fd=435, buf=0x1, count=11182, pos=248) = -1 (Illegal seek)
+> [child21:136162] [584] pread64(fd=78, buf=0xffffbcc40000, count=0xa401, pos=8192) = -1 (Illegal seek)
+> [child21:138090] [167] pread64(fd=339, buf=0x4, count=0x6aba, pos=256) = -1 (Illegal seek)
+> [child21:138090] [203] pread64(fd=348, buf=0xffffbcc90000, count=0x8625, pos=128) = -1 (Illegal seek)
+> [child21:138551] [174] pread64(fd=426, buf=0x0, count=0xd582, pos=0xd7e8674d0a86) = 0
+> [child21:138551] [179] pread64(fd=426, buf=0xffffbce90000, count=0x415a, pos=0x536e873600750b2d) = 0
+> [child21:138988] [306] pread64(fd=436, buf=0x8, count=0x62e6, pos=0x445c403204924c1) = -1 (Illegal seek)
+> [child21:138988] [353] pread64(fd=427, buf=0x4, count=0x993b, pos=176) = 0
