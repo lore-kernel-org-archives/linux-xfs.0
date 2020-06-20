@@ -2,105 +2,68 @@ Return-Path: <SRS0=7N5F=AB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A292CC433DF
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 01:56:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A739CC433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 02:10:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 69A5322D2C
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 01:56:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fieldses.org header.i=@fieldses.org header.b="T9/sZJMp"
+	by mail.kernel.org (Postfix) with ESMTP id 8C6E222D70
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 02:10:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731590AbgFTB4e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jun 2020 21:56:34 -0400
-Received: from fieldses.org ([173.255.197.46]:41234 "EHLO fieldses.org"
+        id S1731696AbgFTCKJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jun 2020 22:10:09 -0400
+Received: from p10link.net ([80.68.89.68]:44063 "EHLO P10Link.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731589AbgFTB4e (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 Jun 2020 21:56:34 -0400
-Received: by fieldses.org (Postfix, from userid 2815)
-        id C14F191D8; Fri, 19 Jun 2020 21:56:33 -0400 (EDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org C14F191D8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
-        s=default; t=1592618193;
-        bh=px2fxrVRGaefarQd+BFyouZ0r8UsW3DJrqCLsAmy3qs=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=T9/sZJMpMOgd+/TkpaAoBFfhJJXx0Rt3kQv+PaHGiCUpVIwWIfRwp6CtiEPMpERoB
-         apwrhYqnopPoBS5TNsHZUdB6O6Kj4KWRBuE43RfpCw5geLcE6VwwarEHXeY4pRTXrx
-         3AErIh9dL/mYCpaZppI/hiDk67oG4cNXJLjt+f2E=
-Date:   Fri, 19 Jun 2020 21:56:33 -0400
-From:   "J. Bruce Fields" <bfields@fieldses.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
-Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
-Message-ID: <20200620015633.GA1516@fieldses.org>
-References: <20200618013026.ewnhvf64nb62k2yx@gabell>
- <20200618030539.GH2005@dread.disaster.area>
- <20200618034535.h5ho7pd4eilpbj3f@gabell>
- <20200618223948.GI2005@dread.disaster.area>
- <20200619022005.GA25414@fieldses.org>
- <20200619024455.GN2005@dread.disaster.area>
- <20200619204033.GB1564@fieldses.org>
- <20200619221044.GO2005@dread.disaster.area>
- <20200619222843.GB2650@fieldses.org>
- <20200620014957.GQ2005@dread.disaster.area>
+        id S1730293AbgFTCKI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 Jun 2020 22:10:08 -0400
+Received: from [192.168.1.2] (unknown [94.2.179.121])
+        by P10Link.net (Postfix) with ESMTPSA id 4D93B40C00F;
+        Sat, 20 Jun 2020 03:10:06 +0100 (BST)
+Subject: Re: Bug#953537: xfsdump fails to install in /usr merged system.
+To:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@sandeen.net>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org,
+        953537@bugs.debian.org
+References: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
+ <20200619044734.GB11245@magnolia>
+ <ea662f0b-7e73-0bbe-33aa-963389b9e215@sandeen.net>
+ <20200619224325.GP2005@dread.disaster.area>
+From:   peter green <plugwash@p10link.net>
+Message-ID: <3ecca5f3-f448-195a-4fd7-d078139972f9@p10link.net>
+Date:   Sat, 20 Jun 2020 03:10:05 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200620014957.GQ2005@dread.disaster.area>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <20200619224325.GP2005@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 20, 2020 at 11:49:57AM +1000, Dave Chinner wrote:
-> On Fri, Jun 19, 2020 at 06:28:43PM -0400, J. Bruce Fields wrote:
-> > On Sat, Jun 20, 2020 at 08:10:44AM +1000, Dave Chinner wrote:
-> > > On Fri, Jun 19, 2020 at 04:40:33PM -0400, J. Bruce Fields wrote:
-> > > > On Fri, Jun 19, 2020 at 12:44:55PM +1000, Dave Chinner wrote:
-> > > > > On Thu, Jun 18, 2020 at 10:20:05PM -0400, J. Bruce Fields wrote:
-> > > > > > My memory was that after Jeff Layton's i_version patches, there wasn't
-> > > > > > really a significant performance hit any more, so the ability to turn it
-> > > > > > off is no longer useful.
-> > > > > 
-> > > > > Yes, I completely agree with you here. However, with some
-> > > > > filesystems allowing it to be turned off, we can't just wave our
-> > > > > hands and force enable the option. Those filesystems - if the
-> > > > > maintainers chose to always enable iversion - will have to go
-> > > > > through a mount option deprecation period before permanently
-> > > > > enabling it.
-> > > > 
-> > > > I don't understand why.
-> > > > 
-> > > > The filesystem can continue to let people set iversion or noiversion as
-> > > > they like, while under the covers behaving as if iversion is always set.
-> > > > I can't see how that would break any application.  (Or even how an
-> > > > application would be able to detect that the filesystem was doing this.)
-> > > 
-> > > It doesn't break functionality, but it affects performance.
-> > 
-> > I thought you just agreed above that any performance hit was not
-> > "significant".
-> 
-> Yes, but that's just /my opinion/.
-> 
-> However, other people have different opinions on this matter (and we
-> know that from the people who considered XFS v4 -> v5 going slower
-> because iversion a major regression), and so we must acknowledge
-> those opinions even if we don't agree with them.
+Putting the debian bug back in cc, previous mails are visible at https://marc.info/?l=linux-xfs&m=159253950420613&w=2
 
-Do you have any of those reports handy?  Were there numbers?
+On 19/06/2020 23:43, Dave Chinner wrote:
 
---b.
+> Isn't the configure script supposed to handle install locations?
+> Both xfsprogs and xfsdump have this in their include/builddefs.in:
+> 
+> PKG_ROOT_SBIN_DIR = @root_sbindir@
+> PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
+> 
+> So the actual install locations are coming from the autoconf setup
+> the build runs under. Looking in configure.ac in xfsprogs and
+> xfsdump, they both do the same thing:
+> 
+The issue is that xfsdump installs the programs in /sbin but it *also* creates symlinks in /usr/sbin,
+presumablly at some point the binaries were moved to /sbin but the developers wanted to keep
+packages that hardcoded the paths working.
+
+Those symlinks are suppressed if installing directly to a merged-usr system, which is fine for
+end-users installing the program directly but isn't useful if installing to a destination dir for
+packaing purposed.
