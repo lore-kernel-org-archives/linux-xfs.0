@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4631EC433E1
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 07:11:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3672C433DF
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 07:11:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F51E23600
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 07:11:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DFA923600
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 07:11:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sBLJDeQy"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Uu7McgdY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbgFTHLi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 Jun 2020 03:11:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35548 "EHLO
+        id S1726920AbgFTHLl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 Jun 2020 03:11:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35554 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725852AbgFTHLi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Jun 2020 03:11:38 -0400
+        with ESMTP id S1725852AbgFTHLl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Jun 2020 03:11:41 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3302FC06174E
-        for <linux-xfs@vger.kernel.org>; Sat, 20 Jun 2020 00:11:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA854C06174E
+        for <linux-xfs@vger.kernel.org>; Sat, 20 Jun 2020 00:11:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
         Reply-To:Cc:Content-Type:Content-ID:Content-Description;
-        bh=aLxestoJxWCYoF/UuAhVUXQxnVY9XT0QlH/9JOr+58c=; b=sBLJDeQy6EwYSxwp3eMkKufLUh
-        O9UekuuqAN6ZMiNzu7d1qrBNNcoP692N6MRJIwH67zj2RU3q1DTSZm98yqOXcgxvG21FJYipb4Fwd
-        aVCnoHwv1RyVrc44Lgh1Byy85KZYfGspUfPJuODsAylQfg65M0Yr/92wcrqnSaIG0o8RXjXwVyHlr
-        NtZZwXqhOYf8dODacmbo5HkFSKXuZoSC15fUCYydwohu6T4OGv18VthWZMygb4kg/8hFV/SUBB5P+
-        YwFncLHBJfSAE6dGyYV5O64JmSYEvfHMWbr0UULVn9kZPxAyTuGUGvrJKNGVGyv088sGdZ1mmTzMG
-        FVUxYOfw==;
+        bh=kINRs3qRsJR9UBLXY2cfetRtvG3bp3htV3lu4vMaOGo=; b=Uu7McgdYRIhOIDQTX3UK2kHCol
+        yYahlKFlSNS6rbrtGjpUZeW03UGq4iHiy04tWmAwpgzbJDcJSZ6VKb7oz0ej0CWCG0I3pEP5JG87Y
+        YriUmz2KUpXFy1o4l1UXZl7AzOttmvzp+M7r/j4s6KF0HFiKoCYP6fdr9owFdSEhNUGfICrWBxtV4
+        RLHyXCAK8Ig1F9o2Od9+xLGr6IIDOS1s1BxLdcalM6ntypPkYq3Qk2rqHyWwZ2OGyuUZ+nJiZ7AzU
+        2P29YB24GrWeYV3D6gLGdpG2Me8dRYy495MeDIQVEKabDVZQWwjG6TMXlJmoHBMaDIw/868BXvS+P
+        pmtWlSDw==;
 Received: from 195-192-102-148.dyn.cablelink.at ([195.192.102.148] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jmXf7-00011R-LQ
-        for linux-xfs@vger.kernel.org; Sat, 20 Jun 2020 07:11:38 +0000
+        id 1jmXfA-00011Y-Ds
+        for linux-xfs@vger.kernel.org; Sat, 20 Jun 2020 07:11:40 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 11/15] xfs: move the di_flags field to struct xfs_inode
-Date:   Sat, 20 Jun 2020 09:10:58 +0200
-Message-Id: <20200620071102.462554-12-hch@lst.de>
+Subject: [PATCH 12/15] xfs: move the di_flags2 field to struct xfs_inode
+Date:   Sat, 20 Jun 2020 09:10:59 +0200
+Message-Id: <20200620071102.462554-13-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200620071102.462554-1-hch@lst.de>
 References: <20200620071102.462554-1-hch@lst.de>
@@ -54,429 +54,373 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In preparation of removing the historic icinode struct, move the flags
+In preparation of removing the historic icinode struct, move the flags2
 field into the containing xfs_inode structure.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_bmap_btree.c |  2 +-
- fs/xfs/libxfs/xfs_inode_buf.c  |  4 ++--
- fs/xfs/libxfs/xfs_inode_buf.h  |  1 -
- fs/xfs/libxfs/xfs_rtbitmap.c   |  4 ++--
- fs/xfs/scrub/common.c          |  2 +-
- fs/xfs/xfs_bmap_util.c         |  4 ++--
- fs/xfs/xfs_file.c              |  4 ++--
- fs/xfs/xfs_filestream.h        |  2 +-
- fs/xfs/xfs_inode.c             | 38 +++++++++++++++++-----------------
- fs/xfs/xfs_inode.h             |  3 ++-
- fs/xfs/xfs_inode_item.c        |  2 +-
- fs/xfs/xfs_ioctl.c             |  9 ++++----
- fs/xfs/xfs_iops.c              |  6 +++---
- fs/xfs/xfs_linux.h             |  2 +-
- fs/xfs/xfs_rtalloc.c           |  4 ++--
- fs/xfs/xfs_super.c             |  4 ++--
- fs/xfs/xfs_symlink.c           |  2 +-
- 17 files changed, 46 insertions(+), 47 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c |  4 ++--
+ fs/xfs/libxfs/xfs_inode_buf.h |  2 --
+ fs/xfs/xfs_bmap_util.c        | 24 ++++++++++++------------
+ fs/xfs/xfs_file.c             |  4 ++--
+ fs/xfs/xfs_inode.c            | 22 ++++++++++------------
+ fs/xfs/xfs_inode.h            |  3 ++-
+ fs/xfs/xfs_inode_item.c       |  2 +-
+ fs/xfs/xfs_ioctl.c            | 23 +++++++++++------------
+ fs/xfs/xfs_iops.c             |  2 +-
+ fs/xfs/xfs_itable.c           |  2 +-
+ fs/xfs/xfs_reflink.c          |  8 ++++----
+ 11 files changed, 46 insertions(+), 50 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index 9ad4c6a1eec518..d32f3a94c936e6 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -183,7 +183,7 @@ xfs_bmbt_update_cursor(
- 	struct xfs_btree_cur	*dst)
- {
- 	ASSERT((dst->bc_tp->t_firstblock != NULLFSBLOCK) ||
--	       (dst->bc_ino.ip->i_d.di_flags & XFS_DIFLAG_REALTIME));
-+	       (dst->bc_ino.ip->i_diflags & XFS_DIFLAG_REALTIME));
- 
- 	dst->bc_ino.allocated += src->bc_ino.allocated;
- 	dst->bc_tp->t_firstblock = src->bc_tp->t_firstblock;
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index 69a6844b1698d0..bb9c4775ecaa5c 100644
+index bb9c4775ecaa5c..79e470933abfa8 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.c
 +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -248,7 +248,7 @@ xfs_inode_from_disk(
- 	ip->i_forkoff = from->di_forkoff;
- 	to->di_dmevmask	= be32_to_cpu(from->di_dmevmask);
- 	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
--	to->di_flags	= be16_to_cpu(from->di_flags);
-+	ip->i_diflags	= be16_to_cpu(from->di_flags);
+@@ -255,7 +255,7 @@ xfs_inode_from_disk(
+ 					   be64_to_cpu(from->di_changecount));
+ 		to->di_crtime.tv_sec = be32_to_cpu(from->di_crtime.t_sec);
+ 		to->di_crtime.tv_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+-		to->di_flags2 = be64_to_cpu(from->di_flags2);
++		ip->i_diflags2 = be64_to_cpu(from->di_flags2);
+ 		ip->i_cowextsize = be32_to_cpu(from->di_cowextsize);
+ 	}
  
- 	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
- 		inode_set_iversion_queried(inode,
-@@ -314,7 +314,7 @@ xfs_inode_to_disk(
- 	to->di_aformat = xfs_ifork_format(ip->i_afp);
- 	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
- 	to->di_dmstate = cpu_to_be16(from->di_dmstate);
--	to->di_flags = cpu_to_be16(from->di_flags);
-+	to->di_flags = cpu_to_be16(ip->i_diflags);
- 
- 	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
- 		to->di_version = 3;
+@@ -321,7 +321,7 @@ xfs_inode_to_disk(
+ 		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
+ 		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.tv_sec);
+ 		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.tv_nsec);
+-		to->di_flags2 = cpu_to_be64(from->di_flags2);
++		to->di_flags2 = cpu_to_be64(ip->i_diflags2);
+ 		to->di_cowextsize = cpu_to_be32(ip->i_cowextsize);
+ 		to->di_ino = cpu_to_be64(ip->i_ino);
+ 		to->di_lsn = cpu_to_be64(lsn);
 diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 032486dbf82757..5c6a6ac521b11d 100644
+index 5c6a6ac521b11d..4bfad6d6d5710a 100644
 --- a/fs/xfs/libxfs/xfs_inode_buf.h
 +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -18,7 +18,6 @@ struct xfs_dinode;
- struct xfs_icdinode {
+@@ -19,8 +19,6 @@ struct xfs_icdinode {
  	uint32_t	di_dmevmask;	/* DMIG event mask */
  	uint16_t	di_dmstate;	/* DMIG state info */
--	uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
  
- 	uint64_t	di_flags2;	/* more random flags */
+-	uint64_t	di_flags2;	/* more random flags */
+-
+ 	struct timespec64 di_crtime;	/* time created */
+ };
  
-diff --git a/fs/xfs/libxfs/xfs_rtbitmap.c b/fs/xfs/libxfs/xfs_rtbitmap.c
-index 9498ced947be9e..57381b9aca00ac 100644
---- a/fs/xfs/libxfs/xfs_rtbitmap.c
-+++ b/fs/xfs/libxfs/xfs_rtbitmap.c
-@@ -997,8 +997,8 @@ xfs_rtfree_extent(
- 	 */
- 	if (tp->t_frextents_delta + mp->m_sb.sb_frextents ==
- 	    mp->m_sb.sb_rextents) {
--		if (!(mp->m_rbmip->i_d.di_flags & XFS_DIFLAG_NEWRTBM))
--			mp->m_rbmip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
-+		if (!(mp->m_rbmip->i_diflags & XFS_DIFLAG_NEWRTBM))
-+			mp->m_rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
- 		*(uint64_t *)&VFS_I(mp->m_rbmip)->i_atime = 0;
- 		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
- 	}
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 18876056e5e02a..254dc813696de4 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -835,7 +835,7 @@ xchk_metadata_inode_forks(
- 		return 0;
- 
- 	/* Metadata inodes don't live on the rt device. */
--	if (sc->ip->i_d.di_flags & XFS_DIFLAG_REALTIME) {
-+	if (sc->ip->i_diflags & XFS_DIFLAG_REALTIME) {
- 		xchk_ino_set_corrupt(sc, sc->ip->i_ino);
- 		return 0;
- 	}
 diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 5eba039d72fb83..0b944aad75e618 100644
+index 0b944aad75e618..8f85a4131983a6 100644
 --- a/fs/xfs/xfs_bmap_util.c
 +++ b/fs/xfs/xfs_bmap_util.c
-@@ -439,7 +439,7 @@ xfs_getbmap(
- 		}
- 
- 		if (xfs_get_extsz_hint(ip) ||
--		    (ip->i_d.di_flags &
-+		    (ip->i_diflags &
- 		     (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))
- 			max_len = mp->m_super->s_maxbytes;
- 		else
-@@ -620,7 +620,7 @@ xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
- 	 * Do not free real preallocated or append-only files unless the file
- 	 * has delalloc blocks and we are forced to remove them.
+@@ -1332,9 +1332,9 @@ xfs_swap_extent_rmap(
+ 	 * rmap functions when we go to fix up the rmaps.  The flags
+ 	 * will be switch for reals later.
  	 */
--	if (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
-+	if (ip->i_diflags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
- 		if (!force || ip->i_delayed_blks == 0)
- 			return false;
+-	tip_flags2 = tip->i_d.di_flags2;
+-	if (ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK)
+-		tip->i_d.di_flags2 |= XFS_DIFLAG2_REFLINK;
++	tip_flags2 = tip->i_diflags2;
++	if (ip->i_diflags2 & XFS_DIFLAG2_REFLINK)
++		tip->i_diflags2 |= XFS_DIFLAG2_REFLINK;
  
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index b0384306d6622f..4f08793f3d6db4 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -56,9 +56,9 @@ xfs_update_prealloc_flags(
+ 	offset_fsb = 0;
+ 	end_fsb = XFS_B_TO_FSB(ip->i_mount, i_size_read(VFS_I(ip)));
+@@ -1405,12 +1405,12 @@ xfs_swap_extent_rmap(
+ 		offset_fsb += ilen;
  	}
  
- 	if (flags & XFS_PREALLOC_SET)
--		ip->i_d.di_flags |= XFS_DIFLAG_PREALLOC;
-+		ip->i_diflags |= XFS_DIFLAG_PREALLOC;
- 	if (flags & XFS_PREALLOC_CLEAR)
--		ip->i_d.di_flags &= ~XFS_DIFLAG_PREALLOC;
-+		ip->i_diflags &= ~XFS_DIFLAG_PREALLOC;
+-	tip->i_d.di_flags2 = tip_flags2;
++	tip->i_diflags2 = tip_flags2;
+ 	return 0;
  
- 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
- 	if (flags & XFS_PREALLOC_SYNC)
-diff --git a/fs/xfs/xfs_filestream.h b/fs/xfs/xfs_filestream.h
-index 5cc7665e93c92b..3af963743e4d0b 100644
---- a/fs/xfs/xfs_filestream.h
-+++ b/fs/xfs/xfs_filestream.h
-@@ -22,7 +22,7 @@ xfs_inode_is_filestream(
- 	struct xfs_inode	*ip)
- {
- 	return (ip->i_mount->m_flags & XFS_MOUNT_FILESTREAMS) ||
--		(ip->i_d.di_flags & XFS_DIFLAG_FILESTREAM);
-+		(ip->i_diflags & XFS_DIFLAG_FILESTREAM);
+ out:
+ 	trace_xfs_swap_extent_rmap_error(ip, error, _RET_IP_);
+-	tip->i_d.di_flags2 = tip_flags2;
++	tip->i_diflags2 = tip_flags2;
+ 	return error;
  }
  
- #endif /* __XFS_FILESTREAM_H__ */
+@@ -1708,13 +1708,13 @@ xfs_swap_extents(
+ 		goto out_trans_cancel;
+ 
+ 	/* Do we have to swap reflink flags? */
+-	if ((ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK) ^
+-	    (tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK)) {
+-		f = ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
+-		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+-		ip->i_d.di_flags2 |= tip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
+-		tip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
+-		tip->i_d.di_flags2 |= f & XFS_DIFLAG2_REFLINK;
++	if ((ip->i_diflags2 & XFS_DIFLAG2_REFLINK) ^
++	    (tip->i_diflags2 & XFS_DIFLAG2_REFLINK)) {
++		f = ip->i_diflags2 & XFS_DIFLAG2_REFLINK;
++		ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
++		ip->i_diflags2 |= tip->i_diflags2 & XFS_DIFLAG2_REFLINK;
++		tip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
++		tip->i_diflags2 |= f & XFS_DIFLAG2_REFLINK;
+ 	}
+ 
+ 	/* Swap the cow forks. */
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 4f08793f3d6db4..193352df48f6bd 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1052,9 +1052,9 @@ xfs_file_remap_range(
+ 	 */
+ 	cowextsize = 0;
+ 	if (pos_in == 0 && len == i_size_read(inode_in) &&
+-	    (src->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
++	    (src->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) &&
+ 	    pos_out == 0 && len >= i_size_read(inode_out) &&
+-	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
++	    !(dest->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE))
+ 		cowextsize = src->i_cowextsize;
+ 
+ 	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 764f91610d1496..479342ac8851f4 100644
+index 479342ac8851f4..593e8c5c2fd658 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -61,7 +61,7 @@ xfs_get_extsz_hint(
- 	 */
- 	if (xfs_is_always_cow_inode(ip))
- 		return 0;
--	if ((ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE) && ip->i_extsize)
-+	if ((ip->i_diflags & XFS_DIFLAG_EXTSIZE) && ip->i_extsize)
- 		return ip->i_extsize;
- 	if (XFS_IS_REALTIME_INODE(ip))
- 		return ip->i_mount->m_sb.sb_rextsize;
-@@ -673,7 +673,7 @@ xfs_ip2xflags(
- {
- 	struct xfs_icdinode	*dic = &ip->i_d;
+@@ -81,7 +81,7 @@ xfs_get_cowextsz_hint(
+ 	xfs_extlen_t		a, b;
  
--	return _xfs_dic2xflags(dic->di_flags, dic->di_flags2, XFS_IFORK_Q(ip));
-+	return _xfs_dic2xflags(ip->i_diflags, dic->di_flags2, XFS_IFORK_Q(ip));
+ 	a = 0;
+-	if (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
++	if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
+ 		a = ip->i_cowextsize;
+ 	b = xfs_get_extsz_hint(ip);
+ 
+@@ -671,9 +671,7 @@ uint
+ xfs_ip2xflags(
+ 	struct xfs_inode	*ip)
+ {
+-	struct xfs_icdinode	*dic = &ip->i_d;
+-
+-	return _xfs_dic2xflags(ip->i_diflags, dic->di_flags2, XFS_IFORK_Q(ip));
++	return _xfs_dic2xflags(ip->i_diflags, ip->i_diflags2, XFS_IFORK_Q(ip));
  }
  
  /*
-@@ -837,7 +837,7 @@ xfs_ialloc(
- 	ip->i_extsize = 0;
- 	ip->i_d.di_dmevmask = 0;
- 	ip->i_d.di_dmstate = 0;
--	ip->i_d.di_flags = 0;
-+	ip->i_diflags = 0;
+@@ -841,7 +839,7 @@ xfs_ialloc(
  
  	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
  		inode_set_iversion(inode, 1);
-@@ -858,45 +858,45 @@ xfs_ialloc(
- 		break;
- 	case S_IFREG:
- 	case S_IFDIR:
--		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
-+		if (pip && (pip->i_diflags & XFS_DIFLAG_ANY)) {
- 			uint		di_flags = 0;
- 
- 			if (S_ISDIR(mode)) {
--				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
-+				if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
- 					di_flags |= XFS_DIFLAG_RTINHERIT;
--				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
-+				if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
- 					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
- 					ip->i_extsize = pip->i_extsize;
- 				}
--				if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
-+				if (pip->i_diflags & XFS_DIFLAG_PROJINHERIT)
- 					di_flags |= XFS_DIFLAG_PROJINHERIT;
- 			} else if (S_ISREG(mode)) {
--				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
-+				if (pip->i_diflags & XFS_DIFLAG_RTINHERIT)
- 					di_flags |= XFS_DIFLAG_REALTIME;
--				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
-+				if (pip->i_diflags & XFS_DIFLAG_EXTSZINHERIT) {
- 					di_flags |= XFS_DIFLAG_EXTSIZE;
- 					ip->i_extsize = pip->i_extsize;
- 				}
- 			}
--			if ((pip->i_d.di_flags & XFS_DIFLAG_NOATIME) &&
-+			if ((pip->i_diflags & XFS_DIFLAG_NOATIME) &&
- 			    xfs_inherit_noatime)
- 				di_flags |= XFS_DIFLAG_NOATIME;
--			if ((pip->i_d.di_flags & XFS_DIFLAG_NODUMP) &&
-+			if ((pip->i_diflags & XFS_DIFLAG_NODUMP) &&
- 			    xfs_inherit_nodump)
- 				di_flags |= XFS_DIFLAG_NODUMP;
--			if ((pip->i_d.di_flags & XFS_DIFLAG_SYNC) &&
-+			if ((pip->i_diflags & XFS_DIFLAG_SYNC) &&
- 			    xfs_inherit_sync)
- 				di_flags |= XFS_DIFLAG_SYNC;
--			if ((pip->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) &&
-+			if ((pip->i_diflags & XFS_DIFLAG_NOSYMLINKS) &&
- 			    xfs_inherit_nosymlinks)
- 				di_flags |= XFS_DIFLAG_NOSYMLINKS;
--			if ((pip->i_d.di_flags & XFS_DIFLAG_NODEFRAG) &&
-+			if ((pip->i_diflags & XFS_DIFLAG_NODEFRAG) &&
- 			    xfs_inherit_nodefrag)
- 				di_flags |= XFS_DIFLAG_NODEFRAG;
--			if (pip->i_d.di_flags & XFS_DIFLAG_FILESTREAM)
-+			if (pip->i_diflags & XFS_DIFLAG_FILESTREAM)
- 				di_flags |= XFS_DIFLAG_FILESTREAM;
- 
--			ip->i_d.di_flags |= di_flags;
-+			ip->i_diflags |= di_flags;
- 		}
- 		if (pip && (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY)) {
- 			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
-@@ -1397,7 +1397,7 @@ xfs_link(
- 	 * creation in our tree when the project IDs are the same; else
- 	 * the tree quota mechanism could be circumvented.
- 	 */
--	if (unlikely((tdp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
-+	if (unlikely((tdp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
- 		     tdp->i_projid != sip->i_projid)) {
- 		error = -EXDEV;
- 		goto error_return;
-@@ -2755,7 +2755,7 @@ xfs_ifree(
+-		ip->i_d.di_flags2 = 0;
++		ip->i_diflags2 = 0;
+ 		ip->i_cowextsize = 0;
+ 		ip->i_d.di_crtime = tv;
  	}
+@@ -898,13 +896,13 @@ xfs_ialloc(
+ 
+ 			ip->i_diflags |= di_flags;
+ 		}
+-		if (pip && (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY)) {
+-			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
+-				ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
++		if (pip && (pip->i_diflags2 & XFS_DIFLAG2_ANY)) {
++			if (pip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE) {
++				ip->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
+ 				ip->i_cowextsize = pip->i_cowextsize;
+ 			}
+-			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
+-				ip->i_d.di_flags2 |= XFS_DIFLAG2_DAX;
++			if (pip->i_diflags2 & XFS_DIFLAG2_DAX)
++				ip->i_diflags2 |= XFS_DIFLAG2_DAX;
+ 		}
+ 		/* FALLTHROUGH */
+ 	case S_IFLNK:
+@@ -1456,7 +1454,7 @@ xfs_itruncate_clear_reflink_flags(
+ 	dfork = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+ 	cfork = XFS_IFORK_PTR(ip, XFS_COW_FORK);
+ 	if (dfork->if_bytes == 0 && cfork->if_bytes == 0)
+-		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
++		ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+ 	if (cfork->if_bytes == 0)
+ 		xfs_inode_clear_cowblocks_tag(ip);
+ }
+@@ -2756,7 +2754,7 @@ xfs_ifree(
  
  	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
--	ip->i_d.di_flags = 0;
-+	ip->i_diflags = 0;
- 	ip->i_d.di_flags2 = 0;
+ 	ip->i_diflags = 0;
+-	ip->i_d.di_flags2 = 0;
++	ip->i_diflags2 = 0;
  	ip->i_d.di_dmevmask = 0;
  	ip->i_forkoff = 0;		/* mark the attr fork not in use */
-@@ -3263,7 +3263,7 @@ xfs_rename(
- 	 * into our tree when the project IDs are the same; else the
- 	 * tree quota mechanism would be circumvented.
- 	 */
--	if (unlikely((target_dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
-+	if (unlikely((target_dp->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
- 		     target_dp->i_projid != src_ip->i_projid)) {
- 		error = -EXDEV;
- 		goto out_trans_cancel;
+ 	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
 diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 31440ab88cf141..7673c841d89154 100644
+index 7673c841d89154..709f04fadde65e 100644
 --- a/fs/xfs/xfs_inode.h
 +++ b/fs/xfs/xfs_inode.h
-@@ -64,6 +64,7 @@ typedef struct xfs_inode {
- 		uint16_t	i_flushiter;	/* incremented on flush */
+@@ -65,6 +65,7 @@ typedef struct xfs_inode {
  	};
  	uint8_t			i_forkoff;	/* attr fork offset >> 3 */
-+	uint16_t		i_diflags;	/* XFS_DIFLAG_... */
+ 	uint16_t		i_diflags;	/* XFS_DIFLAG_... */
++	uint64_t		i_diflags2;	/* XFS_DIFLAG2_... */
  
  	struct xfs_icdinode	i_d;		/* most of ondisk inode */
  
-@@ -184,7 +185,7 @@ xfs_iflags_test_and_set(xfs_inode_t *ip, unsigned short flags)
- static inline prid_t
- xfs_get_initial_prid(struct xfs_inode *dp)
- {
--	if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
-+	if (dp->i_diflags & XFS_DIFLAG_PROJINHERIT)
- 		return dp->i_projid;
+@@ -193,7 +194,7 @@ xfs_get_initial_prid(struct xfs_inode *dp)
  
- 	return XFS_PROJID_DEFAULT;
+ static inline bool xfs_is_reflink_inode(struct xfs_inode *ip)
+ {
+-	return ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK;
++	return ip->i_diflags2 & XFS_DIFLAG2_REFLINK;
+ }
+ 
+ /*
 diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index a83ddc4e029f0f..6af8e829dd0172 100644
+index 6af8e829dd0172..04e671d2957ca2 100644
 --- a/fs/xfs/xfs_inode_item.c
 +++ b/fs/xfs/xfs_inode_item.c
-@@ -332,7 +332,7 @@ xfs_inode_to_log_dinode(
- 	to->di_aformat = xfs_ifork_format(ip->i_afp);
- 	to->di_dmevmask = from->di_dmevmask;
- 	to->di_dmstate = from->di_dmstate;
--	to->di_flags = from->di_flags;
-+	to->di_flags = ip->i_diflags;
- 
- 	/* log a dummy value to ensure log structure is fully initialised */
- 	to->di_next_unlinked = NULLAGINO;
+@@ -342,7 +342,7 @@ xfs_inode_to_log_dinode(
+ 		to->di_changecount = inode_peek_iversion(inode);
+ 		to->di_crtime.t_sec = from->di_crtime.tv_sec;
+ 		to->di_crtime.t_nsec = from->di_crtime.tv_nsec;
+-		to->di_flags2 = from->di_flags2;
++		to->di_flags2 = ip->i_diflags2;
+ 		to->di_cowextsize = ip->i_cowextsize;
+ 		to->di_ino = ip->i_ino;
+ 		to->di_lsn = lsn;
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index cabc86ed6756bc..326991f4d98096 100644
+index 326991f4d98096..d05b86e7930e84 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1143,7 +1143,7 @@ xfs_flags2diflags(
+@@ -1110,7 +1110,7 @@ xfs_fill_fsxattr(
+ 	simple_fill_fsxattr(fa, xfs_ip2xflags(ip));
+ 	fa->fsx_extsize = XFS_FSB_TO_B(mp, ip->i_extsize);
+ 	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
+-	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
++	    (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE))
+ 		fa->fsx_cowextsize = XFS_FSB_TO_B(mp, ip->i_cowextsize);
+ 	fa->fsx_projid = ip->i_projid;
+ 	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
+@@ -1183,15 +1183,14 @@ xfs_flags2diflags2(
+ 	struct xfs_inode	*ip,
+ 	unsigned int		xflags)
  {
- 	/* can't set PREALLOC this way, just preserve it */
- 	uint16_t		di_flags =
--		(ip->i_d.di_flags & XFS_DIFLAG_PREALLOC);
-+		(ip->i_diflags & XFS_DIFLAG_PREALLOC);
+-	uint64_t		di_flags2 =
+-		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
++	uint64_t		i_flags2 = (ip->i_diflags2 & XFS_DIFLAG2_REFLINK);
  
- 	if (xflags & FS_XFLAG_IMMUTABLE)
- 		di_flags |= XFS_DIFLAG_IMMUTABLE;
-@@ -1228,7 +1228,7 @@ xfs_ioctl_setattr_xflags(
- 	if (di_flags2 && !xfs_sb_version_has_v3inode(&mp->m_sb))
+ 	if (xflags & FS_XFLAG_DAX)
+-		di_flags2 |= XFS_DIFLAG2_DAX;
++		i_flags2 |= XFS_DIFLAG2_DAX;
+ 	if (xflags & FS_XFLAG_COWEXTSIZE)
+-		di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
++		i_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+ 
+-	return di_flags2;
++	return i_flags2;
+ }
+ 
+ static int
+@@ -1201,7 +1200,7 @@ xfs_ioctl_setattr_xflags(
+ 	struct fsxattr		*fa)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	uint64_t		di_flags2;
++	uint64_t		i_flags2;
+ 
+ 	/* Can't change realtime flag if any extents are allocated. */
+ 	if ((ip->i_df.if_nextents || ip->i_delayed_blks) &&
+@@ -1217,19 +1216,19 @@ xfs_ioctl_setattr_xflags(
+ 
+ 	/* Clear reflink if we are actually able to set the rt flag. */
+ 	if ((fa->fsx_xflags & FS_XFLAG_REALTIME) && xfs_is_reflink_inode(ip))
+-		ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
++		ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+ 
+ 	/* Don't allow us to set DAX mode for a reflinked file for now. */
+ 	if ((fa->fsx_xflags & FS_XFLAG_DAX) && xfs_is_reflink_inode(ip))
  		return -EINVAL;
  
--	ip->i_d.di_flags = xfs_flags2diflags(ip, fa->fsx_xflags);
-+	ip->i_diflags = xfs_flags2diflags(ip, fa->fsx_xflags);
- 	ip->i_d.di_flags2 = di_flags2;
+ 	/* diflags2 only valid for v3 inodes. */
+-	di_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
+-	if (di_flags2 && !xfs_sb_version_has_v3inode(&mp->m_sb))
++	i_flags2 = xfs_flags2diflags2(ip, fa->fsx_xflags);
++	if (i_flags2 && !xfs_sb_version_has_v3inode(&mp->m_sb))
+ 		return -EINVAL;
+ 
+ 	ip->i_diflags = xfs_flags2diflags(ip, fa->fsx_xflags);
+-	ip->i_d.di_flags2 = di_flags2;
++	ip->i_diflags2 = i_flags2;
  
  	xfs_diflags_to_iflags(ip, false);
-@@ -1570,7 +1570,7 @@ xfs_ioctl_setattr(
- 	 * extent size hint should be set on the inode. If no extent size flags
- 	 * are set on the inode then unconditionally clear the extent size hint.
- 	 */
--	if (ip->i_d.di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
-+	if (ip->i_diflags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
- 		ip->i_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
+ 	xfs_trans_ichgtime(tp, ip, XFS_ICHGTIME_CHG);
+@@ -1575,7 +1574,7 @@ xfs_ioctl_setattr(
  	else
  		ip->i_extsize = 0;
-@@ -1622,9 +1622,8 @@ xfs_ioc_getxflags(
- 	xfs_inode_t		*ip,
- 	void			__user *arg)
- {
--	unsigned int		flags;
-+	unsigned int		flags = xfs_di2lxflags(ip->i_diflags);
- 
--	flags = xfs_di2lxflags(ip->i_d.di_flags);
- 	if (copy_to_user(arg, &flags, sizeof(flags)))
- 		return -EFAULT;
- 	return 0;
+ 	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
+-	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
++	    (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE))
+ 		ip->i_cowextsize = fa->fsx_cowextsize >> mp->m_sb.sb_blocklog;
+ 	else
+ 		ip->i_cowextsize = 0;
 diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 78159c57d82828..f37154fc9828fd 100644
+index f37154fc9828fd..3642f9935cae3f 100644
 --- a/fs/xfs/xfs_iops.c
 +++ b/fs/xfs/xfs_iops.c
-@@ -567,11 +567,11 @@ xfs_vn_getattr(
- 	 * Note: If you add another clause to set an attribute flag, please
- 	 * update attributes_mask below.
- 	 */
--	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
-+	if (ip->i_diflags & XFS_DIFLAG_IMMUTABLE)
- 		stat->attributes |= STATX_ATTR_IMMUTABLE;
--	if (ip->i_d.di_flags & XFS_DIFLAG_APPEND)
-+	if (ip->i_diflags & XFS_DIFLAG_APPEND)
- 		stat->attributes |= STATX_ATTR_APPEND;
--	if (ip->i_d.di_flags & XFS_DIFLAG_NODUMP)
-+	if (ip->i_diflags & XFS_DIFLAG_NODUMP)
- 		stat->attributes |= STATX_ATTR_NODUMP;
+@@ -1265,7 +1265,7 @@ xfs_inode_should_enable_dax(
+ 		return false;
+ 	if (ip->i_mount->m_flags & XFS_MOUNT_DAX_ALWAYS)
+ 		return true;
+-	if (ip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
++	if (ip->i_diflags2 & XFS_DIFLAG2_DAX)
+ 		return true;
+ 	return false;
+ }
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 7937af9f2ea779..4d1509437c3576 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -111,7 +111,7 @@ xfs_bulkstat_one_int(
+ 	buf->bs_version = XFS_BULKSTAT_VERSION_V5;
  
- 	stat->attributes_mask |= (STATX_ATTR_IMMUTABLE |
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 9f70d2f68e059b..95cc3386ac3b4f 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -233,7 +233,7 @@ int xfs_rw_bdev(struct block_device *bdev, sector_t sector, unsigned int count,
-  * configured realtime device.
-  */
- #define XFS_IS_REALTIME_INODE(ip)			\
--	(((ip)->i_d.di_flags & XFS_DIFLAG_REALTIME) &&	\
-+	(((ip)->i_diflags & XFS_DIFLAG_REALTIME) &&	\
- 	 (ip)->i_mount->m_rtdev_targp)
- #define XFS_IS_REALTIME_MOUNT(mp) ((mp)->m_rtdev_targp ? 1 : 0)
- #else
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index cc07d7d27dd7e0..592a1160200f5e 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1281,8 +1281,8 @@ xfs_rtpick_extent(
- 	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
- 
- 	seqp = (uint64_t *)&VFS_I(mp->m_rbmip)->i_atime;
--	if (!(mp->m_rbmip->i_d.di_flags & XFS_DIFLAG_NEWRTBM)) {
--		mp->m_rbmip->i_d.di_flags |= XFS_DIFLAG_NEWRTBM;
-+	if (!(mp->m_rbmip->i_diflags & XFS_DIFLAG_NEWRTBM)) {
-+		mp->m_rbmip->i_diflags |= XFS_DIFLAG_NEWRTBM;
- 		*seqp = 0;
+ 	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
+-		if (dic->di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
++		if (ip->i_diflags2 & XFS_DIFLAG2_COWEXTSIZE)
+ 			buf->bs_cowextsize_blks = ip->i_cowextsize;
  	}
- 	seq = *seqp;
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index fa58cb07c8fdfe..06a01528543aef 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -828,13 +828,13 @@ xfs_fs_statfs(
- 	statp->f_ffree = max_t(int64_t, ffree, 0);
  
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 0e07fa7e43117e..476ba54d84a9a3 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -882,7 +882,7 @@ xfs_reflink_set_inode_flag(
+ 	if (!xfs_is_reflink_inode(src)) {
+ 		trace_xfs_reflink_set_inode_flag(src);
+ 		xfs_trans_ijoin(tp, src, XFS_ILOCK_EXCL);
+-		src->i_d.di_flags2 |= XFS_DIFLAG2_REFLINK;
++		src->i_diflags2 |= XFS_DIFLAG2_REFLINK;
+ 		xfs_trans_log_inode(tp, src, XFS_ILOG_CORE);
+ 		xfs_ifork_init_cow(src);
+ 	} else
+@@ -894,7 +894,7 @@ xfs_reflink_set_inode_flag(
+ 	if (!xfs_is_reflink_inode(dest)) {
+ 		trace_xfs_reflink_set_inode_flag(dest);
+ 		xfs_trans_ijoin(tp, dest, XFS_ILOCK_EXCL);
+-		dest->i_d.di_flags2 |= XFS_DIFLAG2_REFLINK;
++		dest->i_diflags2 |= XFS_DIFLAG2_REFLINK;
+ 		xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
+ 		xfs_ifork_init_cow(dest);
+ 	} else
+@@ -943,7 +943,7 @@ xfs_reflink_update_dest(
  
--	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
-+	if ((ip->i_diflags & XFS_DIFLAG_PROJINHERIT) &&
- 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
- 			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
- 		xfs_qm_statvfs(ip, statp);
- 
- 	if (XFS_IS_REALTIME_MOUNT(mp) &&
--	    (ip->i_d.di_flags & (XFS_DIFLAG_RTINHERIT | XFS_DIFLAG_REALTIME))) {
-+	    (ip->i_diflags & (XFS_DIFLAG_RTINHERIT | XFS_DIFLAG_REALTIME))) {
- 		statp->f_blocks = sbp->sb_rblocks;
- 		statp->f_bavail = statp->f_bfree =
- 			sbp->sb_frextents * sbp->sb_rextsize;
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index 6b8980b1497c9a..dc86e3117f73f0 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -207,7 +207,7 @@ xfs_symlink(
- 	/*
- 	 * Check whether the directory allows new symlinks or not.
- 	 */
--	if (dp->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) {
-+	if (dp->i_diflags & XFS_DIFLAG_NOSYMLINKS) {
- 		error = -EPERM;
- 		goto out_trans_cancel;
+ 	if (cowextsize) {
+ 		dest->i_cowextsize = cowextsize;
+-		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
++		dest->i_diflags2 |= XFS_DIFLAG2_COWEXTSIZE;
  	}
+ 
+ 	xfs_trans_log_inode(tp, dest, XFS_ILOG_CORE);
+@@ -1463,7 +1463,7 @@ xfs_reflink_clear_inode_flag(
+ 
+ 	/* Clear the inode flag. */
+ 	trace_xfs_reflink_unset_inode_flag(ip);
+-	ip->i_d.di_flags2 &= ~XFS_DIFLAG2_REFLINK;
++	ip->i_diflags2 &= ~XFS_DIFLAG2_REFLINK;
+ 	xfs_inode_clear_cowblocks_tag(ip);
+ 	xfs_trans_log_inode(*tpp, ip, XFS_ILOG_CORE);
+ 
 -- 
 2.26.2
 
