@@ -2,98 +2,106 @@ Return-Path: <SRS0=7N5F=AB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4A19C433E1
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 17:09:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67500C433DF
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 23:21:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8438A2404F
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 17:09:29 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fieldses.org header.i=@fieldses.org header.b="HDufi5g7"
+	by mail.kernel.org (Postfix) with ESMTP id 45BAF23C17
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 23:21:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728061AbgFTRJ2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 Jun 2020 13:09:28 -0400
-Received: from fieldses.org ([173.255.197.46]:33350 "EHLO fieldses.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727083AbgFTRJ1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 20 Jun 2020 13:09:27 -0400
-Received: by fieldses.org (Postfix, from userid 2815)
-        id 183C614D8; Sat, 20 Jun 2020 13:09:24 -0400 (EDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org 183C614D8
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
-        s=default; t=1592672964;
-        bh=e6zYVkezLT2ct6J3M7M86Qk+qpHHQC4dPy9/qoTz7aM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HDufi5g79j2EKmPO+eAznsnT5kJ1fwhER+27gkVIii9w36rFHpo1ceaAE6OqWuIIX
-         a4dna+XFvu1kqQdSvo3FdTHmqtHwEBD26AFXn+NPJFhwObV+ohrW1NK2bua/0SkdRw
-         aPlJri1ySFDlaFmf3Zjrx10wbdh7TorkAgcq5plc=
-Date:   Sat, 20 Jun 2020 13:09:24 -0400
-From:   "J. Bruce Fields" <bfields@fieldses.org>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Masayoshi Mizuma <msys.mizuma@gmail.com>,
+        id S1728683AbgFTXVp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 Jun 2020 19:21:45 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:35412 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728633AbgFTXVp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Jun 2020 19:21:45 -0400
+Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id DB3871A8EBC;
+        Sun, 21 Jun 2020 09:21:38 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jmmnk-00013B-Cr; Sun, 21 Jun 2020 09:21:32 +1000
+Date:   Sun, 21 Jun 2020 09:21:32 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     peter green <plugwash@p10link.net>
+Cc:     Eric Sandeen <sandeen@sandeen.net>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
-Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
-Message-ID: <20200620170924.GI1514@fieldses.org>
-References: <20200618034535.h5ho7pd4eilpbj3f@gabell>
- <20200618223948.GI2005@dread.disaster.area>
- <20200619022005.GA25414@fieldses.org>
- <20200619024455.GN2005@dread.disaster.area>
- <20200619204033.GB1564@fieldses.org>
- <20200619221044.GO2005@dread.disaster.area>
- <20200619222843.GB2650@fieldses.org>
- <20200620014957.GQ2005@dread.disaster.area>
- <20200620015633.GA1516@fieldses.org>
- <d6f9cac3-eec0-a88e-4eab-7673728db52c@sandeen.net>
+        Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org,
+        953537@bugs.debian.org
+Subject: Re: Bug#953537: xfsdump fails to install in /usr merged system.
+Message-ID: <20200620232132.GR2005@dread.disaster.area>
+References: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
+ <20200619044734.GB11245@magnolia>
+ <ea662f0b-7e73-0bbe-33aa-963389b9e215@sandeen.net>
+ <20200619224325.GP2005@dread.disaster.area>
+ <3ecca5f3-f448-195a-4fd7-d078139972f9@p10link.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d6f9cac3-eec0-a88e-4eab-7673728db52c@sandeen.net>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <3ecca5f3-f448-195a-4fd7-d078139972f9@p10link.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=gu6fZOg2AAAA:8 a=7-415B0cAAAA:8
+        a=nxzmxJyfhhf4jdFrYR0A:9 a=CjuIK1q_8ugA:10 a=-FEs8UIgK8oA:10
+        a=NWVoK91CQyQA:10 a=2RSlZUUhi9gRBrsHwhhZ:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 20, 2020 at 12:00:43PM -0500, Eric Sandeen wrote:
-> On 6/19/20 8:56 PM, J. Bruce Fields wrote:
-> > On Sat, Jun 20, 2020 at 11:49:57AM +1000, Dave Chinner wrote:
+On Sat, Jun 20, 2020 at 03:10:05AM +0100, peter green wrote:
+> Putting the debian bug back in cc, previous mails are visible at https://marc.info/?l=linux-xfs&m=159253950420613&w=2
 > 
-> ...
+> On 19/06/2020 23:43, Dave Chinner wrote:
 > 
-> >> However, other people have different opinions on this matter (and we
-> >> know that from the people who considered XFS v4 -> v5 going slower
-> >> because iversion a major regression), and so we must acknowledge
-> >> those opinions even if we don't agree with them.
+> > Isn't the configure script supposed to handle install locations?
+> > Both xfsprogs and xfsdump have this in their include/builddefs.in:
 > > 
-> > Do you have any of those reports handy?  Were there numbers?
-> 
-> I can't answer that but did a little digging.  MS_I_VERSION as an option
-> appeared here:
-> 
-...
-> so the optional enablement was there on day one, without any real explanation
-> of why.
+> > PKG_ROOT_SBIN_DIR = @root_sbindir@
+> > PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
+> > 
+> > So the actual install locations are coming from the autoconf setup
+> > the build runs under. Looking in configure.ac in xfsprogs and
+> > xfsdump, they both do the same thing:
+> > 
+> The issue is that xfsdump installs the programs in /sbin but it *also* creates symlinks in /usr/sbin,
+> presumablly at some point the binaries were moved to /sbin but the developers wanted to keep
+> packages that hardcoded the paths working.
 
-My memory is that they didn't have measurements at first, but worried
-that there might be a performance issue.  Which later mesurements
-confirmed.
+Ah, thanks for explaining the issue, Peter.
 
-But that Jeff Layton's work eliminated most of that.
+> Those symlinks are suppressed if installing directly to a merged-usr system, which is fine for
+> end-users installing the program directly but isn't useful if installing to a destination dir for
+> packaing purposed.
 
-I think ext4 was the focuse of the concern, but xfs might also have had
-a (less serious) regression, and btrfs might have actually had it worst?
+OK, so what I'm really missing here is knowledge on how a modern
+distro is expecting binaries to be packaged. If every distro is
+having to work around the install locations the package uses by
+default, then we need to fix up the default locations and behaviour
+of the upstream packaging.
 
-But I don't have references and my memory may be wrong.
+So, what is expected behaviour in these situations:
 
---b.
+	- user installs directly in /usr/local/... or $HOME/...
+	- user installs directly in /usr/....
+	- package installed on split-usr system
+	- package installed on merged-usr system
+
+Th first two here are coded into the build via 'make install', and
+the package build systems use the same install command to build the
+package. It seems to me that we'd want 'make install' to behave the
+same way for the last 3 cases, but I'm missing how the
+build/packaging system is actually supposed to reliably detect the
+differences between such split/merged systems and hence just DTRT....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
