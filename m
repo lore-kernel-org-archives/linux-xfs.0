@@ -6,98 +6,108 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67500C433DF
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 23:21:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26B94C433E1
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 23:54:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45BAF23C17
-	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 23:21:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 066DA2076E
+	for <linux-xfs@archiver.kernel.org>; Sat, 20 Jun 2020 23:54:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728683AbgFTXVp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 20 Jun 2020 19:21:45 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:35412 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728633AbgFTXVp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Jun 2020 19:21:45 -0400
+        id S1728536AbgFTXyU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 20 Jun 2020 19:54:20 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:51523 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728520AbgFTXyT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Jun 2020 19:54:19 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id DB3871A8EBC;
-        Sun, 21 Jun 2020 09:21:38 +1000 (AEST)
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 1CFA0106B74;
+        Sun, 21 Jun 2020 09:54:13 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jmmnk-00013B-Cr; Sun, 21 Jun 2020 09:21:32 +1000
-Date:   Sun, 21 Jun 2020 09:21:32 +1000
+        id 1jmnJI-0001EI-7F; Sun, 21 Jun 2020 09:54:08 +1000
+Date:   Sun, 21 Jun 2020 09:54:08 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     peter green <plugwash@p10link.net>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
+To:     "J. Bruce Fields" <bfields@fieldses.org>
+Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>, linux-xfs@vger.kernel.org,
-        953537@bugs.debian.org
-Subject: Re: Bug#953537: xfsdump fails to install in /usr merged system.
-Message-ID: <20200620232132.GR2005@dread.disaster.area>
-References: <998fa1cb-9e9f-93cf-15f0-e97e5ec54e9a@p10link.net>
- <20200619044734.GB11245@magnolia>
- <ea662f0b-7e73-0bbe-33aa-963389b9e215@sandeen.net>
- <20200619224325.GP2005@dread.disaster.area>
- <3ecca5f3-f448-195a-4fd7-d078139972f9@p10link.net>
+        Christoph Hellwig <hch@infradead.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+Message-ID: <20200620235408.GS2005@dread.disaster.area>
+References: <20200618030539.GH2005@dread.disaster.area>
+ <20200618034535.h5ho7pd4eilpbj3f@gabell>
+ <20200618223948.GI2005@dread.disaster.area>
+ <20200619022005.GA25414@fieldses.org>
+ <20200619024455.GN2005@dread.disaster.area>
+ <20200619204033.GB1564@fieldses.org>
+ <20200619221044.GO2005@dread.disaster.area>
+ <20200619222843.GB2650@fieldses.org>
+ <20200620014957.GQ2005@dread.disaster.area>
+ <20200620015633.GA1516@fieldses.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3ecca5f3-f448-195a-4fd7-d078139972f9@p10link.net>
+In-Reply-To: <20200620015633.GA1516@fieldses.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=gu6fZOg2AAAA:8 a=7-415B0cAAAA:8
-        a=nxzmxJyfhhf4jdFrYR0A:9 a=CjuIK1q_8ugA:10 a=-FEs8UIgK8oA:10
-        a=NWVoK91CQyQA:10 a=2RSlZUUhi9gRBrsHwhhZ:22 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8
+        a=a_BdhvUkA2LIwlif5YsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jun 20, 2020 at 03:10:05AM +0100, peter green wrote:
-> Putting the debian bug back in cc, previous mails are visible at https://marc.info/?l=linux-xfs&m=159253950420613&w=2
+On Fri, Jun 19, 2020 at 09:56:33PM -0400, J. Bruce Fields wrote:
+> On Sat, Jun 20, 2020 at 11:49:57AM +1000, Dave Chinner wrote:
+> > On Fri, Jun 19, 2020 at 06:28:43PM -0400, J. Bruce Fields wrote:
+> > > On Sat, Jun 20, 2020 at 08:10:44AM +1000, Dave Chinner wrote:
+> > > > On Fri, Jun 19, 2020 at 04:40:33PM -0400, J. Bruce Fields wrote:
+> > > > > On Fri, Jun 19, 2020 at 12:44:55PM +1000, Dave Chinner wrote:
+> > > > > > On Thu, Jun 18, 2020 at 10:20:05PM -0400, J. Bruce Fields wrote:
+> > > > > > > My memory was that after Jeff Layton's i_version patches, there wasn't
+> > > > > > > really a significant performance hit any more, so the ability to turn it
+> > > > > > > off is no longer useful.
+> > > > > > 
+> > > > > > Yes, I completely agree with you here. However, with some
+> > > > > > filesystems allowing it to be turned off, we can't just wave our
+> > > > > > hands and force enable the option. Those filesystems - if the
+> > > > > > maintainers chose to always enable iversion - will have to go
+> > > > > > through a mount option deprecation period before permanently
+> > > > > > enabling it.
+> > > > > 
+> > > > > I don't understand why.
+> > > > > 
+> > > > > The filesystem can continue to let people set iversion or noiversion as
+> > > > > they like, while under the covers behaving as if iversion is always set.
+> > > > > I can't see how that would break any application.  (Or even how an
+> > > > > application would be able to detect that the filesystem was doing this.)
+> > > > 
+> > > > It doesn't break functionality, but it affects performance.
+> > > 
+> > > I thought you just agreed above that any performance hit was not
+> > > "significant".
+> > 
+> > Yes, but that's just /my opinion/.
+> > 
+> > However, other people have different opinions on this matter (and we
+> > know that from the people who considered XFS v4 -> v5 going slower
+> > because iversion a major regression), and so we must acknowledge
+> > those opinions even if we don't agree with them.
 > 
-> On 19/06/2020 23:43, Dave Chinner wrote:
-> 
-> > Isn't the configure script supposed to handle install locations?
-> > Both xfsprogs and xfsdump have this in their include/builddefs.in:
-> > 
-> > PKG_ROOT_SBIN_DIR = @root_sbindir@
-> > PKG_ROOT_LIB_DIR= @root_libdir@@libdirsuffix@
-> > 
-> > So the actual install locations are coming from the autoconf setup
-> > the build runs under. Looking in configure.ac in xfsprogs and
-> > xfsdump, they both do the same thing:
-> > 
-> The issue is that xfsdump installs the programs in /sbin but it *also* creates symlinks in /usr/sbin,
-> presumablly at some point the binaries were moved to /sbin but the developers wanted to keep
-> packages that hardcoded the paths working.
+> Do you have any of those reports handy?  Were there numbers?
 
-Ah, thanks for explaining the issue, Peter.
-
-> Those symlinks are suppressed if installing directly to a merged-usr system, which is fine for
-> end-users installing the program directly but isn't useful if installing to a destination dir for
-> packaing purposed.
-
-OK, so what I'm really missing here is knowledge on how a modern
-distro is expecting binaries to be packaged. If every distro is
-having to work around the install locations the package uses by
-default, then we need to fix up the default locations and behaviour
-of the upstream packaging.
-
-So, what is expected behaviour in these situations:
-
-	- user installs directly in /usr/local/... or $HOME/...
-	- user installs directly in /usr/....
-	- package installed on split-usr system
-	- package installed on merged-usr system
-
-Th first two here are coded into the build via 'make install', and
-the package build systems use the same install command to build the
-package. It seems to me that we'd want 'make install' to behave the
-same way for the last 3 cases, but I'm missing how the
-build/packaging system is actually supposed to reliably detect the
-differences between such split/merged systems and hence just DTRT....
+e.g.  RH BZ #1355813 when v5 format was enabled by default in RHEL7.
+Numbers were 40-47% performance degradation for in-cache writes
+caused by the original IVERSION implementation using iozone.  There
+were others I recall, all realted to similar high-IOP small random
+writes workloads typical of databases....
 
 Cheers,
 
