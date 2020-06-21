@@ -2,186 +2,263 @@ Return-Path: <SRS0=aim3=AC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLACK
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79C53C433E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Jun 2020 22:09:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D12DFC433E1
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Jun 2020 23:04:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DAA5252C9
-	for <linux-xfs@archiver.kernel.org>; Sun, 21 Jun 2020 22:09:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="ok6whzLt"
+	by mail.kernel.org (Postfix) with ESMTP id B2D3C252EE
+	for <linux-xfs@archiver.kernel.org>; Sun, 21 Jun 2020 23:04:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726388AbgFUWJr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 21 Jun 2020 18:09:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47282 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726364AbgFUWJq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jun 2020 18:09:46 -0400
-Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACDA8C061796
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jun 2020 15:09:46 -0700 (PDT)
-Received: by mail-qk1-x744.google.com with SMTP id q8so13896490qkm.12
-        for <linux-xfs@vger.kernel.org>; Sun, 21 Jun 2020 15:09:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lca.pw; s=google;
-        h=date:from:to:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=PKmshvnxCi3S4qzqvpETs1bTZ4nXpcFNE/ZdSSfX0T8=;
-        b=ok6whzLttVjTCO00ZovY5Qp+9Q/FskzrHZBq0nVmfOvL/dcgMm+F7BlV7yqhjjXb2X
-         /GwABUb/F6auR4clLv8LxDt1lKCw3f8fujRm3J4i/7DDAQgKxLpG0EuX57O3kZWS14gK
-         EsYW/RxS6uQwawrvN4U8hak6jfE0PruLgOG4UWxJzpqfzKghVgpaH+iIV0MUevUsYdyg
-         xB1iej8rKxcKHL0hPe/QqnHpLcOSZqD8qT5a3oe6uj8mx/sPXjLPrR9H/ehgbtv1McrY
-         iP1jdqNmUV9sf5TPwgiNsgcua92k6hyr6K5LzHUMB/vQlopQ/6WDMCA3F4wCOYffDokR
-         bXxQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=PKmshvnxCi3S4qzqvpETs1bTZ4nXpcFNE/ZdSSfX0T8=;
-        b=rf4mDJ7imse4Idw0wJi018ZiVFXhLpQs3+JcpIsbI4H6AqfC4uTucHUGICCDJ0cDQr
-         rr5CWhN1vVJW29plO0FN2nEazvnX2oqaSYiSXYHlNcQZtzqYCKrV8ugAplIpWw4h/cJG
-         WW8zUjutMa4TN9IguaK7/6buwbGrCaxbCTafi67DOzzeOncilqrlZABPQUCwY/Ldwv2p
-         A8d93hA1raxqcU2Bq4vkYDrZ6MfH7kYa20pDpz1JSuJbA7n/WifwhfndqLW5mN477ox8
-         keqFFAhtuKY0J8rlx5004tdNYrRoekI4EoGepdxTGQS3oPZFfRct+wP7c5pUPedLwy+N
-         Lw8g==
-X-Gm-Message-State: AOAM5334l9tebzDkCi5mQFIHTUlw4T0BNwmXy4lMGiAXYrDJE+wDk6+k
-        yzmE9HkVDOsPJMv+8pkIz3FnHA==
-X-Google-Smtp-Source: ABdhPJxLimkm/zUVwedVJyzs6tH8cndzNlIvqCwJYXshoIa3c1bZDmz6pO0xFTlj2WcNXoCJFH1VsA==
-X-Received: by 2002:a37:cd4:: with SMTP id 203mr8810965qkm.342.1592777385668;
-        Sun, 21 Jun 2020 15:09:45 -0700 (PDT)
-Received: from lca.pw (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
-        by smtp.gmail.com with ESMTPSA id k17sm13998471qtb.5.2020.06.21.15.09.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 21 Jun 2020 15:09:45 -0700 (PDT)
-Date:   Sun, 21 Jun 2020 18:09:37 -0400
-From:   Qian Cai <cai@lca.pw>
-To:     Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-        DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas_os@shipmail.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mm: Track mmu notifiers in fs_reclaim_acquire/release
-Message-ID: <20200621220937.GA2034@lca.pw>
-References: <20200604081224.863494-2-daniel.vetter@ffwll.ch>
- <20200610194101.1668038-1-daniel.vetter@ffwll.ch>
- <20200621174205.GB1398@lca.pw>
- <CAKMK7uFZAFVmceoYvqPovOifGw_Y8Ey-OMy6wioMjwPWhu9dDg@mail.gmail.com>
- <20200621200103.GV20149@phenom.ffwll.local>
+        id S1726473AbgFUXEa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 21 Jun 2020 19:04:30 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:57073 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726398AbgFUXEa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jun 2020 19:04:30 -0400
+Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 837D43A4B86;
+        Mon, 22 Jun 2020 09:04:21 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jn90e-0000u6-Dr; Mon, 22 Jun 2020 09:04:20 +1000
+Date:   Mon, 22 Jun 2020 09:04:20 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Yafang Shao <laoar.shao@gmail.com>
+Cc:     mhocko@kernel.org, darrick.wong@oracle.com, hch@infradead.org,
+        akpm@linux-foundation.org, bfoster@redhat.com, vbabka@suse.cz,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org
+Subject: Re: [PATCH] xfs: reintroduce PF_FSTRANS for transaction reservation
+ recursion protection
+Message-ID: <20200621230420.GT2005@dread.disaster.area>
+References: <1592637174-19657-1-git-send-email-laoar.shao@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200621200103.GV20149@phenom.ffwll.local>
+In-Reply-To: <1592637174-19657-1-git-send-email-laoar.shao@gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=7-415B0cAAAA:8 a=VwQbUJbxAAAA:8
+        a=pGLkceISAAAA:8 a=cCpOmXS292ZDskx4PqcA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22 a=AjGcO6oz07-iQ99wixmX:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 21, 2020 at 10:01:03PM +0200, Daniel Vetter wrote:
-> On Sun, Jun 21, 2020 at 08:07:08PM +0200, Daniel Vetter wrote:
-> > On Sun, Jun 21, 2020 at 7:42 PM Qian Cai <cai@lca.pw> wrote:
-> > >
-> > > On Wed, Jun 10, 2020 at 09:41:01PM +0200, Daniel Vetter wrote:
-> > > > fs_reclaim_acquire/release nicely catch recursion issues when
-> > > > allocating GFP_KERNEL memory against shrinkers (which gpu drivers tend
-> > > > to use to keep the excessive caches in check). For mmu notifier
-> > > > recursions we do have lockdep annotations since 23b68395c7c7
-> > > > ("mm/mmu_notifiers: add a lockdep map for invalidate_range_start/end").
-> > > >
-> > > > But these only fire if a path actually results in some pte
-> > > > invalidation - for most small allocations that's very rarely the case.
-> > > > The other trouble is that pte invalidation can happen any time when
-> > > > __GFP_RECLAIM is set. Which means only really GFP_ATOMIC is a safe
-> > > > choice, GFP_NOIO isn't good enough to avoid potential mmu notifier
-> > > > recursion.
-> > > >
-> > > > I was pondering whether we should just do the general annotation, but
-> > > > there's always the risk for false positives. Plus I'm assuming that
-> > > > the core fs and io code is a lot better reviewed and tested than
-> > > > random mmu notifier code in drivers. Hence why I decide to only
-> > > > annotate for that specific case.
-> > > >
-> > > > Furthermore even if we'd create a lockdep map for direct reclaim, we'd
-> > > > still need to explicit pull in the mmu notifier map - there's a lot
-> > > > more places that do pte invalidation than just direct reclaim, these
-> > > > two contexts arent the same.
-> > > >
-> > > > Note that the mmu notifiers needing their own independent lockdep map
-> > > > is also the reason we can't hold them from fs_reclaim_acquire to
-> > > > fs_reclaim_release - it would nest with the acquistion in the pte
-> > > > invalidation code, causing a lockdep splat. And we can't remove the
-> > > > annotations from pte invalidation and all the other places since
-> > > > they're called from many other places than page reclaim. Hence we can
-> > > > only do the equivalent of might_lock, but on the raw lockdep map.
-> > > >
-> > > > With this we can also remove the lockdep priming added in 66204f1d2d1b
-> > > > ("mm/mmu_notifiers: prime lockdep") since the new annotations are
-> > > > strictly more powerful.
-> > > >
-> > > > v2: Review from Thomas Hellstrom:
-> > > > - unbotch the fs_reclaim context check, I accidentally inverted it,
-> > > >   but it didn't blow up because I inverted it immediately
-> > > > - fix compiling for !CONFIG_MMU_NOTIFIER
-> > > >
-> > > > Cc: Thomas Hellström (Intel) <thomas_os@shipmail.org>
-> > > > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > > > Cc: Jason Gunthorpe <jgg@mellanox.com>
-> > > > Cc: linux-mm@kvack.org
-> > > > Cc: linux-rdma@vger.kernel.org
-> > > > Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-> > > > Cc: Christian König <christian.koenig@amd.com>
-> > > > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-> > >
-> > > Replying the right patch here...
-> > >
-> > > Reverting this commit [1] fixed the lockdep warning below while applying
-> > > some memory pressure.
-> > >
-> > > [1] linux-next cbf7c9d86d75 ("mm: track mmu notifiers in fs_reclaim_acquire/release")
-> > 
-> > Hm, then I'm confused because
-> > - there's not mmut notifier lockdep map in the splat at a..
-> > - the patch is supposed to not change anything for fs_reclaim (but the
-> > interim version got that wrong)
-> > - looking at the paths it's kmalloc vs kswapd, both places I totally
-> > expect fs_reflaim to be used.
-> > 
-> > But you're claiming reverting this prevents the lockdep splat. If
-> > that's right, then my reasoning above is broken somewhere. Someone
-> > less blind than me having an idea?
-> > 
-> > Aside this is the first email I've typed, until I realized the first
-> > report was against the broken patch and that looked like a much more
-> > reasonable explanation (but didn't quite match up with the code
-> > paths).
+On Sat, Jun 20, 2020 at 03:12:54AM -0400, Yafang Shao wrote:
+> PF_FSTRANS which is used to avoid transaction reservation recursion, is
+> dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
+> PF_MEMALLOC_NOFS") and commit 7dea19f9ee63 ("mm: introduce
+> memalloc_nofs_{save,restore} API") and replaced by PF_MEMALLOC_NOFS which
+> means to avoid filesystem reclaim recursion. That change is subtle.
+> Let's take the exmple of the check of WARN_ON_ONCE(current->flags &
+> PF_MEMALLOC_NOFS)) to explain why this abstraction from PF_FSTRANS to
+> PF_MEMALLOC_NOFS is not proper.
 > 
-> Below diff should undo the functional change in my patch. Can you pls test
-> whether the lockdep splat is really gone with that? Might need a lot of
-> testing and memory pressure to be sure, since all these reclaim paths
-> aren't very deterministic.
+> Bellow comment is quoted from Dave,
+> > It wasn't for memory allocation recursion protection in XFS - it was for
+> > transaction reservation recursion protection by something trying to flush
+> > data pages while holding a transaction reservation. Doing
+> > this could deadlock the journal because the existing reservation
+> > could prevent the nested reservation for being able to reserve space
+> > in the journal and that is a self-deadlock vector.
+> > IOWs, this check is not protecting against memory reclaim recursion
+> > bugs at all (that's the previous check [1]). This check is
+> > protecting against the filesystem calling writepages directly from a
+> > context where it can self-deadlock.
+> > So what we are seeing here is that the PF_FSTRANS ->
+> > PF_MEMALLOC_NOFS abstraction lost all the actual useful information
+> > about what type of error this check was protecting against.
+> 
+> Besides reintroducing PF_FSTRANS, there're some other improvements in this
+> patch,
+> - Remove useless MACRO current_clear_flags_nested(), current_pid() and
+>   current_test_flags().
+> - Remove useless memalloc_nofs_{save, restore} in __kmem_vmalloc()
+> 
+> [1]. Bellow check is to avoid memory reclaim recursion.
+> if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
+> 	PF_MEMALLOC))
+> 	goto redirty;
+> 
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Michal Hocko <mhocko@kernel.org>
+> Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> ---
+>  fs/iomap/buffered-io.c    |  4 ++--
+>  fs/xfs/kmem.c             |  7 -------
+>  fs/xfs/kmem.h             |  2 +-
+>  fs/xfs/libxfs/xfs_btree.c |  2 +-
+>  fs/xfs/xfs_aops.c         |  4 ++--
+>  fs/xfs/xfs_linux.h        |  4 ----
+>  fs/xfs/xfs_trans.c        | 12 ++++++------
+>  include/linux/sched.h     |  1 +
+>  8 files changed, 13 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index bcfc288..0f1945c 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1500,9 +1500,9 @@ static void iomap_writepage_end_bio(struct bio *bio)
+>  
+>  	/*
+>  	 * Given that we do not allow direct reclaim to call us, we should
+> -	 * never be called in a recursive filesystem reclaim context.
+> +	 * never be called while in a filesystem transaction.
+>  	 */
+> -	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+> +	if (WARN_ON_ONCE(current->flags & PF_FSTRANS))
+>  		goto redirty;
 
-Well, I am running even heavy memory pressure workloads on linux-next
-like every day, and never saw this splat until today where your patch
-first show up.
+This is OK, but the rest of the patch is not.
 
-Since I am rather busy tracking another regression, here is the steps to
-reproduce (super easy to reproduce on multiple machines here.):
+I did not say "replace all XFS use of GFP_NOFS/KM_NOFS with
+PF_TRANS", which is what this patch does. The use of
+PF_MEMALLOC_NOFS within transactions is correct and valid and needs
+to remain. Replacing this with PF_FSTRANS effectively reverts all
+the simplifications and obviously self-documneting code that
+PF_MEMALLOC_NOFS provides us with.
 
-# git clone https://github.com/cailca/linux-mm.git
-# cd linux-mm; make
-# ./random 0
+IOWs, PF_MEMALLOC_NOFS is used to indicate that this is a "no
+reclaim recursion" path and so it's use remains completely unchanged
+in XFS. PF_FSTRANS is to indicate this is a "no
+transaction recursion" path, which is a different thing and needs
+it's own specific annotation.
 
-The .config is in there as well if ever matters.
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index f136647..9875a23 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -41,18 +41,11 @@
+>  static void *
+>  __kmem_vmalloc(size_t size, xfs_km_flags_t flags)
+>  {
+> -	unsigned nofs_flag = 0;
+>  	void	*ptr;
+>  	gfp_t	lflags = kmem_flags_convert(flags);
+>  
+> -	if (flags & KM_NOFS)
+> -		nofs_flag = memalloc_nofs_save();
+> -
+>  	ptr = __vmalloc(size, lflags);
+>  
+> -	if (flags & KM_NOFS)
+> -		memalloc_nofs_restore(nofs_flag);
+> -
+
+This breaks both kmem_alloc_large() and kmem_alloc_io() if they are
+called from an explicit KM_NOFS context. vmalloc() does not respect
+the gfp flags that are passed to it and will always do GFP_KERNEL
+allocations deep down in the page table allocation code, and hence
+we must use memalloc_nofs_save() here if called in a KM_NOFS
+context.
+
+>  	return ptr;
+>  }
+>  
+> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+> index 34cbcfd..ccc63de 100644
+> --- a/fs/xfs/kmem.h
+> +++ b/fs/xfs/kmem.h
+> @@ -34,7 +34,7 @@
+>  	BUG_ON(flags & ~(KM_NOFS | KM_MAYFAIL | KM_ZERO | KM_NOLOCKDEP));
+>  
+>  	lflags = GFP_KERNEL | __GFP_NOWARN;
+> -	if (flags & KM_NOFS)
+> +	if (current->flags & PF_FSTRANS || flags & KM_NOFS)
+>  		lflags &= ~__GFP_FS;
+
+No. If we are in a transaction context, PF_MEMALLOC_NOFS should be
+set. We got rid of all the PF_FSTRANS checks out of this code by
+moving to PF_MEMALLOC_NOFS, reverting this isn't an improvement.
+
+>  
+>  	/*
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 2d25bab..65d0afe 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -2814,7 +2814,7 @@ struct xfs_btree_split_args {
+>  	struct xfs_btree_split_args	*args = container_of(work,
+>  						struct xfs_btree_split_args, work);
+>  	unsigned long		pflags;
+> -	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
+> +	unsigned long		new_pflags = PF_FSTRANS;
+
+	new_pflags = PF_MEMALLOC_NOFS | PF_FSTRANS;
+>  
+>  	/*
+>  	 * we are in a transaction context here, but may also be doing work
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index b356118..02733eb 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -62,7 +62,7 @@ static inline bool xfs_ioend_is_append(struct iomap_ioend *ioend)
+>  	 * We hand off the transaction to the completion thread now, so
+>  	 * clear the flag here.
+>  	 */
+> -	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+> +	current_restore_flags_nested(&tp->t_pflags, PF_FSTRANS);
+
+	current_restore_flags_nested(PF_MEMALLOC_NOFS | PF_FSTRANS);
+
+>  	return 0;
+>  }
+>  
+> @@ -125,7 +125,7 @@ static inline bool xfs_ioend_is_append(struct iomap_ioend *ioend)
+>  	 * thus we need to mark ourselves as being in a transaction manually.
+>  	 * Similarly for freeze protection.
+>  	 */
+> -	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+> +	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
+
+	current_set_flags_nested(PF_MEMALLOC_NOFS | PF_FSTRANS);
+
+>  	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
+>  
+>  	/* we abort the update if there was an IO error */
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index 9f70d2f..ab737fe 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -102,12 +102,8 @@
+>  #define xfs_cowb_secs		xfs_params.cowb_timer.val
+>  
+>  #define current_cpu()		(raw_smp_processor_id())
+> -#define current_pid()		(current->pid)
+> -#define current_test_flags(f)	(current->flags & (f))
+>  #define current_set_flags_nested(sp, f)		\
+>  		(*(sp) = current->flags, current->flags |= (f))
+> -#define current_clear_flags_nested(sp, f)	\
+> -		(*(sp) = current->flags, current->flags &= ~(f))
+>  #define current_restore_flags_nested(sp, f)	\
+>  		(current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
+
+Separate cleanup patch to remove unrelated definitions, please.
+
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 3c94e5f..1c1b982 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -153,7 +153,7 @@
+>  	bool			rsvd = (tp->t_flags & XFS_TRANS_RESERVE) != 0;
+>  
+>  	/* Mark this thread as being in a transaction */
+> -	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+> +	current_set_flags_nested(&tp->t_pflags, PF_FSTRANS);
+>  
+
+And, again, PF_FSTRANS | PF_MEMALLOC_NOFS through this code.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
