@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.0 required=3.0
 	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBC0AC433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2EA2C433E5
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D557A206D4
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A748A2068F
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725976AbgFVIQM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Jun 2020 04:16:12 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:46393 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725881AbgFVIQL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 04:16:11 -0400
+        id S1726047AbgFVIQN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Jun 2020 04:16:13 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45762 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725833AbgFVIQM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 04:16:12 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 3459D5AC3B8
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 18:16:07 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E233D3A3B01
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 18:16:06 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jnHcc-00046F-NO
+        id 1jnHcc-00045b-4K
         for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:06 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jnHcc-007d6D-Em
-        for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:06 +1000
+        id 1jnHcb-007d5A-SW
+        for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:05 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 24/30] xfs: rework stale inodes in xfs_ifree_cluster
-Date:   Mon, 22 Jun 2020 18:15:59 +1000
-Message-Id: <20200622081605.1818434-25-david@fromorbit.com>
+Subject: [PATCH 11/30] xfs: clean up the buffer iodone callback functions
+Date:   Mon, 22 Jun 2020 18:15:46 +1000
+Message-Id: <20200622081605.1818434-12-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
 In-Reply-To: <20200622081605.1818434-1-david@fromorbit.com>
 References: <20200622081605.1818434-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
         a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=sEHBG_JH86uubuPEzfwA:9 a=7t7KmH_46QdNyjji:21 a=gWB-oh2D01KQ1K8m:21
+        a=QrwaDmlbODsJXtoaXeEA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -53,275 +53,289 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Once we have inodes pinning the cluster buffer and attached whenever
-they are dirty, we no longer have a guarantee that the items are
-flush locked when we lock the cluster buffer. Hence we cannot just
-walk the buffer log item list and modify the attached inodes.
-
-If the inode is not flush locked, we have to ILOCK it first and then
-flush lock it to do all the prerequisite checks needed to avoid
-races with other code. This is already handled by
-xfs_ifree_get_one_inode(), so rework the inode iteration loop and
-function to update all inodes in cache whether they are attached to
-the buffer or not.
-
-Note: we also remove the copying of the log item lsn to the
-ili_flush_lsn as xfs_iflush_done() now uses the XFS_ISTALE flag to
-trigger aborts and so flush lsn matching is not needed in IO
-completion for processing freed inodes.
+Now that we've sorted inode and dquot buffers, we can apply the same
+cleanups to dirty buffers with buffer log items. They only have one
+callback, too, so we don't need the log item callback. Collapse the
+iodone functions and remove all the now unnecessary infrastructure
+around callback processing.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_inode.c | 161 +++++++++++++++++----------------------------
- 1 file changed, 62 insertions(+), 99 deletions(-)
+ fs/xfs/xfs_buf_item.c  | 140 +++++++++--------------------------------
+ fs/xfs/xfs_buf_item.h  |   1 -
+ fs/xfs/xfs_trans_buf.c |   2 -
+ 3 files changed, 29 insertions(+), 114 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 8d638f14ab4e..e62e7133679a 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2517,17 +2517,19 @@ xfs_iunlink_remove(
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index f46e5ec28111..0ece5de9dd71 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -30,7 +30,7 @@ static inline struct xfs_buf_log_item *BUF_ITEM(struct xfs_log_item *lip)
+ 	return container_of(lip, struct xfs_buf_log_item, bli_item);
  }
  
- /*
-- * Look up the inode number specified and mark it stale if it is found. If it is
-- * dirty, return the inode so it can be attached to the cluster buffer so it can
-- * be processed appropriately when the cluster free transaction completes.
-+ * Look up the inode number specified and if it is not already marked XFS_ISTALE
-+ * mark it stale. We should only find clean inodes in this lookup that aren't
-+ * already stale.
-  */
--static struct xfs_inode *
--xfs_ifree_get_one_inode(
--	struct xfs_perag	*pag,
-+static void
-+xfs_ifree_mark_inode_stale(
-+	struct xfs_buf		*bp,
- 	struct xfs_inode	*free_ip,
- 	xfs_ino_t		inum)
- {
--	struct xfs_mount	*mp = pag->pag_mount;
-+	struct xfs_mount	*mp = bp->b_mount;
-+	struct xfs_perag	*pag = bp->b_pag;
-+	struct xfs_inode_log_item *iip;
- 	struct xfs_inode	*ip;
+-STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
++static void xfs_buf_item_done(struct xfs_buf *bp);
  
- retry:
-@@ -2535,8 +2537,10 @@ xfs_ifree_get_one_inode(
- 	ip = radix_tree_lookup(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, inum));
- 
- 	/* Inode not in memory, nothing to do */
--	if (!ip)
--		goto out_rcu_unlock;
-+	if (!ip) {
-+		rcu_read_unlock();
-+		return;
-+	}
- 
- 	/*
- 	 * because this is an RCU protected lookup, we could find a recently
-@@ -2547,9 +2551,9 @@ xfs_ifree_get_one_inode(
- 	spin_lock(&ip->i_flags_lock);
- 	if (ip->i_ino != inum || __xfs_iflags_test(ip, XFS_ISTALE)) {
- 		spin_unlock(&ip->i_flags_lock);
--		goto out_rcu_unlock;
-+		rcu_read_unlock();
-+		return;
- 	}
--	spin_unlock(&ip->i_flags_lock);
- 
- 	/*
- 	 * Don't try to lock/unlock the current inode, but we _cannot_ skip the
-@@ -2559,43 +2563,53 @@ xfs_ifree_get_one_inode(
- 	 */
- 	if (ip != free_ip) {
- 		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-+			spin_unlock(&ip->i_flags_lock);
- 			rcu_read_unlock();
- 			delay(1);
- 			goto retry;
- 		}
--
--		/*
--		 * Check the inode number again in case we're racing with
--		 * freeing in xfs_reclaim_inode().  See the comments in that
--		 * function for more information as to why the initial check is
--		 * not sufficient.
--		 */
--		if (ip->i_ino != inum) {
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--			goto out_rcu_unlock;
--		}
- 	}
-+	ip->i_flags |= XFS_ISTALE;
-+	spin_unlock(&ip->i_flags_lock);
- 	rcu_read_unlock();
- 
--	xfs_iflock(ip);
--	xfs_iflags_set(ip, XFS_ISTALE);
-+	/*
-+	 * If we can't get the flush lock, the inode is already attached.  All
-+	 * we needed to do here is mark the inode stale so buffer IO completion
-+	 * will remove it from the AIL.
-+	 */
-+	iip = ip->i_itemp;
-+	if (!xfs_iflock_nowait(ip)) {
-+		ASSERT(!list_empty(&iip->ili_item.li_bio_list));
-+		ASSERT(iip->ili_last_fields);
-+		goto out_iunlock;
-+	}
-+	ASSERT(!iip || list_empty(&iip->ili_item.li_bio_list));
- 
- 	/*
--	 * We don't need to attach clean inodes or those only with unlogged
--	 * changes (which we throw away, anyway).
-+	 * Clean inodes can be released immediately.  Everything else has to go
-+	 * through xfs_iflush_abort() on journal commit as the flock
-+	 * synchronises removal of the inode from the cluster buffer against
-+	 * inode reclaim.
- 	 */
--	if (!ip->i_itemp || xfs_inode_clean(ip)) {
--		ASSERT(ip != free_ip);
-+	if (xfs_inode_clean(ip)) {
- 		xfs_ifunlock(ip);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		goto out_no_inode;
-+		goto out_iunlock;
- 	}
--	return ip;
- 
--out_rcu_unlock:
--	rcu_read_unlock();
--out_no_inode:
--	return NULL;
-+	/* we have a dirty inode in memory that has not yet been flushed. */
-+	ASSERT(iip->ili_fields);
-+	spin_lock(&iip->ili_lock);
-+	iip->ili_last_fields = iip->ili_fields;
-+	iip->ili_fields = 0;
-+	iip->ili_fsync_fields = 0;
-+	spin_unlock(&iip->ili_lock);
-+	list_add_tail(&iip->ili_item.li_bio_list, &bp->b_li_list);
-+	ASSERT(iip->ili_last_fields);
-+
-+out_iunlock:
-+	if (ip != free_ip)
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- }
- 
- /*
-@@ -2605,26 +2619,20 @@ xfs_ifree_get_one_inode(
-  */
- STATIC int
- xfs_ifree_cluster(
--	xfs_inode_t		*free_ip,
--	xfs_trans_t		*tp,
-+	struct xfs_inode	*free_ip,
-+	struct xfs_trans	*tp,
- 	struct xfs_icluster	*xic)
- {
--	xfs_mount_t		*mp = free_ip->i_mount;
-+	struct xfs_mount	*mp = free_ip->i_mount;
-+	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
-+	struct xfs_buf		*bp;
-+	xfs_daddr_t		blkno;
-+	xfs_ino_t		inum = xic->first_ino;
- 	int			nbufs;
- 	int			i, j;
- 	int			ioffset;
--	xfs_daddr_t		blkno;
--	xfs_buf_t		*bp;
--	xfs_inode_t		*ip;
--	struct xfs_inode_log_item *iip;
--	struct xfs_log_item	*lip;
--	struct xfs_perag	*pag;
--	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
--	xfs_ino_t		inum;
- 	int			error;
- 
--	inum = xic->first_ino;
--	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, inum));
- 	nbufs = igeo->ialloc_blks / igeo->blocks_per_cluster;
- 
- 	for (j = 0; j < nbufs; j++, inum += igeo->inodes_per_cluster) {
-@@ -2653,10 +2661,8 @@ xfs_ifree_cluster(
- 		error = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
- 				mp->m_bsize * igeo->blocks_per_cluster,
- 				XBF_UNMAPPED, &bp);
--		if (error) {
--			xfs_perag_put(pag);
-+		if (error)
- 			return error;
--		}
- 
- 		/*
- 		 * This buffer may not have been correctly initialised as we
-@@ -2670,59 +2676,16 @@ xfs_ifree_cluster(
- 		bp->b_ops = &xfs_inode_buf_ops;
- 
- 		/*
--		 * Walk the inodes already attached to the buffer and mark them
--		 * stale. These will all have the flush locks held, so an
--		 * in-memory inode walk can't lock them. By marking them all
--		 * stale first, we will not attempt to lock them in the loop
--		 * below as the XFS_ISTALE flag will be set.
-+		 * Now we need to set all the cached clean inodes as XFS_ISTALE,
-+		 * too. This requires lookups, and will skip inodes that we've
-+		 * already marked XFS_ISTALE.
+ /* Is this log iovec plausibly large enough to contain the buffer log format? */
+ bool
+@@ -462,9 +462,8 @@ xfs_buf_item_unpin(
+ 		 * the AIL lock.
  		 */
--		list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
--			if (lip->li_type == XFS_LI_INODE) {
--				iip = (struct xfs_inode_log_item *)lip;
--				xfs_trans_ail_copy_lsn(mp->m_ail,
--							&iip->ili_flush_lsn,
--							&iip->ili_item.li_lsn);
--				xfs_iflags_set(iip->ili_inode, XFS_ISTALE);
--			}
--		}
--
--
--		/*
--		 * For each inode in memory attempt to add it to the inode
--		 * buffer and set it up for being staled on buffer IO
--		 * completion.  This is safe as we've locked out tail pushing
--		 * and flushing by locking the buffer.
--		 *
--		 * We have already marked every inode that was part of a
--		 * transaction stale above, which means there is no point in
--		 * even trying to lock them.
--		 */
--		for (i = 0; i < igeo->inodes_per_cluster; i++) {
--			ip = xfs_ifree_get_one_inode(pag, free_ip, inum + i);
--			if (!ip)
--				continue;
--
--			iip = ip->i_itemp;
--			spin_lock(&iip->ili_lock);
--			iip->ili_last_fields = iip->ili_fields;
--			iip->ili_fields = 0;
--			iip->ili_fsync_fields = 0;
--			spin_unlock(&iip->ili_lock);
--			xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
--						&iip->ili_item.li_lsn);
--
--			list_add_tail(&iip->ili_item.li_bio_list,
--						&bp->b_li_list);
--
--			if (ip != free_ip)
--				xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		}
-+		for (i = 0; i < igeo->inodes_per_cluster; i++)
-+			xfs_ifree_mark_inode_stale(bp, free_ip, inum + i);
- 
- 		xfs_trans_stale_inode_buf(tp, bp);
- 		xfs_trans_binval(tp, bp);
- 	}
--
--	xfs_perag_put(pag);
- 	return 0;
+ 		if (bip->bli_flags & XFS_BLI_STALE_INODE) {
+-			lip->li_cb(bp, lip);
++			xfs_buf_item_done(bp);
+ 			xfs_iflush_done(bp);
+-			bp->b_log_item = NULL;
+ 		} else {
+ 			xfs_trans_ail_delete(lip, SHUTDOWN_LOG_IO_ERROR);
+ 			xfs_buf_item_relse(bp);
+@@ -973,46 +972,6 @@ xfs_buf_attach_iodone(
+ 	list_add_tail(&lip->li_bio_list, &bp->b_li_list);
  }
  
+-/*
+- * We can have many callbacks on a buffer. Running the callbacks individually
+- * can cause a lot of contention on the AIL lock, so we allow for a single
+- * callback to be able to scan the remaining items in bp->b_li_list for other
+- * items of the same type and callback to be processed in the first call.
+- *
+- * As a result, the loop walking the callback list below will also modify the
+- * list. it removes the first item from the list and then runs the callback.
+- * The loop then restarts from the new first item int the list. This allows the
+- * callback to scan and modify the list attached to the buffer and we don't
+- * have to care about maintaining a next item pointer.
+- */
+-STATIC void
+-xfs_buf_do_callbacks(
+-	struct xfs_buf		*bp)
+-{
+-	struct xfs_buf_log_item *blip = bp->b_log_item;
+-	struct xfs_log_item	*lip;
+-
+-	/* If there is a buf_log_item attached, run its callback */
+-	if (blip) {
+-		lip = &blip->bli_item;
+-		lip->li_cb(bp, lip);
+-	}
+-
+-	while (!list_empty(&bp->b_li_list)) {
+-		lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
+-				       li_bio_list);
+-
+-		/*
+-		 * Remove the item from the list, so we don't have any
+-		 * confusion if the item is added to another buf.
+-		 * Don't touch the log item after calling its
+-		 * callback, because it could have freed itself.
+-		 */
+-		list_del_init(&lip->li_bio_list);
+-		lip->li_cb(bp, lip);
+-	}
+-}
+-
+ /*
+  * Invoke the error state callback for each log item affected by the failed I/O.
+  *
+@@ -1025,8 +984,8 @@ STATIC void
+ xfs_buf_do_callbacks_fail(
+ 	struct xfs_buf		*bp)
+ {
++	struct xfs_ail		*ailp = bp->b_mount->m_ail;
+ 	struct xfs_log_item	*lip;
+-	struct xfs_ail		*ailp;
+ 
+ 	/*
+ 	 * Buffer log item errors are handled directly by xfs_buf_item_push()
+@@ -1036,9 +995,6 @@ xfs_buf_do_callbacks_fail(
+ 	if (list_empty(&bp->b_li_list))
+ 		return;
+ 
+-	lip = list_first_entry(&bp->b_li_list, struct xfs_log_item,
+-			li_bio_list);
+-	ailp = lip->li_ailp;
+ 	spin_lock(&ailp->ail_lock);
+ 	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
+ 		if (lip->li_ops->iop_error)
+@@ -1051,22 +1007,11 @@ static bool
+ xfs_buf_iodone_callback_error(
+ 	struct xfs_buf		*bp)
+ {
+-	struct xfs_buf_log_item	*bip = bp->b_log_item;
+-	struct xfs_log_item	*lip;
+-	struct xfs_mount	*mp;
++	struct xfs_mount	*mp = bp->b_mount;
+ 	static ulong		lasttime;
+ 	static xfs_buftarg_t	*lasttarg;
+ 	struct xfs_error_cfg	*cfg;
+ 
+-	/*
+-	 * The failed buffer might not have a buf_log_item attached or the
+-	 * log_item list might be empty. Get the mp from the available
+-	 * xfs_log_item
+-	 */
+-	lip = list_first_entry_or_null(&bp->b_li_list, struct xfs_log_item,
+-				       li_bio_list);
+-	mp = lip ? lip->li_mountp : bip->bli_item.li_mountp;
+-
+ 	/*
+ 	 * If we've already decided to shutdown the filesystem because of
+ 	 * I/O errors, there's no point in giving this a retry.
+@@ -1171,14 +1116,27 @@ xfs_buf_had_callback_errors(
+ }
+ 
+ static void
+-xfs_buf_run_callbacks(
++xfs_buf_item_done(
+ 	struct xfs_buf		*bp)
+ {
++	struct xfs_buf_log_item	*bip = bp->b_log_item;
+ 
+-	if (xfs_buf_had_callback_errors(bp))
++	if (!bip)
+ 		return;
+-	xfs_buf_do_callbacks(bp);
++
++	/*
++	 * If we are forcibly shutting down, this may well be off the AIL
++	 * already. That's because we simulate the log-committed callbacks to
++	 * unpin these buffers. Or we may never have put this item on AIL
++	 * because of the transaction was aborted forcibly.
++	 * xfs_trans_ail_delete() takes care of these.
++	 *
++	 * Either way, AIL is useless if we're forcing a shutdown.
++	 */
++	xfs_trans_ail_delete(&bip->bli_item, SHUTDOWN_CORRUPT_INCORE);
+ 	bp->b_log_item = NULL;
++	xfs_buf_item_free(bip);
++	xfs_buf_rele(bp);
+ }
+ 
+ /*
+@@ -1188,19 +1146,10 @@ void
+ xfs_buf_inode_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	struct xfs_buf_log_item *blip = bp->b_log_item;
+-	struct xfs_log_item	*lip;
+-
+ 	if (xfs_buf_had_callback_errors(bp))
+ 		return;
+ 
+-	/* If there is a buf_log_item attached, run its callback */
+-	if (blip) {
+-		lip = &blip->bli_item;
+-		lip->li_cb(bp, lip);
+-		bp->b_log_item = NULL;
+-	}
+-
++	xfs_buf_item_done(bp);
+ 	xfs_iflush_done(bp);
+ 	xfs_buf_ioend_finish(bp);
+ }
+@@ -1212,59 +1161,28 @@ void
+ xfs_buf_dquot_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	struct xfs_buf_log_item *blip = bp->b_log_item;
+-	struct xfs_log_item	*lip;
+-
+ 	if (xfs_buf_had_callback_errors(bp))
+ 		return;
+ 
+ 	/* a newly allocated dquot buffer might have a log item attached */
+-	if (blip) {
+-		lip = &blip->bli_item;
+-		lip->li_cb(bp, lip);
+-		bp->b_log_item = NULL;
+-	}
+-
++	xfs_buf_item_done(bp);
+ 	xfs_dquot_done(bp);
+ 	xfs_buf_ioend_finish(bp);
+ }
+ 
+ /*
+  * Dirty buffer iodone callback function.
++ *
++ * Note that for things like remote attribute buffers, there may not be a buffer
++ * log item here, so processing the buffer log item must remain be optional.
+  */
+ void
+ xfs_buf_iodone(
+ 	struct xfs_buf		*bp)
+ {
+-	xfs_buf_run_callbacks(bp);
+-	xfs_buf_ioend_finish(bp);
+-}
+-
+-/*
+- * This is the iodone() function for buffers which have been
+- * logged.  It is called when they are eventually flushed out.
+- * It should remove the buf item from the AIL, and free the buf item.
+- * It is called by xfs_buf_iodone_callbacks() above which will take
+- * care of cleaning up the buffer itself.
+- */
+-void
+-xfs_buf_item_iodone(
+-	struct xfs_buf		*bp,
+-	struct xfs_log_item	*lip)
+-{
+-	ASSERT(BUF_ITEM(lip)->bli_buf == bp);
+-
+-	xfs_buf_rele(bp);
++	if (xfs_buf_had_callback_errors(bp))
++		return;
+ 
+-	/*
+-	 * If we are forcibly shutting down, this may well be off the AIL
+-	 * already. That's because we simulate the log-committed callbacks to
+-	 * unpin these buffers. Or we may never have put this item on AIL
+-	 * because of the transaction was aborted forcibly.
+-	 * xfs_trans_ail_delete() takes care of these.
+-	 *
+-	 * Either way, AIL is useless if we're forcing a shutdown.
+-	 */
+-	xfs_trans_ail_delete(lip, SHUTDOWN_CORRUPT_INCORE);
+-	xfs_buf_item_free(BUF_ITEM(lip));
++	xfs_buf_item_done(bp);
++	xfs_buf_ioend_finish(bp);
+ }
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index 610cd0019328..7c0bd2a210af 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -57,7 +57,6 @@ bool	xfs_buf_item_dirty_format(struct xfs_buf_log_item *);
+ void	xfs_buf_attach_iodone(struct xfs_buf *,
+ 			      void(*)(struct xfs_buf *, struct xfs_log_item *),
+ 			      struct xfs_log_item *);
+-void	xfs_buf_item_iodone(struct xfs_buf *, struct xfs_log_item *);
+ void	xfs_buf_inode_iodone(struct xfs_buf *);
+ void	xfs_buf_dquot_iodone(struct xfs_buf *);
+ void	xfs_buf_iodone(struct xfs_buf *);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 6752676b94fe..11cd666cd99a 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -475,7 +475,6 @@ xfs_trans_dirty_buf(
+ 	bp->b_flags |= XBF_DONE;
+ 
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+-	bip->bli_item.li_cb = xfs_buf_item_iodone;
+ 
+ 	/*
+ 	 * If we invalidated the buffer within this transaction, then
+@@ -644,7 +643,6 @@ xfs_trans_stale_inode_buf(
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+ 	bip->bli_flags |= XFS_BLI_STALE_INODE;
+-	bip->bli_item.li_cb = xfs_buf_item_iodone;
+ 	bp->b_flags |= _XBF_INODES;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+ }
 -- 
 2.26.2.761.g0e0b3e54be
 
