@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.0 required=3.0
 	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44AA7C433E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A743C433ED
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BA182068F
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30B382068F
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725826AbgFVIQO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Jun 2020 04:16:14 -0400
+        id S1726050AbgFVIQU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Jun 2020 04:16:20 -0400
 Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:46182 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725938AbgFVIQN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 04:16:13 -0400
+        by vger.kernel.org with ESMTP id S1725938AbgFVIQR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 04:16:17 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DE4573A39FF
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 18:16:06 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C187A3A3721
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 18:16:12 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jnHcc-00045o-9h
-        for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:06 +1000
+        id 1jnHcd-00046W-0f
+        for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:07 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jnHcc-007d5U-1X
+        id 1jnHcc-007d6h-Od
         for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:06 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 15/30] xfs: move xfs_clear_li_failed out of xfs_ail_delete_one()
-Date:   Mon, 22 Jun 2020 18:15:50 +1000
-Message-Id: <20200622081605.1818434-16-david@fromorbit.com>
+Subject: [PATCH 30/30] xfs: remove xfs_inobp_check()
+Date:   Mon, 22 Jun 2020 18:16:05 +1000
+Message-Id: <20200622081605.1818434-31-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
 In-Reply-To: <20200622081605.1818434-1-david@fromorbit.com>
 References: <20200622081605.1818434-1-david@fromorbit.com>
@@ -45,8 +45,7 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
         a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=n6ZPMNil_ZAWRd6T3lcA:9 a=pHzHmUro8NiASowvMSCR:22
-        a=nt3jZW36AmriUCFCBwmW:22
+        a=DPGN0NLpbuj1Jjrhi_sA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -54,81 +53,110 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_ail_delete_one() is called directly from dquot and inode IO
-completion, as well as from the generic xfs_trans_ail_delete()
-function. Inodes are about to have their own failure handling, and
-dquots will in future, too. Pull the clearing of the LI_FAILED flag
-up into the callers so we can customise the code appropriately.
+This debug code is called on every xfs_iflush() call, which then
+checks every inode in the buffer for non-zero unlinked list field.
+Hence it checks every inode in the cluster buffer every time a
+single inode on that cluster it flushed. This is resulting in:
+
+-   38.91%     5.33%  [kernel]  [k] xfs_iflush
+   - 17.70% xfs_iflush
+      - 9.93% xfs_inobp_check
+           4.36% xfs_buf_offset
+
+10% of the CPU time spent flushing inodes is repeatedly checking
+unlinked fields in the buffer. We don't need to do this.
+
+The other place we call xfs_inobp_check() is
+xfs_iunlink_update_dinode(), and this is after we've done this
+assert for the agino we are about to write into that inode:
+
+	ASSERT(xfs_verify_agino_or_null(mp, agno, next_agino));
+
+which means we've already checked that the agino we are about to
+write is not 0 on debug kernels. The inode buffer verifiers do
+everything else we need, so let's just remove this debug code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_dquot.c      | 6 +-----
- fs/xfs/xfs_inode_item.c | 3 +--
- fs/xfs/xfs_trans_ail.c  | 2 +-
- 3 files changed, 3 insertions(+), 8 deletions(-)
+ fs/xfs/libxfs/xfs_inode_buf.c | 24 ------------------------
+ fs/xfs/libxfs/xfs_inode_buf.h |  6 ------
+ fs/xfs/xfs_inode.c            |  2 --
+ 3 files changed, 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index d5984a926d1d..76353c9a723e 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1070,16 +1070,12 @@ xfs_qm_dqflush_done(
- 	     test_bit(XFS_LI_FAILED, &lip->li_flags))) {
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 1af97235785c..6b6f67595bf4 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -20,30 +20,6 @@
  
- 		spin_lock(&ailp->ail_lock);
-+		xfs_clear_li_failed(lip);
- 		if (lip->li_lsn == qip->qli_flush_lsn) {
- 			/* xfs_ail_update_finish() drops the AIL lock */
- 			tail_lsn = xfs_ail_delete_one(ailp, lip);
- 			xfs_ail_update_finish(ailp, tail_lsn);
- 		} else {
--			/*
--			 * Clear the failed state since we are about to drop the
--			 * flush lock
--			 */
--			xfs_clear_li_failed(lip);
- 			spin_unlock(&ailp->ail_lock);
- 		}
- 	}
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 86c783dec2ba..0ba75764a8dc 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -690,12 +690,11 @@ xfs_iflush_done(
- 		/* this is an opencoded batch version of xfs_trans_ail_delete */
- 		spin_lock(&ailp->ail_lock);
- 		list_for_each_entry(lip, &tmp, li_bio_list) {
-+			xfs_clear_li_failed(lip);
- 			if (lip->li_lsn == INODE_ITEM(lip)->ili_flush_lsn) {
- 				xfs_lsn_t lsn = xfs_ail_delete_one(ailp, lip);
- 				if (!tail_lsn && lsn)
- 					tail_lsn = lsn;
--			} else {
--				xfs_clear_li_failed(lip);
- 			}
- 		}
- 		xfs_ail_update_finish(ailp, tail_lsn);
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index ac5019361a13..ac33f6393f99 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -843,7 +843,6 @@ xfs_ail_delete_one(
+ #include <linux/iversion.h>
  
- 	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
- 	xfs_ail_delete(ailp, lip);
--	xfs_clear_li_failed(lip);
- 	clear_bit(XFS_LI_IN_AIL, &lip->li_flags);
- 	lip->li_lsn = 0;
+-/*
+- * Check that none of the inode's in the buffer have a next
+- * unlinked field of 0.
+- */
+-#if defined(DEBUG)
+-void
+-xfs_inobp_check(
+-	xfs_mount_t	*mp,
+-	xfs_buf_t	*bp)
+-{
+-	int		i;
+-	xfs_dinode_t	*dip;
+-
+-	for (i = 0; i < M_IGEO(mp)->inodes_per_cluster; i++) {
+-		dip = xfs_buf_offset(bp, i * mp->m_sb.sb_inodesize);
+-		if (!dip->di_next_unlinked)  {
+-			xfs_alert(mp,
+-	"Detected bogus zero next_unlinked field in inode %d buffer 0x%llx.",
+-				i, (long long)bp->b_bn);
+-		}
+-	}
+-}
+-#endif
+-
+ /*
+  * If we are doing readahead on an inode buffer, we might be in log recovery
+  * reading an inode allocation buffer that hasn't yet been replayed, and hence
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 865ac493c72a..6b08b9d060c2 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -52,12 +52,6 @@ int	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
+ void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
+ 			       struct xfs_dinode *to);
  
-@@ -874,6 +873,7 @@ xfs_trans_ail_delete(
- 	}
- 
- 	/* xfs_ail_update_finish() drops the AIL lock */
-+	xfs_clear_li_failed(lip);
- 	tail_lsn = xfs_ail_delete_one(ailp, lip);
- 	xfs_ail_update_finish(ailp, tail_lsn);
+-#if defined(DEBUG)
+-void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
+-#else
+-#define	xfs_inobp_check(mp, bp)
+-#endif /* DEBUG */
+-
+ xfs_failaddr_t xfs_dinode_verify(struct xfs_mount *mp, xfs_ino_t ino,
+ 			   struct xfs_dinode *dip);
+ xfs_failaddr_t xfs_inode_validate_extsize(struct xfs_mount *mp,
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 05017475c766..bae84b3eeb9a 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2165,7 +2165,6 @@ xfs_iunlink_update_dinode(
+ 	xfs_dinode_calc_crc(mp, dip);
+ 	xfs_trans_inode_buf(tp, ibp);
+ 	xfs_trans_log_buf(tp, ibp, offset, offset + sizeof(xfs_agino_t) - 1);
+-	xfs_inobp_check(mp, ibp);
  }
+ 
+ /* Set an in-core inode's unlinked pointer and return the old value. */
+@@ -3558,7 +3557,6 @@ xfs_iflush(
+ 	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
+ 	if (XFS_IFORK_Q(ip))
+ 		xfs_iflush_fork(ip, dip, iip, XFS_ATTR_FORK);
+-	xfs_inobp_check(mp, bp);
+ 
+ 	/*
+ 	 * We've recorded everything logged in the inode, so we'd like to clear
 -- 
 2.26.2.761.g0e0b3e54be
 
