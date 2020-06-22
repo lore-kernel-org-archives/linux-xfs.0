@@ -5,67 +5,66 @@ X-Spam-Level:
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27156C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 09:50:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E351BC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 10:53:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3764206F1
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 09:50:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA07320675
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 10:53:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vEUF2KTW"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FJsK6liD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726666AbgFVJuD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Jun 2020 05:50:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42072 "EHLO
+        id S1726919AbgFVKxM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Jun 2020 06:53:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51874 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726525AbgFVJuD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 05:50:03 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04DA9C061794
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 02:50:02 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id b7so6481953pju.0
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 02:50:02 -0700 (PDT)
+        with ESMTP id S1727027AbgFVKxL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 06:53:11 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55D92C061794
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 03:53:11 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id k1so7423939pls.2
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 03:53:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=UnCCTNS8FBHBHH7rdslXQZ+Y/35jI3hOxgOcX2nr74g=;
-        b=vEUF2KTWRrqc9oiN2q9zHuMZik2FUcX0RMSzk/hPtc+E49Fw+N6KARdA9wWArvdm4k
-         JHhZbDgn1SFhUgKcjDdRKz2zsu+1IYh4UBRsT8re68ArF3IB9rfWo2JNdSA2BMEmCRb3
-         q5+Icsll8YSC8z/0qhawUrkYgzCcfQH+MUCKu3ONVsnxpgW/gZ79vVkXbx1dsvDKMdQ8
-         eL9gqTcPm+r4A1KjIoJtu4A+dFwODDiplisaTpNqCYvVliKUTsFmZ5AkwaMWYBunhOy5
-         Bl4mySw/QiawbQjzphNDZWXj6NwMYpcet33KR/Oz0iMZwiH5yi+AtQuZ7Bp6DZFUXc0/
-         nIJg==
+        bh=StnBrDReAC07XFCOSTOOgsDL+UeeebKk2zwvx2NbEOk=;
+        b=FJsK6liDm8eNFLAFmjnmVZaOU6UJME6ZbeoR9TcfhyGPJbNMNnbIc66FiE8z6ok2pJ
+         L2NxeH3ql/WQmHj5DtwfrVln8S344gzvsAGpFU1yzJnk6BpiCfsJreUxoc8xomPbaw23
+         c4t5unzjxqUGA7pciz2nSCZmGxwOJJc8HkM/5U7Q0JiLlBcMNQzC6AgBXW+Ovj15LktC
+         YyFoZdB8tdrgxtfV4AOK0UnIpjjBWNtPNzkQbxPBI0GOlfKdWZkUQuWL+/5TQOa1U1bU
+         4pzJDkOgB3p4wldmzdMJNyVGhzQr/Yl4rEq+X6blaDYNf3658Y6E+298DmQE+c5aQBxW
+         qrfA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UnCCTNS8FBHBHH7rdslXQZ+Y/35jI3hOxgOcX2nr74g=;
-        b=MGlP/KXCmv+S9oXLWloc2WJxncgL9IrReXoKRLkNp2icK2OIITWetsLARtdoCviQ9S
-         Bg9PzkfA6bHYsIDgmhFmGwln9SKi35fnPhRDbFWnv1JipLEwzXYOQITx99RyOlrUGoeV
-         /Allus6I5Nael50xTdmXCHEIQmbXSb3dJpB/bAOlVNscMRzKUeBijkeCWq8vzJi/WhgD
-         NIWGIX+bXEvBbmZ4sRIKvF9nSIJroSPtUt4MRIEQVXp9zVtXIYu0fvNedn1PTwvFlm8i
-         JKA0s/ihly6MrjQl6lp74LR6UlWaqycVJiMPh2vIPSJRZgZmwUuX0Uadqnk2Mo0iZuKX
-         YiYw==
-X-Gm-Message-State: AOAM532eVWg6x0jXUZshmoAdTtIrYkz20LEbScpVeOe/adSSyutntJ1d
-        bLFj8Fq3rA21TEhGFOukbYs=
-X-Google-Smtp-Source: ABdhPJzZ1u8KCXhtz//WLjFgOw+h55puxgo4gdOEFY2t9DQpqMIiXkruV1uUs1grDLtAM+AmWmRE0w==
-X-Received: by 2002:a17:90a:474c:: with SMTP id y12mr17080544pjg.111.1592819402456;
-        Mon, 22 Jun 2020 02:50:02 -0700 (PDT)
+        bh=StnBrDReAC07XFCOSTOOgsDL+UeeebKk2zwvx2NbEOk=;
+        b=dnBQ4aOMoXSuGpChcizEPiWbVu5QPYtq0krc7p33o4CP2zPPl1Ra2zu7k+xU2WQeuS
+         5+JpGOhCPGRVyXLabaOx/UtMhf9xZ5nHGs2x5rBSNQJ8Tv8PXDIsvfRbfxcP/qa1r/AN
+         WRJUfX/cTGuy7kHM3Go72OLopb2bSdAngKupHVj4wy9xeqQ4IHm+Dopxr6a8ZTOFOXP8
+         QSt6/nyMHQBY4JhsIhRfd3gz89HuRoQMQuiFsaV9r3EkspT69zzq4+4qRfk/CR1EfIpQ
+         69Nqgxqaqq5Wi0LZuTiGhFyhDb0khd9vk3psIcIZJ6EjLhxxYXbZq6VKTRLQ1TCECelI
+         UQag==
+X-Gm-Message-State: AOAM531+14cHmeBl4W0zyrJWq2jekIJyc+5nmfFAr64vqTOYadSuaoOZ
+        yNunSBC3c8ibugJiiziUa6g=
+X-Google-Smtp-Source: ABdhPJztDFs8AiBvpOr6VW6j9gk90cCsrrdTtlhymJEFup7BhP39gRUWRJSKKWnizMLujZpEpAr6Rg==
+X-Received: by 2002:a17:90a:fa8f:: with SMTP id cu15mr18725021pjb.9.1592823190740;
+        Mon, 22 Jun 2020 03:53:10 -0700 (PDT)
 Received: from garuda.localnet ([122.179.34.42])
-        by smtp.gmail.com with ESMTPSA id z8sm8276462pgz.7.2020.06.22.02.50.00
+        by smtp.gmail.com with ESMTPSA id y18sm13115418pfn.177.2020.06.22.03.53.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Jun 2020 02:50:01 -0700 (PDT)
+        Mon, 22 Jun 2020 03:53:10 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/15] xfs: move the di_flushiter field to struct xfs_inode
-Date:   Mon, 22 Jun 2020 15:19:59 +0530
-Message-ID: <5207261.z8F0QaGh9B@garuda>
-In-Reply-To: <20200620071102.462554-8-hch@lst.de>
-References: <20200620071102.462554-1-hch@lst.de> <20200620071102.462554-8-hch@lst.de>
+Subject: Re: [PATCH 08/15] xfs: use a union for i_cowextsize and i_flushiter
+Date:   Mon, 22 Jun 2020 16:23:08 +0530
+Message-ID: <3974096.m9y19ncQGm@garuda>
+In-Reply-To: <20200620071102.462554-9-hch@lst.de>
+References: <20200620071102.462554-1-hch@lst.de> <20200620071102.462554-9-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -74,9 +73,10 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Saturday 20 June 2020 12:40:54 PM IST Christoph Hellwig wrote:
-> In preparation of removing the historic icinode struct, move the
-> flushiter field into the containing xfs_inode structure.
+On Saturday 20 June 2020 12:40:55 PM IST Christoph Hellwig wrote:
+> The i_cowextsize field is only used for v3 inodes, and the i_flushiter
+> field is only used for v1/v2 inodes.  Use a union to pack the inode a
+> littler better after adding a few missing guards around their usage.
 >
 
 The changes look good to me.
@@ -85,125 +85,78 @@ Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_inode_buf.c |  4 ++--
->  fs/xfs/libxfs/xfs_inode_buf.h |  1 -
->  fs/xfs/xfs_icache.c           |  2 +-
->  fs/xfs/xfs_inode.c            | 19 +++++++++----------
->  fs/xfs/xfs_inode.h            |  1 +
->  fs/xfs/xfs_inode_item.c       |  2 +-
->  6 files changed, 14 insertions(+), 15 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_buf.c | 3 ++-
+>  fs/xfs/xfs_inode.c            | 6 ++++--
+>  fs/xfs/xfs_inode.h            | 7 +++++--
+>  fs/xfs/xfs_ioctl.c            | 6 +++++-
+>  4 files changed, 16 insertions(+), 6 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index 860e35611e001a..03bd7cdd0ddc81 100644
+> index 03bd7cdd0ddc81..8c4b7bd69285fa 100644
 > --- a/fs/xfs/libxfs/xfs_inode_buf.c
 > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -205,7 +205,7 @@ xfs_inode_from_disk(
+> @@ -205,7 +205,8 @@ xfs_inode_from_disk(
 >  	 * inode. If the inode is unused, mode is zero and we shouldn't mess
 >  	 * with the unitialized part of it.
 >  	 */
-> -	to->di_flushiter = be16_to_cpu(from->di_flushiter);
-> +	ip->i_flushiter = be16_to_cpu(from->di_flushiter);
+> -	ip->i_flushiter = be16_to_cpu(from->di_flushiter);
+> +	if (!xfs_sb_version_has_v3inode(&ip->i_mount->m_sb))
+> +		ip->i_flushiter = be16_to_cpu(from->di_flushiter);
 >  	inode->i_generation = be32_to_cpu(from->di_gen);
 >  	inode->i_mode = be16_to_cpu(from->di_mode);
 >  	if (!inode->i_mode)
-> @@ -329,7 +329,7 @@ xfs_inode_to_disk(
->  		to->di_flushiter = 0;
->  	} else {
->  		to->di_version = 2;
-> -		to->di_flushiter = cpu_to_be16(from->di_flushiter);
-> +		to->di_flushiter = cpu_to_be16(ip->i_flushiter);
->  	}
->  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-> index 663a97fa78f05f..8cc96f2766ff4f 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.h
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> @@ -16,7 +16,6 @@ struct xfs_dinode;
->   * format specific structures at the appropriate time.
->   */
->  struct xfs_icdinode {
-> -	uint16_t	di_flushiter;	/* incremented on flush */
->  	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
->  	uint32_t	di_dmevmask;	/* DMIG event mask */
->  	uint16_t	di_dmstate;	/* DMIG state info */
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index ad01e694f3ab9b..e6b40f7035aa5a 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -521,7 +521,7 @@ xfs_iget_cache_miss(
->  	 * simply build the new inode core with a random generation number.
->  	 *
->  	 * For version 4 (and older) superblocks, log recovery is dependent on
-> -	 * the di_flushiter field being initialised from the current on-disk
-> +	 * the i_flushiter field being initialised from the current on-disk
->  	 * value and hence we must also read the inode off disk even when
->  	 * initializing new inodes.
->  	 */
 > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index f1893824cd4e2f..5e0336e0dbae44 100644
+> index 5e0336e0dbae44..fd111e05c0bb2e 100644
 > --- a/fs/xfs/xfs_inode.c
 > +++ b/fs/xfs/xfs_inode.c
-> @@ -3765,16 +3765,15 @@ xfs_iflush_int(
->  	}
->  
->  	/*
-> -	 * Inode item log recovery for v2 inodes are dependent on the
-> -	 * di_flushiter count for correct sequencing. We bump the flush
-> -	 * iteration count so we can detect flushes which postdate a log record
-> -	 * during recovery. This is redundant as we now log every change and
-> -	 * hence this can't happen but we need to still do it to ensure
-> -	 * backwards compatibility with old kernels that predate logging all
-> -	 * inode changes.
-> +	 * Inode item log recovery for v2 inodes are dependent on the flushiter
-> +	 * count for correct sequencing.  We bump the flush iteration count so
-> +	 * we can detect flushes which postdate a log record during recovery.
-> +	 * This is redundant as we now log every change and hence this can't
-> +	 * happen but we need to still do it to ensure backwards compatibility
-> +	 * with old kernels that predate logging all inode changes.
->  	 */
->  	if (!xfs_sb_version_has_v3inode(&mp->m_sb))
-> -		ip->i_d.di_flushiter++;
-> +		ip->i_flushiter++;
->  
->  	/*
->  	 * If there are inline format data / attr forks attached to this inode,
-> @@ -3795,8 +3794,8 @@ xfs_iflush_int(
+> @@ -3794,8 +3794,10 @@ xfs_iflush_int(
 >  	xfs_inode_to_disk(ip, dip, iip->ili_item.li_lsn);
 >  
 >  	/* Wrap, we never let the log put out DI_MAX_FLUSH */
-> -	if (ip->i_d.di_flushiter == DI_MAX_FLUSH)
-> -		ip->i_d.di_flushiter = 0;
-> +	if (ip->i_flushiter == DI_MAX_FLUSH)
-> +		ip->i_flushiter = 0;
+> -	if (ip->i_flushiter == DI_MAX_FLUSH)
+> -		ip->i_flushiter = 0;
+> +	if (!xfs_sb_version_has_v3inode(&mp->m_sb)) {
+> +		if (ip->i_flushiter == DI_MAX_FLUSH)
+> +			ip->i_flushiter = 0;
+> +	}
 >  
 >  	xfs_iflush_fork(ip, dip, iip, XFS_DATA_FORK);
 >  	if (XFS_IFORK_Q(ip))
 > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 2cdb7b6b298852..581618ea1156da 100644
+> index 581618ea1156da..a0444b9ce3f792 100644
 > --- a/fs/xfs/xfs_inode.h
 > +++ b/fs/xfs/xfs_inode.h
-> @@ -59,6 +59,7 @@ typedef struct xfs_inode {
+> @@ -58,8 +58,11 @@ typedef struct xfs_inode {
+>  	xfs_rfsblock_t		i_nblocks;	/* # of direct & btree blocks */
 >  	uint32_t		i_projid;	/* owner's project id */
 >  	xfs_extlen_t		i_extsize;	/* basic/minimum extent size */
->  	xfs_extlen_t		i_cowextsize;	/* basic cow extent size */
-> +	uint16_t		i_flushiter;	/* incremented on flush */
+> -	xfs_extlen_t		i_cowextsize;	/* basic cow extent size */
+> -	uint16_t		i_flushiter;	/* incremented on flush */
+> +	/* cowextsize is only used for v3 inodes, flushiter for v1/2 */
+> +	union {
+> +		xfs_extlen_t	i_cowextsize;	/* basic cow extent size */
+> +		uint16_t	i_flushiter;	/* incremented on flush */
+> +	};
 >  
 >  	struct xfs_icdinode	i_d;		/* most of ondisk inode */
 >  
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index ab0d8cf8ceb6ab..8357fe37d3eb8a 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -351,7 +351,7 @@ xfs_inode_to_log_dinode(
->  		to->di_flushiter = 0;
->  	} else {
->  		to->di_version = 2;
-> -		to->di_flushiter = from->di_flushiter;
-> +		to->di_flushiter = ip->i_flushiter;
->  	}
->  }
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index a1937900ad84be..60544dd0f875b8 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1108,7 +1108,11 @@ xfs_fill_fsxattr(
 >  
+>  	simple_fill_fsxattr(fa, xfs_ip2xflags(ip));
+>  	fa->fsx_extsize = ip->i_extsize << ip->i_mount->m_sb.sb_blocklog;
+> -	fa->fsx_cowextsize = ip->i_cowextsize << ip->i_mount->m_sb.sb_blocklog;
+> +	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb) &&
+> +	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE)) {
+> +		fa->fsx_cowextsize =
+> +			ip->i_cowextsize << ip->i_mount->m_sb.sb_blocklog;
+> +	}
+>  	fa->fsx_projid = ip->i_projid;
+>  	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
+>  		fa->fsx_nextents = xfs_iext_count(ifp);
 > 
 
 
