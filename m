@@ -2,260 +2,122 @@ Return-Path: <SRS0=RL8k=AD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B38ABC433F8
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B84C0C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 09:08:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C76C206FA
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89F6A206E2
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 09:08:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N1hluJ66"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725951AbgFVIQW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Jun 2020 04:16:22 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:44495 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725991AbgFVIQP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 04:16:15 -0400
-Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id A7BC7D79917
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 18:16:12 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jnHcc-00045k-8O
-        for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:06 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.93)
-        (envelope-from <david@fromorbit.com>)
-        id 1jnHcc-007d5P-08
-        for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:06 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 14/30] xfs: unwind log item error flagging
-Date:   Mon, 22 Jun 2020 18:15:49 +1000
-Message-Id: <20200622081605.1818434-15-david@fromorbit.com>
-X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
-In-Reply-To: <20200622081605.1818434-1-david@fromorbit.com>
-References: <20200622081605.1818434-1-david@fromorbit.com>
+        id S1725907AbgFVJIP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Jun 2020 05:08:15 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:26841 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726618AbgFVJIP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 05:08:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592816893;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RCKX5GS7JWN5V5e59N4MpanE/MlwLHSwobXRaeohnIs=;
+        b=N1hluJ66vpcPSxGbzcySdZZdGmnnPFXD/tgjMgs3SgE9KLrpqcGt6mttIY8p0Pd42wwJGC
+        98EMvSZghcNmQ6Z+yyWLcKY+BZ/zLlU3iru7E0zWyTrw4N1A9gVMzOxUdbUq9PAmfN/pnh
+        x7oGwyCB23iNjaAcIbV0go3C8Hj2TSY=
+Received: from mail-oo1-f70.google.com (mail-oo1-f70.google.com
+ [209.85.161.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-473-ejD8UXntN_aoANfWXQm6uQ-1; Mon, 22 Jun 2020 05:08:12 -0400
+X-MC-Unique: ejD8UXntN_aoANfWXQm6uQ-1
+Received: by mail-oo1-f70.google.com with SMTP id v9so8283774oov.1
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 02:08:12 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=RCKX5GS7JWN5V5e59N4MpanE/MlwLHSwobXRaeohnIs=;
+        b=aaBPc5DLbKhU8fjYWen+f9HiufRb5iOL+nzPy8/nTKPRv6/jtoclezsZmn5eGiH3Vu
+         LPBji0X4vge4pjmh3V5p+1FzssWzxnUuiJXlyJhWaXvBXYzfP5Fo23VMtmjwhfB5xD5W
+         fqQseZC6Wut455kxzqdw4U5DJpOJm7o5St7YF8OV63g7u9Y0TfzbyP1lMKhR/4VGl86c
+         UyZz6sjWPk69iTGJPOd+/8f+SPzvSvt7cHM3Us1ZwvQMVSfPTi7RrDSI4kvXw8kxDVOI
+         KVVbtgd4rOqjHlMdMW6jYn9NocdXzqXvGKEwSuC41z8KITlgf0rfvBUEJ+VG2wfJrAm/
+         zdrw==
+X-Gm-Message-State: AOAM533oBENFzfcRvpy9iASdyZKcH1VP9BV58hiVXAMJZ0g7m8M5nAi+
+        GOrnmy5WEkM7IZfOWKHpfxb/FZVKArQRHEBAKKr/w8TISoLBJlhjjaUXJ8mt9jNdWz4qQIaZSyf
+        aRqwxWborwpLlZYaUGbPLJOnoBz4aeKDAx0xX
+X-Received: by 2002:aca:5049:: with SMTP id e70mr12026834oib.72.1592816891188;
+        Mon, 22 Jun 2020 02:08:11 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyf1UlkS0QUbrHlpUEpl7yyMoJOq+l/zWCgfs0PQCmZvMH3Mzx49MdVcvg1uxxRhc751A7eZ3hkcs/YxKB3XPU=
+X-Received: by 2002:aca:5049:: with SMTP id e70mr12026813oib.72.1592816890888;
+ Mon, 22 Jun 2020 02:08:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
-        a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=T7xEnian507jIie1A9MA:9
+References: <20200618122408.1054092-1-agruenba@redhat.com> <20200619131347.GA22412@infradead.org>
+In-Reply-To: <20200619131347.GA22412@infradead.org>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Mon, 22 Jun 2020 11:07:59 +0200
+Message-ID: <CAHc6FU7uKUV-R+qJ9ifLAJkS6aPoG_6qWe7y7wJOb7EbWRL4dQ@mail.gmail.com>
+Subject: Re: [PATCH v2] iomap: Make sure iomap_end is called after iomap_begin
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Bob Peterson <rpeterso@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Jun 19, 2020 at 3:25 PM Christoph Hellwig <hch@infradead.org> wrote:
+> On Thu, Jun 18, 2020 at 02:24:08PM +0200, Andreas Gruenbacher wrote:
+> > Make sure iomap_end is always called when iomap_begin succeeds.
+> >
+> > Without this fix, iomap_end won't be called when a filesystem's
+> > iomap_begin operation returns an invalid mapping, bypassing any
+> > unlocking done in iomap_end.  With this fix, the unlocking would
+> > at least still happen.
+> >
+> > This iomap_apply bug was found by Bob Peterson during code review.
+> > It's unlikely that such iomap_begin bugs will survive to affect
+> > users, so backporting this fix seems unnecessary.
+> >
+> > Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure")
+> > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> > ---
+> >  fs/iomap/apply.c | 10 ++++++----
+> >  1 file changed, 6 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+> > index 76925b40b5fd..32daf8cb411c 100644
+> > --- a/fs/iomap/apply.c
+> > +++ b/fs/iomap/apply.c
+> > @@ -46,10 +46,11 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+> >       ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
+> >       if (ret)
+> >               return ret;
+> > -     if (WARN_ON(iomap.offset > pos))
+> > -             return -EIO;
+> > -     if (WARN_ON(iomap.length == 0))
+> > -             return -EIO;
+> > +     if (WARN_ON(iomap.offset > pos) ||
+> > +         WARN_ON(iomap.length == 0)) {
+> > +             written = -EIO;
+> > +             goto out;
+> > +     }
+>
+> As said before please don't merge these for no good reason.
 
-When an buffer IO error occurs, we want to mark all
-the log items attached to the buffer as failed. Open code
-the error handling loop so that we can modify the flagging for the
-different types of objects directly and independently of each other.
+I really didn't expect this tiny patch to require much discussion at
+all, but just to be clear ... do you actually object to this very
+patch that explicitly doesn't merge the two checks and keeps them on
+two separate lines so that the warning messages will report different
+line numbers, or are you fine with that?
 
-This also allows us to remove the ->iop_error method from the log
-item operations.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_buf_item.c   | 48 ++++++++++++-----------------------------
- fs/xfs/xfs_dquot_item.c | 18 ----------------
- fs/xfs/xfs_inode_item.c | 18 ----------------
- fs/xfs/xfs_trans.h      |  1 -
- 4 files changed, 14 insertions(+), 71 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index f80fc5bd3bff..d61f20b989cd 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -12,6 +12,7 @@
- #include "xfs_bit.h"
- #include "xfs_mount.h"
- #include "xfs_trans.h"
-+#include "xfs_trans_priv.h"
- #include "xfs_buf_item.h"
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
-@@ -955,37 +956,6 @@ xfs_buf_item_relse(
- 	xfs_buf_item_free(bip);
- }
- 
--/*
-- * Invoke the error state callback for each log item affected by the failed I/O.
-- *
-- * If a metadata buffer write fails with a non-permanent error, the buffer is
-- * eventually resubmitted and so the completion callbacks are not run. The error
-- * state may need to be propagated to the log items attached to the buffer,
-- * however, so the next AIL push of the item knows hot to handle it correctly.
-- */
--STATIC void
--xfs_buf_do_callbacks_fail(
--	struct xfs_buf		*bp)
--{
--	struct xfs_ail		*ailp = bp->b_mount->m_ail;
--	struct xfs_log_item	*lip;
--
--	/*
--	 * Buffer log item errors are handled directly by xfs_buf_item_push()
--	 * and xfs_buf_iodone_callback_error, and they have no IO error
--	 * callbacks. Check only for items in b_li_list.
--	 */
--	if (list_empty(&bp->b_li_list))
--		return;
--
--	spin_lock(&ailp->ail_lock);
--	list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
--		if (lip->li_ops->iop_error)
--			lip->li_ops->iop_error(lip, bp);
--	}
--	spin_unlock(&ailp->ail_lock);
--}
--
- /*
-  * Decide if we're going to retry the write after a failure, and prepare
-  * the buffer for retrying the write.
-@@ -1165,6 +1135,7 @@ xfs_buf_inode_iodone(
- 	struct xfs_buf		*bp)
- {
- 	if (bp->b_error) {
-+		struct xfs_log_item *lip;
- 		int ret = xfs_buf_iodone_error(bp);
- 
- 		if (ret == XBF_IOERROR_FINISH)
-@@ -1172,7 +1143,11 @@ xfs_buf_inode_iodone(
- 		if (ret == XBF_IOERROR_DONE)
- 			return;
- 		ASSERT(ret == XBF_IOERROR_FAIL);
--		xfs_buf_do_callbacks_fail(bp);
-+		spin_lock(&bp->b_mount->m_ail->ail_lock);
-+		list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
-+			xfs_set_li_failed(lip, bp);
-+		}
-+		spin_unlock(&bp->b_mount->m_ail->ail_lock);
- 		xfs_buf_ioerror(bp, 0);
- 		xfs_buf_relse(bp);
- 		return;
-@@ -1193,6 +1168,7 @@ xfs_buf_dquot_iodone(
- 	struct xfs_buf		*bp)
- {
- 	if (bp->b_error) {
-+		struct xfs_log_item *lip;
- 		int ret = xfs_buf_iodone_error(bp);
- 
- 		if (ret == XBF_IOERROR_FINISH)
-@@ -1200,7 +1176,11 @@ xfs_buf_dquot_iodone(
- 		if (ret == XBF_IOERROR_DONE)
- 			return;
- 		ASSERT(ret == XBF_IOERROR_FAIL);
--		xfs_buf_do_callbacks_fail(bp);
-+		spin_lock(&bp->b_mount->m_ail->ail_lock);
-+		list_for_each_entry(lip, &bp->b_li_list, li_bio_list) {
-+			xfs_set_li_failed(lip, bp);
-+		}
-+		spin_unlock(&bp->b_mount->m_ail->ail_lock);
- 		xfs_buf_ioerror(bp, 0);
- 		xfs_buf_relse(bp);
- 		return;
-@@ -1232,7 +1212,7 @@ xfs_buf_iodone(
- 		if (ret == XBF_IOERROR_DONE)
- 			return;
- 		ASSERT(ret == XBF_IOERROR_FAIL);
--		xfs_buf_do_callbacks_fail(bp);
-+		ASSERT(list_empty(&bp->b_li_list));
- 		xfs_buf_ioerror(bp, 0);
- 		xfs_buf_relse(bp);
- 		return;
-diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
-index 349c92d26570..d7e4de7151d7 100644
---- a/fs/xfs/xfs_dquot_item.c
-+++ b/fs/xfs/xfs_dquot_item.c
-@@ -113,23 +113,6 @@ xfs_qm_dqunpin_wait(
- 	wait_event(dqp->q_pinwait, (atomic_read(&dqp->q_pincount) == 0));
- }
- 
--/*
-- * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-- * have been failed during writeback
-- *
-- * this informs the AIL that the dquot is already flush locked on the next push,
-- * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-- * dirty data makes it to disk.
-- */
--STATIC void
--xfs_dquot_item_error(
--	struct xfs_log_item	*lip,
--	struct xfs_buf		*bp)
--{
--	ASSERT(!completion_done(&DQUOT_ITEM(lip)->qli_dquot->q_flush));
--	xfs_set_li_failed(lip, bp);
--}
--
- STATIC uint
- xfs_qm_dquot_logitem_push(
- 	struct xfs_log_item	*lip,
-@@ -216,7 +199,6 @@ static const struct xfs_item_ops xfs_dquot_item_ops = {
- 	.iop_release	= xfs_qm_dquot_logitem_release,
- 	.iop_committing	= xfs_qm_dquot_logitem_committing,
- 	.iop_push	= xfs_qm_dquot_logitem_push,
--	.iop_error	= xfs_dquot_item_error
- };
- 
- /*
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 7049f2ae8d18..86c783dec2ba 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -464,23 +464,6 @@ xfs_inode_item_unpin(
- 		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
- }
- 
--/*
-- * Callback used to mark a buffer with XFS_LI_FAILED when items in the buffer
-- * have been failed during writeback
-- *
-- * This informs the AIL that the inode is already flush locked on the next push,
-- * and acquires a hold on the buffer to ensure that it isn't reclaimed before
-- * dirty data makes it to disk.
-- */
--STATIC void
--xfs_inode_item_error(
--	struct xfs_log_item	*lip,
--	struct xfs_buf		*bp)
--{
--	ASSERT(xfs_isiflocked(INODE_ITEM(lip)->ili_inode));
--	xfs_set_li_failed(lip, bp);
--}
--
- STATIC uint
- xfs_inode_item_push(
- 	struct xfs_log_item	*lip,
-@@ -619,7 +602,6 @@ static const struct xfs_item_ops xfs_inode_item_ops = {
- 	.iop_committed	= xfs_inode_item_committed,
- 	.iop_push	= xfs_inode_item_push,
- 	.iop_committing	= xfs_inode_item_committing,
--	.iop_error	= xfs_inode_item_error
- };
- 
- 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 99a9ab9cab25..b752501818d2 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -74,7 +74,6 @@ struct xfs_item_ops {
- 	void (*iop_committing)(struct xfs_log_item *, xfs_lsn_t commit_lsn);
- 	void (*iop_release)(struct xfs_log_item *);
- 	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
--	void (*iop_error)(struct xfs_log_item *, xfs_buf_t *);
- 	int (*iop_recover)(struct xfs_log_item *lip, struct xfs_trans *tp);
- 	bool (*iop_match)(struct xfs_log_item *item, uint64_t id);
- };
--- 
-2.26.2.761.g0e0b3e54be
+Thanks,
+Andreas
 
