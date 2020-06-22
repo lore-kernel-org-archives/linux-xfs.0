@@ -2,79 +2,116 @@ Return-Path: <SRS0=RL8k=AD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B691C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 19:38:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17978C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 21:26:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5C57B2076A
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 19:38:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F6B020732
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 21:26:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O2s4trg/"
+	dkim=pass (1024-bit key) header.d=fieldses.org header.i=@fieldses.org header.b="PLXq9kej"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728050AbgFVTi3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Jun 2020 15:38:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48778 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728068AbgFVTi3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 15:38:29 -0400
-X-Greylist: delayed 1301 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 22 Jun 2020 12:38:29 PDT
-Received: from casper.infradead.org (unknown [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6980FC061573
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 12:38:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=vOlums0omprzRySIKDtGsk5lTE0w50R9+b2YKHN4UQg=; b=O2s4trg/qew86YOcSdJjIffHmA
-        DdcAc3OSzu0c6CusCt867ZtR+rnFlEybpH5JG+mdx6CLhP1tRxZQsJZoKjgrEbf5rwiPNstH9ldEG
-        N3fkuuR2Cv5QACnTkpY7XpSMCg4yon9Hh7VDDhVY1kLdmIMlmc2ryh8fFFJSiRpd059xok714noEx
-        XnfWUmAGEv+ORIyTWMNzfLNQueG/IuuE9/vpinRJrgBwb6m6MAh8YLwIzpr8WBy+N4YpviXPf/Nkf
-        cHXElQepKwFRdULiSknyeZ6DPEnBfDOo5ATJwwa5m628ktMXyZOOQKtiFmJPAgolo7WpJnEB9Hko/
-        M7I0k82A==;
-Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=worktop.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jnRvS-0001lC-9Q; Mon, 22 Jun 2020 19:16:14 +0000
-Received: by worktop.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 3986D9834A6; Mon, 22 Jun 2020 21:16:13 +0200 (CEST)
-Date:   Mon, 22 Jun 2020 21:16:13 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
+        id S1730479AbgFVV0O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Jun 2020 17:26:14 -0400
+Received: from fieldses.org ([173.255.197.46]:51546 "EHLO fieldses.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730430AbgFVV0N (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 22 Jun 2020 17:26:13 -0400
+Received: by fieldses.org (Postfix, from userid 2815)
+        id 82FC93EB; Mon, 22 Jun 2020 17:26:12 -0400 (EDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 fieldses.org 82FC93EB
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fieldses.org;
+        s=default; t=1592861172;
+        bh=Czca7QW8KGtHkb/Q7ULTwRFUj30LwsBIzvGyIo0BmgI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=PLXq9kejL/ER77z3lLgkzPPp/WwWi+6NqDkn9ImUU5/OqyWFmTWtfNdkqk1gH56Zv
+         KdyHbIr6Kswhs7USTEwF0BuVujcoGqpsDOOCsW0xiW5Mg1BCVPEbwAGRkHcxyJCDwn
+         0sXccFgWAgm/hmkZ6ezAvgqlE8TtggUtGQwA3h1c=
+Date:   Mon, 22 Jun 2020 17:26:12 -0400
+From:   "J. Bruce Fields" <bfields@fieldses.org>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Waiman Long <longman@redhat.com>,
+Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Juri Lelli <juri.lelli@redhat.com>,
-        Vincent Guittot <vincent.guittot@linaro.org>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Qian Cai <cai@lca.pw>, Eric Sandeen <sandeen@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v2 1/2] sched: Add PF_MEMALLOC_NOLOCKDEP flag
-Message-ID: <20200622191613.GB2483@worktop.programming.kicks-ass.net>
-References: <20200617175310.20912-1-longman@redhat.com>
- <20200617175310.20912-2-longman@redhat.com>
- <20200618000110.GF2005@dread.disaster.area>
+        Christoph Hellwig <hch@infradead.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+Message-ID: <20200622212612.GA11051@fieldses.org>
+References: <20200618034535.h5ho7pd4eilpbj3f@gabell>
+ <20200618223948.GI2005@dread.disaster.area>
+ <20200619022005.GA25414@fieldses.org>
+ <20200619024455.GN2005@dread.disaster.area>
+ <20200619204033.GB1564@fieldses.org>
+ <20200619221044.GO2005@dread.disaster.area>
+ <20200619222843.GB2650@fieldses.org>
+ <20200620014957.GQ2005@dread.disaster.area>
+ <20200620015633.GA1516@fieldses.org>
+ <20200620235408.GS2005@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200618000110.GF2005@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200620235408.GS2005@dread.disaster.area>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 18, 2020 at 10:01:10AM +1000, Dave Chinner wrote:
+On Sun, Jun 21, 2020 at 09:54:08AM +1000, Dave Chinner wrote:
+> On Fri, Jun 19, 2020 at 09:56:33PM -0400, J. Bruce Fields wrote:
+> > On Sat, Jun 20, 2020 at 11:49:57AM +1000, Dave Chinner wrote:
+> > > However, other people have different opinions on this matter (and we
+> > > know that from the people who considered XFS v4 -> v5 going slower
+> > > because iversion a major regression), and so we must acknowledge
+> > > those opinions even if we don't agree with them.
+> > 
+> > Do you have any of those reports handy?  Were there numbers?
+> 
+> e.g.  RH BZ #1355813 when v5 format was enabled by default in RHEL7.
+> Numbers were 40-47% performance degradation for in-cache writes
+> caused by the original IVERSION implementation using iozone.  There
+> were others I recall, all realted to similar high-IOP small random
+> writes workloads typical of databases....
 
-> And, really, if we are playing "re-use existing bits" games because
-> we've run out of process flags, all these memalloc flags should be
-> moved to a new field in the task, say current->memalloc_flags. You
-> could also move PF_SWAPWRITE, PF_LOCAL_THROTTLE, and PF_KSWAPD into
-> that field as well as they are all memory allocation context process
-> flags...
+Thanks, that's an interesting bug!  Though a bit tangled.  This is where
+you identified the change attribute as the main culprit:
 
-FWIW
+	https://bugzilla.redhat.com/show_bug.cgi?id=1355813#c42
 
-There's still 23 bits free after task_struct::in_memstall. That word has
-'current only' semantics, just like PF.
+	The test was running at 70,000 writes/s (2.2GB/s), so it was one
+	transaction per write() syscall: timestamp updates. On CRC
+	enabled filesystems, we have a change counter for NFSv4 - it
+	gets incremented on every write() syscall, even when the
+	timestamp doesn't change. That's the difference in behaviour and
+	hence performance in this test.
+
+In RHEL8, or anything post-v4.16, the frequency of change attribute
+updates should be back down to that of timestamp updates on this
+workload.  So it'd be interesting to repeat that experiment now.
+
+The bug was reporting in-house testing, and doesn't show any evidence
+that particular regression was encountered by users; Eric said:
+
+	https://bugzilla.redhat.com/show_bug.cgi?id=1355813#c52
+
+	Root cause of this minor in-memory regression was inode
+	versioning behavior; as it's unlikely to have real-world effects
+	(and has been open for years with no customer complaints) I'm
+	closing this WONTFIX to get it off the radar.
+
+The typical user may just skip an upgrade or otherwise work around the
+problem rather than root-causing it like this, so absence of reports
+isn't conclusive.  I understand wanting to err on the side of caution.
+
+But if that regression's mostly addressed now, then I'm still inclined
+to think it's time to just leave this on everywhere.
+
+--b.
