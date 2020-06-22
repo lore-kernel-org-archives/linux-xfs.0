@@ -8,64 +8,64 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D51EC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 09:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88B9EC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 09:47:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 530C7206F1
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 09:36:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 568B32071A
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 09:47:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dXS6tRhl"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EdmhNwJD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726704AbgFVJgm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Jun 2020 05:36:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39940 "EHLO
+        id S1726938AbgFVJr1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Jun 2020 05:47:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726620AbgFVJgm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 05:36:42 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BFA2C061794
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 02:36:42 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id u8so7901023pje.4
-        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 02:36:42 -0700 (PDT)
+        with ESMTP id S1726530AbgFVJr1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 05:47:27 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39EE4C061794
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 02:47:26 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id j12so5952803pfn.10
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 02:47:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=nilhZzYMoUvKatgkVaFngrob+JsbLvy75ZBDyA6aFR4=;
-        b=dXS6tRhlilU/2C9M7Ac1ucehNAGpLyOFD8c4Xs72SFmrJLv2AxthIUp5UXi+ccOgLv
-         gM6D1/TkPU/JdMM78lsGoEGWCPN06TF092IUe+U3vL3w5/akFejQv6hBQiU6dBsJcq9R
-         49ywKNBefe1VmWJso9B2l7PmcA+NERu8P0//f9M2blIMqmGqmmxMAarJyAHFF/rdkd7O
-         9V5q//gz3wStQovdHRq5juPD2mfkGULBKg0yx/SBhrfY1VTzRnwrec22lwprTjVeF/Ip
-         TbnjfQAu/Ud8Lo0jm/PPoQo5Kmiqgy0tHInfeGUICpAyz+RZUABwgnpwA2lvs54NeJbI
-         Yj4A==
+        bh=nhjTI2AhFBciT5C2jL9dqL4kOtfCiOHpWcjTl5GuWD0=;
+        b=EdmhNwJDgfPQax6SYAdbNrHDWdCvgPmquaNEisTIPFE8DPgqJGlZT/SOuRUUrELyiH
+         IEHZU9SGQ/30sncKEsQMjYIk90fSNWxrhZqBEOiskbTCCVHnBBRLD0ScyCinLL23qbFo
+         OYe8zB+57HcsdaUXQ1PYy1fEjFZBpeOP+NGJHosVaq3CtpiQbcesQkm09brUWXVCjNF+
+         jrlH5ZnDfwuUUqk2guytX/C+tOwf8uuaW+hmM0COFy2Mj0GEHuH1nqIQ7leBNfB4J+MM
+         R/6jdCfPiGk0bUU/cUdONs5nbJmmplwsztJix+KbSMd/o3Zbb9zTSsIMjp8EZg/xzexF
+         tgXg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=nilhZzYMoUvKatgkVaFngrob+JsbLvy75ZBDyA6aFR4=;
-        b=RnRIix3SRpdiiicfxgmt+E7RB7fKfePYSTSp4MKtp/t071XpOLx53bYq8pEsu+GhOD
-         0Oda2uqEUcqDqNNJ9S38sagAeVESHE+/oA3GAOpw1cj7OFQzTHh0FPFXDJLZ4GXav8qW
-         7yeUD9yAMec3+G3AW94L8tr3iu4tW00Z1InjCudRWGhomzup2KBqO2uimxHTScy9waxA
-         C1mbGD6fcIzGaxohHbbxtmFq6pD2WFC3W7Z6aJVfgzBXbxcGbA4XlUyVw1zFf5zx0KNN
-         YScpmDWVpv/3KL1MYELbDm0MhGuiSRDmUyl/QFCx0Ua/xssfU/8EIXYv6AByemkUhwpL
-         ezQA==
-X-Gm-Message-State: AOAM53273z4gaWMlnK7lErCaAmEMkJpMHMIlfb2PgyelHG5r6UmMfcUn
-        AYeV7RtiirOm4VzwXinu4yI=
-X-Google-Smtp-Source: ABdhPJyAXC3vfgh4ObYkHWKKDUp2Gy0Mxy8VYUUDvknRPSgSiryOBS4fjL8GumC9Nuz6DfeWZuxpYA==
-X-Received: by 2002:a17:90a:c906:: with SMTP id v6mr17547976pjt.105.1592818602053;
-        Mon, 22 Jun 2020 02:36:42 -0700 (PDT)
+        bh=nhjTI2AhFBciT5C2jL9dqL4kOtfCiOHpWcjTl5GuWD0=;
+        b=hMiXJBypDD2RhYj0WgM9AzcipSXc9CW3NZ73i2GELAYWn6gPDzQSBYSD69WFwgBQef
+         c3dmIebDMoEBIfC5dqPbTqpPCTVYNszcgyUGTllOfeqeQ0vl4UXSq8NuhZhXN1RJYwNh
+         RgBW5J+zn52S/7Mt8Oc0V47kQ6Ro3qRnvTJv0O2FpT0IWEAoGnS7HkPRdtIRHDsnhsLA
+         FOZaG10cM4KzhZwrzvksSRPvna73jQlavMLWE81mGUM+1Ic1UxLFA5oDH6VCSul0aMQD
+         57qp9dQdBnpSgPz/St8p9ESQgkT+gpjayw0/ZC/WKLLhzOdQDDQkoyiSBY/1kfI7zNPH
+         ZjZw==
+X-Gm-Message-State: AOAM531EEZrF1hAgY5+qEeFEcD2pnI8CW44Ug99ECT0AooGf5ATblx6Z
+        jQwkeTpt80nwEuqFh6Gd8dTEApU9
+X-Google-Smtp-Source: ABdhPJw52Iwz+K57kGh/LPbcDdaVv9OlgV0JOW3uP7Dh6OY/rTT7k4YXRZbDw10eODamEzFi+PWv8g==
+X-Received: by 2002:a63:e153:: with SMTP id h19mr12490431pgk.167.1592819245747;
+        Mon, 22 Jun 2020 02:47:25 -0700 (PDT)
 Received: from garuda.localnet ([122.179.34.42])
-        by smtp.gmail.com with ESMTPSA id gm11sm13046996pjb.9.2020.06.22.02.36.40
+        by smtp.gmail.com with ESMTPSA id n37sm10613508pgl.82.2020.06.22.02.47.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Jun 2020 02:36:41 -0700 (PDT)
+        Mon, 22 Jun 2020 02:47:25 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/15] xfs: move the di_extsize field to struct xfs_inode
-Date:   Mon, 22 Jun 2020 15:06:39 +0530
-Message-ID: <3082856.PAt9eKsda2@garuda>
-In-Reply-To: <20200620071102.462554-6-hch@lst.de>
-References: <20200620071102.462554-1-hch@lst.de> <20200620071102.462554-6-hch@lst.de>
+Subject: Re: [PATCH 06/15] xfs: move the di_cowextsize field to struct xfs_inode
+Date:   Mon, 22 Jun 2020 15:17:23 +0530
+Message-ID: <1854084.dlrHvGrZUC@garuda>
+In-Reply-To: <20200620071102.462554-7-hch@lst.de>
+References: <20200620071102.462554-1-hch@lst.de> <20200620071102.462554-7-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -74,9 +74,10 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Saturday 20 June 2020 12:40:52 PM IST Christoph Hellwig wrote:
-> In preparation of removing the historic icinode struct, move the extsize
-> field into the containing xfs_inode structure.
+On Saturday 20 June 2020 12:40:53 PM IST Christoph Hellwig wrote:
+> In preparation of removing the historic icinode struct, move the
+> cowextsize field into the containing xfs_inode structure.  Also
+> switch to use the xfs_extlen_t instead of a uint32_t.
 >
 
 The changes look good to me.
@@ -85,186 +86,173 @@ Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c      |  2 +-
->  fs/xfs/libxfs/xfs_inode_buf.c |  4 ++--
->  fs/xfs/libxfs/xfs_inode_buf.h |  1 -
->  fs/xfs/xfs_inode.c            | 10 +++++-----
->  fs/xfs/xfs_inode.h            |  1 +
->  fs/xfs/xfs_inode_item.c       |  2 +-
->  fs/xfs/xfs_ioctl.c            | 10 +++++-----
->  fs/xfs/xfs_itable.c           |  2 +-
->  8 files changed, 16 insertions(+), 16 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_buf.c | 4 ++--
+>  fs/xfs/libxfs/xfs_inode_buf.h | 1 -
+>  fs/xfs/xfs_file.c             | 2 +-
+>  fs/xfs/xfs_inode.c            | 6 +++---
+>  fs/xfs/xfs_inode.h            | 1 +
+>  fs/xfs/xfs_inode_item.c       | 2 +-
+>  fs/xfs/xfs_ioctl.c            | 8 +++-----
+>  fs/xfs/xfs_itable.c           | 2 +-
+>  fs/xfs/xfs_reflink.c          | 2 +-
+>  9 files changed, 13 insertions(+), 15 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 54f3015f08285a..692159357ed8e5 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -2942,7 +2942,7 @@ xfs_bmap_add_extent_hole_real(
->   */
->  
->  /*
-> - * Adjust the size of the new extent based on di_extsize and rt extsize.
-> + * Adjust the size of the new extent based on i_extsize and rt extsize.
->   */
->  int
->  xfs_bmap_extsize_align(
 > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-> index d1a15778e86a38..e51b15c44bb3e1 100644
+> index e51b15c44bb3e1..860e35611e001a 100644
 > --- a/fs/xfs/libxfs/xfs_inode_buf.c
 > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
-> @@ -243,7 +243,7 @@ xfs_inode_from_disk(
+> @@ -255,7 +255,7 @@ xfs_inode_from_disk(
+>  		to->di_crtime.tv_sec = be32_to_cpu(from->di_crtime.t_sec);
+>  		to->di_crtime.tv_nsec = be32_to_cpu(from->di_crtime.t_nsec);
+>  		to->di_flags2 = be64_to_cpu(from->di_flags2);
+> -		to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
+> +		ip->i_cowextsize = be32_to_cpu(from->di_cowextsize);
+>  	}
 >  
->  	ip->i_disk_size = be64_to_cpu(from->di_size);
->  	ip->i_nblocks = be64_to_cpu(from->di_nblocks);
-> -	to->di_extsize = be32_to_cpu(from->di_extsize);
-> +	ip->i_extsize = be32_to_cpu(from->di_extsize);
->  	to->di_forkoff = from->di_forkoff;
->  	to->di_dmevmask	= be32_to_cpu(from->di_dmevmask);
->  	to->di_dmstate	= be16_to_cpu(from->di_dmstate);
-> @@ -306,7 +306,7 @@ xfs_inode_to_disk(
->  
->  	to->di_size = cpu_to_be64(ip->i_disk_size);
->  	to->di_nblocks = cpu_to_be64(ip->i_nblocks);
-> -	to->di_extsize = cpu_to_be32(from->di_extsize);
-> +	to->di_extsize = cpu_to_be32(ip->i_extsize);
->  	to->di_nextents = cpu_to_be32(xfs_ifork_nextents(&ip->i_df));
->  	to->di_anextents = cpu_to_be16(xfs_ifork_nextents(ip->i_afp));
->  	to->di_forkoff = from->di_forkoff;
+>  	error = xfs_iformat_data_fork(ip, from);
+> @@ -321,7 +321,7 @@ xfs_inode_to_disk(
+>  		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.tv_sec);
+>  		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.tv_nsec);
+>  		to->di_flags2 = cpu_to_be64(from->di_flags2);
+> -		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
+> +		to->di_cowextsize = cpu_to_be32(ip->i_cowextsize);
+>  		to->di_ino = cpu_to_be64(ip->i_ino);
+>  		to->di_lsn = cpu_to_be64(lsn);
+>  		memset(to->di_pad2, 0, sizeof(to->di_pad2));
 > diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-> index a322e1adf0a348..d420ea835c8390 100644
+> index d420ea835c8390..663a97fa78f05f 100644
 > --- a/fs/xfs/libxfs/xfs_inode_buf.h
 > +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> @@ -17,7 +17,6 @@ struct xfs_dinode;
->   */
->  struct xfs_icdinode {
->  	uint16_t	di_flushiter;	/* incremented on flush */
-> -	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
->  	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
->  	uint32_t	di_dmevmask;	/* DMIG event mask */
->  	uint16_t	di_dmstate;	/* DMIG state info */
+> @@ -23,7 +23,6 @@ struct xfs_icdinode {
+>  	uint16_t	di_flags;	/* random flags, XFS_DIFLAG_... */
+>  
+>  	uint64_t	di_flags2;	/* more random flags */
+> -	uint32_t	di_cowextsize;	/* basic cow extent size for file */
+>  
+>  	struct timespec64 di_crtime;	/* time created */
+>  };
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 14b533a8ce8e6a..b0384306d6622f 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1055,7 +1055,7 @@ xfs_file_remap_range(
+>  	    (src->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) &&
+>  	    pos_out == 0 && len >= i_size_read(inode_out) &&
+>  	    !(dest->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
+> -		cowextsize = src->i_d.di_cowextsize;
+> +		cowextsize = src->i_cowextsize;
+>  
+>  	ret = xfs_reflink_update_dest(dest, pos_out + len, cowextsize,
+>  			remap_flags);
 > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 19d132acc499cb..6d1891f902aaa9 100644
+> index 6d1891f902aaa9..f1893824cd4e2f 100644
 > --- a/fs/xfs/xfs_inode.c
 > +++ b/fs/xfs/xfs_inode.c
-> @@ -61,8 +61,8 @@ xfs_get_extsz_hint(
->  	 */
->  	if (xfs_is_always_cow_inode(ip))
->  		return 0;
-> -	if ((ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE) && ip->i_d.di_extsize)
-> -		return ip->i_d.di_extsize;
-> +	if ((ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE) && ip->i_extsize)
-> +		return ip->i_extsize;
->  	if (XFS_IS_REALTIME_INODE(ip))
->  		return ip->i_mount->m_sb.sb_rextsize;
->  	return 0;
-> @@ -834,7 +834,7 @@ xfs_ialloc(
->  	inode->i_atime = tv;
->  	inode->i_ctime = tv;
+> @@ -82,7 +82,7 @@ xfs_get_cowextsz_hint(
 >  
-> -	ip->i_d.di_extsize = 0;
-> +	ip->i_extsize = 0;
->  	ip->i_d.di_dmevmask = 0;
->  	ip->i_d.di_dmstate = 0;
->  	ip->i_d.di_flags = 0;
-> @@ -866,7 +866,7 @@ xfs_ialloc(
->  					di_flags |= XFS_DIFLAG_RTINHERIT;
->  				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
->  					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
-> -					ip->i_d.di_extsize = pip->i_d.di_extsize;
-> +					ip->i_extsize = pip->i_extsize;
->  				}
->  				if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
->  					di_flags |= XFS_DIFLAG_PROJINHERIT;
-> @@ -875,7 +875,7 @@ xfs_ialloc(
->  					di_flags |= XFS_DIFLAG_REALTIME;
->  				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
->  					di_flags |= XFS_DIFLAG_EXTSIZE;
-> -					ip->i_d.di_extsize = pip->i_d.di_extsize;
-> +					ip->i_extsize = pip->i_extsize;
->  				}
+>  	a = 0;
+>  	if (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
+> -		a = ip->i_d.di_cowextsize;
+> +		a = ip->i_cowextsize;
+>  	b = xfs_get_extsz_hint(ip);
+>  
+>  	a = max(a, b);
+> @@ -842,7 +842,7 @@ xfs_ialloc(
+>  	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
+>  		inode_set_iversion(inode, 1);
+>  		ip->i_d.di_flags2 = 0;
+> -		ip->i_d.di_cowextsize = 0;
+> +		ip->i_cowextsize = 0;
+>  		ip->i_d.di_crtime = tv;
+>  	}
+>  
+> @@ -901,7 +901,7 @@ xfs_ialloc(
+>  		if (pip && (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY)) {
+>  			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
+>  				ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+> -				ip->i_d.di_cowextsize = pip->i_d.di_cowextsize;
+> +				ip->i_cowextsize = pip->i_cowextsize;
 >  			}
->  			if ((pip->i_d.di_flags & XFS_DIFLAG_NOATIME) &&
+>  			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
+>  				ip->i_d.di_flags2 |= XFS_DIFLAG2_DAX;
 > diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 828f49f109475e..af90c6f745549b 100644
+> index af90c6f745549b..2cdb7b6b298852 100644
 > --- a/fs/xfs/xfs_inode.h
 > +++ b/fs/xfs/xfs_inode.h
-> @@ -57,6 +57,7 @@ typedef struct xfs_inode {
->  	xfs_fsize_t		i_disk_size;	/* number of bytes in file */
+> @@ -58,6 +58,7 @@ typedef struct xfs_inode {
 >  	xfs_rfsblock_t		i_nblocks;	/* # of direct & btree blocks */
 >  	uint32_t		i_projid;	/* owner's project id */
-> +	xfs_extlen_t		i_extsize;	/* basic/minimum extent size */
+>  	xfs_extlen_t		i_extsize;	/* basic/minimum extent size */
+> +	xfs_extlen_t		i_cowextsize;	/* basic cow extent size */
 >  
 >  	struct xfs_icdinode	i_d;		/* most of ondisk inode */
 >  
 > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 0980fa43472cf8..8b8c99809f273e 100644
+> index 8b8c99809f273e..ab0d8cf8ceb6ab 100644
 > --- a/fs/xfs/xfs_inode_item.c
 > +++ b/fs/xfs/xfs_inode_item.c
-> @@ -325,7 +325,7 @@ xfs_inode_to_log_dinode(
->  
->  	to->di_size = ip->i_disk_size;
->  	to->di_nblocks = ip->i_nblocks;
-> -	to->di_extsize = from->di_extsize;
-> +	to->di_extsize = ip->i_extsize;
->  	to->di_nextents = xfs_ifork_nextents(&ip->i_df);
->  	to->di_anextents = xfs_ifork_nextents(ip->i_afp);
->  	to->di_forkoff = from->di_forkoff;
+> @@ -343,7 +343,7 @@ xfs_inode_to_log_dinode(
+>  		to->di_crtime.t_sec = from->di_crtime.tv_sec;
+>  		to->di_crtime.t_nsec = from->di_crtime.tv_nsec;
+>  		to->di_flags2 = from->di_flags2;
+> -		to->di_cowextsize = from->di_cowextsize;
+> +		to->di_cowextsize = ip->i_cowextsize;
+>  		to->di_ino = ip->i_ino;
+>  		to->di_lsn = lsn;
+>  		memset(to->di_pad2, 0, sizeof(to->di_pad2));
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index d93f4fc40fd99e..efe3b5bc1178dc 100644
+> index efe3b5bc1178dc..a1937900ad84be 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1107,7 +1107,7 @@ xfs_fill_fsxattr(
->  	struct xfs_ifork	*ifp = attr ? ip->i_afp : &ip->i_df;
+> @@ -1108,8 +1108,7 @@ xfs_fill_fsxattr(
 >  
 >  	simple_fill_fsxattr(fa, xfs_ip2xflags(ip));
-> -	fa->fsx_extsize = ip->i_d.di_extsize << ip->i_mount->m_sb.sb_blocklog;
-> +	fa->fsx_extsize = ip->i_extsize << ip->i_mount->m_sb.sb_blocklog;
->  	fa->fsx_cowextsize = ip->i_d.di_cowextsize <<
->  			ip->i_mount->m_sb.sb_blocklog;
+>  	fa->fsx_extsize = ip->i_extsize << ip->i_mount->m_sb.sb_blocklog;
+> -	fa->fsx_cowextsize = ip->i_d.di_cowextsize <<
+> -			ip->i_mount->m_sb.sb_blocklog;
+> +	fa->fsx_cowextsize = ip->i_cowextsize << ip->i_mount->m_sb.sb_blocklog;
 >  	fa->fsx_projid = ip->i_projid;
-> @@ -1209,7 +1209,7 @@ xfs_ioctl_setattr_xflags(
->  	/* If realtime flag is set then must have realtime device */
->  	if (fa->fsx_xflags & FS_XFLAG_REALTIME) {
->  		if (mp->m_sb.sb_rblocks == 0 || mp->m_sb.sb_rextsize == 0 ||
-> -		    (ip->i_d.di_extsize % mp->m_sb.sb_rextsize))
-> +		    (ip->i_extsize % mp->m_sb.sb_rextsize))
->  			return -EINVAL;
->  	}
->  
-> @@ -1381,7 +1381,7 @@ xfs_ioctl_setattr_check_extsize(
->  	xfs_fsblock_t		extsize_fsb;
->  
->  	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_df.if_nextents &&
-> -	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
-> +	    ((ip->i_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
->  		return -EINVAL;
->  
->  	if (fa->fsx_extsize == 0)
-> @@ -1569,9 +1569,9 @@ xfs_ioctl_setattr(
->  	 * are set on the inode then unconditionally clear the extent size hint.
->  	 */
->  	if (ip->i_d.di_flags & (XFS_DIFLAG_EXTSIZE | XFS_DIFLAG_EXTSZINHERIT))
-> -		ip->i_d.di_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
-> +		ip->i_extsize = fa->fsx_extsize >> mp->m_sb.sb_blocklog;
->  	else
-> -		ip->i_d.di_extsize = 0;
-> +		ip->i_extsize = 0;
+>  	if (ifp && (ifp->if_flags & XFS_IFEXTENTS))
+>  		fa->fsx_nextents = xfs_iext_count(ifp);
+> @@ -1574,10 +1573,9 @@ xfs_ioctl_setattr(
+>  		ip->i_extsize = 0;
 >  	if (xfs_sb_version_has_v3inode(&mp->m_sb) &&
 >  	    (ip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE))
->  		ip->i_d.di_cowextsize = fa->fsx_cowextsize >>
+> -		ip->i_d.di_cowextsize = fa->fsx_cowextsize >>
+> -				mp->m_sb.sb_blocklog;
+> +		ip->i_cowextsize = fa->fsx_cowextsize >> mp->m_sb.sb_blocklog;
+>  	else
+> -		ip->i_d.di_cowextsize = 0;
+> +		ip->i_cowextsize = 0;
+>  
+>  	code = xfs_trans_commit(tp);
+>  
 > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 7af144500bbfdb..b0f0c19fd7822e 100644
+> index b0f0c19fd7822e..7937af9f2ea779 100644
 > --- a/fs/xfs/xfs_itable.c
 > +++ b/fs/xfs/xfs_itable.c
-> @@ -103,7 +103,7 @@ xfs_bulkstat_one_int(
->  	buf->bs_mode = inode->i_mode;
+> @@ -112,7 +112,7 @@ xfs_bulkstat_one_int(
 >  
->  	buf->bs_xflags = xfs_ip2xflags(ip);
-> -	buf->bs_extsize_blks = dic->di_extsize;
-> +	buf->bs_extsize_blks = ip->i_extsize;
->  	buf->bs_extents = xfs_ifork_nextents(&ip->i_df);
->  	xfs_bulkstat_health(ip, buf);
->  	buf->bs_aextents = xfs_ifork_nextents(ip->i_afp);
+>  	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
+>  		if (dic->di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
+> -			buf->bs_cowextsize_blks = dic->di_cowextsize;
+> +			buf->bs_cowextsize_blks = ip->i_cowextsize;
+>  	}
+>  
+>  	switch (ip->i_df.if_format) {
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index 8598896156e29a..0e07fa7e43117e 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -942,7 +942,7 @@ xfs_reflink_update_dest(
+>  	}
+>  
+>  	if (cowextsize) {
+> -		dest->i_d.di_cowextsize = cowextsize;
+> +		dest->i_cowextsize = cowextsize;
+>  		dest->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+>  	}
+>  
 > 
 
 
