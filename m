@@ -7,45 +7,44 @@ X-Spam-Status: No, score=-10.0 required=3.0
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C31AC433E4
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81BA1C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01CD92068F
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66A042068F
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 08:16:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725937AbgFVIQL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1725928AbgFVIQL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 22 Jun 2020 04:16:11 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59982 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725852AbgFVIQK (ORCPT
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45760 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725788AbgFVIQK (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 04:16:10 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 07B5282157B
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DDF873A394E
         for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 18:16:06 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jnHcb-000457-N2
+        id 1jnHcb-00045D-Qk
         for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:05 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jnHcb-007d4M-Ed
+        id 1jnHcb-007d4b-ID
         for linux-xfs@vger.kernel.org; Mon, 22 Jun 2020 18:16:05 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 01/30] xfs: Don't allow logging of XFS_ISTALE inodes
-Date:   Mon, 22 Jun 2020 18:15:36 +1000
-Message-Id: <20200622081605.1818434-2-david@fromorbit.com>
+Subject: [PATCH 04/30] xfs: mark inode buffers in cache
+Date:   Mon, 22 Jun 2020 18:15:39 +1000
+Message-Id: <20200622081605.1818434-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
 In-Reply-To: <20200622081605.1818434-1-david@fromorbit.com>
 References: <20200622081605.1818434-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
-        a=E4R3UMY25Q1b2mD5dw0A:9
+        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=k2ft56n7lZIwALnzbJ4A:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -53,156 +52,275 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-In tracking down a problem in this patchset, I discovered we are
-reclaiming dirty stale inodes. This wasn't discovered until inodes
-were always attached to the cluster buffer and then the rcu callback
-that freed inodes was assert failing because the inode still had an
-active pointer to the cluster buffer after it had been reclaimed.
+Inode buffers always have write IO callbacks, so by marking them
+directly we can avoid needing to attach ->b_iodone functions to
+them. This avoids an indirect call, and makes future modifications
+much simpler.
 
-Debugging the issue indicated that this was a pre-existing issue
-resulting from the way the inodes are handled in xfs_inactive_ifree.
-When we free a cluster buffer from xfs_ifree_cluster, all the inodes
-in cache are marked XFS_ISTALE. Those that are clean have nothing
-else done to them and so eventually get cleaned up by background
-reclaim. i.e. it is assumed we'll never dirty/relog an inode marked
-XFS_ISTALE.
-
-On journal commit dirty stale inodes as are handled by both
-buffer and inode log items to run though xfs_istale_done() and
-removed from the AIL (buffer log item commit) or the log item will
-simply unpin it because the buffer log item will clean it. What happens
-to any specific inode is entirely dependent on which log item wins
-the commit race, but the result is the same - stale inodes are
-clean, not attached to the cluster buffer, and not in the AIL. Hence
-inode reclaim can just free these inodes without further care.
-
-However, if the stale inode is relogged, it gets dirtied again and
-relogged into the CIL. Most of the time this isn't an issue, because
-relogging simply changes the inode's location in the current
-checkpoint. Problems arise, however, when the CIL checkpoints
-between two transactions in the xfs_inactive_ifree() deferops
-processing. This results in the XFS_ISTALE inode being redirtied
-and inserted into the CIL without any of the other stale cluster
-buffer infrastructure being in place.
-
-Hence on journal commit, it simply gets unpinned, so it remains
-dirty in memory. Everything in inode writeback avoids XFS_ISTALE
-inodes so it can't be written back, and it is not tracked in the AIL
-so there's not even a trigger to attempt to clean the inode. Hence
-the inode just sits dirty in memory until inode reclaim comes along,
-sees that it is XFS_ISTALE, and goes to reclaim it. This reclaiming
-of a dirty inode caused use after free, list corruptions and other
-nasty issues later in this patchset.
-
-Hence this patch addresses a violation of the "never log XFS_ISTALE
-inodes" caused by the deferops processing rolling a transaction
-and relogging a stale inode in xfs_inactive_free. It also adds a
-bunch of asserts to catch this problem in debug kernels so that
-we don't reintroduce this problem in future.
-
-Reproducer for this issue was generic/558 on a v4 filesystem.
+While this is largely a refactor of existing functionality, we
+broaden the scope of the flag to beyond where inodes are explicitly
+attached because future changes need to know what type of log items
+are attached to the buffer. Adding this buffer flag may invoke the
+inode iodone callback in cases where it wouldn't have been
+previously, but this is not a functional change because the callback
+is identical to the normal buffer write iodone callback when inodes
+are not attached.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_trans_inode.c |  2 ++
- fs/xfs/xfs_icache.c             |  3 ++-
- fs/xfs/xfs_inode.c              | 25 ++++++++++++++++++++++---
- 3 files changed, 26 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_buf.c       | 21 ++++++++++++++++-----
+ fs/xfs/xfs_buf.h       | 38 +++++++++++++++++++++++++-------------
+ fs/xfs/xfs_buf_item.c  | 42 +++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_buf_item.h  |  1 +
+ fs/xfs/xfs_inode.c     |  2 +-
+ fs/xfs/xfs_trans_buf.c |  3 +++
+ 6 files changed, 77 insertions(+), 30 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index b5dfb6654842..4504d215cd59 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -36,6 +36,7 @@ xfs_trans_ijoin(
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 20b748f7e186..ae0c923574df 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -14,6 +14,8 @@
+ #include "xfs_mount.h"
+ #include "xfs_trace.h"
+ #include "xfs_log.h"
++#include "xfs_trans.h"
++#include "xfs_buf_item.h"
+ #include "xfs_errortag.h"
+ #include "xfs_error.h"
  
- 	ASSERT(iip->ili_lock_flags == 0);
- 	iip->ili_lock_flags = lock_flags;
-+	ASSERT(!xfs_iflags_test(ip, XFS_ISTALE));
- 
- 	/*
- 	 * Get a log_item_desc to point at the new item.
-@@ -89,6 +90,7 @@ xfs_trans_log_inode(
- 
- 	ASSERT(ip->i_itemp != NULL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(!xfs_iflags_test(ip, XFS_ISTALE));
- 
- 	/*
- 	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 5daef654956c..59dea8178ae3 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1141,7 +1141,7 @@ xfs_reclaim_inode(
- 			goto out_ifunlock;
- 		xfs_iunpin_wait(ip);
+@@ -1202,12 +1204,21 @@ xfs_buf_ioend(
+ 		bp->b_flags |= XBF_DONE;
  	}
--	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
-+	if (xfs_inode_clean(ip)) {
- 		xfs_ifunlock(ip);
- 		goto reclaim;
- 	}
-@@ -1228,6 +1228,7 @@ xfs_reclaim_inode(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_qm_dqdetach(ip);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	ASSERT(xfs_inode_clean(ip));
  
- 	__xfs_inode_free(ip);
- 	return error;
+-	if (bp->b_iodone)
++	if (read)
++		goto out_finish;
++
++	if (bp->b_flags & _XBF_INODES) {
++		xfs_buf_inode_iodone(bp);
++		return;
++	}
++
++	if (bp->b_iodone) {
+ 		(*(bp->b_iodone))(bp);
+-	else if (bp->b_flags & XBF_ASYNC)
+-		xfs_buf_relse(bp);
+-	else
+-		complete(&bp->b_iowait);
++		return;
++	}
++
++out_finish:
++	xfs_buf_ioend_finish(bp);
+ }
+ 
+ static void
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 050c53b739e2..2400cb90a04c 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -30,15 +30,18 @@
+ #define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
+ #define XBF_WRITE_FAIL	 (1 << 7) /* async writes have failed on this buffer */
+ 
+-/* flags used only as arguments to access routines */
+-#define XBF_TRYLOCK	 (1 << 16)/* lock requested, but do not wait */
+-#define XBF_UNMAPPED	 (1 << 17)/* do not map the buffer */
++/* buffer type flags for write callbacks */
++#define _XBF_INODES	 (1 << 16)/* inode buffer */
+ 
+ /* flags used only internally */
+ #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+ #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
+ #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
+ 
++/* flags used only as arguments to access routines */
++#define XBF_TRYLOCK	 (1 << 30)/* lock requested, but do not wait */
++#define XBF_UNMAPPED	 (1 << 31)/* do not map the buffer */
++
+ typedef unsigned int xfs_buf_flags_t;
+ 
+ #define XFS_BUF_FLAGS \
+@@ -50,12 +53,13 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_DONE,		"DONE" }, \
+ 	{ XBF_STALE,		"STALE" }, \
+ 	{ XBF_WRITE_FAIL,	"WRITE_FAIL" }, \
+-	{ XBF_TRYLOCK,		"TRYLOCK" },	/* should never be set */\
+-	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
++	{ _XBF_INODES,		"INODES" }, \
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+-	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
+-
++	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
++	/* The following interface flags should never be set */ \
++	{ XBF_TRYLOCK,		"TRYLOCK" }, \
++	{ XBF_UNMAPPED,		"UNMAPPED" }
+ 
+ /*
+  * Internal state flags.
+@@ -257,9 +261,23 @@ extern void xfs_buf_unlock(xfs_buf_t *);
+ #define xfs_buf_islocked(bp) \
+ 	((bp)->b_sema.count <= 0)
+ 
++static inline void xfs_buf_relse(xfs_buf_t *bp)
++{
++	xfs_buf_unlock(bp);
++	xfs_buf_rele(bp);
++}
++
+ /* Buffer Read and Write Routines */
+ extern int xfs_bwrite(struct xfs_buf *bp);
+ extern void xfs_buf_ioend(struct xfs_buf *bp);
++static inline void xfs_buf_ioend_finish(struct xfs_buf *bp)
++{
++	if (bp->b_flags & XBF_ASYNC)
++		xfs_buf_relse(bp);
++	else
++		complete(&bp->b_iowait);
++}
++
+ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
+ 		xfs_failaddr_t failaddr);
+ #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
+@@ -324,12 +342,6 @@ static inline int xfs_buf_ispinned(struct xfs_buf *bp)
+ 	return atomic_read(&bp->b_pin_count);
+ }
+ 
+-static inline void xfs_buf_relse(xfs_buf_t *bp)
+-{
+-	xfs_buf_unlock(bp);
+-	xfs_buf_rele(bp);
+-}
+-
+ static inline int
+ xfs_buf_verify_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+ {
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 9e75e8d6042e..8659cf4282a6 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1158,20 +1158,15 @@ xfs_buf_iodone_callback_error(
+ 	return false;
+ }
+ 
+-/*
+- * This is the iodone() function for buffers which have had callbacks attached
+- * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
+- * callback list, mark the buffer as having no more callbacks and then push the
+- * buffer through IO completion processing.
+- */
+-void
+-xfs_buf_iodone_callbacks(
++static void
++xfs_buf_run_callbacks(
+ 	struct xfs_buf		*bp)
+ {
++
+ 	/*
+-	 * If there is an error, process it. Some errors require us
+-	 * to run callbacks after failure processing is done so we
+-	 * detect that and take appropriate action.
++	 * If there is an error, process it. Some errors require us to run
++	 * callbacks after failure processing is done so we detect that and take
++	 * appropriate action.
+ 	 */
+ 	if (bp->b_error && xfs_buf_iodone_callback_error(bp))
+ 		return;
+@@ -1188,9 +1183,34 @@ xfs_buf_iodone_callbacks(
+ 	bp->b_log_item = NULL;
+ 	list_del_init(&bp->b_li_list);
+ 	bp->b_iodone = NULL;
++}
++
++/*
++ * This is the iodone() function for buffers which have had callbacks attached
++ * to them by xfs_buf_attach_iodone(). We need to iterate the items on the
++ * callback list, mark the buffer as having no more callbacks and then push the
++ * buffer through IO completion processing.
++ */
++void
++xfs_buf_iodone_callbacks(
++	struct xfs_buf		*bp)
++{
++	xfs_buf_run_callbacks(bp);
+ 	xfs_buf_ioend(bp);
+ }
+ 
++/*
++ * Inode buffer iodone callback function.
++ */
++void
++xfs_buf_inode_iodone(
++	struct xfs_buf		*bp)
++{
++	xfs_buf_run_callbacks(bp);
++	xfs_buf_ioend_finish(bp);
++}
++
++
+ /*
+  * This is the iodone() function for buffers which have been
+  * logged.  It is called when they are eventually flushed out.
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index c9c57e2da932..a342933ad9b8 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -59,6 +59,7 @@ void	xfs_buf_attach_iodone(struct xfs_buf *,
+ 			      struct xfs_log_item *);
+ void	xfs_buf_iodone_callbacks(struct xfs_buf *);
+ void	xfs_buf_iodone(struct xfs_buf *, struct xfs_log_item *);
++void	xfs_buf_inode_iodone(struct xfs_buf *);
+ bool	xfs_buf_log_check_iovec(struct xfs_log_iovec *iovec);
+ 
+ extern kmem_zone_t	*xfs_buf_item_zone;
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 9aea7d68d8ab..6d70daf1c92a 100644
+index e2296f0b7f11..b0760a900e11 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1740,10 +1740,31 @@ xfs_inactive_ifree(
- 		return error;
- 	}
+@@ -3862,13 +3862,13 @@ xfs_iflush_int(
+ 	 * completion on the buffer to remove the inode from the AIL and release
+ 	 * the flush lock.
+ 	 */
++	bp->b_flags |= _XBF_INODES;
+ 	xfs_buf_attach_iodone(bp, xfs_iflush_done, &iip->ili_item);
  
-+	/*
-+	 * We do not hold the inode locked across the entire rolling transaction
-+	 * here. We only need to hold it for the first transaction that
-+	 * xfs_ifree() builds, which may mark the inode XFS_ISTALE if the
-+	 * underlying cluster buffer is freed. Relogging an XFS_ISTALE inode
-+	 * here breaks the relationship between cluster buffer invalidation and
-+	 * stale inode invalidation on cluster buffer item journal commit
-+	 * completion, and can result in leaving dirty stale inodes hanging
-+	 * around in memory.
-+	 *
-+	 * We have no need for serialising this inode operation against other
-+	 * operations - we freed the inode and hence reallocation is required
-+	 * and that will serialise on reallocating the space the deferops need
-+	 * to free. Hence we can unlock the inode on the first commit of
-+	 * the transaction rather than roll it right through the deferops. This
-+	 * avoids relogging the XFS_ISTALE inode.
-+	 *
-+	 * We check that xfs_ifree() hasn't grown an internal transaction roll
-+	 * by asserting that the inode is still locked when it returns.
-+	 */
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, 0);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+ 	/* generate the checksum. */
+ 	xfs_dinode_calc_crc(mp, dip);
  
- 	error = xfs_ifree(tp, ip);
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	if (error) {
- 		/*
- 		 * If we fail to free the inode, shut down.  The cancel
-@@ -1756,7 +1777,6 @@ xfs_inactive_ifree(
- 			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
- 		}
- 		xfs_trans_cancel(tp);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		return error;
- 	}
+ 	ASSERT(!list_empty(&bp->b_li_list));
+-	ASSERT(bp->b_iodone != NULL);
+ 	return error;
+ }
  
-@@ -1774,7 +1794,6 @@ xfs_inactive_ifree(
- 		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
- 			__func__, error);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 08174ffa2118..552d0869aa0f 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -626,6 +626,7 @@ xfs_trans_inode_buf(
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
  
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return 0;
+ 	bip->bli_flags |= XFS_BLI_INODE_BUF;
++	bp->b_flags |= _XBF_INODES;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+ }
+ 
+@@ -651,6 +652,7 @@ xfs_trans_stale_inode_buf(
+ 
+ 	bip->bli_flags |= XFS_BLI_STALE_INODE;
+ 	bip->bli_item.li_cb = xfs_buf_iodone;
++	bp->b_flags |= _XBF_INODES;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+ }
+ 
+@@ -675,6 +677,7 @@ xfs_trans_inode_alloc_buf(
+ 	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+ 
+ 	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
++	bp->b_flags |= _XBF_INODES;
+ 	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
  }
  
 -- 
