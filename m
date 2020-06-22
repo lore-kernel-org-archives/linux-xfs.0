@@ -2,131 +2,79 @@ Return-Path: <SRS0=RL8k=AD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DDDC433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 17:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B691C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 19:38:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA2FB20738
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 17:56:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C57B2076A
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 19:38:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cU2pbC4K"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O2s4trg/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730122AbgFVR4P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Jun 2020 13:56:15 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:39611 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730179AbgFVR4P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 13:56:15 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592848573;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ySuDF4uW5IhgSc5+6f1wy6JDv5FU7nQ5DALwzLWqkuw=;
-        b=cU2pbC4KjwvAZE+02Ub3USzB4d86Mi+d2eR3lwcYcCDsj4czSWAAnIdnilsT/nGjiD0aZi
-        3lFxwwgMfC/bxqQIi2xu/qncBnDiyx30ghQDXmUlT/dAbkwzjmteFyOF0S9riry+ZxHPts
-        eLhoMX0tU0jXIYcoWdSo8X4eRgDe/l8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-189-AWUGfKRlOj6DKO4q4ct8zA-1; Mon, 22 Jun 2020 13:56:09 -0400
-X-MC-Unique: AWUGfKRlOj6DKO4q4ct8zA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2F1718005AD;
-        Mon, 22 Jun 2020 17:56:08 +0000 (UTC)
-Received: from llong.remote.csb (ovpn-116-193.rdu2.redhat.com [10.10.116.193])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2E8AD6FDD1;
-        Mon, 22 Jun 2020 17:56:04 +0000 (UTC)
-Subject: Re: [PATCH v4] xfs: Fix false positive lockdep warning with
- sb_internal & fs_reclaim
+        id S1728050AbgFVTi3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Jun 2020 15:38:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48778 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728068AbgFVTi3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 15:38:29 -0400
+X-Greylist: delayed 1301 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 22 Jun 2020 12:38:29 PDT
+Received: from casper.infradead.org (unknown [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6980FC061573
+        for <linux-xfs@vger.kernel.org>; Mon, 22 Jun 2020 12:38:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=vOlums0omprzRySIKDtGsk5lTE0w50R9+b2YKHN4UQg=; b=O2s4trg/qew86YOcSdJjIffHmA
+        DdcAc3OSzu0c6CusCt867ZtR+rnFlEybpH5JG+mdx6CLhP1tRxZQsJZoKjgrEbf5rwiPNstH9ldEG
+        N3fkuuR2Cv5QACnTkpY7XpSMCg4yon9Hh7VDDhVY1kLdmIMlmc2ryh8fFFJSiRpd059xok714noEx
+        XnfWUmAGEv+ORIyTWMNzfLNQueG/IuuE9/vpinRJrgBwb6m6MAh8YLwIzpr8WBy+N4YpviXPf/Nkf
+        cHXElQepKwFRdULiSknyeZ6DPEnBfDOo5ATJwwa5m628ktMXyZOOQKtiFmJPAgolo7WpJnEB9Hko/
+        M7I0k82A==;
+Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=worktop.programming.kicks-ass.net)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jnRvS-0001lC-9Q; Mon, 22 Jun 2020 19:16:14 +0000
+Received: by worktop.programming.kicks-ass.net (Postfix, from userid 1000)
+        id 3986D9834A6; Mon, 22 Jun 2020 21:16:13 +0200 (CEST)
+Date:   Mon, 22 Jun 2020 21:16:13 +0200
+From:   Peter Zijlstra <peterz@infradead.org>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+Cc:     Waiman Long <longman@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Juri Lelli <juri.lelli@redhat.com>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Qian Cai <cai@lca.pw>, Eric Sandeen <sandeen@redhat.com>
-References: <20200618171941.9475-1-longman@redhat.com>
- <20200618225810.GJ2005@dread.disaster.area>
- <20200618230405.GK2005@dread.disaster.area>
-From:   Waiman Long <longman@redhat.com>
-Organization: Red Hat
-Message-ID: <14d9c969-3fbe-ed1f-6821-050fc2c6289e@redhat.com>
-Date:   Mon, 22 Jun 2020 13:56:04 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        Qian Cai <cai@lca.pw>, Eric Sandeen <sandeen@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v2 1/2] sched: Add PF_MEMALLOC_NOLOCKDEP flag
+Message-ID: <20200622191613.GB2483@worktop.programming.kicks-ass.net>
+References: <20200617175310.20912-1-longman@redhat.com>
+ <20200617175310.20912-2-longman@redhat.com>
+ <20200618000110.GF2005@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20200618230405.GK2005@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200618000110.GF2005@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/18/20 7:04 PM, Dave Chinner wrote:
-> On Fri, Jun 19, 2020 at 08:58:10AM +1000, Dave Chinner wrote:
->> On Thu, Jun 18, 2020 at 01:19:41PM -0400, Waiman Long wrote:
->>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->>> index 379cbff438bc..1b94b9bfa4d7 100644
->>> --- a/fs/xfs/xfs_super.c
->>> +++ b/fs/xfs/xfs_super.c
->>> @@ -913,11 +913,33 @@ xfs_fs_freeze(
->>>   	struct super_block	*sb)
->>>   {
->>>   	struct xfs_mount	*mp = XFS_M(sb);
->>> +	unsigned long		pflags;
->>> +	int			ret;
->>>   
->>> +	/*
->>> +	 * A fs_reclaim pseudo lock is added to check for potential deadlock
->>> +	 * condition with fs reclaim. The following lockdep splat was hit
->>> +	 * occasionally. This is actually a false positive as the allocation
->>> +	 * is being done only after the frozen filesystem is no longer dirty.
->>> +	 * One way to avoid this splat is to add GFP_NOFS to the affected
->>> +	 * allocation calls. This is what PF_MEMALLOC_NOFS is for.
->>> +	 *
->>> +	 *       CPU0                    CPU1
->>> +	 *       ----                    ----
->>> +	 *  lock(sb_internal);
->>> +	 *                               lock(fs_reclaim);
->>> +	 *                               lock(sb_internal);
->>> +	 *  lock(fs_reclaim);
->>> +	 *
->>> +	 *  *** DEADLOCK ***
->>> +	 */
->> The lockdep splat is detailed in the commit message - it most
->> definitely does not need to be repeated in full here because:
->>
->> 	a) it doesn't explain why the splat occurring is, and
->> 	b) we most definitely don't care about how the lockdep check
->> 	   that triggered it is implemented.
-> I should have added this:
->
-> 	c) a lot of people don't understand what lockdep reports
-> 	   are telling them is a problem.
->
-> I get a lot of questions like "I saw this lockdep thing, but I can't
-> work out what it actually means, so can you have a look at it
-> Dave?". Hence I think directly quoting something people tend not to
-> understand to explain the problem they didn't understand isn't the
-> best approach to improving understanding of the problem...
+On Thu, Jun 18, 2020 at 10:01:10AM +1000, Dave Chinner wrote:
 
-OK, how about simplifying the comment to as follows:
+> And, really, if we are playing "re-use existing bits" games because
+> we've run out of process flags, all these memalloc flags should be
+> moved to a new field in the task, say current->memalloc_flags. You
+> could also move PF_SWAPWRITE, PF_LOCAL_THROTTLE, and PF_KSWAPD into
+> that field as well as they are all memory allocation context process
+> flags...
 
-        /*
-          * Disable fs reclaim in memory allocation for fs freeze to avoid
-          * causing a possible circular locking dependency lockdep splat
-          * involving fs reclaim.
-          */
+FWIW
 
-Does that look good enough for you?
-
-Cheers,
-Longman
-
+There's still 23 bits free after task_struct::in_memstall. That word has
+'current only' semantics, just like PF.
