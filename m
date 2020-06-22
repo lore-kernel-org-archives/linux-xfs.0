@@ -2,128 +2,102 @@ Return-Path: <SRS0=RL8k=AD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8532C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 22:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF48C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 22:08:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A1D42073E
-	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 22:04:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34CF12073E
+	for <linux-xfs@archiver.kernel.org>; Mon, 22 Jun 2020 22:08:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730796AbgFVWEL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 22 Jun 2020 18:04:11 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:33097 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730767AbgFVWEK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 18:04:10 -0400
+        id S1730736AbgFVWIo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 22 Jun 2020 18:08:44 -0400
+Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:60829 "EHLO
+        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727006AbgFVWIo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jun 2020 18:08:44 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id C9A76D5A419;
-        Tue, 23 Jun 2020 08:04:00 +1000 (AEST)
+        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 7E4441AA599;
+        Tue, 23 Jun 2020 08:08:40 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jnUXi-0000fd-Ik; Tue, 23 Jun 2020 08:03:54 +1000
-Date:   Tue, 23 Jun 2020 08:03:54 +1000
+        id 1jnUcJ-0000g3-Uh; Tue, 23 Jun 2020 08:08:39 +1000
+Date:   Tue, 23 Jun 2020 08:08:39 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "J. Bruce Fields" <bfields@fieldses.org>
-Cc:     Masayoshi Mizuma <msys.mizuma@gmail.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
-        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs <linux-xfs@vger.kernel.org>, jlayton@redhat.com
-Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
-Message-ID: <20200622220354.GU2005@dread.disaster.area>
-References: <20200618223948.GI2005@dread.disaster.area>
- <20200619022005.GA25414@fieldses.org>
- <20200619024455.GN2005@dread.disaster.area>
- <20200619204033.GB1564@fieldses.org>
- <20200619221044.GO2005@dread.disaster.area>
- <20200619222843.GB2650@fieldses.org>
- <20200620014957.GQ2005@dread.disaster.area>
- <20200620015633.GA1516@fieldses.org>
- <20200620235408.GS2005@dread.disaster.area>
- <20200622212612.GA11051@fieldses.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: don't eat an EIO/ENOSPC writeback error when
+ scrubbing data fork
+Message-ID: <20200622220839.GV2005@dread.disaster.area>
+References: <20200622171713.GG11245@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200622212612.GA11051@fieldses.org>
+In-Reply-To: <20200622171713.GG11245@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=HVVqrPaskdhAXJc0OugA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=nTHF0DUjJn0A:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
+        a=m6S3wBO24_YhWdYwnekA:9 a=UiYtIJt4SKle1YlE:21 a=QpOlqvn8cCqr-vcK:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 22, 2020 at 05:26:12PM -0400, J. Bruce Fields wrote:
-> On Sun, Jun 21, 2020 at 09:54:08AM +1000, Dave Chinner wrote:
-> > On Fri, Jun 19, 2020 at 09:56:33PM -0400, J. Bruce Fields wrote:
-> > > On Sat, Jun 20, 2020 at 11:49:57AM +1000, Dave Chinner wrote:
-> > > > However, other people have different opinions on this matter (and we
-> > > > know that from the people who considered XFS v4 -> v5 going slower
-> > > > because iversion a major regression), and so we must acknowledge
-> > > > those opinions even if we don't agree with them.
-> > > 
-> > > Do you have any of those reports handy?  Were there numbers?
-> > 
-> > e.g.  RH BZ #1355813 when v5 format was enabled by default in RHEL7.
-> > Numbers were 40-47% performance degradation for in-cache writes
-> > caused by the original IVERSION implementation using iozone.  There
-> > were others I recall, all realted to similar high-IOP small random
-> > writes workloads typical of databases....
+On Mon, Jun 22, 2020 at 10:17:13AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Thanks, that's an interesting bug!  Though a bit tangled.  This is where
-> you identified the change attribute as the main culprit:
+> The data fork scrubber calls filemap_write_and_wait to flush dirty pages
+> and delalloc reservations out to disk prior to checking the data fork's
+> extent mappings.  Unfortunately, this means that scrub can consume the
+> EIO/ENOSPC errors that would otherwise have stayed around in the address
+> space until (we hope) the writer application calls fsync to persist data
+> and collect errors.  The end result is that programs that wrote to a
+> file might never see the error code and proceed as if nothing were
+> wrong.
 > 
-> 	https://bugzilla.redhat.com/show_bug.cgi?id=1355813#c42
+> xfs_scrub is not in a position to notify file writers about the
+> writeback failure, and it's only here to check metadata, not file
+> contents.  Therefore, if writeback fails, we should stuff the error code
+> back into the address space so that an fsync by the writer application
+> can pick that up.
 > 
-> 	The test was running at 70,000 writes/s (2.2GB/s), so it was one
-> 	transaction per write() syscall: timestamp updates. On CRC
-> 	enabled filesystems, we have a change counter for NFSv4 - it
-> 	gets incremented on every write() syscall, even when the
-> 	timestamp doesn't change. That's the difference in behaviour and
-> 	hence performance in this test.
+> Fixes: 99d9d8d05da2 ("xfs: scrub inode block mappings")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/bmap.c |   10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
 > 
-> In RHEL8, or anything post-v4.16, the frequency of change attribute
-> updates should be back down to that of timestamp updates on this
-> workload.  So it'd be interesting to repeat that experiment now.
+> diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> index 7badd6dfe544..03be7cf3fe5a 100644
+> --- a/fs/xfs/scrub/bmap.c
+> +++ b/fs/xfs/scrub/bmap.c
+> @@ -47,7 +47,15 @@ xchk_setup_inode_bmap(
+>  	    sc->sm->sm_type == XFS_SCRUB_TYPE_BMBTD) {
+>  		inode_dio_wait(VFS_I(sc->ip));
+>  		error = filemap_write_and_wait(VFS_I(sc->ip)->i_mapping);
+> -		if (error)
+> +		if (error == -ENOSPC || error == -EIO) {
+> +			/*
+> +			 * If writeback hits EIO or ENOSPC, reflect it back
+> +			 * into the address space mapping so that a writer
+> +			 * program calling fsync to look for errors will still
+> +			 * capture the error.
+> +			 */
+> +			mapping_set_error(VFS_I(sc->ip)->i_mapping, error);
+> +		} else if (error)
+>  			goto out;
 
-Yup, which in itself has been a problem for similar workloads.
-There's a reason we now recommend the use of lazytime for high
-performance database workloads that can do hundreds of thousands of
-small write IOs a second...
+calling mapping_set_error() seems reasonable here and you've
+explained that well, but shouldn't the error then be processed the
+same way as all other errors? i.e. by jumping to out?
 
-> The bug was reporting in-house testing, and doesn't show any evidence
-> that particular regression was encountered by users; Eric said:
-> 
-> 	https://bugzilla.redhat.com/show_bug.cgi?id=1355813#c52
-> 
-> 	Root cause of this minor in-memory regression was inode
-> 	versioning behavior; as it's unlikely to have real-world effects
-> 	(and has been open for years with no customer complaints) I'm
-> 	closing this WONTFIX to get it off the radar.
-
-It's just the first I found because bugzilla has a slow, less than
-useful search engine. We know that real applications have
-hit this, and we know even the overhead of timestamp updates on
-writes is way too high for them.
-
-> The typical user may just skip an upgrade or otherwise work around the
-> problem rather than root-causing it like this, so absence of reports
-> isn't conclusive.  I understand wanting to err on the side of caution.
-
-Yup, it's a generic problem - just because we've worked around or
-mitigated the most common situations it impacts performance, that
-doesn't mean they work for everyone....
+If we are now continuing to scrub the bmap after ENOSPC/EIO occur,
+why?
 
 Cheers,
 
