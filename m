@@ -2,108 +2,258 @@ Return-Path: <SRS0=nlsN=AE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF994C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 22:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8A82C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 22:47:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B02AF2078A
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 22:46:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EA432078A
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 22:47:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="cq6eukdP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387643AbgFWWqq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Jun 2020 18:46:46 -0400
-Received: from sandeen.net ([63.231.237.45]:36310 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387634AbgFWWqp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Jun 2020 18:46:45 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C216215B26;
-        Tue, 23 Jun 2020 17:30:07 -0500 (CDT)
-Subject: Re: [PATCH v2] xfsprogs: xfs_quota command error message improvement
-To:     Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
-References: <20200622131319.7717-1-billodo@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <a2c5d616-c48a-435e-e3b4-4d6c784d4a2d@sandeen.net>
-Date:   Tue, 23 Jun 2020 17:30:38 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.9.0
+        id S2388532AbgFWWrm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Jun 2020 18:47:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46790 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388367AbgFWWr2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 18:47:28 -0400
+Received: from mail-ot1-x342.google.com (mail-ot1-x342.google.com [IPv6:2607:f8b0:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55F7BC061262
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 15:36:30 -0700 (PDT)
+Received: by mail-ot1-x342.google.com with SMTP id 72so76309otc.3
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 15:36:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=xlhH26wg9ZGqvZX4SsItfHEpKhp6TU8NjkKPjZVi7dM=;
+        b=cq6eukdP9i43W25in3jOVQL/Rh6YqCJudgz63PRXIcpiyjXdYadDGIVAvDtcZes4/9
+         s4CZdktSYgbhNgC72a2mAW4N8hML0A/MmIipg4XJOKr2osYTgZMBnfvyxbXOKjJ4EuTM
+         Gy3OAq85wO0Bl0ZpfYaesjQijNuCO2Y808qTY=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=xlhH26wg9ZGqvZX4SsItfHEpKhp6TU8NjkKPjZVi7dM=;
+        b=RFwB8PHVfp2Aj44ZRx2qstwoWkoanAbEA363NxJ7QJgLjJfc4FVGoICABtxhx0f7oi
+         c0ZBRndExd4YBPETLSqHxrKrlhQwOadC5kyBIX3GZ+eaOIfRA9CuLxIadyY2TsYuSxSO
+         gpoqRXUXxfYSuGoZNChzzCm4lxbJihJfbNs0+rmcn8LfPKleF1gflRI7ZLIsbW5KSFlz
+         TvEMgpqVPSeQEC2JDUbDR4Pz17e/3BZgWRonY8OfEfDaefvgqak2Be2p+cB/+TEgiwi2
+         4eWFlKrnodg14rea3vmkk4nyKyWnEPPDoEPcOlsCqiPsb7YM9fdrHidKD6znibyNiShl
+         xV7w==
+X-Gm-Message-State: AOAM533e9dNsJNUMG9kGQmMCwOdqj2OnTdCT+EHm0d+A0JgMKO/S6mS+
+        Laz4ceZPtGToDFnAEsXEu5+TUTRR4QH5HPEx/VGmpw==
+X-Google-Smtp-Source: ABdhPJynJByw3qjza9aSaCWuruLjjJaTz6a/edqsdeAh4jWVsWvD+/9TBgrYezsnqUfbPYFHEHBWcHoh1sEG/Na3q0M=
+X-Received: by 2002:a05:6830:2017:: with SMTP id e23mr13025528otp.303.1592951789516;
+ Tue, 23 Jun 2020 15:36:29 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200622131319.7717-1-billodo@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20200604081224.863494-2-daniel.vetter@ffwll.ch>
+ <20200610194101.1668038-1-daniel.vetter@ffwll.ch> <20200621174205.GB1398@lca.pw>
+ <20200623223134.GC2005@dread.disaster.area>
+In-Reply-To: <20200623223134.GC2005@dread.disaster.area>
+From:   Daniel Vetter <daniel.vetter@ffwll.ch>
+Date:   Wed, 24 Jun 2020 00:36:18 +0200
+Message-ID: <CAKMK7uGMJPf8p8sa=9N1hibqSTnXn3SfMzWy3+VC-pwkZENfpA@mail.gmail.com>
+Subject: Re: [PATCH] mm: Track mmu notifiers in fs_reclaim_acquire/release
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Qian Cai <cai@lca.pw>,
+        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas_os@shipmail.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/22/20 8:13 AM, Bill O'Donnell wrote:
-> @@ -350,8 +365,15 @@ quotaoff(
->  		return;
->  	}
->  	dir = mount->fs_name;
-> -	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0)
-> -		perror("XFS_QUOTAOFF");
-> +	if (xfsquotactl(XFS_QUOTAOFF, dir, type, 0, (void *)&qflags) < 0) {
-> +		if (errno == EEXIST)
-> +			fprintf(stderr, _("Quota already off.\n"));
-> +		else if (errno == EINVAL)
-> +			fprintf(stderr,
-> +				_("Can't disable when quotas are off.\n"));
+On Wed, Jun 24, 2020 at 12:31 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Sun, Jun 21, 2020 at 01:42:05PM -0400, Qian Cai wrote:
+> > On Wed, Jun 10, 2020 at 09:41:01PM +0200, Daniel Vetter wrote:
+> > > fs_reclaim_acquire/release nicely catch recursion issues when
+> > > allocating GFP_KERNEL memory against shrinkers (which gpu drivers ten=
+d
+> > > to use to keep the excessive caches in check). For mmu notifier
+> > > recursions we do have lockdep annotations since 23b68395c7c7
+> > > ("mm/mmu_notifiers: add a lockdep map for invalidate_range_start/end"=
+).
+> > >
+> > > But these only fire if a path actually results in some pte
+> > > invalidation - for most small allocations that's very rarely the case=
+.
+> > > The other trouble is that pte invalidation can happen any time when
+> > > __GFP_RECLAIM is set. Which means only really GFP_ATOMIC is a safe
+> > > choice, GFP_NOIO isn't good enough to avoid potential mmu notifier
+> > > recursion.
+> > >
+> > > I was pondering whether we should just do the general annotation, but
+> > > there's always the risk for false positives. Plus I'm assuming that
+> > > the core fs and io code is a lot better reviewed and tested than
+> > > random mmu notifier code in drivers. Hence why I decide to only
+> > > annotate for that specific case.
+> > >
+> > > Furthermore even if we'd create a lockdep map for direct reclaim, we'=
+d
+> > > still need to explicit pull in the mmu notifier map - there's a lot
+> > > more places that do pte invalidation than just direct reclaim, these
+> > > two contexts arent the same.
+> > >
+> > > Note that the mmu notifiers needing their own independent lockdep map
+> > > is also the reason we can't hold them from fs_reclaim_acquire to
+> > > fs_reclaim_release - it would nest with the acquistion in the pte
+> > > invalidation code, causing a lockdep splat. And we can't remove the
+> > > annotations from pte invalidation and all the other places since
+> > > they're called from many other places than page reclaim. Hence we can
+> > > only do the equivalent of might_lock, but on the raw lockdep map.
+> > >
+> > > With this we can also remove the lockdep priming added in 66204f1d2d1=
+b
+> > > ("mm/mmu_notifiers: prime lockdep") since the new annotations are
+> > > strictly more powerful.
+> > >
+> > > v2: Review from Thomas Hellstrom:
+> > > - unbotch the fs_reclaim context check, I accidentally inverted it,
+> > >   but it didn't blow up because I inverted it immediately
+> > > - fix compiling for !CONFIG_MMU_NOTIFIER
+> > >
+> > > Cc: Thomas Hellstr=C3=B6m (Intel) <thomas_os@shipmail.org>
+> > > Cc: Andrew Morton <akpm@linux-foundation.org>
+> > > Cc: Jason Gunthorpe <jgg@mellanox.com>
+> > > Cc: linux-mm@kvack.org
+> > > Cc: linux-rdma@vger.kernel.org
+> > > Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+> > > Cc: Christian K=C3=B6nig <christian.koenig@amd.com>
+> > > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+> >
+> > Replying the right patch here...
+> >
+> > Reverting this commit [1] fixed the lockdep warning below while applyin=
+g
+> > some memory pressure.
+> >
+> > [1] linux-next cbf7c9d86d75 ("mm: track mmu notifiers in fs_reclaim_acq=
+uire/release")
+> >
+> > [  190.455003][  T369] WARNING: possible circular locking dependency de=
+tected
+> > [  190.487291][  T369] 5.8.0-rc1-next-20200621 #1 Not tainted
+> > [  190.512363][  T369] ------------------------------------------------=
+------
+> > [  190.543354][  T369] kswapd3/369 is trying to acquire lock:
+> > [  190.568523][  T369] ffff889fcf694528 (&xfs_nondir_ilock_class){++++}=
+-{3:3}, at: xfs_reclaim_inode+0xdf/0x860
+> > spin_lock at include/linux/spinlock.h:353
+> > (inlined by) xfs_iflags_test_and_set at fs/xfs/xfs_inode.h:166
+> > (inlined by) xfs_iflock_nowait at fs/xfs/xfs_inode.h:249
+> > (inlined by) xfs_reclaim_inode at fs/xfs/xfs_icache.c:1127
+> > [  190.614359][  T369]
+> > [  190.614359][  T369] but task is already holding lock:
+> > [  190.647763][  T369] ffffffffb50ced00 (fs_reclaim){+.+.}-{0:0}, at: _=
+_fs_reclaim_acquire+0x0/0x30
+> > __fs_reclaim_acquire at mm/page_alloc.c:4200
+> > [  190.687845][  T369]
+> > [  190.687845][  T369] which lock already depends on the new lock.
+> > [  190.687845][  T369]
+> > [  190.734890][  T369]
+> > [  190.734890][  T369] the existing dependency chain (in reverse order)=
+ is:
+> > [  190.775991][  T369]
+> > [  190.775991][  T369] -> #1 (fs_reclaim){+.+.}-{0:0}:
+> > [  190.808150][  T369]        fs_reclaim_acquire+0x77/0x80
+> > [  190.832152][  T369]        slab_pre_alloc_hook.constprop.52+0x20/0x1=
+20
+> > slab_pre_alloc_hook at mm/slab.h:507
+> > [  190.862173][  T369]        kmem_cache_alloc+0x43/0x2a0
+> > [  190.885602][  T369]        kmem_zone_alloc+0x113/0x3ef
+> > kmem_zone_alloc at fs/xfs/kmem.c:129
+> > [  190.908702][  T369]        xfs_inode_item_init+0x1d/0xa0
+> > xfs_inode_item_init at fs/xfs/xfs_inode_item.c:639
+> > [  190.934461][  T369]        xfs_trans_ijoin+0x96/0x100
+> > xfs_trans_ijoin at fs/xfs/libxfs/xfs_trans_inode.c:34
+> > [  190.961530][  T369]        xfs_setattr_nonsize+0x1a6/0xcd0
+>
+> OK, this patch has royally screwed something up if this path thinks
+> it can enter memory reclaim. This path is inside a transaction, so
+> it is running under PF_MEMALLOC_NOFS context, so should *never*
+> enter memory reclaim.
+>
+> I'd suggest that whatever mods were made to fs_reclaim_acquire by
+> this patch broke it's basic functionality....
+>
+> > > diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> > > index 13cc653122b7..7536faaaa0fd 100644
+> > > --- a/mm/page_alloc.c
+> > > +++ b/mm/page_alloc.c
+> > > @@ -57,6 +57,7 @@
+> > >  #include <trace/events/oom.h>
+> > >  #include <linux/prefetch.h>
+> > >  #include <linux/mm_inline.h>
+> > > +#include <linux/mmu_notifier.h>
+> > >  #include <linux/migrate.h>
+> > >  #include <linux/hugetlb.h>
+> > >  #include <linux/sched/rt.h>
+> > > @@ -4124,7 +4125,7 @@ should_compact_retry(struct alloc_context *ac, =
+unsigned int order, int alloc_fla
+> > >  static struct lockdep_map __fs_reclaim_map =3D
+> > >     STATIC_LOCKDEP_MAP_INIT("fs_reclaim", &__fs_reclaim_map);
+> > >
+> > > -static bool __need_fs_reclaim(gfp_t gfp_mask)
+> > > +static bool __need_reclaim(gfp_t gfp_mask)
+> > >  {
+> > >     gfp_mask =3D current_gfp_context(gfp_mask);
+>
+> This is applies the per-task memory allocation context flags to the
+> mask that is checked here.
+>
+> > > @@ -4136,10 +4137,6 @@ static bool __need_fs_reclaim(gfp_t gfp_mask)
+> > >     if (current->flags & PF_MEMALLOC)
+> > >             return false;
+> > >
+> > > -   /* We're only interested __GFP_FS allocations for now */
+> > > -   if (!(gfp_mask & __GFP_FS))
+> > > -           return false;
+> > > -
+> > >     if (gfp_mask & __GFP_NOLOCKDEP)
+> > >             return false;
+> > >
+> > > @@ -4158,15 +4155,25 @@ void __fs_reclaim_release(void)
+> > >
+> > >  void fs_reclaim_acquire(gfp_t gfp_mask)
+> > >  {
+> > > -   if (__need_fs_reclaim(gfp_mask))
+> > > -           __fs_reclaim_acquire();
+> > > +   if (__need_reclaim(gfp_mask)) {
+> > > +           if (gfp_mask & __GFP_FS)
+> > > +                   __fs_reclaim_acquire();
+>
+> .... and they have not been applied in this path. There's your
+> breakage.
+>
+> For future reference, please post anything that changes NOFS
+> allocation contexts or behaviours to linux-fsdevel, as filesystem
+> developers need to know about proposed changes to infrastructure
+> that is critical to the correct functioning of filesystems...
 
-Is this the right message here?  We get here from off_f(), which disables
-enforcement and accounting, so I'm not sure "can't disable" makes sense
-if "disable" means "disable enforcement" as it did in disable_enforcement()...?
+Uh crap I totally missed that. Apologies for wasting everyone's time here.
 
-(IOWs, have can you provoke EINVAL?  How?  Sorry, this just kind of jumps out
-at me because "can't disable" seems a little out of place in quotaoff() so
-I want to double check.)
-
-Thanks,
--Eric
+Andrew, please drop for now, I respin this thing.
+-Daniel
+--=20
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
