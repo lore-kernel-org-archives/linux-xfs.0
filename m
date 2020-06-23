@@ -2,201 +2,161 @@ Return-Path: <SRS0=nlsN=AE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA31EC433E2
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 16:18:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFF92C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 16:49:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9720420780
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 16:18:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC0BA204EA
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 16:49:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="q5PXizvo"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Mh6FC/3d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733022AbgFWQSF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Jun 2020 12:18:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43144 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732575AbgFWQSE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 12:18:04 -0400
-Received: from mail-qt1-x842.google.com (mail-qt1-x842.google.com [IPv6:2607:f8b0:4864:20::842])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAA1EC061755
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 09:18:02 -0700 (PDT)
-Received: by mail-qt1-x842.google.com with SMTP id v19so13362341qtq.10
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 09:18:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lca.pw; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=SowX6r/DrbyMyIPo7bbmN6dCO4WOaZBpx8lXkNiYwRQ=;
-        b=q5PXizvouRcfNA2W9Djqc/Z84L8gq+5xyPGe7rkAVVUXYo0XRUHAEI4yVuKgTSfgc9
-         RoYCG4UkEgCC9vVO+IYyrz7JORXpNUWmlzMkIni2Vfw9kxBsp2K+YgamdfZElTJuJZTW
-         bbafUUDUQEhd51JcrBKUA9xHz8S+ZvnGFC/bx4j/zd/tIY4JT4nqabnA6jtnfro4Yx69
-         YevfddRvEKhgwHMyV0hQh6x3L1BXH3reCRQkEUr6zmcuCWOBikrw37RohUhW9xkrCqv7
-         nLIezDVzEaNlXEnFqrM5wDtOVHCyOyKL9todYtNNNUOatrNgrkdDPEXpNyPANNjAfT9T
-         s5yg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=SowX6r/DrbyMyIPo7bbmN6dCO4WOaZBpx8lXkNiYwRQ=;
-        b=RXSL61fNoMAO0f1pBhD36sFKCUZjKA9rrwfBP4HMV3aK4whDmQ337YgCcyWjxCi15f
-         ZLvOVfjaK3X2yen3oZuwll6jNyPmd37XH7lJoBeLI7Gd8QtXHuIgyS7tSfqsmy3/3zZc
-         l9HwQU/5I3/6KURGeR+44C6pzeMoXkdlSZjaf62Ms5no3hbKz0WGyFl7aPD78Qe3iJfC
-         /YcjtY9Fm7T8zVMPaUt/VZZLbROn80bglV5/cudkZ/7NzyPWVYbAgTCSbD1KCoBMg62M
-         W/WUnPsGWdEVQW22KVnMfl+04s7tYy5+G0Pm1EAuxNCuznyJl0kMnXF1xuyn9wo+0EwS
-         Ktxw==
-X-Gm-Message-State: AOAM530nk3PG5HjCIGzlbkmnBojiOb7l/Ey1CzfVfLWzVcCw6Lq7Iazr
-        la0rvMShNdzhuHhmcky3EZsOug==
-X-Google-Smtp-Source: ABdhPJy2/MUFYS3DJu96XPGFYPvGEfp9/cvT3JQEnV1SM172gUGWrPZ+0/Xawft3xZIbg4oUrttvEg==
-X-Received: by 2002:ac8:4448:: with SMTP id m8mr22935603qtn.4.1592929081912;
-        Tue, 23 Jun 2020 09:18:01 -0700 (PDT)
-Received: from lca.pw (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
-        by smtp.gmail.com with ESMTPSA id d140sm966654qkc.22.2020.06.23.09.18.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Jun 2020 09:18:01 -0700 (PDT)
-Date:   Tue, 23 Jun 2020 12:17:54 -0400
-From:   Qian Cai <cai@lca.pw>
-To:     Daniel Vetter <daniel@ffwll.ch>
-Cc:     Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-        DRI Development <dri-devel@lists.freedesktop.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        amd-gfx list <amd-gfx@lists.freedesktop.org>,
-        Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas_os@shipmail.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] mm: Track mmu notifiers in fs_reclaim_acquire/release
-Message-ID: <20200623161754.GA1140@lca.pw>
-References: <20200604081224.863494-2-daniel.vetter@ffwll.ch>
- <20200610194101.1668038-1-daniel.vetter@ffwll.ch>
- <20200621174205.GB1398@lca.pw>
- <CAKMK7uFZAFVmceoYvqPovOifGw_Y8Ey-OMy6wioMjwPWhu9dDg@mail.gmail.com>
- <20200621200103.GV20149@phenom.ffwll.local>
+        id S1732548AbgFWQtl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Jun 2020 12:49:41 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:25928 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1732510AbgFWQtk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 12:49:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1592930979;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=qv/pR3FyfWJFtIOvxO57ePJlwgy3dTWEly61Szbn7Ew=;
+        b=Mh6FC/3dp+3RCvkBP8XHOSR6Hse9TpE0PDqehryKmOIiN2t8rQfZo+e24KBpOtc23UaVYX
+        z1lBwN3bCStwBdqCC9+x15enOBBGuqqdrgGXCFHb7l5KJx7hPjaEVp6Drj6emQaPL5koqk
+        cWaueZa68Pi9QuGJIerMGnWV3WFmwys=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-427-KoRAO1feNIK1Up3wvmciCg-1; Tue, 23 Jun 2020 12:49:37 -0400
+X-MC-Unique: KoRAO1feNIK1Up3wvmciCg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 75179835B8D;
+        Tue, 23 Jun 2020 16:49:36 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1D8675C290;
+        Tue, 23 Jun 2020 16:49:36 +0000 (UTC)
+Date:   Tue, 23 Jun 2020 12:49:34 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: don't eat an EIO/ENOSPC writeback error when
+ scrubbing data fork
+Message-ID: <20200623164934.GA56510@bfoster>
+References: <20200623035010.GF7606@magnolia>
+ <20200623121031.GB55038@bfoster>
+ <20200623152350.GE7625@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200621200103.GV20149@phenom.ffwll.local>
+In-Reply-To: <20200623152350.GE7625@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jun 21, 2020 at 10:01:03PM +0200, Daniel Vetter wrote:
-> On Sun, Jun 21, 2020 at 08:07:08PM +0200, Daniel Vetter wrote:
-> > On Sun, Jun 21, 2020 at 7:42 PM Qian Cai <cai@lca.pw> wrote:
-> > >
-> > > On Wed, Jun 10, 2020 at 09:41:01PM +0200, Daniel Vetter wrote:
-> > > > fs_reclaim_acquire/release nicely catch recursion issues when
-> > > > allocating GFP_KERNEL memory against shrinkers (which gpu drivers tend
-> > > > to use to keep the excessive caches in check). For mmu notifier
-> > > > recursions we do have lockdep annotations since 23b68395c7c7
-> > > > ("mm/mmu_notifiers: add a lockdep map for invalidate_range_start/end").
-> > > >
-> > > > But these only fire if a path actually results in some pte
-> > > > invalidation - for most small allocations that's very rarely the case.
-> > > > The other trouble is that pte invalidation can happen any time when
-> > > > __GFP_RECLAIM is set. Which means only really GFP_ATOMIC is a safe
-> > > > choice, GFP_NOIO isn't good enough to avoid potential mmu notifier
-> > > > recursion.
-> > > >
-> > > > I was pondering whether we should just do the general annotation, but
-> > > > there's always the risk for false positives. Plus I'm assuming that
-> > > > the core fs and io code is a lot better reviewed and tested than
-> > > > random mmu notifier code in drivers. Hence why I decide to only
-> > > > annotate for that specific case.
-> > > >
-> > > > Furthermore even if we'd create a lockdep map for direct reclaim, we'd
-> > > > still need to explicit pull in the mmu notifier map - there's a lot
-> > > > more places that do pte invalidation than just direct reclaim, these
-> > > > two contexts arent the same.
-> > > >
-> > > > Note that the mmu notifiers needing their own independent lockdep map
-> > > > is also the reason we can't hold them from fs_reclaim_acquire to
-> > > > fs_reclaim_release - it would nest with the acquistion in the pte
-> > > > invalidation code, causing a lockdep splat. And we can't remove the
-> > > > annotations from pte invalidation and all the other places since
-> > > > they're called from many other places than page reclaim. Hence we can
-> > > > only do the equivalent of might_lock, but on the raw lockdep map.
-> > > >
-> > > > With this we can also remove the lockdep priming added in 66204f1d2d1b
-> > > > ("mm/mmu_notifiers: prime lockdep") since the new annotations are
-> > > > strictly more powerful.
-> > > >
-> > > > v2: Review from Thomas Hellstrom:
-> > > > - unbotch the fs_reclaim context check, I accidentally inverted it,
-> > > >   but it didn't blow up because I inverted it immediately
-> > > > - fix compiling for !CONFIG_MMU_NOTIFIER
-> > > >
-> > > > Cc: Thomas Hellström (Intel) <thomas_os@shipmail.org>
-> > > > Cc: Andrew Morton <akpm@linux-foundation.org>
-> > > > Cc: Jason Gunthorpe <jgg@mellanox.com>
-> > > > Cc: linux-mm@kvack.org
-> > > > Cc: linux-rdma@vger.kernel.org
-> > > > Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-> > > > Cc: Christian König <christian.koenig@amd.com>
-> > > > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-> > >
-> > > Replying the right patch here...
-> > >
-> > > Reverting this commit [1] fixed the lockdep warning below while applying
-> > > some memory pressure.
-> > >
-> > > [1] linux-next cbf7c9d86d75 ("mm: track mmu notifiers in fs_reclaim_acquire/release")
+On Tue, Jun 23, 2020 at 08:23:50AM -0700, Darrick J. Wong wrote:
+> On Tue, Jun 23, 2020 at 08:10:31AM -0400, Brian Foster wrote:
+> > On Mon, Jun 22, 2020 at 08:50:10PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > The data fork scrubber calls filemap_write_and_wait to flush dirty pages
+> > > and delalloc reservations out to disk prior to checking the data fork's
+> > > extent mappings.  Unfortunately, this means that scrub can consume the
+> > > EIO/ENOSPC errors that would otherwise have stayed around in the address
+> > > space until (we hope) the writer application calls fsync to persist data
+> > > and collect errors.  The end result is that programs that wrote to a
+> > > file might never see the error code and proceed as if nothing were
+> > > wrong.
+> > > 
+> > > xfs_scrub is not in a position to notify file writers about the
+> > > writeback failure, and it's only here to check metadata, not file
+> > > contents.  Therefore, if writeback fails, we should stuff the error code
+> > > back into the address space so that an fsync by the writer application
+> > > can pick that up.
+> > > 
+> > > Fixes: 99d9d8d05da2 ("xfs: scrub inode block mappings")
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > > v2: explain why it's ok to keep going even if writeback fails
+> > > ---
+> > >  fs/xfs/scrub/bmap.c |   19 ++++++++++++++++++-
+> > >  1 file changed, 18 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> > > index 7badd6dfe544..0d7062b7068b 100644
+> > > --- a/fs/xfs/scrub/bmap.c
+> > > +++ b/fs/xfs/scrub/bmap.c
+> > > @@ -47,7 +47,24 @@ xchk_setup_inode_bmap(
+> > >  	    sc->sm->sm_type == XFS_SCRUB_TYPE_BMBTD) {
+> > >  		inode_dio_wait(VFS_I(sc->ip));
+> > >  		error = filemap_write_and_wait(VFS_I(sc->ip)->i_mapping);
+> > > -		if (error)
+> > > +		if (error == -ENOSPC || error == -EIO) {
+> > > +			/*
+> > > +			 * If writeback hits EIO or ENOSPC, reflect it back
+> > > +			 * into the address space mapping so that a writer
+> > > +			 * program calling fsync to look for errors will still
+> > > +			 * capture the error.
+> > > +			 *
+> > > +			 * However, we continue into the extent mapping checks
+> > > +			 * because write failures do not necessarily imply
+> > > +			 * anything about the correctness of the file metadata.
+> > > +			 * The metadata and the file data could be on
+> > > +			 * completely separate devices; a media failure might
+> > > +			 * only affect a subset of the disk, etc.  We properly
+> > > +			 * account for delalloc extents, so leaving them in
+> > > +			 * memory is fine.
+> > > +			 */
+> > > +			mapping_set_error(VFS_I(sc->ip)->i_mapping, error);
 > > 
-> > Hm, then I'm confused because
-> > - there's not mmut notifier lockdep map in the splat at a..
-> > - the patch is supposed to not change anything for fs_reclaim (but the
-> > interim version got that wrong)
-> > - looking at the paths it's kmalloc vs kswapd, both places I totally
-> > expect fs_reflaim to be used.
-> > 
-> > But you're claiming reverting this prevents the lockdep splat. If
-> > that's right, then my reasoning above is broken somewhere. Someone
-> > less blind than me having an idea?
-> > 
-> > Aside this is the first email I've typed, until I realized the first
-> > report was against the broken patch and that looked like a much more
-> > reasonable explanation (but didn't quite match up with the code
-> > paths).
+> > I think the more appropriate thing to do is open code the data write and
+> > wait and use the variants of the latter that don't consume address space
+> > errors in the first place (i.e. filemap_fdatawait_keep_errors()). Then
+> > we wouldn't need the special error handling branch or perhaps the first
+> > part of the comment. Hm?
 > 
-> Below diff should undo the functional change in my patch. Can you pls test
-> whether the lockdep splat is really gone with that? Might need a lot of
-> testing and memory pressure to be sure, since all these reclaim paths
-> aren't very deterministic.
-
-No, this patch does not help but reverting the whole patch still fixed
-the splat.
-
-> -Daniel
+> Yes, it's certainly possible.  I don't want to go opencoding more vfs
+> methods (like some e4 filesystems do) so I'll propose that as a second
+> patch for 5.9.
 > 
-> ---
-> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
-> index d807587c9ae6..27ea763c6155 100644
-> --- a/mm/page_alloc.c
-> +++ b/mm/page_alloc.c
-> @@ -4191,11 +4191,6 @@ void fs_reclaim_acquire(gfp_t gfp_mask)
->  		if (gfp_mask & __GFP_FS)
->  			__fs_reclaim_acquire();
->  
-> -#ifdef CONFIG_MMU_NOTIFIER
-> -		lock_map_acquire(&__mmu_notifier_invalidate_range_start_map);
-> -		lock_map_release(&__mmu_notifier_invalidate_range_start_map);
-> -#endif
-> -
->  	}
->  }
->  EXPORT_SYMBOL_GPL(fs_reclaim_acquire);
-> -- 
-> Daniel Vetter
-> Software Engineer, Intel Corporation
-> http://blog.ffwll.ch
+
+What's the point of fixing it twice when the generic code already
+exports the appropriate helpers? filemap_fdatawrite() and
+filemap_fdatawait_keep_errors() are used fairly commonly afaict. That
+seems much more straightforward to me than misusing a convenience helper
+and trying to undo the undesirable effects after the fact.
+
+> On second thought, I wonder if I should just drop the flush entirely?
+> It's not a huge burden to skip past the delalloc reservations.
+> 
+> Hmmm.  Any preferences?
+> 
+
+The context for the above is not clear to me. If the purpose is to check
+on-disk metadata, shouldn't we flush the in-core content first? It would seem
+a little strange to me for one file check to behave differently from
+another if the only difference between the two is that some or more of a
+file had been written back, but maybe I'm missing details..
+
+Brian
+
+> --D
+> 
+> > Brian
+> > 
+> > > +		} else if (error)
+> > >  			goto out;
+> > >  	}
+> > >  
+> > > 
+> > 
+> 
+
