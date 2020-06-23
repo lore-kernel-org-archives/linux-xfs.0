@@ -2,143 +2,278 @@ Return-Path: <SRS0=nlsN=AE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F157C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 21:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90887C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 22:13:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A6F02072E
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 21:19:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54B452089D
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 22:13:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ddgBIr0t"
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="fI6rkREd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389880AbgFWVTR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Jun 2020 17:19:17 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:43864 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389713AbgFWVTQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 17:19:16 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05NLHppI073740;
-        Tue, 23 Jun 2020 21:19:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=rBwd7NGnfZnoSNlE2W9ieiwdCYIGzdzUrbDLVo4qcOc=;
- b=ddgBIr0tJCpZrWNUKl93hL7hem15XVA9BExZGAbhY7hrkQFEZSUeuMjv2142SiaG5qzB
- nlq+H40jXN4TCkl6Hc+emZu8HZrU4kYmfcfEjZzqrY9KqkaFPqz4bz5L1gyf5CPZAFX0
- hlZPFOR8nBbHpnR6iKRmpH2BfNg6bpgoCjR8QK04kNrpHlnSVHnM6QD35cD3YdbSAAox
- 0wjMH41H5LvgXatrQk0YLO9Cvuosa6tiCY1MJVmDj1A9bMjepw8QmYzBwXGtDY/mUlQI
- 90P3jvi2mhlNiE02IUWKg1amXsOPqw0+YSAwpgvXee6X4ztFJx6yd9+zSiGwQpXYROJp lA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 31uk3c29bm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 23 Jun 2020 21:19:13 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05NLJC68142209;
-        Tue, 23 Jun 2020 21:19:12 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 31uk42jmkg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 23 Jun 2020 21:19:12 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05NLJBPs016007;
-        Tue, 23 Jun 2020 21:19:11 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 23 Jun 2020 21:19:11 +0000
-Date:   Tue, 23 Jun 2020 14:19:10 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: use MMAPLOCK around filemap_map_pages()
-Message-ID: <20200623211910.GG7606@magnolia>
-References: <20200623052059.1893966-1-david@fromorbit.com>
+        id S2388558AbgFWWNh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Jun 2020 18:13:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41484 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387725AbgFWWNf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 18:13:35 -0400
+Received: from mail-ot1-x342.google.com (mail-ot1-x342.google.com [IPv6:2607:f8b0:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E713C0613ED
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 15:13:35 -0700 (PDT)
+Received: by mail-ot1-x342.google.com with SMTP id s13so3958otd.7
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 15:13:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=0ZGDNOSDA1Ta3hgcxRzaAOGyEheiE8Jvv+zjE+Mj6/w=;
+        b=fI6rkREdBOXiWQhJfInIzRJF7zpcxrfUpkbR7wS6uFp1jIy/srpIpWCY2qhR8SlvJM
+         E9xvsRSEuDYKViPPM35jShY2ry/XhUUMfYpJa9F42ZAf+3HnD68PPN/LWw0vhxeX+umr
+         qEMqwgKep73f2cLlFdLlz3jj8N3/5WFnj0bpI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=0ZGDNOSDA1Ta3hgcxRzaAOGyEheiE8Jvv+zjE+Mj6/w=;
+        b=jv0KkCCaF5+0NjIqNM0Vq2gzpghG46G3XjFvCBl2+S9ugUu7O46JuwoYtihOmZugKW
+         Z0ulqemuBfZqbR8thGY1qtY520FI1y3qgJUi+5kGeBURlxwgJ7SsLWviqaxy1cEr+Ajo
+         u/vFt9LWM91zhzAs+s19Qu1KkfW3pU4eMmQ8nhA13QHRZ/kKhMSDhVcUUgPg5mMTLbP/
+         rMp/lJfEi90ZzWie1qbLqpQ4be1BMFDTDMo68+dFonLp0fjQNPtG1XQZU17fkN+8D1kM
+         1Bwkx1doubJ/Ahtt1NLmfFszytj1mqmbm3Kv6kCXSgsOX3w4w+eT/KAT/gYH/9oPhztq
+         N2HA==
+X-Gm-Message-State: AOAM5300dGi/QfY2XPrXkapyIKVPdcNoTuVynIJ34kaPsmT+nc7ivOE3
+        1dx/JDEmR2ZujmefjhR3EFAsEehW/FlE35J044fwKg==
+X-Google-Smtp-Source: ABdhPJwPmQOfovNfpWZFRMIarIw+GC3JzL8nOeU25adQ547Jc0j/YgtfLS4GnLCbiFY0QLcY9IzMa6Nlpo7Cz+8cT/8=
+X-Received: by 2002:a05:6830:2017:: with SMTP id e23mr12956621otp.303.1592950414566;
+ Tue, 23 Jun 2020 15:13:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200623052059.1893966-1-david@fromorbit.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9661 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 mlxscore=0
- adultscore=0 mlxlogscore=999 bulkscore=0 malwarescore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006120000
- definitions=main-2006230144
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9661 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0 mlxscore=0
- malwarescore=0 spamscore=0 lowpriorityscore=0 suspectscore=1 adultscore=0
- phishscore=0 mlxlogscore=999 clxscore=1015 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006120000
- definitions=main-2006230144
+References: <20200604081224.863494-2-daniel.vetter@ffwll.ch>
+ <20200610194101.1668038-1-daniel.vetter@ffwll.ch> <20200621174205.GB1398@lca.pw>
+ <CAKMK7uFZAFVmceoYvqPovOifGw_Y8Ey-OMy6wioMjwPWhu9dDg@mail.gmail.com>
+ <20200621200103.GV20149@phenom.ffwll.local> <20200623161754.GA1140@lca.pw>
+In-Reply-To: <20200623161754.GA1140@lca.pw>
+From:   Daniel Vetter <daniel@ffwll.ch>
+Date:   Wed, 24 Jun 2020 00:13:23 +0200
+Message-ID: <CAKMK7uH90-k12KMHE0pWN6G_aCTr=YNhQsqoaAJC5FHygnf96g@mail.gmail.com>
+Subject: Re: [PATCH] mm: Track mmu notifiers in fs_reclaim_acquire/release
+To:     Qian Cai <cai@lca.pw>
+Cc:     Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        amd-gfx list <amd-gfx@lists.freedesktop.org>,
+        =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas_os@shipmail.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 23, 2020 at 03:20:59PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The page faultround path ->map_pages is implemented in XFS via
+On Tue, Jun 23, 2020 at 6:18 PM Qian Cai <cai@lca.pw> wrote:
+>
+> On Sun, Jun 21, 2020 at 10:01:03PM +0200, Daniel Vetter wrote:
+> > On Sun, Jun 21, 2020 at 08:07:08PM +0200, Daniel Vetter wrote:
+> > > On Sun, Jun 21, 2020 at 7:42 PM Qian Cai <cai@lca.pw> wrote:
+> > > >
+> > > > On Wed, Jun 10, 2020 at 09:41:01PM +0200, Daniel Vetter wrote:
+> > > > > fs_reclaim_acquire/release nicely catch recursion issues when
+> > > > > allocating GFP_KERNEL memory against shrinkers (which gpu drivers=
+ tend
+> > > > > to use to keep the excessive caches in check). For mmu notifier
+> > > > > recursions we do have lockdep annotations since 23b68395c7c7
+> > > > > ("mm/mmu_notifiers: add a lockdep map for invalidate_range_start/=
+end").
+> > > > >
+> > > > > But these only fire if a path actually results in some pte
+> > > > > invalidation - for most small allocations that's very rarely the =
+case.
+> > > > > The other trouble is that pte invalidation can happen any time wh=
+en
+> > > > > __GFP_RECLAIM is set. Which means only really GFP_ATOMIC is a saf=
+e
+> > > > > choice, GFP_NOIO isn't good enough to avoid potential mmu notifie=
+r
+> > > > > recursion.
+> > > > >
+> > > > > I was pondering whether we should just do the general annotation,=
+ but
+> > > > > there's always the risk for false positives. Plus I'm assuming th=
+at
+> > > > > the core fs and io code is a lot better reviewed and tested than
+> > > > > random mmu notifier code in drivers. Hence why I decide to only
+> > > > > annotate for that specific case.
+> > > > >
+> > > > > Furthermore even if we'd create a lockdep map for direct reclaim,=
+ we'd
+> > > > > still need to explicit pull in the mmu notifier map - there's a l=
+ot
+> > > > > more places that do pte invalidation than just direct reclaim, th=
+ese
+> > > > > two contexts arent the same.
+> > > > >
+> > > > > Note that the mmu notifiers needing their own independent lockdep=
+ map
+> > > > > is also the reason we can't hold them from fs_reclaim_acquire to
+> > > > > fs_reclaim_release - it would nest with the acquistion in the pte
+> > > > > invalidation code, causing a lockdep splat. And we can't remove t=
+he
+> > > > > annotations from pte invalidation and all the other places since
+> > > > > they're called from many other places than page reclaim. Hence we=
+ can
+> > > > > only do the equivalent of might_lock, but on the raw lockdep map.
+> > > > >
+> > > > > With this we can also remove the lockdep priming added in 66204f1=
+d2d1b
+> > > > > ("mm/mmu_notifiers: prime lockdep") since the new annotations are
+> > > > > strictly more powerful.
+> > > > >
+> > > > > v2: Review from Thomas Hellstrom:
+> > > > > - unbotch the fs_reclaim context check, I accidentally inverted i=
+t,
+> > > > >   but it didn't blow up because I inverted it immediately
+> > > > > - fix compiling for !CONFIG_MMU_NOTIFIER
+> > > > >
+> > > > > Cc: Thomas Hellstr=C3=B6m (Intel) <thomas_os@shipmail.org>
+> > > > > Cc: Andrew Morton <akpm@linux-foundation.org>
+> > > > > Cc: Jason Gunthorpe <jgg@mellanox.com>
+> > > > > Cc: linux-mm@kvack.org
+> > > > > Cc: linux-rdma@vger.kernel.org
+> > > > > Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+> > > > > Cc: Christian K=C3=B6nig <christian.koenig@amd.com>
+> > > > > Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+> > > >
+> > > > Replying the right patch here...
+> > > >
+> > > > Reverting this commit [1] fixed the lockdep warning below while app=
+lying
+> > > > some memory pressure.
+> > > >
+> > > > [1] linux-next cbf7c9d86d75 ("mm: track mmu notifiers in fs_reclaim=
+_acquire/release")
+> > >
+> > > Hm, then I'm confused because
+> > > - there's not mmut notifier lockdep map in the splat at a..
+> > > - the patch is supposed to not change anything for fs_reclaim (but th=
+e
+> > > interim version got that wrong)
+> > > - looking at the paths it's kmalloc vs kswapd, both places I totally
+> > > expect fs_reflaim to be used.
+> > >
+> > > But you're claiming reverting this prevents the lockdep splat. If
+> > > that's right, then my reasoning above is broken somewhere. Someone
+> > > less blind than me having an idea?
+> > >
+> > > Aside this is the first email I've typed, until I realized the first
+> > > report was against the broken patch and that looked like a much more
+> > > reasonable explanation (but didn't quite match up with the code
+> > > paths).
+> >
+> > Below diff should undo the functional change in my patch. Can you pls t=
+est
+> > whether the lockdep splat is really gone with that? Might need a lot of
+> > testing and memory pressure to be sure, since all these reclaim paths
+> > aren't very deterministic.
+>
+> No, this patch does not help but reverting the whole patch still fixed
+> the splat.
 
-What does "faultround" mean?
+Ok I tested this. I can't use your script to repro because
+- I don't have a setup with xfs, and the splat points at an issue in xfs
+- reproducing lockdep splats in shrinker callbacks is always a bit tricky
 
-I'm pretty convinced that this is merely another round of whackamole wrt
-taking the MMAPLOCK before relying on or doing anything to pages in the
-page cache, I just can't tell if 'faultround' is jargon or typo.
+So instead I made a quick test to validate whether the fs_reclaim
+annotations work correctly, and nothing has changed:
 
---D
++       printk("GFP_NOFS block\n");
++       fs_reclaim_acquire(GFP_NOFS);
++       printk("allocate atomic\n");
++       kfree(kmalloc(16, GFP_ATOMIC));
++       printk("allocate noio\n");
++       kfree(kmalloc(16, GFP_NOIO));
 
-> filemap_map_pages(). This function checks that pages found in page
-> cache lookups have not raced with truncate based invalidation by
-> checking page->mapping is correct and page->index is within EOF.
-> 
-> However, we've known for a long time that this is not sufficient to
-> protect against races with invalidations done by operations that do
-> not change EOF. e.g. hole punching and other fallocate() based
-> direct extent manipulations. The way we protect against these
-> races is we wrap the page fault operations in a XFS_MMAPLOCK_SHARED
-> lock so they serialise against fallocate and truncate before calling
-> into the filemap function that processes the fault.
-> 
-> Do the same for XFS's ->map_pages implementation to close this
-> potential data corruption issue.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_file.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7b05f8fd7b3d..4b185a907432 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1266,10 +1266,23 @@ xfs_filemap_pfn_mkwrite(
->  	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
->  }
->  
-> +static void
-> +xfs_filemap_map_pages(
-> +	struct vm_fault		*vmf,
-> +	pgoff_t			start_pgoff,
-> +	pgoff_t			end_pgoff)
-> +{
-> +	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> +
-> +	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> +	filemap_map_pages(vmf, start_pgoff, end_pgoff);
-> +	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> +}
-> +
->  static const struct vm_operations_struct xfs_file_vm_ops = {
->  	.fault		= xfs_filemap_fault,
->  	.huge_fault	= xfs_filemap_huge_fault,
-> -	.map_pages	= filemap_map_pages,
-> +	.map_pages	= xfs_filemap_map_pages,
->  	.page_mkwrite	= xfs_filemap_page_mkwrite,
->  	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
->  };
-> -- 
-> 2.26.2.761.g0e0b3e54be
-> 
+The below two calls to kmalloc are wrong, but the current annotations
+don't track __GFP_IO and other levels, only __GFP_FS. So no lockdep
+splats here.
+
++       printk("allocate nofs\n");
++       kfree(kmalloc(16, GFP_NOFS));
++       printk("allocate kernel\n");
++       kfree(kmalloc(16, GFP_KERNEL));
++       fs_reclaim_release(GFP_NOFS);
++
++
++       printk("GFP_KERNEL block\n");
++       fs_reclaim_acquire(GFP_KERNEL);
++       printk("allocate atomic\n");
++       kfree(kmalloc(16, GFP_ATOMIC));
++       printk("allocate noio\n");
++       kfree(kmalloc(16, GFP_NOIO));
++       printk("allocate nofs\n");
++       kfree(kmalloc(16, GFP_NOFS));
+
+This allocation is buggy, and should splat. This is the case for both
+with my patch, and with my patch reverted.
+
++       printk("allocate kernel\n");
++       kfree(kmalloc(16, GFP_KERNEL));
++       fs_reclaim_release(GFP_KERNEL);
+
+I also looked at the paths in your lockdep splat in xfs, this is
+simply GFP_KERNEL vs a shrinker reclaim in kswapd.
+
+Summary: Everything is working as expected, there's no change in the
+lockdep annotations.
+
+I really think the problem is that either your testcase doesn't hit
+the issue reliably enough, or that you're not actually testing the
+same kernels and there's some other changes (xfs most likely, but
+really it could be anywhere) which is causing this regression. I'm
+rather convinced now after this test that it's not my stuff.
+
+Thanks, Daniel
+
+>
+> > -Daniel
+> >
+> > ---
+> > diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+> > index d807587c9ae6..27ea763c6155 100644
+> > --- a/mm/page_alloc.c
+> > +++ b/mm/page_alloc.c
+> > @@ -4191,11 +4191,6 @@ void fs_reclaim_acquire(gfp_t gfp_mask)
+> >               if (gfp_mask & __GFP_FS)
+> >                       __fs_reclaim_acquire();
+> >
+> > -#ifdef CONFIG_MMU_NOTIFIER
+> > -             lock_map_acquire(&__mmu_notifier_invalidate_range_start_m=
+ap);
+> > -             lock_map_release(&__mmu_notifier_invalidate_range_start_m=
+ap);
+> > -#endif
+> > -
+> >       }
+> >  }
+> >  EXPORT_SYMBOL_GPL(fs_reclaim_acquire);
+> > --
+> > Daniel Vetter
+> > Software Engineer, Intel Corporation
+> > http://blog.ffwll.ch
+
+
+
+--=20
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
