@@ -2,253 +2,241 @@ Return-Path: <SRS0=nlsN=AE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7CFCC433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 09:50:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C1CEC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 09:50:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD4F820707
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 09:50:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E4E8206C0
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 09:50:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732174AbgFWJuW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Jun 2020 05:50:22 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:42690 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732163AbgFWJuV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 05:50:21 -0400
+        id S1732163AbgFWJuZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Jun 2020 05:50:25 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47833 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732168AbgFWJuY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 05:50:24 -0400
 Received: from dread.disaster.area (pa49-180-124-177.pa.nsw.optusnet.com.au [49.180.124.177])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 8E1E0D7B541
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 19:50:16 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C05913A4EB6
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 19:50:20 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jnfZH-0004gg-Rn
+        id 1jnfZH-0004gl-Uu
         for linux-xfs@vger.kernel.org; Tue, 23 Jun 2020 19:50:15 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.93)
         (envelope-from <david@fromorbit.com>)
-        id 1jnfZH-0087B2-It
+        id 1jnfZH-0087BA-MN
         for linux-xfs@vger.kernel.org; Tue, 23 Jun 2020 19:50:15 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/4] [RFC] xfs: in memory inode unlink log items
-Date:   Tue, 23 Jun 2020 19:50:11 +1000
-Message-Id: <20200623095015.1934171-1-david@fromorbit.com>
+Subject: [PATCH 2/4] xfs: add log item precommit operation
+Date:   Tue, 23 Jun 2020 19:50:13 +1000
+Message-Id: <20200623095015.1934171-3-david@fromorbit.com>
 X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
+In-Reply-To: <20200623095015.1934171-1-david@fromorbit.com>
+References: <20200623095015.1934171-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=k3aV/LVJup6ZGWgigO6cSA==:117 a=k3aV/LVJup6ZGWgigO6cSA==:17
-        a=nTHF0DUjJn0A:10 a=-zqOA9bHWMDpc37BQzAA:9 a=oS71A6B5kQzKe0XX:21
-        a=DhH2TjDY-bTy8Eyr:21
+        a=nTHF0DUjJn0A:10 a=20KFwNOVAAAA:8 a=E9wXMvJij-PDQt6hmJUA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-Inode cluster buffer pinning by dirty inodes allows us to improve
-dirty inode tracking efficiency in the log by logging the inode
-cluster buffer as an ordered transaction. However, this brings with
-it some new issues, namely the order in which we lock  inode cluster
-buffers.
+For inodes that are dirty, we have an attached cluster buffer that
+we want to use to track the dirty inode through the AIL.
+Unfortunately, locking the cluster buffer and adding it to the
+transaction when the inode is first logged in a transaction leads to
+buffer lock ordering inversions.
 
-That is, transactions that dirty and commit multiple inodes in a
-transaction will now need to locking multiple inode cluster buffers
-in each transaction (e.g. create, rename, etc). This introduces new 
-lock ordering constraints in these operations. It also introduces
-lock ordering constraints between the AGI and inode cluster buffers
-as a result of allocation/freeing being serialised by the AGI
-buffer lock. And then there is unlinked inode list logging, which
-currently has no fixed order of inode cluster buffer locking.
+The specific problem is ordering against the AGI buffer. When
+modifying unlinked lists, the buffer lock order is AGI -> inode
+cluster buffer as the AGI buffer lock serialises all access to the
+unlinked lists. Unfortunately, functionality like xfs_droplink()
+logs the inode before calling xfs_iunlink(), as do various directory
+manipulation functions. The inode can be logged way down in the
+stack as far as the bmapi routines and hence, without a major
+rewrite of lots of APIs there's no way we can avoid the inode being
+logged by something until after the AGI has been logged.
 
-It's a bit messy.
+As we are going to be using ordered buffers for inode AIL tracking,
+there isn't a need to actually lock that buffer against modification
+as all the modifications are captured by logging the inode item
+itself. Hence we don't actually need to join the cluster buffer into
+the transaction until just before it is committed. This means we do
+not perturb any of the existing buffer lock orders in transactions,
+and the inode cluster buffer is always locked last in a transaction
+that doesn't otherwise touch inode cluster buffers.
 
-Locking pure inode modifications in order is relatively easy. We
-don't actually need to attach and log the buffer to the transaction
-until the last moment. We have all the inodes locked, so nothing
-other than unlinked inode list modification can race with the
-transaction modifying inodes. Hence we can safely move the
-attachment of the inodes to the cluster buffer from when we first
-dirty them in xfs_trans_log_inode to just before we commit the
-transaction.
+We do this by introducing a precommit log item method. A log item
+method is used because it is likely dquots will be moved to this
+same ordered buffer tracking scheme and hence will need a similar
+callout. This commit just introduces the mechanism; the inode item
+implementation is in followup commits.
 
-At this point, all the inodes that have been dirtied in the
-transaction have already been locked, modified, logged and attached
-to the transaction. Hence if we add a hook into xfs_trans_commit()
-to run a "precommit" operation on these log items, we can use this
-operation to attach the inodes to the cluster buffer at commit time
-instead of in xfs_trans_log_inode().
+The precommit items need to be sorted into consistent order as we
+may be locking multiple items here. Hence if we have two dirty
+inodes in cluster buffers A and B, and some other transaction has
+two separate dirty inodes in the same cluster buffers, locking them
+in different orders opens us up to ABBA deadlocks. Hence we sort the
+items on the transaction based on the presence of a sort log item
+method.
 
-This, by itself, doesn't solve the lock ordering problem. What it
-does do, however, is give us a place where we can -order- all the
-dirty items in the transaction list. Hence before we call the
-precommit operation on each log item, we sort them. This allows us
-to sort all the inode items so that the pre-commit functions that
-locks and logs the cluster buffers are run in a deterministic order.
-This solves the lock order problem for pure inode modifications.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_icache.c |  1 +
+ fs/xfs/xfs_trans.c  | 90 +++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_trans.h  |  6 ++-
+ 3 files changed, 95 insertions(+), 2 deletions(-)
 
-The unlinked inode list buffer locking is more complex. The unlinked
-list is unordered - we add to the tail, remove from where-ever the
-inode is in the list. Hence we might need to lock two inode buffers
-here (previous inode in list and the one being removed). While we
-can order the locking of these buffers correctly within the confines
-of the unlinked list, there may be other inodes that need buffer
-locking in the same transaction. e.g. O_TMPFILE being linked into a
-directory also modifies the directory inode.
-
-Hence we need a mechanism for defering unlinked inode list updates
-to the pre-commit operation where it can be sorted into the correct
-order. We can do this by first observing that we serialise unlinked
-list modifications by holding the AGI buffer lock. IOWs, the AGI is
-going to be locked until the transaction commits any time we modify
-the unlinked list. Hence it doesn't matter when in the transaction
-we actually load, lock and modify the inode cluster buffer.
-
-IOWs, what we need is an unlinked inode log item to defer the inode
-cluster buffer update to transaction commit time where it can be
-ordered with all the other inode cluster operations. Essentially all
-we need to do is record the inodes that need to have their unlinked
-list pointer updated in a new log item that we attached to the
-transaction.
-
-This log item exists purely for the purpose of delaying the update
-of the unlinked list pointer until the inode cluster buffer can be
-locked in the correct order around the other inode cluster buffers.
-It plays no part in the actual commit, and there's no change to
-anything that is written to the log. i.e. the inode cluster buffers
-still have to be fully logged here (not just ordered) as log
-recovery depedends on this to replay mods to the unlinked inode
-list.
-
-To make this unlinked inode list processing simpler and easier to
-implement as a log item, we need to change the way we track the
-unlinked list in memory. Starting from the observation that an inode
-on the unlinked list is pinned in memory by the VFS, we can use the
-xfs_inode itself to track the unlinked list. To do this efficiently,
-we want the unlinked list to be a double linked list. The current
-implementation takes the approach of minimising the memory footprint
-of this list in case we don't want to burn 16 bytes of memory per
-inode for a largely unused list head. [*]
-
-We can get this down to 8 bytes per inode because the unlinked list
-is per-ag, and hence we only need to store the agino portion of the
-inode number as list pointers. We can then use these for lockless
-inode cache lookups to retreive the inode. The aginos in the inode
-are modified only under the AGI lock, just like the cluster buffer
-pointers, so we don't need any extra locking here.  The
-i_next_unlinked field tracks the on-disk value of the unlinked list,
-and the i_prev_unlinked is a purely in-memory pointer that enables
-us to efficiently remove inodes from the middle of the list.
-
-IOWs, we burn a bit more CPU to resolve the unlinked list pointers
-to save 8 bytes of memory per inode. If we decide that 8 bytes of
-memory isn't a big code, we can convert this to a list_head and just
-link the inodes directly to a unlinked list head in the perag.[**]
-
-This gets rid of the entire unlinked list reference hash table that
-is used to track this back pointer relationship, greatly simplifying
-the unlinked list modification code.
-
-Comments, flames, thoughts all welcome.
-
--Dave.
-
-[*] An in-memory double linked list removes the need for keeping
-lists short to minimise previous inode lookup overhead when removing
-from the list. The current backref hash has this function, but it's
-not obvious that it can do this and it's a kinda complex way of
-implementing a double linked list.
-
-Once we've removed the need for keeping the lists short, we no
-longer need the on-disk hash for unlinked lists, so we can put all
-the inodes in a single list....
-
-[**] A single unlinked list in the per-ag then leads to a mutex in
-the per-ag to protect the list, removing the AGI lock from needing
-to be held to modify the unlinked list unless the head of the list
-is being modified. We can then add to the tail of the list instead
-of the head, hence largely removing the AGI from the unlinked list
-processing entirely when there is more than one inode on the
-unlinked list.[***]
-
-This is another advantage of moving to single unlinked list - we are
-much more likely to have multiple inodes on a single unlinked list
-than when they are spread across 64 lists. Hence we are more likely
-to be able to elide AGI locking for the unlinked list modifications
-the more pressure we put on the unlinked list...
-
-[***] Taking the AGI out of the unlinked list processing means the
-only thing it "protects" is the contents of the AGI itself. This is
-basically updating accounting and tracking btree root pointers. We
-could add another in-memory log item for AGI updates such that the
-AGI only needs to be locked, updated and logged in the precommit
-function, greatly reducing the time it spends locked for inode
-unlink processing [*^4. This will improve performance of inode
-alloc/freeing on AG constrained filessytems as we spend less time
-serialising on the AGI lock.....
-
-[*^4] This is how superblock updates work, except it's not by a
-generic in-memory SB log item - the changes to accounting are stored
-directly in the struct xfs_trans as deltas and then applied in
-xfs_trans_commit() via xfs_trans_apply_sb_deltas() which locks,
-applies and logs the superblock buffer. This could be converted to a
-precommit operation, too. [*^5]
-
-Note that this superblock locking is elided for the freespace and
-inode accounting when lazy superblock updates are enabled. This
-prevents the superblock buffer lock for transactional accounting
-update from being a major global contention point.
-
-[*^5] dquots also use a delta accounting structure hard coded into
-the struct xfs_trans - the xfs_dquot_acct structure. This gets
-allocated when dquot modifications are reserved, and then updated
-with each quota modification that is made in the transaction.
-
-Then, in xfs_trans_commit(), it calls xfs_trans_apply_dquot_deltas()
-which then orders the locking of the dquots correct, reads, loads
-and locks the dquots, modifies the in-memory on-disk dquots and logs
-them. This could also be converted to pre-commit operations. [*^6]
-
-[*^6] It should be obvious by now that the pattern of "pre-commit
-processing" for "delayed object modification" is not a new idea.
-It's been in the code for 25-odd years and copy-pasta'd through the
-ages as needed. It's never been turned into a useful, formalised
-infrastructure mechanism - that's what this patchset starts us down
-the path of. It kinda reminds me of the btree infrastructure
-abstraction I did years ago to get rid fo the the 15,000 lines of
-copy-pastad btree code and set us on the path to the (relatively)
-easy addition of more btrees....
-
-
-
-Dave Chinner (4):
-  xfs: xfs_iflock is no longer a completion
-  xfs: add log item precommit operation
-  xfs: track unlinked inodes in core inode
-  xfs: introduce inode unlink log item
-
- fs/xfs/Makefile               |   1 +
- fs/xfs/libxfs/xfs_inode_buf.c |   1 +
- fs/xfs/xfs_icache.c           |  22 +-
- fs/xfs/xfs_inode.c            | 719 +++++++++-------------------------
- fs/xfs/xfs_inode.h            |  38 +-
- fs/xfs/xfs_inode_item.c       |   9 +-
- fs/xfs/xfs_inode_item.h       |   4 +-
- fs/xfs/xfs_iunlink_item.c     | 141 +++++++
- fs/xfs/xfs_iunlink_item.h     |  24 ++
- fs/xfs/xfs_log_recover.c      | 166 ++++----
- fs/xfs/xfs_mount.c            |   5 -
- fs/xfs/xfs_super.c            |  10 +
- fs/xfs/xfs_trans.c            |  90 +++++
- fs/xfs/xfs_trans.h            |   6 +-
- 14 files changed, 575 insertions(+), 661 deletions(-)
- create mode 100644 fs/xfs/xfs_iunlink_item.c
- create mode 100644 fs/xfs/xfs_iunlink_item.h
-
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 0d73559f2d58..1c744dbb313f 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1077,6 +1077,7 @@ xfs_reclaim_inode(
+ 	ip->i_ino = 0;
+ 	spin_unlock(&ip->i_flags_lock);
+ 
++	ASSERT(!ip->i_itemp || ip->i_itemp->ili_item.li_buf == NULL);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+ 	XFS_STATS_INC(ip->i_mount, xs_ig_reclaims);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 3c94e5ff4316..6f350490f84b 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -799,6 +799,89 @@ xfs_trans_committed_bulk(
+ 	spin_unlock(&ailp->ail_lock);
+ }
+ 
++/*
++ * Sort transaction items prior to running precommit operations. This will
++ * attempt to order the items such that they will always be locked in the same
++ * order. Items that have no sort function are moved to the end of the list
++ * and so are locked last (XXX: need to check the logic matches the comment).
++ *
++ * This may need refinement as different types of objects add sort functions.
++ *
++ * Function is more complex than it needs to be because we are comparing 64 bit
++ * values and the function only returns 32 bit values.
++ */
++static int
++xfs_trans_precommit_sort(
++	void			*unused_arg,
++	struct list_head	*a,
++	struct list_head	*b)
++{
++	struct xfs_log_item	*lia = container_of(a,
++					struct xfs_log_item, li_trans);
++	struct xfs_log_item	*lib = container_of(b,
++					struct xfs_log_item, li_trans);
++	int64_t			diff;
++
++	if (!lia->li_ops->iop_sort && !lib->li_ops->iop_sort)
++		return 0;
++	if (!lia->li_ops->iop_sort)
++		return 1;
++	if (!lib->li_ops->iop_sort)
++		return -1;
++
++	diff = lia->li_ops->iop_sort(lia) - lib->li_ops->iop_sort(lib);
++	if (diff < 0)
++		return -1;
++	if (diff > 0)
++		return 1;
++	return 0;
++}
++
++/*
++ * Run transaction precommit functions.
++ *
++ * If there is an error in any of the callouts, then stop immediately and
++ * trigger a shutdown to abort the transaction. There is no recovery possible
++ * from errors at this point as the transaction is dirty....
++ */
++static int
++xfs_trans_run_precommits(
++	struct xfs_trans	*tp)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	struct xfs_log_item	*lip, *n;
++	int			error = 0;
++
++	if (XFS_FORCED_SHUTDOWN(mp))
++		return -EIO;
++
++	/*
++	 * Sort the item list to avoid ABBA deadlocks with other transactions
++	 * running precommit operations that lock multiple shared items such as
++	 * inode cluster buffers.
++	 */
++	list_sort(NULL, &tp->t_items, xfs_trans_precommit_sort);
++
++	/*
++	 * Precommit operations can remove the log item from the transaction
++	 * if the log item exists purely to delay modifications until they
++	 * can be ordered against other operations. Hence we have to use
++	 * list_for_each_entry_safe() here.
++	 */
++	list_for_each_entry_safe(lip, n, &tp->t_items, li_trans) {
++		if (!test_bit(XFS_LI_DIRTY, &lip->li_flags))
++			continue;
++		if (lip->li_ops->iop_precommit) {
++			error = lip->li_ops->iop_precommit(tp, lip);
++			if (error)
++				break;
++		}
++	}
++	if (error)
++		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++	return error;
++}
++
+ /*
+  * Commit the given transaction to the log.
+  *
+@@ -823,6 +906,13 @@ __xfs_trans_commit(
+ 
+ 	trace_xfs_trans_commit(tp, _RET_IP_);
+ 
++	error = xfs_trans_run_precommits(tp);
++	if (error) {
++		if (tp->t_flags & XFS_TRANS_PERM_LOG_RES)
++			xfs_defer_cancel(tp);
++		goto out_unreserve;
++	}
++
+ 	/*
+ 	 * Finish deferred items on final commit. Only permanent transactions
+ 	 * should ever have deferred ops.
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index b752501818d2..26ea19bd0621 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -70,10 +70,12 @@ struct xfs_item_ops {
+ 	void (*iop_format)(struct xfs_log_item *, struct xfs_log_vec *);
+ 	void (*iop_pin)(struct xfs_log_item *);
+ 	void (*iop_unpin)(struct xfs_log_item *, int remove);
+-	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
++	uint64_t (*iop_sort)(struct xfs_log_item *);
++	int (*iop_precommit)(struct xfs_trans *, struct xfs_log_item *);
+ 	void (*iop_committing)(struct xfs_log_item *, xfs_lsn_t commit_lsn);
+-	void (*iop_release)(struct xfs_log_item *);
+ 	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
++	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
++	void (*iop_release)(struct xfs_log_item *);
+ 	int (*iop_recover)(struct xfs_log_item *lip, struct xfs_trans *tp);
+ 	bool (*iop_match)(struct xfs_log_item *item, uint64_t id);
+ };
 -- 
 2.26.2.761.g0e0b3e54be
 
