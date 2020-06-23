@@ -2,121 +2,108 @@ Return-Path: <SRS0=nlsN=AE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DC3AC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 10:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06402C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 10:36:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF65E20774
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 10:08:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2AAA20738
+	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jun 2020 10:36:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TJPYq1Ki"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EnoQoqMr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732056AbgFWKIv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Jun 2020 06:08:51 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:48274 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728265AbgFWKIv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 06:08:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1592906929;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=QzZVasNlfsySyYAHFQagkd6WYPAo80IwAoNZB5L0GsA=;
-        b=TJPYq1KiaMesVaAvZQejZRY9mlrqMMaY/LQ/y0KNcK9dLUoKaJvn4Y/Za1UZJV/3ixpcja
-        q/BJwRYZM8ucy5SWaOoQaBRSI5k+031sehsEHjmcPFIxcGZXh9b1Zn1Ze912APX3Yu01Go
-        PSSqX1DEF6L3T7ERZJAZOmvyKT9iZcU=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-495-8KVrkh_BOeGIbcAZkAMRiQ-1; Tue, 23 Jun 2020 06:08:48 -0400
-X-MC-Unique: 8KVrkh_BOeGIbcAZkAMRiQ-1
-Received: by mail-pg1-f197.google.com with SMTP id s7so11599162pgm.4
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jun 2020 03:08:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=QzZVasNlfsySyYAHFQagkd6WYPAo80IwAoNZB5L0GsA=;
-        b=R9AQP+wxuY1E247GqZRkmuHUkPOIUmmpvaOfomz2BjypiyfXxWgaX98+FZTzhYRS3p
-         d3Ed4+ecjezLuJPTOZ1c/yjpKeVcXW45JJu8oSEGSg7uMsoQEBwafkqYtmatLpM/f6cZ
-         PSx4xtajW/Rx5L7Q0QfA0V0ZJ+WOckr+jorZqtYoeXkE+KD2Gj9mj+4gyyhgKbdo2RLD
-         WG7EvGCSKGz4xKrnlY5LVbGHLBx0yEW5CTJYNxS3moZCvOjvD8I4rteR8ytMvlXniaDN
-         VLbBDWyAwYqUo9pEbtanNXsaFS2MMNq7KOjIJhl6OaEiSqru7HErExLA5meyX340O6cj
-         4NrA==
-X-Gm-Message-State: AOAM533cGSISXSTEuBiMbgGdKblRHrmPBx1HPb4O7S7DBvyLNkN4xRY4
-        Tu4U2MuGzfYiLiQbOQVc1JXcqF3uwWNbFUBMgOnf2AELqj4Cxlrwm6l5EuCrepDT0n1+woJeouQ
-        7TvtTwwUIVOljRCaw2fQO
-X-Received: by 2002:a17:902:326:: with SMTP id 35mr23322578pld.301.1592906927204;
-        Tue, 23 Jun 2020 03:08:47 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzwQsDB9y6ljLMBf2sA+Q/zr0tbIbylSE6vkUSdCJAa/m7JNuou0jVX0dB3NciWoZ5OnFEMzw==
-X-Received: by 2002:a17:902:326:: with SMTP id 35mr23322555pld.301.1592906926960;
-        Tue, 23 Jun 2020 03:08:46 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id 207sm16945708pfw.190.2020.06.23.03.08.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Jun 2020 03:08:46 -0700 (PDT)
-Date:   Tue, 23 Jun 2020 18:08:37 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH v3] xfs: get rid of unnecessary xfs_perag_{get,put} pairs
-Message-ID: <20200623100837.GA1523@xiangao.remote.csb>
-References: <20200603121156.3399-1-hsiangkao@redhat.com>
- <20200605085200.24989-1-hsiangkao@redhat.com>
- <20200605155604.GU2162697@magnolia>
- <20200605183037.GA4468@xiangao.remote.csb>
- <20200605184732.GB4468@xiangao.remote.csb>
+        id S1732201AbgFWKgd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 23 Jun 2020 06:36:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46426 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732172AbgFWKgd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jun 2020 06:36:33 -0400
+Received: from casper.infradead.org (unknown [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07616C061573;
+        Tue, 23 Jun 2020 03:36:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=42UbjTntj/fc5rojlRsUj9PMNMNzEe9xi7G1okFFxjk=; b=EnoQoqMrou48OOkI6I3f5cTFZx
+        OAWRwgmhrIW58xLv4TNeX8XSr9xp2Rz4UJ314aWs3JDt2LsXp4sY0e9dFGvUr2DylbDDnR5oNrb/W
+        ly9CcXg4YMECRCa1NG3Kxq/ZVY2nImfGgu8gHn88DinD9tHv3NOEi2tCdLD6pH9tSngw8T24DjYhd
+        4LpQJqSTN37bMmhwqe1EcCYAjj6kHAWU8Qd0WvycEmlEvEp/MbWMvTzn0d3RIyreWpNDLQNBc46yH
+        YqQGVpcRGiz9niG5OkuTsm2pRmLrE7Nmx5qDI661fkVdgLYJUC3Agzcy/9ezc1EoD6lV8FbjY/NMN
+        oj+vWVPQ==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jngHe-0005M1-0o; Tue, 23 Jun 2020 10:36:06 +0000
+Date:   Tue, 23 Jun 2020 11:36:05 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Bob Peterson <rpeterso@redhat.com>
+Subject: Re: [PATCH v2] iomap: Make sure iomap_end is called after iomap_begin
+Message-ID: <20200623103605.GA20464@infradead.org>
+References: <20200618122408.1054092-1-agruenba@redhat.com>
+ <20200619131347.GA22412@infradead.org>
+ <CAHc6FU7uKUV-R+qJ9ifLAJkS6aPoG_6qWe7y7wJOb7EbWRL4dQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200605184732.GB4468@xiangao.remote.csb>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <CAHc6FU7uKUV-R+qJ9ifLAJkS6aPoG_6qWe7y7wJOb7EbWRL4dQ@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Mon, Jun 22, 2020 at 11:07:59AM +0200, Andreas Gruenbacher wrote:
+> On Fri, Jun 19, 2020 at 3:25 PM Christoph Hellwig <hch@infradead.org> wrote:
+> > On Thu, Jun 18, 2020 at 02:24:08PM +0200, Andreas Gruenbacher wrote:
+> > > Make sure iomap_end is always called when iomap_begin succeeds.
+> > >
+> > > Without this fix, iomap_end won't be called when a filesystem's
+> > > iomap_begin operation returns an invalid mapping, bypassing any
+> > > unlocking done in iomap_end.  With this fix, the unlocking would
+> > > at least still happen.
+> > >
+> > > This iomap_apply bug was found by Bob Peterson during code review.
+> > > It's unlikely that such iomap_begin bugs will survive to affect
+> > > users, so backporting this fix seems unnecessary.
+> > >
+> > > Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure")
+> > > Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> > > ---
+> > >  fs/iomap/apply.c | 10 ++++++----
+> > >  1 file changed, 6 insertions(+), 4 deletions(-)
+> > >
+> > > diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+> > > index 76925b40b5fd..32daf8cb411c 100644
+> > > --- a/fs/iomap/apply.c
+> > > +++ b/fs/iomap/apply.c
+> > > @@ -46,10 +46,11 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+> > >       ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
+> > >       if (ret)
+> > >               return ret;
+> > > -     if (WARN_ON(iomap.offset > pos))
+> > > -             return -EIO;
+> > > -     if (WARN_ON(iomap.length == 0))
+> > > -             return -EIO;
+> > > +     if (WARN_ON(iomap.offset > pos) ||
+> > > +         WARN_ON(iomap.length == 0)) {
+> > > +             written = -EIO;
+> > > +             goto out;
+> > > +     }
+> >
+> > As said before please don't merge these for no good reason.
+> 
+> I really didn't expect this tiny patch to require much discussion at
+> all, but just to be clear ... do you actually object to this very
+> patch that explicitly doesn't merge the two checks and keeps them on
+> two separate lines so that the warning messages will report different
+> line numbers, or are you fine with that?
 
-Friendly ping (just to keep up). What should I do for this patch?
-Should I kill all ASSERTs instead (ASSERTs v3 is just v1 + read_{agf,agi}?
-I could resend again quickly if needed..
-
-Thanks,
-Gao Xiang
-
-On Sat, Jun 06, 2020 at 02:47:32AM +0800, Gao Xiang wrote:
-> On Sat, Jun 06, 2020 at 02:30:37AM +0800, Gao Xiang wrote:
-> 
-> ...
-> 
-> > > 
-> > > Alternately-- if you want to sanity check that b_pag and the buffer
-> > > belong to the same ag, why not do that in xfs_buf_find for all the
-> > > buffers?
-> > 
-> > Since that modification doesn't relate to this patch though (since
-> > the purpose of this patch is not add ASSERT to xfs_buf_find).
-> > 
-> > If in that way, I think we can just kill all these ASSERTs.
-> 
-> Add some to the previous words:
-> 
-> What I really concern is to avoid introduce some regression from
-> this trivial patch. That is the original reason why I added these
-> assertions and tested with stress.
-> 
-> If some of these seems useful to the codebase, I could leave them
-> in this patch (since these are related to the modification of this
-> patch). Otherwise, I'd suggest kill them all though as I mentioned
-> earilier in the reply of v1.
-> 
-> Thanks,
-> Gao Xiang
-> 
-> 
-
+Yes, it merges the WARN_ONs, and thus reduces their usefulness.  How
+about a patch that just fixes your reported issue insted of messing up
+other things for no good reason?
