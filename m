@@ -3,109 +3,163 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C6A0C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 12:28:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 238DBC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 12:31:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5552C20709
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 12:28:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SsVFQ4pV"
+	by mail.kernel.org (Postfix) with ESMTP id EEC0F20709
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 12:31:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593088308;
+	bh=uZyquXWX2uZbi7C4PfxooqqslUf/H9KACJBSxEKBJzk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=OT2RB5Fb9YPH2b6flcAGgFBXuv3nQQzf3pBxWAXQTycDAtiPi7qgisu8jEPe97pJP
+	 tioSUrGcAMJPO3tRMvL32CRnAOdP7IivY+PuTOwR6wpvKQR1qdvm8sxaFD0wiPw6Za
+	 iObZYurdrqqLfVPXvkTUctfOc2JPXZphc0bl7aIk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404451AbgFYM2Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Jun 2020 08:28:25 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:23901 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2404688AbgFYM2Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 08:28:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1593088103;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=6BSnrrdlIMGBBXDBQ4AmTkGoPSE6I1QUEil51cFb1EA=;
-        b=SsVFQ4pVCHGXUEs7Rcp2qM9yuhHbrzogS4LKS5HyyN9dK/8JPUoNdLXbUsYbDCtjocTukw
-        jsE7rQEuCFiKdoC94rh99FUuYQ6GmBqrWXwKdIr5s//q2TUuoCgKx2leOruOjuUiC8/qlk
-        gd+0kZ06KJG2Mm6ilDhmLPG0axdnVZ0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-411-qQeMQhOgOsGVoqlSi76ANA-1; Thu, 25 Jun 2020 08:28:21 -0400
-X-MC-Unique: qQeMQhOgOsGVoqlSi76ANA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D16F1800FF1;
-        Thu, 25 Jun 2020 12:28:20 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5FE9A10013C4;
-        Thu, 25 Jun 2020 12:28:20 +0000 (UTC)
-Date:   Thu, 25 Jun 2020 08:28:18 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, edwin@etorok.net
-Subject: Re: [PATCH 6/9] xfs: reflink can skip remap existing mappings
-Message-ID: <20200625122818.GH2863@bfoster>
-References: <159304785928.874036.4735877085735285950.stgit@magnolia>
- <159304789856.874036.15102270304208951038.stgit@magnolia>
+        id S2404508AbgFYMbr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Jun 2020 08:31:47 -0400
+Received: from mail-ej1-f66.google.com ([209.85.218.66]:45098 "EHLO
+        mail-ej1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404343AbgFYMbr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 08:31:47 -0400
+Received: by mail-ej1-f66.google.com with SMTP id a1so5724405ejg.12;
+        Thu, 25 Jun 2020 05:31:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=LfL/J6kcjTPEsDskt6aLX8PefsDeHP4anavcHPUMTKA=;
+        b=K8tP2qbXQI2hBSalRv4SKfazP6iRV3H2GezAc8E8Uh9rrhiWuQ8Uqg34LY7Fb6evnI
+         l0B30MTdDB8NfVH+KqkGnEjAhchh7qqCHacKA4oePCjNf6TrHlbE0h6RdihWtzcD6spO
+         IE8vZBokrOoqo6uM3O/nZUnpG3CboXOzspyfNggmh3UZuWqH9stnfsm8dKW0rUYkyuq6
+         laFq5z4Bb37H2lDLFaKcdL6RTThXEoBdGPecY/sJJA1qLPPP8FRrX51vy/UNLpxHukgN
+         TzJQMEzsGodiU98ggnmLqKKHWgzO/aMakaLVJ7b+s9Sl9MnE0UqIB2SnSEaU/RL4mTx4
+         J3XA==
+X-Gm-Message-State: AOAM530w5IK5YXKYgtRq/pvNRb0vyX7+bEIhjkMbTaP28RkyOk1Dd0gq
+        MTQHz5NVGHmYaldpcgU8ebY=
+X-Google-Smtp-Source: ABdhPJyiXDwgXlrcNxDquN/m7X009TUFeb5rEVdNCJL2oLKPwCGm2N5mD6JL7UM8/mFBSoWnOD0BJw==
+X-Received: by 2002:a17:906:3d41:: with SMTP id q1mr30164872ejf.12.1593088305149;
+        Thu, 25 Jun 2020 05:31:45 -0700 (PDT)
+Received: from localhost (ip-37-188-168-3.eurotel.cz. [37.188.168.3])
+        by smtp.gmail.com with ESMTPSA id u13sm11449983ejx.3.2020.06.25.05.31.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 25 Jun 2020 05:31:44 -0700 (PDT)
+Date:   Thu, 25 Jun 2020 14:31:43 +0200
+From:   Michal Hocko <mhocko@kernel.org>
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, dm-devel@redhat.com,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 2/6] mm: Add become_kswapd and restore_kswapd
+Message-ID: <20200625123143.GK1320@dhcp22.suse.cz>
+References: <20200625113122.7540-1-willy@infradead.org>
+ <20200625113122.7540-3-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <159304789856.874036.15102270304208951038.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20200625113122.7540-3-willy@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 24, 2020 at 06:18:18PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu 25-06-20 12:31:18, Matthew Wilcox wrote:
+> Since XFS needs to pretend to be kswapd in some of its worker threads,
+> create methods to save & restore kswapd state.  Don't bother restoring
+> kswapd state in kswapd -- the only time we reach this code is when we're
+> exiting and the task_struct is about to be destroyed anyway.
 > 
-> If the source and destination map are identical, we can skip the remap
-> step to save some time.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_reflink.c |   17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
-> 
-> 
-> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-> index 72de7179399d..f1156f121b7d 100644
-> --- a/fs/xfs/xfs_reflink.c
-> +++ b/fs/xfs/xfs_reflink.c
-> @@ -1031,6 +1031,23 @@ xfs_reflink_remap_extent(
->  
->  	trace_xfs_reflink_remap_extent_dest(ip, &smap);
->  
-> +	/*
-> +	 * Two extents mapped to the same physical block must not have
-> +	 * different states; that's filesystem corruption.  Move on to the next
-> +	 * extent if they're both holes or both the same physical extent.
-> +	 */
-> +	if (dmap->br_startblock == smap.br_startblock) {
-> +		ASSERT(dmap->br_startblock == smap.br_startblock);
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
-That assert duplicates the logic in the if statement. Was this intended
-to be the length check I asked for? If so it looks like that was added
-previously so perhaps this can just drop off. With that fixed up:
+Certainly better than an opencoded PF_$FOO manipulation
+Acked-by: Michal Hocko <mhocko@suse.com>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+I would just ask for a clarification because this is rellying to have a
+good MM knowledge to follow
 
-> +		if (dmap->br_state != smap.br_state)
-> +			error = -EFSCORRUPTED;
-> +		goto out_cancel;
-> +	}
+> +/*
+> + * Tell the memory management that we're a "memory allocator",
+
+I would go with.
+Tell the memory management that the caller is working on behalf of the
+background memory reclaim (aka kswapd) and help it to make a forward
+progress. That means that it will get an access to memory reserves
+should there be a need to allocate memory in order to make a forward
+progress. Note that the caller has to be extremely careful when doing
+that.
+
+Or something like that.
+
+> + * and that if we need more memory we should get access to it
+> + * regardless (see "__alloc_pages()"). "kswapd" should
+> + * never get caught in the normal page freeing logic.
+> + *
+> + * (Kswapd normally doesn't need memory anyway, but sometimes
+> + * you need a small amount of memory in order to be able to
+> + * page out something else, and this flag essentially protects
+> + * us from recursively trying to free more memory as we're
+> + * trying to free the first piece of memory in the first place).
+> + */
+> +#define KSWAPD_PF_FLAGS		(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
 > +
-> +	/* If both extents are unwritten, leave them alone. */
-> +	if (dmap->br_state == XFS_EXT_UNWRITTEN &&
-> +	    smap.br_state == XFS_EXT_UNWRITTEN)
-> +		goto out_cancel;
+> +static inline unsigned long become_kswapd(void)
+> +{
+> +	unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
+> +	current->flags |= KSWAPD_PF_FLAGS;
+> +	return flags;
+> +}
 > +
->  	/* No reflinking if the AG of the dest mapping is low on space. */
->  	if (dmap_written) {
->  		error = xfs_reflink_ag_has_free_space(mp,
+> +static inline void restore_kswapd(unsigned long flags)
+> +{
+> +	current->flags &= ~(flags ^ KSWAPD_PF_FLAGS);
+> +}
+> +
+>  static inline void set_current_io_flusher(void)
+>  {
+>  	current->flags |= PF_LOCAL_THROTTLE;
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index b6d84326bdf2..27ae76699899 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3870,19 +3870,7 @@ static int kswapd(void *p)
+>  	if (!cpumask_empty(cpumask))
+>  		set_cpus_allowed_ptr(tsk, cpumask);
+>  
+> -	/*
+> -	 * Tell the memory management that we're a "memory allocator",
+> -	 * and that if we need more memory we should get access to it
+> -	 * regardless (see "__alloc_pages()"). "kswapd" should
+> -	 * never get caught in the normal page freeing logic.
+> -	 *
+> -	 * (Kswapd normally doesn't need memory anyway, but sometimes
+> -	 * you need a small amount of memory in order to be able to
+> -	 * page out something else, and this flag essentially protects
+> -	 * us from recursively trying to free more memory as we're
+> -	 * trying to free the first piece of memory in the first place).
+> -	 */
+> -	tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+> +	become_kswapd();
+>  	set_freezable();
+>  
+>  	WRITE_ONCE(pgdat->kswapd_order, 0);
+> @@ -3932,8 +3920,6 @@ static int kswapd(void *p)
+>  			goto kswapd_try_sleep;
+>  	}
+>  
+> -	tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
+> -
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.27.0
 > 
 
+-- 
+Michal Hocko
+SUSE Labs
