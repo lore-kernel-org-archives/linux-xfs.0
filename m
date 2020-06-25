@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C200C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 11:32:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8666FC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 11:32:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 738832088E
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 11:32:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61DD32088E
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 11:32:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VfnNJg/f"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ZyI8Ej/K"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404352AbgFYLcO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Jun 2020 07:32:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47502 "EHLO
+        id S2404311AbgFYLb7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Jun 2020 07:31:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404274AbgFYLcN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 07:32:13 -0400
+        with ESMTP id S2404267AbgFYLb6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 07:31:58 -0400
 Received: from casper.infradead.org (unknown [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE48EC0613ED;
-        Thu, 25 Jun 2020 04:32:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFEFDC0613ED;
+        Thu, 25 Jun 2020 04:31:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=1HLoZSacyI8SRPtt8h+SndljxFcVBZvNxY1kJjrCDnQ=; b=VfnNJg/fQFw02jR0S1ZX1voZqB
-        S+rlS7Po7AVxOoJEZ0Rhn0fPCvOZVPJX12GDmWY1QWvEbdWKfNf52qajSWr65FqoMjQ6blVMlRy+Y
-        Ftf5aGhMSjJQLwjiBlb7jkjSUBjGQcZnmGKawWT/gTmBBRHEHBJTopVFCwScipNrzi2KqMXFcHYjJ
-        zb3Wi28CaHKfkXHoM0IKsC92VwtyGQ/cw8tbv/soZFDv4Lb1gIoOpRU5DvZJjAMKRdz6OUJF0rk2Z
-        SkOd+J7mbTCuuyIFP2ZtaFcZw40mdSh0BbgCx9dhDqTBzdCc9dYB2z9QWV+/YvIlZ2oWyRImZDyN0
-        hWFICJ9Q==;
+        bh=Crp4AhmOUV70+9ieRKgaDTzbnRsfy5cJ4K1WeF+oLJU=; b=ZyI8Ej/KG39B3+hOJXl5accoDV
+        ZwIM8vPmUud8fp963KDNrm5eXW6e1KHx8c2Va/h16g6bjDJtLD12Qe1uh0P/oicdhmwRCHppYRBn6
+        nvvgIptt7YosCjpWoXpLLZq0Da17Zh4+PigsQDMhDAsc+uIAwq4qB1RTrGvNqVN1gruKDDHNPNQRs
+        jZDziVcrAEx8r7CMsH2j5rkZh3auVhtCWKDNB3clJQD2tVb1tSiT3HTck2SfHMVA9fjg7JEchBB+j
+        IvZs9j4HumOJu63Khhk9EsWu4iucMoT4wHPlgW2f1mLaIvAy9nlWK6765AApD3g0TrdPmxvmUdgvl
+        y9oMaM0w==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1joQ6W-0001zS-Rp; Thu, 25 Jun 2020 11:31:40 +0000
+        id 1joQ6X-0001za-5V; Thu, 25 Jun 2020 11:31:41 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-kernel@vger.kernel.org, linux-mm@kvack.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         linux-xfs@vger.kernel.org, dm-devel@redhat.com,
         Mikulas Patocka <mpatocka@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
-Subject: [PATCH 2/6] mm: Add become_kswapd and restore_kswapd
-Date:   Thu, 25 Jun 2020 12:31:18 +0100
-Message-Id: <20200625113122.7540-3-willy@infradead.org>
+Subject: [PATCH 4/6] mm: Replace PF_MEMALLOC_NOFS with memalloc_nofs
+Date:   Thu, 25 Jun 2020 12:31:20 +0100
+Message-Id: <20200625113122.7540-5-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20200625113122.7540-1-willy@infradead.org>
 References: <20200625113122.7540-1-willy@infradead.org>
@@ -55,127 +55,97 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Since XFS needs to pretend to be kswapd in some of its worker threads,
-create methods to save & restore kswapd state.  Don't bother restoring
-kswapd state in kswapd -- the only time we reach this code is when we're
-exiting and the task_struct is about to be destroyed anyway.
+We're short on PF_* flags, so make memalloc_nofs its own bit where we
+have plenty of space.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
- include/linux/sched/mm.h  | 26 ++++++++++++++++++++++++++
- mm/vmscan.c               | 16 +---------------
- 3 files changed, 35 insertions(+), 21 deletions(-)
+ fs/iomap/buffered-io.c   |  2 +-
+ include/linux/sched.h    |  2 +-
+ include/linux/sched/mm.h | 13 ++++++-------
+ 3 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-index 2d25bab68764..a04a44238aab 100644
---- a/fs/xfs/libxfs/xfs_btree.c
-+++ b/fs/xfs/libxfs/xfs_btree.c
-@@ -2813,8 +2813,9 @@ xfs_btree_split_worker(
- {
- 	struct xfs_btree_split_args	*args = container_of(work,
- 						struct xfs_btree_split_args, work);
-+	bool			is_kswapd = args->kswapd;
- 	unsigned long		pflags;
--	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
-+	int			memalloc_nofs;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index bcfc288dba3f..87d66c13bf5c 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1502,7 +1502,7 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
+ 	 * Given that we do not allow direct reclaim to call us, we should
+ 	 * never be called in a recursive filesystem reclaim context.
+ 	 */
+-	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
++	if (WARN_ON_ONCE(current->memalloc_nofs))
+ 		goto redirty;
  
  	/*
- 	 * we are in a transaction context here, but may also be doing work
-@@ -2822,16 +2823,17 @@ xfs_btree_split_worker(
- 	 * temporarily to ensure that we don't block waiting for memory reclaim
- 	 * in any way.
- 	 */
--	if (args->kswapd)
--		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
--
--	current_set_flags_nested(&pflags, new_pflags);
-+	if (is_kswapd)
-+		pflags = become_kswapd();
-+	memalloc_nofs = memalloc_nofs_save();
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index cf18a3d2bc4c..eaf36ae1fde2 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -802,6 +802,7 @@ struct task_struct {
+ 	unsigned			in_memstall:1;
+ #endif
+ 	unsigned			memalloc_noio:1;
++	unsigned			memalloc_nofs:1;
  
- 	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
- 					 args->key, args->curp, args->stat);
- 	complete(args->done);
+ 	unsigned long			atomic_flags; /* Flags requiring atomic access. */
  
--	current_restore_flags_nested(&pflags, new_pflags);
-+	memalloc_nofs_restore(memalloc_nofs);
-+	if (is_kswapd)
-+		restore_kswapd(pflags);
- }
- 
- /*
+@@ -1505,7 +1506,6 @@ extern struct pid *cad_pid;
+ #define PF_NOFREEZE		0x00008000	/* This thread should not be frozen */
+ #define PF_FROZEN		0x00010000	/* Frozen for system suspend */
+ #define PF_KSWAPD		0x00020000	/* I am kswapd */
+-#define PF_MEMALLOC_NOFS	0x00040000	/* All allocation requests will inherit GFP_NOFS */
+ #define PF_LOCAL_THROTTLE	0x00100000	/* Throttle writes only against the bdi I write to,
+ 						 * I am cleaning dirty pages from some other bdi. */
+ #define PF_KTHREAD		0x00200000	/* I am a kernel thread */
 diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
-index 1a7e1ab1be85..b0089eadc367 100644
+index b0089eadc367..08bc9d0606a8 100644
 --- a/include/linux/sched/mm.h
 +++ b/include/linux/sched/mm.h
-@@ -308,6 +308,32 @@ static inline void memalloc_nocma_restore(unsigned int flags)
- }
- #endif
+@@ -175,20 +175,19 @@ static inline bool in_vfork(struct task_struct *tsk)
  
-+/*
-+ * Tell the memory management that we're a "memory allocator",
-+ * and that if we need more memory we should get access to it
-+ * regardless (see "__alloc_pages()"). "kswapd" should
-+ * never get caught in the normal page freeing logic.
-+ *
-+ * (Kswapd normally doesn't need memory anyway, but sometimes
-+ * you need a small amount of memory in order to be able to
-+ * page out something else, and this flag essentially protects
-+ * us from recursively trying to free more memory as we're
-+ * trying to free the first piece of memory in the first place).
-+ */
-+#define KSWAPD_PF_FLAGS		(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
-+
-+static inline unsigned long become_kswapd(void)
-+{
-+	unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
-+	current->flags |= KSWAPD_PF_FLAGS;
-+	return flags;
-+}
-+
-+static inline void restore_kswapd(unsigned long flags)
-+{
-+	current->flags &= ~(flags ^ KSWAPD_PF_FLAGS);
-+}
-+
- static inline void set_current_io_flusher(void)
+ /*
+  * Applies per-task gfp context to the given allocation flags.
+- * PF_MEMALLOC_NOFS implies GFP_NOFS
+  * PF_MEMALLOC_NOCMA implies no allocation from CMA region.
+  */
+ static inline gfp_t current_gfp_context(gfp_t flags)
  {
- 	current->flags |= PF_LOCAL_THROTTLE;
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index b6d84326bdf2..27ae76699899 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -3870,19 +3870,7 @@ static int kswapd(void *p)
- 	if (!cpumask_empty(cpumask))
- 		set_cpus_allowed_ptr(tsk, cpumask);
- 
--	/*
--	 * Tell the memory management that we're a "memory allocator",
--	 * and that if we need more memory we should get access to it
--	 * regardless (see "__alloc_pages()"). "kswapd" should
--	 * never get caught in the normal page freeing logic.
--	 *
--	 * (Kswapd normally doesn't need memory anyway, but sometimes
--	 * you need a small amount of memory in order to be able to
--	 * page out something else, and this flag essentially protects
--	 * us from recursively trying to free more memory as we're
--	 * trying to free the first piece of memory in the first place).
--	 */
--	tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-+	become_kswapd();
- 	set_freezable();
- 
- 	WRITE_ONCE(pgdat->kswapd_order, 0);
-@@ -3932,8 +3920,6 @@ static int kswapd(void *p)
- 			goto kswapd_try_sleep;
- 	}
- 
--	tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
--
- 	return 0;
+-	if (unlikely(current->flags & (PF_MEMALLOC_NOFS | PF_MEMALLOC_NOCMA) ||
+-		     current->memalloc_noio)) {
++	if (unlikely((current->flags & PF_MEMALLOC_NOCMA) ||
++		     current->memalloc_noio || current->memalloc_nofs)) {
+ 		/*
+ 		 * NOIO implies both NOIO and NOFS and it is a weaker context
+ 		 * so always make sure it makes precedence
+ 		 */
+ 		if (current->memalloc_noio)
+ 			flags &= ~(__GFP_IO | __GFP_FS);
+-		else if (current->flags & PF_MEMALLOC_NOFS)
++		else if (current->memalloc_nofs)
+ 			flags &= ~__GFP_FS;
+ #ifdef CONFIG_CMA
+ 		if (current->flags & PF_MEMALLOC_NOCMA)
+@@ -254,8 +253,8 @@ static inline void memalloc_noio_restore(unsigned int flags)
+  */
+ static inline unsigned int memalloc_nofs_save(void)
+ {
+-	unsigned int flags = current->flags & PF_MEMALLOC_NOFS;
+-	current->flags |= PF_MEMALLOC_NOFS;
++	unsigned int flags = current->memalloc_nofs;
++	current->memalloc_nofs = 1;
+ 	return flags;
  }
  
+@@ -269,7 +268,7 @@ static inline unsigned int memalloc_nofs_save(void)
+  */
+ static inline void memalloc_nofs_restore(unsigned int flags)
+ {
+-	current->flags = (current->flags & ~PF_MEMALLOC_NOFS) | flags;
++	current->memalloc_nofs = flags ? 1 : 0;
+ }
+ 
+ static inline unsigned int memalloc_noreclaim_save(void)
 -- 
 2.27.0
 
