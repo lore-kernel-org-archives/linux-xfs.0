@@ -5,55 +5,55 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54AF9C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 23:29:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36BC1C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 23:29:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EFEE2081A
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 23:29:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1698F20885
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 23:29:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NErVuM4p"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FHxyecMk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732076AbgFYX3Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Jun 2020 19:29:16 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:51174 "EHLO
+        id S1725831AbgFYX3k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Jun 2020 19:29:40 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:51224 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731517AbgFYX3M (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 19:29:12 -0400
+        with ESMTP id S1732046AbgFYX3O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 19:29:14 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05PNSUJo012423
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:29:00 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05PNS4mV012327
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:29:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=i3BGPdhNjPnIo8qd/+b85HFd/Ida22VjTcgVmCagA+w=;
- b=NErVuM4pLL0nIDR2e4A9MKw533Mqh8S8TKokuO8jmfUL7kgAfQHSRBWhMcYvfC1Vlnk7
- R8v21bvzK0f3HPE7K7QGN/e4e7x0ZiE31Gw8OtgOn02XFWerYjYBxQbwvWBYwLcNx1GA
- +ArM8M9KCo92qd1lJVlZxqnh5TiYOW4f5m2VgfhTO1T8HDaIuhUne2U9Wt9EiTGQ7+jC
- xAPbKzfzRAx0In/fjkeuur7JWFdJQbiScpByoBljWjhfDkc3iy2mM1bZ3WM3sF7lOjAr
- ViNppDpMTPwlEItW4uvI5AYLigjUVqtUGyqsCEdbi9m32K7vQ6weEFV6ERHBY4p9Y2fp /g== 
+ bh=D5Tx3jyUdrycvSVYi+hZtg5tXMu6sB7svp45Cq5N+70=;
+ b=FHxyecMkWHjkUl0h4i++M/ybYpO6M5xr4NOiTzniI1vbRtRDLGoGC3NOMohAk/jaFzX0
+ YqZVk73loaPdS3v3A1H68BRr5gD9xpNsk4eIqSc6GuzkPR3XZtAZfOoHPvhHNvXA4QkX
+ rwvhHP7/prehR7O5NKjlj1reqkVHtdjPuTdhul0rkdmWXzIFm6kZ4a7hdRxbMOm4hR+P
+ NEeGv73nR3pSTpTmaibhMu6LfYQBRfdNSM7TiZbwaNtAZVf/eV6XAYHjBzIzgI6JYFgJ
+ uxWQkNseEloLKspPoWxwQJSIOG5wlNJ0NLAr+j3V2jItUA9lKBimxoCNoqBtgvuc9q/T LA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 31uustu95s-1
+        by userp2120.oracle.com with ESMTP id 31uustu964-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:28:59 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:29:06 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05PNS3sl141207
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:28:59 GMT
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05PNS2Dm141065
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:29:06 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 31uur1watp-1
+        by aserp3030.oracle.com with ESMTP id 31uur1wayr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:28:59 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:29:05 +0000
 Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05PNSwfn016764
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:28:58 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05PNT4Di016790
+        for <linux-xfs@vger.kernel.org>; Thu, 25 Jun 2020 23:29:05 GMT
 Received: from localhost.localdomain (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 25 Jun 2020 23:28:57 +0000
+        with ESMTP ; Thu, 25 Jun 2020 23:29:04 +0000
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v10 01/26] xfsprogs: random buffer write failure errortag
-Date:   Thu, 25 Jun 2020 16:28:23 -0700
-Message-Id: <20200625232848.14465-2-allison.henderson@oracle.com>
+Subject: [PATCH v10 17/26] xfsprogs: Add helper function xfs_attr_leaf_mark_incomplete
+Date:   Thu, 25 Jun 2020 16:28:39 -0700
+Message-Id: <20200625232848.14465-18-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200625232848.14465-1-allison.henderson@oracle.com>
 References: <20200625232848.14465-1-allison.henderson@oracle.com>
@@ -73,59 +73,78 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+This patch helps to simplify xfs_attr_node_removename by modularizing
+the code around the transactions into helper functions.  This will make
+the function easier to follow when we introduce delayed attributes.
 
-Source kernel commit: 7376d74547344598008d00419eae0caa5f50f4f0
-
-Introduce an error tag to randomly fail async buffer writes. This is
-primarily to facilitate testing of the XFS error configuration
-mechanism.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/inject.c           | 1 +
- libxfs/xfs_errortag.h | 4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ libxfs/xfs_attr.c | 41 +++++++++++++++++++++++++++--------------
+ 1 file changed, 27 insertions(+), 14 deletions(-)
 
-diff --git a/io/inject.c b/io/inject.c
-index 4191c84..352d27c 100644
---- a/io/inject.c
-+++ b/io/inject.c
-@@ -54,6 +54,7 @@ error_tag(char *name)
- 		{ XFS_ERRTAG_FORCE_SCRUB_REPAIR,	"force_repair" },
- 		{ XFS_ERRTAG_FORCE_SUMMARY_RECALC,	"bad_summary" },
- 		{ XFS_ERRTAG_IUNLINK_FALLBACK,		"iunlink_fallback" },
-+		{ XFS_ERRTAG_BUF_IOERROR,		"buf_ioerror" },
- 		{ XFS_ERRTAG_MAX,			NULL }
- 	};
- 	int	count;
-diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
-index 79e6c4f..2486dab 100644
---- a/libxfs/xfs_errortag.h
-+++ b/libxfs/xfs_errortag.h
-@@ -55,7 +55,8 @@
- #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
- #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
- #define XFS_ERRTAG_IUNLINK_FALLBACK			34
--#define XFS_ERRTAG_MAX					35
-+#define XFS_ERRTAG_BUF_IOERROR				35
-+#define XFS_ERRTAG_MAX					36
+diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
+index 3fecd3b..ded489a 100644
+--- a/libxfs/xfs_attr.c
++++ b/libxfs/xfs_attr.c
+@@ -1138,6 +1138,32 @@ xfs_attr_node_shrink(
+ }
  
  /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -95,5 +96,6 @@
- #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
- #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
- #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
-+#define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
++ * Mark an attribute entry INCOMPLETE and save pointers to the relevant buffers
++ * for later deletion of the entry.
++ */
++STATIC int
++xfs_attr_leaf_mark_incomplete(
++	struct xfs_da_args	*args,
++	struct xfs_da_state	*state)
++{
++	int			error;
++
++	/*
++	 * Fill in disk block numbers in the state structure
++	 * so that we can get the buffers back after we commit
++	 * several transactions in the following calls.
++	 */
++	error = xfs_attr_fillstate(state);
++	if (error)
++		return error;
++
++	/*
++	 * Mark the attribute as INCOMPLETE
++	 */
++	return xfs_attr3_leaf_setflag(args);
++}
++
++/*
+  * Remove a name from a B-tree attribute list.
+  *
+  * This will involve walking down the Btree, and may involve joining
+@@ -1168,20 +1194,7 @@ xfs_attr_node_removename(
+ 	ASSERT(blk->bp != NULL);
+ 	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+ 	if (args->rmtblkno > 0) {
+-		/*
+-		 * Fill in disk block numbers in the state structure
+-		 * so that we can get the buffers back after we commit
+-		 * several transactions in the following calls.
+-		 */
+-		error = xfs_attr_fillstate(state);
+-		if (error)
+-			goto out;
+-
+-		/*
+-		 * Mark the attribute as INCOMPLETE, then bunmapi() the
+-		 * remote value.
+-		 */
+-		error = xfs_attr3_leaf_setflag(args);
++		error = xfs_attr_leaf_mark_incomplete(args, state);
+ 		if (error)
+ 			goto out;
  
- #endif /* __XFS_ERRORTAG_H_ */
 -- 
 2.7.4
 
