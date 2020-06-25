@@ -2,138 +2,94 @@ Return-Path: <SRS0=UnAH=AG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E80F8C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 12:42:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F128CC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 13:11:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3E4B206BE
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 12:42:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593088960;
-	bh=QTKVIlJyYkq9x8igprDkk4WuBfCk37WJUWpBu7U0Lv8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=qb5xSt5Qatu6PEDVL9fG1iwQLnXah1s9eD7lIdy8Uy8v9zPxOI89g2oxyNiTFCsWr
-	 mNFeVrbKyeL/3B2ZBj2EnFhiFfiN+lSFDXdUGXZHgwmzWJymDVLXehmX3bXTFTLsMc
-	 5E+V9wN1SCvOX1/ijf/ysG/u4w/uMTSykSTf9ncQ=
+	by mail.kernel.org (Postfix) with ESMTP id C98A92072E
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 13:11:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kzbXYUu5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404518AbgFYMmj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Jun 2020 08:42:39 -0400
-Received: from mail-wm1-f66.google.com ([209.85.128.66]:36587 "EHLO
-        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404765AbgFYMmi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 08:42:38 -0400
-Received: by mail-wm1-f66.google.com with SMTP id 17so5783986wmo.1;
-        Thu, 25 Jun 2020 05:42:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=zqYYU+XzLTo4RZ3+vh2KfRtchjL+OjYySOUllgC9oo8=;
-        b=LzksH/QjS06oxtxtx5uT+9yAfGlHdc/hEVx539NjsuFbdjtaIhhKIeEXkL8BvwyDiu
-         S3JGcqI5iFYUxK/kDBstsrXSSk0h8ApAmSnbV8bp/P1wJD0we7OTMeVR29fam6gl8DTA
-         1VkUyBjkb1Xlh1sOnZcbIpqiDpBu3yyzPm+jIfU6C/NKnSLlrSthKltC9Toztn/GM3Qs
-         N7Tl3Z5gKbxriRKVdMajbvgrNDs0Up/Un9LYQHWqvsNqekUEbqY7LxefmiKV5/iovvsz
-         JOcTwzP98Z3dsnckKzLeer7zsI5/5h3UwILjQIkwmu7DrSM3g0J9fjNs+QTeb6xxt0N6
-         +JhQ==
-X-Gm-Message-State: AOAM5318DXRU55DawIgJJWlF4Y7ysqYB215iqa92uSUAJrGvFwLKRLWw
-        0nM8octfpneLYS6nqSomxlxGh19q
-X-Google-Smtp-Source: ABdhPJwrxoXQ+HCO1VVYYUvEmwFEOPYklBv2D67vfvs9fNB1wlADT0sE5tlgxNrUNZ128ZofveX60g==
-X-Received: by 2002:a1c:80c8:: with SMTP id b191mr3021699wmd.37.1593088956395;
-        Thu, 25 Jun 2020 05:42:36 -0700 (PDT)
-Received: from localhost (ip-37-188-168-3.eurotel.cz. [37.188.168.3])
-        by smtp.gmail.com with ESMTPSA id t5sm11739610wmj.37.2020.06.25.05.42.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 25 Jun 2020 05:42:35 -0700 (PDT)
-Date:   Thu, 25 Jun 2020 14:42:34 +0200
-From:   Michal Hocko <mhocko@kernel.org>
-To:     Matthew Wilcox <willy@infradead.org>
+        id S2404803AbgFYNLN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Jun 2020 09:11:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34522 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404783AbgFYNLN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 09:11:13 -0400
+Received: from casper.infradead.org (unknown [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3CDCC08C5C1;
+        Thu, 25 Jun 2020 06:11:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=lf76WPH88lH813mY9Yo8ZHZHFHxan9PWrz3Tg7MET60=; b=kzbXYUu53U2ernxrU8NemdCmxZ
+        w8ncV08dVPq7jkm2cnmqpBU10R9U4MKgzsV3vbpTA/25y2MNDYhjdSx1ozsXt6oevq61pyUP0LFlN
+        X1BMrmzYQVNWdH60xTMWVqG82GP+i/OC1pkmtsfLT7aQe54L7UFUGSlvQBNfREuI40WcjJPuruX2U
+        FTQUv6+jqMK/G0pYgB6Nl2mc7FM/HNyXAcHxnU7/kNqND9/NyZMdZHvBn6HhSWlbaOJ/mVVcQu4FW
+        0S+3ys8xvGXnZwngL2GvKy4lY/uO6CH03hVI6iEklM4HtYBx89uulHC/8zCzBs9QJcScc77VI+vS0
+        rBYHy2Bw==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1joReZ-00077i-S6; Thu, 25 Jun 2020 13:10:55 +0000
+Date:   Thu, 25 Jun 2020 14:10:55 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Michal Hocko <mhocko@kernel.org>
 Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
         linux-xfs@vger.kernel.org, dm-devel@redhat.com,
         Mikulas Patocka <mpatocka@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 1/6] mm: Replace PF_MEMALLOC_NOIO with memalloc_noio
-Message-ID: <20200625124234.GM1320@dhcp22.suse.cz>
+Subject: Re: [PATCH 6/6] mm: Add memalloc_nowait
+Message-ID: <20200625131055.GC7703@casper.infradead.org>
 References: <20200625113122.7540-1-willy@infradead.org>
- <20200625113122.7540-2-willy@infradead.org>
- <20200625122239.GJ1320@dhcp22.suse.cz>
- <20200625123418.GB7703@casper.infradead.org>
+ <20200625113122.7540-7-willy@infradead.org>
+ <20200625124017.GL1320@dhcp22.suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200625123418.GB7703@casper.infradead.org>
+In-Reply-To: <20200625124017.GL1320@dhcp22.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 25-06-20 13:34:18, Matthew Wilcox wrote:
-> On Thu, Jun 25, 2020 at 02:22:39PM +0200, Michal Hocko wrote:
-> > On Thu 25-06-20 12:31:17, Matthew Wilcox wrote:
-> > > We're short on PF_* flags, so make memalloc_noio its own bit where we
-> > > have plenty of space.
-> > 
-> > I do not mind moving that outside of the PF_* space. Unless I
-> > misremember all flags in this space were intented to be set only on the
-> > current which rules out any RMW races and therefore they can be
-> > lockless. I am not sure this holds for the bitfield you are adding this
-> > to. At least in_memstall seem to be set on external task as well. But
-> > this would require double checking. Maybe that is not really intended or
-> > just a bug.
+On Thu, Jun 25, 2020 at 02:40:17PM +0200, Michal Hocko wrote:
+> On Thu 25-06-20 12:31:22, Matthew Wilcox wrote:
+> > Similar to memalloc_noio() and memalloc_nofs(), memalloc_nowait()
+> > guarantees we will not sleep to reclaim memory.  Use it to simplify
+> > dm-bufio's allocations.
 > 
-> I was going from the comment:
-> 
->         /* Unserialized, strictly 'current' */
-> (which you can't see from the context of the diff, but is above the block)
-> 
-> The situation with ->flags is a little more ambiguous:
-> 
-> /*
->  * Only the _current_ task can read/write to tsk->flags, but other
->  * tasks can access tsk->flags in readonly mode for example
->  * with tsk_used_math (like during threaded core dumping).
->  * There is however an exception to this rule during ptrace
->  * or during fork: the ptracer task is allowed to write to the
->  * child->flags of its traced child (same goes for fork, the parent
->  * can write to the child->flags), because we're guaranteed the
->  * child is not running and in turn not changing child->flags
->  * at the same time the parent does it.
->  */
+> memalloc_nowait is a good idea! I suspect the primary usecase would be
+> vmalloc.
 
-OK, I have obviously missed that.
+That's funny.  My use case is allocating page tables in an RCU protected
+page fault handler.  Jens' use case is allocating page cache.  This one
+is a vmalloc consumer (which is also indirectly page table allocation).
 
-> but it wasn't unsafe to use the PF_ flags in the way that you were.
-> It's just crowded.
+> > @@ -877,7 +857,9 @@ static struct dm_buffer *__alloc_buffer_wait_no_callback(struct dm_bufio_client
+> >  	 */
+> >  	while (1) {
+> >  		if (dm_bufio_cache_size_latch != 1) {
+> > -			b = alloc_buffer(c, GFP_NOWAIT | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
+> > +			unsigned nowait_flag = memalloc_nowait_save();
+> > +			b = alloc_buffer(c, GFP_KERNEL | __GFP_NOMEMALLOC | __GFP_NOWARN);
+> > +			memalloc_nowait_restore(nowait_flag);
 > 
-> If in_memstall is set on other tasks, then it should be moved to the
-> PFA flags, which there are plenty of.
-> 
-> But a quick grep shows it only being read on other tasks and always
-> set on current:
-> 
-> kernel/sched/psi.c:     *flags = current->in_memstall;
-> kernel/sched/psi.c:      * in_memstall setting & accounting needs to be atomic wrt
-> kernel/sched/psi.c:     current->in_memstall = 1;
-> kernel/sched/psi.c:      * in_memstall clearing & accounting needs to be atomic wrt
-> kernel/sched/psi.c:     current->in_memstall = 0;
-> kernel/sched/psi.c:     if (task->in_memstall)
+> This looks confusing though. I am not familiar with alloc_buffer and
+> there is quite some tweaking around __GFP_NORETRY in alloc_buffer_data
+> which I do not follow but GFP_KERNEL just struck my eyes. So why cannot
+> we have 
+> 		alloc_buffer(GFP_NOWAIT | __GFP_NOMEMALLOC | __GFP_NOWARN);
 
-Have a look at cgroup_move_task. So I believe this is something to be
-fixed but independent on your change.
+Actually, I wanted to ask about the proliferation of __GFP_NOMEMALLOC
+in the block layer.  Am I right in thinking it really has no effect
+unless GFP_ATOMIC is set?  It seems like a magic flag that some driver
+developers are sprinkling around randomly, so we probably need to clarify
+the documentation on it.
 
-Feel free to add
-Acked-by: Michal Hocko <mhocko@suse.com>
-
-> kernel/sched/stats.h:           if (p->in_memstall)
-> kernel/sched/stats.h:           if (p->in_memstall)
-> kernel/sched/stats.h:   if (unlikely(p->in_iowait || p->in_memstall)) {
-> kernel/sched/stats.h:           if (p->in_memstall)
-> kernel/sched/stats.h:   if (unlikely(rq->curr->in_memstall))
-> 
-> so I think everything is fine.
-
--- 
-Michal Hocko
-SUSE Labs
+What I was trying to do was just use the memalloc_nofoo API to control
+what was going on and then the driver can just use GFP_KERNEL.  I should
+probably have completed that thought before sending the patches out.
