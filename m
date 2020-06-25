@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3FA8C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 20:52:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 486D0C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 20:54:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A20B820791
-	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 20:52:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A83F206FA
+	for <linux-xfs@archiver.kernel.org>; Thu, 25 Jun 2020 20:54:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0Fk3QosJ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FgpnhWYr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405322AbgFYUwi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 25 Jun 2020 16:52:38 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:51916 "EHLO
+        id S2405328AbgFYUyo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 25 Jun 2020 16:54:44 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:53504 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405230AbgFYUwh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 16:52:37 -0400
+        with ESMTP id S2405184AbgFYUyo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jun 2020 16:54:44 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05PKlx4U047319;
-        Thu, 25 Jun 2020 20:52:35 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05PKlx29047355;
+        Thu, 25 Jun 2020 20:54:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=SQWU5THf1dMHGKvS+QLyXkOGjRAuQ527TyOTawK4zWk=;
- b=0Fk3QosJpjOLk8xikoHFb7odBYqrzwivAOMDB3W7Ad2vpPk403nMpEA7RzeXPCUcbyin
- xu7geqTz0490ybYc6nOBnAdk5auofsETrSkRUPo4BHt/+LKvaYQiwvrXquL+ANimCr37
- pmLgA1VWu2oYjyamB0uqLCHFx0zqCuF1+JxLZ8HTo+Gq4g/Vcx/XnFKrnKBBpSYX0g5s
- HxYpXR3D3IdEG7sIgOakzr0nZFrODsYg+8dE1i2sGCm1vSKKIoH0O91dPhQIYy1lGsra
- yPoZjM6apONJTz9qmxAeVfL+egIYVmiyH3yRqei4/IyQh1pthVF2251anZkYKIhDTwOu 1A== 
+ bh=0trtjucEJanzVBGP/Cf5cIF7Dbsh/PGow8ojnogotlY=;
+ b=FgpnhWYrpnFKtWPSklVAfrkQLg0y/64LZBo8s7KhUgZ3hedRybNpaf/A39+KMf8ac/VU
+ Xl2I4vaLKCrs8wQqogLV0v8QociKI5jtqIoFYSjFk/z1SGi6aNWrLq0x9/HHfjx+Lobx
+ VHfQwfV0seM9vgJZSyeR0FrmtY4KAy4sG737s1mf8SXNgCSt++9J6VxKQtT0YMg38duc
+ C+t1lAlzHL2HfVJ1ndOOfshsZpiNPFXcpkSNWmHsD3xY8Z7/JUto53qU+XXVcCMuXwvp
+ Y82X607+tKfYmdxwM2+idBZIR2H5S19HgecMZ/71ApIOXK8ajMlMdrju8TgjBtjzzJCY 1Q== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 31uusu2t36-1
+        by aserp2120.oracle.com with ESMTP id 31uusu2tbr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 25 Jun 2020 20:52:35 +0000
+        Thu, 25 Jun 2020 20:54:41 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05PKmHwd070819;
-        Thu, 25 Jun 2020 20:52:34 GMT
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05PKmH8E070850;
+        Thu, 25 Jun 2020 20:52:41 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 31uur9k9bu-1
+        by userp3020.oracle.com with ESMTP id 31uur9k9fj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 25 Jun 2020 20:52:34 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05PKqX3a025547;
-        Thu, 25 Jun 2020 20:52:33 GMT
+        Thu, 25 Jun 2020 20:52:40 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05PKqeZW025578;
+        Thu, 25 Jun 2020 20:52:40 GMT
 Received: from localhost (/10.159.246.176)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 25 Jun 2020 20:52:33 +0000
-Subject: [PATCH 1/2] xfs_repair: complain about ag header crc errors
+        with ESMTP ; Thu, 25 Jun 2020 20:52:39 +0000
+Subject: [PATCH 2/2] xfs_repair: try to fill the AGFL before we fix the
+ freelist
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 25 Jun 2020 13:52:32 -0700
-Message-ID: <159311835284.1065505.8957820680195453723.stgit@magnolia>
+Date:   Thu, 25 Jun 2020 13:52:39 -0700
+Message-ID: <159311835912.1065505.9943855193663354771.stgit@magnolia>
 In-Reply-To: <159311834667.1065505.8056215626287130285.stgit@magnolia>
 References: <159311834667.1065505.8056215626287130285.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -81,45 +82,171 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Repair doesn't complain about crc errors in the AG headers, and it
-should.  Otherwise give the admin the wrong impression about the
-state of the filesystem after a nomodify check.
+In commit 9851fd79bfb1, we added a slight amount of slack to the free
+space btrees being reconstructed so that the initial fix_freelist call
+(which is run against a totally empty AGFL) would never have to split
+either free space btree in order to populate the free list.
 
+The new btree bulk loading code in xfs_repair can re-create this
+situation because it can set the slack values to zero if the filesystem
+is very full.  However, these days repair has the infrastructure needed
+to ensure that overestimations of the btree block counts end up on the
+AGFL or get freed back into the filesystem at the end of phase 5.
+
+Fix this problem by reserving blocks to a separate AGFL block
+reservation, and checking that between this new reservation and any
+overages in the bnobt/cntbt fakeroots, we have enough blocks sitting
+around to populate the AGFL with the minimum number of blocks it needs
+to handle a split in the bno/cnt/rmap btrees.
+
+Note that we reserve blocks for the new bnobt/cntbt/AGFL at the very end
+of the reservation steps in phase 5, so the extra allocation should not
+cause repair to fail if it can't find blocks for btrees.
+
+Fixes: 9851fd79bfb1 ("repair: AGFL rebuild fails if btree split required")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/scan.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ repair/agbtree.c |   78 +++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 68 insertions(+), 10 deletions(-)
 
 
-diff --git a/repair/scan.c b/repair/scan.c
-index 505cfc53..42b299f7 100644
---- a/repair/scan.c
-+++ b/repair/scan.c
-@@ -2441,6 +2441,8 @@ scan_ag(
- 		objname = _("root superblock");
- 		goto out_free_sb;
- 	}
-+	if (sbbuf->b_error == -EFSBADCRC)
-+		do_warn(_("superblock has bad CRC for ag %d\n"), agno);
- 	libxfs_sb_from_disk(sb, sbbuf->b_addr);
+diff --git a/repair/agbtree.c b/repair/agbtree.c
+index 339b1489..7a4f316c 100644
+--- a/repair/agbtree.c
++++ b/repair/agbtree.c
+@@ -65,8 +65,8 @@ consume_freespace(
+ }
  
- 	error = salvage_buffer(mp->m_dev,
-@@ -2450,6 +2452,8 @@ scan_ag(
- 		objname = _("agf block");
- 		goto out_free_sbbuf;
- 	}
-+	if (agfbuf->b_error == -EFSBADCRC)
-+		do_warn(_("agf has bad CRC for ag %d\n"), agno);
- 	agf = agfbuf->b_addr;
+ /* Reserve blocks for the new per-AG structures. */
+-static void
+-reserve_btblocks(
++static uint32_t
++reserve_agblocks(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	struct bt_rebuild	*btr,
+@@ -86,8 +86,7 @@ reserve_btblocks(
+ 		 */
+ 		ext_ptr = findfirst_bcnt_extent(agno);
+ 		if (!ext_ptr)
+-			do_error(
+-_("error - not enough free space in filesystem\n"));
++			break;
  
- 	error = salvage_buffer(mp->m_dev,
-@@ -2459,6 +2463,8 @@ scan_ag(
- 		objname = _("agi block");
- 		goto out_free_agfbuf;
- 	}
-+	if (agibuf->b_error == -EFSBADCRC)
-+		do_warn(_("agi has bad CRC for ag %d\n"), agno);
- 	agi = agibuf->b_addr;
+ 		/* Use up the extent we've got. */
+ 		len = min(ext_ptr->ex_blockcount, nr_blocks - blocks_allocated);
+@@ -110,6 +109,23 @@ _("error - not enough free space in filesystem\n"));
+ 	fprintf(stderr, "blocks_allocated = %d\n",
+ 		blocks_allocated);
+ #endif
++	return blocks_allocated;
++}
++
++static inline void
++reserve_btblocks(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	struct bt_rebuild	*btr,
++	uint32_t		nr_blocks)
++{
++	uint32_t		got;
++
++	got = reserve_agblocks(mp, agno, btr, nr_blocks);
++	if (got != nr_blocks)
++		do_error(
++	_("error - not enough free space in filesystem, AG %u\n"),
++				agno);
+ }
  
- 	/* fix up bad ag headers */
+ /* Feed one of the new btree blocks to the bulk loader. */
+@@ -219,8 +235,13 @@ init_freespace_cursors(
+ {
+ 	unsigned int		bno_blocks;
+ 	unsigned int		cnt_blocks;
++	unsigned int		min_agfl_len;
++	bool			fill_agfl = true;
+ 	int			error;
+ 
++	*extra_blocks = 0;
++	min_agfl_len = libxfs_alloc_min_freelist(sc->mp, NULL);
++
+ 	init_rebuild(sc, &XFS_RMAP_OINFO_AG, free_space, btr_bno);
+ 	init_rebuild(sc, &XFS_RMAP_OINFO_AG, free_space, btr_cnt);
+ 
+@@ -244,6 +265,9 @@ init_freespace_cursors(
+ 	 */
+ 	do {
+ 		unsigned int	num_freeblocks;
++		unsigned int	overflow = 0;
++		unsigned int	got;
++		int64_t		wanted;
+ 
+ 		bno_blocks = btr_bno->bload.nr_blocks;
+ 		cnt_blocks = btr_cnt->bload.nr_blocks;
+@@ -262,25 +286,59 @@ _("Unable to compute free space by block btree geometry, error %d.\n"), -error);
+ 			do_error(
+ _("Unable to compute free space by length btree geometry, error %d.\n"), -error);
+ 
++		if (bno_blocks > btr_bno->bload.nr_blocks)
++			overflow += bno_blocks - btr_bno->bload.nr_blocks;
++		if (cnt_blocks > btr_cnt->bload.nr_blocks)
++			overflow += cnt_blocks - btr_cnt->bload.nr_blocks;
++		if (overflow >= min_agfl_len)
++			fill_agfl = false;
++
+ 		/* We don't need any more blocks, so we're done. */
+ 		if (bno_blocks >= btr_bno->bload.nr_blocks &&
+-		    cnt_blocks >= btr_cnt->bload.nr_blocks)
++		    cnt_blocks >= btr_cnt->bload.nr_blocks &&
++		    !fill_agfl) {
++			*extra_blocks = overflow;
+ 			break;
++		}
+ 
+ 		/* Allocate however many more blocks we need this time. */
+-		if (bno_blocks < btr_bno->bload.nr_blocks)
++		if (bno_blocks < btr_bno->bload.nr_blocks) {
+ 			reserve_btblocks(sc->mp, agno, btr_bno,
+ 					btr_bno->bload.nr_blocks - bno_blocks);
+-		if (cnt_blocks < btr_cnt->bload.nr_blocks)
++			bno_blocks = btr_bno->bload.nr_blocks;
++		}
++		if (cnt_blocks < btr_cnt->bload.nr_blocks) {
+ 			reserve_btblocks(sc->mp, agno, btr_cnt,
+ 					btr_cnt->bload.nr_blocks - cnt_blocks);
++			cnt_blocks = btr_cnt->bload.nr_blocks;
++		}
++
++		/*
++		 * Now try to fill the bnobt/cntbt cursors with extra blocks to
++		 * populate the AGFL.  If we don't get all the blocks we want,
++		 * stop trying to fill the AGFL.
++		 */
++		wanted = (int64_t)btr_bno->bload.nr_blocks +
++				(min_agfl_len / 2) - bno_blocks;
++		if (wanted > 0 && fill_agfl) {
++			got = reserve_agblocks(sc->mp, agno, btr_bno, wanted);
++			if (wanted > got)
++				fill_agfl = false;
++			btr_bno->bload.nr_blocks += got;
++		}
++
++		wanted = (int64_t)btr_cnt->bload.nr_blocks +
++				(min_agfl_len / 2) - cnt_blocks;
++		if (wanted > 0 && fill_agfl) {
++			got = reserve_agblocks(sc->mp, agno, btr_cnt, wanted);
++			if (wanted > got)
++				fill_agfl = false;
++			btr_cnt->bload.nr_blocks += got;
++		}
+ 
+ 		/* Ok, now how many free space records do we have? */
+ 		*nr_extents = count_bno_extents_blocks(agno, &num_freeblocks);
+ 	} while (1);
+-
+-	*extra_blocks = (bno_blocks - btr_bno->bload.nr_blocks) +
+-			(cnt_blocks - btr_cnt->bload.nr_blocks);
+ }
+ 
+ /* Rebuild the free space btrees. */
 
