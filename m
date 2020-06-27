@@ -2,136 +2,118 @@ Return-Path: <SRS0=5xP4=AI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B13C9C433E0
-	for <linux-xfs@archiver.kernel.org>; Sat, 27 Jun 2020 09:33:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7443EC433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 27 Jun 2020 13:09:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8638920768
-	for <linux-xfs@archiver.kernel.org>; Sat, 27 Jun 2020 09:33:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47E0121548
+	for <linux-xfs@archiver.kernel.org>; Sat, 27 Jun 2020 13:09:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dLwG+3iU"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ecaF/nSE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726177AbgF0JdT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 27 Jun 2020 05:33:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49400 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726160AbgF0JdT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Jun 2020 05:33:19 -0400
-Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26BA1C03E979;
-        Sat, 27 Jun 2020 02:33:19 -0700 (PDT)
-Received: by mail-io1-xd44.google.com with SMTP id i25so12364987iog.0;
-        Sat, 27 Jun 2020 02:33:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ffLQuJygGbq4RaYKN898b4cD/qHH2O6tm/Zb6p2WV+4=;
-        b=dLwG+3iUi4OZtTX3/qfZ9iPPiOZsMB5ZU3D7Cqg4ZmmBAkoL/jgX3MlqDeKCkj7VGv
-         BOJ+Zrfw3AL2ECEaU8neH+nTTC7hIXDBOD+Mt0FE5+Gfc12cbAGQD+hpllFvb6EEYXO6
-         ayr5LNsBY9ntu78FTOgPh6uRn6K2jFonK2IDRikVy/hbj1358XggNyM2bqAkaNO57nmI
-         BwVlDNjphmD7dQuaV9bKlPLapFGE0hgyunvtO6IhtNImCPBVGrWgMl1lnyZXOWM2eQo4
-         uYmS1nRErBrH455hElDvQ1o8XS0C1DvLBtTz/Ld9MG0ugFqa/tIjXjduxBuYpfQqwzSJ
-         t1uQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ffLQuJygGbq4RaYKN898b4cD/qHH2O6tm/Zb6p2WV+4=;
-        b=pR/5kGEZhzaaETTHPmQ20VUQQtBgdXZ7c54DydVsypnq80nKXOJAS0npCusn93SOwV
-         qi/nYYQkmDpPV3b8CSC0/KwU3jhAAcs7HoavZoo8e//t6XPjOwsaFVmI9BmG8czshjO3
-         xJYsZrhnih19HyEiMajD5xGfb4C40MnDVtzIADyffyzJrBXhGl8SEQ9HtpVL5gWDkwih
-         p6v2ZISXpYHLSK2IVdojpldmMLjtiWfK2td0eYRkHqh0KjM8Pa6VDo6m2RMi7iwX7ke4
-         QyBv225VUszqSAluWcIDQyoTDQRsjN0ZYAF9MtMFQLfNNAbrZF8woMpOjthfj2B6LoFH
-         mY/A==
-X-Gm-Message-State: AOAM532z3Fi9FrflLSgLADXQeQwSPcuQjZP5gYT4tkoyx7c+aXDxQbXi
-        zO1X6fLh4DjJhjnfIgsH3KwuXShseQWa7gsTCNZFHgHg
-X-Google-Smtp-Source: ABdhPJwOotjqrBwXrGGAK19+x5rTZhFfEmNnDKCdzD15DVR1Uj4IPHoQ24FfPMq47bdkWhRaLtQgSX7481+BpJyrkQs=
-X-Received: by 2002:a6b:780d:: with SMTP id j13mr7883984iom.66.1593250398101;
- Sat, 27 Jun 2020 02:33:18 -0700 (PDT)
+        id S1726576AbgF0NJZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 27 Jun 2020 09:09:25 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:26633 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726394AbgF0NJY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Jun 2020 09:09:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593263360;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=gocYarnZ2JlHVc9RG/zHaX044tbXdzru5bTv0I6/CXM=;
+        b=ecaF/nSEbz6rGsfqONBqtlz5UGzGHvcB/U/B36awRbWxlwttGBxIKvfFzV+o807ZRf0QIJ
+        OW/cd9LMZYw3P6iZxHK55PAYGqHHjT9aEwQNUtPYqIpvCnH8zoNnd/Ue2p6rCJH2rXYZOf
+        cxeh6JdjGL/StrprSUXkB7VmIY4nIpw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-263-qk0xhzsyPy-G0Q7G_J2UvQ-1; Sat, 27 Jun 2020 09:09:18 -0400
+X-MC-Unique: qk0xhzsyPy-G0Q7G_J2UvQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BDF59804001;
+        Sat, 27 Jun 2020 13:09:16 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3758B2B4AC;
+        Sat, 27 Jun 2020 13:09:13 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 05RD9CXa015401;
+        Sat, 27 Jun 2020 09:09:12 -0400
+Received: from localhost (mpatocka@localhost)
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 05RD99e3015395;
+        Sat, 27 Jun 2020 09:09:10 -0400
+X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
+Date:   Sat, 27 Jun 2020 09:09:09 -0400 (EDT)
+From:   Mikulas Patocka <mpatocka@redhat.com>
+X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
+To:     Dave Chinner <david@fromorbit.com>
+cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        linux-xfs@vger.kernel.org, dm-devel@redhat.com,
+        Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
+Subject: Re: [PATCH 0/6] Overhaul memalloc_no*
+In-Reply-To: <20200626230847.GI2005@dread.disaster.area>
+Message-ID: <alpine.LRH.2.02.2006270848540.14350@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20200625113122.7540-1-willy@infradead.org> <alpine.LRH.2.02.2006261058250.11899@file01.intranet.prod.int.rdu2.redhat.com> <20200626230847.GI2005@dread.disaster.area>
+User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
 MIME-Version: 1.0
-References: <1593011142-10209-1-git-send-email-laoar.shao@gmail.com> <20200626090250.GC30103@infradead.org>
-In-Reply-To: <20200626090250.GC30103@infradead.org>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Sat, 27 Jun 2020 17:32:42 +0800
-Message-ID: <CALOAHbD+pwzq6Gs06mMXQdNo8zPZWk2OD_q199uyH8jOAyd77A@mail.gmail.com>
-Subject: Re: [PATCH v2] xfs: reintroduce PF_FSTRANS for transaction
- reservation recursion protection
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Michal Hocko <mhocko@kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        =?UTF-8?Q?Holger_Hoffst=C3=A4tte?= <holger@applied-asynchrony.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux MM <linux-mm@kvack.org>,
-        Matthew Wilcox <willy@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jun 26, 2020 at 5:02 PM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Wed, Jun 24, 2020 at 11:05:42AM -0400, Yafang Shao wrote:
-> > PF_FSTRANS which is used to avoid transaction reservation recursion, is
-> > dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
-> > PF_MEMALLOC_NOFS") and commit 7dea19f9ee63 ("mm: introduce
-> > memalloc_nofs_{save,restore} API") and replaced by PF_MEMALLOC_NOFS which
-> > means to avoid filesystem reclaim recursion. That change is subtle.
-> > Let's take the exmple of the check of WARN_ON_ONCE(current->flags &
-> > PF_MEMALLOC_NOFS)) to explain why this abstraction from PF_FSTRANS to
-> > PF_MEMALLOC_NOFS is not proper.
-> >
-> > Bellow comment is quoted from Dave,
-> > > It wasn't for memory allocation recursion protection in XFS - it was for
-> > > transaction reservation recursion protection by something trying to flush
-> > > data pages while holding a transaction reservation. Doing
-> > > this could deadlock the journal because the existing reservation
-> > > could prevent the nested reservation for being able to reserve space
-> > > in the journal and that is a self-deadlock vector.
-> > > IOWs, this check is not protecting against memory reclaim recursion
-> > > bugs at all (that's the previous check [1]). This check is
-> > > protecting against the filesystem calling writepages directly from a
-> > > context where it can self-deadlock.
-> > > So what we are seeing here is that the PF_FSTRANS ->
-> > > PF_MEMALLOC_NOFS abstraction lost all the actual useful information
-> > > about what type of error this check was protecting against.
-> >
-> > [1]. Bellow check is to avoid memory reclaim recursion.
-> > if (WARN_ON_ONCE((current->flags & (PF_MEMALLOC|PF_KSWAPD)) ==
-> >       PF_MEMALLOC))
-> >       goto redirty;
-> >
-> > Suggested-by: Dave Chinner <david@fromorbit.com>
-> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> > Cc: Michal Hocko <mhocko@kernel.org>
->
-> This generally looks sane, but:
->
->  - adds a bunch of overly long lines for no good reason
->  - doesn't really hide this behind a useful informatin, e.g. a
->    xfs_trans_context_start/end helpers for the normal case, plus
->    an extra helper with kswapd in the name for that case.
->
 
-Good point. I will try to think about it.
 
-> The latter should also help to isolate a bit against the mm-area
-> changes to the memalloc flags proposed.
+On Sat, 27 Jun 2020, Dave Chinner wrote:
 
-I have read the patchset from Matthew.  Agree with you that we should
-do it the same way.
+> On Fri, Jun 26, 2020 at 11:02:19AM -0400, Mikulas Patocka wrote:
+> > Hi
+> > 
+> > I suggest to join memalloc_noio and memalloc_nofs into just one flag that 
+> > prevents both filesystem recursion and i/o recursion.
+> > 
+> > Note that any I/O can recurse into a filesystem via the loop device, thus 
+> > it doesn't make much sense to have a context where PF_MEMALLOC_NOFS is set 
+> > and PF_MEMALLOC_NOIO is not set.
+> 
+> Correct me if I'm wrong, but I think that will prevent swapping from
+> GFP_NOFS memory reclaim contexts.
 
-[adding  Matthew to cc]
+Yes.
 
--- 
-Thanks
-Yafang
+> IOWs, this will substantially
+> change the behaviour of the memory reclaim system under sustained
+> GFP_NOFS memory pressure. Sustained GFP_NOFS memory pressure is
+> quite common, so I really don't think we want to telling memory
+> reclaim "you can't do IO at all" when all we are trying to do is
+> prevent recursion back into the same filesystem.
+
+So, we can define __GFP_ONLY_SWAP_IO and __GFP_IO.
+
+> Given that the loop device IO path already operates under
+> memalloc_noio context, (i.e. the recursion restriction is applied in
+> only the context that needs is) I see no reason for making that a
+> global reclaim limitation....
+
+I think this is a problem.
+
+Suppose that a filesystem does GFP_NOFS allocation, the allocation 
+triggers an IO and waits for it to finish, the loop device driver 
+redirects the IO to the same filesystem that did the GFP_NOFS allocation.
+
+I saw this deadlock in the past in the dm-bufio subsystem - see the commit 
+9d28eb12447ee08bb5d1e8bb3195cf20e1ecd1c0 that fixed it.
+
+Other subsystems that do IO in GFP_NOFS context may deadlock just like 
+bufio.
+
+Mikulas
+
