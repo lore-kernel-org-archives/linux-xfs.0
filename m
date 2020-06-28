@@ -2,119 +2,171 @@ Return-Path: <SRS0=afpP=AJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4285C433DF
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Jun 2020 18:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34BF2C433DF
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Jun 2020 22:37:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E20020702
-	for <linux-xfs@archiver.kernel.org>; Sun, 28 Jun 2020 18:22:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 001F320672
+	for <linux-xfs@archiver.kernel.org>; Sun, 28 Jun 2020 22:37:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0VwWWjk6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726636AbgF1SWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 28 Jun 2020 14:22:07 -0400
-Received: from sandeen.net ([63.231.237.45]:45810 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726622AbgF1SWH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 28 Jun 2020 14:22:07 -0400
-Received: from [10.0.0.11] (liberator [10.0.0.11])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 028252AEC;
-        Sun, 28 Jun 2020 13:22:05 -0500 (CDT)
-Subject: Re: Separate user- and project- quota ?
-To:     Diego Zuccato <diego.zuccato@unibo.it>, linux-xfs@vger.kernel.org
-References: <93882c1f-f26e-96c7-0a60-68fc9381e36c@unibo.it>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <2c0bfee3-01cc-65cf-2be1-1af9432a18be@sandeen.net>
-Date:   Sun, 28 Jun 2020 13:22:05 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.9.0
+        id S1726205AbgF1WhN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 28 Jun 2020 18:37:13 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:60860 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726189AbgF1WhN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Jun 2020 18:37:13 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05SMTcdC081425;
+        Sun, 28 Jun 2020 22:37:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
+ bh=nMEyD8Y7ig3QtxqXtj+sHSTf4FnF09pwORVkx6Vgt+4=;
+ b=0VwWWjk6BNTgVK676Hj55AKzuckmau9tkDnKZi716/5jQWUoIlniTQDB8KQHcVAQIFGU
+ /kpdHTdjpKYhxoTq2fSwAnA/ic/tKGMtc5gLGUIawet6snp/QB1UhZhqR9eyXmzyc0kC
+ 3iR+fxsdoTMEqtV4pUaj3QtcEUiBIag1KdkfoIzmSKmTVMGo0U2COROVhPWMRz+4FFuR
+ zuzPM9wDjAe3ZuLdf6i6uaZssk7qLgeWGtKjWxbgAUPfg0gNq3ygmA0HwKsJeSIIz71e
+ kIK/4d5bGtmfMcWfd/76dbDFPR19dKPp3RwXMPgrzN6B8dCfW/TLS2EAlkaqokjbFl7s sQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 31wxrmukh0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sun, 28 Jun 2020 22:37:07 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05SMYRvl057224;
+        Sun, 28 Jun 2020 22:37:07 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 31xfvpx7wp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 28 Jun 2020 22:37:07 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05SMb09M026927;
+        Sun, 28 Jun 2020 22:37:00 GMT
+Received: from localhost (/10.159.142.59)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 28 Jun 2020 22:37:00 +0000
+Date:   Sun, 28 Jun 2020 15:36:59 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Edwin =?iso-8859-1?B?VPZy9ms=?= <edwin@etorok.net>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 0/9] xfs: reflink cleanups
+Message-ID: <20200628223659.GQ7606@magnolia>
+References: <159304785928.874036.4735877085735285950.stgit@magnolia>
+ <69dc29c4d0f3e80b4a8c8dfc559cbdd5ebce1428.camel@etorok.net>
 MIME-Version: 1.0
-In-Reply-To: <93882c1f-f26e-96c7-0a60-68fc9381e36c@unibo.it>
-Content-Type:   text/plain; charset=US-ASCII
-Content-Language: en-US
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <69dc29c4d0f3e80b4a8c8dfc559cbdd5ebce1428.camel@etorok.net>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9666 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0 spamscore=0
+ phishscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006280169
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9666 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+ priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
+ malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
+ lowpriorityscore=0 suspectscore=1 spamscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006280168
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/26/20 5:58 AM, Diego Zuccato wrote:
-> Hello all.
+On Sun, Jun 28, 2020 at 01:06:08PM +0100, Edwin Török wrote:
+> On Wed, 2020-06-24 at 18:17 -0700, Darrick J. Wong wrote:
+> > Mr. Torok: Could you try applying these patches to a recent kernel to
+> > see if they fix the fs crash problems you were seeing with
+> > duperemove,
+> > please?
 > 
-> I'd need to have separate quota for users and projects on the same
-> filesystem.
-> I currently have /home/PERSONALE and /home/STUDENTI where homes gets
-> automatically created. I'd need to have /home/software/prjN directories
-> with independent quotas.
+> Hi,
 > 
-> What I've seen is that if any user creates a file in prjN directory,
-> that file is counted twice: both in user's and project's quota.
+> Thanks for the fix.
 > 
-> Am I getting something wrong? Missing an option? Can it be done?
+> I've tested commit e812e6bd89dc6489ca924756635fb81855091700 (reflink-
+> cleanups_2020-06-24) with my original test, and duperemove has now
+> finished successfully:
 > 
-> TIA.
+> [...]
+> Comparison of extent info shows a net change in shared extents of:
+> 237116676
+> 
+> There were some hung tasks reported in dmesg, but they recovered
+> eventually:
+> [32142.324709] INFO: task pool:5190 blocked for more than 120 seconds.
+> [32504.821571] INFO: task pool:5191 blocked for more than 120 seconds.
+> [32625.653640] INFO: task pool:5191 blocked for more than 241 seconds.
+> [32746.485671] INFO: task pool:5191 blocked for more than 362 seconds.
+> [32867.318072] INFO: task pool:5191 blocked for more than 483 seconds.
+> [34196.472677] INFO: task pool:5180 blocked for more than 120 seconds.
+> [34317.304542] INFO: task pool:5180 blocked for more than 241 seconds.
+> [34317.304627] INFO: task pool:5195 blocked for more than 120 seconds.
+> [34438.136740] INFO: task pool:5180 blocked for more than 362 seconds.
+> [34438.136816] INFO: task pool:5195 blocked for more than 241 seconds.
+> 
+> The blocked tasks were alternating between these 2 stacktraces:
+> [32142.324715] Call Trace:
+> [32142.324721]  __schedule+0x2d3/0x770
+> [32142.324722]  schedule+0x55/0xc0
+> [32142.324724]  rwsem_down_read_slowpath+0x16c/0x4a0
+> [32142.324726]  ? __wake_up_common_lock+0x8a/0xc0
+> [32142.324750]  ? xfs_vn_fiemap+0x32/0x80 [xfs]
+> [32142.324752]  down_read+0x85/0xa0
+> [32142.324769]  xfs_ilock+0x8a/0x100 [xfs]
+> [32142.324784]  xfs_vn_fiemap+0x32/0x80 [xfs]
+> [32142.324785]  do_vfs_ioctl+0xef/0x680
+> [32142.324787]  ksys_ioctl+0x73/0xd0
+> [32142.324788]  __x64_sys_ioctl+0x1a/0x20
+> [32142.324789]  do_syscall_64+0x49/0xc0
+> [32142.324790]  entry_SYSCALL_64_after_hwframe+0x44/0xa
+> 
+> [32504.821577] Call Trace:
+> [32504.821583]  __schedule+0x2d3/0x770
+> [32504.821584]  schedule+0x55/0xc0
+> [32504.821587]  rwsem_down_write_slowpath+0x244/0x4d0
+> [32504.821588]  down_write+0x41/0x50
+> [32504.821610]  xfs_ilock2_io_mmap+0xc8/0x230 [xfs]
+> [32504.821628]  ? xfs_reflink_remap_blocks+0x11f/0x2a0 [xfs]
+> [32504.821643]  xfs_reflink_remap_prep+0x51/0x1f0 [xfs]
+> [32504.821660]  xfs_file_remap_range+0xbe/0x2f0 [xfs]
+> [32504.821662]  ? security_capable+0x3d/0x60
+> [32504.821664]  vfs_dedupe_file_range_one+0x12d/0x150
+> [32504.821665]  vfs_dedupe_file_range+0x156/0x1e0
+> [32504.821666]  do_vfs_ioctl+0x4a6/0x680
+> [32504.821667]  ksys_ioctl+0x73/0xd0
+> [32504.821668]  __x64_sys_ioctl+0x1a/0x20
+> [32504.821669]  do_syscall_64+0x49/0xc0
+> [32504.821670]  entry_SYSCALL_64_after_hwframe+0x44/0xa
+> 
+> Looking at /proc/$(pidof duperemove)/fd it had ~80 files open at one
+> point, which causes a lot of seeking on a HDD if it was trying to
+> dedupe them all at once so I'm not too worried about these hung tasks.
+> 
+> Running an xfs_repair after the duperemove finished showed no errors.
+> 
+> > 
+> > v2: various cleanups suggested by Brian Foster
+> > 
+> > If you're going to start using this mess, you probably ought to just
+> > pull from my git trees, which are linked below.
+> > 
+> > This is an extraordinary way to destroy everything.  Enjoy!
+> 
+> To be safe I've created an LVM snapshot before trying it.
 
-I'm not certain, but I don't think there is any sort of hierarchy or
-priority among the 3 quota types on a given filesystem.
+Yay!  Thank you for testing this out!  Sorry it broke in the first
+place, though. :/
 
-In the same way that if you have user & group quotas active, a file
-in a user:group pair would count against user and group limits, I'm
-fairly certain that the same behavior applies to user & project quotas.
+--D
 
-I think what you're asking is whether a file in a project quota directory
-can avoid user quota accounting, and I'm pretty sure the answer is no.
-
-I think you'll be limited by the first quota limit that gets reached.
-
-The way around this would be to make /home/software/ a separate filesystem
-with only project quotas active.
-
-(Apologies for not digging into the code to be certain, but from what
-you've seen and from what I think I know, the above is my best guess.)
-
--Eric
+> Best regards,
+> --Edwin
+> 
