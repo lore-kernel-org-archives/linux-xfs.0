@@ -2,78 +2,94 @@ Return-Path: <SRS0=2z4t=AK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FA12C433E1
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Jun 2020 19:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EDC7C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Jun 2020 19:08:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EAAE6206E2
-	for <linux-xfs@archiver.kernel.org>; Mon, 29 Jun 2020 19:08:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 798D7206E2
+	for <linux-xfs@archiver.kernel.org>; Mon, 29 Jun 2020 19:08:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OTvKQIU8"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FK5qFAeN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730827AbgF2TIB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Jun 2020 15:08:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42554 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730826AbgF2THn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jun 2020 15:07:43 -0400
-Received: from casper.infradead.org (unknown [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50862C00E3FB;
-        Mon, 29 Jun 2020 05:18:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=IEJE4pzTKwBckHnN8MJnYUJtj55RnUgeieprz/ielos=; b=OTvKQIU8NCpuynReFPzOX7sxPG
-        BTVSLs55stmmHraBnRi26uem12+KaQj+V1eI4nr9kOJ5204WgoR9TEDgeWykyEJEGueWoT6zz5Lyn
-        JyMjdjzxZuirLVi32k2alVYtkO02n8ePgQVbFBstHngo7UtOTcHEWnd01Xa0KUNi7R5ILAv29WWix
-        tUNoRbV17Am92l88NVeSasyGJGdEcZ5maoj/2ZG1Jln2bvXxkxbcWyGOMifdiAetgP2Q5beo1uiI6
-        qdSwFTgXdx9bahX+TOjD8VzRMT30ZHxxZY9z+GPv0FVIiW1r26VCh5KcPfDwcqQWEqgWK0thaROa6
-        a2mxmwPQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jpsjo-00026M-RY; Mon, 29 Jun 2020 12:18:16 +0000
-Date:   Mon, 29 Jun 2020 13:18:16 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Mike Rapoport <rppt@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, dm-devel@redhat.com,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 6/6] mm: Add memalloc_nowait
-Message-ID: <20200629121816.GC25523@casper.infradead.org>
-References: <20200625113122.7540-1-willy@infradead.org>
- <20200625113122.7540-7-willy@infradead.org>
- <20200629050851.GC1492837@kernel.org>
+        id S1728930AbgF2TIj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Jun 2020 15:08:39 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:39741 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1730880AbgF2TI0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jun 2020 15:08:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593457704;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=n2qVe7QVtMWlsu3tW293XYJBZ3r5SYGfqQyhGd9NB2s=;
+        b=FK5qFAeNANqld3bC3idPx5R9BJwMfVKnx2X3Kc4DmkwoY69uGZZ1wLqeKkU80xjjjmdYVT
+        KpLrly0jEJXPI9ARJpVlPnKPW4gytpbKOaDKlKt6Jerj5jhlMqh8+MvzLcu/v9WMeuAQG9
+        Dm3j4OWcgHLOSegfjevVeo7NWznJh5w=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-240-L3fpmOSlM7CetVm3iyl5YQ-1; Mon, 29 Jun 2020 15:08:13 -0400
+X-MC-Unique: L3fpmOSlM7CetVm3iyl5YQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B3B1210059A3;
+        Mon, 29 Jun 2020 19:08:11 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 074F960BF3;
+        Mon, 29 Jun 2020 19:08:10 +0000 (UTC)
+From:   Eric Sandeen <sandeen@redhat.com>
+To:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Jonathan Corbet <corbet@lwn.net>
+Cc:     cgroups@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] doc: cgroup: add f2fs and xfs to supported list for writeback
+Message-ID: <c8271324-9132-388c-5242-d7699f011892@redhat.com>
+Date:   Mon, 29 Jun 2020 14:08:09 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200629050851.GC1492837@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jun 29, 2020 at 08:08:51AM +0300, Mike Rapoport wrote:
-> > @@ -886,8 +868,12 @@ static struct dm_buffer *__alloc_buffer_wait_no_callback(struct dm_bufio_client
-> >  			return NULL;
-> >  
-> >  		if (dm_bufio_cache_size_latch != 1 && !tried_noio_alloc) {
-> > +			unsigned noio_flag;
-> > +
-> >  			dm_bufio_unlock(c);
-> > -			b = alloc_buffer(c, GFP_NOIO | __GFP_NORETRY | __GFP_NOMEMALLOC | __GFP_NOWARN);
-> > +			noio_flag = memalloc_noio_save();
-> 
-> I've read the series twice and I'm still missing the definition of
-> memalloc_noio_save().
-> 
-> And also it would be nice to have a paragraph about it in
-> Documentation/core-api/memory-allocation.rst
+f2fs and xfs have both added support for cgroup writeback:
 
-Documentation/core-api/gfp_mask-from-fs-io.rst:``memalloc_nofs_save``, ``memalloc_nofs_restore`` respectively ``memalloc_noio_save``,
-Documentation/core-api/gfp_mask-from-fs-io.rst:   :functions: memalloc_noio_save memalloc_noio_restore
-Documentation/core-api/gfp_mask-from-fs-io.rst:allows nesting so it is safe to call ``memalloc_noio_save`` or
+578c647 f2fs: implement cgroup writeback support
+adfb5fb xfs: implement cgroup aware writeback
+
+so add them to the supported list in the docs.
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+TBH I wonder about the wisdom of having this detail in
+the doc, as it apparently gets missed quite often ...
+
+diff --git a/Documentation/admin-guide/cgroup-v2.rst b/Documentation/admin-guide/cgroup-v2.rst
+index ce3e05e..4f82afa 100644
+--- a/Documentation/admin-guide/cgroup-v2.rst
++++ b/Documentation/admin-guide/cgroup-v2.rst
+@@ -1684,9 +1684,9 @@ per-cgroup dirty memory states are examined and the more restrictive
+ of the two is enforced.
+ 
+ cgroup writeback requires explicit support from the underlying
+-filesystem.  Currently, cgroup writeback is implemented on ext2, ext4
+-and btrfs.  On other filesystems, all writeback IOs are attributed to
+-the root cgroup.
++filesystem.  Currently, cgroup writeback is implemented on ext2, ext4,
++btrfs, f2fs, and xfs.  On other filesystems, all writeback IOs are 
++attributed to the root cgroup.
+ 
+ There are inherent differences in memory and writeback management
+ which affects how cgroup ownership is tracked.  Memory is tracked per
 
