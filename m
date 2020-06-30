@@ -2,114 +2,115 @@ Return-Path: <SRS0=3PXQ=AL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76682C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 13:59:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF37C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 15:23:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E995207E8
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 13:59:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A53B020663
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 15:23:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NLczaazk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388245AbgF3N7h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Jun 2020 09:59:37 -0400
-Received: from sandeen.net ([63.231.237.45]:38348 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388215AbgF3N7g (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 30 Jun 2020 09:59:36 -0400
-Received: from [10.0.0.11] (liberator [10.0.0.11])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9E5AB4CB;
-        Tue, 30 Jun 2020 08:59:31 -0500 (CDT)
-Subject: Re: [PATCH] doc: cgroup: add f2fs and xfs to supported list for
- writeback
-To:     Christoph Hellwig <hch@infradead.org>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net,
-        linux-xfs <linux-xfs@vger.kernel.org>
-References: <c8271324-9132-388c-5242-d7699f011892@redhat.com>
- <20200630054217.GA27221@infradead.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <59265a9d-ee0f-4432-3f86-00d076aeb8e8@sandeen.net>
-Date:   Tue, 30 Jun 2020 08:59:34 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.9.0
+        id S2389312AbgF3PXY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Jun 2020 11:23:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33750 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389250AbgF3PXX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jun 2020 11:23:23 -0400
+Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D83AC061755
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 08:23:23 -0700 (PDT)
+Received: by mail-io1-xd42.google.com with SMTP id e64so16489966iof.12
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 08:23:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=wf3aTu9i2iRqTfmGvmEKvC2RnUh/esFJ2QFi4//mgvw=;
+        b=NLczaazkqD6owL1wqmLXyQRawOzYXc3LdtmoOSWuc2wo196A70fFXNw7G9eWlaCjke
+         BBJEEVSC/ZCQ659TBK1/zueWU27F6n1LC3rK7dXi5RrL2SQN8oKQkSnrGvgc6n4FVrDS
+         Fcpd79FWkPjGO1S3bLoE+vHix50RH1c0jf9smKimlzBBt4xTwufBEUCHu+899bz3gFTF
+         A754yzhESwVYjgLCNOytJosjQ+FVS8jCOOu0dtXmF3a5i1Sof5O+Lxuadf8q1leC0PCc
+         SI3qKW4NRUPcWs1nvQmpTuYr3pcAtDkCBG5z+lB2MTXC2n0U5IUCzfea5oP2lMaWr8PT
+         z6kg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=wf3aTu9i2iRqTfmGvmEKvC2RnUh/esFJ2QFi4//mgvw=;
+        b=HE2xlmpMj9W/ee3mtHKPyTFHYOBHY3xLwnx3Th/6UpEE4Tc1H97oXY2RUOPN+yV1OC
+         azqr4XzMrAQcEV5hTeJgmeliaCGzQGNxk4XZffJLCCt4zv1y3uZBJKYDqh2eRK7y9Gph
+         QCx5t7JT2hYY361zoOOyJrZWHH36sIQqnHLw6O4Ng+jn87a878sCAF8B89B4L3Ajb5tP
+         9XlLypqD4n28liCn+J8Q2EI/dhR0MCqOZcwjCM2AzKYN3U30U+zzbl2dOPOFgUCbj/0b
+         lFbEBDHu+cFYLC+3TTwVbsxQaOYOalEFx7KpVsIMY8MViIpOpK78EqoXDiX+jXbobB+7
+         0udg==
+X-Gm-Message-State: AOAM532I2W/ak4p0Fr4nxWO0gTnOIfIS+WMCH4b3B9pB/UnsBpTbPriX
+        GjcK0Ax/SmCR3zSVQm1vIedJmOZDzlQtVx+uxzo=
+X-Google-Smtp-Source: ABdhPJy93NvA1VskawsF4sSxpyyLK7wcSnLaJPKwMhD+/bWSjCYOfQ64kJBU6FhM7kC1g0xNzpRhrfcZfdnIuwLC22c=
+X-Received: by 2002:a05:6602:58a:: with SMTP id v10mr22108267iox.203.1593530602990;
+ Tue, 30 Jun 2020 08:23:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200630054217.GA27221@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20200623052059.1893966-1-david@fromorbit.com> <20200623211910.GG7606@magnolia>
+ <20200623221431.GB2005@dread.disaster.area> <20200629170048.GR7606@magnolia>
+In-Reply-To: <20200629170048.GR7606@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 30 Jun 2020 18:23:12 +0300
+Message-ID: <CAOQ4uxiuEVW=d+g_3kj+zdTc_ngEkF+nGnJ+M2g1aU3SqsFa+w@mail.gmail.com>
+Subject: Re: [PATCH] xfs: use MMAPLOCK around filemap_map_pages()
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 6/30/20 12:42 AM, Christoph Hellwig wrote:
-> On Mon, Jun 29, 2020 at 02:08:09PM -0500, Eric Sandeen wrote:
->> f2fs and xfs have both added support for cgroup writeback:
->>
->> 578c647 f2fs: implement cgroup writeback support
->> adfb5fb xfs: implement cgroup aware writeback
->>
->> so add them to the supported list in the docs.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> TBH I wonder about the wisdom of having this detail in
->> the doc, as it apparently gets missed quite often ...
-> 
-> I'd rather remove the list of file systems.  It has no chance of
-> staying uptodate.
+> /me wonders if someone could please check all the *_ops that point to
+> generic helpers to see if we're missing obvious things like lock
+> taking.  Particularly someone who wants to learn about xfs' locking
+> strategy; I promise it won't let out a ton of bees.
+>
 
-Is there any way for a user to know whether a filesytem does or doesn't
-support it, in practice?
+The list was compiled manually by auditing 'git grep '_operations.*=' fs/xfs'
+structs for non xfs_/iomap_/noop_ functions.
+I am not sure if all iomap_ functions are safe in that respect, but I suppose
+those were done recently with sufficient xfs developers review...
+
+fs/xfs/xfs_aops.c:const struct address_space_operations
+xfs_address_space_operations = {
+        .error_remove_page      = generic_error_remove_page,
+
+generic_error_remove_page() calls truncate_inode_page() without MMAPLOCK
+Is that safe? not sure
+
+fs/xfs/xfs_file.c:static const struct vm_operations_struct xfs_file_vm_ops = {
+        .map_pages      = filemap_map_pages,
+
+Fixed by $SUBJECT
+
+fs/xfs/xfs_file.c:const struct file_operations xfs_file_operations = {
+        .splice_read    = generic_file_splice_read,
+
+Will call xfs_file_read_iter, so looks fine
+
+       .splice_write   = iter_file_splice_write,
+
+Will call xfs_file_write_iter, so looks fine
+
+       .get_unmapped_area = thp_get_unmapped_area,
+
+Looks fine?
+
+fs/xfs/xfs_file.c:const struct file_operations xfs_dir_file_operations = {
+        .read           = generic_read_dir,
+        .llseek         = generic_file_llseek,
+
+No page cache, no dio, no worries?
 
 Thanks,
--Eric
+Amir.
