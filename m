@@ -7,137 +7,134 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45A1CC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 18:27:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75BF4C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 18:30:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 266EE20768
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 18:27:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 508E620772
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 18:30:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jTQ/n5ks"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZnhQy/Bx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390774AbgF3S1w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Jun 2020 14:27:52 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:43650 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389306AbgF3S1w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jun 2020 14:27:52 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UIDK4P011410;
-        Tue, 30 Jun 2020 18:27:50 GMT
+        id S1732411AbgF3SaK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Jun 2020 14:30:10 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34386 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729718AbgF3SaK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jun 2020 14:30:10 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UIIAt3081146;
+        Tue, 30 Jun 2020 18:30:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=Zo0P0tN+LhRM2+pccbKHMDnZc0dgRVPTWd64hER3Quk=;
- b=jTQ/n5ksVWlat7bXD1kxBytM3ihK+c6Cw+EArV0x0rvspDawK/WCFTfYEGKOHy9vJB0o
- slzuLorIl9Ng4lVo/tE8fNAigpSFRHWexNmRrlKEKOC3gQkimcBVoa8Gfn9jGZb0YTY0
- C2/wfrKxF3qcrlvXoZIraFTGfaWH3xK2egoHcQ7Zj9AqfwPza2WjOJ9Up1n1Q4egzlwb
- 3fx6scUNTZZcto7cJOvu1Sdx9uhcsc/WYKFhy2XMn6JBWCf/oV9662mRwymLRWTRPv9s
- MCWZR1UUcMcXRfoswt/R8u43ihcls8OQ5ergWy2mpmxygQsZGumMZ+tfI4Gl1X9vxnzq Rg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 31ywrbmevg-1
+ bh=GSuk1z+UXouJstt+zpAQYF0bKxIqA3H5G/b1ZKaCWR0=;
+ b=ZnhQy/BxAWppqyWiDqRbIsuczsDR5krjRyGGblOikR+TuZl7kGsJaIQ/AprigjoEy7jF
+ 3nb/Ao5jhqO2BWvwRHe9jVMtUROEj6hl8JShcOaWaCaGYM0M/oIn5VJtN0z+UasZOsOt
+ KHhEveWnJEg44INVLbNvzGDWmy/wy/vzZHBHsCXJC/bDHukU37kLDkP/TbHSbxMbfZbO
+ 2F9qthXffQxvjCmb/9HFDEmzxR8GxQhmjLzHX2gtnHCBjcsdwrHXyH6O3A2Z0OUonI9v
+ s3URMUOymntr859S3lho+tWln/EQD0UIMRVlnUsascNX1fy7I2PUvVV8pucjiF0CQiH1 dA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 31wxrn676n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 30 Jun 2020 18:27:50 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UIIYE8060320;
-        Tue, 30 Jun 2020 18:27:50 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 31xfvsuh4a-1
+        Tue, 30 Jun 2020 18:30:07 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UIHl3Y059759;
+        Tue, 30 Jun 2020 18:30:07 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 31xg1x6gq3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 30 Jun 2020 18:27:50 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05UIRnTo021197;
-        Tue, 30 Jun 2020 18:27:49 GMT
+        Tue, 30 Jun 2020 18:30:07 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05UIU67U005638;
+        Tue, 30 Jun 2020 18:30:06 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 30 Jun 2020 18:27:49 +0000
-Date:   Tue, 30 Jun 2020 11:27:48 -0700
+        with ESMTP ; Tue, 30 Jun 2020 18:30:06 +0000
+Date:   Tue, 30 Jun 2020 11:30:04 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: use MMAPLOCK around filemap_map_pages()
-Message-ID: <20200630182748.GR7606@magnolia>
-References: <20200623052059.1893966-1-david@fromorbit.com>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v3] iomap: Make sure iomap_end is called after iomap_begin
+Message-ID: <20200630183004.GS7606@magnolia>
+References: <20200629095118.1366261-1-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200623052059.1893966-1-david@fromorbit.com>
+In-Reply-To: <20200629095118.1366261-1-agruenba@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9668 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0 spamscore=0
- phishscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 phishscore=0
+ malwarescore=0 mlxlogscore=999 adultscore=0 mlxscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
  definitions=main-2006300126
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9668 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=999
- clxscore=1015 cotscore=-2147483648 priorityscore=1501 lowpriorityscore=0
- malwarescore=0 mlxscore=0 adultscore=0 suspectscore=1 impostorscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006300126
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+ priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
+ malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
+ lowpriorityscore=0 suspectscore=1 spamscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2006300126
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 23, 2020 at 03:20:59PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Jun 29, 2020 at 11:51:18AM +0200, Andreas Gruenbacher wrote:
+> Make sure iomap_end is always called when iomap_begin succeeds.
 > 
-> The page faultround path ->map_pages is implemented in XFS via
-> filemap_map_pages(). This function checks that pages found in page
-> cache lookups have not raced with truncate based invalidation by
-> checking page->mapping is correct and page->index is within EOF.
+> Without this fix, iomap_end won't be called when a filesystem's
+> iomap_begin operation returns an invalid mapping, bypassing any
+> unlocking done in iomap_end.  With this fix, the unlocking will still
+> happen.
 > 
-> However, we've known for a long time that this is not sufficient to
-> protect against races with invalidations done by operations that do
-> not change EOF. e.g. hole punching and other fallocate() based
-> direct extent manipulations. The way we protect against these
-> races is we wrap the page fault operations in a XFS_MMAPLOCK_SHARED
-> lock so they serialise against fallocate and truncate before calling
-> into the filemap function that processes the fault.
+> This bug was found by Bob Peterson during code review.  It's unlikely
+> that such iomap_begin bugs will survive to affect users, so backporting
+> this fix seems unnecessary.
 > 
-> Do the same for XFS's ->map_pages implementation to close this
-> potential data corruption issue.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Fixes: ae259a9c8593 ("fs: introduce iomap infrastructure")
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 
-Looks ok, notwithstanding the (semirelated) questions that Amir
-unearthed elsewhere in this thread...
-
+Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/xfs_file.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
+>  fs/iomap/apply.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7b05f8fd7b3d..4b185a907432 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1266,10 +1266,23 @@ xfs_filemap_pfn_mkwrite(
->  	return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
->  }
+> diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+> index 76925b40b5fd..26ab6563181f 100644
+> --- a/fs/iomap/apply.c
+> +++ b/fs/iomap/apply.c
+> @@ -46,10 +46,14 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  	ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
+>  	if (ret)
+>  		return ret;
+> -	if (WARN_ON(iomap.offset > pos))
+> -		return -EIO;
+> -	if (WARN_ON(iomap.length == 0))
+> -		return -EIO;
+> +	if (WARN_ON(iomap.offset > pos)) {
+> +		written = -EIO;
+> +		goto out;
+> +	}
+> +	if (WARN_ON(iomap.length == 0)) {
+> +		written = -EIO;
+> +		goto out;
+> +	}
 >  
-> +static void
-> +xfs_filemap_map_pages(
-> +	struct vm_fault		*vmf,
-> +	pgoff_t			start_pgoff,
-> +	pgoff_t			end_pgoff)
-> +{
-> +	struct inode		*inode = file_inode(vmf->vma->vm_file);
-> +
-> +	xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> +	filemap_map_pages(vmf, start_pgoff, end_pgoff);
-> +	xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> +}
-> +
->  static const struct vm_operations_struct xfs_file_vm_ops = {
->  	.fault		= xfs_filemap_fault,
->  	.huge_fault	= xfs_filemap_huge_fault,
-> -	.map_pages	= filemap_map_pages,
-> +	.map_pages	= xfs_filemap_map_pages,
->  	.page_mkwrite	= xfs_filemap_page_mkwrite,
->  	.pfn_mkwrite	= xfs_filemap_pfn_mkwrite,
->  };
+>  	trace_iomap_apply_dstmap(inode, &iomap);
+>  	if (srcmap.type != IOMAP_HOLE)
+> @@ -80,6 +84,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  	written = actor(inode, pos, length, data, &iomap,
+>  			srcmap.type != IOMAP_HOLE ? &srcmap : &iomap);
+>  
+> +out:
+>  	/*
+>  	 * Now the data has been copied, commit the range we've copied.  This
+>  	 * should not fail unless the filesystem has had a fatal error.
+> 
+> base-commit: 69119673bd50b176ded34032fadd41530fb5af21
 > -- 
-> 2.26.2.761.g0e0b3e54be
+> 2.26.2
 > 
