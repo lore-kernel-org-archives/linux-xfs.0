@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E11D6C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 15:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63344C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 15:42:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BBEA420760
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 15:42:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D4992074F
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jun 2020 15:42:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BiekxIHW"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IYBUHzzZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389632AbgF3PmA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 30 Jun 2020 11:42:00 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:55268 "EHLO
+        id S2389634AbgF3PmH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Jun 2020 11:42:07 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55392 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389628AbgF3PmA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jun 2020 11:42:00 -0400
+        with ESMTP id S2389628AbgF3PmG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jun 2020 11:42:06 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UFRI2l109592
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:41:59 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UFRHCo109553
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:42:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=csx+iE5nlg6R2KpWQ3+Qn+bcKZvULxhoFygeKXHZsiU=;
- b=BiekxIHW8NQTcaQ773nYOOAK0boKzQmg9+YMvvTDlkqA0N4PLFDWNrhU0IIb0VqnsbXb
- ZE2pawvG75pf9PK0QhrQkHziL5eAJ7+iKE51WsmEd2+FMpFJokdk3b80iUpNvm7TBYHf
- 04peZgOZ2484APZvxzFqKFMh6feRsCUYi0n68rlMrEqc4e7mAva+x8vaRRln3TeWTni0
- HMjiY2jzYEDqqm66R6nRoQfQdt+ak+vhZ44KETSCtcmc8MWIvgcv1TlnYaymo3QUqWKc
- F/2mfRouf5z6VgNh1MgFIEVtP4/UMPdhkOWOwrvODBBdPBPwf70t0/8PBT50N2obady9 LQ== 
+ bh=bJY5pYEV7ErAz3hQ23ScDFK5AI0GiTL2D+B4eck3QQg=;
+ b=IYBUHzzZ9WGBe2ZfplVPllDGTo9mzBbUpBH7FqtgzQo0FhVQ+lvy0ifDPoPGTWSX8oHz
+ mXUvMKP2qn6f2YMNFZMMCEQVObzy7uSUyODdOvi9kJKIN7TXZHcdCKGxoi+gKMidSOZe
+ 7+7BhDqAX2V3knFhESXFHEATet07xTIU7kbUTqo6twlfX6H+8k5CYoUotYsgFIS75N+S
+ S0s0sYQ7eW+yzObdAH4nxewysB0517zg3iGrjsYPHz66RL14XuAvtNsEMWPXGFwv/wIa
+ 0KszNJJ2ukdTuvVOj4CpGtHU/u69U0s5qudvsk8M9IXTL/DISR6nU8dIe5odbrdMK2cB GA== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 31ywrbkj97-1
+        by userp2130.oracle.com with ESMTP id 31ywrbkja5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:41:58 +0000
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:42:05 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UFNkM0051028
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:41:58 GMT
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05UFNkX2051124
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:42:05 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 31xg1wy56q-1
+        by userp3030.oracle.com with ESMTP id 31xg1wy5b5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:41:58 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05UFfvfX013251
-        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:41:57 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:42:05 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 05UFg4E9013276
+        for <linux-xfs@vger.kernel.org>; Tue, 30 Jun 2020 15:42:04 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 30 Jun 2020 15:41:57 +0000
-Subject: [PATCH 01/18] xfs: clear XFS_DQ_FREEING if we can't lock the dquot
- buffer to flush
+        with ESMTP ; Tue, 30 Jun 2020 15:42:03 +0000
+Subject: [PATCH 02/18] xfs: fix inode quota reservation checks
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 30 Jun 2020 08:41:56 -0700
-Message-ID: <159353171640.2864738.7967439700762859129.stgit@magnolia>
+Date:   Tue, 30 Jun 2020 08:42:02 -0700
+Message-ID: <159353172261.2864738.3201442261854530990.stgit@magnolia>
 In-Reply-To: <159353170983.2864738.16885438169173786208.stgit@magnolia>
 References: <159353170983.2864738.16885438169173786208.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -81,30 +80,45 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In commit 8d3d7e2b35ea, we changed xfs_qm_dqpurge to bail out if we
-can't lock the dquot buf to flush the dquot.  This prevents the AIL from
-blocking on the dquot, but it also forgets to clear the FREEING flag on
-its way out.  A subsequent purge attempt will see the FREEING flag is
-set and bail out, which leads to dqpurge_all failing to purge all the
-dquots.  This causes unmounts and quotaoff operations to hang.
+xfs_trans_dqresv is the function that we use to make reservations
+against resource quotas.  Each resource contains two counters: the
+q_core counter, which tracks resources allocated on disk; and the dquot
+reservation counter, which tracks how much of that resource has either
+been allocated or reserved by threads that are working on metadata
+updates.
 
-Fixes: 8d3d7e2b35ea ("xfs: trylock underlying buffer on dquot flush")
+For disk blocks, we compare the proposed reservation counter against the
+hard and soft limits to decide if we're going to fail the operation.
+However, for inodes we inexplicably compare against the q_core counter,
+not the incore reservation count.
+
+Since the q_core counter is always lower than the reservation count and
+we unlock the dquot between reservation and transaction commit, this
+means that multiple threads can reserve the last inode count before we
+hit the hard limit, and when they commit, we'll be well over the hard
+limit.
+
+Fix this by checking against the incore inode reservation counter, since
+we would appear to maintain that correctly (and that's what we report in
+GETQUOTA).
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_qm.c |    1 +
- 1 file changed, 1 insertion(+)
+ fs/xfs/xfs_trans_dquot.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index d6cd83317344..938023dd8ce5 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -148,6 +148,7 @@ xfs_qm_dqpurge(
- 			error = xfs_bwrite(bp);
- 			xfs_buf_relse(bp);
- 		} else if (error == -EAGAIN) {
-+			dqp->dq_flags &= ~XFS_DQ_FREEING;
- 			goto out_unlock;
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index c0f73b82c055..ed0ce8b301b4 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -647,7 +647,7 @@ xfs_trans_dqresv(
+ 			}
  		}
- 		xfs_dqflock(dqp);
+ 		if (ninos > 0) {
+-			total_count = be64_to_cpu(dqp->q_core.d_icount) + ninos;
++			total_count = dqp->q_res_icount + ninos;
+ 			timer = be32_to_cpu(dqp->q_core.d_itimer);
+ 			warns = be16_to_cpu(dqp->q_core.d_iwarns);
+ 			warnlimit = defq->iwarnlimit;
 
