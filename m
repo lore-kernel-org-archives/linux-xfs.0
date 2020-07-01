@@ -2,207 +2,219 @@ Return-Path: <SRS0=D+gV=AM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A42EC433E1
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 04:12:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF811C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 04:48:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6080D20768
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 04:12:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LHVWr8fC"
+	by mail.kernel.org (Postfix) with ESMTP id B7D4D2073E
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 04:48:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725893AbgGAEMG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 00:12:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39266 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725263AbgGAEMG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 00:12:06 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FD8CC061755;
-        Tue, 30 Jun 2020 21:12:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=cxS26j1kqb/npKNutTlSyM7+/KYZexcgqH00K0WcRKE=; b=LHVWr8fCHMQRh0I7lznNiZygOE
-        H0xyr9K+doOszin3HKJLMAWX2ybRAnkNu8ctZRUlzMubMCf0HJV4/cRJmy/2K2TQ0Tu6oE4J9Zl7o
-        Q79uR27aWh/aUtwege3ZI7nedkSmptSvqIyBu1ZqcS7QMX+iQbFInLf7PRpbDxsRfnc07oaJtPIIx
-        yT8drQRhIo9a83DbUddoeseLWSBIxJa33PECmIVxV7TMjhGDsH3ZlObP0ugZexU6DX6Px7j3ZH3KR
-        0KxNRlT/lNQjFYIaBm069nx3xKkxWotlnXPrHDMiP6lLjU2sgQIekuNhQ6nrKlAFIqKuFisW8tEjs
-        x1S89aXg==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jqU6N-0001r3-5N; Wed, 01 Jul 2020 04:12:03 +0000
-Date:   Wed, 1 Jul 2020 05:12:03 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Michal Hocko <mhocko@kernel.org>
-Cc:     Mike Rapoport <rppt@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org, dm-devel@redhat.com,
-        Mikulas Patocka <mpatocka@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, NeilBrown <neilb@suse.de>
-Subject: Re: [PATCH 6/6] mm: Add memalloc_nowait
-Message-ID: <20200701041203.GQ25523@casper.infradead.org>
-References: <20200625113122.7540-1-willy@infradead.org>
- <20200625113122.7540-7-willy@infradead.org>
- <20200629050851.GC1492837@kernel.org>
- <20200629121816.GC25523@casper.infradead.org>
- <20200629125231.GJ32461@dhcp22.suse.cz>
- <6421BC93-CF2F-4697-B5CB-5ECDAA9FCB37@kernel.org>
- <20200629212830.GJ25523@casper.infradead.org>
- <20200630063436.GA2369@dhcp22.suse.cz>
+        id S1725771AbgGAEso (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 00:48:44 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47391 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725535AbgGAEso (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 00:48:44 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8CC333A3DC6
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2020 14:48:41 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jqUfo-0002qC-7g
+        for linux-xfs@vger.kernel.org; Wed, 01 Jul 2020 14:48:40 +1000
+Date:   Wed, 1 Jul 2020 14:48:40 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 21/30 V2] xfs: remove SYNC_TRYLOCK from inode reclaim
+Message-ID: <20200701044840.GP2005@dread.disaster.area>
+References: <20200622081605.1818434-1-david@fromorbit.com>
+ <20200622081605.1818434-22-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200630063436.GA2369@dhcp22.suse.cz>
+In-Reply-To: <20200622081605.1818434-22-david@fromorbit.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
+        a=3gPCGDIPrRFzZevPBEEA:9 a=CjuIK1q_8ugA:10
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 30, 2020 at 08:34:36AM +0200, Michal Hocko wrote:
-> On Mon 29-06-20 22:28:30, Matthew Wilcox wrote:
-> [...]
-> > The documentation is hard to add a new case to, so I rewrote it.  What
-> > do you think?  (Obviously I'll split this out differently for submission;
-> > this is just what I have in my tree right now).
-> 
-> I am fine with your changes. Few notes below.
+From: Dave Chinner <dchinner@redhat.com>
 
-Thanks!
+All background reclaim is SYNC_TRYLOCK already, and even blocking
+reclaim (SYNC_WAIT) can use trylock mechanisms as
+xfs_reclaim_inodes_ag() will keep cycling until there are no more
+reclaimable inodes. Hence we can kill SYNC_TRYLOCK from inode
+reclaim and make everything unconditionally non-blocking.
 
-> > -It turned out though that above approach has led to
-> > -abuses when the restricted gfp mask is used "just in case" without a
-> > -deeper consideration which leads to problems because an excessive use
-> > -of GFP_NOFS/GFP_NOIO can lead to memory over-reclaim or other memory
-> > -reclaim issues.
-> 
-> I believe this is an important part because it shows that new people
-> coming to the existing code shouldn't take it as correct and rather
-> question it. Also having a clear indication that overuse is causing real
-> problems that might be not immediately visible to subsystems outside of
-> MM.
+We remove all the optimistic "avoid blocking on locks" checks done
+in xfs_reclaim_inode_grab() as nothing blocks on locks anymore.
+Further, checking XFS_IFLOCK optimistically can result in detecting
+inodes in the process of being cleaned (i.e. between being removed
+from the AIL and having the flush lock dropped), so for
+xfs_reclaim_inodes() to reliably reclaim all inodes we need to drop
+these checks anyway.
 
-It seemed to say a lot of the same things as this paragraph:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+V2
+- drop the optimistic unlocked checks from xfs_reclaim_inode_grab()
+  because they are now unnecessary and the XFS_IFLOCK check races
+  with IO completion on unmount.
+- update commit message to reflect changes to
+  xfs_reclaim_inode_grab()
 
-+You may notice that quite a few allocations in the existing code specify
-+``GFP_NOIO`` or ``GFP_NOFS``. Historically, they were used to prevent
-+recursion deadlocks caused by direct memory reclaim calling back into
-+the FS or IO paths and blocking on already held resources. Since 4.12
-+the preferred way to address this issue is to use the new scope APIs
-+described below.
+ fs/xfs/xfs_icache.c | 63 +++++++++++++++++++++--------------------------------
+ 1 file changed, 25 insertions(+), 38 deletions(-)
 
-Since this is in core-api/ rather than vm/, I felt that discussion of
-the problems that it causes to the mm was a bit too much detail for the
-people who would be reading this document.  Maybe I could move that
-information into a new Documentation/vm/reclaim.rst file?
-
-Let's see if Our Grumpy Editor has time to give us his advice on this.
-
-> > -FS/IO code then simply calls the appropriate save function before
-> > -any critical section with respect to the reclaim is started - e.g.
-> > -lock shared with the reclaim context or when a transaction context
-> > -nesting would be possible via reclaim.  
-> 
-> [...]
-> 
-> > +These functions should be called at the point where any memory allocation
-> > +would start to cause problems.  That is, do not simply wrap individual
-> > +memory allocation calls which currently use ``GFP_NOFS`` with a pair
-> > +of calls to memalloc_nofs_save() and memalloc_nofs_restore().  Instead,
-> > +find the lock which is taken that would cause problems if memory reclaim
-> > +reentered the filesystem, place a call to memalloc_nofs_save() before it
-> > +is acquired and a call to memalloc_nofs_restore() after it is released.
-> > +Ideally also add a comment explaining why this lock will be problematic.
-> 
-> The above text has mentioned the transaction context nesting as well and
-> that was a hint by Dave IIRC. It is imho good to have an example of
-> other reentrant points than just locks. I believe another useful example
-> would be something like loop device which is mixing IO and FS layers but
-> I am not familiar with all the details to give you an useful text.
-
-I'll let Mikulas & Dave finish fighting about that before I write any
-text mentioning the loop driver.  How about this for mentioning the
-filesystem transaction possibility?
-
-@@ -103,12 +103,16 @@ flags specified by any particular call to allocate memory.
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index f387ec21dd35..8d18117242e1 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -174,7 +174,7 @@ xfs_reclaim_worker(
+ 	struct xfs_mount *mp = container_of(to_delayed_work(work),
+ 					struct xfs_mount, m_reclaim_work);
  
- These functions should be called at the point where any memory allocation
- would start to cause problems.  That is, do not simply wrap individual
--memory allocation calls which currently use ``GFP_NOFS`` with a pair
--of calls to memalloc_nofs_save() and memalloc_nofs_restore().  Instead,
--find the lock which is taken that would cause problems if memory reclaim
-+memory allocation calls which currently use ``GFP_NOFS`` with a pair of
-+calls to memalloc_nofs_save() and memalloc_nofs_restore().  Instead, find
-+the resource which is acquired that would cause problems if memory reclaim
- reentered the filesystem, place a call to memalloc_nofs_save() before it
- is acquired and a call to memalloc_nofs_restore() after it is released.
- Ideally also add a comment explaining why this lock will be problematic.
-+A resource might be a lock which would need to be acquired by an attempt
-+to reclaim memory, or it might be starting a transaction that should not
-+nest over a memory reclaim transaction.  Deep knowledge of the filesystem
-+or driver is often needed to place memory scoping calls correctly.
+-	xfs_reclaim_inodes(mp, SYNC_TRYLOCK);
++	xfs_reclaim_inodes(mp, 0);
+ 	xfs_reclaim_work_queue(mp);
+ }
  
- Please note that the proper pairing of save/restore functions
- allows nesting so it is safe to call memalloc_noio_save() and
-
-> > @@ -104,16 +134,19 @@ ARCH_KMALLOC_MINALIGN bytes.  For sizes which are a power of two, the
-> >  alignment is also guaranteed to be at least the respective size.
-> >  
-> >  For large allocations you can use vmalloc() and vzalloc(), or directly
-> > -request pages from the page allocator. The memory allocated by `vmalloc`
-> > -and related functions is not physically contiguous.
-> > +request pages from the page allocator.  The memory allocated by `vmalloc`
-> > +and related functions is not physically contiguous.  The `vmalloc`
-> > +family of functions don't support the old ``GFP_NOFS`` or ``GFP_NOIO``
-> > +flags because there are hardcoded ``GFP_KERNEL`` allocations deep inside
-> > +the allocator which are hard to remove.  However, the scope APIs described
-> > +above can be used to limit the `vmalloc` functions.
-> 
-> I would reiterate "Do not just wrap vmalloc by the scope api but rather
-> rely on the real scope for the NOFS/NOIO context". Maybe we want to
-> stress out that once a scope is defined it is sticky to _all_
-> allocations and all allocators within that scope. The text is already
-> saying that but maybe we want to make it explicit and make it stand out.
-
-yes.  I went with:
-
-@@ -139,7 +143,10 @@ and related functions is not physically contiguous.  The `vmalloc`
- family of functions don't support the old ``GFP_NOFS`` or ``GFP_NOIO``
- flags because there are hardcoded ``GFP_KERNEL`` allocations deep inside
- the allocator which are hard to remove.  However, the scope APIs described
--above can be used to limit the `vmalloc` functions.
-+above can be used to limit the `vmalloc` functions.  As described above,
-+do not simply wrap individual calls in the scope APIs, but look for the
-+underlying reason why the memory allocation may not call into filesystems
-+or block devices.
+@@ -1028,48 +1028,37 @@ xfs_cowblocks_worker(
  
- If you are not sure whether the allocation size is too large for
- `kmalloc`, it is possible to use kvmalloc() and its derivatives. It will
-
-
-> [...]
-> > diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
-> > index 6484569f50df..9fc091274d1d 100644
-> > --- a/include/linux/sched/mm.h
-> > +++ b/include/linux/sched/mm.h
-> > @@ -186,9 +186,10 @@ static inline gfp_t current_gfp_context(gfp_t flags)
-> >  		 * them.  noio implies neither IO nor FS and it is a weaker
-> >  		 * context so always make sure it takes precedence.
-> >  		 */
-> > -		if (current->memalloc_nowait)
-> > +		if (current->memalloc_nowait) {
-> >  			flags &= ~__GFP_DIRECT_RECLAIM;
-> > -		else if (current->memalloc_noio)
-> > +			flags |= __GFP_NOWARN;
-> 
-> I dunno. I wouldn't make nowait implicitly NOWARN as well. At least not
-> with the initial implementation. Maybe we will learn later that there is
-> just too much unhelpful noise in the kernel log and will reconsider but
-> I wouldn't just start with that. Also we might learn that there will be
-> other modifiers for atomic (or should I say non-sleeping) scopes to be
-> defined. E.g. access to memory reserves but let's just wait for real
-> usecases.
-
-Fair enough.  I'll drop that part.  Thanks!
+ /*
+  * Grab the inode for reclaim exclusively.
+- * Return 0 if we grabbed it, non-zero otherwise.
++ *
++ * We have found this inode via a lookup under RCU, so the inode may have
++ * already been freed, or it may be in the process of being recycled by
++ * xfs_iget(). In both cases, the inode will have XFS_IRECLAIM set. If the inode
++ * has been fully recycled by the time we get the i_flags_lock, XFS_IRECLAIMABLE
++ * will not be set. Hence we need to check for both these flag conditions to
++ * avoid inodes that are no longer reclaim candidates.
++ *
++ * Note: checking for other state flags here, under the i_flags_lock or not, is
++ * racy and should be avoided. Those races should be resolved only after we have
++ * ensured that we are able to reclaim this inode and the world can see that we
++ * are going to reclaim it.
++ *
++ * Return true if we grabbed it, false otherwise.
+  */
+-STATIC int
++static bool
+ xfs_reclaim_inode_grab(
+-	struct xfs_inode	*ip,
+-	int			flags)
++	struct xfs_inode	*ip)
+ {
+ 	ASSERT(rcu_read_lock_held());
+ 
+-	/* quick check for stale RCU freed inode */
+-	if (!ip->i_ino)
+-		return 1;
+-
+-	/*
+-	 * If we are asked for non-blocking operation, do unlocked checks to
+-	 * see if the inode already is being flushed or in reclaim to avoid
+-	 * lock traffic.
+-	 */
+-	if ((flags & SYNC_TRYLOCK) &&
+-	    __xfs_iflags_test(ip, XFS_IFLOCK | XFS_IRECLAIM))
+-		return 1;
+-
+-	/*
+-	 * The radix tree lock here protects a thread in xfs_iget from racing
+-	 * with us starting reclaim on the inode.  Once we have the
+-	 * XFS_IRECLAIM flag set it will not touch us.
+-	 *
+-	 * Due to RCU lookup, we may find inodes that have been freed and only
+-	 * have XFS_IRECLAIM set.  Indeed, we may see reallocated inodes that
+-	 * aren't candidates for reclaim at all, so we must check the
+-	 * XFS_IRECLAIMABLE is set first before proceeding to reclaim.
+-	 */
+ 	spin_lock(&ip->i_flags_lock);
+ 	if (!__xfs_iflags_test(ip, XFS_IRECLAIMABLE) ||
+ 	    __xfs_iflags_test(ip, XFS_IRECLAIM)) {
+ 		/* not a reclaim candidate. */
+ 		spin_unlock(&ip->i_flags_lock);
+-		return 1;
++		return false;
+ 	}
+ 	__xfs_iflags_set(ip, XFS_IRECLAIM);
+ 	spin_unlock(&ip->i_flags_lock);
+-	return 0;
++	return true;
+ }
+ 
+ /*
+@@ -1114,8 +1103,7 @@ xfs_reclaim_inode_grab(
+ static bool
+ xfs_reclaim_inode(
+ 	struct xfs_inode	*ip,
+-	struct xfs_perag	*pag,
+-	int			sync_mode)
++	struct xfs_perag	*pag)
+ {
+ 	xfs_ino_t		ino = ip->i_ino; /* for radix_tree_delete */
+ 
+@@ -1209,7 +1197,6 @@ xfs_reclaim_inode(
+ static int
+ xfs_reclaim_inodes_ag(
+ 	struct xfs_mount	*mp,
+-	int			flags,
+ 	int			*nr_to_scan)
+ {
+ 	struct xfs_perag	*pag;
+@@ -1254,7 +1241,7 @@ xfs_reclaim_inodes_ag(
+ 			for (i = 0; i < nr_found; i++) {
+ 				struct xfs_inode *ip = batch[i];
+ 
+-				if (done || xfs_reclaim_inode_grab(ip, flags))
++				if (done || !xfs_reclaim_inode_grab(ip))
+ 					batch[i] = NULL;
+ 
+ 				/*
+@@ -1285,7 +1272,7 @@ xfs_reclaim_inodes_ag(
+ 			for (i = 0; i < nr_found; i++) {
+ 				if (!batch[i])
+ 					continue;
+-				if (!xfs_reclaim_inode(batch[i], pag, flags))
++				if (!xfs_reclaim_inode(batch[i], pag))
+ 					skipped++;
+ 			}
+ 
+@@ -1311,13 +1298,13 @@ xfs_reclaim_inodes(
+ 	int		nr_to_scan = INT_MAX;
+ 	int		skipped;
+ 
+-	xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
++	xfs_reclaim_inodes_ag(mp, &nr_to_scan);
+ 	if (!(mode & SYNC_WAIT))
+ 		return 0;
+ 
+ 	do {
+ 		xfs_ail_push_all_sync(mp->m_ail);
+-		skipped = xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
++		skipped = xfs_reclaim_inodes_ag(mp, &nr_to_scan);
+ 	} while (skipped > 0);
+ 
+ 	return 0;
+@@ -1341,7 +1328,7 @@ xfs_reclaim_inodes_nr(
+ 	xfs_reclaim_work_queue(mp);
+ 	xfs_ail_push_all(mp->m_ail);
+ 
+-	xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK, &nr_to_scan);
++	xfs_reclaim_inodes_ag(mp, &nr_to_scan);
+ 	return 0;
+ }
+ 
