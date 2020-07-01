@@ -4,258 +4,220 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC8A9C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 14:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AB42C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 16:20:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7AC9206C3
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 14:33:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 492E220781
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 16:20:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BJ5rdkT+"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iH1R55qT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731328AbgGAOdP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 10:33:15 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:40559 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730852AbgGAOdO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 10:33:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1593613991;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=U+Ns4BsuKMkh+pQgHV37u1JSNUjg2XjsW7Sq4yALyUI=;
-        b=BJ5rdkT+S41Bu08WxXDBhoBc040Dh17Z8huu2azX9RltcbLRq5Xg05i1oD3Qm6AyJuxW1q
-        L8lD+2xEN1JoMRJ3Rq+l9A17QPMBeDQZpx8pBRn3rxHsKHGuDZWI1Am6wDEmM2gPDRNK6s
-        VuKzma1MmOVa2b9BnLEUl3zgW9lKfjI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-258-hPLMmx8uMHmClPejj1nIQQ-1; Wed, 01 Jul 2020 10:33:10 -0400
-X-MC-Unique: hPLMmx8uMHmClPejj1nIQQ-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B4FB881EDFD;
-        Wed,  1 Jul 2020 14:32:21 +0000 (UTC)
-Received: from bfoster (ovpn-120-48.rdu2.redhat.com [10.10.120.48])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5230374191;
-        Wed,  1 Jul 2020 14:32:21 +0000 (UTC)
-Date:   Wed, 1 Jul 2020 10:32:19 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: introduce inode unlink log item
-Message-ID: <20200701143219.GC1087@bfoster>
-References: <20200623095015.1934171-1-david@fromorbit.com>
- <20200623095015.1934171-5-david@fromorbit.com>
+        id S1732195AbgGAQUI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 12:20:08 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50920 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729019AbgGAQUI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 12:20:08 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 061GCTSr154006;
+        Wed, 1 Jul 2020 16:20:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=Riod1eS6M2jQCCvqWMPe5gu4AbBBgjPHdK+qUUPbGa4=;
+ b=iH1R55qTv8sV3Y75bXgo3P5mCfeAA7/0ahiF85LRUgZboKes+RjMWaw+KtVxJ7QQ3jEw
+ vuCxvjJ+V4L/wWhrxvFQdMS42lJHODx4w6wMqLwvZbSuGoTM+75HuhEdL/XPHMezquOS
+ onQNlXMWPMHpp1t+L/vX/gDaWfjQ0KBgmhwF/E6CLXlsN6HZO9ekQlgsMxfrGLgI49P9
+ mRrWD3mhUCIKxYitiVhBAa82PyRla1rJ6nwPpJaQVyVGeTLxmC+HkJmvaD2aHIb6dhpR
+ yU6NZCI2Q0Gwgb/mXUusak3k+KGDXsCzdn7k0Um9J11y+eWrkmNkNrIchvUrfepFujaO 0g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 31xx1e0cbd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 01 Jul 2020 16:20:03 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 061GIbJb075625;
+        Wed, 1 Jul 2020 16:20:02 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 31xfvu79kd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 01 Jul 2020 16:20:02 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 061GK03W006704;
+        Wed, 1 Jul 2020 16:20:00 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 01 Jul 2020 16:20:00 +0000
+Date:   Wed, 1 Jul 2020 09:19:58 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs_repair: try to fill the AGFL before we fix the
+ freelist
+Message-ID: <20200701161958.GT7606@magnolia>
+References: <159311834667.1065505.8056215626287130285.stgit@magnolia>
+ <159311835912.1065505.9943855193663354771.stgit@magnolia>
+ <20200629122228.GB10449@bfoster>
+ <20200629232140.GV7606@magnolia>
+ <20200630105239.GA31056@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200623095015.1934171-5-david@fromorbit.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <20200630105239.GA31056@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=5 adultscore=0 spamscore=0
+ phishscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2007010116
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015 adultscore=0
+ suspectscore=5 mlxlogscore=999 cotscore=-2147483648 lowpriorityscore=0
+ malwarescore=0 phishscore=0 impostorscore=0 mlxscore=0 spamscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2007010115
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 23, 2020 at 07:50:15PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jun 30, 2020 at 06:52:39AM -0400, Brian Foster wrote:
+> On Mon, Jun 29, 2020 at 04:21:40PM -0700, Darrick J. Wong wrote:
+> > On Mon, Jun 29, 2020 at 08:22:28AM -0400, Brian Foster wrote:
+> > > On Thu, Jun 25, 2020 at 01:52:39PM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > In commit 9851fd79bfb1, we added a slight amount of slack to the free
+> > > > space btrees being reconstructed so that the initial fix_freelist call
+> > > > (which is run against a totally empty AGFL) would never have to split
+> > > > either free space btree in order to populate the free list.
+> > > > 
+> > > > The new btree bulk loading code in xfs_repair can re-create this
+> > > > situation because it can set the slack values to zero if the filesystem
+> > > > is very full.  However, these days repair has the infrastructure needed
+> > > > to ensure that overestimations of the btree block counts end up on the
+> > > > AGFL or get freed back into the filesystem at the end of phase 5.
+> > > > 
+> > > > Fix this problem by reserving blocks to a separate AGFL block
+> > > > reservation, and checking that between this new reservation and any
+> > > > overages in the bnobt/cntbt fakeroots, we have enough blocks sitting
+> > > > around to populate the AGFL with the minimum number of blocks it needs
+> > > > to handle a split in the bno/cnt/rmap btrees.
+> > > > 
+> > > > Note that we reserve blocks for the new bnobt/cntbt/AGFL at the very end
+> > > > of the reservation steps in phase 5, so the extra allocation should not
+> > > > cause repair to fail if it can't find blocks for btrees.
+> > > > 
+> > > > Fixes: 9851fd79bfb1 ("repair: AGFL rebuild fails if btree split required")
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  repair/agbtree.c |   78 +++++++++++++++++++++++++++++++++++++++++++++++-------
+> > > >  1 file changed, 68 insertions(+), 10 deletions(-)
+> > > > 
+> > > > 
+> > > > diff --git a/repair/agbtree.c b/repair/agbtree.c
+> > > > index 339b1489..7a4f316c 100644
+> > > > --- a/repair/agbtree.c
+> > > > +++ b/repair/agbtree.c
+> > > ...
+> > > > @@ -262,25 +286,59 @@ _("Unable to compute free space by block btree geometry, error %d.\n"), -error);
+> > > ...
+> > > > +
+> > > > +		/*
+> > > > +		 * Now try to fill the bnobt/cntbt cursors with extra blocks to
+> > > > +		 * populate the AGFL.  If we don't get all the blocks we want,
+> > > > +		 * stop trying to fill the AGFL.
+> > > > +		 */
+> > > > +		wanted = (int64_t)btr_bno->bload.nr_blocks +
+> > > > +				(min_agfl_len / 2) - bno_blocks;
+> > > > +		if (wanted > 0 && fill_agfl) {
+> > > > +			got = reserve_agblocks(sc->mp, agno, btr_bno, wanted);
+> > > > +			if (wanted > got)
+> > > > +				fill_agfl = false;
+> > > > +			btr_bno->bload.nr_blocks += got;
+> > > > +		}
+> > > > +
+> > > > +		wanted = (int64_t)btr_cnt->bload.nr_blocks +
+> > > > +				(min_agfl_len / 2) - cnt_blocks;
+> > > > +		if (wanted > 0 && fill_agfl) {
+> > > > +			got = reserve_agblocks(sc->mp, agno, btr_cnt, wanted);
+> > > > +			if (wanted > got)
+> > > > +				fill_agfl = false;
+> > > > +			btr_cnt->bload.nr_blocks += got;
+> > > > +		}
+> > > 
+> > > It's a little hard to follow this with the nr_blocks sampling and
+> > > whatnot, but I think I get the idea. What's the reason for splitting the
+> > > AGFL res requirement evenly across the two cursors? These AGFL blocks
+> > > all fall into the same overflow pool, right? I was wondering why we
+> > > couldn't just attach the overflow to one, or check one for the full res
+> > > and then the other if more blocks are needed.
+> > 
+> > I chose to stuff the excess blocks into the bnobt and cntbt bulkload
+> > cursors to avoid having to initialize a semi-phony "bulkload cursor" for
+> > the agfl, and I decided to split them evenly between the two cursors so
+> > that I wouldn't have someday to deal with a bug report about how one
+> > cursor somehow ran out of blocks but the other one had plenty more.
+> > 
+> > > In thinking about it a bit more, wouldn't the whole algorithm be more
+> > > simple if we reserved the min AGFL requirement first, optionally passed
+> > > 'agfl_res' to reserve_btblocks() such that subsequent reservations can
+> > > steal from it (and then fail if it depletes), then stuff what's left in
+> > > one (or both, if there's a reason for that) of the cursors at the end?
+> > 
+> > Hmm.  I hadn't thought about that.  In general I wanted the AGFL
+> > reservations to go last because I'd rather we set off with an underfull
+> > AGFL than totally fail because we couldn't get blocks for the
+> > bnobt/cntbt, but I suppose you're right that we could steal from it as
+> > needed to prevent repair failure.
+> > 
+> > So, uh, I could rework this patch to create a phony agfl bulk load
+> > cursor, fill it before the loop, steal blocks from it to fill the
+> > bnobt/cntbt to satisfy failed allocations, and then dump any remainders
+> > into the bnobt/cntbt cursors afterwards.  How does that sound?
+> > 
 > 
-> Tracking dirty inodes via cluster buffers creates lock ordering
-> issues with logging unlinked inode updates direct to the cluster
-> buffer. The unlinked inode list is unordered, so we can lock cluster
-> buffers in random orders and that causes deadlocks.
+> Ok.. the whole phony cursor thing sounds a bit unfortunate. I was
+> thinking we'd just have a reservation counter or some such, but in
+> reality we'd need that to pass down into the block reservation code to
+> acquire actual blocks for one, then we'd need new code to allocate said
+> blocks from the phony agfl cursor rather than the in-core block lists,
+> right? Perhaps it's not worth doing that if it doesn't reduce complexity
+> as much as shuffle it around or even add a bit more... :/
 > 
-> To solve this problem, we really want to dealy locking the cluster
-> buffers until the pre-commit phase where we can order the buffers
-> correctly along with all the other inode cluster buffers that are
-> locked by the transaction. However, to do this we need to be able to
-> tell the transaction which inodes need to have there unlinked list
-> updated and what it should be updated to.
-> 
-> We can delay the buffer update to the pre-commit phase based on the
-> fact taht all unlinked inode list updates are serialised by the AGI
-> buffer. It will be locked into the transaction before the list
-> update starts, and will remain locked until the transaction commits.
-> Hence we can lock and update the cluster buffers safely any time
-> during the transaction and we are still safe from other racing
-> unlinked list updates.
-> 
-> The iunlink log item currently only exists in memory. we need a log
-> item to attach information to the transaction, but it's context
-> is completely owned by the transaction. Hence it is never formatted
-> or inserted into the CIL, nor is it seen by the journal, the AIL or
-> log recovery.
-> 
-> This makes it a very simple log item, and the changes makes results
-> in adding addition buffer log items to the transaction. Hence once
-> the iunlink log item has run it's pre-commit operation, it can be
-> dropped by the transaction and released.
-> 
-> The creation of this in-memory intent does not prevent us from
-> extending it in future to the journal to replace buffer based
-> logging of the unlinked list. Changing the format of the items we
-> write to the on disk journal is beyond the scope of this patchset,
-> hence we limit it to being in-memory only.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/Makefile           |   1 +
->  fs/xfs/xfs_inode.c        |  70 +++----------------
->  fs/xfs/xfs_inode_item.c   |   3 +-
->  fs/xfs/xfs_iunlink_item.c | 141 ++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_iunlink_item.h |  24 +++++++
->  fs/xfs/xfs_super.c        |  10 +++
->  6 files changed, 189 insertions(+), 60 deletions(-)
->  create mode 100644 fs/xfs/xfs_iunlink_item.c
->  create mode 100644 fs/xfs/xfs_iunlink_item.h
-> 
-...
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index 0494b907c63d..bc1970c37edc 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -488,8 +488,9 @@ xfs_inode_item_push(
->  	ASSERT(iip->ili_item.li_buf);
->  
->  	if (xfs_ipincount(ip) > 0 || xfs_buf_ispinned(bp) ||
-> -	    (ip->i_flags & XFS_ISTALE))
-> +	    (ip->i_flags & XFS_ISTALE)) {
->  		return XFS_ITEM_PINNED;
-> +	}
+> I wonder if a reasonable simplification/tradeoff might be to just
+> refactor the agfl logic in the current patch into a helper function that
+> 1.) calculates the current overflow across both cursors and the current
+> total agfl "wanted" requirement based on that 2.) performs a single
+> reservation to try and accommodate on one of the cursors and 3.) adds a
+> bit more to the comment to explain that we're just overloading the bnobt
+> cursor (for example) for extra agfl res. Hm?
 
-Spurious change..?
+<shrug> The current patch more or less does this, albeit without the
+explicit helper function in (1), and in (3) it splits the overload
+between the two cursors instead of just the bnobt.  I'll see what that
+looks like, since I came up with other cleanups for init_freespace_cursors.
 
->  
->  	/* If the inode is already flush locked, we're already flushing. */
->  	if (xfs_iflags_test(ip, XFS_IFLUSHING))
-> diff --git a/fs/xfs/xfs_iunlink_item.c b/fs/xfs/xfs_iunlink_item.c
-> new file mode 100644
-> index 000000000000..83f1dc81133b
-> --- /dev/null
-> +++ b/fs/xfs/xfs_iunlink_item.c
-> @@ -0,0 +1,141 @@
-...
-> +
-> +static const struct xfs_item_ops xfs_iunlink_item_ops = {
-> +	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
-> +	.iop_release	= xfs_iunlink_item_release,
+--D
 
-Presumably we need the release callback for transaction abort, but the
-flag looks unnecessary. That triggers a release on commit to the on-disk
-log, which IIUC should never happen for this item.
-
-> +	.iop_sort	= xfs_iunlink_item_sort,
-> +	.iop_precommit	= xfs_iunlink_item_precommit,
-> +};
-> +
-> +
-> +/*
-> + * Initialize the inode log item for a newly allocated (in-core) inode.
-> + *
-> + * Inode extents can only reside within an AG. Hence specify the starting
-> + * block for the inode chunk by offset within an AG as well as the
-> + * length of the allocated extent.
-> + *
-> + * This joins the item to the transaction and marks it dirty so
-> + * that we don't need a separate call to do this, nor does the
-> + * caller need to know anything about the iunlink item.
-> + */
-
-Looks like some copy/paste remnants in the comment.
-
-Brian
-
-> +void
-> +xfs_iunlink_log(
-> +	struct xfs_trans	*tp,
-> +	struct xfs_inode	*ip)
-> +{
-> +	struct xfs_iunlink_item	*iup;
-> +
-> +	iup = kmem_zone_zalloc(xfs_iunlink_zone, 0);
-> +
-> +	xfs_log_item_init(tp->t_mountp, &iup->iu_item, XFS_LI_IUNLINK,
-> +			  &xfs_iunlink_item_ops);
-> +
-> +	iup->iu_ino = ip->i_ino;
-> +	iup->iu_next_unlinked = ip->i_next_unlinked;
-> +	iup->iu_imap = ip->i_imap;
-> +
-> +	xfs_trans_add_item(tp, &iup->iu_item);
-> +	tp->t_flags |= XFS_TRANS_DIRTY;
-> +	set_bit(XFS_LI_DIRTY, &iup->iu_item.li_flags);
-> +}
-> diff --git a/fs/xfs/xfs_iunlink_item.h b/fs/xfs/xfs_iunlink_item.h
-> new file mode 100644
-> index 000000000000..c9e58acf4ccf
-> --- /dev/null
-> +++ b/fs/xfs/xfs_iunlink_item.h
-> @@ -0,0 +1,24 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2020, Red Hat, Inc.
-> + * All Rights Reserved.
-> + */
-> +#ifndef XFS_IUNLINK_ITEM_H
-> +#define XFS_IUNLINK_ITEM_H	1
-> +
-> +struct xfs_trans;
-> +struct xfs_inode;
-> +
-> +/* in memory log item structure */
-> +struct xfs_iunlink_item {
-> +	struct xfs_log_item	iu_item;
-> +	struct xfs_imap		iu_imap;
-> +	xfs_ino_t		iu_ino;
-> +	xfs_agino_t		iu_next_unlinked;
-> +};
-> +
-> +extern kmem_zone_t *xfs_iunlink_zone;
-> +
-> +void xfs_iunlink_log(struct xfs_trans *tp, struct xfs_inode *ip);
-> +
-> +#endif	/* XFS_IUNLINK_ITEM_H */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 5a5d9453cf51..a36dfb0e7e5b 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -35,6 +35,7 @@
->  #include "xfs_refcount_item.h"
->  #include "xfs_bmap_item.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_iunlink_item.h"
->  
->  #include <linux/magic.h>
->  #include <linux/fs_context.h>
-> @@ -1955,8 +1956,16 @@ xfs_init_zones(void)
->  	if (!xfs_bui_zone)
->  		goto out_destroy_bud_zone;
->  
-> +	xfs_iunlink_zone = kmem_cache_create("xfs_iul_item",
-> +					     sizeof(struct xfs_iunlink_item),
-> +					     0, 0, NULL);
-> +	if (!xfs_iunlink_zone)
-> +		goto out_destroy_bui_zone;
-> +
->  	return 0;
->  
-> + out_destroy_bui_zone:
-> +	kmem_cache_destroy(xfs_bui_zone);
->   out_destroy_bud_zone:
->  	kmem_cache_destroy(xfs_bud_zone);
->   out_destroy_cui_zone:
-> @@ -2003,6 +2012,7 @@ xfs_destroy_zones(void)
->  	 * destroy caches.
->  	 */
->  	rcu_barrier();
-> +	kmem_cache_destroy(xfs_iunlink_zone);
->  	kmem_cache_destroy(xfs_bui_zone);
->  	kmem_cache_destroy(xfs_bud_zone);
->  	kmem_cache_destroy(xfs_cui_zone);
-> -- 
-> 2.26.2.761.g0e0b3e54be
+> Brian
 > 
-
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > >  
+> > > >  		/* Ok, now how many free space records do we have? */
+> > > >  		*nr_extents = count_bno_extents_blocks(agno, &num_freeblocks);
+> > > >  	} while (1);
+> > > > -
+> > > > -	*extra_blocks = (bno_blocks - btr_bno->bload.nr_blocks) +
+> > > > -			(cnt_blocks - btr_cnt->bload.nr_blocks);
+> > > >  }
+> > > >  
+> > > >  /* Rebuild the free space btrees. */
+> > > > 
+> > > 
+> > 
+> 
