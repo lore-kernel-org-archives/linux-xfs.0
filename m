@@ -2,265 +2,267 @@ Return-Path: <SRS0=D+gV=AM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03BB4C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 13:42:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3F9BC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 14:31:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCBF3207D0
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 13:42:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE05D206C3
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 14:31:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hpwC4lGN"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VQCz6Nft"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726926AbgGANmt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 09:42:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43912 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725927AbgGANmt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 09:42:49 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DEE24C08C5C1;
-        Wed,  1 Jul 2020 06:42:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=cjaRkySnn9zjM8R5vpCGyC7siTFkzFNdHqFzmgptOqw=; b=hpwC4lGNZpBz5bv8A1ATMu3yKV
-        PLVdYtUCPUFcGewCrQR2AvKlGS9dfwNaoukHQ4hFCqr2dUYCu3JU9OJ4mpPDj4BJPFn+Z++pe4xmt
-        a6RJLbV9CwJ5NplzztqrfFyqGPk4NY26/p3ncG7cIzHppIzGihEPdECxIRCK/P82Qc3ttcziDQqXA
-        Dh+PHcP8kmL0JSaiLf3PT9xmdVPGP/B2JmWiL6A+7gIZ3vl1wRtWasiel4eoj1sG5zcUWysIFxcdr
-        NAD6gpo8PZTPz9pA++9QqG8rIV/M2RP5aCTalcHjaOZcKlz0RCcqraZiRX9owxkiOHDKW7xqxNQqq
-        9K3a4//A==;
-Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jqd0f-0006rl-37; Wed, 01 Jul 2020 13:42:45 +0000
-Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (Client did not present a certificate)
-        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 283B3302753;
-        Wed,  1 Jul 2020 15:42:44 +0200 (CEST)
-Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
-        id 0FB79203CDC4F; Wed,  1 Jul 2020 15:42:44 +0200 (CEST)
-Date:   Wed, 1 Jul 2020 15:42:44 +0200
-From:   Peter Zijlstra <peterz@infradead.org>
+        id S1730836AbgGAObH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 10:31:07 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:53975 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730245AbgGAObH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 10:31:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593613864;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=odI6jp+QIuVNBRTQv9UCKfBMg3oow/UWm9p5GmxvyyM=;
+        b=VQCz6Nft1CkliZXUhoP8smX2rzy++9O+jHeBV0yQBoq614G7h3ZCSAccLvKUw3EJcROD5f
+        Xf0FQGsBFTfEUXgnY+eiSHfHphIyrkCiwJ5TR+CnyFqPdNkxcZy8b3KJ2Q74bCvAB4DAno
+        kwFItGrdMQvRtknpasiskmay5KhUMDQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-342-FXgCsFH4PyyFtxmMnUOekA-1; Wed, 01 Jul 2020 10:31:00 -0400
+X-MC-Unique: FXgCsFH4PyyFtxmMnUOekA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DC8491B2C99B;
+        Wed,  1 Jul 2020 14:30:59 +0000 (UTC)
+Received: from bfoster (ovpn-120-48.rdu2.redhat.com [10.10.120.48])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 621EF4D9E6;
+        Wed,  1 Jul 2020 14:30:59 +0000 (UTC)
+Date:   Wed, 1 Jul 2020 10:30:57 -0400
+From:   Brian Foster <bfoster@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Ingo Molnar <mingo@redhat.com>
-Subject: Re: [Bug, sched, 5.8-rc2]: PREEMPT kernels crashing in
- check_preempt_wakeup() running fsx on XFS
-Message-ID: <20200701134244.GG4817@hirez.programming.kicks-ass.net>
-References: <20200626004722.GF2005@dread.disaster.area>
- <20200626073345.GI4800@hirez.programming.kicks-ass.net>
- <20200626223254.GH2005@dread.disaster.area>
- <20200627183042.GK4817@hirez.programming.kicks-ass.net>
- <20200629235533.GL2005@dread.disaster.area>
- <20200630085732.GT4817@hirez.programming.kicks-ass.net>
- <20200701022646.GO2005@dread.disaster.area>
- <20200701080213.GF4817@hirez.programming.kicks-ass.net>
- <20200701110644.GT2005@dread.disaster.area>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/4] xfs: add log item precommit operation
+Message-ID: <20200701143057.GA1087@bfoster>
+References: <20200623095015.1934171-1-david@fromorbit.com>
+ <20200623095015.1934171-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200701110644.GT2005@dread.disaster.area>
+In-Reply-To: <20200623095015.1934171-3-david@fromorbit.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 01, 2020 at 09:06:44PM +1000, Dave Chinner wrote:
-
-> > +/*
-> > + * Serialization rules:
-> > + *
-> > + * Lock order:
-> > + *
-> > + *   p->pi_lock
-> > + *     rq->lock
-> > + *       hrtimer_clock_base::cpu_base->lock
+On Tue, Jun 23, 2020 at 07:50:13PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> So these are accessed by the task_rq_lock() and rq_lock()
-> interfaces, right? And we take clock locks inside these because we
-> need to update timestamps/task clocks when tasks are first
-> scheduled?
-
-That's the hrtimer_start(), which we use for bandwidth control.
-sched_clock() is lockless.
-
-> What are all the rq_*pin_[un]lock() calls and how do they
-> factor into this?
-
-Ah, that's a lockdep annotation to ensure the rq->lock doesn't get
-unlocked by accident. We've had a bunch of races over the years where
-code accidentally unlocked rq->lock.
-
-Basically lockdep_pin_lock() allows you to 'pin' the lock and it will
-return a cookie. Any unlock of a pinned lock will generate a warning.
-lockdep_unpin_lock() requires the previously provided cookie, or again
-it will complain.
-
-Not sure where to put words on that, but I'll find something.
-
-> > + *
-> > + *  rq1->lock
-> > + *    rq2->lock  where: &rq1 < &rq2
-> > + *
+> For inodes that are dirty, we have an attached cluster buffer that
+> we want to use to track the dirty inode through the AIL.
+> Unfortunately, locking the cluster buffer and adding it to the
+> transaction when the inode is first logged in a transaction leads to
+> buffer lock ordering inversions.
 > 
-> Ok, I'm guessing this is when task migration is being performed?
-
-Yeah.
-
-> > + * Regular state:
-> > + *
-> > + * Normal scheduling state is serialized by rq->lock. __schedule() takes the
-> > + * local CPU's rq->lock, it optionally removes the task from the runqueue and
-> > + * always looks at the local rq data structures to find the most elegible task
-> > + * to run next.
-> > + *
-> > + * Task enqueue is also under rq->lock, possibly taken from another CPU.
-> > + * Wakeups from another LLC domain might use an IPI to transfer the enqueue
-> > + * to the local CPU to avoid bouncing the runqueue state around.
+> The specific problem is ordering against the AGI buffer. When
+> modifying unlinked lists, the buffer lock order is AGI -> inode
+> cluster buffer as the AGI buffer lock serialises all access to the
+> unlinked lists. Unfortunately, functionality like xfs_droplink()
+> logs the inode before calling xfs_iunlink(), as do various directory
+> manipulation functions. The inode can be logged way down in the
+> stack as far as the bmapi routines and hence, without a major
+> rewrite of lots of APIs there's no way we can avoid the inode being
+> logged by something until after the AGI has been logged.
 > 
-> That's ttwu_queue_wakelist()?
-
-Yes, added a reference to that.
-
-> I'm a little confused as to where ttwu_remote() fits into remote
-> wakeups, though. That piece of the puzzle hasn't dropped into place
-> yet...
-
-Ah, so try_to_wake_up() is about another task/context changing our
-p->state.
-
-Assume:
-
-  for (;;) {
-	set_current_task(TASK_UNINTERRUPTIBLE)
-
-	if (COND)
-		break;
-
-	schedule();
-  }
-  __set_current_task(TASK_RUNNING);
-
-Now, suppose another CPU/IRQ/etc.. does a wakeup between
-set_current_task() and schedule(). At that point our @p is still a
-running/runnable task, ttwu_remote() deals with this case.
-
-I'll improve the ttwu_remote() comment.
-
-> > + * Task wakeup, specifically wakeups that involve migration, are horribly
-> > + * complicated to avoid having to take two rq->locks.
-> > + *
-> > + * Special state:
-> > + *
-> > + * p->state    <- TASK_*
-> > + * p->on_cpu   <- { 0, 1 }
-> > + * p->on_rq    <- { 0, 1 = TASK_ON_RQ_QUEUED, 2 = TASK_ON_RQ_MIGRATING }
-> > + * task_cpu(p) <- set_task_cpu()
-> > + *
-> > + * System-calls and anything external will use task_rq_lock() which acquires
-> > + * both p->lock and rq->lock. As a consequence things like p->cpus_ptr are
-> > + * stable while holding either lock.
+> As we are going to be using ordered buffers for inode AIL tracking,
+> there isn't a need to actually lock that buffer against modification
+> as all the modifications are captured by logging the inode item
+> itself. Hence we don't actually need to join the cluster buffer into
+> the transaction until just before it is committed. This means we do
+> not perturb any of the existing buffer lock orders in transactions,
+> and the inode cluster buffer is always locked last in a transaction
+> that doesn't otherwise touch inode cluster buffers.
 > 
-> OK. Might be worthwhile iterating the objects that have this "stable
-> with one lock, modified under both locks" structures...
-
-Agreed, that was on the todo list. I called out p->cpus_ptr because
-that's directly used in the ttwu() code, but there's more. I'll dig them
-all out.
-
-> > + *
-> > + * p->state is changed locklessly using set_current_state(),
-> > + * __set_current_state() or set_special_state(), see their respective comments.
+> We do this by introducing a precommit log item method. A log item
+> method is used because it is likely dquots will be moved to this
+> same ordered buffer tracking scheme and hence will need a similar
+> callout. This commit just introduces the mechanism; the inode item
+> implementation is in followup commits.
 > 
-> /me goes code spelunking
+> The precommit items need to be sorted into consistent order as we
+> may be locking multiple items here. Hence if we have two dirty
+> inodes in cluster buffers A and B, and some other transaction has
+> two separate dirty inodes in the same cluster buffers, locking them
+> in different orders opens us up to ABBA deadlocks. Hence we sort the
+> items on the transaction based on the presence of a sort log item
+> method.
 > 
-> Ok, so those comments talk about "using a barrier" to order p->state
-> changes against external logic to avoid wakeup races, not about how
-> they are ordered or used internally.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Correct. Although we also make internal use of these memory barriers, us
-being frugal folk :-) You'll find it referenced in the ttwu() ordering
-comments, also some architectural code (switch_to()) relies on it.
+Seems like a nice abstraction, particularly when you consider the other
+use cases you described that should fall into place over time. A couple
+minor comments..
 
-> But it also mentions that the barrier matches with a full barrier in
-> wake_up_state() and that calls straight into ttwu(). Ah, so that's
-> what this "CONDITION" is - it's the external wakeup checks!
->
->         /*
->          * If we are going to wake up a thread waiting for CONDITION we
->          * need to ensure that CONDITION=1 done by the caller can not be
->          * reordered with p->state check below. This pairs with mb() in
->          * set_current_state() the waiting thread does.
->          */
->         raw_spin_lock_irqsave(&p->pi_lock, flags);
->         smp_mb__after_spinlock();
->         if (!(p->state & state))
->                 goto unlock;
+>  fs/xfs/xfs_icache.c |  1 +
+>  fs/xfs/xfs_trans.c  | 90 +++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_trans.h  |  6 ++-
+>  3 files changed, 95 insertions(+), 2 deletions(-)
 > 
-> My brain now connects this straight to well known task sleep/wakeup
-> code patterns, and this bit now makes a lot more sense....
+...
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 3c94e5ff4316..6f350490f84b 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -799,6 +799,89 @@ xfs_trans_committed_bulk(
+>  	spin_unlock(&ailp->ail_lock);
+>  }
+>  
+> +/*
+> + * Sort transaction items prior to running precommit operations. This will
+> + * attempt to order the items such that they will always be locked in the same
+> + * order. Items that have no sort function are moved to the end of the list
+> + * and so are locked last (XXX: need to check the logic matches the comment).
+> + *
 
-Just so, I'll see if I can make the comments with
-set_current_state()/try_to_wake_up()/__schedule() more consistent with
-one another. They're all trying to describe much the same as they
-co-operate to make that sleep/wakeup pattern work.
+Heh, I was going to ask what the expected behavior was with the various
+!iop_sort() cases and whether we can really expect those items to be
+isolated at the end of the list.
 
-> > + * p->on_rq is set by activate_task() and cleared by deactivate_task(), under
-> > + * rq->lock. Non-zero indicates the task is runnable, the special
-> > + * ON_RQ_MIGRATING state is used for migration without holding both rq->locks.
-> > + * It indicates task_cpu() is not stable, see *task_rq_lock().
-> > + *
-> > + * task_cpu(p) is changed by set_task_cpu(), the rules are intricate but basically:
-> > + *
-> > + *  - don't call set_task_cpu() on a blocked task
+> + * This may need refinement as different types of objects add sort functions.
+> + *
+> + * Function is more complex than it needs to be because we are comparing 64 bit
+> + * values and the function only returns 32 bit values.
+> + */
+> +static int
+> +xfs_trans_precommit_sort(
+> +	void			*unused_arg,
+> +	struct list_head	*a,
+> +	struct list_head	*b)
+> +{
+> +	struct xfs_log_item	*lia = container_of(a,
+> +					struct xfs_log_item, li_trans);
+> +	struct xfs_log_item	*lib = container_of(b,
+> +					struct xfs_log_item, li_trans);
+> +	int64_t			diff;
+> +
+> +	if (!lia->li_ops->iop_sort && !lib->li_ops->iop_sort)
+> +		return 0;
+> +	if (!lia->li_ops->iop_sort)
+> +		return 1;
+> +	if (!lib->li_ops->iop_sort)
+> +		return -1;
+
+I'm a little confused on what these values are supposed to mean if one
+of the two items is non-sortable. Is the purpose of this simply to move
+sortable items to the head and non-sortable toward the tail, as noted
+above?
+
+> +
+> +	diff = lia->li_ops->iop_sort(lia) - lib->li_ops->iop_sort(lib);
+> +	if (diff < 0)
+> +		return -1;
+> +	if (diff > 0)
+> +		return 1;
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Run transaction precommit functions.
+> + *
+> + * If there is an error in any of the callouts, then stop immediately and
+> + * trigger a shutdown to abort the transaction. There is no recovery possible
+> + * from errors at this point as the transaction is dirty....
+> + */
+> +static int
+> +xfs_trans_run_precommits(
+> +	struct xfs_trans	*tp)
+> +{
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	struct xfs_log_item	*lip, *n;
+> +	int			error = 0;
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp))
+> +		return -EIO;
+> +
+
+I'd rather not change behavior here. This effectively overrides the
+shutdown check in the caller because we get here regardless of whether
+the transaction has any pre-commit callouts or not. It seems like this
+is unnecessary, at least for the time being, if the precommit is
+primarily focused on sorting.
+
+Brian
+
+> +	/*
+> +	 * Sort the item list to avoid ABBA deadlocks with other transactions
+> +	 * running precommit operations that lock multiple shared items such as
+> +	 * inode cluster buffers.
+> +	 */
+> +	list_sort(NULL, &tp->t_items, xfs_trans_precommit_sort);
+> +
+> +	/*
+> +	 * Precommit operations can remove the log item from the transaction
+> +	 * if the log item exists purely to delay modifications until they
+> +	 * can be ordered against other operations. Hence we have to use
+> +	 * list_for_each_entry_safe() here.
+> +	 */
+> +	list_for_each_entry_safe(lip, n, &tp->t_items, li_trans) {
+> +		if (!test_bit(XFS_LI_DIRTY, &lip->li_flags))
+> +			continue;
+> +		if (lip->li_ops->iop_precommit) {
+> +			error = lip->li_ops->iop_precommit(tp, lip);
+> +			if (error)
+> +				break;
+> +		}
+> +	}
+> +	if (error)
+> +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> +	return error;
+> +}
+> +
+>  /*
+>   * Commit the given transaction to the log.
+>   *
+> @@ -823,6 +906,13 @@ __xfs_trans_commit(
+>  
+>  	trace_xfs_trans_commit(tp, _RET_IP_);
+>  
+> +	error = xfs_trans_run_precommits(tp);
+> +	if (error) {
+> +		if (tp->t_flags & XFS_TRANS_PERM_LOG_RES)
+> +			xfs_defer_cancel(tp);
+> +		goto out_unreserve;
+> +	}
+> +
+>  	/*
+>  	 * Finish deferred items on final commit. Only permanent transactions
+>  	 * should ever have deferred ops.
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index b752501818d2..26ea19bd0621 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -70,10 +70,12 @@ struct xfs_item_ops {
+>  	void (*iop_format)(struct xfs_log_item *, struct xfs_log_vec *);
+>  	void (*iop_pin)(struct xfs_log_item *);
+>  	void (*iop_unpin)(struct xfs_log_item *, int remove);
+> -	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
+> +	uint64_t (*iop_sort)(struct xfs_log_item *);
+> +	int (*iop_precommit)(struct xfs_trans *, struct xfs_log_item *);
+>  	void (*iop_committing)(struct xfs_log_item *, xfs_lsn_t commit_lsn);
+> -	void (*iop_release)(struct xfs_log_item *);
+>  	xfs_lsn_t (*iop_committed)(struct xfs_log_item *, xfs_lsn_t);
+> +	uint (*iop_push)(struct xfs_log_item *, struct list_head *);
+> +	void (*iop_release)(struct xfs_log_item *);
+>  	int (*iop_recover)(struct xfs_log_item *lip, struct xfs_trans *tp);
+>  	bool (*iop_match)(struct xfs_log_item *item, uint64_t id);
+>  };
+> -- 
+> 2.26.2.761.g0e0b3e54be
 > 
-> why? It's good to document the rule, but I haven't been able to find
-> an obvious explanation of why this rule exists....
 
-Ah, I forgot if there was a techinical reason for it, but the conceptual
-reason is that if a task isn't running, it's CPU assignment is
-irrelevant, it doesn't matter what CPU you're not running on.
-
-So I created rules where we only care about the CPU assignment for
-runnable tasks. I'll add this.
-
-(it makes hotplug easier, we don't have to even care if the cpu
-assignment is even possible)
-
-> > + *
-> > + *  - for try_to_wake_up(), called under p->pi_lock
-> 
-> What's the reason for it being under different locks if it's already
-> in runnable state? i.e. the lock that needs to be held is spelled
-> out on set_task_cpu():
-> 
->         * The caller should hold either p->pi_lock or rq->lock, when changing
-> 	*a task's CPU. ->pi_lock for waking tasks, rq->lock for runnable tasks.
-> 
-> But there's no explanation there or here of why the different locks
-> need to be used or how the two different situations don't
-> overlap/contend/race because they aren't holding the same locks. So
-> while I know rule exists, I don't understand the relationship
-> or logic that the rule emerges from.
-
-There's a hint here:
-
-+ * Task wakeup, specifically wakeups that involve migration, are horribly
-+ * complicated to avoid having to take two rq->locks.
-
-So ttwu() used to first acquire the 'old' rq->lock, then do
-CPU-selection and if new-cpu != old-cpu (a fairly common case) do
-set_task_cpu(), drop the old rq->lock, acquire new rq->lock and do the
-enqueue. Or something along those lines.
-
-It was found that the initial rq->lock in case of migration added
-significantly to the rq->lock contention for a number of workloads, so
-we made things complicated...
-
-I'll go explain it better.
-
-Thanks Dave!
