@@ -4,66 +4,82 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40FABC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 08:27:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C05AC433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 08:32:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 12B9320775
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 08:27:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1410A2074D
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 08:32:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oPnKx/rB"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qdapIMox"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728606AbgGAI1p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 04:27:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50798 "EHLO
+        id S1728902AbgGAIcf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 04:32:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728450AbgGAI1o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 04:27:44 -0400
+        with ESMTP id S1729047AbgGAIc3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 04:32:29 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75CC3C061755
-        for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2020 01:27:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71B13C03E979;
+        Wed,  1 Jul 2020 01:32:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=HWRUIH7nQ5n9/cjG2TP+TwPxD3+3l5RtpwKILN2cTmI=; b=oPnKx/rBTP3KbXktuRKFL7qHKd
-        36rkzowbmdCFj5tIcMxeP+rkn2nXcZ1nQ0tK20JD03OCZjoCf0Lrn9jvNil9JVe4P7Qa2gvJmP6OC
-        UsqNDzl5c+SPeRMVR9YNfSYdvQAO260Ipa85nwZPzL9hSbYOdpoSc4BajtCJhT99uWVxHQvkchOj+
-        8TUQmkEi0beEwk0H15Je2kq0UUEaTQrrLuyuNojmPz9Lrx9/5QtcVZqRPfzEG8I/Jamwc5HQWrZMM
-        HxtrGq8/1Rc+PP4C0ye18/qZu8DJi1HQp98OAbB1oZtvim7nRxMLlguNVihmTfkftBbdVJ0vSe4f5
-        Pz7Ml6dA==;
+        bh=vXiGSDx0OBTNUoDDVLCHJpE3R5npVOLQYlpMjYD89gk=; b=qdapIMox4Ek2eTE/n0txbbOjGF
+        oJGKiOEgDQ9amafICkn7wMpGQazpixnCsCP9vzB1sWllWfYlQ8DIw/BDrv8it538xchboPP1a3fnT
+        /r7lFtLJtFEe6qnkJAw62zmPT8rzrymyJ0nyAnw3cv66pExz0H6f2mtFbMKtbsSNR4N0LR36rhtwO
+        F0i0ZUtDzzu+A9TrM/ZBHha+soKQAt4lO4WQQDJtMr2tjHFNu5+PkR/hO/DfBja+fSrsZGFpUIUZL
+        IBFfzOqiowRXWGc4J2ORzoUaahAdW3PFVchNzsU3fVXrakWnQC9lWtXr6awjsuselgLhI1YRCo/YC
+        rWe3CgMQ==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jqY5l-0006ID-5v; Wed, 01 Jul 2020 08:27:41 +0000
-Date:   Wed, 1 Jul 2020 09:27:41 +0100
+        id 1jqYAK-0006UI-BJ; Wed, 01 Jul 2020 08:32:24 +0000
+Date:   Wed, 1 Jul 2020 09:32:24 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        edwin@etorok.net
-Subject: Re: [PATCH 9/9] xfs: move helpers that lock and unlock two inodes
- against userspace IO
-Message-ID: <20200701082741.GH20101@infradead.org>
-References: <159304785928.874036.4735877085735285950.stgit@magnolia>
- <159304791766.874036.17659898139855742701.stgit@magnolia>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Eric Sandeen <sandeen@redhat.com>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        Jonathan Corbet <corbet@lwn.net>, cgroups@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] doc: cgroup: add f2fs and xfs to supported list for
+ writeback
+Message-ID: <20200701083224.GI20101@infradead.org>
+References: <c8271324-9132-388c-5242-d7699f011892@redhat.com>
+ <20200630054217.GA27221@infradead.org>
+ <59265a9d-ee0f-4432-3f86-00d076aeb8e8@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <159304791766.874036.17659898139855742701.stgit@magnolia>
+In-Reply-To: <59265a9d-ee0f-4432-3f86-00d076aeb8e8@sandeen.net>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jun 24, 2020 at 06:18:37PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jun 30, 2020 at 08:59:34AM -0500, Eric Sandeen wrote:
+> On 6/30/20 12:42 AM, Christoph Hellwig wrote:
+> > On Mon, Jun 29, 2020 at 02:08:09PM -0500, Eric Sandeen wrote:
+> >> f2fs and xfs have both added support for cgroup writeback:
+> >>
+> >> 578c647 f2fs: implement cgroup writeback support
+> >> adfb5fb xfs: implement cgroup aware writeback
+> >>
+> >> so add them to the supported list in the docs.
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> >>
+> >> TBH I wonder about the wisdom of having this detail in
+> >> the doc, as it apparently gets missed quite often ...
+> > 
+> > I'd rather remove the list of file systems.  It has no chance of
+> > staying uptodate.
 > 
-> Move the double-inode locking helpers to xfs_inode.c since they're not
-> specific to reflink.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Is there any way for a user to know whether a filesytem does or doesn't
+> support it, in practice?
 
-Looks good:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+git-grep SB_I_CGROUPWB
