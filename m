@@ -6,124 +6,92 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9D3FC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 23:34:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B482C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 23:44:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D105C2077D
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 23:34:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83557207E8
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 23:44:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726465AbgGAXes (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 19:34:48 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:58274 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726438AbgGAXes (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 19:34:48 -0400
+        id S1727048AbgGAXoj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 19:44:39 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:38679 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726473AbgGAXoi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 19:44:38 -0400
 Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id C50D5D7A014;
-        Thu,  2 Jul 2020 09:34:44 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 43F79D5B378;
+        Thu,  2 Jul 2020 09:44:36 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jqmFV-0001Dy-Fe; Thu, 02 Jul 2020 09:34:41 +1000
-Date:   Thu, 2 Jul 2020 09:34:41 +1000
+        id 1jqmP5-0001EV-GY; Thu, 02 Jul 2020 09:44:35 +1000
+Date:   Thu, 2 Jul 2020 09:44:35 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        Eric Sandeen <sandeen@redhat.com>,
-        Amir Goldstein <amir73il@gmail.com>
-Subject: Re: [PATCH 14/18] xfs: refactor quota exceeded test
-Message-ID: <20200701233441.GE2005@dread.disaster.area>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 04/18] xfs: stop using q_core.d_flags in the quota code
+Message-ID: <20200701234435.GF2005@dread.disaster.area>
 References: <159353170983.2864738.16885438169173786208.stgit@magnolia>
- <159353180004.2864738.3571543752803090361.stgit@magnolia>
- <20200701085621.GN25171@infradead.org>
- <20200701175134.GU7606@magnolia>
+ <159353173676.2864738.5361850443664572160.stgit@magnolia>
+ <20200701225053.GA2005@dread.disaster.area>
+ <20200701231910.GQ7625@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200701175134.GU7606@magnolia>
+In-Reply-To: <20200701231910.GQ7625@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
         a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=3pUzYYSMGETwjZHzPfIA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=UcAKFKipnf-2x62ov5UA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 01, 2020 at 10:51:34AM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 01, 2020 at 09:56:21AM +0100, Christoph Hellwig wrote:
-> > On Tue, Jun 30, 2020 at 08:43:20AM -0700, Darrick J. Wong wrote:
+On Wed, Jul 01, 2020 at 04:19:10PM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 02, 2020 at 08:50:53AM +1000, Dave Chinner wrote:
+> > On Tue, Jun 30, 2020 at 08:42:16AM -0700, Darrick J. Wong wrote:
 > > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > > 
-> > > Refactor the open-coded test for whether or not we're over quota.
+> > > Use the incore dq_flags to figure out the dquot type.  This is the first
+> > > step towards removing xfs_disk_dquot from the incore dquot.
 > > > 
 > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > > ---
-> > >  fs/xfs/xfs_dquot.c |   95 ++++++++++++++++------------------------------------
-> > >  1 file changed, 30 insertions(+), 65 deletions(-)
+> > >  fs/xfs/libxfs/xfs_quota_defs.h |    2 ++
+> > >  fs/xfs/scrub/quota.c           |    4 ----
+> > >  fs/xfs/xfs_dquot.c             |   33 +++++++++++++++++++++++++++++++--
+> > >  fs/xfs/xfs_dquot.h             |    2 ++
+> > >  fs/xfs/xfs_dquot_item.c        |    6 ++++--
+> > >  fs/xfs/xfs_qm.c                |    4 ++--
+> > >  fs/xfs/xfs_qm.h                |    2 +-
+> > >  fs/xfs/xfs_qm_syscalls.c       |    9 +++------
+> > >  8 files changed, 45 insertions(+), 17 deletions(-)
 > > > 
 > > > 
-> > > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> > > index 35a113d1b42b..ef34c82c28a0 100644
-> > > --- a/fs/xfs/xfs_dquot.c
-> > > +++ b/fs/xfs/xfs_dquot.c
-> > > @@ -97,6 +97,33 @@ xfs_qm_adjust_dqlimits(
-> > >  		xfs_dquot_set_prealloc_limits(dq);
-> > >  }
+> > > diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+> > > index 56d9dd787e7b..459023b0a304 100644
+> > > --- a/fs/xfs/libxfs/xfs_quota_defs.h
+> > > +++ b/fs/xfs/libxfs/xfs_quota_defs.h
+> > > @@ -29,6 +29,8 @@ typedef uint16_t	xfs_qwarncnt_t;
 > > >  
-> > > +/*
-> > > + * Determine if this quota counter is over either limit and set the quota
-> > > + * timers as appropriate.
-> > > + */
-> > > +static inline void
-> > > +xfs_qm_adjust_res_timer(
-> > > +	struct xfs_dquot_res	*res,
-> > > +	struct xfs_def_qres	*dres)
-> > > +{
-> > > +	bool			over;
-> > > +
-> > > +#ifdef DEBUG
-> > > +	if (res->hardlimit)
-> > > +		ASSERT(res->softlimit <= res->hardlimit);
-> > > +#endif
+> > >  #define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
+> > >  
+> > > +#define XFS_DQ_ONDISK		(XFS_DQ_ALLTYPES)
 > > 
-> > Maybe:
-> > 	ASSERRT(!res->hardlimit || res->softlimit <= res->hardlimit);
+> > That's used as an on-disk flags mask. Perhaps XFS_DQF_ONDISK_MASK?
 > 
-> Changed.
-> 
-> > 
-> > > +
-> > > +	over = (res->softlimit && res->count > res->softlimit) ||
-> > > +	       (res->hardlimit && res->count > res->hardlimit);
-> > > +
-> > > +	if (over && res->timer == 0)
-> > > +		res->timer = ktime_get_real_seconds() + dres->timelimit;
-> > > +	else if (!over && res->timer != 0)
-> > > +		res->timer = 0;
-> > > +	else if (!over && res->timer == 0)
-> > > +		res->warnings = 0;
-> > 
-> > What about:
-> > 
-> > 	if ((res->softlimit && res->count > res->softlimit) ||
-> > 	    (res->hardlimit && res->count > res->hardlimit)) {
-> > 		if (res->timer == 0)	
-> > 			res->timer = ktime_get_real_seconds() + dres->timelimit;
-> > 	} else {
-> > 		if (res->timer)
-> > 			res->timer = 0;
-> > 		else
-> > 			res->warnings = 0;
-> > 	}
-> 
-> I don't care either way, but the last time I sent this patch out, Eric
-> and Amir seemed to want a flatter if structure:
+> Well, based on Christoph's suggestions I broke the incore dquot flags
+> (XFS_DQ_*) apart from the ondisk dquot flags (XFS_DQFLAG_*).  Not sure
+> if that's really better, but at least the namespaces are separate now.
 
-I much prefer Christoph's version - I was going to suggest the same
-sort of thing myself as the "flatter" version just looks needlessly
-convoluted to me.
+Sure, but the point I was trying to make is that "XFS_DQ_ONDISK"
+doesn't actually indicate what part of the on-disk dquot it refers
+to. We use the phrase "on-disk dquot" to refer to the entire on-disk
+dquot, not a subset of flags in a flags field in the on-disk
+dquot. Hence the name of this variable needs to be more specific as
+to what it applies to in the on-disk dquot...
 
 Cheers,
 
