@@ -7,152 +7,132 @@ X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28666C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 17:53:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E11F1C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 18:27:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0C4620771
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 17:53:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C35452082F
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 18:27:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PUXNBXSh"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="J4XQeBit"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728453AbgGARxt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 13:53:49 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:42628 "EHLO
+        id S1732910AbgGAS1P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 14:27:15 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:43000 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726449AbgGARxt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 13:53:49 -0400
+        with ESMTP id S1732911AbgGAS1O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 14:27:14 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 061HrPxO023890;
-        Wed, 1 Jul 2020 17:53:39 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 061IHN3k059733;
+        Wed, 1 Jul 2020 18:27:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=xcyYgIDG67Yx9unrZayHLt1w5l0hfL+/lhyYlpKyrdk=;
- b=PUXNBXShA6YJiwf11l1G960ZSjLM6T43zUl8D2pn4DWICWauawFsgJQdL9UWq0cmFnIi
- QiOo8HwlrgvCQgtkGSThrsciQicACwMpU3noyOA12LWQpAaMRDBn+xEZlGqMYpZOwtjl
- bRELOU7DXdTW9KeYJs6Dz2J1Vucxgv27/GRO44ZW6DzgxucYSBa6C/1bsfrUVUbe+zro
- K57oSTG+s3iZTHAWZXC5FbNgDP6MWkNmV30OiAJTjJ+hdaMijVsLg+G3tSCFWpd4JsRH
- 6bPQZO9iXvST6JCFLc32fq9x6BWYNPfW11TYQkbgphOeIKAlMPwghQ8Eph6v85F9G+St QQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 31ywrbt7h1-1
+ bh=fI5y4uFVlf5Dd6wQYeRYeV5fTryZBqBOrrrOyu6Q/es=;
+ b=J4XQeBitxCcGRXTeCMveU68ut+R0puINoXLfkq+R2v4wHzhVVWSyl/c6pQY5xVKrhrDC
+ Q5RlzKx4z16YMUcF0O++3hcR/k0CtGcD0/TYtGCdssijBmb1rhXRFBYENGT1M4PjsUOI
+ 6K9GMpiwaomOcoxypgMQOg2PlBgoQDWdVx4WDU3UlQCg05qVOyjhsNAsL+paqwTKpTMw
+ hy37OkJpYaLWD4Ny2DBrHn4CsHfhEE0FQy4l1UfYoEr7NI1RqUohsYTdqJ6aOU9Dfbxq
+ mbwy9VoPqFA35ZpsKrRh50hBgPhMXaI81ge9fN+1v6nXmbgwx9o4033HQJe/uI9M8XYO jw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 31ywrbtdm4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 01 Jul 2020 17:53:39 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 061HWk1u053043;
-        Wed, 1 Jul 2020 17:51:39 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 31xg16vsgg-1
+        Wed, 01 Jul 2020 18:27:11 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 061IIcLh174280;
+        Wed, 1 Jul 2020 18:25:10 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 31xfvubnt0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 01 Jul 2020 17:51:38 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 061HpZux030210;
-        Wed, 1 Jul 2020 17:51:35 GMT
+        Wed, 01 Jul 2020 18:25:10 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 061IP9Ze026670;
+        Wed, 1 Jul 2020 18:25:09 GMT
 Received: from localhost (/10.159.237.139)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 01 Jul 2020 17:51:35 +0000
-Date:   Wed, 1 Jul 2020 10:51:34 -0700
+        with ESMTP ; Wed, 01 Jul 2020 18:25:09 +0000
+Date:   Wed, 1 Jul 2020 11:25:08 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>,
-        Amir Goldstein <amir73il@gmail.com>
-Subject: Re: [PATCH 14/18] xfs: refactor quota exceeded test
-Message-ID: <20200701175134.GU7606@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 03/18] xfs: validate ondisk/incore dquot flags
+Message-ID: <20200701182508.GV7606@magnolia>
 References: <159353170983.2864738.16885438169173786208.stgit@magnolia>
- <159353180004.2864738.3571543752803090361.stgit@magnolia>
- <20200701085621.GN25171@infradead.org>
+ <159353172899.2864738.6438709598863248951.stgit@magnolia>
+ <20200701084208.GC25171@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200701085621.GN25171@infradead.org>
+In-Reply-To: <20200701084208.GC25171@infradead.org>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- mlxlogscore=999 suspectscore=0 bulkscore=0 mlxscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2007010124
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0 spamscore=0
+ phishscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2007010128
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxlogscore=999
  clxscore=1015 cotscore=-2147483648 priorityscore=1501 lowpriorityscore=0
- malwarescore=0 mlxscore=0 adultscore=0 suspectscore=0 impostorscore=0
+ malwarescore=0 mlxscore=0 adultscore=0 suspectscore=1 impostorscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2007010125
+ engine=8.12.0-2004280000 definitions=main-2007010128
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 01, 2020 at 09:56:21AM +0100, Christoph Hellwig wrote:
-> On Tue, Jun 30, 2020 at 08:43:20AM -0700, Darrick J. Wong wrote:
+On Wed, Jul 01, 2020 at 09:42:08AM +0100, Christoph Hellwig wrote:
+> On Tue, Jun 30, 2020 at 08:42:09AM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Refactor the open-coded test for whether or not we're over quota.
+> > While loading dquot records off disk, make sure that the quota type
+> > flags are the same between the incore dquot and the ondisk dquot.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  fs/xfs/xfs_dquot.c |   95 ++++++++++++++++------------------------------------
-> >  1 file changed, 30 insertions(+), 65 deletions(-)
+> >  fs/xfs/xfs_dquot.c |   23 ++++++++++++++++++++---
+> >  1 file changed, 20 insertions(+), 3 deletions(-)
 > > 
 > > 
 > > diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-> > index 35a113d1b42b..ef34c82c28a0 100644
+> > index d5b7f03e93c8..46c8ca83c04d 100644
 > > --- a/fs/xfs/xfs_dquot.c
 > > +++ b/fs/xfs/xfs_dquot.c
-> > @@ -97,6 +97,33 @@ xfs_qm_adjust_dqlimits(
-> >  		xfs_dquot_set_prealloc_limits(dq);
+> > @@ -524,13 +524,27 @@ xfs_dquot_alloc(
 > >  }
 > >  
-> > +/*
-> > + * Determine if this quota counter is over either limit and set the quota
-> > + * timers as appropriate.
-> > + */
-> > +static inline void
-> > +xfs_qm_adjust_res_timer(
-> > +	struct xfs_dquot_res	*res,
-> > +	struct xfs_def_qres	*dres)
-> > +{
-> > +	bool			over;
-> > +
-> > +#ifdef DEBUG
-> > +	if (res->hardlimit)
-> > +		ASSERT(res->softlimit <= res->hardlimit);
-> > +#endif
+> >  /* Copy the in-core quota fields in from the on-disk buffer. */
+> > -STATIC void
+> > +STATIC int
+> >  xfs_dquot_from_disk(
+> >  	struct xfs_dquot	*dqp,
+> >  	struct xfs_buf		*bp)
+> >  {
+> >  	struct xfs_disk_dquot	*ddqp = bp->b_addr + dqp->q_bufoffset;
+> >  
+> > +	/*
+> > +	 * The only field the verifier didn't check was the quota type flag, so
+> > +	 * do that here.
+> > +	 */
+> > +	if ((dqp->dq_flags & XFS_DQ_ALLTYPES) !=
+> > +	    (ddqp->d_flags & XFS_DQ_ALLTYPES) ||
+> > +	    dqp->q_core.d_id != ddqp->d_id) {
 > 
-> Maybe:
-> 	ASSERRT(!res->hardlimit || res->softlimit <= res->hardlimit);
-
-Changed.
-
+> The comment looks a little weird, as this also checks d_id.  Also
+> xfs_dquot_verify verifies d_flags against generally bogus value, it
+> just doesn't check that it matches the type we are looking for.
+> Last but not least dqp->dq_flags only contains the type at this
+> point.
 > 
-> > +
-> > +	over = (res->softlimit && res->count > res->softlimit) ||
-> > +	       (res->hardlimit && res->count > res->hardlimit);
-> > +
-> > +	if (over && res->timer == 0)
-> > +		res->timer = ktime_get_real_seconds() + dres->timelimit;
-> > +	else if (!over && res->timer != 0)
-> > +		res->timer = 0;
-> > +	else if (!over && res->timer == 0)
-> > +		res->warnings = 0;
+> So what about something like:
 > 
-> What about:
-> 
-> 	if ((res->softlimit && res->count > res->softlimit) ||
-> 	    (res->hardlimit && res->count > res->hardlimit)) {
-> 		if (res->timer == 0)	
-> 			res->timer = ktime_get_real_seconds() + dres->timelimit;
-> 	} else {
-> 		if (res->timer)
-> 			res->timer = 0;
-> 		else
-> 			res->warnings = 0;
-> 	}
+> 	/*
+> 	 * Ensure we got the type and ID we were looking for.  Everything else
+> 	 * we checked by the verifier.
+> 	 */
+> 	if ((ddqp->d_flags & XFS_DQ_ALLTYPES) != dqp->dq_flags ||
+> 	    ddqp->d_id != dqp->q_core.d_id)
 
-I don't care either way, but the last time I sent this patch out, Eric
-and Amir seemed to want a flatter if structure:
-
-https://lore.kernel.org/linux-xfs/b979d33d-361b-88cd-699c-7e5f1c621698@sandeen.net/
-https://lore.kernel.org/linux-xfs/CAOQ4uxiveTQu8_7UOvN07=P4o9hBBZTCyu4sSw5UpbrNPQL2pQ@mail.gmail.com/
-
-Granted that was before I pulled the whole thing into a separate helper
-function, so maybe the context is different here...?
+Sounds good to me.  I'll make that change.
 
 --D
+
+> 
