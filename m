@@ -2,113 +2,212 @@ Return-Path: <SRS0=D+gV=AM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7F4BC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 08:59:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CA15C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 10:19:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B564620775
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 08:59:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E94B320722
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 10:19:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bnuQUPQo"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dUvxZlNF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726302AbgGAI7S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 04:59:18 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:41398 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726009AbgGAI7S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 04:59:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1593593957;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=RXx0Lt2k/CnFtiPZfqkgGhtQHxk3BrTjWviC2VpC1Fo=;
-        b=bnuQUPQoOaGzsA25f3r6uRDAFqXDtvZsJB1eAg4M+wb4gySxf11p4KWeljDjpW+ARQhbaW
-        /Qx7sU1NWT81ZJgMMhMulGdjOrtnE74cwsuY9YrfYPgCL3PO0Ig2IIXf6edx+HPb8QwJV4
-        IZNTdGe+SnjdDZBjU2OwoeY0n6oafYQ=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-66-2_8iNpmBMcay40VKKNMeJQ-1; Wed, 01 Jul 2020 04:59:15 -0400
-X-MC-Unique: 2_8iNpmBMcay40VKKNMeJQ-1
-Received: by mail-pg1-f197.google.com with SMTP id j9so13793814pgm.8
-        for <linux-xfs@vger.kernel.org>; Wed, 01 Jul 2020 01:59:15 -0700 (PDT)
+        id S1729842AbgGAKTQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 06:19:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39928 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729834AbgGAKTK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 06:19:10 -0400
+Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 005AFC061755
+        for <linux-xfs@vger.kernel.org>; Wed,  1 Jul 2020 03:19:09 -0700 (PDT)
+Received: by mail-pj1-x1042.google.com with SMTP id k71so7283144pje.0
+        for <linux-xfs@vger.kernel.org>; Wed, 01 Jul 2020 03:19:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=bV/p3+fYB4gfSGnZD1iDd3JeAq0/roj+X/IdIqKVNaM=;
+        b=dUvxZlNFxdCTXpF2ejgi/8/t7CWa3UOVaZd8lmJLAsYxvSnSA8fhhqEa+ig3E+aoEb
+         jDVnqvxnZdzy6JM1Cj4IRy7e0R1xpkH2Twh4jQUa9mPtQRw5RBcSq2WtmTnT4vnRKuxC
+         GbZzb+qAkzaE6c/7GCSn2G0nXYpgqCmKMuiuwi0W6R98CoaAldxD1p68Y04PengZLTNQ
+         9Gr5lf6m44yU+CGf9Po5DPdFOGD1nZNLWyGXYTCWvs/4FMt13Dlri5xjkFQ80hbHEC7y
+         38QK4L9j8GZy6GOj69umku0HhkA7u4JJi3S4lgAg6w0Ys54scNMlzcFLMnjgOmYv30I9
+         miig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=RXx0Lt2k/CnFtiPZfqkgGhtQHxk3BrTjWviC2VpC1Fo=;
-        b=me93PIi9CIVGeijZeLYR3KWHHaJwxN0ciwfjaT8ctu5LMfJtxc1HnvatvJ8QRt/MOn
-         Tru8ySaAl9tkddhR6/DfNLFLal+a9xZv5FIRLdFf4Gld1pbA7IXEiaw3tLUmNIj61yRP
-         Kn+FOjt3CxMBupoAIThD3XLKtK05rOe5xG6nQAhDa9zy77CYOp8wksl25yVeOQdQKk8Z
-         cPSIu4XFGDJjelycKjvY/ZyHJqpOIlF2437LLbWlb9PDVc90smi2GSv6cQluTEvXIBO8
-         +suolBBWvxK4hcfmT75KsHpgFAMJmcJg49/38XfDcIdPclEZZzblS3IZdKZfryCwaZG/
-         EuxA==
-X-Gm-Message-State: AOAM531c3Q0+353qoNbAFhKB7Z9y4M8bXwOBcLv59rAGRAAGiWk3ieol
-        CqJqDSxXxdunlaTcJ0arpVOLH9/rLWKQ2ljallkJ62UQoHU+0SEL98vcPYLEs710SVT32m+tFvS
-        ieR/LTBX4T+MoDe3cbJXt
-X-Received: by 2002:a17:90a:32cb:: with SMTP id l69mr24314076pjb.205.1593593954518;
-        Wed, 01 Jul 2020 01:59:14 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyYW7b9ZMALy+n/Mdm/mfra0+RzcqV8FHp9AfC83mw1WsO6Wa7/54aPJr0Tzh3pzfUrg3GBFg==
-X-Received: by 2002:a17:90a:32cb:: with SMTP id l69mr24314057pjb.205.1593593954246;
-        Wed, 01 Jul 2020 01:59:14 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id k23sm4838744pgb.92.2020.07.01.01.59.12
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=bV/p3+fYB4gfSGnZD1iDd3JeAq0/roj+X/IdIqKVNaM=;
+        b=VbeNPxBxPLBK4IkP6AgMpoO6Onz210FftCyfgXOhL8DDD/X3to4xU6MMwhZAZcEK0q
+         xhk4N65jx+SaZhmrn9kw4cke06T5UEETPf2KXucedvLaKqlReu7ho6Fm+mYThKmcd0bm
+         rDopsw/x6GjKOj0x8qQCD61UqSYjEjIAPs/nm+iNF7XJizxxwJmKutSng55QZqoDHfGY
+         EPFiA8tKvovRVS6+fIshots+MPZXpiDZ7GK22kDTE16pUfDNhajPqfgZ+BEG4XqFnETQ
+         SqMK50ibbjv4bSwhJ0H16KxbbgTYKbGIAP5gWQnL8SOqwKJfHoYrs3DYgQFxc4kHVYZj
+         JmJg==
+X-Gm-Message-State: AOAM530k6gFix+eFsI3gddFSWtoDG4GjePUYcUziiJV73fQxslnZWtl8
+        JK4epdbuG73e9ve35MeoZI4=
+X-Google-Smtp-Source: ABdhPJxBTYb+GoBjgGMI3hNDYj4YSN9MZLwOOKd6bC1EUk5Mv9woTK3OFD4mu4l5Vakk4LSN2CyzFQ==
+X-Received: by 2002:a17:902:7896:: with SMTP id q22mr22128490pll.237.1593598749499;
+        Wed, 01 Jul 2020 03:19:09 -0700 (PDT)
+Received: from garuda.localnet ([122.171.188.144])
+        by smtp.gmail.com with ESMTPSA id d5sm5255383pfa.71.2020.07.01.03.19.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Jul 2020 01:59:13 -0700 (PDT)
-Date:   Wed, 1 Jul 2020 16:59:04 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
+        Wed, 01 Jul 2020 03:19:09 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: track unlinked inodes in core inode
-Message-ID: <20200701085904.GB10152@xiangao.remote.csb>
-References: <20200623095015.1934171-1-david@fromorbit.com>
- <20200623095015.1934171-4-david@fromorbit.com>
+Subject: Re: [PATCH 14/18] xfs: refactor quota exceeded test
+Date:   Wed, 01 Jul 2020 15:49:06 +0530
+Message-ID: <24519076.D1bH60dLAQ@garuda>
+In-Reply-To: <159353180004.2864738.3571543752803090361.stgit@magnolia>
+References: <159353170983.2864738.16885438169173786208.stgit@magnolia> <159353180004.2864738.3571543752803090361.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200623095015.1934171-4-david@fromorbit.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 23, 2020 at 07:50:14PM +1000, Dave Chinner wrote:
+On Tuesday 30 June 2020 9:13:20 PM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Refactor the open-coded test for whether or not we're over quota.
+>
 
-...
+The changes look good to me.
 
-> +static struct xfs_inode *
-> +xfs_iunlink_ilookup(
->  	struct xfs_perag	*pag,
->  	xfs_agino_t		agino)
->  {
-> -	struct xfs_iunlink	*iu;
-> +	struct xfs_mount	*mp = pag->pag_mount;
-> +	struct xfs_inode	*ip;
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_dquot.c |   95 ++++++++++++++++------------------------------------
+>  1 file changed, 30 insertions(+), 65 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 35a113d1b42b..ef34c82c28a0 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -97,6 +97,33 @@ xfs_qm_adjust_dqlimits(
+>  		xfs_dquot_set_prealloc_limits(dq);
+>  }
 >  
-> -	iu = rhashtable_lookup_fast(&pag->pagi_unlinked_hash, &agino,
-> -			xfs_iunlink_hash_params);
+> +/*
+> + * Determine if this quota counter is over either limit and set the quota
+> + * timers as appropriate.
+> + */
+> +static inline void
+> +xfs_qm_adjust_res_timer(
+> +	struct xfs_dquot_res	*res,
+> +	struct xfs_def_qres	*dres)
+> +{
+> +	bool			over;
+> +
+> +#ifdef DEBUG
+> +	if (res->hardlimit)
+> +		ASSERT(res->softlimit <= res->hardlimit);
+> +#endif
+> +
+> +	over = (res->softlimit && res->count > res->softlimit) ||
+> +	       (res->hardlimit && res->count > res->hardlimit);
+> +
+> +	if (over && res->timer == 0)
+> +		res->timer = ktime_get_real_seconds() + dres->timelimit;
+> +	else if (!over && res->timer != 0)
+> +		res->timer = 0;
+> +	else if (!over && res->timer == 0)
+> +		res->warnings = 0;
+> +}
+> +
+>  /*
+>   * Check the limits and timers of a dquot and start or reset timers
+>   * if necessary.
+> @@ -121,71 +148,9 @@ xfs_qm_adjust_dqtimers(
+>  	ASSERT(dq->q_id);
+>  	defq = xfs_get_defquota(qi, xfs_dquot_type(dq));
+>  
+> -#ifdef DEBUG
+> -	if (dq->q_blk.hardlimit)
+> -		ASSERT(dq->q_blk.softlimit <= dq->q_blk.hardlimit);
+> -	if (dq->q_ino.hardlimit)
+> -		ASSERT(dq->q_ino.softlimit <= dq->q_ino.hardlimit);
+> -	if (dq->q_rtb.hardlimit)
+> -		ASSERT(dq->q_rtb.softlimit <= dq->q_rtb.hardlimit);
+> -#endif
+> -
+> -	if (!dq->q_blk.timer) {
+> -		if ((dq->q_blk.softlimit &&
+> -		     (dq->q_blk.count > dq->q_blk.softlimit)) ||
+> -		    (dq->q_blk.hardlimit &&
+> -		     (dq->q_blk.count > dq->q_blk.hardlimit))) {
+> -			dq->q_blk.timer = ktime_get_real_seconds() +
+> -					defq->dfq_blk.timelimit;
+> -		} else {
+> -			dq->q_blk.warnings = 0;
+> -		}
+> -	} else {
+> -		if ((!dq->q_blk.softlimit ||
+> -		     (dq->q_blk.count <= dq->q_blk.softlimit)) &&
+> -		    (!dq->q_blk.hardlimit ||
+> -		    (dq->q_blk.count <= dq->q_blk.hardlimit))) {
+> -			dq->q_blk.timer = 0;
+> -		}
+> -	}
+> -
+> -	if (!dq->q_ino.timer) {
+> -		if ((dq->q_ino.softlimit &&
+> -		     (dq->q_ino.count > dq->q_ino.softlimit)) ||
+> -		    (dq->q_ino.hardlimit &&
+> -		     (dq->q_ino.count > dq->q_ino.hardlimit))) {
+> -			dq->q_ino.timer = ktime_get_real_seconds() +
+> -					defq->dfq_ino.timelimit;
+> -		} else {
+> -			dq->q_ino.warnings = 0;
+> -		}
+> -	} else {
+> -		if ((!dq->q_ino.softlimit ||
+> -		     (dq->q_ino.count <= dq->q_ino.softlimit))  &&
+> -		    (!dq->q_ino.hardlimit ||
+> -		     (dq->q_ino.count <= dq->q_ino.hardlimit))) {
+> -			dq->q_ino.timer = 0;
+> -		}
+> -	}
+> -
+> -	if (!dq->q_rtb.timer) {
+> -		if ((dq->q_rtb.softlimit &&
+> -		     (dq->q_rtb.count > dq->q_rtb.softlimit)) ||
+> -		    (dq->q_rtb.hardlimit &&
+> -		     (dq->q_rtb.count > dq->q_rtb.hardlimit))) {
+> -			dq->q_rtb.timer = ktime_get_real_seconds() +
+> -					defq->dfq_rtb.timelimit;
+> -		} else {
+> -			dq->q_rtb.warnings = 0;
+> -		}
+> -	} else {
+> -		if ((!dq->q_rtb.softlimit ||
+> -		     (dq->q_rtb.count <= dq->q_rtb.softlimit)) &&
+> -		    (!dq->q_rtb.hardlimit ||
+> -		     (dq->q_rtb.count <= dq->q_rtb.hardlimit))) {
+> -			dq->q_rtb.timer = 0;
+> -		}
+> -	}
+> +	xfs_qm_adjust_res_timer(&dq->q_blk, &defq->dfq_blk);
+> +	xfs_qm_adjust_res_timer(&dq->q_ino, &defq->dfq_ino);
+> +	xfs_qm_adjust_res_timer(&dq->q_rtb, &defq->dfq_rtb);
+>  }
+>  
+>  /*
+> 
+> 
 
-Just notice that when working on this patchset. Since pagi_unlinked_hash
-is unused now, let's kill pagi_unlinked_hash in xfs_perag as well.
 
-typedef struct xfs_perag {
-...
-struct rhashtable       pagi_unlinked_hash;
-...
-};
+-- 
+chandan
 
-(I will try to add a mutex and a tail xfs_inode for this later
- in this structure...)
 
-Also I noticed xfs_iunlink_insert_inode and xfs_iunlink_remove_inode
-are used once now, maybe folding into the caller would be better...
-(Just my personal thought...)
-
-Thanks,
-Gao Xiang
 
