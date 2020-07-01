@@ -2,110 +2,149 @@ Return-Path: <SRS0=D+gV=AM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D3F4C433E2
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 18:46:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B5F7C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 18:49:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D0812085B
-	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 18:46:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C86420760
+	for <linux-xfs@archiver.kernel.org>; Wed,  1 Jul 2020 18:49:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="K+qH9l5u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726594AbgGASqp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 14:46:45 -0400
-Received: from sandeen.net ([63.231.237.45]:42387 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725862AbgGASqp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 1 Jul 2020 14:46:45 -0400
-Received: from [10.0.0.11] (liberator [10.0.0.11])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726021AbgGAStG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 14:49:06 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:58604 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726009AbgGAStG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 14:49:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593629343;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TN/nxRsadnDgynU0Vz0HaIEVsUduOsCFWWAv63hpkI4=;
+        b=K+qH9l5uTdq6bBXEOsD+kkwRi2ZJqUi7lL04VHeBLk1Wzq4Grfb4IHVaUT/mr65v5np0Jo
+        mGfvK8R7sLweu0yfyRnS3GyYIedOb6ShKmaIwLqEJa27fH+5/sFD33Qy0amK1arMD3SiZZ
+        EzCIB4VUUCqN41ZiPZcBk622C1OELh8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-507-ZUTRldzcMkOVVjHUXY09vQ-1; Wed, 01 Jul 2020 14:49:00 -0400
+X-MC-Unique: ZUTRldzcMkOVVjHUXY09vQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 870BD120F;
-        Wed,  1 Jul 2020 13:46:38 -0500 (CDT)
-Subject: Re: Separate user- and project- quota ?
-To:     Diego Zuccato <diego.zuccato@unibo.it>, linux-xfs@vger.kernel.org
-References: <93882c1f-f26e-96c7-0a60-68fc9381e36c@unibo.it>
- <2c0bfee3-01cc-65cf-2be1-1af9432a18be@sandeen.net>
- <df054c4d-a1e1-2425-3319-dafa88fc9f08@unibo.it>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <9c64b36f-8222-a031-b458-9b15d8e6831f@sandeen.net>
-Date:   Wed, 1 Jul 2020 13:46:42 -0500
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8FC28800C60;
+        Wed,  1 Jul 2020 18:48:59 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1EB4873FC1;
+        Wed,  1 Jul 2020 18:48:59 +0000 (UTC)
+Subject: Re: [PATCH 14/18] xfs: refactor quota exceeded test
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>
+References: <159353170983.2864738.16885438169173786208.stgit@magnolia>
+ <159353180004.2864738.3571543752803090361.stgit@magnolia>
+ <20200701085621.GN25171@infradead.org> <20200701175134.GU7606@magnolia>
+From:   Eric Sandeen <sandeen@redhat.com>
+Message-ID: <113694f7-5695-e245-5531-e8534d44a476@redhat.com>
+Date:   Wed, 1 Jul 2020 13:48:58 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.9.0
 MIME-Version: 1.0
-In-Reply-To: <df054c4d-a1e1-2425-3319-dafa88fc9f08@unibo.it>
-Content-Type:   text/plain; charset=US-ASCII
+In-Reply-To: <20200701175134.GU7606@magnolia>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/1/20 3:41 AM, Diego Zuccato wrote:
-> Il 28/06/20 20:22, Eric Sandeen ha scritto:
+On 7/1/20 12:51 PM, Darrick J. Wong wrote:
+> On Wed, Jul 01, 2020 at 09:56:21AM +0100, Christoph Hellwig wrote:
+>> On Tue, Jun 30, 2020 at 08:43:20AM -0700, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Refactor the open-coded test for whether or not we're over quota.
+>>>
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>> ---
+>>>  fs/xfs/xfs_dquot.c |   95 ++++++++++++++++------------------------------------
+>>>  1 file changed, 30 insertions(+), 65 deletions(-)
+>>>
+>>>
+>>> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+>>> index 35a113d1b42b..ef34c82c28a0 100644
+>>> --- a/fs/xfs/xfs_dquot.c
+>>> +++ b/fs/xfs/xfs_dquot.c
+>>> @@ -97,6 +97,33 @@ xfs_qm_adjust_dqlimits(
+>>>  		xfs_dquot_set_prealloc_limits(dq);
+>>>  }
+>>>  
+>>> +/*
+>>> + * Determine if this quota counter is over either limit and set the quota
+>>> + * timers as appropriate.
+>>> + */
+>>> +static inline void
+>>> +xfs_qm_adjust_res_timer(
+>>> +	struct xfs_dquot_res	*res,
+>>> +	struct xfs_def_qres	*dres)
+>>> +{
+>>> +	bool			over;
+>>> +
+>>> +#ifdef DEBUG
+>>> +	if (res->hardlimit)
+>>> +		ASSERT(res->softlimit <= res->hardlimit);
+>>> +#endif
+>>
+>> Maybe:
+>> 	ASSERRT(!res->hardlimit || res->softlimit <= res->hardlimit);
 > 
->> I think what you're asking is whether a file in a project quota directory
->> can avoid user quota accounting, and I'm pretty sure the answer is no.
-> Maybe it could be a feature request :)
+> Changed.
 > 
->> I think you'll be limited by the first quota limit that gets reached.
-> Verified that. :(
+>>
+>>> +
+>>> +	over = (res->softlimit && res->count > res->softlimit) ||
+>>> +	       (res->hardlimit && res->count > res->hardlimit);
+>>> +
+>>> +	if (over && res->timer == 0)
+>>> +		res->timer = ktime_get_real_seconds() + dres->timelimit;
+>>> +	else if (!over && res->timer != 0)
+>>> +		res->timer = 0;
+>>> +	else if (!over && res->timer == 0)
+>>> +		res->warnings = 0;
+>>
+>> What about:
+>>
+>> 	if ((res->softlimit && res->count > res->softlimit) ||
+>> 	    (res->hardlimit && res->count > res->hardlimit)) {
+>> 		if (res->timer == 0)	
+>> 			res->timer = ktime_get_real_seconds() + dres->timelimit;
+>> 	} else {
+>> 		if (res->timer)
+>> 			res->timer = 0;
+>> 		else
+>> 			res->warnings = 0;
+>> 	}
 > 
-> Moreover, I've had troubles at reboot because the superblock did not
-> support both group and project quotas. Didn't see anywhere in the docs
-> you couldn't have both enabled at the same time. Maybe i'ts just because
-> it's an "old" filesystem (IIRC created about 10y ago). I'd suggest a
-> "graceful soft failure" in that case: just emit a warning and
-> disable/ignore last option requested. Recovery of a remote machine would
-> be way easier :)
+> I don't care either way, but the last time I sent this patch out, Eric
+> and Amir seemed to want a flatter if structure:
+> 
+> https://lore.kernel.org/linux-xfs/b979d33d-361b-88cd-699c-7e5f1c621698@sandeen.net/
+> https://lore.kernel.org/linux-xfs/CAOQ4uxiveTQu8_7UOvN07=P4o9hBBZTCyu4sSw5UpbrNPQL2pQ@mail.gmail.com/
+> 
+> Granted that was before I pulled the whole thing into a separate helper
+> function, so maybe the context is different here...?
 
-Hm, yes, worth a look.  All 3 have been supported together for quite some
-time now, I didn't know it reacted badly on old filesystems.
-
-What did the failure look like?
+I think it is different.  I'm not too hung up about either way and
+can't promise to dedicate time to thinking about it soon, so -
+as you wish.  :)
 
 -Eric
+
