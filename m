@@ -2,171 +2,207 @@ Return-Path: <SRS0=cy20=AN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18166C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jul 2020 00:59:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8733C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jul 2020 02:06:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D948D2070C
-	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jul 2020 00:59:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C236A206DD
+	for <linux-xfs@archiver.kernel.org>; Thu,  2 Jul 2020 02:06:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IRhMEajk"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AmW3RZi7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727805AbgGBA7l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 1 Jul 2020 20:59:41 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:48570 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726637AbgGBA7k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 20:59:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1593651578;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=Sh4KPebLPMiQTSq94J+ueizqXBs0f85eCZhJCTEhzNY=;
-        b=IRhMEajkdDGIXMrKMMAmIchS1uCPQ7B5cjPeK6QVnECxG6ZvaG9zxKCrqJk4+eh9CMhh9X
-        n8w/ryyndBPg7UeDV6CAaU4HSGsh0sm8AqH+/qrDkKtZJNiulwhfQPBG/ggaMVB9HsfewH
-        dTh4ORQdzuKpe7MMPuA7lRRgCKxOs/I=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-336-sz62XHqhMWyXVzIL3G8wBQ-1; Wed, 01 Jul 2020 20:59:37 -0400
-X-MC-Unique: sz62XHqhMWyXVzIL3G8wBQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F1FF6185B39B;
-        Thu,  2 Jul 2020 00:59:35 +0000 (UTC)
-Received: from llong.com (ovpn-118-140.rdu2.redhat.com [10.10.118.140])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1CCEA73FD2;
-        Thu,  2 Jul 2020 00:59:28 +0000 (UTC)
-From:   Waiman Long <longman@redhat.com>
+        id S1727921AbgGBCGg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 1 Jul 2020 22:06:36 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:36514 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727778AbgGBCGg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 1 Jul 2020 22:06:36 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0621wwm5180380
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Jul 2020 02:06:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=wWnjZPHafSDB8//OpaZTyVeJxnVDPlEJcb2odF1N4zs=;
+ b=AmW3RZi7ecuNlaMYo6IHWAknzQ2Z9D7VnGXGOxP7eER9xZ3NfthrNoF9JwYi1ZLVzMjO
+ MlYNiwY7QP50ca1sHmhgp9gUm4PEBITfIoeVM3ETaASDrRLMQ1Ras2JP/O6N/K1AFjOg
+ X3SyiwT5CCDAyaiUE57sGQ0dSBtxH+fRH/+UZt6btBHLaQgVq6Mk5ZyTEotei5p9ZJ9W
+ a9DZ12biAjMLMhbD24Lyie4apUAy6kV7grk3rPEB4VjLo/hGmAScUgfic6rQpqsSwrdf
+ hsDQKxpZD5/Hu5Tom6pkssKegWs9G+K7OaiWb+L0YDOjhz/oyrcxv5iCdfJOIKofYBPU zA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 31wxrndq40-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2020 02:06:35 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0621wdS3039502
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Jul 2020 02:06:34 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 31xfvusyqg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 02 Jul 2020 02:06:34 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06226YSM006755
+        for <linux-xfs@vger.kernel.org>; Thu, 2 Jul 2020 02:06:34 GMT
+Received: from [192.168.1.226] (/67.1.142.158)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 02 Jul 2020 02:06:33 +0000
+Subject: Re: [PATCH 11/18] xfs: remove qcore from incore dquots
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Waiman Long <longman@redhat.com>
-Subject: [PATCH v5] xfs: Fix false positive lockdep warning with sb_internal & fs_reclaim
-Date:   Wed,  1 Jul 2020 20:59:23 -0400
-Message-Id: <20200702005923.10064-1-longman@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Cc:     linux-xfs@vger.kernel.org
+References: <159353170983.2864738.16885438169173786208.stgit@magnolia>
+ <159353178119.2864738.14352743945962585449.stgit@magnolia>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <ad8941db-25de-a2a0-f0e8-4e8827b6ad8b@oracle.com>
+Date:   Wed, 1 Jul 2020 19:06:32 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <159353178119.2864738.14352743945962585449.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 spamscore=0
+ phishscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2007020012
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9669 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+ priorityscore=1501 impostorscore=0 bulkscore=0 clxscore=1015
+ malwarescore=0 phishscore=0 adultscore=0 cotscore=-2147483648
+ lowpriorityscore=0 suspectscore=0 spamscore=0 classifier=spam adjust=0
+ reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2007020012
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Depending on the workloads, the following circular locking dependency
-warning between sb_internal (a percpu rwsem) and fs_reclaim (a pseudo
-lock) may show up:
 
-======================================================
-WARNING: possible circular locking dependency detected
-5.0.0-rc1+ #60 Tainted: G        W
-------------------------------------------------------
-fsfreeze/4346 is trying to acquire lock:
-0000000026f1d784 (fs_reclaim){+.+.}, at:
-fs_reclaim_acquire.part.19+0x5/0x30
 
-but task is already holding lock:
-0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
+On 6/30/20 8:43 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Now that we've stopped using qcore entirely, drop it from the incore
+> dquot.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-which lock already depends on the new lock.
-  :
- Possible unsafe locking scenario:
+Looks ok
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
-       CPU0                    CPU1
-       ----                    ----
-  lock(sb_internal);
-                               lock(fs_reclaim);
-                               lock(sb_internal);
-  lock(fs_reclaim);
-
- *** DEADLOCK ***
-
-4 locks held by fsfreeze/4346:
- #0: 00000000b478ef56 (sb_writers#8){++++}, at: percpu_down_write+0xb4/0x650
- #1: 000000001ec487a9 (&type->s_umount_key#28){++++}, at: freeze_super+0xda/0x290
- #2: 000000003edbd5a0 (sb_pagefaults){++++}, at: percpu_down_write+0xb4/0x650
- #3: 0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
-
-stack backtrace:
-Call Trace:
- dump_stack+0xe0/0x19a
- print_circular_bug.isra.10.cold.34+0x2f4/0x435
- check_prev_add.constprop.19+0xca1/0x15f0
- validate_chain.isra.14+0x11af/0x3b50
- __lock_acquire+0x728/0x1200
- lock_acquire+0x269/0x5a0
- fs_reclaim_acquire.part.19+0x29/0x30
- fs_reclaim_acquire+0x19/0x20
- kmem_cache_alloc+0x3e/0x3f0
- kmem_zone_alloc+0x79/0x150
- xfs_trans_alloc+0xfa/0x9d0
- xfs_sync_sb+0x86/0x170
- xfs_log_sbcount+0x10f/0x140
- xfs_quiesce_attr+0x134/0x270
- xfs_fs_freeze+0x4a/0x70
- freeze_super+0x1af/0x290
- do_vfs_ioctl+0xedc/0x16c0
- ksys_ioctl+0x41/0x80
- __x64_sys_ioctl+0x73/0xa9
- do_syscall_64+0x18f/0xd23
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-This is a false positive as all the dirty pages are flushed out before
-the filesystem can be frozen.
-
-One way to avoid this splat is to add GFP_NOFS to the affected allocation
-calls. This is what PF_MEMALLOC_NOFS per-process flag is for. This does
-reduce the potential source of memory where reclaim can be done. This
-shouldn't matter unless the system is really running out of memory.
-In that particular case, the filesystem freeze operation may fail while
-it was succeeding previously.
-
-Without this patch, the command sequence below will show that the lock
-dependency chain sb_internal -> fs_reclaim exists.
-
- # fsfreeze -f /home
- # fsfreeze --unfreeze /home
- # grep -i fs_reclaim -C 3 /proc/lockdep_chains | grep -C 5 sb_internal
-
-After applying the patch, such sb_internal -> fs_reclaim lock dependency
-chain can no longer be found. Because of that, the locking dependency
-warning will not be shown.
-
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Waiman Long <longman@redhat.com>
----
- fs/xfs/xfs_super.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 379cbff438bc..dcc97bad950a 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -913,11 +913,21 @@ xfs_fs_freeze(
- 	struct super_block	*sb)
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
-+	unsigned long		pflags;
-+	int			ret;
- 
-+	/*
-+	 * Disable fs reclaim in memory allocation for fs freeze to avoid
-+	 * causing a possible circular locking dependency lockdep splat
-+	 * relating to fs reclaim.
-+	 */
-+	current_set_flags_nested(&pflags, PF_MEMALLOC_NOFS);
- 	xfs_stop_block_reaping(mp);
- 	xfs_save_resvblks(mp);
- 	xfs_quiesce_attr(mp);
--	return xfs_sync_sb(mp, true);
-+	ret = xfs_sync_sb(mp, true);
-+	current_restore_flags_nested(&pflags, PF_MEMALLOC_NOFS);
-+	return ret;
- }
- 
- STATIC int
--- 
-2.18.1
-
+> ---
+>   fs/xfs/scrub/quota.c |    4 ----
+>   fs/xfs/xfs_dquot.c   |   29 +++++++++--------------------
+>   fs/xfs/xfs_dquot.h   |    1 -
+>   3 files changed, 9 insertions(+), 25 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+> index 2fc2625feca0..f4aad5b00188 100644
+> --- a/fs/xfs/scrub/quota.c
+> +++ b/fs/xfs/scrub/quota.c
+> @@ -79,7 +79,6 @@ xchk_quota_item(
+>   	struct xchk_quota_info	*sqi = priv;
+>   	struct xfs_scrub	*sc = sqi->sc;
+>   	struct xfs_mount	*mp = sc->mp;
+> -	struct xfs_disk_dquot	*d = &dq->q_core;
+>   	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+>   	xfs_fileoff_t		offset;
+>   	xfs_ino_t		fs_icount;
+> @@ -98,9 +97,6 @@ xchk_quota_item(
+>   
+>   	sqi->last_id = dq->q_id;
+>   
+> -	if (d->d_pad0 != cpu_to_be32(0) || d->d_pad != cpu_to_be16(0))
+> -		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
+> -
+>   	/*
+>   	 * Warn if the hard limits are larger than the fs.
+>   	 * Administrators can do this, though in production this seems
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index 7434ee57ec43..2d6b50760962 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -529,7 +529,6 @@ xfs_dquot_from_disk(
+>   	}
+>   
+>   	/* copy everything from disk dquot to the incore dquot */
+> -	memcpy(&dqp->q_core, ddqp, sizeof(struct xfs_disk_dquot));
+>   	dqp->q_blk.hardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
+>   	dqp->q_blk.softlimit = be64_to_cpu(ddqp->d_blk_softlimit);
+>   	dqp->q_ino.hardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
+> @@ -568,8 +567,13 @@ xfs_dquot_to_disk(
+>   	struct xfs_disk_dquot	*ddqp,
+>   	struct xfs_dquot	*dqp)
+>   {
+> -	memcpy(ddqp, &dqp->q_core, sizeof(struct xfs_disk_dquot));
+> +	ddqp->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> +	ddqp->d_version = XFS_DQUOT_VERSION;
+>   	ddqp->d_flags = dqp->dq_flags & XFS_DQ_ONDISK;
+> +	ddqp->d_id = cpu_to_be32(dqp->q_id);
+> +	ddqp->d_pad0 = 0;
+> +	ddqp->d_pad = 0;
+> +
+>   	ddqp->d_blk_hardlimit = cpu_to_be64(dqp->q_blk.hardlimit);
+>   	ddqp->d_blk_softlimit = cpu_to_be64(dqp->q_blk.softlimit);
+>   	ddqp->d_ino_hardlimit = cpu_to_be64(dqp->q_ino.hardlimit);
+> @@ -1180,7 +1184,6 @@ xfs_qm_dqflush(
+>   	struct xfs_log_item	*lip = &dqp->q_logitem.qli_item;
+>   	struct xfs_buf		*bp;
+>   	struct xfs_dqblk	*dqb;
+> -	struct xfs_disk_dquot	*ddqp;
+>   	xfs_failaddr_t		fa;
+>   	int			error;
+>   
+> @@ -1204,22 +1207,6 @@ xfs_qm_dqflush(
+>   	if (error)
+>   		goto out_abort;
+>   
+> -	/*
+> -	 * Calculate the location of the dquot inside the buffer.
+> -	 */
+> -	dqb = bp->b_addr + dqp->q_bufoffset;
+> -	ddqp = &dqb->dd_diskdq;
+> -
+> -	/* sanity check the in-core structure before we flush */
+> -	fa = xfs_dquot_verify(mp, &dqp->q_core, dqp->q_id, 0);
+> -	if (fa) {
+> -		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
+> -				dqp->q_id, fa);
+> -		xfs_buf_relse(bp);
+> -		error = -EFSCORRUPTED;
+> -		goto out_abort;
+> -	}
+> -
+>   	fa = xfs_qm_dqflush_check(dqp);
+>   	if (fa) {
+>   		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
+> @@ -1229,7 +1216,9 @@ xfs_qm_dqflush(
+>   		goto out_abort;
+>   	}
+>   
+> -	xfs_dquot_to_disk(ddqp, dqp);
+> +	/* Flush the incore dquot to the ondisk buffer. */
+> +	dqb = bp->b_addr + dqp->q_bufoffset;
+> +	xfs_dquot_to_disk(&dqb->dd_diskdq, dqp);
+>   
+>   	/*
+>   	 * Clear the dirty field and remember the flush lsn for later use.
+> diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+> index 414bae537b1d..62b0fc6e0133 100644
+> --- a/fs/xfs/xfs_dquot.h
+> +++ b/fs/xfs/xfs_dquot.h
+> @@ -71,7 +71,6 @@ struct xfs_dquot {
+>   	struct xfs_dquot_res	q_ino;	/* inodes */
+>   	struct xfs_dquot_res	q_rtb;	/* realtime blocks */
+>   
+> -	struct xfs_disk_dquot	q_core;
+>   	struct xfs_dq_logitem	q_logitem;
+>   
+>   	xfs_qcnt_t		q_prealloc_lo_wmark;
+> 
