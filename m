@@ -2,88 +2,107 @@ Return-Path: <SRS0=maQ1=AO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4547FC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jul 2020 01:07:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0869C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jul 2020 03:05:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E08B20781
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jul 2020 01:07:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B8C920781
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jul 2020 03:05:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XTuzQY6/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726032AbgGCBHZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 2 Jul 2020 21:07:25 -0400
-Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:52253 "EHLO
-        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725915AbgGCBHZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jul 2020 21:07:25 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 3DA22D59879;
-        Fri,  3 Jul 2020 11:07:21 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jrAAi-0001mh-CL; Fri, 03 Jul 2020 11:07:20 +1000
-Date:   Fri, 3 Jul 2020 11:07:20 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Waiman Long <longman@redhat.com>
+        id S1726072AbgGCDFU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 2 Jul 2020 23:05:20 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:44632 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726065AbgGCDFU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 2 Jul 2020 23:05:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1593745519;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=nT5nUdX/XIXMp0SEBuIisefVG98qior59Pb7SabULTU=;
+        b=XTuzQY6/AwCBPgMjLylAFwmB6wLqvfstaxNdLyFXTHFafO7WR07pOjsJsUSXZ0xhnneB2s
+        uO4LtMmP+Ts68RUScq8SVb7oqbT5PhzZ2wCud4GT6oimv7fUnPfdPvmDOJyScR9cny9gnJ
+        ubleCbUUIAsvgifkmCAXy3W3bWjrYgE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-184-1z8sNEliMLCBosM8IsGV_g-1; Thu, 02 Jul 2020 23:05:17 -0400
+X-MC-Unique: 1z8sNEliMLCBosM8IsGV_g-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0CE07BFC0;
+        Fri,  3 Jul 2020 03:05:15 +0000 (UTC)
+Received: from llong.remote.csb (ovpn-112-82.rdu2.redhat.com [10.10.112.82])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1D402612BA;
+        Fri,  3 Jul 2020 03:05:11 +0000 (UTC)
+Subject: Re: [PATCH v5] xfs: Fix false positive lockdep warning with
+ sb_internal & fs_reclaim
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
         Qian Cai <cai@lca.pw>, Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH v5] xfs: Fix false positive lockdep warning with
- sb_internal & fs_reclaim
-Message-ID: <20200703010720.GH5369@dread.disaster.area>
 References: <20200702005923.10064-1-longman@redhat.com>
+ <20200703010720.GH5369@dread.disaster.area>
+From:   Waiman Long <longman@redhat.com>
+Organization: Red Hat
+Message-ID: <85cbaacf-6986-d363-5c80-530be9a6fa63@redhat.com>
+Date:   Thu, 2 Jul 2020 23:05:10 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200702005923.10064-1-longman@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8
-        a=DRpurTtVrwkqR7YIFl8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200703010720.GH5369@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 01, 2020 at 08:59:23PM -0400, Waiman Long wrote:
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Waiman Long <longman@redhat.com>
-> ---
->  fs/xfs/xfs_super.c | 12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 379cbff438bc..dcc97bad950a 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -913,11 +913,21 @@ xfs_fs_freeze(
->  	struct super_block	*sb)
->  {
->  	struct xfs_mount	*mp = XFS_M(sb);
-> +	unsigned long		pflags;
-> +	int			ret;
->  
-> +	/*
-> +	 * Disable fs reclaim in memory allocation for fs freeze to avoid
-> +	 * causing a possible circular locking dependency lockdep splat
-> +	 * relating to fs reclaim.
-> +	 */
+On 7/2/20 9:07 PM, Dave Chinner wrote:
+> On Wed, Jul 01, 2020 at 08:59:23PM -0400, Waiman Long wrote:
+>> Suggested-by: Dave Chinner <david@fromorbit.com>
+>> Signed-off-by: Waiman Long <longman@redhat.com>
+>> ---
+>>   fs/xfs/xfs_super.c | 12 +++++++++++-
+>>   1 file changed, 11 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index 379cbff438bc..dcc97bad950a 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -913,11 +913,21 @@ xfs_fs_freeze(
+>>   	struct super_block	*sb)
+>>   {
+>>   	struct xfs_mount	*mp = XFS_M(sb);
+>> +	unsigned long		pflags;
+>> +	int			ret;
+>>   
+>> +	/*
+>> +	 * Disable fs reclaim in memory allocation for fs freeze to avoid
+>> +	 * causing a possible circular locking dependency lockdep splat
+>> +	 * relating to fs reclaim.
+>> +	 */
+> 	/*
+> 	 * The filesystem is now frozen far enough that memory reclaim
+> 	 * cannot safely operate on the filesystem. Hence we need to
+> 	 * set a GFP_NOFS context here to avoid recursion deadlocks.
+> 	 */
+>
+>> +	current_set_flags_nested(&pflags, PF_MEMALLOC_NOFS);
+> memalloc_nofs_save/restore(), please.
 
-	/*
-	 * The filesystem is now frozen far enough that memory reclaim
-	 * cannot safely operate on the filesystem. Hence we need to
-	 * set a GFP_NOFS context here to avoid recursion deadlocks.
-	 */
+Thanks for the comments, I will make the suggested change.
 
-> +	current_set_flags_nested(&pflags, PF_MEMALLOC_NOFS);
+Cheers,
+Longman
 
-memalloc_nofs_save/restore(), please.
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
