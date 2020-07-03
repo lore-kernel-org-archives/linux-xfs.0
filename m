@@ -2,172 +2,314 @@ Return-Path: <SRS0=maQ1=AO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DAC9C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jul 2020 06:08:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6287FC433DF
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jul 2020 12:39:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 382D720BED
-	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jul 2020 06:08:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 374AF20CC7
+	for <linux-xfs@archiver.kernel.org>; Fri,  3 Jul 2020 12:39:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="auwPDK+D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726213AbgGCGId (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jul 2020 02:08:33 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:46495 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726237AbgGCGIc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jul 2020 02:08:32 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 45F9110C54C;
-        Fri,  3 Jul 2020 16:08:24 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jrEs3-0003Vv-6H; Fri, 03 Jul 2020 16:08:23 +1000
-Date:   Fri, 3 Jul 2020 16:08:23 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
+        id S1726283AbgGCMj3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jul 2020 08:39:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54466 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726022AbgGCMj3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jul 2020 08:39:29 -0400
+Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C6A0C08C5C1
+        for <linux-xfs@vger.kernel.org>; Fri,  3 Jul 2020 05:39:29 -0700 (PDT)
+Received: by mail-pg1-x544.google.com with SMTP id l63so15040459pge.12
+        for <linux-xfs@vger.kernel.org>; Fri, 03 Jul 2020 05:39:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=7QX7e85XBZZBwq/dK0aQBCqeRK751iZicWzZVmU3KoA=;
+        b=auwPDK+Doh3qyLTcE/fq40oNvWXvNAeyjl3eZj/Ssko4uPqvC+bMZcAMbIZLfY6IQL
+         YPGpJPw826GC7FzRSqoUsb3cMz2UjcMubRSOh2p4M/KTIgtcqhTGrSGbOqd2zJu8oNZe
+         bZnd6hdkduEeYjmvMUdqo7JYZjodQpb42tJDzRYqLs2fv3I6SvRQWacFJbY++aBHZetn
+         JYZEFI48MQEZ1yRE8dTC62GVjHrZZJDjz7JV/+jHnJ8XsHc0lNiM9HRyeY3rY2JHeRCX
+         Zndzg+lkBBFoeAMvMhVKtFm5ul6ZVzsct1Edix8No32avXeWZ1UA31dRfbTg6lEy1AJi
+         Dwdw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=7QX7e85XBZZBwq/dK0aQBCqeRK751iZicWzZVmU3KoA=;
+        b=fbOfaqql27hPz41gJh1PWKk7d7P0w5WCSkJaxGZ/tURD/XPvIuU+WKQCdUy7hS3/qv
+         2YIwRx76Nq5QJDjhDb7jZwtYqMgiD9ZNsmdeanFhF+xnRz37tB4r4qonyHTk1dieHh0U
+         f1tlv03ikp1oR2UomlXLyjKT5TVvGzJ/SSl3+RezSQZgZZh59IfSxQBkmXY+GFGM9wfw
+         vvnXGew8aYJlwnwgFEQLWFbYSTRALorAeajsupzbwNvTKJQhluuB+emSXWjzzlV4URcX
+         BIb2mF6LwbUgppkKFR9VsQX6lAW1G6ImuDtH9JrU/qbYRuVvSLAo5gWveq9WSB/gmEFI
+         7Y7Q==
+X-Gm-Message-State: AOAM533C/nRYnT+hx8Jjmpxwe2nlxCwJXTRxL2W9VF4+sJBCN/ZFrBdN
+        KvPbALjn8oTS0oPhF+6dwko=
+X-Google-Smtp-Source: ABdhPJw7I3IDoebeQ+sadv/zWAp8ww28uX9zUqR6F9XqAwpvb+5QjlagX3VshWyR6wHdTmwj7sYE0A==
+X-Received: by 2002:a63:d10a:: with SMTP id k10mr29137471pgg.382.1593779968717;
+        Fri, 03 Jul 2020 05:39:28 -0700 (PDT)
+Received: from garuda.localnet ([122.171.152.21])
+        by smtp.gmail.com with ESMTPSA id y8sm10945677pju.49.2020.07.03.05.39.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Jul 2020 05:39:28 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/10] xfs: automatic log item relog mechanism
-Message-ID: <20200703060823.GK2005@dread.disaster.area>
-References: <20200701165116.47344-1-bfoster@redhat.com>
- <20200701165116.47344-6-bfoster@redhat.com>
+Subject: Re: [PATCH 15/18] xfs: refactor xfs_qm_scall_setqlim
+Date:   Fri, 03 Jul 2020 18:09:25 +0530
+Message-ID: <11069869.t8T49tFK3y@garuda>
+In-Reply-To: <159353180627.2864738.644970181923295002.stgit@magnolia>
+References: <159353170983.2864738.16885438169173786208.stgit@magnolia> <159353180627.2864738.644970181923295002.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200701165116.47344-6-bfoster@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=KSIizm1rcbKzFqhy2_YA:9 a=CjuIK1q_8ugA:10 a=Grnb8HPFGUAA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 01, 2020 at 12:51:11PM -0400, Brian Foster wrote:
-> Now that relog reservation is available and relog state tracking is
-> in place, all that remains to automatically relog items is the relog
-> mechanism itself. An item with relogging enabled is basically pinned
-> from writeback until relog is disabled. Instead of being written
-> back, the item must instead be periodically committed in a new
-> transaction to move it forward in the physical log. The purpose of
-> moving the item is to avoid long term tail pinning and thus avoid
-> log deadlocks for long running operations.
+On Tuesday 30 June 2020 9:13:26 PM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The ideal time to relog an item is in response to tail pushing
-> pressure. This accommodates the current workload at any given time
-> as opposed to a fixed time interval or log reservation heuristic,
-> which risks performance regression. This is essentially the same
-> heuristic that drives metadata writeback. XFS already implements
-> various log tail pushing heuristics that attempt to keep the log
-> progressing on an active fileystem under various workloads.
+> Now that we can pass around quota resource and limit structures, clean
+> up the open-coded field setting in xfs_qm_scall_setqlim.
+>
+
+The changes are logically correct.
+
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_qm_syscalls.c |  164 ++++++++++++++++++++++++++--------------------
+>  1 file changed, 93 insertions(+), 71 deletions(-)
 > 
-> The act of relogging an item simply requires to add it to a
-> transaction and commit. This pushes the already dirty item into a
-> subsequent log checkpoint and frees up its previous location in the
-> on-disk log. Joining an item to a transaction of course requires
-> locking the item first, which means we have to be aware of
-> type-specific locks and lock ordering wherever the relog takes
-> place.
 > 
-> Fundamentally, this points to xfsaild as the ideal location to
-> process relog enabled items. xfsaild already processes log resident
-> items, is driven by log tail pushing pressure, processes arbitrary
-> log item types through callbacks, and is sensitive to type-specific
-> locking rules by design. The fact that automatic relogging
-> essentially diverts items between writeback or relog also suggests
-> xfsaild as an ideal location to process items one way or the other.
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index 5423e02f9837..5044c333af5c 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -436,6 +436,58 @@ xfs_qm_scall_quotaon(
+>  #define XFS_QC_MASK \
+>  	(QC_LIMIT_MASK | QC_TIMER_MASK | QC_WARNS_MASK)
+>  
+> +/*
+> + * Adjust limits of this quota, and the defaults if passed in.  Returns true
+> + * if the new limits made sense and were applied, false otherwise.
+> + */
+> +static inline bool
+> +xfs_setqlim_limits(
+> +	struct xfs_mount	*mp,
+> +	struct xfs_dquot_res	*res,
+> +	struct xfs_def_qres	*dres,
+> +	xfs_qcnt_t		hard,
+> +	xfs_qcnt_t		soft,
+> +	const char		*tag)
+> +{
+> +	/* The hard limit can't be less than the soft limit. */
+> +	if (hard != 0 && hard < soft) {
+> +		xfs_debug(mp, "%shard %lld < %ssoft %lld", tag, hard, tag,
+> +				soft);
+> +		return false;
+> +	}
+> +
+> +	res->hardlimit = hard;
+> +	res->softlimit = soft;
+> +	if (dres) {
+> +		dres->hardlimit = hard;
+> +		dres->softlimit = soft;
+> +	}
+> +
+> +	return true;
+> +}
+> +
+> +static inline void
+> +xfs_setqlim_warns(
+> +	struct xfs_dquot_res	*res,
+> +	struct xfs_def_qres	*dres,
+> +	int			warns)
+> +{
+> +	res->warnings = warns;
+> +	if (dres)
+> +		dres->warnlimit = warns;
+> +}
+> +
+> +static inline void
+> +xfs_setqlim_timer(
+> +	struct xfs_dquot_res	*res,
+> +	struct xfs_def_qres	*dres,
+> +	s64			timer)
+> +{
+> +	res->timer = timer;
+> +	if (dres)
+> +		dres->timelimit = timer;
+> +}
+> +
+>  /*
+>   * Adjust quota limits, and start/stop timers accordingly.
+>   */
+> @@ -450,6 +502,8 @@ xfs_qm_scall_setqlim(
+>  	struct xfs_dquot	*dqp;
+>  	struct xfs_trans	*tp;
+>  	struct xfs_def_quota	*defq;
+> +	struct xfs_dquot_res	*res;
+> +	struct xfs_def_qres	*dres;
+>  	int			error;
+>  	xfs_qcnt_t		hard, soft;
+>  
+> @@ -489,102 +543,70 @@ xfs_qm_scall_setqlim(
+>  	xfs_trans_dqjoin(tp, dqp);
+>  
+>  	/*
+> +	 * Update quota limits, warnings, and timers, and the defaults
+> +	 * if we're touching id == 0.
+> +	 *
+>  	 * Make sure that hardlimits are >= soft limits before changing.
+> +	 *
+> +	 * Update warnings counter(s) if requested.
+> +	 *
+> +	 * Timelimits for the super user set the relative time the other users
+> +	 * can be over quota for this file system. If it is zero a default is
+> +	 * used.  Ditto for the default soft and hard limit values (already
+> +	 * done, above), and for warnings.
+> +	 *
+> +	 * For other IDs, userspace can bump out the grace period if over
+> +	 * the soft limit.
+>  	 */
+> +
+> +	/* Blocks on the data device. */
+>  	hard = (newlim->d_fieldmask & QC_SPC_HARD) ?
+>  		(xfs_qcnt_t) XFS_B_TO_FSB(mp, newlim->d_spc_hardlimit) :
+>  			dqp->q_blk.hardlimit;
+>  	soft = (newlim->d_fieldmask & QC_SPC_SOFT) ?
+>  		(xfs_qcnt_t) XFS_B_TO_FSB(mp, newlim->d_spc_softlimit) :
+>  			dqp->q_blk.softlimit;
+> -	if (hard == 0 || hard >= soft) {
+> -		dqp->q_blk.hardlimit = hard;
+> -		dqp->q_blk.softlimit = soft;
+> +	res = &dqp->q_blk;
+> +	dres = id == 0 ? &defq->dfq_blk : NULL;
+> +
+> +	if (xfs_setqlim_limits(mp, res, dres, hard, soft, "blk"))
+>  		xfs_dquot_set_prealloc_limits(dqp);
+> -		if (id == 0) {
+> -			defq->dfq_blk.hardlimit = hard;
+> -			defq->dfq_blk.softlimit = soft;
+> -		}
+> -	} else {
+> -		xfs_debug(mp, "blkhard %Ld < blksoft %Ld", hard, soft);
+> -	}
+> +	if (newlim->d_fieldmask & QC_SPC_WARNS)
+> +		xfs_setqlim_warns(res, dres, newlim->d_spc_warns);
+> +	if (newlim->d_fieldmask & QC_SPC_TIMER)
+> +		xfs_setqlim_timer(res, dres, newlim->d_spc_timer);
+> +
+> +	/* Blocks on the realtime device. */
+>  	hard = (newlim->d_fieldmask & QC_RT_SPC_HARD) ?
+>  		(xfs_qcnt_t) XFS_B_TO_FSB(mp, newlim->d_rt_spc_hardlimit) :
+>  			dqp->q_rtb.hardlimit;
+>  	soft = (newlim->d_fieldmask & QC_RT_SPC_SOFT) ?
+>  		(xfs_qcnt_t) XFS_B_TO_FSB(mp, newlim->d_rt_spc_softlimit) :
+>  			dqp->q_rtb.softlimit;
+> -	if (hard == 0 || hard >= soft) {
+> -		dqp->q_rtb.hardlimit = hard;
+> -		dqp->q_rtb.softlimit = soft;
+> -		if (id == 0) {
+> -			defq->dfq_rtb.hardlimit = hard;
+> -			defq->dfq_rtb.softlimit = soft;
+> -		}
+> -	} else {
+> -		xfs_debug(mp, "rtbhard %Ld < rtbsoft %Ld", hard, soft);
+> -	}
+> +	res = &dqp->q_rtb;
+> +	dres = id == 0 ? &defq->dfq_rtb : NULL;
+>  
+> +	xfs_setqlim_limits(mp, res, dres, hard, soft, "rtb");
+> +	if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
+> +		xfs_setqlim_warns(res, dres, newlim->d_rt_spc_warns);
+> +	if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
+> +		xfs_setqlim_timer(res, dres, newlim->d_rt_spc_timer);
+> +
+> +	/* Inodes */
+>  	hard = (newlim->d_fieldmask & QC_INO_HARD) ?
+>  		(xfs_qcnt_t) newlim->d_ino_hardlimit :
+>  			dqp->q_ino.hardlimit;
+>  	soft = (newlim->d_fieldmask & QC_INO_SOFT) ?
+>  		(xfs_qcnt_t) newlim->d_ino_softlimit :
+>  			dqp->q_ino.softlimit;
+> -	if (hard == 0 || hard >= soft) {
+> -		dqp->q_ino.hardlimit = hard;
+> -		dqp->q_ino.softlimit = soft;
+> -		if (id == 0) {
+> -			defq->dfq_ino.hardlimit = hard;
+> -			defq->dfq_ino.softlimit = soft;
+> -		}
+> -	} else {
+> -		xfs_debug(mp, "ihard %Ld < isoft %Ld", hard, soft);
+> -	}
+> +	res = &dqp->q_ino;
+> +	dres = id == 0 ? &defq->dfq_ino : NULL;
+>  
+> -	/*
+> -	 * Update warnings counter(s) if requested
+> -	 */
+> -	if (newlim->d_fieldmask & QC_SPC_WARNS)
+> -		dqp->q_blk.warnings = newlim->d_spc_warns;
+> +	xfs_setqlim_limits(mp, res, dres, hard, soft, "ino");
+>  	if (newlim->d_fieldmask & QC_INO_WARNS)
+> -		dqp->q_ino.warnings = newlim->d_ino_warns;
+> -	if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
+> -		dqp->q_rtb.warnings = newlim->d_rt_spc_warns;
+> -
+> -	if (id == 0) {
+> -		if (newlim->d_fieldmask & QC_SPC_WARNS)
+> -			defq->dfq_blk.warnlimit = newlim->d_spc_warns;
+> -		if (newlim->d_fieldmask & QC_INO_WARNS)
+> -			defq->dfq_ino.warnlimit = newlim->d_ino_warns;
+> -		if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
+> -			defq->dfq_rtb.warnlimit = newlim->d_rt_spc_warns;
+> -	}
+> -
+> -	/*
+> -	 * Timelimits for the super user set the relative time the other users
+> -	 * can be over quota for this file system. If it is zero a default is
+> -	 * used.  Ditto for the default soft and hard limit values (already
+> -	 * done, above), and for warnings.
+> -	 *
+> -	 * For other IDs, userspace can bump out the grace period if over
+> -	 * the soft limit.
+> -	 */
+> -	if (newlim->d_fieldmask & QC_SPC_TIMER)
+> -		dqp->q_blk.timer = newlim->d_spc_timer;
+> +		xfs_setqlim_warns(res, dres, newlim->d_ino_warns);
+>  	if (newlim->d_fieldmask & QC_INO_TIMER)
+> -		dqp->q_ino.timer = newlim->d_ino_timer;
+> -	if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
+> -		dqp->q_rtb.timer = newlim->d_rt_spc_timer;
+> -
+> -	if (id == 0) {
+> -		if (newlim->d_fieldmask & QC_SPC_TIMER)
+> -			defq->dfq_blk.timelimit = newlim->d_spc_timer;
+> -		if (newlim->d_fieldmask & QC_INO_TIMER)
+> -			defq->dfq_ino.timelimit = newlim->d_ino_timer;
+> -		if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
+> -			defq->dfq_rtb.timelimit = newlim->d_rt_spc_timer;
+> -	}
+> +		xfs_setqlim_timer(res, dres, newlim->d_ino_timer);
+>  
+>  	if (id != 0) {
+>  		/*
 > 
-> Of course, we don't want xfsaild to process transactions as it is a
-> critical component of the log subsystem for driving metadata
-> writeback and freeing up log space. Therefore, similar to how
-> xfsaild builds up a writeback queue of dirty items and queues writes
-> asynchronously, make xfsaild responsible only for directing pending
-> relog items into an appropriate queue and create an async
-> (workqueue) context for processing the queue. The workqueue context
-> utilizes the pre-reserved log reservation to drain the queue by
-> rolling a permanent transaction.
 > 
-> Update the AIL pushing infrastructure to support a new RELOG item
-> state. If a log item push returns the relog state, queue the item
-> for relog instead of writeback. On completion of a push cycle,
-> schedule the relog task at the same point metadata buffer I/O is
-> submitted. This allows items to be relogged automatically under the
-> same locking rules and pressure heuristics that govern metadata
-> writeback.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-A note while it's still fresh in my mind: memory reclaim is going to
-force relogging of items whether they need it or not. The inode
-shrinker pushes the AIL to it's highest current LSN, which means the
-first shrinker invocation will relog the items. Sustained memory
-pressure will result in this sort of behaviour
 
-	AIL				AIL relog workqueue
-cycle 1:
-	relog item
-		-> move to relog queue
-	relog item
-		-> move to relog queue
-	....
-	relog item
-		-> move to relog queue
-
-	queue work to AIL relog workqueue
-	<sleep 20ms>
-
-					iterates relog items
-					  ->relog
-					  commit
-
-cycle 2:
-	relog item
-		already queued
-		marks AIL for log force
-	relog item
-		already queued
-		marks AIL for log force
-	....
-	relog item
-		-> move to relog queue
-
-	<sleep 20ms>
-
-cycle 3:
-	xfs_log_force(XFS_LOG_SYNC)
-	-> CIL flush
-	   log io
-	   log IO completes
-	   relogged items reinserted in AIL
-	....
-	relog item
-		-> move to relog queue
-	relog item
-		-> move to relog queue
-	....
-	relog item
-		-> move to relog queue
-
-	queue work to AIL relog workqueue
-	<sleep 20ms>
-
-					iterates relog items
-					  ->relog
-					  commit
-<repeat>
-
-So it looks like when there is memory pressure we are going to
-trigger a relog every second AIL push cycle, and a synchronous log
-force every other log cycle.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
+
+
+
