@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 524D5C433DF
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 03:21:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49CBDC433DF
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 03:21:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C439212CC
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 03:21:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27FF12070B
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 03:21:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kdlQ3P5n"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="v7qgqwTp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727847AbgGDDVE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jul 2020 23:21:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48736 "EHLO
+        id S1727775AbgGDDUu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jul 2020 23:20:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727789AbgGDDVC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jul 2020 23:21:02 -0400
+        with ESMTP id S1727121AbgGDDUs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jul 2020 23:20:48 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 495AEC061794;
-        Fri,  3 Jul 2020 20:21:02 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0ADA9C061794;
+        Fri,  3 Jul 2020 20:20:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=NxLHP+9cFhtU3n1OYnw9N90/6GroG0s0rwbqmFTSb6o=; b=kdlQ3P5n9vkkqj1ly+uWdiMMtM
-        Exf5dBIyd7H1wc5cxeAxqlwv/2Un9/BIrbYJXUcVKUmrMpYU4knuAT5//TN8Pn3KGBUQEmWescrtC
-        T4EP5rVfc+p30Jwt9ueo27TcoRyQiJL2HPkBychrVGwgev8EXNraang584WgoG8ypw+ApdA21wkhu
-        tVxlVkCIeTP5Ca8+MxuXO2aTo9+kfdWW+TXsgdOF3p98hImfRBkh1PUYwBQqE7b3MJcqE1Z8dqj1w
-        200gdii7HIynKZmL6xQX6rwATVSlCTYK7zVM7nvmTgz0OCoVIsKEQ9NAjwiebLFgDlWU7lbYHMklg
-        l4/rBZUw==;
+        bh=nGMSxQvjBkDqTq1f7jabTVwcwzwy9TqipamfSuuvRvE=; b=v7qgqwTp0o7B2yw+fo8AWsziCa
+        QCzGaPg3f+qq+ROY2INYQI8VUTFqoXrT5d6hPs8xHq7Mt/E5SKay93YzKdTdPNfV+eSOJnkZMLERO
+        ksSyXgbNjmEVfqdLAy+Pdv8iOR+BVQ3faPXjeme/1Yx6cATtT1zHjPcqTUtb+GP5RO4yvCOSuSII8
+        d1gWvhHCJiVxw9vXprLRXkimQGTgFHV+gIZdkYTlwb98yPIZJhPe4fX+Q4PhQo4NO72htHNfsc36p
+        SVdueTJezN0ljHdlWqSU3/207/YC+deDIjdlp5ZP+j4ie32tKAuCae10hOg+UcW46n9rxLWe4oCxK
+        XolpU1gQ==;
 Received: from [2601:1c0:6280:3f0::19c2] (helo=smtpauth.infradead.org)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jrYjb-0000Ri-Sy; Sat, 04 Jul 2020 03:21:00 +0000
+        id 1jrYjN-0000Ri-Mb; Sat, 04 Jul 2020 03:20:46 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
@@ -53,9 +53,9 @@ Cc:     Randy Dunlap <rdunlap@infradead.org>,
         platform-driver-x86@vger.kernel.org,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org
-Subject: [PATCH 07/13] Documentation/admin-guide: pnfs-scsi-server: drop doubled word
-Date:   Fri,  3 Jul 2020 20:20:14 -0700
-Message-Id: <20200704032020.21923-8-rdunlap@infradead.org>
+Subject: [PATCH 04/13] Documentation/admin-guide: media/building: drop doubled words
+Date:   Fri,  3 Jul 2020 20:20:11 -0700
+Message-Id: <20200704032020.21923-5-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200704032020.21923-1-rdunlap@infradead.org>
 References: <20200704032020.21923-1-rdunlap@infradead.org>
@@ -66,26 +66,34 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Drop the doubled word "with".
+Drop some doubled words.
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 Cc: Jonathan Corbet <corbet@lwn.net>
 Cc: linux-doc@vger.kernel.org
-Cc: Trond Myklebust <trond.myklebust@hammerspace.com>
-Cc: Anna Schumaker <anna.schumaker@netapp.com>
-Cc: linux-nfs@vger.kernel.org
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: linux-media@vger.kernel.org
 ---
- Documentation/admin-guide/nfs/pnfs-scsi-server.rst |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Documentation/admin-guide/media/building.rst |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
---- linux-next-20200701.orig/Documentation/admin-guide/nfs/pnfs-scsi-server.rst
-+++ linux-next-20200701/Documentation/admin-guide/nfs/pnfs-scsi-server.rst
-@@ -9,7 +9,7 @@ which in addition to handling all the me
- also hands out layouts to the clients so that they can directly access the
- underlying SCSI LUNs that are shared with the client.
+--- linux-next-20200701.orig/Documentation/admin-guide/media/building.rst
++++ linux-next-20200701/Documentation/admin-guide/media/building.rst
+@@ -90,7 +90,7 @@ built as modules.
+        Those GPU-specific drivers are selected via the ``Graphics support``
+        menu, under ``Device Drivers``.
  
--To use pNFS SCSI layouts with with the Linux NFS server, the exported file
-+To use pNFS SCSI layouts with the Linux NFS server, the exported file
- system needs to support the pNFS SCSI layouts (currently just XFS), and the
- file system must sit on a SCSI LUN that is accessible to the clients in
- addition to the MDS.  As of now the file system needs to sit directly on the
+-       When a GPU driver supports supports HDMI CEC, it will automatically
++       When a GPU driver supports HDMI CEC, it will automatically
+        enable the CEC core support at the media subsystem.
+ 
+ Media dependencies
+@@ -244,7 +244,7 @@ functionality.
+    If you have an hybrid card, you may need to enable both ``Analog TV``
+    and ``Digital TV`` at the menu.
+ 
+-When using this option, the defaults for the the media support core
++When using this option, the defaults for the media support core
+ functionality are usually good enough to provide the basic functionality
+ for the driver. Yet, you could manually enable some desired extra (optional)
+ functionality using the settings under each of the following
