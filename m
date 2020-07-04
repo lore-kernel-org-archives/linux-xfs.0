@@ -2,120 +2,358 @@ Return-Path: <SRS0=mG4f=AP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52520C433DF
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 15:21:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9321FC433DF
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 20:41:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3095420747
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 15:21:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60724208D5
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 20:41:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="W1+CopM6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726501AbgGDPVK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 4 Jul 2020 11:21:10 -0400
-Received: from sandeen.net ([63.231.237.45]:54908 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726488AbgGDPVK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 4 Jul 2020 11:21:10 -0400
-Received: from [10.0.0.11] (liberator [10.0.0.11])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 162474D1B9C;
-        Sat,  4 Jul 2020 10:20:57 -0500 (CDT)
-Subject: Re: Separate user- and project- quota ?
-To:     Brian Foster <bfoster@redhat.com>,
-        Diego Zuccato <diego.zuccato@unibo.it>
+        id S1726922AbgGDUlW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 4 Jul 2020 16:41:22 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55440 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726909AbgGDUlW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 4 Jul 2020 16:41:22 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 064KbXL5057667
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Jul 2020 20:41:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=3RLvv6YlqSARwMgi0T7GXR+rzKl4j7sqwGZPidIW0HA=;
+ b=W1+CopM6oeqXPHZ0lNA4ALbWh63pVpjqOA6TLXj96jjwrrrBFGLRcpOSg8aN2Rmd7kZ5
+ USXrMBExFi/WxQ+8yA96kV3nfqrWvR4PABzj75XehbVhEJK3lju/m3klNI8iXyv7kf+o
+ 9XFwpwWbVwsMk+3JKbcjDB/VIH2KZmVJ5WX5wjISjzCMjMbS/GmX62p0QCxNM3BfTM3n
+ /3ciVV3omCwbzQQZZINlhbuXKvP+YZsHVH0ynEtLT/9eK5oeU0W/v+fhVMxRn6aBCUdk
+ aL3kv2r+GPQYyOYnm96b4sp/k8H3fEn/LFq0mUzlQH8pR10JIcxgyiUCMkVGxR9xoeEC 5Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 322h6r1kq4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sat, 04 Jul 2020 20:41:18 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 064Kcvki092258
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Jul 2020 20:41:18 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 322hk1fswd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 04 Jul 2020 20:41:18 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 064KfHWE016945
+        for <linux-xfs@vger.kernel.org>; Sat, 4 Jul 2020 20:41:17 GMT
+Received: from [192.168.1.226] (/67.1.142.158)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 04 Jul 2020 13:41:16 -0700
+Subject: Re: [PATCH 18/18] xfs: add more dquot tracepoints
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <93882c1f-f26e-96c7-0a60-68fc9381e36c@unibo.it>
- <2c0bfee3-01cc-65cf-2be1-1af9432a18be@sandeen.net>
- <df054c4d-a1e1-2425-3319-dafa88fc9f08@unibo.it>
- <9c64b36f-8222-a031-b458-9b15d8e6831f@sandeen.net>
- <cb98acba-ebbd-5b45-36bd-0ee292449615@unibo.it>
- <20200702113437.GA55314@bfoster>
- <1b7ed4c0-90f9-420c-e1ca-2af69769f4b6@unibo.it>
- <20200702125028.GD55314@bfoster>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <f6a5c4eb-a391-50de-7c66-61d8cb3f4028@sandeen.net>
-Date:   Sat, 4 Jul 2020 10:21:07 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.10.0
+References: <159353170983.2864738.16885438169173786208.stgit@magnolia>
+ <159353182503.2864738.13936001087522113609.stgit@magnolia>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <7d62d283-de6c-ff30-d58d-751184af52ce@oracle.com>
+Date:   Sat, 4 Jul 2020 13:41:14 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200702125028.GD55314@bfoster>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <159353182503.2864738.13936001087522113609.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9672 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 adultscore=0
+ suspectscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2007040146
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9672 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 lowpriorityscore=0
+ suspectscore=0 adultscore=0 mlxscore=0 spamscore=0 impostorscore=0
+ cotscore=-2147483648 malwarescore=0 mlxlogscore=999 clxscore=1015
+ bulkscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2007040146
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/2/20 7:50 AM, Brian Foster wrote:
-> Pretty much. ;) I think it's reasonable in theory to say something like
-> "pick one or the other for older fs," but then we have to get into
-> issues like being subtly affected by code changes that might reorder
-> mount options without any notion of that affecting behavior (i.e. very
-> brittle) and/or choosing one option of the other based on the current
-> status of the [pg]quota inode, which is more implementation and doesn't
-> rule out having to fail the mount in all cases anyways. Suffice it to
-> say I don't think it's worth going further down that path simply to
-> support passing a combination of mount options that has no runtime
-> effect and was never a supported combination for the associated version
-> of the fs in the first place.
 
-It might be reasonable to /disable/ both in the case of an invalid
-specification, with a warning, but then that gets into "do something
-behind the user's back" - they asked for something impossible, and we
-gave them ... nothing, with a successful mount return?
 
-The tradeoff between that and a failed boot & trip to the data center
-can be a tough one, but we usually err on the side of "don't silently
-carry on pretending it's all OK if we've been asked to do something
-impossible."
+On 6/30/20 8:43 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add all the xfs_dquot fields to the tracepoint for that type; add a new
+> tracepoint type for the qtrx structure (dquot transaction deltas); and
+> use our new tracepoints.  This makes it easier for the author to trace
+> changes to dquot counters for debugging.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Unfortunately the only test for "did you ask for an impossible quota
-scenario in your mount flags?" is to mount it...
+Alrighty, seems helpful
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
--Eric
+> ---
+>   fs/xfs/xfs_trace.h       |  140 +++++++++++++++++++++++++++++++++++++++++++++-
+>   fs/xfs/xfs_trans_dquot.c |   21 +++++++
+>   2 files changed, 159 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 851f97dfe9e3..35b9dfd3984f 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -36,6 +36,7 @@ struct xfs_owner_info;
+>   struct xfs_trans_res;
+>   struct xfs_inobt_rec_incore;
+>   union xfs_btree_ptr;
+> +struct xfs_dqtrx;
+>   
+>   #define XFS_ATTR_FILTER_FLAGS \
+>   	{ XFS_ATTR_ROOT,	"ROOT" }, \
+> @@ -867,37 +868,59 @@ DECLARE_EVENT_CLASS(xfs_dquot_class,
+>   		__field(unsigned, flags)
+>   		__field(unsigned, nrefs)
+>   		__field(unsigned long long, res_bcount)
+> +		__field(unsigned long long, res_rtbcount)
+> +		__field(unsigned long long, res_icount)
+> +
+>   		__field(unsigned long long, bcount)
+> +		__field(unsigned long long, rtbcount)
+>   		__field(unsigned long long, icount)
+> +
+>   		__field(unsigned long long, blk_hardlimit)
+>   		__field(unsigned long long, blk_softlimit)
+> +		__field(unsigned long long, rtb_hardlimit)
+> +		__field(unsigned long long, rtb_softlimit)
+>   		__field(unsigned long long, ino_hardlimit)
+>   		__field(unsigned long long, ino_softlimit)
+> -	), \
+> +	),
+>   	TP_fast_assign(
+>   		__entry->dev = dqp->q_mount->m_super->s_dev;
+>   		__entry->id = dqp->q_id;
+>   		__entry->flags = dqp->dq_flags;
+>   		__entry->nrefs = dqp->q_nrefs;
+> +
+>   		__entry->res_bcount = dqp->q_blk.reserved;
+> +		__entry->res_rtbcount = dqp->q_rtb.reserved;
+> +		__entry->res_icount = dqp->q_ino.reserved;
+> +
+>   		__entry->bcount = dqp->q_blk.count;
+> +		__entry->rtbcount = dqp->q_rtb.count;
+>   		__entry->icount = dqp->q_ino.count;
+> +
+>   		__entry->blk_hardlimit = dqp->q_blk.hardlimit;
+>   		__entry->blk_softlimit = dqp->q_blk.softlimit;
+> +		__entry->rtb_hardlimit = dqp->q_rtb.hardlimit;
+> +		__entry->rtb_softlimit = dqp->q_rtb.softlimit;
+>   		__entry->ino_hardlimit = dqp->q_ino.hardlimit;
+>   		__entry->ino_softlimit = dqp->q_ino.softlimit;
+>   	),
+> -	TP_printk("dev %d:%d id 0x%x flags %s nrefs %u res_bc 0x%llx "
+> +	TP_printk("dev %d:%d id 0x%x flags %s nrefs %u "
+> +		  "res_bc 0x%llx res_rtbc 0x%llx res_ic 0x%llx "
+>   		  "bcnt 0x%llx bhardlimit 0x%llx bsoftlimit 0x%llx "
+> +		  "rtbcnt 0x%llx rtbhardlimit 0x%llx rtbsoftlimit 0x%llx "
+>   		  "icnt 0x%llx ihardlimit 0x%llx isoftlimit 0x%llx]",
+>   		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>   		  __entry->id,
+>   		  __print_flags(__entry->flags, "|", XFS_DQ_FLAGS),
+>   		  __entry->nrefs,
+>   		  __entry->res_bcount,
+> +		  __entry->res_rtbcount,
+> +		  __entry->res_icount,
+>   		  __entry->bcount,
+>   		  __entry->blk_hardlimit,
+>   		  __entry->blk_softlimit,
+> +		  __entry->rtbcount,
+> +		  __entry->rtb_hardlimit,
+> +		  __entry->rtb_softlimit,
+>   		  __entry->icount,
+>   		  __entry->ino_hardlimit,
+>   		  __entry->ino_softlimit)
+> @@ -928,6 +951,119 @@ DEFINE_DQUOT_EVENT(xfs_dqrele);
+>   DEFINE_DQUOT_EVENT(xfs_dqflush);
+>   DEFINE_DQUOT_EVENT(xfs_dqflush_force);
+>   DEFINE_DQUOT_EVENT(xfs_dqflush_done);
+> +DEFINE_DQUOT_EVENT(xfs_trans_apply_dquot_deltas_before);
+> +DEFINE_DQUOT_EVENT(xfs_trans_apply_dquot_deltas_after);
+> +
+> +#define XFS_QMOPT_FLAGS \
+> +	{ XFS_QMOPT_UQUOTA,		"UQUOTA" }, \
+> +	{ XFS_QMOPT_PQUOTA,		"PQUOTA" }, \
+> +	{ XFS_QMOPT_FORCE_RES,		"FORCE_RES" }, \
+> +	{ XFS_QMOPT_SBVERSION,		"SBVERSION" }, \
+> +	{ XFS_QMOPT_GQUOTA,		"GQUOTA" }, \
+> +	{ XFS_QMOPT_INHERIT,		"INHERIT" }, \
+> +	{ XFS_QMOPT_RES_REGBLKS,	"RES_REGBLKS" }, \
+> +	{ XFS_QMOPT_RES_RTBLKS,		"RES_RTBLKS" }, \
+> +	{ XFS_QMOPT_BCOUNT,		"BCOUNT" }, \
+> +	{ XFS_QMOPT_ICOUNT,		"ICOUNT" }, \
+> +	{ XFS_QMOPT_RTBCOUNT,		"RTBCOUNT" }, \
+> +	{ XFS_QMOPT_DELBCOUNT,		"DELBCOUNT" }, \
+> +	{ XFS_QMOPT_DELRTBCOUNT,	"DELRTBCOUNT" }, \
+> +	{ XFS_QMOPT_RES_INOS,		"RES_INOS" }
+> +
+> +TRACE_EVENT(xfs_trans_mod_dquot,
+> +	TP_PROTO(struct xfs_trans *tp, struct xfs_dquot *dqp,
+> +		 unsigned int field, int64_t delta),
+> +	TP_ARGS(tp, dqp, field, delta),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(unsigned int, dqflags)
+> +		__field(unsigned int, dqid)
+> +		__field(unsigned int, field)
+> +		__field(int64_t, delta)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = tp->t_mountp->m_super->s_dev;
+> +		__entry->dqflags = dqp->dq_flags;
+> +		__entry->dqid = dqp->q_id;
+> +		__entry->field = field;
+> +		__entry->delta = delta;
+> +	),
+> +	TP_printk("dev %d:%d dquot %s id 0x%x %s delta %lld",
+> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		   __print_flags(__entry->dqflags, "|", XFS_DQ_FLAGS),
+> +		  __entry->dqid,
+> +		   __print_flags(__entry->field, "|", XFS_QMOPT_FLAGS),
+> +		  __entry->delta)
+> +);
+> +
+> +DECLARE_EVENT_CLASS(xfs_dqtrx_class,
+> +	TP_PROTO(struct xfs_dqtrx *qtrx),
+> +	TP_ARGS(qtrx),
+> +	TP_STRUCT__entry(
+> +		__field(dev_t, dev)
+> +		__field(unsigned int, dqflags)
+> +		__field(u32, dqid)
+> +
+> +		__field(uint64_t, blk_res)
+> +		__field(int64_t,  bcount_delta)
+> +		__field(int64_t,  delbcnt_delta)
+> +
+> +		__field(uint64_t, rtblk_res)
+> +		__field(uint64_t, rtblk_res_used)
+> +		__field(int64_t,  rtbcount_delta)
+> +		__field(int64_t,  delrtb_delta)
+> +
+> +		__field(uint64_t, ino_res)
+> +		__field(uint64_t, ino_res_used)
+> +		__field(int64_t,  icount_delta)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->dev = qtrx->qt_dquot->q_mount->m_super->s_dev;
+> +		__entry->dqflags = qtrx->qt_dquot->dq_flags;
+> +		__entry->dqid = qtrx->qt_dquot->q_id;
+> +
+> +		__entry->blk_res = qtrx->qt_blk_res;
+> +		__entry->bcount_delta = qtrx->qt_bcount_delta;
+> +		__entry->delbcnt_delta = qtrx->qt_delbcnt_delta;
+> +
+> +		__entry->rtblk_res = qtrx->qt_rtblk_res;
+> +		__entry->rtblk_res_used = qtrx->qt_rtblk_res_used;
+> +		__entry->rtbcount_delta = qtrx->qt_rtbcount_delta;
+> +		__entry->delrtb_delta = qtrx->qt_delrtb_delta;
+> +
+> +		__entry->ino_res = qtrx->qt_ino_res;
+> +		__entry->ino_res_used = qtrx->qt_ino_res_used;
+> +		__entry->icount_delta = qtrx->qt_icount_delta;
+> +	),
+> +	TP_printk("dev %d:%d dquot %s id 0x%x "
+> +		  "blk_res %llu bcount_delta %lld delbcnt_delta %lld "
+> +		  "rtblk_res %llu rtblk_res_used %llu rtbcount_delta %lld delrtb_delta %lld "
+> +		  "ino_res %llu ino_res_used %llu icount_delta %lld",
+> +		MAJOR(__entry->dev), MINOR(__entry->dev),
+> +		__print_flags(__entry->dqflags, "|", XFS_DQ_FLAGS),
+> +		__entry->dqid,
+> +
+> +		__entry->blk_res,
+> +		__entry->bcount_delta,
+> +		__entry->delbcnt_delta,
+> +
+> +		__entry->rtblk_res,
+> +		__entry->rtblk_res_used,
+> +		__entry->rtbcount_delta,
+> +		__entry->delrtb_delta,
+> +
+> +		__entry->ino_res,
+> +		__entry->ino_res_used,
+> +		__entry->icount_delta)
+> +)
+> +
+> +#define DEFINE_DQTRX_EVENT(name) \
+> +DEFINE_EVENT(xfs_dqtrx_class, name, \
+> +	TP_PROTO(struct xfs_dqtrx *qtrx), \
+> +	TP_ARGS(qtrx))
+> +DEFINE_DQTRX_EVENT(xfs_trans_apply_dquot_deltas);
+> +DEFINE_DQTRX_EVENT(xfs_trans_mod_dquot_before);
+> +DEFINE_DQTRX_EVENT(xfs_trans_mod_dquot_after);
+>   
+>   DECLARE_EVENT_CLASS(xfs_loggrant_class,
+>   	TP_PROTO(struct xlog *log, struct xlog_ticket *tic),
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index 701923ea6c04..5689d9f1b748 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -15,6 +15,7 @@
+>   #include "xfs_trans_priv.h"
+>   #include "xfs_quota.h"
+>   #include "xfs_qm.h"
+> +#include "xfs_trace.h"
+>   
+>   STATIC void	xfs_trans_alloc_dqinfo(xfs_trans_t *);
+>   
+> @@ -203,6 +204,11 @@ xfs_trans_mod_dquot(
+>   	if (qtrx->qt_dquot == NULL)
+>   		qtrx->qt_dquot = dqp;
+>   
+> +	if (delta) {
+> +		trace_xfs_trans_mod_dquot_before(qtrx);
+> +		trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
+> +	}
+> +
+>   	switch (field) {
+>   
+>   		/*
+> @@ -266,6 +272,10 @@ xfs_trans_mod_dquot(
+>   	      default:
+>   		ASSERT(0);
+>   	}
+> +
+> +	if (delta)
+> +		trace_xfs_trans_mod_dquot_after(qtrx);
+> +
+>   	tp->t_flags |= XFS_TRANS_DQ_DIRTY;
+>   }
+>   
+> @@ -391,6 +401,13 @@ xfs_trans_apply_dquot_deltas(
+>   				qtrx->qt_delbcnt_delta;
+>   			totalrtbdelta = qtrx->qt_rtbcount_delta +
+>   				qtrx->qt_delrtb_delta;
+> +
+> +			if (totalbdelta != 0 || totalrtbdelta != 0 ||
+> +			    qtrx->qt_icount_delta != 0) {
+> +				trace_xfs_trans_apply_dquot_deltas_before(dqp);
+> +				trace_xfs_trans_apply_dquot_deltas(qtrx);
+> +			}
+> +
+>   #ifdef DEBUG
+>   			if (totalbdelta < 0)
+>   				ASSERT(dqp->q_blk.count >= -totalbdelta);
+> @@ -410,6 +427,10 @@ xfs_trans_apply_dquot_deltas(
+>   			if (totalrtbdelta)
+>   				dqp->q_rtb.count += totalrtbdelta;
+>   
+> +			if (totalbdelta != 0 || totalrtbdelta != 0 ||
+> +			    qtrx->qt_icount_delta != 0)
+> +				trace_xfs_trans_apply_dquot_deltas_after(dqp);
+> +
+>   			/*
+>   			 * Get any default limits in use.
+>   			 * Start/reset the timer(s) if needed.
+> 
