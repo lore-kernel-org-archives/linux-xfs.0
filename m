@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 214A1C433E1
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 03:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B189C433E1
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 03:20:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E77AB20936
-	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 03:20:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D2BA2214D8
+	for <linux-xfs@archiver.kernel.org>; Sat,  4 Jul 2020 03:20:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tJY95Xa0"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VrTfAv1R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727094AbgGDDUj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 3 Jul 2020 23:20:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48666 "EHLO
+        id S1727798AbgGDDUy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 3 Jul 2020 23:20:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48710 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726501AbgGDDUi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jul 2020 23:20:38 -0400
+        with ESMTP id S1727789AbgGDDUx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 3 Jul 2020 23:20:53 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CF33C061794;
-        Fri,  3 Jul 2020 20:20:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B632C061794;
+        Fri,  3 Jul 2020 20:20:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=aRVEN4YU/BFDPd6cVTCzZUpu/CCVzRwNOQDbPEBZys4=; b=tJY95Xa0IAWCrSFHJ8hTCqVmCb
-        PXAAOu78uVM3UWrMJkge+fpEUOzsWN6i1uIxsyLnmkkuQkJJKI8Wx/TOSwiCRs3GoeUv+ef/Odg/4
-        DScwsH1ayFutkvn+JXl/8SAVMLiPQGYB0MUXTsWHuuWqq5ph52ziQX1HKD76p6hA9U7asFqXqBZeE
-        9rhtY/avec+Vt38MW41IjTZHQyftEBAk/dryc/xxN2emvHd+r8wIzhVGs4AVI9JlrkZ3Em9tgS+5V
-        Fz+a9iVry0UFDQ259p5zqFaxpP59X6EW0kDPHUScNKFFxI8sioWVwnTmsuLAIn7yc+3yPmOcbAc9k
-        lOiOUrzQ==;
+        bh=Xc5Y/7gMRvZrKEJDCwrF418TtFkFpBUwIh8SQqJf/ZU=; b=VrTfAv1RGQ4hkjvCiNUDlr43un
+        jMOXcMt42Nbx8oDU/ZCH3amqP9Ci4p6Jj0bs5YM+KpSNQ4IvQkmwfsmststlLaxkb/Bu8FDK9T1gf
+        U8W3n96qwP7as2mouie5Il16I0kLXpdDwMJN9RWnaVSNFbtxn/nLTVq2JT7omAyncYHfEYPGIPWxp
+        KsBbm72o1Rg+YHOANxA2hEIOkaxm1TcaR4HMozh5pGtMWNsYS+bQxx179Va8AUDruSOe1f9QDwVp0
+        p4mFxuXbBxcu69O91lkt+sC40Rn54VfvH4i4E1SEtOKR9fz53N8PoD7JO7oTtDS1SEOHDoFEe/Ixu
+        TIR9XeJA==;
 Received: from [2601:1c0:6280:3f0::19c2] (helo=smtpauth.infradead.org)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jrYjE-0000Ri-15; Sat, 04 Jul 2020 03:20:36 +0000
+        id 1jrYjS-0000Ri-7y; Sat, 04 Jul 2020 03:20:51 +0000
 From:   Randy Dunlap <rdunlap@infradead.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Randy Dunlap <rdunlap@infradead.org>,
@@ -52,9 +52,9 @@ Cc:     Randy Dunlap <rdunlap@infradead.org>,
         platform-driver-x86@vger.kernel.org,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org
-Subject: [PATCH 02/13] Documentation/admin-guide: cgroup-v1/rdma: drop doubled word
-Date:   Fri,  3 Jul 2020 20:20:09 -0700
-Message-Id: <20200704032020.21923-3-rdunlap@infradead.org>
+Subject: [PATCH 05/13] Documentation/admin-guide: mm/ksm: drop doubled word
+Date:   Fri,  3 Jul 2020 20:20:12 -0700
+Message-Id: <20200704032020.21923-6-rdunlap@infradead.org>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200704032020.21923-1-rdunlap@infradead.org>
 References: <20200704032020.21923-1-rdunlap@infradead.org>
@@ -65,21 +65,25 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Drop the doubled word "echo".
+Drop the doubled word "the".
 
 Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 Cc: Jonathan Corbet <corbet@lwn.net>
 Cc: linux-doc@vger.kernel.org
-Cc: cgroups@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-mm@kvack.org
 ---
- Documentation/admin-guide/cgroup-v1/rdma.rst |    2 +-
+ Documentation/admin-guide/mm/ksm.rst |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
---- linux-next-20200701.orig/Documentation/admin-guide/cgroup-v1/rdma.rst
-+++ linux-next-20200701/Documentation/admin-guide/cgroup-v1/rdma.rst
-@@ -114,4 +114,4 @@ Following resources can be accounted by
- 
- (d) Delete resource limit::
- 
--	echo echo mlx4_0 hca_handle=max hca_object=max > /sys/fs/cgroup/rdma/1/rdma.max
-+	echo mlx4_0 hca_handle=max hca_object=max > /sys/fs/cgroup/rdma/1/rdma.max
+--- linux-next-20200701.orig/Documentation/admin-guide/mm/ksm.rst
++++ linux-next-20200701/Documentation/admin-guide/mm/ksm.rst
+@@ -52,7 +52,7 @@ with EAGAIN, but more probably arousing
+ If KSM is not configured into the running kernel, madvise MADV_MERGEABLE
+ and MADV_UNMERGEABLE simply fail with EINVAL.  If the running kernel was
+ built with CONFIG_KSM=y, those calls will normally succeed: even if the
+-the KSM daemon is not currently running, MADV_MERGEABLE still registers
++KSM daemon is not currently running, MADV_MERGEABLE still registers
+ the range for whenever the KSM daemon is started; even if the range
+ cannot contain any pages which KSM could actually merge; even if
+ MADV_UNMERGEABLE is applied to a range which was never MADV_MERGEABLE.
