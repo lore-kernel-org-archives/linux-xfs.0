@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4851AC433E0
-	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jul 2020 22:13:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 444FFC433DF
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jul 2020 22:13:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AAF62075B
-	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jul 2020 22:13:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CACE2075B
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jul 2020 22:13:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nrRqN5fd"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jBpXKqL1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728237AbgGEWNE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 5 Jul 2020 18:13:04 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:45010 "EHLO
+        id S1728264AbgGEWNJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 5 Jul 2020 18:13:09 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:45072 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728152AbgGEWNE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Jul 2020 18:13:04 -0400
+        with ESMTP id S1728152AbgGEWNJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Jul 2020 18:13:09 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 065MCs8A002397
-        for <linux-xfs@vger.kernel.org>; Sun, 5 Jul 2020 22:13:02 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 065MBe8L001856
+        for <linux-xfs@vger.kernel.org>; Sun, 5 Jul 2020 22:13:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=Et6ZvbJw5F4PYflwq1Fab6MaZBQynLE8w1c2IiJP7eA=;
- b=nrRqN5fdeZXFwyCZhE657wu+0ihITYGFL2qOyFkh8QuBwEFtOwdWw+HnMD2RzlUxtdIq
- pHgcT/YEumdeQuiPU+Hj/53pjTJTmnheb3M8Uj7gThKfGWNzIvDKkAqhLFEn3eeGt3wD
- TnaGYbHyH64rYMnakCv/3ruB6r1Nv7JlC96PVsEXrulzEST+mFr6gfv2N0y3PiuLe0Cx
- OpPLJFDCjUDl1qQ8HBOqTN4vwRUBdo8n2zvA9S0d7/DguIqfb+xpd7QVyfooqNusbP8N
- lLQVyyeUzxIzfP9WE5YPW9TRPta8i3Y6kw9DvvZK3XR5lSquJiFlqgFU3/gHK9itGiw9 +g== 
+ bh=DiFBhQpKoi8notTLIyBH7XpjeLDfi1Y8pa0OVoxQOt8=;
+ b=jBpXKqL1XavL1k/jaT9sf63TSzXGJ50ywHGHix/xyXWvQnmrIsE0zTldc5XP/oS41PFB
+ 2l0RdRyc5J9mUBxjrAQFz6+GWpW0qX5rJkDzGP/xO4rDXRnaWn2mSruhPpZYrwbShqxf
+ cO+gTCkqak5XhpGNgCiuMUah8Dig3knJLaF8bWVi+y6TIZpjDPzV0ZDT6qOew93nEk6g
+ +/ZXiSjawkPMjrOmLdDdmBiSG1DitMHLtAt3xf4wGrNtPYAZ9w4IRgN/P8XVrH59mipb
+ wfXGUqMyXtJofQwXXjhoezMcFcCTqLXpx/8jsF2TAGqj5UbaPgBer9KgR6o4UYVN1LH2 kw== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 322h6r3j2w-1
+        by userp2130.oracle.com with ESMTP id 322h6r3j31-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sun, 05 Jul 2020 22:13:02 +0000
+        for <linux-xfs@vger.kernel.org>; Sun, 05 Jul 2020 22:13:08 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 065M86WS055678
-        for <linux-xfs@vger.kernel.org>; Sun, 5 Jul 2020 22:13:02 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 3233pubj80-1
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 065M86Cc055643
+        for <linux-xfs@vger.kernel.org>; Sun, 5 Jul 2020 22:13:08 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 3233pubjd3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 05 Jul 2020 22:13:02 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 065MD1DJ018132
-        for <linux-xfs@vger.kernel.org>; Sun, 5 Jul 2020 22:13:01 GMT
+        for <linux-xfs@vger.kernel.org>; Sun, 05 Jul 2020 22:13:08 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 065MD7lR026075
+        for <linux-xfs@vger.kernel.org>; Sun, 5 Jul 2020 22:13:07 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 05 Jul 2020 15:13:00 -0700
-Subject: [PATCH 04/22] xfs: split dquot flags
+        with ESMTP ; Sun, 05 Jul 2020 15:13:07 -0700
+Subject: [PATCH 05/22] xfs: make XFS_DQUOT_CLUSTER_SIZE_FSB part of the ondisk
+ format
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Sun, 05 Jul 2020 15:13:00 -0700
-Message-ID: <159398718001.425236.11382626384865972595.stgit@magnolia>
+Date:   Sun, 05 Jul 2020 15:13:06 -0700
+Message-ID: <159398718628.425236.8654425233877130537.stgit@magnolia>
 In-Reply-To: <159398715269.425236.15910213189856396341.stgit@magnolia>
 References: <159398715269.425236.15910213189856396341.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -80,200 +81,70 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Split the dquot flags space between incore dquots (XFS_DQ_*) and ondisk
-dquots (XFS_DQFLAG_*).
+Move the dquot cluster size #define to xfs_format.h.  It is an important
+part of the ondisk format because the ondisk dquot record size is not an
+even power of two, which means that the buffer size we use is
+significant here because the kernel leaves slack space at the end of the
+buffer to avoid having to deal with a dquot record crossing a block
+boundary.
+
+This is also an excuse to fix one of the longstanding discrepancies
+between kernel and userspace libxfs headers.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_dquot_buf.c   |   15 ++++++++++-----
- fs/xfs/libxfs/xfs_format.h      |   12 +++++++++++-
- fs/xfs/libxfs/xfs_quota_defs.h  |    6 +++---
- fs/xfs/xfs_dquot.c              |    4 ++--
- fs/xfs/xfs_dquot_item_recover.c |    4 ++--
- fs/xfs/xfs_qm.c                 |   21 ++++++++++++---------
- 6 files changed, 40 insertions(+), 22 deletions(-)
+ fs/xfs/libxfs/xfs_format.h |   16 ++++++++++++++++
+ fs/xfs/xfs_qm.h            |   11 -----------
+ 2 files changed, 16 insertions(+), 11 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-index bedc1e752b60..3d8abfaf8bcf 100644
---- a/fs/xfs/libxfs/xfs_dquot_buf.c
-+++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-@@ -40,6 +40,8 @@ xfs_dquot_verify(
- 	xfs_dqid_t		id,
- 	uint			type)	/* used only during quotacheck */
- {
-+	unsigned int		dtype;
-+
- 	/*
- 	 * We can encounter an uninitialized dquot buffer for 2 reasons:
- 	 * 1. If we crash while deleting the quotainode(s), and those blks got
-@@ -60,11 +62,14 @@ xfs_dquot_verify(
- 	if (ddq->d_version != XFS_DQUOT_VERSION)
- 		return __this_address;
- 
--	if (type && ddq->d_flags != type)
-+	if (ddq->d_flags & ~XFS_DDQFEAT_ANY)
- 		return __this_address;
--	if (ddq->d_flags != XFS_DQ_USER &&
--	    ddq->d_flags != XFS_DQ_PROJ &&
--	    ddq->d_flags != XFS_DQ_GROUP)
-+	dtype = ddq->d_flags & XFS_DDQFEAT_TYPE_MASK;
-+	if (type && dtype != type)
-+		return __this_address;
-+	if (dtype != XFS_DDQFEAT_USER &&
-+	    dtype != XFS_DDQFEAT_PROJ &&
-+	    dtype != XFS_DDQFEAT_GROUP)
- 		return __this_address;
- 
- 	if (id != -1 && id != be32_to_cpu(ddq->d_id))
-@@ -123,7 +128,7 @@ xfs_dqblk_repair(
- 
- 	dqb->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
- 	dqb->dd_diskdq.d_version = XFS_DQUOT_VERSION;
--	dqb->dd_diskdq.d_flags = type;
-+	dqb->dd_diskdq.d_flags = type & XFS_DDQFEAT_TYPE_MASK;
- 	dqb->dd_diskdq.d_id = cpu_to_be32(id);
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index c74249063250..fcd270194e47 100644
+index fcd270194e47..d6615103db0c 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1150,6 +1150,16 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- #define XFS_DQUOT_MAGIC		0x4451		/* 'DQ' */
- #define XFS_DQUOT_VERSION	(uint8_t)0x01	/* latest version number */
+@@ -1209,6 +1209,22 @@ typedef struct xfs_dqblk {
  
-+#define XFS_DDQFEAT_USER	0x01		/* user dquot record */
-+#define XFS_DDQFEAT_PROJ	0x02		/* project dquot record */
-+#define XFS_DDQFEAT_GROUP	0x04		/* group dquot record */
-+
-+#define XFS_DDQFEAT_TYPE_MASK	(XFS_DDQFEAT_USER | \
-+				 XFS_DDQFEAT_PROJ | \
-+				 XFS_DDQFEAT_GROUP)
-+
-+#define XFS_DDQFEAT_ANY		(XFS_DDQFEAT_TYPE_MASK)
-+
- /*
-  * This is the main portion of the on-disk representation of quota
-  * information for a user. This is the q_core of the struct xfs_dquot that
-@@ -1159,7 +1169,7 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- struct xfs_disk_dquot {
- 	__be16		d_magic;	/* dquot magic = XFS_DQUOT_MAGIC */
- 	__u8		d_version;	/* dquot version */
--	__u8		d_flags;	/* XFS_DQ_USER/PROJ/GROUP */
-+	__u8		d_flags;	/* XFS_DDQFEAT_* */
- 	__be32		d_id;		/* user,project,group id */
- 	__be64		d_blk_hardlimit;/* absolute limit on disk blks */
- 	__be64		d_blk_softlimit;/* preferred limit on disk blks */
-diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
-index 56d9dd787e7b..396c10369771 100644
---- a/fs/xfs/libxfs/xfs_quota_defs.h
-+++ b/fs/xfs/libxfs/xfs_quota_defs.h
-@@ -21,9 +21,9 @@ typedef uint16_t	xfs_qwarncnt_t;
- /*
-  * flags for q_flags field in the dquot.
-  */
--#define XFS_DQ_USER		0x0001		/* a user quota */
--#define XFS_DQ_PROJ		0x0002		/* project quota */
--#define XFS_DQ_GROUP		0x0004		/* a group quota */
-+#define XFS_DQ_USER		XFS_DDQFEAT_USER	/* a user quota */
-+#define XFS_DQ_PROJ		XFS_DDQFEAT_PROJ	/* a project quota */
-+#define XFS_DQ_GROUP		XFS_DDQFEAT_GROUP /* a group quota */
- #define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
- #define XFS_DQ_FREEING		0x0010		/* dquot is being torn down */
+ #define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
  
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 5bd963c774f8..883573927416 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -238,7 +238,7 @@ xfs_qm_init_dquot_blk(
- 		d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
- 		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
- 		d->dd_diskdq.d_id = cpu_to_be32(curid);
--		d->dd_diskdq.d_flags = type;
-+		d->dd_diskdq.d_flags = type & XFS_DDQFEAT_TYPE_MASK;
- 		if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 			uuid_copy(&d->dd_uuid, &mp->m_sb.sb_meta_uuid);
- 			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
-@@ -536,7 +536,7 @@ xfs_dquot_from_disk(
- 	 * Ensure that we got the type and ID we were looking for.
- 	 * Everything else was checked by the dquot buffer verifier.
- 	 */
--	if ((ddqp->d_flags & XFS_DQ_ALLTYPES) != dqp->dq_flags ||
-+	if ((ddqp->d_flags & XFS_DDQFEAT_TYPE_MASK) != dqp->dq_flags ||
- 	    ddqp->d_id != dqp->q_core.d_id) {
- 		xfs_alert_tag(bp->b_mount, XFS_PTAG_VERIFIER_ERROR,
- 			  "Metadata corruption detected at %pS, quota %u",
-diff --git a/fs/xfs/xfs_dquot_item_recover.c b/fs/xfs/xfs_dquot_item_recover.c
-index 3400be4c88f0..edb4bd88f1a3 100644
---- a/fs/xfs/xfs_dquot_item_recover.c
-+++ b/fs/xfs/xfs_dquot_item_recover.c
-@@ -39,7 +39,7 @@ xlog_recover_dquot_ra_pass2(
- 	if (item->ri_buf[1].i_len < sizeof(struct xfs_disk_dquot))
- 		return;
- 
--	type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
-+	type = recddq->d_flags & XFS_DDQFEAT_TYPE_MASK;
- 	ASSERT(type);
- 	if (log->l_quotaoffs_flag & type)
- 		return;
-@@ -91,7 +91,7 @@ xlog_recover_dquot_commit_pass2(
- 	/*
- 	 * This type of quotas was turned off, so ignore this record.
- 	 */
--	type = recddq->d_flags & (XFS_DQ_USER | XFS_DQ_PROJ | XFS_DQ_GROUP);
-+	type = recddq->d_flags & XFS_DDQFEAT_TYPE_MASK;
- 	ASSERT(type);
- 	if (log->l_quotaoffs_flag & type)
- 		return 0;
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 938023dd8ce5..bd807f740eb9 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -826,13 +826,16 @@ xfs_qm_qino_alloc(
- 	return error;
- }
- 
--
 +/*
-+ * Reset the dquot counters.  type should be one of the ondisk quota type flags
-+ * (XFS_DQUOT_{USER,GROUP,PROJECT}.
++ * This defines the unit of allocation of dquots.
++ *
++ * Currently, it is just one file system block, and a 4K blk contains 30
++ * (136 * 30 = 4080) dquots. It's probably not worth trying to make
++ * this more dynamic.
++ *
++ * However, if this number is changed, we have to make sure that we don't
++ * implicitly assume that we do allocations in chunks of a single filesystem
++ * block in the dquot/xqm code.
++ *
++ * This is part of the ondisk format because the structure size is not a power
++ * of two, which leaves slack at the end of the disk block.
 + */
- STATIC void
- xfs_qm_reset_dqcounts(
--	xfs_mount_t	*mp,
--	xfs_buf_t	*bp,
--	xfs_dqid_t	id,
--	uint		type)
-+	struct xfs_mount	*mp,
-+	struct xfs_buf		*bp,
-+	xfs_dqid_t		id,
-+	unsigned int		type)
- {
- 	struct xfs_dqblk	*dqb;
- 	int			j;
-@@ -869,7 +872,7 @@ xfs_qm_reset_dqcounts(
- 		 * Reset type in case we are reusing group quota file for
- 		 * project quotas or vice versa
- 		 */
--		ddq->d_flags = type;
-+		ddq->d_flags = type & XFS_DDQFEAT_TYPE_MASK;
- 		ddq->d_bcount = 0;
- 		ddq->d_icount = 0;
- 		ddq->d_rtbcount = 0;
-@@ -907,11 +910,11 @@ xfs_qm_reset_dqcounts_all(
- {
- 	struct xfs_buf		*bp;
- 	int			error;
--	int			type;
-+	unsigned int		type;
++#define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
++
+ /*
+  * Remote symlink format and access functions.
+  */
+diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
+index 7b0e771fcbce..2c8ca9df23af 100644
+--- a/fs/xfs/xfs_qm.h
++++ b/fs/xfs/xfs_qm.h
+@@ -30,17 +30,6 @@ extern struct kmem_zone	*xfs_qm_dqtrxzone;
+ 	!dqp->q_core.d_rtbcount && \
+ 	!dqp->q_core.d_icount)
  
- 	ASSERT(blkcnt > 0);
--	type = flags & XFS_QMOPT_UQUOTA ? XFS_DQ_USER :
--		(flags & XFS_QMOPT_PQUOTA ? XFS_DQ_PROJ : XFS_DQ_GROUP);
-+	type = flags & XFS_QMOPT_UQUOTA ? XFS_DDQFEAT_USER :
-+		(flags & XFS_QMOPT_PQUOTA ? XFS_DDQFEAT_PROJ : XFS_DDQFEAT_GROUP);
- 	error = 0;
- 
- 	/*
+-/*
+- * This defines the unit of allocation of dquots.
+- * Currently, it is just one file system block, and a 4K blk contains 30
+- * (136 * 30 = 4080) dquots. It's probably not worth trying to make
+- * this more dynamic.
+- * XXXsup However, if this number is changed, we have to make sure that we don't
+- * implicitly assume that we do allocations in chunks of a single filesystem
+- * block in the dquot/xqm code.
+- */
+-#define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
+-
+ /* Defaults for each quota type: time limits, warn limits, usage limits */
+ struct xfs_def_quota {
+ 	time64_t	btimelimit;	/* limit for blks timer */
 
