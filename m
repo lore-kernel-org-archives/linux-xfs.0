@@ -7,58 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CDA2C433DF
-	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jul 2020 22:16:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 795D9C433DF
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jul 2020 22:16:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F4172075B
-	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jul 2020 22:16:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 530562075B
+	for <linux-xfs@archiver.kernel.org>; Sun,  5 Jul 2020 22:16:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sT43qReS"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xmIWrgEh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728335AbgGEWP7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 5 Jul 2020 18:15:59 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:46364 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728103AbgGEWP7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Jul 2020 18:15:59 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 065MCcop002358;
-        Sun, 5 Jul 2020 22:13:54 GMT
+        id S1728308AbgGEWQF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 5 Jul 2020 18:16:05 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41154 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728103AbgGEWQF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 5 Jul 2020 18:16:05 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 065ME180147698;
+        Sun, 5 Jul 2020 22:14:01 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=0jH5u4EaJLU4ABo0xaNVq0aJykMT3oZ/1vhvlo29LAI=;
- b=sT43qReSVCLTQGkpryT5HgDOtViDtdn5mRHDHMXkSQHadDbhyBPepgZNuCV4U5EIK9WB
- 9BzniYFbw667iJKe+zFHn+Ariy62ahjBs4/Nd673OlB7L6EpHMd+toN0T7kXVp54JcTY
- hCRQxdFSlk2Nt+juqtAHRccPx06DOkGY5ZQTVJ8APpS04ulU5bw99PDKbyDb9BtLyALv
- ifdbrMzFMeO6UUPVEt+yFEb4uYDFUm+EZwXbMlx4KXPbujM4ial8QxVGptz7IoF+Z8r/
- GUm63hADz3wsjXZQEQ5Zles05jNi1olyESK7xlsWbEWlIfOqn27FjE5MrKHG73EcxnU6 Fg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 322h6r3j3p-1
+ bh=oSJ2Srz6PwsLZE7MEJzeB4XeFJ93Tr+VaNi7Ohfd22A=;
+ b=xmIWrgEh2raAX7STqFZa4xIZf6Vl5IVSmaiTxObx+C4jXYAslJcAiwuhBuABoNa/eV3n
+ 0CrXtA0HjKd5D0X1+b+hoHqyqXJ0R6bXlZ5MCPAZc8RJo0vYUjq3u29tb+yuS7ec6LWV
+ fNuNnio3A7CYhERMzX/X8tokes0pspcDpKsisxqO/tJjGDOdsnbEepyKAGiKnJsxuDgv
+ bJMzJTUL9Nvs4tsg3nph+BVUfgkKwq4fgckYPfc8DpuElZJBRhqZNFCUO9iTCnqU9G20
+ eKuJmPavMCK7eI0e+vlm9qE6xkAtdBEDOhxlfytA2wZtGdL/5UuZweghX31kB2jMv8IH tA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 322jdn3f6e-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 05 Jul 2020 22:13:54 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 065MD4Ii158963;
-        Sun, 5 Jul 2020 22:13:53 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 3233bkj183-1
+        Sun, 05 Jul 2020 22:14:00 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 065MD2Sh111539;
+        Sun, 5 Jul 2020 22:14:00 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 3233nx9anh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 05 Jul 2020 22:13:53 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 065MDrwf018484;
-        Sun, 5 Jul 2020 22:13:53 GMT
+        Sun, 05 Jul 2020 22:14:00 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 065MDxAt009123;
+        Sun, 5 Jul 2020 22:13:59 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 05 Jul 2020 15:13:53 -0700
-Subject: [PATCH 12/22] xfs: stop using q_core timers in the quota code
+        with ESMTP ; Sun, 05 Jul 2020 15:13:59 -0700
+Subject: [PATCH 13/22] xfs: remove qcore from incore dquots
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Allison Collins <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Date:   Sun, 05 Jul 2020 15:13:51 -0700
-Message-ID: <159398723189.425236.1531388135291288907.stgit@magnolia>
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Date:   Sun, 05 Jul 2020 15:13:58 -0700
+Message-ID: <159398723836.425236.16683896014000523196.stgit@magnolia>
 In-Reply-To: <159398715269.425236.15910213189856396341.stgit@magnolia>
 References: <159398715269.425236.15910213189856396341.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -66,15 +64,15 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9673 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 adultscore=0
- malwarescore=0 spamscore=0 mlxlogscore=999 bulkscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2007050172
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxlogscore=999
+ mlxscore=0 spamscore=0 bulkscore=0 malwarescore=0 phishscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2004280000 definitions=main-2007050172
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9673 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 lowpriorityscore=0
- suspectscore=1 adultscore=0 mlxscore=0 spamscore=0 impostorscore=0
- cotscore=-2147483648 malwarescore=0 mlxlogscore=999 clxscore=1015
- bulkscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 clxscore=1015
+ lowpriorityscore=0 suspectscore=1 impostorscore=0 spamscore=0 phishscore=0
+ malwarescore=0 bulkscore=0 mlxlogscore=999 priorityscore=1501 mlxscore=0
+ cotscore=-2147483648 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2004280000 definitions=main-2007050172
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
@@ -83,298 +81,133 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add timers fields to the incore dquot, and use that instead of the ones
-in qcore.  This eliminates a bunch of endian conversions and will
-eventually allow us to remove qcore entirely.
+Now that we've stopped using qcore entirely, drop it from the incore
+dquot.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_dquot.c       |   40 +++++++++++++++++++++++-----------------
- fs/xfs/xfs_dquot.h       |    7 +++++++
- fs/xfs/xfs_qm.c          |   15 ++++++---------
- fs/xfs/xfs_qm_syscalls.c |   18 ++++++++----------
- fs/xfs/xfs_trans_dquot.c |    6 +++---
- 5 files changed, 47 insertions(+), 39 deletions(-)
+ fs/xfs/scrub/quota.c |    4 ----
+ fs/xfs/xfs_dquot.c   |   35 ++++++++++++-----------------------
+ fs/xfs/xfs_dquot.h   |    1 -
+ 3 files changed, 12 insertions(+), 28 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 3942ef6f1e94..6738e33102a2 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -117,7 +117,6 @@ xfs_qm_adjust_dqtimers(
- 	struct xfs_dquot	*dq)
- {
- 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
+index 2fc2625feca0..f4aad5b00188 100644
+--- a/fs/xfs/scrub/quota.c
++++ b/fs/xfs/scrub/quota.c
+@@ -79,7 +79,6 @@ xchk_quota_item(
+ 	struct xchk_quota_info	*sqi = priv;
+ 	struct xfs_scrub	*sc = sqi->sc;
+ 	struct xfs_mount	*mp = sc->mp;
 -	struct xfs_disk_dquot	*d = &dq->q_core;
- 	struct xfs_def_quota	*defq;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 	xfs_fileoff_t		offset;
+ 	xfs_ino_t		fs_icount;
+@@ -98,9 +97,6 @@ xchk_quota_item(
  
- 	ASSERT(dq->q_id);
-@@ -132,13 +131,13 @@ xfs_qm_adjust_dqtimers(
- 		ASSERT(dq->q_rtb.softlimit <= dq->q_rtb.hardlimit);
- #endif
+ 	sqi->last_id = dq->q_id;
  
--	if (!d->d_btimer) {
-+	if (!dq->q_blk.timer) {
- 		if ((dq->q_blk.softlimit &&
- 		     (dq->q_blk.count > dq->q_blk.softlimit)) ||
- 		    (dq->q_blk.hardlimit &&
- 		     (dq->q_blk.count > dq->q_blk.hardlimit))) {
--			d->d_btimer = cpu_to_be32(ktime_get_real_seconds() +
--					defq->btimelimit);
-+			dq->q_blk.timer = ktime_get_real_seconds() +
-+					defq->btimelimit;
- 		} else {
- 			dq->q_blk.warnings = 0;
- 		}
-@@ -147,17 +146,17 @@ xfs_qm_adjust_dqtimers(
- 		     (dq->q_blk.count <= dq->q_blk.softlimit)) &&
- 		    (!dq->q_blk.hardlimit ||
- 		    (dq->q_blk.count <= dq->q_blk.hardlimit))) {
--			d->d_btimer = 0;
-+			dq->q_blk.timer = 0;
- 		}
- 	}
- 
--	if (!d->d_itimer) {
-+	if (!dq->q_ino.timer) {
- 		if ((dq->q_ino.softlimit &&
- 		     (dq->q_ino.count > dq->q_ino.softlimit)) ||
- 		    (dq->q_ino.hardlimit &&
- 		     (dq->q_ino.count > dq->q_ino.hardlimit))) {
--			d->d_itimer = cpu_to_be32(ktime_get_real_seconds() +
--					defq->itimelimit);
-+			dq->q_ino.timer = ktime_get_real_seconds() +
-+					defq->itimelimit;
- 		} else {
- 			dq->q_ino.warnings = 0;
- 		}
-@@ -166,17 +165,17 @@ xfs_qm_adjust_dqtimers(
- 		     (dq->q_ino.count <= dq->q_ino.softlimit))  &&
- 		    (!dq->q_ino.hardlimit ||
- 		     (dq->q_ino.count <= dq->q_ino.hardlimit))) {
--			d->d_itimer = 0;
-+			dq->q_ino.timer = 0;
- 		}
- 	}
- 
--	if (!d->d_rtbtimer) {
-+	if (!dq->q_rtb.timer) {
- 		if ((dq->q_rtb.softlimit &&
- 		     (dq->q_rtb.count > dq->q_rtb.softlimit)) ||
- 		    (dq->q_rtb.hardlimit &&
- 		     (dq->q_rtb.count > dq->q_rtb.hardlimit))) {
--			d->d_rtbtimer = cpu_to_be32(ktime_get_real_seconds() +
--					defq->rtbtimelimit);
-+			dq->q_rtb.timer = ktime_get_real_seconds() +
-+					defq->rtbtimelimit;
- 		} else {
- 			dq->q_rtb.warnings = 0;
- 		}
-@@ -185,7 +184,7 @@ xfs_qm_adjust_dqtimers(
- 		     (dq->q_rtb.count <= dq->q_rtb.softlimit)) &&
- 		    (!dq->q_rtb.hardlimit ||
- 		     (dq->q_rtb.count <= dq->q_rtb.hardlimit))) {
--			d->d_rtbtimer = 0;
-+			dq->q_rtb.timer = 0;
- 		}
- 	}
- }
-@@ -546,6 +545,10 @@ xfs_dquot_from_disk(
- 	dqp->q_ino.warnings = be16_to_cpu(ddqp->d_iwarns);
- 	dqp->q_rtb.warnings = be16_to_cpu(ddqp->d_rtbwarns);
- 
-+	dqp->q_blk.timer = be32_to_cpu(ddqp->d_btimer);
-+	dqp->q_ino.timer = be32_to_cpu(ddqp->d_itimer);
-+	dqp->q_rtb.timer = be32_to_cpu(ddqp->d_rtbtimer);
-+
- 	/*
- 	 * Reservation counters are defined as reservation plus current usage
- 	 * to avoid having to add every time.
-@@ -581,6 +584,10 @@ xfs_dquot_to_disk(
- 	ddqp->d_bwarns = cpu_to_be16(dqp->q_blk.warnings);
- 	ddqp->d_iwarns = cpu_to_be16(dqp->q_ino.warnings);
- 	ddqp->d_rtbwarns = cpu_to_be16(dqp->q_rtb.warnings);
-+
-+	ddqp->d_btimer = cpu_to_be32(dqp->q_blk.timer);
-+	ddqp->d_itimer = cpu_to_be32(dqp->q_ino.timer);
-+	ddqp->d_rtbtimer = cpu_to_be32(dqp->q_rtb.timer);
- }
- 
- /* Allocate and initialize the dquot buffer for this in-core dquot. */
-@@ -1135,7 +1142,6 @@ static xfs_failaddr_t
- xfs_qm_dqflush_check(
- 	struct xfs_dquot	*dqp)
- {
--	struct xfs_disk_dquot	*ddq = &dqp->q_core;
- 	unsigned int		type = dqp->dq_flags & XFS_DQ_ALLTYPES;
- 
- 	if (type != XFS_DQ_USER && type != XFS_DQ_GROUP && type != XFS_DQ_PROJ)
-@@ -1145,15 +1151,15 @@ xfs_qm_dqflush_check(
- 		return NULL;
- 
- 	if (dqp->q_blk.softlimit && dqp->q_blk.count > dqp->q_blk.softlimit &&
--	    !ddq->d_btimer)
-+	    !dqp->q_blk.timer)
- 		return __this_address;
- 
- 	if (dqp->q_ino.softlimit && dqp->q_ino.count > dqp->q_ino.softlimit &&
--	    !ddq->d_itimer)
-+	    !dqp->q_ino.timer)
- 		return __this_address;
- 
- 	if (dqp->q_rtb.softlimit && dqp->q_rtb.count > dqp->q_rtb.softlimit &&
--	    !ddq->d_rtbtimer)
-+	    !dqp->q_rtb.timer)
- 		return __this_address;
- 
- 	return NULL;
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 5840bc54b772..414bae537b1d 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -38,6 +38,13 @@ struct xfs_dquot_res {
- 	xfs_qcnt_t		hardlimit;
- 	xfs_qcnt_t		softlimit;
- 
-+	/*
-+	 * For root dquots, this is the default grace period, in seconds.
-+	 * Otherwise, this is when the quota grace period expires,
-+	 * in seconds since the Unix epoch.
-+	 */
-+	time64_t		timer;
-+
- 	/*
- 	 * For root dquots, this is the maximum number of warnings that will
- 	 * be issued for this quota type.  Otherwise, this is the number of
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index fabc0e6062f2..54b8d270843b 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -579,7 +579,6 @@ xfs_qm_init_timelimits(
- {
- 	struct xfs_quotainfo	*qinf = mp->m_quotainfo;
- 	struct xfs_def_quota	*defq;
--	struct xfs_disk_dquot	*ddqp;
- 	struct xfs_dquot	*dqp;
- 	int			error;
- 
-@@ -603,19 +602,17 @@ xfs_qm_init_timelimits(
- 	if (error)
- 		return;
- 
--	ddqp = &dqp->q_core;
+-	if (d->d_pad0 != cpu_to_be32(0) || d->d_pad != cpu_to_be16(0))
+-		xchk_fblock_set_corrupt(sc, XFS_DATA_FORK, offset);
 -
  	/*
- 	 * The warnings and timers set the grace period given to
- 	 * a user or group before he or she can not perform any
- 	 * more writing. If it is zero, a default is used.
- 	 */
--	if (ddqp->d_btimer)
--		defq->btimelimit = be32_to_cpu(ddqp->d_btimer);
--	if (ddqp->d_itimer)
--		defq->itimelimit = be32_to_cpu(ddqp->d_itimer);
--	if (ddqp->d_rtbtimer)
--		defq->rtbtimelimit = be32_to_cpu(ddqp->d_rtbtimer);
-+	if (dqp->q_blk.timer)
-+		defq->btimelimit = dqp->q_blk.timer;
-+	if (dqp->q_ino.timer)
-+		defq->itimelimit = dqp->q_ino.timer;
-+	if (dqp->q_rtb.timer)
-+		defq->rtbtimelimit = dqp->q_rtb.timer;
- 	if (dqp->q_blk.warnings)
- 		defq->bwarnlimit = dqp->q_blk.warnings;
- 	if (dqp->q_ino.warnings)
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 5d3bccdbd3bf..1b2b70b1660f 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -447,7 +447,6 @@ xfs_qm_scall_setqlim(
- 	struct qc_dqblk		*newlim)
+ 	 * Warn if the hard limits are larger than the fs.
+ 	 * Administrators can do this, though in production this seems
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 6738e33102a2..1d96b254539b 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -529,7 +529,6 @@ xfs_dquot_from_disk(
+ 	}
+ 
+ 	/* copy everything from disk dquot to the incore dquot */
+-	memcpy(&dqp->q_core, ddqp, sizeof(struct xfs_disk_dquot));
+ 	dqp->q_blk.hardlimit = be64_to_cpu(ddqp->d_blk_hardlimit);
+ 	dqp->q_blk.softlimit = be64_to_cpu(ddqp->d_blk_softlimit);
+ 	dqp->q_ino.hardlimit = be64_to_cpu(ddqp->d_ino_hardlimit);
+@@ -568,8 +567,13 @@ xfs_dquot_to_disk(
+ 	struct xfs_disk_dquot	*ddqp,
+ 	struct xfs_dquot	*dqp)
  {
- 	struct xfs_quotainfo	*q = mp->m_quotainfo;
--	struct xfs_disk_dquot	*ddq;
- 	struct xfs_dquot	*dqp;
- 	struct xfs_trans	*tp;
- 	struct xfs_def_quota	*defq;
-@@ -488,7 +487,6 @@ xfs_qm_scall_setqlim(
+-	memcpy(ddqp, &dqp->q_core, sizeof(struct xfs_disk_dquot));
++	ddqp->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++	ddqp->d_version = XFS_DQUOT_VERSION;
+ 	ddqp->d_flags = dqp->dq_flags & XFS_DDQFEAT_TYPE_MASK;
++	ddqp->d_id = cpu_to_be32(dqp->q_id);
++	ddqp->d_pad0 = 0;
++	ddqp->d_pad = 0;
++
+ 	ddqp->d_blk_hardlimit = cpu_to_be64(dqp->q_blk.hardlimit);
+ 	ddqp->d_blk_softlimit = cpu_to_be64(dqp->q_blk.softlimit);
+ 	ddqp->d_ino_hardlimit = cpu_to_be64(dqp->q_ino.hardlimit);
+@@ -1181,8 +1185,7 @@ xfs_qm_dqflush(
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct xfs_log_item	*lip = &dqp->q_logitem.qli_item;
+ 	struct xfs_buf		*bp;
+-	struct xfs_dqblk	*dqb;
+-	struct xfs_disk_dquot	*ddqp;
++	struct xfs_dqblk	*dqblk;
+ 	xfs_failaddr_t		fa;
+ 	int			error;
  
- 	xfs_dqlock(dqp);
- 	xfs_trans_dqjoin(tp, dqp);
--	ddq = &dqp->q_core;
+@@ -1206,22 +1209,6 @@ xfs_qm_dqflush(
+ 	if (error)
+ 		goto out_abort;
+ 
+-	/*
+-	 * Calculate the location of the dquot inside the buffer.
+-	 */
+-	dqb = bp->b_addr + dqp->q_bufoffset;
+-	ddqp = &dqb->dd_diskdq;
+-
+-	/* sanity check the in-core structure before we flush */
+-	fa = xfs_dquot_verify(mp, &dqp->q_core, dqp->q_id, 0);
+-	if (fa) {
+-		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
+-				dqp->q_id, fa);
+-		xfs_buf_relse(bp);
+-		error = -EFSCORRUPTED;
+-		goto out_abort;
+-	}
+-
+ 	fa = xfs_qm_dqflush_check(dqp);
+ 	if (fa) {
+ 		xfs_alert(mp, "corrupt dquot ID 0x%x in memory at %pS",
+@@ -1231,7 +1218,9 @@ xfs_qm_dqflush(
+ 		goto out_abort;
+ 	}
+ 
+-	xfs_dquot_to_disk(ddqp, dqp);
++	/* Flush the incore dquot to the ondisk buffer. */
++	dqblk = bp->b_addr + dqp->q_bufoffset;
++	xfs_dquot_to_disk(&dqblk->dd_diskdq, dqp);
  
  	/*
- 	 * Make sure that hardlimits are >= soft limits before changing.
-@@ -573,11 +571,11 @@ xfs_qm_scall_setqlim(
- 	 * the soft limit.
+ 	 * Clear the dirty field and remember the flush lsn for later use.
+@@ -1251,8 +1240,8 @@ xfs_qm_dqflush(
+ 	 * of a dquot without an up-to-date CRC getting to disk.
  	 */
- 	if (newlim->d_fieldmask & QC_SPC_TIMER)
--		ddq->d_btimer = cpu_to_be32(newlim->d_spc_timer);
-+		dqp->q_blk.timer = newlim->d_spc_timer;
- 	if (newlim->d_fieldmask & QC_INO_TIMER)
--		ddq->d_itimer = cpu_to_be32(newlim->d_ino_timer);
-+		dqp->q_ino.timer = newlim->d_ino_timer;
- 	if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
--		ddq->d_rtbtimer = cpu_to_be32(newlim->d_rt_spc_timer);
-+		dqp->q_rtb.timer = newlim->d_rt_spc_timer;
+ 	if (xfs_sb_version_hascrc(&mp->m_sb)) {
+-		dqb->dd_lsn = cpu_to_be64(dqp->q_logitem.qli_item.li_lsn);
+-		xfs_update_cksum((char *)dqb, sizeof(struct xfs_dqblk),
++		dqblk->dd_lsn = cpu_to_be64(dqp->q_logitem.qli_item.li_lsn);
++		xfs_update_cksum((char *)dqblk, sizeof(struct xfs_dqblk),
+ 				 XFS_DQUOT_CRC_OFF);
+ 	}
  
- 	if (id == 0) {
- 		if (newlim->d_fieldmask & QC_SPC_TIMER)
-@@ -621,18 +619,18 @@ xfs_qm_scall_getquota_fill_qc(
- 	memset(dst, 0, sizeof(*dst));
- 	dst->d_spc_hardlimit = XFS_FSB_TO_B(mp, dqp->q_blk.hardlimit);
- 	dst->d_spc_softlimit = XFS_FSB_TO_B(mp, dqp->q_blk.softlimit);
--	dst->d_ino_hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
--	dst->d_ino_softlimit = be64_to_cpu(dqp->q_core.d_ino_softlimit);
-+	dst->d_ino_hardlimit = dqp->q_ino.hardlimit;
-+	dst->d_ino_softlimit = dqp->q_ino.softlimit;
- 	dst->d_space = XFS_FSB_TO_B(mp, dqp->q_blk.reserved);
- 	dst->d_ino_count = dqp->q_ino.reserved;
--	dst->d_spc_timer = be32_to_cpu(dqp->q_core.d_btimer);
--	dst->d_ino_timer = be32_to_cpu(dqp->q_core.d_itimer);
-+	dst->d_spc_timer = dqp->q_blk.timer;
-+	dst->d_ino_timer = dqp->q_ino.timer;
- 	dst->d_ino_warns = dqp->q_ino.warnings;
- 	dst->d_spc_warns = dqp->q_blk.warnings;
- 	dst->d_rt_spc_hardlimit = XFS_FSB_TO_B(mp, dqp->q_rtb.hardlimit);
- 	dst->d_rt_spc_softlimit = XFS_FSB_TO_B(mp, dqp->q_rtb.softlimit);
- 	dst->d_rt_space = XFS_FSB_TO_B(mp, dqp->q_rtb.reserved);
--	dst->d_rt_spc_timer = be32_to_cpu(dqp->q_core.d_rtbtimer);
-+	dst->d_rt_spc_timer = dqp->q_rtb.timer;
- 	dst->d_rt_spc_warns = dqp->q_rtb.warnings;
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 414bae537b1d..62b0fc6e0133 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -71,7 +71,6 @@ struct xfs_dquot {
+ 	struct xfs_dquot_res	q_ino;	/* inodes */
+ 	struct xfs_dquot_res	q_rtb;	/* realtime blocks */
  
- 	/*
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 21ed8eda3c80..28b59a4069a3 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -591,7 +591,7 @@ xfs_trans_dqresv(
- 		softlimit = dqp->q_blk.softlimit;
- 		if (!softlimit)
- 			softlimit = defq->bsoftlimit;
--		timer = be32_to_cpu(dqp->q_core.d_btimer);
-+		timer = dqp->q_blk.timer;
- 		warns = dqp->q_blk.warnings;
- 		warnlimit = defq->bwarnlimit;
- 		resbcountp = &dqp->q_blk.reserved;
-@@ -603,7 +603,7 @@ xfs_trans_dqresv(
- 		softlimit = dqp->q_rtb.softlimit;
- 		if (!softlimit)
- 			softlimit = defq->rtbsoftlimit;
--		timer = be32_to_cpu(dqp->q_core.d_rtbtimer);
-+		timer = dqp->q_rtb.timer;
- 		warns = dqp->q_rtb.warnings;
- 		warnlimit = defq->rtbwarnlimit;
- 		resbcountp = &dqp->q_rtb.reserved;
-@@ -638,7 +638,7 @@ xfs_trans_dqresv(
- 		}
- 		if (ninos > 0) {
- 			total_count = dqp->q_ino.reserved + ninos;
--			timer = be32_to_cpu(dqp->q_core.d_itimer);
-+			timer = dqp->q_ino.timer;
- 			warns = dqp->q_ino.warnings;
- 			warnlimit = defq->iwarnlimit;
- 			hardlimit = dqp->q_ino.hardlimit;
+-	struct xfs_disk_dquot	q_core;
+ 	struct xfs_dq_logitem	q_logitem;
+ 
+ 	xfs_qcnt_t		q_prealloc_lo_wmark;
 
