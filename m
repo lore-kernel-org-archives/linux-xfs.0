@@ -2,103 +2,133 @@ Return-Path: <SRS0=eqR3=AR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AF67C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jul 2020 18:10:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66CFAC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jul 2020 22:53:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 152E620760
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jul 2020 18:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E82B20723
+	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jul 2020 22:53:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XEt3gI8x"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dKfIiXom"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729661AbgGFSK0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jul 2020 14:10:26 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:38194 "EHLO
+        id S1726491AbgGFWxw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jul 2020 18:53:52 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:48714 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729648AbgGFSK0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jul 2020 14:10:26 -0400
+        with ESMTP id S1726280AbgGFWxw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jul 2020 18:53:52 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 066I6nbF088795;
-        Mon, 6 Jul 2020 18:10:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=5T7dTXioAzbYOiIl5A/DrEFn8a4oDLa1jF9+FRzNVQE=;
- b=XEt3gI8xMtNYX4IHNnW8WTyzariYXA4A14VuBro4X8ETzUdF8Tvcv6S6b8xETpRmmlcu
- U2FLNueI9pfRYdP2yK7ytcJoV5bzdrhPQbmpFWQAsuE3HEncVN0mTQLgzG1ybMNF7LFE
- PpOvCGnv5r3tm1LtGYxYpIyC2UDcTiFe3pVrtjJNohV9/mmgVkIpMJgVXcPOzW41lShr
- 7n9ppuw79Q9PEZsCe4ItzWzT4nIdAkDPrOGwYdD0l9G7o4QTVMHbfgvXIN3JrrPe6DOV
- UEfWd80yOfkkp84C5aocPzE+S5Cuxwp11gDIMl+okVlvM/wBHrQNcklUzLXcqHfb06Jf Ow== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 323sxxma77-1
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 066Mr6Gj152591;
+        Mon, 6 Jul 2020 22:53:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=qGTv/hofEApGb+qpfhVKGwUYz4UXOnHONvu+v/rFdy8=;
+ b=dKfIiXomKZjnf5cCk5y2oTWLCK1eW5vuer5oWFJNGfXLdfYNGztfLOUlb7hwEsprLcA/
+ vSo7mRndUX3rK9SlKxEdc0FvGFcdkOXttzldpxKJsDi6MrvV6jhq8+tkfu1dvrkLIzh2
+ m2jAEPU+qU3vPQoDAm+z6mN/+yfizTFSFK5EAW/+TW2FnBtWpAvHLHuB8YdNQ0j0/0Jx
+ X/2lD3Oy0KcHxmx0vidUODP+1DOrH3XhcBtbGbj4wKvtZfxsjm8xzi0BN4SRB1SecEAx
+ r84PEdhJcaJHOir8Ko6xHN77uKpuwqvJEpquT3EdrHrfOY9NJfWW4t3Awvv6XrfGdKnl Og== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 323sxxnfqn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 06 Jul 2020 18:10:14 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 066I95VZ065440;
-        Mon, 6 Jul 2020 18:10:14 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 3233p0grse-1
+        Mon, 06 Jul 2020 22:53:48 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 066Mmv9F121832;
+        Mon, 6 Jul 2020 22:53:48 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 3243pdjdtm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 06 Jul 2020 18:10:14 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 066IABqb004822;
-        Mon, 6 Jul 2020 18:10:11 GMT
-Received: from localhost (/67.169.218.210)
+        Mon, 06 Jul 2020 22:53:48 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 066MrkDi017092;
+        Mon, 6 Jul 2020 22:53:46 GMT
+Received: from [192.168.1.226] (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 06 Jul 2020 11:10:11 -0700
-Date:   Mon, 6 Jul 2020 11:10:10 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: iomap-5.9-merge updated to d1b4f507d71d
-Message-ID: <20200706181010.GA7597@magnolia>
+        with ESMTP ; Mon, 06 Jul 2020 15:53:46 -0700
+Subject: Re: [PATCH 1/3] xfs_repair: complain about ag header crc errors
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
+References: <159370361029.3579756.1711322369086095823.stgit@magnolia>
+ <159370361687.3579756.17807287829667417464.stgit@magnolia>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <e9f71f07-9654-9bce-75c6-29d85245ae6a@oracle.com>
+Date:   Mon, 6 Jul 2020 15:53:45 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9673 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 mlxlogscore=999
- mlxscore=0 spamscore=0 bulkscore=0 malwarescore=0 phishscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2007060125
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9673 signatures=668680
+In-Reply-To: <159370361687.3579756.17807287829667417464.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9674 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=2 spamscore=0
+ adultscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
+ definitions=main-2007060157
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9674 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 mlxlogscore=999
  bulkscore=0 impostorscore=0 adultscore=0 cotscore=-2147483648 phishscore=0
  priorityscore=1501 clxscore=1015 malwarescore=0 suspectscore=2 spamscore=0
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2007060125
+ engine=8.12.0-2004280000 definitions=main-2007060157
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
-
-The iomap-5.9-merge branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The new head of the iomap-5.9-merge branch is commit:
-
-d1b4f507d71d iomap: Make sure iomap_end is called after iomap_begin
-
-New Commits:
-
-Andreas Gruenbacher (1):
-      [d1b4f507d71d] iomap: Make sure iomap_end is called after iomap_begin
 
 
-Code Diffstat:
+On 7/2/20 8:26 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Repair doesn't complain about crc errors in the AG headers, and it
+> should.  Otherwise, this gives the admin the wrong impression about the
+> state of the filesystem after a nomodify check.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+Looks fine
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
- fs/iomap/apply.c | 13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+> ---
+>   repair/scan.c |    6 ++++++
+>   1 file changed, 6 insertions(+)
+> 
+> 
+> diff --git a/repair/scan.c b/repair/scan.c
+> index 505cfc53..42b299f7 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
+> @@ -2441,6 +2441,8 @@ scan_ag(
+>   		objname = _("root superblock");
+>   		goto out_free_sb;
+>   	}
+> +	if (sbbuf->b_error == -EFSBADCRC)
+> +		do_warn(_("superblock has bad CRC for ag %d\n"), agno);
+>   	libxfs_sb_from_disk(sb, sbbuf->b_addr);
+>   
+>   	error = salvage_buffer(mp->m_dev,
+> @@ -2450,6 +2452,8 @@ scan_ag(
+>   		objname = _("agf block");
+>   		goto out_free_sbbuf;
+>   	}
+> +	if (agfbuf->b_error == -EFSBADCRC)
+> +		do_warn(_("agf has bad CRC for ag %d\n"), agno);
+>   	agf = agfbuf->b_addr;
+>   
+>   	error = salvage_buffer(mp->m_dev,
+> @@ -2459,6 +2463,8 @@ scan_ag(
+>   		objname = _("agi block");
+>   		goto out_free_agfbuf;
+>   	}
+> +	if (agibuf->b_error == -EFSBADCRC)
+> +		do_warn(_("agi has bad CRC for ag %d\n"), agno);
+>   	agi = agibuf->b_addr;
+>   
+>   	/* fix up bad ag headers */
+> 
