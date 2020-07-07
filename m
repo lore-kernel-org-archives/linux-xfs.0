@@ -2,773 +2,570 @@ Return-Path: <SRS0=C5JC=AS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD628C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 06:03:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D58F1C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 11:37:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A8F220702
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 06:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2EA3206DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 11:37:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LRG4UsTJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727876AbgGGGDq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jul 2020 02:03:46 -0400
-Received: from mga12.intel.com ([192.55.52.136]:15191 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726889AbgGGGDq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 7 Jul 2020 02:03:46 -0400
-IronPort-SDR: +FX0Fqa/uq8xQ1lKfi4XhBx4muL1zO6tINAiRjtc4nqiBUNSpmX6aXXm3p1R38E99aW9wzF/WA
- den/18usS90Q==
-X-IronPort-AV: E=McAfee;i="6000,8403,9674"; a="127134274"
-X-IronPort-AV: E=Sophos;i="5.75,321,1589266800"; 
-   d="gz'50?scan'50,208,50";a="127134274"
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jul 2020 22:34:43 -0700
-IronPort-SDR: bycFZjpmsxM8PsbCaNMcniCfTEBNltwCssGvtGekCuyPzvCd+bWOmWSNZEBnPo6hK2HjV04Il8
- A72MnBod5LDw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,321,1589266800"; 
-   d="gz'50?scan'50,208,50";a="266729280"
-Received: from lkp-server01.sh.intel.com (HELO f2047cb89c8e) ([10.239.97.150])
-  by fmsmga007.fm.intel.com with ESMTP; 06 Jul 2020 22:34:41 -0700
-Received: from kbuild by f2047cb89c8e with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1jsgFc-00006M-1I; Tue, 07 Jul 2020 05:34:40 +0000
-Date:   Tue, 7 Jul 2020 13:34:23 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Dave Chinner <dchinner@redhat.com>
-Cc:     kbuild-all@lists.01.org, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>
-Subject: [xfs-linux:xfs-5.9-merge 24/46] fs/xfs/xfs_buf_item.c:1228:
- undefined reference to `xfs_dquot_done'
-Message-ID: <202007071321.bCyf04yt%lkp@intel.com>
+        id S1727777AbgGGLhw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jul 2020 07:37:52 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:31714 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727834AbgGGLhv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jul 2020 07:37:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594121868;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=mBdWTe7eoi7WBgKP82v097yRmZF+0LUHOvyBecw99zw=;
+        b=LRG4UsTJqX90nZP/nG1Hd/5/ZL+F6d9uAr7M0XjHJfpg5GZXGTeqQiA3rUFXyUwChZvyfH
+        Gv9LeGNDOLt3oS8S58CixiKBUT4+tbAfJYG1Ml6wvJZW/GP6FZpSHq6xroLThPXv75jRZC
+        gZSsouow5l+NW85uhALgVbZ2He8RFfo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-290-wyOsSKLoPq--X1dpC5U3xA-1; Tue, 07 Jul 2020 07:37:46 -0400
+X-MC-Unique: wyOsSKLoPq--X1dpC5U3xA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A2EC3461;
+        Tue,  7 Jul 2020 11:37:45 +0000 (UTC)
+Received: from bfoster (ovpn-112-122.rdu2.redhat.com [10.10.112.122])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 06D6219D61;
+        Tue,  7 Jul 2020 11:37:44 +0000 (UTC)
+Date:   Tue, 7 Jul 2020 07:37:43 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 00/10] xfs: automatic relogging
+Message-ID: <20200707113743.GA33690@bfoster>
+References: <20200701165116.47344-1-bfoster@redhat.com>
+ <20200702115144.GH2005@dread.disaster.area>
+ <20200702185209.GA58137@bfoster>
+ <20200703004940.GI2005@dread.disaster.area>
+ <20200706160306.GA21048@bfoster>
+ <20200706174257.GG7606@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="n8g4imXOkfNTN/H1"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200706174257.GG7606@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Jul 06, 2020 at 10:42:57AM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 06, 2020 at 12:03:06PM -0400, Brian Foster wrote:
+> > On Fri, Jul 03, 2020 at 10:49:40AM +1000, Dave Chinner wrote:
+> > > On Thu, Jul 02, 2020 at 02:52:09PM -0400, Brian Foster wrote:
+> > > > On Thu, Jul 02, 2020 at 09:51:44PM +1000, Dave Chinner wrote:
+> > > > > On Wed, Jul 01, 2020 at 12:51:06PM -0400, Brian Foster wrote:
+...
+> > 
+> > > Consider that a single transaction that contains an EFD for the
+> > > original EFI, and a new EFI for the same extent is effectively
+> > > "relogging the EFI". It does so by atomically cancelling the
+> > > original EFI in the log and creating a new EFI.
+> > > 
+> > 
+> > Right. This is how dfops currently works IIRC.
+> > 
+> > > Now, and EFI is defined on disk as:
+> > > 
+> > > typedef struct xfs_efi_log_format {
+> > >         uint16_t                efi_type;       /* efi log item type */
+> > >         uint16_t                efi_size;       /* size of this item */
+> > >         uint32_t                efi_nextents;   /* # extents to free */
+> > >         uint64_t                efi_id;         /* efi identifier */
+> > >         xfs_extent_t            efi_extents[1]; /* array of extents to free */
+> > > } xfs_efi_log_format_t;
+> > > 
+> > > Which means it can hold up to 2^16-1 individual extents that we
+> > > intend to free. We currently only use one extent per EFI, but if we
+> > > go back in history, they were dynamically sized structures and
+> > > could track arbitrary numbers of extents.
+> > > 
+> > > So, repair needs to track mulitple nested EFIs?
+> > > 
+> > > We cancel the old EFI, log a new EFI with all the old extents and
+> > > the new extent in it. We now have a single EFI in the journal
+> > > containing N+1 extents in it.
+> > > 
+> > 
+> > That's an interesting optimization.
+> 
+> Hmm, I hadn't thought about amortizing the cost of maintaining an EFI
+> across as many of the btree block allocations as possible.  That would
+> make the current scheme (which I'll get into below) less scary.
+> 
+> > > Further, an EFD with multiple extents in it is -intended to be
+> > > relogged- multiple times. Every time we free an extent in the EFI,
+> > > we remove it from the EFD and relog the EFD. THis tells log recovery
+> > > that this extent has now been freed, and that it should not replay
+> > > it, even though it is still in the EFI.
+> > > 
+> > > And to prevent the big EFI from pinning the tail of the log while
+> > > EFDs are being processed, we can relog the EFI along with the EFD
+> > > each time the EFD is updated, hence we drag the EFI forwards in
+> > > every high level transaction roll when we are actually freeing the
+> > > extents.
+> > > 
+> > 
+> > Hmm.. I'm not sure that addresses the deadlock problem for repair. That
+> > assumes that EFD updates come at regular enough intervals to keep the
+> > tail moving, but IIRC the bulk loading infrastructure will essentially
+> > log a bunch of EFIs, spend a non-deterministic amount of time doing
+> > work, then log the associated EFDs. So there's still a period of time in
+> > there where we might need to relog intents that aren't otherwise being
+> > updated.
+> > 
+> > Darrick might want to chime in here in case I'm missing something...
+> 
+> I changed the ->claim_block function in the online repair code[3] to
+> relog all of the EFIs (using the strategy Dave outlined above), with the
+> claimed block not present in the new EFI.  I think this means we can't
+> pin the log tail longer than it takes to memcpy a bunch of records into
+> a block and put it on a delwri list, which should be fast enough.
+> 
 
---n8g4imXOkfNTN/H1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Ah, interesting. So each filled block would relog the intents associated
+with the outstanding reservation for the rebuild. That certainly will
+keep things moving, I'd suspect relogging far more frequently than
+necessary, but correctness first. :)
 
-tree:   https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git xfs-5.9-merge
-head:   5710e1092b7141cecc9ff6996b0b1f421f57c95b
-commit: 018dc16679134d5bb5f8c7bb117cdfda42b8c37f [24/46] xfs: use direct calls for dquot IO completion
-config: i386-randconfig-m021-20200707 (attached as .config)
-compiler: gcc-9 (Debian 9.3.0-14) 9.3.0
+One thing I'm curious about in the broader context of repair is what
+happens if the filesystem crashes mid-rebuild? IIRC the rebuilt tree is
+fake rooted and the above seems to imply we'd have EFDs logged for the
+blocks consumed by the tree. Are those blocks restored to the fs somehow
+or another on a crash recovery?
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+> > > The key to this is that the EFI/EFD relogging must be done entirely
+> > > under a single rolling transaction, so there is -always- space
+> > > available in the log for both the EFI and the EFDs to be relogged as
+> > > the long running operation is performed.
+> > > 
+> > > IOWs, the EFI/EFD structures support relogging of the intents at a
+> > > design level, and it is intended that this process is entirely
+> > > driven from a single rolling transaction context. I srtongly suspect
+> > > that all the recent EFI/EFD and deferred ops reworking has lost a
+> > > lot of this context from the historical EFI/EFD implementation...
+> 
+> I don't agree with this, since the BUI/CUI items actively relog
+> themselves for another go-around if they decide that they still have
+> work to do, and the atomic extent swap item I proposed also takes
+> advantage of this design property.
+> 
+> Though, I concede that I don't think any of us were watching carefully
+> enough to the dfops manager to spot the occasional need to relog all the
+> attached intent items if the chain gets long enough.
+> 
+> > > So before we go down the path of implementing generic automatic
+> > > relogging infrastructure, we first should have been writing the
+> > > application code that needs to relog intents and use a mechanism
+> > > like the above to cancel and reinsert intents further down the log.
+> 
+> Already done.  The reason why Brian and I are stirring up this hornet
+> nest again is that I started posting patches to fix various deficiencies
+> that were exposed by generic/52[12] shakedowns of the atomic swap code. ;)
+> 
+> I guess I should go post the latest version of the defer freezer code
+> since it takes steps to minimize the dfops chain lengths, and relogs the
+> entire dfops chain every few rolls to keep the associated log items
+> moving forward...
+> 
+> > > Once we have code that is using these techniques to do bulk
+> > > operations, then we can look to optimise/genericise the
+> > > infrastructure they use.
+> > > 
+> > > > Moving on to quotaoff...
+> > > > 
+> > > > > I have been spending some time recently in the quota code, so I have
+> > > > > a better grip on what it is doing now than I did last time I looked
+> > > > > at this relogging code. I never really questioned why the quota code
+> > > > > needed two transactions for quota-off, and I'm guessing that nobody
+> > > > > else has either. So I spent some time this morning understanding
+> > > > > what problem it was actually solving and trying to find an alternate
+> > > > > solution to that problem.
+> > > > 
+> > > > Indeed, I hadn't looked into that.
+> > > > 
+> > > > > The reason we have the two quota-off transactions is that active
+> > > > > dquot modifications at the time quotaoff is started leak past the
+> > > > > first quota off transaction that hits the journal. Hence to avoid
+> > > > > incorrect replay of those modifications in the journal if we crash
+> > > > > after the quota-off item passes out of the journal, we pin the
+> > > > > quota-off item in the journal. It gets unpinned by the commit of the
+> > > > > second quota-off transaction at completion time, hence defining the
+> > > > > window in journal where quota-off is being processed and dquot
+> > > > > modifications should be ignored. i.e. there is no window where
+> > > > > recovery will replay dquot modifications incorrectly.
+> > > > > 
+> > > > 
+> > > > Ok.
+> > > > 
+> > > > > However, if the second transaction is left too long, the reservation
+> > > > > will fail to find journal space because of the pinned quota-off item.
+> > > > > 
+> > > > 
+> > > > Right.
+> > > > 
+> > > > > The relogging infrastructure is designed to allow the inital
+> > > > > quota-off intent to keep moving forward in the log so it never pins
+> > > > > the tail of the log before the second quota-off transaction is run.
+> > > > > This tries to avoid the recovery issue because there's always an
+> > > > > active quota off item in the log, but I think there may be a flaw
+> > > > > here.  When the quotaoff item gets relogged, it jumps all the dquots
+> > > > > in the log that were modified after the quota-off started. Hence if
+> > > > > we crash after the relogging but while the dquots are still in the
+> > > > > log before the relogged quotaoff item, then they will be replayed,
+> > > > > possibly incorrectly. i.e. the relogged quota-off item no longer
+> > > > > prevents replay of those items.
+> > > > > 
+> > > > > So while relogging prevents the tail pinning deadlock, I think it
+> > > > > may actually result in incorrect recovery behaviour in that items
+> > > > > that should be cancelled and not replayed can end up getting
+> > > > > replayed.  I'm not sure that this matters for dquots, but for a
+> > > > > general mechanism I think the transactional ordering violations it
+> > > > > can result in reduce it's usefulness significantly.
+> > > > > 
+> > > > 
+> > > > Hmm.. I could be mistaken, but I thought we reasoned about this a bit on
+> > > > the early RFCs.
+> > > 
+> > > We might have, but I don't recall that. And it would appear nobody
+> > > looked at this code in any detail if we did discuss it, so I'd say
+> > > the discussion was largely uninformed...
+> > > 
+> > > > Log recovery processes the quotaoff intent in pass 1 and
+> > > > dquot updates in pass 2, which I thought was intended to handle this
+> > > > kind of problem.
+> > > 
+> > > Right, it does handle it, but only because there are two quota-off
+> > > items in the log. i.e.  There's two recovery situations in play here
+> > > - 1) quota off in progress and 2) quota off done.
+> > > 
+> > > In the first case, only the initial quota-off item is in the log, so
+> > > it is needed to be detect to stop replay of relevant dquots that
+> > > have been logged after the quota off was started.
+> > > 
+> > > The second case has to be broken down into two sitations: a) both quota-off items
+> > > are active in the log, or b) only the second item is active in the log
+> > > as the tail has moved forwards past the first item.
+> > > 
+> > > In the case of 2a), it doesn't matter which item recovery sees, it
+> > > will cancel the dquot updates correctly. In the case of 2b), the
+> > > second quota off item is absolutely necessary to prevent replay of
+> > > the dquots in the log before it.
+> > > 
+> > > Hence if dquot modifications can leak past the first quota-off item
+> > > in the log, then the second item is absolutely necessary to catch
+> > > the 2b) case to prevent incorrect replay of dquot buffers.
+> > > 
+> > 
+> > Ok, but we're talking specifically about log recovery after quotaoff has
+> > completed but before both intents have fallen off of the log. Relogging
+> > of the initial intent (re: the original comment above about incorrect
+> > recovery behavior) has no impact on this general ordering between the
+> > start/end intents or dquot changes and the end intent.
+> > 
+> > > > If I follow correctly, the recovery issue that warrants pinning the
+> > > > quotaoff in the log is not so much an ordering issue, but if the latter
+> > > > happens to fall off the end of the log before the last of the dquot
+> > > > modifications, recovery could see dquot changes after having lost the
+> > > > fact that a quotaoff had occurred at all. The current implementation
+> > > > presumably handles this by pinning the quotaoff until all dquots are
+> > > > completely purged from existence. The relog mechanism just allows the
+> > > > item to move while it effectively remains pinned, so I don't see how it
+> > > > introduces recovery issues.
+> > > 
+> > > As I said, it may not affect the specific quota-off usage, but we
+> > > can't just change the order of items in the physical journal without
+> > > care because the journal is supposed to be -strictly ordered-.
+> > > 
+> > 
+> > The mechanism itself is intended to target specific instances of log
+> > items. Each use case should be evaluated for correctness on its own,
+> > just like one would with ordered buffers or some other internal low
+> > level construct that changes behavior.
+> > 
+> > > Reordering intents in the log automatically without regard to higher
+> > > level transactional ordering dependencies of the log items may
+> > > violate the ordering rules for journalling and recovery of metadata.
+> > > This is why I said automatic relogging may not be useful as generic
+> > > infrastructure - if there are dependent log items, then they need to
+> > > relogged as an atomic change set that maintains the ordering
+> > > dependencies between objects. That's where this automatic mechanism
+> > > completely falls down - the ordering dependencies are known only by
+> > > the code running the original transaction, not the log items...
+> > > 
+> > 
+> > This and the above sounds to me that you're treating automatic relogging
+> > like it would just be enabled by default on all intents, reordering
+> > things arbitrarily. That is not the case as things would certainly
+> > break, just like what would happen if ordered buffers were enabled by
+> > default. The mechanism is per log item and context specific. It is
+> > "generic" in the sense that there are (were) multiple use cases for it,
+> > not that it should be used arbitrarily or "without care."
+> > 
+> > Use cases that have very particular ordering requirements across certain
+> > sets of items should probably not enable this mechanism on those items
+> > or otherwise verify that relogging a particular item is safe. The
+> > potential example of this ordering problem being cited is quotaoff, but
+> > we've already gone through this example multiple times and established
+> > that relogging the quotaoff start item is safe.
+> > 
+> > All that said, extending a relogging notification somehow to a
+> > particular context has always been a consideration because 1.) direct
+> > EFI relogging would require log recovery changes and 2.) there was yet
+> > another potential use case where dfops needed to know whether to relog a
+> > particular intent in a long running chain to avoid some issue (the
+> > details of which escape me). I think issue #1 is not complicated to
+> > address, but creates a backwards incompatibility for log recovery. Issue
+> > #2 would potentially separate out relogging as a notification mechanism
+> > from the reservation management bits, but it's still not clear to me
+> > what that notification mechanism would look like for a transaction that
+> > has already been committed by some caller context.
+> > 
+> > I think Darrick was looking at repurposing ->iop_relog() for that one so
+> > I'd be curious to know what that is looking like in general...
+> 
+> ...it's graduated to the point that I'm willing/crazy enough to run it
+> on my development workstations, and it hasn't let out the magic smoke.
+> 
 
-All errors (new ones prefixed by >>):
+Heh.
 
-   ld: fs/xfs/xfs_buf_item.o: in function `xfs_buf_dquot_iodone':
->> fs/xfs/xfs_buf_item.c:1228: undefined reference to `xfs_dquot_done'
+> I added ->iop_relog handlers to all the major intent items (EFI, RUI,
+> CUI, BUI, SXI), then taught xfs_defer_finish_noroll to relog everything
+> on dop_pending every 7 transaction rolls[1].  Initially this caused log
+> reservation overflow problems with transactions that log intents whose
+> ->finish_item functions themselves log dozens more intents, but then
+> realized that the second patch[2] I had written took care of this
+> problem.
+> 
 
-vim +1228 fs/xfs/xfs_buf_item.c
+Thanks. I think I get the general idea. We're reworking the
+->iop_relog() handler to complete and replace the current intent (rather
+than just relog the original intent, which is what this series did for
+the quotaoff case) in the current dfops transaction and allow the dfops
+code to update its reference to the item. The part that's obviously
+missing is some kind of determination on when we actually need to relog
+the outstanding intents vs. using a fixed roll count.
 
-  1207	
-  1208	/*
-  1209	 * Dquot buffer iodone callback function.
-  1210	 */
-  1211	void
-  1212	xfs_buf_dquot_iodone(
-  1213		struct xfs_buf		*bp)
-  1214	{
-  1215		struct xfs_buf_log_item *blip = bp->b_log_item;
-  1216		struct xfs_log_item	*lip;
-  1217	
-  1218		if (xfs_buf_had_callback_errors(bp))
-  1219			return;
-  1220	
-  1221		/* a newly allocated dquot buffer might have a log item attached */
-  1222		if (blip) {
-  1223			lip = &blip->bli_item;
-  1224			lip->li_cb(bp, lip);
-  1225			bp->b_log_item = NULL;
-  1226		}
-  1227	
-> 1228		xfs_dquot_done(bp);
-  1229		xfs_buf_ioend_finish(bp);
-  1230	}
-  1231	
+I suppose we could do something like I was mentioning in my other reply
+on the AIL pushing issue Dave pointed out where we'd set a bit on
+certain items that are tail pinned and in need of relog. That sounds
+like overkill given this use case is currently self-contained to dfops.
+Perhaps the other idea of factoring out the threshold determination
+logic from xlog_grant_push_ail() might be useful.
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+For example, if the current free reservation is below the calculated
+threshold (with need_bytes == 0), return a threshold LSN based on the
+current tail. Instead of using that to push the AIL, compare it to
+->li_lsn of each intent and relog any that are inside the threshold LSN
+(which will probably be all of them in practice since they are part of
+the same transaction). We'd probably need to identify intents that have
+been recently relogged so the process doesn't repeat until the CIL
+drains and the li_lsn eventually changes. Hmm.. I did have an
+XFS_LI_IN_CIL state tracking patch around somewhere for debugging
+purposes that might actually be sufficient for that. We could also
+consider stashing a "relog push" LSN somewhere (similar to the way AIL
+pushing works) and perhaps use that to avoid repeated relogs on a chain,
+but it's not immediately clear to me how well that would fit into the
+dfops mechanism...
 
---n8g4imXOkfNTN/H1
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
+Brian
 
-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
-nDws/D8gJnb/LyICAA==
+> That patch, of course, is one that I posted a while ago that makes it so
+> that if a transaction owner logs items A and B and then commits (or
+> calls defer_roll), dfops will now finish all the items created by A's
+> ->finish_item before it moves on to trying to finish B.
+> 
+> I had put /that/ patch aside after Brian pointed out that on its own,
+> that patch merely substituted pinning the tail on some sub-item of A
+> with pinning the tail on B, but I think with both patches applied I have
+> solved both problems.
+> 
+> --D
+> 
+> [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=djwong-wtf&id=515cc4e637bf4e9afcfbaeb39b13f85b27923916
+> [2] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=djwong-wtf&id=8e63f8a7af12d673feb5400d09179502632854c4
+> [3] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=djwong-wtf&id=ddfeca6f1f1862c3f162db8b8bdbfc5149f5e5c5
+> 
+> > > > > But back to quota-off: What I've realised is that the only dquot
+> > > > > modifications we need to protect against being recovered are the
+> > > > > ones that are running at the time the first quota-off is committed
+> > > > > to the journal. That is, once the DQACTIVE flags are clear,
+> > > > > transactions will not modify those dquots anymore. Hence by the time
+> > > > > that the quota off item pins the tail of the log, the transactions
+> > > > > that were actively dirtying inodes when it was committed have also
+> > > > > committed and are in the journal and there are no actively modified
+> > > > > dquots left in memory.
+> > > > > 
+> > > > 
+> > > > I'm not sure how the (sync) commit of the quotaoff guarantees some other
+> > > > transaction running in parallel hadn't modified a dquot and committed
+> > > > after the quotaoff, but I think I see where you're going in general...
+> > > 
+> > > We drained out all the transactions that can be modifying quotas
+> > > before we log the quotaoff items. So, by definition, this cannot
+> > > happen.
+> > > 
+> > > > > IOWs, we don't actually need to wait until we've released and purged
+> > > > > all the dquots from memory before we log the second quota off item;
+> > > > > all we need to wait for is for all the transactions with dirty
+> > > > > dquots to have committed. These transactions already have log
+> > > > > reservations, so completing them will free unused reservation space
+> > > > > for the second quota off transaction. Once they are committed, then
+> > > > > we can log the second item. i.e. we don't have to wait until we've
+> > > > > cleaned up the dquots to close out the quota-off transaction in the
+> > > > > journal.
+> > > > > 
+> > > > 
+> > > > Ok, so we can deterministically shorten the window with a runtime
+> > > > barrier (i.e. disable -> drain) on quota modifying transactions rather
+> > > > than relying on the full dquot purge to provide this ordering.
+> > > 
+> > > Yup.
+> > > 
+> > > > > To make it even more robust, if we stop all the transactions that
+> > > > > may dirty dquots and drain the active ones before we log the first
+> > > > > quota-off item, we can log the second item immediately afterwards
+> > > > > because it is known that there are no dquot modifications in flight
+> > > > > when the first item is logged. We can probably even log both items
+> > > > > in the same transaction.
+> > > > > 
+> > > > 
+> > > > I was going to ask why we'd even need two items if this approach is
+> > > > generally viable.
+> > > 
+> > > Because I don't want to change the in-journal appearance of
+> > > quota-off to older kernels. Changing how things appear on disk is
+> > > dangerous and likely going to bite us in unexpected ways.
+> > > 
+> > 
+> > Well combining them into a single transaction doesn't guarantee ordering
+> > of the two, right? So it might not be worth doing that either if we're
+> > concerned about log appearance. Regardless, those potential steps can be
+> > evaluated independently on top of the core runtime fixes.
+> > 
+> > > > > So, putting my money where my mouth is, the patch below does this.
+> > > > > It's survived 100 cycles of xfs/305 (qoff vs fsstress) and 10 cycles
+> > > > > of -g quota with all quotas enabled and is currently running a full
+> > > > > auto cycle with all quotas enabled. It hasn't let the smoke out
+> > > > > after about 4 hours of testing now....
+> > > > > 
+> > > > 
+> > > > Thanks for the patch. First, I like the idea and agree that it's more
+> > > > simple than the relogging approach. I do still need to stare at it some
+> > > > more to grok it and convince myself it's safe.
+> > > > 
+> > > > The thing that sticks out to me is tagging all of the transactions that
+> > > > modify quotas. Is there any reason we can't just quiesce the transaction
+> > > > subsystem entirely as a first step? It's not like quotaoff is common or
+> > > > performance sensitive. For example:
+> > > >
+> > > > 1. stop all transactions, wait to drain, force log
+> > > > 2. log the sb/quotaoff synchronously (punching through via something
+> > > >    like NO_WRITECOUNT)
+> > > > 3. clear the xfs_mount quota active flags
+> > > > 4. restart the transaction subsystem (no more dquot mods)
+> > > > 5. complete quotaoff via the dquot release and purge sequence
+> > > 
+> > > Yup, as I said on #xfs a short while ago:
+> > > 
+> > > [3/7/20 01:15] <djwong> qi_active_trans?
+> > > [3/7/20 01:15] <djwong> man, we just killed off m_active_trans
+> > > [3/7/20 08:47] <dchinner> djwong: I know we just killed off that atomic counter, it was used for doing exactly what I needed for quota-off, but freeze didn't need it anymore
+> > > [3/7/20 08:48] <dchinner> I mean, we could just make quota-off freeze the filesystem, do quota-off, then unfreeze....
+> > > [3/7/20 08:48] <dchinner> that's a simple, brute force solution
+> > > [3/7/20 08:49] <dchinner> but it's also overkill in that it forces lots of unnecessary data writeback...
+> > > [3/7/20 08:52] * djwong sometimes wonders if we just need a "run XXXX with exclusive access" thing
+> > > [3/7/20 08:58] <dchinner> djwong: that's kinda what xfs_quiesce_attr() was originally intended for
+> > > [3/7/20 08:59] <dchinner> but as all the code slowly got moved up into the VFS freeze layers, it stopped being able to be used for that sort of operation....
+> > > [3/7/20 09:01] <djwong> oh
+> > > [3/7/20 09:03] <dchinner> and so just after we remove the last remaining fragment of that original functionality, we find that maybe we actually still need to be able to quiesce the filesytsem for internal synchronisation reasons
+> > > 
+> > > So, we used to have exactly the functionality I needed in XFS as
+> > > general infrastructure, but we've removed it over the past few years
+> > > as the VFS has slowly been brought up to feature parity with XFS. I
+> > > just implemented what I needed to block/halt quota modifications
+> > > because I didn't want to perturb anything else while exploring if my
+> > > hypothesis was correct.
+> > > 
+> > 
+> > Ok.
+> > 
+> > > The only outstanding thing I haven't checked out fully is the
+> > > delayed allocation reservations that aren't done in transaction
+> > > contexts. I -think- these are OK because they are in memory only,
+> > > and they will serialised on the inode lock when detatching dquots
+> > > (i.e. the existing dquot purging ordering mechanisms) after quotas
+> > > are turned off. Hence I think these are fine, but more investigation
+> > > will be needed there to confirm behaviour is correct.
+> > > 
+> > 
+> > Yep.
+> > 
+> > > > I think it could be worth the tradeoff for the simplicity of not having
+> > > > to maintain the transaction reservation tags or the special quota
+> > > > waiting infrastructure vs. something like the more generic (recently
+> > > > removed) transaction counter. We might even be able to abstract the
+> > > > whole thing behind a transaction flag. E.g.:
+> > > > 
+> > > > 	/*
+> > > > 	 * A barrier transaction locks out further transactions and waits on
+> > > > 	 * outstanding transactions to drain (i.e. commit) before returning.
+> > > > 	 * Everything unlocks when the transaction commits.
+> > > > 	 */
+> > > > 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0,
+> > > > 			XFS_TRANS_BARRIER, &tp);
+> > > > 	...
+> > > 
+> > > Yup, if we decide that we want to track all active transactions again
+> > > rather than just when quota is active, it would make a lot of
+> > > sense to make it a formal function of the xfs_trans_alloc() API.
+> > > 
+> > > Really, though, I've got so many other things on my plate right now
+> > > I don't have the time to take on yet another infrastructure
+> > > reworking. I spent the time to write the patch because if I was
+> > > going to say I didn't like relogging then it was absolutely
+> > > necessary for me to provide an alternative solution to the problem,
+> > > but I'm ireally hoping that it is sufficient for someone else to be
+> > > able to pick it up and run with it....
+> > > 
+> > 
+> > Ok, I can take a look at this since I need to step back and rethink this
+> > particular feature anyways.
+> > 
+> > Brian
+> > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > 
+> > > PS. FWIW, if anyone wants to pick up any RFC patchset I've posted in
+> > > the past and run with it, I'm more than happy for you to do so. I've
+> > > got way more ideas and prototypes than I've got time to turn into
+> > > full production features. I also don't care about "ownership" of the
+> > > work; it's better to have someone actively working on the code than
+> > > having it sit around waiting for me to find time to get back to
+> > > it...
+> > > 
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
+> > > 
+> > 
+> 
 
---n8g4imXOkfNTN/H1--
