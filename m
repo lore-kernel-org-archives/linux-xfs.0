@@ -2,252 +2,170 @@ Return-Path: <SRS0=C5JC=AS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2311C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 14:39:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3660EC433E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 19:16:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB9402073E
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 14:39:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1946F2078B
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 19:16:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YwbkkwPA"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JUlGvPcr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728470AbgGGOj0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jul 2020 10:39:26 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:57091 "EHLO
+        id S1728777AbgGGTQz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jul 2020 15:16:55 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:53719 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728247AbgGGOj0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jul 2020 10:39:26 -0400
+        by vger.kernel.org with ESMTP id S1728748AbgGGTQv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jul 2020 15:16:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594132763;
+        s=mimecast20190719; t=1594149409;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Qx4Vv/c1Ni8G26JoRd547qPM+Eg6Wzx54sTBnI579X4=;
-        b=YwbkkwPASnugEBG0KYunLc6lRSOFWjnoffXs/yPL6jjHlMLhQKUUJGSYG0XF9UzpRXMGAt
-        L5gIVMTtiGNpxTP68HB2mOMyKwbJWRor6r9K/gE2SQ2vOjkdeCn12cpkFVuvnIcc2u2h/w
-        oRXzU6baOjF+uAnxI9ufa17DAW7XNYE=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-213-uKyQO_YeMDSp4OXQZ14lvQ-1; Tue, 07 Jul 2020 10:39:20 -0400
-X-MC-Unique: uKyQO_YeMDSp4OXQZ14lvQ-1
-Received: by mail-pl1-f200.google.com with SMTP id a8so7376552plm.7
-        for <linux-xfs@vger.kernel.org>; Tue, 07 Jul 2020 07:39:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Qx4Vv/c1Ni8G26JoRd547qPM+Eg6Wzx54sTBnI579X4=;
-        b=bx8OUVEbL24ss535ayA0O33yYLiyngaDod1nC5sMhzBjOwUGuLB4px9Oa7mj3lFDbO
-         kMZ3jefmzoFLQbeJkFLUPm51+anG3Y/cKBa63hZ2s5oHarZkulL0sXqP97q3bEd6klhP
-         F18OvrKN14/fH573UX0+JID4cWNr7eRznXbLkKgSMoc5YV680Nj+xP5WfDL34HaDjAi9
-         f8BqMPKAL8reImE3wge/onpmz/nkUbXQ8K9hRNZXh8sK2H8CsK9BJHNI1ywFVPErTgyb
-         Yuc/F69dWworthfrP9KJxxqTG0VfimO9KppMq5LYRsozDey9cZOOYRJAdFLct9BqYIWO
-         Loug==
-X-Gm-Message-State: AOAM531YQvdgZ7ioSjn7ohLSqOtqNZ51qee2vFZ6mroNcjiODSSGkTlm
-        hseL/oWoJkluifz9yDzX+5pZqzvZGv3iuhSHykCjTZcF5yFu7yx/jIaBJNh3SL7PlfSSDNON+ke
-        asKvoFbh7wpbQXWqpGWhx
-X-Received: by 2002:a62:cfc2:: with SMTP id b185mr14611868pfg.125.1594132758801;
-        Tue, 07 Jul 2020 07:39:18 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyn1Hgo3Csrp1FR6PR9bs3iFjRd9/luxkRCDyv2mu5PuZa06ANpsjax73Aa1YCB1rpTbQpR2A==
-X-Received: by 2002:a62:cfc2:: with SMTP id b185mr14611839pfg.125.1594132758478;
-        Tue, 07 Jul 2020 07:39:18 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id b21sm13195246pfb.45.2020.07.07.07.39.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 07 Jul 2020 07:39:17 -0700 (PDT)
-Date:   Tue, 7 Jul 2020 22:39:08 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: track unlinked inodes in core inode
-Message-ID: <20200707143908.GA1934@xiangao.remote.csb>
-References: <20200623095015.1934171-1-david@fromorbit.com>
- <20200623095015.1934171-4-david@fromorbit.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200623095015.1934171-4-david@fromorbit.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+         to:to:cc:cc; bh=bRhrqkREzp0r3NeHnhZi/lkFWagM7LgdiEAL4cl4rAI=;
+        b=JUlGvPcrzzWGAbXYTEn5d1DYjWIvdxz2cJdl6nHUcqUWvBy3JaJSKc7h+HoPUzRKHXJlNA
+        p6uOhpQ+I8GCxtAYU33Uk0L26ofU1005FJFjLcIxatBRs6b6xbgyzkUSqccAfarkYoHc3e
+        D7Q0xOHRwhiPZxFJGuN6aGnhKmdVoEk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-307-g_1x2jlQPCqcbYUnqS7Vyw-1; Tue, 07 Jul 2020 15:16:44 -0400
+X-MC-Unique: g_1x2jlQPCqcbYUnqS7Vyw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 68E27107ACCA;
+        Tue,  7 Jul 2020 19:16:43 +0000 (UTC)
+Received: from llong.com (ovpn-118-81.rdu2.redhat.com [10.10.118.81])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F3F1CC0067;
+        Tue,  7 Jul 2020 19:16:36 +0000 (UTC)
+From:   Waiman Long <longman@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Waiman Long <longman@redhat.com>
+Subject: [PATCH v6] xfs: Fix false positive lockdep warning with sb_internal & fs_reclaim
+Date:   Tue,  7 Jul 2020 15:16:29 -0400
+Message-Id: <20200707191629.13911-1-longman@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+Depending on the workloads, the following circular locking dependency
+warning between sb_internal (a percpu rwsem) and fs_reclaim (a pseudo
+lock) may show up:
 
-During working on this stuff, I found some another noticiable places
-to mention. Hope it of some help...
+======================================================
+WARNING: possible circular locking dependency detected
+5.0.0-rc1+ #60 Tainted: G        W
+------------------------------------------------------
+fsfreeze/4346 is trying to acquire lock:
+0000000026f1d784 (fs_reclaim){+.+.}, at:
+fs_reclaim_acquire.part.19+0x5/0x30
 
-On Tue, Jun 23, 2020 at 07:50:14PM +1000, Dave Chinner wrote:
+but task is already holding lock:
+0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
 
-...
+which lock already depends on the new lock.
+  :
+ Possible unsafe locking scenario:
 
->  /*
-> - * This is called when the inode's link count has gone to 0 or we are creating
-> - * a tmpfile via O_TMPFILE.  The inode @ip must have nlink == 0.
-> - *
-> - * We place the on-disk inode on a list in the AGI.  It will be pulled from this
-> - * list when the inode is freed.
-> + * Always insert at the head, so we only have to do a next inode lookup to
-> + * update it's prev pointer. The AGI bucket will point at the one we are
-> + * inserting.
->   */
-> -STATIC int
-> -xfs_iunlink(
-> +static int
-> +xfs_iunlink_insert_inode(
->  	struct xfs_trans	*tp,
-> +	struct xfs_buf		*agibp,
->  	struct xfs_inode	*ip)
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
-> -	struct xfs_agi		*agi;
-> -	struct xfs_buf		*agibp;
-> -	xfs_agino_t		next_agino;
-> -	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-> +	struct xfs_agi		*agi = agibp->b_addr;
-> +	xfs_agino_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+       CPU0                    CPU1
+       ----                    ----
+  lock(sb_internal);
+                               lock(fs_reclaim);
+                               lock(sb_internal);
+  lock(fs_reclaim);
 
-unnecessary modification here... (use xfs_agnumber_t instead)
+ *** DEADLOCK ***
 
-> -/* Return the imap, dinode pointer, and buffer for an inode. */
-> -STATIC int
-> -xfs_iunlink_map_ino(
-> +/*
-> + * Remove can be from anywhere in the list, so we have to do two adjacent inode
-> + * lookups here so we can update list pointers. We may be at the head or the
-> + * tail of the list, so we have to handle those cases as well.
-> + */
-> +static int
-> +xfs_iunlink_remove_inode(
->  	struct xfs_trans	*tp,
-> -	xfs_agnumber_t		agno,
-> -	xfs_agino_t		agino,
-> -	struct xfs_imap		*imap,
-> -	struct xfs_dinode	**dipp,
-> -	struct xfs_buf		**bpp)
-> +	struct xfs_buf		*agibp,
-> +	struct xfs_inode	*ip)
->  {
->  	struct xfs_mount	*mp = tp->t_mountp;
-> +	struct xfs_agi		*agi = agibp->b_addr;
-> +	xfs_agino_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+4 locks held by fsfreeze/4346:
+ #0: 00000000b478ef56 (sb_writers#8){++++}, at: percpu_down_write+0xb4/0x650
+ #1: 000000001ec487a9 (&type->s_umount_key#28){++++}, at: freeze_super+0xda/0x290
+ #2: 000000003edbd5a0 (sb_pagefaults){++++}, at: percpu_down_write+0xb4/0x650
+ #3: 0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
 
-same here
+stack backtrace:
+Call Trace:
+ dump_stack+0xe0/0x19a
+ print_circular_bug.isra.10.cold.34+0x2f4/0x435
+ check_prev_add.constprop.19+0xca1/0x15f0
+ validate_chain.isra.14+0x11af/0x3b50
+ __lock_acquire+0x728/0x1200
+ lock_acquire+0x269/0x5a0
+ fs_reclaim_acquire.part.19+0x29/0x30
+ fs_reclaim_acquire+0x19/0x20
+ kmem_cache_alloc+0x3e/0x3f0
+ kmem_zone_alloc+0x79/0x150
+ xfs_trans_alloc+0xfa/0x9d0
+ xfs_sync_sb+0x86/0x170
+ xfs_log_sbcount+0x10f/0x140
+ xfs_quiesce_attr+0x134/0x270
+ xfs_fs_freeze+0x4a/0x70
+ freeze_super+0x1af/0x290
+ do_vfs_ioctl+0xedc/0x16c0
+ ksys_ioctl+0x41/0x80
+ __x64_sys_ioctl+0x73/0xa9
+ do_syscall_64+0x18f/0xd23
+ entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
->  /*
-> @@ -2762,56 +2735,107 @@ xlog_recover_process_one_iunlink(
->   * scheduled on this CPU to ensure other scheduled work can run without undue
->   * latency.
->   */
-> -STATIC void
-> -xlog_recover_process_iunlinks(
-> -	struct xlog	*log)
-> +static int
-> +xlog_recover_iunlink_ag(
-> +	struct xfs_mount	*mp,
-> +	xfs_agnumber_t		agno)
->  {
-> -	xfs_mount_t	*mp;
-> -	xfs_agnumber_t	agno;
-> -	xfs_agi_t	*agi;
-> -	xfs_buf_t	*agibp;
-> -	xfs_agino_t	agino;
-> -	int		bucket;
-> -	int		error;
-> +	struct xfs_agi		*agi;
-> +	struct xfs_buf		*agibp;
-> +	int			bucket;
-> +	int			error;
->  
-> -	mp = log->l_mp;
-> +	/*
-> +	 * Find the agi for this ag.
-> +	 */
-> +	error = xfs_read_agi(mp, NULL, agno, &agibp);
-> +	if (error) {
->  
-> -	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
->  		/*
-> -		 * Find the agi for this ag.
-> +		 * AGI is b0rked. Don't process it.
-> +		 *
-> +		 * We should probably mark the filesystem as corrupt after we've
-> +		 * recovered all the ag's we can....
->  		 */
-> -		error = xfs_read_agi(mp, NULL, agno, &agibp);
-> +		return 0;
-> +	}
-> +
-> +	/*
-> +	 * Unlock the buffer so that it can be acquired in the normal course of
-> +	 * the transaction to truncate and free each inode.  Because we are not
-> +	 * racing with anyone else here for the AGI buffer, we don't even need
-> +	 * to hold it locked to read the initial unlinked bucket entries out of
-> +	 * the buffer. We keep buffer reference though, so that it stays pinned
-> +	 * in memory while we need the buffer.
-> +	 */
-> +	agi = agibp->b_addr;
-> +	xfs_buf_unlock(agibp);
-> +
-> +	/*
-> +	 * The unlinked inode list is maintained on incore inodes as a double
-> +	 * linked list. We don't have any of that state in memory, so we have to
-> +	 * create it as we go. This is simple as we are only removing from the
-> +	 * head of the list and that means we only need to pull the current
-> +	 * inode in and the next inode.  Inodes are unlinked when their
-> +	 * reference count goes to zero, so we can overlap the xfs_iget() and
-> +	 * xfs_irele() calls so we always have the first two inodes on the list
-> +	 * in memory. Hence we can fake up the necessary in memory state for the
-> +	 * unlink to "just work".
-> +	 */
-> +	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
-> +		struct xfs_inode	*ip, *prev_ip = NULL;
-> +		xfs_agino_t		agino, prev_agino = NULLAGINO;
-> +
-> +		agino = be32_to_cpu(agi->agi_unlinked[bucket]);
-> +		while (agino != NULLAGINO) {
-> +			ip = xlog_recover_get_one_iunlink(mp, agno, agino,
-> +							  bucket);
-> +			if (!ip) {
-> +				/*
-> +				 * something busted, but still got to release
-> +				 * prev_ip, so make it look like it's at the end
-> +				 * of the list before it gets released.
-> +				 */
-> +				error = -EFSCORRUPTED;
-> +				if (prev_ip)
-> +					prev_ip->i_next_unlinked = NULLAGINO;
-> +				break;
-> +			}
-> +			if (prev_ip) {
-> +				ip->i_prev_unlinked = prev_agino;
-> +				xfs_irele(prev_ip);
-> +			}
+This is a false positive as all the dirty pages are flushed out before
+the filesystem can be frozen.
 
-(little confused about this, why not xfs_irele the current ip and move it after
-agino = ip->i_next_unlinked; ....)
+One way to avoid this splat is to add GFP_NOFS to the affected allocation
+calls by using the memalloc_nofs_save()/memalloc_nofs_restore() pair.
+This shouldn't matter unless the system is really running out of memory.
+In that particular case, the filesystem freeze operation may fail while
+it was succeeding previously.
 
+Without this patch, the command sequence below will show that the lock
+dependency chain sb_internal -> fs_reclaim exists.
 
-And some comments about "[PATCH 4/4] xfs: introduce inode unlink log item.
-(no need to raise another thread about this since I'm not fully reviewing that..)
+ # fsfreeze -f /home
+ # fsfreeze --unfreeze /home
+ # grep -i fs_reclaim -C 3 /proc/lockdep_chains | grep -C 5 sb_internal
 
-> @@ -2185,6 +2136,7 @@ xfs_iunlink(
->  	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
->  	int			error;
->  
-> +	ASSERT(ip->i_next_unlinked == NULLAGINO);
->  	ASSERT(VFS_I(ip)->i_nlink == 0);
->  	ASSERT(VFS_I(ip)->i_mode != 0);
->  	trace_xfs_iunlink(ip);
+After applying the patch, such sb_internal -> fs_reclaim lock dependency
+chain can no longer be found. Because of that, the locking dependency
+warning will not be shown.
 
-this ASSERT is not necessary since some unreasonable numbers could be loaded
-from disk for crafted images... (seems only for debugging use...)
+Suggested-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Waiman Long <longman@redhat.com>
+---
+ fs/xfs/xfs_super.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-Thanks,
-Gao Xiang
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 379cbff438bc..0797a96b83d6 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -913,11 +913,21 @@ xfs_fs_freeze(
+ 	struct super_block	*sb)
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
++	unsigned int		flags;
++	int			ret;
+ 
++	/*
++	 * The filesystem is now frozen far enough that memory reclaim
++	 * cannot safely operate on the filesystem. Hence we need to
++	 * set a GFP_NOFS context here to avoid recursion deadlocks.
++	 */
++	flags = memalloc_nofs_save();
+ 	xfs_stop_block_reaping(mp);
+ 	xfs_save_resvblks(mp);
+ 	xfs_quiesce_attr(mp);
+-	return xfs_sync_sb(mp, true);
++	ret = xfs_sync_sb(mp, true);
++	memalloc_nofs_restore(flags);
++	return ret;
+ }
+ 
+ STATIC int
+-- 
+2.18.1
 
