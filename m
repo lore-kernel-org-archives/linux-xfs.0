@@ -1,200 +1,96 @@
-Return-Path: <SRS0=eqR3=AR=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=C5JC=AS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B46C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jul 2020 22:53:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A0A9C433E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 00:28:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D037A20723
-	for <linux-xfs@archiver.kernel.org>; Mon,  6 Jul 2020 22:53:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68600206DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 00:28:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="i9nMp9cC"
+	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="TWVNHL3O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726805AbgGFWxz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 6 Jul 2020 18:53:55 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:46918 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726280AbgGFWxz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 6 Jul 2020 18:53:55 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 066MqGSr055551;
-        Mon, 6 Jul 2020 22:53:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=dEEv+4lFJSBiyCn9U4jgblzJFLEzmhXtsY1W/sk/ppI=;
- b=i9nMp9cCuoTNtR/q6IdxUc7HRiqINuxeuIFWfZaX9uxW4OOeYk5uI9TrakoUguD2Io85
- 3v+9bBo9pw6qt2/SWL1wahHguh5MCVs4CO3q//b6xjr85OpLRgozKDnWDaPHnz+jVrDD
- Y9tgOP+IQS/QMcE5ywOp6K8Hx1Gwh4MXWuGi6OHnh9FOqKc1Ny97UyNIehFQLdD5ZXr7
- FmmxRTvtnDVRTd5DRu4V+M7Qox2WtqXgdls6wfQYarptEJvrTXEGa5KwBJ2++M/yWQP2
- Qh7nnyeV/kB5wD4eJIDAkKyB/rk7yLyc+2up7VZ9dO3DfrXyedhlLNS2cxjoSm3FAVk2 5A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 323wacd1dq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 06 Jul 2020 22:53:53 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 066Mn9lJ125805;
-        Mon, 6 Jul 2020 22:53:52 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 3233bn5wnu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 06 Jul 2020 22:53:52 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 066MrpL1015207;
-        Mon, 6 Jul 2020 22:53:51 GMT
-Received: from [192.168.1.226] (/67.1.142.158)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 06 Jul 2020 15:53:51 -0700
-Subject: Re: [PATCH 2/3] xfs_repair: simplify free space btree calculations in
- init_freespace_cursors
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org
-References: <159370361029.3579756.1711322369086095823.stgit@magnolia>
- <159370362331.3579756.9359456822795462355.stgit@magnolia>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <21f5265f-7fa6-bb3a-783b-8fa455f0120e@oracle.com>
-Date:   Mon, 6 Jul 2020 15:53:50 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726729AbgGGA2A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 6 Jul 2020 20:28:00 -0400
+Received: from ozlabs.org ([203.11.71.1]:42165 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725942AbgGGA2A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 6 Jul 2020 20:28:00 -0400
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4B13Dr6P5cz9s1x;
+        Tue,  7 Jul 2020 10:27:56 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
+        s=201702; t=1594081678;
+        bh=cQkuvuDXVTNikfR9rypMMuYWn/Qt9xkPY1Y3fHHP+sk=;
+        h=Date:From:To:Cc:Subject:From;
+        b=TWVNHL3O2g8vW9CwWCti08wVl7BC3+BE2ImClNyC23D/GKnnbN9XEDKgP7Yap4HGq
+         0ZsD4GyvbChSHcc/iUhJFAmDUOpQ4/Q6I60kPuS/jCWiKy/PK02UKHqCST66sy/xu8
+         qgIXBg7S80ikYSAgDr7JEOL4VXwJ17CKkYmOupoxyxyPyJtyqoCxS1XfpnuyM9UXbf
+         6lxSLvEEdADp3C+kDmXZYzBOeVLiz0x1LlrD0cASArqnuQB3+XikoPz6bHMRwc311Z
+         0usEBtrsJjzPPQW8rXdiL2Jxp61qSpNQ1bdGLnV3uaK5uXKK82jnkLXSv6s33xAn+b
+         zR6MitfZSZ38w==
+Date:   Tue, 7 Jul 2020 10:27:54 +1000
+From:   Stephen Rothwell <sfr@canb.auug.org.au>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Brian Foster <bfoster@redhat.com>
+Subject: linux-next: build failure after merge of the xfs tree
+Message-ID: <20200707102754.65254f1e@canb.auug.org.au>
 MIME-Version: 1.0
-In-Reply-To: <159370362331.3579756.9359456822795462355.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9674 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 adultscore=0
- malwarescore=0 spamscore=0 mlxlogscore=999 bulkscore=0 suspectscore=2
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2007060157
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9674 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
- phishscore=0 spamscore=0 mlxlogscore=999 adultscore=0 cotscore=-2147483648
- suspectscore=2 impostorscore=0 bulkscore=0 mlxscore=0 clxscore=1015
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2007060157
+Content-Type: multipart/signed; boundary="Sig_/78vVcTgeuWwIZD/fb3c.Pgv";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+--Sig_/78vVcTgeuWwIZD/fb3c.Pgv
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
+Hi all,
 
-On 7/2/20 8:27 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Add a summary variable to the bulkload structure so that we can track
-> the number of blocks that have been reserved for a particular (btree)
-> bulkload operation.  Doing so enables us to simplify the logic in
-> init_freespace_cursors that deals with figuring out how many more blocks
-> we need to fill the bnobt/cntbt properly.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Alrighty, looks good
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+After merging the xfs tree, today's linux-next build (powerpc
+ppc64_defconfig) failed like this:
 
-> ---
->   repair/agbtree.c  |   33 +++++++++++++++++----------------
->   repair/bulkload.c |    2 ++
->   repair/bulkload.h |    3 +++
->   3 files changed, 22 insertions(+), 16 deletions(-)
-> 
-> 
-> diff --git a/repair/agbtree.c b/repair/agbtree.c
-> index 339b1489..de8015ec 100644
-> --- a/repair/agbtree.c
-> +++ b/repair/agbtree.c
-> @@ -217,8 +217,6 @@ init_freespace_cursors(
->   	struct bt_rebuild	*btr_bno,
->   	struct bt_rebuild	*btr_cnt)
->   {
-> -	unsigned int		bno_blocks;
-> -	unsigned int		cnt_blocks;
->   	int			error;
->   
->   	init_rebuild(sc, &XFS_RMAP_OINFO_AG, free_space, btr_bno);
-> @@ -244,9 +242,7 @@ init_freespace_cursors(
->   	 */
->   	do {
->   		unsigned int	num_freeblocks;
-> -
-> -		bno_blocks = btr_bno->bload.nr_blocks;
-> -		cnt_blocks = btr_cnt->bload.nr_blocks;
-> +		int		delta_bno, delta_cnt;
->   
->   		/* Compute how many bnobt blocks we'll need. */
->   		error = -libxfs_btree_bload_compute_geometry(btr_bno->cur,
-> @@ -262,25 +258,30 @@ _("Unable to compute free space by block btree geometry, error %d.\n"), -error);
->   			do_error(
->   _("Unable to compute free space by length btree geometry, error %d.\n"), -error);
->   
-> +		/*
-> +		 * Compute the deficit between the number of blocks reserved
-> +		 * and the number of blocks we think we need for the btree.
-> +		 */
-> +		delta_bno = (int)btr_bno->newbt.nr_reserved -
-> +				 btr_bno->bload.nr_blocks;
-> +		delta_cnt = (int)btr_cnt->newbt.nr_reserved -
-> +				 btr_cnt->bload.nr_blocks;
-> +
->   		/* We don't need any more blocks, so we're done. */
-> -		if (bno_blocks >= btr_bno->bload.nr_blocks &&
-> -		    cnt_blocks >= btr_cnt->bload.nr_blocks)
-> +		if (delta_bno >= 0 && delta_cnt >= 0) {
-> +			*extra_blocks = delta_bno + delta_cnt;
->   			break;
-> +		}
->   
->   		/* Allocate however many more blocks we need this time. */
-> -		if (bno_blocks < btr_bno->bload.nr_blocks)
-> -			reserve_btblocks(sc->mp, agno, btr_bno,
-> -					btr_bno->bload.nr_blocks - bno_blocks);
-> -		if (cnt_blocks < btr_cnt->bload.nr_blocks)
-> -			reserve_btblocks(sc->mp, agno, btr_cnt,
-> -					btr_cnt->bload.nr_blocks - cnt_blocks);
-> +		if (delta_bno < 0)
-> +			reserve_btblocks(sc->mp, agno, btr_bno, -delta_bno);
-> +		if (delta_cnt < 0)
-> +			reserve_btblocks(sc->mp, agno, btr_cnt, -delta_cnt);
->   
->   		/* Ok, now how many free space records do we have? */
->   		*nr_extents = count_bno_extents_blocks(agno, &num_freeblocks);
->   	} while (1);
-> -
-> -	*extra_blocks = (bno_blocks - btr_bno->bload.nr_blocks) +
-> -			(cnt_blocks - btr_cnt->bload.nr_blocks);
->   }
->   
->   /* Rebuild the free space btrees. */
-> diff --git a/repair/bulkload.c b/repair/bulkload.c
-> index 81d67e62..8dd0a0c3 100644
-> --- a/repair/bulkload.c
-> +++ b/repair/bulkload.c
-> @@ -40,6 +40,8 @@ bulkload_add_blocks(
->   	resv->len = len;
->   	resv->used = 0;
->   	list_add_tail(&resv->list, &bkl->resv_list);
-> +	bkl->nr_reserved += len;
-> +
->   	return 0;
->   }
->   
-> diff --git a/repair/bulkload.h b/repair/bulkload.h
-> index 01f67279..a84e99b8 100644
-> --- a/repair/bulkload.h
-> +++ b/repair/bulkload.h
-> @@ -41,6 +41,9 @@ struct bulkload {
->   
->   	/* The last reservation we allocated from. */
->   	struct bulkload_resv	*last_resv;
-> +
-> +	/* Number of blocks reserved via resv_list. */
-> +	unsigned int		nr_reserved;
->   };
->   
->   #define for_each_bulkload_reservation(bkl, resv, n)	\
-> 
+ld: fs/xfs/xfs_buf_item.o: in function `.xfs_buf_dquot_iodone':
+xfs_buf_item.c:(.text+0x21a0): undefined reference to `.xfs_dquot_done'
+
+Caused by commit
+
+  018dc1667913 ("xfs: use direct calls for dquot IO completion")
+
+# CONFIG_XFS_QUOTA is not set
+
+I have used the xfs tree from next-20200706 for today.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/78vVcTgeuWwIZD/fb3c.Pgv
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl8DwYoACgkQAVBC80lX
+0GyqUwgAkHSU+O1kJckMqxnfPa+2Y888f5hB/g8zdGEN1ejvnpd/9B0aYagn66cA
+f0p6g5Btnjd7NnngBAq6RHuKigV6wWcoXlmhw0O0j0X9j0+8Z987W9WxrwdPrixl
+eZfklF694lQn9jHPxxTNm0nbG+PVyadVSy1poFZddRXxwVR7G3o/l57J/m2Y7R6s
+7XVFyNB5en3kXzHknviZmsGl+usg+vih9TaZE3mWGuwj1yL9bujmjJS1F/zdLe8t
+gz5gmc10jMMvul8D4qyxQvXLHgXAxZTa2Xu6DAKEtxIEO5A8tigLDcwSuDxUJXe+
+znBY29Y1pqNty1E4GSr1NIkQRX4ySA==
+=XvtZ
+-----END PGP SIGNATURE-----
+
+--Sig_/78vVcTgeuWwIZD/fb3c.Pgv--
