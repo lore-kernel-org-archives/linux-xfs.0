@@ -2,170 +2,352 @@ Return-Path: <SRS0=C5JC=AS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3660EC433E2
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 19:16:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 672CDC433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 19:59:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1946F2078B
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 19:16:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JUlGvPcr"
+	by mail.kernel.org (Postfix) with ESMTP id 40E1F20773
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 19:59:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594151980;
+	bh=wBUoZXp791DtM0idK2+sP5gdsYPKyaALxH32+tVv6O0=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=Tva15CXMk6zQhv1WxT/qSTLQoaDc1NR2wcWrP6IiAyuaMO+eBdX+QAC2sUo8hHx2K
+	 mmBLB9u0ZwHIfRRL3jZjYacu8QfM+Y6vkoPoTk7feJ9b2drJZrw1J3mCGC8W/qKlAx
+	 ClVTYEJSM7mZ5wv4IekpQJ5TU3oHtou0dEghYdok=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728777AbgGGTQz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jul 2020 15:16:55 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:53719 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728748AbgGGTQv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jul 2020 15:16:51 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594149409;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=bRhrqkREzp0r3NeHnhZi/lkFWagM7LgdiEAL4cl4rAI=;
-        b=JUlGvPcrzzWGAbXYTEn5d1DYjWIvdxz2cJdl6nHUcqUWvBy3JaJSKc7h+HoPUzRKHXJlNA
-        p6uOhpQ+I8GCxtAYU33Uk0L26ofU1005FJFjLcIxatBRs6b6xbgyzkUSqccAfarkYoHc3e
-        D7Q0xOHRwhiPZxFJGuN6aGnhKmdVoEk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-307-g_1x2jlQPCqcbYUnqS7Vyw-1; Tue, 07 Jul 2020 15:16:44 -0400
-X-MC-Unique: g_1x2jlQPCqcbYUnqS7Vyw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1727791AbgGGT7j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jul 2020 15:59:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38060 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727003AbgGGT7j (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 7 Jul 2020 15:59:39 -0400
+Received: from embeddedor (unknown [200.39.26.250])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 68E27107ACCA;
-        Tue,  7 Jul 2020 19:16:43 +0000 (UTC)
-Received: from llong.com (ovpn-118-81.rdu2.redhat.com [10.10.118.81])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F3F1CC0067;
-        Tue,  7 Jul 2020 19:16:36 +0000 (UTC)
-From:   Waiman Long <longman@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        by mail.kernel.org (Postfix) with ESMTPSA id 2E2E1206F6;
+        Tue,  7 Jul 2020 19:59:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594151977;
+        bh=wBUoZXp791DtM0idK2+sP5gdsYPKyaALxH32+tVv6O0=;
+        h=Date:From:To:Cc:Subject:From;
+        b=Bko9YNNVLC1f6MjlmJnmCwlQ0+04wBUeJIJ0YYZGJp3T7zGsEi902zVRUWGmMpJGd
+         jBcYGTBjwDQPOW2gya1jjjHpmvOce2W5qyE11/XsOQR4ewFHzqDkpxnSb+XHFR1JVZ
+         kjrj4i40iMEtN5JLMO57xnka0hs62fdxLCWooVBM=
+Date:   Tue, 7 Jul 2020 15:05:04 -0500
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Waiman Long <longman@redhat.com>
-Subject: [PATCH v6] xfs: Fix false positive lockdep warning with sb_internal & fs_reclaim
-Date:   Tue,  7 Jul 2020 15:16:29 -0400
-Message-Id: <20200707191629.13911-1-longman@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: [PATCH] xfs: Use fallthrough pseudo-keyword
+Message-ID: <20200707200504.GA4796@embeddedor>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Depending on the workloads, the following circular locking dependency
-warning between sb_internal (a percpu rwsem) and fs_reclaim (a pseudo
-lock) may show up:
+Replace the existing /* fall through */ comments and its variants with
+the new pseudo-keyword macro fallthrough[1]. Also, remove unnecessary
+fall-through markings when it is the case.
 
-======================================================
-WARNING: possible circular locking dependency detected
-5.0.0-rc1+ #60 Tainted: G        W
-------------------------------------------------------
-fsfreeze/4346 is trying to acquire lock:
-0000000026f1d784 (fs_reclaim){+.+.}, at:
-fs_reclaim_acquire.part.19+0x5/0x30
+[1] https://www.kernel.org/doc/html/latest/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
 
-but task is already holding lock:
-0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
-
-which lock already depends on the new lock.
-  :
- Possible unsafe locking scenario:
-
-       CPU0                    CPU1
-       ----                    ----
-  lock(sb_internal);
-                               lock(fs_reclaim);
-                               lock(sb_internal);
-  lock(fs_reclaim);
-
- *** DEADLOCK ***
-
-4 locks held by fsfreeze/4346:
- #0: 00000000b478ef56 (sb_writers#8){++++}, at: percpu_down_write+0xb4/0x650
- #1: 000000001ec487a9 (&type->s_umount_key#28){++++}, at: freeze_super+0xda/0x290
- #2: 000000003edbd5a0 (sb_pagefaults){++++}, at: percpu_down_write+0xb4/0x650
- #3: 0000000072bfc54b (sb_internal){++++}, at: percpu_down_write+0xb4/0x650
-
-stack backtrace:
-Call Trace:
- dump_stack+0xe0/0x19a
- print_circular_bug.isra.10.cold.34+0x2f4/0x435
- check_prev_add.constprop.19+0xca1/0x15f0
- validate_chain.isra.14+0x11af/0x3b50
- __lock_acquire+0x728/0x1200
- lock_acquire+0x269/0x5a0
- fs_reclaim_acquire.part.19+0x29/0x30
- fs_reclaim_acquire+0x19/0x20
- kmem_cache_alloc+0x3e/0x3f0
- kmem_zone_alloc+0x79/0x150
- xfs_trans_alloc+0xfa/0x9d0
- xfs_sync_sb+0x86/0x170
- xfs_log_sbcount+0x10f/0x140
- xfs_quiesce_attr+0x134/0x270
- xfs_fs_freeze+0x4a/0x70
- freeze_super+0x1af/0x290
- do_vfs_ioctl+0xedc/0x16c0
- ksys_ioctl+0x41/0x80
- __x64_sys_ioctl+0x73/0xa9
- do_syscall_64+0x18f/0xd23
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-This is a false positive as all the dirty pages are flushed out before
-the filesystem can be frozen.
-
-One way to avoid this splat is to add GFP_NOFS to the affected allocation
-calls by using the memalloc_nofs_save()/memalloc_nofs_restore() pair.
-This shouldn't matter unless the system is really running out of memory.
-In that particular case, the filesystem freeze operation may fail while
-it was succeeding previously.
-
-Without this patch, the command sequence below will show that the lock
-dependency chain sb_internal -> fs_reclaim exists.
-
- # fsfreeze -f /home
- # fsfreeze --unfreeze /home
- # grep -i fs_reclaim -C 3 /proc/lockdep_chains | grep -C 5 sb_internal
-
-After applying the patch, such sb_internal -> fs_reclaim lock dependency
-chain can no longer be found. Because of that, the locking dependency
-warning will not be shown.
-
-Suggested-by: Dave Chinner <david@fromorbit.com>
-Signed-off-by: Waiman Long <longman@redhat.com>
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- fs/xfs/xfs_super.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_ag_resv.c   |    4 ++--
+ fs/xfs/libxfs/xfs_alloc.c     |    2 +-
+ fs/xfs/libxfs/xfs_da_btree.c  |    2 +-
+ fs/xfs/libxfs/xfs_inode_buf.c |    4 ++--
+ fs/xfs/scrub/bmap.c           |    2 +-
+ fs/xfs/scrub/btree.c          |    2 +-
+ fs/xfs/scrub/common.c         |    6 +++---
+ fs/xfs/scrub/dabtree.c        |    2 +-
+ fs/xfs/scrub/repair.c         |    2 +-
+ fs/xfs/xfs_bmap_util.c        |    2 +-
+ fs/xfs/xfs_export.c           |    4 ++--
+ fs/xfs/xfs_file.c             |    2 +-
+ fs/xfs/xfs_fsmap.c            |    2 +-
+ fs/xfs/xfs_inode.c            |    2 +-
+ fs/xfs/xfs_ioctl.c            |    4 ++--
+ fs/xfs/xfs_iomap.c            |    2 +-
+ fs/xfs/xfs_trans_buf.c        |    2 +-
+ 17 files changed, 23 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 379cbff438bc..0797a96b83d6 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -913,11 +913,21 @@ xfs_fs_freeze(
- 	struct super_block	*sb)
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
-+	unsigned int		flags;
-+	int			ret;
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index fdfe6dc0d307..0b061a027e4e 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -338,7 +338,7 @@ xfs_ag_resv_alloc_extent(
+ 		break;
+ 	default:
+ 		ASSERT(0);
+-		/* fall through */
++		fallthrough;
+ 	case XFS_AG_RESV_NONE:
+ 		field = args->wasdel ? XFS_TRANS_SB_RES_FDBLOCKS :
+ 				       XFS_TRANS_SB_FDBLOCKS;
+@@ -380,7 +380,7 @@ xfs_ag_resv_free_extent(
+ 		break;
+ 	default:
+ 		ASSERT(0);
+-		/* fall through */
++		fallthrough;
+ 	case XFS_AG_RESV_NONE:
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (int64_t)len);
+ 		return;
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 203e74fa64aa..6b153e6ee342 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -3119,7 +3119,7 @@ xfs_alloc_vextent(
+ 		}
+ 		args->agbno = XFS_FSB_TO_AGBNO(mp, args->fsbno);
+ 		args->type = XFS_ALLOCTYPE_NEAR_BNO;
+-		/* FALLTHROUGH */
++		fallthrough;
+ 	case XFS_ALLOCTYPE_FIRST_AG:
+ 		/*
+ 		 * Rotate through the allocation groups looking for a winner.
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index 897749c41f36..c48beec0c0df 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -276,7 +276,7 @@ xfs_da3_node_read_verify(
+ 						__this_address);
+ 				break;
+ 			}
+-			/* fall through */
++			fallthrough;
+ 		case XFS_DA_NODE_MAGIC:
+ 			fa = xfs_da3_node_verify(bp);
+ 			if (fa)
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+index 6f84ea85fdd8..63b0d86ff985 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.c
++++ b/fs/xfs/libxfs/xfs_inode_buf.c
+@@ -439,8 +439,8 @@ xfs_dinode_verify_forkoff(
+ 		if (dip->di_forkoff != (roundup(sizeof(xfs_dev_t), 8) >> 3))
+ 			return __this_address;
+ 		break;
+-	case XFS_DINODE_FMT_LOCAL:	/* fall through ... */
+-	case XFS_DINODE_FMT_EXTENTS:    /* fall through ... */
++	case XFS_DINODE_FMT_LOCAL:
++	case XFS_DINODE_FMT_EXTENTS:
+ 	case XFS_DINODE_FMT_BTREE:
+ 		if (dip->di_forkoff >= (XFS_LITINO(mp) >> 3))
+ 			return __this_address;
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 7badd6dfe544..10e8599b34f6 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -252,7 +252,7 @@ xchk_bmap_iextent_xref(
+ 	case XFS_DATA_FORK:
+ 		if (xfs_is_reflink_inode(info->sc->ip))
+ 			break;
+-		/* fall through */
++		fallthrough;
+ 	case XFS_ATTR_FORK:
+ 		xchk_xref_is_not_shared(info->sc, agbno,
+ 				irec->br_blockcount);
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index f52a7b8256f9..990a379fc322 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -43,7 +43,7 @@ __xchk_btree_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+ 			trace_xchk_ifork_btree_op_error(sc, cur, level,
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 18876056e5e0..63f13c8ed8c7 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -81,7 +81,7 @@ __xchk_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_op_error(sc, agno, bno, *error,
+ 				ret_ip);
+@@ -134,7 +134,7 @@ __xchk_fblock_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_file_op_error(sc, whichfork, offset, *error,
+ 				ret_ip);
+@@ -713,7 +713,7 @@ xchk_get_inode(
+ 		if (error)
+ 			return -ENOENT;
+ 		error = -EFSCORRUPTED;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_op_error(sc,
+ 				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index 44b15015021f..238a0cab792c 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -47,7 +47,7 @@ xchk_da_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_file_op_error(sc, ds->dargs.whichfork,
+ 				xfs_dir2_da_to_db(ds->dargs.geo,
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index db3cfd12803d..90948ca758a7 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -944,7 +944,7 @@ xrep_ino_dqattach(
+ 			xrep_force_quotacheck(sc, XFS_DQ_GROUP);
+ 		if (XFS_IS_PQUOTA_ON(sc->mp) && !sc->ip->i_pdquot)
+ 			xrep_force_quotacheck(sc, XFS_DQ_PROJ);
+-		/* fall through */
++		fallthrough;
+ 	case -ESRCH:
+ 		error = 0;
+ 		break;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index f37f5cc4b19f..035896e81104 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -244,7 +244,7 @@ xfs_bmap_count_blocks(
+ 		 */
+ 		*count += btblocks - 1;
  
-+	/*
-+	 * The filesystem is now frozen far enough that memory reclaim
-+	 * cannot safely operate on the filesystem. Hence we need to
-+	 * set a GFP_NOFS context here to avoid recursion deadlocks.
-+	 */
-+	flags = memalloc_nofs_save();
- 	xfs_stop_block_reaping(mp);
- 	xfs_save_resvblks(mp);
- 	xfs_quiesce_attr(mp);
--	return xfs_sync_sb(mp, true);
-+	ret = xfs_sync_sb(mp, true);
-+	memalloc_nofs_restore(flags);
-+	return ret;
- }
- 
- STATIC int
--- 
-2.18.1
+-		/* fall through */
++		fallthrough;
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		*nextents = xfs_bmap_count_leaves(ifp, count);
+ 		break;
+diff --git a/fs/xfs/xfs_export.c b/fs/xfs/xfs_export.c
+index 5a4b0119143a..bc5fcb631c51 100644
+--- a/fs/xfs/xfs_export.c
++++ b/fs/xfs/xfs_export.c
+@@ -84,7 +84,7 @@ xfs_fs_encode_fh(
+ 	case FILEID_INO32_GEN_PARENT:
+ 		fid->i32.parent_ino = XFS_I(parent)->i_ino;
+ 		fid->i32.parent_gen = parent->i_generation;
+-		/*FALLTHRU*/
++		fallthrough;
+ 	case FILEID_INO32_GEN:
+ 		fid->i32.ino = XFS_I(inode)->i_ino;
+ 		fid->i32.gen = inode->i_generation;
+@@ -92,7 +92,7 @@ xfs_fs_encode_fh(
+ 	case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:
+ 		fid64->parent_ino = XFS_I(parent)->i_ino;
+ 		fid64->parent_gen = parent->i_generation;
+-		/*FALLTHRU*/
++		fallthrough;
+ 	case FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG:
+ 		fid64->ino = XFS_I(inode)->i_ino;
+ 		fid64->gen = inode->i_generation;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 00db81eac80d..b85d1da85b82 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -769,7 +769,7 @@ xfs_break_layouts(
+ 			error = xfs_break_dax_layouts(inode, &retry);
+ 			if (error || retry)
+ 				break;
+-			/* fall through */
++			fallthrough;
+ 		case BREAK_WRITE:
+ 			error = xfs_break_leased_layouts(inode, iolock, &retry);
+ 			break;
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 4eebcec4aae6..c334550aeea7 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -100,7 +100,7 @@ xfs_fsmap_owner_to_rmap(
+ 		dest->rm_owner = XFS_RMAP_OWN_COW;
+ 		break;
+ 	case XFS_FMR_OWN_DEFECTIVE:	/* not implemented */
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		return -EINVAL;
+ 	}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 9aea7d68d8ab..52ce37ed14de 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -906,7 +906,7 @@ xfs_ialloc(
+ 			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
+ 				ip->i_d.di_flags2 |= XFS_DIFLAG2_DAX;
+ 		}
+-		/* FALLTHROUGH */
++		fallthrough;
+ 	case S_IFLNK:
+ 		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
+ 		ip->i_df.if_flags = XFS_IFEXTENTS;
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index a190212ca85d..ea366a645c8e 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -557,7 +557,7 @@ xfs_ioc_attrmulti_one(
+ 	case ATTR_OP_REMOVE:
+ 		value = NULL;
+ 		*len = 0;
+-		/* fall through */
++		fallthrough;
+ 	case ATTR_OP_SET:
+ 		error = mnt_want_write_file(parfilp);
+ 		if (error)
+@@ -1660,7 +1660,7 @@ xfs_ioc_getbmap(
+ 	switch (cmd) {
+ 	case XFS_IOC_GETBMAPA:
+ 		bmx.bmv_iflags = BMV_IF_ATTRFORK;
+-		/*FALLTHRU*/
++		fallthrough;
+ 	case XFS_IOC_GETBMAP:
+ 		if (file->f_mode & FMODE_NOCMTIME)
+ 			bmx.bmv_iflags |= BMV_IF_NO_DMAPI_READ;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index b9a8c3798e08..fc4b65b24fdf 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1002,7 +1002,7 @@ xfs_buffered_write_iomap_begin(
+ 			prealloc_blocks = 0;
+ 			goto retry;
+ 		}
+-		/*FALLTHRU*/
++		fallthrough;
+ 	default:
+ 		goto out_unlock;
+ 	}
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 08174ffa2118..ad79065607cc 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -310,7 +310,7 @@ xfs_trans_read_buf_map(
+ 	default:
+ 		if (tp && (tp->t_flags & XFS_TRANS_DIRTY))
+ 			xfs_force_shutdown(tp->t_mountp, SHUTDOWN_META_IO_ERROR);
+-		/* fall through */
++		fallthrough;
+ 	case -ENOMEM:
+ 	case -EAGAIN:
+ 		return error;
 
