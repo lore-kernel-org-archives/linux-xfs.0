@@ -2,93 +2,179 @@ Return-Path: <SRS0=C5JC=AS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C11AC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 12:57:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE32FC433DF
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 12:59:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CD4520708
-	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 12:57:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A2C820708
+	for <linux-xfs@archiver.kernel.org>; Tue,  7 Jul 2020 12:59:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ofG/O9FX"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Rc+dHefI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727090AbgGGM5J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 7 Jul 2020 08:57:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38018 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726900AbgGGM5J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jul 2020 08:57:09 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D206C061755;
-        Tue,  7 Jul 2020 05:57:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=NcqHrUmx33Xz3ikGjbmqyDITaJtyyUAxn+yVEQB5egg=; b=ofG/O9FXtmDtbWnntDxYn6vCii
-        lBosd0F3EBZqz4nzmI+lv73zKOaBrCqAEbjSOSz6+dBhoy8VomVwvx8q/uvHSGVx0PXhyT7vfB0OR
-        M6MiciRdpwivfdM8/gFIBl6ruQNxsAx8AfRS0ljHMcyqBJRoFZ7ipc1D2GEu4CNyYuYDypIIK71PW
-        +7DBTJ3Zb6j5S+BeKyh5S1kKto5iZ1PYVHB1YBWRHIM8OyLHzxlVoRSDLpo1vx3U3hbQ+eclD/xAV
-        abt24/JV4jwYmfFVukE2LgtHSmTv1+b+6KaDxsGni5ljaU+FBMf9he4KIh3fI18PX1CEuJXq7SK7y
-        LujY/7ww==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jsn9l-0004qG-Lq; Tue, 07 Jul 2020 12:57:05 +0000
-Date:   Tue, 7 Jul 2020 13:57:05 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, fdmanana@gmail.com, dsterba@suse.cz,
-        david@fromorbit.com, darrick.wong@oracle.com,
-        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: always fall back to buffered I/O after invalidation failures,
- was: Re: [PATCH 2/6] iomap: IOMAP_DIO_RWF_NO_STALE_PAGECACHE return if page
- invalidation fails
-Message-ID: <20200707125705.GK25523@casper.infradead.org>
-References: <20200629192353.20841-1-rgoldwyn@suse.de>
- <20200629192353.20841-3-rgoldwyn@suse.de>
- <20200701075310.GB29884@lst.de>
- <20200707124346.xnr5gtcysuzehejq@fiona>
+        id S1727886AbgGGM7E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 7 Jul 2020 08:59:04 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:32089 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726946AbgGGM7E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 7 Jul 2020 08:59:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594126742;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=jB1BoBWBMDJc7kO9rcy6QqBJLIpALf9uyhtgzM7j7Vs=;
+        b=Rc+dHefIXWOLJZQ7BJPmQ7ESKFZMVFrT5MjYx8rtCl1n3GIEQGi6DygvCXObcMeE9lJQnH
+        a3QJ1CJ36DMrgs+zp8b4PGC5PJkLiz2ouM+glzEHXMifxHjE0qyP6+fZQT7M1FdqsYJqkP
+        YSc3aGkms7MvhzCWx1AzlgWgJr/mEkM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-449-KIBJ0ELzPZKQIsgU5nc1yw-1; Tue, 07 Jul 2020 08:59:00 -0400
+X-MC-Unique: KIBJ0ELzPZKQIsgU5nc1yw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AC31464ACA;
+        Tue,  7 Jul 2020 12:58:59 +0000 (UTC)
+Received: from bfoster (ovpn-112-122.rdu2.redhat.com [10.10.112.122])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 289ED10013D7;
+        Tue,  7 Jul 2020 12:58:59 +0000 (UTC)
+Date:   Tue, 7 Jul 2020 08:58:57 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs_repair: simplify free space btree calculations
+ in init_freespace_cursors
+Message-ID: <20200707125857.GA37141@bfoster>
+References: <159370361029.3579756.1711322369086095823.stgit@magnolia>
+ <159370362331.3579756.9359456822795462355.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200707124346.xnr5gtcysuzehejq@fiona>
+In-Reply-To: <159370362331.3579756.9359456822795462355.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 07, 2020 at 07:43:46AM -0500, Goldwyn Rodrigues wrote:
-> On  9:53 01/07, Christoph Hellwig wrote:
-> > On Mon, Jun 29, 2020 at 02:23:49PM -0500, Goldwyn Rodrigues wrote:
-> > > From: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> > > 
-> > > For direct I/O, add the flag IOMAP_DIO_RWF_NO_STALE_PAGECACHE to indicate
-> > > that if the page invalidation fails, return back control to the
-> > > filesystem so it may fallback to buffered mode.
-> > > 
-> > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
-> > 
-> > I'd like to start a discussion of this shouldn't really be the
-> > default behavior.  If we have page cache that can't be invalidated it
-> > actually makes a whole lot of sense to not do direct I/O, avoid the
-> > warnings, etc.
-> > 
-> > Adding all the relevant lists.
+On Thu, Jul 02, 2020 at 08:27:03AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Since no one responded so far, let me see if I can stir the cauldron :)
+> Add a summary variable to the bulkload structure so that we can track
+> the number of blocks that have been reserved for a particular (btree)
+> bulkload operation.  Doing so enables us to simplify the logic in
+> init_freespace_cursors that deals with figuring out how many more blocks
+> we need to fill the bnobt/cntbt properly.
 > 
-> What error should be returned in case of such an error? I think the
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Christoph's message is ambiguous.  I don't know if he means "fail the
-I/O with an error" or "satisfy the I/O through the page cache".  I'm
-strongly in favour of the latter.  Indeed, I'm in favour of not invalidating
-the page cache at all for direct I/O.  For reads, I think the page cache
-should be used to satisfy any portion of the read which is currently
-cached.  For writes, I think we should write into the page cache pages
-which currently exist, and then force those pages to be written back,
-but left in cache.
+Nice simplification:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  repair/agbtree.c  |   33 +++++++++++++++++----------------
+>  repair/bulkload.c |    2 ++
+>  repair/bulkload.h |    3 +++
+>  3 files changed, 22 insertions(+), 16 deletions(-)
+> 
+> 
+> diff --git a/repair/agbtree.c b/repair/agbtree.c
+> index 339b1489..de8015ec 100644
+> --- a/repair/agbtree.c
+> +++ b/repair/agbtree.c
+> @@ -217,8 +217,6 @@ init_freespace_cursors(
+>  	struct bt_rebuild	*btr_bno,
+>  	struct bt_rebuild	*btr_cnt)
+>  {
+> -	unsigned int		bno_blocks;
+> -	unsigned int		cnt_blocks;
+>  	int			error;
+>  
+>  	init_rebuild(sc, &XFS_RMAP_OINFO_AG, free_space, btr_bno);
+> @@ -244,9 +242,7 @@ init_freespace_cursors(
+>  	 */
+>  	do {
+>  		unsigned int	num_freeblocks;
+> -
+> -		bno_blocks = btr_bno->bload.nr_blocks;
+> -		cnt_blocks = btr_cnt->bload.nr_blocks;
+> +		int		delta_bno, delta_cnt;
+>  
+>  		/* Compute how many bnobt blocks we'll need. */
+>  		error = -libxfs_btree_bload_compute_geometry(btr_bno->cur,
+> @@ -262,25 +258,30 @@ _("Unable to compute free space by block btree geometry, error %d.\n"), -error);
+>  			do_error(
+>  _("Unable to compute free space by length btree geometry, error %d.\n"), -error);
+>  
+> +		/*
+> +		 * Compute the deficit between the number of blocks reserved
+> +		 * and the number of blocks we think we need for the btree.
+> +		 */
+> +		delta_bno = (int)btr_bno->newbt.nr_reserved -
+> +				 btr_bno->bload.nr_blocks;
+> +		delta_cnt = (int)btr_cnt->newbt.nr_reserved -
+> +				 btr_cnt->bload.nr_blocks;
+> +
+>  		/* We don't need any more blocks, so we're done. */
+> -		if (bno_blocks >= btr_bno->bload.nr_blocks &&
+> -		    cnt_blocks >= btr_cnt->bload.nr_blocks)
+> +		if (delta_bno >= 0 && delta_cnt >= 0) {
+> +			*extra_blocks = delta_bno + delta_cnt;
+>  			break;
+> +		}
+>  
+>  		/* Allocate however many more blocks we need this time. */
+> -		if (bno_blocks < btr_bno->bload.nr_blocks)
+> -			reserve_btblocks(sc->mp, agno, btr_bno,
+> -					btr_bno->bload.nr_blocks - bno_blocks);
+> -		if (cnt_blocks < btr_cnt->bload.nr_blocks)
+> -			reserve_btblocks(sc->mp, agno, btr_cnt,
+> -					btr_cnt->bload.nr_blocks - cnt_blocks);
+> +		if (delta_bno < 0)
+> +			reserve_btblocks(sc->mp, agno, btr_bno, -delta_bno);
+> +		if (delta_cnt < 0)
+> +			reserve_btblocks(sc->mp, agno, btr_cnt, -delta_cnt);
+>  
+>  		/* Ok, now how many free space records do we have? */
+>  		*nr_extents = count_bno_extents_blocks(agno, &num_freeblocks);
+>  	} while (1);
+> -
+> -	*extra_blocks = (bno_blocks - btr_bno->bload.nr_blocks) +
+> -			(cnt_blocks - btr_cnt->bload.nr_blocks);
+>  }
+>  
+>  /* Rebuild the free space btrees. */
+> diff --git a/repair/bulkload.c b/repair/bulkload.c
+> index 81d67e62..8dd0a0c3 100644
+> --- a/repair/bulkload.c
+> +++ b/repair/bulkload.c
+> @@ -40,6 +40,8 @@ bulkload_add_blocks(
+>  	resv->len = len;
+>  	resv->used = 0;
+>  	list_add_tail(&resv->list, &bkl->resv_list);
+> +	bkl->nr_reserved += len;
+> +
+>  	return 0;
+>  }
+>  
+> diff --git a/repair/bulkload.h b/repair/bulkload.h
+> index 01f67279..a84e99b8 100644
+> --- a/repair/bulkload.h
+> +++ b/repair/bulkload.h
+> @@ -41,6 +41,9 @@ struct bulkload {
+>  
+>  	/* The last reservation we allocated from. */
+>  	struct bulkload_resv	*last_resv;
+> +
+> +	/* Number of blocks reserved via resv_list. */
+> +	unsigned int		nr_reserved;
+>  };
+>  
+>  #define for_each_bulkload_reservation(bkl, resv, n)	\
+> 
 
