@@ -2,65 +2,131 @@ Return-Path: <SRS0=1kUG=AT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C1C9C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 06:46:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95FBAC433E2
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 06:51:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 560F4206E2
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 06:46:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Vfj7EemW"
+	by mail.kernel.org (Postfix) with ESMTP id 7F60720760
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 06:51:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729687AbgGHGq4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jul 2020 02:46:56 -0400
-Received: from casper.infradead.org ([90.155.50.34]:55940 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726171AbgGHGqz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jul 2020 02:46:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=CZOkXyyY4dgTf+kqhDB3CzWaT/nYODB1edBU1B7TMHo=; b=Vfj7EemWn0U7Dyc0oY5B906K8S
-        9ugYUiV/I6FJet6p3M/VQZNm5IK2/eSgrUp/yQf03dVOma3gP1oP3OnIAmsuH6GPX8RHhv8ME7ivo
-        SQ8F7y76xBBWRVK8tT+GpMly9fDrmVC0Mtnh8R18lieKPZZ1ItR1+QVrxPX/jkwkUFbkgHqlgviS6
-        Pcb48VNK/4CyIyvR9foBO8UAN38gX7+SusbdxgYHr8d1mlQIBx9wfm02FUiOrFn1Xvj99dQPMWAlV
-        J5oBi41NEX1EgV8YVc7EoM49Xw105fojdyqsze5CuWSTCfwjVIG5sPcf6x3aviaZUiy+Y1niULCbc
-        1WZCuwZg==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jt3gv-0002Xg-Bh; Wed, 08 Jul 2020 06:36:56 +0000
-Date:   Wed, 8 Jul 2020 07:36:23 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, Brian Foster <bfoster@redhat.com>,
+        id S1729987AbgGHGvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jul 2020 02:51:36 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55758 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729971AbgGHGvf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jul 2020 02:51:35 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 408423A4417;
+        Wed,  8 Jul 2020 16:51:29 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jt3vT-0003aV-Rn; Wed, 08 Jul 2020 16:51:27 +1000
+Date:   Wed, 8 Jul 2020 16:51:27 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        fdmanana@gmail.com, dsterba@suse.cz, darrick.wong@oracle.com,
+        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
         linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs_repair: complain about ag header crc errors
-Message-ID: <20200708063623.GA9080@infradead.org>
-References: <159370361029.3579756.1711322369086095823.stgit@magnolia>
- <159370361687.3579756.17807287829667417464.stgit@magnolia>
+Subject: Re: always fall back to buffered I/O after invalidation failures,
+ was: Re: [PATCH 2/6] iomap: IOMAP_DIO_RWF_NO_STALE_PAGECACHE return if page
+ invalidation fails
+Message-ID: <20200708065127.GM2005@dread.disaster.area>
+References: <20200629192353.20841-1-rgoldwyn@suse.de>
+ <20200629192353.20841-3-rgoldwyn@suse.de>
+ <20200701075310.GB29884@lst.de>
+ <20200707124346.xnr5gtcysuzehejq@fiona>
+ <20200707125705.GK25523@casper.infradead.org>
+ <20200707130030.GA13870@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <159370361687.3579756.17807287829667417464.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200707130030.GA13870@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=iox4zFpeAAAA:8 a=yPCof4ZbAAAA:8
+        a=7-415B0cAAAA:8 a=3vpnGOzTaiQfhgfqfmAA:9 a=CjuIK1q_8ugA:10
+        a=WzC6qhA0u3u7Ye7llzcV:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 02, 2020 at 08:26:56AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Jul 07, 2020 at 03:00:30PM +0200, Christoph Hellwig wrote:
+> On Tue, Jul 07, 2020 at 01:57:05PM +0100, Matthew Wilcox wrote:
+> > On Tue, Jul 07, 2020 at 07:43:46AM -0500, Goldwyn Rodrigues wrote:
+> > > On  9:53 01/07, Christoph Hellwig wrote:
+> > > > On Mon, Jun 29, 2020 at 02:23:49PM -0500, Goldwyn Rodrigues wrote:
+> > > > > From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> > > > > 
+> > > > > For direct I/O, add the flag IOMAP_DIO_RWF_NO_STALE_PAGECACHE to indicate
+> > > > > that if the page invalidation fails, return back control to the
+> > > > > filesystem so it may fallback to buffered mode.
+> > > > > 
+> > > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> > > > 
+> > > > I'd like to start a discussion of this shouldn't really be the
+> > > > default behavior.  If we have page cache that can't be invalidated it
+> > > > actually makes a whole lot of sense to not do direct I/O, avoid the
+> > > > warnings, etc.
+> > > > 
+> > > > Adding all the relevant lists.
+> > > 
+> > > Since no one responded so far, let me see if I can stir the cauldron :)
+> > > 
+> > > What error should be returned in case of such an error? I think the
+> > 
+> > Christoph's message is ambiguous.  I don't know if he means "fail the
+> > I/O with an error" or "satisfy the I/O through the page cache".  I'm
+> > strongly in favour of the latter.
 > 
-> Repair doesn't complain about crc errors in the AG headers, and it
-> should.  Otherwise, this gives the admin the wrong impression about the
-> state of the filesystem after a nomodify check.
+> Same here.  Sorry if my previous mail was unclear.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > Indeed, I'm in favour of not invalidating
+> > the page cache at all for direct I/O.  For reads, I think the page cache
+> > should be used to satisfy any portion of the read which is currently
+> > cached.  For writes, I think we should write into the page cache pages
+> > which currently exist, and then force those pages to be written back,
+> > but left in cache.
+> 
+> Something like that, yes.
 
-Looks good,
+So are we really willing to take the performance regression that
+occurs from copying out of the page cache consuming lots more CPU
+than an actual direct IO read? Or that direct IO writes suddenly
+serialise because there are page cache pages and now we have to do
+buffered IO?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Direct IO should be a deterministic, zero-copy IO path to/from
+storage. Using the CPU to copy data during direct IO is the complete
+opposite of the intended functionality, not to mention the behaviour
+that many applications have been careful designed and tuned for.
+
+Hence I think that forcing iomap to use cached pages for DIO is a
+non-starter. I have no problems with providing infrastructure that
+allows filesystems to -opt in- to using buffered IO for the direct
+IO path. However, the change in IO behaviour caused by unpredicably
+switching between direct IO and buffered IO (e.g. suddening DIO
+writes serialise -all IO-) will cause unacceptible performance
+regressions for many applications and be -very difficult to
+diagnose- in production systems.
+
+IOWs, we need to let the individual filesystems decide how they want
+to use the page cache for direct IO. Just because we have new direct
+IO infrastructure (i.e. iomap) it does not mean we can just make
+wholesale changes to the direct IO path behaviour...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
