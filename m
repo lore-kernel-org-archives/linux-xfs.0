@@ -2,109 +2,111 @@ Return-Path: <SRS0=1kUG=AT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCA60C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 12:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32415C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 12:56:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 929AD20720
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 12:42:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E08820774
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 12:56:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RVrzy58r"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hnU2WYPU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728941AbgGHMmQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jul 2020 08:42:16 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:31727 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728803AbgGHMmQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jul 2020 08:42:16 -0400
+        id S1728803AbgGHM4Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jul 2020 08:56:16 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:56611 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728759AbgGHM4P (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jul 2020 08:56:15 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594212135;
+        s=mimecast20190719; t=1594212974;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=seVLlmPeKZN8mXaTPo00K+QMni7ieNnhIGb9PuA9DC8=;
-        b=RVrzy58rhEK4rYNoCbnun3vHQncYPBYb3Q458Yd5XDUQ+2UfOfCeL8RsjtK2FdPRkERIVz
-        gy+Oge8DQ9wbWb2DBhHN+qw6AwWTRhwZYGkfMAC4jaEQZYmRIHLsigL6D7Vy6rlrni1/Zy
-        WtLT8JMts+d0dSNxtE7mWs9QL9cNFKs=
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Abe7YPSOhBYIZPP09Qf+aIPV78DxXE9sjAbJ9OfQeIY=;
+        b=hnU2WYPUOROLASxAoHOZmoYaiMyNZpUJR2ZHAHuM0oSZzYU7+jvkwNfhIun3v8rtmXMgeO
+        EQeaPvi34GeTI1pKKzOEGWu+rJFO0fd4hhEdS08fXerak8GqdoMOzoybK5Pjc6WL+ZqNUH
+        qi36hUA6vu63NTvMPoVtYm0TC8JnXQs=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-56-sYXzhx52PkeJOH1s7aDGFQ-1; Wed, 08 Jul 2020 08:42:12 -0400
-X-MC-Unique: sYXzhx52PkeJOH1s7aDGFQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-18-KNlaQYSgNBS5RfXDKoLBQw-1; Wed, 08 Jul 2020 08:56:12 -0400
+X-MC-Unique: KNlaQYSgNBS5RfXDKoLBQw-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 197E519253C3;
-        Wed,  8 Jul 2020 12:42:11 +0000 (UTC)
-Received: from bfoster (ovpn-112-122.rdu2.redhat.com [10.10.112.122])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B539C1002388;
-        Wed,  8 Jul 2020 12:42:10 +0000 (UTC)
-Date:   Wed, 8 Jul 2020 08:42:08 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v10 14/25] xfs: Remove xfs_trans_roll in
- xfs_attr_node_removename
-Message-ID: <20200708124208.GB53550@bfoster>
-References: <20200625233018.14585-1-allison.henderson@oracle.com>
- <20200625233018.14585-15-allison.henderson@oracle.com>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E2817107BEF5
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Jul 2020 12:56:11 +0000 (UTC)
+Received: from eorzea.redhat.com (unknown [10.40.194.83])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5BD4B60E3E
+        for <linux-xfs@vger.kernel.org>; Wed,  8 Jul 2020 12:56:11 +0000 (UTC)
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 0/4] Continue xfs kmem cleanup
+Date:   Wed,  8 Jul 2020 14:56:04 +0200
+Message-Id: <20200708125608.155645-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200625233018.14585-15-allison.henderson@oracle.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 25, 2020 at 04:30:07PM -0700, Allison Collins wrote:
-> The xfs_trans_roll in _removename is not needed because invalidating
-> blocks is an incore-only change.  This is analogous to the non-remote
-> remove case where an entry is removed and a potential dabtree join
-> occurs under the same transaction.
-> 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> ---
+Hi,
 
-Ok, but I think we should be a bit more descriptive in the commit log so
-the reasoning is available for historical reference. For example:
+a while ago I started to cleanup the kmem helpers we have, and use kernel's MM
+API. The discussion has stalled because I've got caugh on other stuff, and I'm
+trying to continue that cleanup.
 
-"A transaction roll is not necessary immediately after setting the
-INCOMPLETE flag when removing a node xattr entry with remote value
-blocks. The remote block invalidation that immediately follows setting
-the flag is an in-core only change. The next step after that is to start
-unmapping the remote blocks from the attr fork, but the xattr remove
-transaction reservation includes reservation for full tree splits of the
-dabtree and bmap tree. The remote block unmap code will roll the
-transaction as extents are unmapped and freed."
+The following series basically removes kmem_zone_alloc() and kmem_zone_zalloc(),
+replacing them by kmem_cache_{alloc,zalloc}.
 
-With something like that in place:
+It uses __GFP_NOFAIL where we are not allowed to fail, to replicate the behavior
+of kmem_zone_alloc().
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Patches have been tested with xfstests, on a 1GiG and a 64GiB RAM systems to
+check the patches under memory pressure.
 
->  fs/xfs/libxfs/xfs_attr.c | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index 1a78023..f1becca 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1148,10 +1148,6 @@ xfs_attr_node_removename(
->  		if (error)
->  			goto out;
->  
-> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
-> -		if (error)
-> -			goto out;
-> -
->  		error = xfs_attr_rmtval_invalidate(args);
->  		if (error)
->  			return error;
-> -- 
-> 2.7.4
-> 
+The patches are good as-is, but my main point is to revive the topic, and I
+though it would be better to do it with the patches. Which is another reason I
+decided to split the series in a few more patches than would be required, I
+thought it would be better segmenting the changes in the way I did.
+
+Comments?
+
+Cheers
+
+ fs/xfs/kmem.c                      | 21 ---------------------
+ fs/xfs/kmem.h                      |  8 --------
+ fs/xfs/libxfs/xfs_alloc.c          |  3 ++-
+ fs/xfs/libxfs/xfs_alloc_btree.c    |  3 ++-
+ fs/xfs/libxfs/xfs_bmap.c           |  8 ++++++--
+ fs/xfs/libxfs/xfs_bmap_btree.c     |  3 ++-
+ fs/xfs/libxfs/xfs_da_btree.c       |  4 +++-
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c     |  6 +++---
+ fs/xfs/libxfs/xfs_refcount_btree.c |  2 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |  2 +-
+ fs/xfs/xfs_bmap_item.c             |  4 ++--
+ fs/xfs/xfs_buf.c                   |  2 +-
+ fs/xfs/xfs_buf_item.c              |  2 +-
+ fs/xfs/xfs_dquot.c                 |  2 +-
+ fs/xfs/xfs_extfree_item.c          |  6 ++++--
+ fs/xfs/xfs_icache.c                | 11 +++--------
+ fs/xfs/xfs_icreate_item.c          |  2 +-
+ fs/xfs/xfs_inode_item.c            |  3 ++-
+ fs/xfs/xfs_log.c                   |  7 ++++---
+ fs/xfs/xfs_log_cil.c               |  2 +-
+ fs/xfs/xfs_log_priv.h              |  2 +-
+ fs/xfs/xfs_refcount_item.c         |  5 +++--
+ fs/xfs/xfs_rmap_item.c             |  6 ++++--
+ fs/xfs/xfs_trace.h                 |  1 -
+ fs/xfs/xfs_trans.c                 |  5 +++--
+ fs/xfs/xfs_trans_dquot.c           |  3 ++-
+ 27 files changed, 54 insertions(+), 71 deletions(-)
+
+-- 
+2.26.2
 
