@@ -2,324 +2,204 @@ Return-Path: <SRS0=1kUG=AT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 241A3C433E3
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 21:20:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 389E5C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 22:33:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08863206E2
-	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 21:20:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1913820772
+	for <linux-xfs@archiver.kernel.org>; Wed,  8 Jul 2020 22:33:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726339AbgGHVUF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jul 2020 17:20:05 -0400
-Received: from mx2.suse.de ([195.135.220.15]:35684 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726305AbgGHVUE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 8 Jul 2020 17:20:04 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 641B5AE61;
-        Wed,  8 Jul 2020 21:20:02 +0000 (UTC)
-From:   Goldwyn Rodrigues <rgoldwyn@suse.de>
-To:     linux-btrfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, darrick.wong@oracle.com, hch@lst.de,
-        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: [PATCH 6/6] btrfs: split btrfs_direct_IO to read and write part
-Date:   Wed,  8 Jul 2020 16:19:26 -0500
-Message-Id: <20200708211926.7706-7-rgoldwyn@suse.de>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200708211926.7706-1-rgoldwyn@suse.de>
-References: <20200708211926.7706-1-rgoldwyn@suse.de>
+        id S1726285AbgGHWdc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jul 2020 18:33:32 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:54332 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726174AbgGHWdc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jul 2020 18:33:32 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 4F40ED5A629;
+        Thu,  9 Jul 2020 08:33:28 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jtId4-0000si-RL; Thu, 09 Jul 2020 08:33:26 +1000
+Date:   Thu, 9 Jul 2020 08:33:26 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>
+Subject: Re: [RFC PATCH 1/2] xfs: arrange all unlinked inodes into one list
+Message-ID: <20200708223326.GO2005@dread.disaster.area>
+References: <20200707135741.487-1-hsiangkao@redhat.com>
+ <20200707135741.487-2-hsiangkao@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200707135741.487-2-hsiangkao@redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=Nq5i_PvIb6j-hZL2PpsA:9 a=7Zwj6sZBwVKJAoWSPKxL6X1jA+E=:19
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Tue, Jul 07, 2020 at 09:57:40PM +0800, Gao Xiang wrote:
+> There is no need to keep old multiple short unlink inode buckets
+> since we have an in-memory double linked list for all unlinked
+> inodes.
+> 
+> Apart from the perspective of the necessity, the main advantage
+> is that the log and AGI update can be reduced since each AG has
+> the only one head now, which is implemented in the following patch.
+> 
+> Therefore, this patch applies the new way in xfs_iunlink() and
+> keep the old approach in xfs_iunlink_remove_inode() path as well
+> so inode eviction can still work properly in recovery.
+> 
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+>  fs/xfs/xfs_inode.c | 40 ++++++++++++++++++++--------------------
+>  1 file changed, 20 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index ab288424764c..10565fa5ace4 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -33,6 +33,7 @@
+>  #include "xfs_symlink.h"
+>  #include "xfs_trans_priv.h"
+>  #include "xfs_log.h"
+> +#include "xfs_log_priv.h"
+>  #include "xfs_bmap_btree.h"
+>  #include "xfs_reflink.h"
+>  #include "xfs_iunlink_item.h"
+> @@ -1955,25 +1956,32 @@ xfs_iunlink_update_bucket(
+>  	struct xfs_trans	*tp,
+>  	xfs_agnumber_t		agno,
+>  	struct xfs_buf		*agibp,
+> -	unsigned int		bucket_index,
+> +	xfs_agino_t		old_agino,
+>  	xfs_agino_t		new_agino)
+>  {
+> +	struct xlog		*log = tp->t_mountp->m_log;
+>  	struct xfs_agi		*agi = agibp->b_addr;
+>  	xfs_agino_t		old_value;
+> -	int			offset;
+> +	unsigned int		bucket_index;
+> +	int                     offset;
+>  
+>  	ASSERT(xfs_verify_agino_or_null(tp->t_mountp, agno, new_agino));
+>  
+> +	bucket_index = 0;
+> +	/* During recovery, the old multiple bucket index can be applied */
+> +	if (!log || log->l_flags & XLOG_RECOVERY_NEEDED) {
+> +		ASSERT(old_agino != NULLAGINO);
+> +
+> +		if (be32_to_cpu(agi->agi_unlinked[0]) != old_agino)
+> +			bucket_index = old_agino % XFS_AGI_UNLINKED_BUCKETS;
+> +	}
 
-The read and write versions don't have anything in common except for the
-call to iomap_dio_rw.  So split this function, and merge each half into
-its only caller.
+Ok, so you are doing this because you changed the function to pass
+in an agino rather than a bucket index from the caller context. So
+now you have to look up a structure to determine what the caller
+context was to determine what the bucket index we need to use is.
 
-Originally proposed by Christoph Hellwig <hch@lst.de>
+Seems like we probably should have kept passing in the bucket index
+from the caller because that's where the knowledge of what bucket we
+need to update comes from?
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- fs/btrfs/ctree.h |  4 +-
- fs/btrfs/file.c  | 95 +++++++++++++++++++++++++++++++++++++++++++-----
- fs/btrfs/inode.c | 82 +----------------------------------------
- 3 files changed, 90 insertions(+), 91 deletions(-)
+And in that case, the higher level code should be checking for the
+log recovery case when selecting the bucket, not hiding it deep in
+the guts of the code here....
 
-diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
-index 677f170434e3..1037969cda63 100644
---- a/fs/btrfs/ctree.h
-+++ b/fs/btrfs/ctree.h
-@@ -28,6 +28,7 @@
- #include <linux/dynamic_debug.h>
- #include <linux/refcount.h>
- #include <linux/crc32c.h>
-+#include <linux/iomap.h>
- #include "extent-io-tree.h"
- #include "extent_io.h"
- #include "extent_map.h"
-@@ -2935,7 +2936,8 @@ int btrfs_writepage_cow_fixup(struct page *page, u64 start, u64 end);
- void btrfs_writepage_endio_finish_ordered(struct page *page, u64 start,
- 					  u64 end, int uptodate);
- extern const struct dentry_operations btrfs_dentry_operations;
--ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter);
-+extern const struct iomap_ops btrfs_dio_iomap_ops;
-+extern const struct iomap_dio_ops btrfs_dops;
- 
- /* ioctl.c */
- long btrfs_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
-diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-index 9d486350f1bf..8c738f8101c4 100644
---- a/fs/btrfs/file.c
-+++ b/fs/btrfs/file.c
-@@ -1825,21 +1825,65 @@ static noinline ssize_t btrfs_buffered_write(struct kiocb *iocb,
- 	return num_written ? num_written : ret;
- }
- 
--static ssize_t __btrfs_direct_write(struct kiocb *iocb, struct iov_iter *from)
-+static ssize_t check_direct_IO(struct btrfs_fs_info *fs_info,
-+			       const struct iov_iter *iter, loff_t offset)
-+{
-+	const unsigned int blocksize_mask = fs_info->sectorsize - 1;
-+
-+	if (offset & blocksize_mask)
-+		return -EINVAL;
-+
-+	if (iov_iter_alignment(iter) & blocksize_mask)
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
-+static ssize_t btrfs_direct_write(struct kiocb *iocb, struct iov_iter *from)
- {
- 	struct file *file = iocb->ki_filp;
- 	struct inode *inode = file_inode(file);
--	loff_t pos;
--	ssize_t written;
-+	struct btrfs_fs_info *fs_info = btrfs_sb(inode->i_sb);
-+	loff_t pos = iocb->ki_pos;
-+	ssize_t written = 0;
- 	ssize_t written_buffered;
- 	loff_t endbyte;
- 	int err;
-+	size_t count = 0;
-+	bool relock = false;
-+	int flags = IOMAP_DIO_RWF_NO_STALE_PAGECACHE;
- 
--	written = btrfs_direct_IO(iocb, from);
-+	if (check_direct_IO(fs_info, from, pos))
-+		goto buffered;
-+
-+	count = iov_iter_count(from);
-+	/*
-+	 * If the write DIO is beyond the EOF, we need update the isize, but it
-+	 * is protected by i_mutex. So we can not unlock the i_mutex at this
-+	 * case.
-+	 */
-+	if (pos + count <= inode->i_size) {
-+		inode_unlock(inode);
-+		relock = true;
-+	} else if (iocb->ki_flags & IOCB_NOWAIT) {
-+		return -EAGAIN;
-+	}
-+
-+	if (is_sync_kiocb(iocb))
-+		flags |= IOMAP_DIO_RWF_SYNCIO;
-+
-+	down_read(&BTRFS_I(inode)->dio_sem);
-+	written = iomap_dio_rw(iocb, from, &btrfs_dio_iomap_ops, &btrfs_dops,
-+			       flags);
-+	up_read(&BTRFS_I(inode)->dio_sem);
-+
-+	if (relock)
-+		inode_lock(inode);
- 
- 	if (written < 0 || !iov_iter_count(from))
- 		return written;
- 
-+buffered:
- 	pos = iocb->ki_pos;
- 	written_buffered = btrfs_buffered_write(iocb, from);
- 	if (written_buffered < 0) {
-@@ -1990,7 +2034,7 @@ static ssize_t btrfs_file_write_iter(struct kiocb *iocb,
- 		atomic_inc(&BTRFS_I(inode)->sync_writers);
- 
- 	if (iocb->ki_flags & IOCB_DIRECT) {
--		num_written = __btrfs_direct_write(iocb, from);
-+		num_written = btrfs_direct_write(iocb, from);
- 	} else {
- 		num_written = btrfs_buffered_write(iocb, from);
- 		if (num_written > 0)
-@@ -3504,16 +3548,47 @@ static int btrfs_file_open(struct inode *inode, struct file *filp)
- 	return generic_file_open(inode, filp);
- }
- 
-+static int check_direct_read(struct btrfs_fs_info *fs_info,
-+			     const struct iov_iter *iter, loff_t offset)
-+{
-+	int ret;
-+	int i, seg;
-+
-+	ret = check_direct_IO(fs_info, iter, offset);
-+	if (ret < 0)
-+		return ret;
-+
-+	for (seg = 0; seg < iter->nr_segs; seg++)
-+		for (i = seg + 1; i < iter->nr_segs; i++)
-+			if (iter->iov[seg].iov_base == iter->iov[i].iov_base)
-+				return -EINVAL;
-+	return 0;
-+}
-+
-+static ssize_t btrfs_direct_read(struct kiocb *iocb, struct iov_iter *to)
-+{
-+	struct inode *inode = file_inode(iocb->ki_filp);
-+	ssize_t ret;
-+	int flags = IOMAP_DIO_RWF_NO_STALE_PAGECACHE;
-+
-+	if (check_direct_read(btrfs_sb(inode->i_sb), to, iocb->ki_pos))
-+		return 0;
-+
-+	if (is_sync_kiocb(iocb))
-+		flags |= IOMAP_DIO_RWF_SYNCIO;
-+
-+	inode_lock_shared(inode);
-+	ret = iomap_dio_rw(iocb, to, &btrfs_dio_iomap_ops, &btrfs_dops, flags);
-+	inode_unlock_shared(inode);
-+	return ret;
-+}
-+
- static ssize_t btrfs_file_read_iter(struct kiocb *iocb, struct iov_iter *to)
- {
- 	ssize_t ret = 0;
- 
- 	if (iocb->ki_flags & IOCB_DIRECT) {
--		struct inode *inode = file_inode(iocb->ki_filp);
--
--		inode_lock_shared(inode);
--		ret = btrfs_direct_IO(iocb, to);
--		inode_unlock_shared(inode);
-+		ret = btrfs_direct_read(iocb, to);
- 		if (ret < 0)
- 			return ret;
- 	}
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 264b676ebf29..864415a17b1f 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -29,7 +29,6 @@
- #include <linux/swap.h>
- #include <linux/migrate.h>
- #include <linux/sched/mm.h>
--#include <linux/iomap.h>
- #include <asm/unaligned.h>
- #include "misc.h"
- #include "ctree.h"
-@@ -7844,92 +7843,15 @@ static blk_qc_t btrfs_submit_direct(struct inode *inode, struct iomap *iomap,
- 	return BLK_QC_T_NONE;
- }
- 
--static ssize_t check_direct_IO(struct btrfs_fs_info *fs_info,
--			       const struct iov_iter *iter, loff_t offset)
--{
--	int seg;
--	int i;
--	unsigned int blocksize_mask = fs_info->sectorsize - 1;
--	ssize_t retval = -EINVAL;
--
--	if (offset & blocksize_mask)
--		goto out;
--
--	if (iov_iter_alignment(iter) & blocksize_mask)
--		goto out;
--
--	/* If this is a write we don't need to check anymore */
--	if (iov_iter_rw(iter) != READ || !iter_is_iovec(iter))
--		return 0;
--	/*
--	 * Check to make sure we don't have duplicate iov_base's in this
--	 * iovec, if so return EINVAL, otherwise we'll get csum errors
--	 * when reading back.
--	 */
--	for (seg = 0; seg < iter->nr_segs; seg++) {
--		for (i = seg + 1; i < iter->nr_segs; i++) {
--			if (iter->iov[seg].iov_base == iter->iov[i].iov_base)
--				goto out;
--		}
--	}
--	retval = 0;
--out:
--	return retval;
--}
--
--static const struct iomap_ops btrfs_dio_iomap_ops = {
-+const struct iomap_ops btrfs_dio_iomap_ops = {
- 	.iomap_begin            = btrfs_dio_iomap_begin,
- 	.iomap_end              = btrfs_dio_iomap_end,
- };
- 
--static const struct iomap_dio_ops btrfs_dops = {
-+const struct iomap_dio_ops btrfs_dops = {
- 	.submit_io		= btrfs_submit_direct,
- };
- 
--ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
--{
--	struct file *file = iocb->ki_filp;
--	struct inode *inode = file->f_mapping->host;
--	struct btrfs_fs_info *fs_info = btrfs_sb(inode->i_sb);
--	struct extent_changeset *data_reserved = NULL;
--	loff_t offset = iocb->ki_pos;
--	size_t count = 0;
--	bool relock = false;
--	ssize_t ret;
--	int flags = IOMAP_DIO_RWF_NO_STALE_PAGECACHE;
--
--	if (check_direct_IO(fs_info, iter, offset))
--		return 0;
--
--	count = iov_iter_count(iter);
--	if (iov_iter_rw(iter) == WRITE) {
--		/*
--		 * If the write DIO is beyond the EOF, we need update
--		 * the isize, but it is protected by i_mutex. So we can
--		 * not unlock the i_mutex at this case.
--		 */
--		if (offset + count <= inode->i_size) {
--			inode_unlock(inode);
--			relock = true;
--		}
--		down_read(&BTRFS_I(inode)->dio_sem);
--	}
--
--	if (is_sync_kiocb(iocb))
--		flags |= IOMAP_DIO_RWF_SYNCIO;
--
--	ret = iomap_dio_rw(iocb, iter, &btrfs_dio_iomap_ops, &btrfs_dops,
--			flags);
--
--	if (iov_iter_rw(iter) == WRITE) {
--		up_read(&BTRFS_I(inode)->dio_sem);
--	}
--	if (relock)
--		inode_lock(inode);
--	extent_changeset_free(data_reserved);
--	return ret;
--}
--
- static int btrfs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
- 		__u64 start, __u64 len)
- {
+> +
+>  	old_value = be32_to_cpu(agi->agi_unlinked[bucket_index]);
+>  	trace_xfs_iunlink_update_bucket(tp->t_mountp, agno, bucket_index,
+>  			old_value, new_agino);
+>  
+> -	/*
+> -	 * We should never find the head of the list already set to the value
+> -	 * passed in because either we're adding or removing ourselves from the
+> -	 * head of the list.
+> -	 */
+> -	if (old_value == new_agino) {
+> +	/* check if the old agi_unlinked head is as expected */
+> +	if (old_value != old_agino) {
+>  		xfs_buf_mark_corrupt(agibp);
+>  		return -EFSCORRUPTED;
+>  	}
+
+This looks like a change of behaviour - it no longer checks against
+the inode we are about to add/remove from the list, but instead
+checks that old inode is what we found on the list. We're not
+concerned that what we found on the list matches what the caller
+found on the list and passed us - we're concerned about doing a
+double add/remove of the current inode...
+
+> @@ -2001,14 +2009,13 @@ xfs_iunlink_insert_inode(
+>  	xfs_agino_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+>  	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+>  	xfs_agino_t		next_agino;
+> -	short			bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
+>  
+>  	/*
+>  	 * Get the index into the agi hash table for the list this inode will
+>  	 * go on.  Make sure the pointer isn't garbage and that this inode
+>  	 * isn't already on the list.
+>  	 */
+> -	next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
+> +	next_agino = be32_to_cpu(agi->agi_unlinked[0]);
+>  	if (next_agino == agino ||
+>  	    !xfs_verify_agino_or_null(mp, agno, next_agino)) {
+>  		xfs_buf_mark_corrupt(agibp);
+> @@ -2036,7 +2043,7 @@ xfs_iunlink_insert_inode(
+>  	}
+>  
+>  	/* Point the head of the list to point to this inode. */
+> -	return xfs_iunlink_update_bucket(tp, agno, agibp, bucket_index, agino);
+> +	return xfs_iunlink_update_bucket(tp, agno, agibp, next_agino, agino);
+>  }
+>  
+>  /*
+> @@ -2051,27 +2058,20 @@ xfs_iunlink_remove_inode(
+>  	struct xfs_inode	*ip)
+>  {
+>  	struct xfs_mount	*mp = tp->t_mountp;
+> -	struct xfs_agi		*agi = agibp->b_addr;
+>  	xfs_agino_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+>  	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+>  	xfs_agino_t		next_agino = ip->i_next_unlinked;
+> -	short			bucket_index = agino % XFS_AGI_UNLINKED_BUCKETS;
+>  	int			error;
+>  
+>  	if (ip->i_prev_unlinked == NULLAGINO) {
+>  		/* remove from head of list */
+> -		if (be32_to_cpu(agi->agi_unlinked[bucket_index]) != agino) {
+> -			xfs_buf_mark_corrupt(agibp);
+> -			return -EFSCORRUPTED;
+> -		}
+>  		if (next_agino == agino ||
+>  		    !xfs_verify_agino_or_null(mp, agno, next_agino))
+>  			return -EFSCORRUPTED;
+>  
+> -		error = xfs_iunlink_update_bucket(tp, agno, agibp,
+> -					bucket_index, next_agino);
+> +		error = xfs_iunlink_update_bucket(tp, agno, agibp, agino, next_agino);
+>  		if (error)
+> -			return -EFSCORRUPTED;
+> +			return error;
+
+i.e. this is the point where we know we need to remove from the head
+of the unlinked list and all the bucket selection and verification
+should probably remain here...
+
 -- 
-2.26.2
-
+Dave Chinner
+david@fromorbit.com
