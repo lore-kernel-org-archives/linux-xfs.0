@@ -2,309 +2,325 @@ Return-Path: <SRS0=XuOj=AU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF865C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 00:55:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FF61C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 02:25:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86E7820663
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 00:55:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iJjeO8Nl"
+	by mail.kernel.org (Postfix) with ESMTP id 5DF55206F6
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 02:25:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726117AbgGIAzn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jul 2020 20:55:43 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:33650 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725903AbgGIAzm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jul 2020 20:55:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594256140;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=oM1uC9sWZ0abh9OU+qgayi0MaWQOFY4GEZmsR+Cz2EY=;
-        b=iJjeO8NljsJ1RmoopU3etVmx9sMwqv9ADFQ1YUxnSBLYpOwzgHcNrNF0lKYqEKe8FiQvkH
-        Mz2YgVC17gYVSRIEzSK6WgZb91EsIxm5jSBta0fVPkgxouj4bn74988Yxg0EbbxFTlxNGT
-        BVr3Ns1YRi6lKKDj3lYNSqLqLKU8RXQ=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-278-gdyEXQb9Oe2jywu5pkO_UQ-1; Wed, 08 Jul 2020 20:55:39 -0400
-X-MC-Unique: gdyEXQb9Oe2jywu5pkO_UQ-1
-Received: by mail-pl1-f199.google.com with SMTP id p14so203692plq.19
-        for <linux-xfs@vger.kernel.org>; Wed, 08 Jul 2020 17:55:38 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=oM1uC9sWZ0abh9OU+qgayi0MaWQOFY4GEZmsR+Cz2EY=;
-        b=QCJRBPyS+3kYVYlooUvDBsq0oh4Yr9arg+Zl6fNyTB2waBpem8tB6FystAfeN3h59k
-         67OGk6kwVIRB/7GVB7bkseoal7V0lgN23+2Qo5OsR4JEXCRwNhl9fkYtaBj6tKTekLQy
-         rWAnzKRHcJ7GZttdLbS57cojCEEVkdU1spmqPC0uXcWi9OXpueiirhlaEZjZTPmB1Khe
-         NVmHmZfZMIHAbCqMHE8T75/yeqf+eHh8x6eELXeRXOlYT/N72I4IOTW1yT68l952jUbZ
-         yLvx3o+fpyYsycOJiYMnWJGYBlUloURbZeZJBTs3i8WvfPSC/xgYMcZxDXA1XAmaXddo
-         qmew==
-X-Gm-Message-State: AOAM533oInQ4lsS54v/7FrqVKU3iYHdm2GxM6zP0eHPqdDQaTkUctE5J
-        /hCCMhh4K+YyZ7doO25BBVoVqyQBdlXMto3j/fCcZUMcuv8edw/YtZJKy98w3+xEcezWoD6+tbW
-        /h5IeovcBFSXXvzslf7N0
-X-Received: by 2002:a17:902:968b:: with SMTP id n11mr51018326plp.331.1594256137522;
-        Wed, 08 Jul 2020 17:55:37 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxuxvc67BJOEjOH91jRAjlcM56yqfpnC69fglx/EmpqDjzUyp5yU783++hRBDEacVeDIWP6GQ==
-X-Received: by 2002:a17:902:968b:: with SMTP id n11mr51018311plp.331.1594256137102;
-        Wed, 08 Jul 2020 17:55:37 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id q6sm832633pfg.76.2020.07.08.17.55.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jul 2020 17:55:36 -0700 (PDT)
-Date:   Thu, 9 Jul 2020 08:55:26 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>
-Subject: Re: [RFC PATCH 2/2] xfs: don't access AGI on unlinked inodes if it
- can
-Message-ID: <20200709005526.GC15249@xiangao.remote.csb>
-References: <20200707135741.487-1-hsiangkao@redhat.com>
- <20200707135741.487-3-hsiangkao@redhat.com>
- <20200708233311.GP2005@dread.disaster.area>
+        id S1726124AbgGICZo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 8 Jul 2020 22:25:44 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:41858 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726082AbgGICZo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jul 2020 22:25:44 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 16768D7DE6C;
+        Thu,  9 Jul 2020 12:25:29 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jtMFb-0002D1-VP; Thu, 09 Jul 2020 12:25:27 +1000
+Date:   Thu, 9 Jul 2020 12:25:27 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        fdmanana@gmail.com, dsterba@suse.cz, darrick.wong@oracle.com,
+        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: always fall back to buffered I/O after invalidation failures,
+ was: Re: [PATCH 2/6] iomap: IOMAP_DIO_RWF_NO_STALE_PAGECACHE return if page
+ invalidation fails
+Message-ID: <20200709022527.GQ2005@dread.disaster.area>
+References: <20200629192353.20841-1-rgoldwyn@suse.de>
+ <20200629192353.20841-3-rgoldwyn@suse.de>
+ <20200701075310.GB29884@lst.de>
+ <20200707124346.xnr5gtcysuzehejq@fiona>
+ <20200707125705.GK25523@casper.infradead.org>
+ <20200707130030.GA13870@lst.de>
+ <20200708065127.GM2005@dread.disaster.area>
+ <20200708135437.GP25523@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200708233311.GP2005@dread.disaster.area>
+In-Reply-To: <20200708135437.GP25523@casper.infradead.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8
+        a=SxJXpkryYG3jv73f6oUA:9 a=CjuIK1q_8ugA:10 a=DiKeHqHhRZ4A:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 09, 2020 at 09:33:11AM +1000, Dave Chinner wrote:
-> On Tue, Jul 07, 2020 at 09:57:41PM +0800, Gao Xiang wrote:
-> > Currently, we use AGI buffer lock to protect in-memory linked list for
-> > unlinked inodes but since it's not necessary to modify AGI unless the
-> > head of the unlinked list is modified. So let's removing the AGI buffer
-> > modification dependency if possible, including 1) adding another per-AG
-> > dedicated lock to protect the whole list and 2) inserting unlinked
-> > inodes from tail.
+On Wed, Jul 08, 2020 at 02:54:37PM +0100, Matthew Wilcox wrote:
+> On Wed, Jul 08, 2020 at 04:51:27PM +1000, Dave Chinner wrote:
+> > On Tue, Jul 07, 2020 at 03:00:30PM +0200, Christoph Hellwig wrote:
+> > > On Tue, Jul 07, 2020 at 01:57:05PM +0100, Matthew Wilcox wrote:
+> > > > Indeed, I'm in favour of not invalidating
+> > > > the page cache at all for direct I/O.  For reads, I think the page cache
+> > > > should be used to satisfy any portion of the read which is currently
+> > > > cached.  For writes, I think we should write into the page cache pages
+> > > > which currently exist, and then force those pages to be written back,
+> > > > but left in cache.
+> > > 
+> > > Something like that, yes.
 > > 
-> > For 2), the tail of bucket 0 is now recorded in perag for xfs_iunlink()
-> > to use. xfs_iunlink_remove() still support old multiple short bucket
-> > lists for recovery code.
+> > So are we really willing to take the performance regression that
+> > occurs from copying out of the page cache consuming lots more CPU
+> > than an actual direct IO read? Or that direct IO writes suddenly
+> > serialise because there are page cache pages and now we have to do
+> > buffered IO?
+> > 
+> > Direct IO should be a deterministic, zero-copy IO path to/from
+> > storage. Using the CPU to copy data during direct IO is the complete
+> > opposite of the intended functionality, not to mention the behaviour
+> > that many applications have been careful designed and tuned for.
 > 
-> I would split this into two separate patches. One to move to a perag
-> based locking strategy, another to change from head to tail
-> addition as they are largely independent algorithmic changes.
+> Direct I/O isn't deterministic though.
 
-Yes, that is much better from the perspective of spilting patches and
-I thought that before. It seems that is like 2 steps but the proposed
-target solution is as a whole (in other words, 2 steps are code-related)
-and I'm not sure how large these code is sharable or can be inherited
-but rather than introduce some code in patch 2 and then remove immediately
-and turn into a new code in patch 3). I'm not sure how large logic could
-be sharable between these 2 dependent steps so I didn't do that.
+When all the application is doing is direct IO, it is as
+deterministic as the underlying storage behaviour. This is the best
+we can possibly do from the perspective of the filesystem, and this
+is largely what Direct IO requires from the filesystem.
 
-I will spilt patches in the next RFC version to make a try.
+Direct IO starts from delegating all responsibility for IO
+synchronisation data coherency and integrity to userspace, and then
+follows up by requiring the filesystem and kernel to stay out of the
+IO path except where it is absolutely necessary to read or write
+data to/from the underlying storage hardware. Serving Direct IO from
+the page cache violates the second of these requirements.
 
+> If the file isn't shared, then
+> it works great, but as soon as you get mixed buffered and direct I/O,
+> everything is already terrible.
+
+Right, but that's *the rare exception* for applications using direct
+IO, not the common fast path. It is the slow path where -shit has
+already gone wrong on the production machine-, and it most
+definitely does not change the DIO requirements that the filesystem
+needs to provide userspace via the direct IO path.
+
+Optimising the slow exception path is fine if it does not affect the
+guarantees we try to provide through the common/fast path. If it is
+does affect behaviour of the fast path, then we must be able to
+either turn it off or provide our own alternative implementation
+that does not have that cost.
+
+> Direct I/Os perform pagecache lookups
+> already, but instead of using the data that we found in the cache, we
+> (if it's dirty) write it back, wait for the write to complete, remove
+> the page from the pagecache and then perform another I/O to get the data
+> that we just wrote out!  And then the app that's using buffered I/O has
+> to read it back in again.
+
+Yup, that's because we have a history going back 20+ years of people
+finding performance regressions in applications using direct IO when
+we leave incorrectly left pages in the page cache rather than
+invalidating them and continuing to do direct IO.
+
+
+> Nobody's proposing changing Direct I/O to exclusively work through the
+> pagecache.  The proposal is to behave less weirdly when there's already
+> data in the pagecache.
+
+No, the proposal it to make direct IO behave *less
+deterministically* if there is data in the page cache.
+
+e.g. Instead of having a predicatable submission CPU overhead and
+read latency of 100us for your data, this proposal makes the claim
+that it is always better to burn 10x the IO submission CPU for a
+single IO to copy the data and give that specific IO 10x lower
+latency than it is to submit 10 async IOs to keep the IO pipeline
+full.
+
+What it fails to take into account is that in spending that CPU time
+to copy the data, we haven't submitted 10 other IOs and so the
+actual in-flight IO for the application has decreased. If
+performance comes from keeping the IO pipeline as close to 100% full
+as possible, then copying the data out of the page cache will cause
+performance regressions.
+
+i.e. Hit 5 page cache pages in 5 IOs in a row, and the IO queue
+depth craters because we've only fulfilled 5 complete IOs instead of
+submitting 50 entire IOs. This is the hidden cost of synchronous IO
+via CPU data copying vs async IO via hardware offload, and if we
+take that into account we must look at future hardware performance
+trends to determine if this cost is going to increase or decrease in
+future.
+
+That is: CPUs are not getting faster anytime soon. IO subsystems are
+still deep in the "performance doubles every 2 years" part of the
+technology curve (pcie 3.0->4.0 just happened, 4->5 is a year away,
+5->6 is 3-4 years away, etc). Hence our reality is that we are deep
+within a performance trend curve that tells us synchronous CPU
+operations are not getting faster, but IO bandwidth and IOPS are
+going to increase massively over the next 5-10 years. Hence putting
+(already expensive) synchronous CPU operations in the asynchronous
+zero-data-touch IO fast path is -exactly the wrong direction to be
+moving-.
+
+This is simple math. The gap between IO latency and bandwidth and
+CPU addressable memory latency and bandwidth is closing all the
+time, and the closer that gap gets the less sense it makes to use
+CPU addressable memory for buffering syscall based read and write
+IO. We are not quite yet at the cross-over point, but we really
+aren't that far from it.
+
+> I have had an objection raised off-list.  In a scenario with a block
+> device shared between two systems and an application which does direct
+> I/O, everything is normally fine.  If one of the systems uses tar to
+> back up the contents of the block device then the application on that
+> system will no longer see the writes from the other system because
+> there's nothing to invalidate the pagecache on the first system.
+
+I'm sorry you have to deal with that. :(
+
+Back in the world of local filesystems, sharing block device across
+systems without using a clustered filesystem to maintain storage
+device level data coherency across those multiple machines is not
+supported in any way, shape or form, direct IO or not.
+
+> Unfortunately, this is in direct conflict with the performance
+> problem caused by some little arsewipe deciding to do:
 > 
-> > Note that some paths take AGI lock in its transaction in advance,
-> > so the proper locking order is only AGI lock -> unlinked list lock.
-> 
-> These paths should be documented in the commit message as well
-> as in code comments so the reviewer is aware of those code paths
-> and can verify that your assumptions about locking order are
-> correct.
+> $ while true; do dd if=/lib/x86_64-linux-gnu/libc-2.30.so iflag=direct of=/dev/null; done
 
-Yeah, It has been documented in the following.
+This has come up in the past, and I'm pretty sure I sent a patch to
+stop iomap from invalidating the cache on DIO reads because the same
+data is on disk as is in memory and it solves this whole problem.  I
+cannot find that patch in the archives - I must have sent it inline
+to the discussion as I'm about to do again.
 
-+xfs_iunlink(
- 	struct xfs_trans	*tp,
--	struct xfs_buf		*agibp,
- 	struct xfs_inode	*ip)
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
--	struct xfs_agi		*agi = agibp->b_addr;
--	xfs_agino_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-+	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
-+	struct xfs_perag	*pag;
-+	struct xfs_inode	*pip;
- 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
--	xfs_agino_t		next_agino;
-+	int			error;
-+
-+	ASSERT(VFS_I(ip)->i_nlink == 0);
-+	ASSERT(VFS_I(ip)->i_mode != 0);
-+	trace_xfs_iunlink(ip);
-+
-+	pag = xfs_perag_get(mp, agno);
+Yeah, now it comes back to me - the context was about using
+RWF_NOWAIT to detect page cache residency for page cache timing
+attacks and I mentioned doing exactly the above as a mechanism to
+demand trigger invalidation of the mapped page cache. The
+solution was to only invalidate the page cache on DIO writes, but we
+didn't do it straight away because I needed to audit the XFS code to
+determine if there were still real reasons it was necessary.
+
+The patch is attached below. The DIO read path is unchanged except
+for the fact it skips the invalidation.  i.e. the dio read still
+goes to disk, but we can leave the data in memory because it is the
+same as what was on disk. This does not perturb DIO behaviour by
+inserting synchronous page cache copies or exclusive inode locking
+into the async DIO path and so will not cause DIO performance
+regressions. However, it does allow mmap() and read() to be served
+from cache at the same time as we issue overlapping DIO reads.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+iomap: Only invalidate page cache pages on direct IO writes
+
+From: Dave Chinner <dchinner@redhat.com>
+
+The historic requirement for XFS to invalidate cached pages on
+direct IO reads has been lost in the twisty pages of history - it was
+inherited from Irix, which implemented page cache invalidation on
+read as a method of working around problems synchronising page
+cache state with uncached IO.
+
+XFS has carried this ever since. In the initial linux ports it was
+necessary to get mmap and DIO to play "ok" together and not
+immediately corrupt data. This was the state of play until the linux
+kernel had infrastructure to track unwritten extents and synchronise
+page faults with allocations and unwritten extent conversions
+(->page_mkwrite infrastructure). IOws, the page cache invalidation
+on DIO read was necessary to prevent trivial data corruptions. This
+didn't solve all the problems, though.
+
+There were peformance problems if we didn't invalidate the entire
+page cache over the file on read - we couldn't easily determine if
+the cached pages were over the range of the IO, and invalidation
+required taking a serialising lock (i_mutex) on the inode. This
+serialising lock was an issue for XFS, as it was the only exclusive
+lock in the direct Io read path.
+
+Hence if there were any cached pages, we'd just invalidate the
+entire file in one go so that subsequent IOs didn't need to take the
+serialising lock. This was a problem that prevented ranged
+invalidation from being particularly useful for avoiding the
+remaining coherency issues. This was solved with the conversion of
+i_mutex to i_rwsem and the conversion of the XFS inode IO lock to
+use i_rwsem. Hence we could now just do ranged invalidation and the
+performance problem went away.
+
+However, page cache invalidation was still needed to serialise
+sub-page/sub-block zeroing via direct IO against buffered IO because
+bufferhead state attached to the cached page could get out of whack
+when direct IOs were issued.  We've removed bufferheads from the
+XFS code, and we don't carry any extent state on the cached pages
+anymore, and so this problem has gone away, too.
+
+IOWs, it would appear that we don't have any good reason to be
+invalidating the page cache on DIO reads anymore. Hence remove the
+invalidation on read because it is unnecessary overhead,
+not needed to maintain coherency between mmap/buffered access and
+direct IO anymore, and prevents anyone from using direct IO reads
+from intentionally invalidating the page cache of a file.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/iomap/direct-io.c | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index ec7b78e6feca..ef0059eb34b5 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -475,23 +475,24 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (ret)
+ 		goto out_free_dio;
  
- 	/*
--	 * Get the index into the agi hash table for the list this inode will
--	 * go on.  Make sure the pointer isn't garbage and that this inode
--	 * isn't already on the list.
-+	 * some paths (e.g. xfs_create_tmpfile) could take AGI lock
-+	 * in this transaction in advance and the only locking order
-+	 * AGI buf lock -> pag_unlinked_mutex is safe.
-
-> 
-> > 
-> > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> > ---
-> >  fs/xfs/xfs_inode.c       | 251 ++++++++++++++++++++-------------------
-> >  fs/xfs/xfs_log_recover.c |   6 +
-> >  fs/xfs/xfs_mount.c       |   3 +
-> >  fs/xfs/xfs_mount.h       |   3 +
-> >  4 files changed, 144 insertions(+), 119 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 10565fa5ace4..d33e5b198534 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -1994,182 +1994,195 @@ xfs_iunlink_update_bucket(
-> >  }
-> >  
-> >  /*
-> > - * Always insert at the head, so we only have to do a next inode lookup to
-> > - * update it's prev pointer. The AGI bucket will point at the one we are
-> > - * inserting.
-> > + * This is called when the inode's link count has gone to 0 or we are creating
-> > + * a tmpfile via O_TMPFILE.  The inode @ip must have nlink == 0.
-> > + *
-> > + * We place the on-disk inode on a list in the AGI.  It will be pulled from this
-> > + * list when the inode is freed.
-> >   */
-> > -static int
-> > -xfs_iunlink_insert_inode(
-> 
-> Hmmm. Flattening the code also make the patch harder to follow as it
-> combines code movement/rearrangement with algorithmic changes.  We
-> try to separate out code movement/rearrangement into their own
-> patches so that the movement is easy to verify by itself.
-> 
-> Also, the helper functions help document the separation of the
-> unlinked list manipulations from the from setup and locking
-> requirements for the list manipulations, and this largely undoes all
-> that. I added these helpers because it completely untangled the mess
-> that was present before the RFC patchset I posted. THat is, I
-> couldn't easily modify the existing code because it interleaved
-> the locking, the backref hash manipulations and
-> the on-disk list manipulations in ways I found difficult to
-> understand and manage. Short, simple, clear functions are much
-> better than long, multiple operation functions...
-> 
-> i.e. this:
-> 
-> xfs_iunlink()
-> {
-> 
-> 	get locks
-> 	do list insert
-> 	drop locks
-> }
-> 
-> Is better for understanding, maintenance and future modification
-> than:
-> 
-> xfs_iunlink()
-> {
-> 
-> 	get perag
-> 	lock perag
-> 	look at tail of list
-> 	if (empty) {
-> 		unlock perag
-> 		read/lock AGI
-> 		lock perag
-> 		look at tail of list
-> 		if (empty)
-> 			do head insert
-> 			goto out
-> 	}
-> 	do tail insert
-> out:
-> 	update inode/pag tails
-> 	unlock
-> 	drop perag
-> }
-> 
-> It's trivial for a reader to understand what the first version of
-> xfs_iunlink() is going to do without needing to understand the
-> intraccies of the locking strategies. However, it takes time and
-> effort to undestand exactly waht the second one is doing because
-> it's not clear where lock ends and list modifications start, nor
-> what the locking rules are for the different modifications that are
-> being made. Essentially, it goes back to the complex
-> locking-intertwined-with-modification-algorithm problem the current
-> TOT code has.
-> 
-> I'd much prefer to see something like this:
-> 
-> /*
->  * Inode allocation in the O_TMPFILE path defines the AGI/unlinked
->  * list lock order as being AGI->perag unlinked list lock. We are
->  * inverting it here as the fast path tail addition does not need to
->  * modify the AGI at all. Hence we only need the AGI lock if the
->  * tail is empty, but if we fail to get it without blocking then we
->  * need to fall back to the slower, correct lock order.
->  */
-> xfs_iunlink_insert_lock()
-> {
-> 	get perag;
-> 	lock_perag();
-> 	if (!tail empty)
-> 		return;
-> 	if (trylock AGI)
-> 		return;
-
-(adding some notes here, this patch doesn't use try lock here
- finally but unlock perag and take AGI and relock and recheck tail_empty....
- since the tail non-empty is rare...)
-
-> 
-> 	/*
-> 	 * Slow path, need to lock AGI first. Don't even bother
-> 	 * rechecking tail pointers or trying to optimise for
-> 	 * minimal AGI lock hold time as racing unlink list mods
-> 	 * will all block on the perag lock once we take that. They
-> 	 * will then hit the !tail empty fast path and not require
-> 	 * the AGI lock at all.
-> 	 */
-> 	lock AGI
-> 	lock_perag()
-> 	return;
-> }
-> 
-> The non-AGI locking fast path is slightly different in the remove
-> case, so we'll have a slightly different helper function in that
-> case which checks where the inode being removed is in the list.
-> 
-> In both cases, though, the unlock should be the same:
-> 
-> xfs_iunlink_unlock()
-> {
-> 	/* Does not unlock AGI, ever. commit does that. */
-> 	unlock perag
-> 	put perag
-> }
-> 
-> This keeps the list locking completely separate from the list
-> manipulations and allows us to document the locking constraints and
-> reasons for why it is or isn't optimised for specific conditions
-> without cluttering up the list manipulations code.
-
-Yeah, the _lock and _unlock pair is helpful, I will go for this direction.
-
-Thanks,
-Gao Xiang
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+-	/*
+-	 * Try to invalidate cache pages for the range we're direct
+-	 * writing.  If this invalidation fails, tough, the write will
+-	 * still work, but racing two incompatible write paths is a
+-	 * pretty crazy thing to do, so we don't support it 100%.
+-	 */
+-	ret = invalidate_inode_pages2_range(mapping,
+-			pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
+-	if (ret)
+-		dio_warn_stale_pagecache(iocb->ki_filp);
+-	ret = 0;
++	if (iov_iter_rw(iter) == WRITE) {
++		/*
++		 * Try to invalidate cache pages for the range we're direct
++		 * writing.  If this invalidation fails, tough, the write will
++		 * still work, but racing two incompatible write paths is a
++		 * pretty crazy thing to do, so we don't support it 100%.
++		 */
++		ret = invalidate_inode_pages2_range(mapping,
++				pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
++		if (ret)
++			dio_warn_stale_pagecache(iocb->ki_filp);
++		ret = 0;
+ 
+-	if (iov_iter_rw(iter) == WRITE && !wait_for_completion &&
+-	    !inode->i_sb->s_dio_done_wq) {
+-		ret = sb_init_dio_done_wq(inode->i_sb);
+-		if (ret < 0)
+-			goto out_free_dio;
++		if (!wait_for_completion &&
++		    !inode->i_sb->s_dio_done_wq) {
++			ret = sb_init_dio_done_wq(inode->i_sb);
++			if (ret < 0)
++				goto out_free_dio;
+ 	}
+ 
+ 	inode_dio_begin(inode);
