@@ -2,376 +2,670 @@ Return-Path: <SRS0=XuOj=AU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF02EC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 16:12:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27304C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 16:32:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8FDEE2078B
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 16:12:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0D37207FB
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 16:32:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xc2LG5P/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Aqk6702K"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727944AbgGIQMM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Jul 2020 12:12:12 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:55014 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726357AbgGIQML (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 12:12:11 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 069G7pMq194149;
-        Thu, 9 Jul 2020 16:11:40 GMT
+        id S1727096AbgGIQcr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Jul 2020 12:32:47 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:54730 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726408AbgGIQcq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 12:32:46 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 069GWd7w148795;
+        Thu, 9 Jul 2020 16:32:39 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=i3stYrSZ13+uPhOhOyEQWASoeoYjXBvn1KNQ+SmH2qc=;
- b=xc2LG5P/4lNS9g2oVuoaqsMcOwRYCciJ//hjcn48iC94Xcb/ikm6NMuYSp8akPaA/Hc2
- Ukgnu/1J7fBhSZOIJ94UyF2qZlUwGvow6+zz4Z33ucdPYM3U9oQhUVx6f00UgTVXfxxz
- D9BRpfv1K1tgaHMHoyvGIjbviIZxTOWnz/77RITc2E8BpFPrYh9HqYk0V+foKllisLqm
- AyspIoYz/zeo9vlMhY43qKGHS6iqR16pPx4SJrbSFuUXtxN4GTAPTUlmJOqqEJ7LYC9T
- y7eRQKdE3HK0uOCp3gcEhL0b4bLwJahbiTOFP8Ws9eNucKxqOvsdh/8pizuNDqReIddg Ig== 
+ bh=C0NvYQ82KpcpLMALZi4ccbKLwrJob95EPnnP8x5HY3A=;
+ b=Aqk6702KQN03X62qVhLZxKNXk7UDoZfVF4UCB5vPyqJyAzB0iseo3Axnuew0Mdd7SLWX
+ kWDBtgR9Oci8+HeyjaV5M9qMLr6YtS7M/7Y5WozLBEfiljSA7hpolWKraBB2Ki6MEWGV
+ X4W0PCAA4ygtUV1SCuOe3UnSXBGf+LPniTFh37skgdx/SHYrIbpEeLNmb6gCERvwBra4
+ cBwjLuK4OsiDSkLTl3c84F7aPPJKvbOIQ3+VkAnAFv8J2ab8LNDaUJe09BZQVZ93ZcIi
+ Gz/Qmb7RA/P5/J6h4IBt/w0jd2NCyrEbj5SJpcKSX7RMQNYbFsP5fuWmPi0I7SCvVCx8 Ug== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 325y0ajsgm-1
+        by userp2120.oracle.com with ESMTP id 325y0ajwcc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 09 Jul 2020 16:11:40 +0000
+        Thu, 09 Jul 2020 16:32:38 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 069G9MgZ139354;
-        Thu, 9 Jul 2020 16:09:39 GMT
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 069GNLx4183888;
+        Thu, 9 Jul 2020 16:32:35 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 325k3hgsrh-1
+        by userp3020.oracle.com with ESMTP id 325k3hhuq0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 09 Jul 2020 16:09:39 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 069G9SSl007389;
-        Thu, 9 Jul 2020 16:09:28 GMT
+        Thu, 09 Jul 2020 16:32:35 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 069GWXax019212;
+        Thu, 9 Jul 2020 16:32:34 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 09 Jul 2020 09:09:27 -0700
-Date:   Thu, 9 Jul 2020 09:09:26 -0700
+        with ESMTP ; Thu, 09 Jul 2020 09:32:33 -0700
+Date:   Thu, 9 Jul 2020 09:32:30 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        fdmanana@gmail.com, dsterba@suse.cz, cluster-devel@redhat.com,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: always fall back to buffered I/O after invalidation failures,
- was: Re: [PATCH 2/6] iomap: IOMAP_DIO_RWF_NO_STALE_PAGECACHE return if page
- invalidation fails
-Message-ID: <20200709160926.GO7606@magnolia>
-References: <20200629192353.20841-1-rgoldwyn@suse.de>
- <20200629192353.20841-3-rgoldwyn@suse.de>
- <20200701075310.GB29884@lst.de>
- <20200707124346.xnr5gtcysuzehejq@fiona>
- <20200707125705.GK25523@casper.infradead.org>
- <20200707130030.GA13870@lst.de>
- <20200708065127.GM2005@dread.disaster.area>
- <20200708135437.GP25523@casper.infradead.org>
- <20200709022527.GQ2005@dread.disaster.area>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 00/10] xfs: automatic relogging
+Message-ID: <20200709163230.GQ7606@magnolia>
+References: <20200701165116.47344-1-bfoster@redhat.com>
+ <20200702115144.GH2005@dread.disaster.area>
+ <20200702185209.GA58137@bfoster>
+ <20200703004940.GI2005@dread.disaster.area>
+ <20200706160306.GA21048@bfoster>
+ <20200706174257.GG7606@magnolia>
+ <20200707113743.GA33690@bfoster>
+ <20200708164428.GC7625@magnolia>
+ <20200709121530.GA56848@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200709022527.GQ2005@dread.disaster.area>
+In-Reply-To: <20200709121530.GA56848@bfoster>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9677 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 mlxscore=0
- spamscore=0 malwarescore=0 phishscore=0 mlxlogscore=999 suspectscore=7
+ spamscore=0 malwarescore=0 phishscore=0 mlxlogscore=999 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007090116
+ definitions=main-2007090118
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9677 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 clxscore=1015
- lowpriorityscore=0 impostorscore=0 malwarescore=0 bulkscore=0 phishscore=0
- adultscore=0 suspectscore=7 mlxlogscore=999 priorityscore=1501 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007090116
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 malwarescore=0
+ clxscore=1015 impostorscore=0 phishscore=0 suspectscore=0
+ priorityscore=1501 bulkscore=0 lowpriorityscore=0 mlxlogscore=999
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007090119
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 09, 2020 at 12:25:27PM +1000, Dave Chinner wrote:
-> On Wed, Jul 08, 2020 at 02:54:37PM +0100, Matthew Wilcox wrote:
-> > On Wed, Jul 08, 2020 at 04:51:27PM +1000, Dave Chinner wrote:
-> > > On Tue, Jul 07, 2020 at 03:00:30PM +0200, Christoph Hellwig wrote:
-> > > > On Tue, Jul 07, 2020 at 01:57:05PM +0100, Matthew Wilcox wrote:
-> > > > > Indeed, I'm in favour of not invalidating
-> > > > > the page cache at all for direct I/O.  For reads, I think the page cache
-> > > > > should be used to satisfy any portion of the read which is currently
-> > > > > cached.  For writes, I think we should write into the page cache pages
-> > > > > which currently exist, and then force those pages to be written back,
-> > > > > but left in cache.
+On Thu, Jul 09, 2020 at 08:15:30AM -0400, Brian Foster wrote:
+> On Wed, Jul 08, 2020 at 09:44:28AM -0700, Darrick J. Wong wrote:
+> > On Tue, Jul 07, 2020 at 07:37:43AM -0400, Brian Foster wrote:
+> > > On Mon, Jul 06, 2020 at 10:42:57AM -0700, Darrick J. Wong wrote:
+> > > > On Mon, Jul 06, 2020 at 12:03:06PM -0400, Brian Foster wrote:
+> > > > > On Fri, Jul 03, 2020 at 10:49:40AM +1000, Dave Chinner wrote:
+> > > > > > On Thu, Jul 02, 2020 at 02:52:09PM -0400, Brian Foster wrote:
+> > > > > > > On Thu, Jul 02, 2020 at 09:51:44PM +1000, Dave Chinner wrote:
+> > > > > > > > On Wed, Jul 01, 2020 at 12:51:06PM -0400, Brian Foster wrote:
+> > > ...
+> > > > > 
+> > > > > > Consider that a single transaction that contains an EFD for the
+> > > > > > original EFI, and a new EFI for the same extent is effectively
+> > > > > > "relogging the EFI". It does so by atomically cancelling the
+> > > > > > original EFI in the log and creating a new EFI.
+> > > > > > 
+> > > > > 
+> > > > > Right. This is how dfops currently works IIRC.
+> > > > > 
+> > > > > > Now, and EFI is defined on disk as:
+> > > > > > 
+> > > > > > typedef struct xfs_efi_log_format {
+> > > > > >         uint16_t                efi_type;       /* efi log item type */
+> > > > > >         uint16_t                efi_size;       /* size of this item */
+> > > > > >         uint32_t                efi_nextents;   /* # extents to free */
+> > > > > >         uint64_t                efi_id;         /* efi identifier */
+> > > > > >         xfs_extent_t            efi_extents[1]; /* array of extents to free */
+> > > > > > } xfs_efi_log_format_t;
+> > > > > > 
+> > > > > > Which means it can hold up to 2^16-1 individual extents that we
+> > > > > > intend to free. We currently only use one extent per EFI, but if we
+> > > > > > go back in history, they were dynamically sized structures and
+> > > > > > could track arbitrary numbers of extents.
+> > > > > > 
+> > > > > > So, repair needs to track mulitple nested EFIs?
+> > > > > > 
+> > > > > > We cancel the old EFI, log a new EFI with all the old extents and
+> > > > > > the new extent in it. We now have a single EFI in the journal
+> > > > > > containing N+1 extents in it.
+> > > > > > 
+> > > > > 
+> > > > > That's an interesting optimization.
 > > > > 
-> > > > Something like that, yes.
+> > > > Hmm, I hadn't thought about amortizing the cost of maintaining an EFI
+> > > > across as many of the btree block allocations as possible.  That would
+> > > > make the current scheme (which I'll get into below) less scary.
+> > > > 
+> > > > > > Further, an EFD with multiple extents in it is -intended to be
+> > > > > > relogged- multiple times. Every time we free an extent in the EFI,
+> > > > > > we remove it from the EFD and relog the EFD. THis tells log recovery
+> > > > > > that this extent has now been freed, and that it should not replay
+> > > > > > it, even though it is still in the EFI.
+> > > > > > 
+> > > > > > And to prevent the big EFI from pinning the tail of the log while
+> > > > > > EFDs are being processed, we can relog the EFI along with the EFD
+> > > > > > each time the EFD is updated, hence we drag the EFI forwards in
+> > > > > > every high level transaction roll when we are actually freeing the
+> > > > > > extents.
+> > > > > > 
+> > > > > 
+> > > > > Hmm.. I'm not sure that addresses the deadlock problem for repair. That
+> > > > > assumes that EFD updates come at regular enough intervals to keep the
+> > > > > tail moving, but IIRC the bulk loading infrastructure will essentially
+> > > > > log a bunch of EFIs, spend a non-deterministic amount of time doing
+> > > > > work, then log the associated EFDs. So there's still a period of time in
+> > > > > there where we might need to relog intents that aren't otherwise being
+> > > > > updated.
+> > > > > 
+> > > > > Darrick might want to chime in here in case I'm missing something...
+> > > > 
+> > > > I changed the ->claim_block function in the online repair code[3] to
+> > > > relog all of the EFIs (using the strategy Dave outlined above), with the
+> > > > claimed block not present in the new EFI.  I think this means we can't
+> > > > pin the log tail longer than it takes to memcpy a bunch of records into
+> > > > a block and put it on a delwri list, which should be fast enough.
+> > > > 
 > > > 
-> > > So are we really willing to take the performance regression that
-> > > occurs from copying out of the page cache consuming lots more CPU
-> > > than an actual direct IO read? Or that direct IO writes suddenly
-> > > serialise because there are page cache pages and now we have to do
-> > > buffered IO?
+> > > Ah, interesting. So each filled block would relog the intents associated
+> > > with the outstanding reservation for the rebuild. That certainly will
+> > > keep things moving, I'd suspect relogging far more frequently than
+> > > necessary, but correctness first. :)
+> > 
+> > <nod> It's even less bad if you've maximized the number of free extent
+> > records per EFI.
+> > 
+> > > One thing I'm curious about in the broader context of repair is what
+> > > happens if the filesystem crashes mid-rebuild? IIRC the rebuilt tree is
+> > > fake rooted and the above seems to imply we'd have EFDs logged for the
+> > > blocks consumed by the tree. Are those blocks restored to the fs somehow
+> > > or another on a crash recovery?
+> > 
+> > Each time we relog the EFIs, we log exactly the same records as before,
+> > which means that all the blocks in the new btree remain the target of
+> > EFIs until the repair completes.  If we crash before the end, log
+> > recovery will free the entire half-built structure.
+> > 
+> 
+> I'm a little confused by how we log EFIs for exactly the same records as
+> before while the above description says we leave off the claimed block
+> in the new EFI when it rolls. Does the roll in this scenario complete
+> the previous EFI(s) with an EFD and create a new EFI without the claimed
+> block? For example, suppose we do our bulk reservation and log the
+> necessary EFIs, start the rebuild, claim the first block, relog the
+> outstanding EFI without the claimed block, and then the system crashes.
+> What happens with the claimed block on subsequent recovery?
+
+Sorry, I must have zapped the first sentence that said (more or less,
+since I also accidentally deleted an earlier draft of this reply):
+
+"I misspoke earlier-- the ->claim_block relogging code does /not/ leave
+off the claimed block; it has to preserve everything.  Each time we
+relog the EFIs..."
+
+> > If we reach the end of the repair, we'll log EFDs for all the EFIs in
+> > the btree bulkload reservation; log the new btree root; and queue a
+> > bunch of extfree_items (which themselves log more EFIs) for the old
+> > btree blocks.  Then we let dfops finish the extfree items, which deletes
+> > the old btree.  If we crash during that part, log recovery will roll us
+> > forward to the point of having a freshly rebuilt btree and no leaked
+> > blocks.
+> > 
+> > > > > > The key to this is that the EFI/EFD relogging must be done entirely
+> > > > > > under a single rolling transaction, so there is -always- space
+> > > > > > available in the log for both the EFI and the EFDs to be relogged as
+> > > > > > the long running operation is performed.
+> > > > > > 
+> > > > > > IOWs, the EFI/EFD structures support relogging of the intents at a
+> > > > > > design level, and it is intended that this process is entirely
+> > > > > > driven from a single rolling transaction context. I srtongly suspect
+> > > > > > that all the recent EFI/EFD and deferred ops reworking has lost a
+> > > > > > lot of this context from the historical EFI/EFD implementation...
+> > > > 
+> > > > I don't agree with this, since the BUI/CUI items actively relog
+> > > > themselves for another go-around if they decide that they still have
+> > > > work to do, and the atomic extent swap item I proposed also takes
+> > > > advantage of this design property.
+> > > > 
+> > > > Though, I concede that I don't think any of us were watching carefully
+> > > > enough to the dfops manager to spot the occasional need to relog all the
+> > > > attached intent items if the chain gets long enough.
+> > > > 
+> > > > > > So before we go down the path of implementing generic automatic
+> > > > > > relogging infrastructure, we first should have been writing the
+> > > > > > application code that needs to relog intents and use a mechanism
+> > > > > > like the above to cancel and reinsert intents further down the log.
+> > > > 
+> > > > Already done.  The reason why Brian and I are stirring up this hornet
+> > > > nest again is that I started posting patches to fix various deficiencies
+> > > > that were exposed by generic/52[12] shakedowns of the atomic swap code. ;)
+> > > > 
+> > > > I guess I should go post the latest version of the defer freezer code
+> > > > since it takes steps to minimize the dfops chain lengths, and relogs the
+> > > > entire dfops chain every few rolls to keep the associated log items
+> > > > moving forward...
+> > > > 
+> > > > > > Once we have code that is using these techniques to do bulk
+> > > > > > operations, then we can look to optimise/genericise the
+> > > > > > infrastructure they use.
+> > > > > > 
+> > > > > > > Moving on to quotaoff...
+> > > > > > > 
+> > > > > > > > I have been spending some time recently in the quota code, so I have
+> > > > > > > > a better grip on what it is doing now than I did last time I looked
+> > > > > > > > at this relogging code. I never really questioned why the quota code
+> > > > > > > > needed two transactions for quota-off, and I'm guessing that nobody
+> > > > > > > > else has either. So I spent some time this morning understanding
+> > > > > > > > what problem it was actually solving and trying to find an alternate
+> > > > > > > > solution to that problem.
+> > > > > > > 
+> > > > > > > Indeed, I hadn't looked into that.
+> > > > > > > 
+> > > > > > > > The reason we have the two quota-off transactions is that active
+> > > > > > > > dquot modifications at the time quotaoff is started leak past the
+> > > > > > > > first quota off transaction that hits the journal. Hence to avoid
+> > > > > > > > incorrect replay of those modifications in the journal if we crash
+> > > > > > > > after the quota-off item passes out of the journal, we pin the
+> > > > > > > > quota-off item in the journal. It gets unpinned by the commit of the
+> > > > > > > > second quota-off transaction at completion time, hence defining the
+> > > > > > > > window in journal where quota-off is being processed and dquot
+> > > > > > > > modifications should be ignored. i.e. there is no window where
+> > > > > > > > recovery will replay dquot modifications incorrectly.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > Ok.
+> > > > > > > 
+> > > > > > > > However, if the second transaction is left too long, the reservation
+> > > > > > > > will fail to find journal space because of the pinned quota-off item.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > Right.
+> > > > > > > 
+> > > > > > > > The relogging infrastructure is designed to allow the inital
+> > > > > > > > quota-off intent to keep moving forward in the log so it never pins
+> > > > > > > > the tail of the log before the second quota-off transaction is run.
+> > > > > > > > This tries to avoid the recovery issue because there's always an
+> > > > > > > > active quota off item in the log, but I think there may be a flaw
+> > > > > > > > here.  When the quotaoff item gets relogged, it jumps all the dquots
+> > > > > > > > in the log that were modified after the quota-off started. Hence if
+> > > > > > > > we crash after the relogging but while the dquots are still in the
+> > > > > > > > log before the relogged quotaoff item, then they will be replayed,
+> > > > > > > > possibly incorrectly. i.e. the relogged quota-off item no longer
+> > > > > > > > prevents replay of those items.
+> > > > > > > > 
+> > > > > > > > So while relogging prevents the tail pinning deadlock, I think it
+> > > > > > > > may actually result in incorrect recovery behaviour in that items
+> > > > > > > > that should be cancelled and not replayed can end up getting
+> > > > > > > > replayed.  I'm not sure that this matters for dquots, but for a
+> > > > > > > > general mechanism I think the transactional ordering violations it
+> > > > > > > > can result in reduce it's usefulness significantly.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > Hmm.. I could be mistaken, but I thought we reasoned about this a bit on
+> > > > > > > the early RFCs.
+> > > > > > 
+> > > > > > We might have, but I don't recall that. And it would appear nobody
+> > > > > > looked at this code in any detail if we did discuss it, so I'd say
+> > > > > > the discussion was largely uninformed...
+> > > > > > 
+> > > > > > > Log recovery processes the quotaoff intent in pass 1 and
+> > > > > > > dquot updates in pass 2, which I thought was intended to handle this
+> > > > > > > kind of problem.
+> > > > > > 
+> > > > > > Right, it does handle it, but only because there are two quota-off
+> > > > > > items in the log. i.e.  There's two recovery situations in play here
+> > > > > > - 1) quota off in progress and 2) quota off done.
+> > > > > > 
+> > > > > > In the first case, only the initial quota-off item is in the log, so
+> > > > > > it is needed to be detect to stop replay of relevant dquots that
+> > > > > > have been logged after the quota off was started.
+> > > > > > 
+> > > > > > The second case has to be broken down into two sitations: a) both quota-off items
+> > > > > > are active in the log, or b) only the second item is active in the log
+> > > > > > as the tail has moved forwards past the first item.
+> > > > > > 
+> > > > > > In the case of 2a), it doesn't matter which item recovery sees, it
+> > > > > > will cancel the dquot updates correctly. In the case of 2b), the
+> > > > > > second quota off item is absolutely necessary to prevent replay of
+> > > > > > the dquots in the log before it.
+> > > > > > 
+> > > > > > Hence if dquot modifications can leak past the first quota-off item
+> > > > > > in the log, then the second item is absolutely necessary to catch
+> > > > > > the 2b) case to prevent incorrect replay of dquot buffers.
+> > > > > > 
+> > > > > 
+> > > > > Ok, but we're talking specifically about log recovery after quotaoff has
+> > > > > completed but before both intents have fallen off of the log. Relogging
+> > > > > of the initial intent (re: the original comment above about incorrect
+> > > > > recovery behavior) has no impact on this general ordering between the
+> > > > > start/end intents or dquot changes and the end intent.
+> > > > > 
+> > > > > > > If I follow correctly, the recovery issue that warrants pinning the
+> > > > > > > quotaoff in the log is not so much an ordering issue, but if the latter
+> > > > > > > happens to fall off the end of the log before the last of the dquot
+> > > > > > > modifications, recovery could see dquot changes after having lost the
+> > > > > > > fact that a quotaoff had occurred at all. The current implementation
+> > > > > > > presumably handles this by pinning the quotaoff until all dquots are
+> > > > > > > completely purged from existence. The relog mechanism just allows the
+> > > > > > > item to move while it effectively remains pinned, so I don't see how it
+> > > > > > > introduces recovery issues.
+> > > > > > 
+> > > > > > As I said, it may not affect the specific quota-off usage, but we
+> > > > > > can't just change the order of items in the physical journal without
+> > > > > > care because the journal is supposed to be -strictly ordered-.
+> > > > > > 
+> > > > > 
+> > > > > The mechanism itself is intended to target specific instances of log
+> > > > > items. Each use case should be evaluated for correctness on its own,
+> > > > > just like one would with ordered buffers or some other internal low
+> > > > > level construct that changes behavior.
+> > > > > 
+> > > > > > Reordering intents in the log automatically without regard to higher
+> > > > > > level transactional ordering dependencies of the log items may
+> > > > > > violate the ordering rules for journalling and recovery of metadata.
+> > > > > > This is why I said automatic relogging may not be useful as generic
+> > > > > > infrastructure - if there are dependent log items, then they need to
+> > > > > > relogged as an atomic change set that maintains the ordering
+> > > > > > dependencies between objects. That's where this automatic mechanism
+> > > > > > completely falls down - the ordering dependencies are known only by
+> > > > > > the code running the original transaction, not the log items...
+> > > > > > 
+> > > > > 
+> > > > > This and the above sounds to me that you're treating automatic relogging
+> > > > > like it would just be enabled by default on all intents, reordering
+> > > > > things arbitrarily. That is not the case as things would certainly
+> > > > > break, just like what would happen if ordered buffers were enabled by
+> > > > > default. The mechanism is per log item and context specific. It is
+> > > > > "generic" in the sense that there are (were) multiple use cases for it,
+> > > > > not that it should be used arbitrarily or "without care."
+> > > > > 
+> > > > > Use cases that have very particular ordering requirements across certain
+> > > > > sets of items should probably not enable this mechanism on those items
+> > > > > or otherwise verify that relogging a particular item is safe. The
+> > > > > potential example of this ordering problem being cited is quotaoff, but
+> > > > > we've already gone through this example multiple times and established
+> > > > > that relogging the quotaoff start item is safe.
+> > > > > 
+> > > > > All that said, extending a relogging notification somehow to a
+> > > > > particular context has always been a consideration because 1.) direct
+> > > > > EFI relogging would require log recovery changes and 2.) there was yet
+> > > > > another potential use case where dfops needed to know whether to relog a
+> > > > > particular intent in a long running chain to avoid some issue (the
+> > > > > details of which escape me). I think issue #1 is not complicated to
+> > > > > address, but creates a backwards incompatibility for log recovery. Issue
+> > > > > #2 would potentially separate out relogging as a notification mechanism
+> > > > > from the reservation management bits, but it's still not clear to me
+> > > > > what that notification mechanism would look like for a transaction that
+> > > > > has already been committed by some caller context.
+> > > > > 
+> > > > > I think Darrick was looking at repurposing ->iop_relog() for that one so
+> > > > > I'd be curious to know what that is looking like in general...
+> > > > 
+> > > > ...it's graduated to the point that I'm willing/crazy enough to run it
+> > > > on my development workstations, and it hasn't let out the magic smoke.
+> > > > 
 > > > 
-> > > Direct IO should be a deterministic, zero-copy IO path to/from
-> > > storage. Using the CPU to copy data during direct IO is the complete
-> > > opposite of the intended functionality, not to mention the behaviour
-> > > that many applications have been careful designed and tuned for.
+> > > Heh.
+> > > 
+> > > > I added ->iop_relog handlers to all the major intent items (EFI, RUI,
+> > > > CUI, BUI, SXI), then taught xfs_defer_finish_noroll to relog everything
+> > > > on dop_pending every 7 transaction rolls[1].  Initially this caused log
+> > > > reservation overflow problems with transactions that log intents whose
+> > > > ->finish_item functions themselves log dozens more intents, but then
+> > > > realized that the second patch[2] I had written took care of this
+> > > > problem.
+> > > > 
+> > > 
+> > > Thanks. I think I get the general idea. We're reworking the
+> > > ->iop_relog() handler to complete and replace the current intent (rather
+> > > than just relog the original intent, which is what this series did for
+> > > the quotaoff case) in the current dfops transaction and allow the dfops
+> > > code to update its reference to the item. The part that's obviously
+> > > missing is some kind of determination on when we actually need to relog
+> > > the outstanding intents vs. using a fixed roll count.
 > > 
-> > Direct I/O isn't deterministic though.
-> 
-> When all the application is doing is direct IO, it is as
-> deterministic as the underlying storage behaviour. This is the best
-> we can possibly do from the perspective of the filesystem, and this
-> is largely what Direct IO requires from the filesystem.
-> 
-> Direct IO starts from delegating all responsibility for IO
-> synchronisation data coherency and integrity to userspace, and then
-> follows up by requiring the filesystem and kernel to stay out of the
-> IO path except where it is absolutely necessary to read or write
-> data to/from the underlying storage hardware. Serving Direct IO from
-> the page cache violates the second of these requirements.
-> 
-> > If the file isn't shared, then
-> > it works great, but as soon as you get mixed buffered and direct I/O,
-> > everything is already terrible.
-> 
-> Right, but that's *the rare exception* for applications using direct
-> IO, not the common fast path. It is the slow path where -shit has
-> already gone wrong on the production machine-, and it most
-> definitely does not change the DIO requirements that the filesystem
-> needs to provide userspace via the direct IO path.
-> 
-> Optimising the slow exception path is fine if it does not affect the
-> guarantees we try to provide through the common/fast path. If it is
-> does affect behaviour of the fast path, then we must be able to
-> either turn it off or provide our own alternative implementation
-> that does not have that cost.
-> 
-> > Direct I/Os perform pagecache lookups
-> > already, but instead of using the data that we found in the cache, we
-> > (if it's dirty) write it back, wait for the write to complete, remove
-> > the page from the pagecache and then perform another I/O to get the data
-> > that we just wrote out!  And then the app that's using buffered I/O has
-> > to read it back in again.
-> 
-> Yup, that's because we have a history going back 20+ years of people
-> finding performance regressions in applications using direct IO when
-> we leave incorrectly left pages in the page cache rather than
-> invalidating them and continuing to do direct IO.
-> 
-> 
-> > Nobody's proposing changing Direct I/O to exclusively work through the
-> > pagecache.  The proposal is to behave less weirdly when there's already
-> > data in the pagecache.
-> 
-> No, the proposal it to make direct IO behave *less
-> deterministically* if there is data in the page cache.
-> 
-> e.g. Instead of having a predicatable submission CPU overhead and
-> read latency of 100us for your data, this proposal makes the claim
-> that it is always better to burn 10x the IO submission CPU for a
-> single IO to copy the data and give that specific IO 10x lower
-> latency than it is to submit 10 async IOs to keep the IO pipeline
-> full.
-> 
-> What it fails to take into account is that in spending that CPU time
-> to copy the data, we haven't submitted 10 other IOs and so the
-> actual in-flight IO for the application has decreased. If
-> performance comes from keeping the IO pipeline as close to 100% full
-> as possible, then copying the data out of the page cache will cause
-> performance regressions.
-> 
-> i.e. Hit 5 page cache pages in 5 IOs in a row, and the IO queue
-> depth craters because we've only fulfilled 5 complete IOs instead of
-> submitting 50 entire IOs. This is the hidden cost of synchronous IO
-> via CPU data copying vs async IO via hardware offload, and if we
-> take that into account we must look at future hardware performance
-> trends to determine if this cost is going to increase or decrease in
-> future.
-> 
-> That is: CPUs are not getting faster anytime soon. IO subsystems are
-> still deep in the "performance doubles every 2 years" part of the
-> technology curve (pcie 3.0->4.0 just happened, 4->5 is a year away,
-> 5->6 is 3-4 years away, etc). Hence our reality is that we are deep
-> within a performance trend curve that tells us synchronous CPU
-> operations are not getting faster, but IO bandwidth and IOPS are
-> going to increase massively over the next 5-10 years. Hence putting
-> (already expensive) synchronous CPU operations in the asynchronous
-> zero-data-touch IO fast path is -exactly the wrong direction to be
-> moving-.
-> 
-> This is simple math. The gap between IO latency and bandwidth and
-> CPU addressable memory latency and bandwidth is closing all the
-> time, and the closer that gap gets the less sense it makes to use
-> CPU addressable memory for buffering syscall based read and write
-> IO. We are not quite yet at the cross-over point, but we really
-> aren't that far from it.
-> 
-> > I have had an objection raised off-list.  In a scenario with a block
-> > device shared between two systems and an application which does direct
-> > I/O, everything is normally fine.  If one of the systems uses tar to
-> > back up the contents of the block device then the application on that
-> > system will no longer see the writes from the other system because
-> > there's nothing to invalidate the pagecache on the first system.
-> 
-> I'm sorry you have to deal with that. :(
-> 
-> Back in the world of local filesystems, sharing block device across
-> systems without using a clustered filesystem to maintain storage
-> device level data coherency across those multiple machines is not
-> supported in any way, shape or form, direct IO or not.
-> 
-> > Unfortunately, this is in direct conflict with the performance
-> > problem caused by some little arsewipe deciding to do:
+> > <nod>  I don't consider myself sufficiently ail-smart to know how to do
+> > that part. :)
 > > 
-> > $ while true; do dd if=/lib/x86_64-linux-gnu/libc-2.30.so iflag=direct of=/dev/null; done
+> > > I suppose we could do something like I was mentioning in my other reply
+> > > on the AIL pushing issue Dave pointed out where we'd set a bit on
+> > > certain items that are tail pinned and in need of relog. That sounds
+> > > like overkill given this use case is currently self-contained to dfops.
+> > 
+> > That might be a useful optimization -- every time defer_finish rolls the
+> > transaction, check the items to see if any of them have
+> > XFS_LI_RELOGMEPLEASE set, and if any of them do, or we hit our (now
+> > probably higher than 7) fixed roll count, we'll relog as desired to keep
+> > the log moving forward.
+> > 
 > 
-> This has come up in the past, and I'm pretty sure I sent a patch to
-> stop iomap from invalidating the cache on DIO reads because the same
-> data is on disk as is in memory and it solves this whole problem.  I
-> cannot find that patch in the archives - I must have sent it inline
-> to the discussion as I'm about to do again.
+> It's an optimization in some sense to prevent unnecessary relogs, but
+> the intent would be to avoid the need for a fixed count by notifying
+> when a relog is needed to a transaction that should be guaranteed to
+> have the reservation necessary to do so. I'm not sure it's worth the
+> complexity if there were some reason we still needed to fall back to a
+> hard count.
 
-And, um, it'll get buried in the archives again. :(
+<nod> I might just be clinging to the current implementation. :)
 
-Though I guess I could just suck it in and see what happens, and maybe
-"the mists of time" won't be an issue this time around.  Particularly
-since I was the one asking you about this very hunk of code last night
-on irc. :P
+> > > Perhaps the other idea of factoring out the threshold determination
+> > > logic from xlog_grant_push_ail() might be useful.
+> > > 
+> > > For example, if the current free reservation is below the calculated
+> > > threshold (with need_bytes == 0), return a threshold LSN based on the
+> > > current tail. Instead of using that to push the AIL, compare it to
+> > > ->li_lsn of each intent and relog any that are inside the threshold LSN
+> > > (which will probably be all of them in practice since they are part of
+> > > the same transaction). We'd probably need to identify intents that have
+> > > been recently relogged so the process doesn't repeat until the CIL
+> > > drains and the li_lsn eventually changes. Hmm.. I did have an
+> > > XFS_LI_IN_CIL state tracking patch around somewhere for debugging
+> > > purposes that might actually be sufficient for that. We could also
+> > > consider stashing a "relog push" LSN somewhere (similar to the way AIL
+> > > pushing works) and perhaps use that to avoid repeated relogs on a chain,
+> > > but it's not immediately clear to me how well that would fit into the
+> > > dfops mechanism...
+> > 
+> > ...is there a sane way for dfops to query the threshold LSN so that it
+> > could compare against the li_lsn of each item it holds?
+> > 
+> 
+> I'd start with just trying to reuse the logic in xlog_grant_push_ail()
+> (i.e. just factor out the AIL push). That function starts with a check
+> on available log reservation to filter out unnecessary pushes, then
+> calculates the AIL push LSN by adding the amount of log space we need to
+> free up to the current log tail. In this case we're not pushing the AIL,
+> but I think we'd be able to use the same threshold calculation logic to
+> determine when to relog intents that happen to reside within the range
+> from the current tail to the calculated threshold.
 
-Oh well, onto the review...
-
-> Yeah, now it comes back to me - the context was about using
-> RWF_NOWAIT to detect page cache residency for page cache timing
-> attacks and I mentioned doing exactly the above as a mechanism to
-> demand trigger invalidation of the mapped page cache. The
-> solution was to only invalidate the page cache on DIO writes, but we
-> didn't do it straight away because I needed to audit the XFS code to
-> determine if there were still real reasons it was necessary.
-> 
-> The patch is attached below. The DIO read path is unchanged except
-> for the fact it skips the invalidation.  i.e. the dio read still
-> goes to disk, but we can leave the data in memory because it is the
-> same as what was on disk. This does not perturb DIO behaviour by
-> inserting synchronous page cache copies or exclusive inode locking
-> into the async DIO path and so will not cause DIO performance
-> regressions. However, it does allow mmap() and read() to be served
-> from cache at the same time as we issue overlapping DIO reads.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> iomap: Only invalidate page cache pages on direct IO writes
-> 
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The historic requirement for XFS to invalidate cached pages on
-> direct IO reads has been lost in the twisty pages of history - it was
-> inherited from Irix, which implemented page cache invalidation on
-> read as a method of working around problems synchronising page
-> cache state with uncached IO.
-
-Urk.
-
-> XFS has carried this ever since. In the initial linux ports it was
-> necessary to get mmap and DIO to play "ok" together and not
-> immediately corrupt data. This was the state of play until the linux
-> kernel had infrastructure to track unwritten extents and synchronise
-> page faults with allocations and unwritten extent conversions
-> (->page_mkwrite infrastructure). IOws, the page cache invalidation
-> on DIO read was necessary to prevent trivial data corruptions. This
-> didn't solve all the problems, though.
-> 
-> There were peformance problems if we didn't invalidate the entire
-> page cache over the file on read - we couldn't easily determine if
-> the cached pages were over the range of the IO, and invalidation
-> required taking a serialising lock (i_mutex) on the inode. This
-> serialising lock was an issue for XFS, as it was the only exclusive
-> lock in the direct Io read path.
-> 
-> Hence if there were any cached pages, we'd just invalidate the
-> entire file in one go so that subsequent IOs didn't need to take the
-> serialising lock. This was a problem that prevented ranged
-> invalidation from being particularly useful for avoiding the
-> remaining coherency issues. This was solved with the conversion of
-> i_mutex to i_rwsem and the conversion of the XFS inode IO lock to
-> use i_rwsem. Hence we could now just do ranged invalidation and the
-> performance problem went away.
-> 
-> However, page cache invalidation was still needed to serialise
-> sub-page/sub-block zeroing via direct IO against buffered IO because
-> bufferhead state attached to the cached page could get out of whack
-> when direct IOs were issued.  We've removed bufferheads from the
-> XFS code, and we don't carry any extent state on the cached pages
-> anymore, and so this problem has gone away, too.
-> 
-> IOWs, it would appear that we don't have any good reason to be
-> invalidating the page cache on DIO reads anymore. Hence remove the
-> invalidation on read because it is unnecessary overhead,
-> not needed to maintain coherency between mmap/buffered access and
-> direct IO anymore, and prevents anyone from using direct IO reads
-> from intentionally invalidating the page cache of a file.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/iomap/direct-io.c | 33 +++++++++++++++++----------------
->  1 file changed, 17 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index ec7b78e6feca..ef0059eb34b5 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -475,23 +475,24 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->  	if (ret)
->  		goto out_free_dio;
->  
-> -	/*
-> -	 * Try to invalidate cache pages for the range we're direct
-> -	 * writing.  If this invalidation fails, tough, the write will
-> -	 * still work, but racing two incompatible write paths is a
-> -	 * pretty crazy thing to do, so we don't support it 100%.
-
-I always wondered about the repeated use of 'write' in this comment
-despite the lack of any sort of WRITE check logic.  Seems fine to me,
-let's throw it on the fstests pile and see what happens.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+<nod> Ok, I see how that would work.  I'll give it a try.
 
 --D
 
-> -	 */
-> -	ret = invalidate_inode_pages2_range(mapping,
-> -			pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
-> -	if (ret)
-> -		dio_warn_stale_pagecache(iocb->ki_filp);
-> -	ret = 0;
-> +	if (iov_iter_rw(iter) == WRITE) {
-> +		/*
-> +		 * Try to invalidate cache pages for the range we're direct
-> +		 * writing.  If this invalidation fails, tough, the write will
-> +		 * still work, but racing two incompatible write paths is a
-> +		 * pretty crazy thing to do, so we don't support it 100%.
-> +		 */
-> +		ret = invalidate_inode_pages2_range(mapping,
-> +				pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
-> +		if (ret)
-> +			dio_warn_stale_pagecache(iocb->ki_filp);
-> +		ret = 0;
->  
-> -	if (iov_iter_rw(iter) == WRITE && !wait_for_completion &&
-> -	    !inode->i_sb->s_dio_done_wq) {
-> -		ret = sb_init_dio_done_wq(inode->i_sb);
-> -		if (ret < 0)
-> -			goto out_free_dio;
-> +		if (!wait_for_completion &&
-> +		    !inode->i_sb->s_dio_done_wq) {
-> +			ret = sb_init_dio_done_wq(inode->i_sb);
-> +			if (ret < 0)
-> +				goto out_free_dio;
->  	}
->  
->  	inode_dio_begin(inode);
+> Brian
+> 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > That patch, of course, is one that I posted a while ago that makes it so
+> > > > that if a transaction owner logs items A and B and then commits (or
+> > > > calls defer_roll), dfops will now finish all the items created by A's
+> > > > ->finish_item before it moves on to trying to finish B.
+> > > > 
+> > > > I had put /that/ patch aside after Brian pointed out that on its own,
+> > > > that patch merely substituted pinning the tail on some sub-item of A
+> > > > with pinning the tail on B, but I think with both patches applied I have
+> > > > solved both problems.
+> > > > 
+> > > > --D
+> > > > 
+> > > > [1] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=djwong-wtf&id=515cc4e637bf4e9afcfbaeb39b13f85b27923916
+> > > > [2] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=djwong-wtf&id=8e63f8a7af12d673feb5400d09179502632854c4
+> > > > [3] https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=djwong-wtf&id=ddfeca6f1f1862c3f162db8b8bdbfc5149f5e5c5
+> > > > 
+> > > > > > > > But back to quota-off: What I've realised is that the only dquot
+> > > > > > > > modifications we need to protect against being recovered are the
+> > > > > > > > ones that are running at the time the first quota-off is committed
+> > > > > > > > to the journal. That is, once the DQACTIVE flags are clear,
+> > > > > > > > transactions will not modify those dquots anymore. Hence by the time
+> > > > > > > > that the quota off item pins the tail of the log, the transactions
+> > > > > > > > that were actively dirtying inodes when it was committed have also
+> > > > > > > > committed and are in the journal and there are no actively modified
+> > > > > > > > dquots left in memory.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > I'm not sure how the (sync) commit of the quotaoff guarantees some other
+> > > > > > > transaction running in parallel hadn't modified a dquot and committed
+> > > > > > > after the quotaoff, but I think I see where you're going in general...
+> > > > > > 
+> > > > > > We drained out all the transactions that can be modifying quotas
+> > > > > > before we log the quotaoff items. So, by definition, this cannot
+> > > > > > happen.
+> > > > > > 
+> > > > > > > > IOWs, we don't actually need to wait until we've released and purged
+> > > > > > > > all the dquots from memory before we log the second quota off item;
+> > > > > > > > all we need to wait for is for all the transactions with dirty
+> > > > > > > > dquots to have committed. These transactions already have log
+> > > > > > > > reservations, so completing them will free unused reservation space
+> > > > > > > > for the second quota off transaction. Once they are committed, then
+> > > > > > > > we can log the second item. i.e. we don't have to wait until we've
+> > > > > > > > cleaned up the dquots to close out the quota-off transaction in the
+> > > > > > > > journal.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > Ok, so we can deterministically shorten the window with a runtime
+> > > > > > > barrier (i.e. disable -> drain) on quota modifying transactions rather
+> > > > > > > than relying on the full dquot purge to provide this ordering.
+> > > > > > 
+> > > > > > Yup.
+> > > > > > 
+> > > > > > > > To make it even more robust, if we stop all the transactions that
+> > > > > > > > may dirty dquots and drain the active ones before we log the first
+> > > > > > > > quota-off item, we can log the second item immediately afterwards
+> > > > > > > > because it is known that there are no dquot modifications in flight
+> > > > > > > > when the first item is logged. We can probably even log both items
+> > > > > > > > in the same transaction.
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > I was going to ask why we'd even need two items if this approach is
+> > > > > > > generally viable.
+> > > > > > 
+> > > > > > Because I don't want to change the in-journal appearance of
+> > > > > > quota-off to older kernels. Changing how things appear on disk is
+> > > > > > dangerous and likely going to bite us in unexpected ways.
+> > > > > > 
+> > > > > 
+> > > > > Well combining them into a single transaction doesn't guarantee ordering
+> > > > > of the two, right? So it might not be worth doing that either if we're
+> > > > > concerned about log appearance. Regardless, those potential steps can be
+> > > > > evaluated independently on top of the core runtime fixes.
+> > > > > 
+> > > > > > > > So, putting my money where my mouth is, the patch below does this.
+> > > > > > > > It's survived 100 cycles of xfs/305 (qoff vs fsstress) and 10 cycles
+> > > > > > > > of -g quota with all quotas enabled and is currently running a full
+> > > > > > > > auto cycle with all quotas enabled. It hasn't let the smoke out
+> > > > > > > > after about 4 hours of testing now....
+> > > > > > > > 
+> > > > > > > 
+> > > > > > > Thanks for the patch. First, I like the idea and agree that it's more
+> > > > > > > simple than the relogging approach. I do still need to stare at it some
+> > > > > > > more to grok it and convince myself it's safe.
+> > > > > > > 
+> > > > > > > The thing that sticks out to me is tagging all of the transactions that
+> > > > > > > modify quotas. Is there any reason we can't just quiesce the transaction
+> > > > > > > subsystem entirely as a first step? It's not like quotaoff is common or
+> > > > > > > performance sensitive. For example:
+> > > > > > >
+> > > > > > > 1. stop all transactions, wait to drain, force log
+> > > > > > > 2. log the sb/quotaoff synchronously (punching through via something
+> > > > > > >    like NO_WRITECOUNT)
+> > > > > > > 3. clear the xfs_mount quota active flags
+> > > > > > > 4. restart the transaction subsystem (no more dquot mods)
+> > > > > > > 5. complete quotaoff via the dquot release and purge sequence
+> > > > > > 
+> > > > > > Yup, as I said on #xfs a short while ago:
+> > > > > > 
+> > > > > > [3/7/20 01:15] <djwong> qi_active_trans?
+> > > > > > [3/7/20 01:15] <djwong> man, we just killed off m_active_trans
+> > > > > > [3/7/20 08:47] <dchinner> djwong: I know we just killed off that atomic counter, it was used for doing exactly what I needed for quota-off, but freeze didn't need it anymore
+> > > > > > [3/7/20 08:48] <dchinner> I mean, we could just make quota-off freeze the filesystem, do quota-off, then unfreeze....
+> > > > > > [3/7/20 08:48] <dchinner> that's a simple, brute force solution
+> > > > > > [3/7/20 08:49] <dchinner> but it's also overkill in that it forces lots of unnecessary data writeback...
+> > > > > > [3/7/20 08:52] * djwong sometimes wonders if we just need a "run XXXX with exclusive access" thing
+> > > > > > [3/7/20 08:58] <dchinner> djwong: that's kinda what xfs_quiesce_attr() was originally intended for
+> > > > > > [3/7/20 08:59] <dchinner> but as all the code slowly got moved up into the VFS freeze layers, it stopped being able to be used for that sort of operation....
+> > > > > > [3/7/20 09:01] <djwong> oh
+> > > > > > [3/7/20 09:03] <dchinner> and so just after we remove the last remaining fragment of that original functionality, we find that maybe we actually still need to be able to quiesce the filesytsem for internal synchronisation reasons
+> > > > > > 
+> > > > > > So, we used to have exactly the functionality I needed in XFS as
+> > > > > > general infrastructure, but we've removed it over the past few years
+> > > > > > as the VFS has slowly been brought up to feature parity with XFS. I
+> > > > > > just implemented what I needed to block/halt quota modifications
+> > > > > > because I didn't want to perturb anything else while exploring if my
+> > > > > > hypothesis was correct.
+> > > > > > 
+> > > > > 
+> > > > > Ok.
+> > > > > 
+> > > > > > The only outstanding thing I haven't checked out fully is the
+> > > > > > delayed allocation reservations that aren't done in transaction
+> > > > > > contexts. I -think- these are OK because they are in memory only,
+> > > > > > and they will serialised on the inode lock when detatching dquots
+> > > > > > (i.e. the existing dquot purging ordering mechanisms) after quotas
+> > > > > > are turned off. Hence I think these are fine, but more investigation
+> > > > > > will be needed there to confirm behaviour is correct.
+> > > > > > 
+> > > > > 
+> > > > > Yep.
+> > > > > 
+> > > > > > > I think it could be worth the tradeoff for the simplicity of not having
+> > > > > > > to maintain the transaction reservation tags or the special quota
+> > > > > > > waiting infrastructure vs. something like the more generic (recently
+> > > > > > > removed) transaction counter. We might even be able to abstract the
+> > > > > > > whole thing behind a transaction flag. E.g.:
+> > > > > > > 
+> > > > > > > 	/*
+> > > > > > > 	 * A barrier transaction locks out further transactions and waits on
+> > > > > > > 	 * outstanding transactions to drain (i.e. commit) before returning.
+> > > > > > > 	 * Everything unlocks when the transaction commits.
+> > > > > > > 	 */
+> > > > > > > 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0,
+> > > > > > > 			XFS_TRANS_BARRIER, &tp);
+> > > > > > > 	...
+> > > > > > 
+> > > > > > Yup, if we decide that we want to track all active transactions again
+> > > > > > rather than just when quota is active, it would make a lot of
+> > > > > > sense to make it a formal function of the xfs_trans_alloc() API.
+> > > > > > 
+> > > > > > Really, though, I've got so many other things on my plate right now
+> > > > > > I don't have the time to take on yet another infrastructure
+> > > > > > reworking. I spent the time to write the patch because if I was
+> > > > > > going to say I didn't like relogging then it was absolutely
+> > > > > > necessary for me to provide an alternative solution to the problem,
+> > > > > > but I'm ireally hoping that it is sufficient for someone else to be
+> > > > > > able to pick it up and run with it....
+> > > > > > 
+> > > > > 
+> > > > > Ok, I can take a look at this since I need to step back and rethink this
+> > > > > particular feature anyways.
+> > > > > 
+> > > > > Brian
+> > > > > 
+> > > > > > Cheers,
+> > > > > > 
+> > > > > > Dave.
+> > > > > > 
+> > > > > > PS. FWIW, if anyone wants to pick up any RFC patchset I've posted in
+> > > > > > the past and run with it, I'm more than happy for you to do so. I've
+> > > > > > got way more ideas and prototypes than I've got time to turn into
+> > > > > > full production features. I also don't care about "ownership" of the
+> > > > > > work; it's better to have someone actively working on the code than
+> > > > > > having it sit around waiting for me to find time to get back to
+> > > > > > it...
+> > > > > > 
+> > > > > > -- 
+> > > > > > Dave Chinner
+> > > > > > david@fromorbit.com
+> > > > > > 
+> > > > > 
+> > > > 
+> > > 
+> > 
+> 
