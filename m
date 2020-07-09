@@ -2,77 +2,105 @@ Return-Path: <SRS0=XuOj=AU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9392BC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 22:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44507C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 22:59:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DAEA206A5
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 22:38:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22B6C20775
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 22:59:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726615AbgGIWiJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Jul 2020 18:38:09 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:38032 "EHLO
+        id S1726496AbgGIW7p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Jul 2020 18:59:45 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:34184 "EHLO
         mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726228AbgGIWiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 18:38:08 -0400
+        by vger.kernel.org with ESMTP id S1726228AbgGIW7o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 18:59:44 -0400
 Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 6C2C3D7B967;
-        Fri, 10 Jul 2020 08:38:03 +1000 (AEST)
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 484E0D7A54F;
+        Fri, 10 Jul 2020 08:59:37 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jtfB4-0000y8-Kh; Fri, 10 Jul 2020 08:38:02 +1000
-Date:   Fri, 10 Jul 2020 08:38:02 +1000
+        id 1jtfVw-00018A-GA; Fri, 10 Jul 2020 08:59:36 +1000
+Date:   Fri, 10 Jul 2020 08:59:36 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Waiman Long <longman@redhat.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Qian Cai <cai@lca.pw>, Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH v6] xfs: Fix false positive lockdep warning with
- sb_internal & fs_reclaim
-Message-ID: <20200709223802.GY2005@dread.disaster.area>
-References: <20200707191629.13911-1-longman@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        fdmanana@gmail.com, dsterba@suse.cz, cluster-devel@redhat.com,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: always fall back to buffered I/O after invalidation failures,
+ was: Re: [PATCH 2/6] iomap: IOMAP_DIO_RWF_NO_STALE_PAGECACHE return if page
+ invalidation fails
+Message-ID: <20200709225936.GZ2005@dread.disaster.area>
+References: <20200701075310.GB29884@lst.de>
+ <20200707124346.xnr5gtcysuzehejq@fiona>
+ <20200707125705.GK25523@casper.infradead.org>
+ <20200707130030.GA13870@lst.de>
+ <20200708065127.GM2005@dread.disaster.area>
+ <20200708135437.GP25523@casper.infradead.org>
+ <20200709022527.GQ2005@dread.disaster.area>
+ <20200709160926.GO7606@magnolia>
+ <20200709170519.GH12769@casper.infradead.org>
+ <20200709171038.GE7625@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200707191629.13911-1-longman@redhat.com>
+In-Reply-To: <20200709171038.GE7625@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
         a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8
-        a=l721tooEcPd6T4aNpT4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8
+        a=CAmLY35Qp_Y7Zt_JOjoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 07, 2020 at 03:16:29PM -0400, Waiman Long wrote:
-> One way to avoid this splat is to add GFP_NOFS to the affected allocation
-> calls by using the memalloc_nofs_save()/memalloc_nofs_restore() pair.
-> This shouldn't matter unless the system is really running out of memory.
-> In that particular case, the filesystem freeze operation may fail while
-> it was succeeding previously.
+On Thu, Jul 09, 2020 at 10:10:38AM -0700, Darrick J. Wong wrote:
+> On Thu, Jul 09, 2020 at 06:05:19PM +0100, Matthew Wilcox wrote:
+> > On Thu, Jul 09, 2020 at 09:09:26AM -0700, Darrick J. Wong wrote:
+> > > On Thu, Jul 09, 2020 at 12:25:27PM +1000, Dave Chinner wrote:
+> > > > -	 */
+> > > > -	ret = invalidate_inode_pages2_range(mapping,
+> > > > -			pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
+> > > > -	if (ret)
+> > > > -		dio_warn_stale_pagecache(iocb->ki_filp);
+> > > > -	ret = 0;
+> > > > +	if (iov_iter_rw(iter) == WRITE) {
+> > > > +		/*
+> > > > +		 * Try to invalidate cache pages for the range we're direct
+> > > > +		 * writing.  If this invalidation fails, tough, the write will
+> > > > +		 * still work, but racing two incompatible write paths is a
+> > > > +		 * pretty crazy thing to do, so we don't support it 100%.
+> > > > +		 */
+> > > > +		ret = invalidate_inode_pages2_range(mapping,
+> > > > +				pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
+> > > > +		if (ret)
+> > > > +			dio_warn_stale_pagecache(iocb->ki_filp);
+> > > > +		ret = 0;
+> > > >  
+> > > > -	if (iov_iter_rw(iter) == WRITE && !wait_for_completion &&
+> > > > -	    !inode->i_sb->s_dio_done_wq) {
+> > > > -		ret = sb_init_dio_done_wq(inode->i_sb);
+> > > > -		if (ret < 0)
+> > > > -			goto out_free_dio;
+> > > > +		if (!wait_for_completion &&
+> > > > +		    !inode->i_sb->s_dio_done_wq) {
+> > > > +			ret = sb_init_dio_done_wq(inode->i_sb);
+> > > > +			if (ret < 0)
+> > > > +				goto out_free_dio;
 > 
-> Without this patch, the command sequence below will show that the lock
-> dependency chain sb_internal -> fs_reclaim exists.
-> 
->  # fsfreeze -f /home
->  # fsfreeze --unfreeze /home
->  # grep -i fs_reclaim -C 3 /proc/lockdep_chains | grep -C 5 sb_internal
-> 
-> After applying the patch, such sb_internal -> fs_reclaim lock dependency
-> chain can no longer be found. Because of that, the locking dependency
-> warning will not be shown.
-> 
-> Suggested-by: Dave Chinner <david@fromorbit.com>
-> Signed-off-by: Waiman Long <longman@redhat.com>
+> ...and yes I did add in the closing brace here. :P
 
-Looks good. Thanks for working through this, Waiman.
+Doh! I forgot to refresh the patch after fixing that. :/
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Thanks!
 
 Cheers,
 
