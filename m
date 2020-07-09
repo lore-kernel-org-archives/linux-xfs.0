@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30D7EC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 15:13:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77E42C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 15:13:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 090B1206C3
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 15:13:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 524702077D
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 15:13:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OjDqokAZ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="m2UmESDZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726765AbgGIPNu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Jul 2020 11:13:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53630 "EHLO
+        id S1726793AbgGIPNv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Jul 2020 11:13:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53632 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726410AbgGIPNu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 11:13:50 -0400
+        with ESMTP id S1726410AbgGIPNv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 11:13:51 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 417D5C08C5CE
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2020 08:13:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D489C08C5CE
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2020 08:13:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
         Content-Type:Content-ID:Content-Description;
-        bh=mPdG5KEeVXF86GDCvqiEyJwqO0BWUut0/iuKmcseJvg=; b=OjDqokAZT6UUPCiUA5yE/sLg/k
-        khpT64ARY0UEsQN8JCpjBCdShFg3iiftmGUUvdQ9zqCYkmP2q5gqMJqPXQ065dwxc0+v7ua5+Rd6G
-        h/ESbVfpWqjrRR/JzRFaWk6yRAO1bltmMz0/YPf/T3IZQKa7z9rI0D2oIhSlpgX5E9gsjUDD1R4n1
-        flaKTLCeDn+1DGieAePEnj1x+RCb+vqPBytaihZkdlXLEp1rYN6XVjG/ipfTBy6TvOpeTjOLFBO1O
-        /ELhTE+5y9ZK4zt++todK4P6ung/aHUBX/856Y+4y1fNaYRAQf7e9J1OUrWCTPrnC1DQwEufp3ts2
-        Lb/a558Q==;
+        bh=ZUyM6o9aU77S+vJJPinZV+tKi4AAmA3bOYVQDWy/kuM=; b=m2UmESDZbBWWoWlqywEcefDTGY
+        WwuKifqCfx+igAs5E1XxCw9LU4hnybzGp8RAj+VTep52yT5jkLEGOuMv1YIOOW+KTQonAaeTMsG5L
+        lhWIV/FrPhzt4OZ7AFu4GThHz2mfmTsrK0Cu2MJsHpu6jpChbMEZm8ac5cW0HtxfT5UdQmWv21dlo
+        bszTRD1MTov7y0DYjYs/uHEcyBAW4MCpPOOOybxin4HuJXcHLtYU8lmApgKlbM1qFEvHT4Xy0P9/C
+        ZVPUmyvm2m5NArXKh5NPbToLqs5ttRSZPuwx8yAUt0hqM8dlI9WrAMdg1mPtYmwdfDDEKtn9JScZZ
+        4261JqcQ==;
 Received: from [2001:4bb8:188:5f50:7053:304b:bf82:82cf] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jtYFA-000589-LC
-        for linux-xfs@vger.kernel.org; Thu, 09 Jul 2020 15:13:49 +0000
+        id 1jtYFB-00058E-Op
+        for linux-xfs@vger.kernel.org; Thu, 09 Jul 2020 15:13:50 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 06/13] xfs: refactor xfs_buf_ioerror_fail_without_retry
-Date:   Thu,  9 Jul 2020 17:04:46 +0200
-Message-Id: <20200709150453.109230-7-hch@lst.de>
+Subject: [PATCH 07/13] xfs: remove xfs_buf_ioerror_retry
+Date:   Thu,  9 Jul 2020 17:04:47 +0200
+Message-Id: <20200709150453.109230-8-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200709150453.109230-1-hch@lst.de>
 References: <20200709150453.109230-1-hch@lst.de>
@@ -54,80 +54,72 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_buf_ioerror_fail_without_retry is a somewhat weird function in
-that it has two trivial checks that decide the return value, while
-the rest implements a ratelimited warning.  Just lift the two checks
-into the caller, and give the remainder a suitable name.
+Merge xfs_buf_ioerror_retry into its only caller to make the resubmission
+flow a little more obvious.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.c | 35 +++++++++++++++--------------------
- 1 file changed, 15 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_buf.c | 33 ++++++++++++---------------------
+ 1 file changed, 12 insertions(+), 21 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e6a73e455caa1a..2f2ce3faab0826 100644
+index 2f2ce3faab0826..e5592563dda6a1 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -1172,36 +1172,19 @@ xfs_buf_wait_unpin(
- 	set_current_state(TASK_RUNNING);
- }
- 
--/*
-- * Decide if we're going to retry the write after a failure, and prepare
-- * the buffer for retrying the write.
-- */
--static bool
--xfs_buf_ioerror_fail_without_retry(
-+static void
-+xfs_buf_ioerror_alert_ratelimited(
- 	struct xfs_buf		*bp)
- {
--	struct xfs_mount	*mp = bp->b_mount;
- 	static unsigned long	lasttime;
- 	static struct xfs_buftarg *lasttarg;
- 
--	/*
--	 * If we've already decided to shutdown the filesystem because of
--	 * I/O errors, there's no point in giving this a retry.
--	 */
--	if (XFS_FORCED_SHUTDOWN(mp))
--		return true;
--
- 	if (bp->b_target != lasttarg ||
- 	    time_after(jiffies, (lasttime + 5*HZ))) {
- 		lasttime = jiffies;
- 		xfs_buf_ioerror_alert(bp, __this_address);
- 	}
+@@ -1187,23 +1187,6 @@ xfs_buf_ioerror_alert_ratelimited(
  	lasttarg = bp->b_target;
--
--	/* synchronous writes will have callers process the error */
--	if (!(bp->b_flags & XBF_ASYNC))
--		return true;
--	return false;
  }
  
- static bool
-@@ -1282,7 +1265,19 @@ xfs_buf_ioend_disposition(
- 	if (likely(!bp->b_error))
- 		return XBF_IOEND_FINISH;
- 
--	if (xfs_buf_ioerror_fail_without_retry(bp))
-+	/*
-+	 * If we've already decided to shutdown the filesystem because of I/O
-+	 * errors, there's no point in giving this a retry.
-+	 */
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		goto out_stale;
-+
-+	xfs_buf_ioerror_alert_ratelimited(bp);
-+
-+	/*
-+	 * Synchronous writes will have callers process the error.
-+	 */
-+	if (!(bp->b_flags & XBF_ASYNC))
- 		goto out_stale;
- 
+-static bool
+-xfs_buf_ioerror_retry(
+-	struct xfs_buf		*bp,
+-	struct xfs_error_cfg	*cfg)
+-{
+-	if ((bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL)) &&
+-	    bp->b_last_error == bp->b_error)
+-		return false;
+-
+-	bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
+-	bp->b_last_error = bp->b_error;
+-	if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
+-	    !bp->b_first_retry_time)
+-		bp->b_first_retry_time = jiffies;
+-	return true;
+-}
+-
+ /*
+  * Account for this latest trip around the retry handler, and decide if
+  * we've failed enough times to constitute a permanent failure.
+@@ -1283,10 +1266,13 @@ xfs_buf_ioend_disposition(
  	trace_xfs_buf_iodone_async(bp, _RET_IP_);
+ 
+ 	cfg = xfs_error_get_cfg(mp, XFS_ERR_METADATA, bp->b_error);
+-	if (xfs_buf_ioerror_retry(bp, cfg)) {
+-		xfs_buf_ioerror(bp, 0);
+-		xfs_buf_submit(bp);
+-		return XBF_IOEND_DONE;
++	if (bp->b_last_error != bp->b_error ||
++	    !(bp->b_flags & (XBF_STALE | XBF_WRITE_FAIL))) {
++		bp->b_last_error = bp->b_error;
++		if (cfg->retry_timeout != XFS_ERR_RETRY_FOREVER &&
++		    !bp->b_first_retry_time)
++			bp->b_first_retry_time = jiffies;
++		goto resubmit;
+ 	}
+ 
+ 	/*
+@@ -1301,6 +1287,11 @@ xfs_buf_ioend_disposition(
+ 	/* Still considered a transient error. Caller will schedule retries. */
+ 	return XBF_IOEND_FAIL;
+ 
++resubmit:
++	xfs_buf_ioerror(bp, 0);
++	bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
++	xfs_buf_submit(bp);
++	return XBF_IOEND_DONE;
+ out_stale:
+ 	xfs_buf_stale(bp);
+ 	bp->b_flags |= XBF_DONE;
 -- 
 2.26.2
 
