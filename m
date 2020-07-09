@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D36BC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 15:13:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30D7EC433E2
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 15:13:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D34032077D
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 15:13:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 090B1206C3
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 15:13:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dcbJ6mGD"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OjDqokAZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726758AbgGIPNt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 9 Jul 2020 11:13:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53624 "EHLO
+        id S1726765AbgGIPNu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Jul 2020 11:13:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53630 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726410AbgGIPNt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 11:13:49 -0400
+        with ESMTP id S1726410AbgGIPNu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 11:13:50 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A97EC08C5CE
-        for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2020 08:13:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 417D5C08C5CE
+        for <linux-xfs@vger.kernel.org>; Thu,  9 Jul 2020 08:13:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
         Content-Type:Content-ID:Content-Description;
-        bh=bPGBQolre54dR4kfOUzfsYKiHVQ5rs7/kiqZOVcwwlw=; b=dcbJ6mGDYMmBGBN0BMxoXjBD5i
-        soJRREYSBFm518O4NR4BV0RUy6/TYN+10H3qn/wHKljFi8ElM63GJhi+ScTl/jjI4buVPG8GhsL4L
-        jIG0uXHoenVxb9RkQOMFiS53XAPxOuMJLq8yyEfDM/k5TBfOehxqtpMZlrZqss/Xn6G4JumQI4cYs
-        YeWoojGIVYIx4fBHVAENeWEM3FR1RkLJSo16+AbXYD6AVP3XMePznhu3PKceqfowIYwuhmtbWdfUg
-        iKqn+D2mTuCxd5RvJ6Z0xwBsrJvRQO9hbI+lQxvHYpK3/hH3c/SlqauedoDD0aFf0uhI8DqlG1+N5
-        L9CWvM9w==;
+        bh=mPdG5KEeVXF86GDCvqiEyJwqO0BWUut0/iuKmcseJvg=; b=OjDqokAZT6UUPCiUA5yE/sLg/k
+        khpT64ARY0UEsQN8JCpjBCdShFg3iiftmGUUvdQ9zqCYkmP2q5gqMJqPXQ065dwxc0+v7ua5+Rd6G
+        h/ESbVfpWqjrRR/JzRFaWk6yRAO1bltmMz0/YPf/T3IZQKa7z9rI0D2oIhSlpgX5E9gsjUDD1R4n1
+        flaKTLCeDn+1DGieAePEnj1x+RCb+vqPBytaihZkdlXLEp1rYN6XVjG/ipfTBy6TvOpeTjOLFBO1O
+        /ELhTE+5y9ZK4zt++todK4P6ung/aHUBX/856Y+4y1fNaYRAQf7e9J1OUrWCTPrnC1DQwEufp3ts2
+        Lb/a558Q==;
 Received: from [2001:4bb8:188:5f50:7053:304b:bf82:82cf] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jtYF9-00057r-4c
-        for linux-xfs@vger.kernel.org; Thu, 09 Jul 2020 15:13:47 +0000
+        id 1jtYFA-000589-LC
+        for linux-xfs@vger.kernel.org; Thu, 09 Jul 2020 15:13:49 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 05/13] xfs: fold xfs_buf_ioend_finish into xfs_ioend
-Date:   Thu,  9 Jul 2020 17:04:45 +0200
-Message-Id: <20200709150453.109230-6-hch@lst.de>
+Subject: [PATCH 06/13] xfs: refactor xfs_buf_ioerror_fail_without_retry
+Date:   Thu,  9 Jul 2020 17:04:46 +0200
+Message-Id: <20200709150453.109230-7-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200709150453.109230-1-hch@lst.de>
 References: <20200709150453.109230-1-hch@lst.de>
@@ -54,72 +54,80 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-No need to keep a separate helper for this logic.
+xfs_buf_ioerror_fail_without_retry is a somewhat weird function in
+that it has two trivial checks that decide the return value, while
+the rest implements a ratelimited warning.  Just lift the two checks
+into the caller, and give the remainder a suitable name.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.c         | 8 +++++---
- fs/xfs/xfs_buf.h         | 7 -------
- fs/xfs/xfs_log_recover.c | 1 -
- 3 files changed, 5 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_buf.c | 35 +++++++++++++++--------------------
+ 1 file changed, 15 insertions(+), 20 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 443d11bdfcf502..e6a73e455caa1a 100644
+index e6a73e455caa1a..2f2ce3faab0826 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -1335,7 +1335,6 @@ xfs_buf_ioend(
- 			bp->b_ops->verify_read(bp);
- 		if (!bp->b_error)
- 			bp->b_flags |= XBF_DONE;
--		xfs_buf_ioend_finish(bp);
- 	} else if (bp->b_flags & _XBF_LOGRECOVERY) {
- 		/*
- 		 * If this is a log recovery buffer, we aren't doing
-@@ -1383,9 +1382,12 @@ xfs_buf_ioend(
- 			xfs_buf_inode_iodone(bp);
- 		else if (bp->b_flags & _XBF_DQUOTS)
- 			xfs_buf_dquot_iodone(bp);
+@@ -1172,36 +1172,19 @@ xfs_buf_wait_unpin(
+ 	set_current_state(TASK_RUNNING);
+ }
+ 
+-/*
+- * Decide if we're going to retry the write after a failure, and prepare
+- * the buffer for retrying the write.
+- */
+-static bool
+-xfs_buf_ioerror_fail_without_retry(
++static void
++xfs_buf_ioerror_alert_ratelimited(
+ 	struct xfs_buf		*bp)
+ {
+-	struct xfs_mount	*mp = bp->b_mount;
+ 	static unsigned long	lasttime;
+ 	static struct xfs_buftarg *lasttarg;
+ 
+-	/*
+-	 * If we've already decided to shutdown the filesystem because of
+-	 * I/O errors, there's no point in giving this a retry.
+-	 */
+-	if (XFS_FORCED_SHUTDOWN(mp))
+-		return true;
 -
--		xfs_buf_ioend_finish(bp);
+ 	if (bp->b_target != lasttarg ||
+ 	    time_after(jiffies, (lasttime + 5*HZ))) {
+ 		lasttime = jiffies;
+ 		xfs_buf_ioerror_alert(bp, __this_address);
  	}
+ 	lasttarg = bp->b_target;
+-
+-	/* synchronous writes will have callers process the error */
+-	if (!(bp->b_flags & XBF_ASYNC))
+-		return true;
+-	return false;
+ }
+ 
+ static bool
+@@ -1282,7 +1265,19 @@ xfs_buf_ioend_disposition(
+ 	if (likely(!bp->b_error))
+ 		return XBF_IOEND_FINISH;
+ 
+-	if (xfs_buf_ioerror_fail_without_retry(bp))
++	/*
++	 * If we've already decided to shutdown the filesystem because of I/O
++	 * errors, there's no point in giving this a retry.
++	 */
++	if (XFS_FORCED_SHUTDOWN(mp))
++		goto out_stale;
 +
-+	if (bp->b_flags & XBF_ASYNC)
-+		xfs_buf_relse(bp);
-+	else
-+		complete(&bp->b_iowait);
- }
++	xfs_buf_ioerror_alert_ratelimited(bp);
++
++	/*
++	 * Synchronous writes will have callers process the error.
++	 */
++	if (!(bp->b_flags & XBF_ASYNC))
+ 		goto out_stale;
  
- static void
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index bea20d43a38191..9eb4044597c985 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -269,13 +269,6 @@ static inline void xfs_buf_relse(xfs_buf_t *bp)
- 
- /* Buffer Read and Write Routines */
- extern int xfs_bwrite(struct xfs_buf *bp);
--static inline void xfs_buf_ioend_finish(struct xfs_buf *bp)
--{
--	if (bp->b_flags & XBF_ASYNC)
--		xfs_buf_relse(bp);
--	else
--		complete(&bp->b_iowait);
--}
- 
- extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
- 		xfs_failaddr_t failaddr);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index cf6dabb98f2327..741a2c247bc585 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -288,7 +288,6 @@ xlog_recover_iodone(
- 		xfs_buf_item_relse(bp);
- 	ASSERT(bp->b_log_item == NULL);
- 	bp->b_flags &= ~_XBF_LOGRECOVERY;
--	xfs_buf_ioend_finish(bp);
- }
- 
- /*
+ 	trace_xfs_buf_iodone_async(bp, _RET_IP_);
 -- 
 2.26.2
 
