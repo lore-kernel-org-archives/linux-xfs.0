@@ -2,61 +2,111 @@ Return-Path: <SRS0=XuOj=AU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF2E6C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 03:00:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 301F9C433E1
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 08:26:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C467620738
-	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 03:00:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11EBD206A1
+	for <linux-xfs@archiver.kernel.org>; Thu,  9 Jul 2020 08:26:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Bu84UwjN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726119AbgGIDA7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 8 Jul 2020 23:00:59 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:51110 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726107AbgGIDA7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 8 Jul 2020 23:00:59 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 768D35EED46;
-        Thu,  9 Jul 2020 13:00:55 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jtMnu-0002Ri-Eb; Thu, 09 Jul 2020 13:00:54 +1000
-Date:   Thu, 9 Jul 2020 13:00:54 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Carlos Maiolino <cmaiolino@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: remove xfs_zone_{alloc,zalloc} helpers
-Message-ID: <20200709030054.GV2005@dread.disaster.area>
-References: <20200708125608.155645-1-cmaiolino@redhat.com>
- <20200708125608.155645-5-cmaiolino@redhat.com>
+        id S1726387AbgGII0j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 9 Jul 2020 04:26:39 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:46977 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726306AbgGII0i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 9 Jul 2020 04:26:38 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594283197;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=lZzkV3MawPwjnH2A6+i/gZ/LnvMbuWxGQy5lTADJWpQ=;
+        b=Bu84UwjNrpRCdTYt8kmlkY+70KZOF+yvmD7CNPIJxxSL+ctrZscMbaO0Yj+NcD6XY719Wt
+        n4cGAnn2YgYlSeMsH21PUKrjlzYOlnGDEHz/UpOd38oVZcpX8KmX/wDY4T3X2xtcudhYDL
+        y5aQvlsDba//jBe3EvlxJvVargiFScg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-479-VvhpeSOcMc-klcFzERo_4w-1; Thu, 09 Jul 2020 04:26:33 -0400
+X-MC-Unique: VvhpeSOcMc-klcFzERo_4w-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9C93988C922;
+        Thu,  9 Jul 2020 08:26:31 +0000 (UTC)
+Received: from fogou.chygwyn.com (unknown [10.33.36.52])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CC38379815;
+        Thu,  9 Jul 2020 08:26:24 +0000 (UTC)
+Subject: Re: [Cluster-devel] always fall back to buffered I/O after
+ invalidation failures, was: Re: [PATCH 2/6] iomap:
+ IOMAP_DIO_RWF_NO_STALE_PAGECACHE return if page invalidation fails
+To:     Christoph Hellwig <hch@lst.de>,
+        Matthew Wilcox <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, fdmanana@gmail.com,
+        darrick.wong@oracle.com, Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Dave Chinner <david@fromorbit.com>, dsterba@suse.cz,
+        cluster-devel@redhat.com, linux-fsdevel@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+References: <20200629192353.20841-1-rgoldwyn@suse.de>
+ <20200629192353.20841-3-rgoldwyn@suse.de> <20200701075310.GB29884@lst.de>
+ <20200707124346.xnr5gtcysuzehejq@fiona>
+ <20200707125705.GK25523@casper.infradead.org> <20200707130030.GA13870@lst.de>
+ <20200708065127.GM2005@dread.disaster.area>
+ <20200708135437.GP25523@casper.infradead.org> <20200708165412.GA637@lst.de>
+From:   Steven Whitehouse <swhiteho@redhat.com>
+Message-ID: <126c9e1b-145f-3725-fbde-92135f52a4a3@redhat.com>
+Date:   Thu, 9 Jul 2020 09:26:22 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.6.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200708125608.155645-5-cmaiolino@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=Vt2hdyRRZuE0I09j3OsA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200708165412.GA637@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 08, 2020 at 02:56:08PM +0200, Carlos Maiolino wrote:
-> All their users have been converted to use MM API directly, no need to
-> keep them around anymore.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hi,
 
-Looks good. :)
+On 08/07/2020 17:54, Christoph Hellwig wrote:
+> On Wed, Jul 08, 2020 at 02:54:37PM +0100, Matthew Wilcox wrote:
+>> Direct I/O isn't deterministic though.  If the file isn't shared, then
+>> it works great, but as soon as you get mixed buffered and direct I/O,
+>> everything is already terrible.  Direct I/Os perform pagecache lookups
+>> already, but instead of using the data that we found in the cache, we
+>> (if it's dirty) write it back, wait for the write to complete, remove
+>> the page from the pagecache and then perform another I/O to get the data
+>> that we just wrote out!  And then the app that's using buffered I/O has
+>> to read it back in again.
+> Mostly agreed.  That being said I suspect invalidating clean cache
+> might still be a good idea.  The original idea was mostly on how
+> to deal with invalidation failures of any kind, but falling back for
+> any kind of dirty cache also makes at least some sense.
+>
+>> I have had an objection raised off-list.  In a scenario with a block
+>> device shared between two systems and an application which does direct
+>> I/O, everything is normally fine.  If one of the systems uses tar to
+>> back up the contents of the block device then the application on that
+>> system will no longer see the writes from the other system because
+>> there's nothing to invalidate the pagecache on the first system.
+> Err, WTF?  If someone access shared block devices with random
+> applications all bets are off anyway.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On GFS2 the locking should take care of that. Not 100% sure about OCFS2 
+without looking, but I'm fairly sure that they have a similar 
+arrangement. So this shouldn't be a problem unless there is an 
+additional cluster fs that I'm not aware of that they are using in this 
+case. It would be good to confirm which fs they are using,
 
--- 
-Dave Chinner
-david@fromorbit.com
+Steve.
+
+
