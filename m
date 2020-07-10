@@ -4,97 +4,96 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF789C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 13:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B2DC433E7
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 15:44:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AEFFE20767
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 13:53:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38387207BB
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 15:44:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IavPO43/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bfv/CTMB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726867AbgGJNx5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jul 2020 09:53:57 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:42283 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726828AbgGJNx5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jul 2020 09:53:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594389236;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=mtIuvWkuwTN3qDUtspD4+kB96CZ/SC3n7kkvO9RbS9c=;
-        b=IavPO43/Vwfio29rZJBt2ZuHiycQWVLfS7PzhfEcs9255SGp/Kce4sWSpZNeoD/BacVWkn
-        Qsi3cygjSbzjlBIQEgpQJ82nBPucQknBAJyJA/cC8qOXHpz5p0yXv99lBWj0BzA3GT83Gi
-        +GPv9q/7Itg/tWB8OwpPVdmgM2/nQFc=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-428-07-khZlMMRm1mvNMFoGPkA-1; Fri, 10 Jul 2020 09:53:54 -0400
-X-MC-Unique: 07-khZlMMRm1mvNMFoGPkA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 31BD9100AA23;
-        Fri, 10 Jul 2020 13:53:53 +0000 (UTC)
-Received: from redhat.com (ovpn-115-154.rdu2.redhat.com [10.10.115.154])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A4F9A17D82;
-        Fri, 10 Jul 2020 13:53:49 +0000 (UTC)
-Date:   Fri, 10 Jul 2020 08:53:47 -0500
-From:   Bill O'Donnell <billodo@redhat.com>
+        id S1727820AbgGJPom (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jul 2020 11:44:42 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:36888 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727810AbgGJPom (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jul 2020 11:44:42 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06AFaqDj139538;
+        Fri, 10 Jul 2020 15:44:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=4TX80nWXBYUetU6EWwfqTgSalK9LB2PropViIo7MHcA=;
+ b=bfv/CTMBm0uyHlbsltrCIWv0m3VysPeKsbfWYRmGl1jT/xOJFZgRGLiumpQOk+skW8Lm
+ iTap5o46ZndRIUbgUAAPLzOgdjQkNz/4aCYVQT1uQ75iCUo58rUz/dZq6a/1GqyvVVRi
+ RWfKAZQpI11Ab7VjdrERBXtp43uksM82Zkf/n+xU1g+aNXmmIu0iF8nxXBOPP+LB4utH
+ jxAhhqwREnwN4NCqtu/4V8pYphmP8QKa/0hUHM6bCE7lwLOX6ukMicKsKv5HiLD/hLhD
+ DTE7OhBpGUgbZrDNYS/K9FdoAgzFKRvKqrQsFuC0kwzVDahJLCmINFvTmMcb4t6p/D4a bQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 325y0ar7cn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 10 Jul 2020 15:44:33 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06AFbR2V027042;
+        Fri, 10 Jul 2020 15:42:33 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 325k3khgrn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 10 Jul 2020 15:42:33 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06AFgTth006524;
+        Fri, 10 Jul 2020 15:42:29 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 10 Jul 2020 08:42:29 -0700
+Date:   Fri, 10 Jul 2020 08:42:28 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, sandeen@redhat.com,
-        darrick.wong@oracle.com
-Subject: Re: [PATCH] xfsprogs: xfs_quota state command should report ugp
- grace times
-Message-ID: <20200710135347.GA249437@redhat.com>
-References: <20200709212657.216923-1-billodo@redhat.com>
- <20200710090042.GB30797@infradead.org>
+Cc:     "Bill O'Donnell" <billodo@redhat.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs_quota: display warning limits when printing quota
+ type information
+Message-ID: <20200710154228.GT7606@magnolia>
+References: <20200709161124.GP7606@magnolia>
+ <20200710085906.GA30797@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200710090042.GB30797@infradead.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20200710085906.GA30797@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9678 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 mlxscore=0
+ spamscore=0 malwarescore=0 phishscore=0 mlxlogscore=999 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007100106
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9678 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 adultscore=0 malwarescore=0
+ clxscore=1015 impostorscore=0 phishscore=0 suspectscore=1
+ priorityscore=1501 bulkscore=0 lowpriorityscore=0 mlxlogscore=999
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007100106
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 10, 2020 at 10:00:42AM +0100, Christoph Hellwig wrote:
-> On Thu, Jul 09, 2020 at 04:26:57PM -0500, Bill O'Donnell wrote:
-> > Since grace periods are now supported for three quota types (ugp),
-> > modify xfs_quota state command to report times for all three.
+On Fri, Jul 10, 2020 at 09:59:06AM +0100, Christoph Hellwig wrote:
+> On Thu, Jul 09, 2020 at 09:11:24AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > We should dump the default warning limits when we're printing quota
+> > information.
 > 
-> This looks like it'll clash with the patch that Darrick just sent..
+> This looks sensible.  Do we need any xfstests changes for thew new
+> output, though?
 > 
-> > +	if (type & XFS_USER_QUOTA) {
-> > +		if (xfsquotactl(XFS_GETQSTATV, dev, XFS_USER_QUOTA,
-> > +				0, (void *)&sv) < 0) {
-> > +			if (xfsquotactl(XFS_GETQSTAT, dev, XFS_USER_QUOTA,
-> > +					0, (void *)&s) < 0) {
-> > +				if (flags & VERBOSE_FLAG)
-> > +					fprintf(fp,
-> > +						_("%s quota are not enabled on %s\n"),
-> > +						type_to_string(XFS_USER_QUOTA),
-> > +						dev);
-> > +				return;
-> > +			}
-> > +			state_stat_to_statv(&s, &sv);
-> >  		}
-> >  
-> >  		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
-> >  				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
-> >  				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
-> > +		state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
-> > +		state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
-> > +		state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
-> > +	}
-> 
-> Any chance we could factor this repititive code into a helper?
-> 
-Yeah, that makes sense. I'll do it.
-Thanks-
-Bill
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
+Yep.  I'll throw that series in at the end of the next round of the
+quota refactoring.
+
+--D
