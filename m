@@ -6,62 +6,81 @@ X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA46FC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 08:59:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1B44C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 09:00:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A36FB207BC
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 08:59:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C4BC206E2
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 09:00:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="G6WDGQU+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qhVQBEud"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726880AbgGJI7Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jul 2020 04:59:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49166 "EHLO
+        id S1726816AbgGJJAo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jul 2020 05:00:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726644AbgGJI7P (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jul 2020 04:59:15 -0400
+        with ESMTP id S1726496AbgGJJAn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jul 2020 05:00:43 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6073C08C5CE
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Jul 2020 01:59:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9E5BC08C5CE
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Jul 2020 02:00:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=9suiaCyA6n9zpkCe8RDJnXKIHWpCPll+xj1LntvNO1M=; b=G6WDGQU+Ok5Fw5pPVjq53r8LDV
-        ArmhYJigd6deTfpKY3vVUnZBYgZJ/p7ffVTUwR58oL0xkRGPX0h/ymSC8NJcSyaqyVJd8FHeGA8Kp
-        jm1oAa+b0nCCs3TDZczLTuH+WHMvEz89wKpy/z9GI5K+07zwyCddAgaTDH4iKxwqLC/yMNkNTNPa3
-        1geHoNu28AB08Sa5wr0QZcXiHB94nHcE/uS8pp+uzD7tKhntiV39ZuKYkVh2KMGrrvenbnfLrsMXf
-        wD1JLB2ILTYAVGIuTTiB6Zq2Q90gCENF9vfCY5Rm+OsLtXG/OpsaV0kuwJbXo8eSn80y+XTUnxFeH
-        e5dwD/yw==;
+        bh=iRnF2UzEOLAQZBwswsINfbA2CNZ+sZDuzKAT65EpUjM=; b=qhVQBEudx0ZKhoQ5W6/Ou8E8UC
+        513/cJKbMn2FoloS8NqUg4xrLdDfdC7B/LVY8hoHfxBEyzOVvPYw0RA3zrxFn9Nrd3YrM21dRsZjD
+        NH/7AntCtcCwFEERUTzorMtb516+Y0jR6k+eDGQtoz7k9ZEwkLB4xEWVwJUhs5umV+/6U+lyCQDdq
+        IIiGferarn9rZst3hgC4TPY1qvQNjVDE0lXC73ejNXOF70xhIRF2caGosQLKkAJ2M0ns1SU296Y+3
+        fQnc/gWsPFqBk4oROpgvEkjyXQIU5nR1P4fSJU0f/ERrNEOXMAjZjbKVR4g5AKU3wJyqUU5siLdyX
+        sFkgn4XA==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jtos6-00081K-IS; Fri, 10 Jul 2020 08:59:06 +0000
-Date:   Fri, 10 Jul 2020 09:59:06 +0100
+        id 1jtote-00088g-BJ; Fri, 10 Jul 2020 09:00:42 +0000
+Date:   Fri, 10 Jul 2020 10:00:42 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Bill O'Donnell <billodo@redhat.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs_quota: display warning limits when printing quota
- type information
-Message-ID: <20200710085906.GA30797@infradead.org>
-References: <20200709161124.GP7606@magnolia>
+To:     Bill O'Donnell <billodo@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, sandeen@redhat.com,
+        darrick.wong@oracle.com
+Subject: Re: [PATCH] xfsprogs: xfs_quota state command should report ugp
+ grace times
+Message-ID: <20200710090042.GB30797@infradead.org>
+References: <20200709212657.216923-1-billodo@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200709161124.GP7606@magnolia>
+In-Reply-To: <20200709212657.216923-1-billodo@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 09, 2020 at 09:11:24AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> We should dump the default warning limits when we're printing quota
-> information.
+On Thu, Jul 09, 2020 at 04:26:57PM -0500, Bill O'Donnell wrote:
+> Since grace periods are now supported for three quota types (ugp),
+> modify xfs_quota state command to report times for all three.
 
-This looks sensible.  Do we need any xfstests changes for thew new
-output, though?
+This looks like it'll clash with the patch that Darrick just sent..
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> +	if (type & XFS_USER_QUOTA) {
+> +		if (xfsquotactl(XFS_GETQSTATV, dev, XFS_USER_QUOTA,
+> +				0, (void *)&sv) < 0) {
+> +			if (xfsquotactl(XFS_GETQSTAT, dev, XFS_USER_QUOTA,
+> +					0, (void *)&s) < 0) {
+> +				if (flags & VERBOSE_FLAG)
+> +					fprintf(fp,
+> +						_("%s quota are not enabled on %s\n"),
+> +						type_to_string(XFS_USER_QUOTA),
+> +						dev);
+> +				return;
+> +			}
+> +			state_stat_to_statv(&s, &sv);
+>  		}
+>  
+>  		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
+>  				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
+>  				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
+> +		state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
+> +		state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
+> +		state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
+> +	}
+
+Any chance we could factor this repititive code into a helper?
