@@ -2,85 +2,112 @@ Return-Path: <SRS0=IY5l=AV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1B44C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 09:00:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF801C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 09:15:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C4BC206E2
-	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 09:00:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8470C2065D
+	for <linux-xfs@archiver.kernel.org>; Fri, 10 Jul 2020 09:15:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qhVQBEud"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KNm1sxFr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726816AbgGJJAo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 10 Jul 2020 05:00:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49400 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726496AbgGJJAn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jul 2020 05:00:43 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B9E5BC08C5CE
-        for <linux-xfs@vger.kernel.org>; Fri, 10 Jul 2020 02:00:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=iRnF2UzEOLAQZBwswsINfbA2CNZ+sZDuzKAT65EpUjM=; b=qhVQBEudx0ZKhoQ5W6/Ou8E8UC
-        513/cJKbMn2FoloS8NqUg4xrLdDfdC7B/LVY8hoHfxBEyzOVvPYw0RA3zrxFn9Nrd3YrM21dRsZjD
-        NH/7AntCtcCwFEERUTzorMtb516+Y0jR6k+eDGQtoz7k9ZEwkLB4xEWVwJUhs5umV+/6U+lyCQDdq
-        IIiGferarn9rZst3hgC4TPY1qvQNjVDE0lXC73ejNXOF70xhIRF2caGosQLKkAJ2M0ns1SU296Y+3
-        fQnc/gWsPFqBk4oROpgvEkjyXQIU5nR1P4fSJU0f/ERrNEOXMAjZjbKVR4g5AKU3wJyqUU5siLdyX
-        sFkgn4XA==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jtote-00088g-BJ; Fri, 10 Jul 2020 09:00:42 +0000
-Date:   Fri, 10 Jul 2020 10:00:42 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Bill O'Donnell <billodo@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, sandeen@redhat.com,
-        darrick.wong@oracle.com
-Subject: Re: [PATCH] xfsprogs: xfs_quota state command should report ugp
- grace times
-Message-ID: <20200710090042.GB30797@infradead.org>
-References: <20200709212657.216923-1-billodo@redhat.com>
+        id S1726664AbgGJJPu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 10 Jul 2020 05:15:50 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:41333 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726496AbgGJJPt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 10 Jul 2020 05:15:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594372548;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=q73+bxK0AsmcQmcfY+J5J+ST+7JC3I8fjtPtysmapz4=;
+        b=KNm1sxFry/OVv23WknP31Jqhx4I2R/Rb7INpASGUyWnyjCVm7QnmvvoEpo9viL+at2/gde
+        QHGg7flXLa08C4FHO+4Mx9EcsR6S+CVepI5cDe2LwXFPYAZQdNF7ODmcTIucS360jnXzKc
+        o3NuaLGMs3Jh5BKlwSlHJJhtDcP4Fgc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-434-VuF78DipNVmEisqSANMN0w-1; Fri, 10 Jul 2020 05:15:46 -0400
+X-MC-Unique: VuF78DipNVmEisqSANMN0w-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 28ABE107ACCA
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Jul 2020 09:15:46 +0000 (UTC)
+Received: from eorzea.redhat.com (unknown [10.40.193.235])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 836AC5D9E5
+        for <linux-xfs@vger.kernel.org>; Fri, 10 Jul 2020 09:15:45 +0000 (UTC)
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 0/5] Continue xfs kmem cleanup - V2
+Date:   Fri, 10 Jul 2020 11:15:31 +0200
+Message-Id: <20200710091536.95828-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200709212657.216923-1-billodo@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 09, 2020 at 04:26:57PM -0500, Bill O'Donnell wrote:
-> Since grace periods are now supported for three quota types (ugp),
-> modify xfs_quota state command to report times for all three.
+Hi,
 
-This looks like it'll clash with the patch that Darrick just sent..
+This is a V2 of the kmem cleanup series, which includes the changes suggested by
+Dave on V1, including his reviewed-by tag on patch 4.
 
-> +	if (type & XFS_USER_QUOTA) {
-> +		if (xfsquotactl(XFS_GETQSTATV, dev, XFS_USER_QUOTA,
-> +				0, (void *)&sv) < 0) {
-> +			if (xfsquotactl(XFS_GETQSTAT, dev, XFS_USER_QUOTA,
-> +					0, (void *)&s) < 0) {
-> +				if (flags & VERBOSE_FLAG)
-> +					fprintf(fp,
-> +						_("%s quota are not enabled on %s\n"),
-> +						type_to_string(XFS_USER_QUOTA),
-> +						dev);
-> +				return;
-> +			}
-> +			state_stat_to_statv(&s, &sv);
->  		}
->  
->  		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
->  				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
->  				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
-> +		state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
-> +		state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
-> +		state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
-> +	}
+Detailed changelog is written on each patch.
 
-Any chance we could factor this repititive code into a helper?
+Patches have been tested with xfstests, on a 1GiG and a 64GiB RAM systems to
+check the patches under memory pressure.
+
+Cheers.
+
+Comments?
+
+Carlos Maiolino (5):
+  xfs: Remove kmem_zone_alloc() usage
+  xfs: Remove kmem_zone_zalloc() usage
+  xfs: Modify xlog_ticket_alloc() to use kernel's MM API
+  xfs: remove xfs_zone_{alloc,zalloc} helpers
+  xfs: Remove xfs_da_state_alloc() helper
+
+ fs/xfs/kmem.c                      | 21 ---------------------
+ fs/xfs/kmem.h                      |  8 --------
+ fs/xfs/libxfs/xfs_alloc.c          |  3 ++-
+ fs/xfs/libxfs/xfs_alloc_btree.c    |  2 +-
+ fs/xfs/libxfs/xfs_attr.c           |  9 +++++----
+ fs/xfs/libxfs/xfs_bmap.c           |  8 ++++++--
+ fs/xfs/libxfs/xfs_bmap_btree.c     |  2 +-
+ fs/xfs/libxfs/xfs_da_btree.c       | 10 ----------
+ fs/xfs/libxfs/xfs_da_btree.h       |  1 -
+ fs/xfs/libxfs/xfs_dir2_node.c      |  8 ++++----
+ fs/xfs/libxfs/xfs_ialloc_btree.c   |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c     |  6 +++---
+ fs/xfs/libxfs/xfs_refcount_btree.c |  2 +-
+ fs/xfs/libxfs/xfs_rmap_btree.c     |  2 +-
+ fs/xfs/scrub/dabtree.c             |  3 ++-
+ fs/xfs/xfs_bmap_item.c             |  4 ++--
+ fs/xfs/xfs_buf.c                   |  4 +---
+ fs/xfs/xfs_buf_item.c              |  2 +-
+ fs/xfs/xfs_dquot.c                 |  2 +-
+ fs/xfs/xfs_extfree_item.c          |  6 ++++--
+ fs/xfs/xfs_icache.c                | 13 +++++++++----
+ fs/xfs/xfs_icreate_item.c          |  2 +-
+ fs/xfs/xfs_inode_item.c            |  3 ++-
+ fs/xfs/xfs_log.c                   |  9 +++------
+ fs/xfs/xfs_log_cil.c               |  3 +--
+ fs/xfs/xfs_log_priv.h              |  4 +---
+ fs/xfs/xfs_refcount_item.c         |  5 +++--
+ fs/xfs/xfs_rmap_item.c             |  5 +++--
+ fs/xfs/xfs_trace.h                 |  1 -
+ fs/xfs/xfs_trans.c                 |  4 ++--
+ fs/xfs/xfs_trans_dquot.c           |  3 ++-
+ 31 files changed, 63 insertions(+), 94 deletions(-)
+
+-- 
+2.26.2
+
