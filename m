@@ -2,90 +2,150 @@ Return-Path: <SRS0=4kkz=AY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8A3C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jul 2020 20:21:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB53EC433E3
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jul 2020 23:45:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 109B220720
-	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jul 2020 20:21:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VBiYEWRD"
+	by mail.kernel.org (Postfix) with ESMTP id C578F2137B
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jul 2020 23:45:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726400AbgGMUV4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 13 Jul 2020 16:21:56 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:35409 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726321AbgGMUV4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 13 Jul 2020 16:21:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594671715;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=D0/Xvxxx5YHKJ/Ib7PuxpQltL7eDZZDU4H48/YQcuTE=;
-        b=VBiYEWRDS6JiaFCMdDSMv2pPKX6DhWgrFo1s8r7QX6yN54EK1ioRF/Yn+KSItaw3PSkv42
-        rzahNK2PyW2Ey8VnwWBXhrgk85TE2syHP81361NG0aXTmiUZRKQkiX9achFDhOSakEmV1O
-        HKONhKA2E1BfcPDzNdpQj55i0PiIEJ0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-469-igMJLCA6OuO2AMWt6gJAkA-1; Mon, 13 Jul 2020 16:21:53 -0400
-X-MC-Unique: igMJLCA6OuO2AMWt6gJAkA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1727030AbgGMXpo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 13 Jul 2020 19:45:44 -0400
+Received: from sandeen.net ([63.231.237.45]:55786 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726339AbgGMXpo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 13 Jul 2020 19:45:44 -0400
+Received: from Liberator.localdomain (unknown [50.34.198.88])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7C107100CCC0
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2020 20:21:52 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-113-214.rdu2.redhat.com [10.10.113.214])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 37F31710A1
-        for <linux-xfs@vger.kernel.org>; Mon, 13 Jul 2020 20:21:52 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: finish dfops on every insert range shift iteration
-Date:   Mon, 13 Jul 2020 16:21:51 -0400
-Message-Id: <20200713202151.64750-1-bfoster@redhat.com>
+        by sandeen.net (Postfix) with ESMTPSA id 5119A4EA2B7;
+        Mon, 13 Jul 2020 18:45:06 -0500 (CDT)
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+To:     Dave Chinner <david@fromorbit.com>,
+        Masayoshi Mizuma <msys.mizuma@gmail.com>
+Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>
+References: <20200617155836.GD13815@fieldses.org>
+ <24692989-2ee0-3dcc-16d8-aa436114f5fb@sandeen.net>
+ <20200617172456.GP11245@magnolia>
+ <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
+ <20200617181816.GA18315@fieldses.org>
+ <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
+ <20200617184507.GB18315@fieldses.org>
+ <20200618013026.ewnhvf64nb62k2yx@gabell>
+ <20200618030539.GH2005@dread.disaster.area>
+ <20200618034535.h5ho7pd4eilpbj3f@gabell>
+ <20200618223948.GI2005@dread.disaster.area>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <0404aff7-a1d9-c054-f709-521458d7901d@sandeen.net>
+Date:   Mon, 13 Jul 2020 16:45:19 -0700
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <20200618223948.GI2005@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The recent change to make insert range an atomic operation used the
-incorrect transaction rolling mechanism. The explicit transaction
-roll does not finish deferred operations. This means that intents
-for rmapbt updates caused by extent shifts are not logged until the
-final transaction commits. Thus if a crash occurs during an insert
-range, log recovery might leave the rmapbt in an inconsistent state.
-This was discovered by repeated runs of generic/455.
+On 6/18/20 3:39 PM, Dave Chinner wrote:
+> On Wed, Jun 17, 2020 at 11:45:35PM -0400, Masayoshi Mizuma wrote:
 
-Update insert range to finish dfops on every shift iteration. This
-is similar to collapse range and ensures that intents are logged
-with the transactions that make associated changes.
+...
 
-Fixes: dd87f87d87fa ("xfs: rework insert range into an atomic operation")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_bmap_util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> Thank you for pointed it out.
+>> How about following change? I believe it works both xfs and btrfs...
+>>
+>> diff --git a/fs/super.c b/fs/super.c
+>> index b0a511bef4a0..42fc6334d384 100644
+>> --- a/fs/super.c
+>> +++ b/fs/super.c
+>> @@ -973,6 +973,9 @@ int reconfigure_super(struct fs_context *fc)
+>>                 }
+>>         }
+>>
+>> +       if (sb->s_flags & SB_I_VERSION)
+>> +               fc->sb_flags |= MS_I_VERSION;
+>> +
+>>         WRITE_ONCE(sb->s_flags, ((sb->s_flags & ~fc->sb_flags_mask) |
+>>                                  (fc->sb_flags & fc->sb_flags_mask)));
+>>         /* Needs to be ordered wrt mnt_is_readonly() */
+> 
+> This will prevent SB_I_VERSION from being turned off at all. That
+> will break existing filesystems that allow SB_I_VERSION to be turned
+> off on remount, such as ext4.
+> 
+> The manipulations here need to be in the filesystem specific code;
+> we screwed this one up so badly there is no "one size fits all"
+> behaviour that we can implement in the generic code...
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index afdc7f8e0e70..feb277874a1f 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1165,7 +1165,7 @@ xfs_insert_file_space(
- 		goto out_trans_cancel;
- 
- 	do {
--		error = xfs_trans_roll_inode(&tp, ip);
-+		error = xfs_defer_finish(&tp);
- 		if (error)
- 			goto out_trans_cancel;
- 
--- 
-2.21.3
+I wandered back into this thread for some reason ... ;)
 
+Since iversion/noiversion is /already/ advertised as a vfs-level mount option,
+wouldn't exposing it in /proc/mounts solve the original problem here?
+
+("i_version" is wrong, because it's ext4-specific, but "iversion" is handled
+by the vfs, so it's meaningful for any filesystems, and it will also trivially
+allow mount(2) to preserve it across remounts for all filesystems that set it by
+default.)
+
+Seems like that's the fastest path to fixing the current problems, even if a
+long-term goal may be to deprecate it altogether.
+
+-Eric
