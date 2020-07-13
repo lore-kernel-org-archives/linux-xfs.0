@@ -1,151 +1,139 @@
-Return-Path: <SRS0=dwuM=AX=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=4kkz=AY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 820C8C433E0
-	for <linux-xfs@archiver.kernel.org>; Sun, 12 Jul 2020 11:36:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C32C433E3
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jul 2020 03:35:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 506CB20720
-	for <linux-xfs@archiver.kernel.org>; Sun, 12 Jul 2020 11:36:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=scylladb-com.20150623.gappssmtp.com header.i=@scylladb-com.20150623.gappssmtp.com header.b="ZiuD87Ds"
+	by mail.kernel.org (Postfix) with ESMTP id 36459206E2
+	for <linux-xfs@archiver.kernel.org>; Mon, 13 Jul 2020 03:35:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594611305;
+	bh=41IYY+/hX2sb2b1GBvHrVsrCwrGfmHuoNNwcohgG4Us=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=xpS8UkEt23dbs1v4+8k8vsf0bLIAX88HkOVkLRNRdzLlluE+78hFV6EPrbKYiV+GE
+	 VP1g+RXyuxUNE80DuoB5t/6s1p2Lw+//E00THsrsCwR0XgHsFP6rWaWpLVTv/rOlnO
+	 sz7DdYrvLrTfYwRlI/VS0WMSLWCBLoigcrfPklz0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728813AbgGLLgg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 12 Jul 2020 07:36:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34938 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728797AbgGLLgf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 12 Jul 2020 07:36:35 -0400
-Received: from mail-wr1-x444.google.com (mail-wr1-x444.google.com [IPv6:2a00:1450:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DACD8C061794
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2020 04:36:34 -0700 (PDT)
-Received: by mail-wr1-x444.google.com with SMTP id z13so10101802wrw.5
-        for <linux-xfs@vger.kernel.org>; Sun, 12 Jul 2020 04:36:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=scylladb-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:organization:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=5A9cDnFjTG3NBzPmqHsPL3YmbPK4apFGGEKOIxq7+1E=;
-        b=ZiuD87Dsu+6b7jF8K06Oi76ztxdd7tcCfM24FD0meQMd0en5C46y3i/vjGou1ps+mp
-         IINa+5udjSzWkifAEdUzA21DvZcisQqApTQfvyUaleXNt2uCllIdltFhYN4TsL5IU3Wz
-         f+67WzizA9s7b3wjdRsNSf6wAguRT8/W0xLrxIM+zD0y19fcSXwwmG//8Ba/KKYoH/ck
-         XZSqpzoX6xVbBJ0gnk3TJFGiHv4bUtwLjQfHq1aCeVkUR8byjONl687PUWDkIYlUScSe
-         ptjblxeDeZ6iP9JetGcVIDSG8L9WbbwkPQFwcQ+DIzroN6zwuC1FzvfZxRMeeZ9Ml1LC
-         0N1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:organization
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-transfer-encoding:content-language;
-        bh=5A9cDnFjTG3NBzPmqHsPL3YmbPK4apFGGEKOIxq7+1E=;
-        b=Q4af0A5R/0lgnrbDKCrYJnZ8u6qp5xXtRynlsm8bJx2iWwuK6ZOjdXjc1CAYTs9k8M
-         3WmiMwJgVDMB1XjzFuGgmwO3xauFZwF0iSxOHYHb5NETDocoEzsaq0BNAyloBp3fkSvm
-         fcm3MkxA20gUOjXCFsp8ObnXDMIs9GFfSIfXGAwEN92dEkS9k+EbiLOkXYuQ2MMp2r/K
-         XaHyWPiPXSQHo8AqGJzOtM3o98E+ZHzW/DoiZ4JSyV3y5DvYoVQmlT8fkdwxeLhwP1Z+
-         MLa4V22mlMGFmTOxtDvQQTxzDgq3QHSYyeBopA1mHtepzTSvSJySLm50O619fEkWu6Pb
-         iXxA==
-X-Gm-Message-State: AOAM530NIjqYY7TTgEeblogfM6MUgqQf3+6CWQGE1hY1up+1rWqs69r3
-        RqkjA943WKmPejBzXQeLLRd1Fg==
-X-Google-Smtp-Source: ABdhPJz33AclGjgkKPm9J3Ofni7d342G+PScmj88XhlgW6hBgx7woi/nEA1w/wuw9KvF7wt1x0wiRg==
-X-Received: by 2002:adf:f889:: with SMTP id u9mr82733150wrp.149.1594553793471;
-        Sun, 12 Jul 2020 04:36:33 -0700 (PDT)
-Received: from [10.0.0.1] (system.cloudius-systems.com. [199.203.229.89])
-        by smtp.gmail.com with ESMTPSA id m2sm7020970wmg.0.2020.07.12.04.36.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 12 Jul 2020 04:36:32 -0700 (PDT)
-Subject: Re: always fall back to buffered I/O after invalidation failures,
- was: Re: [PATCH 2/6] iomap: IOMAP_DIO_RWF_NO_STALE_PAGECACHE return if page
- invalidation fails
-To:     Dave Chinner <david@fromorbit.com>,
-        Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        fdmanana@gmail.com, dsterba@suse.cz, darrick.wong@oracle.com,
-        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-References: <20200629192353.20841-1-rgoldwyn@suse.de>
- <20200629192353.20841-3-rgoldwyn@suse.de> <20200701075310.GB29884@lst.de>
- <20200707124346.xnr5gtcysuzehejq@fiona>
- <20200707125705.GK25523@casper.infradead.org> <20200707130030.GA13870@lst.de>
- <20200708065127.GM2005@dread.disaster.area>
- <20200708135437.GP25523@casper.infradead.org>
- <20200709022527.GQ2005@dread.disaster.area>
-From:   Avi Kivity <avi@scylladb.com>
-Organization: ScyllaDB
-Message-ID: <f86a687a-29bf-ef9c-844c-4354de9a65bb@scylladb.com>
-Date:   Sun, 12 Jul 2020 14:36:28 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        id S1728252AbgGMDfE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 12 Jul 2020 23:35:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47574 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726491AbgGMDfE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 12 Jul 2020 23:35:04 -0400
+Received: from sol.hsd1.ca.comcast.net (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D2E320722;
+        Mon, 13 Jul 2020 03:35:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594611303;
+        bh=41IYY+/hX2sb2b1GBvHrVsrCwrGfmHuoNNwcohgG4Us=;
+        h=From:To:Cc:Subject:Date:From;
+        b=zKLykD+ebs0yY0QSgcLifTmGtf0olv8jsDAubALRq2trmmLiErvOdj5Lt9Q5pktgz
+         UerZhze4E3Z8Vnq8R++twoa81O8L6/XVIA6/7fKEO0o0KQBh9sBm7yvNt/Xd4/ZOtB
+         J3u9YYUlHTWNLZLawnI+60HlK4L2C0qCxnhIAL2w=
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: [PATCH] fs/direct-io: avoid data race on ->s_dio_done_wq
+Date:   Sun, 12 Jul 2020 20:33:30 -0700
+Message-Id: <20200713033330.205104-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <20200709022527.GQ2005@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Eric Biggers <ebiggers@google.com>
 
-On 09/07/2020 05.25, Dave Chinner wrote:
->
->> Nobody's proposing changing Direct I/O to exclusively work through the
->> pagecache.  The proposal is to behave less weirdly when there's already
->> data in the pagecache.
-> No, the proposal it to make direct IO behave *less
-> deterministically* if there is data in the page cache.
->
-> e.g. Instead of having a predicatable submission CPU overhead and
-> read latency of 100us for your data, this proposal makes the claim
-> that it is always better to burn 10x the IO submission CPU for a
-> single IO to copy the data and give that specific IO 10x lower
-> latency than it is to submit 10 async IOs to keep the IO pipeline
-> full.
->
-> What it fails to take into account is that in spending that CPU time
-> to copy the data, we haven't submitted 10 other IOs and so the
-> actual in-flight IO for the application has decreased. If
-> performance comes from keeping the IO pipeline as close to 100% full
-> as possible, then copying the data out of the page cache will cause
-> performance regressions.
->
-> i.e. Hit 5 page cache pages in 5 IOs in a row, and the IO queue
-> depth craters because we've only fulfilled 5 complete IOs instead of
-> submitting 50 entire IOs. This is the hidden cost of synchronous IO
-> via CPU data copying vs async IO via hardware offload, and if we
-> take that into account we must look at future hardware performance
-> trends to determine if this cost is going to increase or decrease in
-> future.
->
-> That is: CPUs are not getting faster anytime soon. IO subsystems are
-> still deep in the "performance doubles every 2 years" part of the
-> technology curve (pcie 3.0->4.0 just happened, 4->5 is a year away,
-> 5->6 is 3-4 years away, etc). Hence our reality is that we are deep
-> within a performance trend curve that tells us synchronous CPU
-> operations are not getting faster, but IO bandwidth and IOPS are
-> going to increase massively over the next 5-10 years. Hence putting
-> (already expensive) synchronous CPU operations in the asynchronous
-> zero-data-touch IO fast path is -exactly the wrong direction to be
-> moving-.
->
-> This is simple math. The gap between IO latency and bandwidth and
-> CPU addressable memory latency and bandwidth is closing all the
-> time, and the closer that gap gets the less sense it makes to use
-> CPU addressable memory for buffering syscall based read and write
-> IO. We are not quite yet at the cross-over point, but we really
-> aren't that far from it.
->
->
+Fix the preliminary checks for ->s_dio_done_wq to use READ_ONCE(), since
+it's a data race, and technically the behavior is undefined without
+READ_ONCE().  Also, on one CPU architecture (Alpha), the data read
+dependency barrier included in READ_ONCE() is needed to guarantee that
+the pointed-to struct is seen as fully initialized.
 
-My use-case supports this. The application uses AIO+DIO, but backup may 
-bring pages into page cache. For me, it is best to ignore page cache (as 
-long as it's clean, which it is for backup) and serve from disk as usual.
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ fs/direct-io.c       | 8 +++-----
+ fs/internal.h        | 9 ++++++++-
+ fs/iomap/direct-io.c | 3 +--
+ 3 files changed, 12 insertions(+), 8 deletions(-)
 
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 6d5370eac2a8..26221ae24156 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -590,7 +590,7 @@ static inline int dio_bio_reap(struct dio *dio, struct dio_submit *sdio)
+  * filesystems that don't need it and also allows us to create the workqueue
+  * late enough so the we can include s_id in the name of the workqueue.
+  */
+-int sb_init_dio_done_wq(struct super_block *sb)
++int __sb_init_dio_done_wq(struct super_block *sb)
+ {
+ 	struct workqueue_struct *old;
+ 	struct workqueue_struct *wq = alloc_workqueue("dio/%s",
+@@ -615,9 +615,7 @@ static int dio_set_defer_completion(struct dio *dio)
+ 	if (dio->defer_completion)
+ 		return 0;
+ 	dio->defer_completion = true;
+-	if (!sb->s_dio_done_wq)
+-		return sb_init_dio_done_wq(sb);
+-	return 0;
++	return sb_init_dio_done_wq(sb);
+ }
+ 
+ /*
+@@ -1250,7 +1248,7 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 		retval = 0;
+ 		if (iocb->ki_flags & IOCB_DSYNC)
+ 			retval = dio_set_defer_completion(dio);
+-		else if (!dio->inode->i_sb->s_dio_done_wq) {
++		else {
+ 			/*
+ 			 * In case of AIO write racing with buffered read we
+ 			 * need to defer completion. We can't decide this now,
+diff --git a/fs/internal.h b/fs/internal.h
+index 9b863a7bd708..6736c9eee978 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -178,7 +178,14 @@ extern void mnt_pin_kill(struct mount *m);
+ extern const struct dentry_operations ns_dentry_operations;
+ 
+ /* direct-io.c: */
+-int sb_init_dio_done_wq(struct super_block *sb);
++int __sb_init_dio_done_wq(struct super_block *sb);
++static inline int sb_init_dio_done_wq(struct super_block *sb)
++{
++	/* pairs with cmpxchg() in __sb_init_dio_done_wq() */
++	if (likely(READ_ONCE(sb->s_dio_done_wq)))
++		return 0;
++	return __sb_init_dio_done_wq(sb);
++}
+ 
+ /*
+  * fs/stat.c:
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index ec7b78e6feca..dc7fe898dab8 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -487,8 +487,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		dio_warn_stale_pagecache(iocb->ki_filp);
+ 	ret = 0;
+ 
+-	if (iov_iter_rw(iter) == WRITE && !wait_for_completion &&
+-	    !inode->i_sb->s_dio_done_wq) {
++	if (iov_iter_rw(iter) == WRITE && !wait_for_completion) {
+ 		ret = sb_init_dio_done_wq(inode->i_sb);
+ 		if (ret < 0)
+ 			goto out_free_dio;
+-- 
+2.27.0
 
