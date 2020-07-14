@@ -2,34 +2,50 @@ Return-Path: <SRS0=oQKh=AZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B3A8C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 18:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 157C7C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 20:26:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C26F22527
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 18:08:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB7A720657
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 20:26:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725951AbgGNSIN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jul 2020 14:08:13 -0400
-Received: from sandeen.net ([63.231.237.45]:55000 "EHLO sandeen.net"
+        id S1726675AbgGNU0l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jul 2020 16:26:41 -0400
+Received: from sandeen.net ([63.231.237.45]:33786 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725906AbgGNSIM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 14 Jul 2020 14:08:12 -0400
+        id S1725877AbgGNU0k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 14 Jul 2020 16:26:40 -0400
 Received: from Liberator.localdomain (unknown [50.34.173.57])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 44CAA2AEC;
-        Tue, 14 Jul 2020 13:07:43 -0500 (CDT)
-Subject: Re: [PATCH] xfs_io: Document '-q' option for pread/pwrite command
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200714055327.1396-1-yangx.jy@cn.fujitsu.com>
- <20200714150148.GA7606@magnolia>
+        by sandeen.net (Postfix) with ESMTPSA id 9C2EC2AEC;
+        Tue, 14 Jul 2020 15:25:58 -0500 (CDT)
+Subject: Re: [PATCH] fs: i_version mntopt gets visible through /proc/mounts
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Masayoshi Mizuma <msys.mizuma@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Masayoshi Mizuma <m.mizuma@jp.fujitsu.com>,
+        linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs <linux-xfs@vger.kernel.org>
+References: <20200617172456.GP11245@magnolia>
+ <8f0df756-4f71-9d96-7a52-45bf51482556@sandeen.net>
+ <20200617181816.GA18315@fieldses.org>
+ <4cbb5cbe-feb4-2166-0634-29041a41a8dc@sandeen.net>
+ <20200617184507.GB18315@fieldses.org>
+ <20200618013026.ewnhvf64nb62k2yx@gabell>
+ <20200618030539.GH2005@dread.disaster.area>
+ <20200618034535.h5ho7pd4eilpbj3f@gabell>
+ <20200618223948.GI2005@dread.disaster.area>
+ <0404aff7-a1d9-c054-f709-521458d7901d@sandeen.net>
+ <20200714083000.GA31189@infradead.org>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -73,12 +89,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <ab89861d-0d85-e803-d545-18bd11342ab0@sandeen.net>
-Date:   Tue, 14 Jul 2020 11:08:07 -0700
+Message-ID: <e5aa3b59-63f4-b423-d7f2-59e506512626@sandeen.net>
+Date:   Tue, 14 Jul 2020 13:26:17 -0700
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200714150148.GA7606@magnolia>
+In-Reply-To: <20200714083000.GA31189@infradead.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,20 +103,37 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/14/20 8:01 AM, Darrick J. Wong wrote:
-> On Tue, Jul 14, 2020 at 01:53:26PM +0800, Xiao Yang wrote:
->> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+
+
+On 7/14/20 1:30 AM, Christoph Hellwig wrote:
+> On Mon, Jul 13, 2020 at 04:45:19PM -0700, Eric Sandeen wrote:
+>> I wandered back into this thread for some reason ... ;)
+>>
+>> Since iversion/noiversion is /already/ advertised as a vfs-level mount option,
+>> wouldn't exposing it in /proc/mounts solve the original problem here?
+>>
+>> ("i_version" is wrong, because it's ext4-specific, but "iversion" is handled
+>> by the vfs, so it's meaningful for any filesystems, and it will also trivially
+>> allow mount(2) to preserve it across remounts for all filesystems that set it by
+>> default.)
+>>
+>> Seems like that's the fastest path to fixing the current problems, even if a
+>> long-term goal may be to deprecate it altogether.
 > 
-> I did not know we had a 'q' flag...
+> But they should not be exposed as a mount option.  E.g. for XFS we
+> decide internally if we have a useful i_version or not, totally
+> independent of the mount option that leaked into the VFS.  So we'll
+> need to fix how the flag is used before doing any new work in this area.
 > 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-It was added >= 15 years ago and never documented, so that's
-not surprising.  :P
+It's been explicitly exposed, documented, fixed, updated etc for about
+12 years now.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+I was just hoping to make the current situation - even if we regret its
+mere existence - less broken, because going down a deprecation path will
+take us a while even if we choose it.
 
-Care to fix up sendfile as well?
+In the meantime I'll just make sure xfs isn't broken on remount, but had
+hoped for a more general fix.  *shrug*
 
-Thanks,
 -Eric
