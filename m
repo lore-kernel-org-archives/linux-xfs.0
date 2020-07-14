@@ -7,62 +7,66 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1371FC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 08:02:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCC57C433E4
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 08:03:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6AA52075D
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 08:02:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EBE52075D
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 08:03:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QNTSBdFN"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bQnGTn4T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725833AbgGNICp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jul 2020 04:02:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50612 "EHLO
+        id S1725816AbgGNIDb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jul 2020 04:03:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725793AbgGNICo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 04:02:44 -0400
+        with ESMTP id S1725793AbgGNIDb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 04:03:31 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A9A9C061755
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2020 01:02:44 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1B06C061755
+        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2020 01:03:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=9Rb8rdJLP+L0SEJgZHQO0oCM2/adoKuZ3Vg7v5M0Uz4=; b=QNTSBdFNbqniNW3ELFfeanyg55
-        DP5eIXw+DABlV+0k/7InUz/1stMMXiEtK0YBXuXjks3n2lxUWBhxrklvYl3IluhYeu75K5l2ZlJ2B
-        7ayU6ycuDkVX8/5uFXsUvJcbIoEeAO6Oed+7rqyI8wHLTBzVnnGSE2ufc+NmSJB7XMdvjli2sek4y
-        3kaMCGbTxjPIq5AMt8hSEsvCEKHch6lOHxAw1/tet8xkbxaNaal3LW13hQ/BklJUab71DP+IMqbqx
-        08wSGFjirAQNWdCIMbNTbRqlZsfhmOU8po/GnzXWoG1D1fCHU5v6FlGewb2KwncdXatoN1arolcFx
-        HuP6Tlgw==;
+        bh=Veol6zHcwyFTcI61GRZNvdlHvQrsif0mTYnaov0NtYk=; b=bQnGTn4TVHDRl7cpBE5C0ihrW0
+        qVtE2NLH/LQqWZNlgr/50ffACbxIXyB+syUU5IRO3zJS4GhreyLsBXBQXpTbgvl0bmMGtZzLMOeEE
+        qYPFXMp+YwcETfVvqqclTZCawX55VNlxf/xLmeLADWftBkoyyb4jisBgZxuroq9kmlgTpwY8N74+8
+        XUZB4mZ0vTNdvio134onNQ+BuABnyhuVY0XhGfl4o3vwcy37D62AqzP4HRj4eMuLQ1C9Tp43S0xnJ
+        dMhVrjaYaYadB9mWgQVIRFg9Ylhdt7B7mDcW8AW6L0yvhpyONXAJGOQQ6LJh2mH39jSynyTii5zY6
+        z/hU+/GQ==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jvFtj-00074W-6d; Tue, 14 Jul 2020 08:02:43 +0000
-Date:   Tue, 14 Jul 2020 09:02:43 +0100
+        id 1jvFuS-00078Y-WE; Tue, 14 Jul 2020 08:03:29 +0000
+Date:   Tue, 14 Jul 2020 09:03:28 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 24/26] xfs: assume the default quota limits are always
- set in xfs_qm_adjust_dqlimits
-Message-ID: <20200714080243.GI19883@infradead.org>
+Cc:     Allison Collins <allison.henderson@oracle.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 26/26] xfs: add more dquot tracepoints
+Message-ID: <20200714080328.GK19883@infradead.org>
 References: <159469028734.2914673.17856142063205791176.stgit@magnolia>
- <159469044233.2914673.9887253692124252095.stgit@magnolia>
+ <159469045467.2914673.3575157462136790000.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <159469044233.2914673.9887253692124252095.stgit@magnolia>
+In-Reply-To: <159469045467.2914673.3575157462136790000.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Jul 13, 2020 at 06:34:02PM -0700, Darrick J. Wong wrote:
+On Mon, Jul 13, 2020 at 06:34:14PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> We always initialize the default quota limits to something nowadays, so
-> we don't need to check that the defaults are set to something before
-> using them.
+> Add all the xfs_dquot fields to the tracepoint for that type; add a new
+> tracepoint type for the qtrx structure (dquot transaction deltas); and
+> use our new tracepoints.  This makes it easier for the author to trace
+> changes to dquot counters for debugging.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+> Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
 Looks good,
 
