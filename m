@@ -2,73 +2,75 @@ Return-Path: <SRS0=oQKh=AZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF9C9C433E2
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 21:46:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDCDEC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 21:46:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE10F206F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 21:46:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5FC3206D9
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 21:46:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AnMpsaAB"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xatYazoX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726831AbgGNVqL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jul 2020 17:46:11 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43010 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726710AbgGNVqK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 17:46:10 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06ELauvt149941;
-        Tue, 14 Jul 2020 21:46:09 GMT
+        id S1726986AbgGNVqZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jul 2020 17:46:25 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37318 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726710AbgGNVqZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 17:46:25 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06ELc5hj065569;
+        Tue, 14 Jul 2020 21:46:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=70S0rt50OTSWkMlD6sNocrQR4yVzPX6ouuE9NBCs4+c=;
- b=AnMpsaABiLuQYANHpZxFD6pc7IEQEZ7+ffKWASpdisMZQmZJi1lHbzUoN6N+3ZWENapq
- PRPiVXsfEoPPGPS67OtihKOvfFnOsJdhycGU9CR5zl5mtk4ZnEi3Pfq6qT9+vP/R6Wla
- nhxZzMRGxRMT1ReVSRctTRQOLsAf2Hc+n74YgHRiHoRzzVd0P/bQ1oRLoXkgr2KvRg98
- wflRXCha4aHzMPF5HaxwL+nPfiAj0sGfRNpcS3uqbmNO41mVMhZWliJMyvcyWHQl8Yni
- A75zTRTZrb2bWFYT5hYBRkBZD2pLilV6OoH3k6YRqCILSYDzBbiI6lAhM8lGfUok/zUn oQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 3275cm80gs-1
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=9PGjj14JllFYbNj8E3NwAnEJ4KTGh5s68I+j+JrKdQo=;
+ b=xatYazoXFP8B3fOo/b1q9U81YdkmaEgsnben9hzOxNoLNxzWdQJHvnFI9dXop+LFJ00m
+ WW2GSTTZDkpGCfz68DkznCgnjwSvT3sRxMn61ev+hLfzZ1EKxg0G/A8S0nA+xzkucAm5
+ amnCnHuc2zq3yuzPORb+r/OHUq1SfJ/GymLG6CSkVAO2FwIqK12WkIjB5WfmHV6FFmb7
+ lALHytxKMqAimPRoMOp02Pa07cPNPiDoyO3rfPqUFSVEPZX/FSN/OMuW8U6srcgzGBZZ
+ IaxwHKl54409e6ekEQSWXop05gw7s8/lsJcTRmhKXaNwpaiIQ84UdxoRjXZITVKOuyfX xQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 3274ur82tq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 14 Jul 2020 21:46:09 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06ELhaWO051480;
-        Tue, 14 Jul 2020 21:46:08 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 327qb5bc97-1
+        Tue, 14 Jul 2020 21:46:23 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06ELhcG8146638;
+        Tue, 14 Jul 2020 21:46:22 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 327q0q0wj1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 14 Jul 2020 21:46:08 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06ELk8Ol025182;
-        Tue, 14 Jul 2020 21:46:08 GMT
+        Tue, 14 Jul 2020 21:46:22 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06ELkLC9024804;
+        Tue, 14 Jul 2020 21:46:21 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 14 Jul 2020 14:46:08 -0700
-Subject: [PATCH v2.2 0/4] xfs_repair: check quota counters
+        with ESMTP ; Tue, 14 Jul 2020 14:46:20 -0700
+Subject: [PATCH 2/4] xfs_repair: fix clearing of quota CHKD flags
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 14 Jul 2020 14:46:05 -0700
-Message-ID: <159476316511.3156699.17998319555266568403.stgit@magnolia>
+Date:   Tue, 14 Jul 2020 14:46:19 -0700
+Message-ID: <159476317959.3156699.12804674592240361133.stgit@magnolia>
+In-Reply-To: <159476316511.3156699.17998319555266568403.stgit@magnolia>
+References: <159476316511.3156699.17998319555266568403.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 spamscore=0 phishscore=0 suspectscore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007140149
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 phishscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007140149
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 priorityscore=1501
- bulkscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ suspectscore=0 phishscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 priorityscore=1501 adultscore=0 bulkscore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2007140148
 Sender: linux-xfs-owner@vger.kernel.org
@@ -76,39 +78,55 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-One of the larger gaps between xfs_check and xfs_repair is that repair
-doesn't have the ability to check quota counters against the filesystem
-contents.  This series adds that checking ability to repair pass7, which
-should suffice to drop xfs_check in fstests.  It also means that repair
-no longer forces a quotacheck on the next mount even if the quota counts
-were correct.
+XFS_ALL_QUOTA_CHKD, being a OR of [UGP]QUOTA_CHKD, is a bitset of the
+possible *incore* quota checked flags.  This means that it cannot be
+used in a comparison with the *ondisk* quota checked flags because V4
+filesystems set OQUOTA_CHKD, not the [GU]QUOTA_CHKD flags (which are V5
+flags).
 
-For v2, I moved the makefile changes to a separate patch; fixed various
-labelling and error message things that Eric pointed out; and also fixed
-a bug where repair wasn't clearing the CHKD flags correctly on V4 fses.
+If you have a V4 filesystem with user quotas disabled but either group
+or project quotas enabled, xfs_repair will /not/ claim that the quota
+info will be regenerated on the next mount like it does in any other
+situation.  This is because the ondisk qflags field has OQUOTA_CHKD set
+but repair fails to notice.
 
-v2.2: Rebase against 5.7-rc1.
+Worse, if you have a V4 filesystem with user and group quotas enabled
+and mild corruption, repair will claim that the quota info will be
+regenerated.  If you then mount the fs with only group quotas enabled,
+quotacheck will not run to correct the data because repair failed to
+clear OQUOTA_CHKD properly.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+These are fairly benign and unlikely scenarios, but when we add
+quotacheck capabilities to xfs_repair, it will complain about the
+incorrect quota counts, which causes regressions in xfs/278.
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=repair-quotacheck
+Fixes: 342aef1ec0ec ("xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man8/xfs_repair.8 |    4 
- repair/Makefile       |   69 +++++-
- repair/phase7.c       |   21 ++
- repair/quotacheck.c   |  552 +++++++++++++++++++++++++++++++++++++++++++++++++
- repair/quotacheck.h   |   16 +
- repair/xfs_repair.c   |   13 +
- 6 files changed, 660 insertions(+), 15 deletions(-)
- create mode 100644 repair/quotacheck.c
- create mode 100644 repair/quotacheck.h
+ repair/xfs_repair.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 3bfc8311..1a51abd1 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -1100,10 +1100,13 @@ _("Warning:  project quota information would be cleared.\n"
+ 
+ 	dsb = sbp->b_addr;
+ 
+-	if (be16_to_cpu(dsb->sb_qflags) & XFS_ALL_QUOTA_CHKD) {
++	if (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD) {
+ 		do_warn(_("Note - quota info will be regenerated on next "
+ 			"quota mount.\n"));
+-		dsb->sb_qflags &= cpu_to_be16(~XFS_ALL_QUOTA_CHKD);
++		dsb->sb_qflags &= cpu_to_be16(~(XFS_UQUOTA_CHKD |
++						XFS_GQUOTA_CHKD |
++						XFS_PQUOTA_CHKD |
++						XFS_OQUOTA_CHKD));
+ 	}
+ 
+ 	if (copied_sunit) {
 
