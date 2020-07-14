@@ -2,147 +2,118 @@ Return-Path: <SRS0=oQKh=AZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 691FFC433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 06:00:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8271AC433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 07:01:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B08B21D93
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 06:00:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60400221F5
+	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 07:01:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E6t6RT6q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725876AbgGNGAt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jul 2020 02:00:49 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:22626 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725306AbgGNGAs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 02:00:48 -0400
-X-IronPort-AV: E=Sophos;i="5.75,350,1589212800"; 
-   d="scan'208";a="96298591"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 14 Jul 2020 14:00:44 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 802C04CE4BD9
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2020 14:00:38 +0800 (CST)
-Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Tue, 14 Jul 2020 14:00:38 +0800
-Received: from Fedora-30.g08.fujitsu.local (10.167.220.106) by
- G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Tue, 14 Jul 2020 14:00:35 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-To:     <linux-xfs@vger.kernel.org>
-CC:     Xiao Yang <yangx.jy@cn.fujitsu.com>
-Subject: [PATCH] xfs_io: Document '-q' option for pread/pwrite command
-Date:   Tue, 14 Jul 2020 13:53:26 +0800
-Message-ID: <20200714055327.1396-1-yangx.jy@cn.fujitsu.com>
-X-Mailer: git-send-email 2.21.0
+        id S1725931AbgGNHBH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jul 2020 03:01:07 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:24594 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725853AbgGNHBG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 03:01:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594710065;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=v0o6vS05dMQd9Z186F31LUjw5ChXs8ly1eNOlRWUGXc=;
+        b=E6t6RT6qwRcvikuHhccEjpSkwgCipOVx66wbFRG20Cw9V7pG8AIE0xnVESMUbw4zlrHuNB
+        Pm/Aly5PDtnglVtHa7sbu8fQyeEqLtrFqQ+3b0fKr0T7VAtLti+63LYuaJTREoLvGb8Awh
+        GUBfTU8KlXdUfwab1Qlba07ds1l4jP4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-360-IOq-grENOSCtRE7efr8cHA-1; Tue, 14 Jul 2020 03:01:00 -0400
+X-MC-Unique: IOq-grENOSCtRE7efr8cHA-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 519241800D42;
+        Tue, 14 Jul 2020 07:00:59 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AC1E2797EF;
+        Tue, 14 Jul 2020 07:00:58 +0000 (UTC)
+Date:   Tue, 14 Jul 2020 15:13:46 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>, fstests@vger.kernel.org,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs/010,030: filter AG header CRC error warnings
+Message-ID: <20200714071346.GY1938@dhcp-12-102.nay.redhat.com>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eryu Guan <guaneryu@gmail.com>, fstests@vger.kernel.org,
+        xfs <linux-xfs@vger.kernel.org>
+References: <20200713184930.GK7600@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 802C04CE4BD9.A9C1A
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200713184930.GK7600@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
----
- io/pread.c        |  3 ++-
- io/pwrite.c       |  3 ++-
- man/man8/xfs_io.8 | 10 ++++++++--
- 3 files changed, 12 insertions(+), 4 deletions(-)
+On Mon, Jul 13, 2020 at 11:49:30AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Filter out the new AG header CRC verification warnings in xfs_repair
+> since these tests were built before that existed.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/xfs/010 |    6 +++++-
+>  tests/xfs/030 |    2 ++
+>  2 files changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/tests/xfs/010 b/tests/xfs/010
+> index c341795d..ec23507a 100755
+> --- a/tests/xfs/010
+> +++ b/tests/xfs/010
+> @@ -113,7 +113,11 @@ _check_scratch_fs
+>  # nuke the finobt root, repair will have to regenerate from the inobt
+>  _corrupt_finobt_root $SCRATCH_DEV
+>  
+> -_scratch_xfs_repair 2>&1 | sed -e '/^bad finobt block/d' | _filter_repair_lostblocks
 
-diff --git a/io/pread.c b/io/pread.c
-index 971dbbc9..458a78b8 100644
---- a/io/pread.c
-+++ b/io/pread.c
-@@ -30,6 +30,7 @@ pread_help(void)
- " The reads are performed in sequential blocks starting at offset, with the\n"
- " blocksize tunable using the -b option (default blocksize is 4096 bytes),\n"
- " unless a different pattern is requested.\n"
-+" -q   -- quiet mode, do not write anything to standard output.\n"
- " -B   -- read backwards through the range from offset (backwards N bytes)\n"
- " -F   -- read forwards through the range of bytes from offset (default)\n"
- " -v   -- be verbose, dump out buffers (used when reading forwards)\n"
-@@ -506,7 +507,7 @@ pread_init(void)
- 	pread_cmd.argmin = 2;
- 	pread_cmd.argmax = -1;
- 	pread_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	pread_cmd.args = _("[-b bs] [-v] [-i N] [-FBR [-Z N]] off len");
-+	pread_cmd.args = _("[-b bs] [-qv] [-i N] [-FBR [-Z N]] off len");
- 	pread_cmd.oneline = _("reads a number of bytes at a specified offset");
- 	pread_cmd.help = pread_help;
- 
-diff --git a/io/pwrite.c b/io/pwrite.c
-index 995f6ece..467bfa9f 100644
---- a/io/pwrite.c
-+++ b/io/pwrite.c
-@@ -27,6 +27,7 @@ pwrite_help(void)
- " The writes are performed in sequential blocks starting at offset, with the\n"
- " blocksize tunable using the -b option (default blocksize is 4096 bytes),\n"
- " unless a different write pattern is requested.\n"
-+" -q   -- quiet mode, do not write anything to standard output.\n"
- " -S   -- use an alternate seed number for filling the write buffer\n"
- " -i   -- input file, source of data to write (used when writing forward)\n"
- " -d   -- open the input file for direct IO\n"
-@@ -483,7 +484,7 @@ pwrite_init(void)
- 	pwrite_cmd.argmax = -1;
- 	pwrite_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
- 	pwrite_cmd.args =
--_("[-i infile [-dDwNOW] [-s skip]] [-b bs] [-S seed] [-FBR [-Z N]] [-V N] off len");
-+_("[-i infile [-qdDwNOW] [-s skip]] [-b bs] [-S seed] [-FBR [-Z N]] [-V N] off len");
- 	pwrite_cmd.oneline =
- 		_("writes a number of bytes at a specified offset");
- 	pwrite_cmd.help = pwrite_help;
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index b9dcc312..d3eb3e7e 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -200,7 +200,7 @@ option will set the file permissions to read-write (0644). This allows xfs_io to
- set up mismatches between the file permissions and the open file descriptor
- read/write mode to exercise permission checks inside various syscalls.
- .TP
--.BI "pread [ \-b " bsize " ] [ \-v ] [ \-FBR [ \-Z " seed " ] ] [ \-V " vectors " ] " "offset length"
-+.BI "pread [ \-b " bsize " ] [ \-qv ] [ \-FBR [ \-Z " seed " ] ] [ \-V " vectors " ] " "offset length"
- Reads a range of bytes in a specified blocksize from the given
- .IR offset .
- .RS 1.0i
-@@ -211,6 +211,9 @@ can be used to set the blocksize into which the
- .BR read (2)
- requests will be split. The default blocksize is 4096 bytes.
- .TP
-+.B \-q
-+quiet mode, do not write anything to standard output.
-+.TP
- .B \-v
- dump the contents of the buffer after reading,
- by default only the count of bytes actually read is dumped.
-@@ -241,7 +244,7 @@ See the
- .B pread
- command.
- .TP
--.BI "pwrite [ \-i " file " ] [ \-dDwNOW ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-V " vectors " ] " "offset length"
-+.BI "pwrite [ \-i " file " ] [ \-qdDwNOW ] [ \-s " skip " ] [ \-b " size " ] [ \-S " seed " ] [ \-FBR [ \-Z " zeed " ] ] [ \-V " vectors " ] " "offset length"
- Writes a range of bytes in a specified blocksize from the given
- .IR offset .
- The bytes written can be either a set pattern or read in from another
-@@ -254,6 +257,9 @@ allows an input
- .I file
- to be specified as the source of the data to be written.
- .TP
-+.B \-q
-+quiet mode, do not write anything to standard output.
-+.TP
- .B \-d
- causes direct I/O, rather than the usual buffered
- I/O, to be used when reading the input file.
--- 
-2.21.0
+I think this patch is based on another patch which hasn't been merged, right?
+Due to I can't find the *sed -e '/^bad finobt block/d'* on current xfstests-dev
+master branch, which HEAD is:
+  aae8fbec  generic/270: wait for fsstress processes to be killed
 
+Thanks,
+Zorro
 
+> +filter_finobt_repair() {
+> +	sed -e '/^agi has bad CRC/d' -e '/^bad finobt block/d' | _filter_repair_lostblocks
+> +}
+> +
+> +_scratch_xfs_repair 2>&1 | filter_finobt_repair
+>  
+>  status=0
+>  exit
+> diff --git a/tests/xfs/030 b/tests/xfs/030
+> index 8f95331a..a270e36c 100755
+> --- a/tests/xfs/030
+> +++ b/tests/xfs/030
+> @@ -43,6 +43,8 @@ _check_ag()
+>  			    -e '/^bad agbno AGBNO for rmapbt/d' \
+>  			    -e '/^bad agbno AGBNO for refcntbt/d' \
+>  			    -e '/^bad inobt block count/d' \
+> +			    -e '/^agf has bad CRC/d' \
+> +			    -e '/^agi has bad CRC/d' \
+>  			    -e '/^bad finobt block count/d' \
+>  			    -e '/^Missing reverse-mapping record.*/d' \
+>  			    -e '/^unknown block state, ag AGNO, block.*/d'
+> 
 
