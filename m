@@ -2,123 +2,179 @@ Return-Path: <SRS0=dZhK=A2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A80FAC433E1
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 07:05:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDE2C433E2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 08:01:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DEA62065E
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 07:05:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ruM48ch9"
+	by mail.kernel.org (Postfix) with ESMTP id C379D2064C
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 08:01:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726811AbgGOHFx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jul 2020 03:05:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39308 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726212AbgGOHFw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 03:05:52 -0400
-Received: from mail-lf1-x144.google.com (mail-lf1-x144.google.com [IPv6:2a00:1450:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E45EC061755
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2020 00:05:52 -0700 (PDT)
-Received: by mail-lf1-x144.google.com with SMTP id y18so472550lfh.11
-        for <linux-xfs@vger.kernel.org>; Wed, 15 Jul 2020 00:05:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:subject:to:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=cZpPBr6QcgD5NOThIEIEbMR8/zmIhcJKg83JOkvRNYg=;
-        b=ruM48ch9N6M9quf5nDkhp3/eGHmMdnaQcpQUjKVUHOLrbxX/G38pqqFarleq4dPIH/
-         00rRqo8QwqpmCrreS0sP0d+DmCynWJ1PiObN4SlNXZxMTKiksWuDbQsxoNdb3+7unZqU
-         eoAr4xP+vOPFhOulL+uJmOD1U8mTXoTBJORja+WQ7qRwc5OVQiJ3aIfFTq7gMllXaURj
-         I+zetKof9z9CeCjK+/DApN2v3czJ7qmToBfPzrl3x1h0Ed76xHHGCAOMFImPIxAgkYnn
-         xBgq0MXUPjHAgjulTfkLOt28FycUjeKwMWeZYSaftBI8nsy3tBOOmteohGrPp23ng1Hy
-         715w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=cZpPBr6QcgD5NOThIEIEbMR8/zmIhcJKg83JOkvRNYg=;
-        b=MsDLpzt95WNNHPfOj+chssjiHHx/SIsLr5oT6z8r2PfOULawXJVEA+xfl40huy/De4
-         35xRHcVCkqWiOOcXzA7DsTGbH3oaK+uqWRbMLTnY43wenlRXVMEpYq5u5MVrhQd4bTEG
-         qARqZYXoNzkUGmCFAVjpagTzZ4cgeVrIC12/Sjwy5SIwOxYhl7HZgqa4lPHcs7nfhedT
-         4hVl9zfUuJz2+QNUfpgma4DDWys090b/7+kbdZlGD1Be2rldk6gl5WBRd/5zbVjQufgH
-         9YbCHyu9chdZ9fCyYjmn1SfvsnYipoLr6iXX+hARMBDc8uScTlj6B58xSkutoIJvzY14
-         zbRQ==
-X-Gm-Message-State: AOAM533lGFJ/3/fkG+8hcKq4dPngzMWZHB/EBHZ9yS3hCm9SMo8u36jG
-        GMqcwUvYWB3HSMctRA+bCUXHBfTw
-X-Google-Smtp-Source: ABdhPJxOrcB3+imwTjsa1DaYwvhR9uteb3/7CTzjALi6j+9KTM25zn8NoIHc9XkY1oLY1/2JIXxj7A==
-X-Received: by 2002:a19:806:: with SMTP id 6mr3980586lfi.171.1594796750196;
-        Wed, 15 Jul 2020 00:05:50 -0700 (PDT)
-Received: from amb.local (out244.support.agnat.pl. [91.234.176.244])
-        by smtp.gmail.com with ESMTPSA id t15sm359143lft.0.2020.07.15.00.05.49
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 15 Jul 2020 00:05:49 -0700 (PDT)
-From:   =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
-Subject: xfs_repair doesn't handle: br_startoff 8388608 br_startblock -2
- br_blockcount 1 br_state 0 corruption
-To:     linux-xfs@vger.kernel.org
-Message-ID: <744867e7-0457-46c6-f14b-8d7b91a61bbc@gmail.com>
-Date:   Wed, 15 Jul 2020 09:05:47 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.10.0
+        id S1729503AbgGOIBu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jul 2020 04:01:50 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39378 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729001AbgGOIBu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 04:01:50 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DF491821FB8;
+        Wed, 15 Jul 2020 18:01:46 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jvcMK-00045x-Rx; Wed, 15 Jul 2020 18:01:44 +1000
+Date:   Wed, 15 Jul 2020 18:01:44 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH] fs/direct-io: avoid data race on ->s_dio_done_wq
+Message-ID: <20200715080144.GF2005@dread.disaster.area>
+References: <20200713033330.205104-1-ebiggers@kernel.org>
+ <20200715013008.GD2005@dread.disaster.area>
+ <20200715023714.GA38091@sol.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200715023714.GA38091@sol.localdomain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=1XWaLZrsAAAA:8 a=7-415B0cAAAA:8
+        a=qULOb7ZNe8sg2onIpx4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Jul 14, 2020 at 07:37:14PM -0700, Eric Biggers wrote:
+> On Wed, Jul 15, 2020 at 11:30:08AM +1000, Dave Chinner wrote:
+> > On Sun, Jul 12, 2020 at 08:33:30PM -0700, Eric Biggers wrote:
+> > > From: Eric Biggers <ebiggers@google.com>
+> > > 
+> > > Fix the preliminary checks for ->s_dio_done_wq to use READ_ONCE(), since
+> > > it's a data race, and technically the behavior is undefined without
+> > > READ_ONCE().  Also, on one CPU architecture (Alpha), the data read
+> > > dependency barrier included in READ_ONCE() is needed to guarantee that
+> > > the pointed-to struct is seen as fully initialized.
+> > > 
+> > > Signed-off-by: Eric Biggers <ebiggers@google.com>
+> > > ---
+> > >  fs/direct-io.c       | 8 +++-----
+> > >  fs/internal.h        | 9 ++++++++-
+> > >  fs/iomap/direct-io.c | 3 +--
+> > >  3 files changed, 12 insertions(+), 8 deletions(-)
+> > > 
+> > > diff --git a/fs/direct-io.c b/fs/direct-io.c
+> > > index 6d5370eac2a8..26221ae24156 100644
+> > > --- a/fs/direct-io.c
+> > > +++ b/fs/direct-io.c
+> > > @@ -590,7 +590,7 @@ static inline int dio_bio_reap(struct dio *dio, struct dio_submit *sdio)
+> > >   * filesystems that don't need it and also allows us to create the workqueue
+> > >   * late enough so the we can include s_id in the name of the workqueue.
+> > >   */
+> > > -int sb_init_dio_done_wq(struct super_block *sb)
+> > > +int __sb_init_dio_done_wq(struct super_block *sb)
+> > >  {
+> > >  	struct workqueue_struct *old;
+> > >  	struct workqueue_struct *wq = alloc_workqueue("dio/%s",
+> > > @@ -615,9 +615,7 @@ static int dio_set_defer_completion(struct dio *dio)
+> > >  	if (dio->defer_completion)
+> > >  		return 0;
+> > >  	dio->defer_completion = true;
+> > > -	if (!sb->s_dio_done_wq)
+> > > -		return sb_init_dio_done_wq(sb);
+> > > -	return 0;
+> > > +	return sb_init_dio_done_wq(sb);
+> > >  }
+> > >  
+> > >  /*
+> > > @@ -1250,7 +1248,7 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+> > >  		retval = 0;
+> > >  		if (iocb->ki_flags & IOCB_DSYNC)
+> > >  			retval = dio_set_defer_completion(dio);
+> > > -		else if (!dio->inode->i_sb->s_dio_done_wq) {
+> > > +		else {
+> > >  			/*
+> > >  			 * In case of AIO write racing with buffered read we
+> > >  			 * need to defer completion. We can't decide this now,
+> > > diff --git a/fs/internal.h b/fs/internal.h
+> > > index 9b863a7bd708..6736c9eee978 100644
+> > > --- a/fs/internal.h
+> > > +++ b/fs/internal.h
+> > > @@ -178,7 +178,14 @@ extern void mnt_pin_kill(struct mount *m);
+> > >  extern const struct dentry_operations ns_dentry_operations;
+> > >  
+> > >  /* direct-io.c: */
+> > > -int sb_init_dio_done_wq(struct super_block *sb);
+> > > +int __sb_init_dio_done_wq(struct super_block *sb);
+> > > +static inline int sb_init_dio_done_wq(struct super_block *sb)
+> > > +{
+> > > +	/* pairs with cmpxchg() in __sb_init_dio_done_wq() */
+> > > +	if (likely(READ_ONCE(sb->s_dio_done_wq)))
+> > > +		return 0;
+> > > +	return __sb_init_dio_done_wq(sb);
+> > > +}
+> > 
+> > Ummm, why don't you just add this check in sb_init_dio_done_wq(). I
+> > don't see any need for adding another level of function call
+> > abstraction in the source code?
+> 
+> This keeps the fast path doing no function calls and one fewer branch, as it was
+> before.  People care a lot about minimizing direct I/O overhead, so it seems
+> desirable to keep this simple optimization.  Would you rather it be removed?
 
-Hello.
+No.
 
-xfs_repair (from for-next from about 2-3 weeks ago) doesn't seem to
-handle such kind of corruption. Repair (few times) finishes just fine
-but it ends up again with such trace.
+What I'm trying to say is that I'd prefer fast path checks don't get
+hidden away in a static inline function wrappers that require the
+reader to go look up code in a different file to understand that
+code in yet another different file is conditionally executed.
 
-Metadump is possible but problematic (will be huge).
+Going from obvious, easy to read fast path code to spreading the
+fast path logic over functions in 3 different files is not an
+improvement in the code - it is how we turn good code into an
+unmaintainable mess...
 
+> > Also, you need to explain the reason for the READ_ONCE() existing
+> > rather than just saying "it pairs with <some other operation>".
+> > Knowing what operation it pairs with doesn't explain why the pairing
+> > is necessary in the first place, and that leads to nobody reading
+> > the code being able to understand what this is protecting against.
+> > 
+> 
+> How about this?
+> 
+> 	/*
+> 	 * Nothing to do if ->s_dio_done_wq is already set.  But since another
+> 	 * process may set it concurrently, we need to use READ_ONCE() rather
+> 	 * than a plain read to avoid a data race (undefined behavior) and to
+> 	 * ensure we observe the pointed-to struct to be fully initialized.
+> 	 */
+> 	if (likely(READ_ONCE(sb->s_dio_done_wq)))
+> 		return 0;
 
-Jul  9 14:35:51 x kernel: XFS (sdd1): xfs_dabuf_map: bno 8388608 dir:
-inode 21698340263
-Jul  9 14:35:51 x kernel: XFS (sdd1): [00] br_startoff 8388608
-br_startblock -2 br_blockcount 1 br_state 0
-Jul  9 14:35:51 x kernel: XFS (sdd1): Internal error xfs_da_do_buf(1) at
-line 2557 of file fs/xfs/libxfs/xfs_da_btree.c.  Caller
-xfs_da_read_buf+0x6a/0x120 [xfs]
-Jul  9 14:35:51 x kernel: CPU: 3 PID: 2928 Comm: cp Tainted: G
-  E     5.0.0-1-03515-g3478588b5136 #10
-Jul  9 14:35:51 x kernel: Hardware name: Supermicro X10DRi/X10DRi, BIOS
-3.0a 02/06/2018
-Jul  9 14:35:51 x kernel: Call Trace:
-Jul  9 14:35:51 x kernel:  dump_stack+0x5c/0x80
-Jul  9 14:35:51 x kernel:  xfs_dabuf_map.constprop.0+0x1dc/0x390 [xfs]
-Jul  9 14:35:51 x kernel:  xfs_da_read_buf+0x6a/0x120 [xfs]
-Jul  9 14:35:51 x kernel:  xfs_da3_node_read+0x17/0xd0 [xfs]
-Jul  9 14:35:51 x kernel:  xfs_da3_node_lookup_int+0x6c/0x370 [xfs]
-Jul  9 14:35:51 x kernel:  ? kmem_cache_alloc+0x14e/0x1b0
-Jul  9 14:35:51 x kernel:  xfs_dir2_node_lookup+0x4b/0x170 [xfs]
-Jul  9 14:35:51 x kernel:  xfs_dir_lookup+0x1b5/0x1c0 [xfs]
-Jul  9 14:35:51 x kernel:  xfs_lookup+0x57/0x120 [xfs]
-Jul  9 14:35:51 x kernel:  xfs_vn_lookup+0x70/0xa0 [xfs]
-Jul  9 14:35:51 x kernel:  __lookup_hash+0x6c/0xa0
-Jul  9 14:35:51 x kernel:  ? _cond_resched+0x15/0x30
-Jul  9 14:35:51 x kernel:  filename_create+0x91/0x160
-Jul  9 14:35:51 x kernel:  do_linkat+0xa5/0x360
-Jul  9 14:35:51 x kernel:  __x64_sys_linkat+0x21/0x30
-Jul  9 14:35:51 x kernel:  do_syscall_64+0x55/0x100
-Jul  9 14:35:51 x kernel:  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+You still need to document what it pairs with, as "data race" doesn't
+describe the actual dependency we are synchronising against is.
 
+AFAICT from your description, the data race is not on
+sb->s_dio_done_wq itself, but on seeing the contents of the
+structure being pointed to incorrectly. i.e. we need to ensure that
+writes done before the cmpxchg are ordered correctly against
+reads done after the pointer can be seen here.
 
-Longer log:
-http://ixion.pld-linux.org/~arekm/xfs-10.txt
+If so, can't we just treat this as a normal
+store-release/load-acquire ordering pattern and hence use more
+relaxed memory barriers instead of have to patch up what we have now
+to specifically make ancient platforms that nobody actually uses
+with weird and unusual memory models work correctly?
 
+Cheers,
 
+Dave.
 -- 
-Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
+Dave Chinner
+david@fromorbit.com
