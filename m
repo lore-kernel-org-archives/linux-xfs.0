@@ -8,55 +8,56 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74654C433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:50:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E5FFC433E5
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:51:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 45BB32074B
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:50:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 388082074B
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:51:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GPtqKJJH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WzGkM5+w"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726852AbgGOBu6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jul 2020 21:50:58 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:38696 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726356AbgGOBu6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 21:50:58 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06F1l29l101670;
-        Wed, 15 Jul 2020 01:50:55 GMT
+        id S1726928AbgGOBvH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jul 2020 21:51:07 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:48168 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726356AbgGOBvH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 21:51:07 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06F1kvD8167664;
+        Wed, 15 Jul 2020 01:51:04 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=PnVqWxedwqcjAFYWA8S5UbNchf8ckZcLRh7pA/+17x8=;
- b=GPtqKJJHcQxAUFexHVzzWefjgiSrB2KWA1qNhIRDxfXxCfiKe1iI0+x4qOAYyFacRkGv
- tuq8GPjF9m0J91BWh5tdMSA4JF24U5r6MUvlGGXx8jdTId5ldrVOjq9vWkdOjw1/HiVi
- 589Zpy5xYkQEPCrxlXqCuBKQOdfXmyPROjRCuVOQP22hwP0kQQEhGgXhjHFZssw+5/nf
- ZDepyVH7bSae1FfQoBrNwgMXZKZGoMhI6y3A0tZ9p2actgqaUMe1dKw+Chaw50TX3oyk
- Z7mrD78l1KBtjtuqKp4BtttrDTaqckBanqqa1n+tXWUih5Di4dA31aUDkb7JRZSzatbR Zw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 32762nggej-1
+ bh=+bwFob7EVNPUAQwfZ3scUAY90oGR1a/HrhlWLy/T7gA=;
+ b=WzGkM5+wmmxQQsGwgqN+pmx0yLH2Gyn8lCrGNhJcoMwmCH8Uz5CfKYw5YmqEMH2Gt/Y0
+ qj1Z7id8zef4tw0ByE3TsjTt3J0d471+HFk0sY/I+oO9PoznwV4HY1VmAO//aaebZURT
+ jSzRT1PuSg1yuZZ6DrfTJRJkJhYJheH6aEK5p6YXIkCY5DDnWvOtqte0YtgJuMagmmzw
+ iW28jmnmOzYRQmDLCwCZ+Cs1Nyfsyr108pMv5/je2G8M2D1+J3gchpJl2hmbZyGNQXBE
+ +szF9LOFWqhzFCc2rdJrHD6e85jXVrLrZ1FzxCC0M3dGnfb4o01BCLhTAVtkZB6xvpaF KA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 3275cm8mmc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 15 Jul 2020 01:50:55 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06F1mews036739;
-        Wed, 15 Jul 2020 01:50:54 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 327qbyu68n-1
+        Wed, 15 Jul 2020 01:51:03 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06F1lcqX080888;
+        Wed, 15 Jul 2020 01:51:03 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 327q0qa5xm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jul 2020 01:50:54 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06F1orXN027894;
-        Wed, 15 Jul 2020 01:50:53 GMT
+        Wed, 15 Jul 2020 01:51:03 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06F1p3Xm018447;
+        Wed, 15 Jul 2020 01:51:03 GMT
 Received: from localhost (/10.159.237.234)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 14 Jul 2020 18:50:53 -0700
-Subject: [PATCH 03/26] xfs: validate ondisk/incore dquot flags
+        with ESMTP ; Tue, 14 Jul 2020 18:51:02 -0700
+Subject: [PATCH 04/26] xfs: move the flags argument of
+ xfs_qm_scall_trunc_qfiles to XFS_QMOPT_*
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Tue, 14 Jul 2020 18:50:52 -0700
-Message-ID: <159477785242.3263162.9079810070691814130.stgit@magnolia>
+Date:   Tue, 14 Jul 2020 18:50:58 -0700
+Message-ID: <159477785867.3263162.14797330963625412377.stgit@magnolia>
 In-Reply-To: <159477783164.3263162.2564345443708779029.stgit@magnolia>
 References: <159477783164.3263162.2564345443708779029.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -64,14 +65,14 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 spamscore=0
- mlxlogscore=999 bulkscore=0 malwarescore=0 mlxscore=0 phishscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007150013
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
- clxscore=1015 priorityscore=1501 mlxlogscore=999 lowpriorityscore=0
- bulkscore=0 suspectscore=1 phishscore=0 adultscore=0 impostorscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 phishscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007150013
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 priorityscore=1501
+ bulkscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
+ impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2007150013
 Sender: linux-xfs-owner@vger.kernel.org
@@ -81,76 +82,67 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-While loading dquot records off disk, make sure that the quota type
-flags are the same between the incore dquot and the ondisk dquot.
+Since xfs_qm_scall_trunc_qfiles can take a bitset of quota types that we
+want to truncate, change the flags argument to take XFS_QMOPT_[UGP}QUOTA
+so that the next patch can start to deprecate XFS_DQ_*.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dquot.c |   23 ++++++++++++++++++++---
- 1 file changed, 20 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_qm_syscalls.c |    8 ++++----
+ fs/xfs/xfs_quotaops.c    |    6 +++---
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 76353c9a723e..7503c6695569 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -23,6 +23,7 @@
- #include "xfs_trace.h"
- #include "xfs_log.h"
- #include "xfs_bmap_btree.h"
-+#include "xfs_error.h"
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 7effd7a28136..35fad348e3a2 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -322,23 +322,23 @@ xfs_qm_scall_trunc_qfiles(
+ 	int		error = -EINVAL;
  
- /*
-  * Lock order:
-@@ -524,13 +525,26 @@ xfs_dquot_alloc(
- }
+ 	if (!xfs_sb_version_hasquota(&mp->m_sb) || flags == 0 ||
+-	    (flags & ~XFS_DQ_ALLTYPES)) {
++	    (flags & ~XFS_QMOPT_QUOTALL)) {
+ 		xfs_debug(mp, "%s: flags=%x m_qflags=%x",
+ 			__func__, flags, mp->m_qflags);
+ 		return -EINVAL;
+ 	}
  
- /* Copy the in-core quota fields in from the on-disk buffer. */
--STATIC void
-+STATIC int
- xfs_dquot_from_disk(
- 	struct xfs_dquot	*dqp,
- 	struct xfs_buf		*bp)
- {
- 	struct xfs_disk_dquot	*ddqp = bp->b_addr + dqp->q_bufoffset;
+-	if (flags & XFS_DQ_USER) {
++	if (flags & XFS_QMOPT_UQUOTA) {
+ 		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_uquotino);
+ 		if (error)
+ 			return error;
+ 	}
+-	if (flags & XFS_DQ_GROUP) {
++	if (flags & XFS_QMOPT_GQUOTA) {
+ 		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_gquotino);
+ 		if (error)
+ 			return error;
+ 	}
+-	if (flags & XFS_DQ_PROJ)
++	if (flags & XFS_QMOPT_PQUOTA)
+ 		error = xfs_qm_scall_trunc_qfile(mp, mp->m_sb.sb_pquotino);
  
-+	/*
-+	 * Ensure that we got the type and ID we were looking for.
-+	 * Everything else was checked by the dquot buffer verifier.
-+	 */
-+	if ((ddqp->d_flags & XFS_DQ_ALLTYPES) != dqp->dq_flags ||
-+	    ddqp->d_id != dqp->q_core.d_id) {
-+		xfs_alert_tag(bp->b_mount, XFS_PTAG_VERIFIER_ERROR,
-+			  "Metadata corruption detected at %pS, quota %u",
-+			  __this_address, be32_to_cpu(dqp->q_core.d_id));
-+		xfs_alert(bp->b_mount, "Unmount and run xfs_repair");
-+		return -EFSCORRUPTED;
-+	}
-+
- 	/* copy everything from disk dquot to the incore dquot */
- 	memcpy(&dqp->q_core, ddqp, sizeof(struct xfs_disk_dquot));
- 
-@@ -544,6 +558,7 @@ xfs_dquot_from_disk(
- 
- 	/* initialize the dquot speculative prealloc thresholds */
- 	xfs_dquot_set_prealloc_limits(dqp);
-+	return 0;
- }
- 
- /* Allocate and initialize the dquot buffer for this in-core dquot. */
-@@ -617,9 +632,11 @@ xfs_qm_dqread(
- 	 * further.
- 	 */
- 	ASSERT(xfs_buf_islocked(bp));
--	xfs_dquot_from_disk(dqp, bp);
--
-+	error = xfs_dquot_from_disk(dqp, bp);
- 	xfs_buf_relse(bp);
-+	if (error)
-+		goto err;
-+
- 	*dqpp = dqp;
  	return error;
+diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
+index bf809b77a316..0868e6ee2219 100644
+--- a/fs/xfs/xfs_quotaops.c
++++ b/fs/xfs/xfs_quotaops.c
+@@ -205,11 +205,11 @@ xfs_fs_rm_xquota(
+ 		return -EINVAL;
  
+ 	if (uflags & FS_USER_QUOTA)
+-		flags |= XFS_DQ_USER;
++		flags |= XFS_QMOPT_UQUOTA;
+ 	if (uflags & FS_GROUP_QUOTA)
+-		flags |= XFS_DQ_GROUP;
++		flags |= XFS_QMOPT_GQUOTA;
+ 	if (uflags & FS_PROJ_QUOTA)
+-		flags |= XFS_DQ_PROJ;
++		flags |= XFS_QMOPT_PQUOTA;
+ 
+ 	return xfs_qm_scall_trunc_qfiles(mp, flags);
+ }
 
