@@ -2,201 +2,166 @@ Return-Path: <SRS0=dZhK=A2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DA11C433E6
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 20:13:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E45EDC433E1
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 20:33:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DF582065D
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 20:13:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZcaXyp7k"
+	by mail.kernel.org (Postfix) with ESMTP id C709C20672
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 20:33:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727104AbgGOUNM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jul 2020 16:13:12 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:22874 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726780AbgGOUNL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 16:13:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594843989;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=wIwMqWILJ+v4fswH5Jt1hU3CL4KYa/Sadu45p8aQ0Lg=;
-        b=ZcaXyp7kG1SWME7nxwqYsXOc+TNl/L7+eey4ZCjiLpYdZj4WTm0bBIiLtVyzacs8xP+dpg
-        wbxJGAniKWU59JNCx4rPDNOixrOVRUvJS8/VpLVqHoaSva9+EF6wvFbDRaNcOKx9OPUnUK
-        IeYcgMvi4p7p/EPRn8SERaEI1EPsWcs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-170-KIZKHzXdOSGDofRz7tC9IQ-1; Wed, 15 Jul 2020 16:13:05 -0400
-X-MC-Unique: KIZKHzXdOSGDofRz7tC9IQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726971AbgGOUdf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jul 2020 16:33:35 -0400
+Received: from sandeen.net ([63.231.237.45]:50308 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726491AbgGOUde (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Jul 2020 16:33:34 -0400
+Received: from Liberator.localdomain (unknown [50.34.173.57])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D6C861085;
-        Wed, 15 Jul 2020 20:13:04 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-116-87.rdu2.redhat.com [10.10.116.87])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 711CE60BF1;
-        Wed, 15 Jul 2020 20:13:04 +0000 (UTC)
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     sandeen@sandeen.net, darrick.wong@oracle.com
-Subject: [PATCH 3/3] xfsprogs: xfs_quota state command should report ugp grace times
-Date:   Wed, 15 Jul 2020 15:12:53 -0500
-Message-Id: <20200715201253.171356-4-billodo@redhat.com>
-In-Reply-To: <20200715201253.171356-1-billodo@redhat.com>
+        by sandeen.net (Postfix) with ESMTPSA id 9B97B335021;
+        Wed, 15 Jul 2020 15:33:04 -0500 (CDT)
+Subject: Re: [PATCH 3/3] xfsprogs: xfs_quota state command should report ugp
+ grace times
+To:     Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com
 References: <20200715201253.171356-1-billodo@redhat.com>
+ <20200715201253.171356-4-billodo@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <359b4cde-f252-214d-6828-2d5f85050705@sandeen.net>
+Date:   Wed, 15 Jul 2020 13:33:29 -0700
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <20200715201253.171356-4-billodo@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Since grace periods are now supported for three quota types (ugp),
-modify xfs_quota state command to report times for all three.
-Add a helper function for stat reporting.
+On 7/15/20 1:12 PM, Bill O'Donnell wrote:
+> Since grace periods are now supported for three quota types (ugp),
+> modify xfs_quota state command to report times for all three.
+> Add a helper function for stat reporting.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- quota/state.c | 108 +++++++++++++++++++++++++++++++++++++-------------
- 1 file changed, 80 insertions(+), 28 deletions(-)
+...
 
-diff --git a/quota/state.c b/quota/state.c
-index 1627181d..5aadcca2 100644
---- a/quota/state.c
-+++ b/quota/state.c
-@@ -190,6 +190,39 @@ state_stat_to_statv(
- 	}
- }
- 
-+static void
-+state_quotafile_stat(
-+	FILE			*fp,
-+	uint			type,
-+	struct fs_path		*mount,
-+	struct fs_quota_statv	*sv)
-+{
-+	switch(type) {
-+	case XFS_USER_QUOTA:
-+		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv->qs_uquota,
-+				sv->qs_flags & XFS_QUOTA_UDQ_ACCT,
-+				sv->qs_flags & XFS_QUOTA_UDQ_ENFD);
-+		break;
-+	case XFS_GROUP_QUOTA:
-+		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv->qs_gquota,
-+				sv->qs_flags & XFS_QUOTA_GDQ_ACCT,
-+				sv->qs_flags & XFS_QUOTA_GDQ_ENFD);
-+		break;
-+	case XFS_PROJ_QUOTA:
-+		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv->qs_pquota,
-+				sv->qs_flags & XFS_QUOTA_PDQ_ACCT,
-+				sv->qs_flags & XFS_QUOTA_PDQ_ENFD);
-+		break;
-+	}
-+	state_timelimit(fp, XFS_BLOCK_QUOTA, sv->qs_btimelimit);
-+	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv->qs_bwarnlimit);
-+
-+	state_timelimit(fp, XFS_INODE_QUOTA, sv->qs_itimelimit);
-+	state_warnlimit(fp, XFS_INODE_QUOTA, sv->qs_iwarnlimit);
-+
-+	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv->qs_rtbtimelimit);
-+}
-+
- static void
- state_quotafile_mount(
- 	FILE			*fp,
-@@ -203,37 +236,56 @@ state_quotafile_mount(
- 
- 	sv.qs_version = FS_QSTATV_VERSION1;
- 
--	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
--		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
--			if (flags & VERBOSE_FLAG)
--				fprintf(fp,
--					_("%s quota are not enabled on %s\n"),
--					type_to_string(type), dev);
--			return;
-+	if (type & XFS_USER_QUOTA) {
-+		if (xfsquotactl(XFS_GETQSTATV, dev, XFS_USER_QUOTA,
-+				0, (void *)&sv) < 0) {
-+			if (xfsquotactl(XFS_GETQSTAT, dev, XFS_USER_QUOTA,
-+					0, (void *)&s) < 0) {
-+				if (flags & VERBOSE_FLAG)
-+					fprintf(fp,
-+						_("%s quota are not enabled on %s\n"),
-+						type_to_string(XFS_USER_QUOTA),
-+						dev);
-+				return;
-+			}
-+			state_stat_to_statv(&s, &sv);
- 		}
--		state_stat_to_statv(&s, &sv);
-+		state_quotafile_stat(fp, XFS_USER_QUOTA, mount, &sv);
- 	}
- 
--	if (type & XFS_USER_QUOTA)
--		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
--				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
--				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
--	if (type & XFS_GROUP_QUOTA)
--		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv.qs_gquota,
--				sv.qs_flags & XFS_QUOTA_GDQ_ACCT,
--				sv.qs_flags & XFS_QUOTA_GDQ_ENFD);
--	if (type & XFS_PROJ_QUOTA)
--		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv.qs_pquota,
--				sv.qs_flags & XFS_QUOTA_PDQ_ACCT,
--				sv.qs_flags & XFS_QUOTA_PDQ_ENFD);
--
--	state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
--	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv.qs_bwarnlimit);
--
--	state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
--	state_warnlimit(fp, XFS_INODE_QUOTA, sv.qs_iwarnlimit);
--
--	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
-+	if (type & XFS_GROUP_QUOTA) {
-+		if (xfsquotactl(XFS_GETQSTATV, dev, XFS_GROUP_QUOTA,
-+				0, (void *)&sv) < 0) {
-+			if (xfsquotactl(XFS_GETQSTAT, dev, XFS_GROUP_QUOTA,
-+					0, (void *)&s) < 0) {
-+				if (flags & VERBOSE_FLAG)
-+					fprintf(fp,
-+						_("%s quota are not enabled on %s\n"),
-+						type_to_string(XFS_GROUP_QUOTA),
-+						dev);
-+				return;
-+			}
-+			state_stat_to_statv(&s, &sv);
-+		}
-+		state_quotafile_stat(fp, XFS_GROUP_QUOTA, mount, &sv);
-+	}
-+
-+	if (type & XFS_PROJ_QUOTA) {
-+		if (xfsquotactl(XFS_GETQSTATV, dev, XFS_PROJ_QUOTA,
-+				0, (void *)&sv) < 0) {
-+			if (xfsquotactl(XFS_GETQSTAT, dev, XFS_PROJ_QUOTA,
-+					0, (void *)&s) < 0) {
-+				if (flags & VERBOSE_FLAG)
-+					fprintf(fp,
-+						_("%s quota are not enabled on %s\n"),
-+						type_to_string(XFS_PROJ_QUOTA),
-+						dev);
-+				return;
-+			}
-+			state_stat_to_statv(&s, &sv);
-+		}
-+		state_quotafile_stat(fp, XFS_PROJ_QUOTA, mount, &sv);
-+	}
- }
- 
- static void
--- 
-2.26.2
+> +	if (type & XFS_GROUP_QUOTA) {
+> +		if (xfsquotactl(XFS_GETQSTATV, dev, XFS_GROUP_QUOTA,
+> +				0, (void *)&sv) < 0) {
+> +			if (xfsquotactl(XFS_GETQSTAT, dev, XFS_GROUP_QUOTA,
+> +					0, (void *)&s) < 0) {
+> +				if (flags & VERBOSE_FLAG)
+> +					fprintf(fp,
+> +						_("%s quota are not enabled on %s\n"),
+> +						type_to_string(XFS_GROUP_QUOTA),
+> +						dev);
+> +				return;
+> +			}
+> +			state_stat_to_statv(&s, &sv);
+> +		}
+
+At first glance, can't all of the above be moved into the helper as well?
+
+Maybe something like this (needs fixing up for sure)
+
+static void
+state_quotafile_stat(
+	FILE			*fp,
+	uint			type,
+	struct fs_path		*mount,
+	struct fs_quota_statv	*sv)
+{
+	bool 			accounting, enforcing;
+	struct fs_qfilestat	*qsv;
+
+	switch(type) {
+	case XFS_USER_QUOTA:
+		qsv = &sv->qs_uquota;
+		accounting = sv->qs_flags & XFS_QUOTA_UDQ_ACCT;
+		enforcing = sv->qs_flags & XFS_QUOTA_UDQ_ENFD;		
+		break;
+	case XFS_GROUP_QUOTA:
+		...
+		break;
+...
+	default:
+		/* defensive check goes here */
+	}
+
+	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
+		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
+			if (flags & VERBOSE_FLAG)
+				fprintf(fp,
+					_("%s quota are not enabled on %s\n"),
+					type_to_string(type), dev);
+			return;
+		}
+		state_stat_to_statv(&s, &sv)
+	}	
+
+	state_qfilestat(fp, mount, type, qsv, accounting, enforcing);
+
+	state_timelimit(fp, XFS_BLOCK_QUOTA, sv->qs_btimelimit);
+	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv->qs_bwarnlimit);
+
+	state_timelimit(fp, XFS_INODE_QUOTA, sv->qs_itimelimit);
+	state_warnlimit(fp, XFS_INODE_QUOTA, sv->qs_iwarnlimit);
+
+	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv->qs_rtbtimelimit);
+}
+
+
+Thanks,
+-Eric
 
