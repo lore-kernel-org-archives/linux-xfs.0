@@ -2,77 +2,76 @@ Return-Path: <SRS0=dZhK=A2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1FB2C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:50:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6636C433E2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:55:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2F4020658
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:50:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 900EA2071B
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:55:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="f77/d8ST"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="m0DypsRE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727981AbgGOBun (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jul 2020 21:50:43 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:43888 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726356AbgGOBum (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 21:50:42 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06F1mul5076291;
-        Wed, 15 Jul 2020 01:50:36 GMT
+        id S1726964AbgGOBzY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jul 2020 21:55:24 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:50480 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727899AbgGOBzY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 21:55:24 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06F1l5vP167743;
+        Wed, 15 Jul 2020 01:55:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=zVSgQkym2DLoLw99MDsUhv0i1HMGoWMA4xlK/iIdUk8=;
- b=f77/d8STHXGHOXeZePGUW2a+EAPGYBJIVhLj7waHG06bkMu5RJWuC7RSVOVVnIszibcL
- 2gqx8COW9wgvQbNmpZneDDYK54hJ5BHRQxet9+JifXBI8IQZERIHFOYN2q2hJTnoCbLQ
- m8R+JKA1r3ABwGJtXguhJeQa8KpI1cpr9Z8jCmK1bT/iqTpeOHzStDfFn8utchUMfKQv
- laC5tW3cg2P0bd2UaQP3vsvKk75dsp5B12EI/L2qiN6/8237nD7FyR2x61ddAwqH60OG
- Epq8Y/uzi5KUUV0qU9sWv38u4gwkpxgX2RGenBSk3FHLayEWNGTrpcDAZw2GB4dne92X hw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 3274ur8pvf-1
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=VpiUfdsFfxj1Jd4AmCnaV5lVucHYwq94cm56aN0VceE=;
+ b=m0DypsREh54TqnyfKVM7Fv6gqTH54fmuuayAy+3ERR140rwr3DFjVAHlXo5FGU54a6Qn
+ oZXAQU/EqEa2gBI7AAUNoFsV3S6VqZu25+sbpSYR/VjLjucx4TTg1hykL1sm92Cvj+dg
+ YZ05hp2d2WDmXiCZzXyTO6f27AMYopqHFoq/kTwQboo58UBv9BWsshISnjdJpT4EDbgq
+ QramTiH/17/M7VLk24g2UMbyWXYuMHNym2zokE4ZWFNgYf3mJN1jzQrjvMueNt1e5Ak4
+ hWsMf/1aLheYqZJRzP/NuHyXwyjoafmNbsR3hxc7ALRPnaDXGmX4ubIHydk0zs6qo21d hg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 3275cm8mxg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 15 Jul 2020 01:50:35 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06F1la8L184496;
-        Wed, 15 Jul 2020 01:50:35 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 327qb5wn5h-1
+        Wed, 15 Jul 2020 01:55:21 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06F1lbLA080785;
+        Wed, 15 Jul 2020 01:53:20 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 327q0qa80j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jul 2020 01:50:35 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06F1oXs2026001;
-        Wed, 15 Jul 2020 01:50:33 GMT
+        Wed, 15 Jul 2020 01:53:20 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06F1rKOk019266;
+        Wed, 15 Jul 2020 01:53:20 GMT
 Received: from localhost (/10.159.237.234)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 14 Jul 2020 18:50:33 -0700
-Subject: [PATCH v4 00/26] xfs: remove xfs_disk_quot from incore dquot
+        with ESMTP ; Tue, 14 Jul 2020 18:53:20 -0700
+Subject: [PATCH 25/26] xfs: actually bump warning counts when we send warnings
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     Allison Collins <allison.henderson@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Brian Foster <bfoster@redhat.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
-        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org
-Date:   Tue, 14 Jul 2020 18:50:32 -0700
-Message-ID: <159477783164.3263162.2564345443708779029.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Date:   Tue, 14 Jul 2020 18:53:18 -0700
+Message-ID: <159477799812.3263162.13957383827318048593.stgit@magnolia>
+In-Reply-To: <159477783164.3263162.2564345443708779029.stgit@magnolia>
+References: <159477783164.3263162.2564345443708779029.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 spamscore=0 phishscore=0 suspectscore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007150013
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 phishscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007150013
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9682 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- suspectscore=0 phishscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 priorityscore=1501 adultscore=0 bulkscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 priorityscore=1501
+ bulkscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
+ impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2007150013
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,72 +79,32 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This series replaces q_core (the ondisk quota structure) in the incore
-dquot structure with a quota resource control structure containing the
-count, reservation, limits, timers, and warnings.  Each dquot gets three
-of these resource control structures (blocks, inodes, rt blocks).
+Currently, xfs quotas have the ability to send netlink warnings when a
+user exceeds the limits.  They also have all the support code necessary
+to convert softlimit warnings into failures if the number of warnings
+exceeds a limit set by the administrator.  Unfortunately, we never
+actually increase the warning counter, so this never actually happens.
+Make it so we actually do something useful with the warning counts.
 
-Doing this enables us to remove a whole lot of noisy endian conversions
-in the quota code, and enables us to refactor a bunch of open-coded
-logic to pass around pointers to quota resource control structs.
-
-Note that these cleanups are a prerequisite for the bigtime patchset, as
-it depends on incore quota timers being time64_t to take advantage of
-the 64-bit time functions in the kernel with fewer places to trip over
-the ondisk format.
-
-In v2 we do some more work cleaning up the d_flags/dq_flags mess,
-finally add the dquot cluster size to the ondisk format declarations
-(because the cluster size actually /does/ affect that), shorten some of
-the long names from v1, and fix quota warning count having been broken
-for years.
-
-In v3 we separate the incore dquot's dq_flags fields into separate q_type
-and q_flags fields, and introduce a new xfs_dqtype_t to make it obvious
-when a function operates on a *single* quota type.  This also makes it
-easier to validate that outside functions aren't going to screw up the
-incore dquot state.
-
-v4: merge the dquot type flags when possible.  I still plan to keep the
-incore type/state flag namespace separate from the ondisk flags so that
-I can add more flags to the ondisk dquot in the next series.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=remove-quota-qcore
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=remove-quota-qcore
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_dquot_buf.c   |   25 ++-
- fs/xfs/libxfs/xfs_format.h      |   36 +++-
- fs/xfs/libxfs/xfs_quota_defs.h  |   37 ++--
- fs/xfs/scrub/quota.c            |   86 ++++-----
- fs/xfs/scrub/repair.c           |   10 +
- fs/xfs/scrub/repair.h           |    4 
- fs/xfs/xfs_buf_item_recover.c   |    8 -
- fs/xfs/xfs_dquot.c              |  367 +++++++++++++++++++++------------------
- fs/xfs/xfs_dquot.h              |  119 ++++++++-----
- fs/xfs/xfs_dquot_item.c         |    8 +
- fs/xfs/xfs_dquot_item_recover.c |   12 +
- fs/xfs/xfs_icache.c             |    4 
- fs/xfs/xfs_iomap.c              |   42 ++--
- fs/xfs/xfs_qm.c                 |  196 ++++++++++-----------
- fs/xfs/xfs_qm.h                 |  104 +++++------
- fs/xfs/xfs_qm_bhv.c             |   22 +-
- fs/xfs/xfs_qm_syscalls.c        |  257 ++++++++++++++-------------
- fs/xfs/xfs_quota.h              |   10 +
- fs/xfs/xfs_quotaops.c           |   26 +--
- fs/xfs/xfs_trace.h              |  172 +++++++++++++++++-
- fs/xfs/xfs_trans_dquot.c        |  349 +++++++++++++++++++------------------
- 21 files changed, 1059 insertions(+), 835 deletions(-)
+ fs/xfs/xfs_trans_dquot.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 78201ff3696b..cbd92d8b693d 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -596,6 +596,7 @@ xfs_dqresv_check(
+ 			return QUOTA_NL_ISOFTLONGWARN;
+ 		}
+ 
++		res->warnings++;
+ 		return QUOTA_NL_ISOFTWARN;
+ 	}
+ 
 
