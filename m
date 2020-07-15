@@ -2,119 +2,161 @@ Return-Path: <SRS0=dZhK=A2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D31BDC433E2
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 15:37:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EE56C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 16:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2AD720672
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 15:37:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EpTYU2an"
+	by mail.kernel.org (Postfix) with ESMTP id 6FE2120663
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 16:13:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594829626;
+	bh=IJsMkoevTsx6L9HNxlWZDWP3nwinEoBjxQZqDR3QAYM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Yh977NrjX8/3SW0XZFsDTp6j2BnVDXfW0JmUZoFIoErB01oD9XUZL/CP+oP4vwCcC
+	 MqawnLlxaB/OF6daOpDK+tSmdBi6211pDqAZwK4Iuiu1C99ReTip4SlGyA3vyFFdyS
+	 JEsH7Qo6YAmIfH7QRe9WZouJaApV7u85CygAvrYs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726778AbgGOPhb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jul 2020 11:37:31 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:46024 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725770AbgGOPhb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 11:37:31 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FFMBan106292;
-        Wed, 15 Jul 2020 15:37:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=tg+pjwJaLKnQJGGDeBCtRXT92PamLhl1eyyAkt0G20w=;
- b=EpTYU2anLIFT5V20uaClUQ6C5oYYaH5VRV8Rao8N55fKeFrEMQtBTshtfBaA+71cU7/Z
- TFfq7ZBtKtwK4usRK3BR+LdDqPJyXMOGLRirgUyVEOoOPJJWgpJcDocLA/3KuchnGzeS
- 81f/ZDZDdKy4vrRDYu+IFitiJ5T5iap43wpQnVKQ0G+VzlYV34aUyXqB2Oi10TAlg4ko
- VgQhpnV4mu7QAatiE/eT3O1tDUnlxG7K4+LiUod5MNyXNoKKZ0BOCX0PzLtr+7cRT/jg
- TCM+gOvm2wmSi6HrSCR0CYG59jnRtOnsRv6UficzROTlownwu0JHkmPUPMzb3Aew8zis 1A== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 3274urc77y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 15 Jul 2020 15:37:25 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FFNdAx010951;
-        Wed, 15 Jul 2020 15:37:25 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 32a4cqrsb4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jul 2020 15:37:25 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06FFbM7i026054;
-        Wed, 15 Jul 2020 15:37:22 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jul 2020 08:37:22 -0700
-Date:   Wed, 15 Jul 2020 08:37:21 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2 1/5] xfs: Remove kmem_zone_alloc() usage
-Message-ID: <20200715153721.GC3151642@magnolia>
-References: <20200710091536.95828-1-cmaiolino@redhat.com>
- <20200710091536.95828-2-cmaiolino@redhat.com>
- <20200710160804.GA10364@infradead.org>
- <20200710222132.GC2005@dread.disaster.area>
- <20200713091610.kooniclgd3curv73@eorzea>
- <20200713161718.GW7606@magnolia>
- <20200715150659.crao7yuq3hkh3tmq@eorzea>
+        id S1725881AbgGOQNp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jul 2020 12:13:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32850 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725831AbgGOQNp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Jul 2020 12:13:45 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5F93120663;
+        Wed, 15 Jul 2020 16:13:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594829624;
+        bh=IJsMkoevTsx6L9HNxlWZDWP3nwinEoBjxQZqDR3QAYM=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=N0z0tBQotG8LArmmiAePX5kmgXENP4UAKHIg9UhO1qGZPrV8Ilw+LOIpBvIm+VROW
+         AoElmez3OskjYxnq2+b63SuxSI83F+O+C3V4lqsRfNbW0Dqvog97lsMD/99y4sRwB+
+         FhOZI9bPxybyBjGn3THjrB6bMu7VYjNnUaTHySQw=
+Date:   Wed, 15 Jul 2020 09:13:42 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH] fs/direct-io: avoid data race on ->s_dio_done_wq
+Message-ID: <20200715161342.GA1167@sol.localdomain>
+References: <20200713033330.205104-1-ebiggers@kernel.org>
+ <20200715013008.GD2005@dread.disaster.area>
+ <20200715023714.GA38091@sol.localdomain>
+ <20200715080144.GF2005@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200715150659.crao7yuq3hkh3tmq@eorzea>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
- suspectscore=1 bulkscore=0 adultscore=0 phishscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007150125
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- suspectscore=1 phishscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 priorityscore=1501 adultscore=0 bulkscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007150125
+In-Reply-To: <20200715080144.GF2005@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 15, 2020 at 05:06:59PM +0200, Carlos Maiolino wrote:
-> > > No problem in splitting this change into 2 patches, 1 by unconditionally use
-> > > __GFP_NOFAIL, and another changing the behavior to use NOFAIL only inside a
-> > > transaction.
+On Wed, Jul 15, 2020 at 06:01:44PM +1000, Dave Chinner wrote:
+> > > >  /* direct-io.c: */
+> > > > -int sb_init_dio_done_wq(struct super_block *sb);
+> > > > +int __sb_init_dio_done_wq(struct super_block *sb);
+> > > > +static inline int sb_init_dio_done_wq(struct super_block *sb)
+> > > > +{
+> > > > +	/* pairs with cmpxchg() in __sb_init_dio_done_wq() */
+> > > > +	if (likely(READ_ONCE(sb->s_dio_done_wq)))
+> > > > +		return 0;
+> > > > +	return __sb_init_dio_done_wq(sb);
+> > > > +}
 > > > 
-> > > Regarding the PF_FSTRANS flag, I opted by PF_MEMALLOC_NOFS after reading the
-> > > commit which removed PF_FSTRANS initially (didn't mean to ignore your suggestion
-> > > Dave, my apologies if I sounded like that), but I actually didn't find any commit
-> > > re-adding PF_FSTRANS back. I searched most trees but couldn't find any commit
-> > > re-adding it back, could you guys please point me out where is the commit adding
-> > > it back?
+> > > Ummm, why don't you just add this check in sb_init_dio_done_wq(). I
+> > > don't see any need for adding another level of function call
+> > > abstraction in the source code?
 > > 
-> > I suspect Dave is referring to:
-> > 
-> > "xfs: reintroduce PF_FSTRANS for transaction reservation recursion
-> > protection" by Yang Shao.
-> > 
-> > AFAICT it hasn't cleared akpm yet, so it's not in his quiltpile, and as
-> > he doesn't use git there won't be a commit until it ends up in
-> > mainline...
-> > 
+> > This keeps the fast path doing no function calls and one fewer branch, as it was
+> > before.  People care a lot about minimizing direct I/O overhead, so it seems
+> > desirable to keep this simple optimization.  Would you rather it be removed?
 > 
-> Thanks, I think I'll wait until it hits the mainline before trying to push this
-> series then.
+> No.
+> 
+> What I'm trying to say is that I'd prefer fast path checks don't get
+> hidden away in a static inline function wrappers that require the
+> reader to go look up code in a different file to understand that
+> code in yet another different file is conditionally executed.
+> 
+> Going from obvious, easy to read fast path code to spreading the
+> fast path logic over functions in 3 different files is not an
+> improvement in the code - it is how we turn good code into an
+> unmaintainable mess...
 
-FWIW I could be persuaded to take that one via one of the xfs/iomap
-trees if the author puts out a revised patch.
+The alternative would be to duplicate the READ_ONCE() at all 3 call sites --
+including the explanatory comment.  That seems strictly worse.
 
---D
+And the code before was broken, so I disagree it was "obvious" or "good".
 
 > 
-> -- 
-> Carlos
+> > > Also, you need to explain the reason for the READ_ONCE() existing
+> > > rather than just saying "it pairs with <some other operation>".
+> > > Knowing what operation it pairs with doesn't explain why the pairing
+> > > is necessary in the first place, and that leads to nobody reading
+> > > the code being able to understand what this is protecting against.
+> > > 
+> > 
+> > How about this?
+> > 
+> > 	/*
+> > 	 * Nothing to do if ->s_dio_done_wq is already set.  But since another
+> > 	 * process may set it concurrently, we need to use READ_ONCE() rather
+> > 	 * than a plain read to avoid a data race (undefined behavior) and to
+> > 	 * ensure we observe the pointed-to struct to be fully initialized.
+> > 	 */
+> > 	if (likely(READ_ONCE(sb->s_dio_done_wq)))
+> > 		return 0;
 > 
+> You still need to document what it pairs with, as "data race" doesn't
+> describe the actual dependency we are synchronising against is.
+> 
+> AFAICT from your description, the data race is not on
+> sb->s_dio_done_wq itself, but on seeing the contents of the
+> structure being pointed to incorrectly. i.e. we need to ensure that
+> writes done before the cmpxchg are ordered correctly against
+> reads done after the pointer can be seen here.
+> 
+
+No, the data race is on ->s_dio_done_wq itself.  How about this:
+
+        /*
+         * Nothing to do if ->s_dio_done_wq is already set.  The READ_ONCE()
+         * here pairs with the cmpxchg() in __sb_init_dio_done_wq().  Since the
+         * cmpxchg() may set ->s_dio_done_wq concurrently, a plain load would be
+         * a data race (undefined behavior), so READ_ONCE() is needed.
+         * READ_ONCE() also includes any needed read data dependency barrier to
+         * ensure that the pointed-to struct is seen to be fully initialized.
+         */
+
+FWIW, long-term we really need to get developers to understand these sorts of
+issues, so that the code is written correctly in the first place and we don't
+need to annotate common patterns like one-time-init with a long essay and have a
+long discussion.  Recently KCSAN was merged upstream
+(https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/dev-tools/kcsan.rst)
+and the memory model documentation was improved
+(https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/memory-model/Documentation/explanation.txt?h=v5.8-rc5#n1922),
+so hopefully that will raise awareness...
+
+> If so, can't we just treat this as a normal
+> store-release/load-acquire ordering pattern and hence use more
+> relaxed memory barriers instead of have to patch up what we have now
+> to specifically make ancient platforms that nobody actually uses
+> with weird and unusual memory models work correctly?
+
+READ_ONCE() is already as relaxed as it can get, as it includes a read data
+dependency barrier only (which is no-op on everything other than Alpha).
+
+If anything it should be upgraded to smp_load_acquire(), which handles control
+dependencies too.  I didn't see anything obvious in the workqueue code that
+would need that (i.e. accesses to some global structure that isn't transitively
+reachable via the workqueue_struct itself).  But we could use it to be safe if
+we're okay with any performance implications of the additional memory barrier it
+would add.
+
+- Eric
