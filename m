@@ -1,98 +1,133 @@
-Return-Path: <SRS0=oQKh=AZ=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=dZhK=A2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C834C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 22:11:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F8B5C433E2
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:30:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BD84206D9
-	for <linux-xfs@archiver.kernel.org>; Tue, 14 Jul 2020 22:11:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FFqdVH0+"
+	by mail.kernel.org (Postfix) with ESMTP id 43B0A20663
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 01:30:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726446AbgGNWLk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 14 Jul 2020 18:11:40 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:47721 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726361AbgGNWLj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 18:11:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594764698;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=DfjinsVKPWUQwGbmNBSEeWBLtzAp/p89ilNObfVr4xE=;
-        b=FFqdVH0+ntpEN5eOWVIbOrLT2At1cJHHJbdgokDDa7nMb2CuUdkNYVfbm2tzGYaNJJkdjR
-        I6P1YL/DZi9okmEyIbO1ogLG7yVfkST08r/pNQYv8Grl3FR2wAvsskwDTvf7pbELOaAuOS
-        C3cnginL+OMJ3tXY8YUWiYinAr/WsQM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-217-1hk7BrQbNACAu8mJAjoOCA-1; Tue, 14 Jul 2020 18:11:36 -0400
-X-MC-Unique: 1hk7BrQbNACAu8mJAjoOCA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A62171080
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2020 22:11:35 +0000 (UTC)
-Received: from Liberator.localdomain (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5D1641992D
-        for <linux-xfs@vger.kernel.org>; Tue, 14 Jul 2020 22:11:35 +0000 (UTC)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: preserve inode versioning across remounts
-Message-ID: <e8bfbbec-4cb9-0267-08eb-03580e2aedc6@redhat.com>
-Date:   Tue, 14 Jul 2020 15:11:34 -0700
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.10.0
+        id S1727965AbgGOBaP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 14 Jul 2020 21:30:15 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:36559 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727863AbgGOBaP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 14 Jul 2020 21:30:15 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D322082343E;
+        Wed, 15 Jul 2020 11:30:10 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jvWFM-0001mz-Mi; Wed, 15 Jul 2020 11:30:08 +1000
+Date:   Wed, 15 Jul 2020 11:30:08 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH] fs/direct-io: avoid data race on ->s_dio_done_wq
+Message-ID: <20200715013008.GD2005@dread.disaster.area>
+References: <20200713033330.205104-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200713033330.205104-1-ebiggers@kernel.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=1XWaLZrsAAAA:8 a=7-415B0cAAAA:8
+        a=J4IdXHwxHjXuEvTYv6sA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The MS_I_VERSION mount flag is exposed via the VFS, as documented
-in the mount manpages etc; see the iversion and noiversion mount
-options in mount(8).
+On Sun, Jul 12, 2020 at 08:33:30PM -0700, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
+> 
+> Fix the preliminary checks for ->s_dio_done_wq to use READ_ONCE(), since
+> it's a data race, and technically the behavior is undefined without
+> READ_ONCE().  Also, on one CPU architecture (Alpha), the data read
+> dependency barrier included in READ_ONCE() is needed to guarantee that
+> the pointed-to struct is seen as fully initialized.
+> 
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+>  fs/direct-io.c       | 8 +++-----
+>  fs/internal.h        | 9 ++++++++-
+>  fs/iomap/direct-io.c | 3 +--
+>  3 files changed, 12 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/direct-io.c b/fs/direct-io.c
+> index 6d5370eac2a8..26221ae24156 100644
+> --- a/fs/direct-io.c
+> +++ b/fs/direct-io.c
+> @@ -590,7 +590,7 @@ static inline int dio_bio_reap(struct dio *dio, struct dio_submit *sdio)
+>   * filesystems that don't need it and also allows us to create the workqueue
+>   * late enough so the we can include s_id in the name of the workqueue.
+>   */
+> -int sb_init_dio_done_wq(struct super_block *sb)
+> +int __sb_init_dio_done_wq(struct super_block *sb)
+>  {
+>  	struct workqueue_struct *old;
+>  	struct workqueue_struct *wq = alloc_workqueue("dio/%s",
+> @@ -615,9 +615,7 @@ static int dio_set_defer_completion(struct dio *dio)
+>  	if (dio->defer_completion)
+>  		return 0;
+>  	dio->defer_completion = true;
+> -	if (!sb->s_dio_done_wq)
+> -		return sb_init_dio_done_wq(sb);
+> -	return 0;
+> +	return sb_init_dio_done_wq(sb);
+>  }
+>  
+>  /*
+> @@ -1250,7 +1248,7 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+>  		retval = 0;
+>  		if (iocb->ki_flags & IOCB_DSYNC)
+>  			retval = dio_set_defer_completion(dio);
+> -		else if (!dio->inode->i_sb->s_dio_done_wq) {
+> +		else {
+>  			/*
+>  			 * In case of AIO write racing with buffered read we
+>  			 * need to defer completion. We can't decide this now,
+> diff --git a/fs/internal.h b/fs/internal.h
+> index 9b863a7bd708..6736c9eee978 100644
+> --- a/fs/internal.h
+> +++ b/fs/internal.h
+> @@ -178,7 +178,14 @@ extern void mnt_pin_kill(struct mount *m);
+>  extern const struct dentry_operations ns_dentry_operations;
+>  
+>  /* direct-io.c: */
+> -int sb_init_dio_done_wq(struct super_block *sb);
+> +int __sb_init_dio_done_wq(struct super_block *sb);
+> +static inline int sb_init_dio_done_wq(struct super_block *sb)
+> +{
+> +	/* pairs with cmpxchg() in __sb_init_dio_done_wq() */
+> +	if (likely(READ_ONCE(sb->s_dio_done_wq)))
+> +		return 0;
+> +	return __sb_init_dio_done_wq(sb);
+> +}
 
-As a result, mount -o remount looks for this option in /proc/mounts
-and will only send the I_VERSION flag back in during remount it it
-is present.  Since it's not there, a remount will /remove/ the
-I_VERSION flag at the vfs level, and iversion functionality is lost.
+Ummm, why don't you just add this check in sb_init_dio_done_wq(). I
+don't see any need for adding another level of function call
+abstraction in the source code?
 
-xfs v5 superblocks intend to always have i_version enabled; it is
-set as a default at mount time, but is lost during remount for the
-reasons above.
+Also, you need to explain the reason for the READ_ONCE() existing
+rather than just saying "it pairs with <some other operation>".
+Knowing what operation it pairs with doesn't explain why the pairing
+is necessary in the first place, and that leads to nobody reading
+the code being able to understand what this is protecting against.
 
-The generic fix would be to expose this documented option in 
-/proc/mounts, but since that was rejected, fix it up again in the
-xfs remount path instead, so that at least xfs won't suffer from
-this misbehavior.
+Cheers,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
---
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 379cbff438bc..9239985571af 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1714,6 +1714,10 @@ xfs_fc_reconfigure(
- 	int			flags = fc->sb_flags;
- 	int			error;
- 
-+	/* version 5 superblocks always support version counters. */
-+	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-+		fc->sb_flags |= SB_I_VERSION;
-+
- 	error = xfs_fc_validate_params(new_mp);
- 	if (error)
- 		return error;
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
