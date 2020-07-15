@@ -2,204 +2,139 @@ Return-Path: <SRS0=dZhK=A2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DE2CC433E7
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 16:41:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF39C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 16:57:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FDF020658
-	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 16:41:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA17720672
+	for <linux-xfs@archiver.kernel.org>; Wed, 15 Jul 2020 16:57:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mzpb91In"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DQr4PBTr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728044AbgGOQl0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jul 2020 12:41:26 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:60472 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727037AbgGOQlZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 12:41:25 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FGRBCA114614;
-        Wed, 15 Jul 2020 16:41:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
+        id S1725866AbgGOQ53 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jul 2020 12:57:29 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55832 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725838AbgGOQ52 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 12:57:28 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FGq9Jx075886;
+        Wed, 15 Jul 2020 16:57:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=F2LkoM+UWtBMNs81QAgimajX13qffszW2vrur3LEJAs=;
- b=mzpb91InlBToye1VyhhDpXuE6dalx8a1Ki6BYrf/xOZ+9ec0NAC7EqH5gmlSsV8ht5al
- 0IBwe0SmOAqg47AKlUxBmcmOMZWdVJ30IiaoHLrEL8Xc03alFTWX2VF/XDI2Jhg6j2Vz
- qvOv1SlRPe3PX796G0V1f8BnFX0VLGTH6VRZF3kPTLZO8UIuiBtJnlgvkS5FP64VWB8Y
- goJZNI0HHCq59zAA+w1BzL5sC4abA1PNFRTP0d+kPMXpzWLXqFxH9cV6NQ+lKoqo7nsY
- s+LYbQrZMBIsK/Ju/3k5pHMxOna2ZamfKeXGQ9ObIvwA9BzBtDRz9Dp8Qfo6qlgnmpnu qg== 
+ bh=6RSQ7O3rl364QfIJw4dF8BogajQSrzsLV/OEGwMsOl8=;
+ b=DQr4PBTrlhK9kEZbJ6vj6HqqKj6icrxQmlA32Vp2QlwKM2B3ujIvbtptq0xI7/bcvfPm
+ P4pm34kfVBH1aAC0VTxGuQ3jQlNr2dhA8tx1zec6cApo/zSnXppbsUl7hyXjsBKgHgR0
+ cuqwlZANPa21JD0k1EUfysm2CCj103Lh2rNAYtRfGD5QyPIBRR5OdzTWaDX776B3yPcu
+ P8QPM3OwPJ/EmPNSLpJdhD9/7UzxJsLlmMZnOwFDyOJCJAlpEWmUGMzx2UaZ0LXgO0Om
+ pDLJSsxaha6/NF/qYG91FvtC3RgtG30LAwOZMBe2t2aF434KxNRcDH9qs7KL08IWz0Xp 0A== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 3275cmcgpb-1
+        by userp2130.oracle.com with ESMTP id 3274urcnf8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 15 Jul 2020 16:41:22 +0000
+        Wed, 15 Jul 2020 16:57:25 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FGMggF044797;
-        Wed, 15 Jul 2020 16:41:21 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 327qc1a91y-1
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FGqiSe166085;
+        Wed, 15 Jul 2020 16:57:25 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 327qc1b1br-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jul 2020 16:41:21 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06FGfK10006935;
-        Wed, 15 Jul 2020 16:41:20 GMT
+        Wed, 15 Jul 2020 16:57:25 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06FGvO15031140;
+        Wed, 15 Jul 2020 16:57:24 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jul 2020 09:41:20 -0700
-Date:   Wed, 15 Jul 2020 09:41:18 -0700
+        with ESMTP ; Wed, 15 Jul 2020 09:57:24 -0700
+Date:   Wed, 15 Jul 2020 09:57:23 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH] fs/direct-io: avoid data race on ->s_dio_done_wq
-Message-ID: <20200715164118.GB848607@magnolia>
-References: <20200713033330.205104-1-ebiggers@kernel.org>
- <20200715013008.GD2005@dread.disaster.area>
- <20200715023714.GA38091@sol.localdomain>
- <20200715080144.GF2005@dread.disaster.area>
- <20200715161342.GA1167@sol.localdomain>
+To:     Eryu Guan <guaneryu@gmail.com>, fstests@vger.kernel.org,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs/010,030: filter AG header CRC error warnings
+Message-ID: <20200715165723.GJ7625@magnolia>
+References: <20200713184930.GK7600@magnolia>
+ <20200714071346.GY1938@dhcp-12-102.nay.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200715161342.GA1167@sol.localdomain>
+In-Reply-To: <20200714071346.GY1938@dhcp-12-102.nay.redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 spamscore=0
  mlxlogscore=999 bulkscore=0 malwarescore=0 mlxscore=0 phishscore=0
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007150129
+ engine=8.12.0-2006250000 definitions=main-2007150131
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 priorityscore=1501
- bulkscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ suspectscore=1 phishscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 priorityscore=1501 adultscore=0 bulkscore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007150129
+ definitions=main-2007150131
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 15, 2020 at 09:13:42AM -0700, Eric Biggers wrote:
-> On Wed, Jul 15, 2020 at 06:01:44PM +1000, Dave Chinner wrote:
-> > > > >  /* direct-io.c: */
-> > > > > -int sb_init_dio_done_wq(struct super_block *sb);
-> > > > > +int __sb_init_dio_done_wq(struct super_block *sb);
-> > > > > +static inline int sb_init_dio_done_wq(struct super_block *sb)
-> > > > > +{
-> > > > > +	/* pairs with cmpxchg() in __sb_init_dio_done_wq() */
-> > > > > +	if (likely(READ_ONCE(sb->s_dio_done_wq)))
-> > > > > +		return 0;
-> > > > > +	return __sb_init_dio_done_wq(sb);
-> > > > > +}
-> > > > 
-> > > > Ummm, why don't you just add this check in sb_init_dio_done_wq(). I
-> > > > don't see any need for adding another level of function call
-> > > > abstraction in the source code?
-> > > 
-> > > This keeps the fast path doing no function calls and one fewer branch, as it was
-> > > before.  People care a lot about minimizing direct I/O overhead, so it seems
-> > > desirable to keep this simple optimization.  Would you rather it be removed?
+On Tue, Jul 14, 2020 at 03:13:46PM +0800, Zorro Lang wrote:
+> On Mon, Jul 13, 2020 at 11:49:30AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > No.
+> > Filter out the new AG header CRC verification warnings in xfs_repair
+> > since these tests were built before that existed.
 > > 
-> > What I'm trying to say is that I'd prefer fast path checks don't get
-> > hidden away in a static inline function wrappers that require the
-> > reader to go look up code in a different file to understand that
-> > code in yet another different file is conditionally executed.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  tests/xfs/010 |    6 +++++-
+> >  tests/xfs/030 |    2 ++
+> >  2 files changed, 7 insertions(+), 1 deletion(-)
 > > 
-> > Going from obvious, easy to read fast path code to spreading the
-> > fast path logic over functions in 3 different files is not an
-> > improvement in the code - it is how we turn good code into an
-> > unmaintainable mess...
+> > diff --git a/tests/xfs/010 b/tests/xfs/010
+> > index c341795d..ec23507a 100755
+> > --- a/tests/xfs/010
+> > +++ b/tests/xfs/010
+> > @@ -113,7 +113,11 @@ _check_scratch_fs
+> >  # nuke the finobt root, repair will have to regenerate from the inobt
+> >  _corrupt_finobt_root $SCRATCH_DEV
+> >  
+> > -_scratch_xfs_repair 2>&1 | sed -e '/^bad finobt block/d' | _filter_repair_lostblocks
 > 
-> The alternative would be to duplicate the READ_ONCE() at all 3 call sites --
-> including the explanatory comment.  That seems strictly worse.
-> 
-> And the code before was broken, so I disagree it was "obvious" or "good".
-> 
-> > 
-> > > > Also, you need to explain the reason for the READ_ONCE() existing
-> > > > rather than just saying "it pairs with <some other operation>".
-> > > > Knowing what operation it pairs with doesn't explain why the pairing
-> > > > is necessary in the first place, and that leads to nobody reading
-> > > > the code being able to understand what this is protecting against.
-> > > > 
-> > > 
-> > > How about this?
-> > > 
-> > > 	/*
-> > > 	 * Nothing to do if ->s_dio_done_wq is already set.  But since another
-> > > 	 * process may set it concurrently, we need to use READ_ONCE() rather
-> > > 	 * than a plain read to avoid a data race (undefined behavior) and to
-> > > 	 * ensure we observe the pointed-to struct to be fully initialized.
-> > > 	 */
-> > > 	if (likely(READ_ONCE(sb->s_dio_done_wq)))
-> > > 		return 0;
-> > 
-> > You still need to document what it pairs with, as "data race" doesn't
-> > describe the actual dependency we are synchronising against is.
-> > 
-> > AFAICT from your description, the data race is not on
-> > sb->s_dio_done_wq itself, but on seeing the contents of the
-> > structure being pointed to incorrectly. i.e. we need to ensure that
-> > writes done before the cmpxchg are ordered correctly against
-> > reads done after the pointer can be seen here.
-> > 
-> 
-> No, the data race is on ->s_dio_done_wq itself.  How about this:
-> 
->         /*
->          * Nothing to do if ->s_dio_done_wq is already set.  The READ_ONCE()
->          * here pairs with the cmpxchg() in __sb_init_dio_done_wq().  Since the
->          * cmpxchg() may set ->s_dio_done_wq concurrently, a plain load would be
->          * a data race (undefined behavior), so READ_ONCE() is needed.
->          * READ_ONCE() also includes any needed read data dependency barrier to
->          * ensure that the pointed-to struct is seen to be fully initialized.
->          */
-> 
-> FWIW, long-term we really need to get developers to understand these sorts of
-> issues, so that the code is written correctly in the first place and we don't
-> need to annotate common patterns like one-time-init with a long essay and have a
-> long discussion.  Recently KCSAN was merged upstream
-> (https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/dev-tools/kcsan.rst)
-> and the memory model documentation was improved
-> (https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/memory-model/Documentation/explanation.txt?h=v5.8-rc5#n1922),
-> so hopefully that will raise awareness...
+> I think this patch is based on another patch which hasn't been merged, right?
+> Due to I can't find the *sed -e '/^bad finobt block/d'* on current xfstests-dev
+> master branch, which HEAD is:
+>   aae8fbec  generic/270: wait for fsstress processes to be killed
 
-I tried to understand that, but TBH this whole topic area seems very
-complex and difficult to understand.  I more or less understand what
-READ_ONCE and WRITE_ONCE do wrt restricting compiler optimizations, but
-I wouldn't say that I understand all that machinery.
-
-Granted, my winning strategy so far is to write a simple version with
-big dumb locks and let the rest of you argue over slick optimizations.
-:P
-
-<shrug> If using READ_ONCE and cmpxchg for pointer initialization (or I
-guess smp_store_release and smp_load_acquire?) are a commonly used
-paradigm, then maybe that should get its own section in
-tools/memory-model/Documentation/recipes.txt and then any code that uses
-it can point readers at that?
+Oops, yeah, I forgot that my development branch has multiple patches to
+those tests.  Now that xfsprogs for-next has updated I guess I should
+clean all those up and send them for real.
 
 --D
 
-> > If so, can't we just treat this as a normal
-> > store-release/load-acquire ordering pattern and hence use more
-> > relaxed memory barriers instead of have to patch up what we have now
-> > to specifically make ancient platforms that nobody actually uses
-> > with weird and unusual memory models work correctly?
+> Thanks,
+> Zorro
 > 
-> READ_ONCE() is already as relaxed as it can get, as it includes a read data
-> dependency barrier only (which is no-op on everything other than Alpha).
+> > +filter_finobt_repair() {
+> > +	sed -e '/^agi has bad CRC/d' -e '/^bad finobt block/d' | _filter_repair_lostblocks
+> > +}
+> > +
+> > +_scratch_xfs_repair 2>&1 | filter_finobt_repair
+> >  
+> >  status=0
+> >  exit
+> > diff --git a/tests/xfs/030 b/tests/xfs/030
+> > index 8f95331a..a270e36c 100755
+> > --- a/tests/xfs/030
+> > +++ b/tests/xfs/030
+> > @@ -43,6 +43,8 @@ _check_ag()
+> >  			    -e '/^bad agbno AGBNO for rmapbt/d' \
+> >  			    -e '/^bad agbno AGBNO for refcntbt/d' \
+> >  			    -e '/^bad inobt block count/d' \
+> > +			    -e '/^agf has bad CRC/d' \
+> > +			    -e '/^agi has bad CRC/d' \
+> >  			    -e '/^bad finobt block count/d' \
+> >  			    -e '/^Missing reverse-mapping record.*/d' \
+> >  			    -e '/^unknown block state, ag AGNO, block.*/d'
+> > 
 > 
-> If anything it should be upgraded to smp_load_acquire(), which handles control
-> dependencies too.  I didn't see anything obvious in the workqueue code that
-> would need that (i.e. accesses to some global structure that isn't transitively
-> reachable via the workqueue_struct itself).  But we could use it to be safe if
-> we're okay with any performance implications of the additional memory barrier it
-> would add.
-> 
-> - Eric
