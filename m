@@ -2,101 +2,96 @@ Return-Path: <SRS0=b91c=A3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8FBEC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 22:02:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBCE1C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 22:06:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 821FA2076D
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 22:02:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EFF2207CB
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 22:06:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726489AbgGPWCB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jul 2020 18:02:01 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:58274 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726113AbgGPWCA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 18:02:00 -0400
+        id S1726104AbgGPWGK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jul 2020 18:06:10 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:40099 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726007AbgGPWGK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 18:06:10 -0400
 Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id C8FCB5EC5F1;
-        Fri, 17 Jul 2020 08:01:57 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 3C2C1D59DF1;
+        Fri, 17 Jul 2020 08:06:06 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jwBwy-0000oh-2L; Fri, 17 Jul 2020 08:01:56 +1000
-Date:   Fri, 17 Jul 2020 08:01:56 +1000
+        id 1jwC0z-0000p9-O4; Fri, 17 Jul 2020 08:06:05 +1000
+Date:   Fri, 17 Jul 2020 08:06:05 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: replace ialloc space res macro with inline
- helper
-Message-ID: <20200716220156.GL2005@dread.disaster.area>
-References: <20200715193310.22002-1-bfoster@redhat.com>
- <20200716121849.36661-1-bfoster@redhat.com>
+Subject: Re: [PATCH 3/4] repair: use fs root ino for dummy parent value
+ instead of zero
+Message-ID: <20200716220605.GM2005@dread.disaster.area>
+References: <20200715140836.10197-1-bfoster@redhat.com>
+ <20200715140836.10197-4-bfoster@redhat.com>
+ <20200715222216.GH2005@dread.disaster.area>
+ <20200716104103.GB26218@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200716121849.36661-1-bfoster@redhat.com>
+In-Reply-To: <20200716104103.GB26218@bfoster>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=W5xGqiek c=1 sm=1 tr=0
         a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
         a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=SwQ4_jGhSb0S161kMscA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=cVBLk4NVIW_AA7u7hokA:9 a=y3QdnymCw1F_V5lu:21 a=8AtYZZoPygbbD5fp:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 16, 2020 at 08:18:49AM -0400, Brian Foster wrote:
-> Rewrite the macro as a static inline helper to clean up the logic
-> and have one less macro.
+On Thu, Jul 16, 2020 at 06:41:03AM -0400, Brian Foster wrote:
+> On Thu, Jul 16, 2020 at 08:22:16AM +1000, Dave Chinner wrote:
+> > On Wed, Jul 15, 2020 at 10:08:35AM -0400, Brian Foster wrote:
+> > > If a directory inode has an invalid parent ino on disk, repair
+> > > replaces the invalid value with a dummy value of zero in the buffer
+> > > and NULLFSINO in the in-core parent tracking. The zero value serves
+> > > no functional purpose as it is still an invalid value and the parent
+> > > must be repaired by phase 6 based on the in-core state before the
+> > > buffer can be written out.  Instead, use the root fs inode number as
+> > > a catch all for invalid parent values so phase 6 doesn't have to
+> > > create custom verifier infrastructure just to work around this
+> > > behavior.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > 
+> > Reasonale, but wouldn't it be better to use lost+found as the dummy
+> > parent inode (i.e. the orphanage inode)? Because if the parent can't
+> > be found and the inode reconnected correctly, we're going to put it
+> > in lost+found, anyway?
+> > 
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_trans_space.h | 24 ++++++++++++++++--------
->  fs/xfs/xfs_inode.c              |  4 ++--
->  fs/xfs/xfs_symlink.c            |  2 +-
->  3 files changed, 19 insertions(+), 11 deletions(-)
+> That was my first thought when I originally wrote this, but there's
+> several reasons I didn't end up doing that. The orphanage isn't created
+> until much later in repair and only if we end up with orphaned inodes.
+> We'd have to change that in order to use a dummy parent inode number
+> that corresponds to a valid orphanage, and TBH I'm not even sure if it's
+> always going to be safe to expect an inode allocation to work at this
+> point in repair.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
-> index c6df01a2a158..d08dfc8795c3 100644
-> --- a/fs/xfs/libxfs/xfs_trans_space.h
-> +++ b/fs/xfs/libxfs/xfs_trans_space.h
-> @@ -55,10 +55,18 @@
->  	 XFS_DIRENTER_MAX_SPLIT(mp,nl))
->  #define	XFS_DIRREMOVE_SPACE_RES(mp)	\
->  	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK)
-> -#define	XFS_IALLOC_SPACE_RES(mp)	\
-> -	(M_IGEO(mp)->ialloc_blks + \
-> -	 ((xfs_sb_version_hasfinobt(&mp->m_sb) ? 2 : 1) * \
-> -	  (M_IGEO(mp)->inobt_maxlevels - 1)))
-> +
-> +static inline int
-> +xfs_ialloc_space_res(
-> +	struct xfs_mount	*mp)
-> +{
-> +	int			res = M_IGEO(mp)->ialloc_blks;
-> +
-> +	res += M_IGEO(mp)->inobt_maxlevels - 1;
-> +	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-> +		res += M_IGEO(mp)->inobt_maxlevels - 1;
-> +	return res;
-> +}
+> Further, it's still too early to tell whether these directories are
+> orphaned because the directory scan in phase 6 can easily repair
+> missing/broken parent information. The scenarios I used to test this
+> functionality didn't involve the orphanage at all, so now we not only
+> need to change when/how the orphanage is created, but need to free it if
+> it ends up unused before we exit (which could be via any number of
+> do_error() calls before we ever get close to phase 6).
 
-This misses the point I made. i.e. that the space reservation is
-constant and never changes, yet we calculate it -twice- per inode
-create. That means we can be calculating it hundreds of thousands of
-times a second instead of just reading a variable that is likely hot
-in cache.
-
-IOWs, if we are going to improve this code, it should to be moved to
-a pre-calculated, read-only, per-mount variable so the repeated
-calculation goes away entirely.
-
-Then the macro/function goes away entirely an is replaced simply
-by mp->m_ialloc_space_res or M_IGEO(mp)->alloc_space_res....
+Fair enough - can you please capture all this in the commit message
+to preserve the explanation of why the root inode was chosen and
+not lost+found?
 
 Cheers,
 
