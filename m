@@ -2,148 +2,149 @@ Return-Path: <SRS0=b91c=A3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4681C433E3
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 02:19:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A9FDC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 02:40:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3CF32076C
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 02:19:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="zVp40kGK"
+	by mail.kernel.org (Postfix) with ESMTP id D7BD8207DD
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 02:39:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594867199;
+	bh=j/hoiMBoGyR7vawRZBB/BhJA92ztWmhMeUJTQ0begzI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=Dnkd71dHvUqHnDW72T6lpdykK3yWQO9IUpIherCJ8IZSdL0h4cw/jUb5UfuNzzDM5
+	 fLm+3276SWfE+v418lZrpAuqgaXJErMW+OTDbfGXETwr2WvSiAo7AXLg2kwUAKtlr2
+	 alhF0CIo+wzE9Z2sfUfQpsio5+IeJX2YymtLRrlI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726960AbgGPCTy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jul 2020 22:19:54 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:37374 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726770AbgGPCTy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 22:19:54 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06G2I50I023842;
-        Thu, 16 Jul 2020 02:19:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=/bqE8BDnHGGxYGu9v59M5kN5658UntngIT2OHkVbtqY=;
- b=zVp40kGKo4M83aJzGXzF5RvKJPN2qQBM3HUDRoYhgAUXcuyL8ROr8vYX3pefuQYjoqKA
- i/ngakYZXOf6DcC/Z93zLCTmz8z/d6TOaCdOE6CPVREMWB/xXLftyWvzDtTMCgTQi954
- Ixafk6WUoPJhQGyO0C7tHAOT3/1EeAhqwBvfvdorWY3n8Mf9nL/SGtzCG+isqyAUwWg5
- BfSaMhzNR/OW813wtwIWo/OrR7UbOZqS8rAT74oPAcPpYbDwjAQnpAPyIku5QSov12+i
- J8zJHwKDPdiYk8RqefECv5FjIRpq5A7yt91pZKqNz4y6HPyfQUImgL4hPgBAf1ewpY0B Ug== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 327s65mwsy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 16 Jul 2020 02:19:41 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06G2He4p018683;
-        Thu, 16 Jul 2020 02:17:41 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 32a4crr8ka-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Jul 2020 02:17:40 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06G2HYk4006547;
-        Thu, 16 Jul 2020 02:17:34 GMT
-Received: from localhost (/10.159.238.106)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jul 2020 19:17:34 -0700
-Date:   Wed, 15 Jul 2020 19:17:33 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/26] xfs: split the incore dquot type into a separate
- field
-Message-ID: <20200716021733.GI3151642@magnolia>
-References: <159469028734.2914673.17856142063205791176.stgit@magnolia>
- <159469032038.2914673.4780928031076025099.stgit@magnolia>
- <20200714075756.GB19883@infradead.org>
- <20200714180502.GB7606@magnolia>
- <20200715174340.GB11239@infradead.org>
- <20200715183838.GD3151642@magnolia>
- <20200715183948.GA23249@infradead.org>
- <20200715212032.GE3151642@magnolia>
+        id S1726905AbgGPCj7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jul 2020 22:39:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45710 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726776AbgGPCj7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 15 Jul 2020 22:39:59 -0400
+Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 726D420775;
+        Thu, 16 Jul 2020 02:39:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594867198;
+        bh=j/hoiMBoGyR7vawRZBB/BhJA92ztWmhMeUJTQ0begzI=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qeeGc1q3OAYCfrn9he6sMqvRS0BMg9EXaQjOMohKediMdjzM+XFHyizC2Jib9FDIf
+         3qEz9HN9mSUTa9BfTvw5Z8jTP4Gj6gg1QnlssCrY746cTXzBII3d1LPPkJW9PhZe9C
+         KTdSHhzzCCsX3yJhZVoAoYsbDw8u3aZzy4AKI5qg=
+Date:   Wed, 15 Jul 2020 19:39:57 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH] fs/direct-io: avoid data race on ->s_dio_done_wq
+Message-ID: <20200716023957.GD1167@sol.localdomain>
+References: <20200713033330.205104-1-ebiggers@kernel.org>
+ <20200715013008.GD2005@dread.disaster.area>
+ <20200715023714.GA38091@sol.localdomain>
+ <20200715080144.GF2005@dread.disaster.area>
+ <20200715161342.GA1167@sol.localdomain>
+ <20200716014656.GJ2005@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200715212032.GE3151642@magnolia>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
- suspectscore=1 bulkscore=0 adultscore=0 phishscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007160014
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxscore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 impostorscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007160014
+In-Reply-To: <20200716014656.GJ2005@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 15, 2020 at 02:20:32PM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 15, 2020 at 07:39:48PM +0100, Christoph Hellwig wrote:
-> > On Wed, Jul 15, 2020 at 11:38:38AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jul 15, 2020 at 06:43:40PM +0100, Christoph Hellwig wrote:
-> > > > On Tue, Jul 14, 2020 at 11:05:02AM -0700, Darrick J. Wong wrote:
-> > > > > On Tue, Jul 14, 2020 at 08:57:56AM +0100, Christoph Hellwig wrote:
-> > > > > > On Mon, Jul 13, 2020 at 06:32:00PM -0700, Darrick J. Wong wrote:
-> > > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > > 
-> > > > > > > Create a new type (xfs_dqtype_t) to represent the type of an incore
-> > > > > > > dquot.  Break the type field out from the dq_flags field of the incore
-> > > > > > > dquot.
-> > > > > > 
-> > > > > > I don't understand why we need separate in-core vs on-disk values for
-> > > > > > the type.  Why not something like this on top of the whole series:
+On Thu, Jul 16, 2020 at 11:46:56AM +1000, Dave Chinner wrote:
+> > > > > Also, you need to explain the reason for the READ_ONCE() existing
+> > > > > rather than just saying "it pairs with <some other operation>".
+> > > > > Knowing what operation it pairs with doesn't explain why the pairing
+> > > > > is necessary in the first place, and that leads to nobody reading
+> > > > > the code being able to understand what this is protecting against.
 > > > > > 
-> > > > > I want to keep the ondisk d_type values separate from the incore q_type
-> > > > > values because they don't describe exactly the same concepts:
-> > > > > 
-> > > > > First, the incore qtype has a NONE value that we can pass to the dquot
-> > > > > core verifier when we don't actually know if this is a user, group, or
-> > > > > project dquot.  This should never end up on disk.
 > > > > 
-> > > > Which we can trivially verify.  Or just get rid of NONE, which actually
-> > > > cleans things up a fair bit (patch on top of my previous one below)
+> > > > How about this?
+> > > > 
+> > > > 	/*
+> > > > 	 * Nothing to do if ->s_dio_done_wq is already set.  But since another
+> > > > 	 * process may set it concurrently, we need to use READ_ONCE() rather
+> > > > 	 * than a plain read to avoid a data race (undefined behavior) and to
+> > > > 	 * ensure we observe the pointed-to struct to be fully initialized.
+> > > > 	 */
+> > > > 	if (likely(READ_ONCE(sb->s_dio_done_wq)))
+> > > > 		return 0;
 > > > 
-> > > Ok, I'll get rid of that usage.
+> > > You still need to document what it pairs with, as "data race" doesn't
+> > > describe the actual dependency we are synchronising against is.
 > > > 
-> > > > > Second, xfs_dqtype_t is a (barely concealed) enumeration type for quota
-> > > > > callers to tell us that they want to perform an action on behalf of
-> > > > > user, group, or project quotas.  The incore q_flags and the ondisk
-> > > > > d_type contain internal state that should not be exposed to quota
-> > > > > callers.
-> > > > 
-> > > > I don't think that is an argument, as we do the same elsewhere.
-> > > > 
-> > > > > 
-> > > > > I feel a need to reiterate that I'm about to start adding more flags to
-> > > > > d_type (for y2038+ time support), for which it will be very important to
-> > > > > keep d_type and q_{type,flags} separate.
-> > > > 
-> > > > Why?  We'll just OR the bigtime flag in before writing to disk.
+> > > AFAICT from your description, the data race is not on
+> > > sb->s_dio_done_wq itself, but on seeing the contents of the
+> > > structure being pointed to incorrectly. i.e. we need to ensure that
+> > > writes done before the cmpxchg are ordered correctly against
+> > > reads done after the pointer can be seen here.
 > > > 
-> > > Ugh, fine, I'll rework the whole series yet again, since it doesn't look
-> > > like anyone else is going to have the time to review a 27 patch cleanup
-> > > series.
 > > 
-> > Let's just get your series in and I'll send an incremental patch
-> > after the bigtime series..
+> > No, the data race is on ->s_dio_done_wq itself.  How about this:
 > 
-> Seeing as I already refactored yesterday to produce v4 and am now midway
-> through refactoring to produce v5 I just going to keep going with even
-> more ******* cleanups.
+> Then we -just don't care- that it races because false negatives call
+> into sb_init_dio_done_wq() and it does the right thing. And given
+> that -false positives- cannot occur (requires time travel to see the
+> variable set before it has actually been set by the cmpxchg) there
+> is nothing wrong with this check being racy.
+> 
+> >         /*
+> >          * Nothing to do if ->s_dio_done_wq is already set.  The READ_ONCE()
+> >          * here pairs with the cmpxchg() in __sb_init_dio_done_wq().  Since the
+> >          * cmpxchg() may set ->s_dio_done_wq concurrently, a plain load would be
+> >          * a data race (undefined behavior),
+> 
+> No, it is *not undefined*. If we know what is racing, then it is
+> trivial to determine what the outcome of the race will be. And that
+> -defines- the behaviour that will occur, and as per above, once
+> we've defined the behaviour we realise that *we just don't care
+> about races on setting/reading ->s_dio_done_wq because the code
+> will *always do the right thing*.
 
-To elaborate on that, I've split all the patches that /have/ been
-reviewed into one branch, and all the flags cleanups into a second
-branch.  If that second branch passes testing I'll mail it out in the
-morning.
+You're just wrong here.  The C standard allows compilers to assume that
+variables accessed by plain accesses aren't concurrently changed by other CPUs.
+It's undefined behavior if other CPUs do in fact change the variable.
 
---D
+For example, it's perfectly allowed for the compiler to load the variable twice,
+do the NULL check on the second copy, then actually use the first copy --- since
+it can assume the two copies will have the same value.  But here the first copy
+could be NULL and the second copy could be non-NULL.
 
-> --D
+See https://github.com/google/ktsan/wiki/READ_ONCE-and-WRITE_ONCE for a
+discussion of the many other reasons to properly annotate data races as well.
+
+I understand that many kernel developers are perfectly happy to rely on the
+compiler being "reasonable" (with everyone having their own opinion of what is
+"reasonable").  I think that's not enough.  Whenever feasible, we should write
+unambiguously correct code.
+
+Anyway, do you have a concrete suggestion for this patch itself?  You've
+suggested about four different things and not clearly said what you prefer.
+As I see it, the options are:
+
+- Do nothing.  I.e. retain undefined behavior, and also retain brokenness on a
+  supported Linux architecture.
+
+- Use READ_ONCE() (which you apparently want duplicated in 3 places?)
+
+- Use smp_load_acquire() (which part of your email suggested you prefer, but
+  would also affect performance slightly whereas another part of your email
+  complained about compromising performance)
+
+- Make filesystems allocate the workqueue at mount time.  Note that in many
+  cases this workqueue will never be used, and the comment above
+  sb_init_dio_done_wq() specifically calls out that the workqueue is
+  intentionally not allocated when unneeded.  So we'd be changing that.
+
+Perhaps it would help if we waited on this patch until the one-time init pattern
+is properly documented in tools/memory-model/Documentation/recipes.txt?
+
+- Eric
