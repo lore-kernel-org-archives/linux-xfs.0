@@ -2,145 +2,259 @@ Return-Path: <SRS0=b91c=A3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CA8DC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 01:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA34BC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 01:47:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6861720791
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 01:48:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="swy56HIJ"
+	by mail.kernel.org (Postfix) with ESMTP id AA99E2078C
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 01:47:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726960AbgGPBsI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 15 Jul 2020 21:48:08 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:42874 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726785AbgGPBsH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 21:48:07 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06G1WAlq166704;
-        Thu, 16 Jul 2020 01:48:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=zr+EHWUF+aV9s/J/Kdy3dUa1fjf7lQyN00if1jicjHM=;
- b=swy56HIJKC5uHbT5Q+HOe9JAK6A2hfcC+Mc5W84QE0hFHZqrpoumTfPljLcnIPGN28+5
- 2xt2fxhnAhh2gCp+On/GRvQGa30DcYQ0ap+QG1yCW0+zhnY3VHmrho1Awf/uo/QUBD3y
- MdnXN/QiVKhh2X9Xy5wO9szWI9MH2rcQwukZAcqfj5s2BQVO49hbdVVcaRDfPlIjEXyp
- 2YfnabDzzFRvdUSszMl5lA1J4ZuueIy2R5Z8Cf/2F8JyPD933K0XeOBTbHDuDkPu3SDi
- +vcfmiepidWqp9Cycmx4iWydN3zgm/SRw+J0sYHqTuMEA6Z7p4etW+XpbWeOGdqdrUhs gg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 3274uremey-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 16 Jul 2020 01:48:03 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06G1Wgrs081158;
-        Thu, 16 Jul 2020 01:48:02 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 327qc25165-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 16 Jul 2020 01:48:02 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06G1m15w025652;
-        Thu, 16 Jul 2020 01:48:01 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jul 2020 18:48:00 -0700
-Date:   Wed, 15 Jul 2020 18:47:59 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix inode allocation block res calculation
- precedence
-Message-ID: <20200716014759.GH3151642@magnolia>
-References: <20200715193310.22002-1-bfoster@redhat.com>
- <20200715222935.GI2005@dread.disaster.area>
+        id S1726960AbgGPBrE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 15 Jul 2020 21:47:04 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56342 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726785AbgGPBrD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 15 Jul 2020 21:47:03 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5AC483AA635;
+        Thu, 16 Jul 2020 11:46:57 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jvszA-0001y6-2f; Thu, 16 Jul 2020 11:46:56 +1000
+Date:   Thu, 16 Jul 2020 11:46:56 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH] fs/direct-io: avoid data race on ->s_dio_done_wq
+Message-ID: <20200716014656.GJ2005@dread.disaster.area>
+References: <20200713033330.205104-1-ebiggers@kernel.org>
+ <20200715013008.GD2005@dread.disaster.area>
+ <20200715023714.GA38091@sol.localdomain>
+ <20200715080144.GF2005@dread.disaster.area>
+ <20200715161342.GA1167@sol.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200715222935.GI2005@dread.disaster.area>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=5 spamscore=0
- mlxlogscore=999 bulkscore=0 malwarescore=0 mlxscore=0 phishscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007160009
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- suspectscore=5 phishscore=0 spamscore=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 priorityscore=1501 adultscore=0 bulkscore=0 clxscore=1015
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007160009
+In-Reply-To: <20200715161342.GA1167@sol.localdomain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=p68NMH57DQzvjREzIioA:9 a=Trv5CCooIfyJ-1wu:21 a=SIlSwGWthHDq-VID:21
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 16, 2020 at 08:29:35AM +1000, Dave Chinner wrote:
-> On Wed, Jul 15, 2020 at 03:33:10PM -0400, Brian Foster wrote:
-> > The block reservation calculation for inode allocation is supposed
-> > to consist of the blocks required for the inode chunk plus
-> > (maxlevels-1) of the inode btree multiplied by the number of inode
-> > btrees in the fs (2 when finobt is enabled, 1 otherwise).
+On Wed, Jul 15, 2020 at 09:13:42AM -0700, Eric Biggers wrote:
+> On Wed, Jul 15, 2020 at 06:01:44PM +1000, Dave Chinner wrote:
+> > > > >  /* direct-io.c: */
+> > > > > -int sb_init_dio_done_wq(struct super_block *sb);
+> > > > > +int __sb_init_dio_done_wq(struct super_block *sb);
+> > > > > +static inline int sb_init_dio_done_wq(struct super_block *sb)
+> > > > > +{
+> > > > > +	/* pairs with cmpxchg() in __sb_init_dio_done_wq() */
+> > > > > +	if (likely(READ_ONCE(sb->s_dio_done_wq)))
+> > > > > +		return 0;
+> > > > > +	return __sb_init_dio_done_wq(sb);
+> > > > > +}
+> > > > 
+> > > > Ummm, why don't you just add this check in sb_init_dio_done_wq(). I
+> > > > don't see any need for adding another level of function call
+> > > > abstraction in the source code?
+> > > 
+> > > This keeps the fast path doing no function calls and one fewer branch, as it was
+> > > before.  People care a lot about minimizing direct I/O overhead, so it seems
+> > > desirable to keep this simple optimization.  Would you rather it be removed?
 > > 
-> > Instead, the macro returns (ialloc_blocks + 2) due to a precedence
-> > error in the calculation logic. This leads to block reservation
-> > overruns via generic/531 on small block filesystems with finobt
-> > enabled. Add braces to fix the calculation and reserve the
-> > appropriate number of blocks.
+> > No.
 > > 
-> > Fixes: 9d43b180af67 ("xfs: update inode allocation/free transaction reservations for finobt")
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_space.h | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > What I'm trying to say is that I'd prefer fast path checks don't get
+> > hidden away in a static inline function wrappers that require the
+> > reader to go look up code in a different file to understand that
+> > code in yet another different file is conditionally executed.
 > > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
-> > index 88221c7a04cc..c6df01a2a158 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_space.h
-> > +++ b/fs/xfs/libxfs/xfs_trans_space.h
-> > @@ -57,7 +57,7 @@
-> >  	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK)
-> >  #define	XFS_IALLOC_SPACE_RES(mp)	\
-> >  	(M_IGEO(mp)->ialloc_blks + \
-> > -	 (xfs_sb_version_hasfinobt(&mp->m_sb) ? 2 : 1 * \
-> > +	 ((xfs_sb_version_hasfinobt(&mp->m_sb) ? 2 : 1) * \
-> >  	  (M_IGEO(mp)->inobt_maxlevels - 1)))
+> > Going from obvious, easy to read fast path code to spreading the
+> > fast path logic over functions in 3 different files is not an
+> > improvement in the code - it is how we turn good code into an
+> > unmaintainable mess...
 > 
-> Ugh. THese macros really need rewriting as static inline functions.
-> This would not have happened if it were written as:
+> The alternative would be to duplicate the READ_ONCE() at all 3 call sites --
+> including the explanatory comment.  That seems strictly worse.
 > 
-> static inline int
-> xfs_ialloc_space_res(struct xfs_mount *mp)
-> {
-> 	int	res = M_IGEO(mp)->ialloc_blks;
-> 
-> 	res += M_IGEO(mp)->inobt_maxlevels - 1;
-> 	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-> 		res += M_IGEO(mp)->inobt_maxlevels - 1;
-> 	return res;
-> }
-> 
-> Next question: why is this even a macro that is calculated on demand
-> instead of a read-only constant held in inode geometry calculated
-> at mount time? Then it doesn't even need to be an inline function
-> and can just be rolled into xfs_ialloc_setup_geometry()....
+> And the code before was broken, so I disagree it was "obvious" or "good".
 
-Yeah, I hate those macros too.  Fixing all that sounds like a <cough>
-cleanup series for someone, but in the meantime this is easy enough to
-backport to stable kernels.
+It's only "broken" on anything but an ancient platform that
+has a unique, one-off, never to be repeated, whacky
+memory model.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+And why should we compromise performance on hundreds of millions of
+modern systems to fix an extremely rare race on an extremely rare
+platform that maybe only a hundred people world-wide might still
+use?
 
---D
+Indeed, if you are going to use "fast path performance" as the
+justification for READ_ONCE() over a more robust but slightly slower
+release/acquire barrier pair, then I'd suggest that the check and
+dynamic allocation of the workqueue should be removed entirely and
+it should be allocated at mount time by filesytems that require it. 
 
-> Cheers,
+IOWs, If we are truly concerned with fast path performance, then
+we'd elide the entire branch from the fast path altogether, thereby
+getting rid of the cmpxchg code and the data race at the same
+time....
+
+I'm talking from self interest here: I need to be able to understand
+and debug this code, and if I struggle to understand what the memory
+ordering relationship is and have to work it out from first
+principles every time I have to look at the code, then *that is bad
+code*.
+
+I don't care about speed if I can't understand or easily modify the
+code without it breaking unexpectedly. IO performance comes from the
+algorithms, not micro-optimisation of CPU usage. If one CPU is not
+enough, I've got another thousand I can also use. Make the code
+simple, stupid, easy to maintain, and easy to test - performance
+will come from smart, highly concurrent algorithms, not single CPU
+usage micro-optimisations.
+
+> > > > Also, you need to explain the reason for the READ_ONCE() existing
+> > > > rather than just saying "it pairs with <some other operation>".
+> > > > Knowing what operation it pairs with doesn't explain why the pairing
+> > > > is necessary in the first place, and that leads to nobody reading
+> > > > the code being able to understand what this is protecting against.
+> > > > 
+> > > 
+> > > How about this?
+> > > 
+> > > 	/*
+> > > 	 * Nothing to do if ->s_dio_done_wq is already set.  But since another
+> > > 	 * process may set it concurrently, we need to use READ_ONCE() rather
+> > > 	 * than a plain read to avoid a data race (undefined behavior) and to
+> > > 	 * ensure we observe the pointed-to struct to be fully initialized.
+> > > 	 */
+> > > 	if (likely(READ_ONCE(sb->s_dio_done_wq)))
+> > > 		return 0;
+> > 
+> > You still need to document what it pairs with, as "data race" doesn't
+> > describe the actual dependency we are synchronising against is.
+> > 
+> > AFAICT from your description, the data race is not on
+> > sb->s_dio_done_wq itself, but on seeing the contents of the
+> > structure being pointed to incorrectly. i.e. we need to ensure that
+> > writes done before the cmpxchg are ordered correctly against
+> > reads done after the pointer can be seen here.
+> > 
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> No, the data race is on ->s_dio_done_wq itself.  How about this:
+
+Then we -just don't care- that it races because false negatives call
+into sb_init_dio_done_wq() and it does the right thing. And given
+that -false positives- cannot occur (requires time travel to see the
+variable set before it has actually been set by the cmpxchg) there
+is nothing wrong with this check being racy.
+
+>         /*
+>          * Nothing to do if ->s_dio_done_wq is already set.  The READ_ONCE()
+>          * here pairs with the cmpxchg() in __sb_init_dio_done_wq().  Since the
+>          * cmpxchg() may set ->s_dio_done_wq concurrently, a plain load would be
+>          * a data race (undefined behavior),
+
+No, it is *not undefined*. If we know what is racing, then it is
+trivial to determine what the outcome of the race will be. And that
+-defines- the behaviour that will occur, and as per above, once
+we've defined the behaviour we realise that *we just don't care
+about races on setting/reading ->s_dio_done_wq because the code
+will *always do the right thing*.
+
+>          so READ_ONCE() is needed.
+>          * READ_ONCE() also includes any needed read data dependency barrier to
+>          * ensure that the pointed-to struct is seen to be fully initialized.
+>          */
+
+IOWs, the only problem started here is the read data dependency
+that results from not explicitly ordering loads from the memory that
+->s_dio_done_wq points to before it is made visible via the cmpxchg.
+
+Most people will be able to understand this as a
+store-release/load-acquire data relationship.  Yes, I know that
+because the related write operations that need ordering occur in the
+same structure the atomic ops publish via a pointer to that
+structure, it can be reduced to just a pure read data dependency.
+But understanding that from the code and reasoning that the
+dependency is unchanged by future modifications is complex and
+beyond the capability of many people, likely including *me*.
+
+If we leave the code as a simple store-release/load_acquire pattern,
+then we just don't have to care about hidden or subtle data/control
+dependencies. The code will work regardless of whether they exist or
+not, so it will be much more robust against future changes.
+
+> FWIW, long-term we really need to get developers to understand these sorts of
+> issues, so that the code is written correctly in the first place and we don't
+> need to annotate common patterns like one-time-init with a long essay and have a
+> long discussion.
+
+Well, yes, but slamming READ_ONCE/WRITE_ONCE all through the code
+-does not acheive that-. Go back and look at the recent discussion
+I had with PeterZ over the memory ordering in ttwu(). [1] You can
+document the memory ordering, but that *does not make the code
+understandable*. Memory ordering requires a -lot- of knowledge to
+understand the context in which the ordering is necessary, and
+nobody can understand that from a terse comment like "pairs with
+<op> in <func>".
+
+[1] https://lore.kernel.org/linux-xfs/20200626223254.GH2005@dread.disaster.area/
+
+> Recently KCSAN was merged upstream
+> (https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/dev-tools/kcsan.rst)
+> and the memory model documentation was improved
+> (https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/tools/memory-model/Documentation/explanation.txt?h=v5.8-rc5#n1922),
+> so hopefully that will raise awareness...
+
+The majority of the _good_ programmers I know run away screaming
+from this stuff. As was said many, many years ago - understanding
+memory-barriers.txt is an -extremely high bar- to set as a basic
+requirement for being a kernel developer.
+
+This needs to be simplified down into a small set of common
+patterns. store-release/load-acquire is a simple pattern, especially
+for people who understand that unlock-to-lock provides a memory
+barrier for the critical section inside the lock. When you explain
+that this is a store-release/load-acquire memory ordering pattern,
+it's much easier to form a working understanding of the ordering
+of operations.
+
+> > If so, can't we just treat this as a normal
+> > store-release/load-acquire ordering pattern and hence use more
+> > relaxed memory barriers instead of have to patch up what we have now
+> > to specifically make ancient platforms that nobody actually uses
+> > with weird and unusual memory models work correctly?
+> 
+> READ_ONCE() is already as relaxed as it can get, as it includes a read data
+> dependency barrier only (which is no-op on everything other than Alpha).
+> 
+> If anything it should be upgraded to smp_load_acquire(), which handles control
+> dependencies too.  I didn't see anything obvious in the workqueue code that
+> would need that (i.e. accesses to some global structure that isn't transitively
+> reachable via the workqueue_struct itself).  But we could use it to be safe if
+> we're okay with any performance implications of the additional memory barrier it
+> would add.
+
+That's exactly the point I've been trying to make - if people cannot
+reason why the code is correct/safe from reading it, then it doesn't
+matter how fast it is.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
