@@ -2,214 +2,116 @@ Return-Path: <SRS0=b91c=A3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68985C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 08:16:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 997ADC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 10:39:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52A1D2070E
-	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 08:16:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 740C92074B
+	for <linux-xfs@archiver.kernel.org>; Thu, 16 Jul 2020 10:39:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Glx7iSp9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726232AbgGPIQY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jul 2020 04:16:24 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:58959 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725867AbgGPIQX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 04:16:23 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 8A3F71A942D;
-        Thu, 16 Jul 2020 18:16:18 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jvz3w-0004EU-EV; Thu, 16 Jul 2020 18:16:16 +1000
-Date:   Thu, 16 Jul 2020 18:16:16 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH] fs/direct-io: avoid data race on ->s_dio_done_wq
-Message-ID: <20200716081616.GM5369@dread.disaster.area>
-References: <20200713033330.205104-1-ebiggers@kernel.org>
- <20200715013008.GD2005@dread.disaster.area>
- <20200715023714.GA38091@sol.localdomain>
- <20200715080144.GF2005@dread.disaster.area>
- <20200715161342.GA1167@sol.localdomain>
- <20200716014656.GJ2005@dread.disaster.area>
- <20200716024717.GJ12769@casper.infradead.org>
- <20200716053332.GH1167@sol.localdomain>
+        id S1726383AbgGPKjr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jul 2020 06:39:47 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:23036 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726239AbgGPKjq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 06:39:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1594895985;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=B3C5L0IdmyJAVuEFqWJF6DtIwfW7xnPsEcp+akF4VIQ=;
+        b=Glx7iSp98KFLd+VzEx9qKj9i7NAgdUF9CypBV5sduhAkg0kyhmYC8Q0n7tzQVg013r4l1Q
+        kulRkTkCHA3wx2eoEkX5Uh5XjA68xMVXI5I2am11CmRTVy6tbch5mzJJdlmaa/LRS5MIbn
+        SGvksYc36BFRv9aBeOOrKxsfbk0ZAJQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-98-LmSGS1MoOrCc8La004HSxw-1; Thu, 16 Jul 2020 06:39:43 -0400
+X-MC-Unique: LmSGS1MoOrCc8La004HSxw-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8F382100CCC5;
+        Thu, 16 Jul 2020 10:39:42 +0000 (UTC)
+Received: from bfoster (ovpn-113-214.rdu2.redhat.com [10.10.113.214])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E50AF72ACF;
+        Thu, 16 Jul 2020 10:39:41 +0000 (UTC)
+Date:   Thu, 16 Jul 2020 06:39:40 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/4] repair: don't double check dir2 sf parent in phase 4
+Message-ID: <20200716103940.GA26218@bfoster>
+References: <20200715140836.10197-1-bfoster@redhat.com>
+ <20200715140836.10197-3-bfoster@redhat.com>
+ <20200715184350.GB23618@infradead.org>
+ <20200715235414.GF3151642@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200716053332.GH1167@sol.localdomain>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=X6os11be c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=VwQbUJbxAAAA:8 a=pGLkceISAAAA:8
-        a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8 a=PuJr3C3hJH1ja2Oo6fIA:9
-        a=bOA-3-YMxWdk0kr0:21 a=WW9XynqRKrwYVvAG:21 a=CjuIK1q_8ugA:10
-        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200715235414.GF3151642@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 15, 2020 at 10:33:32PM -0700, Eric Biggers wrote:
-> On Thu, Jul 16, 2020 at 03:47:17AM +0100, Matthew Wilcox wrote:
-> > On Thu, Jul 16, 2020 at 11:46:56AM +1000, Dave Chinner wrote:
-> > > And why should we compromise performance on hundreds of millions of
-> > > modern systems to fix an extremely rare race on an extremely rare
-> > > platform that maybe only a hundred people world-wide might still
-> > > use?
+On Wed, Jul 15, 2020 at 04:54:14PM -0700, Darrick J. Wong wrote:
+> On Wed, Jul 15, 2020 at 07:43:50PM +0100, Christoph Hellwig wrote:
+> > On Wed, Jul 15, 2020 at 10:08:34AM -0400, Brian Foster wrote:
+> > > The shortform parent ino verification code runs once in phase 3
+> > > (ino_discovery == true) and once in phase 4 (ino_discovery ==
+> > > false). This is unnecessary and leads to duplicate error messages if
+> > > repair replaces an invalid parent value with zero because zero is
+> > > still an invalid value. Skip the check in phase 4.
 > > 
-> > I thought that wasn't the argument here.  It was that some future
-> > compiler might choose to do something absolutely awful that no current
-> > compiler does, and that rather than disable the stupid "optimisation",
-> > we'd be glad that we'd already stuffed the source code up so that it
-> > lay within some tortuous reading of the C spec.
+> > This looks good,
 > > 
-> > The memory model is just too complicated.  Look at the recent exchange
-> > between myself & Dan Williams.  I spent literally _hours_ trying to
-> > figure out what rules to follow.
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > > 
-> > https://lore.kernel.org/linux-mm/CAPcyv4jgjoLqsV+aHGJwGXbCSwbTnWLmog5-rxD2i31vZ2rDNQ@mail.gmail.com/
-> > https://lore.kernel.org/linux-mm/CAPcyv4j2+7XiJ9BXQ4mj_XN0N+rCyxch5QkuZ6UsOBsOO1+2Vg@mail.gmail.com/
-> > 
-> > Neither Dan nor I are exactly "new" to Linux kernel development.  As Dave
-> > is saying here, having to understand the memory model is too high a bar.
-> > 
-> > Hell, I don't know if what we ended up with for v4 is actually correct.
-> > It lokos good to me, but *shrug*
-> > 
-> > https://lore.kernel.org/linux-mm/159009507306.847224.8502634072429766747.stgit@dwillia2-desk3.amr.corp.intel.com/
+> > As far as the existing code is concerned:  Does anyone else find the
+> > ino_discovery booleand passed as int as annoying as I do?  An
+> > "enum repair_phase phase" would be much more descriptive in my opinion.
 > 
-> Looks like you still got it wrong :-(  It needs:
+> I can never remember what "ino_discovery" actually means.  true means
+> phase2 (looking at inodes for the first time) and false means phase4
+> (looking for crosslinked data and whatnot)?
 > 
-> diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-> index 934c92dcb9ab..9a95fbe86e15 100644
-> --- a/drivers/char/mem.c
-> +++ b/drivers/char/mem.c
-> @@ -1029,7 +1029,7 @@ static int devmem_init_inode(void)
->         }
+
+Same.. I agree with Christoph on not just ino_discovery, but the various
+boolean parameters to some of the common scanning functions that are
+reused across multiple phases. It's confusing to track when reading the
+code as well as to identify intent and whether certain hunks of
+idempotent code are running multiple times, etc.
+
+That said, I'm not necessarily convinced that replacing the booleans
+with a phase enum is a huge benefit. That just changes the interface so
+it's easier to determine what phase we're in vs. why certain bits of
+logic are executed. I.e., 'if (ino_discovery) { do_discovery_stuff(); }'
+confuses what phase we're in when reading the lower level code, but 'if
+(phase == PHASE_3) { do_discovery_stuff() }' doesn't really clarify how
+do_discovery_stuff() might interact with other behaviors that are part
+of the same phase.
+
+I'm not sure what the right answer is but if we're going to look at
+refactoring things, I'd rather see us start with considering something
+more fundamental. For example, could we perhaps factor out the the phase
+specific functionality into phase specific functions via an approach
+like Darrick's recent log recovery rework?  That way it might be easier
+to read through each phase and understand the core repair logic vs.
+having to troll through scanning infrastructure multiple times trying to
+keep track of where you are in the grand scheme of things. Of course if
+that is too much of a mess then perhaps the phase enum thing makes more
+sense..
+
+Brian
+
+> --D
 > 
->         /* publish /dev/mem initialized */
-> -       WRITE_ONCE(devmem_inode, inode);
-> +       smp_store_release(&devmem_inode, inode);
-> 
->         return 0;
->  }
-> 
-> It seems one source of confusion is that READ_ONCE() and WRITE_ONCE() don't
-> actually pair with each other, unless no memory barriers are needed at all.
-> 
-> Instead, READ_ONCE() pairs with a primitive that has "release" semantics, e.g.
-> smp_store_release() or cmpxchg_release(). But READ_ONCE() is only correct if
-> there's no control flow dependency; if there is, it needs to be upgraded to a
-> primitive with "acquire" semantics, e.g. smp_load_acquire().
 
-You lost your audience at "control flow dependency". i.e. you're
-trying to explain memory ordering requirements by using terms that
-only people who deeply grok memory ordering understand.
-
-I can't tell you what a control flow dependency is off the top
-of my head - I'd have to look up the documentation to remind myself
-what it means and why it might be important. Then I'll realise yet
-again that if I just use release+acquire message passing constructs,
-I just don't have to care about them. And so I promptly forget about
-them again.
-
-My point is that the average programmer does not need to know what a
-control flow or data depedency is to use memory ordering semantics
-correctly. If you want to optimise your code down to the Nth degree
-then you *may* need to know that, but almost nobody in the kernel
-needs to optimise their code to that extent.
-
-> The best approach might be to just say that the READ_ONCE() + "release" pairing
-> should be avoided, and we should stick to "acquire" + "release".  (And I think
-> Dave may be saying he'd prefer that for ->s_dio_done_wq?)
-
-Pretty much.
-
-We need to stop thinking of these synchronisation primitives as
-"memory ordering" or "memory barriers" or "atomic access" and
-instead think of them as tools to pass data safely between concurrent
-threads.
-
-We need to give people a simple mental model and/or pattern for
-passing data safely between two racing threads, not hit them over
-the head with the LKMM documentation. People are much more likely to
-understand the ordering and *much* less likely to make mistakes
-given clear, simple examples to follow. And that will stick if you
-can relate those examples back to the locking constructs they
-already understand and have been using for years.
-
-e.g. basic message passing. foo = 0 is the initial message state, y
-is the mail box flag, initially 0/locked:
-
-			locking:	ordered code:
-
-write message:		foo = 1		foo = 1
-post message:		spin_unlock(y)	smp_store_release(y, 1)
-
-check message box:	spin_lock(y)	if (smp_load_acquire(y) == 1)
-got message:		print(foo)		print(foo)
-
-And in both cases we will always get "foo = 1" as the output of
-both sets of code. i.e. foo is the message, y is the object that
-guarantees delivery of the message.
-
-This makes the code Willy linked to obvious. The message to be
-delivered is the inode and it's contents, and it is posted via
-the devmem_inode. Hence:
-
-write message:		inode = alloc_anon_inode()
-post message:		smp_store_release(&devmem_inode, inode);
-
-check message box:	inode = smp_load_acquire(&devmem_inode);
-got message?		if (!inode)
-    no				<fail>
-   yes			<message contents guaranteed to be seen>
-
-To someone familiar with message passing patterns, this code almost
-doesn't need comments to explain it.
-
-Using memory ordering code becomes much simpler when we think of it
-as a release+acquire pattern rather than "READ_ONCE/WRITE_ONCE plus
-(some set of) memory barriers" because it explicitly lays out the
-ordering requirements of the code on both sides of the pattern.
-Once a developer creates a mental association between the
-release+acquire message passing mechanism and critical section
-ordering defined by unlock->lock operations, ordering becomes much
-less challenging to think and reason about.
-
-Part of the problem is that RO/WO are now such overloaded operators
-it's hard to understand all the things they do or discriminate
-between which function a specific piece of code is relying on.
-
-IMO, top level kernel developers need to stop telling people "you
-need to understand the lkmm and/or memory_barriers.txt" like it's
-the only way to write safe concurrent code. The reality is that most
-devs don't need to understand it at all.  We'll make much more
-progress on fixing broken code and having new code being written
-correctly by teaching people simple patterns that are easy to
-explain, easy to learn, *hard to get wrong* and easy to review. And
-then they'll use them in places where they'd previously not care
-about data races because they have been taught "this is the way we
-should write concurrent code". They'll never learn that from being
-told to read the LKMM documentation....
-
-So if you find yourself using the words "LKMM", "control flow",
-"data dependency", "compiler optimisation" or other intricate
-details or the memory model, then you've already lost your
-audience....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
