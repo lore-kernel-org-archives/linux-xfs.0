@@ -2,117 +2,195 @@ Return-Path: <SRS0=+9Bg=A4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A78F2C433E3
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 20:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E81C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 20:43:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81E712065D
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 20:09:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C93B92070E
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 20:43:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="B4UhzZWr"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fgmUVLwo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728432AbgGQUJf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jul 2020 16:09:35 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:59016 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726771AbgGQUJe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jul 2020 16:09:34 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06HK8CTn153973;
-        Fri, 17 Jul 2020 20:09:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=lA37IPZvJ84ABk+CRcaItjSoDQDCwOQb3a5ru8DL4n4=;
- b=B4UhzZWrJD0SKDChj9040JWoB4nT/KDUJBA01DLYO8/OQ3qJgnse5hd+TMISIQ23BQcc
- yPkTjyo+CeHsP4MniR3LE5UxKV6Hebdr0TIoUB5N3OjpXMNc3exE4gAMiT6ZVrcsQ4NS
- NkRy7J6gMyauHhwb31quRY669OdIxi+q9/YXTlsQ3IGlZixwA5MBKI4PXgE7tc5VCXKj
- 7sdUwqBQW0DhL2aSt2AQPi9Wc6eI9x/KCv+oCSFD1PiSsEiAhQFXdhb5IVO83we5Z56e
- lLDYAiTcSF29OnJcjxcW03zbC8Bmro1h8WmF3rnn/yBVfb7Ar6oElOufUCeWNE36Tcot 9Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 327s65yka1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 17 Jul 2020 20:09:29 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06HJwnuF107420;
-        Fri, 17 Jul 2020 20:07:29 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 32bjd3hh78-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Jul 2020 20:07:29 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06HK7SCh013387;
-        Fri, 17 Jul 2020 20:07:28 GMT
-Received: from localhost (/10.159.159.76)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 17 Jul 2020 13:07:27 -0700
-Date:   Fri, 17 Jul 2020 13:07:26 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix inode allocation block res calculation
- precedence
-Message-ID: <20200717200726.GO3151642@magnolia>
-References: <20200715193310.22002-1-bfoster@redhat.com>
- <20200715222935.GI2005@dread.disaster.area>
- <20200716014759.GH3151642@magnolia>
- <20200716020209.GK2005@dread.disaster.area>
- <20200716121811.GB31705@bfoster>
- <9e464b84-7945-95b5-c6ff-ae3eb8bee878@sandeen.net>
+        id S1726771AbgGQUnU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jul 2020 16:43:20 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:27521 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726492AbgGQUnU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jul 2020 16:43:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595018598;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KGONjK+Oo0EYc/VwHmXLXppjINSV3ySk+HAa0W/EUcI=;
+        b=fgmUVLwoK4dcFY1gXOBKp1L8kZiJKiavJiJdSRPzoLXIrKeMIx+YOQ1gW6QjyPQj4hLtEt
+        80qOlHXjx2XbO58B7pCp9LuLNuk60lvKOIPHCmS8keBXGbYhLGvy9sxKMQiDDNKZ5PRaQb
+        uRxN1Wf+4GuELZyeogl64sLz9C3SUKw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-324-w518hMQFOU6vceMNNzrqgA-1; Fri, 17 Jul 2020 16:43:16 -0400
+X-MC-Unique: w518hMQFOU6vceMNNzrqgA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D3D9AE91A;
+        Fri, 17 Jul 2020 20:43:15 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-113-112.rdu2.redhat.com [10.10.113.112])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 594FA61100;
+        Fri, 17 Jul 2020 20:43:15 +0000 (UTC)
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     sandeen@sandeen.net, darrick.wong@oracle.com
+Subject: [PATCH v2 3/3] xfsprogs: xfs_quota state command should report ugp grace times
+Date:   Fri, 17 Jul 2020 15:43:14 -0500
+Message-Id: <20200717204314.309873-1-billodo@redhat.com>
+In-Reply-To: <20200715201253.171356-4-billodo@redhat.com>
+References: <20200715201253.171356-4-billodo@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9e464b84-7945-95b5-c6ff-ae3eb8bee878@sandeen.net>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9685 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 mlxlogscore=999
- malwarescore=0 suspectscore=1 adultscore=0 phishscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007170135
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9685 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxscore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
- clxscore=1015 bulkscore=0 mlxlogscore=999 impostorscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007170136
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 17, 2020 at 10:16:02AM -0700, Eric Sandeen wrote:
-> On 7/16/20 5:18 AM, Brian Foster wrote:
-> > On Thu, Jul 16, 2020 at 12:02:09PM +1000, Dave Chinner wrote:
-> 
-> ...
-> 
-> >> i.e. XFS_IALLOC_SPACE_RES() is used in just 7 places in the code,
-> >> 4 of them are in that same header file, so it's a simple, standalone
-> >> patch that fixes the bug by addressing the underlying cause of
-> >> the problem (i.e. nasty macro!).
-> >>
-> > I agree that the inline is nicer than the macro, but a transaction
-> > reservation value seems misplaced to me in the IGEO. Perhaps having
-> > something analogous to struct xfs_trans_resv might be more appropriate.
-> 
-> For whatever my opinion is worth these days, it seems like doing
-> a survey to see how many of these reservations are static would be a
-> good first step, and then decide where they should all go if they should
-> move. I agree that IGEO might be a little odd, depending on what other
-> static reservation types there are and what they're associated with.
-> 
-> I see both sides of the discussion re: how fixes like this move forward
-> and what's easily backportable but in this case (and maybe I'm missing
-> context) it seems like a wider survey would be wise before deciding to
-> move this one value to IGEO in particular.
+Since grace periods are now supported for three quota types (ugp),
+modify xfs_quota state command to report times for all three.
+Add a helper function for stat reporting.
 
-Agreed.  AFAICT the first patch is a bug fix for broken functionality,
-so I will put it in the 5.9 branch update next week.
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+v2: load-up helper function more, further reducing redundant LoC
 
---D
+ quota/state.c | 96 +++++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 67 insertions(+), 29 deletions(-)
 
-> -Eric
+diff --git a/quota/state.c b/quota/state.c
+index 1627181d..19d34ed0 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -191,49 +191,87 @@ state_stat_to_statv(
+ }
+ 
+ static void
+-state_quotafile_mount(
++state_quotafile_stat(
+ 	FILE			*fp,
+ 	uint			type,
+-	struct fs_path		*mount,
++	struct fs_path          *mount,
++	struct fs_quota_statv	*sv,
++	struct fs_quota_stat	*s,
+ 	uint			flags)
+ {
+-	struct fs_quota_stat	s;
+-	struct fs_quota_statv	sv;
++	bool			accounting, enforcing;
++	struct fs_qfilestatv	*qsv;
+ 	char			*dev = mount->fs_name;
+ 
+-	sv.qs_version = FS_QSTATV_VERSION1;
+-
+-	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
+-		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
++	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)sv) < 0) {
++		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)s) < 0) {
+ 			if (flags & VERBOSE_FLAG)
+ 				fprintf(fp,
+ 					_("%s quota are not enabled on %s\n"),
+ 					type_to_string(type), dev);
+ 			return;
+ 		}
+-		state_stat_to_statv(&s, &sv);
++		state_stat_to_statv(s, sv);
++	}
++
++	switch(type) {
++	case XFS_USER_QUOTA:
++		qsv = &sv->qs_uquota;
++		accounting = sv->qs_flags & XFS_QUOTA_UDQ_ACCT;
++		enforcing = sv->qs_flags & XFS_QUOTA_UDQ_ENFD;
++		break;
++	case XFS_GROUP_QUOTA:
++		qsv = &sv->qs_gquota;
++		accounting = sv->qs_flags & XFS_QUOTA_GDQ_ACCT;
++		enforcing = sv->qs_flags & XFS_QUOTA_GDQ_ENFD;
++		break;
++	case XFS_PROJ_QUOTA:
++		qsv = &sv->qs_pquota;
++		accounting = sv->qs_flags & XFS_QUOTA_PDQ_ACCT;
++		enforcing = sv->qs_flags & XFS_QUOTA_PDQ_ENFD;
++		break;
++	default:
++		return;
+ 	}
+ 
+-	if (type & XFS_USER_QUOTA)
+-		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
+-				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
+-				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
+-	if (type & XFS_GROUP_QUOTA)
+-		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv.qs_gquota,
+-				sv.qs_flags & XFS_QUOTA_GDQ_ACCT,
+-				sv.qs_flags & XFS_QUOTA_GDQ_ENFD);
+-	if (type & XFS_PROJ_QUOTA)
+-		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv.qs_pquota,
+-				sv.qs_flags & XFS_QUOTA_PDQ_ACCT,
+-				sv.qs_flags & XFS_QUOTA_PDQ_ENFD);
+-
+-	state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
+-	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv.qs_bwarnlimit);
+-
+-	state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
+-	state_warnlimit(fp, XFS_INODE_QUOTA, sv.qs_iwarnlimit);
+-
+-	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
++
++	state_qfilestat(fp, mount, type, qsv, accounting, enforcing);
++
++	state_timelimit(fp, XFS_BLOCK_QUOTA, sv->qs_btimelimit);
++	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv->qs_bwarnlimit);
++
++	state_timelimit(fp, XFS_INODE_QUOTA, sv->qs_itimelimit);
++	state_warnlimit(fp, XFS_INODE_QUOTA, sv->qs_iwarnlimit);
++
++	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv->qs_rtbtimelimit);
++}
++
++static void
++state_quotafile_mount(
++	FILE			*fp,
++	uint			type,
++	struct fs_path		*mount,
++	uint			flags)
++{
++	struct fs_quota_stat	s;
++	struct fs_quota_statv	sv;
++
++	sv.qs_version = FS_QSTATV_VERSION1;
++
++	if (type & XFS_USER_QUOTA) {
++		state_quotafile_stat(fp, XFS_USER_QUOTA, mount,
++				     &sv, &s, flags);
++	}
++
++	if (type & XFS_GROUP_QUOTA) {
++		state_quotafile_stat(fp, XFS_GROUP_QUOTA, mount,
++				     &sv, &s, flags);
++	}
++
++	if (type & XFS_PROJ_QUOTA) {
++		state_quotafile_stat(fp, XFS_PROJ_QUOTA, mount,
++				     &sv, &s, flags);
++	}
+ }
+ 
+ static void
+-- 
+2.26.2
+
