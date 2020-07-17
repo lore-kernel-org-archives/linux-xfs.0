@@ -2,121 +2,177 @@ Return-Path: <SRS0=+9Bg=A4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.6 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5826C4345E
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:46:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2BF1C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 05:05:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77FF92070E
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:46:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="tEG1tbY0"
+	by mail.kernel.org (Postfix) with ESMTP id AC92620578
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 05:05:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594962341;
+	bh=5l82E/2QHFoLujhbouEO+rAl9xdMKFx6N0zLGFHTMhs=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=MNk1scFJhbqjJH1JQmB6vURphfCeNa+JmSxIJV7Gbvvo9fRxA9bb+ceUcxs6C+4qC
+	 cm5mqP7eo2H0BbqlZ7DU7gCIW2Eihq0c/agpLvcKg5z9MOhl1pq9wi48fmUlys71Sk
+	 oZ4mDBDDzTM7rAfHkPTBi/xiczVh+U14D2LahShs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726843AbgGQBp7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jul 2020 21:45:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39438 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726818AbgGQBp4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 21:45:56 -0400
-Received: from mail-pf1-x44a.google.com (mail-pf1-x44a.google.com [IPv6:2607:f8b0:4864:20::44a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D13E8C061755
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:45:56 -0700 (PDT)
-Received: by mail-pf1-x44a.google.com with SMTP id c2so5814252pfj.5
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:45:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=zr1haxdG39xCeCSCxAtAF/uCJ0PriAfrFWPYdcjKJpg=;
-        b=tEG1tbY0GS7WlBxSa3Kxt1rFESwI3ui5yUD/cLDZhMOcAswtEsR2gA7+HRG/RM3fom
-         kKXQfxEkJ03SNR1VcwABHdAvnSgZUNipTuaqbleOSRI3ly6YGNWQXT0md6xvoxRmgISr
-         aj1KioZwAFAZKz6AW2HjIi/fOOThLnth025dI4US/K0SzJSIhF6AN4lrRl8BpYvkr1Lb
-         lQR2IJ1LUZ1nzraC9ZyIdcxHojIZhPSRzBFpK0Xtgwy/5Wvxiufo3xtWfUGQ9f6mDhqc
-         Jy0npXSloiyPA693awr5gTPYLK5o6O/NYyKBiDV9yOX2QtiUCYUlxyhVr0ZzfowLwJVK
-         ez1g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=zr1haxdG39xCeCSCxAtAF/uCJ0PriAfrFWPYdcjKJpg=;
-        b=MnF/MRB3sPGA8wfafA05Bw2A9yIUZjW+xYbc800p9dq/aevmFcQbBToSruHA6mq0JR
-         +z4UvHfoDZF/S6NJhm3p8Zqf3ntSmp/rHl5c9pRRlmhL+/fXlk+Q6i5rxGqin1dnnZ3J
-         l3DSWCmkhoOyVmgGplbOlMTgDG3LOaW+JWO2MjK3aZdOjrK/Y+f1PqpMsSze8uoJ4OmA
-         G7rQ8j6ZgEQeiLhmFyl6YtHcVR2J6ZKNdamico4fw1CBXcooYOhWiNEN77xEsnEWO31x
-         pnL7xS1RlEdHd4fCZ4K+uiKokXFNgmBL9v5Xp/5/Ht95doEAvXCIj9riObwchwODgQjC
-         89SQ==
-X-Gm-Message-State: AOAM532IRlnN424YPLn5n5vDsz+Aa378I98Ossr2szvF7fDNWxhRzs+G
-        ABR8fMgb78dmTPZayK1N4fBfAZgXXWI=
-X-Google-Smtp-Source: ABdhPJxOhOzjo61R2qPX4OdqO+HjLZ7jHTuuKQDlVMjuRGuop7Hl6oLUSvAWIvqqI67Mktlky6ueFrap26Y=
-X-Received: by 2002:a17:90b:283:: with SMTP id az3mr7615052pjb.38.1594950356419;
- Thu, 16 Jul 2020 18:45:56 -0700 (PDT)
-Date:   Fri, 17 Jul 2020 01:45:40 +0000
-In-Reply-To: <20200717014540.71515-1-satyat@google.com>
-Message-Id: <20200717014540.71515-8-satyat@google.com>
-Mime-Version: 1.0
-References: <20200717014540.71515-1-satyat@google.com>
-X-Mailer: git-send-email 2.28.0.rc0.105.gf9edc3c819-goog
-Subject: [PATCH v3 7/7] fscrypt: update documentation for direct I/O support
-From:   Satya Tangirala <satyat@google.com>
-To:     linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, Satya Tangirala <satyat@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        id S1725811AbgGQFFl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jul 2020 01:05:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50104 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725300AbgGQFFk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Jul 2020 01:05:40 -0400
+Received: from sol.hsd1.ca.comcast.net (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 43CA420578;
+        Fri, 17 Jul 2020 05:05:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594962339;
+        bh=5l82E/2QHFoLujhbouEO+rAl9xdMKFx6N0zLGFHTMhs=;
+        h=From:To:Cc:Subject:Date:From;
+        b=hPy3AehdaeIYUIxIi6vazUd8VjMAZGkYAA9YuPUVsM/+o1rNDuTZd7rj6tgsqBaCg
+         KQUG7GS8hB/15zv/jq/B9imnCHICTViJsaToC9nZuZ8VP3tacmbLxTCo/jxosGmOtv
+         mvSEgW/3wMT4bv+EqBY8oCQgS96QiT3FN9l+fZv4=
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+Subject: [PATCH v2] fs/direct-io: fix one-time init of ->s_dio_done_wq
+Date:   Thu, 16 Jul 2020 22:05:10 -0700
+Message-Id: <20200717050510.95832-1-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.27.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Update fscrypt documentation to reflect the addition of direct I/O support
-and document the necessary conditions for direct I/O on encrypted files.
+From: Eric Biggers <ebiggers@google.com>
 
-Signed-off-by: Satya Tangirala <satyat@google.com>
+Correctly implement the "one-time" init pattern for ->s_dio_done_wq.
+This fixes the following issues:
+
+- The LKMM doesn't guarantee that the workqueue will be seen initialized
+  before being used, if another CPU allocated it.  With regards to
+  specific CPU architectures, this is true on at least Alpha, but it may
+  be true on other architectures too if the internal implementation of
+  workqueues causes use of the workqueue to involve a control
+  dependency.  (There doesn't appear to be a control dependency
+  currently, but it's hard to tell and it could change in the future.)
+
+- The preliminary checks for sb->s_dio_done_wq are a data race, since
+  they do a plain load of a concurrently modified variable.  According
+  to the C standard, this undefined behavior.  In practice, the kernel
+  does sometimes makes assumptions about data races might be okay in
+  practice, but these rules are undocumented and not uniformly agreed
+  upon, so it's best to avoid cases where they might come into play.
+
+Following the guidance for one-time init I've proposed at
+https://lkml.kernel.org/r/20200717044427.68747-1-ebiggers@kernel.org,
+replace it with the simplest implementation that is guaranteed to be
+correct while still achieving the following properties:
+
+    - Doesn't make direct I/O users contend on a mutex in the fast path.
+
+    - Doesn't allocate the workqueue when it will never be used.
+
+Fixes: 7b7a8665edd8 ("direct-io: Implement generic deferred AIO completions")
+Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- Documentation/filesystems/fscrypt.rst | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/filesystems/fscrypt.rst b/Documentation/filesystems/fscrypt.rst
-index f3d87a1a0a7f..95c76a5f0567 100644
---- a/Documentation/filesystems/fscrypt.rst
-+++ b/Documentation/filesystems/fscrypt.rst
-@@ -1049,8 +1049,10 @@ astute users may notice some differences in behavior:
-   may be used to overwrite the source files but isn't guaranteed to be
-   effective on all filesystems and storage devices.
- 
--- Direct I/O is not supported on encrypted files.  Attempts to use
--  direct I/O on such files will fall back to buffered I/O.
-+- Direct I/O is supported on encrypted files only under some circumstances
-+  (see `Direct I/O support`_ for details). When these circumstances are not
-+  met, attempts to use direct I/O on such files will fall back to buffered
-+  I/O.
- 
- - The fallocate operations FALLOC_FL_COLLAPSE_RANGE and
-   FALLOC_FL_INSERT_RANGE are not supported on encrypted files and will
-@@ -1257,6 +1259,20 @@ without the key is subject to change in the future.  It is only meant
- as a way to temporarily present valid filenames so that commands like
- ``rm -r`` work as expected on encrypted directories.
- 
-+Direct I/O support
-+------------------
+v2: new implementation using smp_load_acquire() + smp_store_release()
+    and a mutex.
+
+ fs/direct-io.c       | 42 ++++++++++++++++++++++++------------------
+ fs/iomap/direct-io.c |  3 +--
+ 2 files changed, 25 insertions(+), 20 deletions(-)
+
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 6d5370eac2a8..c03c2204aadf 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -592,20 +592,28 @@ static inline int dio_bio_reap(struct dio *dio, struct dio_submit *sdio)
+  */
+ int sb_init_dio_done_wq(struct super_block *sb)
+ {
+-	struct workqueue_struct *old;
+-	struct workqueue_struct *wq = alloc_workqueue("dio/%s",
+-						      WQ_MEM_RECLAIM, 0,
+-						      sb->s_id);
+-	if (!wq)
+-		return -ENOMEM;
+-	/*
+-	 * This has to be atomic as more DIOs can race to create the workqueue
+-	 */
+-	old = cmpxchg(&sb->s_dio_done_wq, NULL, wq);
+-	/* Someone created workqueue before us? Free ours... */
+-	if (old)
+-		destroy_workqueue(wq);
+-	return 0;
++	static DEFINE_MUTEX(sb_init_dio_done_mutex);
++	struct workqueue_struct *wq;
++	int err = 0;
 +
-+Direct I/O on encrypted files is supported through blk-crypto. In
-+particular, this means the kernel must have CONFIG_BLK_INLINE_ENCRYPTION
-+enabled, the filesystem must have had the 'inlinecrypt' mount option
-+specified, and either hardware inline encryption must be present, or
-+CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK must have been enabled. Further,
-+any I/O must be aligned to the filesystem block size (*not* necessarily
-+the same as the block device's block size) - in particular, any userspace
-+buffer into which data is read/written from must also be aligned to the
-+filesystem block size. If any of these conditions isn't met, attempts to do
-+direct I/O on an encrypted file will fall back to buffered I/O.
++	/* Pairs with the smp_store_release() below */
++	if (smp_load_acquire(&sb->s_dio_done_wq))
++		return 0;
 +
- Tests
- =====
++	mutex_lock(&sb_init_dio_done_mutex);
++	if (sb->s_dio_done_wq)
++		goto out;
++
++	wq = alloc_workqueue("dio/%s", WQ_MEM_RECLAIM, 0, sb->s_id);
++	if (!wq) {
++		err = -ENOMEM;
++		goto out;
++	}
++	/* Pairs with the smp_load_acquire() above */
++	smp_store_release(&sb->s_dio_done_wq, wq);
++out:
++	mutex_unlock(&sb_init_dio_done_mutex);
++	return err;
+ }
  
+ static int dio_set_defer_completion(struct dio *dio)
+@@ -615,9 +623,7 @@ static int dio_set_defer_completion(struct dio *dio)
+ 	if (dio->defer_completion)
+ 		return 0;
+ 	dio->defer_completion = true;
+-	if (!sb->s_dio_done_wq)
+-		return sb_init_dio_done_wq(sb);
+-	return 0;
++	return sb_init_dio_done_wq(sb);
+ }
+ 
+ /*
+@@ -1250,7 +1256,7 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+ 		retval = 0;
+ 		if (iocb->ki_flags & IOCB_DSYNC)
+ 			retval = dio_set_defer_completion(dio);
+-		else if (!dio->inode->i_sb->s_dio_done_wq) {
++		else {
+ 			/*
+ 			 * In case of AIO write racing with buffered read we
+ 			 * need to defer completion. We can't decide this now,
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index ec7b78e6feca..dc7fe898dab8 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -487,8 +487,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		dio_warn_stale_pagecache(iocb->ki_filp);
+ 	ret = 0;
+ 
+-	if (iov_iter_rw(iter) == WRITE && !wait_for_completion &&
+-	    !inode->i_sb->s_dio_done_wq) {
++	if (iov_iter_rw(iter) == WRITE && !wait_for_completion) {
+ 		ret = sb_init_dio_done_wq(inode->i_sb);
+ 		if (ret < 0)
+ 			goto out_free_dio;
 -- 
-2.28.0.rc0.105.gf9edc3c819-goog
+2.27.0
 
