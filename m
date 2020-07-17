@@ -8,59 +8,59 @@ X-Spam-Status: No, score=-20.6 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA9E7C433E8
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:35:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AEAAFC433ED
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:35:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B502F20578
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:35:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 862DC20691
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:35:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="EcPT5iw6"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="S9hUMdzt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726898AbgGQBfc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jul 2020 21:35:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37764 "EHLO
+        id S1726929AbgGQBfd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jul 2020 21:35:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37778 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726870AbgGQBfa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 21:35:30 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C5842C08C5C0
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:35:29 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id p22so9505252ybg.21
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:35:29 -0700 (PDT)
+        with ESMTP id S1726893AbgGQBfb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 21:35:31 -0400
+Received: from mail-pj1-x1049.google.com (mail-pj1-x1049.google.com [IPv6:2607:f8b0:4864:20::1049])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F6D9C08C5DC
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:35:31 -0700 (PDT)
+Received: by mail-pj1-x1049.google.com with SMTP id jx16so6664891pjb.6
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:35:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=zp9IyNE/WOqMjmmUo5OQb7An9Jck4EABFW2ZtXIp0J8=;
-        b=EcPT5iw6xeAfEjdlPbda6DoINJs/j9jKP2TGre8RBeZXNcyIRuqos8GS/JPjNxyyMj
-         aARz+rkyGL52RWpzFM5BJ3zkR/4wfsdnrw+1luAFREm/VEQT+l2s5cpIKsr+5uKeFMH4
-         WY51ds7oCW7o+7bxVZeVdvBRNakPa9eZZmcbTSZ4YdYGuLV6Q/SugNCpoAJkT93/jfJb
-         IGJddYgCOXxJUJ+GqNK5dO62cUYyve5r5yM+KtVqyAb2Zs2BUOSmw7Fs3p41vxvgdu5b
-         24MANUxf9LZQryIjThNYfZtFGr6rsTY31QgdC5WUa3iwxTm6vikksUZPQJEA49/6nHBM
-         jWDA==
+        bh=+UBFxrt4pNJbQqfKhET/4plBmEv6gpLPjB+6J7RRg5k=;
+        b=S9hUMdztXXvOY4ssFaJ9x50x8aFoXJPR1Ord6CgvNBpR6vnJ1HcxEp+eSdaGY2wu49
+         f3fn0Te4kWifwbc6OZ2yWU1j5vyM+/dIh9NQBMQelj7AihRRtRxZWdcI+Qm/qQb+JSZ1
+         4vatdj6y/6H9IPDw31RFvJBnXZAEWZbrTIeQ4n+CYYf5Ls9iTkaDeHulKw5UxKN3y0t7
+         zfn3cXRsUyUuNwYuMX4HUH1SILLzTcAjK5hnXBz6/fju1dXdZTfC0wUHMfBLejmNNWiV
+         2zSjQ0QinEPAhWayJplF9JFzkA1NeMZT/PHLH5AVbbg/wAeJA+k9Fp7jqWMsVvb0ahs1
+         nmew==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=zp9IyNE/WOqMjmmUo5OQb7An9Jck4EABFW2ZtXIp0J8=;
-        b=DatFUDPl5sXrtcMQGwW6obKnpiueIxDGU4JnsGRQa6l41DKdE18RCIHbDilYdEr7oV
-         ImHyZ38x09+PXmux/uOoJhTX89eXaREDHgEyrlk2U6vRl0CXHpZcIrBW7AGzaboyReQf
-         91vnm85l/fJhYzE1ofQdtrr6OoK4DPvFAEqcDOj6xHm4zlXGlfaAV+PeSu9wnXDls+y9
-         hxxnJAqqBjIfUyysByxKo1N+aDu/k4KEhDEZYZnWKypxVS6V0XPWDdXYq8qxj+KhvVGl
-         v4ZHZw4lJPL/hQawLJdsQMYJQ3AoBGp2eMpopSqmwuAiGBpW1+b8wKevWdqHA01DoQvX
-         STEw==
-X-Gm-Message-State: AOAM532ldK00ss6UuOzJv9sWC8+vxQ4n2nNv70Kve4XjnmK4bkW43jCT
-        u3CGSeSviE95JbDfgcB+IH9+Kj4n62E=
-X-Google-Smtp-Source: ABdhPJxs8eFAsth37g1R47hI62Mpm1RAZyjhJ4mmlKAvDAiqG/78AzVwzEyzIKJIVFj3OeeEfj/R+GGoZ6o=
-X-Received: by 2002:a25:e481:: with SMTP id b123mr9697382ybh.126.1594949728932;
- Thu, 16 Jul 2020 18:35:28 -0700 (PDT)
-Date:   Fri, 17 Jul 2020 01:35:13 +0000
+        bh=+UBFxrt4pNJbQqfKhET/4plBmEv6gpLPjB+6J7RRg5k=;
+        b=n6tYyaDBYJRmBwkPN4Rr+OMK4cPjYW6Wft8do9cupZDxKkgz2FXQ09XNxTThaDs6aB
+         Rod9MH3Wox7/kZCO4aB4SnkQpFhnMP++Qo0fhTusvtKuabmnUtGNBvIHU1dkcMOal0tc
+         gnrAh4bw6+haU1wDxvQwpLPcLX6ICNEdL32i87m/D0rFWjYKzgsqfHyn8PF5XC+MpMSK
+         DG3kgRMBgkeYLBKjXGm0PVtyDR7hBcV6YNIOjtfhDsg15Vdd8muNg0q8dOyacKqimiRO
+         LPzfThfkLGWggXwGam3CHwKzZOzqxpC6b63QULYhaIPPp6EobkU7hASA42wTLBrRd8lW
+         1MvQ==
+X-Gm-Message-State: AOAM5312BTjDB94iUA4T8ryDltj/lj8QAaG6aUjqMb81rovEV96Dafid
+        fnYVRqEr4XaWmK14eDB1xYyJPq4rkVE=
+X-Google-Smtp-Source: ABdhPJyUKbNKbPD52mHlMT2ZSrU8LempwbQ8BXLBZXihRGAVepOXrVcw0EfQ5Li0VQYXBx83T3iUPhq+8QI=
+X-Received: by 2002:a17:90a:1fcb:: with SMTP id z11mr2171526pjz.1.1594949730708;
+ Thu, 16 Jul 2020 18:35:30 -0700 (PDT)
+Date:   Fri, 17 Jul 2020 01:35:14 +0000
 In-Reply-To: <20200717013518.59219-1-satyat@google.com>
-Message-Id: <20200717013518.59219-3-satyat@google.com>
+Message-Id: <20200717013518.59219-4-satyat@google.com>
 Mime-Version: 1.0
 References: <20200717013518.59219-1-satyat@google.com>
 X-Mailer: git-send-email 2.28.0.rc0.105.gf9edc3c819-goog
-Subject: [PATCH v2 2/7] direct-io: add support for fscrypt using blk-crypto
+Subject: [PATCH v2 3/7] iomap: support direct I/O with fscrypt using blk-crypto
 From:   Satya Tangirala <satyat@google.com>
 To:     linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org
@@ -74,68 +74,72 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-Set bio crypt contexts on bios by calling into fscrypt when required,
-and explicitly check for DUN continuity when adding pages to the bio.
-(While DUN continuity is usually implied by logical block contiguity,
-this is not the case when using certain fscrypt IV generation methods
-like IV_INO_LBLK_32).
+Wire up iomap direct I/O with the fscrypt additions for direct I/O,
+and set bio crypt contexts on bios when appropriate.
+
+Make iomap_dio_bio_actor() call fscrypt_limit_io_pages() to ensure that
+DUNs remain contiguous within a bio, since it works directly with logical
+ranges and can't call fscrypt_mergeable_bio() on each page.
 
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 Co-developed-by: Satya Tangirala <satyat@google.com>
 Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- fs/direct-io.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+ fs/iomap/direct-io.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/fs/direct-io.c b/fs/direct-io.c
-index 6d5370eac2a8..f27f7e3780ee 100644
---- a/fs/direct-io.c
-+++ b/fs/direct-io.c
-@@ -24,6 +24,7 @@
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index ec7b78e6feca..4507dc16dbe5 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -6,6 +6,7 @@
  #include <linux/module.h>
- #include <linux/types.h>
+ #include <linux/compiler.h>
  #include <linux/fs.h>
 +#include <linux/fscrypt.h>
- #include <linux/mm.h>
- #include <linux/slab.h>
- #include <linux/highmem.h>
-@@ -411,6 +412,7 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
- 	      sector_t first_sector, int nr_vecs)
+ #include <linux/iomap.h>
+ #include <linux/backing-dev.h>
+ #include <linux/uio.h>
+@@ -183,11 +184,14 @@ static void
+ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 		unsigned len)
  {
++	struct inode *inode = file_inode(dio->iocb->ki_filp);
+ 	struct page *page = ZERO_PAGE(0);
+ 	int flags = REQ_SYNC | REQ_IDLE;
  	struct bio *bio;
-+	struct inode *inode = dio->inode;
  
- 	/*
- 	 * bio_alloc() is guaranteed to return a bio when allowed to sleep and
-@@ -418,6 +420,9 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
- 	 */
- 	bio = bio_alloc(GFP_KERNEL, nr_vecs);
- 
-+	fscrypt_set_bio_crypt_ctx(bio, inode,
-+				  sdio->cur_page_fs_offset >> inode->i_blkbits,
+ 	bio = bio_alloc(GFP_KERNEL, 1);
++	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
 +				  GFP_KERNEL);
- 	bio_set_dev(bio, bdev);
- 	bio->bi_iter.bi_sector = first_sector;
- 	bio_set_op_attrs(bio, dio->op, dio->op_flags);
-@@ -782,9 +787,17 @@ static inline int dio_send_cur_page(struct dio *dio, struct dio_submit *sdio,
- 		 * current logical offset in the file does not equal what would
- 		 * be the next logical offset in the bio, submit the bio we
- 		 * have.
-+		 *
-+		 * When fscrypt inline encryption is used, data unit number
-+		 * (DUN) contiguity is also required.  Normally that's implied
-+		 * by logical contiguity.  However, certain IV generation
-+		 * methods (e.g. IV_INO_LBLK_32) don't guarantee it.  So, we
-+		 * must explicitly check fscrypt_mergeable_bio() too.
- 		 */
- 		if (sdio->final_block_in_bio != sdio->cur_page_block ||
--		    cur_offset != bio_next_offset)
-+		    cur_offset != bio_next_offset ||
-+		    !fscrypt_mergeable_bio(sdio->bio, dio->inode,
-+					   cur_offset >> dio->inode->i_blkbits))
- 			dio_bio_submit(dio, sdio);
+ 	bio_set_dev(bio, iomap->bdev);
+ 	bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+ 	bio->bi_private = dio;
+@@ -253,6 +257,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		ret = nr_pages;
+ 		goto out;
  	}
++	nr_pages = fscrypt_limit_io_pages(inode, pos, nr_pages);
  
+ 	if (need_zeroout) {
+ 		/* zero out from the start of the block to the write offset */
+@@ -270,6 +275,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		}
+ 
+ 		bio = bio_alloc(GFP_KERNEL, nr_pages);
++		fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
++					  GFP_KERNEL);
+ 		bio_set_dev(bio, iomap->bdev);
+ 		bio->bi_iter.bi_sector = iomap_sector(iomap, pos);
+ 		bio->bi_write_hint = dio->iocb->ki_hint;
+@@ -307,6 +314,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		copied += n;
+ 
+ 		nr_pages = iov_iter_npages(dio->submit.iter, BIO_MAX_PAGES);
++		nr_pages = fscrypt_limit_io_pages(inode, pos, nr_pages);
+ 		iomap_dio_submit_bio(dio, iomap, bio, pos);
+ 		pos += n;
+ 	} while (nr_pages);
 -- 
 2.28.0.rc0.105.gf9edc3c819-goog
 
