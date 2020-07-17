@@ -2,148 +2,117 @@ Return-Path: <SRS0=+9Bg=A4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4773C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 12:25:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAFDDC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 17:16:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9552B206BE
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 12:25:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z7w6tsRM"
+	by mail.kernel.org (Postfix) with ESMTP id 9D701206BE
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 17:16:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726070AbgGQMZy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jul 2020 08:25:54 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:33985 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726056AbgGQMZx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jul 2020 08:25:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1594988750;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=m905tr0jT0SQJnZ13QRtEQcAWg005jJcsg9gqBROWf8=;
-        b=Z7w6tsRMexIQqRTS9sDKpKq3UiVPro5fCaOXbn/G2iDRp58CT88FmDUbcojry5Wf809IpR
-        TibTuU1ueJUNBh2FEGLnvvISXsc06PicmOBbG/19LbKVekdhg/p1R3PZzSOT4V/Wf/cqmx
-        mQFghh3GtRvkb+GqpiPGQRf+UG4Dy10=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-233-1gIn7vI9P0-oPVoifY6Ggw-1; Fri, 17 Jul 2020 08:25:48 -0400
-X-MC-Unique: 1gIn7vI9P0-oPVoifY6Ggw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1726559AbgGQRQQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jul 2020 13:16:16 -0400
+Received: from sandeen.net ([63.231.237.45]:43720 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726463AbgGQRQP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 17 Jul 2020 13:16:15 -0400
+Received: from Liberator.localdomain (unknown [50.46.151.135])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A2AA0100CCC2;
-        Fri, 17 Jul 2020 12:25:47 +0000 (UTC)
-Received: from bfoster (ovpn-113-214.rdu2.redhat.com [10.10.113.214])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 45FFC10013C4;
-        Fri, 17 Jul 2020 12:25:47 +0000 (UTC)
-Date:   Fri, 17 Jul 2020 08:25:45 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: replace ialloc space res macro with inline
- helper
-Message-ID: <20200717122545.GB58041@bfoster>
+        by sandeen.net (Postfix) with ESMTPSA id 85E144EA2C6;
+        Fri, 17 Jul 2020 12:15:37 -0500 (CDT)
+Subject: Re: [PATCH] xfs: fix inode allocation block res calculation
+ precedence
+To:     Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
 References: <20200715193310.22002-1-bfoster@redhat.com>
- <20200716121849.36661-1-bfoster@redhat.com>
- <20200716220156.GL2005@dread.disaster.area>
+ <20200715222935.GI2005@dread.disaster.area>
+ <20200716014759.GH3151642@magnolia>
+ <20200716020209.GK2005@dread.disaster.area> <20200716121811.GB31705@bfoster>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <9e464b84-7945-95b5-c6ff-ae3eb8bee878@sandeen.net>
+Date:   Fri, 17 Jul 2020 10:16:02 -0700
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200716220156.GL2005@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20200716121811.GB31705@bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 17, 2020 at 08:01:56AM +1000, Dave Chinner wrote:
-> On Thu, Jul 16, 2020 at 08:18:49AM -0400, Brian Foster wrote:
-> > Rewrite the macro as a static inline helper to clean up the logic
-> > and have one less macro.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_trans_space.h | 24 ++++++++++++++++--------
-> >  fs/xfs/xfs_inode.c              |  4 ++--
-> >  fs/xfs/xfs_symlink.c            |  2 +-
-> >  3 files changed, 19 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_space.h b/fs/xfs/libxfs/xfs_trans_space.h
-> > index c6df01a2a158..d08dfc8795c3 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_space.h
-> > +++ b/fs/xfs/libxfs/xfs_trans_space.h
-> > @@ -55,10 +55,18 @@
-> >  	 XFS_DIRENTER_MAX_SPLIT(mp,nl))
-> >  #define	XFS_DIRREMOVE_SPACE_RES(mp)	\
-> >  	XFS_DAREMOVE_SPACE_RES(mp, XFS_DATA_FORK)
-> > -#define	XFS_IALLOC_SPACE_RES(mp)	\
-> > -	(M_IGEO(mp)->ialloc_blks + \
-> > -	 ((xfs_sb_version_hasfinobt(&mp->m_sb) ? 2 : 1) * \
-> > -	  (M_IGEO(mp)->inobt_maxlevels - 1)))
-> > +
-> > +static inline int
-> > +xfs_ialloc_space_res(
-> > +	struct xfs_mount	*mp)
-> > +{
-> > +	int			res = M_IGEO(mp)->ialloc_blks;
-> > +
-> > +	res += M_IGEO(mp)->inobt_maxlevels - 1;
-> > +	if (xfs_sb_version_hasfinobt(&mp->m_sb))
-> > +		res += M_IGEO(mp)->inobt_maxlevels - 1;
-> > +	return res;
-> > +}
-> 
-> This misses the point I made. i.e. that the space reservation is
-> constant and never changes, yet we calculate it -twice- per inode
-> create. That means we can be calculating it hundreds of thousands of
-> times a second instead of just reading a variable that is likely hot
-> in cache.
-> 
+On 7/16/20 5:18 AM, Brian Foster wrote:
+> On Thu, Jul 16, 2020 at 12:02:09PM +1000, Dave Chinner wrote:
 
-Partly.. I mentioned in my earlier reply that the geometry structure
-doesn't seem like the right place to stuff transaction reservation
-related values. An alternative I mentioned would be a new (or update to
-the existing) structure that similarly precalculates log reservations,
-but I wasn't going to go do that without some discussion/feedback on the
-approach. Replacing the macro seemed broadly acceptable, so I sent that
-patch as an incremental improvement and to keep the bug fix isolated.
+...
 
-Also, while stuffing a new value in a pre-existing structure might lend
-itself to a one-off patch, I'm not sure that creating a new data
-structure does lest it fail to justify the existence of the structure
-itself. Therefore, it might be better to create a small series to
-convert over several values to start such a structure and perhaps do the
-rest over time to reduce the churn..
+>> i.e. XFS_IALLOC_SPACE_RES() is used in just 7 places in the code,
+>> 4 of them are in that same header file, so it's a simple, standalone
+>> patch that fixes the bug by addressing the underlying cause of
+>> the problem (i.e. nasty macro!).
+>>
+> I agree that the inline is nicer than the macro, but a transaction
+> reservation value seems misplaced to me in the IGEO. Perhaps having
+> something analogous to struct xfs_trans_resv might be more appropriate.
 
-> IOWs, if we are going to improve this code, it should to be moved to
-> a pre-calculated, read-only, per-mount variable so the repeated
-> calculation goes away entirely.
-> 
+For whatever my opinion is worth these days, it seems like doing
+a survey to see how many of these reservations are static would be a
+good first step, and then decide where they should all go if they should
+move. I agree that IGEO might be a little odd, depending on what other
+static reservation types there are and what they're associated with.
 
-I figured replacing the macro was an incremental improvement independent
-from how precalculated transaction block reservations might be
-structured. TBH, I don't mind the macros as much as others seem to, so
-feel free to defer or discard this patch altogether..
+I see both sides of the discussion re: how fixes like this move forward
+and what's easily backportable but in this case (and maybe I'm missing
+context) it seems like a wider survey would be wise before deciding to
+move this one value to IGEO in particular.
 
-> Then the macro/function goes away entirely an is replaced simply
-> by mp->m_ialloc_space_res or M_IGEO(mp)->alloc_space_res....
-> 
-
-Feel free to comment on my feedback on this in the previous reply..
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+-Eric
