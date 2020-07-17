@@ -2,255 +2,116 @@ Return-Path: <SRS0=+9Bg=A4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.6 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+X-Spam-Status: No, score=-25.6 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,USER_IN_DEF_DKIM_WL
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11303C433E8
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:45:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4ACAC43457
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:45:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E44B121702
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:45:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACF2520838
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 01:45:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="NgLVdFfz"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="IuienX4m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726626AbgGQBpt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 16 Jul 2020 21:45:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39410 "EHLO
+        id S1726489AbgGQBp7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 16 Jul 2020 21:45:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726439AbgGQBpp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 21:45:45 -0400
-Received: from mail-pg1-x54a.google.com (mail-pg1-x54a.google.com [IPv6:2607:f8b0:4864:20::54a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D41DAC061755
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:45:45 -0700 (PDT)
-Received: by mail-pg1-x54a.google.com with SMTP id e127so6849184pgc.2
-        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:45:45 -0700 (PDT)
+        with ESMTP id S1726401AbgGQBp4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 16 Jul 2020 21:45:56 -0400
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 236A9C08C5E2
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:45:55 -0700 (PDT)
+Received: by mail-yb1-xb4a.google.com with SMTP id u189so9483046ybg.17
+        for <linux-xfs@vger.kernel.org>; Thu, 16 Jul 2020 18:45:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=B0x0K0LAx9+Y7Q8FXBFUwx+eU4+ad8NV7ubLsxeFaf4=;
-        b=NgLVdFfzPI8rniPtNm8DqUu4McExuVBrHsycos4sDr8HsIC6inA/SB0isGbUmdBmO7
-         G/OrVuLZvnL13Tu1mu21s4F7Ileup0x4d6uYiJ/kRc/SQmxDVcl9ygK9eVQ7wsjmIqNo
-         eElNu+LzNt9T9mDuksME3/2KwYx+iFpkfHnqd+pwMaw4jxdcWmmUK78AYXj+/Kf9MXkh
-         86ClwUljjM8zN95NX5YUb5jda8EvPewsTfVBDH6wUOZej4e/FczD89ejdlyqv5g+4dbU
-         6Cz7coqFDmzebNg2T0T8MZ6p/kLm5A96Fi28C012iOqXi7l4A7sD3rqk2EZ5Xxa58Gh/
-         WOWQ==
+        bh=M2BARCIgcttWxNELPw4zNOFpxD9+a8coXLhy2/p7EJA=;
+        b=IuienX4mga40GmSRRKzTF+joRBlWaewlilX9kK4DbxKVxKtc0HgNzNmwzCZ1zOSkZS
+         /sl4RwiktZzyDIGk22y0rBU4/6to0p2Mb+0sHuOgVc59Of+mmEYUSL/X8GIx7S9N2g7k
+         AAsNYq+yOp1P9y/M3dpmzdp+iTmYeg60KNpHeU9Q4DinrRedG6NGSsYmC3G3+ZszcxWF
+         iiLyYi1e8fZMhBIQmpfrA1eMen9sCtNU9W9nDP6q6QwGvJa13W8tY3dxZyWvEvjE0cyb
+         7vhn6iWIVWyfKhLFtLO/KNWOxq8m9tNiM/Xk00LgFuq+iUFipff48yn3YZCVEhX9KuBH
+         cXvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=B0x0K0LAx9+Y7Q8FXBFUwx+eU4+ad8NV7ubLsxeFaf4=;
-        b=TAN2piwl0+LN7HzWF8GCCFnxtHVzgrviwUhcaYGLbjJuJbBlNvUlPv+uDxKBQLVLGa
-         VVxrAXJ42ocSHx7GurGRTtuskGADsUyg0JrVZGjZM6dgn8PLuEKhhcaNQhABL21zpwdt
-         3v+yhnM9u/StXJ8jMkbOEu5CgiCnbOBAXXVZIb/83DjSoRnOiNzMrbE/5Lmpl0nDcbZF
-         hchJQjN9BkmvxnHhWGY94WnaRm2NGD1cMFWK6eTLRuYzm5B64EGG9YSfD4x8Oup/pdvd
-         zPoPjtt5kQy/ciiByOwOX5dIwRMGOEgzvh1h4c3Qyenz5xn1nbgABwjjcnchWYbL+Fko
-         BCoA==
-X-Gm-Message-State: AOAM533fAVbSgHvaiKaKZtOObav5B2zEb8bJ7LmAXG6NDaYoTSaWkv3r
-        U1bvnKqRVM73zkZrutsZke5N0VhrIR8=
-X-Google-Smtp-Source: ABdhPJx6iODqkhaKqJfQZ6FjelMNp9N/V3wUMH1/G/neMrWU0AXc+o65/W6IN7lPQnmGBJARaC+27IB1sHQ=
-X-Received: by 2002:a17:90a:cc03:: with SMTP id b3mr6955247pju.80.1594950345389;
- Thu, 16 Jul 2020 18:45:45 -0700 (PDT)
-Date:   Fri, 17 Jul 2020 01:45:34 +0000
+        bh=M2BARCIgcttWxNELPw4zNOFpxD9+a8coXLhy2/p7EJA=;
+        b=XfrZBpZjUcLXS0zAaxWPB2W2Hgat00vH5TrlSqvhw/EcoRwE41zFhbWGHnawP6Vqnu
+         SwDKV78BxkqXtLWi2EynOGigvRXHGx8NGJ9Xu6XQQ7NRxRPZZffTOOZh90hp9lftFZc0
+         k/a6tO2i3Frv4aYhVT3PyO2PpqwcvM7CLEXERfCvPDKRYYmHphXIq8Cw4U2P9jWMm228
+         0yFiD+sLMtbTx6rNSa6GI312iTcgjnrXJsQ8fgGPc1tnwiCysVQkYucFHV0Ys6xxx/RI
+         nK32TKl7oyPUQ5JgQfHTz17+tdGn7pYa/SV8XKEzzZ+hqaqybASD54WsSoJ6VViFNJTJ
+         +Zpw==
+X-Gm-Message-State: AOAM533GpEDepxeQz7A6sReK8HYzhayxQXvwby/gCt3mZj4ukEiGKzwb
+        nVAHG3Up5KjFG6VOXWtPsG560fHxxgU=
+X-Google-Smtp-Source: ABdhPJxSclWXD3pWyzJ/EO11UCYSucRKXFbMR9YelueZjjlG1f9W2/r7ez0qwF6s0pIusA0evwMmb2iIxEk=
+X-Received: by 2002:a25:3789:: with SMTP id e131mr10722971yba.417.1594950354393;
+ Thu, 16 Jul 2020 18:45:54 -0700 (PDT)
+Date:   Fri, 17 Jul 2020 01:45:39 +0000
 In-Reply-To: <20200717014540.71515-1-satyat@google.com>
-Message-Id: <20200717014540.71515-2-satyat@google.com>
+Message-Id: <20200717014540.71515-7-satyat@google.com>
 Mime-Version: 1.0
 References: <20200717014540.71515-1-satyat@google.com>
 X-Mailer: git-send-email 2.28.0.rc0.105.gf9edc3c819-goog
-Subject: [PATCH v3 1/7] fscrypt: Add functions for direct I/O support
+Subject: [PATCH v3 6/7] fscrypt: document inline encryption support
 From:   Satya Tangirala <satyat@google.com>
 To:     linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>,
-        Satya Tangirala <satyat@google.com>
+Cc:     linux-xfs@vger.kernel.org, Satya Tangirala <satyat@google.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+Update the fscrypt documentation file for inline encryption support.
 
-Introduce fscrypt_dio_supported() to check whether a direct I/O request
-is unsupported due to encryption constraints, and
-fscrypt_limit_io_pages() to check how many pages may be added to a bio
-being prepared for direct I/O.
-
-The IV_INO_LBLK_32 fscrypt policy introduced the possibility that DUNs
-in logically continuous file blocks might wrap from 0xffffffff to 0.
-Since this was particularly difficult to handle when block_size !=
-PAGE_SIZE, fscrypt only supports blk-crypto en/decryption with
-the IV_INO_LBLK_32 policy when block_size == PAGE_SIZE, and ensures that
-the DUN never wraps around within any submitted bio.
-fscrypt_limit_io_pages() can be used to determine the number of logically
-contiguous blocks/pages that may be added to the bio without causing the
-DUN to wrap around within the bio. This is an alternative to calling
-fscrypt_mergeable_bio() on each page in a range of logically contiguous
-pages.
-
-Signed-off-by: Eric Biggers <ebiggers@google.com>
-Co-developed-by: Satya Tangirala <satyat@google.com>
 Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- fs/crypto/crypto.c       |  8 ++++
- fs/crypto/inline_crypt.c | 80 ++++++++++++++++++++++++++++++++++++++++
- include/linux/fscrypt.h  | 19 ++++++++++
- 3 files changed, 107 insertions(+)
+ Documentation/filesystems/fscrypt.rst | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/fs/crypto/crypto.c b/fs/crypto/crypto.c
-index a52cf32733ab..fb34364360b3 100644
---- a/fs/crypto/crypto.c
-+++ b/fs/crypto/crypto.c
-@@ -69,6 +69,14 @@ void fscrypt_free_bounce_page(struct page *bounce_page)
- }
- EXPORT_SYMBOL(fscrypt_free_bounce_page);
+diff --git a/Documentation/filesystems/fscrypt.rst b/Documentation/filesystems/fscrypt.rst
+index f5d8b0303ddf..f3d87a1a0a7f 100644
+--- a/Documentation/filesystems/fscrypt.rst
++++ b/Documentation/filesystems/fscrypt.rst
+@@ -1204,6 +1204,18 @@ buffer.  Some filesystems, such as UBIFS, already use temporary
+ buffers regardless of encryption.  Other filesystems, such as ext4 and
+ F2FS, have to allocate bounce pages specially for encryption.
  
-+/*
-+ * Generate the IV for the given logical block number within the given file.
-+ * For filenames encryption, lblk_num == 0.
-+ *
-+ * Keep this in sync with fscrypt_limit_io_pages().  fscrypt_limit_io_pages()
-+ * needs to know about any IV generation methods where the low bits of IV don't
-+ * simply contain the lblk_num (e.g., IV_INO_LBLK_32).
-+ */
- void fscrypt_generate_iv(union fscrypt_iv *iv, u64 lblk_num,
- 			 const struct fscrypt_info *ci)
- {
-diff --git a/fs/crypto/inline_crypt.c b/fs/crypto/inline_crypt.c
-index d7aecadf33c1..f5af6a63e04c 100644
---- a/fs/crypto/inline_crypt.c
-+++ b/fs/crypto/inline_crypt.c
-@@ -16,6 +16,7 @@
- #include <linux/blkdev.h>
- #include <linux/buffer_head.h>
- #include <linux/sched/mm.h>
-+#include <linux/uio.h>
++Fscrypt is also able to use inline encryption hardware instead of the
++kernel crypto API for en/decryption of file contents.  When possible, and
++if directed to do so (by specifying the 'inlinecrypt' mount option for
++an ext4/F2FS filesystem), it adds encryption contexts to bios and
++uses blk-crypto to perform the en/decryption instead of making use
++of the above read/write path changes.  Of course, even if directed to make
++use of inline encryption, fscrypt will only be able to do so if either
++hardware inline encryption support is available for the selected encryption
++algorithm or CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK is selected.  If neither
++is the case, fscrypt will fall back to using the above mentioned read/write
++path changes for en/decryption.
++
+ Filename hashing and encoding
+ -----------------------------
  
- #include "fscrypt_private.h"
+@@ -1250,7 +1262,9 @@ Tests
  
-@@ -362,3 +363,82 @@ bool fscrypt_mergeable_bio_bh(struct bio *bio,
- 	return fscrypt_mergeable_bio(bio, inode, next_lblk);
- }
- EXPORT_SYMBOL_GPL(fscrypt_mergeable_bio_bh);
-+
-+/**
-+ * fscrypt_dio_supported() - check whether a direct I/O request is unsupported
-+ *			     due to encryption constraints
-+ * @iocb: the file and position the I/O is targeting
-+ * @iter: the I/O data segment(s)
-+ *
-+ * Return: true if direct I/O is supported
-+ */
-+bool fscrypt_dio_supported(struct kiocb *iocb, struct iov_iter *iter)
-+{
-+	const struct inode *inode = file_inode(iocb->ki_filp);
-+	const unsigned int blocksize = i_blocksize(inode);
-+
-+	/* If the file is unencrypted, no veto from us. */
-+	if (!fscrypt_needs_contents_encryption(inode))
-+		return true;
-+
-+	/* We only support direct I/O with inline crypto, not fs-layer crypto */
-+	if (!fscrypt_inode_uses_inline_crypto(inode))
-+		return false;
-+
-+	/*
-+	 * Since the granularity of encryption is filesystem blocks, the I/O
-+	 * must be block aligned -- not just disk sector aligned.
-+	 */
-+	if (!IS_ALIGNED(iocb->ki_pos | iov_iter_alignment(iter), blocksize))
-+		return false;
-+
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(fscrypt_dio_supported);
-+
-+/**
-+ * fscrypt_limit_io_pages() - limit I/O pages to avoid discontiguous DUNs
-+ * @inode: the file on which I/O is being done
-+ * @pos: the file position (in bytes) at which the I/O is being done
-+ * @nr_pages: the number of pages we want to submit starting at @pos
-+ *
-+ * Determine the limit to the number of pages that can be submitted in the bio
-+ * targeting @pos without causing a data unit number (DUN) discontinuity.
-+ *
-+ * For IV generation methods that can't cause DUN wraparounds
-+ * within logically continuous data blocks, the maximum number of pages is
-+ * simply @nr_pages. For those IV generation methods that *might* cause DUN
-+ * wraparounds, the returned number of pages is the largest possible number of
-+ * pages (less than @nr_pages) that can be added to the bio without causing a
-+ * DUN wraparound within the bio.
-+ *
-+ * Return: the actual number of pages that can be submitted
-+ */
-+int fscrypt_limit_io_pages(const struct inode *inode, loff_t pos, int nr_pages)
-+{
-+	const struct fscrypt_info *ci = inode->i_crypt_info;
-+	u32 dun;
-+
-+	if (!fscrypt_inode_uses_inline_crypto(inode))
-+		return nr_pages;
-+
-+	if (nr_pages <= 1)
-+		return nr_pages;
-+
-+	if (!(fscrypt_policy_flags(&ci->ci_policy) &
-+	      FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32))
-+		return nr_pages;
-+
-+	/*
-+	 * fscrypt_select_encryption_impl() ensures that block_size == PAGE_SIZE
-+	 * when using FSCRYPT_POLICY_FLAG_IV_INO_LBLK_32.
-+	 */
-+	if (WARN_ON_ONCE(i_blocksize(inode) != PAGE_SIZE))
-+		return 1;
-+
-+	/* With IV_INO_LBLK_32, the DUN can wrap around from U32_MAX to 0. */
-+
-+	dun = ci->ci_hashed_ino + (pos >> inode->i_blkbits);
-+
-+	return min_t(u64, nr_pages, (u64)U32_MAX + 1 - dun);
-+}
-diff --git a/include/linux/fscrypt.h b/include/linux/fscrypt.h
-index bb257411365f..c205c214b35e 100644
---- a/include/linux/fscrypt.h
-+++ b/include/linux/fscrypt.h
-@@ -559,6 +559,11 @@ bool fscrypt_mergeable_bio(struct bio *bio, const struct inode *inode,
- bool fscrypt_mergeable_bio_bh(struct bio *bio,
- 			      const struct buffer_head *next_bh);
+ To test fscrypt, use xfstests, which is Linux's de facto standard
+ filesystem test suite.  First, run all the tests in the "encrypt"
+-group on the relevant filesystem(s).  For example, to test ext4 and
++group on the relevant filesystem(s).  One can also run the tests
++with the 'inlinecrypt' mount option to test the implementation for
++inline encryption support.  For example, to test ext4 and
+ f2fs encryption using `kvm-xfstests
+ <https://github.com/tytso/xfstests-bld/blob/master/Documentation/kvm-quickstart.md>`_::
  
-+bool fscrypt_dio_supported(struct kiocb *iocb, struct iov_iter *iter);
-+
-+int fscrypt_limit_io_pages(const struct inode *inode, loff_t pos,
-+			   int nr_pages);
-+
- #else /* CONFIG_FS_ENCRYPTION_INLINE_CRYPT */
- 
- static inline bool __fscrypt_inode_uses_inline_crypto(const struct inode *inode)
-@@ -587,6 +592,20 @@ static inline bool fscrypt_mergeable_bio_bh(struct bio *bio,
- {
- 	return true;
- }
-+
-+static inline bool fscrypt_dio_supported(struct kiocb *iocb,
-+					 struct iov_iter *iter)
-+{
-+	const struct inode *inode = file_inode(iocb->ki_filp);
-+
-+	return !fscrypt_needs_contents_encryption(inode);
-+}
-+
-+static inline int fscrypt_limit_io_pages(const struct inode *inode, loff_t pos,
-+					 int nr_pages)
-+{
-+	return nr_pages;
-+}
- #endif /* !CONFIG_FS_ENCRYPTION_INLINE_CRYPT */
- 
- /**
 -- 
 2.28.0.rc0.105.gf9edc3c819-goog
 
