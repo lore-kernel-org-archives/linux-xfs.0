@@ -4,193 +4,217 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E81C433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 20:43:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F158C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 21:04:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C93B92070E
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 20:43:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67F742074B
+	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 21:04:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fgmUVLwo"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="n4fd1huM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726771AbgGQUnU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jul 2020 16:43:20 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:27521 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726492AbgGQUnU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jul 2020 16:43:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1595018598;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=KGONjK+Oo0EYc/VwHmXLXppjINSV3ySk+HAa0W/EUcI=;
-        b=fgmUVLwoK4dcFY1gXOBKp1L8kZiJKiavJiJdSRPzoLXIrKeMIx+YOQ1gW6QjyPQj4hLtEt
-        80qOlHXjx2XbO58B7pCp9LuLNuk60lvKOIPHCmS8keBXGbYhLGvy9sxKMQiDDNKZ5PRaQb
-        uRxN1Wf+4GuELZyeogl64sLz9C3SUKw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-324-w518hMQFOU6vceMNNzrqgA-1; Fri, 17 Jul 2020 16:43:16 -0400
-X-MC-Unique: w518hMQFOU6vceMNNzrqgA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D3D9AE91A;
-        Fri, 17 Jul 2020 20:43:15 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-113-112.rdu2.redhat.com [10.10.113.112])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 594FA61100;
-        Fri, 17 Jul 2020 20:43:15 +0000 (UTC)
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     sandeen@sandeen.net, darrick.wong@oracle.com
-Subject: [PATCH v2 3/3] xfsprogs: xfs_quota state command should report ugp grace times
-Date:   Fri, 17 Jul 2020 15:43:14 -0500
-Message-Id: <20200717204314.309873-1-billodo@redhat.com>
-In-Reply-To: <20200715201253.171356-4-billodo@redhat.com>
-References: <20200715201253.171356-4-billodo@redhat.com>
+        id S1726512AbgGQVE3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jul 2020 17:04:29 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47424 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726393AbgGQVE2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jul 2020 17:04:28 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06HL3IG2013698;
+        Fri, 17 Jul 2020 21:04:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=MM7mdGykqks3yBttHdwzGPDw1wP4s4tokF4UONjrXBE=;
+ b=n4fd1huMLf1/ZFaqGiKLnSpsN1AKpxfbcOPLORjsQ1jTnuax6a8kAhM0qenRPHn184XB
+ DUGASgisVnyApaMTNVrY6i1tsnocOzuLC1Uj8xQQrbFr0Az+pV2nEmcRWqkmtrb/CRvS
+ mRRvIRbh4bz/ovWi/V+tnw4DVS6ZFCXmG/NkASGMKDYwMdweDADF+mD1FgoKqP0lYJfV
+ yHA9/jlnBelOUJlMRFAZXd1lVZTPG+BspfOlD55wmJ9zbJr3snWSjX2UvqxUPiUou/D8
+ pr8LNIEaSiTEHwrBB7/oivGhiVg1RZvLXlz+4L83e2dR66fLraWOI1QHhUn/3VL7RiqI uw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 3275cmsfnc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 17 Jul 2020 21:04:26 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06HL3tqK025230;
+        Fri, 17 Jul 2020 21:04:25 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 32bj2d3hdx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Jul 2020 21:04:25 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06HL4O0N002782;
+        Fri, 17 Jul 2020 21:04:24 GMT
+Received: from localhost (/10.159.159.76)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 17 Jul 2020 14:04:24 -0700
+Date:   Fri, 17 Jul 2020 14:04:23 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2] fs/direct-io: fix one-time init of ->s_dio_done_wq
+Message-ID: <20200717210423.GP3151642@magnolia>
+References: <20200717050510.95832-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200717050510.95832-1-ebiggers@kernel.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9685 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
+ adultscore=0 spamscore=0 bulkscore=0 malwarescore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007170142
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9685 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 priorityscore=1501
+ bulkscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
+ impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007170142
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Since grace periods are now supported for three quota types (ugp),
-modify xfs_quota state command to report times for all three.
-Add a helper function for stat reporting.
+On Thu, Jul 16, 2020 at 10:05:10PM -0700, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
+> 
+> Correctly implement the "one-time" init pattern for ->s_dio_done_wq.
+> This fixes the following issues:
+> 
+> - The LKMM doesn't guarantee that the workqueue will be seen initialized
+>   before being used, if another CPU allocated it.  With regards to
+>   specific CPU architectures, this is true on at least Alpha, but it may
+>   be true on other architectures too if the internal implementation of
+>   workqueues causes use of the workqueue to involve a control
+>   dependency.  (There doesn't appear to be a control dependency
+>   currently, but it's hard to tell and it could change in the future.)
+> 
+> - The preliminary checks for sb->s_dio_done_wq are a data race, since
+>   they do a plain load of a concurrently modified variable.  According
+>   to the C standard, this undefined behavior.  In practice, the kernel
+>   does sometimes makes assumptions about data races might be okay in
+>   practice, but these rules are undocumented and not uniformly agreed
+>   upon, so it's best to avoid cases where they might come into play.
+> 
+> Following the guidance for one-time init I've proposed at
+> https://lkml.kernel.org/r/20200717044427.68747-1-ebiggers@kernel.org,
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
-v2: load-up helper function more, further reducing redundant LoC
+It might be a good idea to combine these two patches into a series so
+that we can leave a breadcrumb in sb_init_dio_done_wq explaining why it
+does what it does.
 
- quota/state.c | 96 +++++++++++++++++++++++++++++++++++----------------
- 1 file changed, 67 insertions(+), 29 deletions(-)
+> replace it with the simplest implementation that is guaranteed to be
+> correct while still achieving the following properties:
+> 
+>     - Doesn't make direct I/O users contend on a mutex in the fast path.
+> 
+>     - Doesn't allocate the workqueue when it will never be used.
+> 
+> Fixes: 7b7a8665edd8 ("direct-io: Implement generic deferred AIO completions")
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> ---
+> 
+> v2: new implementation using smp_load_acquire() + smp_store_release()
+>     and a mutex.
+> 
+>  fs/direct-io.c       | 42 ++++++++++++++++++++++++------------------
+>  fs/iomap/direct-io.c |  3 +--
+>  2 files changed, 25 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/direct-io.c b/fs/direct-io.c
+> index 6d5370eac2a8..c03c2204aadf 100644
+> --- a/fs/direct-io.c
+> +++ b/fs/direct-io.c
+> @@ -592,20 +592,28 @@ static inline int dio_bio_reap(struct dio *dio, struct dio_submit *sdio)
+>   */
+>  int sb_init_dio_done_wq(struct super_block *sb)
+>  {
+> -	struct workqueue_struct *old;
+> -	struct workqueue_struct *wq = alloc_workqueue("dio/%s",
+> -						      WQ_MEM_RECLAIM, 0,
+> -						      sb->s_id);
+> -	if (!wq)
+> -		return -ENOMEM;
+> -	/*
+> -	 * This has to be atomic as more DIOs can race to create the workqueue
+> -	 */
+> -	old = cmpxchg(&sb->s_dio_done_wq, NULL, wq);
+> -	/* Someone created workqueue before us? Free ours... */
+> -	if (old)
+> -		destroy_workqueue(wq);
+> -	return 0;
+> +	static DEFINE_MUTEX(sb_init_dio_done_mutex);
+> +	struct workqueue_struct *wq;
+> +	int err = 0;
+> +
+> +	/* Pairs with the smp_store_release() below */
+> +	if (smp_load_acquire(&sb->s_dio_done_wq))
+> +		return 0;
+> +
+> +	mutex_lock(&sb_init_dio_done_mutex);
+> +	if (sb->s_dio_done_wq)
+> +		goto out;
+> +
+> +	wq = alloc_workqueue("dio/%s", WQ_MEM_RECLAIM, 0, sb->s_id);
+> +	if (!wq) {
+> +		err = -ENOMEM;
+> +		goto out;
+> +	}
+> +	/* Pairs with the smp_load_acquire() above */
+> +	smp_store_release(&sb->s_dio_done_wq, wq);
 
-diff --git a/quota/state.c b/quota/state.c
-index 1627181d..19d34ed0 100644
---- a/quota/state.c
-+++ b/quota/state.c
-@@ -191,49 +191,87 @@ state_stat_to_statv(
- }
- 
- static void
--state_quotafile_mount(
-+state_quotafile_stat(
- 	FILE			*fp,
- 	uint			type,
--	struct fs_path		*mount,
-+	struct fs_path          *mount,
-+	struct fs_quota_statv	*sv,
-+	struct fs_quota_stat	*s,
- 	uint			flags)
- {
--	struct fs_quota_stat	s;
--	struct fs_quota_statv	sv;
-+	bool			accounting, enforcing;
-+	struct fs_qfilestatv	*qsv;
- 	char			*dev = mount->fs_name;
- 
--	sv.qs_version = FS_QSTATV_VERSION1;
--
--	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
--		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
-+	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)sv) < 0) {
-+		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)s) < 0) {
- 			if (flags & VERBOSE_FLAG)
- 				fprintf(fp,
- 					_("%s quota are not enabled on %s\n"),
- 					type_to_string(type), dev);
- 			return;
- 		}
--		state_stat_to_statv(&s, &sv);
-+		state_stat_to_statv(s, sv);
-+	}
-+
-+	switch(type) {
-+	case XFS_USER_QUOTA:
-+		qsv = &sv->qs_uquota;
-+		accounting = sv->qs_flags & XFS_QUOTA_UDQ_ACCT;
-+		enforcing = sv->qs_flags & XFS_QUOTA_UDQ_ENFD;
-+		break;
-+	case XFS_GROUP_QUOTA:
-+		qsv = &sv->qs_gquota;
-+		accounting = sv->qs_flags & XFS_QUOTA_GDQ_ACCT;
-+		enforcing = sv->qs_flags & XFS_QUOTA_GDQ_ENFD;
-+		break;
-+	case XFS_PROJ_QUOTA:
-+		qsv = &sv->qs_pquota;
-+		accounting = sv->qs_flags & XFS_QUOTA_PDQ_ACCT;
-+		enforcing = sv->qs_flags & XFS_QUOTA_PDQ_ENFD;
-+		break;
-+	default:
-+		return;
- 	}
- 
--	if (type & XFS_USER_QUOTA)
--		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
--				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
--				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
--	if (type & XFS_GROUP_QUOTA)
--		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv.qs_gquota,
--				sv.qs_flags & XFS_QUOTA_GDQ_ACCT,
--				sv.qs_flags & XFS_QUOTA_GDQ_ENFD);
--	if (type & XFS_PROJ_QUOTA)
--		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv.qs_pquota,
--				sv.qs_flags & XFS_QUOTA_PDQ_ACCT,
--				sv.qs_flags & XFS_QUOTA_PDQ_ENFD);
--
--	state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
--	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv.qs_bwarnlimit);
--
--	state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
--	state_warnlimit(fp, XFS_INODE_QUOTA, sv.qs_iwarnlimit);
--
--	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
-+
-+	state_qfilestat(fp, mount, type, qsv, accounting, enforcing);
-+
-+	state_timelimit(fp, XFS_BLOCK_QUOTA, sv->qs_btimelimit);
-+	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv->qs_bwarnlimit);
-+
-+	state_timelimit(fp, XFS_INODE_QUOTA, sv->qs_itimelimit);
-+	state_warnlimit(fp, XFS_INODE_QUOTA, sv->qs_iwarnlimit);
-+
-+	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv->qs_rtbtimelimit);
-+}
-+
-+static void
-+state_quotafile_mount(
-+	FILE			*fp,
-+	uint			type,
-+	struct fs_path		*mount,
-+	uint			flags)
-+{
-+	struct fs_quota_stat	s;
-+	struct fs_quota_statv	sv;
-+
-+	sv.qs_version = FS_QSTATV_VERSION1;
-+
-+	if (type & XFS_USER_QUOTA) {
-+		state_quotafile_stat(fp, XFS_USER_QUOTA, mount,
-+				     &sv, &s, flags);
-+	}
-+
-+	if (type & XFS_GROUP_QUOTA) {
-+		state_quotafile_stat(fp, XFS_GROUP_QUOTA, mount,
-+				     &sv, &s, flags);
-+	}
-+
-+	if (type & XFS_PROJ_QUOTA) {
-+		state_quotafile_stat(fp, XFS_PROJ_QUOTA, mount,
-+				     &sv, &s, flags);
-+	}
- }
- 
- static void
--- 
-2.26.2
+Why not use cmpxchg_release here?  Is the mutex actually required here,
+or is this merely following the "don't complicate it up" guidelines in
+the "One-Time Init" recipe that say not to use cmpxchg_release unless
+you have a strong justification for it?
 
+The code changes look ok to me, fwiw.
+
+--D
+
+> +out:
+> +	mutex_unlock(&sb_init_dio_done_mutex);
+> +	return err;
+>  }
+>  
+>  static int dio_set_defer_completion(struct dio *dio)
+> @@ -615,9 +623,7 @@ static int dio_set_defer_completion(struct dio *dio)
+>  	if (dio->defer_completion)
+>  		return 0;
+>  	dio->defer_completion = true;
+> -	if (!sb->s_dio_done_wq)
+> -		return sb_init_dio_done_wq(sb);
+> -	return 0;
+> +	return sb_init_dio_done_wq(sb);
+>  }
+>  
+>  /*
+> @@ -1250,7 +1256,7 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inode *inode,
+>  		retval = 0;
+>  		if (iocb->ki_flags & IOCB_DSYNC)
+>  			retval = dio_set_defer_completion(dio);
+> -		else if (!dio->inode->i_sb->s_dio_done_wq) {
+> +		else {
+>  			/*
+>  			 * In case of AIO write racing with buffered read we
+>  			 * need to defer completion. We can't decide this now,
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index ec7b78e6feca..dc7fe898dab8 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -487,8 +487,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>  		dio_warn_stale_pagecache(iocb->ki_filp);
+>  	ret = 0;
+>  
+> -	if (iov_iter_rw(iter) == WRITE && !wait_for_completion &&
+> -	    !inode->i_sb->s_dio_done_wq) {
+> +	if (iov_iter_rw(iter) == WRITE && !wait_for_completion) {
+>  		ret = sb_init_dio_done_wq(inode->i_sb);
+>  		if (ret < 0)
+>  			goto out_free_dio;
+> -- 
+> 2.27.0
+> 
