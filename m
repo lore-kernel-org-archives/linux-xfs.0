@@ -1,226 +1,124 @@
-Return-Path: <SRS0=+9Bg=A4=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=IYU2=A5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9F18C433E2
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 21:13:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B1CC433DF
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jul 2020 00:15:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84DF520717
-	for <linux-xfs@archiver.kernel.org>; Fri, 17 Jul 2020 21:13:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MZSAJWOx"
+	by mail.kernel.org (Postfix) with ESMTP id 49984207EA
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jul 2020 00:15:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726569AbgGQVNx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jul 2020 17:13:53 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54366 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726205AbgGQVNw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jul 2020 17:13:52 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06HLBdLv036944;
-        Fri, 17 Jul 2020 21:13:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=E1AyqijCirj1Rsfwf0LsssmMgcrabsMYJJspjDbCx9E=;
- b=MZSAJWOxdfDejzrqWeDT/q7gGeQLT0CsFb+5ZNn6dKAw4Pd/S21CYenasU8lvtAWFtdr
- 7WKx6ZUIjhzoektaVOKn0u/30TjvFvAIn0z+GFip79cCJpmuLZWnR2LdChJAVxW+VAB9
- j4GXwW05RjHTf44EPqOv0OcjKLjj1TCd0bzik+Z7qUEUgXktHg/e5CLBri8wOWGizGSi
- MYuOjXjfz3MLVOjSooi3RvpJgZ+1vilLQuF8a9c0adSq6SsTY+M5u/HBSonecB33xjQL
- 1xTpMeQTcbOET4TMWvjSYychjjMkcTzAlsh9qLj8ZYS3AiBrpZL/HNldxwtkLvpfQWhk DQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 3275cmsgvg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 17 Jul 2020 21:13:49 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06HLDmC7043854;
-        Fri, 17 Jul 2020 21:13:48 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 32bj7guyby-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 17 Jul 2020 21:13:48 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06HLDlvp007151;
-        Fri, 17 Jul 2020 21:13:47 GMT
-Received: from localhost (/10.159.159.76)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 17 Jul 2020 14:13:46 -0700
-Date:   Fri, 17 Jul 2020 14:13:45 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     "Bill O'Donnell" <billodo@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, sandeen@sandeen.net
-Subject: Re: [PATCH v2 3/3] xfsprogs: xfs_quota state command should report
- ugp grace times
-Message-ID: <20200717211345.GS3151642@magnolia>
-References: <20200715201253.171356-4-billodo@redhat.com>
- <20200717204314.309873-1-billodo@redhat.com>
+        id S1728276AbgGRAPm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 17 Jul 2020 20:15:42 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:41721 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728087AbgGRAPm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 17 Jul 2020 20:15:42 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 97E77D5AC94;
+        Sat, 18 Jul 2020 10:15:38 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jwaVs-0001di-2p; Sat, 18 Jul 2020 10:15:36 +1000
+Date:   Sat, 18 Jul 2020 10:15:36 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org
+Subject: Re: [PATCH v2] fs/direct-io: fix one-time init of ->s_dio_done_wq
+Message-ID: <20200718001536.GB2005@dread.disaster.area>
+References: <20200717050510.95832-1-ebiggers@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200717204314.309873-1-billodo@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9685 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- adultscore=0 suspectscore=1 mlxscore=0 bulkscore=0 mlxlogscore=999
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007170144
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9685 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 priorityscore=1501
- bulkscore=0 adultscore=0 lowpriorityscore=0 phishscore=0 spamscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=999 clxscore=1015 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007170143
+In-Reply-To: <20200717050510.95832-1-ebiggers@kernel.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=1XWaLZrsAAAA:8 a=VwQbUJbxAAAA:8
+        a=7-415B0cAAAA:8 a=T5U9q6-3o76AgGMSUHEA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 17, 2020 at 03:43:14PM -0500, Bill O'Donnell wrote:
-> Since grace periods are now supported for three quota types (ugp),
-> modify xfs_quota state command to report times for all three.
-> Add a helper function for stat reporting.
+On Thu, Jul 16, 2020 at 10:05:10PM -0700, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
 > 
-> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> Correctly implement the "one-time" init pattern for ->s_dio_done_wq.
+> This fixes the following issues:
+> 
+> - The LKMM doesn't guarantee that the workqueue will be seen initialized
+>   before being used, if another CPU allocated it.  With regards to
+>   specific CPU architectures, this is true on at least Alpha, but it may
+>   be true on other architectures too if the internal implementation of
+>   workqueues causes use of the workqueue to involve a control
+>   dependency.  (There doesn't appear to be a control dependency
+>   currently, but it's hard to tell and it could change in the future.)
+> 
+> - The preliminary checks for sb->s_dio_done_wq are a data race, since
+>   they do a plain load of a concurrently modified variable.  According
+>   to the C standard, this undefined behavior.  In practice, the kernel
+>   does sometimes makes assumptions about data races might be okay in
+>   practice, but these rules are undocumented and not uniformly agreed
+>   upon, so it's best to avoid cases where they might come into play.
+> 
+> Following the guidance for one-time init I've proposed at
+> https://lkml.kernel.org/r/20200717044427.68747-1-ebiggers@kernel.org,
+> replace it with the simplest implementation that is guaranteed to be
+> correct while still achieving the following properties:
+> 
+>     - Doesn't make direct I/O users contend on a mutex in the fast path.
+> 
+>     - Doesn't allocate the workqueue when it will never be used.
+> 
+> Fixes: 7b7a8665edd8 ("direct-io: Implement generic deferred AIO completions")
+> Signed-off-by: Eric Biggers <ebiggers@google.com>
 > ---
-> v2: load-up helper function more, further reducing redundant LoC
 > 
->  quota/state.c | 96 +++++++++++++++++++++++++++++++++++----------------
->  1 file changed, 67 insertions(+), 29 deletions(-)
-> 
-> diff --git a/quota/state.c b/quota/state.c
-> index 1627181d..19d34ed0 100644
-> --- a/quota/state.c
-> +++ b/quota/state.c
-> @@ -191,49 +191,87 @@ state_stat_to_statv(
->  }
->  
->  static void
-> -state_quotafile_mount(
-> +state_quotafile_stat(
->  	FILE			*fp,
->  	uint			type,
-> -	struct fs_path		*mount,
-> +	struct fs_path          *mount,
-> +	struct fs_quota_statv	*sv,
-> +	struct fs_quota_stat	*s,
->  	uint			flags)
->  {
-> -	struct fs_quota_stat	s;
-> -	struct fs_quota_statv	sv;
-> +	bool			accounting, enforcing;
-> +	struct fs_qfilestatv	*qsv;
->  	char			*dev = mount->fs_name;
->  
-> -	sv.qs_version = FS_QSTATV_VERSION1;
-> -
-> -	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)&sv) < 0) {
-> -		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
-> +	if (xfsquotactl(XFS_GETQSTATV, dev, type, 0, (void *)sv) < 0) {
+> v2: new implementation using smp_load_acquire() + smp_store_release()
+>     and a mutex.
 
-At some point I'd love to refactor all these ioctl-like xfsquotactl
-calls into a set of real functions with type checking and whatnot, but
-this looks fine to me on its own:
+A mutex?
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+That's over-engineered premature optimisation - the allocation path
+is a slow path that will only ever be hit only on the first few
+direct IOs if an app manages to synchronise it's first ever
+concurrent DIOs to different files perfectly. There is zero need to
+"optimise" the code like this.
 
---D
+I've already suggested that we get rid of this whole dynamic
+initialisation code out of the direct IO path altogether for good
+reason: all of this goes away and we don't have to care about
+optimising it for performance at all.
 
-> +		if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)s) < 0) {
->  			if (flags & VERBOSE_FLAG)
->  				fprintf(fp,
->  					_("%s quota are not enabled on %s\n"),
->  					type_to_string(type), dev);
->  			return;
->  		}
-> -		state_stat_to_statv(&s, &sv);
-> +		state_stat_to_statv(s, sv);
-> +	}
-> +
-> +	switch(type) {
-> +	case XFS_USER_QUOTA:
-> +		qsv = &sv->qs_uquota;
-> +		accounting = sv->qs_flags & XFS_QUOTA_UDQ_ACCT;
-> +		enforcing = sv->qs_flags & XFS_QUOTA_UDQ_ENFD;
-> +		break;
-> +	case XFS_GROUP_QUOTA:
-> +		qsv = &sv->qs_gquota;
-> +		accounting = sv->qs_flags & XFS_QUOTA_GDQ_ACCT;
-> +		enforcing = sv->qs_flags & XFS_QUOTA_GDQ_ENFD;
-> +		break;
-> +	case XFS_PROJ_QUOTA:
-> +		qsv = &sv->qs_pquota;
-> +		accounting = sv->qs_flags & XFS_QUOTA_PDQ_ACCT;
-> +		enforcing = sv->qs_flags & XFS_QUOTA_PDQ_ENFD;
-> +		break;
-> +	default:
-> +		return;
->  	}
->  
-> -	if (type & XFS_USER_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_USER_QUOTA, &sv.qs_uquota,
-> -				sv.qs_flags & XFS_QUOTA_UDQ_ACCT,
-> -				sv.qs_flags & XFS_QUOTA_UDQ_ENFD);
-> -	if (type & XFS_GROUP_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_GROUP_QUOTA, &sv.qs_gquota,
-> -				sv.qs_flags & XFS_QUOTA_GDQ_ACCT,
-> -				sv.qs_flags & XFS_QUOTA_GDQ_ENFD);
-> -	if (type & XFS_PROJ_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &sv.qs_pquota,
-> -				sv.qs_flags & XFS_QUOTA_PDQ_ACCT,
-> -				sv.qs_flags & XFS_QUOTA_PDQ_ENFD);
-> -
-> -	state_timelimit(fp, XFS_BLOCK_QUOTA, sv.qs_btimelimit);
-> -	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv.qs_bwarnlimit);
-> -
-> -	state_timelimit(fp, XFS_INODE_QUOTA, sv.qs_itimelimit);
-> -	state_warnlimit(fp, XFS_INODE_QUOTA, sv.qs_iwarnlimit);
-> -
-> -	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv.qs_rtbtimelimit);
-> +
-> +	state_qfilestat(fp, mount, type, qsv, accounting, enforcing);
-> +
-> +	state_timelimit(fp, XFS_BLOCK_QUOTA, sv->qs_btimelimit);
-> +	state_warnlimit(fp, XFS_BLOCK_QUOTA, sv->qs_bwarnlimit);
-> +
-> +	state_timelimit(fp, XFS_INODE_QUOTA, sv->qs_itimelimit);
-> +	state_warnlimit(fp, XFS_INODE_QUOTA, sv->qs_iwarnlimit);
-> +
-> +	state_timelimit(fp, XFS_RTBLOCK_QUOTA, sv->qs_rtbtimelimit);
-> +}
-> +
-> +static void
-> +state_quotafile_mount(
-> +	FILE			*fp,
-> +	uint			type,
-> +	struct fs_path		*mount,
-> +	uint			flags)
-> +{
-> +	struct fs_quota_stat	s;
-> +	struct fs_quota_statv	sv;
-> +
-> +	sv.qs_version = FS_QSTATV_VERSION1;
-> +
-> +	if (type & XFS_USER_QUOTA) {
-> +		state_quotafile_stat(fp, XFS_USER_QUOTA, mount,
-> +				     &sv, &s, flags);
-> +	}
-> +
-> +	if (type & XFS_GROUP_QUOTA) {
-> +		state_quotafile_stat(fp, XFS_GROUP_QUOTA, mount,
-> +				     &sv, &s, flags);
-> +	}
-> +
-> +	if (type & XFS_PROJ_QUOTA) {
-> +		state_quotafile_stat(fp, XFS_PROJ_QUOTA, mount,
-> +				     &sv, &s, flags);
-> +	}
->  }
->  
->  static void
-> -- 
-> 2.26.2
-> 
+We have two options as I see it: always allocate the workqueue on
+direct IO capable filesytsems in their ->fill_super() method, or
+allocate it on the first open(O_DIRECT) where we check if O_DIRECT
+is supported by the filesystem.
+
+i.e. do_dentry_open() does this:
+
+        /* NB: we're sure to have correct a_ops only after f_op->open */
+        if (f->f_flags & O_DIRECT) {
+                if (!f->f_mapping->a_ops || !f->f_mapping->a_ops->direct_IO)
+                        return -EINVAL;
+        }
+
+Allocate the work queue there, and we don't need to care about how
+fast or slow setting up the workqueue is and so there is zero need
+to optimise it for speed.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
