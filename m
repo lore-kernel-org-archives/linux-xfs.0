@@ -2,145 +2,277 @@ Return-Path: <SRS0=IYU2=A5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9FA1C433E0
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jul 2020 00:42:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F0BEC433DF
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jul 2020 04:33:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81C802076A
-	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jul 2020 00:42:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595032927;
-	bh=/1rAyGat83oAOmSiVA4ydtrSEo9zRVg0c/t7EMZcIdY=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=1lruLeaSDf/2FXR6YGg6TqEoktXXkIUJUEhFmmyEuugwn4LboLY1GlpdTXQsWILcr
-	 g0tqgN2ABHkulVDbD7pwE1n85i0Obl5O1hn8Imos7QlXCJjLFaw1hFNr1B402Pc3cn
-	 zuJAmm35Sidhdj1IXNDbSoC7ZVE4Yo9N+MSLnRLg=
+	by mail.kernel.org (Postfix) with ESMTP id 701DA2083B
+	for <linux-xfs@archiver.kernel.org>; Sat, 18 Jul 2020 04:33:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ATst4oGn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728069AbgGRAmG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 17 Jul 2020 20:42:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36146 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726665AbgGRAmG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 17 Jul 2020 20:42:06 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BD49D20759;
-        Sat, 18 Jul 2020 00:42:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1595032925;
-        bh=/1rAyGat83oAOmSiVA4ydtrSEo9zRVg0c/t7EMZcIdY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=mYkgYxgsdHKRmYVlDNK7pvJCEBRS4vRnhBqjKnDGtLjQk30LQEQWZJCD8s9yM5Esv
-         M9VvPkwzkpKFOrMvijTiC8zAoh3Ok2Vxw+p48pqoMqtpoZjjA08VMVA9asI9PWIifY
-         Ng/zeSG53TWDmhHOlmf4UGxQDo6XblTQIPoN/FPg=
-Date:   Fri, 17 Jul 2020 17:42:03 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v2] fs/direct-io: fix one-time init of ->s_dio_done_wq
-Message-ID: <20200718004203.GA2183@sol.localdomain>
-References: <20200717050510.95832-1-ebiggers@kernel.org>
- <20200718001536.GB2005@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200718001536.GB2005@dread.disaster.area>
+        id S1725868AbgGREdy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 18 Jul 2020 00:33:54 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:59510 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725809AbgGREdy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 18 Jul 2020 00:33:54 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06I4WU9u051785
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jul 2020 04:33:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : in-reply-to : references; s=corp-2020-01-29;
+ bh=+mNLHtPhQDaL8z3IC2A1ufREkBufQZ2Pv9i9ntSbsog=;
+ b=ATst4oGn5z4vA7w15VezXvnnjpfYwh42wwg6fiK5kU8wemQamQkK4Ckgi0wZzXzQZnMt
+ n/TaVaZlw0KRtNrscMIurQaO0KiTQiebVi2FqpuI3j/gZjtdrHJmHGbagvEV7Thy7mL4
+ NQTBN3JegWpIT/KSZU9inyJele2ZVhl4/8PH+8oq37MT71Q3Df74Xuh23gILVVKGqcHT
+ sJZ7C9jwW5MdQ4hx3g7Av8tn1ALQPMbP0yDtlP2Y+20uwaESIZqGWeLfzfwf9/i8ywkj
+ TQjNq6FJ9eL9kQEhtWWoPEsZID6H4zLKNPuCFYHjMZvzuHD1jPXYAIYonXQU8EjQxuAA fw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 32bpkarbj5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jul 2020 04:33:52 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06I4Xn2Z058335
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jul 2020 04:33:52 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 32br1n3nf8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jul 2020 04:33:52 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06I4XqkU003172
+        for <linux-xfs@vger.kernel.org>; Sat, 18 Jul 2020 04:33:52 GMT
+Received: from localhost.localdomain (/67.1.142.158)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 17 Jul 2020 21:33:51 -0700
+From:   Allison Collins <allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v11 04/26] xfsprogs: Factor out new helper functions xfs_attr_rmtval_set
+Date:   Fri, 17 Jul 2020 21:33:20 -0700
+Message-Id: <20200718043342.6432-5-allison.henderson@oracle.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200718043342.6432-1-allison.henderson@oracle.com>
+References: <20200718043342.6432-1-allison.henderson@oracle.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9685 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 bulkscore=0
+ malwarescore=0 mlxscore=0 suspectscore=1 spamscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007180030
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9685 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 bulkscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 adultscore=0 priorityscore=1501 impostorscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007180030
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,
+Break xfs_attr_rmtval_set into two helper functions
+xfs_attr_rmt_find_hole and xfs_attr_rmtval_set_value.
+xfs_attr_rmtval_set rolls the transaction between the helpers, but
+delayed operations cannot.  We will use the helpers later when
+constructing new delayed attribute routines.
 
-On Sat, Jul 18, 2020 at 10:15:36AM +1000, Dave Chinner wrote:
-> On Thu, Jul 16, 2020 at 10:05:10PM -0700, Eric Biggers wrote:
-> > From: Eric Biggers <ebiggers@google.com>
-> > 
-> > Correctly implement the "one-time" init pattern for ->s_dio_done_wq.
-> > This fixes the following issues:
-> > 
-> > - The LKMM doesn't guarantee that the workqueue will be seen initialized
-> >   before being used, if another CPU allocated it.  With regards to
-> >   specific CPU architectures, this is true on at least Alpha, but it may
-> >   be true on other architectures too if the internal implementation of
-> >   workqueues causes use of the workqueue to involve a control
-> >   dependency.  (There doesn't appear to be a control dependency
-> >   currently, but it's hard to tell and it could change in the future.)
-> > 
-> > - The preliminary checks for sb->s_dio_done_wq are a data race, since
-> >   they do a plain load of a concurrently modified variable.  According
-> >   to the C standard, this undefined behavior.  In practice, the kernel
-> >   does sometimes makes assumptions about data races might be okay in
-> >   practice, but these rules are undocumented and not uniformly agreed
-> >   upon, so it's best to avoid cases where they might come into play.
-> > 
-> > Following the guidance for one-time init I've proposed at
-> > https://lkml.kernel.org/r/20200717044427.68747-1-ebiggers@kernel.org,
-> > replace it with the simplest implementation that is guaranteed to be
-> > correct while still achieving the following properties:
-> > 
-> >     - Doesn't make direct I/O users contend on a mutex in the fast path.
-> > 
-> >     - Doesn't allocate the workqueue when it will never be used.
-> > 
-> > Fixes: 7b7a8665edd8 ("direct-io: Implement generic deferred AIO completions")
-> > Signed-off-by: Eric Biggers <ebiggers@google.com>
-> > ---
-> > 
-> > v2: new implementation using smp_load_acquire() + smp_store_release()
-> >     and a mutex.
-> 
-> A mutex?
-> 
-> That's over-engineered premature optimisation - the allocation path
-> is a slow path that will only ever be hit only on the first few
-> direct IOs if an app manages to synchronise it's first ever
-> concurrent DIOs to different files perfectly. There is zero need to
-> "optimise" the code like this.
+Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Chandan Rajendra <chandanrlinux@gmail.com>
+---
+ libxfs/xfs_attr_remote.c | 149 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 92 insertions(+), 57 deletions(-)
 
-You're completely misunderstanding the point of this change.  The mutex version
-is actually simpler and easier to get right than the cmpxchg() version (which
-what I'm replacing) -- see the tools/memory-model/Documentation/ patch I've
-proposed which explains this.  In fact the existing use of cmpxchg() is wrong,
-since cmpxchg() doesn't guarantee an ACQUIRE barrier on failure.
+diff --git a/libxfs/xfs_attr_remote.c b/libxfs/xfs_attr_remote.c
+index a9a48b30..6267cd6 100644
+--- a/libxfs/xfs_attr_remote.c
++++ b/libxfs/xfs_attr_remote.c
+@@ -439,32 +439,23 @@ xfs_attr_rmtval_get(
+ }
+ 
+ /*
+- * Write the value associated with an attribute into the out-of-line buffer
+- * that we have defined for it.
++ * Find a "hole" in the attribute address space large enough for us to drop the
++ * new attribute's value into
+  */
+-int
+-xfs_attr_rmtval_set(
++STATIC int
++xfs_attr_rmt_find_hole(
+ 	struct xfs_da_args	*args)
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_mount	*mp = dp->i_mount;
+-	struct xfs_bmbt_irec	map;
+-	xfs_dablk_t		lblkno;
+-	xfs_fileoff_t		lfileoff = 0;
+-	uint8_t			*src = args->value;
+-	int			blkcnt;
+-	int			valuelen;
+-	int			nmap;
+ 	int			error;
+-	int			offset = 0;
+-
+-	trace_xfs_attr_rmtval_set(args);
++	int			blkcnt;
++	xfs_fileoff_t		lfileoff = 0;
+ 
+ 	/*
+-	 * Find a "hole" in the attribute address space large enough for
+-	 * us to drop the new attribute's value into. Because CRC enable
+-	 * attributes have headers, we can't just do a straight byte to FSB
+-	 * conversion and have to take the header space into account.
++	 * Because CRC enable attributes have headers, we can't just do a
++	 * straight byte to FSB conversion and have to take the header space
++	 * into account.
+ 	 */
+ 	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
+ 	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
+@@ -472,48 +463,26 @@ xfs_attr_rmtval_set(
+ 	if (error)
+ 		return error;
+ 
+-	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
++	args->rmtblkno = (xfs_dablk_t)lfileoff;
+ 	args->rmtblkcnt = blkcnt;
+ 
+-	/*
+-	 * Roll through the "value", allocating blocks on disk as required.
+-	 */
+-	while (blkcnt > 0) {
+-		/*
+-		 * Allocate a single extent, up to the size of the value.
+-		 *
+-		 * Note that we have to consider this a data allocation as we
+-		 * write the remote attribute without logging the contents.
+-		 * Hence we must ensure that we aren't using blocks that are on
+-		 * the busy list so that we don't overwrite blocks which have
+-		 * recently been freed but their transactions are not yet
+-		 * committed to disk. If we overwrite the contents of a busy
+-		 * extent and then crash then the block may not contain the
+-		 * correct metadata after log recovery occurs.
+-		 */
+-		nmap = 1;
+-		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
+-				  blkcnt, XFS_BMAPI_ATTRFORK, args->total, &map,
+-				  &nmap);
+-		if (error)
+-			return error;
+-		error = xfs_defer_finish(&args->trans);
+-		if (error)
+-			return error;
+-
+-		ASSERT(nmap == 1);
+-		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
+-		       (map.br_startblock != HOLESTARTBLOCK));
+-		lblkno += map.br_blockcount;
+-		blkcnt -= map.br_blockcount;
++	return 0;
++}
+ 
+-		/*
+-		 * Start the next trans in the chain.
+-		 */
+-		error = xfs_trans_roll_inode(&args->trans, dp);
+-		if (error)
+-			return error;
+-	}
++STATIC int
++xfs_attr_rmtval_set_value(
++	struct xfs_da_args	*args)
++{
++	struct xfs_inode	*dp = args->dp;
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_bmbt_irec	map;
++	xfs_dablk_t		lblkno;
++	uint8_t			*src = args->value;
++	int			blkcnt;
++	int			valuelen;
++	int			nmap;
++	int			error;
++	int			offset = 0;
+ 
+ 	/*
+ 	 * Roll through the "value", copying the attribute value to the
+@@ -594,6 +563,72 @@ xfs_attr_rmtval_stale(
+ }
+ 
+ /*
++ * Write the value associated with an attribute into the out-of-line buffer
++ * that we have defined for it.
++ */
++int
++xfs_attr_rmtval_set(
++	struct xfs_da_args	*args)
++{
++	struct xfs_inode	*dp = args->dp;
++	struct xfs_bmbt_irec	map;
++	xfs_dablk_t		lblkno;
++	int			blkcnt;
++	int			nmap;
++	int			error;
++
++	trace_xfs_attr_rmtval_set(args);
++
++	error = xfs_attr_rmt_find_hole(args);
++	if (error)
++		return error;
++
++	blkcnt = args->rmtblkcnt;
++	lblkno = (xfs_dablk_t)args->rmtblkno;
++	/*
++	 * Roll through the "value", allocating blocks on disk as required.
++	 */
++	while (blkcnt > 0) {
++		/*
++		 * Allocate a single extent, up to the size of the value.
++		 *
++		 * Note that we have to consider this a data allocation as we
++		 * write the remote attribute without logging the contents.
++		 * Hence we must ensure that we aren't using blocks that are on
++		 * the busy list so that we don't overwrite blocks which have
++		 * recently been freed but their transactions are not yet
++		 * committed to disk. If we overwrite the contents of a busy
++		 * extent and then crash then the block may not contain the
++		 * correct metadata after log recovery occurs.
++		 */
++		nmap = 1;
++		error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)lblkno,
++				  blkcnt, XFS_BMAPI_ATTRFORK, args->total, &map,
++				  &nmap);
++		if (error)
++			return error;
++		error = xfs_defer_finish(&args->trans);
++		if (error)
++			return error;
++
++		ASSERT(nmap == 1);
++		ASSERT((map.br_startblock != DELAYSTARTBLOCK) &&
++		       (map.br_startblock != HOLESTARTBLOCK));
++		lblkno += map.br_blockcount;
++		blkcnt -= map.br_blockcount;
++
++		/*
++		 * Start the next trans in the chain.
++		 */
++		error = xfs_trans_roll_inode(&args->trans, dp);
++		if (error)
++			return error;
++	}
++
++	return xfs_attr_rmtval_set_value(args);
++}
++
++/*
+  * Remove the value associated with an attribute by deleting the
+  * out-of-line buffer that it is stored on.
+  */
+-- 
+2.7.4
 
-> 
-> I've already suggested that we get rid of this whole dynamic
-> initialisation code out of the direct IO path altogether for good
-> reason: all of this goes away and we don't have to care about
-> optimising it for performance at all.
-> 
-> We have two options as I see it: always allocate the workqueue on
-> direct IO capable filesytsems in their ->fill_super() method, or
-> allocate it on the first open(O_DIRECT) where we check if O_DIRECT
-> is supported by the filesystem.
-> 
-> i.e. do_dentry_open() does this:
-> 
->         /* NB: we're sure to have correct a_ops only after f_op->open */
->         if (f->f_flags & O_DIRECT) {
->                 if (!f->f_mapping->a_ops || !f->f_mapping->a_ops->direct_IO)
->                         return -EINVAL;
->         }
-> 
-> Allocate the work queue there, and we don't need to care about how
-> fast or slow setting up the workqueue is and so there is zero need
-> to optimise it for speed.
-
-You also suggested about 4 other different things, so I don't know which one you
-actually want.  Now you're still suggesting multiple different things.
-
-Not having to add filesystem-specific code to nearly every filesystem and not
-allocating the workqueue when it won't be used are desirable properties to have,
-and I think worth using one-time-init for.
-
-Multiple threads can execute do_dentry_open() concurrently on the same
-filesystem, so we'd still have to use one-time init for that.  Is your proposal
-to do that and use the implementation where the mutex is unconditionally taken?
-
-- Eric
