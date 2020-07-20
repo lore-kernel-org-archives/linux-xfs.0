@@ -8,64 +8,64 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DE7BC433E4
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jul 2020 05:38:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2780AC433E3
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jul 2020 05:38:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CA1B21775
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jul 2020 05:38:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 035E820758
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jul 2020 05:38:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EUg8pA7U"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NDse7yyb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726109AbgGTFid (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 20 Jul 2020 01:38:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58334 "EHLO
+        id S1726017AbgGTFi1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Jul 2020 01:38:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58316 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725805AbgGTFid (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jul 2020 01:38:33 -0400
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42638C0619D2
-        for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2020 22:38:33 -0700 (PDT)
-Received: by mail-pj1-x1041.google.com with SMTP id k71so9628542pje.0
-        for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2020 22:38:33 -0700 (PDT)
+        with ESMTP id S1725805AbgGTFi1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jul 2020 01:38:27 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3ECA2C0619D2
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2020 22:38:27 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id u5so8485282pfn.7
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2020 22:38:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=5V/ccJ0QWicIjnpCSXrFuUIvhDQbSqp+jRyNCcabuK0=;
-        b=EUg8pA7UG03/zMFblxBvvHHXxM0PTIAxcDK7+AAF3NCaMSMFUrTS1Hmq6WOiaucTN7
-         VkReX0mxkeyydCdcJ2eWYdvPfq4im1DW6HynwzXQ7fDTHHMEQhi0NQ3kNrBRkaVoAiZw
-         uZ8AtTuLInweUdix1U46V3oeyq0ZMjH4WLmwyZQgncl4FQlOx9rRAjuW5MDciSeDXCHn
-         mHHza09l43bgaPltii40vPxRe+60yyvQTovVFPAOXffonmj6JSXJvGcIWj+IZg2mAeMJ
-         1MgV1brY/F+obOO9JsPYhWYHwhZRTMDNGxFNSGfDJJ6K3uOtuAU94JfhJV+jKEg0Gdkl
-         Tb+w==
+        bh=TK5CdTR6UFf9rmSQmh49JPQPiM+liD85kSjrxRzLWKE=;
+        b=NDse7yybzVjDJ11imObuWu3MBn6uPbRAf7oiLc2//OQ71QZ2UoaGVSTkEP307j0Gq0
+         B7hgWick2aGt2Q8KACGARc5VvyErl0lewWTl9ysA10I5mbazZIWWcts7QlCVpQ+U4oGr
+         HZPps9n7meEgVj12NxbeBrXBFtI4CEqnAPpZA6VJ8jNjtVGeqROmXSBN0ydhzBBccWUa
+         5pO1tu4AtBnAbpI0XmvfKy5f+XnTH21f8SJ7Atn+ypc2VN7Mdc95ntvPfpAFspp/woKS
+         TtwrsqOH+2soExBv5jjj0CDjNdCO4Vjv+APFwxblRwLy8uQ/1DZN7cZwCBMWkANIPa/J
+         ZrFw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=5V/ccJ0QWicIjnpCSXrFuUIvhDQbSqp+jRyNCcabuK0=;
-        b=oIELdRg69zjghUEbgx+ZpuWbspAjn2rRW2x+AC5CSSh8R9CYIp6+VakD59QJQ9VRBu
-         V/bweVGz04mHwiPWtGFQb4LEQyht7az1lfdqKiYBj/lTrg+AyPFLVxv54NnWBdSHGCFo
-         2lVfdZlHYBuRltZpEcY0iRzTb1sOi2ifa/6XNhhQmpria6vdtb54OpGOrPuu1miAeu/i
-         adg7JDuo+7XtYQL0NEUn6eIGkre6VQpZsP/KgJi2Yew8PpxK2rqJp5nSAKDlseEvrZhR
-         Tm08JaQ2+5LrGqDHc/yvxz1IHGlHWsgwkW9so1h8lVwKAoRKDbLXg0Qoq+3WfjSk3XLJ
-         KNfQ==
-X-Gm-Message-State: AOAM531Ww0roSieNlZeavwLYDi+qc2MEuAEFmJb2SKYf4cBk/p9xm6En
-        uFB/i+Ev13UZJvzdjlpYIvh6iCTp
-X-Google-Smtp-Source: ABdhPJwL9vOw/kRYlC3cixM82CRXEaMgDtB94tn/w3zaFBX3bnAQ4fvL8MkCOXEjOQEJgz1mx0M3iA==
-X-Received: by 2002:a17:902:7281:: with SMTP id d1mr14269120pll.247.1595223512800;
-        Sun, 19 Jul 2020 22:38:32 -0700 (PDT)
+        bh=TK5CdTR6UFf9rmSQmh49JPQPiM+liD85kSjrxRzLWKE=;
+        b=btMqKzygXysj5axq4Xf0aEn/0lnbz5msb185ppFvF4Ew9N7QEJ+U2i+7Awdp/aS2a6
+         /6+nTNmhORlRc2diSafflHfPskTeqNfgYqP1znxsP1kor54sHTVVySsT1E9hO1gt2rnm
+         oi2TJim2KgZIAU7IJHajXVqVA5QZi8mQw+cUP1JvZg59Vpmlh5eJg9TUmC486bcY6uer
+         hVi3I/RM/sYeF4n6LZLyPWztUM8siTWqdc9rbULSTR7sG3bYSka1n3YIskkv4UPhkJmk
+         qqCF6vcEKzAwCPxvGsGFJkDjkf7eB9fjYG97p95tylbe2/ukBwfBzUMVdexrSK09UVy4
+         sK6w==
+X-Gm-Message-State: AOAM530PtCkjdUll/Nm3k9BO1trf86aVG+ceA5W2YdfsWAzrnUqiEePz
+        9adDQauIOM7/QfssJABGx2UTVMuu
+X-Google-Smtp-Source: ABdhPJzSbhomWWzhSKMI/YGitpCuDhPpfN5YZkGGCesyftL0yg3SFWWSMUX2Hb4AloS+OVdog6AbVg==
+X-Received: by 2002:a63:b508:: with SMTP id y8mr18052553pge.106.1595223506833;
+        Sun, 19 Jul 2020 22:38:26 -0700 (PDT)
 Received: from garuda.localnet ([122.171.166.148])
-        by smtp.gmail.com with ESMTPSA id a16sm14198606pgj.27.2020.07.19.22.38.31
+        by smtp.gmail.com with ESMTPSA id s30sm14672229pgn.34.2020.07.19.22.38.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 19 Jul 2020 22:38:32 -0700 (PDT)
+        Sun, 19 Jul 2020 22:38:26 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/26] xfs: make XFS_DQUOT_CLUSTER_SIZE_FSB part of the ondisk format
-Date:   Mon, 20 Jul 2020 11:07:45 +0530
-Message-ID: <1785002.aZXFcyIeaH@garuda>
-In-Reply-To: <159477789339.3263162.3626376647868941894.stgit@magnolia>
-References: <159477783164.3263162.2564345443708779029.stgit@magnolia> <159477789339.3263162.3626376647868941894.stgit@magnolia>
+Subject: Re: [PATCH 24/26] xfs: assume the default quota limits are always set in xfs_qm_adjust_dqlimits
+Date:   Mon, 20 Jul 2020 11:08:05 +0530
+Message-ID: <2472470.UBcdlpre6e@garuda>
+In-Reply-To: <159477799136.3263162.16638446868281519003.stgit@magnolia>
+References: <159477783164.3263162.2564345443708779029.stgit@magnolia> <159477799136.3263162.16638446868281519003.stgit@magnolia>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -74,81 +74,57 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wednesday 15 July 2020 7:21:33 AM IST Darrick xJ. Wong wrote:
+On Wednesday 15 July 2020 7:23:11 AM IST Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Move the dquot cluster size #define to xfs_format.h.  It is an important
-> part of the ondisk format because the ondisk dquot record size is not an
-> even power of two, which means that the buffer size we use is
-> significant here because the kernel leaves slack space at the end of the
-> buffer to avoid having to deal with a dquot record crossing a block
-> boundary.
-> 
-> This is also an excuse to fix one of the longstanding discrepancies
-> between kernel and userspace libxfs headers.
+> We always initialize the default quota limits to something nowadays, so
+> we don't need to check that the defaults are set to something before
+> using them.
+>
 
 The changes look good to me.
 
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/libxfs/xfs_format.h |   16 ++++++++++++++++
->  fs/xfs/xfs_qm.h            |   11 -----------
->  2 files changed, 16 insertions(+), 11 deletions(-)
+>  fs/xfs/xfs_dquot.c |   12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
 > 
 > 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 79fbabeb476c..76d34b77031a 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -1209,6 +1209,22 @@ typedef struct xfs_dqblk {
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+> index e44f80700005..2b52913073b3 100644
+> --- a/fs/xfs/xfs_dquot.c
+> +++ b/fs/xfs/xfs_dquot.c
+> @@ -77,21 +77,21 @@ xfs_qm_adjust_dqlimits(
+>  	ASSERT(dq->q_id);
+>  	defq = xfs_get_defquota(q, dq->q_type);
 >  
->  #define XFS_DQUOT_CRC_OFF	offsetof(struct xfs_dqblk, dd_crc)
+> -	if (defq->blk.soft && !dq->q_blk.softlimit) {
+> +	if (!dq->q_blk.softlimit) {
+>  		dq->q_blk.softlimit = defq->blk.soft;
+>  		prealloc = 1;
+>  	}
+> -	if (defq->blk.hard && !dq->q_blk.hardlimit) {
+> +	if (!dq->q_blk.hardlimit) {
+>  		dq->q_blk.hardlimit = defq->blk.hard;
+>  		prealloc = 1;
+>  	}
+> -	if (defq->ino.soft && !dq->q_ino.softlimit)
+> +	if (!dq->q_ino.softlimit)
+>  		dq->q_ino.softlimit = defq->ino.soft;
+> -	if (defq->ino.hard && !dq->q_ino.hardlimit)
+> +	if (!dq->q_ino.hardlimit)
+>  		dq->q_ino.hardlimit = defq->ino.hard;
+> -	if (defq->rtb.soft && !dq->q_rtb.softlimit)
+> +	if (!dq->q_rtb.softlimit)
+>  		dq->q_rtb.softlimit = defq->rtb.soft;
+> -	if (defq->rtb.hard && !dq->q_rtb.hardlimit)
+> +	if (!dq->q_rtb.hardlimit)
+>  		dq->q_rtb.hardlimit = defq->rtb.hard;
 >  
-> +/*
-> + * This defines the unit of allocation of dquots.
-> + *
-> + * Currently, it is just one file system block, and a 4K blk contains 30
-> + * (136 * 30 = 4080) dquots. It's probably not worth trying to make
-> + * this more dynamic.
-> + *
-> + * However, if this number is changed, we have to make sure that we don't
-> + * implicitly assume that we do allocations in chunks of a single filesystem
-> + * block in the dquot/xqm code.
-> + *
-> + * This is part of the ondisk format because the structure size is not a power
-> + * of two, which leaves slack at the end of the disk block.
-> + */
-> +#define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
-> +
->  /*
->   * Remote symlink format and access functions.
->   */
-> diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-> index 27789272da95..c5d0716b378e 100644
-> --- a/fs/xfs/xfs_qm.h
-> +++ b/fs/xfs/xfs_qm.h
-> @@ -30,17 +30,6 @@ extern struct kmem_zone	*xfs_qm_dqtrxzone;
->  	!dqp->q_core.d_rtbcount && \
->  	!dqp->q_core.d_icount)
->  
-> -/*
-> - * This defines the unit of allocation of dquots.
-> - * Currently, it is just one file system block, and a 4K blk contains 30
-> - * (136 * 30 = 4080) dquots. It's probably not worth trying to make
-> - * this more dynamic.
-> - * XXXsup However, if this number is changed, we have to make sure that we don't
-> - * implicitly assume that we do allocations in chunks of a single filesystem
-> - * block in the dquot/xqm code.
-> - */
-> -#define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
-> -
->  /* Defaults for each quota type: time limits, warn limits, usage limits */
->  struct xfs_def_quota {
->  	time64_t	btimelimit;	/* limit for blks timer */
+>  	if (prealloc)
 > 
 > 
 
