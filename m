@@ -2,174 +2,118 @@ Return-Path: <SRS0=nIBV=A7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E69C433E1
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jul 2020 03:58:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42D36C433E1
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jul 2020 05:38:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BC9D2250E
-	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jul 2020 03:58:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BBC021775
+	for <linux-xfs@archiver.kernel.org>; Mon, 20 Jul 2020 05:38:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tEHK1RtN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726146AbgGTD6q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 19 Jul 2020 23:58:46 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47530 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726123AbgGTD6p (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 19 Jul 2020 23:58:45 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4A771821524;
-        Mon, 20 Jul 2020 13:58:41 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jxMwq-0002md-Mq; Mon, 20 Jul 2020 13:58:40 +1000
-Date:   Mon, 20 Jul 2020 13:58:40 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 00/10] xfs: automatic relogging
-Message-ID: <20200720035840.GD2005@dread.disaster.area>
-References: <20200701165116.47344-1-bfoster@redhat.com>
- <20200702115144.GH2005@dread.disaster.area>
- <20200702185209.GA58137@bfoster>
- <20200703004940.GI2005@dread.disaster.area>
- <20200706160306.GA21048@bfoster>
- <20200706174257.GG7606@magnolia>
- <20200707113743.GA33690@bfoster>
- <20200708164428.GC7625@magnolia>
- <20200709121530.GA56848@bfoster>
+        id S1726015AbgGTFiY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 20 Jul 2020 01:38:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58308 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725805AbgGTFiY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jul 2020 01:38:24 -0400
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34C45C0619D2
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2020 22:38:24 -0700 (PDT)
+Received: by mail-pl1-x644.google.com with SMTP id 72so8160439ple.0
+        for <linux-xfs@vger.kernel.org>; Sun, 19 Jul 2020 22:38:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=gzznrkQJ6dik1VklimjQucPMfv3ssP7Q98Ey7PQvNng=;
+        b=tEHK1RtNnEAO3ntNaklT5b84bjYVZV4+bKkElVo1a2wfWdnkaqfxRlCmE+HI/d7ikk
+         6IqMFKU1qu1OAZ+ghjia1bbgUn24dFNXVOkjLf0E5Pa6qd046rbdxCOyCk5s0TbDTVwE
+         WUrE2sIhoZ5ggfiXo8TbMA9Qe2wu/JhQ3X+bBVfCuPTMHpvEqlw/6AH3S5p48dQDEJpt
+         jMYGb7EENzMhwB9+pA/Khzcs1axapgn4gHgUvEw9KhII7aRPmFAKCMXJufk8pcREXOXM
+         l/U6yL+0yhZm48El8juFU3zdk6WMZ07OJi67OwwdqXRCwDRw5h23gZee2xdYw3Ub1hY+
+         PHEg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=gzznrkQJ6dik1VklimjQucPMfv3ssP7Q98Ey7PQvNng=;
+        b=HaMqQco90zYkyII8rvGsIA9BWvpiWqevV3tUabHAfxZvlj6EfGz+0qKoxm6nezfbpq
+         ciXRL3K6fIg4Ie7pgbmr970/Bktqi7PiUCjA6ES8aIU7oq7j0AuxNYVPP1IDg27xBTYj
+         ACmxwGTHYagVnSGbFwZ5yHk7t5n2aecGHr+lrrJpZBhplGkg4r3wQTHzfufMQmAvr+7b
+         ldnq0gsqNNloKtvOyxAZHn5Cs1Zo/HcBRIjfGZaEcaMuy7uy+2vJo0U1IhY1cjb98o74
+         uPdwnDhnN1uu9jIJTPQ4AQpDB6HayYwOFkoWYpXvfBJEAks3qBrivUUwENAKxjlFoslR
+         cvFQ==
+X-Gm-Message-State: AOAM532MFrrTHgnek3XqM+co8KPaa6w8goOoUMeD52b4v8H2keVEyWZB
+        rZ40mLPTMkfDsRtA80wlnD4=
+X-Google-Smtp-Source: ABdhPJzOcPvBseWejL2KJKTAFf4JGuTehvLi4+hFPNrqDcQbj+APxC0bjjDT0Nzqh4duz5/neHERFQ==
+X-Received: by 2002:a17:902:7483:: with SMTP id h3mr16079412pll.114.1595223503803;
+        Sun, 19 Jul 2020 22:38:23 -0700 (PDT)
+Received: from garuda.localnet ([122.171.166.148])
+        by smtp.gmail.com with ESMTPSA id j8sm15708892pfd.145.2020.07.19.22.38.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 19 Jul 2020 22:38:23 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 25/26] xfs: actually bump warning counts when we send warnings
+Date:   Mon, 20 Jul 2020 11:08:13 +0530
+Message-ID: <1711545.bsSymtsJ8m@garuda>
+In-Reply-To: <159477799812.3263162.13957383827318048593.stgit@magnolia>
+References: <159477783164.3263162.2564345443708779029.stgit@magnolia> <159477799812.3263162.13957383827318048593.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200709121530.GA56848@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8
-        a=_2VJTg5ke6Nig_IZf44A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 09, 2020 at 08:15:30AM -0400, Brian Foster wrote:
-> On Wed, Jul 08, 2020 at 09:44:28AM -0700, Darrick J. Wong wrote:
-> > On Tue, Jul 07, 2020 at 07:37:43AM -0400, Brian Foster wrote:
-> > > > 
-> > > 
-> > > Thanks. I think I get the general idea. We're reworking the
-> > > ->iop_relog() handler to complete and replace the current intent (rather
-> > > than just relog the original intent, which is what this series did for
-> > > the quotaoff case) in the current dfops transaction and allow the dfops
-> > > code to update its reference to the item. The part that's obviously
-> > > missing is some kind of determination on when we actually need to relog
-> > > the outstanding intents vs. using a fixed roll count.
-> > 
-> > <nod>  I don't consider myself sufficiently ail-smart to know how to do
-> > that part. :)
-> > 
-> > > I suppose we could do something like I was mentioning in my other reply
-> > > on the AIL pushing issue Dave pointed out where we'd set a bit on
-> > > certain items that are tail pinned and in need of relog. That sounds
-> > > like overkill given this use case is currently self-contained to dfops.
-> > 
-> > That might be a useful optimization -- every time defer_finish rolls the
-> > transaction, check the items to see if any of them have
-> > XFS_LI_RELOGMEPLEASE set, and if any of them do, or we hit our (now
-> > probably higher than 7) fixed roll count, we'll relog as desired to keep
-> > the log moving forward.
-> > 
+On Wednesday 15 July 2020 7:23:18 AM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> It's an optimization in some sense to prevent unnecessary relogs, but
-> the intent would be to avoid the need for a fixed count by notifying
-> when a relog is needed to a transaction that should be guaranteed to
-> have the reservation necessary to do so. I'm not sure it's worth the
-> complexity if there were some reason we still needed to fall back to a
-> hard count.
+> Currently, xfs quotas have the ability to send netlink warnings when a
+> user exceeds the limits.  They also have all the support code necessary
+> to convert softlimit warnings into failures if the number of warnings
+> exceeds a limit set by the administrator.  Unfortunately, we never
+> actually increase the warning counter, so this never actually happens.
+> Make it so we actually do something useful with the warning counts.
+>
 
-FWIW, relogging would only ever be necessary if
-xfs_log_item_in_current_chkpt() returned false for an item we are
-considering relogging. Otherwise, it's already queued for the next
-journal checkpoint and there's no need to relog it until the
-checkpoint commits....
+The changes look good to me.
 
-> > > Perhaps the other idea of factoring out the threshold determination
-> > > logic from xlog_grant_push_ail() might be useful.
-> > > 
-> > > For example, if the current free reservation is below the calculated
-> > > threshold (with need_bytes == 0), return a threshold LSN based on the
-> > > current tail. Instead of using that to push the AIL, compare it to
-> > > ->li_lsn of each intent and relog any that are inside the threshold LSN
-> > > (which will probably be all of them in practice since they are part of
-> > > the same transaction). We'd probably need to identify intents that have
-> > > been recently relogged so the process doesn't repeat until the CIL
-> > > drains and the li_lsn eventually changes. Hmm.. I did have an
-> > > XFS_LI_IN_CIL state tracking patch around somewhere for debugging
-> > > purposes that might actually be sufficient for that. We could also
-> > > consider stashing a "relog push" LSN somewhere (similar to the way AIL
-> > > pushing works) and perhaps use that to avoid repeated relogs on a chain,
-> > > but it's not immediately clear to me how well that would fit into the
-> > > dfops mechanism...
-> > 
-> > ...is there a sane way for dfops to query the threshold LSN so that it
-> > could compare against the li_lsn of each item it holds?
-> > 
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_trans_dquot.c |    1 +
+>  1 file changed, 1 insertion(+)
 > 
-> I'd start with just trying to reuse the logic in xlog_grant_push_ail()
-> (i.e. just factor out the AIL push). That function starts with a check
-> on available log reservation to filter out unnecessary pushes, then
-> calculates the AIL push LSN by adding the amount of log space we need to
-> free up to the current log tail. In this case we're not pushing the AIL,
-> but I think we'd be able to use the same threshold calculation logic to
-> determine when to relog intents that happen to reside within the range
-> from the current tail to the calculated threshold.
+> 
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index 78201ff3696b..cbd92d8b693d 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -596,6 +596,7 @@ xfs_dqresv_check(
+>  			return QUOTA_NL_ISOFTLONGWARN;
+>  		}
+>  
+> +		res->warnings++;
+>  		return QUOTA_NL_ISOFTWARN;
+>  	}
+>  
+> 
+> 
 
-Hmmmm. I'm kinda wanting to pull the AIL away from the demand-based
-tail pushing that xlog_grant_push_ail() does. Distance from the tail
-doesn't really tell us how quickly that distance will be consumed
-by ongoing operations....
 
-One of the problems we have at the moment is that the AIL will sit
-at under 75% full and do nothing at all (because the
-xlog_grant_push_ail() call does nothing at <75% full) until we get
-memory pressure or the log worker comes along every 30s and calls
-xfs_ail_push_all().
-
-The result is that when we are under bursty workloads, we don't
-keep pushing metadata out to free up log space - our working space
-to soak up bursts is only 25% of the journal, which we can fill in a
-couple of seconds, even on a 2GB log. SO under sustained bursty
-worklaods, we really only have 25% of the log available at most,
-rather than continuing to write back past the 75% threshold so the
-next burst can have, say, 50% of the log space available to soak up
-the burst.
-
-i.e. if we have frequent bursts and the IO subsystem can soak up the
-metadata writeback rate, we should be writing back faster so that
-the bursts can hit the transaction reservation fast path for
-longer...
-
-IOWs, I'd like to see the AIL move more towards a mechanism that
-balances a time-averaged rate of inserts (journal checkpoint
-completions) with a time-averaged rate of removals (metadata IO
-completions) rather than working to a free fixed space target.
-If the workload is sustained, then this effective ends up the same
-as we have now with transactions waiting for log reservation space,
-but we should end up draining the AIL down further when than we
-currently do when incoming work tails off.
-
-I suspect that we could work into this a "need to be relogged within
-X seconds" trigger for active reloggable items in the AIL, such that
-if the top layer deferops sees the flag set on any item in the
-processing of the deferops it relogs all the reloggable items in the
-current set...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+chandan
+
+
+
