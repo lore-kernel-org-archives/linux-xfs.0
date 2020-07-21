@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E1B7C433EB
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 00:18:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBAF5C433EA
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 00:18:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECDB522BF3
+	by mail.kernel.org (Postfix) with ESMTP id AACFD22BF5
 	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 00:18:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NaREcSgO"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="b4yjGOnG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728220AbgGUASV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1728230AbgGUASV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 20 Jul 2020 20:18:21 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:39612 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728228AbgGUASV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jul 2020 20:18:21 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06L02ccd102328
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 00:18:20 GMT
+Received: from aserp2120.oracle.com ([141.146.126.78]:41790 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728220AbgGUASU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 20 Jul 2020 20:18:20 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06L03SYf181799
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 00:18:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=qjUIVUlY2mlCt0Y9p78bgesjqAlAhADUnZla+cTGT5k=;
- b=NaREcSgOwQqHlMY7PiBY/KOTQnm/4vUDERTK1j3ZSF4xnMG2vGcR4pwqtlMBjUZSUzE7
- TnULZlilUNlzXGoJA6Un2VBnSYELqyRmz/YXb6y+HI5+VncveP9Tuyv4MluYmur6C2tx
- rNNKHijkOeZMV5NkkH7KEb1N9GMrF4O/nVaAFY8G2AKfdcB+6a+mN6RepIe22AXiz1hz
- XDcks9V7i17WCvcA+CaleELokv4B308mTbUtioQDO1PsQLP3C0Bu1rjqcUp7NFXXvdKJ
- 0/HFupn4yEZEEKYl4w0e2jZ+JCY548F++4pT9oP7aKCMzfLYhroX7loOjSerpnXdOCsC bg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 32brgr9yvd-1
+ bh=xot8efOUoQ6pLHmJNTTf9PdiPFeM0UUl/A20FYsUqWc=;
+ b=b4yjGOnGq/mV4d1XBT8eMjC/b3IFbALLBGZuBqJcXJwJw2PMvusGlxsBGOWR67OgZ3mQ
+ o9lqordv+JsO9TTwdP0oyjdduuaS7opfyZx5AekrAx1ZY7EG5wVwWEvYHWN2dchRgr3h
+ vufEJYMEw6pSqsvcbHM2j+MXk7K+I5fvs0G6qOg/0NoJJYsW6CbbS8S8FpGzvM6po0cN
+ Y6Vguh3s1iKVySPGLkmCsDPsBkA6T9PTA6GyjGU6SMkFkcTXCGEmz14EieZguNKFd4CO
+ e1CQgxxskReAidSkhu9lGn20qL4l3GYziVdpeLa15gJaaqjH9spud/kbZAHe2ywqQxLg fA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 32bs1m9xgt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 00:18:20 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06L04NsS097343
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 00:18:19 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06L0DJLP176909
         for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 00:16:19 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 32dnfngf0k-1
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 32dnmq82vh-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 00:16:19 +0000
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 00:16:18 +0000
 Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06L0GIbS014544
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06L0GIDs027095
         for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 00:16:18 GMT
 Received: from localhost.localdomain (/67.1.142.158)
         by default (Oracle Beehive Gateway v4.0)
         with ESMTP ; Mon, 20 Jul 2020 17:16:18 -0700
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v11 22/25] xfs: Lift -ENOSPC handler from xfs_attr_leaf_addname
-Date:   Mon, 20 Jul 2020 17:16:03 -0700
-Message-Id: <20200721001606.10781-23-allison.henderson@oracle.com>
+Subject: [PATCH v11 20/25] xfs: Simplify xfs_attr_leaf_addname
+Date:   Mon, 20 Jul 2020 17:16:01 -0700
+Message-Id: <20200721001606.10781-21-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20200721001606.10781-1-allison.henderson@oracle.com>
 References: <20200721001606.10781-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9688 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=1
- malwarescore=0 mlxscore=0 adultscore=0 spamscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007200146
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
+ bulkscore=0 suspectscore=1 mlxscore=0 malwarescore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007200146
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9688 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 spamscore=0
- impostorscore=0 suspectscore=1 adultscore=0 clxscore=1015 mlxlogscore=999
- priorityscore=1501 phishscore=0 lowpriorityscore=0 mlxscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 bulkscore=0 adultscore=0
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
+ spamscore=0 mlxscore=0 impostorscore=0 phishscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2007200146
 Sender: linux-xfs-owner@vger.kernel.org
@@ -74,67 +74,143 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Lift -ENOSPC handler from xfs_attr_leaf_addname.  This will help to
-reorganize transitions between the attr forms later.
+Invert the rename logic in xfs_attr_leaf_addname to simplify the
+delayed attr logic later.
 
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+ fs/xfs/libxfs/xfs_attr.c | 107 ++++++++++++++++++++++++-----------------------
+ 1 file changed, 55 insertions(+), 52 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index e618b09..4b78c86 100644
+index f993af5..ca1e851 100644
 --- a/fs/xfs/libxfs/xfs_attr.c
 +++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -299,6 +299,13 @@ xfs_attr_set_args(
+@@ -695,68 +695,71 @@ xfs_attr_leaf_addname(
  			return error;
- 
- 		/*
-+		 * Promote the attribute list to the Btree format.
-+		 */
-+		error = xfs_attr3_leaf_to_node(args);
-+		if (error)
-+			return error;
-+
-+		/*
- 		 * Finish any deferred work items and roll the transaction once
- 		 * more.  The goal here is to call node_addname with the inode
- 		 * and transaction in the same state (inode locked and joined,
-@@ -603,7 +610,7 @@ xfs_attr_leaf_try_add(
- 	struct xfs_da_args	*args,
- 	struct xfs_buf		*bp)
- {
--	int			retval, error;
-+	int			retval;
- 
- 	/*
- 	 * Look up the given attribute in the leaf block.  Figure out if
-@@ -635,20 +642,10 @@ xfs_attr_leaf_try_add(
  	}
  
- 	/*
--	 * Add the attribute to the leaf block, transitioning to a Btree
--	 * if required.
-+	 * Add the attribute to the leaf block
- 	 */
--	retval = xfs_attr3_leaf_add(bp, args);
--	if (retval == -ENOSPC) {
--		/*
--		 * Promote the attribute list to the Btree format. Unless an
--		 * error occurs, retain the -ENOSPC retval
+-	/*
+-	 * If this is an atomic rename operation, we must "flip" the
+-	 * incomplete flags on the "new" and "old" attribute/value pairs
+-	 * so that one disappears and one appears atomically.  Then we
+-	 * must remove the "old" attribute/value pair.
+-	 */
+-	if (args->op_flags & XFS_DA_OP_RENAME) {
++	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
+ 		/*
+-		 * In a separate transaction, set the incomplete flag on the
+-		 * "old" attr and clear the incomplete flag on the "new" attr.
 -		 */
--		error = xfs_attr3_leaf_to_node(args);
+-		error = xfs_attr3_leaf_flipflags(args);
 -		if (error)
 -			return error;
--	}
--	return retval;
-+	return xfs_attr3_leaf_add(bp, args);
+-		/*
+-		 * Commit the flag value change and start the next trans in
+-		 * series.
++		 * Added a "remote" value, just clear the incomplete flag.
+ 		 */
+-		error = xfs_trans_roll_inode(&args->trans, args->dp);
+-		if (error)
+-			return error;
++		if (args->rmtblkno > 0)
++			error = xfs_attr3_leaf_clearflag(args);
+ 
+-		/*
+-		 * Dismantle the "old" attribute/value pair by removing
+-		 * a "remote" value (if it exists).
+-		 */
+-		xfs_attr_restore_rmt_blk(args);
++		return error;
++	}
+ 
+-		if (args->rmtblkno) {
+-			error = xfs_attr_rmtval_invalidate(args);
+-			if (error)
+-				return error;
++	/*
++	 * If this is an atomic rename operation, we must "flip" the incomplete
++	 * flags on the "new" and "old" attribute/value pairs so that one
++	 * disappears and one appears atomically.  Then we must remove the "old"
++	 * attribute/value pair.
++	 *
++	 * In a separate transaction, set the incomplete flag on the "old" attr
++	 * and clear the incomplete flag on the "new" attr.
++	 */
+ 
+-			error = xfs_attr_rmtval_remove(args);
+-			if (error)
+-				return error;
+-		}
++	error = xfs_attr3_leaf_flipflags(args);
++	if (error)
++		return error;
++	/*
++	 * Commit the flag value change and start the next trans in series.
++	 */
++	error = xfs_trans_roll_inode(&args->trans, args->dp);
++	if (error)
++		return error;
+ 
+-		/*
+-		 * Read in the block containing the "old" attr, then
+-		 * remove the "old" attr from that block (neat, huh!)
+-		 */
+-		error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
+-					   &bp);
++	/*
++	 * Dismantle the "old" attribute/value pair by removing a "remote" value
++	 * (if it exists).
++	 */
++	xfs_attr_restore_rmt_blk(args);
 +
- out_brelse:
- 	xfs_trans_brelse(args->trans, bp);
- 	return retval;
++	if (args->rmtblkno) {
++		error = xfs_attr_rmtval_invalidate(args);
+ 		if (error)
+ 			return error;
+ 
+-		xfs_attr3_leaf_remove(bp, args);
+-
+-		/*
+-		 * If the result is small enough, shrink it all into the inode.
+-		 */
+-		forkoff = xfs_attr_shortform_allfit(bp, dp);
+-		if (forkoff)
+-			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+-			/* bp is gone due to xfs_da_shrink_inode */
+-	} else if (args->rmtblkno > 0) {
+-		/*
+-		 * Added a "remote" value, just clear the incomplete flag.
+-		 */
+-		error = xfs_attr3_leaf_clearflag(args);
++		error = xfs_attr_rmtval_remove(args);
++		if (error)
++			return error;
+ 	}
++
++	/*
++	 * Read in the block containing the "old" attr, then remove the "old"
++	 * attr from that block (neat, huh!)
++	 */
++	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno,
++				   &bp);
++	if (error)
++		return error;
++
++	xfs_attr3_leaf_remove(bp, args);
++
++	/*
++	 * If the result is small enough, shrink it all into the inode.
++	 */
++	forkoff = xfs_attr_shortform_allfit(bp, dp);
++	if (forkoff)
++		error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
++		/* bp is gone due to xfs_da_shrink_inode */
++
+ 	return error;
+ }
+ 
 -- 
 2.7.4
 
