@@ -2,145 +2,164 @@ Return-Path: <SRS0=jPpR=BA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83408C433EB
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 16:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F34DFC433E5
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 18:32:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61AA92073A
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 16:06:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0B882072E
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 18:32:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="F3w1juxl"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YZLMGD/R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730153AbgGUQGB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jul 2020 12:06:01 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43422 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728219AbgGUQGA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jul 2020 12:06:00 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06LG1UVD048595;
-        Tue, 21 Jul 2020 16:05:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=LSsHWv/Ry310RdY8DfK9RbXStKhT7a/ijlTJRfNYKBw=;
- b=F3w1juxlH5QSmHd+imiuYdZGWjKHnzEv/NKoyKwhIc/s7GN+vHaAzidQDTB/DhjAEyeT
- d/Gx8vucWDL2jzjYsFydj9gp/ppR/d1HKXkpQ4M+nBfyMU/lBxulYLTGIP63iUbn+XMa
- 5AJJ7SdGe5ThlcDK+Ad12dSY6V2RP2uwwvf/W6jgJCOAzcaF6075T2S5EuIypvbdsOMZ
- 5GZy7LilCugLI4xLlHnpqSBJQc4HmAEDrO9FuVijPQrTmhxzqZDLoVgUPaZUuxoFXLdV
- 7XUINu6FhLHiAiQirWudIChRb2+CCLxB/+abECYiU5zPJXFWz1kdRwMYbxCbqSB925uM yw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 32bs1me5ju-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 21 Jul 2020 16:05:47 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06LFi0cn060765;
-        Tue, 21 Jul 2020 16:03:47 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 32e33ght6u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jul 2020 16:03:47 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06LG3i8F028849;
-        Tue, 21 Jul 2020 16:03:45 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Jul 2020 16:03:44 +0000
-Date:   Tue, 21 Jul 2020 09:03:42 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        Dave Chinner <david@fromorbit.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
+        id S1726458AbgGUScL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jul 2020 14:32:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35778 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729015AbgGUScI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jul 2020 14:32:08 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FA2FC0619DB;
+        Tue, 21 Jul 2020 11:32:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=xU171t7ztfam8+xnaeFGlyAau2FdqaQtiVon3JxnpSU=; b=YZLMGD/R+ktbdwc4xiH9a29f5h
+        hwNXGvtAxLPO3AL54x641XLSxIz2rAPmoxfMSymEfT/c1ybEz0H+UYEXhlx4jqYLPfZpn9mzRgkmP
+        sOLGJlYpZlLHpzKqDOgKd73jxrcUgi20fcT3wOvb4j5jig1zCdMagouh5WCdWAWS0+AE+KlsR76tR
+        NScrViP2XiQMiVgbjaUsnIaKp6UgUl7/WmwqvYfwxuPp5slvE/cB6izGeumc2S/5u/mgoAJHMfaTJ
+        pNJI/8DhmehoXnCcedyqVLLW52JBBsLcWvvOCvMf9ukounNnrAttEfHX8A4w4YZQyCxIfk55ghgmh
+        KluiZGhQ==;
+Received: from [2001:4bb8:18c:2acc:5b1c:6483:bd6d:e406] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jxx3a-00062X-Oq; Tue, 21 Jul 2020 18:32:03 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Dave Chinner <david@fromorbit.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
         Naohiro Aota <naohiro.aota@wdc.com>,
         Johannes Thumshirn <jth@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
         linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        Michael Kerrisk <mtk.manpages@gmail.com>,
-        linux-man@vger.kernel.org
-Subject: Re: RFC: iomap write invalidation
-Message-ID: <20200721160342.GC3151642@magnolia>
-References: <20200713074633.875946-1-hch@lst.de>
- <20200720215125.bfz7geaftocy4r5l@fiona>
- <20200721145313.GA9217@lst.de>
- <20200721150432.GH15516@casper.infradead.org>
- <20200721150615.GA10330@lst.de>
- <20200721151437.GI15516@casper.infradead.org>
- <20200721151616.GA11074@lst.de>
- <20200721153136.GJ15516@casper.infradead.org>
- <20200721154240.GB11652@lst.de>
- <20200721155201.GL15516@casper.infradead.org>
+        linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 2/3] iomap: Only invalidate page cache pages on direct IO writes
+Date:   Tue, 21 Jul 2020 20:31:56 +0200
+Message-Id: <20200721183157.202276-3-hch@lst.de>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20200721183157.202276-1-hch@lst.de>
+References: <20200721183157.202276-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200721155201.GL15516@casper.infradead.org>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9689 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=1
- malwarescore=0 mlxlogscore=999 spamscore=0 bulkscore=0 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007210112
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9689 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 bulkscore=0 adultscore=0
- lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
- spamscore=0 mlxscore=0 impostorscore=0 phishscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007210113
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 21, 2020 at 04:52:01PM +0100, Matthew Wilcox wrote:
-> On Tue, Jul 21, 2020 at 05:42:40PM +0200, Christoph Hellwig wrote:
-> > On Tue, Jul 21, 2020 at 04:31:36PM +0100, Matthew Wilcox wrote:
-> > > > Umm, no.  -ENOTBLK is internal - the file systems will retry using
-> > > > buffered I/O and the error shall never escape to userspace (or even the
-> > > > VFS for that matter).
-> > > 
-> > > Ah, I made the mistake of believing the comments that I could see in
-> > > your patch instead of reading the code.
-> > > 
-> > > Can I suggest deleting this comment:
-> > > 
-> > >         /*
-> > >          * No fallback to buffered IO on errors for XFS, direct IO will either
-> > >          * complete fully or fail.
-> > >          */
-> > > 
-> > > and rewording this one:
-> > > 
-> > >                 /*
-> > >                  * Allow a directio write to fall back to a buffered
-> > >                  * write *only* in the case that we're doing a reflink
-> > >                  * CoW.  In all other directio scenarios we do not
-> > >                  * allow an operation to fall back to buffered mode.
-> > >                  */
-> > > 
-> > > as part of your revised patchset?
-> > 
-> > That isn't actually true.  In current mainline we only fallback on
-> > reflink RMW cases, but with this series we also fall back for
-> > invalidation failures.
-> 
-> ... that's why I'm suggesting that you delete the first one and rewrite
-> the second one.  Because they aren't true.
+From: Dave Chinner <dchinner@redhat.com>
 
-/*
- * We allow only three outcomes of a directio: (1) it succeeds
- * completely; (2) it fails with a negative error code; or (3) it
- * returns -ENOTBLK to signal that we should fall back to buffered IO.
- *
- * The third scenario should only happen if iomap refuses to perform the
- * direct IO, or the direct write request requires CoW but is not aligned
- * to the filesystem block size.
- */
+The historic requirement for XFS to invalidate cached pages on
+direct IO reads has been lost in the twisty pages of history - it was
+inherited from Irix, which implemented page cache invalidation on
+read as a method of working around problems synchronising page
+cache state with uncached IO.
 
-?
+XFS has carried this ever since. In the initial linux ports it was
+necessary to get mmap and DIO to play "ok" together and not
+immediately corrupt data. This was the state of play until the linux
+kernel had infrastructure to track unwritten extents and synchronise
+page faults with allocations and unwritten extent conversions
+(->page_mkwrite infrastructure). IOws, the page cache invalidation
+on DIO read was necessary to prevent trivial data corruptions. This
+didn't solve all the problems, though.
 
---D
+There were peformance problems if we didn't invalidate the entire
+page cache over the file on read - we couldn't easily determine if
+the cached pages were over the range of the IO, and invalidation
+required taking a serialising lock (i_mutex) on the inode. This
+serialising lock was an issue for XFS, as it was the only exclusive
+lock in the direct Io read path.
+
+Hence if there were any cached pages, we'd just invalidate the
+entire file in one go so that subsequent IOs didn't need to take the
+serialising lock. This was a problem that prevented ranged
+invalidation from being particularly useful for avoiding the
+remaining coherency issues. This was solved with the conversion of
+i_mutex to i_rwsem and the conversion of the XFS inode IO lock to
+use i_rwsem. Hence we could now just do ranged invalidation and the
+performance problem went away.
+
+However, page cache invalidation was still needed to serialise
+sub-page/sub-block zeroing via direct IO against buffered IO because
+bufferhead state attached to the cached page could get out of whack
+when direct IOs were issued.  We've removed bufferheads from the
+XFS code, and we don't carry any extent state on the cached pages
+anymore, and so this problem has gone away, too.
+
+IOWs, it would appear that we don't have any good reason to be
+invalidating the page cache on DIO reads anymore. Hence remove the
+invalidation on read because it is unnecessary overhead,
+not needed to maintain coherency between mmap/buffered access and
+direct IO anymore, and prevents anyone from using direct IO reads
+from intentionally invalidating the page cache of a file.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/direct-io.c | 31 +++++++++++++++----------------
+ 1 file changed, 15 insertions(+), 16 deletions(-)
+
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index ec7b78e6fecaf9..190967e87b69e4 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -475,23 +475,22 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	if (ret)
+ 		goto out_free_dio;
+ 
+-	/*
+-	 * Try to invalidate cache pages for the range we're direct
+-	 * writing.  If this invalidation fails, tough, the write will
+-	 * still work, but racing two incompatible write paths is a
+-	 * pretty crazy thing to do, so we don't support it 100%.
+-	 */
+-	ret = invalidate_inode_pages2_range(mapping,
+-			pos >> PAGE_SHIFT, end >> PAGE_SHIFT);
+-	if (ret)
+-		dio_warn_stale_pagecache(iocb->ki_filp);
+-	ret = 0;
++	if (iov_iter_rw(iter) == WRITE) {
++		/*
++		 * Try to invalidate cache pages for the range we are writing.
++		 * If this invalidation fails, tough, the write will still work,
++		 * but racing two incompatible write paths is a pretty crazy
++		 * thing to do, so we don't support it 100%.
++		 */
++		if (invalidate_inode_pages2_range(mapping, pos >> PAGE_SHIFT,
++				end >> PAGE_SHIFT))
++			dio_warn_stale_pagecache(iocb->ki_filp);
+ 
+-	if (iov_iter_rw(iter) == WRITE && !wait_for_completion &&
+-	    !inode->i_sb->s_dio_done_wq) {
+-		ret = sb_init_dio_done_wq(inode->i_sb);
+-		if (ret < 0)
+-			goto out_free_dio;
++		if (!wait_for_completion && !inode->i_sb->s_dio_done_wq) {
++			ret = sb_init_dio_done_wq(inode->i_sb);
++			if (ret < 0)
++				goto out_free_dio;
++		}
+ 	}
+ 
+ 	inode_dio_begin(inode);
+-- 
+2.27.0
+
