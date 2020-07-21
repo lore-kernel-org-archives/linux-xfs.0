@@ -7,59 +7,60 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AE48C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 14:59:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22A61C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 14:54:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4203020729
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 14:59:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3E37207CD
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 14:54:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nKgELrB/"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JgOeg2ZR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728127AbgGUO7U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jul 2020 10:59:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59016 "EHLO
+        id S1728342AbgGUOyk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jul 2020 10:54:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728064AbgGUO7U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jul 2020 10:59:20 -0400
+        with ESMTP id S1726710AbgGUOyk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jul 2020 10:54:40 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D29B0C061794
-        for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 07:59:19 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BBBEC061794
+        for <linux-xfs@vger.kernel.org>; Tue, 21 Jul 2020 07:54:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=IlyK+n37SuRE2cA8WKjSbqTyu4j/DGu+kB7y9eQdGJg=; b=nKgELrB/g8LVGCsQTTGpUR8fj7
-        Rnynh0eIudPmKEm9CmT/KaRNKNE7RhRU9qoVQ6Es87lY09s54qn9G2pvaZHvvUdKyiEkDXKHU45f9
-        gjuo6IRT2dIamnSKS8tiTM1DgGtcYV8n3er0NStJtN9y5vPT+LPnAGZppCLiYFTUsImvD/aFsNyoL
-        wAx0XdBVz/eFnczfwkbDy4A8FOx68ilS2k/KnxwF7ZHYJ9lKafNr50US/KvhJ2AhzyChFPIk9uxmB
-        rudLqDuJwCDZ5W92KuKEn0BPl8ZcH2wtQOgcgq/zSJ1s9JmRaKLZnEosMdGtqjxWb+PiRhK7g8SZb
-        Vh4tAA7Q==;
+        bh=KPOt2J3aH3GDTlYtvCytnyzIBpxTaIdjzK5IoRljWZI=; b=JgOeg2ZRCWEgz9WceJCAtqqyT7
+        b9H1iXR8pQIoNcR9jFRa/Derqk0BAZZuBpeXiCQFzzCdblLVf8ghPpeTQesZkbUc1vjqkqE3Ue6tu
+        2YrR6/jWgHZYrwgNa0f7FwJH3sGhtoSwP06ikixpKY0DGzsd0S4/zVxKsbQYamqroKs0YUZHM0veX
+        tjn4fXeebKhZ88Vnqd/unj5x22LdUlhQYReWXh4N5SRwWW1xr8uhxq33cklVH6c7Ir2a+tnpXXOY8
+        qjGRyUbNHQXwuMph8835tsHcl3Duc1tLConkV4Az+8A5N91853aSZx9mcLeiU5Wzz8JlyWmTmH/I+
+        N04z2PvQ==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jxtji-0001wV-Cp; Tue, 21 Jul 2020 14:59:18 +0000
-Date:   Tue, 21 Jul 2020 15:59:18 +0100
+        id 1jxtfC-0001eN-LV; Tue, 21 Jul 2020 14:54:38 +0000
+Date:   Tue, 21 Jul 2020 15:54:38 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/11] xfs: rename the ondisk dquot d_flags to d_type
-Message-ID: <20200721145918.GK6208@infradead.org>
+Subject: Re: [PATCH 02/11] xfs: rename XFS_DQ_{USER,GROUP,PROJ} to
+ XFS_DQTYPE_*
+Message-ID: <20200721145438.GB6208@infradead.org>
 References: <159488191927.3813063.6443979621452250872.stgit@magnolia>
- <159488199070.3813063.17484927860165624202.stgit@magnolia>
+ <159488193224.3813063.12478435320438781308.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <159488199070.3813063.17484927860165624202.stgit@magnolia>
+In-Reply-To: <159488193224.3813063.12478435320438781308.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 15, 2020 at 11:46:30PM -0700, Darrick J. Wong wrote:
+On Wed, Jul 15, 2020 at 11:45:32PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The ondisk dquot stores the quota record type in the flags field.
-> Rename this field to d_type to make the _type relationship between the
-> ondisk and incore dquot more obvious.
+> We're going to split up the incore dquot state flags from the ondisk
+> dquot flags (eventually renaming this "type") so start by renaming the
+> three flags and the bitmask that are going to participate in this.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
