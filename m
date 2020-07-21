@@ -2,102 +2,81 @@ Return-Path: <SRS0=jPpR=BA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B2BEC433E4
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 15:52:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4592C433EB
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 15:56:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32697207BB
-	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 15:52:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A10C920792
+	for <linux-xfs@archiver.kernel.org>; Tue, 21 Jul 2020 15:56:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RyAh1b+A"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KzHyrjvW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728064AbgGUPwH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 21 Jul 2020 11:52:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38964 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726029AbgGUPwH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jul 2020 11:52:07 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE82FC061794;
-        Tue, 21 Jul 2020 08:52:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=CmlEdM9mHmEYsnkNRDmtewDs+LTuThNYW1KeG9HP9QA=; b=RyAh1b+Aew+y8wPFyVvKx99p4o
-        7LllldkBFIeFA/7lpj4qE89gQWwfUtJzVTUyprOec/KJ7Orn8V2fo1kYc44pMh6XskT/tbs5S3mhT
-        ke5HgkEX7NuIqfCeVZzvhGugdguxIRFc5l7O1rkzh6CBGGu6Rsk4Dc/MatzZIsphuKpwBCCWzyZBD
-        kayZ1Pd1P23pCWewHEm0Gz1yywn76NKHLMik4zLhCY7Nrcaiz3jpyj5qSSOIk9ACUDApGX1nCiXPl
-        HfShmHDDH5e1hx6MIq6NzR5vxxJH9BRKV4y0VplaZ6m//vUwYdXFL4yQncyLwbQXcH7zeojPyQlVx
-        EAc+PtFA==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jxuYj-00054a-SC; Tue, 21 Jul 2020 15:52:02 +0000
-Date:   Tue, 21 Jul 2020 16:52:01 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        Dave Chinner <david@fromorbit.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Johannes Thumshirn <jth@kernel.org>,
-        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        Michael Kerrisk <mtk.manpages@gmail.com>,
-        linux-man@vger.kernel.org
-Subject: Re: RFC: iomap write invalidation
-Message-ID: <20200721155201.GL15516@casper.infradead.org>
-References: <20200713074633.875946-1-hch@lst.de>
- <20200720215125.bfz7geaftocy4r5l@fiona>
- <20200721145313.GA9217@lst.de>
- <20200721150432.GH15516@casper.infradead.org>
- <20200721150615.GA10330@lst.de>
- <20200721151437.GI15516@casper.infradead.org>
- <20200721151616.GA11074@lst.de>
- <20200721153136.GJ15516@casper.infradead.org>
- <20200721154240.GB11652@lst.de>
+        id S1728468AbgGUP4B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 21 Jul 2020 11:56:01 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:21870 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726892AbgGUP4B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 21 Jul 2020 11:56:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595346960;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=qrC2X/jZHrAKI9FJpAizdCRiq0dJS1Ska4sAsRwCrOM=;
+        b=KzHyrjvWTvU+Rkh9qA5kG2sH7BotTptM8+BzNlZgM2FpsV0IOH7w43QmLriAF1VOc1yKcj
+        TdoDAw6YB4a11yN0bmtbreNGAA0JS/xWmcG01Xa4wyUTkyCtz147A7O2CgBR+3vGJ2l6WL
+        PzMNM/eZGPGRFpWLNi2uv/MAgYUpOXk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-379-oOHEOUiMNxu5-9L4RKtfpA-1; Tue, 21 Jul 2020 11:55:56 -0400
+X-MC-Unique: oOHEOUiMNxu5-9L4RKtfpA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0494FE918;
+        Tue, 21 Jul 2020 15:55:55 +0000 (UTC)
+Received: from redhat.com (ovpn-114-248.rdu2.redhat.com [10.10.114.248])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5847E1755E;
+        Tue, 21 Jul 2020 15:55:54 +0000 (UTC)
+Date:   Tue, 21 Jul 2020 10:55:52 -0500
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, sandeen@sandeen.net,
+        darrick.wong@oracle.com
+Subject: Re: [PATCH 1/3] xfsprogs: xfs_quota command error message improvement
+Message-ID: <20200721155552.GA96787@redhat.com>
+References: <20200715201253.171356-1-billodo@redhat.com>
+ <20200715201253.171356-2-billodo@redhat.com>
+ <20200721150404.GA8201@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200721154240.GB11652@lst.de>
+In-Reply-To: <20200721150404.GA8201@infradead.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 21, 2020 at 05:42:40PM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 21, 2020 at 04:31:36PM +0100, Matthew Wilcox wrote:
-> > > Umm, no.  -ENOTBLK is internal - the file systems will retry using
-> > > buffered I/O and the error shall never escape to userspace (or even the
-> > > VFS for that matter).
+On Tue, Jul 21, 2020 at 04:04:04PM +0100, Christoph Hellwig wrote:
+> On Wed, Jul 15, 2020 at 03:12:51PM -0500, Bill O'Donnell wrote:
+> > Make the error messages for rudimentary xfs_quota commands
+> > (off, enable, disable) more user friendly, instead of the
+> > terse sys error outputs.
 > > 
-> > Ah, I made the mistake of believing the comments that I could see in
-> > your patch instead of reading the code.
-> > 
-> > Can I suggest deleting this comment:
-> > 
-> >         /*
-> >          * No fallback to buffered IO on errors for XFS, direct IO will either
-> >          * complete fully or fail.
-> >          */
-> > 
-> > and rewording this one:
-> > 
-> >                 /*
-> >                  * Allow a directio write to fall back to a buffered
-> >                  * write *only* in the case that we're doing a reflink
-> >                  * CoW.  In all other directio scenarios we do not
-> >                  * allow an operation to fall back to buffered mode.
-> >                  */
-> > 
-> > as part of your revised patchset?
+> > Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 > 
-> That isn't actually true.  In current mainline we only fallback on
-> reflink RMW cases, but with this series we also fall back for
-> invalidation failures.
+> I think we should have one helper with the error message
+> instead of duplicating them three times.
+> 
+Except that the error messages are different depending on the context,
+so crafting a helper function that recognizes the context seems to
+offer diminishing return AFAICT.
 
-... that's why I'm suggesting that you delete the first one and rewrite
-the second one.  Because they aren't true.
+Thanks-
+Bill
+
