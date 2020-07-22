@@ -6,66 +6,62 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4008FC433E2
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jul 2020 14:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCE8DC433E3
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jul 2020 14:15:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FC1320709
-	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jul 2020 14:13:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6C6F20729
+	for <linux-xfs@archiver.kernel.org>; Wed, 22 Jul 2020 14:15:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="itjgFqge"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XHvGLJ/A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730465AbgGVONs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 22 Jul 2020 10:13:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49034 "EHLO
+        id S1732391AbgGVOPG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 22 Jul 2020 10:15:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728351AbgGVONs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jul 2020 10:13:48 -0400
+        with ESMTP id S1726003AbgGVOPF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 22 Jul 2020 10:15:05 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52990C0619DC
-        for <linux-xfs@vger.kernel.org>; Wed, 22 Jul 2020 07:13:48 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B555C0619DC
+        for <linux-xfs@vger.kernel.org>; Wed, 22 Jul 2020 07:15:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=R4q9JIbPMEvG1r8TauWb0aaLNFYeWnMrJ8d6qpEvkAw=; b=itjgFqgeCzNiAijRabyn6eOiX9
-        Gzlzu9J5vBya+XyW+i7J0EyEbI9uFoyYvgMqNHEhGhj2Axu8JanmKaaVpCPTPDWdWdLj86CptXQcA
-        xzKth4QrmtegABqBhnR8voQWrkgH8OqQd6ybNWerHg7wgQySlyuzQDQ5qfY5UCwo1Z9SLD3JkeTeZ
-        Yw5L1lDc+Kv6HnIhZ0s84C4B+ilp7MwSnjf4Up2VJ60u+LcSHGhX6QU3DzX7JgV9Eb9sxxqWianyI
-        NsO0l2xPnPB/2q/WCPDMl56pa6sMG5tY5NIt+SukkKuqBPtSdZV1stsrCI9dUBquG5dBXp/s2iSVf
-        dEO7n49g==;
+        bh=Nglx5cq1WqOWnkQHmrk9cM4F+Wg104TImPu7ee/Rg9E=; b=XHvGLJ/AU5XqTOLK+qnKn67d7X
+        qnyB6uc0pw2zsf4tAjE4/VqyE3kx7shdBIgG0gCXKaYDySM/C65licmGR9ZBU2y42T4SN3jLBwJgS
+        UGchtDUZBEFukwsJZgHRb+kPL04U2y8ti5rZ0EDfLYj2aL/PF1id3jQ7IctDM9xL0lBLtUt9ZbEgN
+        F2QOY3pDLCtPNRuJJaZu0wPkSYpxyjbMnh+ksgQ+QvyYeZfrmwzjG5Brro3UAvcOmI6iXwxQqRh3M
+        qQV/xtpc4w1+JpD/+7RApbHO0gkot4QQ7ClfoNi2gxKW5PV346DhSTyWCelKbWv/0fusDtT6Az/Xk
+        1u8ip3SQ==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jyFVC-0005Jw-Gj; Wed, 22 Jul 2020 14:13:46 +0000
-Date:   Wed, 22 Jul 2020 15:13:46 +0100
+        id 1jyFWP-0005O2-O2; Wed, 22 Jul 2020 14:15:02 +0000
+Date:   Wed, 22 Jul 2020 15:15:01 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Carlos Maiolino <cmaiolino@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] xfs: Remove kmem_zone_alloc() usage
-Message-ID: <20200722141346.GA20266@infradead.org>
+Subject: Re: [PATCH 5/5] xfs: Refactor xfs_da_state_alloc() helper
+Message-ID: <20200722141501.GB20266@infradead.org>
 References: <20200722090518.214624-1-cmaiolino@redhat.com>
- <20200722090518.214624-2-cmaiolino@redhat.com>
+ <20200722090518.214624-6-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200722090518.214624-2-cmaiolino@redhat.com>
+In-Reply-To: <20200722090518.214624-6-cmaiolino@redhat.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 22, 2020 at 11:05:14AM +0200, Carlos Maiolino wrote:
-> -	/*
-> -	 * if this didn't occur in transactions, we could use
-> -	 * KM_MAYFAIL and return NULL here on ENOMEM. Set the
-> -	 * code up to do this anyway.
-> -	 */
-> -	ip = kmem_zone_alloc(xfs_inode_zone, 0);
-> -	if (!ip)
-> -		return NULL;
-> +	ip = kmem_cache_alloc(xfs_inode_zone, GFP_KERNEL | __GFP_NOFAIL);
-> +
+On Wed, Jul 22, 2020 at 11:05:18AM +0200, Carlos Maiolino wrote:
+> Every call to xfs_da_state_alloc() also requires setting up state->args
+> and state->mp
+> 
+> Change xfs_da_state_alloc() to receive an xfs_da_args_t as argument and
+> return a xfs_da_state_t with both args and mp already set.
 
-I would have kept a version of this comment.  But if this on your
-radar for the next merge window anyway this should be ok:
+I would have not use the typedef versions and switched to the raw
+struct type, but that's something we should eventually take care of
+with a bulk cleanup anyway, so:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
