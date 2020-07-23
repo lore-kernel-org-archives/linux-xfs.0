@@ -2,189 +2,128 @@ Return-Path: <SRS0=I6cU=BC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53314C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jul 2020 22:08:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B418BC433E3
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jul 2020 22:15:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BAAB20768
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jul 2020 22:08:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96F7220825
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jul 2020 22:15:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726535AbgGWWIF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jul 2020 18:08:05 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:54888 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726173AbgGWWIF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jul 2020 18:08:05 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 84C79108342;
-        Fri, 24 Jul 2020 08:07:58 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1jyjNY-0000u9-BP; Fri, 24 Jul 2020 08:07:52 +1000
-Date:   Fri, 24 Jul 2020 08:07:52 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Satya Tangirala <satyat@google.com>, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 3/7] iomap: support direct I/O with fscrypt using
- blk-crypto
-Message-ID: <20200723220752.GF2005@dread.disaster.area>
-References: <20200720233739.824943-1-satyat@google.com>
- <20200720233739.824943-4-satyat@google.com>
- <20200722211629.GE2005@dread.disaster.area>
- <20200722223404.GA76479@sol.localdomain>
+        id S1726417AbgGWWPb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jul 2020 18:15:31 -0400
+Received: from sandeen.net ([63.231.237.45]:51942 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726436AbgGWWPb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 23 Jul 2020 18:15:31 -0400
+Received: from Liberator.local (c-71-237-195-212.hsd1.or.comcast.net [71.237.195.212])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 128EE2AEC;
+        Thu, 23 Jul 2020 17:14:46 -0500 (CDT)
+Subject: Re: [PATCH] io/attr.c: Disallow specifying both -D and -R options for
+ chattr command
+To:     Xiao Yang <yangx.jy@cn.fujitsu.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+References: <20200723052723.30063-1-yangx.jy@cn.fujitsu.com>
+ <20200723060850.GA14199@infradead.org> <5F19308A.2060109@cn.fujitsu.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
+ nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
+ WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
+ vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
+ ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
+ sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
+ BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
+ gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
+ LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
+ dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
+ bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
+ aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
+ UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
+ EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
+ sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
+ 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
+ gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
+ 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
+ 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
+ WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
+ Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
+ X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
+ SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
+ 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
+ GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
+ 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
+ Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
+ ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
+ TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
+ gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
+ AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
+ YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
+ mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
+ LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
+ LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
+ MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
+ JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
+ Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
+ m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
+ fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
+Message-ID: <86314935-eeb9-3c8a-5d64-7db8b36ce43d@sandeen.net>
+Date:   Thu, 23 Jul 2020 15:15:27 -0700
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200722223404.GA76479@sol.localdomain>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LPwYv6e9 c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=1XWaLZrsAAAA:8 a=VwQbUJbxAAAA:8
-        a=7-415B0cAAAA:8 a=o-5nuXC40d1hAW-zK1QA:9 a=lV8-eMjJ7w0CS7Ub:21
-        a=2U3LBo-zXchMHvL1:21 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <5F19308A.2060109@cn.fujitsu.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 22, 2020 at 03:34:04PM -0700, Eric Biggers wrote:
-> On Thu, Jul 23, 2020 at 07:16:29AM +1000, Dave Chinner wrote:
-> > On Mon, Jul 20, 2020 at 11:37:35PM +0000, Satya Tangirala wrote:
-> > > From: Eric Biggers <ebiggers@google.com>
-> > > 
-> > > Wire up iomap direct I/O with the fscrypt additions for direct I/O.
-> > > This allows ext4 to support direct I/O on encrypted files when inline
-> > > encryption is enabled.
-> > > 
-> > > This change consists of two parts:
-> > > 
-> > > - Set a bio_crypt_ctx on bios for encrypted files, so that the file
-> > >   contents get encrypted (or decrypted).
-> > > 
-> > > - Ensure that encryption data unit numbers (DUNs) are contiguous within
-> > >   each bio.  Use the new function fscrypt_limit_io_pages() for this,
-> > >   since the iomap code works directly with logical ranges and thus
-> > >   doesn't have a chance to call fscrypt_mergeable_bio() on each page.
-> > > 
-> > > Note that fscrypt_limit_io_pages() is normally a no-op, as normally the
-> > > DUNs simply increment along with the logical blocks.  But it's needed to
-> > > handle an edge case in one of the fscrypt IV generation methods.
-> > > 
-> > > Signed-off-by: Eric Biggers <ebiggers@google.com>
-> > > Co-developed-by: Satya Tangirala <satyat@google.com>
-> > > Signed-off-by: Satya Tangirala <satyat@google.com>
-> > > ---
-> > >  fs/iomap/direct-io.c | 12 +++++++++++-
-> > >  1 file changed, 11 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> > > index ec7b78e6feca..12064daa3e3d 100644
-> > > --- a/fs/iomap/direct-io.c
-> > > +++ b/fs/iomap/direct-io.c
-> > > @@ -6,6 +6,7 @@
-> > >  #include <linux/module.h>
-> > >  #include <linux/compiler.h>
-> > >  #include <linux/fs.h>
-> > > +#include <linux/fscrypt.h>
-> > >  #include <linux/iomap.h>
-> > >  #include <linux/backing-dev.h>
-> > >  #include <linux/uio.h>
-> > > @@ -183,11 +184,16 @@ static void
-> > >  iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
-> > >  		unsigned len)
-> > >  {
-> > > +	struct inode *inode = file_inode(dio->iocb->ki_filp);
-> > >  	struct page *page = ZERO_PAGE(0);
-> > >  	int flags = REQ_SYNC | REQ_IDLE;
-> > >  	struct bio *bio;
-> > >  
-> > >  	bio = bio_alloc(GFP_KERNEL, 1);
-> > > +
-> > > +	/* encrypted direct I/O is guaranteed to be fs-block aligned */
-> > > +	WARN_ON_ONCE(fscrypt_needs_contents_encryption(inode));
-> > 
-> > Which means you are now placing a new constraint on this code in
-> > that we cannot ever, in future, zero entire blocks here.
-> > 
-> > This code can issue arbitrary sized zeroing bios - multiple entire fs blocks
-> > blocks if necessary - so I think constraining it to only support
-> > partial block zeroing by adding a warning like this is no correct.
+On 7/22/20 11:39 PM, Xiao Yang wrote:
+> On 2020/7/23 14:08, Christoph Hellwig wrote:
+>> On Thu, Jul 23, 2020 at 01:27:23PM +0800, Xiao Yang wrote:
+>>> -D and -R options are mutually exclusive actually but chattr command
+>>> doesn't check it so that always applies -D option when both of them
+>>> are specified.  For example:
+>> Looks good,
+>>
+>> Reviewed-by: Christoph Hellwig<hch@lst.de>
+> Hi,
 > 
-> In v3 and earlier this instead had the code to set an encryption context:
-> 
-> 	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
-> 				  GFP_KERNEL);
-> 
-> Would you prefer that, even though the call to fscrypt_set_bio_crypt_ctx() would
+> Ah,  I have a question after sending the patch:
+> Other commands(e.g. cowextsize) including the same options seem to avoid the issue by accepting the last option, as below:
+> --------------------------------------------------------
+> io/cowextsize.c
+> 141         while ((c = getopt(argc, argv, "DR")) != EOF) {
+> 142                 switch (c) {
+> 143                 case 'D':
+> 144                         recurse_all = 0;
+> 145                         recurse_dir = 1;
+> 146                         break;
+> 147                 case 'R':
+> 148                         recurse_all = 1;
+> 149                         recurse_dir = 0;
+> 150                         break;
 
-Actually, I have no idea what that function does. It's not in a
-5.8-rc6 kernel, and it's not in this patchset....
+Yep, I meant to look at this but hadn't gotten to it yet.  These should all
+be consistent, and I tend to agree with Dave that explicitly conflicting
+incompatible options and erroring out is better than silently accepting
+the last one specified.
 
-> always be a no-op currently (since for now, iomap_dio_zero() will never be
-> called with an encrypted file) and thus wouldn't be properly tested?
+And indeed help specifies that they are exclusive:
 
-Same can be said for this WARN_ON_ONCE() code :)
+        cowextsize_cmd.args = _("[-D | -R] [cowextsize]");
 
-But, in the interests of not leaving landmines, if a fscrypt context
-is needed to be attached to the bio for data IO in direct IO, it
-should be attached to all bios that are allocated in the dio path
-rather than leave a landmine for people in future to trip over.
+It'd be great if you want to send a V2 that makes the behavior (and
+documentation) of any/all commands that accept [-D | -R] consistent.
 
-> BTW, iomap_dio_zero() is actually limited to one page, so it's not quite
-> "arbitrary sizes".
-
-Yup, but that's an implentation detail, not a design constraint.
-i.e. I typically review/talk about how stuff functions at a
-design/architecture level, not how it's been implemented in the
-code.
-
-e.g. block size > page size patches in progress make use of the
-"arbitrary length" capability of the design:
-
-https://lore.kernel.org/linux-xfs/20181107063127.3902-7-david@fromorbit.com/
-
-> iomap is used for other filesystem operations too, so we need to consider when
-> to actually do the limiting.  I don't think we should break up the extents
-> returned FS_IOC_FIEMAP, for example.  FIEMAP already has a defined behavior.
-> Also, it would be weird for the list of extents that FIEMAP returns to change
-> depending on whether the filesystem is mounted with '-o inlinecrypt' or not.
-
-We don't need to care about that in the iomap code. The caller
-controls the behaviour of the mapping callbacks themselves via
-the iomap_ops structure they pass into high level iomap functions.
-
-> That also avoids any confusion between pages and blocks, which is nice.
-
-FWIW, the latest version of the above patchset (which,
-co-incidentally, I was bring up to date yesterday) abstracts away
-page and block sizes. It introduces the concept of "chunk size"
-which is calculated from the combination of the current page's size
-and the current inode's block size.
-
-i.e. in the near future we are going to have both variable page
-sizes (on a per-page basis via Willy's current work) and per-inode
-blocks sizes smaller, the same and larger than the size of the
-current pager. Hence we need to get rid of any assumptions about
-page sizes and block sizes in the iomap code, not introduce new
-ones.
-
-Hence if there is any limitation of filesystem functionality based
-on block size vs page size, it is going to be up to the filesystem
-to detect and enforce those restrictions, not the iomap
-infrastructure.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Eric
