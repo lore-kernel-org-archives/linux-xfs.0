@@ -2,101 +2,109 @@ Return-Path: <SRS0=I6cU=BC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7D1DC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jul 2020 06:39:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DAEC433E3
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jul 2020 09:02:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7A0E20771
-	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jul 2020 06:39:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12BEE2071A
+	for <linux-xfs@archiver.kernel.org>; Thu, 23 Jul 2020 09:02:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NmevssvP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725774AbgGWGjX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jul 2020 02:39:23 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:6517 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725846AbgGWGjX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jul 2020 02:39:23 -0400
-X-IronPort-AV: E=Sophos;i="5.75,385,1589212800"; 
-   d="scan'208";a="96787303"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 23 Jul 2020 14:39:15 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id B53ED4CE505C;
-        Thu, 23 Jul 2020 14:39:10 +0800 (CST)
-Received: from [10.167.220.69] (10.167.220.69) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 23 Jul 2020 14:39:09 +0800
-Message-ID: <5F19308A.2060109@cn.fujitsu.com>
-Date:   Thu, 23 Jul 2020 14:39:06 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.2; zh-CN; rv:1.9.2.18) Gecko/20110616 Thunderbird/3.1.11
-MIME-Version: 1.0
+        id S1728145AbgGWJCk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jul 2020 05:02:40 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:47779 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728170AbgGWJCj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jul 2020 05:02:39 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1595494958;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=7wjk22UxoW0Cdbt+18K758jgjkgB2ArLGT31PqDWubI=;
+        b=NmevssvPqadY3EcM+wuiOrmFBDkWlAUJFIFB+pQfUyyNqn7jVbXX6E5RabYx9byYn7HOCY
+        Af4ZV4WDhMG+fs20eldpAx01WFlV8q6A7IYdR3bFHaUjrfmI3FVkQKjVekKvL2TGhhFkQA
+        HrY3qDw4+mOpEIhOR9j3ZOnMK2Z+iig=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-100-MmTV7nmcNXuvgrMRDH3oEw-1; Thu, 23 Jul 2020 05:02:36 -0400
+X-MC-Unique: MmTV7nmcNXuvgrMRDH3oEw-1
+Received: by mail-ej1-f69.google.com with SMTP id op28so2140844ejb.15
+        for <linux-xfs@vger.kernel.org>; Thu, 23 Jul 2020 02:02:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=7wjk22UxoW0Cdbt+18K758jgjkgB2ArLGT31PqDWubI=;
+        b=U8lPtEH+lE7FsuRfkZLjMG21w30boU+21M21Z6wJeVqINiIC/izhTgpZicuz6SNUxY
+         rG6RR1Q40mjHtGSOWVdM9Q1scx05nEZ0OdoWHPFCzht5AQzM0ozzihg595Cq06Xl34dY
+         rOuEYbDkH49gZ6GgLCBQkYa3gDnMIoA1wXgkvx9HVXIVQfzCNpWaBBE2TdKb5zdoJvDa
+         ieRBfQY7R2XogahfPOCsqmMJm76r8W3Ap/kgFOOf/Zx7HCbzaIuu101270jiJo3hgEef
+         gtH/zK25Ap7iCGtHML93h8t9Qb4ow9Ix6K6IrtyGY6D3tc9eBXqe9kkCB9BmsanRFR4j
+         wp8w==
+X-Gm-Message-State: AOAM533Om4BGcWq5IltNEz44q2zwS0PpiHGpStQSva1nle4KULrgj4Ik
+        OE05rp8I7IcZnaAQ7NPMzIbgLmnB0S8QZJbBTCk7bMOEhyBrTERDeK9s6APqKlY34c5s5AruQne
+        R/PxgTpU0WXM5YIVVCIE/
+X-Received: by 2002:a17:906:b353:: with SMTP id cd19mr3422354ejb.395.1595494954638;
+        Thu, 23 Jul 2020 02:02:34 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyn262LkLrTQxLi5LkdUlMInapey7MkXA3qgMwTcoxQoGee6P/WJDiBgUZZ5uhobLI+HTp6yQ==
+X-Received: by 2002:a17:906:b353:: with SMTP id cd19mr3422325ejb.395.1595494954198;
+        Thu, 23 Jul 2020 02:02:34 -0700 (PDT)
+Received: from eorzea (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id z101sm1657560ede.6.2020.07.23.02.02.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Jul 2020 02:02:33 -0700 (PDT)
+Date:   Thu, 23 Jul 2020 11:02:31 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     Christoph Hellwig <hch@infradead.org>
-CC:     <sandeen@sandeen.net>, <darrick.wong@oracle.com>,
-        <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] io/attr.c: Disallow specifying both -D and -R options
- for chattr command
-References: <20200723052723.30063-1-yangx.jy@cn.fujitsu.com> <20200723060850.GA14199@infradead.org>
-In-Reply-To: <20200723060850.GA14199@infradead.org>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.220.69]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206)
-X-yoursite-MailScanner-ID: B53ED4CE505C.AAF2A
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/5] xfs: Remove kmem_zone_alloc() usage
+Message-ID: <20200723090231.ulsyoikyzvfjo3mo@eorzea>
+Mail-Followup-To: Christoph Hellwig <hch@infradead.org>,
+        linux-xfs@vger.kernel.org
+References: <20200722090518.214624-1-cmaiolino@redhat.com>
+ <20200722090518.214624-2-cmaiolino@redhat.com>
+ <20200722141346.GA20266@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200722141346.GA20266@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/7/23 14:08, Christoph Hellwig wrote:
-> On Thu, Jul 23, 2020 at 01:27:23PM +0800, Xiao Yang wrote:
->> -D and -R options are mutually exclusive actually but chattr command
->> doesn't check it so that always applies -D option when both of them
->> are specified.  For example:
-> Looks good,
->
-> Reviewed-by: Christoph Hellwig<hch@lst.de>
-Hi,
+On Wed, Jul 22, 2020 at 03:13:46PM +0100, Christoph Hellwig wrote:
+> On Wed, Jul 22, 2020 at 11:05:14AM +0200, Carlos Maiolino wrote:
+> > -	/*
+> > -	 * if this didn't occur in transactions, we could use
+> > -	 * KM_MAYFAIL and return NULL here on ENOMEM. Set the
+> > -	 * code up to do this anyway.
+> > -	 */
+> > -	ip = kmem_zone_alloc(xfs_inode_zone, 0);
+> > -	if (!ip)
+> > -		return NULL;
+> > +	ip = kmem_cache_alloc(xfs_inode_zone, GFP_KERNEL | __GFP_NOFAIL);
+> > +
+> 
+> I would have kept a version of this comment.  But if this on your
+> radar for the next merge window anyway this should be ok:
 
-Ah,  I have a question after sending the patch:
-Other commands(e.g. cowextsize) including the same options seem to avoid 
-the issue by accepting the last option, as below:
---------------------------------------------------------
-io/cowextsize.c
-141         while ((c = getopt(argc, argv, "DR")) != EOF) {
-142                 switch (c) {
-143                 case 'D':
-144                         recurse_all = 0;
-145                         recurse_dir = 1;
-146                         break;
-147                 case 'R':
-148                         recurse_all = 1;
-149                         recurse_dir = 0;
-150                         break;
+I thought it makes no sense to keep the comment, and yes, I'll keep an eye on it
+and rework this as soon as we have PF_FSTRANS back.
 
-Test:
-# xfs_io -c "cowextsize -D -R" testdir
-[0] testdir/tdir
-[0] testdir/tfile
-[0] testdir
-[root@Fedora-31 ~]# xfs_io -c "cowextsize -R -D" testdir
-[0] testdir/tdir
-[0] testdir
---------------------------------------------------------
+Thanks for the review.
 
-Perhaps, we should use the same solution. (not sure) :-)
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> 
 
-Thanks,
-Xiao Yang
->
-> .
->
-
-
+-- 
+Carlos
 
