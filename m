@@ -6,153 +6,126 @@ X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B1DDC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 05:31:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2EDAC433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 05:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2311920714
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 05:31:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B78F920737
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 05:35:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725901AbgGXFbh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jul 2020 01:31:37 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:46979 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725860AbgGXFbh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 01:31:37 -0400
+        id S1726280AbgGXFfd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jul 2020 01:35:33 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:46430 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726277AbgGXFfc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 01:35:32 -0400
 Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 3E0F1D7ADE7;
-        Fri, 24 Jul 2020 15:31:32 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 247FBD5A713;
+        Fri, 24 Jul 2020 15:35:27 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1jyqIs-0003Xl-Rk; Fri, 24 Jul 2020 15:31:30 +1000
-Date:   Fri, 24 Jul 2020 15:31:30 +1000
+        id 1jyqMg-0003Y7-JZ; Fri, 24 Jul 2020 15:35:26 +1000
+Date:   Fri, 24 Jul 2020 15:35:26 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     Satya Tangirala <satyat@google.com>, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 3/7] iomap: support direct I/O with fscrypt using
- blk-crypto
-Message-ID: <20200724053130.GO2005@dread.disaster.area>
-References: <20200720233739.824943-1-satyat@google.com>
- <20200720233739.824943-4-satyat@google.com>
- <20200722211629.GE2005@dread.disaster.area>
- <20200722223404.GA76479@sol.localdomain>
- <20200723220752.GF2005@dread.disaster.area>
- <20200723230345.GB870@sol.localdomain>
- <20200724013910.GH2005@dread.disaster.area>
- <20200724034628.GC870@sol.localdomain>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v11 00/25] xfs: Delay Ready Attributes
+Message-ID: <20200724053526.GP2005@dread.disaster.area>
+References: <20200721001606.10781-1-allison.henderson@oracle.com>
+ <20200724034100.GN2005@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200724034628.GC870@sol.localdomain>
+In-Reply-To: <20200724034100.GN2005@dread.disaster.area>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
         a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8
-        a=qgdjzU_bvmtCALAiQDgA:9 a=abFM6lBaT0MdK4Jk:21 a=bpKwr00CVUWniEzF:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=wVkfdLxGgUcmzkAhm8wA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 23, 2020 at 08:46:28PM -0700, Eric Biggers wrote:
-> On Fri, Jul 24, 2020 at 11:39:10AM +1000, Dave Chinner wrote:
-> > fscrypt_inode_uses_inline_crypto() ends up being:
+On Fri, Jul 24, 2020 at 01:41:00PM +1000, Dave Chinner wrote:
+> On Mon, Jul 20, 2020 at 05:15:41PM -0700, Allison Collins wrote:
+> > Hi all,
 > > 
-> > 	if (IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode) &&
-> > 	    inode->i_crypt_info->ci_inlinecrypt)
+> > This set is a subset of a larger series for delayed attributes. Which is a
+> > subset of an even larger series, parent pointers. Delayed attributes allow
+> > attribute operations (set and remove) to be logged and committed in the same
+> > way that other delayed operations do. This allows more complex operations (like
+> > parent pointers) to be broken up into multiple smaller transactions. To do
+> > this, the existing attr operations must be modified to operate as either a
+> > delayed operation or a inline operation since older filesystems will not be
+> > able to use the new log entries.  This means that they cannot roll, commit, or
+> > finish transactions.  Instead, they return -EAGAIN to allow the calling
+> > function to handle the transaction. In this series, we focus on only the clean
+> > up and refactoring needed to accomplish this. We will introduce delayed attrs
+> > and parent pointers in a later set.
 > > 
-> > I note there are no checks for inode->i_crypt_info being non-null,
-> > and I note that S_ENCRYPTED is set on the inode when the on-disk
-> > encrypted flag is encountered, not when inode->i_crypt_info is set.
+> > At the moment, I would like people to focus their review efforts on just this
+> > "delay ready" subseries, as I think that is a more conservative use of peoples
+> > review time.  I also think the set is a bit much to manage all at once, and we
+> > need to get the infrastructure ironed out before we focus too much anything
+> > that depends on it. But I do have the extended series for folks that want to
+> > see the bigger picture of where this is going.
 > > 
+> > To help organize the set, I've arranged the patches to make sort of mini sets.
+> > I thought it would help reviewers break down the reviewing some. For reviewing
+> > purposes, the set could be broken up into 4 different phases:
+> > 
+> > Error code filtering (patches 1-2):
+> > These two patches are all about finding and catching error codes that need to
+> > be sent back up to user space before starting delayed operations.  Errors that
+> > happen during a delayed operation are treated like internal errors that cause a
+> > shutdown.  But we wouldnt want that for example: when the user tries to rename
+> > a non existent attr.  So the idea is that we need to find all such conditions,
+> > and take care of them before starting a delayed operation.
+> >    xfs: Add xfs_has_attr and subroutines
+> >    xfs: Check for -ENOATTR or -EEXIST
+> > 
+> > Move transactions upwards (patches 3-12): 
+> > The goal of this subset is to try and move all the transaction specific code up
+> > the call stack much as possible.  The idea being that once we get them to the
+> > top, we can introduce the statemachine to handle the -EAGAIN logic where ever
+> > the transactions used to be.
+> >   xfs: Factor out new helper functions xfs_attr_rmtval_set
+> >   xfs: Pull up trans handling in xfs_attr3_leaf_flipflags
+> >   xfs: Split apart xfs_attr_leaf_addname
+> >   xfs: Refactor xfs_attr_try_sf_addname
+> >   xfs: Pull up trans roll from xfs_attr3_leaf_setflag
+> >   xfs: Factor out xfs_attr_rmtval_invalidate
+> >   xfs: Pull up trans roll in xfs_attr3_leaf_clearflag
+> >   xfs: Refactor xfs_attr_rmtval_remove
+> >   xfs: Pull up xfs_attr_rmtval_invalidate
+> >   xfs: Add helper function xfs_attr_node_shrink
+> > 
+> > Modularizing and cleanups (patches 13-22):
+> > Now that we have pulled the transactions up to where we need them, it's time to
+> > start breaking down the top level functions into new subfunctions. The goal
+> > being to work towards a top level function that deals mostly with the
+> > statemachine, and helpers for those states
+> >   xfs: Remove unneeded xfs_trans_roll_inode calls
+> >   xfs: Remove xfs_trans_roll in xfs_attr_node_removename
+> >   xfs: Add helpers xfs_attr_is_shortform and xfs_attr_set_shortform
+> >   xfs: Add helper function xfs_attr_leaf_mark_incomplete
+> >   xfs: Add remote block helper functions
+> >   xfs: Add helper function xfs_attr_node_removename_setup
+> >   xfs: Add helper function xfs_attr_node_removename_rmt
+> >   xfs: Simplify xfs_attr_leaf_addname
+> >   xfs: Simplify xfs_attr_node_addname
+> >   xfs: Lift -ENOSPC handler from xfs_attr_leaf_addname
 > 
-> ->i_crypt_info is set when the file is opened, so it's guaranteed to be set for
-> any I/O.  So the case you're concerned about just doesn't happen.
+> I'm happy to see everything up to here merged.
 
-Ok. The connection is not obvious to someone who doesn't know the
-fscrypt code inside out.
+BTW, that translates as:
 
-> > > Note that currently, I don't think iomap_dio_bio_actor() would handle an
-> > > encrypted file with blocksize > PAGE_SIZE correctly, as the I/O could be split
-> > > in the middle of a filesystem block (even after the filesystem ensures that
-> > > direct I/O on encrypted files is fully filesystem-block-aligned, which we do ---
-> > > see the rest of this patchset), which isn't allowed on encrypted files.
-> > 
-> > That can already happen unless you've specifically restricted DIO
-> > alignments in the filesystem code. i.e. Direct IO already supports
-> > sub-block ranges and alignment, and we can already do user DIO on
-> > sub-block, sector aligned ranges just fine. And the filesystem can
-> > already split the iomap on sub-block alignments and ranges if it
-> > needs to because the iomap uses byte range addressing, not sector or
-> > block based addressing.
-> > 
-> > So either you already have a situation where the 2^32 offset can
-> > land *inside* a filesystem block, or the offset is guaranteed to be
-> > filesystem block aligned and so you'll never get this "break an IO
-> > on sub-block alignment" problem regardless of the filesystem block
-> > size...
-> > 
-> > Either way, it's not an iomap problem - it's a filesystem mapping
-> > problem...
-> > 
-> 
-> I think you're missing the point here.  Currently, the granularity of encryption
-> (a.k.a. "data unit size") is always filesystem blocks, so that's the minimum we
-> can directly read or write to an encrypted file.  This has nothing to do with
-> the IV wraparound case also being discussed.
+Acked-by: Dave Chinner <dchinner@redhat.com>
 
-So when you change the subject, please make it *really obvious* so
-that people don't think you are still talking about the same issue.
+For the first 22 patches.
 
-> For example, changing a single bit in the plaintext of a filesystem block may
-> result in the entire block's ciphertext changing.  (The exact behavior depends
-> on the cryptographic algorithm that is used.)
-> 
-> That's why this patchset makes ext4 only allow direct I/O on encrypted files if
-> the I/O is fully filesystem-block-aligned.  Note that this might be a more
-> strict alignment requirement than the bdev_logical_block_size().
-> 
-> As long as the iomap code only issues filesystem-block-aligned bios, *given
-> fully filesystem-block-aligned inputs*, we're fine.  That appears to be the case
-> currently.
-
-The actual size and shape of the bios issued by direct IO (both old
-code and newer iomap code) is determined by the user supplied iov,
-the size of the biovec array allocated in the bio, and the IO
-constraints of the underlying hardware.  Hence direct IO does not
-guarantee alignment to anything larger than the underlying block
-device logical sector size because there's no guarantee when or
-where a bio will fill up.
-
-To guarantee alignment of what ends up at the hardware, you have to
-set the block device parameters (e.g. logical sector size)
-appropriately all the way down the stack. You also need to ensure
-that the filesystem is correctly aligned on the block device so that
-filesystem blocks don't overlap things like RAID stripe boundaires,
-linear concat boundaries, etc.
-
-IOWs, to constrain alignment in the IO path, you need to configure
-you system correct so that the information provided to iomap for IO
-alignment matches your requirements. This is not somethign iomap can
-do itself; everything from above needs to be constrained by the
-filesystem using iomap, everything sent below by iomap is
-constrained by the block device config.
-
-> (It's possible that in the future we'll support other encryption data unit
-> sizes, perhaps powers of 2 from 512 to filesystem block size.  But for now the
-> filesystem block size has been good enough for everyone,
-
-Not the case. fscrypt use in enterprise environments needs support
-for block size < page size so that it can be deployed on 64kB page
-size machines without requiring 64kB filesystem block sizes.
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
