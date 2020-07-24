@@ -2,29 +2,30 @@ Return-Path: <SRS0=Yx8G=BD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 736CCC433E3
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 19:05:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9377CC433E3
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 19:08:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 585EF2070E
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 19:05:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DC88206F0
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 19:08:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726553AbgGXTFf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jul 2020 15:05:35 -0400
-Received: from sandeen.net ([63.231.237.45]:55418 "EHLO sandeen.net"
+        id S1726736AbgGXTI0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jul 2020 15:08:26 -0400
+Received: from sandeen.net ([63.231.237.45]:55570 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726416AbgGXTFf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Jul 2020 15:05:35 -0400
+        id S1726381AbgGXTIZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Jul 2020 15:08:25 -0400
 Received: from Liberator.local (c-71-237-195-212.hsd1.or.comcast.net [71.237.195.212])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 3F7234D1BA2
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2020 14:04:51 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id 0A3D34CDD35;
+        Fri, 24 Jul 2020 14:07:40 -0500 (CDT)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
 From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [DEVEL] libxfs update timing for xfsprogs 5.8.0
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -67,104 +68,30 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfsprogs v5.7.0 released
-Message-ID: <6c56d6aa-d3b9-92af-4137-b812172505bd@sandeen.net>
-Date:   Fri, 24 Jul 2020 12:05:31 -0700
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>
+Message-ID: <1088d142-1e80-aaac-62eb-2b01f0fc9c63@sandeen.net>
+Date:   Fri, 24 Jul 2020 12:08:21 -0700
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="o0EiM4XYYc2gerHlXOkSUiDQfIMpdt7lF"
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---o0EiM4XYYc2gerHlXOkSUiDQfIMpdt7lF
-Content-Type: multipart/mixed; boundary="HuzjHMgHyuZLuFys9rDiDw9Xph1cGPlRV"
+At one point there was a little discussion about whether it might
+be better to defer libxfs/ syncing to later in the release, rather
+than doing it at the beginning.  I'm happy to do it either way.
 
---HuzjHMgHyuZLuFys9rDiDw9Xph1cGPlRV
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Do we have a preference for 5.8.0, would one be better than the other
+for anyone working on major xfsprogs updates?
 
-Hi folks,
+(Darrick probably already has his work staged on top of a libxfs
+sync, so there's that ...)
 
-xfsprogs v5.7.0 has been released, and the xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-Tarballs are available at:
-
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.7.0.tar=
-=2Egz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.7.0.tar=
-=2Exz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.7.0.tar=
-=2Esign
-
-The new head of the master branch is commit:
-
-97194e73 (HEAD -> guilt/for-next, tag: v5.7.0, refs/patches/for-next/5.7.=
-0) xfsprogs: Release v5.7.0
-
-Abbreviated changelog:
-
-xxfsprogs-5.7.0 (24 Jul 2020)
-        - xfs_io: Document '-q' option for sendfile command (Xiao Yang)
-
-xfsprogs-5.7.0-rc1 (15 Jul 2020)
-        - remove libreadline support (Christoph Hellwig)
-        - xfs_quota: allow individual timer extension (Eric Sandeen)
-        - xfs_quota: fix unsigned int id comparisons (Darrick Wong)
-        - xfs_repair: fix progress reporting (Eric Sandeen)
-        - xfs_repair: fix minrecs error during phase5 btree rebuild (Gao =
-Xiang)
-        - xfs_repair: add missing validations to match xfs_check (Darrick=
- Wong)
-        - xfs_repair: use btree bulk loading (Darrick Wong)
-        - xfs_io: fix copy_range argument parsing (Eric Sandeen)
-        - xfs_io: document -q option for pread/pwrite command (Xiao Yang)=
-
-        - xfs_metadump: man page fixes (Kaixu Xia)
-        - xfs_db: fix crc invalidation segfault (Anthony Iliopoulos)
-
-xfsprogs-5.7.0-rc0 (07 May 2020)
-        - libxfs changes merged from kernel 5.7
-
-Thanks,
 -Eric
-
-
-
---HuzjHMgHyuZLuFys9rDiDw9Xph1cGPlRV--
-
---o0EiM4XYYc2gerHlXOkSUiDQfIMpdt7lF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl8bMPsACgkQIK4WkuE9
-3uArMRAAyHYHro674gM3cTqI9b4bHHIzppqI193+DVG361RZ7xKTXNjOk9rLbE8o
-WJvq5Qfadb3xISz9zanPaw6f6i2//n4wX4teHelBTFw4YmUGKA/VAot3tXRNvkcj
-0NfWNDSWHkYCCLoVxe9YdZVsOlH5HVsqbJkp7wGcTR3cYksqTtFxJp9CvOSgYvcy
-UBvbybr9p/DUnI3TUp5VmhyG048DCEgY4DAD86bg37jlRYNPWx1bYSFtUeYIugzU
-rSNpc/Z8f5vQo1FpPDjuOxVTQoAv/YQSn7PXY9VksAObDuIm11xwuvDBr/PUds7l
-6Z0XKfCbgSh26F78g/4JDM6jpM1O2jD0MGRlL82Vl1rtBK8fdscdCsZDzA8vO2pF
-lkkskw53Z596IC/J0+6upoyfHPl+n8lbMoJOJVp5o83lLVbrxxcQX44dyHnuAc7U
-RfO1oyUaLfHHtLI8A/GoGZ3MZAjhcr9S+X29oeC8l6bJv2RrkbFtAOgZ6yZ6whIb
-onXxhWPWynzIVnHmb49F2JWpWr6hwUgavy2JHxeA5SY7Mnpz9gnLFaEC6RZckpNy
-WUwhzkR2259vaFQugHWYIsMzgUfcCkhoZznI71iEM4kFntYW1GgMY0RCzJOJ5OdH
-hbSGtKsY+fbXZAIWKvAh3koxRr7kSmuTEta8z9GS0c5YG+j0S6M=
-=HA+p
------END PGP SIGNATURE-----
-
---o0EiM4XYYc2gerHlXOkSUiDQfIMpdt7lF--
