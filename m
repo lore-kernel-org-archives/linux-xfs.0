@@ -2,107 +2,171 @@ Return-Path: <SRS0=Yx8G=BD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9752C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 01:09:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C814C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 01:39:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CE6D206E3
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 01:09:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E62020737
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 01:39:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726284AbgGXBJF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 23 Jul 2020 21:09:05 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:33412 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726259AbgGXBJF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jul 2020 21:09:05 -0400
-X-IronPort-AV: E=Sophos;i="5.75,388,1589212800"; 
-   d="scan'208";a="96838722"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 24 Jul 2020 09:09:02 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id CD5A64CE4BD9;
-        Fri, 24 Jul 2020 09:09:01 +0800 (CST)
-Received: from [10.167.220.69] (10.167.220.69) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 24 Jul 2020 09:09:01 +0800
-Message-ID: <5F1A34AC.8080505@cn.fujitsu.com>
-Date:   Fri, 24 Jul 2020 09:09:00 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.2; zh-CN; rv:1.9.2.18) Gecko/20110616 Thunderbird/3.1.11
+        id S1726567AbgGXBjR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 23 Jul 2020 21:39:17 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:38731 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726381AbgGXBjR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 23 Jul 2020 21:39:17 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 71C7F366291;
+        Fri, 24 Jul 2020 11:39:12 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jymg2-00028i-T8; Fri, 24 Jul 2020 11:39:10 +1000
+Date:   Fri, 24 Jul 2020 11:39:10 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Satya Tangirala <satyat@google.com>, linux-fscrypt@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 3/7] iomap: support direct I/O with fscrypt using
+ blk-crypto
+Message-ID: <20200724013910.GH2005@dread.disaster.area>
+References: <20200720233739.824943-1-satyat@google.com>
+ <20200720233739.824943-4-satyat@google.com>
+ <20200722211629.GE2005@dread.disaster.area>
+ <20200722223404.GA76479@sol.localdomain>
+ <20200723220752.GF2005@dread.disaster.area>
+ <20200723230345.GB870@sol.localdomain>
 MIME-Version: 1.0
-To:     Eric Sandeen <sandeen@sandeen.net>
-CC:     Christoph Hellwig <hch@infradead.org>, <darrick.wong@oracle.com>,
-        <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] io/attr.c: Disallow specifying both -D and -R options
- for chattr command
-References: <20200723052723.30063-1-yangx.jy@cn.fujitsu.com> <20200723060850.GA14199@infradead.org> <5F19308A.2060109@cn.fujitsu.com> <86314935-eeb9-3c8a-5d64-7db8b36ce43d@sandeen.net>
-In-Reply-To: <86314935-eeb9-3c8a-5d64-7db8b36ce43d@sandeen.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.220.69]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206)
-X-yoursite-MailScanner-ID: CD5A64CE4BD9.AC667
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200723230345.GB870@sol.localdomain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=Sl42X8Ll_owcVs_SU54A:9 a=GBvlyDy58HXx1nsP:21 a=b1TFODAEc1PeXSa0:21
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/7/24 6:15, Eric Sandeen wrote:
-> On 7/22/20 11:39 PM, Xiao Yang wrote:
->> On 2020/7/23 14:08, Christoph Hellwig wrote:
->>> On Thu, Jul 23, 2020 at 01:27:23PM +0800, Xiao Yang wrote:
->>>> -D and -R options are mutually exclusive actually but chattr command
->>>> doesn't check it so that always applies -D option when both of them
->>>> are specified.  For example:
->>> Looks good,
->>>
->>> Reviewed-by: Christoph Hellwig<hch@lst.de>
->> Hi,
->>
->> Ah,  I have a question after sending the patch:
->> Other commands(e.g. cowextsize) including the same options seem to avoid the issue by accepting the last option, as below:
->> --------------------------------------------------------
->> io/cowextsize.c
->> 141         while ((c = getopt(argc, argv, "DR")) != EOF) {
->> 142                 switch (c) {
->> 143                 case 'D':
->> 144                         recurse_all = 0;
->> 145                         recurse_dir = 1;
->> 146                         break;
->> 147                 case 'R':
->> 148                         recurse_all = 1;
->> 149                         recurse_dir = 0;
->> 150                         break;
-> Yep, I meant to look at this but hadn't gotten to it yet.  These should all
-> be consistent, and I tend to agree with Dave that explicitly conflicting
-> incompatible options and erroring out is better than silently accepting
-> the last one specified.
->
-> And indeed help specifies that they are exclusive:
->
->          cowextsize_cmd.args = _("[-D | -R] [cowextsize]");
->
-> It'd be great if you want to send a V2 that makes the behavior (and
-> documentation) of any/all commands that accept [-D | -R] consistent.
-Hi Eric, Dave
+On Thu, Jul 23, 2020 at 04:03:45PM -0700, Eric Biggers wrote:
+> Hi Dave,
+> 
+> On Fri, Jul 24, 2020 at 08:07:52AM +1000, Dave Chinner wrote:
+> > > > > @@ -183,11 +184,16 @@ static void
+> > > > >  iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+> > > > >  		unsigned len)
+> > > > >  {
+> > > > > +	struct inode *inode = file_inode(dio->iocb->ki_filp);
+> > > > >  	struct page *page = ZERO_PAGE(0);
+> > > > >  	int flags = REQ_SYNC | REQ_IDLE;
+> > > > >  	struct bio *bio;
+> > > > >  
+> > > > >  	bio = bio_alloc(GFP_KERNEL, 1);
+> > > > > +
+> > > > > +	/* encrypted direct I/O is guaranteed to be fs-block aligned */
+> > > > > +	WARN_ON_ONCE(fscrypt_needs_contents_encryption(inode));
+> > > > 
+> > > > Which means you are now placing a new constraint on this code in
+> > > > that we cannot ever, in future, zero entire blocks here.
+> > > > 
+> > > > This code can issue arbitrary sized zeroing bios - multiple entire fs blocks
+> > > > blocks if necessary - so I think constraining it to only support
+> > > > partial block zeroing by adding a warning like this is no correct.
+> > > 
+> > > In v3 and earlier this instead had the code to set an encryption context:
+> > > 
+> > > 	fscrypt_set_bio_crypt_ctx(bio, inode, pos >> inode->i_blkbits,
+> > > 				  GFP_KERNEL);
+> > > 
+> > > Would you prefer that, even though the call to fscrypt_set_bio_crypt_ctx() would
+> > 
+> > Actually, I have no idea what that function does. It's not in a
+> > 5.8-rc6 kernel, and it's not in this patchset....
+> 
+> The cover letter mentions that this patchset is based on fscrypt/master.
 
-Thanks for your suggestions.
-I will send v2 patch to make the behavior consistent.
+Which the reader is left to work out where it exists. If you are
+going to say "based on", then a pointer to the actual tree like
+this:
 
-Thanks,
-Xiao Yang
-> Thanks,
-> -Eric
->
->
-> .
->
+> That is, "master" of https://git.kernel.org/pub/scm/fs/fscrypt/fscrypt.git
 
+is somewhat helpful.
 
+> fscrypt_set_bio_crypt_ctx() was introduced by
+> "fscrypt: add inline encryption support" on that branch.
 
+Way too much static inline function abstraction.
+
+fscrypt_inode_uses_inline_crypto() ends up being:
+
+	if (IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode) &&
+	    inode->i_crypt_info->ci_inlinecrypt)
+
+I note there are no checks for inode->i_crypt_info being non-null,
+and I note that S_ENCRYPTED is set on the inode when the on-disk
+encrypted flag is encountered, not when inode->i_crypt_info is set.
+
+Further, I note that the local variable for ci is fetched before
+fscrypt_inode_uses_inline_crypto() is run, so leaving a landmine for
+people who try to access ci before checking if inline crypto is
+enabled. Or, indeed, if S_ENCRYPTED is set and the crypt_info has
+not been set up, fscrypt_set_bio_crypt_ctx() will oops in the DIO
+path.
+
+> > > always be a no-op currently (since for now, iomap_dio_zero() will never be
+> > > called with an encrypted file) and thus wouldn't be properly tested?
+> > 
+> > Same can be said for this WARN_ON_ONCE() code :)
+> > 
+> > But, in the interests of not leaving landmines, if a fscrypt context
+> > is needed to be attached to the bio for data IO in direct IO, it
+> > should be attached to all bios that are allocated in the dio path
+> > rather than leave a landmine for people in future to trip over.
+> 
+> My concern is that if we were to pass the wrong 'lblk' to
+> fscrypt_set_bio_crypt_ctx(), we wouldn't catch it because it's not tested.
+> Passing the wrong 'lblk' would cause the data to be encrypted/decrypted
+> incorrectly.
+
+When you implement sub-block DIO alignment for fscrypt enabled
+filesystems, fsx will tell you pretty quickly if you screwed up....
+
+> Note that currently, I don't think iomap_dio_bio_actor() would handle an
+> encrypted file with blocksize > PAGE_SIZE correctly, as the I/O could be split
+> in the middle of a filesystem block (even after the filesystem ensures that
+> direct I/O on encrypted files is fully filesystem-block-aligned, which we do ---
+> see the rest of this patchset), which isn't allowed on encrypted files.
+
+That can already happen unless you've specifically restricted DIO
+alignments in the filesystem code. i.e. Direct IO already supports
+sub-block ranges and alignment, and we can already do user DIO on
+sub-block, sector aligned ranges just fine. And the filesystem can
+already split the iomap on sub-block alignments and ranges if it
+needs to because the iomap uses byte range addressing, not sector or
+block based addressing.
+
+So either you already have a situation where the 2^32 offset can
+land *inside* a filesystem block, or the offset is guaranteed to be
+filesystem block aligned and so you'll never get this "break an IO
+on sub-block alignment" problem regardless of the filesystem block
+size...
+
+Either way, it's not an iomap problem - it's a filesystem mapping
+problem...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
