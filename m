@@ -2,141 +2,184 @@ Return-Path: <SRS0=Yx8G=BD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D6FCC43467
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 18:25:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A00DC43617
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 18:25:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B40120748
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 18:25:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A1FF206F0
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 18:25:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="J/8zD0cl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727843AbgGXSY7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jul 2020 14:24:59 -0400
-Received: from sandeen.net ([63.231.237.45]:53486 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727089AbgGXSY6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Jul 2020 14:24:58 -0400
-Received: from Liberator.local (c-71-237-195-212.hsd1.or.comcast.net [71.237.195.212])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 2F8A94CDD35;
-        Fri, 24 Jul 2020 13:24:13 -0500 (CDT)
-Subject: Re: [PATCH] xfs_io: Document '-q' option for sendfile command
-To:     Xiao Yang <yangx.jy@cn.fujitsu.com>, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-References: <20200722051507.13322-1-yangx.jy@cn.fujitsu.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <0b425e96-ba93-d0ea-e526-d345dc0de8aa@sandeen.net>
-Date:   Fri, 24 Jul 2020 11:24:54 -0700
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.10.0
+        id S1727060AbgGXSYm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jul 2020 14:24:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55802 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727058AbgGXSYl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 14:24:41 -0400
+Received: from mail-qk1-x744.google.com (mail-qk1-x744.google.com [IPv6:2607:f8b0:4864:20::744])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1A12C0619E4
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2020 11:24:40 -0700 (PDT)
+Received: by mail-qk1-x744.google.com with SMTP id l64so2697549qkb.8
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2020 11:24:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=3Ie5Y5jakC2TFYwvUbZ4AezHADKbOSAGoe2GqVmVxQg=;
+        b=J/8zD0clhD+RVPBhfuu6n3aDk34xjG3G2KT7+4IkbmjawUxqIMUwBx65PcUOHaOIkX
+         oI1Sdn0qS+Lt+BST2Qr0oP8vDDo4TBRPd220V/Lp+KF/xKk/jgtUiFtoxAskajrs77df
+         TlMlSOIwv4m9vTr1I+1cgHOb4k/v9MYCvEIzbthmYw016OpXfwddDb8DC5D49xN2bxVA
+         nC/HY1vs4dQJw8EWZqRv2W+xkqEJChNK7sKcx0BNNMihdz6PBw7bblcCv+R9Sp2Znk+j
+         o/DQrrJ/RxALmlHx6mn6R1ogpPSFbfU9wjGjZI3cfV6adS97zSB8rOMD1tExxP1DHiav
+         9mlg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=3Ie5Y5jakC2TFYwvUbZ4AezHADKbOSAGoe2GqVmVxQg=;
+        b=bMB0eV7YxiBuUMEt7JD6w3FLHRW1Nbnex60sgSZtMZK9U1KbenHM8WQGHUj6jon+tH
+         hgUUutO/hbBc+M8lPgq88bRchojIMgbh0vle2XMfBFhXFIYv2ZMMk+F1gCVYDoR6avW3
+         DKpGKjM1vd245rNmpoxG1USowt+EmHmaTMWMIjFTTfZTAfkMAq/BP8on8DHKlMSZw0VK
+         89tpoT3Es2DmZBEIDo/qaGoJnUMbXabTkoKUaRsucACY8/2eO/7Afu4hfcxYxzwDX8Fy
+         rRidllAQBgCmtcgpYvXX0QJ0xLmGsJLCSl3rWNzpd2SG9fcKzy5S0mciAo+6L7lMfnD/
+         ajZw==
+X-Gm-Message-State: AOAM530qzg3RUcTK8n1spPKzJvmATWRiU0c11pzeAV7ZeR+RsRsksMzz
+        X2J+L8NUXPB0J8YtBQ/fO2ZHNbNfy3VKvg==
+X-Google-Smtp-Source: ABdhPJyOoDWvRTYYGd9EiZWjC7o3snsGBi2o0muewXUaL4FerT4fhL0bqh+y3QkRXVoIfrJA6+Slow==
+X-Received: by 2002:a37:9205:: with SMTP id u5mr1958494qkd.327.1595615079736;
+        Fri, 24 Jul 2020 11:24:39 -0700 (PDT)
+Received: from lca.pw (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
+        by smtp.gmail.com with ESMTPSA id c22sm7634469qke.2.2020.07.24.11.24.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jul 2020 11:24:39 -0700 (PDT)
+Date:   Fri, 24 Jul 2020 14:24:32 -0400
+From:   Qian Cai <cai@lca.pw>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     darrick.wong@oracle.com, hch@infradead.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, khlebnikov@yandex-team.ru
+Subject: Re: WARN_ON_ONCE(1) in iomap_dio_actor()
+Message-ID: <20200724182431.GA4871@lca.pw>
+References: <20200619211750.GA1027@lca.pw>
+ <20200620001747.GC8681@bombadil.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20200722051507.13322-1-yangx.jy@cn.fujitsu.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200620001747.GC8681@bombadil.infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/21/20 10:15 PM, Xiao Yang wrote:
-> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  io/sendfile.c     | 3 ++-
->  man/man8/xfs_io.8 | 6 +++++-
->  2 files changed, 7 insertions(+), 2 deletions(-)
+On Fri, Jun 19, 2020 at 05:17:47PM -0700, Matthew Wilcox wrote:
+> On Fri, Jun 19, 2020 at 05:17:50PM -0400, Qian Cai wrote:
+> > Running a syscall fuzzer by a normal user could trigger this,
+> > 
+> > [55649.329999][T515839] WARNING: CPU: 6 PID: 515839 at fs/iomap/direct-io.c:391 iomap_dio_actor+0x29c/0x420
+> ...
+> > 371 static loff_t
+> > 372 iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+> > 373                 void *data, struct iomap *iomap, struct iomap *srcmap)
+> > 374 {
+> > 375         struct iomap_dio *dio = data;
+> > 376
+> > 377         switch (iomap->type) {
+> > 378         case IOMAP_HOLE:
+> > 379                 if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
+> > 380                         return -EIO;
+> > 381                 return iomap_dio_hole_actor(length, dio);
+> > 382         case IOMAP_UNWRITTEN:
+> > 383                 if (!(dio->flags & IOMAP_DIO_WRITE))
+> > 384                         return iomap_dio_hole_actor(length, dio);
+> > 385                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
+> > 386         case IOMAP_MAPPED:
+> > 387                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
+> > 388         case IOMAP_INLINE:
+> > 389                 return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
+> > 390         default:
+> > 391                 WARN_ON_ONCE(1);
+> > 392                 return -EIO;
+> > 393         }
+> > 394 }
+> > 
+> > Could that be iomap->type == IOMAP_DELALLOC ? Looking throught the logs,
+> > it contains a few pread64() calls until this happens,
 > 
-> diff --git a/io/sendfile.c b/io/sendfile.c
-> index ff012c81..a003bb55 100644
-> --- a/io/sendfile.c
-> +++ b/io/sendfile.c
-> @@ -25,6 +25,7 @@ sendfile_help(void)
->  " Copies data between one file descriptor and another.  Because this copying\n"
->  " is done within the kernel, sendfile does not need to transfer data to and\n"
->  " from user space.\n"
-> +" -q -- quiet mode, do not write anything to standard output.\n"
->  " -f -- specifies an input file from which to source data to write\n"
->  " -i -- specifies an input file name from which to source data to write.\n"
->  " An offset and length in the source file can be optionally specified.\n"
-> @@ -168,7 +169,7 @@ sendfile_init(void)
->  	sendfile_cmd.argmax = -1;
->  	sendfile_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
->  	sendfile_cmd.args =
-> -		_("-i infile | -f N [off len]");
-> +		_("[-q] -i infile | -f N [off len]");
->  	sendfile_cmd.oneline =
->  		_("Transfer data directly between file descriptors");
->  	sendfile_cmd.help = sendfile_help;
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index d3eb3e7e..caf3f15c 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -541,13 +541,17 @@ manual page to allocate and zero blocks within the range.
->  Truncates the current file at the given offset using
->  .BR ftruncate (2).
->  .TP
-> -.BI "sendfile \-i " srcfile " | \-f " N " [ " "offset length " ]
-> +.BI "sendfile [ \-q ] \-i " srcfile " | \-f " N " [ " "offset length " ]
->  On platforms which support it, allows a direct in-kernel copy between
->  two file descriptors. The current open file is the target, the source
->  must be specified as another open file
->  .RB ( \-f )
->  or by path
->  .RB ( \-i ).
-> +.RS 1.0i
-> +.B \-q
-> +quiet mode, do not write anything to standard output.
-> +.RE
->  .TP
->  .BI "readdir [ -v ] [ -o " offset " ] [ -l " length " ] "
->  Read a range of directory entries from a given offset of a directory.
+> It _shouldn't_ be able to happen.  XFS writes back ranges which exist
+> in the page cache upon seeing an O_DIRECT I/O.  So it's not supposed to
+> be possible for there to be an extent which is waiting for the contents
+> of the page cache to be written back.
+
+Okay, it is IOMAP_DELALLOC. We have,
+
+[11746.454628][T431855] Page cache invalidation failure on direct I/O.  Possible data corruption due to collision with buffered I/O!
+[11746.466345][T431855] File: /tmp/trinity-testfile2 (deleted) PID: 431855 Comm: trinity-c54
+[11746.474608][T431855] iomap->type = 1, iomap->flags = 2, iomap->length = 2031616
+
+I noticed the commit 5a9d929d6e13 ("iomap: report collisions between directio
+and buffered writes to userspace") started to convert those WARN_ON_ONCE() to
+dio_warn_stale_pagecache() indicating that those to be triggered by userspace
+programs, so this looks like just another missing place to convert? Apparently,
+we don't want non-root users to be able to trigger this warning and kernel
+tainted. This?
+
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index ec7b78e6feca..7f49292df420 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -388,7 +388,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+        case IOMAP_INLINE:
+                return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
+        default:
+-               WARN_ON_ONCE(1);
++               dio_warn_stale_pagecache(dio->iocb->ki_filp);
+                return -EIO;
+        }
+ }
+
 > 
+> > [child21:124180] [17] pread64(fd=353, buf=0x0, count=0x59b5, pos=0xe0e0e0e) = -1 (Illegal seek)
+> > [child21:124180] [339] pread64(fd=339, buf=0xffffbcc40000, count=0xbd71, pos=0xff26) = -1 (Illegal seek)
+> > [child21:124627] [136] pread64(fd=69, buf=0xffffbd290000, count=0xee42, pos=2) = -1 (Illegal seek)
+> > [child21:124627] [196] pread64(fd=83, buf=0x1, count=0x62f8, pos=0x15390000) = -1 (Illegal seek)
+> > [child21:125127] [154] pread64(fd=345, buf=0xffffbcc40000, count=9332, pos=0xffbd) = 9332
+> > [child21:125169] [188] pread64(fd=69, buf=0xffffbce90000, count=0x4d47, pos=0) = -1 (Illegal seek)
+> > [child21:125169] [227] pread64(fd=345, buf=0x1, count=0xe469, pos=1046) = -1 (Bad address)
+> > [child21:125569] [354] pread64(fd=87, buf=0xffffbcc50000, count=0x4294, pos=0x16161616) = -1 (Illegal seek)
+> > [child21:125569] [655] pread64(fd=341, buf=0xffffbcc70000, count=2210, pos=0xffff) = -1 (Illegal seek)
+> > [child21:125569] [826] pread64(fd=343, buf=0x8, count=0xeb22, pos=0xc090c202e598b) = 0
+> > [child21:126233] [261] pread64(fd=338, buf=0xffffbcc40000, count=0xe8fe, pos=105) = -1 (Illegal seek)
+> > [child21:126233] [275] pread64(fd=190, buf=0x8, count=0x9c24, pos=116) = -1 (Is a directory)
+> > [child21:126882] [32] pread64(fd=86, buf=0xffffbcc40000, count=0x7fc2, pos=2) = -1 (Illegal seek)
+> > [child21:127448] [14] pread64(fd=214, buf=0x4, count=11371, pos=0x9b26) = 0
+> > [child21:127489] [70] pread64(fd=339, buf=0xffffbcc70000, count=0xb07a, pos=8192) = -1 (Illegal seek)
+> > [child21:127489] [80] pread64(fd=339, buf=0x0, count=6527, pos=205) = -1 (Illegal seek)
+> > [child21:127489] [245] pread64(fd=69, buf=0x8, count=0xbba2, pos=47) = -1 (Illegal seek)
+> > [child21:128098] [334] pread64(fd=353, buf=0xffffbcc90000, count=0x4540, pos=168) = -1 (Illegal seek)
+> > [child21:129079] [157] pread64(fd=422, buf=0x0, count=0x80df, pos=0xdfef6378b650aa) = 0
+> > [child21:134700] [275] pread64(fd=397, buf=0xffffbcc50000, count=0xdee6, pos=0x887b1e74a2) = -1 (Illegal seek)
+> > [child21:135042] [7] pread64(fd=80, buf=0x8, count=0xc494, pos=216) = -1 (Illegal seek)
+> > [child21:135056] [188] pread64(fd=430, buf=0xffffbd090000, count=0xbe66, pos=0x3a3a3a3a) = -1 (Illegal seek)
+> > [child21:135442] [143] pread64(fd=226, buf=0xffffbd390000, count=11558, pos=0x1000002d) = 0
+> > [child21:135513] [275] pread64(fd=69, buf=0x4, count=4659, pos=0x486005206c2986) = -1 (Illegal seek)
+> > [child21:135513] [335] pread64(fd=339, buf=0xffffbd090000, count=0x90fd, pos=253) = -1 (Illegal seek)
+> > [child21:135513] [392] pread64(fd=76, buf=0xffffbcc40000, count=0xf324, pos=0x5d5d5d5d) = -1 (Illegal seek)
+> > [child21:135665] [5] pread64(fd=431, buf=0xffffbcc70000, count=10545, pos=16384) = -1 (Illegal seek)
+> > [child21:135665] [293] pread64(fd=349, buf=0x4, count=0xd2ad, pos=0x2000000) = -1 (Illegal seek)
+> > [child21:135790] [99] pread64(fd=76, buf=0x8, count=0x70d7, pos=0x21000440) = -1 (Illegal seek)
+> > [child21:135790] [149] pread64(fd=70, buf=0xffffbd5b0000, count=0x53f3, pos=255) = -1 (Illegal seek)
+> > [child21:135790] [301] pread64(fd=348, buf=0x4, count=5713, pos=0x6c00401a) = -1 (Illegal seek)
+> > [child21:136162] [570] pread64(fd=435, buf=0x1, count=11182, pos=248) = -1 (Illegal seek)
+> > [child21:136162] [584] pread64(fd=78, buf=0xffffbcc40000, count=0xa401, pos=8192) = -1 (Illegal seek)
+> > [child21:138090] [167] pread64(fd=339, buf=0x4, count=0x6aba, pos=256) = -1 (Illegal seek)
+> > [child21:138090] [203] pread64(fd=348, buf=0xffffbcc90000, count=0x8625, pos=128) = -1 (Illegal seek)
+> > [child21:138551] [174] pread64(fd=426, buf=0x0, count=0xd582, pos=0xd7e8674d0a86) = 0
+> > [child21:138551] [179] pread64(fd=426, buf=0xffffbce90000, count=0x415a, pos=0x536e873600750b2d) = 0
+> > [child21:138988] [306] pread64(fd=436, buf=0x8, count=0x62e6, pos=0x445c403204924c1) = -1 (Illegal seek)
+> > [child21:138988] [353] pread64(fd=427, buf=0x4, count=0x993b, pos=176) = 0
