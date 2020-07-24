@@ -5,70 +5,71 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A24AAC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 05:43:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFDDFC433E8
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 05:44:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D9522074A
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 05:43:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2E8A20748
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 05:44:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Y54UPlR4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tADtUa99"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726280AbgGXFnn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jul 2020 01:43:43 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:34326 "EHLO
+        id S1726437AbgGXFoZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jul 2020 01:44:25 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:34966 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726277AbgGXFnm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 01:43:42 -0400
+        with ESMTP id S1726277AbgGXFoX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 01:44:23 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06O5cP0s065696;
-        Fri, 24 Jul 2020 05:43:40 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06O5bwnH065327;
+        Fri, 24 Jul 2020 05:44:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=VIo4FYpjFm5+NIyGSgCJLUdoy9aE8bd6gPe0wttPKtY=;
- b=Y54UPlR4KEwmEoElggW3CqVkumcVv/rqvHjNrOV0REGEebSOg7NgrgvB0Iv1BqD1rWp+
- jln/DTmgh+bmeOQtnqbsBnhdydebFF6lx4BJ8wd/PIi8Z3aAj5hRJyuRcKn2xisqRgY7
- KH1CLjOvqn3pRcS5Ei6Udb1xIetU4SqisACo4aZaU8r9zueLs9AYJ7KTt5RAmjKFBo+d
- 3A3nQNf09Td6sjoyjKHo4taCgxC0DQYpnj0N2AG7hVEaoZJ/myhENxDzmmG1ircHA6cZ
- HUoIpur1PsU71hB8SoGd3awUe4oq0pid6xjVT/fy0tx8M12QTCzM7EGmUOCLYn+a8q5k Iw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 32bs1mw73x-1
+ bh=R5I2YakBmNpkY+ouCQoPiI0yZo5RO2vdq9lUlxcp7qM=;
+ b=tADtUa99/hmTzcv1Uhg4BxM0mL4CSNP02gkVTC6uVfUy6IxAzmUjArktRBa+oHi6pvAN
+ Q0zSRl8BjEXHsHdIV+OGp7WsoAuQkCBrK5J5pCMG9ViGF1i5Y1qzuqcRyeuWSPNV6Bss
+ QyXtcI738EttXf5BmXmxW9QzQgYZ7FBW1Rt0bNDhlu/nyWGlKzkIXvv4LrxmDsMdABti
+ 7D4+ofn0Crl0y5FrYbn0Jeu/LtVOzsZFrqhAuejZFkYCyRCR6F4TFRqUxeveWxZfMXsW
+ SmAF82E60FyI5s+FbIVCn9zh/pF23nsQ0O2amJIEuP5Aa1KNzXrV7W1n/p/dhb6Kubnp Rg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 32bs1mw78u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 24 Jul 2020 05:43:40 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06O5dBO4154074;
-        Fri, 24 Jul 2020 05:41:39 GMT
+        Fri, 24 Jul 2020 05:44:19 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06O5cADm105199;
+        Fri, 24 Jul 2020 05:42:18 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 32fhy6sswp-1
+        by aserp3020.oracle.com with ESMTP id 32fn6q0r62-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 24 Jul 2020 05:41:39 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06O5ackh007852;
-        Fri, 24 Jul 2020 05:36:38 GMT
+        Fri, 24 Jul 2020 05:42:18 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06O5edtL009136;
+        Fri, 24 Jul 2020 05:40:39 GMT
 Received: from localhost (/10.159.156.50)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 23 Jul 2020 22:36:38 -0700
-Date:   Thu, 23 Jul 2020 22:36:37 -0700
+        with ESMTP ; Fri, 24 Jul 2020 05:40:39 +0000
+Date:   Thu, 23 Jul 2020 22:40:38 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Carlos Maiolino <cmaiolino@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/5] xfs: Remove kmem_zone_alloc() usage
-Message-ID: <20200724053637.GQ3151642@magnolia>
+Subject: Re: [PATCH 5/5] xfs: Refactor xfs_da_state_alloc() helper
+Message-ID: <20200724054037.GU3151642@magnolia>
 References: <20200722090518.214624-1-cmaiolino@redhat.com>
- <20200722090518.214624-2-cmaiolino@redhat.com>
+ <20200722090518.214624-6-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200722090518.214624-2-cmaiolino@redhat.com>
+In-Reply-To: <20200722090518.214624-6-cmaiolino@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9691 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
- phishscore=0 adultscore=0 malwarescore=0 bulkscore=0 suspectscore=5
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ adultscore=0 phishscore=0 bulkscore=0 suspectscore=7 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2007240042
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9691 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=5 bulkscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=7 bulkscore=0 adultscore=0
  lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
  spamscore=0 mlxscore=0 impostorscore=0 phishscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
@@ -78,21 +79,16 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 22, 2020 at 11:05:14AM +0200, Carlos Maiolino wrote:
-> Use kmem_cache_alloc() directly.
+On Wed, Jul 22, 2020 at 11:05:18AM +0200, Carlos Maiolino wrote:
+> Every call to xfs_da_state_alloc() also requires setting up state->args
+> and state->mp
 > 
-> All kmem_zone_alloc() users pass 0 as flags, which are translated into:
-> GFP_KERNEL | __GFP_NOWARN, and kmem_zone_alloc() loops forever until the
-> allocation succeeds.
-> 
-> We can use __GFP_NOFAIL to tell the allocator to loop forever rather
-> than doing it ourself, and because the allocation will never fail, we do
-> not need to use __GFP_NOWARN anymore. Hence, all callers can be
-> converted to use GFP_KERNEL | __GFP_NOFAIL
+> Change xfs_da_state_alloc() to receive an xfs_da_args_t as argument and
+> return a xfs_da_state_t with both args and mp already set.
 > 
 > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Looks ok to me too (I put the comment back in),
+Will fix the typedef thing for xfs_da_state_alloc when I commit this;
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
@@ -100,69 +96,165 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
 > 
 > Changelog:
-> 	V2:
-> 		- Wire up xfs_inode_alloc to use __GFP_NOFAIL
-> 		  if it's called inside a transaction
-> 		- Rewrite changelog in a more decent way.
 > 	V3:
-> 		- Use __GFP_NOFAIL unconditionally in xfs_inode_alloc(),
-> 		  use of PF_FSTRANS will be added when the patch re-adding
-> 		  it is moved to mainline.
+> 		- Originally this patch removed xfs_da_state_alloc(),
+> 		  per hch's suggestion, instead of removing, it has been
+> 		  refactored, to also set state->{args,mp} which removes
+> 		  a few lines of code.
 > 
->  fs/xfs/libxfs/xfs_alloc.c |  3 ++-
->  fs/xfs/libxfs/xfs_bmap.c  |  3 ++-
->  fs/xfs/xfs_icache.c       | 10 ++--------
->  3 files changed, 6 insertions(+), 10 deletions(-)
+>  fs/xfs/libxfs/xfs_attr.c      | 17 +++++------------
+>  fs/xfs/libxfs/xfs_da_btree.c  |  8 ++++++--
+>  fs/xfs/libxfs/xfs_da_btree.h  |  2 +-
+>  fs/xfs/libxfs/xfs_dir2_node.c | 17 +++++------------
+>  fs/xfs/scrub/dabtree.c        |  4 +---
+>  5 files changed, 18 insertions(+), 30 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 203e74fa64aa6..583242253c027 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -2467,7 +2467,8 @@ xfs_defer_agfl_block(
->  	ASSERT(xfs_bmap_free_item_zone != NULL);
->  	ASSERT(oinfo != NULL);
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 3b1bd6e112f89..52e01fc0c5d04 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -750,9 +750,7 @@ xfs_attr_node_addname(
+>  	dp = args->dp;
+>  	mp = dp->i_mount;
+>  restart:
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = mp;
+> +	state = xfs_da_state_alloc(args);
 >  
-> -	new = kmem_zone_alloc(xfs_bmap_free_item_zone, 0);
-> +	new = kmem_cache_alloc(xfs_bmap_free_item_zone,
-> +			       GFP_KERNEL | __GFP_NOFAIL);
->  	new->xefi_startblock = XFS_AGB_TO_FSB(mp, agno, agbno);
->  	new->xefi_blockcount = 1;
->  	new->xefi_oinfo = *oinfo;
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 667cdd0dfdf4a..fd5c0d669d0d7 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -553,7 +553,8 @@ __xfs_bmap_add_free(
->  #endif
->  	ASSERT(xfs_bmap_free_item_zone != NULL);
->  
-> -	new = kmem_zone_alloc(xfs_bmap_free_item_zone, 0);
-> +	new = kmem_cache_alloc(xfs_bmap_free_item_zone,
-> +			       GFP_KERNEL | __GFP_NOFAIL);
->  	new->xefi_startblock = bno;
->  	new->xefi_blockcount = (xfs_extlen_t)len;
->  	if (oinfo)
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 58a750ce689c0..c2d97e4f131fb 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -36,14 +36,8 @@ xfs_inode_alloc(
->  {
->  	struct xfs_inode	*ip;
->  
-> -	/*
-> -	 * if this didn't occur in transactions, we could use
-> -	 * KM_MAYFAIL and return NULL here on ENOMEM. Set the
-> -	 * code up to do this anyway.
-> -	 */
-> -	ip = kmem_zone_alloc(xfs_inode_zone, 0);
-> -	if (!ip)
-> -		return NULL;
-> +	ip = kmem_cache_alloc(xfs_inode_zone, GFP_KERNEL | __GFP_NOFAIL);
+>  	/*
+>  	 * Search to see if name already exists, and get back a pointer
+> @@ -899,9 +897,8 @@ xfs_attr_node_addname(
+>  		 * attr, not the "new" one.
+>  		 */
+>  		args->attr_filter |= XFS_ATTR_INCOMPLETE;
+> -		state = xfs_da_state_alloc();
+> -		state->args = args;
+> -		state->mp = mp;
+> +		state = xfs_da_state_alloc(args);
 > +
->  	if (inode_init_always(mp->m_super, VFS_I(ip))) {
->  		kmem_cache_free(xfs_inode_zone, ip);
->  		return NULL;
+>  		state->inleaf = 0;
+>  		error = xfs_da3_node_lookup_int(state, &retval);
+>  		if (error)
+> @@ -975,9 +972,7 @@ xfs_attr_node_removename(
+>  	 * Tie a string around our finger to remind us where we are.
+>  	 */
+>  	dp = args->dp;
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = dp->i_mount;
+> +	state = xfs_da_state_alloc(args);
+>  
+>  	/*
+>  	 * Search to see if name exists, and get back a pointer to it.
+> @@ -1207,9 +1202,7 @@ xfs_attr_node_get(xfs_da_args_t *args)
+>  
+>  	trace_xfs_attr_node_get(args);
+>  
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = args->dp->i_mount;
+> +	state = xfs_da_state_alloc(args);
+>  
+>  	/*
+>  	 * Search to see if name exists, and get back a pointer to it.
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index a4e1f01daf3d8..47da88154b434 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -79,9 +79,13 @@ kmem_zone_t *xfs_da_state_zone;	/* anchor for state struct zone */
+>   * We don't put them on the stack since they're large.
+>   */
+>  xfs_da_state_t *
+> -xfs_da_state_alloc(void)
+> +xfs_da_state_alloc(xfs_da_args_t *args)
+>  {
+> -	return kmem_cache_zalloc(xfs_da_state_zone, GFP_NOFS | __GFP_NOFAIL);
+> +	xfs_da_state_t *state = kmem_cache_zalloc(xfs_da_state_zone,
+> +						  GFP_NOFS | __GFP_NOFAIL);
+> +	state->args = args;
+> +	state->mp = args->dp->i_mount;
+> +	return state;
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+> index 6e25de6621e4f..bb039dcb0cce4 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.h
+> +++ b/fs/xfs/libxfs/xfs_da_btree.h
+> @@ -219,7 +219,7 @@ enum xfs_dacmp xfs_da_compname(struct xfs_da_args *args,
+>  				const unsigned char *name, int len);
+>  
+>  
+> -xfs_da_state_t *xfs_da_state_alloc(void);
+> +xfs_da_state_t *xfs_da_state_alloc(xfs_da_args_t *args);
+>  void xfs_da_state_free(xfs_da_state_t *state);
+>  
+>  void	xfs_da3_node_hdr_from_disk(struct xfs_mount *mp,
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index 6ac4aad98cd76..5d51265d29d6f 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -2015,9 +2015,7 @@ xfs_dir2_node_addname(
+>  	/*
+>  	 * Allocate and initialize the state (btree cursor).
+>  	 */
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = args->dp->i_mount;
+> +	state = xfs_da_state_alloc(args);
+>  	/*
+>  	 * Look up the name.  We're not supposed to find it, but
+>  	 * this gives us the insertion point.
+> @@ -2086,9 +2084,8 @@ xfs_dir2_node_lookup(
+>  	/*
+>  	 * Allocate and initialize the btree cursor.
+>  	 */
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = args->dp->i_mount;
+> +	state = xfs_da_state_alloc(args);
+> +
+>  	/*
+>  	 * Fill in the path to the entry in the cursor.
+>  	 */
+> @@ -2139,9 +2136,7 @@ xfs_dir2_node_removename(
+>  	/*
+>  	 * Allocate and initialize the btree cursor.
+>  	 */
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = args->dp->i_mount;
+> +	state = xfs_da_state_alloc(args);
+>  
+>  	/* Look up the entry we're deleting, set up the cursor. */
+>  	error = xfs_da3_node_lookup_int(state, &rval);
+> @@ -2206,9 +2201,7 @@ xfs_dir2_node_replace(
+>  	/*
+>  	 * Allocate and initialize the btree cursor.
+>  	 */
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = args->dp->i_mount;
+> +	state = xfs_da_state_alloc(args);
+>  
+>  	/*
+>  	 * We have to save new inode number and ftype since
+> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+> index 44b15015021f3..e56786f0a13c8 100644
+> --- a/fs/xfs/scrub/dabtree.c
+> +++ b/fs/xfs/scrub/dabtree.c
+> @@ -476,9 +476,7 @@ xchk_da_btree(
+>  	ds.dargs.whichfork = whichfork;
+>  	ds.dargs.trans = sc->tp;
+>  	ds.dargs.op_flags = XFS_DA_OP_OKNOENT;
+> -	ds.state = xfs_da_state_alloc();
+> -	ds.state->args = &ds.dargs;
+> -	ds.state->mp = mp;
+> +	ds.state = xfs_da_state_alloc(&ds.dargs);
+>  	ds.sc = sc;
+>  	ds.private = private;
+>  	if (whichfork == XFS_ATTR_FORK) {
 > -- 
 > 2.26.2
 > 
