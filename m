@@ -2,209 +2,141 @@ Return-Path: <SRS0=Yx8G=BD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1D09C43446
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 17:41:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D6FCC43467
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 18:25:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C475B2070E
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 17:41:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595612499;
-	bh=aRMgYqgvo4BFbSMRZ6izOXZzYw7jYpwFPgZM1in6fMU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=cJhNAAw6h+QR8CK4Ny1NcKAGvGH/hPVBX8bf6pirnh7NgCMd6r1gpk4+V/cWCrsNb
-	 xn7j0RaHX2ccJjJI05/h3QnXhL3gGdl8085zXwlY7/1vkK+4aJ3TcdiyvGmy7XzEP8
-	 S5/ixH4iKIYM/SDCdegawineNw2EZ/9RUin8aAe4=
+	by mail.kernel.org (Postfix) with ESMTP id 4B40120748
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 18:25:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726995AbgGXRlf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jul 2020 13:41:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50234 "EHLO mail.kernel.org"
+        id S1727843AbgGXSY7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jul 2020 14:24:59 -0400
+Received: from sandeen.net ([63.231.237.45]:53486 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726455AbgGXRlf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 24 Jul 2020 13:41:35 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1727089AbgGXSY6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 24 Jul 2020 14:24:58 -0400
+Received: from Liberator.local (c-71-237-195-212.hsd1.or.comcast.net [71.237.195.212])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 016BE2067D;
-        Fri, 24 Jul 2020 17:41:33 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1595612494;
-        bh=aRMgYqgvo4BFbSMRZ6izOXZzYw7jYpwFPgZM1in6fMU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=jBZM5Y0g+E10PwoCqRC6t5F6HCknVy62WPLNvcAzxDV15X1J6NGfRf+WZ3Tdv4vEC
-         PZev737/sUJJ5pcIQHzYt4uiOTtESBBEHz5SbsJhuZlXHLnK9gUZqLgGp/kHfWMDCs
-         FfrARJduO1G+dnwJjrvvMzKNmhVqqtK6ncu1eGWg=
-Date:   Fri, 24 Jul 2020 10:41:32 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Satya Tangirala <satyat@google.com>, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 3/7] iomap: support direct I/O with fscrypt using
- blk-crypto
-Message-ID: <20200724174132.GB819@sol.localdomain>
-References: <20200720233739.824943-1-satyat@google.com>
- <20200720233739.824943-4-satyat@google.com>
- <20200722211629.GE2005@dread.disaster.area>
- <20200722223404.GA76479@sol.localdomain>
- <20200723220752.GF2005@dread.disaster.area>
- <20200723230345.GB870@sol.localdomain>
- <20200724013910.GH2005@dread.disaster.area>
- <20200724034628.GC870@sol.localdomain>
- <20200724053130.GO2005@dread.disaster.area>
+        by sandeen.net (Postfix) with ESMTPSA id 2F8A94CDD35;
+        Fri, 24 Jul 2020 13:24:13 -0500 (CDT)
+Subject: Re: [PATCH] xfs_io: Document '-q' option for sendfile command
+To:     Xiao Yang <yangx.jy@cn.fujitsu.com>, darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+References: <20200722051507.13322-1-yangx.jy@cn.fujitsu.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <0b425e96-ba93-d0ea-e526-d345dc0de8aa@sandeen.net>
+Date:   Fri, 24 Jul 2020 11:24:54 -0700
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200724053130.GO2005@dread.disaster.area>
+In-Reply-To: <20200722051507.13322-1-yangx.jy@cn.fujitsu.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Jul 24, 2020 at 03:31:30PM +1000, Dave Chinner wrote:
-> On Thu, Jul 23, 2020 at 08:46:28PM -0700, Eric Biggers wrote:
-> > On Fri, Jul 24, 2020 at 11:39:10AM +1000, Dave Chinner wrote:
-> > > fscrypt_inode_uses_inline_crypto() ends up being:
-> > > 
-> > > 	if (IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode) &&
-> > > 	    inode->i_crypt_info->ci_inlinecrypt)
-> > > 
-> > > I note there are no checks for inode->i_crypt_info being non-null,
-> > > and I note that S_ENCRYPTED is set on the inode when the on-disk
-> > > encrypted flag is encountered, not when inode->i_crypt_info is set.
-> > > 
-> > 
-> > ->i_crypt_info is set when the file is opened, so it's guaranteed to be set for
-> > any I/O.  So the case you're concerned about just doesn't happen.
+On 7/21/20 10:15 PM, Xiao Yang wrote:
+> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  io/sendfile.c     | 3 ++-
+>  man/man8/xfs_io.8 | 6 +++++-
+>  2 files changed, 7 insertions(+), 2 deletions(-)
 > 
-> Ok. The connection is not obvious to someone who doesn't know the
-> fscrypt code inside out.
+> diff --git a/io/sendfile.c b/io/sendfile.c
+> index ff012c81..a003bb55 100644
+> --- a/io/sendfile.c
+> +++ b/io/sendfile.c
+> @@ -25,6 +25,7 @@ sendfile_help(void)
+>  " Copies data between one file descriptor and another.  Because this copying\n"
+>  " is done within the kernel, sendfile does not need to transfer data to and\n"
+>  " from user space.\n"
+> +" -q -- quiet mode, do not write anything to standard output.\n"
+>  " -f -- specifies an input file from which to source data to write\n"
+>  " -i -- specifies an input file name from which to source data to write.\n"
+>  " An offset and length in the source file can be optionally specified.\n"
+> @@ -168,7 +169,7 @@ sendfile_init(void)
+>  	sendfile_cmd.argmax = -1;
+>  	sendfile_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+>  	sendfile_cmd.args =
+> -		_("-i infile | -f N [off len]");
+> +		_("[-q] -i infile | -f N [off len]");
+>  	sendfile_cmd.oneline =
+>  		_("Transfer data directly between file descriptors");
+>  	sendfile_cmd.help = sendfile_help;
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index d3eb3e7e..caf3f15c 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -541,13 +541,17 @@ manual page to allocate and zero blocks within the range.
+>  Truncates the current file at the given offset using
+>  .BR ftruncate (2).
+>  .TP
+> -.BI "sendfile \-i " srcfile " | \-f " N " [ " "offset length " ]
+> +.BI "sendfile [ \-q ] \-i " srcfile " | \-f " N " [ " "offset length " ]
+>  On platforms which support it, allows a direct in-kernel copy between
+>  two file descriptors. The current open file is the target, the source
+>  must be specified as another open file
+>  .RB ( \-f )
+>  or by path
+>  .RB ( \-i ).
+> +.RS 1.0i
+> +.B \-q
+> +quiet mode, do not write anything to standard output.
+> +.RE
+>  .TP
+>  .BI "readdir [ -v ] [ -o " offset " ] [ -l " length " ] "
+>  Read a range of directory entries from a given offset of a directory.
 > 
-> > > > Note that currently, I don't think iomap_dio_bio_actor() would handle an
-> > > > encrypted file with blocksize > PAGE_SIZE correctly, as the I/O could be split
-> > > > in the middle of a filesystem block (even after the filesystem ensures that
-> > > > direct I/O on encrypted files is fully filesystem-block-aligned, which we do ---
-> > > > see the rest of this patchset), which isn't allowed on encrypted files.
-> > > 
-> > > That can already happen unless you've specifically restricted DIO
-> > > alignments in the filesystem code. i.e. Direct IO already supports
-> > > sub-block ranges and alignment, and we can already do user DIO on
-> > > sub-block, sector aligned ranges just fine. And the filesystem can
-> > > already split the iomap on sub-block alignments and ranges if it
-> > > needs to because the iomap uses byte range addressing, not sector or
-> > > block based addressing.
-> > > 
-> > > So either you already have a situation where the 2^32 offset can
-> > > land *inside* a filesystem block, or the offset is guaranteed to be
-> > > filesystem block aligned and so you'll never get this "break an IO
-> > > on sub-block alignment" problem regardless of the filesystem block
-> > > size...
-> > > 
-> > > Either way, it's not an iomap problem - it's a filesystem mapping
-> > > problem...
-> > > 
-> > 
-> > I think you're missing the point here.  Currently, the granularity of encryption
-> > (a.k.a. "data unit size") is always filesystem blocks, so that's the minimum we
-> > can directly read or write to an encrypted file.  This has nothing to do with
-> > the IV wraparound case also being discussed.
-> 
-> So when you change the subject, please make it *really obvious* so
-> that people don't think you are still talking about the same issue.
-> 
-> > For example, changing a single bit in the plaintext of a filesystem block may
-> > result in the entire block's ciphertext changing.  (The exact behavior depends
-> > on the cryptographic algorithm that is used.)
-> > 
-> > That's why this patchset makes ext4 only allow direct I/O on encrypted files if
-> > the I/O is fully filesystem-block-aligned.  Note that this might be a more
-> > strict alignment requirement than the bdev_logical_block_size().
-> > 
-> > As long as the iomap code only issues filesystem-block-aligned bios, *given
-> > fully filesystem-block-aligned inputs*, we're fine.  That appears to be the case
-> > currently.
-> 
-> The actual size and shape of the bios issued by direct IO (both old
-> code and newer iomap code) is determined by the user supplied iov,
-> the size of the biovec array allocated in the bio, and the IO
-> constraints of the underlying hardware.  Hence direct IO does not
-> guarantee alignment to anything larger than the underlying block
-> device logical sector size because there's no guarantee when or
-> where a bio will fill up.
-> 
-> To guarantee alignment of what ends up at the hardware, you have to
-> set the block device parameters (e.g. logical sector size)
-> appropriately all the way down the stack. You also need to ensure
-> that the filesystem is correctly aligned on the block device so that
-> filesystem blocks don't overlap things like RAID stripe boundaires,
-> linear concat boundaries, etc.
-> 
-> IOWs, to constrain alignment in the IO path, you need to configure
-> you system correct so that the information provided to iomap for IO
-> alignment matches your requirements. This is not somethign iomap can
-> do itself; everything from above needs to be constrained by the
-> filesystem using iomap, everything sent below by iomap is
-> constrained by the block device config.
-
-That way of thinking about things doesn't entirely work for inline encryption.
-
-Hardware can support multiple encryption "data unit sizes", some of which may be
-larger than the logical block size.  (The data unit size is the granularity of
-encryption.  E.g. if software selects data_unit_size=4096, then each invocation
-of the encryption/decryption algorithm is passed 4096 bytes.  You can't then
-later encrypt/decrypt just part of that; that's not how the algorithms work.)
-
-For example hardware might *in general* support addressing 512-byte sectors and
-thus have logical_block_size=512.  But it could also support encryption data
-unit sizes [512, 1024, 2048, 4096].  Encrypted I/O has to be aligned to the data
-unit size, not just to the logical block size.  The data unit size to use, and
-whether to use encryption or not, is decided on a per-I/O basis.
-
-So in this case technically it's the filesystem (and later the
-bio::bi_crypt_context which the filesystem sets) that knows about the alignment
-needed -- *not* the request_queue.
-
-Is it your opinion that inline encryption should only be supported when
-data_unit_size <= logical_block_size?  The problems with that are
-
-    (a) Using an unnecessarily small data_unit_size degrades performance a
-	lot -- for *all* I/O, not just direct I/O.  This is because there are a
-	lot more separate encryptions/decryptions to do, and there's a fixed
-	overhead to each one (much of which is intrinsic in the crypto
-	algorithms themselves, i.e. this isn't simply an implementation quirk).
-
-    (b) fscrypt currently only supports data_unit_size == filesystem_block_size.
-	(OFC, filesystem_block_size may be greater than logical_block_size.)
-
-    (c) Filesystem images would be less portable, unless the minimum
-	data_unit_size were used everywhere which would degrade performance.
-
-(We could address (b) by allowing users to specify data_unit_size when
-encrypting a directory.  That would add complexity, but it's possible.)
-
-But again, as far as I can tell, fs/iomap/direct-io.c currently *does* guarantee
-that *if* the input is fully filesystem-block-aligned and if blocksize <=
-PAGE_SIZE, then the issued I/O is also filesystem-block-aligned.
-
-So as far as I can tell, there isn't really any problem there, at least not now.
-I just want to make sure we're on the same page...
-
-> 
-> > (It's possible that in the future we'll support other encryption data unit
-> > sizes, perhaps powers of 2 from 512 to filesystem block size.  But for now the
-> > filesystem block size has been good enough for everyone,
-> 
-> Not the case. fscrypt use in enterprise environments needs support
-> for block size < page size so that it can be deployed on 64kB page
-> size machines without requiring 64kB filesystem block sizes.
-> 
-
-It's already supported (on ext4 since Linux v5.5).
-
-What's not supported (yet) is data_unit_size < filesystem_block_size.
-
-- Eric
