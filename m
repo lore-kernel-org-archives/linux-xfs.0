@@ -2,97 +2,74 @@ Return-Path: <SRS0=Yx8G=BD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D16C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 07:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80539C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 07:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8BF3320748
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 07:22:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5099920748
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 07:36:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="j/GJPcn/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726618AbgGXHWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jul 2020 03:22:07 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:56054 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726543AbgGXHWG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 03:22:06 -0400
-X-IronPort-AV: E=Sophos;i="5.75,389,1589212800"; 
-   d="scan'208";a="96847193"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 24 Jul 2020 15:22:03 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 66BBB4CE4BD0;
-        Fri, 24 Jul 2020 15:22:01 +0800 (CST)
-Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 24 Jul 2020 15:22:02 +0800
-Received: from Fedora-30.g08.fujitsu.local (10.167.220.106) by
- G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Fri, 24 Jul 2020 15:22:02 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-To:     <linux-xfs@vger.kernel.org>
-CC:     <sandeen@sandeen.net>, <darrick.wong@oracle.com>,
-        Xiao Yang <yangx.jy@cn.fujitsu.com>
-Subject: [PATCH] xfs_io: Remove redundant setting/check for lsattr/stat command
-Date:   Fri, 24 Jul 2020 15:14:40 +0800
-Message-ID: <20200724071440.23239-1-yangx.jy@cn.fujitsu.com>
-X-Mailer: git-send-email 2.21.0
+        id S1726717AbgGXHgm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jul 2020 03:36:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39102 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725942AbgGXHgm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 03:36:42 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BBC4C0619D3
+        for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2020 00:36:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=jPWSjFqV2AeXXx4TRZ3nZzNy0yJKNQcU/3sTZCZ1lnk=; b=j/GJPcn/x1a5di4J4jgWBDPzgP
+        jg+rlkG/Gd0XHl6vitRHmVMXQBr9JjQj50TvYYyuBxeVBiOKZqEQsehHP9+DVyCdjv3IU6fQHubHd
+        EnA9zwDr3WHWyUAZ5mUWHi/dOVZkg0dKDHaC5BqrPFH8/c8mBhO5apfFT9btu2uFgaUs5tC6UoExR
+        5Yyy7oc5A9bVMxfhf4Aod1yGTCom0urP5NzH+DuJSi70BppQLir2ogQS/e2ioeZP0ljqOBtTtzGbv
+        AVuTKgtk8irVJo0PgCmtMUfukLEbStM8DNCpWYJbsHuHeHDRShnwQ3f+mTjsQD+MoAfF/zmWhNPsr
+        lr/ni0HA==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jysFz-0006hj-Nz; Fri, 24 Jul 2020 07:36:39 +0000
+Date:   Fri, 24 Jul 2020 08:36:39 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: Need to slow things down for a few days...
+Message-ID: <20200724073639.GA23472@infradead.org>
+References: <20200723172113.GP3151642@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 66BBB4CE4BD0.AAECB
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200723172113.GP3151642@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-lsattr/stat command can check exclusive options by argmax = 1
-so the related setting/check is redundant.
+On Thu, Jul 23, 2020 at 10:21:13AM -0700, Darrick J. Wong wrote:
+> Hi everyone,
+> 
+> I wrenched my back last night (blah blah too much internal process
+> stress and sitting) and need a few days rest.  I still intend to make a
+> post-rc6 for-next push, though I've noticed that fstests runtime has
+> slipped by about 30%.
+> 
+> I can't tell if it's the result of iomap directio falling back to
+> buffered writes, or Carlos' kmem conversion, or even Allison's delayed
+> attrs series, but I'll know in a few hours.  I added all three a few
+> days ago to see what would happen. :P
+> 
+> In the meantime, I'll be hobbling along in the slow lane because sitting
+> down is not a good idea and I can only standing-desk it for so long. :(
 
-Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
----
- io/attr.c | 2 --
- io/stat.c | 5 -----
- 2 files changed, 7 deletions(-)
-
-diff --git a/io/attr.c b/io/attr.c
-index 181ff089..fd82a2e7 100644
---- a/io/attr.c
-+++ b/io/attr.c
-@@ -198,10 +198,8 @@ lsattr_f(
- 			break;
- 		case 'a':
- 			aflag = 1;
--			vflag = 0;
- 			break;
- 		case 'v':
--			aflag = 0;
- 			vflag = 1;
- 			break;
- 		default:
-diff --git a/io/stat.c b/io/stat.c
-index 5f513e0d..49c4c27c 100644
---- a/io/stat.c
-+++ b/io/stat.c
-@@ -142,11 +142,6 @@ stat_f(
- 		}
- 	}
- 
--	if (raw && verbose) {
--		exitcode = 1;
--		return command_usage(&stat_cmd);
--	}
--
- 	if (fstat(file->fd, &st) < 0) {
- 		perror("fstat");
- 		exitcode = 1;
--- 
-2.21.0
-
-
-
+Oh well, get better soon!
