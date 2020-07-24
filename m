@@ -2,157 +2,119 @@ Return-Path: <SRS0=Yx8G=BD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.6 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0CD5C433F2
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 12:12:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB54C433E3
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 16:20:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BECD22065E
-	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 12:12:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72EC82074A
+	for <linux-xfs@archiver.kernel.org>; Fri, 24 Jul 2020 16:20:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="CIOYCqTm"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nrDrSg8x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726989AbgGXMMK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 24 Jul 2020 08:12:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53694 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726890AbgGXML7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 08:11:59 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CE4CC0619E8
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2020 05:11:57 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id u189so10129153ybg.17
-        for <linux-xfs@vger.kernel.org>; Fri, 24 Jul 2020 05:11:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=r8Pg6JmNaFN8fVBskJ954zlZvlkSSoV1f+xmIU4eJ8Y=;
-        b=CIOYCqTme+TnWuKD+xZRysHr8oJo78rie88iaMhNzTS0t45MoVE4RsI/vEVkYotMFZ
-         JtjeVNk6dL7xq1AR4PQA6w+exLdpvxRctrNJ2l6hVGYJMGeMH8HU4Izlxs39K4/L9Csg
-         iaeQxhWNQr4udHFUBEXYDh0it42hv4TuuYRMH3NvOqxfOT5YQZZhuwdUvMZocLeHtm1+
-         wWhBEQsXnDrUzdith9nAVMQtoO0aXYKyWzoqdOJxpf17R/DHVuV6ojo2ym2rZkevTwWN
-         dbBmJIWEZR4a7YLOBF2DNCau1fKoD6S7dcgLT2jQsSAOFbzYgqxPmojFzvDL5GEfdwZp
-         Xzbg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=r8Pg6JmNaFN8fVBskJ954zlZvlkSSoV1f+xmIU4eJ8Y=;
-        b=p/V4m914LpBLAONg9Ei2nYkXfWVnG7UY+NQT9JF6KaqCo+eZTSRz+Jvxzgc950cwiy
-         isaTMmZtxOOzRh7RSWKGoLVkzEF6xBKZx+6Q1qYjhS7pmDp23esFCyIv7fMWfbjPTYyO
-         jCnluJFhhdLWJkju0LghGyQj2+YjotqGH5Sk2507NgPP874Tmou8fDISXjURiQcyQZe/
-         gHiw8Rb22n6i5qBLGm7EJlqXw7eMdkMVxOkDm6OzpYG+p+3kW9y6s6NV0eQkiV/OUJyF
-         ZNU+BdaGw5MdVXDq0xGq5Nfulg7xXytY9amNvJv1cNmJ19xxgOrKotPcA8TctrqA0f4c
-         cMGg==
-X-Gm-Message-State: AOAM533rFhOFqg0GiUgzeO5CGDPO5HsGVDNMx/1JooqEbfq/4WtqfrQa
-        w3SMqhZZPb76wKIsZrbo39cL8gxfUGo=
-X-Google-Smtp-Source: ABdhPJx/KO6QnXMM0Pc1pM0nRqEcHHdAJJmtmE+sSNw66/LnMCl7LqpQ2/7JJlu071k/LdTupwpYQ4l/YFY=
-X-Received: by 2002:a5b:74a:: with SMTP id s10mr15292910ybq.101.1595592716305;
- Fri, 24 Jul 2020 05:11:56 -0700 (PDT)
-Date:   Fri, 24 Jul 2020 12:11:40 +0000
-In-Reply-To: <20200724121143.1589121-1-satyat@google.com>
-Message-Id: <20200724121143.1589121-5-satyat@google.com>
-Mime-Version: 1.0
-References: <20200724121143.1589121-1-satyat@google.com>
-X-Mailer: git-send-email 2.28.0.rc0.142.g3c755180ce-goog
-Subject: [PATCH v5 4/7] ext4: support direct I/O with fscrypt using blk-crypto
-From:   Satya Tangirala <satyat@google.com>
-To:     linux-fscrypt@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, Eric Biggers <ebiggers@google.com>,
-        Satya Tangirala <satyat@google.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        id S1726593AbgGXQUF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 24 Jul 2020 12:20:05 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37490 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726381AbgGXQUE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 24 Jul 2020 12:20:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06OGDR6r066731;
+        Fri, 24 Jul 2020 16:19:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=gsr+vWVs/KQ7EOATjgJv17+sA8w6+4lLcvRvINDuemk=;
+ b=nrDrSg8xpV/TPsl+qV0r083eSeEGEhkzhHu9zaDyi0PIstRrYMIYBTc5H+6IJ5mftfIZ
+ n77gnJ2B/CXIHb37dOBZHez12LU7ByzA1knuMo7qgPNLqO2Q4EMcku54hMg3TUqxOtKb
+ 9Km11XHhoM5sRPDFxTci/Ui/P+O3agEKnJ/3nc18Gnv9BbVlfwqO7oM2qBJPH5d2S3Qv
+ t9kNT2U8gYtF1SNOd7HGcH2u29wZn8HeTFMeIrVhfWyUtx7qG3376KSt9+hGom8efj8b
+ G9FhKTGpH4lIH93ILXxgALJ+MbG1GyV1jZditG0CMKfF3W/cJiCTkviVZeeUWAdWBgIN Hg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 32bs1n004g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 24 Jul 2020 16:19:57 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06OG4OhW058171;
+        Fri, 24 Jul 2020 16:19:57 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 32fswssurg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 24 Jul 2020 16:19:56 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06OGJuKC004419;
+        Fri, 24 Jul 2020 16:19:56 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 24 Jul 2020 09:19:55 -0700
+Date:   Fri, 24 Jul 2020 09:19:55 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to 979045f83ced
+Message-ID: <20200724161955.GV3151642@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9692 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=2
+ malwarescore=0 bulkscore=0 mlxlogscore=999 phishscore=0 mlxscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007240127
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9692 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 bulkscore=0 adultscore=0
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 clxscore=1015
+ spamscore=0 mlxscore=0 impostorscore=0 phishscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007240127
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+Hi folks,
 
-Wire up ext4 with fscrypt direct I/O support. Direct I/O with fscrypt is
-only supported through blk-crypto (i.e. CONFIG_BLK_INLINE_ENCRYPTION must
-have been enabled, the 'inlinecrypt' mount option must have been specified,
-and either hardware inline encryption support must be present or
-CONFIG_BLK_INLINE_ENCYRPTION_FALLBACK must have been enabled). Further,
-direct I/O on encrypted files is only supported when I/O is aligned
-to the filesystem block size (which is *not* necessarily the same as the
-block device's block size).
+The iomap-for-next branch of the xfs-linux repository at:
 
-fscrypt_limit_io_blocks() is called before setting up the iomap to ensure
-that the blocks of each bio that iomap will submit will have contiguous
-DUNs. Note that fscrypt_limit_io_blocks() is normally a no-op, as normally
-the DUNs simply increment along with the logical blocks. But it's needed
-to handle an edge case in one of the fscrypt IV generation methods.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
-Co-developed-by: Satya Tangirala <satyat@google.com>
-Signed-off-by: Satya Tangirala <satyat@google.com>
-Reviewed-by: Jaegeuk Kim <jaegeuk@kernel.org>
----
- fs/ext4/file.c  | 10 ++++++----
- fs/ext4/inode.c |  7 +++++++
- 2 files changed, 13 insertions(+), 4 deletions(-)
+has just been updated.
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 2a01e31a032c..d534f72675d9 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -36,9 +36,11 @@
- #include "acl.h"
- #include "truncate.h"
- 
--static bool ext4_dio_supported(struct inode *inode)
-+static bool ext4_dio_supported(struct kiocb *iocb, struct iov_iter *iter)
- {
--	if (IS_ENABLED(CONFIG_FS_ENCRYPTION) && IS_ENCRYPTED(inode))
-+	struct inode *inode = file_inode(iocb->ki_filp);
-+
-+	if (!fscrypt_dio_supported(iocb, iter))
- 		return false;
- 	if (fsverity_active(inode))
- 		return false;
-@@ -61,7 +63,7 @@ static ssize_t ext4_dio_read_iter(struct kiocb *iocb, struct iov_iter *to)
- 		inode_lock_shared(inode);
- 	}
- 
--	if (!ext4_dio_supported(inode)) {
-+	if (!ext4_dio_supported(iocb, to)) {
- 		inode_unlock_shared(inode);
- 		/*
- 		 * Fallback to buffered I/O if the operation being performed on
-@@ -490,7 +492,7 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
- 	}
- 
- 	/* Fallback to buffered I/O if the inode does not support direct I/O. */
--	if (!ext4_dio_supported(inode)) {
-+	if (!ext4_dio_supported(iocb, from)) {
- 		if (ilock_shared)
- 			inode_unlock_shared(inode);
- 		else
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 44bad4bb8831..6725116ea348 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -3445,6 +3445,13 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
- 	if (ret < 0)
- 		return ret;
- 
-+	/*
-+	 * When inline encryption is enabled, sometimes I/O to an encrypted file
-+	 * has to be broken up to guarantee DUN contiguity. Handle this by
-+	 * limiting the length of the mapping returned.
-+	 */
-+	map.m_len = fscrypt_limit_io_blocks(inode, map.m_lblk, map.m_len);
-+
- 	ext4_set_iomap(inode, iomap, &map, offset, length);
- 
- 	return 0;
--- 
-2.28.0.rc0.142.g3c755180ce-goog
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update (bug fixes for 5.9, new features for 5.10).
 
+This is later in the week than I was hoping, but I'm also recovering
+from wrenching my back a few day ago. :(
+
+The new head of the iomap-for-next branch is commit:
+
+979045f83ced iomap: fall back to buffered writes for invalidation failures
+
+New Commits:
+
+Andreas Gruenbacher (1):
+      [d1b4f507d71d] iomap: Make sure iomap_end is called after iomap_begin
+
+Christoph Hellwig (2):
+      [00dccd7bf406] xfs: use ENOTBLK for direct I/O to buffered I/O fallback
+      [979045f83ced] iomap: fall back to buffered writes for invalidation failures
+
+Dave Chinner (1):
+      [6fa1c383e783] iomap: Only invalidate page cache pages on direct IO writes
+
+
+Code Diffstat:
+
+ fs/ext4/file.c       |  2 ++
+ fs/gfs2/file.c       |  3 ++-
+ fs/iomap/apply.c     | 13 +++++++++----
+ fs/iomap/direct-io.c | 37 +++++++++++++++++++++----------------
+ fs/iomap/trace.h     |  1 +
+ fs/xfs/xfs_file.c    |  8 ++++----
+ fs/zonefs/super.c    |  7 +++++--
+ 7 files changed, 44 insertions(+), 27 deletions(-)
