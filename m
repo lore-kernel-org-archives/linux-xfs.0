@@ -2,159 +2,261 @@ Return-Path: <SRS0=Wl19=BE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E941AC433DF
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jul 2020 23:06:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A29DC433E0
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jul 2020 23:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD361206C1
-	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jul 2020 23:06:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DWSdJIRa"
+	by mail.kernel.org (Postfix) with ESMTP id E7745206F6
+	for <linux-xfs@archiver.kernel.org>; Sat, 25 Jul 2020 23:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726870AbgGYXGw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 25 Jul 2020 19:06:52 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:43016 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726784AbgGYXGw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Jul 2020 19:06:52 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06PN6p73100331
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Jul 2020 23:06:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references; s=corp-2020-01-29;
- bh=Q+MUwB/53yPyhwWBgFwNFDXvTfxE9ft2NKDtbJvhEaQ=;
- b=DWSdJIRaBuRI3oBNPPZ5GAVvi156fybu2Uhh7COEbEYEInVaYdSUf0LDgVpqFHkCTjLi
- iX5oGqf9sIizq5iFamT2rid6TubCeQhNrSc4GcUz3tYWbgxAsznEvVpCOMyAsH7dnapH
- qRiyF0OakO95WgJvv8u3LBCcGE5q2OAbUvZqTEUe2gS1F4X5ct436BfrQIfP7YPrvlCH
- 4Vrexs+UOQBnEVaQpV78Auxu9LmoK6MzT23eO61R2bGGrv7WA7yzFGfXbjqgl06Sz4SL
- Z/FbYGQoayDC59Fg1/4Dl1K9R1c7ZMucHEZXluQ3p2tGBKzWG/60uFryBTl9NTXQUvda mw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 32gx46g01b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Jul 2020 23:06:51 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06PN4Cks103659
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Jul 2020 23:04:50 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 32gw39s64c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Jul 2020 23:04:07 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06PN19GF006870
-        for <linux-xfs@vger.kernel.org>; Sat, 25 Jul 2020 23:01:09 GMT
-Received: from localhost.localdomain (/67.1.142.158)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 25 Jul 2020 16:01:08 -0700
-From:   Allison Collins <allison.henderson@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: Fix compiler warning in xfs_attr_shortform_add
-Date:   Sat, 25 Jul 2020 16:01:02 -0700
-Message-Id: <20200725230102.22192-3-allison.henderson@oracle.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200725230102.22192-1-allison.henderson@oracle.com>
-References: <20200725230102.22192-1-allison.henderson@oracle.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9693 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 phishscore=0
- mlxscore=0 adultscore=0 suspectscore=1 mlxlogscore=999 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007250191
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9693 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- clxscore=1015 impostorscore=0 lowpriorityscore=0 priorityscore=1501
- spamscore=0 mlxscore=0 suspectscore=1 phishscore=0 bulkscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007250191
+        id S1727881AbgGYXsB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 25 Jul 2020 19:48:01 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:49494 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727086AbgGYXsA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 25 Jul 2020 19:48:00 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id E7D84D5AF5D;
+        Sun, 26 Jul 2020 09:47:53 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1jzTtP-0001MM-R6; Sun, 26 Jul 2020 09:47:51 +1000
+Date:   Sun, 26 Jul 2020 09:47:51 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Biggers <ebiggers@kernel.org>
+Cc:     Satya Tangirala <satyat@google.com>, linux-fscrypt@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4 3/7] iomap: support direct I/O with fscrypt using
+ blk-crypto
+Message-ID: <20200725234751.GR2005@dread.disaster.area>
+References: <20200720233739.824943-1-satyat@google.com>
+ <20200720233739.824943-4-satyat@google.com>
+ <20200722211629.GE2005@dread.disaster.area>
+ <20200722223404.GA76479@sol.localdomain>
+ <20200723220752.GF2005@dread.disaster.area>
+ <20200723230345.GB870@sol.localdomain>
+ <20200724013910.GH2005@dread.disaster.area>
+ <20200724034628.GC870@sol.localdomain>
+ <20200724053130.GO2005@dread.disaster.area>
+ <20200724174132.GB819@sol.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200724174132.GB819@sol.localdomain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8
+        a=kCWghvGevV_Be34-x9kA:9 a=0nE9jjMUsWplL590:21 a=Ro6-E-bpJJKdh-rk:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Fix compiler warning: variable 'error' set but not used in
-xfs_attr_shortform_add
+On Fri, Jul 24, 2020 at 10:41:32AM -0700, Eric Biggers wrote:
+> On Fri, Jul 24, 2020 at 03:31:30PM +1000, Dave Chinner wrote:
+> > On Thu, Jul 23, 2020 at 08:46:28PM -0700, Eric Biggers wrote:
+> > > On Fri, Jul 24, 2020 at 11:39:10AM +1000, Dave Chinner wrote:
+> > > > fscrypt_inode_uses_inline_crypto() ends up being:
+> > > > 
+> > > > 	if (IS_ENCRYPTED(inode) && S_ISREG(inode->i_mode) &&
+> > > > 	    inode->i_crypt_info->ci_inlinecrypt)
+> > > > 
+> > > > I note there are no checks for inode->i_crypt_info being non-null,
+> > > > and I note that S_ENCRYPTED is set on the inode when the on-disk
+> > > > encrypted flag is encountered, not when inode->i_crypt_info is set.
+> > > > 
+> > > 
+> > > ->i_crypt_info is set when the file is opened, so it's guaranteed to be set for
+> > > any I/O.  So the case you're concerned about just doesn't happen.
+> > 
+> > Ok. The connection is not obvious to someone who doesn't know the
+> > fscrypt code inside out.
+> > 
+> > > > > Note that currently, I don't think iomap_dio_bio_actor() would handle an
+> > > > > encrypted file with blocksize > PAGE_SIZE correctly, as the I/O could be split
+> > > > > in the middle of a filesystem block (even after the filesystem ensures that
+> > > > > direct I/O on encrypted files is fully filesystem-block-aligned, which we do ---
+> > > > > see the rest of this patchset), which isn't allowed on encrypted files.
+> > > > 
+> > > > That can already happen unless you've specifically restricted DIO
+> > > > alignments in the filesystem code. i.e. Direct IO already supports
+> > > > sub-block ranges and alignment, and we can already do user DIO on
+> > > > sub-block, sector aligned ranges just fine. And the filesystem can
+> > > > already split the iomap on sub-block alignments and ranges if it
+> > > > needs to because the iomap uses byte range addressing, not sector or
+> > > > block based addressing.
+> > > > 
+> > > > So either you already have a situation where the 2^32 offset can
+> > > > land *inside* a filesystem block, or the offset is guaranteed to be
+> > > > filesystem block aligned and so you'll never get this "break an IO
+> > > > on sub-block alignment" problem regardless of the filesystem block
+> > > > size...
+> > > > 
+> > > > Either way, it's not an iomap problem - it's a filesystem mapping
+> > > > problem...
+> > > > 
+> > > 
+> > > I think you're missing the point here.  Currently, the granularity of encryption
+> > > (a.k.a. "data unit size") is always filesystem blocks, so that's the minimum we
+> > > can directly read or write to an encrypted file.  This has nothing to do with
+> > > the IV wraparound case also being discussed.
+> > 
+> > So when you change the subject, please make it *really obvious* so
+> > that people don't think you are still talking about the same issue.
+> > 
+> > > For example, changing a single bit in the plaintext of a filesystem block may
+> > > result in the entire block's ciphertext changing.  (The exact behavior depends
+> > > on the cryptographic algorithm that is used.)
+> > > 
+> > > That's why this patchset makes ext4 only allow direct I/O on encrypted files if
+> > > the I/O is fully filesystem-block-aligned.  Note that this might be a more
+> > > strict alignment requirement than the bdev_logical_block_size().
+> > > 
+> > > As long as the iomap code only issues filesystem-block-aligned bios, *given
+> > > fully filesystem-block-aligned inputs*, we're fine.  That appears to be the case
+> > > currently.
+> > 
+> > The actual size and shape of the bios issued by direct IO (both old
+> > code and newer iomap code) is determined by the user supplied iov,
+> > the size of the biovec array allocated in the bio, and the IO
+> > constraints of the underlying hardware.  Hence direct IO does not
+> > guarantee alignment to anything larger than the underlying block
+> > device logical sector size because there's no guarantee when or
+> > where a bio will fill up.
+> > 
+> > To guarantee alignment of what ends up at the hardware, you have to
+> > set the block device parameters (e.g. logical sector size)
+> > appropriately all the way down the stack. You also need to ensure
+> > that the filesystem is correctly aligned on the block device so that
+> > filesystem blocks don't overlap things like RAID stripe boundaires,
+> > linear concat boundaries, etc.
+> > 
+> > IOWs, to constrain alignment in the IO path, you need to configure
+> > you system correct so that the information provided to iomap for IO
+> > alignment matches your requirements. This is not somethign iomap can
+> > do itself; everything from above needs to be constrained by the
+> > filesystem using iomap, everything sent below by iomap is
+> > constrained by the block device config.
+> 
+> That way of thinking about things doesn't entirely work for inline encryption.
 
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Allison Collins <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_attr.c      |  3 +--
- fs/xfs/libxfs/xfs_attr_leaf.c | 11 ++++++++---
- fs/xfs/libxfs/xfs_attr_leaf.h |  2 +-
- 3 files changed, 10 insertions(+), 6 deletions(-)
+Then the inline encryption design is flawed. Block devices tell the
+layers above what the minimum unit of atomic IO is via the logical
+block size of the device is. Everything above the block device
+assumes that it can align and size IO to this size, and the IO will
+succeed.
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 4ef0020..3428f8b 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -562,8 +562,7 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
- 	if (!forkoff)
- 		return -ENOSPC;
- 
--	xfs_attr_shortform_add(args, forkoff);
--	return 0;
-+	return xfs_attr_shortform_add(args, forkoff);
- }
- 
- 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index ad7b351..d0653bb 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -708,7 +708,7 @@ xfs_attr_sf_findname(
-  * Add a name/value pair to the shortform attribute list.
-  * Overflow from the inode has already been checked for.
-  */
--void
-+int
- xfs_attr_shortform_add(
- 	struct xfs_da_args		*args,
- 	int				forkoff)
-@@ -730,7 +730,8 @@ xfs_attr_shortform_add(
- 	ASSERT(ifp->if_flags & XFS_IFINLINE);
- 	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
- 	error = xfs_attr_sf_findname(args, &sfe, NULL);
--	ASSERT(error != -EEXIST);
-+	if (error == -EEXIST)
-+		return error;
- 
- 	offset = (char *)sfe - (char *)sf;
- 	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
-@@ -748,6 +749,8 @@ xfs_attr_shortform_add(
- 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE | XFS_ILOG_ADATA);
- 
- 	xfs_sbversion_add_attr2(mp, args->trans);
-+
-+	return 0;
- }
- 
- /*
-@@ -1151,7 +1154,9 @@ xfs_attr3_leaf_to_shortform(
- 		nargs.valuelen = be16_to_cpu(name_loc->valuelen);
- 		nargs.hashval = be32_to_cpu(entry->hashval);
- 		nargs.attr_filter = entry->flags & XFS_ATTR_NSP_ONDISK_MASK;
--		xfs_attr_shortform_add(&nargs, forkoff);
-+		error = xfs_attr_shortform_add(&nargs, forkoff);
-+		if (error)
-+			goto out;
- 	}
- 	error = 0;
- 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index 9b1c59f..e0027bb 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -46,7 +46,7 @@ struct xfs_attr3_icleaf_hdr {
-  * Internal routines when attribute fork size < XFS_LITINO(mp).
-  */
- void	xfs_attr_shortform_create(struct xfs_da_args *args);
--void	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
-+int	xfs_attr_shortform_add(struct xfs_da_args *args, int forkoff);
- int	xfs_attr_shortform_lookup(struct xfs_da_args *args);
- int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
- int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
+> Hardware can support multiple encryption "data unit sizes", some of which may be
+> larger than the logical block size.  (The data unit size is the granularity of
+> encryption.  E.g. if software selects data_unit_size=4096, then each invocation
+> of the encryption/decryption algorithm is passed 4096 bytes.  You can't then
+> later encrypt/decrypt just part of that; that's not how the algorithms work.)
+
+I know what a DUN is. The problem here is that it's the unit of
+atomic IO the hardware supports when encryption is enabled....
+
+> For example hardware might *in general* support addressing 512-byte sectors and
+> thus have logical_block_size=512.  But it could also support encryption data
+> unit sizes [512, 1024, 2048, 4096].  Encrypted I/O has to be aligned to the data
+> unit size, not just to the logical block size.  The data unit size to use, and
+> whether to use encryption or not, is decided on a per-I/O basis.
+
+And that is the fundamental problem here: DUN > logical block size
+of the underlying device. i.e. The storage stack does not guarantee
+atomicity of such IOs.
+
+If inline encryption increases the size of the atomic unit of IO,
+then the logical block size of the device must increase to match it.
+If you do that, then the iomap and storage layers will guarantee
+that IOs are *always* aligned to DUN boundaries.
+
+> So in this case technically it's the filesystem (and later the
+> bio::bi_crypt_context which the filesystem sets) that knows about the alignment
+> needed -- *not* the request_queue.
+
+Exactly my point. Requiring infrastructure and storage layers to
+obey completely new, undefined, undiscoverable, opaque and variable
+definition of the block devices' "atomic unit of IO", then that's
+simply a non-starter. That requires a complete re-architecture of
+the block layers and how things interface and transmit information
+through them. At minimum, high level IO alignment constraints must
+be generic and not be hidden in context specific crypto structures.
+
+> Is it your opinion that inline encryption should only be supported when
+> data_unit_size <= logical_block_size?  The problems with that are
+
+Pretty much.
+
+>     (a) Using an unnecessarily small data_unit_size degrades performance a
+> 	lot -- for *all* I/O, not just direct I/O.  This is because there are a
+> 	lot more separate encryptions/decryptions to do, and there's a fixed
+> 	overhead to each one (much of which is intrinsic in the crypto
+> 	algorithms themselves, i.e. this isn't simply an implementation quirk).
+
+Performance is irrelevant if correctness is not possible.
+
+>     (b) fscrypt currently only supports data_unit_size == filesystem_block_size.
+> 	(OFC, filesystem_block_size may be greater than logical_block_size.)
+
+Which is just fine if FSB == logical block size.
+
+The existing constraint on filesystems is that FSB >= block device
+logical sector size as the filesystem has to be able to do single
+block IOs.  For inline encryption, this turns into a constraint on
+fscrypt that DUN <= logical block size because it requires IOs to be
+aligned to DUNs, not filesystem blocks..
+
+And because of the -implementation limitation- of fscrypt that DUN
+== FSB, that means the only valid configuration right now is DUN =
+FSB = logical sector size.
+
+>     (c) Filesystem images would be less portable, unless the minimum
+> 	data_unit_size were used everywhere which would degrade performance.
+
+Not my problem. If the hardware and/or kernel cannot support the
+requirements of the encryption used within the filesystem image,
+then it -should error out-.
+
+> (We could address (b) by allowing users to specify data_unit_size when
+> encrypting a directory.  That would add complexity, but it's possible.)
+> 
+> But again, as far as I can tell, fs/iomap/direct-io.c currently *does* guarantee
+> that *if* the input is fully filesystem-block-aligned and if blocksize <=
+> PAGE_SIZE, then the issued I/O is also filesystem-block-aligned.
+
+Please listen to what I'm saying, Eric.
+
+The -current iomap implementation- may provide that behaviour. That
+doesn't mean we guarantee that behaviour. i.e. the iomap -design-
+does not guaranteee that behaviour, and we don't guarantee such
+behaviour into the future. And we won't guarantee this behaviour -
+even though the current implementation may provide it - because the
+rest of the IO stack below iomap does not provide iomap with that
+guarantee.
+
+Hence if iomap cannot get a guarantee that IO it issues won't get
+split at some arbitrary boundary, it cannot provide filesystems with
+that guarantee.
+
+> So as far as I can tell, there isn't really any problem there, at least not now.
+> I just want to make sure we're on the same page...
+
+If that page is "fscrypt+inline encryption is making fundamentally
+flawed assumptions about IO stack behaviour" then, yes, we're on the
+same page.
+
+And that code that has fundamentally flawed assumptions is grounds
+for a NACK, yes?
+
+-Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
