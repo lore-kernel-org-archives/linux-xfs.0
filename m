@@ -2,89 +2,132 @@ Return-Path: <SRS0=7j32=BF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F890C433E4
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jul 2020 21:57:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2918C433E1
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jul 2020 22:52:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11CAA20715
-	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jul 2020 21:57:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D65C2053B
+	for <linux-xfs@archiver.kernel.org>; Sun, 26 Jul 2020 22:52:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=canb.auug.org.au header.i=@canb.auug.org.au header.b="L8GXh/8G"
+	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="JkDdmLMl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726736AbgGZV5X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 26 Jul 2020 17:57:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54352 "EHLO
+        id S1727053AbgGZWwF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 26 Jul 2020 18:52:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726636AbgGZV5X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jul 2020 17:57:23 -0400
-Received: from ozlabs.org (bilbo.ozlabs.org [IPv6:2401:3900:2:1::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E15E6C0619D2;
-        Sun, 26 Jul 2020 14:57:22 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4BFGxr4WmDz9sR4;
-        Mon, 27 Jul 2020 07:57:20 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=canb.auug.org.au;
-        s=201702; t=1595800640;
-        bh=w68z9elGHIX9P0R9RdUtZpCt3tNk3gp5u1a//7njPx0=;
-        h=Date:From:To:Cc:Subject:From;
-        b=L8GXh/8GQYLzBv5BYw78aBJTG7U7ftm9tIdeAC31yQ1mKqJRMf6w6gjY8ebc3/S/1
-         IyzmQKjqHh6eGNJ9mhJmSI2tDFPAmhLDmbeA32Ydehsmms7ag0DTrFjW4ITbHgzy2N
-         Bi1hoGdNR/07vHI9F+60BDTwcuCs2lfgv6yq0Y6GV7nvzIJC+iCxw1xF+jXhih40JQ
-         S3HoNbxXIKbiVcjxFLfgJnLhBYqWM0O7ADKOw/yx0AhPWybnMMF9FtC9xw5kxgx2RW
-         ZBo0pM5mCnmyEzTGejVOKFTDVA2IUTBnTUhr8uKaVXd+NZLgrrwRxM4k/2VIp2oDMM
-         Ga5xLZPYkVkEg==
-Date:   Mon, 27 Jul 2020 07:57:19 +1000
-From:   Stephen Rothwell <sfr@canb.auug.org.au>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc:     Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: linux-next: Signed-off-by missing for commit in the xfs tree
-Message-ID: <20200727075719.627a3efd@canb.auug.org.au>
+        with ESMTP id S1726467AbgGZWwE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 26 Jul 2020 18:52:04 -0400
+Received: from mail-qv1-xf44.google.com (mail-qv1-xf44.google.com [IPv6:2607:f8b0:4864:20::f44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A70EDC0619D5
+        for <linux-xfs@vger.kernel.org>; Sun, 26 Jul 2020 15:52:04 -0700 (PDT)
+Received: by mail-qv1-xf44.google.com with SMTP id di5so6604208qvb.11
+        for <linux-xfs@vger.kernel.org>; Sun, 26 Jul 2020 15:52:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=8qxqp4Cra7c8Q17ZGNold8rkyaZiozPWBwMAyhGj2zo=;
+        b=JkDdmLMlOOUeQhUCCC15e+gkl4e2eabFhCb9ynbxSm34RgDUqt6M37JmbF9hvf/noi
+         fiFoU3kOcsHOhNWXL74Ui2bXI3vyGhKCRSw9Msvo+e4uuTvycKoym9Lrcs1SiiWKhQcb
+         cuL/ajKCgjMdxo28TW2jfxoifsW/74Pnvjv5+gT1hggLnSYYtgEzIFjz6VNEMMGgp4jx
+         u+YJcX54ih5WlXdreWOiBX7ylgibmQ6QnmdGd2fqoIBXQYAmx6gVcqaa915e3Vsmhp3x
+         LMRhA8A+HoUvA5BsBW/hxJ5UB2PRENXf9ouMF1/xOHDoV/wQpvueF2EdJg23BOyuqG2l
+         Wt7w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=8qxqp4Cra7c8Q17ZGNold8rkyaZiozPWBwMAyhGj2zo=;
+        b=jXTGSSExFNpabPifSysmypUHoIX8i4WoJItBfq2dPTnq63FbHc7bDuDXCArPWz1jQd
+         6WudMg+XC+OTnawHFieZ5DnuCLJ3/M0T9H7s7zkclOyYLj7/gwgKoxx/or0JlOQ8Ha8a
+         rzMjoWEuf332ZkoYnHUE/njFRMOJc3XKz8iTx8QIdqXK3uPoFIZl/s5JBsC+X7nUCnYF
+         BrfgYXhPMOnz1WrNWAZGcL5qXPzNiy1mdpVPCBewV7BZBUyppm3dYfhv/iJmjrLYGqMm
+         eQO9rEwLy9QcTnV8YjqznRoYj3TXmObTPbtvO1QPxkzib6qXB+v+1RpwN1FjDlA1K+5P
+         IK/Q==
+X-Gm-Message-State: AOAM532sjSxPDX0VA2qj1vnvVqmyl7wUeFtjQcLJsrnY9ywRBpZ7iG3x
+        CcqET53Bi7E6+CGa/Er7fxpJNg==
+X-Google-Smtp-Source: ABdhPJxtX6CIU9klIDmZxKuPl98KVTqY07BMK/VxQByZcrYhNr3TrR1gvudNaJwU7iLZffa5iyqWPA==
+X-Received: by 2002:a05:6214:11f3:: with SMTP id e19mr9636442qvu.220.1595803923650;
+        Sun, 26 Jul 2020 15:52:03 -0700 (PDT)
+Received: from lca.pw (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
+        by smtp.gmail.com with ESMTPSA id p17sm2043556qtn.15.2020.07.26.15.52.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 26 Jul 2020 15:52:02 -0700 (PDT)
+Date:   Sun, 26 Jul 2020 18:51:54 -0400
+From:   Qian Cai <cai@lca.pw>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Matthew Wilcox <willy@infradead.org>, darrick.wong@oracle.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, khlebnikov@yandex-team.ru
+Subject: Re: WARN_ON_ONCE(1) in iomap_dio_actor()
+Message-ID: <20200726225154.GA929@lca.pw>
+References: <20200619211750.GA1027@lca.pw>
+ <20200620001747.GC8681@bombadil.infradead.org>
+ <20200724182431.GA4871@lca.pw>
+ <20200726152412.GA26614@infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="Sig_/znC0=KRqyGnD4u/8uyqbHhf";
- protocol="application/pgp-signature"; micalg=pgp-sha256
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200726152412.GA26614@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---Sig_/znC0=KRqyGnD4u/8uyqbHhf
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Sun, Jul 26, 2020 at 04:24:12PM +0100, Christoph Hellwig wrote:
+> On Fri, Jul 24, 2020 at 02:24:32PM -0400, Qian Cai wrote:
+> > On Fri, Jun 19, 2020 at 05:17:47PM -0700, Matthew Wilcox wrote:
+> > > On Fri, Jun 19, 2020 at 05:17:50PM -0400, Qian Cai wrote:
+> > > > Running a syscall fuzzer by a normal user could trigger this,
+> > > > 
+> > > > [55649.329999][T515839] WARNING: CPU: 6 PID: 515839 at fs/iomap/direct-io.c:391 iomap_dio_actor+0x29c/0x420
+> > > ...
+> > > > 371 static loff_t
+> > > > 372 iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+> > > > 373                 void *data, struct iomap *iomap, struct iomap *srcmap)
+> > > > 374 {
+> > > > 375         struct iomap_dio *dio = data;
+> > > > 376
+> > > > 377         switch (iomap->type) {
+> > > > 378         case IOMAP_HOLE:
+> > > > 379                 if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
+> > > > 380                         return -EIO;
+> > > > 381                 return iomap_dio_hole_actor(length, dio);
+> > > > 382         case IOMAP_UNWRITTEN:
+> > > > 383                 if (!(dio->flags & IOMAP_DIO_WRITE))
+> > > > 384                         return iomap_dio_hole_actor(length, dio);
+> > > > 385                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
+> > > > 386         case IOMAP_MAPPED:
+> > > > 387                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
+> > > > 388         case IOMAP_INLINE:
+> > > > 389                 return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
+> > > > 390         default:
+> > > > 391                 WARN_ON_ONCE(1);
+> > > > 392                 return -EIO;
+> > > > 393         }
+> > > > 394 }
+> > > > 
+> > > > Could that be iomap->type == IOMAP_DELALLOC ? Looking throught the logs,
+> > > > it contains a few pread64() calls until this happens,
+> > > 
+> > > It _shouldn't_ be able to happen.  XFS writes back ranges which exist
+> > > in the page cache upon seeing an O_DIRECT I/O.  So it's not supposed to
+> > > be possible for there to be an extent which is waiting for the contents
+> > > of the page cache to be written back.
+> > 
+> > Okay, it is IOMAP_DELALLOC. We have,
+> 
+> Can you share the fuzzer?  If we end up with delalloc space here we
+> probably need to fix a bug in the cache invalidation code.
 
-Hi all,
+This is just a wrapper of the trinity fuzzer.
 
-Commit
+# git clone https://gitlab.com/cailca/linux-mm
+# cd linux-mm; make
+# ./random -x 0-100 -f
 
-  ea52eff66dcd ("xfs: preserve inode versioning across remounts")
-
-is missing a Signed-off-by from its committer.
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/znC0=KRqyGnD4u/8uyqbHhf
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl8d/D8ACgkQAVBC80lX
-0Gwivwf8CykkuOiZjzkLPiHZubcnQZvD1GtaYVY8zAgReKO3S2QuX0eNkupoBMa/
-WEaZI271C1natetPsIg6OC7/TIuR2yWFP1dX/2zn4Ax4Swn5IEIjWQaPA6AvTucq
-EEaqLynqwEOYlT32NAl7BxvGwRatwVpuiiEGjiq5VcDAYx7vVTQTIzwgUGETzI3u
-oHvde8C3DuB0t6C8+y5ahUYIkzWAgZ8BB+a6TwbIRC66PDxPOIfODvJTD+hAna2c
-w3GnW1lGwBwXsT/98GTKn+5hQGCPHtIZXST2ggIJ1hTYLNKQYaAS5lR3rML/GjGM
-awsRhDDMdhVT5kxm4xhSFEODfKJ6TA==
-=NiM6
------END PGP SIGNATURE-----
-
---Sig_/znC0=KRqyGnD4u/8uyqbHhf--
+https://gitlab.com/cailca/linux-mm/-/blob/master/random.c#L1383
