@@ -2,162 +2,143 @@ Return-Path: <SRS0=NLen=BG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6AFAC433E3
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jul 2020 17:16:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB1CC433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jul 2020 18:52:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 822F62074F
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jul 2020 17:16:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595870178;
-	bh=7UCQgSoiooCyBil8fOSJp8RobRWZr1sCpOea8qGPx3c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=a2gjvs2smrL6sFn1MIUk+Z2yIfFxkOfcNmuOHlu7J61t9MO6asI5H8unSH6MCu3GW
-	 9KWAkIWWhh7iOi7W6QGKI44BArwwl0vi4m4dk2l0KiTfBi5EsX7A/h1Ndw6x/od1yn
-	 Ifwb3t/hQjrfqecbGdPydGaDASs+uoDUUXiqx95E=
+	by mail.kernel.org (Postfix) with ESMTP id 8FE0A2074F
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jul 2020 18:52:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="O5vn17/7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730653AbgG0RQS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jul 2020 13:16:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47900 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728021AbgG0RQR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 27 Jul 2020 13:16:17 -0400
-Received: from sol.localdomain (c-107-3-166-239.hsd1.ca.comcast.net [107.3.166.239])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A9042206E7;
-        Mon, 27 Jul 2020 17:16:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1595870176;
-        bh=7UCQgSoiooCyBil8fOSJp8RobRWZr1sCpOea8qGPx3c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=xLeAxijvamdVYBWP2+Xvnj2jRciZbuOyQV+Kr2OvyHP74SUbz5bInn0yjxVioK8iA
-         8RWxuGNDB39zHQEMFVvnNN+Y241XtQ8jBcC1cBB46iXnudHmAJqjUxgGzvnF30XsHK
-         t5+RylcDIYaB/36yRNq39qkw5MkMKxUWNmCGlon4=
-Date:   Mon, 27 Jul 2020 10:16:15 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Satya Tangirala <satyat@google.com>, linux-fscrypt@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 3/7] iomap: support direct I/O with fscrypt using
- blk-crypto
-Message-ID: <20200727171615.GJ1138@sol.localdomain>
-References: <20200722211629.GE2005@dread.disaster.area>
- <20200722223404.GA76479@sol.localdomain>
- <20200723220752.GF2005@dread.disaster.area>
- <20200723230345.GB870@sol.localdomain>
- <20200724013910.GH2005@dread.disaster.area>
- <20200724034628.GC870@sol.localdomain>
- <20200724053130.GO2005@dread.disaster.area>
- <20200724174132.GB819@sol.localdomain>
- <20200725234751.GR2005@dread.disaster.area>
- <20200726024211.GA14321@sol.localdomain>
+        id S1726268AbgG0SwV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jul 2020 14:52:21 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:36718 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726196AbgG0SwU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jul 2020 14:52:20 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06RIpZeV110220
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2020 18:52:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=hHmGEiTsae6apXliAIiLfSjF1J+pMBxhUGmXBJhqXXs=;
+ b=O5vn17/7KDoclQ4NlF5bz34H1aQtaK8EXNg/M4l7w8ZQ5QfhndwE9Luadsu57RcqPEZ0
+ 8tEQLLBOviehj+Q2IG3ihAud5SJi+49aMxiHQvjy3hSFwySaAfxYrVTEwGpuMn4ktzYZ
+ l6UF7nD4NpTnOtH+yFTmOcwptBPOJ31A62QN6JtMnjCyK+uh02Hez+lBG3bOcmznt803
+ kLDOa7cGH82iWDXTOdghYncNym/dPMt/GS2tki7txWtiVuXhielSua99PsyorjidsNTy
+ QBorPfNUIT07yeUW7RgDRrKokDPfDGK5ESR+4erIupWD0CtHN64r9vbfgVSYuo/3eZy8 bQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 32hu1j39fq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2020 18:52:19 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06RIiO9x038128
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2020 18:50:19 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 32hu5rf7bu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2020 18:50:19 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06RIoHas026583
+        for <linux-xfs@vger.kernel.org>; Mon, 27 Jul 2020 18:50:18 GMT
+Received: from localhost (/10.159.140.18)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 27 Jul 2020 11:50:17 -0700
+Date:   Mon, 27 Jul 2020 11:50:16 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] xfs: Fix compiler warning in
+ xfs_attr_node_removename_setup
+Message-ID: <20200727185016.GB3151642@magnolia>
+References: <20200727022608.18535-1-allison.henderson@oracle.com>
+ <20200727022608.18535-2-allison.henderson@oracle.com>
+ <20200727154611.GA3151642@magnolia>
+ <a641cbc8-6cda-25b2-f6e6-63e52fde572a@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200726024211.GA14321@sol.localdomain>
+In-Reply-To: <a641cbc8-6cda-25b2-f6e6-63e52fde572a@oracle.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9695 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 adultscore=0 bulkscore=0
+ malwarescore=0 mlxscore=0 spamscore=0 mlxlogscore=999 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007270126
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9695 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
+ lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxscore=0 impostorscore=0
+ phishscore=0 adultscore=0 suspectscore=2 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007270127
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Jul 25, 2020 at 07:42:11PM -0700, Eric Biggers wrote:
-> > Exactly my point. Requiring infrastructure and storage layers to
-> > obey completely new, undefined, undiscoverable, opaque and variable
-> > definition of the block devices' "atomic unit of IO", then that's
-> > simply a non-starter. That requires a complete re-architecture of
-> > the block layers and how things interface and transmit information
-> > through them. At minimum, high level IO alignment constraints must
-> > be generic and not be hidden in context specific crypto structures.
+On Mon, Jul 27, 2020 at 09:51:54AM -0700, Allison Collins wrote:
 > 
-> Do you have any specific examples in mind of where *encrypted* I/O may broken at
-> only a logical_block_size boundary?  Remember that encrypted I/O with a
-> particular data_unit_size is only issued if the request_queue has declared that
-> it supports encryption with that data_unit_size.  In the case of a layered
-> device, that means that every layer would have to opt-into supporting encryption
-> as well as the specific data_unit_size.
 > 
-> Also, the alignment requirement is already passed down the stack as part of the
-> bio_crypt_ctx.  If there do turn out to be places that need to use it, we could
-> easily define generic helper functions:
+> On 7/27/20 8:46 AM, Darrick J. Wong wrote:
+> > On Sun, Jul 26, 2020 at 07:26:07PM -0700, Allison Collins wrote:
+> > > Fix compiler warning for variable 'blk' set but not used in
+> > > xfs_attr_node_removename_setup.  blk is used only in an ASSERT so only
+> > > declare blk when DEBUG is set.
+> > > 
+> > > Reported-by: kernel test robot <lkp@intel.com>
+> > > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> > > ---
+> > >   fs/xfs/libxfs/xfs_attr.c | 2 ++
+> > >   1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > > index d4583a0..5168d32 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr.c
+> > > +++ b/fs/xfs/libxfs/xfs_attr.c
+> > > @@ -1174,7 +1174,9 @@ int xfs_attr_node_removename_setup(
+> > >   	struct xfs_da_state	**state)
+> > >   {
+> > >   	int			error;
+> > > +#ifdef DEBUG
+> > >   	struct xfs_da_state_blk	*blk;
+> > > +#endif
+> > 
+> > But now a non-DEBUG compilation will trip over the assignment to blk:
+> > 
+> > 	blk = &(*state)->path.blk[(*state)->path.active - 1];
+> > 
+> > that comes just before the asserts, right?
+> > 
+> > 	ASSERT((*state)->path.blk[(*state)->path.active - 1].bp != NULL);
+> > 	ASSERT((*state)->path.blk[(*state)->path.active - 1].magic ==
+> > 		XFS_ATTR_LEAF_MAGIC);
+> > 
+> > In the end you probably just want to encode the accessor logic in the
+> > assert body so the whole thing just disappears entirely.
+> Are you sure you'd rather have it that way, then once up in the declaration?
+> Like this:
 > 
-> unsigned int bio_required_alignment(struct bio *bio)
-> {
->         unsigned int alignmask = queue_logical_block_size(bio->bi_disk->queue) - 1;
-> 
-> #ifdef CONFIG_BLK_INLINE_ENCRYPTION
->         if (bio->bi_crypt_context)
->                 alignmask |= bio->bi_crypt_context->bc_key->crypto_cfg.data_unit_size - 1;
+> #ifdef DEBUG
+> 	struct xfs_da_state_blk	*blk = &(*state)->path.blk[(*state)->path.active -
+> 1];
 > #endif
-> 
->         return alignmask + 1;
-> }
-> 
-> unsigned int rq_required_alignment(struct request *rq)
-> {
->         unsigned int alignmask = queue_logical_block_size(rq->q) - 1;
-> 
-> #ifdef CONFIG_BLK_INLINE_ENCRYPTION
->         if (rq->crypt_ctx)
->                 alignmask |= rq->crypt_ctx->bc_key->crypto_cfg.data_unit_size - 1;
-> #endif
-> 
->         return alignmask + 1;
-> }
-> 
-> Sure, we could also add a new alignment_required field to struct bio and struct
-> request, but it would be unnecessary since all the information is already there.
-> 
-> > > Is it your opinion that inline encryption should only be supported when
-> > > data_unit_size <= logical_block_size?  The problems with that are
-> > 
-> > Pretty much.
-> > 
-> > >     (a) Using an unnecessarily small data_unit_size degrades performance a
-> > > 	lot -- for *all* I/O, not just direct I/O.  This is because there are a
-> > > 	lot more separate encryptions/decryptions to do, and there's a fixed
-> > > 	overhead to each one (much of which is intrinsic in the crypto
-> > > 	algorithms themselves, i.e. this isn't simply an implementation quirk).
-> > 
-> > Performance is irrelevant if correctness is not possible.
-> > 
-> 
-> As far as I know, data_unit_size > logical_block_size is working for everyone
-> who has used it so far.
-> 
-> So again, I'm curious if you have any specific examples in mind.  Is this a
-> real-world problem, or just a theoretical case where (in the future) someone
-> could declare support for some data_unit_size in their 'struct request_queue'
-> (possibly for a layered device) without correctly handling alignment in all
-> cases?
-> 
-> I do see that logical_block_size is used for discard, write_same, and zeroout.
-> But that isn't encrypted I/O.
-> 
-> BTW, there might very well be hardware that *only* supports
-> data_unit_size > logical_block_size.
 
-I found get_max_io_size() in block/blk-merge.c.  I'll check if that needs to be
-updated.
+I thought xfs_attr_node_hasname could allocate the da state and set
+*state, which means that we can't dereference *state until after that
+call?
 
-Let me know if you have any objection to the fscrypt inline encryption patches
-*without direct I/O support* going into 5.9.  Note that fscrypt doesn't directly
-care about this block layer stuff at all; instead it uses
-blk_crypto_config_supported() to check whether inline encryption with the
-specified (crypto_mode, data_unit_size, dun_bytes) combination is supported on
-the filesystem's device(s).  Only then will fscrypt use inline encryption
-instead of the traditional filesystem-layer encryption.
+--D
 
-So if blk_crypto_config_supported() is saying that some crypto configuration is
-supported when it isn't, then that's a bug in the blk-crypto patches that went
-into the block layer in 5.8, which we need to fix there.  (Ideally by fixing any
-cases where encrypted I/O may be split in the middle of a data unit.  But in the
-worst case, we could easily make blk_crypto_config_supported() return false when
-'data_unit_size > logical_block_size' for now.)
-
-- Eric
+> > 
+> > --D
+> > 
+> > >   	error = xfs_attr_node_hasname(args, state);
+> > >   	if (error != -EEXIST)
+> > > -- 
+> > > 2.7.4
+> > > 
