@@ -2,117 +2,123 @@ Return-Path: <SRS0=NLen=BG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2C0EC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jul 2020 09:35:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 057D1C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jul 2020 10:03:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86A24206E7
-	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jul 2020 09:35:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3B1120672
+	for <linux-xfs@archiver.kernel.org>; Mon, 27 Jul 2020 10:03:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H88LdCbS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726269AbgG0JfE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 27 Jul 2020 05:35:04 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:12171 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726139AbgG0JfE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jul 2020 05:35:04 -0400
-X-IronPort-AV: E=Sophos;i="5.75,401,1589212800"; 
-   d="scan'208";a="96909954"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 27 Jul 2020 17:35:02 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 555624CE2808;
-        Mon, 27 Jul 2020 17:35:01 +0800 (CST)
-Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Mon, 27 Jul 2020 17:35:04 +0800
-Received: from Fedora-30.g08.fujitsu.local (10.167.220.106) by
- G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Mon, 27 Jul 2020 17:35:04 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-To:     <darrick.wong@oracle.com>, <ira.weiny@intel.com>
-CC:     <linux-xfs@vger.kernel.org>, Xiao Yang <yangx.jy@cn.fujitsu.com>
-Subject: [PATCH] fs/xfs: Support that ioctl(SETXFLAGS/GETXFLAGS) can set/get inode DAX on XFS.
-Date:   Mon, 27 Jul 2020 17:27:44 +0800
-Message-ID: <20200727092744.2641-1-yangx.jy@cn.fujitsu.com>
-X-Mailer: git-send-email 2.21.0
+        id S1726885AbgG0KDT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 27 Jul 2020 06:03:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53168 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726139AbgG0KDT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 27 Jul 2020 06:03:19 -0400
+Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 157FEC061794;
+        Mon, 27 Jul 2020 03:03:19 -0700 (PDT)
+Received: by mail-il1-x142.google.com with SMTP id j9so9165170ilc.11;
+        Mon, 27 Jul 2020 03:03:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=SbcIk9QRVNmTa64FQw2LUqJ0DwejPGC1RXXC9k0XwjI=;
+        b=H88LdCbSw6dH961YkMIE7I7REvkthDXLwiokY35x5QKJe+KgovD4xNQNHCYC2B2smH
+         hMvJQOZ8f1lzV0rwAT2fZGHlWcciAuUiw4yawOGZb1OgEXBvguPS4Vkvgui/UAvqZeR4
+         g1LoiCRi7IrrYF51ggb/CK4qoYdO68669xmNVUxDJbglXy1x+SeOgN1uO6w+U2/YFcHw
+         wOJXZKtvoqUG2LBWoZpFJda+vvJoKH8Ms+zt/UZYkMMr5lMb1WSlfcZ8VvxLKIA3RSK4
+         xHsaQtMH8I1+rn6MLe+Fr+ryuPLgjKpUd1nbBYmH0nkXH20Aqc3b9V4Ef33XrbFgWLN+
+         7cag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=SbcIk9QRVNmTa64FQw2LUqJ0DwejPGC1RXXC9k0XwjI=;
+        b=JLoA2JFVGOM7Pa6obJ5M6yebJWdy2oghB1t2t4zG3nSfXUmuJe5Q/8DOSRmtKf6G/F
+         cAI1+25z5Abv/pfB3ExqPiqTYu7bVusAHeSFkEBOMiLDZfGlL9Z3fv3i6B9bFbJY6md6
+         9f1++7WIUj/6T5DzGGg+p28FTTEu6ZazNuTXh9spvPEmdjIzscfTraoEud2noZBJvqKU
+         U3q+QLanmgitDuGlTkQ55U+khb3fEyESGmQ/gmFz2PUpqk2nB/8k/SYgIOEPlC9VatN2
+         FmefpfDZss5JiaWd6X1Qa+SgS+BjROgtVhUC75QCnGHqMhGXHv5yRAM7y+vFQDSYO/e4
+         wwBw==
+X-Gm-Message-State: AOAM531uql5L497t1JiLfDujs3Kz0mJs1vih6XKSIWLTUV3UnX92jziD
+        z5jrBeoMBRXeN7AJgJCgBOBUfNJM7BPNGaVx66ewNz62
+X-Google-Smtp-Source: ABdhPJxJSBcMJciRLSTi9EnWlJPB63Ai95H7UpZj0ExgEiiivXRREnUn9J5JqqB/sEzaPW4V0p/djZBaW8EAeKmCTjE=
+X-Received: by 2002:a92:730e:: with SMTP id o14mr15302562ilc.203.1595844198388;
+ Mon, 27 Jul 2020 03:03:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 555624CE2808.A7DC5
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+References: <20200726145726.1484-1-laoar.shao@gmail.com> <20200726160400.GF23808@casper.infradead.org>
+In-Reply-To: <20200726160400.GF23808@casper.infradead.org>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Mon, 27 Jul 2020 18:02:42 +0800
+Message-ID: <CALOAHbBVK2qK0y3vtU7VgxaWOGTk1VAV_k9LSgGcXgy85dJDhQ@mail.gmail.com>
+Subject: Re: [PATCH v3] xfs: introduce task->in_fstrans for transaction
+ reservation recursion protection
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Michal Hocko <mhocko@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Linux MM <linux-mm@kvack.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-1) FS_DAX_FL has been introduced by commit b383a73f2b83.
-2) In future, chattr/lsattr command from e2fsprogs can set/get
-   inode DAX on XFS by calling ioctl(SETXFLAGS/GETXFLAGS).
+On Mon, Jul 27, 2020 at 12:04 AM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Sun, Jul 26, 2020 at 10:57:26AM -0400, Yafang Shao wrote:
+> > Bellow comment is quoted from Dave,
+>
+> FYI, you mean "Below", not "Bellow".  Dave doesn't often bellow.
 
-Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
----
- fs/xfs/xfs_ioctl.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+Ah, thanks for pointing that out. I often make that kind of misstake.
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index a190212ca85d..6f22a66777cd 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1075,13 +1075,18 @@ xfs_merge_ioc_xflags(
- 		xflags |= FS_XFLAG_NODUMP;
- 	else
- 		xflags &= ~FS_XFLAG_NODUMP;
-+	if (flags & FS_DAX_FL)
-+		xflags |= FS_XFLAG_DAX;
-+	else
-+		xflags &= ~FS_XFLAG_DAX;
- 
- 	return xflags;
- }
- 
- STATIC unsigned int
- xfs_di2lxflags(
--	uint16_t	di_flags)
-+	uint16_t	di_flags,
-+	uint64_t	di_flags2)
- {
- 	unsigned int	flags = 0;
- 
-@@ -1095,6 +1100,9 @@ xfs_di2lxflags(
- 		flags |= FS_NOATIME_FL;
- 	if (di_flags & XFS_DIFLAG_NODUMP)
- 		flags |= FS_NODUMP_FL;
-+	if (di_flags2 & XFS_DIFLAG2_DAX) {
-+		flags |= FS_DAX_FL;
-+	}
- 	return flags;
- }
- 
-@@ -1565,7 +1573,7 @@ xfs_ioc_getxflags(
- {
- 	unsigned int		flags;
- 
--	flags = xfs_di2lxflags(ip->i_d.di_flags);
-+	flags = xfs_di2lxflags(ip->i_d.di_flags, ip->i_d.di_flags2);
- 	if (copy_to_user(arg, &flags, sizeof(flags)))
- 		return -EFAULT;
- 	return 0;
-@@ -1588,7 +1596,7 @@ xfs_ioc_setxflags(
- 
- 	if (flags & ~(FS_IMMUTABLE_FL | FS_APPEND_FL | \
- 		      FS_NOATIME_FL | FS_NODUMP_FL | \
--		      FS_SYNC_FL))
-+		      FS_SYNC_FL | FS_DAX_FL))
- 		return -EOPNOTSUPP;
- 
- 	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
+>
+> > As a result, we should reintroduce PF_FSTRANS. Because PF_FSTRANS is only
+> > set by current, we can move it out of task->flags to avoid being out of PF_
+> > flags. So a new flag in_fstrans is introduced.
+>
+> I don't think we need a new flag for this.  I think you can just set
+> current->journal_info to a non-NULL value.
+
+Seems like a good suggestion.
+I will think about it.
+
+>
+> > +++ b/fs/xfs/xfs_linux.h
+> > @@ -111,6 +111,20 @@ typedef __u32                    xfs_nlink_t;
+> >  #define current_restore_flags_nested(sp, f)  \
+> >               (current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
+> >
+> > +static inline unsigned int xfs_trans_context_start(void)
+> > +{
+> > +     unsigned int flags = current->in_fstrans;
+> > +
+> > +     current->in_fstrans = 1;
+> > +
+> > +     return flags;
+> > +}
+> > +
+> > +static inline void xfs_trans_context_end(unsigned int flags)
+> > +{
+> > +     current->in_fstrans = flags ? 1 : 0;
+> > +}
+>
+> Does XFS support nested transactions?  If we're just using
+> current->journal_info, we can pretend its an unsigned long and use it
+> as a counter rather than handle the nesting the same way as the GFP flags.
+>
+
+
 -- 
-2.21.0
-
-
-
+Thanks
+Yafang
