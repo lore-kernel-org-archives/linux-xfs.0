@@ -2,133 +2,117 @@ Return-Path: <SRS0=dxv4=BH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7950AC433E3
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jul 2020 11:58:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 689D8C433E5
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jul 2020 13:15:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51E14206D7
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jul 2020 11:58:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4885D206D8
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jul 2020 13:15:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xjKWwMZq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="b/7l3miI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728364AbgG1L6w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jul 2020 07:58:52 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:58690 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728129AbgG1L6w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jul 2020 07:58:52 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06SBvshP046593
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jul 2020 11:58:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=+Yhm6uljOZ1ZygJZTARUeL4mynmOR4OiGWSrSvONlFY=;
- b=xjKWwMZqL+qIp2q/7ndl59tDY8BI6uAXwIBFYxou6evbrwnyLGQCoOJx+9ymVec0OC3b
- Gj7Lm/JYOn5fgjO2FUcIMN/+OjMn4nwNQ2e7uYrvnD0kBCdi1+hHgOla2J1UWieXjvve
- W8KcSvFR70F2pldGrILZACrlWaWhKZU8AdzR1RE6EGx3brwfEcyf8o65jm2H1G1uIY3Q
- VldiTTgZz7ikhLRNhZMrt5fZt+uLjo57hdh4PDRiaMg4gEe9Ywy4nBuRgYLO0y65kamh
- IOMRO9NZLnJMFyRBnc6D2vEG2klCslCtmSBy3cMS3oKPku2+qIj6O4Re0XnlYG5x7IzM hA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 32hu1j70u9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jul 2020 11:58:26 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06SBwPBZ088513
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jul 2020 11:58:26 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 32hu5tn0w9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jul 2020 11:58:26 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 06SBvwnZ011435
-        for <linux-xfs@vger.kernel.org>; Tue, 28 Jul 2020 11:58:01 GMT
-Received: from mwanda (/41.57.98.10)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Jul 2020 04:57:57 -0700
-Date:   Tue, 28 Jul 2020 14:57:52 +0300
-From:   <dan.carpenter@oracle.com>
-To:     allison.henderson@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Subject: [bug report] xfs: Add xfs_has_attr and subroutines
-Message-ID: <20200728115752.GA426300@mwanda>
+        id S1730011AbgG1NPJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jul 2020 09:15:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52428 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729853AbgG1NPI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jul 2020 09:15:08 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 604A5C061794;
+        Tue, 28 Jul 2020 06:15:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ZHMkQDJHn0zeY8FYCEBJ2eds7Y8bNR+OKpl6shmcGbI=; b=b/7l3miILmZezVLADSpph+v5Or
+        Xn6wZxOT4Aa7YplNd7piMOxm73z0wsg6c709ExUWYVuIh6qVekx78kXSHmB1TigNQlG4OWgaqydae
+        /ljo9oqOdRgDmBlhGej+pTENWzR9KAER2L5RQQnF7VAPr6fcNelXyvggF00BeO7oQim50GaFjS3xv
+        zseW3J0Ps0Xtpb9ji5+/m5G9M6szb4vLNjcEJAAbUoETTYdvQJr1902KyTcfnszq0K04vZ4Nae6gL
+        LdAWObKGeK3HqYvhyaGX69eFD0FHSW1OLAJMlHjkvoAB/qK1CduggVaApPJeftgsph60MsUGx+s8f
+        0iWrzlBQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1k0PRh-0004V8-63; Tue, 28 Jul 2020 13:15:05 +0000
+Date:   Tue, 28 Jul 2020 14:15:05 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Brian Foster <bfoster@redhat.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iomap: Ensure iop->uptodate matches PageUptodate
+Message-ID: <20200728131505.GQ23808@casper.infradead.org>
+References: <20200726091052.30576-1-willy@infradead.org>
+ <20200726230657.GT2005@dread.disaster.area>
+ <20200726232022.GH23808@casper.infradead.org>
+ <20200726235335.GU2005@dread.disaster.area>
+ <20200728092301.GA32142@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9695 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=11 adultscore=0
- bulkscore=0 malwarescore=0 mlxscore=0 spamscore=0 mlxlogscore=597
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007280091
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9695 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=570
- lowpriorityscore=0 malwarescore=0 clxscore=1011 mlxscore=0 impostorscore=0
- phishscore=0 adultscore=0 suspectscore=11 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007280091
+In-Reply-To: <20200728092301.GA32142@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello Allison Collins,
+On Tue, Jul 28, 2020 at 10:23:01AM +0100, Christoph Hellwig wrote:
+> On Mon, Jul 27, 2020 at 09:53:35AM +1000, Dave Chinner wrote:
+> > Yes, I understand the code accepts it can happen; what I dislike is
+> > code that asserts subtle behaviour can happen, then doesn't describe
+> > that exactly why/how that condition can occur. And then, because we
+> > don't know exactly how something happens, we add work arounds to
+> > hide issues we can't reason through fully. That's .... suboptimal.
+> > 
+> > Christoph might know off the top of his head how we get into this
+> > state. Once we work it out, then we need to add comments...
+> 
+> Unfortunately I don't know offhand.  I'll need to spend some more
+> quality time with this code first.
 
-The patch cfe3d8821c6f: "xfs: Add xfs_has_attr and subroutines" from
-Jul 20, 2020, leads to the following Smatch warning:
+The code reads like you had several ideas for how the uptodate array
+works, changing your mind as you went along, and it didn't quite get to
+a coherent state before it was merged.  For example, there are parts
+of the code which think that a clear bit in the uptodate array means
+there's a hole in the file, eg
 
-	fs/xfs/libxfs/xfs_attr.c:1431 xfs_attr_node_get()
-	warn: variable dereferenced before check 'state' (see line 1426)
+fs/iomap/seek.c:page_seek_hole_data() calls iomap_is_partially_uptodate()
 
-fs/xfs/libxfs/xfs_attr.c
-  1398  STATIC int
-  1399  xfs_attr_node_get(
-  1400          struct xfs_da_args      *args)
-  1401  {
-  1402          struct xfs_da_state     *state;
-  1403          struct xfs_da_state_blk *blk;
-  1404          int                     i;
-  1405          int                     error;
-  1406  
-  1407          trace_xfs_attr_node_get(args);
-  1408  
-  1409          /*
-  1410           * Search to see if name exists, and get back a pointer to it.
-  1411           */
-  1412          error = xfs_attr_node_hasname(args, &state);
-  1413          if (error != -EEXIST)
-  1414                  goto out_release;
-                        ^^^^^^^^^^^^^^^^
-state can be NULL.
+but we set the uptodate bits when zeroing the parts of the page which
+are covered by holes in iomap_readpage_actor()
 
-  1415  
-  1416          /*
-  1417           * Get the value, local or "remote"
-  1418           */
-  1419          blk = &state->path.blk[state->path.active - 1];
-  1420          error = xfs_attr3_leaf_getvalue(blk->bp, args);
-  1421  
-  1422          /*
-  1423           * If not in a transaction, we have to release all the buffers.
-  1424           */
-  1425  out_release:
-  1426          for (i = 0; i < state->path.active; i++) {
-                                ^^^^^^^^^^^^^^^^^^
-Dereference
+> > > Way ahead of you
+> > > http://git.infradead.org/users/willy/pagecache.git/commitdiff/5a1de6fc4f815797caa4a2f37c208c67afd7c20b
+> > 
+> > *nod*
+> > 
+> > I would suggest breaking that out as a separate cleanup patch and
+> > not hide is in a patch that contains both THP modifications and bug
+> > fixes. It stands alone as a valid cleanup.
+> 
+> I'm pretty sure I already suggested that when it first showed up.
+> 
+> That being said I have another somewhat related thing in this area
+> that I really want to get done before THP support, and maybe I can
+> offload it to willy:
+> 
+> Currently we always allocate the iomap_page structure for blocksize
+> < PAGE_SIZE.  While this was easy to implement and a major improvement
+> over the buffer heads it actually is quite silly, as we only actually
+> need it if we either have sub-page uptodate state, or have extents
+> boundaries in the page.  So what I'd like to do is to only actually
+> allocate it in that case.  By doing the allocation lazy it should also
+> help to never allocate one that is marked all uptodate from the start.
 
-  1427                  xfs_trans_brelse(args->trans, state->path.blk[i].bp);
-  1428                  state->path.blk[i].bp = NULL;
-  1429          }
-  1430  
-  1431          if (state)
-                    ^^^^^
-To late.
+Hah, I want to do that too, and I was afraid I was going to have to
+argue with you about it!
 
-  1432                  xfs_da_state_free(state);
-  1433          return error;
-  1434  }
+My thinking was to skip the allocation if the page lies entirely within
+an iomap extent.  That will let us skip the allocation even for THPs
+unless the file is fragmented.
 
-regards,
-dan carpenter
+I don't think it needs to get done before THP support, they're pretty
+orthogonal.
