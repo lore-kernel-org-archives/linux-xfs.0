@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ED19C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jul 2020 18:27:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1916AC433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jul 2020 18:36:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65CA320714
-	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jul 2020 18:27:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0489F20825
+	for <linux-xfs@archiver.kernel.org>; Tue, 28 Jul 2020 18:36:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728401AbgG1S1Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jul 2020 14:27:24 -0400
-Received: from sandeen.net ([63.231.237.45]:48762 "EHLO sandeen.net"
+        id S1732463AbgG1SgD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jul 2020 14:36:03 -0400
+Received: from sandeen.net ([63.231.237.45]:49156 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728179AbgG1S1X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 28 Jul 2020 14:27:23 -0400
+        id S1729475AbgG1SgD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 28 Jul 2020 14:36:03 -0400
 Received: from Liberator.local (047-025-251-180.res.spectrum.com [47.25.251.180])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 5D9123289E3;
-        Tue, 28 Jul 2020 13:26:32 -0500 (CDT)
-Subject: Re: [PATCH v4 1/2] xfs: Fix compiler warning in
- xfs_attr_node_removename_setup
+        by sandeen.net (Postfix) with ESMTPSA id D87514D1B9F;
+        Tue, 28 Jul 2020 13:35:11 -0500 (CDT)
+Subject: Re: [PATCH v4 2/2] xfs: Fix compiler warning in
+ xfs_attr_shortform_add
 To:     Allison Collins <allison.henderson@oracle.com>,
         linux-xfs@vger.kernel.org
 References: <20200728043220.17231-1-allison.henderson@oracle.com>
- <20200728043220.17231-2-allison.henderson@oracle.com>
+ <20200728043220.17231-3-allison.henderson@oracle.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -73,12 +73,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <fb8e39e8-2571-2511-a41f-3f36c2cc1873@sandeen.net>
-Date:   Tue, 28 Jul 2020 11:27:20 -0700
+Message-ID: <77934ee0-b7ae-23e5-dee2-4990f74ca269@sandeen.net>
+Date:   Tue, 28 Jul 2020 11:36:00 -0700
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200728043220.17231-2-allison.henderson@oracle.com>
+In-Reply-To: <20200728043220.17231-3-allison.henderson@oracle.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,40 +88,41 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 7/27/20 9:32 PM, Allison Collins wrote:
-> Fix compiler warning for variable 'blk' set but not used in
-> xfs_attr_node_removename_setup.
+> Fix compiler warning warning: variable 'error' set but not used in
+> xfs_attr_shortform_add.
 > 
 > Reported-by: kernel test robot <lkp@intel.com>
 > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 
-Fixes: 534c7e150352 ("xfs: Add helper function xfs_attr_node_removename_setup")
+Fixes: cfe3d8821c6f ("xfs: Add xfs_has_attr and subroutines")
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  fs/xfs/libxfs/xfs_attr.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
+>  fs/xfs/libxfs/xfs_attr_leaf.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index d4583a0..e5ec9ed 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1174,15 +1174,14 @@ int xfs_attr_node_removename_setup(
->  	struct xfs_da_state	**state)
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index ad7b351..8623c81 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -715,7 +715,7 @@ xfs_attr_shortform_add(
 >  {
->  	int			error;
-> -	struct xfs_da_state_blk	*blk;
+>  	struct xfs_attr_shortform	*sf;
+>  	struct xfs_attr_sf_entry	*sfe;
+> -	int				offset, size, error;
+> +	int				offset, size;
+>  	struct xfs_mount		*mp;
+>  	struct xfs_inode		*dp;
+>  	struct xfs_ifork		*ifp;
+> @@ -729,8 +729,8 @@ xfs_attr_shortform_add(
+>  	ifp = dp->i_afp;
+>  	ASSERT(ifp->if_flags & XFS_IFINLINE);
+>  	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+> -	error = xfs_attr_sf_findname(args, &sfe, NULL);
+> -	ASSERT(error != -EEXIST);
+> +	if (xfs_attr_sf_findname(args, &sfe, NULL) == -EEXIST)
+> +		ASSERT(0);
 >  
->  	error = xfs_attr_node_hasname(args, state);
->  	if (error != -EEXIST)
->  		return error;
->  
-> -	blk = &(*state)->path.blk[(*state)->path.active - 1];
-> -	ASSERT(blk->bp != NULL);
-> -	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-> +	ASSERT((*state)->path.blk[(*state)->path.active - 1].bp != NULL);
-> +	ASSERT((*state)->path.blk[(*state)->path.active - 1].magic ==
-> +		XFS_ATTR_LEAF_MAGIC);
->  
->  	if (args->rmtblkno > 0) {
->  		error = xfs_attr_leaf_mark_incomplete(args, *state);
+>  	offset = (char *)sfe - (char *)sf;
+>  	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
 > 
