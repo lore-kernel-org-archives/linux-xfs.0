@@ -2,154 +2,131 @@ Return-Path: <SRS0=aQ/b=BI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62502C433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 05:19:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADF23C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 08:45:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4840820786
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 05:19:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98B862065E
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 08:45:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726299AbgG2FTa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jul 2020 01:19:30 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60080 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726203AbgG2FTa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jul 2020 01:19:30 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 35D0A367CFD;
-        Wed, 29 Jul 2020 15:19:24 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k0eUt-0003Qx-20; Wed, 29 Jul 2020 15:19:23 +1000
-Date:   Wed, 29 Jul 2020 15:19:23 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Zhengyuan Liu <liuzhengyuang521@gmail.com>,
-        linux-xfs@vger.kernel.org, Zhengyuan Liu <liuzhengyuan@kylinos.cn>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Question] About XFS random buffer write performance
-Message-ID: <20200729051923.GZ2005@dread.disaster.area>
-References: <CAOOPZo45E+hVAo9S_2psMJQzrzwmVKo_WjWOM7Zwhm_CS0J3iA@mail.gmail.com>
- <20200728153453.GC3151642@magnolia>
- <20200728154753.GS23808@casper.infradead.org>
- <20200729015458.GY2005@dread.disaster.area>
- <20200729021231.GV23808@casper.infradead.org>
+        id S1728129AbgG2Ipd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jul 2020 04:45:33 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:19810 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727054AbgG2Ipc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jul 2020 04:45:32 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06T8WR1Q053522;
+        Wed, 29 Jul 2020 04:45:30 -0400
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 32jpw40reg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 29 Jul 2020 04:45:29 -0400
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 06T8TnkI026980;
+        Wed, 29 Jul 2020 08:45:28 GMT
+Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
+        by ppma03ams.nl.ibm.com with ESMTP id 32gcpx4u4c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 29 Jul 2020 08:45:27 +0000
+Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 06T8i0xC55640444
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 29 Jul 2020 08:44:00 GMT
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 36A6A11C05C;
+        Wed, 29 Jul 2020 08:45:25 +0000 (GMT)
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id E610911C050;
+        Wed, 29 Jul 2020 08:45:23 +0000 (GMT)
+Received: from localhost.localdomain.com (unknown [9.199.33.112])
+        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed, 29 Jul 2020 08:45:23 +0000 (GMT)
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+To:     linux-nvdimm@lists.01.org
+Cc:     linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>
+Subject: [RFC 1/1] pmem: Add cond_resched() in bio_for_each_segment loop in pmem_make_request
+Date:   Wed, 29 Jul 2020 14:15:18 +0530
+Message-Id: <0d96e2481f292de2cda8828b03d5121004308759.1596011292.git.riteshh@linux.ibm.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200729021231.GV23808@casper.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8
-        a=U3rayDVxfcYZLsYnrqQA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-07-29_03:2020-07-28,2020-07-29 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
+ adultscore=0 lowpriorityscore=0 priorityscore=1501 mlxlogscore=842
+ malwarescore=0 spamscore=0 impostorscore=0 suspectscore=1 clxscore=1011
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007290055
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 29, 2020 at 03:12:31AM +0100, Matthew Wilcox wrote:
-> On Wed, Jul 29, 2020 at 11:54:58AM +1000, Dave Chinner wrote:
-> > On Tue, Jul 28, 2020 at 04:47:53PM +0100, Matthew Wilcox wrote:
-> > > I propose we do away with the 'uptodate' bit-array and replace it with an
-> > > 'writeback' bit-array.  We set the page uptodate bit whenever the reads to
-> > 
-> > That's just per-block dirty state tracking. But when we set a single
-> > bit, we still need to set the page dirty flag.
-> 
-> It's not exactly dirty, though.  It's 'present' (ie the opposite
-> of hole). 
+For systems which do not have CONFIG_PREEMPT set and
+if there is a heavy multi-threaded load/store operation happening
+on pmem + sometimes along with device latencies, softlockup warnings like
+this could trigger. This was seen on Power where pagesize is 64K.
 
-Careful with your terminology. At the page cache level, there is no
-such thing as a "hole". There is only data and whether the data is
-up to date or not. The page cache may be *sparsely populated*, but
-a lack of a page or a range of the page that is not up to date
-does not imply there is a -hole in the file- at that point.
+To avoid softlockup, this patch adds a cond_resched() in this path.
 
-I'm still not sure what "present" is supposed to mean, though,
-because it seems no different to "up to date". The data is present
-once it's been read into the page, calling page_mkwrite() on the
-page doesn't change that at all.
+<...>
+watchdog: BUG: soft lockup - CPU#31 stuck for 22s!
+<...>
+CPU: 31 PID: 15627 <..> 5.3.18-20
+<...>
+NIP memcpy_power7+0x43c/0x7e0
+LR memcpy_flushcache+0x28/0xa0
 
-> I'm not attached to the name.  So it can be used to
-> implement iomap_is_partially_uptodate.  If the page is dirty, the chunks
-> corresponding to the present bits get written back, but we don't track
-> a per-block dirty state.
+Call Trace:
+memcpy_power7+0x274/0x7e0 (unreliable)
+memcpy_flushcache+0x28/0xa0
+write_pmem+0xa0/0x100 [nd_pmem]
+pmem_do_bvec+0x1f0/0x420 [nd_pmem]
+pmem_make_request+0x14c/0x370 [nd_pmem]
+generic_make_request+0x164/0x400
+submit_bio+0x134/0x2e0
+submit_bio_wait+0x70/0xc0
+blkdev_issue_zeroout+0xf4/0x2a0
+xfs_zero_extent+0x90/0xc0 [xfs]
+xfs_bmapi_convert_unwritten+0x198/0x230 [xfs]
+xfs_bmapi_write+0x284/0x630 [xfs]
+xfs_iomap_write_direct+0x1f0/0x3e0 [xfs]
+xfs_file_iomap_begin+0x344/0x690 [xfs]
+dax_iomap_pmd_fault+0x488/0xc10
+__xfs_filemap_fault+0x26c/0x2b0 [xfs]
+__handle_mm_fault+0x794/0x1af0
+handle_mm_fault+0x12c/0x220
+__do_page_fault+0x290/0xe40
+do_page_fault+0x38/0xc0
+handle_page_fault+0x10/0x30
 
-iomap_is_partially_uptodate() only indicates whether data in the
-page is entirely valid or not. If it isn't entirely valid, then the
-caller has to ask the filesystem whether the underlying range
-contains holes or data....
+Reviewed-by: Aneesh Kumar K.V <aneesh.kumar@linux.ibm.com>
+Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+---
+ drivers/nvdimm/pmem.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> > > fill the page have completed rather than checking the 'writeback' array.
-> > > In page_mkwrite, we fill the writeback bit-array on the grounds that we
-> > > have no way to track a block's non-dirtiness and we don't want to scan
-> > > each block at writeback time to see if it's been written to.
-> > 
-> > You're talking about mmap() access to the file here, not
-> > read/write() syscall access. If page_mkwrite() sets all the
-> > blocks in a page as "needing writeback", how is that different in
-> > any way to just using a single dirty bit? So why wouldn't we just do
-> > this in iomap_set_page_dirty()?
-> 
-> iomap_set_page_dirty() is called from iomap_page_mkwrite_actor(), so
-> sure!
-
-via set_page_dirty(), which is why I mentioned this:
-
-> > The only place we wouldn't want to set the entire page dirty is
-> > the call from __iomap_write_end() which knows the exact range of the
-> > page that was dirtied. In which case, iomap_set_page_dirty_range()
-> > would be appropriate, right? i.e. we still have to do all the same
-> > page/page cache/inode dirtying, but only that would set a sub-page
-> > range of dirty bits in the iomap_page?
-> > 
-> > /me doesn't see the point of calling dirty tracking "writeback bits"
-> > when "writeback" is a specific page state that comes between the
-> > "dirty" and "clean" states...
-> 
-> I don't want to get it confused with page states.  This is a different
-> thing.  It's just tracking which blocks are holes (and have definitely
-> not been written to), so those blocks can remain as holes when the page
-> gets written back.
-
-We do not track holes at the page level. We do not want to track
-anything to do with the filesystem extent mapping at the page level.
-That was something that bufferheads were used for, and was something
-we specifically designed iomap specifically not to require.
-
-IOWs, iomap does page cache IO at page level granularity, not block
-level granularity.  The only thing we track at block granularity is
-wither the range of the page over a given block contains valid data
-or not.  i.e. whether the page has been initialised with the correct
-data or not.
-
-Further, page-mkwrite() has no knoweldge of whether the backing
-store has holes in it or not, nor does it care. All it does is call
-into the filesystem to fill any holes that may exist in the backing
-space behind the page.  This is also needed for COW to allocate the
-destination of the over write, but in either case there is no
-interaction with pre-existing holes - that is all done by the
-read side of the page fault before page_mkwrite is called...
-
-IOWs, if you call page_mkwrite() on a THP, the filesystem will
-allocate/reserve the entire backing space behind the page because
-writeback of that THP requires writing the entire page and for
-backing space to be fully allocated before that write is issued.
-
-hence I'm really not sure what you are suggesting we do here because
-it doesn't make sense to me. Maybe I'm missing something that THP
-does that I'm not away of, but other than that I'm completely
-missing what you are trying to do here...
-
-Cheers,
-
-Dave.
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 2df6994acf83..fcf7af13897e 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -214,6 +214,7 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ 			bio->bi_status = rc;
+ 			break;
+ 		}
++		cond_resched();
+ 	}
+ 	if (do_acct)
+ 		nd_iostat_end(bio, start);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.4
+
