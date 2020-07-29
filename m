@@ -2,122 +2,198 @@ Return-Path: <SRS0=aQ/b=BI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38104C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 20:02:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5B1DC433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 20:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 134142065C
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 20:02:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE6B820658
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 20:09:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X/RmBu1J"
+	dkim=pass (2048-bit key) header.d=dilger-ca.20150623.gappssmtp.com header.i=@dilger-ca.20150623.gappssmtp.com header.b="kISoZA1A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726476AbgG2UCF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jul 2020 16:02:05 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:38030 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726588AbgG2UCF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jul 2020 16:02:05 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06TJvrhL180467
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 20:02:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=pK7l19rhwspG7InRCQXVweJExc7lCxN1EcwCWX5Vtdk=;
- b=X/RmBu1Jk2NOxVm9Pr7jFNq2uY3U0AKMhnOvPKVpadD1yIZS29xCzbA0wqmsl8COUs0t
- R+JPOe/dw0GYsUqVdDoEbtI3qS1Bl5Vg7VHuIyZvcMZoKEij3LHl+lG9V9Rjgb2jGrAO
- 1pOjKNBJBOkvujKu7lpwQqeCsPaRVjL17eWouo5LEa/PGuvU1O390tRETaIMXx4kOa3u
- +8aPUsbg6DS2XMrOwOTv/wfQCdm4qTxs9Ja9Uh8O0/j09BkHelaQfCKJLP6Pw6+n1SL5
- wdaMO2vgLGhzlrnOpeJ3O7JjLEB0b6fBqm+XzkTJ76KbNeRIAOS28JsEYTvQkPd2XZaL uw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 32hu1jqsq3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 20:02:04 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06TJxO4g146834
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 20:02:04 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 32hu5vek81-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 20:02:03 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06TK222Q021355
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 20:02:03 GMT
-Received: from [192.168.1.226] (/67.1.244.254)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 29 Jul 2020 13:02:02 -0700
-Subject: Re: [PATCH v2 1/1] xfs: Fix Smatch warning in xfs_attr_node_get
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200729043747.11164-1-allison.henderson@oracle.com>
- <20200729195916.GF3151642@magnolia>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <2681bee9-5f9a-3132-60c8-09a5ab325623@oracle.com>
-Date:   Wed, 29 Jul 2020 13:02:02 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <20200729195916.GF3151642@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9697 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
- suspectscore=0 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007290133
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9697 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 mlxlogscore=999
- malwarescore=0 impostorscore=0 priorityscore=1501 spamscore=0 phishscore=0
- suspectscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007290133
+        id S1726631AbgG2UJL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jul 2020 16:09:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55840 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726628AbgG2UJK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jul 2020 16:09:10 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 863B6C0619D2
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 13:09:10 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id f193so3178523pfa.12
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 13:09:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=dilger-ca.20150623.gappssmtp.com; s=20150623;
+        h=from:message-id:mime-version:subject:date:in-reply-to:cc:to
+         :references;
+        bh=xWKolhp+xjYOfse+K3ZZ3CjsNTLKuThMe9fBfqxuG/0=;
+        b=kISoZA1AVq38hPkUpNSVAMnEl8DsMuYz4aBFaaxDhfOvCfzBYLvsA3scgsIuCGmTXp
+         Bnpy5BQlEUmPpP4l5qhNpT24SGlBqZwo4ECBh4D3cND/ikXXkgbqBwMpCYOHSBY0438f
+         fGHFLDkOE9j0DsD1JkG+szjp6OIgynL4+j7kBbkTalsBsFQMFK/yAFU+szvwRs/LE1Xg
+         ciLYvSEZT9B1cq/ptwmH7iPmM0eFt/DpyJp74W5IhQ2w1NzpD4I9SU99HhDcZWmvVftI
+         /ncGcGMCSkqetkJv6IcW8n0/WESjdqnQGVtUxDnuGEud9gTZN3SdAyc1Uf15LaX1Uw77
+         YXmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:message-id:mime-version:subject:date
+         :in-reply-to:cc:to:references;
+        bh=xWKolhp+xjYOfse+K3ZZ3CjsNTLKuThMe9fBfqxuG/0=;
+        b=CtdoEA+UXdzM8CxDGhhmQCoWd1ushivc03uhSfwGt84pal1HCShDKWzvCfRTdh+kz0
+         kpkUk6pgTmjBAUKJmmMW8U/+4y8eI1w0Z0WovccEz8E5+I6jv4iebTxj/mziFswJBSaN
+         n5mXfwKgHXCjmIK9T/ccNrK9RoRziMSRSigVUd7OHUwDVCuzbRLzbhDg1fqLyi5hLR4s
+         TS7gbxK9UFxjRCbyvfRXjFojA7M4IrQwF+MriaTkpj77fDEUmxMwlUAvAUhx6dnkfl+t
+         uwc2GMjzH3/SgY/1pcRtS+jps57S++x1so2NMf+stDIDP6Bif8Z4sx++43Eq1EYUAlGN
+         SeNA==
+X-Gm-Message-State: AOAM533zenuIv1qi+/SYKQL4CHLx5GjW5X044MJ2FudSTbdJILPGJZIM
+        sgDvw+GMaBNr/hlKDPdkeDCEBg==
+X-Google-Smtp-Source: ABdhPJwAS4p8mRU5xPMRmrAzAo40aBo6B83m72XVI3dOOTK+bafivrbee0AbXygA3nbW40NKTft+sw==
+X-Received: by 2002:a63:cf49:: with SMTP id b9mr29840208pgj.31.1596053349863;
+        Wed, 29 Jul 2020 13:09:09 -0700 (PDT)
+Received: from [192.168.10.160] (S01061cabc081bf83.cg.shawcable.net. [70.77.221.9])
+        by smtp.gmail.com with ESMTPSA id y65sm3267920pfb.155.2020.07.29.13.09.08
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 29 Jul 2020 13:09:09 -0700 (PDT)
+From:   Andreas Dilger <adilger@dilger.ca>
+Message-Id: <F98B4E81-C4E7-4E0E-83B2-224AF7E72283@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_44D43FA3-A251-461F-A353-2D8D8D096051";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: ext4/xfs: about switching underlying 512B sector devices to 4K
+ ones
+Date:   Wed, 29 Jul 2020 14:09:05 -0600
+In-Reply-To: <CANR1yOpz9o9VcAiqo18aVO5ssmuSy18RxnMKR=Dz884Rj8_trg@mail.gmail.com>
+Cc:     Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+To:     Takuya Yoshikawa <takuya.yoshikawa@gmail.com>
+References: <CANR1yOpz9o9VcAiqo18aVO5ssmuSy18RxnMKR=Dz884Rj8_trg@mail.gmail.com>
+X-Mailer: Apple Mail (2.3273)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
+--Apple-Mail=_44D43FA3-A251-461F-A353-2D8D8D096051
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-On 7/29/20 12:59 PM, Darrick J. Wong wrote:
-> On Tue, Jul 28, 2020 at 09:37:47PM -0700, Allison Collins wrote:
->> Fix warning: variable dereferenced before check 'state' in
->> xfs_attr_node_get.  If xfs_attr_node_hasname fails, it may return a null
->> state.  If state is null, do not release paths or derefrence state
->>
->> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> 
-> Looks ok, though I folded all these into the for-next rebase (and then
-> forgot to push send on this...)
-> 
-No worries, thank you!
-Allison
+On Jul 29, 2020, at 4:38 AM, Takuya Yoshikawa =
+<takuya.yoshikawa@gmail.com> wrote:
+>=20
+> I have a question: is it possible to make existing ext4/xfs =
+filesystems
+> formatted on 512B sector devices run as is on 4k sector devices?
 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> --D
-> 
->> ---
->>   fs/xfs/libxfs/xfs_attr.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index e5ec9ed..38fe0d3 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -1422,7 +1422,7 @@ xfs_attr_node_get(
->>   	 * If not in a transaction, we have to release all the buffers.
->>   	 */
->>   out_release:
->> -	for (i = 0; i < state->path.active; i++) {
->> +	for (i = 0; i < state && state->path.active; i++) {
->>   		xfs_trans_brelse(args->trans, state->path.blk[i].bp);
->>   		state->path.blk[i].bp = NULL;
->>   	}
->> -- 
->> 2.7.4
->>
+For ext4 filesystems that are formatted with 4KB block size, there
+is no problem to change the underlying sector size to 4KB.  It will
+never access blocks that are not sized/aligned at 4KB.
+
+Most ext4 filesystem are formatted with 4KB blocksize by default,
+unless it is a tiny partition like /boot that *may* be formatted with
+1KB block size to save space.  In such cases, it would be easy to
+format a new /boot with 4KB blocksize and copy the file contents over,
+since it would be a very small partition.
+
+You can check with "dumpe2fs -h /dev/md127 | grep | grep 'Block size' "
+to see what the filesystem block size is.
+
+Cheers, Andreas
+
+> Problem:
+>=20
+> We are maintaining some legacy servers whose data is stored on
+> ext4/xfs filesystems formatted on lvm2 raid1 devices.
+>=20
+> These raid1 devices consist of a few iSCSI devices, so the
+> remote storage servers running as iSCSI targets are the actual
+> data storage.
+>=20
+>  /dev/md127 --  /dev/sda  --(iSCSI)-- remote storage server
+>                 /dev/sdb  --(iSCSI)-- remote storage server
+>=20
+> A problem happened when we tried to add a new storage server with
+> 4k sector disks as an iSCSI target. After lvm2 added that iSCSI
+> device and started syncing the blocks from existing 512B sector
+> storage servers to the new 4k sector ones, we got
+> "Bad block number requested" messages, and soon after that,
+> the new device was removed from the lvm2 raid1 device.
+>=20
+>  /dev/md127 --  /dev/sda  --(iSCSI)-- remote storage server(512)
+>                 /dev/sdb  --(iSCSI)-- remote storage server(512)
+>              *  /dev/sdc  --(iSCSI)-- remote storage server(4k)
+>=20
+>  The combined raid1 device had been recognized as a 4k device
+>  as described in this article:
+>    https://access.redhat.com/articles/3911611
+>=20
+> It seemed like 512B unaligned requests from the xfs filesystem
+> were sent to the raid1 device, and mirrored requests caused
+> the problem on the newly added 4k sector storage.
+>=20
+> The xfs was formatted with its sector_size_options set to the
+> default (512).
+> See https://www.man7.org/linux/man-pages/man8/mkfs.xfs.8.html
+>=20
+> In the case of ext4, the device continued to run, but I was not
+> sure if there could be any problems.
+>=20
+>=20
+> Question:
+>=20
+> Is it possible to change the underlying storage to 4k sector ones
+> as written above without copying the data on the ext4/xfs
+> filesystems to outside of the raid1 device?
+>=20
+> ext4: I am not seeing any apparent errors after adding the 4k
+>  device. Is this an expected behavior?
+>=20
+> xfs: is it possible to change the filesystem sector size?
+>=20
+>  I read this explanation and thought if I could change the
+>  journal related metadata, it might be possible.
+>  https://www.spinics.net/lists/linux-xfs/msg14495.html
+>=20
+>=20
+> Thanks,
+>  Takuya
+
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_44D43FA3-A251-461F-A353-2D8D8D096051
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAl8h12IACgkQcqXauRfM
+H+BrHg//RHLqCE/fuim4cDziFXn5eZ3zoF48M3q169atvDhZxsodSUD4AvOv/lWv
+3qZiXlcTPGpjX8aQYCQQo2gurh+MHimGTTeihZbEEf8yqijfwJogPYvXL0Z7H5Ro
+VgT05Iceo890rLjaLJz4db/i+ASfR+5J1nFQz7qam5Mq4rKTXEhN121v02Ua176U
+xQS2XUOA60YeTK+nSgCRWrBZFavsfjpjKR+OqsvIRv77+HtmYFhuLpfO3wCHdCE9
+LMGkAWY2qNc6/cdoiA/RCeLFphQPMg+Y0d+fBoTqfCtpkmNmNAagm6Zw0KQQ19dC
+OoJY1lGq/Q1zIqL5lNJ/mbPGUi6eSBqN9MFKxsIjdBY6oAe5x+PUyBWyAaGwalsb
+r+m7Lg6VbhtYBOSZn+nU+fe370f9C+98BQO7LteEW083LIvmbA4p6vxlIHwI+VX9
+S6Yk5Q6uUD1PTZq6fvX1Bb6FFf9y9XAyuB39q2nJ71LCF8VlQfVYuNyPFqM5epCE
+3rLpmP6CTTPB4ZUU2TNR3q8o4OX8/jv/2cqU0eCPvvIHrarh257PCGsLOzLbxlh/
+jmXCrmYubugcPFbEXov7MXMudHpmoswGyaSBscDduqumPgqGLJi4IYw2PmAvGtz9
+Ir+18WeLlYxyb2Jx1HjFK1iomR9Uf1yhQe81EW6uqsRZjQvSom4=
+=2BxT
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_44D43FA3-A251-461F-A353-2D8D8D096051--
