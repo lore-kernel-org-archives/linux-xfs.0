@@ -2,127 +2,120 @@ Return-Path: <SRS0=aQ/b=BI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B98DC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 16:10:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE8CFC433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 18:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 446E820809
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 16:10:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D4B02075D
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 18:50:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oMPK+N+Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726628AbgG2QKs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jul 2020 12:10:48 -0400
-Received: from mga03.intel.com ([134.134.136.65]:56002 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726365AbgG2QKs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Jul 2020 12:10:48 -0400
-IronPort-SDR: QCfIgLttXfAgRCOdvyLwih8K9ic/nDJzcMQBzdmVbll4kzZeQ6zCXEO62Bra24d2I4bVUi5gag
- bLn8AFFIYdag==
-X-IronPort-AV: E=McAfee;i="6000,8403,9697"; a="151428427"
-X-IronPort-AV: E=Sophos;i="5.75,410,1589266800"; 
-   d="scan'208";a="151428427"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Jul 2020 09:10:41 -0700
-IronPort-SDR: i7X1v4Hd61tSPtOHwyapVU3DpUiuiiKjbknAuZyuu6ZTZld0mdwSsCKC4UI0xk0/Aw/dKSFeuh
- SD8kUQzhsvYg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,410,1589266800"; 
-   d="scan'208";a="290580949"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
-  by orsmga006.jf.intel.com with ESMTP; 29 Jul 2020 09:10:40 -0700
-Date:   Wed, 29 Jul 2020 09:10:40 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Yasunori Goto <y-goto@fujitsu.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
-Subject: Re: Can we change the S_DAX flag immediately on XFS without dropping
- caches?
-Message-ID: <20200729161040.GA1250504@iweiny-DESK2.sc.intel.com>
-References: <9dc179147f6a47279d801445f3efeecc@G08CNEXMBPEKD04.g08.fujitsu.local>
- <20200728022059.GX2005@dread.disaster.area>
- <573feb69-bc38-8eb4-ee9b-7c49802eb737@fujitsu.com>
+        id S1726509AbgG2Sur (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jul 2020 14:50:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43700 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726365AbgG2Suq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jul 2020 14:50:46 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2C4EC061794
+        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 11:50:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=quN0Ftgv4QEXOhwix+xTSiBjv0rz9kY16DXPD2tbT4s=; b=oMPK+N+YUwPEVmhrFew0baffSo
+        tdqIaZnV3K3OhA6GkyrI5x45eMFpFAPB9ggxNI95cFnKvbGiqZwjzwiTBczdhYqj8gWQFDYrqd9Fe
+        j4OMi6P+5lCyT1evIXGCkfPV5UzBHhkpyIKLKRWzfK7cZEyZyj17KzM+LDZC8Np7Jc8soaT3+n5+S
+        cybh/Elkl342D0F7RHnBvR9fl89TEdGfMWQ+cWFhemHIGeLPVLIXaYP5RBaIkI9jQFAWLvLR8RXH+
+        QkFrItp+C85fxcifz246a0e0Il66yIRb677K/FDBFmODDT9Kh9DG1OMAk5mo7j4HXDW5z5c559yAe
+        kdqCez5g==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1k0r9v-0007LX-9N; Wed, 29 Jul 2020 18:50:35 +0000
+Date:   Wed, 29 Jul 2020 19:50:35 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Zhengyuan Liu <liuzhengyuang521@gmail.com>,
+        linux-xfs@vger.kernel.org, Zhengyuan Liu <liuzhengyuan@kylinos.cn>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Question] About XFS random buffer write performance
+Message-ID: <20200729185035.GX23808@casper.infradead.org>
+References: <CAOOPZo45E+hVAo9S_2psMJQzrzwmVKo_WjWOM7Zwhm_CS0J3iA@mail.gmail.com>
+ <20200728153453.GC3151642@magnolia>
+ <20200728154753.GS23808@casper.infradead.org>
+ <20200729015458.GY2005@dread.disaster.area>
+ <20200729021231.GV23808@casper.infradead.org>
+ <20200729051923.GZ2005@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <573feb69-bc38-8eb4-ee9b-7c49802eb737@fujitsu.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200729051923.GZ2005@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 29, 2020 at 11:23:21AM +0900, Yasunori Goto wrote:
-> Hi,
-> 
-> On 2020/07/28 11:20, Dave Chinner wrote:
-> > On Tue, Jul 28, 2020 at 02:00:08AM +0000, Li, Hao wrote:
-> > > Hi,
+On Wed, Jul 29, 2020 at 03:19:23PM +1000, Dave Chinner wrote:
+> On Wed, Jul 29, 2020 at 03:12:31AM +0100, Matthew Wilcox wrote:
+> > On Wed, Jul 29, 2020 at 11:54:58AM +1000, Dave Chinner wrote:
+> > > On Tue, Jul 28, 2020 at 04:47:53PM +0100, Matthew Wilcox wrote:
+> > > > I propose we do away with the 'uptodate' bit-array and replace it with an
+> > > > 'writeback' bit-array.  We set the page uptodate bit whenever the reads to
 > > > 
-> > > I have noticed that we have to drop caches to make the changing of S_DAX
-> > > flag take effect after using chattr +x to turn on DAX for a existing
-> > > regular file. The related function is xfs_diflags_to_iflags, whose
-> > > second parameter determines whether we should set S_DAX immediately.
-> > Yup, as documented in Documentation/filesystems/dax.txt. Specifically:
+> > > That's just per-block dirty state tracking. But when we set a single
+> > > bit, we still need to set the page dirty flag.
 > > 
-> >   6. When changing the S_DAX policy via toggling the persistent FS_XFLAG_DAX flag,
-> >      the change in behaviour for existing regular files may not occur
-> >      immediately.  If the change must take effect immediately, the administrator
-> >      needs to:
-> > 
-> >      a) stop the application so there are no active references to the data set
-> >         the policy change will affect
-> > 
-> >      b) evict the data set from kernel caches so it will be re-instantiated when
-> >         the application is restarted. This can be achieved by:
-> > 
-> >         i. drop-caches
-> >         ii. a filesystem unmount and mount cycle
-> >         iii. a system reboot
-> > 
-> > > I can't figure out why we do this. Is this because the page caches in
-> > > address_space->i_pages are hard to deal with?
-> > Because of unfixable races in the page fault path that prevent
-> > changing the caching behaviour of the inode while concurrent access
-> > is possible. The only way to guarantee races can't happen is to
-> > cycle the inode out of cache.
+> > It's not exactly dirty, though.  It's 'present' (ie the opposite
+> > of hole). 
 > 
-> I understand why the drop_cache operation is necessary. Thanks.
-> 
-> BTW, even normal user becomes to able to change DAX flag for an inode,
-> drop_cache operation still requires root permission, right?
-> 
-> So, if kernel have a feature for normal user can operate drop cache for "a
-> inode" with
-> its permission, I think it improve the above limitation, and
-> we would like to try to implement it recently.
-> 
-> Do you have any opinion making such feature?
-> (Agree/opposition, or any other comment?)
+> Careful with your terminology. At the page cache level, there is no
+> such thing as a "hole". There is only data and whether the data is
+> up to date or not. The page cache may be *sparsely populated*, but
+> a lack of a page or a range of the page that is not up to date
+> does not imply there is a -hole in the file- at that point.
 
-I would not be opposed but there were many hurdles to that implementation.
+That's not entirely true.  The current ->uptodate array does keep
+track of whether an unwritten extent is currently a hole (see
+page_cache_seek_hole_data()).  I don't know how useful that is.
 
-What is the use case you are thinking of here?
+> I'm still not sure what "present" is supposed to mean, though,
+> because it seems no different to "up to date". The data is present
+> once it's been read into the page, calling page_mkwrite() on the
+> page doesn't change that at all.
 
-The compromise of dropping caches was reached because we envisioned that many
-users would simply want to chose the file mode when a file was created and
-maintain that mode through the lifetime of the file.  To that end one can
-simply create directories which have the desired dax mode and any files created
-in that directory will inherit the dax mode immediately.  So there is no need
-to switch the file mode directly as a normal user.
+I had a bit of a misunderstanding.  Let's discard that proposal
+and discuss what we want to optimise for, ignoring THPs.  We don't
+need to track any per-block state, of course.  We could implement
+__iomap_write_begin() by reading in the entire page (skipping the last
+few blocks if they lie outside i_size, of course) and then marking the
+entire page Uptodate.
 
-Would that work for your use case?
+Buffer heads track several bits of information about each block:
+ - Uptodate (contents of cache at least as recent as storage)
+ - Dirty (contents of cache more recent than storage)
+ - ... er, I think all the rest are irrelevant for iomap
 
-Ira
+I think I just talked myself into what you were arguing for -- that we
+change the ->uptodate bit array into a ->dirty bit array.
 
-> 
-> Thanks,
-> 
-> -- 
-> Yasunori Goto
-> 
+That implies that we lose the current optimisation that we can write at
+a blocksize alignment into the page cache and not read from storage.
+I'm personally fine with that; most workloads don't care if you read
+extra bytes from storage (hence readahead), but writing unnecessarily
+to storage (particularly flash) is bad.
+
+Or we keep two bits per block.  The implementation would be a little icky,
+but it could be done.
+
+I like the idea of getting rid of partially uptodate pages.  I've never
+really understood the concept.  For me, a partially dirty page makes a
+lot more sense than a partially uptodate page.  Perhaps I'm just weird.
+
+Speaking of weird, I don't understand why an unwritten extent queries
+the uptodate bits.  Maybe that's a buffer_head thing and we can just
+ignore it -- iomap doesn't have such a thing as a !uptodate page any
+more.
