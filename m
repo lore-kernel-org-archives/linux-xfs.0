@@ -2,124 +2,161 @@ Return-Path: <SRS0=aQ/b=BI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC507C433EC
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 01:23:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 460B7C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 01:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD0072078E
-	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 01:23:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Aien3Y4W"
+	by mail.kernel.org (Postfix) with ESMTP id 25AFA22CB1
+	for <linux-xfs@archiver.kernel.org>; Wed, 29 Jul 2020 01:55:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730351AbgG2BXw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 28 Jul 2020 21:23:52 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:35314 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728364AbgG2BXv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jul 2020 21:23:51 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06T1LdOW090562
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 01:23:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=/F1YLFVyROtKJg5k7ML+urFjCsOglW/RpEpje68i8Jk=;
- b=Aien3Y4WGeU5p03HOYK3WRs9JlAw2vdgRHaoTDL2Flvc9+Z9R1JxLSL1Tz4ZRe3jfmC3
- OPbjRKedGv3m/9ERjZw2aeUNWvK6iegvepEfxVjdLx8uSklBFo5fRhQzmay0Jg6BwwM/
- 27F9HMhB63k9hJLCTeLnI2Wh7lDpJs2gkiHWcu4nFWSw64TqnUU8tJpNJ8ntUhn+xB2D
- zKpGSlhYwcNS7DAkjX9TbGofSNyWtEmFzMrGWiFOghRmsL/7e191Atdo90mYWTfEEIHO
- Qhy4fnmYJEbw/EVgMew9SSM8Tor/QMHlU03sCOGPYwSh08yN9cFjIqIZsPsnTGFrSozf tA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 32hu1jaqwh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 01:23:50 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06T1MjFm096130
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 01:23:50 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 32hu5v0d4b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 01:23:50 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06T1NnUR031346
-        for <linux-xfs@vger.kernel.org>; Wed, 29 Jul 2020 01:23:49 GMT
-Received: from localhost (/10.159.234.45)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 28 Jul 2020 18:23:49 -0700
-Date:   Tue, 28 Jul 2020 18:23:48 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/1] xfs: Fix Smatch warning in xfs_attr_node_get
-Message-ID: <20200729012348.GD3151642@magnolia>
-References: <20200729000853.10215-1-allison.henderson@oracle.com>
+        id S1730328AbgG2BzL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 28 Jul 2020 21:55:11 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:47851 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728401AbgG2BzL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 28 Jul 2020 21:55:11 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 84B3D10676C;
+        Wed, 29 Jul 2020 11:55:07 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1k0bJ5-0002DA-0I; Wed, 29 Jul 2020 11:54:59 +1000
+Date:   Wed, 29 Jul 2020 11:54:58 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Zhengyuan Liu <liuzhengyuang521@gmail.com>,
+        linux-xfs@vger.kernel.org, Zhengyuan Liu <liuzhengyuan@kylinos.cn>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Question] About XFS random buffer write performance
+Message-ID: <20200729015458.GY2005@dread.disaster.area>
+References: <CAOOPZo45E+hVAo9S_2psMJQzrzwmVKo_WjWOM7Zwhm_CS0J3iA@mail.gmail.com>
+ <20200728153453.GC3151642@magnolia>
+ <20200728154753.GS23808@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200729000853.10215-1-allison.henderson@oracle.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9696 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=7 malwarescore=0
- mlxscore=0 adultscore=0 spamscore=0 phishscore=0 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007290007
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9696 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
- lowpriorityscore=0 malwarescore=0 clxscore=1015 mlxscore=0 impostorscore=0
- phishscore=0 adultscore=0 suspectscore=7 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007290007
+In-Reply-To: <20200728154753.GS23808@casper.infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LPwYv6e9 c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=_RQrkK6FrEwA:10 a=7-415B0cAAAA:8
+        a=54W2vMxcrCYB_z3ejGAA:9 a=bV3nX3049HCpF6Oh:21 a=NQJUQbIoccpt3rAq:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jul 28, 2020 at 05:08:53PM -0700, Allison Collins wrote:
-> Fix warning: variable dereferenced before check 'state' in
-> xfs_attr_node_get.  If xfs_attr_node_hasname fails, it may return a null
-> state.  If state is null, do not derefrence it.  Go straight to out.
+On Tue, Jul 28, 2020 at 04:47:53PM +0100, Matthew Wilcox wrote:
+> On Tue, Jul 28, 2020 at 08:34:53AM -0700, Darrick J. Wong wrote:
+> > On Tue, Jul 28, 2020 at 07:34:39PM +0800, Zhengyuan Liu wrote:
+> > > Hi all,
+> > > 
+> > > When doing random buffer write testing I found the bandwidth on EXT4 is much
+> > > better than XFS under the same environment.
+> > > The test case ,test result and test environment is as follows:
+> > > Test case:
+> > > fio --ioengine=sync --rw=randwrite --iodepth=64 --size=4G --name=test
+> > > --filename=/mnt/testfile --bs=4k
+> > > Before doing fio, use dd (if=/dev/zero of=/mnt/testfile bs=1M
+> > > count=4096) to warm-up the file in the page cache.
+> > > 
+> > > Test result (bandwidth):
+> > >          ext4                   xfs
+> > >        ~300MB/s       ~120MB/s
+> > > 
+> > > Test environment:
+> > >     Platform:  arm64
+> > >     Kernel:  v5.7
+> > >     PAGESIZE:  64K
+> > >     Memtotal:  16G
+
+So it's capturing roughly 2GB of random 4kB writes before it starts
+blocking waiting for writeback.
+
+What happens when you change the size of the file (say 512MB, 1GB,
+2GB, 8GB, 16GB, etc)? Does this change the result at all?
+
+i.e. are we just looking at a specific behaviour triggered by the
+specific data set size?  I would suspect that the larger the file,
+the greater the performance differential as XFS will drive the SSD
+to be bandwidth bound before ext4, and that if you have a faster SSd
+(e.g. nvme on pcie 4x) there would be a much smaller difference as
+the workload won't end up IO bandwidth bound....
+
+I also suspect that you'll get a different result running on spinning
+disks. i.e., it is likely that you'll get the oppposite result (i.e
+XFS is faster than ext4) because each 64kB page write IO from XFS
+captures multiple 4KB user writes and so results in fewer seeks than
+ext4 doing individual 4kB IOs.
+
+> > >     Storage: sata ssd(Max bandwidth about 350MB/s)
+> > >     FS block size: 4K
+> > > 
+> > > The  fio "Test result" shows that EXT4 has more than 2x bandwidth compared to
+> > > XFS, but iostat shows the transfer speed of XFS to SSD is about 300MB/s too.
+> > > So I debt XFS writing back many non-dirty blocks to SSD while  writing back
+> > > dirty pages. I tried to read the core writeback code of both
+> > > filesystem and found
+> > > XFS will write back blocks which is uptodate (seeing iomap_writepage_map()),
+> > 
+> > Ahhh, right, because iomap tracks uptodate separately for each block in
+> > the page, but only tracks dirty status for the whole page.  Hence if you
+> > dirty one byte in the 64k page, xfs will write all 64k even though we
+> > could get away writing 4k like ext4 does.
+
+Right, iomap intentionally went to a page granularity IO model for
+page cache IO, because that's what the page cache uses and largely
+gets rid of the need for tracking per-block page state.
+
+> > Hey Christoph & Matthew: If you're already thinking about changing
+> > struct iomap_page, should we add the ability to track per-block dirty
+> > state to reduce the write amplification that Zhengyuan is asking about?
+> > 
+> > I'm guessing that between willy's THP series, Dave's iomap chunks
+> > series, and whatever Christoph may or may not be writing, at least one
+> > of you might have already implemented this? :)
 > 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
+> Well, this is good timing!  I was wondering whether something along
+> these lines was an important use-case.
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index e5ec9ed..90b7b24 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -1409,6 +1409,9 @@ xfs_attr_node_get(
->  	 * Search to see if name exists, and get back a pointer to it.
->  	 */
->  	error = xfs_attr_node_hasname(args, &state);
-> +	if (!state)
-> +		goto out;
-> +
->  	if (error != -EEXIST)
->  		goto out_release;
->  
-> @@ -1426,7 +1429,7 @@ xfs_attr_node_get(
+> I propose we do away with the 'uptodate' bit-array and replace it with an
+> 'writeback' bit-array.  We set the page uptodate bit whenever the reads to
 
-I would've just changed the for loop to:
+That's just per-block dirty state tracking. But when we set a single
+bit, we still need to set the page dirty flag.
 
-	for (i = 0; state && i < state->path.active; i++) {
 
-Since that way we'd know that the error-out path always does the right
-thing wrt any resources that could have been allocated.
+> fill the page have completed rather than checking the 'writeback' array.
+> In page_mkwrite, we fill the writeback bit-array on the grounds that we
+> have no way to track a block's non-dirtiness and we don't want to scan
+> each block at writeback time to see if it's been written to.
 
---D
+You're talking about mmap() access to the file here, not
+read/write() syscall access. If page_mkwrite() sets all the
+blocks in a page as "needing writeback", how is that different in
+any way to just using a single dirty bit? So why wouldn't we just do
+this in iomap_set_page_dirty()?
 
->  		xfs_trans_brelse(args->trans, state->path.blk[i].bp);
->  		state->path.blk[i].bp = NULL;
->  	}
-> -
-> +out:
->  	if (state)
->  		xfs_da_state_free(state);
->  	return error;
-> -- 
-> 2.7.4
-> 
+The only place we wouldn't want to set the entire page dirty is
+the call from __iomap_write_end() which knows the exact range of the
+page that was dirtied. In which case, iomap_set_page_dirty_range()
+would be appropriate, right? i.e. we still have to do all the same
+page/page cache/inode dirtying, but only that would set a sub-page
+range of dirty bits in the iomap_page?
+
+/me doesn't see the point of calling dirty tracking "writeback bits"
+when "writeback" is a specific page state that comes between the
+"dirty" and "clean" states...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
