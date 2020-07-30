@@ -2,95 +2,60 @@ Return-Path: <SRS0=myhp=BJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79F63C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 03:19:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90782C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 03:39:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55F0220829
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 03:19:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="S0N287qi"
+	by mail.kernel.org (Postfix) with ESMTP id 74ACA22B4B
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 03:39:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726480AbgG3DTn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jul 2020 23:19:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37018 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726367AbgG3DTn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 29 Jul 2020 23:19:43 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 412DEC061794;
-        Wed, 29 Jul 2020 20:19:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ObYVAbjLZNL5RELvwh/jnTQxhHj3rC/rJB12CZz+dfg=; b=S0N287qi5qL/keCKSHTZaClYp3
-        Y4hm3Gp6xWnHaWT94aHYI6hxryrySrz9J2286JdpWGNN/20uPAt5RoySBeYJLHh2bAboi9n+wuvXb
-        4j5QyrwsAr3yx9eCs8ASlYoINipNJ0qUDj+0TdCQxnoSBHy82cEFZ/hRxUVCMdmQJfuNvLbPIvkom
-        Y6nbyacYGyhGOEbMrJ44LsQJaHPPrYkbThYFIdXhCKnQ78yC0rTFjJhoiHLutaZFPSRCC7aMiZzX0
-        e0DaMNZuIFeg/hQ487UbISSQzcWpFgVqpLr5CTGaXSvGjOFl6Ra/W7JbhR1V4Cdwu9Bruts3oDFvs
-        HbY1W3Nw==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k0z6U-0007Lc-Nz; Thu, 30 Jul 2020 03:19:34 +0000
-Date:   Thu, 30 Jul 2020 04:19:34 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Yu Kuai <yukuai3@huawei.com>
-Cc:     hch@infradead.org, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yi.zhang@huawei.com
+        id S1726806AbgG3Dju (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jul 2020 23:39:50 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:34836 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726774AbgG3Dju (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Jul 2020 23:39:50 -0400
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 8A30C1EE9F9AFAA22382;
+        Thu, 30 Jul 2020 11:39:46 +0800 (CST)
+Received: from [127.0.0.1] (10.174.179.103) by DGGEMS405-HUB.china.huawei.com
+ (10.3.19.205) with Microsoft SMTP Server id 14.3.487.0; Thu, 30 Jul 2020
+ 11:39:38 +0800
 Subject: Re: [RFC PATCH] iomap: add support to track dirty state of sub pages
-Message-ID: <20200730031934.GA23808@casper.infradead.org>
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     <hch@infradead.org>, <darrick.wong@oracle.com>,
+        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <yi.zhang@huawei.com>
 References: <20200730011901.2840886-1-yukuai3@huawei.com>
+ <20200730031934.GA23808@casper.infradead.org>
+From:   "yukuai (C)" <yukuai3@huawei.com>
+Message-ID: <98b561be-5aca-148f-5f69-2fd2b5dedff4@huawei.com>
+Date:   Thu, 30 Jul 2020 11:39:37 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200730011901.2840886-1-yukuai3@huawei.com>
+In-Reply-To: <20200730031934.GA23808@casper.infradead.org>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.103]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 30, 2020 at 09:19:01AM +0800, Yu Kuai wrote:
-> +++ b/fs/iomap/buffered-io.c
-> @@ -29,7 +29,9 @@ struct iomap_page {
->  	atomic_t		read_count;
->  	atomic_t		write_count;
->  	spinlock_t		uptodate_lock;
-> +	spinlock_t		dirty_lock;
+On 2020/7/30 11:19, Matthew Wilcox wrote:
+> Maybe let the discussion on removing the ->uptodate array finish
+> before posting another patch for review?
 
-No need for a separate spinlock.  Just rename uptodate_lock.  Maybe
-'bitmap_lock'.
+Hi, Matthew!
 
->  	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
-> +	DECLARE_BITMAP(dirty, PAGE_SIZE / 512);
+Of course, I missed the discussion thread before sending this path.
+And thanks for your suggestions.
 
-This is inefficient and poses difficulties for the THP patchset.
-Maybe let the discussion on removing the ->uptodate array finish
-before posting another patch for review?
-
-> +static void
-> +iomap_iop_set_or_clear_range_dirty(
-> +	struct page *page,
-> +	unsigned int off,
-> +	unsigned int len,
-> +	bool is_set)
-
-Please follow normal kernel programming style.  This isn't XFS.
-Also 'set or clear' with a bool to indicate which to do is horrible
-style.  Separate functions!
-
-> @@ -1386,7 +1432,8 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  	for (i = 0, file_offset = page_offset(page);
->  	     i < (PAGE_SIZE >> inode->i_blkbits) && file_offset < end_offset;
->  	     i++, file_offset += len) {
-> -		if (iop && !test_bit(i, iop->uptodate))
-> +		if (iop && (!test_bit(i, iop->uptodate) ||
-> +		    !test_bit(i, iop->dirty)))
->  			continue;
-
-Surely we don't need to test ->uptodate here at all.  Why would we write
-back a block which isn't dirty?
+Best regards,
+Yu Kuai
 
