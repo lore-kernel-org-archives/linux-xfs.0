@@ -7,27 +7,28 @@ X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A85C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 00:45:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C528C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 00:46:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E3A62074B
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 00:45:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1052B2072A
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 00:46:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726858AbgG3ApU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 29 Jul 2020 20:45:20 -0400
-Received: from sandeen.net ([63.231.237.45]:51432 "EHLO sandeen.net"
+        id S1726858AbgG3Aqx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 29 Jul 2020 20:46:53 -0400
+Received: from sandeen.net ([63.231.237.45]:51514 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726756AbgG3ApU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 29 Jul 2020 20:45:20 -0400
+        id S1726756AbgG3Aqx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 29 Jul 2020 20:46:53 -0400
 Received: from Liberator.local (047-025-251-180.res.spectrum.com [47.25.251.180])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 671BA483510;
-        Wed, 29 Jul 2020 19:44:26 -0500 (CDT)
-Subject: Re: [PATCH v2] xfs_io: Make -D and -R options incompatible explicitly
+        by sandeen.net (Postfix) with ESMTPSA id 391B34D1B9F;
+        Wed, 29 Jul 2020 19:46:00 -0500 (CDT)
+Subject: Re: [PATCH] xfs_io: Remove redundant setting/check for lsattr/stat
+ command
 To:     Xiao Yang <yangx.jy@cn.fujitsu.com>, linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com, david@fromorbit.com, hch@infradead.org
-References: <20200724063253.22247-1-yangx.jy@cn.fujitsu.com>
+Cc:     darrick.wong@oracle.com
+References: <20200724071440.23239-1-yangx.jy@cn.fujitsu.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,39 +72,28 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <93c05acc-20b6-f559-504b-da62a9963d2b@sandeen.net>
-Date:   Wed, 29 Jul 2020 17:45:17 -0700
+Message-ID: <24f5075d-ae31-5795-2a20-5b307c228155@sandeen.net>
+Date:   Wed, 29 Jul 2020 17:46:50 -0700
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20200724063253.22247-1-yangx.jy@cn.fujitsu.com>
+In-Reply-To: <20200724071440.23239-1-yangx.jy@cn.fujitsu.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 7/23/20 11:32 PM, Xiao Yang wrote:
-> -D and -R options are mutually exclusive actually but many commands
-> can accept them at the same time and process them differently(e.g.
-> chattr alway chooses -D option or cowextsize accepts the last one
-> specified), so make these commands have the consistent behavior that
-> don't accept them concurrently.
-> 
-> 1) Make them incompatible by setting argmax to 1 if commands can accept
->    single option(i.e. lsattr, lsproj).
-
-I see that lsattr already has argmax=1, so I guess that was ok.
-Still good to remove the extra vars from the cases.
-
-> 2) Make them incompatible by adding check if commands can accept multiple
->    options(i.e. chattr, chproj, extsize, cowextsize).
+On 7/24/20 12:14 AM, Xiao Yang wrote:
+> lsattr/stat command can check exclusive options by argmax = 1
+> so the related setting/check is redundant.
 > 
 > Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
 
-Thank you for cleaning all of these up.
+Looks good.  I guess we are not very consistent about our use
+of argmax :)
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
