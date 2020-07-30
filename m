@@ -2,124 +2,223 @@ Return-Path: <SRS0=myhp=BJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE463C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 13:50:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F412CC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 16:52:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B54802074B
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 13:50:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA82C208A9
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 16:52:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CsDQY/BJ"
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=shipmail.org header.i=@shipmail.org header.b="Ban6eCam"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726799AbgG3Nuv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jul 2020 09:50:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49268 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726281AbgG3Nuu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jul 2020 09:50:50 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C79CC061574
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2020 06:50:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=t3GSpKHlsq/+mbghOOSDihtSkWYDc7y7KHKRSA+tr0M=; b=CsDQY/BJ81GXZQ1TY8A5W6Z0jZ
-        hAVA3lkg62yZUJNhxPgV4UPw1rJdhdBJG28OSH9J0aOB+KVEV8+zYjspAthHD8QnuTXVZPFnRDZix
-        XbjOJpnpNEYSI7FkM/gUgSyQJZOl8qzm9/AW4gIUEMBgogUZ55qTo3/+impgIViPAy0wVkWLapPBP
-        Q2ZoaeGFnNvrbTawQKs1pNDfFwZCzhE+KkUSl+1q/uTwoyavolSiku9M1y/p326LJpL6z8RjcqIXj
-        Aa2EuP9LGOwIslxksi8wrklpBdcykUBQDH1ptqfHaFRXzhgyG4hUPmjNEqY/17LyqiT4TJr7Ec3R8
-        yNjDsOAA==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k18xE-0000j5-4E; Thu, 30 Jul 2020 13:50:40 +0000
-Date:   Thu, 30 Jul 2020 14:50:40 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Zhengyuan Liu <liuzhengyuang521@gmail.com>,
-        linux-xfs@vger.kernel.org, Zhengyuan Liu <liuzhengyuan@kylinos.cn>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Question] About XFS random buffer write performance
-Message-ID: <20200730135040.GD23808@casper.infradead.org>
-References: <CAOOPZo45E+hVAo9S_2psMJQzrzwmVKo_WjWOM7Zwhm_CS0J3iA@mail.gmail.com>
- <20200728153453.GC3151642@magnolia>
- <20200728154753.GS23808@casper.infradead.org>
- <20200729015458.GY2005@dread.disaster.area>
- <20200729021231.GV23808@casper.infradead.org>
- <20200729051923.GZ2005@dread.disaster.area>
- <20200729185035.GX23808@casper.infradead.org>
- <20200729230503.GA2005@dread.disaster.area>
+        id S1730089AbgG3QwW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jul 2020 12:52:22 -0400
+Received: from pio-pvt-msa2.bahnhof.se ([79.136.2.41]:36652 "EHLO
+        pio-pvt-msa2.bahnhof.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730043AbgG3QwU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jul 2020 12:52:20 -0400
+X-Greylist: delayed 417 seconds by postgrey-1.27 at vger.kernel.org; Thu, 30 Jul 2020 12:52:19 EDT
+Received: from localhost (localhost [127.0.0.1])
+        by pio-pvt-msa2.bahnhof.se (Postfix) with ESMTP id 9D5093FC07;
+        Thu, 30 Jul 2020 18:45:18 +0200 (CEST)
+Authentication-Results: pio-pvt-msa2.bahnhof.se;
+        dkim=pass (1024-bit key; unprotected) header.d=shipmail.org header.i=@shipmail.org header.b=Ban6eCam;
+        dkim-atps=neutral
+X-Virus-Scanned: Debian amavisd-new at bahnhof.se
+Received: from pio-pvt-msa2.bahnhof.se ([127.0.0.1])
+        by localhost (pio-pvt-msa2.bahnhof.se [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id FGIani5JgmKM; Thu, 30 Jul 2020 18:45:17 +0200 (CEST)
+Received: from mail1.shipmail.org (h-205-35.A357.priv.bahnhof.se [155.4.205.35])
+        (Authenticated sender: mb878879)
+        by pio-pvt-msa2.bahnhof.se (Postfix) with ESMTPA id 22D5D3FBCF;
+        Thu, 30 Jul 2020 18:45:14 +0200 (CEST)
+Received: from localhost.localdomain (h-205-35.A357.priv.bahnhof.se [155.4.205.35])
+        by mail1.shipmail.org (Postfix) with ESMTPSA id 68E9E361FE2;
+        Thu, 30 Jul 2020 18:45:14 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=shipmail.org; s=mail;
+        t=1596127516; bh=WmoqVD5xMx2mKhiXkA7Wx6HNNvArGiPu3cb42J8Eqq8=;
+        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
+        b=Ban6eCam79LaP2aso+KqRtn4VGxizeZQ3uHVvcID5i+rm+f7F9Yk/y4F1LRpx7kM4
+         7+UvyzkUHOyPhdiSOiHvQteBECLWcX8gITVwl8MQG3RSVLKJZ8EZjCZK5d63q9vEYr
+         4f/39kCtOd/IbfmxfAV+kxoiRaUob9Nuv5nZKE4E=
+Subject: Re: [PATCH] dma-resv: lockdep-prime address_space->i_mmap_rwsem for
+ dma-resv
+To:     Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
+        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
+        "open list:DMA BUFFER SHARING FRAMEWORK" 
+        <linux-media@vger.kernel.org>,
+        "moderated list:DMA BUFFER SHARING FRAMEWORK" 
+        <linaro-mm-sig@lists.linaro.org>,
+        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+References: <20200728135839.1035515-1-daniel.vetter@ffwll.ch>
+ <38cbc4fb-3a88-47c4-2d6c-4d90f9be42e7@shipmail.org>
+ <CAKMK7uFe-70DE5qOBJ6FwD8d_A0yZt+h5bCqA=e9QtYE1qwASQ@mail.gmail.com>
+From:   =?UTF-8?Q?Thomas_Hellstr=c3=b6m_=28Intel=29?= 
+        <thomas_os@shipmail.org>
+Message-ID: <60f2b14f-8cef-f515-9cf5-bdbc02d9c63c@shipmail.org>
+Date:   Thu, 30 Jul 2020 18:45:14 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200729230503.GA2005@dread.disaster.area>
+In-Reply-To: <CAKMK7uFe-70DE5qOBJ6FwD8d_A0yZt+h5bCqA=e9QtYE1qwASQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 30, 2020 at 09:05:03AM +1000, Dave Chinner wrote:
-> On Wed, Jul 29, 2020 at 07:50:35PM +0100, Matthew Wilcox wrote:
-> > I had a bit of a misunderstanding.  Let's discard that proposal
-> > and discuss what we want to optimise for, ignoring THPs.  We don't
-> > need to track any per-block state, of course.  We could implement
-> > __iomap_write_begin() by reading in the entire page (skipping the last
-> > few blocks if they lie outside i_size, of course) and then marking the
-> > entire page Uptodate.
-> 
-> __iomap_write_begin() already does read-around for sub-page writes.
-> And, if necessary, it does zeroing of unwritten extents, newly
-> allocated ranges and ranges beyond EOF and marks them uptodate
-> appropriately.
 
-But it doesn't read in the entire page, just the blocks in the page which
-will be touched by the write.
+On 7/30/20 3:17 PM, Daniel Vetter wrote:
+> On Thu, Jul 30, 2020 at 2:17 PM Thomas Hellström (Intel)
+> <thomas_os@shipmail.org> wrote:
+>>
+>> On 7/28/20 3:58 PM, Daniel Vetter wrote:
+>>> GPU drivers need this in their shrinkers, to be able to throw out
+>>> mmap'ed buffers. Note that we also need dma_resv_lock in shrinkers,
+>>> but that loop is resolved by trylocking in shrinkers.
+>>>
+>>> So full hierarchy is now (ignore some of the other branches we already
+>>> have primed):
+>>>
+>>> mmap_read_lock -> dma_resv -> shrinkers -> i_mmap_lock_write
+>>>
+>>> I hope that's not inconsistent with anything mm or fs does, adding
+>>> relevant people.
+>>>
+>> Looks OK to me. The mapping_dirty_helpers run under the i_mmap_lock, but
+>> don't allocate any memory AFAICT.
+>>
+>> Since huge page-table-entry splitting may happen under the i_mmap_lock
+>> from unmap_mapping_range() it might be worth figuring out how new page
+>> directory pages are allocated, though.
+> ofc I'm not an mm expert at all, but I did try to scroll through all
+> i_mmap_lock_write/read callers. Found the following:
+>
+> - kernel/events/uprobes.c in build_map_info:
+>
+>              /*
+>               * Needs GFP_NOWAIT to avoid i_mmap_rwsem recursion through
+>               * reclaim. This is optimistic, no harm done if it fails.
+>               */
+>
+> - I got lost in the hugetlb.c code and couldn't convince myself it's
+> not allocating page directories at various levels with something else
+> than GFP_KERNEL.
+>
+> So looks like the recursion is clearly there and known, but the
+> hugepage code is too complex and flying over my head.
+> -Daniel
 
-> > Buffer heads track several bits of information about each block:
-> >  - Uptodate (contents of cache at least as recent as storage)
-> >  - Dirty (contents of cache more recent than storage)
-> >  - ... er, I think all the rest are irrelevant for iomap
-> 
-> 
-> Yes, it is. And we optimised out the dirty tracking by just using
-> the single dirty bit in the page.
-> 
-> > I think I just talked myself into what you were arguing for -- that we
-> > change the ->uptodate bit array into a ->dirty bit array.
-> > 
-> > That implies that we lose the current optimisation that we can write at
-> > a blocksize alignment into the page cache and not read from storage.
-> 
-> iomap does not do that. It always reads the entire page in, even for
-> block aligned sub-page writes. IIRC, we even allocate on page
-> granularity for sub-page block size filesystems so taht we fill
-> holes and can do full page writes in writeback because this tends to
-> significantly reduce worst case file fragmentation for random sparse
-> writes...
+OK, so I inverted your annotation and ran a memory hog, and got the 
+below splat. So clearly your proposed reclaim->i_mmap_lock locking order 
+is an already established one.
 
-That isn't what __iomap_write_begin() does today.
+So
 
-Consider a 1kB block size filesystem and a 4kB page size host.  Trace through
-writing 1kB at a 2kB offset into the file.
-We call iomap_write_begin() with pos of 2048, len 1024.
-Allocate a new page
-Call __iomap_write_begin(2048, 1024)
-block_start = 2048
-block_end = 3072
-iomap_adjust_read_range() sets poff and plen to 2048 & 1024
-from == 2048, to == 3072, so we continue
-block_start + plen == block_end so the loop terminates.
-We didn't read anything.
+Reviewed-by: Thomas Hellström <thomas.hellstrom@intel.com>
 
-> Modern really SSDs don't care about runs of zeros being written.
-> They compress and/or deduplicate such things on the fly as part of
-> their internal write-amplification reduction strategies. Pretty much
-> all SSDs on the market these days - consumer or enterprise - do this
-> sort of thing in their FTLs and so writing more than the exact
-> changed data really doesn't make a difference.
+8<---------------------------------------------------------------------------------------------
 
-You're clearly talking to different SSD people than I am.
+[  308.324654] WARNING: possible circular locking dependency detected
+[  308.324655] 5.8.0-rc2+ #16 Not tainted
+[  308.324656] ------------------------------------------------------
+[  308.324657] kswapd0/98 is trying to acquire lock:
+[  308.324658] ffff92a16f758428 (&mapping->i_mmap_rwsem){++++}-{3:3}, 
+at: rmap_walk_file+0x1c0/0x2f0
+[  308.324663]
+                but task is already holding lock:
+[  308.324664] ffffffffb0960240 (fs_reclaim){+.+.}-{0:0}, at: 
+__fs_reclaim_acquire+0x5/0x30
+[  308.324666]
+                which lock already depends on the new lock.
 
+[  308.324667]
+                the existing dependency chain (in reverse order) is:
+[  308.324667]
+                -> #1 (fs_reclaim){+.+.}-{0:0}:
+[  308.324670]        fs_reclaim_acquire+0x34/0x40
+[  308.324672]        dma_resv_lockdep+0x186/0x224
+[  308.324675]        do_one_initcall+0x5d/0x2c0
+[  308.324676]        kernel_init_freeable+0x222/0x288
+[  308.324678]        kernel_init+0xa/0x107
+[  308.324679]        ret_from_fork+0x1f/0x30
+[  308.324680]
+                -> #0 (&mapping->i_mmap_rwsem){++++}-{3:3}:
+[  308.324682]        __lock_acquire+0x119f/0x1fc0
+[  308.324683]        lock_acquire+0xa4/0x3b0
+[  308.324685]        down_read+0x2d/0x110
+[  308.324686]        rmap_walk_file+0x1c0/0x2f0
+[  308.324687]        page_referenced+0x133/0x150
+[  308.324689]        shrink_active_list+0x142/0x610
+[  308.324690]        balance_pgdat+0x229/0x620
+[  308.324691]        kswapd+0x200/0x470
+[  308.324693]        kthread+0x11f/0x140
+[  308.324694]        ret_from_fork+0x1f/0x30
+[  308.324694]
+                other info that might help us debug this:
+
+[  308.324695]  Possible unsafe locking scenario:
+
+[  308.324695]        CPU0                    CPU1
+[  308.324696]        ----                    ----
+[  308.324696]   lock(fs_reclaim);
+[  308.324697] lock(&mapping->i_mmap_rwsem);
+[  308.324698]                                lock(fs_reclaim);
+[  308.324699]   lock(&mapping->i_mmap_rwsem);
+[  308.324699]
+                 *** DEADLOCK ***
+
+[  308.324700] 1 lock held by kswapd0/98:
+[  308.324701]  #0: ffffffffb0960240 (fs_reclaim){+.+.}-{0:0}, at: 
+__fs_reclaim_acquire+0x5/0x30
+[  308.324702]
+                stack backtrace:
+[  308.324704] CPU: 1 PID: 98 Comm: kswapd0 Not tainted 5.8.0-rc2+ #16
+[  308.324705] Hardware name: VMware, Inc. VMware Virtual Platform/440BX 
+Desktop Reference Platform, BIOS 6.00 07/29/2019
+[  308.324706] Call Trace:
+[  308.324710]  dump_stack+0x92/0xc8
+[  308.324711]  check_noncircular+0x12d/0x150
+[  308.324713]  __lock_acquire+0x119f/0x1fc0
+[  308.324715]  lock_acquire+0xa4/0x3b0
+[  308.324716]  ? rmap_walk_file+0x1c0/0x2f0
+[  308.324717]  ? __lock_acquire+0x394/0x1fc0
+[  308.324719]  down_read+0x2d/0x110
+[  308.324720]  ? rmap_walk_file+0x1c0/0x2f0
+[  308.324721]  rmap_walk_file+0x1c0/0x2f0
+[  308.324722]  page_referenced+0x133/0x150
+[  308.324724]  ? __page_set_anon_rmap+0x70/0x70
+[  308.324725]  ? page_get_anon_vma+0x190/0x190
+[  308.324726]  shrink_active_list+0x142/0x610
+[  308.324728]  balance_pgdat+0x229/0x620
+[  308.324730]  kswapd+0x200/0x470
+[  308.324731]  ? lockdep_hardirqs_on_prepare+0xf5/0x170
+[  308.324733]  ? finish_wait+0x80/0x80
+[  308.324734]  ? balance_pgdat+0x620/0x620
+[  308.324736]  kthread+0x11f/0x140
+[  308.324737]  ? kthread_create_worker_on_cpu+0x40/0x40
+[  308.324739]  ret_from_fork+0x1f/0x30
+
+
+
+>> /Thomas
+>>
+>>
+>>
+>
