@@ -2,120 +2,256 @@ Return-Path: <SRS0=myhp=BJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6DF2C433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 18:30:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA9D1C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 18:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABBB5206E6
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 18:30:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8494920829
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 18:34:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X+ZNpjsr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726343AbgG3Sas (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jul 2020 14:30:48 -0400
-Received: from sandeen.net ([63.231.237.45]:46200 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726275AbgG3Sas (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 30 Jul 2020 14:30:48 -0400
-Received: from Liberator.local (047-025-251-180.res.spectrum.com [47.25.251.180])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id E8394B7C;
-        Thu, 30 Jul 2020 13:29:52 -0500 (CDT)
-Subject: Re: [PATCH 0/3] xfsprogs: xfs_quota error message and state reporting
- improvement
-To:     Bill O'Donnell <billodo@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com
-References: <20200715201253.171356-1-billodo@redhat.com>
- <910cf53e-62fe-c4b4-2892-5b5cd0821ac3@sandeen.net>
- <20200730175220.GA306320@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <5985466b-abd7-1469-bfa9-d88d57ccd2ed@sandeen.net>
-Date:   Thu, 30 Jul 2020 11:30:44 -0700
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.10.0
+        id S1726544AbgG3Seo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jul 2020 14:34:44 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41788 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726275AbgG3Sen (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jul 2020 14:34:43 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06UIGujA092305;
+        Thu, 30 Jul 2020 18:34:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=mbvFblHRw7LzhN7MFNZv2uYnbWvgCt/mixrtTr/RGIs=;
+ b=X+ZNpjsrb0iFDGSJuQhsf0ifOSUQSsrpPUnLplRR6+QjxyA2roIUSftOtXRsJ4mk40/a
+ nNtV/tjj3QefMUyhCTXAV159s9F1jAjOMUCn+7f8g1aUIjhsoa7hen8D99IxYi2ghZR8
+ GNCuLUBxAmgeKoYBdwZTwPMz1YR8rawMMUnQx2hftBuW477JiGdKe/HUxAUCyVL6u2om
+ cItiSzMGGGgW71QV5tY/bDZANabQ60xivBAee+Kch8B/8GDqj8pBRwlPd8RY5p4GZvR0
+ q1W2+tP00r6133WmtrW6NvAvaY986+zF2nUPQLrRcfp1RJWw2kzhcHAqFj7a9Z2Ijakv fA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 32hu1jnba3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 30 Jul 2020 18:34:41 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06UIIgMD049864;
+        Thu, 30 Jul 2020 18:34:41 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 32hu5x8xex-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 30 Jul 2020 18:34:40 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06UIYdFr006740;
+        Thu, 30 Jul 2020 18:34:39 GMT
+Received: from localhost (/10.159.249.46)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 30 Jul 2020 11:34:39 -0700
+Date:   Thu, 30 Jul 2020 11:34:38 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: [PATCH] xfs/{050,299}: clear quota warnings in between checks
+Message-ID: <20200730183438.GA67809@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200730175220.GA306320@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9698 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
+ malwarescore=0 suspectscore=1 spamscore=0 mlxlogscore=999 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007300130
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9698 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 clxscore=1015
+ malwarescore=0 spamscore=0 suspectscore=1 bulkscore=0 priorityscore=1501
+ phishscore=0 mlxlogscore=999 lowpriorityscore=0 impostorscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007300130
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
+Both of these quota tests contain the output of the xfs_quota repquota
+command in the golden output.  Unfortunately, the output was recorded
+before quota soft warnings were implemented, which means they'll regress
+the output when we make quota warning work.  Fix this by resetting the
+warning count to zero before generating output.
 
-On 7/30/20 10:52 AM, Bill O'Donnell wrote:
-> On Thu, Jul 30, 2020 at 10:46:18AM -0700, Eric Sandeen wrote:
->> On 7/15/20 1:12 PM, Bill O'Donnell wrote:
->>>
->>> This patchset improves xfs_quota command error message output as well as
->>> adding reporting for grace times and warning limits for state (u,g,p).
->>>
->>> Note that patches to xfstests to handle these changes will be forthcoming.
->>> Also, patch 1 was originally submitted separately:
->>>   (xfsprogs: xfs_quota command error message improvement)
->>>
->>> patch 1 contains the command error message improvements.
->>> patch 2 contains the warning limit reporting (originally SoB Darrick Wong).
->>> patch 3 contains the additional state reporting of grace times for u,g,p.
->>>
->>> Comments appreciated. Thanks-
->>> Bill
->>
->> Hi Bill - 
->>
->> These look good and have reviews, but we need xfstests fixed up with filters
->> now, multiple tests now have output that doesn't match expected, causing
->> failures:
-> 
-> I'll work on it. Thanks for the reminder.
-> -Bill
+While we're at it, use $XFS_QUOTA_PROG instead of xfs_quota.
 
-Ah, sounds like Darrick has (sent?) some(?) patches for this already....
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+note that these changes are necessary because we fixed a longstanding
+warning counter bug for 5.9...
+---
+ tests/xfs/050 |   23 ++++++++++++++++-------
+ tests/xfs/299 |   23 ++++++++++++++++-------
+ 2 files changed, 32 insertions(+), 14 deletions(-)
 
--Eric
+diff --git a/tests/xfs/050 b/tests/xfs/050
+index 788ed7f1..c765f00b 100755
+--- a/tests/xfs/050
++++ b/tests/xfs/050
+@@ -61,6 +61,7 @@ _filter_report()
+ 			$val = $ENV{'NUM_SPACE_FILES'};
+ 		}
+ 		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
++	sed -e 's/ 65535 \[--------\]/ 00 \[--------\]/g' |
+ 	perl -npe '
+ 		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
+ }
+@@ -128,9 +129,11 @@ _exercise()
+ 
+ 	echo "Using type=$type id=$id" >>$seqres.full
+ 
++	$XFS_QUOTA_PROG -x -c "warn -$type 65535 -d" $SCRATCH_DEV
++
+ 	echo
+ 	echo "*** report no quota settings" | tee -a $seqres.full
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -139,11 +142,11 @@ _exercise()
+ 	_file_as_id $SCRATCH_MNT/initme $id $type 1024 0
+ 	echo "ls -l $SCRATCH_MNT" >>$seqres.full
+ 	ls -l $SCRATCH_MNT >>$seqres.full
+-	xfs_quota -D $tmp.projects -P $temp.projid -x \
++	$XFS_QUOTA_PROG -D $tmp.projects -P $temp.projid -x \
+ 		-c "limit -$type bsoft=${bsoft} bhard=${bhard} $id" \
+ 		-c "limit -$type isoft=$isoft ihard=$ihard $id" \
+ 		$SCRATCH_DEV
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -154,7 +157,8 @@ _exercise()
+ 	_file_as_id $SCRATCH_MNT/softie3 $id $type 1024 0
+ 	_file_as_id $SCRATCH_MNT/softie4 $id $type 1024 0
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -x -c "warn -i -$type 0 $id" $SCRATCH_DEV
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -162,7 +166,9 @@ _exercise()
+ 	echo "*** push past the soft block limit" | tee -a $seqres.full
+ 	_file_as_id $SCRATCH_MNT/softie $id $type $bsize 300
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -x -c "warn -i -$type 0 $id" \
++		-c "warn -b -$type 0 $id" $SCRATCH_DEV
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -174,7 +180,9 @@ _exercise()
+ 		_file_as_id $SCRATCH_MNT/hard$i $id $type 1024 0
+ 	done
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -x  -c "warn -b -$type 0 $id" \
++		-c "warn -i -$type 0 $id" $SCRATCH_DEV
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -185,7 +193,8 @@ _exercise()
+ 	echo "ls -l $SCRATCH_MNT" >>$seqres.full
+ 	ls -l $SCRATCH_MNT >>$seqres.full
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -x -c "warn -b -$type 0 $id" $SCRATCH_DEV
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_and_check_blks | LC_COLLATE=POSIX sort -ru
+ 
+diff --git a/tests/xfs/299 b/tests/xfs/299
+index adcf0e41..574a93b9 100755
+--- a/tests/xfs/299
++++ b/tests/xfs/299
+@@ -54,6 +54,7 @@ _filter_report()
+ 			$val = $ENV{'NUM_SPACE_FILES'};
+ 		}
+ 		s/(^\[ROOT\] \S+ \S+ \S+ \S+ \[--------\] )(\S+)/$1@{[$2 - $val]}/g' |
++	sed -e 's/ 65535 \[--------\]/ 00 \[--------\]/g' |
+ 	perl -npe '
+ 		s|^(.*?) (\d+) (\d+) (\d+)|$1 @{[$2 * 1024 /'$bsize']} @{[$3 * 1024 /'$bsize']} @{[$4 * 1024 /'$bsize']}|'
+ }
+@@ -114,9 +115,11 @@ _exercise()
+ 
+ 	echo "Using type=$type id=$id" >>$seqres.full
+ 
++	$XFS_QUOTA_PROG -x -c "warn -$type 65535 -d" $SCRATCH_DEV
++
+ 	echo
+ 	echo "*** report no quota settings" | tee -a $seqres.full
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -125,11 +128,11 @@ _exercise()
+ 	_file_as_id $SCRATCH_MNT/initme $id $type 1024 0
+ 	echo "ls -l $SCRATCH_MNT" >>$seqres.full
+ 	ls -l $SCRATCH_MNT >>$seqres.full
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "limit -$type bsoft=${bsoft} bhard=${bhard} $id" \
+ 		-c "limit -$type isoft=$isoft ihard=$ihard $id" \
+ 		$SCRATCH_DEV
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -140,7 +143,8 @@ _exercise()
+ 	_file_as_id $SCRATCH_MNT/softie3 $id $type 1024 0
+ 	_file_as_id $SCRATCH_MNT/softie4 $id $type 1024 0
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -x -c "warn -i -$type 0 $id" $SCRATCH_DEV
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -148,7 +152,9 @@ _exercise()
+ 	echo "*** push past the soft block limit" | tee -a $seqres.full
+ 	_file_as_id $SCRATCH_MNT/softie $id $type $bsize 200
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -x -c "warn -i -$type 0 $id" \
++		-c "warn -b -$type 0 $id" $SCRATCH_DEV
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -160,7 +166,9 @@ _exercise()
+ 		_file_as_id $SCRATCH_MNT/hard$i $id $type 1024 0
+ 	done
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -x  -c "warn -b -$type 0 $id" \
++		-c "warn -i -$type 0 $id" $SCRATCH_DEV
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_report | LC_COLLATE=POSIX sort -ru
+ 
+@@ -171,7 +179,8 @@ _exercise()
+ 	echo "ls -l $SCRATCH_MNT" >>$seqres.full
+ 	ls -l $SCRATCH_MNT >>$seqres.full
+ 	_qmount
+-	xfs_quota -D $tmp.projects -P $tmp.projid -x \
++	$XFS_QUOTA_PROG -x -c "warn -b -$type 0 $id" $SCRATCH_DEV
++	$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid -x \
+ 		-c "repquota -birnN -$type" $SCRATCH_DEV |
+ 		_filter_and_check_blks | LC_COLLATE=POSIX sort -ru
+ 
