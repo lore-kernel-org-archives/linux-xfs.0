@@ -2,223 +2,123 @@ Return-Path: <SRS0=myhp=BJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F412CC433E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 16:52:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A94AC433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 17:46:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA82C208A9
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 16:52:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=shipmail.org header.i=@shipmail.org header.b="Ban6eCam"
+	by mail.kernel.org (Postfix) with ESMTP id 82EFF2083B
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 17:46:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730089AbgG3QwW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jul 2020 12:52:22 -0400
-Received: from pio-pvt-msa2.bahnhof.se ([79.136.2.41]:36652 "EHLO
-        pio-pvt-msa2.bahnhof.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730043AbgG3QwU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jul 2020 12:52:20 -0400
-X-Greylist: delayed 417 seconds by postgrey-1.27 at vger.kernel.org; Thu, 30 Jul 2020 12:52:19 EDT
-Received: from localhost (localhost [127.0.0.1])
-        by pio-pvt-msa2.bahnhof.se (Postfix) with ESMTP id 9D5093FC07;
-        Thu, 30 Jul 2020 18:45:18 +0200 (CEST)
-Authentication-Results: pio-pvt-msa2.bahnhof.se;
-        dkim=pass (1024-bit key; unprotected) header.d=shipmail.org header.i=@shipmail.org header.b=Ban6eCam;
-        dkim-atps=neutral
-X-Virus-Scanned: Debian amavisd-new at bahnhof.se
-Received: from pio-pvt-msa2.bahnhof.se ([127.0.0.1])
-        by localhost (pio-pvt-msa2.bahnhof.se [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id FGIani5JgmKM; Thu, 30 Jul 2020 18:45:17 +0200 (CEST)
-Received: from mail1.shipmail.org (h-205-35.A357.priv.bahnhof.se [155.4.205.35])
-        (Authenticated sender: mb878879)
-        by pio-pvt-msa2.bahnhof.se (Postfix) with ESMTPA id 22D5D3FBCF;
-        Thu, 30 Jul 2020 18:45:14 +0200 (CEST)
-Received: from localhost.localdomain (h-205-35.A357.priv.bahnhof.se [155.4.205.35])
-        by mail1.shipmail.org (Postfix) with ESMTPSA id 68E9E361FE2;
-        Thu, 30 Jul 2020 18:45:14 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=shipmail.org; s=mail;
-        t=1596127516; bh=WmoqVD5xMx2mKhiXkA7Wx6HNNvArGiPu3cb42J8Eqq8=;
-        h=Subject:To:Cc:References:From:Date:In-Reply-To:From;
-        b=Ban6eCam79LaP2aso+KqRtn4VGxizeZQ3uHVvcID5i+rm+f7F9Yk/y4F1LRpx7kM4
-         7+UvyzkUHOyPhdiSOiHvQteBECLWcX8gITVwl8MQG3RSVLKJZ8EZjCZK5d63q9vEYr
-         4f/39kCtOd/IbfmxfAV+kxoiRaUob9Nuv5nZKE4E=
-Subject: Re: [PATCH] dma-resv: lockdep-prime address_space->i_mmap_rwsem for
- dma-resv
-To:     Daniel Vetter <daniel.vetter@ffwll.ch>
-Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
-        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        =?UTF-8?Q?Christian_K=c3=b6nig?= <christian.koenig@amd.com>,
-        "open list:DMA BUFFER SHARING FRAMEWORK" 
-        <linux-media@vger.kernel.org>,
-        "moderated list:DMA BUFFER SHARING FRAMEWORK" 
-        <linaro-mm-sig@lists.linaro.org>,
-        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-References: <20200728135839.1035515-1-daniel.vetter@ffwll.ch>
- <38cbc4fb-3a88-47c4-2d6c-4d90f9be42e7@shipmail.org>
- <CAKMK7uFe-70DE5qOBJ6FwD8d_A0yZt+h5bCqA=e9QtYE1qwASQ@mail.gmail.com>
-From:   =?UTF-8?Q?Thomas_Hellstr=c3=b6m_=28Intel=29?= 
-        <thomas_os@shipmail.org>
-Message-ID: <60f2b14f-8cef-f515-9cf5-bdbc02d9c63c@shipmail.org>
-Date:   Thu, 30 Jul 2020 18:45:14 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1730242AbgG3RqW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jul 2020 13:46:22 -0400
+Received: from sandeen.net ([63.231.237.45]:44058 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728532AbgG3RqU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 30 Jul 2020 13:46:20 -0400
+Received: from Liberator.local (047-025-251-180.res.spectrum.com [47.25.251.180])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 44C86120F;
+        Thu, 30 Jul 2020 12:45:26 -0500 (CDT)
+Subject: Re: [PATCH 0/3] xfsprogs: xfs_quota error message and state reporting
+ improvement
+To:     Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com
+References: <20200715201253.171356-1-billodo@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <910cf53e-62fe-c4b4-2892-5b5cd0821ac3@sandeen.net>
+Date:   Thu, 30 Jul 2020 10:46:18 -0700
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <CAKMK7uFe-70DE5qOBJ6FwD8d_A0yZt+h5bCqA=e9QtYE1qwASQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200715201253.171356-1-billodo@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On 7/15/20 1:12 PM, Bill O'Donnell wrote:
+> 
+> This patchset improves xfs_quota command error message output as well as
+> adding reporting for grace times and warning limits for state (u,g,p).
+> 
+> Note that patches to xfstests to handle these changes will be forthcoming.
+> Also, patch 1 was originally submitted separately:
+>   (xfsprogs: xfs_quota command error message improvement)
+> 
+> patch 1 contains the command error message improvements.
+> patch 2 contains the warning limit reporting (originally SoB Darrick Wong).
+> patch 3 contains the additional state reporting of grace times for u,g,p.
+> 
+> Comments appreciated. Thanks-
+> Bill
 
-On 7/30/20 3:17 PM, Daniel Vetter wrote:
-> On Thu, Jul 30, 2020 at 2:17 PM Thomas Hellström (Intel)
-> <thomas_os@shipmail.org> wrote:
->>
->> On 7/28/20 3:58 PM, Daniel Vetter wrote:
->>> GPU drivers need this in their shrinkers, to be able to throw out
->>> mmap'ed buffers. Note that we also need dma_resv_lock in shrinkers,
->>> but that loop is resolved by trylocking in shrinkers.
->>>
->>> So full hierarchy is now (ignore some of the other branches we already
->>> have primed):
->>>
->>> mmap_read_lock -> dma_resv -> shrinkers -> i_mmap_lock_write
->>>
->>> I hope that's not inconsistent with anything mm or fs does, adding
->>> relevant people.
->>>
->> Looks OK to me. The mapping_dirty_helpers run under the i_mmap_lock, but
->> don't allocate any memory AFAICT.
->>
->> Since huge page-table-entry splitting may happen under the i_mmap_lock
->> from unmap_mapping_range() it might be worth figuring out how new page
->> directory pages are allocated, though.
-> ofc I'm not an mm expert at all, but I did try to scroll through all
-> i_mmap_lock_write/read callers. Found the following:
->
-> - kernel/events/uprobes.c in build_map_info:
->
->              /*
->               * Needs GFP_NOWAIT to avoid i_mmap_rwsem recursion through
->               * reclaim. This is optimistic, no harm done if it fails.
->               */
->
-> - I got lost in the hugetlb.c code and couldn't convince myself it's
-> not allocating page directories at various levels with something else
-> than GFP_KERNEL.
->
-> So looks like the recursion is clearly there and known, but the
-> hugepage code is too complex and flying over my head.
-> -Daniel
+Hi Bill - 
 
-OK, so I inverted your annotation and ran a memory hog, and got the 
-below splat. So clearly your proposed reclaim->i_mmap_lock locking order 
-is an already established one.
+These look good and have reviews, but we need xfstests fixed up with filters
+now, multiple tests now have output that doesn't match expected, causing
+failures:
 
-So
-
-Reviewed-by: Thomas Hellström <thomas.hellstrom@intel.com>
-
-8<---------------------------------------------------------------------------------------------
-
-[  308.324654] WARNING: possible circular locking dependency detected
-[  308.324655] 5.8.0-rc2+ #16 Not tainted
-[  308.324656] ------------------------------------------------------
-[  308.324657] kswapd0/98 is trying to acquire lock:
-[  308.324658] ffff92a16f758428 (&mapping->i_mmap_rwsem){++++}-{3:3}, 
-at: rmap_walk_file+0x1c0/0x2f0
-[  308.324663]
-                but task is already holding lock:
-[  308.324664] ffffffffb0960240 (fs_reclaim){+.+.}-{0:0}, at: 
-__fs_reclaim_acquire+0x5/0x30
-[  308.324666]
-                which lock already depends on the new lock.
-
-[  308.324667]
-                the existing dependency chain (in reverse order) is:
-[  308.324667]
-                -> #1 (fs_reclaim){+.+.}-{0:0}:
-[  308.324670]        fs_reclaim_acquire+0x34/0x40
-[  308.324672]        dma_resv_lockdep+0x186/0x224
-[  308.324675]        do_one_initcall+0x5d/0x2c0
-[  308.324676]        kernel_init_freeable+0x222/0x288
-[  308.324678]        kernel_init+0xa/0x107
-[  308.324679]        ret_from_fork+0x1f/0x30
-[  308.324680]
-                -> #0 (&mapping->i_mmap_rwsem){++++}-{3:3}:
-[  308.324682]        __lock_acquire+0x119f/0x1fc0
-[  308.324683]        lock_acquire+0xa4/0x3b0
-[  308.324685]        down_read+0x2d/0x110
-[  308.324686]        rmap_walk_file+0x1c0/0x2f0
-[  308.324687]        page_referenced+0x133/0x150
-[  308.324689]        shrink_active_list+0x142/0x610
-[  308.324690]        balance_pgdat+0x229/0x620
-[  308.324691]        kswapd+0x200/0x470
-[  308.324693]        kthread+0x11f/0x140
-[  308.324694]        ret_from_fork+0x1f/0x30
-[  308.324694]
-                other info that might help us debug this:
-
-[  308.324695]  Possible unsafe locking scenario:
-
-[  308.324695]        CPU0                    CPU1
-[  308.324696]        ----                    ----
-[  308.324696]   lock(fs_reclaim);
-[  308.324697] lock(&mapping->i_mmap_rwsem);
-[  308.324698]                                lock(fs_reclaim);
-[  308.324699]   lock(&mapping->i_mmap_rwsem);
-[  308.324699]
-                 *** DEADLOCK ***
-
-[  308.324700] 1 lock held by kswapd0/98:
-[  308.324701]  #0: ffffffffb0960240 (fs_reclaim){+.+.}-{0:0}, at: 
-__fs_reclaim_acquire+0x5/0x30
-[  308.324702]
-                stack backtrace:
-[  308.324704] CPU: 1 PID: 98 Comm: kswapd0 Not tainted 5.8.0-rc2+ #16
-[  308.324705] Hardware name: VMware, Inc. VMware Virtual Platform/440BX 
-Desktop Reference Platform, BIOS 6.00 07/29/2019
-[  308.324706] Call Trace:
-[  308.324710]  dump_stack+0x92/0xc8
-[  308.324711]  check_noncircular+0x12d/0x150
-[  308.324713]  __lock_acquire+0x119f/0x1fc0
-[  308.324715]  lock_acquire+0xa4/0x3b0
-[  308.324716]  ? rmap_walk_file+0x1c0/0x2f0
-[  308.324717]  ? __lock_acquire+0x394/0x1fc0
-[  308.324719]  down_read+0x2d/0x110
-[  308.324720]  ? rmap_walk_file+0x1c0/0x2f0
-[  308.324721]  rmap_walk_file+0x1c0/0x2f0
-[  308.324722]  page_referenced+0x133/0x150
-[  308.324724]  ? __page_set_anon_rmap+0x70/0x70
-[  308.324725]  ? page_get_anon_vma+0x190/0x190
-[  308.324726]  shrink_active_list+0x142/0x610
-[  308.324728]  balance_pgdat+0x229/0x620
-[  308.324730]  kswapd+0x200/0x470
-[  308.324731]  ? lockdep_hardirqs_on_prepare+0xf5/0x170
-[  308.324733]  ? finish_wait+0x80/0x80
-[  308.324734]  ? balance_pgdat+0x620/0x620
-[  308.324736]  kthread+0x11f/0x140
-[  308.324737]  ? kthread_create_worker_on_cpu+0x40/0x40
-[  308.324739]  ret_from_fork+0x1f/0x30
+xfs/106	- output mismatch (see /root/xfstests-dev/results//xfs/106.out.bad)
+    --- tests/xfs/106.out	2017-08-28 12:17:34.950134054 -0400
+    +++ /root/xfstests-dev/results//xfs/106.out.bad	2020-07-30 13:34:26.889836623 -0400
+    @@ -102,7 +102,9 @@
+      Enforcement: OFF
+      Inode: #[INO] (X blocks, Y extents)
+     Blocks grace time: [3 days]
+    +Blocks max warnings: 5
+     Inodes grace time: [3 days]
+    +Inodes max warnings: 5
+     Realtime Blocks grace time: [7 days]
 
 
-
->> /Thomas
->>
->>
->>
->
+Thanks,
+-Eric
