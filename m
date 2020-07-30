@@ -2,136 +2,124 @@ Return-Path: <SRS0=myhp=BJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24976C433E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 13:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE463C433E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 13:50:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 057332074B
-	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 13:17:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B54802074B
+	for <linux-xfs@archiver.kernel.org>; Thu, 30 Jul 2020 13:50:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="Tj45p5a0"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CsDQY/BJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727072AbgG3NRa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 30 Jul 2020 09:17:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44136 "EHLO
+        id S1726799AbgG3Nuv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 30 Jul 2020 09:50:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49268 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726873AbgG3NR1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jul 2020 09:17:27 -0400
-Received: from mail-ot1-x343.google.com (mail-ot1-x343.google.com [IPv6:2607:f8b0:4864:20::343])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 917FAC0619D2
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2020 06:17:26 -0700 (PDT)
-Received: by mail-ot1-x343.google.com with SMTP id t7so6217279otp.0
-        for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2020 06:17:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=l6NNuTlAlb+T71eovQReK+men4boXEXZJmc745e1mek=;
-        b=Tj45p5a06zkqFl6bUdtEmCxMS67sh1pLfLaP0MJK1JKsob6GFGtCQSeLESCL2s30Bo
-         ou0Hr4WM+OKrYig/4okfOklio8NyYxv+hqW65aWlMC+/KH2ReSdB2qWfNUvAmIpCL5GB
-         NCD+kQkkx7Q/TROpmA3URVMeplfnD5XbvU6DY=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=l6NNuTlAlb+T71eovQReK+men4boXEXZJmc745e1mek=;
-        b=Kdkh94Y6XgXrNa3aHTDAOqjgK8dRYjDpsbSn2iULRiyKCWDwbyx1D15i3eXutZwsez
-         kA98fi44HTgNCvWurhPrl7BGK1H/cOphaMTXnwhMoUb6pNcAutUuJdX3U/EU33qipAF7
-         Anc+6fnq1mhMx62s4A8g1Vbpj+QDHCYnxkictlB7s/PJGl5DjPTm5SO4ulWe9m31vfDY
-         tD8yrnh54ZdTAPbVDKpLj6PnuPweweAy1xvuGsN7VsIVom4nvHPz0FsI6o9/k/ccM6Hd
-         ZJI9oX+2CeQtIglFk/U+RwRBDw4kR/1DrfQOx8ImOB1xI7mcOs73w+GOULkuh6Hc6AUX
-         LEPw==
-X-Gm-Message-State: AOAM533QeuyAsiPaHqVxvejPb2huS2D6cbkWbIfL8oYAWae0d4AACx5U
-        0wPGUxF2V58hZaIQo3bAxqFwi1cEO+N+ErxGhY9K0Q==
-X-Google-Smtp-Source: ABdhPJyT+P5EKFUT/rekKMDvcsT0JZ6B1aXbsvpwMmAI2gySdtJl4PHRq6e+n9dVUTuKG5DRk4IoPKAkcy7FpSExRU8=
-X-Received: by 2002:a9d:6052:: with SMTP id v18mr2134622otj.303.1596115045756;
- Thu, 30 Jul 2020 06:17:25 -0700 (PDT)
+        with ESMTP id S1726281AbgG3Nuu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 30 Jul 2020 09:50:50 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C79CC061574
+        for <linux-xfs@vger.kernel.org>; Thu, 30 Jul 2020 06:50:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=t3GSpKHlsq/+mbghOOSDihtSkWYDc7y7KHKRSA+tr0M=; b=CsDQY/BJ81GXZQ1TY8A5W6Z0jZ
+        hAVA3lkg62yZUJNhxPgV4UPw1rJdhdBJG28OSH9J0aOB+KVEV8+zYjspAthHD8QnuTXVZPFnRDZix
+        XbjOJpnpNEYSI7FkM/gUgSyQJZOl8qzm9/AW4gIUEMBgogUZ55qTo3/+impgIViPAy0wVkWLapPBP
+        Q2ZoaeGFnNvrbTawQKs1pNDfFwZCzhE+KkUSl+1q/uTwoyavolSiku9M1y/p326LJpL6z8RjcqIXj
+        Aa2EuP9LGOwIslxksi8wrklpBdcykUBQDH1ptqfHaFRXzhgyG4hUPmjNEqY/17LyqiT4TJr7Ec3R8
+        yNjDsOAA==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1k18xE-0000j5-4E; Thu, 30 Jul 2020 13:50:40 +0000
+Date:   Thu, 30 Jul 2020 14:50:40 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Zhengyuan Liu <liuzhengyuang521@gmail.com>,
+        linux-xfs@vger.kernel.org, Zhengyuan Liu <liuzhengyuan@kylinos.cn>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [Question] About XFS random buffer write performance
+Message-ID: <20200730135040.GD23808@casper.infradead.org>
+References: <CAOOPZo45E+hVAo9S_2psMJQzrzwmVKo_WjWOM7Zwhm_CS0J3iA@mail.gmail.com>
+ <20200728153453.GC3151642@magnolia>
+ <20200728154753.GS23808@casper.infradead.org>
+ <20200729015458.GY2005@dread.disaster.area>
+ <20200729021231.GV23808@casper.infradead.org>
+ <20200729051923.GZ2005@dread.disaster.area>
+ <20200729185035.GX23808@casper.infradead.org>
+ <20200729230503.GA2005@dread.disaster.area>
 MIME-Version: 1.0
-References: <20200728135839.1035515-1-daniel.vetter@ffwll.ch> <38cbc4fb-3a88-47c4-2d6c-4d90f9be42e7@shipmail.org>
-In-Reply-To: <38cbc4fb-3a88-47c4-2d6c-4d90f9be42e7@shipmail.org>
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-Date:   Thu, 30 Jul 2020 15:17:14 +0200
-Message-ID: <CAKMK7uFe-70DE5qOBJ6FwD8d_A0yZt+h5bCqA=e9QtYE1qwASQ@mail.gmail.com>
-Subject: Re: [PATCH] dma-resv: lockdep-prime address_space->i_mmap_rwsem for dma-resv
-To:     =?UTF-8?Q?Thomas_Hellstr=C3=B6m_=28Intel=29?= 
-        <thomas_os@shipmail.org>
-Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
-        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-        "open list:DMA BUFFER SHARING FRAMEWORK" 
-        <linux-media@vger.kernel.org>,
-        "moderated list:DMA BUFFER SHARING FRAMEWORK" 
-        <linaro-mm-sig@lists.linaro.org>,
-        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200729230503.GA2005@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 30, 2020 at 2:17 PM Thomas Hellstr=C3=B6m (Intel)
-<thomas_os@shipmail.org> wrote:
->
->
-> On 7/28/20 3:58 PM, Daniel Vetter wrote:
-> > GPU drivers need this in their shrinkers, to be able to throw out
-> > mmap'ed buffers. Note that we also need dma_resv_lock in shrinkers,
-> > but that loop is resolved by trylocking in shrinkers.
-> >
-> > So full hierarchy is now (ignore some of the other branches we already
-> > have primed):
-> >
-> > mmap_read_lock -> dma_resv -> shrinkers -> i_mmap_lock_write
-> >
-> > I hope that's not inconsistent with anything mm or fs does, adding
-> > relevant people.
-> >
-> Looks OK to me. The mapping_dirty_helpers run under the i_mmap_lock, but
-> don't allocate any memory AFAICT.
->
-> Since huge page-table-entry splitting may happen under the i_mmap_lock
-> from unmap_mapping_range() it might be worth figuring out how new page
-> directory pages are allocated, though.
+On Thu, Jul 30, 2020 at 09:05:03AM +1000, Dave Chinner wrote:
+> On Wed, Jul 29, 2020 at 07:50:35PM +0100, Matthew Wilcox wrote:
+> > I had a bit of a misunderstanding.  Let's discard that proposal
+> > and discuss what we want to optimise for, ignoring THPs.  We don't
+> > need to track any per-block state, of course.  We could implement
+> > __iomap_write_begin() by reading in the entire page (skipping the last
+> > few blocks if they lie outside i_size, of course) and then marking the
+> > entire page Uptodate.
+> 
+> __iomap_write_begin() already does read-around for sub-page writes.
+> And, if necessary, it does zeroing of unwritten extents, newly
+> allocated ranges and ranges beyond EOF and marks them uptodate
+> appropriately.
 
-ofc I'm not an mm expert at all, but I did try to scroll through all
-i_mmap_lock_write/read callers. Found the following:
+But it doesn't read in the entire page, just the blocks in the page which
+will be touched by the write.
 
-- kernel/events/uprobes.c in build_map_info:
+> > Buffer heads track several bits of information about each block:
+> >  - Uptodate (contents of cache at least as recent as storage)
+> >  - Dirty (contents of cache more recent than storage)
+> >  - ... er, I think all the rest are irrelevant for iomap
+> 
+> 
+> Yes, it is. And we optimised out the dirty tracking by just using
+> the single dirty bit in the page.
+> 
+> > I think I just talked myself into what you were arguing for -- that we
+> > change the ->uptodate bit array into a ->dirty bit array.
+> > 
+> > That implies that we lose the current optimisation that we can write at
+> > a blocksize alignment into the page cache and not read from storage.
+> 
+> iomap does not do that. It always reads the entire page in, even for
+> block aligned sub-page writes. IIRC, we even allocate on page
+> granularity for sub-page block size filesystems so taht we fill
+> holes and can do full page writes in writeback because this tends to
+> significantly reduce worst case file fragmentation for random sparse
+> writes...
 
-            /*
-             * Needs GFP_NOWAIT to avoid i_mmap_rwsem recursion through
-             * reclaim. This is optimistic, no harm done if it fails.
-             */
+That isn't what __iomap_write_begin() does today.
 
-- I got lost in the hugetlb.c code and couldn't convince myself it's
-not allocating page directories at various levels with something else
-than GFP_KERNEL.
+Consider a 1kB block size filesystem and a 4kB page size host.  Trace through
+writing 1kB at a 2kB offset into the file.
+We call iomap_write_begin() with pos of 2048, len 1024.
+Allocate a new page
+Call __iomap_write_begin(2048, 1024)
+block_start = 2048
+block_end = 3072
+iomap_adjust_read_range() sets poff and plen to 2048 & 1024
+from == 2048, to == 3072, so we continue
+block_start + plen == block_end so the loop terminates.
+We didn't read anything.
 
-So looks like the recursion is clearly there and known, but the
-hugepage code is too complex and flying over my head.
--Daniel
+> Modern really SSDs don't care about runs of zeros being written.
+> They compress and/or deduplicate such things on the fly as part of
+> their internal write-amplification reduction strategies. Pretty much
+> all SSDs on the market these days - consumer or enterprise - do this
+> sort of thing in their FTLs and so writing more than the exact
+> changed data really doesn't make a difference.
 
->
-> /Thomas
->
->
->
+You're clearly talking to different SSD people than I am.
 
-
---=20
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
