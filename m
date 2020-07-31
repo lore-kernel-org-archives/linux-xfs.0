@@ -2,189 +2,147 @@ Return-Path: <SRS0=R26v=BK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,FORGED_MUA_MOZILLA,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F130C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jul 2020 07:01:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EEF8C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jul 2020 09:12:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78AB72067D
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jul 2020 07:01:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4571821883
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jul 2020 09:12:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731522AbgGaHBc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 31 Jul 2020 03:01:32 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:19692 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731384AbgGaHBb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Jul 2020 03:01:31 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06V6WCoY059876;
-        Fri, 31 Jul 2020 03:01:17 -0400
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 32mc8wk8nc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Jul 2020 03:01:17 -0400
-Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 06V6oCOo103706;
-        Fri, 31 Jul 2020 03:01:16 -0400
-Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 32mc8wk8mh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Jul 2020 03:01:16 -0400
-Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
-        by ppma02fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 06V70YTs023783;
-        Fri, 31 Jul 2020 07:01:14 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma02fra.de.ibm.com with ESMTP id 32gcq0v9c4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 31 Jul 2020 07:01:14 +0000
-Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 06V71BHi25362690
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 31 Jul 2020 07:01:11 GMT
-Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 614075205A;
-        Fri, 31 Jul 2020 07:01:11 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.199.33.112])
-        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 1B13252079;
-        Fri, 31 Jul 2020 07:01:08 +0000 (GMT)
-Subject: Re: [PATCH 3/3] iomap: fall back to buffered writes for invalidation
- failures
-To:     Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>
-Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
-        Naohiro Aota <naohiro.aota@wdc.com>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>
-References: <20200721183157.202276-1-hch@lst.de>
- <20200721183157.202276-4-hch@lst.de>
-From:   Ritesh Harjani <riteshh@linux.ibm.com>
-Date:   Fri, 31 Jul 2020 12:31:08 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S1732044AbgGaJMq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 31 Jul 2020 05:12:46 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:42576 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731991AbgGaJMq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Jul 2020 05:12:46 -0400
+X-IronPort-AV: E=Sophos;i="5.75,417,1589212800"; 
+   d="scan'208";a="97212846"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 31 Jul 2020 17:12:42 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 0E4604CE4B09;
+        Fri, 31 Jul 2020 17:12:39 +0800 (CST)
+Received: from [10.167.225.206] (10.167.225.206) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Fri, 31 Jul 2020 17:12:40 +0800
+Subject: Re: Can we change the S_DAX flag immediately on XFS without dropping
+ caches?
+To:     Ira Weiny <ira.weiny@intel.com>
+CC:     Dave Chinner <david@fromorbit.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        <yangx.jy@cn.fujitsu.com>, <ruansy.fnst@cn.fujitsu.com>,
+        <gujx@cn.fujitsu.com>, Yasunori Goto <y-goto@fujitsu.com>
+References: <9dc179147f6a47279d801445f3efeecc@G08CNEXMBPEKD04.g08.fujitsu.local>
+ <20200728022059.GX2005@dread.disaster.area>
+ <573feb69-bc38-8eb4-ee9b-7c49802eb737@fujitsu.com>
+ <20200729161040.GA1250504@iweiny-DESK2.sc.intel.com>
+From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
+Message-ID: <5717e1e5-79fb-af3c-0859-eea3cd8d9626@cn.fujitsu.com>
+Date:   Fri, 31 Jul 2020 17:12:38 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.0.1
 MIME-Version: 1.0
-In-Reply-To: <20200721183157.202276-4-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+In-Reply-To: <20200729161040.GA1250504@iweiny-DESK2.sc.intel.com>
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20200731070109.1B13252079@d06av21.portsmouth.uk.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-07-31_01:2020-07-30,2020-07-31 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1011
- impostorscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
- lowpriorityscore=0 suspectscore=2 bulkscore=0 mlxlogscore=999
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007310045
+Content-Language: en-US
+X-Originating-IP: [10.167.225.206]
+X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
+X-yoursite-MailScanner-ID: 0E4604CE4B09.AF3EC
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On 2020/7/30 0:10, Ira Weiny wrote:
+
+> On Wed, Jul 29, 2020 at 11:23:21AM +0900, Yasunori Goto wrote:
+>> Hi,
+>>
+>> On 2020/07/28 11:20, Dave Chinner wrote:
+>>> On Tue, Jul 28, 2020 at 02:00:08AM +0000, Li, Hao wrote:
+>>>> Hi,
+>>>>
+>>>> I have noticed that we have to drop caches to make the changing of S_DAX
+>>>> flag take effect after using chattr +x to turn on DAX for a existing
+>>>> regular file. The related function is xfs_diflags_to_iflags, whose
+>>>> second parameter determines whether we should set S_DAX immediately.
+>>> Yup, as documented in Documentation/filesystems/dax.txt. Specifically:
+>>>
+>>>   6. When changing the S_DAX policy via toggling the persistent FS_XFLAG_DAX flag,
+>>>      the change in behaviour for existing regular files may not occur
+>>>      immediately.  If the change must take effect immediately, the administrator
+>>>      needs to:
+>>>
+>>>      a) stop the application so there are no active references to the data set
+>>>         the policy change will affect
+>>>
+>>>      b) evict the data set from kernel caches so it will be re-instantiated when
+>>>         the application is restarted. This can be achieved by:
+>>>
+>>>         i. drop-caches
+>>>         ii. a filesystem unmount and mount cycle
+>>>         iii. a system reboot
+>>>
+>>>> I can't figure out why we do this. Is this because the page caches in
+>>>> address_space->i_pages are hard to deal with?
+>>> Because of unfixable races in the page fault path that prevent
+>>> changing the caching behaviour of the inode while concurrent access
+>>> is possible. The only way to guarantee races can't happen is to
+>>> cycle the inode out of cache.
+>> I understand why the drop_cache operation is necessary. Thanks.
+>>
+>> BTW, even normal user becomes to able to change DAX flag for an inode,
+>> drop_cache operation still requires root permission, right?
+>>
+>> So, if kernel have a feature for normal user can operate drop cache for "a
+>> inode" with
+>> its permission, I think it improve the above limitation, and
+>> we would like to try to implement it recently.
+>>
+>> Do you have any opinion making such feature?
+>> (Agree/opposition, or any other comment?)
+> I would not be opposed but there were many hurdles to that implementation.
+>
+> What is the use case you are thinking of here?
+>
+> The compromise of dropping caches was reached because we envisioned that many
+> users would simply want to chose the file mode when a file was created and
+> maintain that mode through the lifetime of the file.  To that end one can
+> simply create directories which have the desired dax mode and any files created
+> in that directory will inherit the dax mode immediately.  
+Inheriting mechanism for DAX mode is reasonable but chattr&drop_caches
+makes things complicated.
+> So there is no need
+> to switch the file mode directly as a normal user.
+
+The question is, the normal users can indeed use chattr to change the DAX
+mode for a regular file as long as they want. However, when they do this,
+they have no way to make the change take effect. I think this behavior is
+weird. We can say chattr executes successfully because XFS_DIFLAG2_DAX has
+been set onto xfs_inode->i_d.di_flags2, but we can also say chattr doesn't
+finish things completely because S_DAX is not set onto inode->i_flags.
+The user may be confused about why chattr +/-x doesn't work at all. Maybe
+we should find a way for the normal user to make chattr take effects
+without calling the administrator, or we can make the chattr +/x command
+request root permission now that if the user has root permission, he can
+make DAX changing take effect through echo 2 > /proc/sys/vm/drop_caches.
 
 
-On 7/22/20 12:01 AM, Christoph Hellwig wrote:
-> Failing to invalid the page cache means data in incoherent, which is
-> a very bad state for the system.  Always fall back to buffered I/O
-> through the page cache if we can't invalidate mappings.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+Regards,
+
+Hao Li
+
+>
+> Would that work for your use case?
+>
+> Ira
 
 
-Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
-  mainly for ext4 part.
-
-
-> ---
->   fs/ext4/file.c       |  2 ++
->   fs/gfs2/file.c       |  3 ++-
->   fs/iomap/direct-io.c | 16 +++++++++++-----
->   fs/iomap/trace.h     |  1 +
->   fs/xfs/xfs_file.c    |  4 ++--
->   fs/zonefs/super.c    |  7 +++++--
->   6 files changed, 23 insertions(+), 10 deletions(-)
-> 
-> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-> index 2a01e31a032c4c..129cc1dd6b7952 100644
-> --- a/fs/ext4/file.c
-> +++ b/fs/ext4/file.c
-> @@ -544,6 +544,8 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
->   		iomap_ops = &ext4_iomap_overwrite_ops;
->   	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
->   			   is_sync_kiocb(iocb) || unaligned_io || extend);
-> +	if (ret == -ENOTBLK)
-> +		ret = 0;
-> 
->   	if (extend)
->   		ret = ext4_handle_inode_extension(inode, offset, ret, count);
-> diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
-> index bebde537ac8cf2..b085a3bea4f0fd 100644
-> --- a/fs/gfs2/file.c
-> +++ b/fs/gfs2/file.c
-> @@ -835,7 +835,8 @@ static ssize_t gfs2_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
-> 
->   	ret = iomap_dio_rw(iocb, from, &gfs2_iomap_ops, NULL,
->   			   is_sync_kiocb(iocb));
-> -
-> +	if (ret == -ENOTBLK)
-> +		ret = 0;
->   out:
->   	gfs2_glock_dq(&gh);
->   out_uninit:
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index 190967e87b69e4..c1aafb2ab99072 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -10,6 +10,7 @@
->   #include <linux/backing-dev.h>
->   #include <linux/uio.h>
->   #include <linux/task_io_accounting_ops.h>
-> +#include "trace.h"
-> 
->   #include "../internal.h"
-> 
-> @@ -401,6 +402,9 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
->    * can be mapped into multiple disjoint IOs and only a subset of the IOs issued
->    * may be pure data writes. In that case, we still need to do a full data sync
->    * completion.
-> + *
-> + * Returns -ENOTBLK In case of a page invalidation invalidation failure for
-> + * writes.  The callers needs to fall back to buffered I/O in this case.
->    */
->   ssize_t
->   iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> @@ -478,13 +482,15 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
->   	if (iov_iter_rw(iter) == WRITE) {
->   		/*
->   		 * Try to invalidate cache pages for the range we are writing.
-> -		 * If this invalidation fails, tough, the write will still work,
-> -		 * but racing two incompatible write paths is a pretty crazy
-> -		 * thing to do, so we don't support it 100%.
-> +		 * If this invalidation fails, let the caller fall back to
-> +		 * buffered I/O.
->   		 */
->   		if (invalidate_inode_pages2_range(mapping, pos >> PAGE_SHIFT,
-> -				end >> PAGE_SHIFT))
-> -			dio_warn_stale_pagecache(iocb->ki_filp);
-> +				end >> PAGE_SHIFT)) {
-> +			trace_iomap_dio_invalidate_fail(inode, pos, count);
-> +			ret = -ENOTBLK;
-> +			goto out_free_dio;
-> +		}
-> 
->   		if (!wait_for_completion && !inode->i_sb->s_dio_done_wq) {
->   			ret = sb_init_dio_done_wq(inode->i_sb);
-
-Just as a note. So if the driver returns -ENOTBLK (from ->iomap_end)then
-iomap considers it as a magic value to fall back to buffered-io and it
-changes ret=0 And now with this patch, iomap could also return
--ENOTBLK if it gets an error while doing above operation and so the
-driver is free to consider this as a fallback mechanism to buffered-io.
