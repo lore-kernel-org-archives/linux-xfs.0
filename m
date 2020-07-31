@@ -2,82 +2,189 @@ Return-Path: <SRS0=R26v=BK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,FORGED_MUA_MOZILLA,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0119CC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jul 2020 06:59:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F130C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jul 2020 07:01:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C888520838
-	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jul 2020 06:59:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BRwdExN4"
+	by mail.kernel.org (Postfix) with ESMTP id 78AB72067D
+	for <linux-xfs@archiver.kernel.org>; Fri, 31 Jul 2020 07:01:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731573AbgGaG7v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 31 Jul 2020 02:59:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37942 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731566AbgGaG7t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Jul 2020 02:59:49 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 692FDC061574;
-        Thu, 30 Jul 2020 23:59:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lDee4pOFLZSB3nuhpAPdiW8K8t8auXkIPj1PU+i4wwU=; b=BRwdExN41fb4azXzQCAyPVCd3Z
-        VH/lhXhua5z5h8iRo7NB5hzFaL8GkfpxDJX8e7kBGZI0c4W80SeT6UG5xRoyUB2ofgf15DjlNmuCL
-        NbwvefmyLXujmYfQabvNDUuR1H3J4DQmaasi32XE6oBdXI9wNe4vDytUMTT1d73RN+QrSZftXoBuT
-        xMEssx6G8IhE3ekT+rTcModhFaKbea8yO7PKeShsvFsObvlf0/V+sWFaN5a2nEFZCYT27M54QJhYV
-        y/5RuM2Oj0rm1M2POeu8DmIfmil1gwC3ErIib1qwZNLE6dK4HUBl4V9bMpsUIJY+l2oKjr+MhJEam
-        7L61Kckw==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k1P14-0007p7-31; Fri, 31 Jul 2020 06:59:42 +0000
-Date:   Fri, 31 Jul 2020 07:59:41 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Yu Kuai <yukuai3@huawei.com>, hch@infradead.org,
-        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com
-Subject: Re: [RFC PATCH] iomap: add support to track dirty state of sub pages
-Message-ID: <20200731065941.GD25674@infradead.org>
-References: <20200730011901.2840886-1-yukuai3@huawei.com>
- <20200730031934.GA23808@casper.infradead.org>
+        id S1731522AbgGaHBc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 31 Jul 2020 03:01:32 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:19692 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731384AbgGaHBb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 31 Jul 2020 03:01:31 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 06V6WCoY059876;
+        Fri, 31 Jul 2020 03:01:17 -0400
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 32mc8wk8nc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 31 Jul 2020 03:01:17 -0400
+Received: from m0098417.ppops.net (m0098417.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 06V6oCOo103706;
+        Fri, 31 Jul 2020 03:01:16 -0400
+Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 32mc8wk8mh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 31 Jul 2020 03:01:16 -0400
+Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
+        by ppma02fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 06V70YTs023783;
+        Fri, 31 Jul 2020 07:01:14 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma02fra.de.ibm.com with ESMTP id 32gcq0v9c4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 31 Jul 2020 07:01:14 +0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 06V71BHi25362690
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 31 Jul 2020 07:01:11 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 614075205A;
+        Fri, 31 Jul 2020 07:01:11 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.199.33.112])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 1B13252079;
+        Fri, 31 Jul 2020 07:01:08 +0000 (GMT)
+Subject: Re: [PATCH 3/3] iomap: fall back to buffered writes for invalidation
+ failures
+To:     Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
+        Naohiro Aota <naohiro.aota@wdc.com>,
+        Johannes Thumshirn <jth@kernel.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        cluster-devel@redhat.com, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>
+References: <20200721183157.202276-1-hch@lst.de>
+ <20200721183157.202276-4-hch@lst.de>
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+Date:   Fri, 31 Jul 2020 12:31:08 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200730031934.GA23808@casper.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200721183157.202276-4-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+Message-Id: <20200731070109.1B13252079@d06av21.portsmouth.uk.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-07-31_01:2020-07-30,2020-07-31 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1011
+ impostorscore=0 mlxscore=0 spamscore=0 adultscore=0 phishscore=0
+ lowpriorityscore=0 suspectscore=2 bulkscore=0 mlxlogscore=999
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007310045
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 30, 2020 at 04:19:34AM +0100, Matthew Wilcox wrote:
-> On Thu, Jul 30, 2020 at 09:19:01AM +0800, Yu Kuai wrote:
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -29,7 +29,9 @@ struct iomap_page {
-> >  	atomic_t		read_count;
-> >  	atomic_t		write_count;
-> >  	spinlock_t		uptodate_lock;
-> > +	spinlock_t		dirty_lock;
-> 
-> No need for a separate spinlock.  Just rename uptodate_lock.  Maybe
-> 'bitmap_lock'.
 
-Agreed.
 
+On 7/22/20 12:01 AM, Christoph Hellwig wrote:
+> Failing to invalid the page cache means data in incoherent, which is
+> a very bad state for the system.  Always fall back to buffered I/O
+> through the page cache if we can't invalidate mappings.
 > 
-> >  	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
-> > +	DECLARE_BITMAP(dirty, PAGE_SIZE / 512);
-> 
-> This is inefficient and poses difficulties for the THP patchset.
-> Maybe let the discussion on removing the ->uptodate array finish
-> before posting another patch for review?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-I really don't think we can kill the uptodate bit.   But what we can
-do is have on bitmap array (flex size as in your prep patches) and just
-alternating bits for uptodate and dirty.
+
+Reviewed-by: Ritesh Harjani <riteshh@linux.ibm.com>
+  mainly for ext4 part.
+
+
+> ---
+>   fs/ext4/file.c       |  2 ++
+>   fs/gfs2/file.c       |  3 ++-
+>   fs/iomap/direct-io.c | 16 +++++++++++-----
+>   fs/iomap/trace.h     |  1 +
+>   fs/xfs/xfs_file.c    |  4 ++--
+>   fs/zonefs/super.c    |  7 +++++--
+>   6 files changed, 23 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+> index 2a01e31a032c4c..129cc1dd6b7952 100644
+> --- a/fs/ext4/file.c
+> +++ b/fs/ext4/file.c
+> @@ -544,6 +544,8 @@ static ssize_t ext4_dio_write_iter(struct kiocb *iocb, struct iov_iter *from)
+>   		iomap_ops = &ext4_iomap_overwrite_ops;
+>   	ret = iomap_dio_rw(iocb, from, iomap_ops, &ext4_dio_write_ops,
+>   			   is_sync_kiocb(iocb) || unaligned_io || extend);
+> +	if (ret == -ENOTBLK)
+> +		ret = 0;
+> 
+>   	if (extend)
+>   		ret = ext4_handle_inode_extension(inode, offset, ret, count);
+> diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
+> index bebde537ac8cf2..b085a3bea4f0fd 100644
+> --- a/fs/gfs2/file.c
+> +++ b/fs/gfs2/file.c
+> @@ -835,7 +835,8 @@ static ssize_t gfs2_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
+> 
+>   	ret = iomap_dio_rw(iocb, from, &gfs2_iomap_ops, NULL,
+>   			   is_sync_kiocb(iocb));
+> -
+> +	if (ret == -ENOTBLK)
+> +		ret = 0;
+>   out:
+>   	gfs2_glock_dq(&gh);
+>   out_uninit:
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 190967e87b69e4..c1aafb2ab99072 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -10,6 +10,7 @@
+>   #include <linux/backing-dev.h>
+>   #include <linux/uio.h>
+>   #include <linux/task_io_accounting_ops.h>
+> +#include "trace.h"
+> 
+>   #include "../internal.h"
+> 
+> @@ -401,6 +402,9 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+>    * can be mapped into multiple disjoint IOs and only a subset of the IOs issued
+>    * may be pure data writes. In that case, we still need to do a full data sync
+>    * completion.
+> + *
+> + * Returns -ENOTBLK In case of a page invalidation invalidation failure for
+> + * writes.  The callers needs to fall back to buffered I/O in this case.
+>    */
+>   ssize_t
+>   iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+> @@ -478,13 +482,15 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>   	if (iov_iter_rw(iter) == WRITE) {
+>   		/*
+>   		 * Try to invalidate cache pages for the range we are writing.
+> -		 * If this invalidation fails, tough, the write will still work,
+> -		 * but racing two incompatible write paths is a pretty crazy
+> -		 * thing to do, so we don't support it 100%.
+> +		 * If this invalidation fails, let the caller fall back to
+> +		 * buffered I/O.
+>   		 */
+>   		if (invalidate_inode_pages2_range(mapping, pos >> PAGE_SHIFT,
+> -				end >> PAGE_SHIFT))
+> -			dio_warn_stale_pagecache(iocb->ki_filp);
+> +				end >> PAGE_SHIFT)) {
+> +			trace_iomap_dio_invalidate_fail(inode, pos, count);
+> +			ret = -ENOTBLK;
+> +			goto out_free_dio;
+> +		}
+> 
+>   		if (!wait_for_completion && !inode->i_sb->s_dio_done_wq) {
+>   			ret = sb_init_dio_done_wq(inode->i_sb);
+
+Just as a note. So if the driver returns -ENOTBLK (from ->iomap_end)then
+iomap considers it as a magic value to fall back to buffered-io and it
+changes ret=0 And now with this patch, iomap could also return
+-ENOTBLK if it gets an error while doing above operation and so the
+driver is free to consider this as a fallback mechanism to buffered-io.
