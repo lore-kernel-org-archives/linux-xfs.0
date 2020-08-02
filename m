@@ -1,115 +1,125 @@
-Return-Path: <SRS0=tAZO=BL=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=Zds0=BM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14BBBC433E0
-	for <linux-xfs@archiver.kernel.org>; Sat,  1 Aug 2020 18:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BCBCC433DF
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Aug 2020 23:01:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEF6D2068F
-	for <linux-xfs@archiver.kernel.org>; Sat,  1 Aug 2020 18:10:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF48D207BB
+	for <linux-xfs@archiver.kernel.org>; Sun,  2 Aug 2020 23:01:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727063AbgHASK1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 1 Aug 2020 14:10:27 -0400
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:43661 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726901AbgHASK1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 1 Aug 2020 14:10:27 -0400
-Received: from [192.168.0.4] (ip5f5aeff1.dynamic.kabel-deutschland.de [95.90.239.241])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: buczek)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 67A172064608E;
-        Sat,  1 Aug 2020 20:10:23 +0200 (CEST)
-Subject: Re: xfs_reclaim_inodes_ag taking several seconds
-From:   Donald Buczek <buczek@molgen.mpg.de>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>
-References: <8284912e-b99a-31af-1901-a38ea03b8648@molgen.mpg.de>
- <20200731223255.GG2005@dread.disaster.area>
- <d515fa07-5198-fc3c-24ac-d35aa4e08668@molgen.mpg.de>
-Message-ID: <0f0416a5-2af8-b4be-d53e-6af61082424a@molgen.mpg.de>
-Date:   Sat, 1 Aug 2020 20:10:22 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726693AbgHBXBz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 2 Aug 2020 19:01:55 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:57774 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726257AbgHBXBz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 2 Aug 2020 19:01:55 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 9F77B109820;
+        Mon,  3 Aug 2020 09:01:50 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1k2MzE-0000Mk-Pv; Mon, 03 Aug 2020 09:01:48 +1000
+Date:   Mon, 3 Aug 2020 09:01:48 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ritesh Harjani <riteshh@linux.ibm.com>
+Cc:     linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>
+Subject: Re: [RFC 1/1] pmem: Add cond_resched() in bio_for_each_segment loop
+ in pmem_make_request
+Message-ID: <20200802230148.GA2114@dread.disaster.area>
+References: <0d96e2481f292de2cda8828b03d5121004308759.1596011292.git.riteshh@linux.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <d515fa07-5198-fc3c-24ac-d35aa4e08668@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0d96e2481f292de2cda8828b03d5121004308759.1596011292.git.riteshh@linux.ibm.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=VnNF1IyMAAAA:8 a=7-415B0cAAAA:8
+        a=qczKg5P-FDsFxSpMrEAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-On 01.08.20 12:25, Donald Buczek wrote:
-
-> So if I understand you correctly, this is expected behavior with this kind of load and conceptual changes are already scheduled for kernel 5.9. I don't understand most of it, but isn't it true that with that planned changes the impact might be better limited to the filesystem, so that the performance of other areas of the system might improve? I'd love to test that with our load, but I don't want to risk our backup data and it would be difficult to produce the same load on a toy system. The patch set is not yet ready to be tested on production data, is it?
+On Wed, Jul 29, 2020 at 02:15:18PM +0530, Ritesh Harjani wrote:
+> For systems which do not have CONFIG_PREEMPT set and
+> if there is a heavy multi-threaded load/store operation happening
+> on pmem + sometimes along with device latencies, softlockup warnings like
+> this could trigger. This was seen on Power where pagesize is 64K.
 > 
-> So I guess I'll try to put the backup processes into one or more cgroups to limit the memory available for their fs caches and leave some room for unrelated (maintenance) processes. I hope, that makes sense.
-
-Which it doesn't, because it totally ignores what was said before. The affected processes were not waiting for memory but for the shrinker to finish.
-
-D.
-
+> To avoid softlockup, this patch adds a cond_resched() in this path.
 > 
-> Thank you both four your analysis!
+> <...>
+> watchdog: BUG: soft lockup - CPU#31 stuck for 22s!
+> <...>
+> CPU: 31 PID: 15627 <..> 5.3.18-20
+> <...>
+> NIP memcpy_power7+0x43c/0x7e0
+> LR memcpy_flushcache+0x28/0xa0
 > 
-> Donald
+> Call Trace:
+> memcpy_power7+0x274/0x7e0 (unreliable)
+> memcpy_flushcache+0x28/0xa0
+> write_pmem+0xa0/0x100 [nd_pmem]
+> pmem_do_bvec+0x1f0/0x420 [nd_pmem]
+> pmem_make_request+0x14c/0x370 [nd_pmem]
+> generic_make_request+0x164/0x400
+> submit_bio+0x134/0x2e0
+> submit_bio_wait+0x70/0xc0
+> blkdev_issue_zeroout+0xf4/0x2a0
+> xfs_zero_extent+0x90/0xc0 [xfs]
+> xfs_bmapi_convert_unwritten+0x198/0x230 [xfs]
+> xfs_bmapi_write+0x284/0x630 [xfs]
+> xfs_iomap_write_direct+0x1f0/0x3e0 [xfs]
+> xfs_file_iomap_begin+0x344/0x690 [xfs]
+> dax_iomap_pmd_fault+0x488/0xc10
+> __xfs_filemap_fault+0x26c/0x2b0 [xfs]
+> __handle_mm_fault+0x794/0x1af0
+> handle_mm_fault+0x12c/0x220
+> __do_page_fault+0x290/0xe40
+> do_page_fault+0x38/0xc0
+> handle_page_fault+0x10/0x30
 > 
->> And if you have 30 million inodes in memory, and lots of them are
->> dirty, and the shrinkers are running, then they will be doing
->> dirty inode writeback to throttle memory reclaim to
->> ensure it makes progress and doesn't declare OOM and kill processes
->> permaturely.
->>
->> You have spinning disks, RAID6. I'm betting that it can only clean a
->> couple of hundred inodes a second because RAID6 is severely IOP
->> limited for small writes (like inode clusters). And when you many,
->> many thousands (maybe millions) of dirty inodes, anything that has
->> to wait on inode writeback is going to be waiting for some time...
->>
->>> root:done:/home/buczek/linux_problems/shrinker_semaphore/# xfs_info /amd/done/C/C8024
->>> meta-data=/dev/md0               isize=512    agcount=102, agsize=268435328 blks
->>>           =                       sectsz=4096  attr=2, projid32bit=1
->>>           =                       crc=1        finobt=1, sparse=1, rmapbt=0
->>>           =                       reflink=0
->>> data     =                       bsize=4096   blocks=27348629504, imaxpct=1
->>>           =                       sunit=128    swidth=1792 blks
->>> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
->>> log      =internal log           bsize=4096   blocks=521728, version=2
->>
->> And full size journals, so the filesystem can hold an awful lot of
->> active dirty inodes in memory before it starts throttling on a full
->> journal (think millions of dirty inodes per filesystem)...
->>
->> So, yeah, this is the classic "in memory operation is orders of
->> magnitude faster than disk operation" and it all comes crashing down
->> when something needs to wait for inodes to be written back. The
->> patchset Darrick pointed you at should fix the shrinker issue, but
->> it's likely that this will just push the problem to the next
->> throttling point, which is the journal filling up.
->>
->> IOWs, I suspect fixing your shrinker problem is only going to make
->> the overload of dirty inodes in the system behave worse, because
->> running out of journal space cause *all modifications* to the
->> filesystem to start taking significant delays while they wait for
->> inode writeback to free journal space, not just have things
->> trying to register/unregister shrinkers take delays...
->>
->> Cheers,
->>
->> Dave.
->>
+> Reviewed-by: Aneesh Kumar K.V <aneesh.kumar@linux.ibm.com>
+> Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+> ---
+>  drivers/nvdimm/pmem.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
+> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+> index 2df6994acf83..fcf7af13897e 100644
+> --- a/drivers/nvdimm/pmem.c
+> +++ b/drivers/nvdimm/pmem.c
+> @@ -214,6 +214,7 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+>  			bio->bi_status = rc;
+>  			break;
+>  		}
+> +		cond_resched();
 
+There are already cond_resched() calls between submitted bios in
+blkdev_issue_zeroout() via both __blkdev_issue_zero_pages() and
+__blkdev_issue_write_zeroes(), so I'm kinda wondering where the
+problem is coming from here.
+
+Just how big is the bio being issued here that it spins for 22s
+trying to copy it?
+
+And, really, if the system is that bound on cacheline bouncing that
+it prevents memcpy() from making progress, I think we probably
+should be issuing a soft lockup warning like this...
+
+Cheers,
+
+Dave.
 -- 
-Donald Buczek
-buczek@molgen.mpg.de
-Tel: +49 30 8413 1433
+Dave Chinner
+david@fromorbit.com
