@@ -7,105 +7,103 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 089FFC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Aug 2020 13:19:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7C09C433E0
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Aug 2020 13:46:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1E5C2076B
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Aug 2020 13:19:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D6E12076E
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Aug 2020 13:46:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Lk6emh3a"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O/7gyANh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726489AbgHCNTS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Aug 2020 09:19:18 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:28476 "EHLO
+        id S1727785AbgHCNqN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Aug 2020 09:46:13 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:22855 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726579AbgHCNTR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Aug 2020 09:19:17 -0400
+        by vger.kernel.org with ESMTP id S1726579AbgHCNqM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Aug 2020 09:46:12 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1596460756;
+        s=mimecast20190719; t=1596462371;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uyVMMgWvVzFqUoAca6kHm3Fl88WYHO9NHus7WXtlpnc=;
-        b=Lk6emh3azaUSceKASrVFFpXxr/W19LkBs323ajTTP6PrHOA/HITNayELtAGxiND7mH7CmY
-        h8k67WhB/9ZWCitFWTBYi4fmRnwQNMXw8HDK8/ajgfjef+4vJZgLBgx4YkIT+/NzQ4eZZA
-        eqipuedIN/dLIT++0mFDyMr+DWyHFLw=
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=NAemkr0liG+PR5v5uY2JJpPXr17ZKVT/tLcQrkbAH2o=;
+        b=O/7gyANh4jzxGSjZeFqCLYKDBtB7z0doVhOSWtyUqvYUZb8vMdoc36gi2TgGvpXQvKX6qp
+        gALFMHdIZocTsnoz72PHwERTjaudxQ6LjDCutK0kSS8WjZV1Ca7DMOqtmQUm15ZK89GKJ5
+        cbAHwUssvYdL+5LMl8KqnQT1JPH2BQM=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-374-EBT7kzN1OZ-XMO9y-uXz6g-1; Mon, 03 Aug 2020 09:18:05 -0400
-X-MC-Unique: EBT7kzN1OZ-XMO9y-uXz6g-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-211-h6E8lwEOPOS9QI7IOm9amQ-1; Mon, 03 Aug 2020 09:46:07 -0400
+X-MC-Unique: h6E8lwEOPOS9QI7IOm9amQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 947C21009627;
-        Mon,  3 Aug 2020 13:18:04 +0000 (UTC)
-Received: from redhat.com (ovpn-116-244.rdu2.redhat.com [10.10.116.244])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 57ED95FC36;
-        Mon,  3 Aug 2020 13:18:01 +0000 (UTC)
-Date:   Mon, 3 Aug 2020 08:17:59 -0500
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CDA508015F3;
+        Mon,  3 Aug 2020 13:46:06 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-116-244.rdu2.redhat.com [10.10.116.244])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A66C77176E;
+        Mon,  3 Aug 2020 13:46:01 +0000 (UTC)
 From:   Bill O'Donnell <billodo@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eryu Guan <guaneryu@gmail.com>, xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH] xfs/{263,106} erase max warnings printout
-Message-ID: <20200803131759.GA574548@redhat.com>
-References: <20200730183533.GB67809@magnolia>
+To:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Cc:     darrick.wong@oracle.com, sandeen@redhat.com
+Subject: [PATCH] xfs/263: filters to accommodate new xfs_quota state command and prevent regression
+Date:   Mon,  3 Aug 2020 08:46:00 -0500
+Message-Id: <20200803134601.577775-1-billodo@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200730183533.GB67809@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jul 30, 2020 at 11:35:33AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Both of these tests encode the xfs_quota output in the golden output.
-> Now that we've changed xfs_quota to emit max warnings, we have to fix
-> the test to avoid regressions.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+New xfs_quota kernel and xfsprogs add grace timers for group and project,
+in addition to user quota. Adjust xfs/263 to accommodate those
+changes, and avoid regression.
 
-Looks good.
-Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+NOTE: this patch needs to follow:
+      [PATCH] xfs/{263,106} erase max warnings printout (djwong)
 
-> ---
->  tests/xfs/106 |    3 ++-
->  tests/xfs/263 |    4 +++-
->  2 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/tests/xfs/106 b/tests/xfs/106
-> index 7a71ec09..e6a9b3d1 100755
-> --- a/tests/xfs/106
-> +++ b/tests/xfs/106
-> @@ -96,7 +96,8 @@ filter_state()
->  {
->  	_filter_quota | sed -e "s/Inode: #[0-9]* (0 blocks, 0 extents)/Inode: #[INO] (0 blocks, 0 extents)/g" \
->  			    -e "s/Inode: #[0-9]* ([0-9]* blocks, [0-9]* extents)/Inode: #[INO] (X blocks, Y extents)/g" \
-> -			    -e "/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/s/ [0-9][0-9]:[0-9][0-9]:[0-9][0-9]//g"
-> +			    -e "/[0-9][0-9]:[0-9][0-9]:[0-9][0-9]/s/ [0-9][0-9]:[0-9][0-9]:[0-9][0-9]//g" \
-> +			    -e '/max warnings:/d'
->  }
->  
->  test_quot()
-> diff --git a/tests/xfs/263 b/tests/xfs/263
-> index 578f9ee7..2f23318d 100755
-> --- a/tests/xfs/263
-> +++ b/tests/xfs/263
-> @@ -57,7 +57,9 @@ function option_string()
->  }
->  
->  filter_quota_state() {
-> -	sed -e 's/Inode: #[0-9]\+/Inode #XXX/g' | _filter_scratch
-> +	sed -e 's/Inode: #[0-9]\+/Inode #XXX/g' \
-> +	    -e '/max warnings:/d' \
-> +		| _filter_scratch
->  }
->  
->  function test_all_state()
-> 
+ tests/xfs/263 | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/tests/xfs/263 b/tests/xfs/263
+index 2f23318d..c18b2e1e 100755
+--- a/tests/xfs/263
++++ b/tests/xfs/263
+@@ -59,6 +59,18 @@ function option_string()
+ filter_quota_state() {
+ 	sed -e 's/Inode: #[0-9]\+/Inode #XXX/g' \
+ 	    -e '/max warnings:/d' \
++	    -e '/Blocks grace time:/d' \
++	    -e '/Inodes grace time:/d' \
++		| _filter_scratch
++}
++
++filter_quota_state2() {
++	sed -e '/User quota state on/d' \
++	    -e '/ Accounting: /d' \
++	    -e '/ Enforcement: /d' \
++	    -e '/ Inode: /d' \
++	    -e '/Blocks max warnings: /d' \
++	    -e '/Inodes max warnings: /d' \
+ 		| _filter_scratch
+ }
+ 
+@@ -70,7 +82,10 @@ function test_all_state()
+ 		# Some combinations won't mount on V4 supers (grp + prj)
+ 		_qmount_option "$OPTIONS"
+ 		_try_scratch_mount &>> $seqres.full || continue
+-		$XFS_QUOTA_PROG -x -c "state" $SCRATCH_MNT | filter_quota_state
++		$XFS_QUOTA_PROG -x -c "state -u" $SCRATCH_MNT | filter_quota_state
++		$XFS_QUOTA_PROG -x -c "state -g" $SCRATCH_MNT | filter_quota_state
++		$XFS_QUOTA_PROG -x -c "state -p" $SCRATCH_MNT | filter_quota_state
++		$XFS_QUOTA_PROG -x -c "state -u" $SCRATCH_MNT | filter_quota_state2
+ 		_scratch_unmount
+ 	done
+ }
+-- 
+2.26.2
 
