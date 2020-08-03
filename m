@@ -2,165 +2,293 @@ Return-Path: <SRS0=ns7q=BN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,FORGED_MUA_MOZILLA,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E16F2C433E0
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Aug 2020 07:14:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FA95C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Aug 2020 12:53:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C635F206E9
-	for <linux-xfs@archiver.kernel.org>; Mon,  3 Aug 2020 07:14:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B6482064B
+	for <linux-xfs@archiver.kernel.org>; Mon,  3 Aug 2020 12:53:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IIU3x/bi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725831AbgHCHON (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 3 Aug 2020 03:14:13 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:53840 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725826AbgHCHON (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Aug 2020 03:14:13 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07371xNB126358;
-        Mon, 3 Aug 2020 03:14:10 -0400
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 32pakccrev-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 03 Aug 2020 03:14:10 -0400
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0737AIlx026036;
-        Mon, 3 Aug 2020 07:14:08 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma03ams.nl.ibm.com with ESMTP id 32n0181vuq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 03 Aug 2020 07:14:08 +0000
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0737E6he27591050
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 3 Aug 2020 07:14:06 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6367011C05B;
-        Mon,  3 Aug 2020 07:14:06 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 64C0711C058;
-        Mon,  3 Aug 2020 07:14:05 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.199.43.55])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon,  3 Aug 2020 07:14:05 +0000 (GMT)
-Subject: Re: [RFC 1/1] pmem: Add cond_resched() in bio_for_each_segment loop
- in pmem_make_request
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>
-References: <0d96e2481f292de2cda8828b03d5121004308759.1596011292.git.riteshh@linux.ibm.com>
- <20200802230148.GA2114@dread.disaster.area>
-From:   Ritesh Harjani <riteshh@linux.ibm.com>
-Date:   Mon, 3 Aug 2020 12:44:04 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
-MIME-Version: 1.0
-In-Reply-To: <20200802230148.GA2114@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-Message-Id: <20200803071405.64C0711C058@d06av25.portsmouth.uk.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-03_04:2020-07-31,2020-08-03 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
- lowpriorityscore=0 suspectscore=0 malwarescore=0 mlxscore=0 bulkscore=0
- priorityscore=1501 adultscore=0 mlxlogscore=999 clxscore=1015
- impostorscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2006250000 definitions=main-2008030046
+        id S1728041AbgHCMvh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 3 Aug 2020 08:51:37 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:40615 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729183AbgHCMv0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Aug 2020 08:51:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1596459064;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=SqrnrVBugImuhT0yhnlPO6MXgZZ+L8bUW9h5EMB3LAg=;
+        b=IIU3x/biQgot2uEokDcucSqnkbXlBLpoClA0CxcY0upQtI3l9QhwcWRvg8nQOn0pJNszcX
+        tzeIXYK9JQgnPevOnwN+dHBOli5iivMoOiqcf+pBZOzWaMIiWSQat/yBYrpFrXWajyxPs2
+        Y66k8QUrvmKy1YmHgoe0xpssIBT2XeU=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-154-uiyP5OTNNwi6IeYSmKKXLg-1; Mon, 03 Aug 2020 08:51:02 -0400
+X-MC-Unique: uiyP5OTNNwi6IeYSmKKXLg-1
+Received: by mail-pl1-f198.google.com with SMTP id k21so19730130pls.2
+        for <linux-xfs@vger.kernel.org>; Mon, 03 Aug 2020 05:51:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=SqrnrVBugImuhT0yhnlPO6MXgZZ+L8bUW9h5EMB3LAg=;
+        b=dxAdobVnziN+fcfiUlh2nbcIO8Pq84UpRuqt5su/kCInMAtUz3Mdm4P56+EGLcUaEK
+         s/ZNJs3AmPJiFXZVPhAtsQZi22/OzbeBdyDrndBT/rvd5VUN6BeLn6QsWRPl4YCIMONS
+         NtuKq1UwhoOMWsTj57xDDZaMUbWIvXftpEj6GaJsx/vriDHBjRPIuXebzXZncpjYrv5c
+         F1ixFsuiDcrCotPJVLrxShnLRv0ZAcVAp6cEuj115dL0iqLVlOCVWarAY345J7TJKiCo
+         rX86l+gsq5TkbxdgqkqJFBMgDuUiPxnzwfh9vBq/xv5iSRepFk5DH79RA2zPCDCJvBn4
+         Awuw==
+X-Gm-Message-State: AOAM532zrpfKpWVDr66/Z/uU4DGm3em9l0zdl8NjIPMz93QehMObu2/L
+        +A9PyHhqVK7udX+cYwv/4cAybNZqaGt9Zvaz+cpnL2wKfhb+Nif0ngV3IsQs3cSYaN0MIqdpby/
+        876g1iMPHB+MHq407L+Wy
+X-Received: by 2002:a63:af0c:: with SMTP id w12mr14136595pge.312.1596459061034;
+        Mon, 03 Aug 2020 05:51:01 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxoB8EFdWzitnsSzrJFlsEj2O8cESb/WlOpepYBBWAhGrYUpxdDcQc4Q7idjCAByct/67Sv4A==
+X-Received: by 2002:a63:af0c:: with SMTP id w12mr14136578pge.312.1596459060740;
+        Mon, 03 Aug 2020 05:51:00 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id f2sm19250360pfb.184.2020.08.03.05.50.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Aug 2020 05:51:00 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH] mkfs.xfs: introduce sunit/swidth validation helper
+Date:   Mon,  3 Aug 2020 20:50:18 +0800
+Message-Id: <20200803125018.16718-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.1
+In-Reply-To: <a673fbd3-5038-2dc8-8135-a58c24042734@redhat.com>
+References: <a673fbd3-5038-2dc8-8135-a58c24042734@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+Currently stripe unit/width checking logic is all over xfsprogs.
+So, refactor the same code snippet into a single validation helper
+xfs_validate_stripe_factors(), including:
+ - integer overflows of either value
+ - sunit and swidth alignment wrt sector size
+ - if either sunit or swidth are zero, both should be zero
+ - swidth must be a multiple of sunit
 
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+---
 
-On 8/3/20 4:31 AM, Dave Chinner wrote:
-> On Wed, Jul 29, 2020 at 02:15:18PM +0530, Ritesh Harjani wrote:
->> For systems which do not have CONFIG_PREEMPT set and
->> if there is a heavy multi-threaded load/store operation happening
->> on pmem + sometimes along with device latencies, softlockup warnings like
->> this could trigger. This was seen on Power where pagesize is 64K.
->>
->> To avoid softlockup, this patch adds a cond_resched() in this path.
->>
->> <...>
->> watchdog: BUG: soft lockup - CPU#31 stuck for 22s!
->> <...>
->> CPU: 31 PID: 15627 <..> 5.3.18-20
->> <...>
->> NIP memcpy_power7+0x43c/0x7e0
->> LR memcpy_flushcache+0x28/0xa0
->>
->> Call Trace:
->> memcpy_power7+0x274/0x7e0 (unreliable)
->> memcpy_flushcache+0x28/0xa0
->> write_pmem+0xa0/0x100 [nd_pmem]
->> pmem_do_bvec+0x1f0/0x420 [nd_pmem]
->> pmem_make_request+0x14c/0x370 [nd_pmem]
->> generic_make_request+0x164/0x400
->> submit_bio+0x134/0x2e0
->> submit_bio_wait+0x70/0xc0
->> blkdev_issue_zeroout+0xf4/0x2a0
->> xfs_zero_extent+0x90/0xc0 [xfs]
->> xfs_bmapi_convert_unwritten+0x198/0x230 [xfs]
->> xfs_bmapi_write+0x284/0x630 [xfs]
->> xfs_iomap_write_direct+0x1f0/0x3e0 [xfs]
->> xfs_file_iomap_begin+0x344/0x690 [xfs]
->> dax_iomap_pmd_fault+0x488/0xc10
->> __xfs_filemap_fault+0x26c/0x2b0 [xfs]
->> __handle_mm_fault+0x794/0x1af0
->> handle_mm_fault+0x12c/0x220
->> __do_page_fault+0x290/0xe40
->> do_page_fault+0x38/0xc0
->> handle_page_fault+0x10/0x30
->>
->> Reviewed-by: Aneesh Kumar K.V <aneesh.kumar@linux.ibm.com>
->> Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
->> ---
->>   drivers/nvdimm/pmem.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
->> index 2df6994acf83..fcf7af13897e 100644
->> --- a/drivers/nvdimm/pmem.c
->> +++ b/drivers/nvdimm/pmem.c
->> @@ -214,6 +214,7 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
->>   			bio->bi_status = rc;
->>   			break;
->>   		}
->> +		cond_resched();
-> 
-> There are already cond_resched() calls between submitted bios in
-> blkdev_issue_zeroout() via both __blkdev_issue_zero_pages() and
-> __blkdev_issue_write_zeroes(), so I'm kinda wondering where the
-> problem is coming from here.
+This patch follows Darrick's original suggestion [1], yet I'm
+not sure if I'm doing the right thing or if something is still
+missing (e.g the meaning of six(ish) places)... So post it
+right now...
 
-This problem is coming from that bio call- submit_bio()
+TBH, especially all these naming and the helper location (whether
+in topology.c)...plus, click a dislike on calc_stripe_factors()
+itself...
 
-> 
-> Just how big is the bio being issued here that it spins for 22s
-> trying to copy it?
+(Hopefully hear some advice about this... Thanks!)
 
-It's 256 (due to BIO_MAX_PAGES) * 64KB (pagesize) = 16MB.
-So this is definitely not an easy trigger as per tester was mainly seen
-on a VM.
+[1] https://lore.kernel.org/r/20200515204802.GO6714@magnolia
 
-Looking at the cond_resched() inside dax_writeback_mapping_range()
-in xas_for_each_marked() loop, I thought it should be good to have a
-cond_resched() in the above path as well.
+ libfrog/topology.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++
+ libfrog/topology.h | 15 ++++++++++++++
+ mkfs/xfs_mkfs.c    | 48 ++++++++++++++++++++++----------------------
+ 3 files changed, 89 insertions(+), 24 deletions(-)
 
-Hence an RFC for discussion.
+diff --git a/libfrog/topology.c b/libfrog/topology.c
+index b1b470c9..cf56fb03 100644
+--- a/libfrog/topology.c
++++ b/libfrog/topology.c
+@@ -174,6 +174,41 @@ out:
+ 	return ret;
+ }
+ 
++enum xfs_stripe_retcode
++xfs_validate_stripe_factors(
++	int	sectorsize,
++	int 	*sup,
++	int	*swp)
++{
++	int sunit = *sup, swidth = *swp;
++
++	if (sectorsize) {
++		long long	big_swidth;
++
++		if (sunit % sectorsize)
++			return XFS_STRIPE_RET_SUNIT_MISALIGN;
++
++		sunit = (int)BTOBBT(sunit);
++		big_swidth = (long long)sunit * swidth;
++
++		if (big_swidth > INT_MAX)
++			return XFS_STRIPE_RET_SWIDTH_OVERFLOW;
++		swidth = big_swidth;
++	}
++	if ((sunit && !swidth) || (!sunit && swidth))
++		return XFS_STRIPE_RET_PARTIAL_VALID;
++
++	if (sunit > swidth)
++		return XFS_STRIPE_RET_SUNIT_TOO_LARGE;
++
++	if (sunit && (swidth % sunit))
++		return XFS_STRIPE_RET_SWIDTH_MISALIGN;
++
++	*sup = sunit;
++	*swp = swidth;
++	return XFS_STRIPE_RET_OK;
++}
++
+ static void blkid_get_topology(
+ 	const char	*device,
+ 	int		*sunit,
+@@ -229,6 +264,21 @@ static void blkid_get_topology(
+ 	 */
+ 	*sunit = *sunit >> 9;
+ 	*swidth = *swidth >> 9;
++	switch (xfs_validate_stripe_factors(0, sunit, swidth)) {
++	case XFS_STRIPE_RET_OK:
++		break;
++	case XFS_STRIPE_RET_PARTIAL_VALID:
++		fprintf(stderr,
++_("%s: Volume reports stripe unit of %d bytes and stripe width of %d bytes, ignoring.\n"),
++				progname, BBTOB(*sunit), BBTOB(*swidth));
++	default:
++		/*
++		 * if firmware is broken, just give up and set both to zero,
++		 * we can't trust information from this device.
++		 */
++		*sunit = 0;
++		*swidth = 0;
++	}
+ 
+ 	if (blkid_topology_get_alignment_offset(tp) != 0) {
+ 		fprintf(stderr,
+diff --git a/libfrog/topology.h b/libfrog/topology.h
+index 6fde868a..e8be26b2 100644
+--- a/libfrog/topology.h
++++ b/libfrog/topology.h
+@@ -36,4 +36,19 @@ extern int
+ check_overwrite(
+ 	const char	*device);
+ 
++enum xfs_stripe_retcode {
++	XFS_STRIPE_RET_OK = 0,
++	XFS_STRIPE_RET_SUNIT_MISALIGN,
++	XFS_STRIPE_RET_SWIDTH_OVERFLOW,
++	XFS_STRIPE_RET_PARTIAL_VALID,
++	XFS_STRIPE_RET_SUNIT_TOO_LARGE,
++	XFS_STRIPE_RET_SWIDTH_MISALIGN,
++};
++
++enum xfs_stripe_retcode
++xfs_validate_stripe_factors(
++	int	sectorsize,
++	int 	*sup,
++	int	*swp);
++
+ #endif	/* __LIBFROG_TOPOLOGY_H__ */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2e6cd280..a3d6032c 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2255,7 +2255,6 @@ calc_stripe_factors(
+ 	struct cli_params	*cli,
+ 	struct fs_topology	*ft)
+ {
+-	long long int	big_dswidth;
+ 	int		dsunit = 0;
+ 	int		dswidth = 0;
+ 	int		lsunit = 0;
+@@ -2263,6 +2262,7 @@ calc_stripe_factors(
+ 	int		dsw = 0;
+ 	int		lsu = 0;
+ 	bool		use_dev = false;
++	int		error;
+ 
+ 	if (cli_opt_set(&dopts, D_SUNIT))
+ 		dsunit = cli->dsunit;
+@@ -2289,31 +2289,40 @@ _("both data su and data sw options must be specified\n"));
+ 			usage();
+ 		}
+ 
+-		if (dsu % cfg->sectorsize) {
++		dsunit = dsu;
++		dswidth = dsw;
++		error = xfs_validate_stripe_factors(cfg->sectorsize, &dsunit, &dswidth);
++		switch(error) {
++		case XFS_STRIPE_RET_SUNIT_MISALIGN:
+ 			fprintf(stderr,
+ _("data su must be a multiple of the sector size (%d)\n"), cfg->sectorsize);
+ 			usage();
+-		}
+-
+-		dsunit  = (int)BTOBBT(dsu);
+-		big_dswidth = (long long int)dsunit * dsw;
+-		if (big_dswidth > INT_MAX) {
++			break;
++		case XFS_STRIPE_RET_SWIDTH_OVERFLOW:
+ 			fprintf(stderr,
+-_("data stripe width (%lld) is too large of a multiple of the data stripe unit (%d)\n"),
+-				big_dswidth, dsunit);
++_("data stripe width (dsw %d) is too large of a multiple of the data stripe unit (%d)\n"),
++				dsw, dsunit);
+ 			usage();
++			break;
+ 		}
+-		dswidth = big_dswidth;
++	} else {
++		error = xfs_validate_stripe_factors(0, &dsunit, &dswidth);
+ 	}
+ 
+-	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
+-	    (dsunit && (dswidth % dsunit != 0))) {
++	if (error == XFS_STRIPE_RET_PARTIAL_VALID ||
++	    error == XFS_STRIPE_RET_SWIDTH_MISALIGN) {
+ 		fprintf(stderr,
+ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+ 			dswidth, dsunit);
+ 		usage();
+ 	}
+ 
++	if (error) {
++		fprintf(stderr,
++_("invalid data stripe unit (%d), width (%d)\n"), dsunit, dswidth);
++		usage();
++	}
++
+ 	/* If sunit & swidth were manually specified as 0, same as noalign */
+ 	if ((cli_opt_set(&dopts, D_SUNIT) || cli_opt_set(&dopts, D_SU)) &&
+ 	    !dsunit && !dswidth)
+@@ -2328,18 +2337,9 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+ 
+ 	/* if no stripe config set, use the device default */
+ 	if (!dsunit) {
+-		/* Ignore nonsense from device.  XXX add more validation */
+-		if (ft->dsunit && ft->dswidth == 0) {
+-			fprintf(stderr,
+-_("%s: Volume reports stripe unit of %d bytes and stripe width of 0, ignoring.\n"),
+-				progname, BBTOB(ft->dsunit));
+-			ft->dsunit = 0;
+-			ft->dswidth = 0;
+-		} else {
+-			dsunit = ft->dsunit;
+-			dswidth = ft->dswidth;
+-			use_dev = true;
+-		}
++		dsunit = ft->dsunit;
++		dswidth = ft->dswidth;
++		use_dev = true;
+ 	} else {
+ 		/* check and warn if user-specified alignment is sub-optimal */
+ 		if (ft->dsunit && ft->dsunit != dsunit) {
+-- 
+2.18.1
 
-> 
-> And, really, if the system is that bound on cacheline bouncing that
-> it prevents memcpy() from making progress, I think we probably
-> should be issuing a soft lockup warning like this... >
-> Cheers,
-> 
-> Dave.
-> 
