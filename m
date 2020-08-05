@@ -4,57 +4,66 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 659A2C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Aug 2020 20:07:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 432A7C433E0
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Aug 2020 20:12:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F5B822B42
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Aug 2020 20:07:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14BD122B42
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Aug 2020 20:12:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q25j3yFC"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZLdpXk/H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729810AbgHEUHG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Aug 2020 16:07:06 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:60878 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726925AbgHEQeG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Aug 2020 12:34:06 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 075GM4BD038971;
-        Wed, 5 Aug 2020 16:33:33 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=IQLdx5abes21j8K7iHnVnBLrSGwXYmzNR4vIr2rCepI=;
- b=q25j3yFCZq1ZH0dHoKbPHv8VCIDBkrVg3ESlEMQDIO313ZVAJL3bbCVbkb87xqQrRUCm
- DfEqdeLSynhXTeQqUjffQd7tCybsxI5V6XItsOVGvoV1y/+WTHJtLq0knW7tro0lSVOv
- ERcCwS+/uwfmQsffNQvLBPBN5QgyUMIKp368IpUQlFtCrTqLx15i/WuTy6OY49J/UwbY
- w5CSyW0Sz14pqW8luVJCotpnL5HKonN2RZYUSgpi98TmDG6IeXp7/LlW6BLkbOZjVKxf
- 84uZpBM8DSraJiNmdLk98yq/t5ykat3kqPuv/ENLvgYkV7yy2uqmZTxy6lNN7rCVXC3C WA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 32n11nb3fk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 05 Aug 2020 16:33:33 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 075GJBpZ061181;
-        Wed, 5 Aug 2020 16:31:32 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 32p5gu12aq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Aug 2020 16:31:30 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 075GVTHY020512;
-        Wed, 5 Aug 2020 16:31:29 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 05 Aug 2020 09:31:29 -0700
-Date:   Wed, 5 Aug 2020 09:31:26 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
+        id S1727972AbgHEUMT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Aug 2020 16:12:19 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:56146 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726640AbgHEQZe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Aug 2020 12:25:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1596644702;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=RDiNTwaajX9EstP2+rkOoaOqP4Sp0ty/xDldPk1nRuY=;
+        b=ZLdpXk/HNS+AUi3ROo21rtg5Qv/XEfMrWtwgHBP6n1uUNof4vHLTDb87x3rxT0koc07SI1
+        KTy/QnlzYkehHheLsKET1MfkI4cCZ3DuAAVbypP255ovHcsjVT2UagoKVgj5mgELRtEPhL
+        jo0xtTQdhi26UO7nuMhsfxoSWEsvsFk=
+Received: from mail-oo1-f71.google.com (mail-oo1-f71.google.com
+ [209.85.161.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-395-m-niOmh1OL6WJ_sYmQRKNw-1; Wed, 05 Aug 2020 11:54:43 -0400
+X-MC-Unique: m-niOmh1OL6WJ_sYmQRKNw-1
+Received: by mail-oo1-f71.google.com with SMTP id v21so20595759ooq.12
+        for <linux-xfs@vger.kernel.org>; Wed, 05 Aug 2020 08:54:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=RDiNTwaajX9EstP2+rkOoaOqP4Sp0ty/xDldPk1nRuY=;
+        b=S6Z9j5v0D2h/WxqL3jbIroXJSsF4oOZiV5DOjnsNx2YQBrhFqRIUWo+r2nu1jyKIwi
+         s0FQoiZjjwUfVCGqczB2ALQPjrgdaXuwioWxISNCii21teipqWLVLYpRg0kIdNfDr7mr
+         t2iDDnVkDGL6hc/Po/HH5UtgPj98wiKdZHVyPSROabGrrghzIErDAasxT+XlXMeikq1V
+         CwuxEiHVuXQpKf/p6v2HPbmPWL62mvUQqYZCh4nNIy0jjbrCHf+WxZ8GE9xZSJg6yo64
+         ognuh3GpyeeXvV5NXeEVIyitIOx2tkIuy/mfdPs56HFqg0eLyqx3KCMQ7FUINXLhv9i1
+         NNGw==
+X-Gm-Message-State: AOAM533a8n7o4NLuk6TvPvnlSFybu40OPfRm0a82gPH0jZoppPK+HxEV
+        OxtQzXJwGHV6/g4VeG4J4HevxaextdwPGGadtzYBuY57I9Oza6Bk8dPM7PipKpjNq2kzFvipjqr
+        QVASDj6rxZyb4Pa6RVh7Je2JT2VFTu6P7wPr/
+X-Received: by 2002:a9d:3784:: with SMTP id x4mr3040059otb.95.1596642882736;
+        Wed, 05 Aug 2020 08:54:42 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxFNuf696slwlPSZJynKjLvYPlN0RCiKIOzOVmS4vUbpxiRMAJuurwOtGRZDzCz52Sm2DXwT3decGCiphYpc3o=
+X-Received: by 2002:a9d:3784:: with SMTP id x4mr3040047otb.95.1596642882501;
+ Wed, 05 Aug 2020 08:54:42 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200805153214.GA6090@magnolia>
+In-Reply-To: <20200805153214.GA6090@magnolia>
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+Date:   Wed, 5 Aug 2020 17:54:31 +0200
+Message-ID: <CAHc6FU6yMnuKdVsAXkWgwr2ViMSXJdBXksrQDvHwaaw4p8u0rQ@mail.gmail.com>
+Subject: Re: [GIT PULL] iomap: new code for 5.9-rc1
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
         LKML <linux-kernel@vger.kernel.org>,
@@ -64,75 +73,30 @@ Cc:     "Darrick J. Wong" <djwong@kernel.org>,
         "Theodore Ts'o" <tytso@mit.edu>, riteshh@linux.ibm.com,
         Goldwyn Rodrigues <rgoldwyn@suse.de>,
         linux-btrfs@vger.kernel.org
-Subject: Re: [GIT PULL] iomap: new code for 5.9-rc1
-Message-ID: <20200805163126.GC6107@magnolia>
-References: <20200805153214.GA6090@magnolia>
- <CAHc6FU6yMnuKdVsAXkWgwr2ViMSXJdBXksrQDvHwaaw4p8u0rQ@mail.gmail.com>
- <20200805162349.GB6107@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200805162349.GB6107@magnolia>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9704 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 bulkscore=0
- phishscore=0 spamscore=0 adultscore=0 suspectscore=1 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008050132
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9704 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
- impostorscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0 mlxscore=0
- suspectscore=1 mlxlogscore=999 phishscore=0 adultscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008050132
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 05, 2020 at 09:23:49AM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 05, 2020 at 05:54:31PM +0200, Andreas Gruenbacher wrote:
-> > Hi Darrick,
-> > 
-> > On Wed, Aug 5, 2020 at 5:40 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> > > ----------------------------------------------------------------
-> > > Andreas Gruenbacher (1):
-> > >       iomap: Make sure iomap_end is called after iomap_begin
-> > 
-> > that commit (d1b4f507d71de) contains the following garbage in the
-> > commit message:
-> > 
-> >     The message from this sender included one or more files
-> >     which could not be scanned for virus detection; do not
-> >     open these files unless you are certain of the sender's intent.
-> > 
-> >     ----------------------------------------------------------------------
-> > 
-> > How did it come to that?
-> 
-> I have no idea.  It's not in the email that I turned into a patch, but
-> golly roundtripping git patches through email and back to git sucks.
+Hi Darrick,
 
-Aha-- the effing Oracle email virus scanner doesn't run on mails coming
-in via mailing lists (which is the copy that I keep in my archive) but
-the copy that you sent direct to me /did/ get a virus scan, which failed
-because it's too stupid to recognize plain text, so the virus scanner
-injected its stupid warning *into the message body*, and then I git-am'd
-that without noticing.
+On Wed, Aug 5, 2020 at 5:40 PM Darrick J. Wong <djwong@kernel.org> wrote:
+> ----------------------------------------------------------------
+> Andreas Gruenbacher (1):
+>       iomap: Make sure iomap_end is called after iomap_begin
 
-S'ok, they're moving us to Exchange soon, so I expect never to hear from
-any of you ever again.
+that commit (d1b4f507d71de) contains the following garbage in the
+commit message:
 
---D
+    The message from this sender included one or more files
+    which could not be scanned for virus detection; do not
+    open these files unless you are certain of the sender's intent.
 
-> 
-> Oh well, I guess I have to rebase the whole branch now.
-> 
-> Linus: please ignore this pull request.
-> 
-> --D
-> 
-> > 
-> > Thanks,
-> > Andreas
-> > 
-> 
+    ----------------------------------------------------------------------
+
+How did it come to that?
+
+Thanks,
+Andreas
+
