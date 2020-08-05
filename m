@@ -2,85 +2,73 @@ Return-Path: <SRS0=76Cg=BP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2408AC433E0
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Aug 2020 17:33:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E54CEC433E3
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Aug 2020 20:03:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1C3D22D07
-	for <linux-xfs@archiver.kernel.org>; Wed,  5 Aug 2020 17:33:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C24F12076E
+	for <linux-xfs@archiver.kernel.org>; Wed,  5 Aug 2020 20:03:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LJmwUcb4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bh0uu4nr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728384AbgHERc7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 5 Aug 2020 13:32:59 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:49778 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728878AbgHERap (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Aug 2020 13:30:45 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 075GM4C9038919;
-        Wed, 5 Aug 2020 16:25:56 GMT
+        id S1728735AbgHEUDJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 5 Aug 2020 16:03:09 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:52164 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727863AbgHEQii (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Aug 2020 12:38:38 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 075GM5nn154546;
+        Wed, 5 Aug 2020 16:38:22 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=5XP8uLSK11AJnsAEQAxe44/0zKxbW/hwfIcqfufnmeE=;
- b=LJmwUcb4xXwAz+eZQ4bWBDX8nC3NpFcZDGJz9UsACTT1Buvih6AKdRste9P6dvdnpuz6
- gAXkAW+1S4jQxY+6OhBDH1RRPEhyttOeaAPeUlTQ2L81MD+5vgMhTwfdn3zaSVpPsONa
- 8o48vxS1YNJo0ADSpu6hRU99WRTEeIF7hma0EOwE4o98DpxD0OuM4Gv8Ur3b6+TURRYI
- kGJKI1GW+M7Qnfj4k6HlkJlssx0YR7KmSkpePBVuOY6FkVpoxtU/Kafde+voK3yy/t6x
- 7q4MMybU4E2EqJmXrvLK+Zo6BoZmq3u+ZgYx0/TsoF1lx3YNQlxL54esBlPSEYAsFni1 7g== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 32n11nb27j-1
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=b91EhdBrtRf++crUMvU1v/okOqyDZ/p6+WllKgxua24=;
+ b=bh0uu4nrsi2S5qBOLMoUoWyyOCFcW8wJRK2qxlPYKZGMsxuECStoUme98FKfA4V+Pfn+
+ MT8GQE4mupsAb++iZS1GmIr9H3Ve6g7SwPELF4xT53THa0ihgTf54fNRwjRVOzREhfWC
+ k8LTFNGnx/mHv04cU4GrNbCXlgT/ICQArMOM1oTj4LFfeHtbcIykZdL1NukBn8lp036a
+ 8Vl7cV48YWgV+so495ZZbfdrEXqxmnNYizovLZ+2sKSBYiUlYQa/3LZ8jOO1alGLFeLk
+ bRaqwXPCP/9IL+3sVa/4t40X8BSVqtuLaNf9p1VmcPinoWiieXF2xZyrPzzjq5XOkSA+ yA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 32qnd43e1v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 05 Aug 2020 16:25:56 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 075GHjwM074767;
-        Wed, 5 Aug 2020 16:23:56 GMT
+        Wed, 05 Aug 2020 16:38:22 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 075GJB9S061054;
+        Wed, 5 Aug 2020 16:38:22 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 32qyaa39tb-1
+        by aserp3030.oracle.com with ESMTP id 32p5gu1evy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 05 Aug 2020 16:23:56 +0000
+        Wed, 05 Aug 2020 16:38:22 +0000
 Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 075GNq50031730;
-        Wed, 5 Aug 2020 16:23:52 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 075GcLuM002243;
+        Wed, 5 Aug 2020 16:38:21 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 05 Aug 2020 09:23:51 -0700
-Date:   Wed, 5 Aug 2020 09:23:49 -0700
+        with ESMTP ; Wed, 05 Aug 2020 09:38:21 -0700
+Date:   Wed, 5 Aug 2020 09:38:20 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        Christoph Hellwig <hch@lst.de>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>, riteshh@linux.ibm.com,
-        Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [GIT PULL] iomap: new code for 5.9-rc1
-Message-ID: <20200805162349.GB6107@magnolia>
-References: <20200805153214.GA6090@magnolia>
- <CAHc6FU6yMnuKdVsAXkWgwr2ViMSXJdBXksrQDvHwaaw4p8u0rQ@mail.gmail.com>
+        agruenba@redhat.com
+Subject: [ANNOUNCE] xfs-linux: iomap-5.9-merge rebased to 60263d5889e6
+Message-ID: <20200805163820.GB6090@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHc6FU6yMnuKdVsAXkWgwr2ViMSXJdBXksrQDvHwaaw4p8u0rQ@mail.gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9704 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 suspectscore=1
- spamscore=0 bulkscore=0 phishscore=0 malwarescore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 bulkscore=0
+ phishscore=0 spamscore=0 adultscore=0 suspectscore=2 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008050132
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9704 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
- impostorscore=0 lowpriorityscore=0 malwarescore=0 spamscore=0 mlxscore=0
- suspectscore=1 mlxlogscore=999 phishscore=0 adultscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 clxscore=1015 mlxscore=0
+ priorityscore=1501 mlxlogscore=999 malwarescore=0 adultscore=0
+ lowpriorityscore=0 spamscore=0 bulkscore=0 phishscore=0 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008050132
 Sender: linux-xfs-owner@vger.kernel.org
@@ -88,35 +76,44 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 05, 2020 at 05:54:31PM +0200, Andreas Gruenbacher wrote:
-> Hi Darrick,
-> 
-> On Wed, Aug 5, 2020 at 5:40 PM Darrick J. Wong <djwong@kernel.org> wrote:
-> > ----------------------------------------------------------------
-> > Andreas Gruenbacher (1):
-> >       iomap: Make sure iomap_end is called after iomap_begin
-> 
-> that commit (d1b4f507d71de) contains the following garbage in the
-> commit message:
-> 
->     The message from this sender included one or more files
->     which could not be scanned for virus detection; do not
->     open these files unless you are certain of the sender's intent.
-> 
->     ----------------------------------------------------------------------
-> 
-> How did it come to that?
+Hi folks,
 
-I have no idea.  It's not in the email that I turned into a patch, but
-golly roundtripping git patches through email and back to git sucks.
+The iomap-5.9-merge branch of the xfs-linux repository at:
 
-Oh well, I guess I have to rebase the whole branch now.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Linus: please ignore this pull request.
+has just been rebased to remove email virus scanner debris from a patch
+commit log.
 
---D
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.
 
-> 
-> Thanks,
-> Andreas
-> 
+The new head of the iomap-5.9-merge branch is commit:
+
+60263d5889e6 iomap: fall back to buffered writes for invalidation failures
+
+New Commits:
+
+Andreas Gruenbacher (1):
+      [856473cd5d17] iomap: Make sure iomap_end is called after iomap_begin
+
+Christoph Hellwig (2):
+      [80e543ae24db] xfs: use ENOTBLK for direct I/O to buffered I/O fallback
+      [60263d5889e6] iomap: fall back to buffered writes for invalidation failures
+
+Dave Chinner (1):
+      [54752de928c4] iomap: Only invalidate page cache pages on direct IO writes
+
+
+Code Diffstat:
+
+ fs/ext4/file.c       |  2 ++
+ fs/gfs2/file.c       |  3 ++-
+ fs/iomap/apply.c     | 13 +++++++++----
+ fs/iomap/direct-io.c | 37 +++++++++++++++++++++----------------
+ fs/iomap/trace.h     |  1 +
+ fs/xfs/xfs_file.c    |  8 ++++----
+ fs/zonefs/super.c    |  7 +++++--
+ 7 files changed, 44 insertions(+), 27 deletions(-)
