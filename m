@@ -7,31 +7,31 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 699B7C433E3
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 13:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DEC5C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 13:14:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FF8F2224D
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 13:14:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D8A622CAE
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 13:14:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726769AbgHGNO3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Aug 2020 09:14:29 -0400
+        id S1726584AbgHGNOJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Aug 2020 09:14:09 -0400
 Received: from mail.cn.fujitsu.com ([183.91.158.132]:4478 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726198AbgHGNOM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Aug 2020 09:14:12 -0400
+        with ESMTP id S1726217AbgHGNOF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Aug 2020 09:14:05 -0400
 X-IronPort-AV: E=Sophos;i="5.75,445,1589212800"; 
-   d="scan'208";a="97774934"
+   d="scan'208";a="97774922"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 07 Aug 2020 21:13:54 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id BF32F4CE34EE;
-        Fri,  7 Aug 2020 21:13:51 +0800 (CST)
+  by heian.cn.fujitsu.com with ESMTP; 07 Aug 2020 21:13:48 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id 721444CE34F2;
+        Fri,  7 Aug 2020 21:13:44 +0800 (CST)
 Received: from G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 7 Aug 2020 21:13:40 +0800
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Fri, 7 Aug 2020 21:13:43 +0800
 Received: from localhost.localdomain (10.167.225.141) by
  G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Fri, 7 Aug 2020 21:13:39 +0800
+ id 15.0.1497.2 via Frontend Transport; Fri, 7 Aug 2020 21:13:41 +0800
 From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <linux-nvdimm@lists.01.org>
@@ -39,16 +39,16 @@ CC:     <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>,
         <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <hch@lst.de>, <rgoldwyn@suse.de>,
         <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-Subject: [RFC PATCH 4/8] fsdax: copy data before write
-Date:   Fri, 7 Aug 2020 21:13:32 +0800
-Message-ID: <20200807131336.318774-5-ruansy.fnst@cn.fujitsu.com>
+Subject: [RFC PATCH 7/8] fs/xfs: handle CoW for fsdax write() path
+Date:   Fri, 7 Aug 2020 21:13:35 +0800
+Message-ID: <20200807131336.318774-8-ruansy.fnst@cn.fujitsu.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200807131336.318774-1-ruansy.fnst@cn.fujitsu.com>
 References: <20200807131336.318774-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: BF32F4CE34EE.AFF39
+X-yoursite-MailScanner-ID: 721444CE34F2.AB269
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
@@ -56,136 +56,125 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add dax_copy_edges() into each dax actor functions to perform CoW.
+In fsdax mode, WRITE and ZERO on a shared extent need CoW mechanism
+performed.  After CoW, new extents needs to be remapped to the file.
 
 Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 ---
- fs/dax.c | 39 +++++++++++++++++++++++++++++++++++----
- 1 file changed, 35 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_bmap_util.c |  6 +++++-
+ fs/xfs/xfs_file.c      | 10 +++++++---
+ fs/xfs/xfs_iomap.c     |  3 ++-
+ fs/xfs/xfs_iops.c      | 11 ++++++++---
+ fs/xfs/xfs_reflink.c   |  2 ++
+ 5 files changed, 24 insertions(+), 8 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 308678c58d4d..65553e3f7602 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1208,7 +1208,8 @@ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 			return iov_iter_zero(min(length, end - pos), iter);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index f37f5cc4b19f..5d09d6c454b6 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -969,10 +969,14 @@ xfs_free_file_space(
+ 	if (offset + len > XFS_ISIZE(ip))
+ 		len = XFS_ISIZE(ip) - offset;
+ 	error = iomap_zero_range(VFS_I(ip), offset, len, NULL,
+-			&xfs_buffered_write_iomap_ops);
++		  IS_DAX(VFS_I(ip)) ?
++		  &xfs_direct_write_iomap_ops : &xfs_buffered_write_iomap_ops);
+ 	if (error)
+ 		return error;
+ 
++	if (xfs_is_reflink_inode(ip))
++		xfs_reflink_end_cow(ip, offset, len);
++
+ 	/*
+ 	 * If we zeroed right up to EOF and EOF straddles a page boundary we
+ 	 * must make sure that the post-EOF area is also zeroed because the
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 00db81eac80d..45041913129b 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -588,9 +588,13 @@ xfs_file_dax_write(
+ 
+ 	trace_xfs_file_dax_write(ip, count, pos);
+ 	ret = dax_iomap_rw(iocb, from, &xfs_direct_write_iomap_ops);
+-	if (ret > 0 && iocb->ki_pos > i_size_read(inode)) {
+-		i_size_write(inode, iocb->ki_pos);
+-		error = xfs_setfilesize(ip, pos, ret);
++	if (ret > 0) {
++		if (iocb->ki_pos > i_size_read(inode)) {
++			i_size_write(inode, iocb->ki_pos);
++			error = xfs_setfilesize(ip, pos, ret);
++		}
++		if (xfs_is_cow_inode(ip))
++			xfs_reflink_end_cow(ip, pos, ret);
+ 	}
+ out:
+ 	xfs_iunlock(ip, iolock);
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index b9a8c3798e08..a1fc75f11cf9 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -748,13 +748,14 @@ xfs_direct_write_iomap_begin(
+ 		goto out_unlock;
+ 
+ 	if (imap_needs_cow(ip, flags, &imap, nimaps)) {
++		bool need_convert = flags & IOMAP_DIRECT || IS_DAX(inode);
+ 		error = -EAGAIN;
+ 		if (flags & IOMAP_NOWAIT)
+ 			goto out_unlock;
+ 
+ 		/* may drop and re-acquire the ilock */
+ 		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
+-				&lockmode, flags & IOMAP_DIRECT);
++				&lockmode, need_convert);
+ 		if (error)
+ 			goto out_unlock;
+ 		if (shared)
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 80a13c8561d8..6dd6a973ea75 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -860,6 +860,7 @@ xfs_setattr_size(
+ 	int			error;
+ 	uint			lock_flags = 0;
+ 	bool			did_zeroing = false;
++	const struct iomap_ops	*ops;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+ 	ASSERT(xfs_isilocked(ip, XFS_MMAPLOCK_EXCL));
+@@ -906,13 +907,17 @@ xfs_setattr_size(
+ 	 * extension, or zeroing out the rest of the block on a downward
+ 	 * truncate.
+ 	 */
++	if (IS_DAX(inode))
++		ops = &xfs_direct_write_iomap_ops;
++	else
++		ops = &xfs_buffered_write_iomap_ops;
++
+ 	if (newsize > oldsize) {
+ 		trace_xfs_zero_eof(ip, oldsize, newsize - oldsize);
+ 		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
+-				&did_zeroing, &xfs_buffered_write_iomap_ops);
++				&did_zeroing, ops);
+ 	} else {
+-		error = iomap_truncate_page(inode, newsize, &did_zeroing,
+-				&xfs_buffered_write_iomap_ops);
++		error = iomap_truncate_page(inode, newsize, &did_zeroing, ops);
  	}
  
--	if (WARN_ON_ONCE(iomap->type != IOMAP_MAPPED))
-+	if (WARN_ON_ONCE(iomap->type != IOMAP_MAPPED &&
-+			!(iomap->flags & IOMAP_F_SHARED)))
- 		return -EIO;
+ 	if (error)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 792217cd1e64..f87ab78dd421 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1269,6 +1269,8 @@ xfs_reflink_zero_posteof(
  
- 	/*
-@@ -1247,6 +1248,12 @@ dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 			break;
- 		}
+ 	trace_xfs_zero_eof(ip, isize, pos - isize);
+ 	return iomap_zero_range(VFS_I(ip), isize, pos - isize, NULL,
++			IS_DAX(VFS_I(ip)) ?
++			&xfs_direct_write_iomap_ops :
+ 			&xfs_buffered_write_iomap_ops);
+ }
  
-+		if (iomap != srcmap) {
-+			ret = dax_copy_edges(pos, length, srcmap, kaddr, false);
-+			if (ret)
-+				break;
-+		}
-+
- 		map_len = PFN_PHYS(map_len);
- 		kaddr += offset;
- 		map_len -= offset;
-@@ -1358,6 +1365,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	vm_fault_t ret = 0;
- 	void *entry;
- 	pfn_t pfn;
-+	void *kaddr;
- 
- 	trace_dax_pte_fault(inode, vmf, ret);
- 	/*
-@@ -1439,19 +1447,27 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 
- 	switch (iomap.type) {
- 	case IOMAP_MAPPED:
-+cow:
- 		if (iomap.flags & IOMAP_F_NEW) {
- 			count_vm_event(PGMAJFAULT);
- 			count_memcg_event_mm(vma->vm_mm, PGMAJFAULT);
- 			major = VM_FAULT_MAJOR;
- 		}
- 		error = dax_iomap_direct_access(&iomap, pos, PAGE_SIZE, &pfn,
--						NULL);
-+						&kaddr);
- 		if (error < 0)
- 			goto error_finish_iomap;
- 
- 		entry = dax_insert_entry(&xas, mapping, vmf, iomap.addr, entry,
- 					 pfn, 0, write && !sync);
- 
-+		if (srcmap.type != IOMAP_HOLE) {
-+			error = dax_copy_edges(pos, PAGE_SIZE, &srcmap, kaddr,
-+					       false);
-+			if (error)
-+				goto error_finish_iomap;
-+		}
-+
- 		/*
- 		 * If we are doing synchronous page fault and inode needs fsync,
- 		 * we can insert PTE into page tables only after that happens.
-@@ -1475,12 +1491,15 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 
- 		goto finish_iomap;
- 	case IOMAP_UNWRITTEN:
-+		if (write && iomap.flags & IOMAP_F_SHARED)
-+			goto cow;
-+		fallthrough;
- 	case IOMAP_HOLE:
- 		if (!write) {
- 			ret = dax_load_hole(&xas, mapping, &entry, vmf);
- 			goto finish_iomap;
- 		}
--		/*FALLTHRU*/
-+		fallthrough;
- 	default:
- 		WARN_ON_ONCE(1);
- 		error = -EIO;
-@@ -1582,6 +1601,7 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	loff_t pos;
- 	int error;
- 	pfn_t pfn;
-+	void *kaddr;
- 
- 	/*
- 	 * Check whether offset isn't beyond end of file now. Caller is
-@@ -1663,14 +1683,22 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 
- 	switch (iomap.type) {
- 	case IOMAP_MAPPED:
-+cow:
- 		error = dax_iomap_direct_access(&iomap, pos, PMD_SIZE, &pfn,
--						NULL);
-+						&kaddr);
- 		if (error < 0)
- 			goto finish_iomap;
- 
- 		entry = dax_insert_entry(&xas, mapping, vmf, iomap.addr, entry,
- 					 pfn, DAX_PMD, write && !sync);
- 
-+		if (srcmap.type != IOMAP_HOLE) {
-+			error = dax_copy_edges(pos, PMD_SIZE, &srcmap, kaddr,
-+					       true);
-+			if (error)
-+				goto unlock_entry;
-+		}
-+
- 		/*
- 		 * If we are doing synchronous page fault and inode needs fsync,
- 		 * we can insert PMD into page tables only after that happens.
-@@ -1689,6 +1717,9 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		result = vmf_insert_pfn_pmd(vmf, pfn, write);
- 		break;
- 	case IOMAP_UNWRITTEN:
-+		if (write && iomap.flags & IOMAP_F_SHARED)
-+			goto cow;
-+		fallthrough;
- 	case IOMAP_HOLE:
- 		if (WARN_ON_ONCE(write))
- 			break;
 -- 
 2.27.0
 
