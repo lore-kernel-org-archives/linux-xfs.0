@@ -2,54 +2,60 @@ Return-Path: <SRS0=4IRk=BR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D520CC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 02:42:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45D3BC433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 03:12:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6E242073B
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 02:42:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30A0722CAF
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 03:12:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726038AbgHGCmV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 6 Aug 2020 22:42:21 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:58300 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726027AbgHGCmV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Aug 2020 22:42:21 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 07CDCD7CEF7;
-        Fri,  7 Aug 2020 12:42:17 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k3sKh-0001Jk-Gh; Fri, 07 Aug 2020 12:42:11 +1000
-Date:   Fri, 7 Aug 2020 12:42:11 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@bugzilla.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [Bug 208827] New: [fio io_uring] io_uring write data crc32c
- verify failed
-Message-ID: <20200807024211.GG2114@dread.disaster.area>
-References: <bug-208827-201763@https.bugzilla.kernel.org/>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+        id S1726631AbgHGDMF convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 6 Aug 2020 23:12:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47048 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726038AbgHGDMF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Aug 2020 23:12:05 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 208827] [fio io_uring] io_uring write data crc32c verify failed
+Date:   Fri, 07 Aug 2020 03:12:03 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-208827-201763-ubSctIQBY4@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-208827-201763@https.bugzilla.kernel.org/>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LPwYv6e9 c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=VwQbUJbxAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=5rSYxMdFigoYx87TRuQA:9 a=d2odK2Q6lhk3acVR:21
-        a=TNQTxYroACMm6mQ1:21 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+References: <bug-208827-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 06, 2020 at 04:57:58AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=208827
+
+--- Comment #1 from Dave Chinner (david@fromorbit.com) ---
+On Thu, Aug 06, 2020 at 04:57:58AM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=208827
 > 
 >             Bug ID: 208827
@@ -73,9 +79,11 @@ On Thu, Aug 06, 2020 at 04:57:58AM +0000, bugzilla-daemon@bugzilla.kernel.org wr
 > Our fio io_uring test failed as below:
 > 
 > # fio io_uring.fio
-> uring_w: (g=0): rw=randwrite, bs=(R) 64.0KiB-64.0KiB, (W) 64.0KiB-64.0KiB, (T)
+> uring_w: (g=0): rw=randwrite, bs=(R) 64.0KiB-64.0KiB, (W) 64.0KiB-64.0KiB,
+> (T)
 > 64.0KiB-64.0KiB, ioengine=io_uring, iodepth=16
-> uring_sqt_w: (g=0): rw=randwrite, bs=(R) 64.0KiB-64.0KiB, (W) 64.0KiB-64.0KiB,
+> uring_sqt_w: (g=0): rw=randwrite, bs=(R) 64.0KiB-64.0KiB, (W)
+> 64.0KiB-64.0KiB,
 > (T) 64.0KiB-64.0KiB, ioengine=io_uring, iodepth=16
 > uring_rw: (g=0): rw=randrw, bs=(R) 64.0KiB-64.0KiB, (W) 64.0KiB-64.0KiB, (T)
 > 64.0KiB-64.0KiB, ioengine=io_uring, iodepth=16
@@ -152,6 +160,7 @@ largely useless...
 Cheers,
 
 Dave.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.
