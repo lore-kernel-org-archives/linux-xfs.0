@@ -2,249 +2,186 @@ Return-Path: <SRS0=4IRk=BR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,FORGED_MUA_MOZILLA,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC5CEC433E0
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 04:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2C32C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 09:23:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9608922D01
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 04:12:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DE532177B
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 09:23:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="t5oLN1mB"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="FQ1PLt4h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725379AbgHGEM0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Aug 2020 00:12:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35526 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725263AbgHGEMZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Aug 2020 00:12:25 -0400
-Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6569C061574;
-        Thu,  6 Aug 2020 21:12:24 -0700 (PDT)
-Received: by mail-io1-xd43.google.com with SMTP id g14so656493iom.0;
-        Thu, 06 Aug 2020 21:12:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=tR46+jH5HAE5RBYT73wIlj3eTY5WLMg+m88DMWq/IdQ=;
-        b=t5oLN1mBhXv0gHC6lx0fidZIOb7WEf4YcNP2+rKWfNA0NznbT8k/QFWao3Gnk3aUHp
-         KqYQbJSzuUY2SVeBgT9QBeSaK/PjcyyIibRkILH5P2I1Hf/pzA5O6G5xmjgSYHlC9l4G
-         REVHH1baJYlrFX0BwXX2oiE5Dae5zxIE2GJ2Wvrl2oy/dBQYvzVTpVDPGtZ+syhOohvm
-         U60oiQiLr5tD93JQmf+BBdyP3jxGEqE2mMXaGAFnxIRsIe2ZUZpwu+9WoKDSgCs4jHPh
-         g5SsfNNkzOA1IsevHd7UNrqeadGBDiYITPsEr1AQ01BcA2KCjLKBT+EkdLu0usaokWOK
-         pV9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=tR46+jH5HAE5RBYT73wIlj3eTY5WLMg+m88DMWq/IdQ=;
-        b=nx5Vrw/lsWJLHYU45R+xUy//KZ2yBYUy+DmDo3UGYOQLKrw/0O/4614pEw+dQxauPC
-         8D+4VsJz1pd1c5574XBKy0/bSlToGoe0PnVjr0PAqEhk60wGt2h0gAIWIX8xnt5Q6WSu
-         blkQiKgp0deyc263P86Jeej22zwpiPwG5P9Wz34r+Hp/cWwnVJAovEj52D1c2jt7GVCx
-         f5HAbnSsIXFdNUUHDGHKrUMZYH0EdnSIVMBn6s6oMjQlHFfbL061BSG1hOKNvSlYCTZO
-         BjTNEyvG81Ek+VFU4WN3UomXhj/UZQFVlRJ+AJR4TtoCQaHeG81LbhSuFOpuPV4MAaP3
-         mrEg==
-X-Gm-Message-State: AOAM532IB163vb43ct9whYW2yIayABNLf5dFPalrbvW2N3r2d2niAvCO
-        pRuLlbUu14Fk9epsr9IBRLGxq5UWFsYaqvJItZU=
-X-Google-Smtp-Source: ABdhPJzdDcMpFQJ83WorZ3S8PJ+sGu+ca3vrkSQnrfd38VFioTPUGK3RJQ9ZSZYPqkq3SPJFwn0xRQXqjCugePJlQZ0=
-X-Received: by 2002:a02:a905:: with SMTP id n5mr2836770jam.64.1596773544199;
- Thu, 06 Aug 2020 21:12:24 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200801154632.866356-1-laoar.shao@gmail.com> <20200801154632.866356-3-laoar.shao@gmail.com>
- <20200804233541.GE2114@dread.disaster.area>
-In-Reply-To: <20200804233541.GE2114@dread.disaster.area>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Fri, 7 Aug 2020 12:11:48 +0800
-Message-ID: <CALOAHbCbyx8HSG2vRcK7dtDCk_abUiHwmXBgvNPRkrvnUsOZyw@mail.gmail.com>
-Subject: Re: [PATCH v4 2/2] xfs: avoid transaction reservation recursion
+        id S1726756AbgHGJXV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Aug 2020 05:23:21 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:29414 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725881AbgHGJXT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Aug 2020 05:23:19 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07794hFE059704;
+        Fri, 7 Aug 2020 05:23:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : date : mime-version : in-reply-to : content-type :
+ content-transfer-encoding : message-id; s=pp1;
+ bh=1g03ZrsAvU3imE8zwOJzFzX6Suq13FXKqdRyOgNIzuI=;
+ b=FQ1PLt4hTiHEifRKRogJbBRU0tM++7lUxJhJhMy37d8wi5v2vJQGVWc5epptKaJAAKaf
+ zFR0PfjkxG0sHFpDhgbLo8GzgHmBECLnvFRWLK8//U8yrG7a6DoXQ5ZPAwF+1oOusvtt
+ oi/OfsdMBgiaWtTPFYvdjHE/5hfZmvZheldkYRajo0e+695gxhYSZBZK/4uf/T4xKGe6
+ 3kXAgbf80M0BB6pn0layHneR7SWuuW26yt6zZWMMtCpkpGhrfX6p2N6UJ+xtcagIzsAP
+ 6OTvE/hQNBGv8jQ2GvogUNB4RWAy189bTxa/wh5sxZdAu7aePV/hdXnbYelRSlY8DPB+ aA== 
+Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 32rephmdet-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 07 Aug 2020 05:23:16 -0400
+Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
+        by ppma02fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 0779F7Qc031564;
+        Fri, 7 Aug 2020 09:23:15 GMT
+Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
+        by ppma02fra.de.ibm.com with ESMTP id 32n018bykk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 07 Aug 2020 09:23:15 +0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 0779Lk4p61276644
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 7 Aug 2020 09:21:46 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C61464C04E;
+        Fri,  7 Aug 2020 09:23:12 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B3CF64C046;
+        Fri,  7 Aug 2020 09:23:11 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.199.36.111])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Fri,  7 Aug 2020 09:23:11 +0000 (GMT)
+Subject: Re: [RFC 1/1] pmem: Add cond_resched() in bio_for_each_segment loop
+ in pmem_make_request
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Michal Hocko <mhocko@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux MM <linux-mm@kvack.org>,
-        Yafang Shao <shaoyafang@didiglobal.com>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Aneesh Kumar K . V" <aneesh.kumar@linux.ibm.com>
+References: <0d96e2481f292de2cda8828b03d5121004308759.1596011292.git.riteshh@linux.ibm.com>
+ <20200802230148.GA2114@dread.disaster.area>
+ <20200803071405.64C0711C058@d06av25.portsmouth.uk.ibm.com>
+ <20200803215144.GB2114@dread.disaster.area>
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+Date:   Fri, 7 Aug 2020 14:53:10 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
+MIME-Version: 1.0
+In-Reply-To: <20200803215144.GB2114@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+Message-Id: <20200807092311.B3CF64C046@d06av22.portsmouth.uk.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-08-07_05:2020-08-06,2020-08-07 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 malwarescore=0
+ priorityscore=1501 mlxscore=0 lowpriorityscore=0 suspectscore=0
+ adultscore=0 mlxlogscore=999 clxscore=1015 phishscore=0 spamscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008070064
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 5, 2020 at 7:35 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Sat, Aug 01, 2020 at 11:46:32AM -0400, Yafang Shao wrote:
-> > From: Yafang Shao <shaoyafang@didiglobal.com>
-> >
-> > PF_FSTRANS which is used to avoid transaction reservation recursion, is
-> > dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
-> > PF_MEMALLOC_NOFS") and commit 7dea19f9ee63 ("mm: introduce
-> > memalloc_nofs_{save,restore} API") and replaced by PF_MEMALLOC_NOFS which
-> > means to avoid filesystem reclaim recursion. That change is subtle.
-> > Let's take the exmple of the check of WARN_ON_ONCE(current->flags &
-> > PF_MEMALLOC_NOFS)) to explain why this abstraction from PF_FSTRANS to
-> > PF_MEMALLOC_NOFS is not proper.
-> > Below comment is quoted from Dave,
-> > > It wasn't for memory allocation recursion protection in XFS - it was for
-> > > transaction reservation recursion protection by something trying to flush
-> > > data pages while holding a transaction reservation. Doing
-> > > this could deadlock the journal because the existing reservation
-> > > could prevent the nested reservation for being able to reserve space
-> > > in the journal and that is a self-deadlock vector.
-> > > IOWs, this check is not protecting against memory reclaim recursion
-> > > bugs at all (that's the previous check [1]). This check is
-> > > protecting against the filesystem calling writepages directly from a
-> > > context where it can self-deadlock.
-> > > So what we are seeing here is that the PF_FSTRANS ->
-> > > PF_MEMALLOC_NOFS abstraction lost all the actual useful information
-> > > about what type of error this check was protecting against.
-> >
-> > As a result, we should reintroduce PF_FSTRANS. As current->journal_info
-> > isn't used in XFS, we can reuse it to indicate whehter the task is in
-> > fstrans or not.
->
-> IF we are just going to use ->journal_info, do it the simple way.
->
-> > index 2d25bab68764..0795511f9e6a 100644
-> > --- a/fs/xfs/libxfs/xfs_btree.c
-> > +++ b/fs/xfs/libxfs/xfs_btree.c
-> > @@ -2825,6 +2825,7 @@ xfs_btree_split_worker(
-> >       if (args->kswapd)
-> >               new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-> >
-> > +     xfs_trans_context_start();
->
-> Not really. We are transferring a transaction context here, not
-> starting one. Hence this reads somewhat strangely.
->
-> This implies that the helper function should be something like:
->
->         xfs_trans_context_set(tp);
->
->
-> >       current_set_flags_nested(&pflags, new_pflags);
-> >
-> >       args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
-> > @@ -2832,6 +2833,7 @@ xfs_btree_split_worker(
-> >       complete(args->done);
-> >
-> >       current_restore_flags_nested(&pflags, new_pflags);
-> > +     xfs_trans_context_end();
->
-> And this is more likely xfs_trans_context_clear(tp)
->
-> Reasons for this will become clear soon...
->
-> >  }
-> >
-> >  /*
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index b35611882ff9..39ef95acdd8e 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -63,6 +63,8 @@ xfs_setfilesize_trans_alloc(
-> >        * clear the flag here.
-> >        */
-> >       current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-> > +     xfs_trans_context_end();
->
-> Note the repeated pairing of functions in this patch?
->
-> > +
-> >       return 0;
-> >  }
-> >
-> > @@ -125,6 +127,7 @@ xfs_setfilesize_ioend(
-> >        * thus we need to mark ourselves as being in a transaction manually.
-> >        * Similarly for freeze protection.
-> >        */
-> > +     xfs_trans_context_start();
-> >       current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-> >       __sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
-> >
-> > diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> > index 9f70d2f68e05..1192b660a968 100644
-> > --- a/fs/xfs/xfs_linux.h
-> > +++ b/fs/xfs/xfs_linux.h
-> > @@ -111,6 +111,25 @@ typedef __u32                    xfs_nlink_t;
-> >  #define current_restore_flags_nested(sp, f)  \
-> >               (current->flags = ((current->flags & ~(f)) | (*(sp) & (f))))
-> >
-> > +static inline void xfs_trans_context_start(void)
-> > +{
-> > +     long flags = (long)current->journal_info;
-> > +
-> > +     /*
-> > +      * Reuse journal_info to indicate whehter the current is in fstrans
-> > +      * or not.
-> > +      */
-> > +     current->journal_info = (void *)(flags + 1);
-> > +}
-> > +
-> > +static inline void xfs_trans_context_end(void)
-> > +{
-> > +     long flags = (long)current->journal_info;
-> > +
-> > +     WARN_ON_ONCE(flags <= 0);
-> > +     current->journal_info = ((void *)(flags - 1));
-> > +}
->
-> This is overly complex, and cannot be used for validation that we
-> are clearing the transaction context we expect to be clearing. These
-> are really "set" and "clear" operations, and for rolling
-> transactions we are going to need an "update" operation, too.
->
-> As per my comments about the previous patch, _set() would be done
-> in xfs_trans_alloc(), _clear() would be done on the final
-> xfs_trans_commit() or _cancel() and _update() would be done when the
-> transaction rolls.
->
-> Then we can roll in the NOFS updates, and we get these three helper
-> functions that keep all the per-transaction thread state coherent:
->
-> static inline void
-> xfs_trans_context_set(struct xfs_trans *tp)
-> {
->         ASSERT(!current->journal_info);
->         current->journal_info = tp;
->         tp->t_flags = memalloc_nofs_save();
-> }
->
-> static inline void
-> xfs_trans_context_update(struct xfs_trans *old, struct xfs_trans *new)
-> {
->         ASSERT(current->journal_info == old);
->         current->journal_info = new;
->         new->t_flags = old->t_flags;
-> }
->
-> static inline void
-> xfs_trans_context_clear(struct xfs_trans *tp)
-> {
->         ASSERT(current->journal_info == tp);
->         current->journal_info = NULL;
->         memalloc_nofs_restore(tp->t_flags);
-> }
->
 
-Below helper will be used in fs/iomap/buffered-io.c, so I think we'd
-better name it with fstrans_context_active() and put it in
-include/linux/iomap.h, while regarding the other three helpers I think
-we'd better put them in fs/xfs/xfs_trans.h.
-> static bool
-> xfs_trans_context_active(void)
-> {
->         return current->journal_info != NULL;
-> }
->
 
-Many thanks for the detailed explanation, I will update with your
-suggestion in the next version.
+On 8/4/20 3:21 AM, Dave Chinner wrote:
+> On Mon, Aug 03, 2020 at 12:44:04PM +0530, Ritesh Harjani wrote:
+>>
+>>
+>> On 8/3/20 4:31 AM, Dave Chinner wrote:
+>>> On Wed, Jul 29, 2020 at 02:15:18PM +0530, Ritesh Harjani wrote:
+>>>> For systems which do not have CONFIG_PREEMPT set and
+>>>> if there is a heavy multi-threaded load/store operation happening
+>>>> on pmem + sometimes along with device latencies, softlockup warnings like
+>>>> this could trigger. This was seen on Power where pagesize is 64K.
+>>>>
+>>>> To avoid softlockup, this patch adds a cond_resched() in this path.
+>>>>
+>>>> <...>
+>>>> watchdog: BUG: soft lockup - CPU#31 stuck for 22s!
+>>>> <...>
+>>>> CPU: 31 PID: 15627 <..> 5.3.18-20
+>>>> <...>
+>>>> NIP memcpy_power7+0x43c/0x7e0
+>>>> LR memcpy_flushcache+0x28/0xa0
+>>>>
+>>>> Call Trace:
+>>>> memcpy_power7+0x274/0x7e0 (unreliable)
+>>>> memcpy_flushcache+0x28/0xa0
+>>>> write_pmem+0xa0/0x100 [nd_pmem]
+>>>> pmem_do_bvec+0x1f0/0x420 [nd_pmem]
+>>>> pmem_make_request+0x14c/0x370 [nd_pmem]
+>>>> generic_make_request+0x164/0x400
+>>>> submit_bio+0x134/0x2e0
+>>>> submit_bio_wait+0x70/0xc0
+>>>> blkdev_issue_zeroout+0xf4/0x2a0
+>>>> xfs_zero_extent+0x90/0xc0 [xfs]
+>>>> xfs_bmapi_convert_unwritten+0x198/0x230 [xfs]
+>>>> xfs_bmapi_write+0x284/0x630 [xfs]
+>>>> xfs_iomap_write_direct+0x1f0/0x3e0 [xfs]
+>>>> xfs_file_iomap_begin+0x344/0x690 [xfs]
+>>>> dax_iomap_pmd_fault+0x488/0xc10
+>>>> __xfs_filemap_fault+0x26c/0x2b0 [xfs]
+>>>> __handle_mm_fault+0x794/0x1af0
+>>>> handle_mm_fault+0x12c/0x220
+>>>> __do_page_fault+0x290/0xe40
+>>>> do_page_fault+0x38/0xc0
+>>>> handle_page_fault+0x10/0x30
+>>>>
+>>>> Reviewed-by: Aneesh Kumar K.V <aneesh.kumar@linux.ibm.com>
+>>>> Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+>>>> ---
+>>>>    drivers/nvdimm/pmem.c | 1 +
+>>>>    1 file changed, 1 insertion(+)
+>>>>
+>>>> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+>>>> index 2df6994acf83..fcf7af13897e 100644
+>>>> --- a/drivers/nvdimm/pmem.c
+>>>> +++ b/drivers/nvdimm/pmem.c
+>>>> @@ -214,6 +214,7 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+>>>>    			bio->bi_status = rc;
+>>>>    			break;
+>>>>    		}
+>>>> +		cond_resched();
+>>>
+>>> There are already cond_resched() calls between submitted bios in
+>>> blkdev_issue_zeroout() via both __blkdev_issue_zero_pages() and
+>>> __blkdev_issue_write_zeroes(), so I'm kinda wondering where the
+>>> problem is coming from here.
+>>
+>> This problem is coming from that bio call- submit_bio()
+>>
+>>>
+>>> Just how big is the bio being issued here that it spins for 22s
+>>> trying to copy it?
+>>
+>> It's 256 (due to BIO_MAX_PAGES) * 64KB (pagesize) = 16MB.
+>> So this is definitely not an easy trigger as per tester was mainly seen
+>> on a VM.
+> 
+> Right, so a memcpy() of 16MB of data in a single bio is taking >22s?
+> 
+> If so, then you can't solve this problem with cond_resched() - if
+> something that should only take half a millisecond to run is taking
+> 22s of CPU time, there are bigger problems occurring that need
+> fixing.
+> 
+> i.e. if someone is running a workload that has effectively
+> livelocked the hardware cache coherency protocol across the entire
+> machine, then changing kernel code that requires memory bandwidth to
+> be available is not going to fix the problem. All is does is shoot
+> the messenger that tells you there is something going wrong.
 
--- 
-Thanks
-Yafang
+Thanks Dave. Appreciate your inputs in this area.
+Yes, agreed on the fact that we should not shoot the messenger itself.
+Will look more into this.
+
+-ritesh
