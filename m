@@ -2,75 +2,126 @@ Return-Path: <SRS0=4IRk=BR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0606CC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 13:39:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45C61C433E0
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 15:58:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE5972224D
-	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 13:39:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jooGZOBZ"
+	by mail.kernel.org (Postfix) with ESMTP id 1905822C9F
+	for <linux-xfs@archiver.kernel.org>; Fri,  7 Aug 2020 15:58:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726131AbgHGNjB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 7 Aug 2020 09:39:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37716 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725970AbgHGNjB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Aug 2020 09:39:01 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 421B8C061574;
-        Fri,  7 Aug 2020 06:39:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=eNlt5+MOMqdMiipq56av3Q5dInH/0IZEcBwwhkePOhw=; b=jooGZOBZPN+/zhWloZREEQs9Qe
-        1Gm0HEqpmKTnkfVygGtCjNGPDIVzbn6Oy4iJaZzm2CfGsgeL8I6RGXh+QirerafkOCyyFLowQfn04
-        IChcKEfRifcIOwSxygkNiijBPFeNHpOZTqM6nCUYljV7yii6nwcVfTblozH6g8PM6Q312CvbDI25M
-        zjBglzIXAyMENEhkum19A1pCMt7D7s7lweM2Z4sd2VbM7V6c6Cd5CwISpe/CWHJm+3fcz7fTwgtvK
-        Rlxfs1dl7r8mlxzgjjjbi+UlFk1MHOgX7V6pvrUvfVUZV9ivnPN/+OOwdWfrzlX5EzJ1coyIw+I7X
-        K4lH3vDg==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k42aH-0003o5-B8; Fri, 07 Aug 2020 13:38:57 +0000
-Date:   Fri, 7 Aug 2020 14:38:57 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, darrick.wong@oracle.com,
-        dan.j.williams@intel.com, david@fromorbit.com, hch@lst.de,
-        rgoldwyn@suse.de, qi.fuli@fujitsu.com, y-goto@fujitsu.com
-Subject: Re: [RFC PATCH 0/8] fsdax: introduce FS query interface to support
- reflink
-Message-ID: <20200807133857.GC17456@casper.infradead.org>
-References: <20200807131336.318774-1-ruansy.fnst@cn.fujitsu.com>
+        id S1726242AbgHGP6m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 7 Aug 2020 11:58:42 -0400
+Received: from mga17.intel.com ([192.55.52.151]:35038 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726066AbgHGP6m (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Aug 2020 11:58:42 -0400
+IronPort-SDR: ZX+aDiT3QwS1et9WC+S6ZqQcoE9CSUIdBGYtT/BY3b/5VNqSA48LFoz25/g5F6ztMgWEdS0IjZ
+ na41mEVV/5VQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9705"; a="133188925"
+X-IronPort-AV: E=Sophos;i="5.75,446,1589266800"; 
+   d="scan'208";a="133188925"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2020 08:58:41 -0700
+IronPort-SDR: 84GhESYlMVxCqdFLFQUJbDMjzi+st2B04wkoIaGMyw6B6LsVtdOlCoCKS3/QKhs0JKgz/N5wwD
+ VFCLylzdQPXg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.75,446,1589266800"; 
+   d="scan'208";a="325784410"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.147])
+  by fmsmga002.fm.intel.com with ESMTP; 07 Aug 2020 08:58:41 -0700
+Date:   Fri, 7 Aug 2020 08:58:41 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Xiao Yang <yangx.jy@cn.fujitsu.com>
+Cc:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] fs/xfs: Support that ioctl(SETXFLAGS/GETXFLAGS) can
+ set/get inode DAX on XFS.
+Message-ID: <20200807155841.GP1573827@iweiny-DESK2.sc.intel.com>
+References: <20200727092744.2641-1-yangx.jy@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200807131336.318774-1-ruansy.fnst@cn.fujitsu.com>
+In-Reply-To: <20200727092744.2641-1-yangx.jy@cn.fujitsu.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 07, 2020 at 09:13:28PM +0800, Shiyang Ruan wrote:
-> This patchset is a try to resolve the problem of tracking shared page
-> for fsdax.
+On Mon, Jul 27, 2020 at 05:27:44PM +0800, Xiao Yang wrote:
+> 1) FS_DAX_FL has been introduced by commit b383a73f2b83.
+> 2) In future, chattr/lsattr command from e2fsprogs can set/get
+>    inode DAX on XFS by calling ioctl(SETXFLAGS/GETXFLAGS).
 > 
-> Instead of per-page tracking method, this patchset introduces a query
-> interface: get_shared_files(), which is implemented by each FS, to
-> obtain the owners of a shared page.  It returns an owner list of this
-> shared page.  Then, the memory-failure() iterates the list to be able
-> to notify each process using files that sharing this page.
+> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+
+Wow sorry for the delay.  This looks good.  thanks!
+
+Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+
+> ---
+>  fs/xfs/xfs_ioctl.c | 14 +++++++++++---
+>  1 file changed, 11 insertions(+), 3 deletions(-)
 > 
-> The design of the tracking method is as follow:
-> 1. dax_assocaite_entry() associates the owner's info to this page
-
-I think that's the first problem with this design.  dax_associate_entry is
-a horrendous idea which needs to be ripped out, not made more important.
-It's all part of the general problem of trying to do something on a
-per-page basis instead of per-extent basis.
-
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index a190212ca85d..6f22a66777cd 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1075,13 +1075,18 @@ xfs_merge_ioc_xflags(
+>  		xflags |= FS_XFLAG_NODUMP;
+>  	else
+>  		xflags &= ~FS_XFLAG_NODUMP;
+> +	if (flags & FS_DAX_FL)
+> +		xflags |= FS_XFLAG_DAX;
+> +	else
+> +		xflags &= ~FS_XFLAG_DAX;
+>  
+>  	return xflags;
+>  }
+>  
+>  STATIC unsigned int
+>  xfs_di2lxflags(
+> -	uint16_t	di_flags)
+> +	uint16_t	di_flags,
+> +	uint64_t	di_flags2)
+>  {
+>  	unsigned int	flags = 0;
+>  
+> @@ -1095,6 +1100,9 @@ xfs_di2lxflags(
+>  		flags |= FS_NOATIME_FL;
+>  	if (di_flags & XFS_DIFLAG_NODUMP)
+>  		flags |= FS_NODUMP_FL;
+> +	if (di_flags2 & XFS_DIFLAG2_DAX) {
+> +		flags |= FS_DAX_FL;
+> +	}
+>  	return flags;
+>  }
+>  
+> @@ -1565,7 +1573,7 @@ xfs_ioc_getxflags(
+>  {
+>  	unsigned int		flags;
+>  
+> -	flags = xfs_di2lxflags(ip->i_d.di_flags);
+> +	flags = xfs_di2lxflags(ip->i_d.di_flags, ip->i_d.di_flags2);
+>  	if (copy_to_user(arg, &flags, sizeof(flags)))
+>  		return -EFAULT;
+>  	return 0;
+> @@ -1588,7 +1596,7 @@ xfs_ioc_setxflags(
+>  
+>  	if (flags & ~(FS_IMMUTABLE_FL | FS_APPEND_FL | \
+>  		      FS_NOATIME_FL | FS_NODUMP_FL | \
+> -		      FS_SYNC_FL))
+> +		      FS_SYNC_FL | FS_DAX_FL))
+>  		return -EOPNOTSUPP;
+>  
+>  	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
+> -- 
+> 2.21.0
+> 
+> 
+> 
