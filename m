@@ -2,175 +2,90 @@ Return-Path: <SRS0=bIZx=BU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 952FCC433E0
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Aug 2020 09:09:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 162D0C433E1
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Aug 2020 11:17:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FFD9206B5
-	for <linux-xfs@archiver.kernel.org>; Mon, 10 Aug 2020 09:09:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBCCB206E9
+	for <linux-xfs@archiver.kernel.org>; Mon, 10 Aug 2020 11:17:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OCNWmeSi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726021AbgHJJJH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Aug 2020 05:09:07 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:54865 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726597AbgHJJJG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Aug 2020 05:09:06 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 8F4411A9E0F;
-        Mon, 10 Aug 2020 19:09:01 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k53nf-00038D-EF; Mon, 10 Aug 2020 19:08:59 +1000
-Date:   Mon, 10 Aug 2020 19:08:59 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     bugzilla-daemon@bugzilla.kernel.org
-Cc:     linux-xfs@vger.kernel.org, axboe@kernel.dk
-Subject: Re: [Bug 208827] [fio io_uring] io_uring write data crc32c verify
- failed
-Message-ID: <20200810090859.GK2114@dread.disaster.area>
-References: <bug-208827-201763@https.bugzilla.kernel.org/>
- <bug-208827-201763-ubSctIQBY4@https.bugzilla.kernel.org/>
- <20200810000932.GH2114@dread.disaster.area>
- <20200810035605.GI2114@dread.disaster.area>
- <20200810070807.GJ2114@dread.disaster.area>
+        id S1726510AbgHJLRF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Aug 2020 07:17:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54128 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726368AbgHJLRB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Aug 2020 07:17:01 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94C8EC061756;
+        Mon, 10 Aug 2020 04:17:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description;
+        bh=LF7J00zPGvE5+TvNb+kSZ/mLnQ6lmd1ykbbcKN0G5P0=; b=OCNWmeSiZDDpjF5Hgiofx6N6ON
+        mkqo524ZrkTmjYeAH/LOzFSErW1eK+WyzkAZsFnVA34VOuSVBXoSGM7MZ+/9KklSyZN05mfuOyT0s
+        2YhgWUkFXY+JSuAnnaw4NmrKz7wA57V3jBIlZHPNkZdhVqDXFnmhvk2JKjby9cP7BlVaWDfAzs53N
+        lkQLlrm4o/LDXG8+jPi57WYiSsbgy1qMRGEEL8mYfBJh/Cz0n3tZebBXT9ZPwoMDjAhbgQ2MQPDaJ
+        U4AvMZQcyGTR2UWCtkSXx4VKMEPJLjTvF5HALWCUljf51bkVR9AU8RSTIPChGPGHGBS0dNqkiVmpQ
+        /ZGi0Vig==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1k55nV-0002Ra-ET; Mon, 10 Aug 2020 11:16:57 +0000
+Date:   Mon, 10 Aug 2020 12:16:57 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Ruan Shiyang <ruansy.fnst@cn.fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, darrick.wong@oracle.com,
+        dan.j.williams@intel.com, david@fromorbit.com, hch@lst.de,
+        rgoldwyn@suse.de, qi.fuli@fujitsu.com, y-goto@fujitsu.com
+Subject: Re: [RFC PATCH 0/8] fsdax: introduce FS query interface to support
+ reflink
+Message-ID: <20200810111657.GL17456@casper.infradead.org>
+References: <20200807131336.318774-1-ruansy.fnst@cn.fujitsu.com>
+ <20200807133857.GC17456@casper.infradead.org>
+ <9673ed3c-9e42-3d01-000b-b01cda9832ce@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20200810070807.GJ2114@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
-        a=NvkeETndsdyT21pYkskA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9673ed3c-9e42-3d01-000b-b01cda9832ce@cn.fujitsu.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 10, 2020 at 05:08:07PM +1000, Dave Chinner wrote:
-> [cc Jens]
+On Mon, Aug 10, 2020 at 04:15:50PM +0800, Ruan Shiyang wrote:
 > 
-> [Jens, data corruption w/ io_uring and simple fio reproducer. see
-> the bz link below.]
 > 
-> On Mon, Aug 10, 2020 at 01:56:05PM +1000, Dave Chinner wrote:
-> > On Mon, Aug 10, 2020 at 10:09:32AM +1000, Dave Chinner wrote:
-> > > On Fri, Aug 07, 2020 at 03:12:03AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
-> > > > --- Comment #1 from Dave Chinner (david@fromorbit.com) ---
-> > > > On Thu, Aug 06, 2020 at 04:57:58AM +0000, bugzilla-daemon@bugzilla.kernel.org
-> > > > wrote:
-> > > > > https://bugzilla.kernel.org/show_bug.cgi?id=208827
-> > > > > 
-> > > > >             Bug ID: 208827
-> > > > >            Summary: [fio io_uring] io_uring write data crc32c verify
-> > > > >                     failed
-> > > > >            Product: File System
-> > > > >            Version: 2.5
-> > > > >     Kernel Version: xfs-linux xfs-5.9-merge-7 + v5.8-rc4
+> On 2020/8/7 下午9:38, Matthew Wilcox wrote:
+> > On Fri, Aug 07, 2020 at 09:13:28PM +0800, Shiyang Ruan wrote:
+> > > This patchset is a try to resolve the problem of tracking shared page
+> > > for fsdax.
 > > > 
-> > > FWIW, I can reproduce this with a vanilla 5.8 release kernel,
-> > > so this isn't related to contents of the XFS dev tree at all...
+> > > Instead of per-page tracking method, this patchset introduces a query
+> > > interface: get_shared_files(), which is implemented by each FS, to
+> > > obtain the owners of a shared page.  It returns an owner list of this
+> > > shared page.  Then, the memory-failure() iterates the list to be able
+> > > to notify each process using files that sharing this page.
 > > > 
-> > > In fact, this bug isn't a recent regression. AFAICT, it was
-> > > introduced between in 5.4 and 5.5 - 5.4 did not reproduce, 5.5 did
-> > > reproduce. More info once I've finished bisecting it....
+> > > The design of the tracking method is as follow:
+> > > 1. dax_assocaite_entry() associates the owner's info to this page
 > > 
-> > f67676d160c6ee2ed82917fadfed6d29cab8237c is the first bad commit
-> > commit f67676d160c6ee2ed82917fadfed6d29cab8237c
-> > Author: Jens Axboe <axboe@kernel.dk>
-> > Date:   Mon Dec 2 11:03:47 2019 -0700
+> > I think that's the first problem with this design.  dax_associate_entry is
+> > a horrendous idea which needs to be ripped out, not made more important.
+> > It's all part of the general problem of trying to do something on a
+> > per-page basis instead of per-extent basis.
 > > 
-> >     io_uring: ensure async punted read/write requests copy iovec
 > 
-> ....
-> 
-> Ok, I went back to vanilla 5.8 to continue debugging and adding
-> tracepoints, and it's proving strangely difficult to reproduce now.
+> The memory-failure needs to track owners info from a dax page, so I should
+> associate the owner with this page.  In this version, I associate the block
+> device to the dax page, so that the memory-failure is able to iterate the
+> owners by the query interface provided by filesystem.
 
-Which turns out to be caused by a tracepoint I inserted to try to
-narrow down if this was an invalidation race. I put this in
-invalidate_complete_page:
-
-
---- a/mm/truncate.c
-+++ b/mm/truncate.c
-@@ -257,8 +257,11 @@ int invalidate_inode_page(struct page *page)
-        struct address_space *mapping = page_mapping(page);
-        if (!mapping)
-                return 0;
--       if (PageDirty(page) || PageWriteback(page))
-+       if (PageDirty(page) || PageWriteback(page)) {
-+               trace_printk("ino 0x%lx page %p, offset 0x%lx\n",
-+                       mapping->host->i_ino, page, page->index * PAGE_SIZE);
-                return 0;
-+       }
-        if (page_mapped(page))
-                return 0;
-        return invalidate_complete_page(mapping, page);
-
-
-And that alone, without even enabling tracepoints, made the
-corruption go completely away. So I suspect a page state race
-condition and look at POSIX_FADV_DONTNEED, which fio is issuing
-before running it's verification reads. First thing that does:
-
-	if (!inode_write_congested(mapping->host))
-		__filemap_fdatawrite_range(mapping, offset, endbyte,
-					   WB_SYNC_NONE);
-
-It starts async writeback of the dirty pages. There's 256MB of dirty
-pages on these inodes, and iomap tracing indicates the entire 256MB
-immediately runs through the trace_iomap_writepage() tracepoint.
-i.e. every page goes Dirty -> Writeback and is submitted for async
-IO.
-
-Then the POSIX_FADV_DONTNEED code goes and runs
-invalidate_mapping_pages(), which ends up try-locking each page and
-then running invalidate_inode_page() on the page, which is where the
-trace debug I put in on pages under writeback gets hit. So if
-changing the invalidation code for pages under writeback makes the
-problem go away, then stopping invalidate_mapping_pages() from
-racing with page writeback should make the problem go away, too.
-
-This does indeed make the corruption go away:
-
---- a/mm/fadvise.c
-+++ b/mm/fadvise.c
-@@ -109,9 +109,8 @@ int generic_fadvise(struct file *file, loff_t offset, loff_t len, int advice)
-        case POSIX_FADV_NOREUSE:
-                break;
-        case POSIX_FADV_DONTNEED:
-                if (!inode_write_congested(mapping->host))
--                       __filemap_fdatawrite_range(mapping, offset, endbyte,
--                                                  WB_SYNC_NONE);
-+                       filemap_write_and_wait_range(mapping, offset, endbyte);
- 
-                /*
-                 * First and last FULL page! Partial pages are deliberately
-
-by making the invalidation wait for the pages to go fully to the
-clean state before starting.
-
-This, however, only fixes the specific symptom being tripped over
-here.  To further test this, I removed this writeback from
-POSIX_FADV_DONTNEED completely so I could trigger writeback via
-controlled background writeback. And, as I expected, whenever
-background writeback ran to write back these dirty files, the
-verification failures triggered again. It is quite reliable.
-
-So it looks like there is some kind of writeback completion vs page
-invalidation race condition occurring, but more work is needed to
-isolate it further. I don't know what part the async read plays in
-the corruption yet, because I don't know how we are getting pages in
-the cache where page->index != the file offset stamped in the data.
-That smells of leaking PageUptodate flags...
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+No, it doesn't need to track owner info from a DAX page.  What it needs to
+do is ask the filesystem.
