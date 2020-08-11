@@ -2,58 +2,58 @@ Return-Path: <SRS0=LlZ6=BV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8069BC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 05:53:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAF57C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 05:53:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 617E22078A
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 05:53:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C2DA206DA
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 05:53:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728064AbgHKFxZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Aug 2020 01:53:25 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:60338 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726397AbgHKFxZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Aug 2020 01:53:25 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id 85F9F10526F;
-        Tue, 11 Aug 2020 15:53:22 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k5NDs-00022M-PM; Tue, 11 Aug 2020 15:53:20 +1000
-Date:   Tue, 11 Aug 2020 15:53:20 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [Bug 208827] [fio io_uring] io_uring write data crc32c verify
- failed
-Message-ID: <20200811055320.GN2114@dread.disaster.area>
+        id S1728160AbgHKFx1 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Aug 2020 01:53:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45084 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726397AbgHKFx0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Aug 2020 01:53:26 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 208827] [fio io_uring] io_uring write data crc32c verify failed
+Date:   Tue, 11 Aug 2020 05:53:25 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: david@fromorbit.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-208827-201763-J6SuYafpeK@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-208827-201763@https.bugzilla.kernel.org/>
 References: <bug-208827-201763@https.bugzilla.kernel.org/>
- <bug-208827-201763-ubSctIQBY4@https.bugzilla.kernel.org/>
- <20200810000932.GH2114@dread.disaster.area>
- <20200810035605.GI2114@dread.disaster.area>
- <20200810070807.GJ2114@dread.disaster.area>
- <20200810090859.GK2114@dread.disaster.area>
- <20200811020052.GM2114@dread.disaster.area>
- <d7c9ea39-136d-bc1b-7282-097a784e336b@kernel.dk>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d7c9ea39-136d-bc1b-7282-097a784e336b@kernel.dk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=7-415B0cAAAA:8
-        a=n1yUEEuMochTUF6OLcgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=208827
+
+--- Comment #13 from Dave Chinner (david@fromorbit.com) ---
 On Mon, Aug 10, 2020 at 08:19:57PM -0600, Jens Axboe wrote:
 > > IOWs, there does not appear to be a filesystem or page cache issue
 > > here at all - it's just an unhandled short read.
@@ -133,6 +133,7 @@ As I said, I think it should be at the top of your list.
 Cheers,
 
 Dave.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+You are receiving this mail because:
+You are watching the assignee of the bug.
