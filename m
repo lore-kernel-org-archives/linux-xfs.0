@@ -2,198 +2,294 @@ Return-Path: <SRS0=LlZ6=BV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 464E5C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 02:03:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D686C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 02:20:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CDCF206DC
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 02:03:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F14FC20782
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 02:20:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="UtUSG9Ck"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="L31HnGDF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728160AbgHKCDL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Aug 2020 22:03:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48954 "EHLO
+        id S1726932AbgHKCUB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Aug 2020 22:20:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51526 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728144AbgHKCDH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Aug 2020 22:03:07 -0400
-Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8009CC061787
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 19:03:07 -0700 (PDT)
-Received: by mail-qk1-x741.google.com with SMTP id p4so10411079qkf.0
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 19:03:07 -0700 (PDT)
+        with ESMTP id S1726380AbgHKCUA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Aug 2020 22:20:00 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47427C06174A
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 19:20:00 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id f10so6067026plj.8
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 19:20:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lca.pw; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=n6w7AedUzKNoG5yNf5WngxBbptMIjeyr30damMxLi38=;
-        b=UtUSG9CkbKVXvOYIVulxf27t8zNeNvdSQAV+G9P//BUcp5qnuLJcrJoS3Q6FZ0cbca
-         4jJWPF7zFOVe1ZdSVgLoWWxRiTE/SAvPFuvef1zl22jtaNb/CJyvrXIDQnriAOn/pZRY
-         fBn69vxe7lGTGD1bxzCdlfATR66WPs5Nn/ehPOG2hK4YcU7J2LgSBfSVmtygHRya/YZt
-         3F5HIKRimtpdjQZQ28fL4iV5VI97uKLfXV+rQNGjwQf4DWQlqw19/ZxuHyT8LmGWZocE
-         Z43xoR8XtqFg20xhYEc/IVicXCtFV4Jzq9iPGoXMf5jx+Rx8YJVApmfpVK+otCwVwjrT
-         67mA==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=jrFfesT/cYaceoAfvk/kxzpcTRhDYri6Aqfwc0qg1jE=;
+        b=L31HnGDFMzEOfQtt75b5LNenq+sbq5UQ+AjVAcguxNjzkyBQVM8R8+TXV6gbxVzRG7
+         OlafRht73XbjMjGx5eTk2lrRsdm7hEuADGSHuD+CLXygVQo2neb2l/E+YMnoNPcm4DL+
+         fjndJt8F46VOhGX3MV/L+exa8w4ZsMr09SOtwc353HQgAQ/vxDzJB/BuX+u34YFXFhnp
+         GU6fDlpzN0UOUWrP/00L83u0lhqkmN95kbJf8QjLOccKGFq2tdqyIUIMzyu3hSL1Tkpd
+         ujVakJKjUKLWHfCLBEckvDSd5KDL6NEApQxXjIzqMTLEmpZZqaW1f5NmXaoXvBVD9c2D
+         yrKA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=n6w7AedUzKNoG5yNf5WngxBbptMIjeyr30damMxLi38=;
-        b=DHQaYKxYICAciY18mrJLTsnU8cpWRE+0BtzsSvNCvqpb2kgWX8MtEfkhlctG16eh97
-         AzpOxNN1KBSPz12U9tePA3aiTCbW5FUudeQpRN195JUR3FkRP8t3hCXVsLFTYnn6DB1/
-         IMudE2DiAgebOQOjXIBP3O2EcOMoM+zrMtJumIcs/XVTZYvBi9nfyWpAFW9LpCobNFkT
-         lToD6ki9/StsL9Fu3XnhiZEUv8D1cLDAF1DJPrvvmUAmhrQL8CtemGDF9aEiyaYz50WS
-         LEc5J2DVJw1rLgtmR2xjeQwfWaey/pwDOz4TYT/ctebe91yWzpFB0OU0WNUPrS95PxAW
-         sFNw==
-X-Gm-Message-State: AOAM5339vsLB41FZu8FoCAGjyrQuiHWVLXEU3XTxOddTjPamwdbFBt9W
-        OlAjr4OksBpVcACgaBGq0IJuB6a1bjDAhA==
-X-Google-Smtp-Source: ABdhPJyKlW905TrWERlopxviweYlTeA8W3IPWegBCxKgTIF10gsrOHqQaRtMIvyB9kH58Dt1fINlbg==
-X-Received: by 2002:a37:d4c:: with SMTP id 73mr27437642qkn.445.1597111386334;
-        Mon, 10 Aug 2020 19:03:06 -0700 (PDT)
-Received: from lca.pw (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
-        by smtp.gmail.com with ESMTPSA id 139sm15631918qkl.13.2020.08.10.19.03.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 10 Aug 2020 19:03:05 -0700 (PDT)
-Date:   Mon, 10 Aug 2020 22:03:03 -0400
-From:   Qian Cai <cai@lca.pw>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Matthew Wilcox <willy@infradead.org>, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, khlebnikov@yandex-team.ru
-Subject: Re: WARN_ON_ONCE(1) in iomap_dio_actor()
-Message-ID: <20200811020302.GD5307@lca.pw>
-References: <20200619211750.GA1027@lca.pw>
- <20200620001747.GC8681@bombadil.infradead.org>
- <20200724182431.GA4871@lca.pw>
- <20200726152412.GA26614@infradead.org>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=jrFfesT/cYaceoAfvk/kxzpcTRhDYri6Aqfwc0qg1jE=;
+        b=Y6oQyo3HGf3gH2ZZhEpAiXWkiSnSFjB3pY1LwdlODH1K7Hu5N2bBfRmjAbUqrQ0h+5
+         qWHCK9EEdbuLataGAdpIgVWdDomdiYprmJqCE1xe6Y+bZrh7YXvV0hUsh5kTH+nVP597
+         v6INc1DhCRPmDJDxE5UOrcZy8nCD37aF2EKb/WaSbNE1elsL0k2Vnog3Pu967IHys10D
+         U8O6G4tEEU/DxfA+UXY9XAPf9xeBdOUDWw8Am3bSdbbcpVQWGqrWqsi5iYIwCwFiq8+X
+         PHrRFU2o05vasrd30qZzGNY34gLsTYTuoUh8p74A74Kb6tSxVJ4JvFvB3t0D2Bhywpg0
+         bDnQ==
+X-Gm-Message-State: AOAM532rBoboznPGn1s4i0fGsPh+0vaXqBxjVpz8D8hsThZ0NpQ2M6Q4
+        8H9aEy03Xje5nx4wLJ+GXSkcUryL2h0=
+X-Google-Smtp-Source: ABdhPJwg7SzGVS7JnMCuy9qKK0aS+PWyv54I31kCR5heaWHFnyzG02TcnpQa5LQbbWF5Btl80K8BWA==
+X-Received: by 2002:a17:90b:1b45:: with SMTP id nv5mr2347613pjb.35.1597112399272;
+        Mon, 10 Aug 2020 19:19:59 -0700 (PDT)
+Received: from [192.168.1.182] ([66.219.217.173])
+        by smtp.gmail.com with ESMTPSA id q12sm25643601pfg.135.2020.08.10.19.19.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 10 Aug 2020 19:19:58 -0700 (PDT)
+Subject: Re: [Bug 208827] [fio io_uring] io_uring write data crc32c verify
+ failed
+To:     Dave Chinner <david@fromorbit.com>,
+        bugzilla-daemon@bugzilla.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+References: <bug-208827-201763@https.bugzilla.kernel.org/>
+ <bug-208827-201763-ubSctIQBY4@https.bugzilla.kernel.org/>
+ <20200810000932.GH2114@dread.disaster.area>
+ <20200810035605.GI2114@dread.disaster.area>
+ <20200810070807.GJ2114@dread.disaster.area>
+ <20200810090859.GK2114@dread.disaster.area>
+ <20200811020052.GM2114@dread.disaster.area>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <d7c9ea39-136d-bc1b-7282-097a784e336b@kernel.dk>
+Date:   Mon, 10 Aug 2020 20:19:57 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200726152412.GA26614@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200811020052.GM2114@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Jul 26, 2020 at 04:24:12PM +0100, Christoph Hellwig wrote:
-> On Fri, Jul 24, 2020 at 02:24:32PM -0400, Qian Cai wrote:
-> > On Fri, Jun 19, 2020 at 05:17:47PM -0700, Matthew Wilcox wrote:
-> > > On Fri, Jun 19, 2020 at 05:17:50PM -0400, Qian Cai wrote:
-> > > > Running a syscall fuzzer by a normal user could trigger this,
-> > > > 
-> > > > [55649.329999][T515839] WARNING: CPU: 6 PID: 515839 at fs/iomap/direct-io.c:391 iomap_dio_actor+0x29c/0x420
-> > > ...
-> > > > 371 static loff_t
-> > > > 372 iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
-> > > > 373                 void *data, struct iomap *iomap, struct iomap *srcmap)
-> > > > 374 {
-> > > > 375         struct iomap_dio *dio = data;
-> > > > 376
-> > > > 377         switch (iomap->type) {
-> > > > 378         case IOMAP_HOLE:
-> > > > 379                 if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
-> > > > 380                         return -EIO;
-> > > > 381                 return iomap_dio_hole_actor(length, dio);
-> > > > 382         case IOMAP_UNWRITTEN:
-> > > > 383                 if (!(dio->flags & IOMAP_DIO_WRITE))
-> > > > 384                         return iomap_dio_hole_actor(length, dio);
-> > > > 385                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
-> > > > 386         case IOMAP_MAPPED:
-> > > > 387                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
-> > > > 388         case IOMAP_INLINE:
-> > > > 389                 return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
-> > > > 390         default:
-> > > > 391                 WARN_ON_ONCE(1);
-> > > > 392                 return -EIO;
-> > > > 393         }
-> > > > 394 }
-> > > > 
-> > > > Could that be iomap->type == IOMAP_DELALLOC ? Looking throught the logs,
-> > > > it contains a few pread64() calls until this happens,
-> > > 
-> > > It _shouldn't_ be able to happen.  XFS writes back ranges which exist
-> > > in the page cache upon seeing an O_DIRECT I/O.  So it's not supposed to
-> > > be possible for there to be an extent which is waiting for the contents
-> > > of the page cache to be written back.
-> > 
-> > Okay, it is IOMAP_DELALLOC. We have,
+On 8/10/20 8:00 PM, Dave Chinner wrote:
+> On Mon, Aug 10, 2020 at 07:08:59PM +1000, Dave Chinner wrote:
+>> On Mon, Aug 10, 2020 at 05:08:07PM +1000, Dave Chinner wrote:
+>>> [cc Jens]
+>>>
+>>> [Jens, data corruption w/ io_uring and simple fio reproducer. see
+>>> the bz link below.]
 > 
-> Can you share the fuzzer?  If we end up with delalloc space here we
-> probably need to fix a bug in the cache invalidation code.
+> Looks like a io_uring/fio bugs at this point, Jens. All your go fast
+> bits turns the buffered read into a short read, and neither fio nor
+> io_uring async buffered read path handle short reads. Details below.
 
-Here is a simple reproducer (I believe it can also be reproduced using xfstests
-generic/503 on a plain xfs without DAX when SCRATCH_MNT == TEST_DIR),
+It's a fio issue. The io_uring engine uses a different path for short
+IO completions, and that's being ignored by the backend... Hence the
+IO just gets completed and not retried for this case, and that'll then
+trigger verification as if it did complete. I'm fixing it up.
 
-# git clone https://gitlab.com/cailca/linux-mm
-# cd linux-mm; make
-# ./random 14
-- start: mmap_collision
-wrote 20480/20480 bytes at offset 0
-20 KiB, 5 ops; 0.0000 sec (673.491 MiB/sec and 172413.7931 ops/sec)
-wrote 20480/20480 bytes at offset 0
-20 KiB, 5 ops; 0.0000 sec (697.545 MiB/sec and 178571.4286 ops/sec)
-wrote 20480/20480 bytes at offset 0
-20 KiB, 5 ops; 0.0000 sec (723.380 MiB/sec and 185185.1852 ops/sec)
-pread: Input/output error
+> Also, the block_rq_* trace points appear to emit corrupt trace
+> records that crash trace-cmd. That probably needs to be looked into
+> as well:
+> 
+> $ sudo trace-cmd record -e xfs_file\* -e iomap\* -e block_bio\* -e block_rq_complete -e printk fio tests/io_uring_corruption.fio
+> .....
+> $ trace-cmd report > s.t
+> ug! no event found for type 4228
+> ug! no event found for type 32
+> ug! negative record size -4
+> ug! no event found for type 16722
+> ug! no event found for type 0
+> ug! no event found for type 4228
+> ug! no event found for type 32
+> ug! negative record size -4
+> ug! no event found for type 16722
+> ug! no event found for type 4228
+> ug! no event found for type 4230
+> ug! no event found for type 32
+> ug! no event found for type 0
+> ug! no event found for type 4230
+> ug! no event found for type 32
+> ug! no event found for type 0
+> ug! no event found for type 32
+> ug! negative record size -4
+> Segmentation fault
+> $
 
-[ 8944.905010][ T6995] ------------[ cut here ]------------
-[ 8944.911193][ T6995] WARNING: CPU: 4 PID: 6995 at fs/iomap/direct-io.c:392 iomap_dio_actor+0x319/0x480
-[ 8944.920498][ T6995] Modules linked in: nls_ascii nls_cp437 vfat fat kvm_amd ses enclosure kvm irqbypass efivars acpi_cpufreq efivarfs ip_tables x_tables sd_mod smartpqi scsi_transport_sas tg3 mlx5_core libphy firmware_class dm_mirror dm_region_hash dm_log dm_mod
-[ 8944.943950][ T6995] CPU: 4 PID: 6995 Comm: random Not tainted 5.8.0-next-20200810+ #2
-[ 8944.951855][ T6995] Hardware name: HPE ProLiant DL385 Gen10/ProLiant DL385 Gen10, BIOS A40 07/10/2019
-[ 8944.961162][ T6995] RIP: 0010:iomap_dio_actor+0x319/0x480
-[ 8944.966622][ T6995] Code: 24 f6 43 27 40 0f 84 62 ff ff ff 48 83 c4 20 48 89 d9 48 89 ea 4c 89 e6 5b 4c 89 ff 5d 41 5c 41 5d 41 5e 41 5f e9 07 ef ff ff <0f> 0b 48 83 c4 20 48 c7 c0 fb ff ff ff 5b 5d 41 5c 41 5d 41 5e 41
-[ 8944.986232][ T6995] RSP: 0018:ffffc90007d1f8d0 EFLAGS: 00010202
-[ 8944.992203][ T6995] RAX: 0000000000000001 RBX: ffff88861b681c00 RCX: ffff88861b681c00
-[ 8945.000105][ T6995] RDX: 1ffff92000fa3f33 RSI: 0000000000000000 RDI: ffffc90007d1f998
-[ 8945.008014][ T6995] RBP: 0000000000001000 R08: ffffc90007d1f980 R09: ffffc90007d1f980
-[ 8945.015920][ T6995] R10: ffffffffa72e72a7 R11: fffffbfff4e5ce54 R12: 0000000000000000
-[ 8945.023805][ T6995] R13: ffff8888060e1388 R14: ffffffffa1f2e080 R15: ffff8888060e1388
-[ 8945.031705][ T6995] FS:  00007fa50e389700(0000) GS:ffff88905ec00000(0000) knlGS:0000000000000000
-[ 8945.040562][ T6995] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 8945.047063][ T6995] CR2: 00007fa50eb93000 CR3: 00000005ad9f2000 CR4: 00000000003506e0
-[ 8945.054952][ T6995] Call Trace:
-[ 8945.058147][ T6995]  iomap_apply+0x25a/0xb73
-[ 8945.062453][ T6995]  ? iomap_dio_bio_actor+0xde0/0xde0
-[ 8945.067650][ T6995]  ? generic_perform_write+0x410/0x410
-[ 8945.073003][ T6995]  ? trace_event_raw_event_iomap_apply+0x420/0x420
-[ 8945.079424][ T6995]  ? filemap_check_errors+0x51/0xe0
-[ 8945.084514][ T6995]  iomap_dio_rw+0x644/0x1298
-[ 8945.089011][ T6995]  ? iomap_dio_bio_actor+0xde0/0xde0
-[ 8945.094192][ T6995]  ? iomap_dio_bio_end_io+0x4a0/0x4a0
-[ 8945.099474][ T6995]  ? down_read_nested+0x10e/0x430
-[ 8945.104391][ T6995]  ? downgrade_write+0x3a0/0x3a0
-[ 8945.109237][ T6995]  ? rcu_read_lock_sched_held+0xaa/0xd0
-[ 8945.114680][ T6995]  ? xfs_file_dio_aio_read+0x1d5/0x4c0
-[ 8945.120051][ T6995]  xfs_file_dio_aio_read+0x1d5/0x4c0
-[ 8945.125253][ T6995]  xfs_file_read_iter+0x3e3/0x6b0
-[ 8945.130173][ T6995]  new_sync_read+0x39b/0x600
-[ 8945.134648][ T6995]  ? vfs_dedupe_file_range+0x5f0/0x5f0
-[ 8945.140022][ T6995]  ? __fget_files+0x1cb/0x300
-[ 8945.144588][ T6995]  ? lock_downgrade+0x730/0x730
-[ 8945.149346][ T6995]  ? rcu_read_lock_held+0xaa/0xc0
-[ 8945.154265][ T6995]  vfs_read+0x226/0x450
-[ 8945.158323][ T6995]  ksys_pread64+0x116/0x140
-[ 8945.162714][ T6995]  ? __x64_sys_write+0xa0/0xa0
-[ 8945.167386][ T6995]  ? syscall_enter_from_user_mode+0x20/0x210
-[ 8945.173269][ T6995]  ? trace_hardirqs_on+0x20/0x1b5
-[ 8945.178202][ T6995]  do_syscall_64+0x33/0x40
-[ 8945.182512][ T6995]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-[ 8945.188323][ T6995] RIP: 0033:0x7fa50e75e4b7
-[ 8945.192628][ T6995] Code: 41 54 49 89 d4 55 48 89 f5 53 89 fb 48 83 ec 18 e8 3e f3 ff ff 4d 89 ea 4c 89 e2 48 89 ee 41 89 c0 89 df b8 11 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 35 44 89 c7 48 89 44 24 08 e8 74 f3 ff ff 48
-[ 8945.212238][ T6995] RSP: 002b:00007fa50e388e70 EFLAGS: 00000293 ORIG_RAX: 0000000000000011
-[ 8945.220584][ T6995] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007fa50e75e4b7
-[ 8945.228489][ T6995] RDX: 0000000000004000 RSI: 00007fa50eb90000 RDI: 0000000000000004
-[ 8945.236392][ T6995] RBP: 00007fa50eb90000 R08: 0000000000000000 R09: 00007fa50e746260
-[ 8945.244278][ T6995] R10: 0000000000000000 R11: 0000000000000293 R12: 0000000000004000
-[ 8945.252177][ T6995] R13: 0000000000000000 R14: 0000000000000000 R15: 00007fa50e388fc0
-[ 8945.260084][ T6995] irq event stamp: 8871
-[ 8945.264129][ T6995] hardirqs last  enabled at (8879): [<ffffffffa0866c8f>] console_unlock+0x75f/0xaf0
-[ 8945.273427][ T6995] hardirqs last disabled at (8888): [<ffffffffa086677d>] console_unlock+0x24d/0xaf0
-[ 8945.282728][ T6995] softirqs last  enabled at (8236): [<ffffffffa1c0070f>] __do_softirq+0x70f/0xa9f
-[ 8945.291857][ T6995] softirqs last disabled at (7067): [<ffffffffa1a00ec2>] asm_call_on_stack+0x12/0x20
-[ 8945.301246][ T6995] ---[ end trace 2deaef5e80c278a7 ]---
+No idea what that is, I regularly use "normal" blktrace and it works just
+fine for me.
+
+>>> On Mon, Aug 10, 2020 at 01:56:05PM +1000, Dave Chinner wrote:
+>>>> On Mon, Aug 10, 2020 at 10:09:32AM +1000, Dave Chinner wrote:
+>>>>> On Fri, Aug 07, 2020 at 03:12:03AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+>>>>>> --- Comment #1 from Dave Chinner (david@fromorbit.com) ---
+>>>>>> On Thu, Aug 06, 2020 at 04:57:58AM +0000, bugzilla-daemon@bugzilla.kernel.org
+>>>>>> wrote:
+>>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=208827
+>>>>>>>
+>>>>>>>             Bug ID: 208827
+>>>>>>>            Summary: [fio io_uring] io_uring write data crc32c verify
+>>>>>>>                     failed
+>>>>>>>            Product: File System
+>>>>>>>            Version: 2.5
+>>>>>>>     Kernel Version: xfs-linux xfs-5.9-merge-7 + v5.8-rc4
+>>>>>
+>>>>> FWIW, I can reproduce this with a vanilla 5.8 release kernel,
+>>>>> so this isn't related to contents of the XFS dev tree at all...
+>>>>>
+>>>>> In fact, this bug isn't a recent regression. AFAICT, it was
+>>>>> introduced between in 5.4 and 5.5 - 5.4 did not reproduce, 5.5 did
+>>>>> reproduce. More info once I've finished bisecting it....
+>>>>
+>>>> f67676d160c6ee2ed82917fadfed6d29cab8237c is the first bad commit
+>>>> commit f67676d160c6ee2ed82917fadfed6d29cab8237c
+>>>> Author: Jens Axboe <axboe@kernel.dk>
+>>>> Date:   Mon Dec 2 11:03:47 2019 -0700
+>>>>
+>>>>     io_uring: ensure async punted read/write requests copy iovec
+>>>
+>>> ....
+>>>
+>>> Ok, I went back to vanilla 5.8 to continue debugging and adding
+>>> tracepoints, and it's proving strangely difficult to reproduce now.
+>>
+>> Which turns out to be caused by a tracepoint I inserted to try to
+>> narrow down if this was an invalidation race. I put this in
+>> invalidate_complete_page:
+>>
+>>
+>> --- a/mm/truncate.c
+>> +++ b/mm/truncate.c
+>> @@ -257,8 +257,11 @@ int invalidate_inode_page(struct page *page)
+>>         struct address_space *mapping = page_mapping(page);
+>>         if (!mapping)
+>>                 return 0;
+>> -       if (PageDirty(page) || PageWriteback(page))
+>> +       if (PageDirty(page) || PageWriteback(page)) {
+>> +               trace_printk("ino 0x%lx page %p, offset 0x%lx\n",
+>> +                       mapping->host->i_ino, page, page->index * PAGE_SIZE);
+>>                 return 0;
+>> +       }
+>>         if (page_mapped(page))
+>>                 return 0;
+>>         return invalidate_complete_page(mapping, page);
+> 
+> So I updated to the current 5.9 whcih has all the new async buffered
+> read stuff in it to see if that fixed the problem, but it didn't.
+> Instead, it actually made this problem occur almost instantenously.
+> 
+> I could put the above trace code back in and it didn't purturb the
+> situation, either. Neither did writeback, which I was now able to
+> confirm didn't actually impact on this problem at all.
+> 
+> The problem is, instead, reads racing with readahead completion.
+> There is no page cache corruption at all, just fio is reusing
+> buffers that contain stale data from previous read IO and hence any
+> part of the buffer that doesn't get updated by the read IO ends up
+> being detected as "corrupt" because they already contain stale data.
+> 
+> The problem is clear from this sequence trace:
+> 
+>      io_uring-sq-4518  [012]    52.806976: xfs_file_buffered_read: dev 253:32 ino 0x86 size 0x10000000 offset 0x6f40000 count 0x10000
+>      io_uring-sq-4518  [012]    52.806987: iomap_readahead:      dev 253:32 ino 0x86 nr_pages 16
+>      io_uring-sq-4518  [012]    52.806987: iomap_apply:          dev 253:32 ino 0x86 pos 116654080 length 65536 flags  (0x0) ops xfs_read_iomap_ops caller iomap_readahead actor iomap_readahead_actor
+>      io_uring-sq-4518  [012]    52.806988: iomap_apply_dstmap:   dev 253:32 ino 0x86 bdev 253:32 addr 922058752 offset 116654080 length 65536 type MAPPED flags 
+>      io_uring-sq-4518  [012]    52.806990: block_bio_queue:      253,32 RA 1800896 + 128 [io_uring-sq]
+> ....
+>      io_uring-sq-4518  [012]    52.806992: xfs_file_buffered_read: dev 253:32 ino 0x86 size 0x10000000 offset 0x6f40000 count 0xfffffffffffffff5
+>      io_uring-sq-4518  [012]    52.806993: xfs_file_buffered_read: dev 253:32 ino 0x86 size 0x10000000 offset 0x6f40000 count 0x10000
+>      io_uring-sq-4518  [012]    52.806994: xfs_file_buffered_read: dev 253:32 ino 0x86 size 0x10000000 offset 0x6f40000 count 0xfffffffffffffdef
+>      io_uring-sq-4518  [012]    52.806995: xfs_file_buffered_read: dev 253:32 ino 0x86 size 0x10000000 offset 0x6bf0000 count 0x10000
+> ....
+>              fio-4515  [013]    52.807855: block_rq_complete:    253,32 RA () 1800896 + 128 [0]
+>      io_uring-sq-4518  [012]    52.807863: xfs_file_buffered_read: dev 253:32 ino 0x86 size 0x10000000 offset 0x6f40000 count 0x10000
+>      io_uring-sq-4518  [012]    52.807866: xfs_file_buffered_read: dev 253:32 ino 0x86 size 0x10000000 offset 0x6f41000 count 0x1000
+> ....
+>              fio-4515  [013]    52.807871: block_rq_complete:    253,32 RA () 1752640 + 128 [0]
+>              fio-4515  [013]    52.807876: block_rq_complete:    253,32 RA () 1675200 + 128 [0]
+>              fio-4515  [013]    52.807880: block_rq_complete:    253,32 RA () 1652672 + 128 [0]
+> 
+> What we see is -3- calls to do the buffered read. The first call
+> triggers readahead and we can see iomap map the file offset and
+> issue the bio. This is IOCB_NOWAIT context, so this is actually
+> broken as we can block for a long time in this path (e.g. on
+> inode locks).
+> 
+> Once the IO is issued, we see a second xfs_file_buffered_read trace
+> with the return value in the count - that's -EAGAIN because
+> IOCB_NOWAIT is set and now we are going to block waiting for IO.
+> 
+> Immediately after this, the io_uring code issues the buffered read
+> again, only this time with IOCB_WAITQ|IOCB_NOWAIT set and it hits
+> the "page not up to date" path. This then hits
+> __wait_on_page_locked_async() which sets the PageWaiter bit and
+> returns -EIOCBQUEUED to tell the caller that it has been queued.
+> 
+> About a millisecond later, the readahead IO completes, and the block
+> layer logs it. This ends up calling iomap_read_end_io() which walks
+> each page(bvec) in the bio, marks them uptodate and unlocks them.
+> The first page unlock sees the PageWaiter bit, which then does a
+> 
+> 	wake_up_page_bit(page, PG_locked);
+> 
+> because the PageWaiter bit is set. We see the same io_uring worker
+> thread then immmediately re-issue the buffered read and it does it
+> with IOCB_WAITQ|IOCB_NOWAIT context. This gets the first page, then
+> finds the second page not up to date or has to block trying to lock
+> it. It aborts the read at that point, and because we've already read
+> a page it returns 4096 bytes read.
+> 
+> I left the post-buffered read IO completions that were being run by
+> the block layer to show that the buffered read was issued and
+> completed while the block layer was still processing the readahead
+> bio completion.
+> 
+> At this point (a positive byte count being returned) the io_uring
+> layer considers the IO done and returns the result to the userspace
+> app. Fio then completely fails to check for a short read despite
+> being in "verify" mode and instead yells about corruption due to
+> stale data that it had left in the buffer that it passed the
+> kernel....
+> 
+> IOWs, there does not appear to be a filesystem or page cache issue
+> here at all - it's just an unhandled short read.
+
+Right, the page cache is consistent, nothing wrong on that side. This is
+purely a fio issue with messing up the short read.
+
+It'd be nice to do better on the short reads, maybe wait for the entire
+range to be ready instead of just triggering on the first page.
+Something to look into.
+
+> Jens, if strace worked on io_uring, I wouldn't have wasted 2 and
+> half days tracking this down. It would have taken 5 minutes with
+> strace and it would have been totally obvious. I'd suggest this
+> needs addressing as a matter of priority over everything else for
+> io_uring....
+
+Sorry, you should have pinged me earlier. In lieu of strace, we could
+expand the io_uring issue event to include a bigger dump of exactly what
+is in the command being issued instead of just the opcode. There's
+already info in there enabling someone to tie the complete and submit
+events together, so it could have been deduced that we never retried a
+short IO on the application side. But it should not be that hard to dig
+out, I agree we need to make it easier to debug these kinds of things.
+Definitely on the list!
+
+-- 
+Jens Axboe
+
