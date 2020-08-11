@@ -2,93 +2,202 @@ Return-Path: <SRS0=LlZ6=BV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B263C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 22:09:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CE53C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 22:31:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF90A206C3
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 22:09:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED7EE20756
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 22:31:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vf/VQwYx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726164AbgHKWJf convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Aug 2020 18:09:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48174 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726023AbgHKWJf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Aug 2020 18:09:35 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 208827] [fio io_uring] io_uring write data crc32c verify failed
-Date:   Tue, 11 Aug 2020 22:09:34 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-208827-201763-ad6LEmPujS@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-208827-201763@https.bugzilla.kernel.org/>
-References: <bug-208827-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1725901AbgHKWbT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Aug 2020 18:31:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40518 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725987AbgHKWbT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Aug 2020 18:31:19 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FF2FC06174A;
+        Tue, 11 Aug 2020 15:31:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=A/hI0S7gtfY9mSqdqK890h1+rXEGA4FIpXNQ4i01M7A=; b=vf/VQwYxBp8OzecyfjMKdWCA6T
+        94Ol3tP5mE7Ye/rYCnB04ZCtg6XfRJMbQ9SX+tjnde21FkKvP+7QT2v7USa/yrubVjDhMZBun0s1V
+        XzolBzCpqOh5HFrqeLsWK7sCpUCghykfM6N6bCJX8+n9IPMpOrV3twyzv32tzlmOFuXZhv0OE6W6J
+        rvMVjItojIO0e2bSLVo9PUCGaTRaWMm8tMdwaPwbsK3eSScTGP5/5uPN/j5rvtOLrflrdgMFqOtm7
+        lBvSSMK5/dPKiorh0C8IEgKbnAVsQIBDax9IcdKACpHAZpMMeyHvJ/XVF7zYYSlhJ6qHGcls6YWxG
+        J4smetkA==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1k5cnc-000626-Th; Tue, 11 Aug 2020 22:31:17 +0000
+Date:   Tue, 11 Aug 2020 23:31:16 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/2] iomap: Convert readahead to iomap_iter
+Message-ID: <20200811223116.GY17456@casper.infradead.org>
+References: <20200728173216.7184-1-willy@infradead.org>
+ <20200728173216.7184-3-willy@infradead.org>
+ <20200811205314.GF6107@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200811205314.GF6107@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=208827
-
---- Comment #19 from Dave Chinner (david@fromorbit.com) ---
-On Tue, Aug 11, 2020 at 04:56:37PM -0400, Jeff Moyer wrote:
-> Jens Axboe <axboe@kernel.dk> writes:
+On Tue, Aug 11, 2020 at 01:56:13PM -0700, Darrick J. Wong wrote:
+> > @@ -625,7 +625,14 @@ STATIC void
+> >  xfs_vm_readahead(
+> >  	struct readahead_control	*rac)
+> >  {
+> > -	iomap_readahead(rac, &xfs_read_iomap_ops);
+> > +	IOMAP_ITER(iomi, rac->mapping->host, readahead_pos(rac),
+> > +			readahead_length(rac), 0);
+> > +	struct iomap_readpage_ctx ctx = {
+> > +		.rac = rac,
+> > +	};
+> > +
+> > +	while (iomap_iter(&iomi, xfs_iomap_next_read))
+> > +		iomi.copied = iomap_readahead(&iomi, &ctx);
 > 
-> > So it seems to me like the file state is consistent, at least after the
-> > run, and that this seems more likely to be a fio issue with short
-> > read handling.
+> Why not have iomap_readahead set iomi.copied on its way out?  The actor
+> function is supposed to set iomi.ret if an error happens, right?
+
+I actually wanted to make iomap_readahead take a const pointer.
+This should do the trick.
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index fff23ed6a682..3ca128a3b044 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -377,7 +377,8 @@ EXPORT_SYMBOL_GPL(iomap_readpage);
+  * function is called with memalloc_nofs set, so allocations will not cause
+  * the filesystem to be reentered.
+  */
+-loff_t iomap_readahead(struct iomap_iter *iomi, struct iomap_readpage_ctx *ctx)
++loff_t iomap_readahead(const struct iomap_iter *iomi,
++		struct iomap *iomap, struct iomap_readpage_ctx *ctx)
+ {
+ 	loff_t done, ret, length = iomap_length(iomi);
+ 
+@@ -393,8 +394,7 @@ loff_t iomap_readahead(struct iomap_iter *iomi, struct iomap_readpage_ctx *ctx)
+ 			ctx->cur_page_in_bio = false;
+ 		}
+ 		ret = iomap_readpage_actor(iomi->inode, iomi->pos + done,
+-				length - done, ctx,
+-				&iomi->iomap, &iomi->srcmap);
++				length - done, ctx, iomap, NULL);
+ 	}
+ 
+ 	if (iomi->len == done) {
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 2884752e40e8..62777daefe94 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -632,7 +632,7 @@ xfs_vm_readahead(
+ 	};
+ 
+ 	while (iomap_iter(&iomi, xfs_iomap_next_read))
+-		iomi.copied = iomap_readahead(&iomi, &ctx);
++		iomi.copied = iomap_readahead(&iomi, &iomi.iomap, &ctx);
+ }
+ 
+ static int
+diff --git a/fs/zonefs/super.c b/fs/zonefs/super.c
+index 4842b85ce36d..6ae51bf1d77c 100644
+--- a/fs/zonefs/super.c
++++ b/fs/zonefs/super.c
+@@ -99,7 +99,7 @@ static void zonefs_readahead(struct readahead_control *rac)
+ 	};
+ 
+ 	while (iomap_iter(&iomi, zonefs_iomap_next))
+-		iomi.copied = iomap_readahead(&iomi, &ctx);
++		iomi.copied = iomap_readahead(&iomi, &iomi.iomap, &ctx);
+ }
+ 
+ /*
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index dd9bfed85c4f..11a104129a04 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -305,7 +305,8 @@ struct iomap_readpage_ctx {
+ 	struct readahead_control *rac;
+ };
+ 
+-loff_t iomap_readahead(struct iomap_iter *, struct iomap_readpage_ctx *);
++loff_t iomap_readahead(const struct iomap_iter *, struct iomap *,
++		struct iomap_readpage_ctx *);
+ 
+ /*
+  * Flags for direct I/O ->end_io:
+
+> Oh wait no, the actor function returns a positive copied value, or a
+> negative error code, and then it's up to the _next_read function to
+> notice if copied is negative, stuff it in ret, and then return false to
+> stop the iteration?
+
+I want to handle all the changes to iomap_iter in iomap_iter() and
+iomi_advance() so people writing new things that use iomap_iter don't
+need to think about what they should modify.  Just return the error;
+done.
+
+One of the more convoluted bits of this is making sure that both the
+filesystem and the body of the loop get the chance to clean up their state
+if the other encounters an error.  So if 'copied' is set to an errno by
+the body, then we call next() anyway (and stop the iteration).  And if
+next() returns an error, we iterate the body once more.  We'll still
+call next() again even if it did return an error, because it might not
+have realised that returning a completely bogus iomap was an error.
+
+> > +int
+> > +xfs_iomap_next_read(
+> > +	const struct iomap_iter *iomi,
+> > +	struct iomap		*iomap,
+> > +	struct iomap		*srcmap)
 > 
-> Any idea why there was a short read, though?
+> Aren't these last two parameters already in the iomap iter?
+> Are they passed separately to work around the pointer being const?
 
-Yes. See:
+Exactly.
 
-https://lore.kernel.org/linux-xfs/20200807024211.GG2114@dread.disaster.area/T/#maf3bd9325fb3ac0773089ca58609a2cea0386ddf
+> > +{
+> > +	if (iomi->copied < 0)
+> > +		return iomi->copied;
+> 
+> Is this boilerplate going to end up in every single iomap_next_t
+> function?  If so, it should probably just go in iomap_iter prior to the
+> next() call, right?
 
-It's a race between the readahead io completion marking pages
-uptodate and unlocking them, and the io_uring worker function
-getting woken on the first page being unlocked and running the
-buffered read before the entire readahead IO completion has unlocked
-all the pages in the IO.
+This is to give the next_t the opportunity to clean up after itself.
+ie it's for the things currently done in ->iomap_end().  So when we
+replace xfs_buffered_write_iomap_ops, you'll see it used then.
 
-Basically, io_uring is re-running the IOCB_NOWAIT|IOCB_WAITQ IO when
-there are still pages locked under IO. This will happen much more
-frequently the larger the buffered read (these are only 64kB) and
-the readahead windows are opened.
+> > +	if (iomi->copied >= iomi->len)
+> > +		return 0;
+> 
+> Er... if we copied more than we asked for, doesn't that imply something
+> bad just happened?
 
-Essentially, the io_uring buffered read needs to wait until _all_
-pages in the IO are marked up to date and unlocked, not just the
-first one. And not just the last one, either - readahead can be
-broken into multiple bios (because it spans extents) and there is no
-guarantee of order of completion of the readahead bios given by the
-readahead code....
+erm ... maybe?  We don't currently sanity-check the return value from
+actor() in iomap_apply().  Perhaps we should?
 
-Cheers,
+> > +
+> > +	return xfs_read_iomap_begin(iomi->inode, iomi->pos + iomi->copied,
+> > +			iomi->len - iomi->copied, iomi->flags, iomap, srcmap);
+> 
+> Would be kinda nice if you could just pass the whole iomap_iter, but I
+> get that we're probably stuck with this until the entirety gets
+> converted.
 
-Dave.
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Yeah.  I could probably do it the other way round where
+xfs_read_iomap_begin() constructs an iomap_iter on the stack and passes
+it to xfs_read_iomap_begin().  I don't think it makes much difference.
