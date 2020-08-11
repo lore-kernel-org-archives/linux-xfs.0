@@ -2,138 +2,131 @@ Return-Path: <SRS0=LlZ6=BV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAF57C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 05:53:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D54B0C433E0
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 07:05:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C2DA206DA
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 05:53:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8E922080C
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 07:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728160AbgHKFx1 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 11 Aug 2020 01:53:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45084 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726397AbgHKFx0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Aug 2020 01:53:26 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 208827] [fio io_uring] io_uring write data crc32c verify failed
-Date:   Tue, 11 Aug 2020 05:53:25 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: david@fromorbit.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-208827-201763-J6SuYafpeK@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-208827-201763@https.bugzilla.kernel.org/>
+        id S1728296AbgHKHFN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 11 Aug 2020 03:05:13 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:56177 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728271AbgHKHFM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Aug 2020 03:05:12 -0400
+Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id 78B1CD5BA4A;
+        Tue, 11 Aug 2020 17:05:08 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1k5OLJ-0002XG-Tg; Tue, 11 Aug 2020 17:05:05 +1000
+Date:   Tue, 11 Aug 2020 17:05:05 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     bugzilla-daemon@bugzilla.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [Bug 208827] [fio io_uring] io_uring write data crc32c verify
+ failed
+Message-ID: <20200811070505.GO2114@dread.disaster.area>
 References: <bug-208827-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+ <bug-208827-201763-ubSctIQBY4@https.bugzilla.kernel.org/>
+ <20200810000932.GH2114@dread.disaster.area>
+ <20200810035605.GI2114@dread.disaster.area>
+ <20200810070807.GJ2114@dread.disaster.area>
+ <20200810090859.GK2114@dread.disaster.area>
+ <20200811020052.GM2114@dread.disaster.area>
+ <d7c9ea39-136d-bc1b-7282-097a784e336b@kernel.dk>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d7c9ea39-136d-bc1b-7282-097a784e336b@kernel.dk>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0
+        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
+        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=7-415B0cAAAA:8
+        a=_GoX9-eHnmEvp3vwkc4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=208827
-
---- Comment #13 from Dave Chinner (david@fromorbit.com) ---
 On Mon, Aug 10, 2020 at 08:19:57PM -0600, Jens Axboe wrote:
-> > IOWs, there does not appear to be a filesystem or page cache issue
-> > here at all - it's just an unhandled short read.
+> On 8/10/20 8:00 PM, Dave Chinner wrote:
+> > On Mon, Aug 10, 2020 at 07:08:59PM +1000, Dave Chinner wrote:
+> >> On Mon, Aug 10, 2020 at 05:08:07PM +1000, Dave Chinner wrote:
+> >>> [cc Jens]
+> >>>
+> >>> [Jens, data corruption w/ io_uring and simple fio reproducer. see
+> >>> the bz link below.]
+> > 
+> > Looks like a io_uring/fio bugs at this point, Jens. All your go fast
+> > bits turns the buffered read into a short read, and neither fio nor
+> > io_uring async buffered read path handle short reads. Details below.
 > 
-> Right, the page cache is consistent, nothing wrong on that side. This is
-> purely a fio issue with messing up the short read.
-> 
-> It'd be nice to do better on the short reads, maybe wait for the entire
-> range to be ready instead of just triggering on the first page.
-> Something to look into.
-> 
-> > Jens, if strace worked on io_uring, I wouldn't have wasted 2 and
-> > half days tracking this down. It would have taken 5 minutes with
-> > strace and it would have been totally obvious. I'd suggest this
-> > needs addressing as a matter of priority over everything else for
-> > io_uring....
-> 
-> Sorry, you should have pinged me earlier.
+> It's a fio issue. The io_uring engine uses a different path for short
+> IO completions, and that's being ignored by the backend... Hence the
+> IO just gets completed and not retried for this case, and that'll then
+> trigger verification as if it did complete. I'm fixing it up.
 
-I pinged you as early as I would ping anyone else when it's apparent
-I'm probably not looking at a filesystem issue.
+I just updated fio to:
 
-The problem is here that io_uring is completely unfamiliar code to
-most of the fileystem developers that are going to have to diagnose
-problems like this in the field.  That's why I spent the time on it
-- nobody else in my team or the upstream people I work with day to
-day has even looked at this code or has a clue of how it works.
+cb7d7abb (HEAD -> master, origin/master, origin/HEAD) io_u: set io_u->verify_offset in fill_io_u()
 
-We need to have people who know how this precarious stack of cards
-actually works, otherwise we're completely screwed when a user has a
-similar sort of issue.  And right now, all I see are big red flags.
+The workload still reports corruption almost instantly. Only this
+time, the trace is not reporting a short read.
 
-This exercise has lead me to realise that that we really don't
-have *any* tools that can be used to diagnose io_uring problems at
-all. That's something that clearly needs to be fixed, because fo
-some reason this crazy io_uring stuff has suddenly become the
-responsibility of distro filesystem people are being asked to
-maintain and debug...
+File is patterned with:
 
-So saying "you should have pinged me earlier" is a hugely naive
-response. It completely ignores the fact that people are going to
-have to triage issues like this on a regular basis. And you don't
-scale to having every single user ping you to help debug io_uring
-problems they are seeing. IOWs, "you should have pinged me" is not a
-solution, nor does it absolve you of the responsibility for making
-your subsystem debuggable by the expected user and application
-devleoper base.
+verify_pattern=0x33333333%o-16
 
-> In lieu of strace, we could
-> expand the io_uring issue event to include a bigger dump of exactly what
-> is in the command being issued instead of just the opcode.
+Offset of "bad" data is 0x1240000.
 
-I didn't find anything even remotely useful in the handful of trace
-points in the io_uring code.....
+Expected:
 
-> There's
-> already info in there enabling someone to tie the complete and submit
-> events together, so it could have been deduced that we never retried a
-> short IO on the application side.  But it should not be that hard to dig
-> out,
+00000000:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000010:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000020:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000030:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000040:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000050:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000060:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000070:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000080:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff 3333............
+.....
+0000ffd0:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff  3333............
+0000ffe0:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff  3333............
+0000fff0:  33 33 33 33 00 10 24 01 00 00 00 00 f0 ff ff ff  3333............
 
-... and now you're assuming that the person trying to debug their
-application knows exactly how the whole io_uring thing works inside
-the kernel so they can make sense of the tracepoint information.
-There's no documentation for the interface, there's no design doc
-that describes how the async engine is supposed to work, what
-constraints it places on code paths that need to be able to run
-async, etc.  If you aren't deep in the guts of io_uring all the
-time, then working out what the tracepoints are documenting is no
-easy task.
 
-> I agree we need to make it easier to debug these kinds of things.
-> Definitely on the list!
+Received:
 
-As I said, I think it should be at the top of your list.
+00000000:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000010:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000020:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000030:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000040:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000050:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000060:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000070:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+00000080:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff 3333............
+.....
+0000ffd0:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff  3333............
+0000ffe0:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff  3333............
+0000fff0:  33 33 33 33 00 00 24 01 00 00 00 00 f0 ff ff ff  3333............
 
-Cheers,
 
-Dave.
+Looks like the data in the expected buffer is wrong - the data
+pattern in the received buffer is correct according the defined
+pattern.
 
+Error is 100% reproducable from the same test case. Same bad byte in
+the expected buffer dump every single time.
+
+-Dave.
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Dave Chinner
+david@fromorbit.com
