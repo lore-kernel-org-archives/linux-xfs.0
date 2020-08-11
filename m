@@ -2,231 +2,198 @@ Return-Path: <SRS0=LlZ6=BV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A063CC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 02:01:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 464E5C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 02:03:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A707206DC
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 02:01:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1CDCF206DC
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 02:03:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="UtUSG9Ck"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728135AbgHKCBd convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Aug 2020 22:01:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39784 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728088AbgHKCBc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Aug 2020 22:01:32 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 208827] [fio io_uring] io_uring write data crc32c verify failed
-Date:   Tue, 11 Aug 2020 02:01:31 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: axboe@kernel.dk
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-208827-201763-1SY9bwL2xP@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-208827-201763@https.bugzilla.kernel.org/>
-References: <bug-208827-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1728160AbgHKCDL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Aug 2020 22:03:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48954 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728144AbgHKCDH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Aug 2020 22:03:07 -0400
+Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8009CC061787
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 19:03:07 -0700 (PDT)
+Received: by mail-qk1-x741.google.com with SMTP id p4so10411079qkf.0
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 19:03:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=n6w7AedUzKNoG5yNf5WngxBbptMIjeyr30damMxLi38=;
+        b=UtUSG9CkbKVXvOYIVulxf27t8zNeNvdSQAV+G9P//BUcp5qnuLJcrJoS3Q6FZ0cbca
+         4jJWPF7zFOVe1ZdSVgLoWWxRiTE/SAvPFuvef1zl22jtaNb/CJyvrXIDQnriAOn/pZRY
+         fBn69vxe7lGTGD1bxzCdlfATR66WPs5Nn/ehPOG2hK4YcU7J2LgSBfSVmtygHRya/YZt
+         3F5HIKRimtpdjQZQ28fL4iV5VI97uKLfXV+rQNGjwQf4DWQlqw19/ZxuHyT8LmGWZocE
+         Z43xoR8XtqFg20xhYEc/IVicXCtFV4Jzq9iPGoXMf5jx+Rx8YJVApmfpVK+otCwVwjrT
+         67mA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=n6w7AedUzKNoG5yNf5WngxBbptMIjeyr30damMxLi38=;
+        b=DHQaYKxYICAciY18mrJLTsnU8cpWRE+0BtzsSvNCvqpb2kgWX8MtEfkhlctG16eh97
+         AzpOxNN1KBSPz12U9tePA3aiTCbW5FUudeQpRN195JUR3FkRP8t3hCXVsLFTYnn6DB1/
+         IMudE2DiAgebOQOjXIBP3O2EcOMoM+zrMtJumIcs/XVTZYvBi9nfyWpAFW9LpCobNFkT
+         lToD6ki9/StsL9Fu3XnhiZEUv8D1cLDAF1DJPrvvmUAmhrQL8CtemGDF9aEiyaYz50WS
+         LEc5J2DVJw1rLgtmR2xjeQwfWaey/pwDOz4TYT/ctebe91yWzpFB0OU0WNUPrS95PxAW
+         sFNw==
+X-Gm-Message-State: AOAM5339vsLB41FZu8FoCAGjyrQuiHWVLXEU3XTxOddTjPamwdbFBt9W
+        OlAjr4OksBpVcACgaBGq0IJuB6a1bjDAhA==
+X-Google-Smtp-Source: ABdhPJyKlW905TrWERlopxviweYlTeA8W3IPWegBCxKgTIF10gsrOHqQaRtMIvyB9kH58Dt1fINlbg==
+X-Received: by 2002:a37:d4c:: with SMTP id 73mr27437642qkn.445.1597111386334;
+        Mon, 10 Aug 2020 19:03:06 -0700 (PDT)
+Received: from lca.pw (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
+        by smtp.gmail.com with ESMTPSA id 139sm15631918qkl.13.2020.08.10.19.03.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Aug 2020 19:03:05 -0700 (PDT)
+Date:   Mon, 10 Aug 2020 22:03:03 -0400
+From:   Qian Cai <cai@lca.pw>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Matthew Wilcox <willy@infradead.org>, darrick.wong@oracle.com,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, khlebnikov@yandex-team.ru
+Subject: Re: WARN_ON_ONCE(1) in iomap_dio_actor()
+Message-ID: <20200811020302.GD5307@lca.pw>
+References: <20200619211750.GA1027@lca.pw>
+ <20200620001747.GC8681@bombadil.infradead.org>
+ <20200724182431.GA4871@lca.pw>
+ <20200726152412.GA26614@infradead.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200726152412.GA26614@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=208827
-
---- Comment #10 from Jens Axboe (axboe@kernel.dk) ---
-On 8/10/20 7:50 PM, Jens Axboe wrote:
-> On 8/10/20 7:15 PM, Jens Axboe wrote:
->> On 8/10/20 3:08 AM, Dave Chinner wrote:
->>> On Mon, Aug 10, 2020 at 05:08:07PM +1000, Dave Chinner wrote:
->>>> [cc Jens]
->>>>
->>>> [Jens, data corruption w/ io_uring and simple fio reproducer. see
->>>> the bz link below.]
->>>>
->>>> On Mon, Aug 10, 2020 at 01:56:05PM +1000, Dave Chinner wrote:
->>>>> On Mon, Aug 10, 2020 at 10:09:32AM +1000, Dave Chinner wrote:
->>>>>> On Fri, Aug 07, 2020 at 03:12:03AM +0000,
->>>>>> bugzilla-daemon@bugzilla.kernel.org wrote:
->>>>>>> --- Comment #1 from Dave Chinner (david@fromorbit.com) ---
->>>>>>> On Thu, Aug 06, 2020 at 04:57:58AM +0000,
->>>>>>> bugzilla-daemon@bugzilla.kernel.org
->>>>>>> wrote:
->>>>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=208827
->>>>>>>>
->>>>>>>>             Bug ID: 208827
->>>>>>>>            Summary: [fio io_uring] io_uring write data crc32c verify
->>>>>>>>                     failed
->>>>>>>>            Product: File System
->>>>>>>>            Version: 2.5
->>>>>>>>     Kernel Version: xfs-linux xfs-5.9-merge-7 + v5.8-rc4
->>>>>>
->>>>>> FWIW, I can reproduce this with a vanilla 5.8 release kernel,
->>>>>> so this isn't related to contents of the XFS dev tree at all...
->>>>>>
->>>>>> In fact, this bug isn't a recent regression. AFAICT, it was
->>>>>> introduced between in 5.4 and 5.5 - 5.4 did not reproduce, 5.5 did
->>>>>> reproduce. More info once I've finished bisecting it....
->>>>>
->>>>> f67676d160c6ee2ed82917fadfed6d29cab8237c is the first bad commit
->>>>> commit f67676d160c6ee2ed82917fadfed6d29cab8237c
->>>>> Author: Jens Axboe <axboe@kernel.dk>
->>>>> Date:   Mon Dec 2 11:03:47 2019 -0700
->>>>>
->>>>>     io_uring: ensure async punted read/write requests copy iovec
->>>>
->>>> ....
->>>>
->>>> Ok, I went back to vanilla 5.8 to continue debugging and adding
->>>> tracepoints, and it's proving strangely difficult to reproduce now.
->>>
->>> Which turns out to be caused by a tracepoint I inserted to try to
->>> narrow down if this was an invalidation race. I put this in
->>> invalidate_complete_page:
->>>
->>>
->>> --- a/mm/truncate.c
->>> +++ b/mm/truncate.c
->>> @@ -257,8 +257,11 @@ int invalidate_inode_page(struct page *page)
->>>         struct address_space *mapping = page_mapping(page);
->>>         if (!mapping)
->>>                 return 0;
->>> -       if (PageDirty(page) || PageWriteback(page))
->>> +       if (PageDirty(page) || PageWriteback(page)) {
->>> +               trace_printk("ino 0x%lx page %p, offset 0x%lx\n",
->>> +                       mapping->host->i_ino, page, page->index *
->>> PAGE_SIZE);
->>>                 return 0;
->>> +       }
->>>         if (page_mapped(page))
->>>                 return 0;
->>>         return invalidate_complete_page(mapping, page);
->>>
->>>
->>> And that alone, without even enabling tracepoints, made the
->>> corruption go completely away. So I suspect a page state race
->>> condition and look at POSIX_FADV_DONTNEED, which fio is issuing
->>> before running it's verification reads. First thing that does:
->>>
->>>     if (!inode_write_congested(mapping->host))
->>>             __filemap_fdatawrite_range(mapping, offset, endbyte,
->>>                                        WB_SYNC_NONE);
->>>
->>> It starts async writeback of the dirty pages. There's 256MB of dirty
->>> pages on these inodes, and iomap tracing indicates the entire 256MB
->>> immediately runs through the trace_iomap_writepage() tracepoint.
->>> i.e. every page goes Dirty -> Writeback and is submitted for async
->>> IO.
->>>
->>> Then the POSIX_FADV_DONTNEED code goes and runs
->>> invalidate_mapping_pages(), which ends up try-locking each page and
->>> then running invalidate_inode_page() on the page, which is where the
->>> trace debug I put in on pages under writeback gets hit. So if
->>> changing the invalidation code for pages under writeback makes the
->>> problem go away, then stopping invalidate_mapping_pages() from
->>> racing with page writeback should make the problem go away, too.
->>>
->>> This does indeed make the corruption go away:
->>>
->>> --- a/mm/fadvise.c
->>> +++ b/mm/fadvise.c
->>> @@ -109,9 +109,8 @@ int generic_fadvise(struct file *file, loff_t offset,
->>> loff_t len, int advice)
->>>         case POSIX_FADV_NOREUSE:
->>>                 break;
->>>         case POSIX_FADV_DONTNEED:
->>>                 if (!inode_write_congested(mapping->host))
->>> -                       __filemap_fdatawrite_range(mapping, offset,
->>> endbyte,
->>> -                                                  WB_SYNC_NONE);
->>> +                       filemap_write_and_wait_range(mapping, offset,
->>> endbyte);
->>>  
->>>                 /*
->>>                  * First and last FULL page! Partial pages are deliberately
->>>
->>> by making the invalidation wait for the pages to go fully to the
->>> clean state before starting.
->>>
->>> This, however, only fixes the specific symptom being tripped over
->>> here.  To further test this, I removed this writeback from
->>> POSIX_FADV_DONTNEED completely so I could trigger writeback via
->>> controlled background writeback. And, as I expected, whenever
->>> background writeback ran to write back these dirty files, the
->>> verification failures triggered again. It is quite reliable.
->>>
->>> So it looks like there is some kind of writeback completion vs page
->>> invalidation race condition occurring, but more work is needed to
->>> isolate it further. I don't know what part the async read plays in
->>> the corruption yet, because I don't know how we are getting pages in
->>> the cache where page->index != the file offset stamped in the data.
->>> That smells of leaking PageUptodate flags...
->>
->> The async read really isn't doing anything that you could not do with
->> separate threads. Unfortunately it's not that easy to have multiple
->> threads working on the same region with fio, or we could've reproduced
->> it with a job file written to use that instead.
->>
->> I'll dig a bit here...
+On Sun, Jul 26, 2020 at 04:24:12PM +0100, Christoph Hellwig wrote:
+> On Fri, Jul 24, 2020 at 02:24:32PM -0400, Qian Cai wrote:
+> > On Fri, Jun 19, 2020 at 05:17:47PM -0700, Matthew Wilcox wrote:
+> > > On Fri, Jun 19, 2020 at 05:17:50PM -0400, Qian Cai wrote:
+> > > > Running a syscall fuzzer by a normal user could trigger this,
+> > > > 
+> > > > [55649.329999][T515839] WARNING: CPU: 6 PID: 515839 at fs/iomap/direct-io.c:391 iomap_dio_actor+0x29c/0x420
+> > > ...
+> > > > 371 static loff_t
+> > > > 372 iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+> > > > 373                 void *data, struct iomap *iomap, struct iomap *srcmap)
+> > > > 374 {
+> > > > 375         struct iomap_dio *dio = data;
+> > > > 376
+> > > > 377         switch (iomap->type) {
+> > > > 378         case IOMAP_HOLE:
+> > > > 379                 if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
+> > > > 380                         return -EIO;
+> > > > 381                 return iomap_dio_hole_actor(length, dio);
+> > > > 382         case IOMAP_UNWRITTEN:
+> > > > 383                 if (!(dio->flags & IOMAP_DIO_WRITE))
+> > > > 384                         return iomap_dio_hole_actor(length, dio);
+> > > > 385                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
+> > > > 386         case IOMAP_MAPPED:
+> > > > 387                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
+> > > > 388         case IOMAP_INLINE:
+> > > > 389                 return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
+> > > > 390         default:
+> > > > 391                 WARN_ON_ONCE(1);
+> > > > 392                 return -EIO;
+> > > > 393         }
+> > > > 394 }
+> > > > 
+> > > > Could that be iomap->type == IOMAP_DELALLOC ? Looking throught the logs,
+> > > > it contains a few pread64() calls until this happens,
+> > > 
+> > > It _shouldn't_ be able to happen.  XFS writes back ranges which exist
+> > > in the page cache upon seeing an O_DIRECT I/O.  So it's not supposed to
+> > > be possible for there to be an extent which is waiting for the contents
+> > > of the page cache to be written back.
+> > 
+> > Okay, it is IOMAP_DELALLOC. We have,
 > 
-> Have we verified that the actual page cache is inconsistent, or is that
-> just an assumption? I'm asking since I poked a bit on the fio side, and
-> suspiciously the failed verification was a short IO. At least
-> originally, fio will retry those, but it could be a bug in the io_uring
-> engine for fio.
-> 
-> I'll poke some more.
+> Can you share the fuzzer?  If we end up with delalloc space here we
+> probably need to fix a bug in the cache invalidation code.
 
-The on-disk state seems sane. I added a hack that clears the rest of the
-buffer to 0x5a when we get a short read. When the verify fails, the io_u
-that was attempted verified looks like this:
+Here is a simple reproducer (I believe it can also be reproduced using xfstests
+generic/503 on a plain xfs without DAX when SCRATCH_MNT == TEST_DIR),
 
-0000fe0 116b b418 d14b 0477 822d 6dcd 201d 1316
-0000ff0 3045 eca3 0d1c 1a4f e608 0571 6b52 015e
-0001000 5a5a 5a5a 5a5a 5a5a 5a5a 5a5a 5a5a 5a5a
-*
-0010000
+# git clone https://gitlab.com/cailca/linux-mm
+# cd linux-mm; make
+# ./random 14
+- start: mmap_collision
+wrote 20480/20480 bytes at offset 0
+20 KiB, 5 ops; 0.0000 sec (673.491 MiB/sec and 172413.7931 ops/sec)
+wrote 20480/20480 bytes at offset 0
+20 KiB, 5 ops; 0.0000 sec (697.545 MiB/sec and 178571.4286 ops/sec)
+wrote 20480/20480 bytes at offset 0
+20 KiB, 5 ops; 0.0000 sec (723.380 MiB/sec and 185185.1852 ops/sec)
+pread: Input/output error
 
-where fio dumps this as the expected data:
-
-0000fe0 116b b418 d14b 0477 822d 6dcd 201d 1316
-0000ff0 3045 eca3 0d1c 1a4f e608 0571 6b52 015e
-0001000 3cc1 4daa cab1 12ba c798 0b54 b281 0a05
-0001010 98f3 bd9e 30a5 1728 531e 6b3a 2745 1877
-
-Fio says the offset is 62652416 in the file, and reading
-that 64k block from the file and dumping it:
-
-0000fe0 116b b418 d14b 0477 822d 6dcd 201d 1316
-0000ff0 3045 eca3 0d1c 1a4f e608 0571 6b52 015e
-0001000 3cc1 4daa cab1 12ba c798 0b54 b281 0a05
-0001010 98f3 bd9e 30a5 1728 531e 6b3a 2745 1877
-
-So it seems to me like the file state is consistent, at least after the
-run, and that this seems more likely to be a fio issue with short
-read handling.
-
-Poking along...
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+[ 8944.905010][ T6995] ------------[ cut here ]------------
+[ 8944.911193][ T6995] WARNING: CPU: 4 PID: 6995 at fs/iomap/direct-io.c:392 iomap_dio_actor+0x319/0x480
+[ 8944.920498][ T6995] Modules linked in: nls_ascii nls_cp437 vfat fat kvm_amd ses enclosure kvm irqbypass efivars acpi_cpufreq efivarfs ip_tables x_tables sd_mod smartpqi scsi_transport_sas tg3 mlx5_core libphy firmware_class dm_mirror dm_region_hash dm_log dm_mod
+[ 8944.943950][ T6995] CPU: 4 PID: 6995 Comm: random Not tainted 5.8.0-next-20200810+ #2
+[ 8944.951855][ T6995] Hardware name: HPE ProLiant DL385 Gen10/ProLiant DL385 Gen10, BIOS A40 07/10/2019
+[ 8944.961162][ T6995] RIP: 0010:iomap_dio_actor+0x319/0x480
+[ 8944.966622][ T6995] Code: 24 f6 43 27 40 0f 84 62 ff ff ff 48 83 c4 20 48 89 d9 48 89 ea 4c 89 e6 5b 4c 89 ff 5d 41 5c 41 5d 41 5e 41 5f e9 07 ef ff ff <0f> 0b 48 83 c4 20 48 c7 c0 fb ff ff ff 5b 5d 41 5c 41 5d 41 5e 41
+[ 8944.986232][ T6995] RSP: 0018:ffffc90007d1f8d0 EFLAGS: 00010202
+[ 8944.992203][ T6995] RAX: 0000000000000001 RBX: ffff88861b681c00 RCX: ffff88861b681c00
+[ 8945.000105][ T6995] RDX: 1ffff92000fa3f33 RSI: 0000000000000000 RDI: ffffc90007d1f998
+[ 8945.008014][ T6995] RBP: 0000000000001000 R08: ffffc90007d1f980 R09: ffffc90007d1f980
+[ 8945.015920][ T6995] R10: ffffffffa72e72a7 R11: fffffbfff4e5ce54 R12: 0000000000000000
+[ 8945.023805][ T6995] R13: ffff8888060e1388 R14: ffffffffa1f2e080 R15: ffff8888060e1388
+[ 8945.031705][ T6995] FS:  00007fa50e389700(0000) GS:ffff88905ec00000(0000) knlGS:0000000000000000
+[ 8945.040562][ T6995] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 8945.047063][ T6995] CR2: 00007fa50eb93000 CR3: 00000005ad9f2000 CR4: 00000000003506e0
+[ 8945.054952][ T6995] Call Trace:
+[ 8945.058147][ T6995]  iomap_apply+0x25a/0xb73
+[ 8945.062453][ T6995]  ? iomap_dio_bio_actor+0xde0/0xde0
+[ 8945.067650][ T6995]  ? generic_perform_write+0x410/0x410
+[ 8945.073003][ T6995]  ? trace_event_raw_event_iomap_apply+0x420/0x420
+[ 8945.079424][ T6995]  ? filemap_check_errors+0x51/0xe0
+[ 8945.084514][ T6995]  iomap_dio_rw+0x644/0x1298
+[ 8945.089011][ T6995]  ? iomap_dio_bio_actor+0xde0/0xde0
+[ 8945.094192][ T6995]  ? iomap_dio_bio_end_io+0x4a0/0x4a0
+[ 8945.099474][ T6995]  ? down_read_nested+0x10e/0x430
+[ 8945.104391][ T6995]  ? downgrade_write+0x3a0/0x3a0
+[ 8945.109237][ T6995]  ? rcu_read_lock_sched_held+0xaa/0xd0
+[ 8945.114680][ T6995]  ? xfs_file_dio_aio_read+0x1d5/0x4c0
+[ 8945.120051][ T6995]  xfs_file_dio_aio_read+0x1d5/0x4c0
+[ 8945.125253][ T6995]  xfs_file_read_iter+0x3e3/0x6b0
+[ 8945.130173][ T6995]  new_sync_read+0x39b/0x600
+[ 8945.134648][ T6995]  ? vfs_dedupe_file_range+0x5f0/0x5f0
+[ 8945.140022][ T6995]  ? __fget_files+0x1cb/0x300
+[ 8945.144588][ T6995]  ? lock_downgrade+0x730/0x730
+[ 8945.149346][ T6995]  ? rcu_read_lock_held+0xaa/0xc0
+[ 8945.154265][ T6995]  vfs_read+0x226/0x450
+[ 8945.158323][ T6995]  ksys_pread64+0x116/0x140
+[ 8945.162714][ T6995]  ? __x64_sys_write+0xa0/0xa0
+[ 8945.167386][ T6995]  ? syscall_enter_from_user_mode+0x20/0x210
+[ 8945.173269][ T6995]  ? trace_hardirqs_on+0x20/0x1b5
+[ 8945.178202][ T6995]  do_syscall_64+0x33/0x40
+[ 8945.182512][ T6995]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[ 8945.188323][ T6995] RIP: 0033:0x7fa50e75e4b7
+[ 8945.192628][ T6995] Code: 41 54 49 89 d4 55 48 89 f5 53 89 fb 48 83 ec 18 e8 3e f3 ff ff 4d 89 ea 4c 89 e2 48 89 ee 41 89 c0 89 df b8 11 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 35 44 89 c7 48 89 44 24 08 e8 74 f3 ff ff 48
+[ 8945.212238][ T6995] RSP: 002b:00007fa50e388e70 EFLAGS: 00000293 ORIG_RAX: 0000000000000011
+[ 8945.220584][ T6995] RAX: ffffffffffffffda RBX: 0000000000000004 RCX: 00007fa50e75e4b7
+[ 8945.228489][ T6995] RDX: 0000000000004000 RSI: 00007fa50eb90000 RDI: 0000000000000004
+[ 8945.236392][ T6995] RBP: 00007fa50eb90000 R08: 0000000000000000 R09: 00007fa50e746260
+[ 8945.244278][ T6995] R10: 0000000000000000 R11: 0000000000000293 R12: 0000000000004000
+[ 8945.252177][ T6995] R13: 0000000000000000 R14: 0000000000000000 R15: 00007fa50e388fc0
+[ 8945.260084][ T6995] irq event stamp: 8871
+[ 8945.264129][ T6995] hardirqs last  enabled at (8879): [<ffffffffa0866c8f>] console_unlock+0x75f/0xaf0
+[ 8945.273427][ T6995] hardirqs last disabled at (8888): [<ffffffffa086677d>] console_unlock+0x24d/0xaf0
+[ 8945.282728][ T6995] softirqs last  enabled at (8236): [<ffffffffa1c0070f>] __do_softirq+0x70f/0xa9f
+[ 8945.291857][ T6995] softirqs last disabled at (7067): [<ffffffffa1a00ec2>] asm_call_on_stack+0x12/0x20
+[ 8945.301246][ T6995] ---[ end trace 2deaef5e80c278a7 ]---
