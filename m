@@ -2,303 +2,168 @@ Return-Path: <SRS0=LlZ6=BV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61186C433E0
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 00:36:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB09C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 01:07:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DD812075D
-	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 00:36:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 919FC20716
+	for <linux-xfs@archiver.kernel.org>; Tue, 11 Aug 2020 01:07:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="HPy/Q52k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726977AbgHKAg5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 10 Aug 2020 20:36:57 -0400
-Received: from sandeen.net ([63.231.237.45]:48302 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727014AbgHKAg4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Aug 2020 20:36:56 -0400
-Received: from [10.0.0.11] (liberator [10.0.0.11])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 44D1315B01
-        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 19:36:31 -0500 (CDT)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 54b4eee7
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <3f9eaf33-0a12-7911-b402-f289d894df36@sandeen.net>
-Date:   Mon, 10 Aug 2020 19:36:51 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.11.0
+        id S1727049AbgHKBHM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 10 Aug 2020 21:07:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40406 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727002AbgHKBHL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Aug 2020 21:07:11 -0400
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3AF80C06174A
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 18:07:11 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id t6so994753pjr.0
+        for <linux-xfs@vger.kernel.org>; Mon, 10 Aug 2020 18:07:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=wcepStmCPaQyHKG02HsJpqi/Mpfioo21JYLEfTzpgWU=;
+        b=HPy/Q52k7cex+vGoX9ZF+Y5PGkUDobfFVtR7QrmVyrnT6U2FRg/su/ygPtQZ1VzKrX
+         NhpJJNA6p6ycgrZnir/h+kfL5MIGymPWn8qP/bBIZOTmnVP4DRA9fhiWc6cX9kJwAobN
+         vbylhpzbcfcQeBji44di032VlK2CBsnMB5XmvI2LklF9Eahy9pJ5iYEru8yxjd6hwuyD
+         5b28R7emuUbmd3g05m/koht+6vRY6860OeZYy+XZTRjGYp5l5zQ+Oh8PYP68nGpSl2it
+         Xs2FjjLD4G+IZanm5qlYj79UlKN2DUGooxfpfuhorhmNHp4GgO2Dt682VWC2aubWfkM8
+         BLNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=wcepStmCPaQyHKG02HsJpqi/Mpfioo21JYLEfTzpgWU=;
+        b=jMc5BYDXWM9ZZUPn9EoH5koHxdLU6Ig/j1dS+loKmWxmhya2R1D3og16Whm3fJQEJc
+         pyd1mrsprUFOlTu/gQSm7fL7pHrhwPqCGleSSRa12CCBXdwMwkYac6P5wxMBhYUwaYH8
+         F/KWu8f85KpYDnQCoZGoxj9ji2qn8xc4A8zDy2LKqZUdng+rmoFJplIMPfW3kSArqJ+B
+         hK/OpJQH/9xfz6ysbmg1YQ8dFJFfQyY0EsvptGiIFfTrX0DF9mXT5A4RhX0j/Cim+fxT
+         hDGRZxm9Wshfz1rJM46mKTOfCaeRqhaczP7mtYEvFsjQViXoY+arZzQ8a10dzozZ8Www
+         FfYQ==
+X-Gm-Message-State: AOAM530+7SlRJ4o7+G7HayS92PMonaBK+uVEEQoH/nFaeIwQKv5EYWc1
+        kvSAklyxPqIyHBSVJaonElNgZwh6zww=
+X-Google-Smtp-Source: ABdhPJx7dnZFf8bIGo/WyufmYzL9goinurugMDAsiRpNMqd/CcQTlkNURq2zP1nIAsXAayFw4uuS/A==
+X-Received: by 2002:a17:902:a982:: with SMTP id bh2mr1288922plb.182.1597108029993;
+        Mon, 10 Aug 2020 18:07:09 -0700 (PDT)
+Received: from [192.168.1.182] ([66.219.217.173])
+        by smtp.gmail.com with ESMTPSA id s18sm5228432pgj.3.2020.08.10.18.07.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 10 Aug 2020 18:07:09 -0700 (PDT)
+Subject: Re: [Bug 208827] [fio io_uring] io_uring write data crc32c verify
+ failed
+To:     Dave Chinner <david@fromorbit.com>,
+        bugzilla-daemon@bugzilla.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+References: <bug-208827-201763@https.bugzilla.kernel.org/>
+ <bug-208827-201763-ubSctIQBY4@https.bugzilla.kernel.org/>
+ <20200810000932.GH2114@dread.disaster.area>
+ <20200810035605.GI2114@dread.disaster.area>
+ <20200810070807.GJ2114@dread.disaster.area>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <d35b95df-2d0e-e402-251c-4da4bc254f66@kernel.dk>
+Date:   Mon, 10 Aug 2020 19:07:07 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="3Mz9y7en3SZEKZdDb3gopXIVrC3eJSZWt"
+In-Reply-To: <20200810070807.GJ2114@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---3Mz9y7en3SZEKZdDb3gopXIVrC3eJSZWt
-Content-Type: multipart/mixed; boundary="WSjPWvh5U0m5WwO7HQuA1bbCWezFEhzP0"
+On 8/10/20 1:08 AM, Dave Chinner wrote:
+> [cc Jens]
+> 
+> [Jens, data corruption w/ io_uring and simple fio reproducer. see
+> the bz link below.]
+> 
+> On Mon, Aug 10, 2020 at 01:56:05PM +1000, Dave Chinner wrote:
+>> On Mon, Aug 10, 2020 at 10:09:32AM +1000, Dave Chinner wrote:
+>>> On Fri, Aug 07, 2020 at 03:12:03AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+>>>> --- Comment #1 from Dave Chinner (david@fromorbit.com) ---
+>>>> On Thu, Aug 06, 2020 at 04:57:58AM +0000, bugzilla-daemon@bugzilla.kernel.org
+>>>> wrote:
+>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=208827
+>>>>>
+>>>>>             Bug ID: 208827
+>>>>>            Summary: [fio io_uring] io_uring write data crc32c verify
+>>>>>                     failed
+>>>>>            Product: File System
+>>>>>            Version: 2.5
+>>>>>     Kernel Version: xfs-linux xfs-5.9-merge-7 + v5.8-rc4
+>>>
+>>> FWIW, I can reproduce this with a vanilla 5.8 release kernel,
+>>> so this isn't related to contents of the XFS dev tree at all...
+>>>
+>>> In fact, this bug isn't a recent regression. AFAICT, it was
+>>> introduced between in 5.4 and 5.5 - 5.4 did not reproduce, 5.5 did
+>>> reproduce. More info once I've finished bisecting it....
+>>
+>> f67676d160c6ee2ed82917fadfed6d29cab8237c is the first bad commit
+>> commit f67676d160c6ee2ed82917fadfed6d29cab8237c
+>> Author: Jens Axboe <axboe@kernel.dk>
+>> Date:   Mon Dec 2 11:03:47 2019 -0700
+>>
+>>     io_uring: ensure async punted read/write requests copy iovec
 
---WSjPWvh5U0m5WwO7HQuA1bbCWezFEhzP0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I don't think this commit is related to the issue at all, but I think
+we're probably on the same page with that. It's probably just changing
+things slightly enough to avoid the race.
 
-Hi folks,
+> Ok, I went back to vanilla 5.8 to continue debugging and adding
+> tracepoints, and it's proving strangely difficult to reproduce now.
+> 
+> However, I did just hit this:
+> 
+> [ 4980.136032] ------------[ cut here ]------------
+> [ 4980.137665] do not call blocking ops when !TASK_RUNNING; state=1 set at [<00000000ef911b51>] prepare_to_wait_exclusive+0x3d/0xd0
+> [ 4980.141403] WARNING: CPU: 13 PID: 6800 at kernel/sched/core.c:6888 __might_sleep+0x74/0x80
+> [ 4980.143940] CPU: 13 PID: 6800 Comm: fio Not tainted 5.8.0-dgc+ #2549
+> [ 4980.146147] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.13.0-1 04/01/2014
+> [ 4980.148774] RIP: 0010:__might_sleep+0x74/0x80
+> [ 4980.150455] Code: ff 41 5c 41 5d 41 5e 5d c3 48 8b 90 30 22 00 00 48 c7 c7 a8 b9 50 82 c6 05 38 e4 9a 01 01 48 8b 70 10 48 89 d1 e8 fa 5c fc ff <0f> 0b eb c5 0f 1f 84 00 00 00 002
+> [ 4980.156255] RSP: 0018:ffffc90005383c58 EFLAGS: 00010282
+> [ 4980.158299] RAX: 0000000000000000 RBX: 0000561a18122000 RCX: 0000000000000000
+> [ 4980.160817] RDX: ffff88883eca7de0 RSI: ffff88883ec97a80 RDI: ffff88883ec97a80
+> [ 4980.163162] RBP: ffffc90005383c70 R08: ffff88883ec97a80 R09: ffff8888070f3000
+> [ 4980.165635] R10: ffff8888070f3434 R11: ffff8888070f3434 R12: ffffffff8251f46e
+> [ 4980.168115] R13: 00000000000001ba R14: 0000000000000000 R15: ffff888235647740
+> [ 4980.170714] FS:  00007f80de7af700(0000) GS:ffff88883ec80000(0000) knlGS:0000000000000000
+> [ 4980.173442] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [ 4980.175371] CR2: 00007f80d4005008 CR3: 00000005eb01c004 CR4: 0000000000060ee0
+> [ 4980.177607] Call Trace:
+> [ 4980.178583]  change_protection+0x827/0x9e0
+> [ 4980.180063]  ? kvm_clock_read+0x18/0x30
+> [ 4980.181654]  ? kvm_sched_clock_read+0x9/0x20
+> [ 4980.183426]  ? sysvec_apic_timer_interrupt+0x46/0x90
+> [ 4980.185160]  change_prot_numa+0x19/0x30
+> [ 4980.186607]  task_numa_work+0x1c7/0x2e0
+> [ 4980.188003]  task_work_run+0x64/0xb0
+> [ 4980.189488]  io_cqring_wait+0x118/0x290
 
-The for-next branch of the xfsprogs repository at:
+I'll get this one:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+commit 4c6e277c4cc4a6b3b2b9c66a7b014787ae757cc1
+Author: Jens Axboe <axboe@kernel.dk>
+Date:   Wed Jul 1 11:29:10 2020 -0600
 
-has just been updated and tagged with v5.8.0-rc0.
+    io_uring: abstract out task work running
 
-This is mostly the libxfs sync plus a couple others prior.
+queued up for stable. Should not be related to this at all, current -git
+shouldn't run into this.
 
-(Huge thanks to djwong & hch for their work on the libxfs sync which
-makes this job so much easier.)
+-- 
+Jens Axboe
 
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-54b4eee7 (HEAD -> guilt/libxfs-5.8-sync, tag: v5.8.0-rc0, korg/libxfs-5.8=
--sync, korg/for-next, refs/patches/libxfs-5.8-sync/5.8-rc0) xfsprogs: Rel=
-ease v5.8.0-rc0
-
-New Commits:
-
-Brian Foster (8):
-      [ba7dd41b] repair: set the in-core inode parent in phase 3
-      [1b0bfeb5] repair: don't double check dir2 sf parent in phase 4
-      [993ca3ee] repair: use fs rootino for dummy parent value instead of=
- zero
-      [2703aa2c] repair: remove custom dir2 sf fork verifier from phase6
-      [820c6548] xfs: remove unnecessary shutdown check from xfs_iflush()=
-
-      [3acdd264] xfs: random buffer write failure errortag
-      [0cd4b54a] xfs: remove unused iget_flags param from xfs_imap_to_bp(=
-)
-      [5779d997] xfs: don't fail verifier on empty attr3 leaf block
-
-Christoph Hellwig (25):
-      [ed8d09e1] xfs: remove the xfs_inode_log_item_t typedef
-      [fa8a37b6] xfs: factor out a xfs_defer_create_intent helper
-      [8d81fcd0] xfs: merge the ->log_item defer op into ->create_intent
-      [74a7f5fa] xfs: merge the ->diff_items defer op into ->create_inten=
-t
-      [18d0d657] xfs: turn dfp_intent into a xfs_log_item
-      [ed0873e6] xfs: refactor xfs_defer_finish_noroll
-      [95e01274] xfs: turn dfp_done into a xfs_log_item
-      [4371b480] xfs: use a xfs_btree_cur for the ->finish_cleanup state
-      [8d431a3b] xfs: spell out the parameter name for ->cancel_item
-      [f5d22700] xfs: xfs_bmapi_read doesn't take a fork id as the last a=
-rgument
-      [3eb685ae] xfs: call xfs_iformat_fork from xfs_inode_from_disk
-      [07973a77] xfs: split xfs_iformat_fork
-      [f47e002f] xfs: handle unallocated inodes in xfs_inode_from_disk
-      [d1eeae6b] xfs: call xfs_dinode_verify from xfs_inode_from_disk
-      [f6e757aa] xfs: don't reset i_delayed_blks in xfs_iread
-      [89522615] xfs: remove xfs_iread
-      [1fecabf9] xfs: remove xfs_ifork_ops
-      [318d12fd] xfs: refactor xfs_inode_verify_forks
-      [0815f7ab] xfs: improve local fork verification
-      [00773e64] xfs: remove the special COW fork handling in xfs_bmapi_r=
-ead
-      [212be827] xfs: remove the NULL fork handling in xfs_bmapi_read
-      [8c6cccd7] xfs: remove the XFS_DFORK_Q macro
-      [87c472b7] xfs: move the per-fork nextents fields into struct xfs_i=
-fork
-      [d967a68d] xfs: move the fork format fields into struct xfs_ifork
-      [a87a40a2] xfs: cleanup xfs_idestroy_fork
-
-Darrick J. Wong (11):
-      [6526f30e] xfs_db: stop misusing an onstack inode
-      [3d16b59a] xfs: convert xfs_log_recover_item_t to struct xfs_log_re=
-cover_item
-      [a172b39c] xfs: refactor log recovery item sorting into a generic d=
-ispatch structure
-      [76887ef8] xfs: refactor log recovery item dispatch for pass2 readh=
-ead functions
-      [bc9c7143] xfs: refactor log recovery item dispatch for pass1 commi=
-t functions
-      [ecb32931] xfs: refactor log recovery buffer item dispatch for pass=
-2 commit functions
-      [90301e35] xfs: refactor releasing finished intents during log reco=
-very
-      [6fe2ec55] xfs: move log recovery buffer cancellation code to xfs_b=
-uf_item_recover.c
-      [e30de1a1] xfs: use ordered buffers to initialize dquot buffers dur=
-ing quotacheck
-      [edc9bb69] xfs: force writes to delalloc regions to unwritten
-      [db8c0218] xfs: more lockdep whackamole with kmem_alloc*
-
-Eric Sandeen (2):
-      [e90330f9] xfs: always return -ENOSPC on project quota reservation =
-failure
-      [54b4eee7] xfsprogs: Release v5.8.0-rc0
-
-Gustavo A. R. Silva (1):
-      [1f3fe204] xfs: Replace zero-length array with flexible-array
-
-Kaixu Xia (1):
-      [faa7f9b2] xfs: fix the warning message in xfs_validate_sb_common()=
-
-
-Nishad Kamdar (1):
-      [7acf15bf] xfs: Use the correct style for SPDX License Identifier
-
-
-Code Diffstat:
-
- VERSION                     |   4 +-
- configure.ac                |   2 +-
- db/attrset.c                |   6 +-
- db/block.c                  |  21 +--
- db/bmroot.c                 |  10 +-
- db/check.c                  | 102 ++++++++-------
- db/frag.c                   |   2 +-
- db/inode.c                  |  10 +-
- debian/changelog            |   6 +
- doc/CHANGES                 |   5 +
- include/kmem.h              |   1 +
- include/libxlog.h           |   2 +-
- include/xfs_inode.h         |   5 +-
- include/xfs_log_recover.h   |   4 +-
- include/xfs_trans.h         |   5 +-
- io/inject.c                 |   1 +
- libxfs/defer_item.c         | 162 ++++++++---------------
- libxfs/libxfs_api_defs.h    |   1 -
- libxfs/logitem.c            |   6 +-
- libxfs/rdwr.c               |  82 +++++-------
- libxfs/trans.c              |  20 +--
- libxfs/util.c               |  49 +++----
- libxfs/xfs_ag_resv.h        |   2 +-
- libxfs/xfs_alloc.h          |   2 +-
- libxfs/xfs_alloc_btree.h    |   2 +-
- libxfs/xfs_attr.c           |  16 +--
- libxfs/xfs_attr.h           |   2 +-
- libxfs/xfs_attr_leaf.c      |  59 ++++-----
- libxfs/xfs_attr_leaf.h      |   2 +-
- libxfs/xfs_attr_remote.h    |   2 +-
- libxfs/xfs_attr_sf.h        |   2 +-
- libxfs/xfs_bit.h            |   2 +-
- libxfs/xfs_bmap.c           | 310 +++++++++++++++++++-------------------=
------
- libxfs/xfs_bmap.h           |   2 +-
- libxfs/xfs_bmap_btree.c     |   5 +-
- libxfs/xfs_bmap_btree.h     |   2 +-
- libxfs/xfs_btree.h          |   2 +-
- libxfs/xfs_da_btree.h       |   2 +-
- libxfs/xfs_da_format.h      |   2 +-
- libxfs/xfs_defer.c          | 162 +++++++++++------------
- libxfs/xfs_defer.h          |  26 ++--
- libxfs/xfs_dir2.c           |   8 +-
- libxfs/xfs_dir2.h           |   2 +-
- libxfs/xfs_dir2_block.c     |   2 +-
- libxfs/xfs_dir2_priv.h      |   2 +-
- libxfs/xfs_dir2_sf.c        |  13 +-
- libxfs/xfs_errortag.h       |   6 +-
- libxfs/xfs_format.h         |   9 +-
- libxfs/xfs_fs.h             |   2 +-
- libxfs/xfs_health.h         |   2 +-
- libxfs/xfs_inode_buf.c      | 186 +++++++-------------------
- libxfs/xfs_inode_buf.h      |  10 +-
- libxfs/xfs_inode_fork.c     | 320 ++++++++++++++++++++++----------------=
--------
- libxfs/xfs_inode_fork.h     |  68 ++++------
- libxfs/xfs_quota_defs.h     |   1 -
- libxfs/xfs_rtbitmap.c       |   2 +-
- libxfs/xfs_sb.c             |   2 +-
- libxfs/xfs_symlink_remote.c |  16 +--
- libxfs/xfs_trans_inode.c    |   2 +-
- libxlog/xfs_log_recover.c   |  18 +--
- logprint/log_print_all.c    |  14 +-
- logprint/log_redo.c         |   4 +-
- logprint/logprint.h         |   4 +-
- mkfs/proto.c                |   2 +-
- repair/dino_chunks.c        |   9 +-
- repair/dinode.c             |   2 +-
- repair/dir2.c               |  14 +-
- repair/phase6.c             | 115 +++++-----------
- repair/phase7.c             |   2 +-
- repair/quotacheck.c         |   4 +-
- repair/xfs_repair.c         |   3 +-
- 71 files changed, 842 insertions(+), 1112 deletions(-)
-
-
---WSjPWvh5U0m5WwO7HQuA1bbCWezFEhzP0--
-
---3Mz9y7en3SZEKZdDb3gopXIVrC3eJSZWt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl8x6CYACgkQIK4WkuE9
-3uCdsA//UhMoamUlOKiC5TK0d0e+DfVmgttFMxk1n7lS88agABlOI2sFohIKXY4X
-6XE3nvH/6Ag/UCQwgkZ/IrV6ENHs8uARUzT+cqF/5xNdhMr3mhLOAv89DrB7Civz
-lQSgj6U5RNAnW6RFHRyj4R+T0gi5svhnaDS+UYoxiK+uu6l/yK1X3Kz2e0GZMy/h
-niuUCer0dPKFm91tyFcJqCzeN46ou52O3I3YAZZAqVj/eYnvQkPXcYr5BMN7TCQr
-BB7NC8JXp4vi9X64L7HMBS71X7Kch24yKcUVUDNEP1hrye5SskpTwjihxUtgj1A4
-mS0VWErLBTZv5+dFHzwjAcyC46UemI29M6sDtuNVulCtfcNgu+fXVoU916cplWP7
-6h4aHIt9opa/22W9mT5NA5k4x10jHIeAjskUn6f//A44BPpsBOD2HfBlI37nUw3p
-JWnNYaeFKhIGIqhwhl1NzWDdYl0xpRLN+ISOKUPUoBTk9fbH1PKKrz62HOpJuUKz
-/R6nJcJZcWYPqXe7iQKbblIHC6228riq7xt0KwNICAbfrkpa/Uh84+qiNFvEIQ+2
-iL0VeXtdDMTDmivMgC+Nd2MrumHRCC43kLMh3XfYIwTLeDhkWaSUBWONS/ibxpJI
-D2QM3BO23maEmTwb9R4qgrYHs/6aiWZSsMeH5In4ryGWC1dkpME=
-=mpoX
------END PGP SIGNATURE-----
-
---3Mz9y7en3SZEKZdDb3gopXIVrC3eJSZWt--
