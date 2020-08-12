@@ -2,410 +2,175 @@ Return-Path: <SRS0=vsMz=BW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68E72C433EB
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Aug 2020 09:26:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32768C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Aug 2020 11:12:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52ED4206C3
-	for <linux-xfs@archiver.kernel.org>; Wed, 12 Aug 2020 09:26:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 074FC20781
+	for <linux-xfs@archiver.kernel.org>; Wed, 12 Aug 2020 11:12:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XKNuSSMs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727864AbgHLJ0J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 12 Aug 2020 05:26:09 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:60387 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727858AbgHLJ0I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Aug 2020 05:26:08 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id D662B760CF3
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Aug 2020 19:25:58 +1000 (AEST)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k5n1B-0003QW-4S
-        for linux-xfs@vger.kernel.org; Wed, 12 Aug 2020 19:25:57 +1000
-Received: from dave by discord.disaster.area with local (Exim 4.93)
-        (envelope-from <david@fromorbit.com>)
-        id 1k5n1A-00Alsu-QA
-        for linux-xfs@vger.kernel.org; Wed, 12 Aug 2020 19:25:56 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 05/13] xfs: add unlink list pointers to xfs_inode
-Date:   Wed, 12 Aug 2020 19:25:48 +1000
-Message-Id: <20200812092556.2567285-6-david@fromorbit.com>
-X-Mailer: git-send-email 2.26.2.761.g0e0b3e54be
-In-Reply-To: <20200812092556.2567285-1-david@fromorbit.com>
+        id S1726829AbgHLLMt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 12 Aug 2020 07:12:49 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:44295 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726698AbgHLLMs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Aug 2020 07:12:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597230766;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oUEnp0Yj02JG1pY1UUZcnloHZpZB6Q+kugMnDRFsOkA=;
+        b=XKNuSSMsFFJWs+zLcd4zXfBKVENbwIX/D5jO/T+5lrIJhalyzp1F8eANkLSZNPl1QlXC1v
+        tGQwNv0lAaTHveXBMWB8TGEMTOGca6A5vS/WINPk9sttgAc4ts60th5s0QwgdHLeBD/otF
+        bcpfOSqm5wrGsXhnu/5nsdLkCEGKurw=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-375-YYA-z5VpN-q6F5jYb_75ZA-1; Wed, 12 Aug 2020 07:12:44 -0400
+X-MC-Unique: YYA-z5VpN-q6F5jYb_75ZA-1
+Received: by mail-pj1-f71.google.com with SMTP id e2so1492234pjm.3
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Aug 2020 04:12:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=oUEnp0Yj02JG1pY1UUZcnloHZpZB6Q+kugMnDRFsOkA=;
+        b=YYm2iXpaHAijmH8LEGQkKiopq29vCgzmxj/Rg8D9yxCWetAbA/xlpdTZkeK5U6HC55
+         Nw4M+KSrzSqwhNjnbL/ZEMwwiNMI3GkgsKE//zZwzmbPf/NZj0QUKZ2oPuO4FQoalPx7
+         x89KMn41ig0J63oVqOB7txpyCa5LonOS5MluBuLUQt0jEdrUFAX77txc75fklpb7MPMr
+         EEnbAlNXuRI9TdWxIRxDy+FadD0J5W64ZIByVw0zsJmKtrRXeylkdsv3A3zQ039eQeIW
+         XP7L9w2/pB4ZLe8M80kvcDQZveAa7GZuQAq9K9hwfbJK8j0RsQIBCWinmO4J45WjACQu
+         jyBg==
+X-Gm-Message-State: AOAM532hazYNW/9G0eEtlONtvk63uXAAB1p57GBx3q3erePZvT3GQXny
+        pM2ak4Iygrr/lo9Humfsbx7jae/r4evrEh2pE6UJ+GuIXaEmrmuGkh2YzHMPtM9nY5nIRkUdQcK
+        6NIH5hzYnnrMeRZDBxsHh
+X-Received: by 2002:a63:565d:: with SMTP id g29mr4817693pgm.220.1597230763710;
+        Wed, 12 Aug 2020 04:12:43 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxmHjJkPyplPHeQPa3CO+ZmZCuRc/v1OU0jUS91KTswxeQpYcxy7xNY0LQQSXO9PnmgCir+hQ==
+X-Received: by 2002:a63:565d:: with SMTP id g29mr4817670pgm.220.1597230763366;
+        Wed, 12 Aug 2020 04:12:43 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id q17sm2120463pfh.32.2020.08.12.04.12.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Aug 2020 04:12:42 -0700 (PDT)
+Date:   Wed, 12 Aug 2020 19:12:33 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 13/13] xfs: reorder iunlink remove operation in xfs_ifree
+Message-ID: <20200812111233.GB759@xiangao.remote.csb>
 References: <20200812092556.2567285-1-david@fromorbit.com>
+ <20200812092556.2567285-14-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=y4yBn9ojGxQA:10 a=20KFwNOVAAAA:8 a=InVZWV_gqGCsK9yfbhcA:9
-        a=WmKpBGBqIDIG9tgC:21 a=VXZMSOiFbSp7OkDt:21
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200812092556.2567285-14-david@fromorbit.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Aug 12, 2020 at 07:25:56PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The O_TMPFILE creation implementation creates a specific order of
+> operations for inode allocation/freeing and unlinked list
+> modification. Currently both are serialised by the AGI, so the order
+> doesn't strictly matter as long as the are both in the same
+> transaction.
+> 
+> However, if we want to move the unlinked list insertions largely
+> out from under the AGI lock, then we have to be concerned about the
+> order in which we do unlinked list modification operations.
+> O_TMPFILE creation tells us this order is inode allocation/free,
+> then unlinked list modification.
+> 
+> Change xfs_ifree() to use this same ordering on unlinked list
+> removal. THis way we always guarantee that when we enter the
+> iunlinked list removal code from this path, we have the already
+> locked and we don't have to worry about lock nesting AGI reads
+> inside unlink list locks because it's already locked and attached to
+> the transaction.
+> 
+> We can do this safely as the inode freeing and unlinked list removal
+> are done in the same transaction and hence are atomic operations
+> with resepect to log recovery.
 
-To move away from using the on disk inode buffers to track and log
-unlinked inodes, we need pointers to track them in memory. Because
-we have arbitrary remove order from the list, it needs to be a
-double linked list.
+Yeah, due to all these constraints, such reorder is much cleaner,
+otherwise it needs forcely taking AGI lock in xfs_iunlink_remove()
+in advance as what I did in my new v3 ( due to exist AGI lock in
+xfs_difree() )...
+https://git.kernel.org/pub/scm/linux/kernel/git/xiang/linux.git/tree/fs/xfs/xfs_inode.c?h=xfs/iunlink_opt_v3#n2511
+https://git.kernel.org/pub/scm/linux/kernel/git/xiang/linux.git/commit/fs/xfs/xfs_inode.c?h=xfs/iunlink_opt_v3&id=79a6a18a7f13d12726c2554e2581a56fc473b152
 
-We start by noting that inodes are always in memory when they are
-active on the unlinked list, and hence we can track these inodes
-without needing to take references to the inodes or store them in
-the list. We cannot, however, use inode locks to protect the inodes
-on the list - the list needs an external lock to serialise all
-inserts and removals. We can use the existing AGI buffer lock for
-this right now as that already serialises all unlinked list
-traversals and modifications.
+Since the new based patchset is out, I will look into this patchset
+and skip sending out my v3 (looks like the previous logging order
+issues has been resolved) and directly rebase the rest patches
+into v4.
 
-Hence we can convert the in-memory unlinked list to a simple
-list_head list in the perag. We can use list_empty() to detect an
-empty unlinked list, likewise we can detect the end of the list when
-the inode next pointer points back to the perag list_head. This
-makes insert, remove and traversal.
+Thanks,
+Gao Xiang
 
-The only complication here is log recovery of old filesystems that
-have multiple lists. These always remove from the head of the list,
-so we can easily construct just enough of the unlinked list for
-recovery from any list to work correctly.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_icache.c      |   1 +
- fs/xfs/xfs_inode.c       |  21 ++++-
- fs/xfs/xfs_inode.h       |   1 +
- fs/xfs/xfs_log_recover.c | 179 +++++++++++++++++++++++----------------
- fs/xfs/xfs_mount.c       |   1 +
- fs/xfs/xfs_mount.h       |   1 +
- 6 files changed, 130 insertions(+), 74 deletions(-)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 5cdded02cdc8..0c04a66bf88d 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -66,6 +66,7 @@ xfs_inode_alloc(
- 	memset(&ip->i_d, 0, sizeof(ip->i_d));
- 	ip->i_sick = 0;
- 	ip->i_checked = 0;
-+	INIT_LIST_HEAD(&ip->i_unlink);
- 	INIT_WORK(&ip->i_ioend_work, xfs_end_io);
- 	INIT_LIST_HEAD(&ip->i_ioend_list);
- 	spin_lock_init(&ip->i_ioend_lock);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index fa92bdf6e0da..dcf80ac51267 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2294,7 +2294,17 @@ xfs_iunlink(
- 	if (error)
- 		return error;
- 
--	return xfs_iunlink_insert_inode(tp, agibp, ip);
-+	/*
-+	 * Insert the inode into the on disk unlinked list, and if that
-+	 * succeeds, then insert it into the in memory list. We do it in this
-+	 * order so that the modifications required to the on disk list are not
-+	 * impacted by already having this inode in the list.
-+	 */
-+	error = xfs_iunlink_insert_inode(tp, agibp, ip);
-+	if (!error)
-+		list_add(&ip->i_unlink, &agibp->b_pag->pag_ici_unlink_list);
-+
-+	return error;
- }
- 
- /* Return the imap, dinode pointer, and buffer for an inode. */
-@@ -2516,7 +2526,14 @@ xfs_iunlink_remove(
- 	if (error)
- 		return error;
- 
--	return xfs_iunlink_remove_inode(tp, agibp, ip);
-+	/*
-+	 * Remove the inode from the on-disk list and then remove it from the
-+	 * in-memory list. This order of operations ensures we can look up both
-+	 * next and previous inode in the on-disk list via the in-memory list.
-+	 */
-+	error = xfs_iunlink_remove_inode(tp, agibp, ip);
-+	list_del(&ip->i_unlink);
-+	return error;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 5ea962c6cf98..73f36908a1ce 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -56,6 +56,7 @@ typedef struct xfs_inode {
- 	uint64_t		i_delayed_blks;	/* count of delay alloc blks */
- 
- 	struct xfs_icdinode	i_d;		/* most of ondisk inode */
-+	struct list_head	i_unlink;
- 
- 	/* VFS inode */
- 	struct inode		i_vnode;	/* embedded VFS inode */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index e2ec91b2d0f4..b3481f4e2f96 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2682,11 +2682,11 @@ xlog_recover_clear_agi_bucket(
- 	return;
- }
- 
--STATIC xfs_agino_t
--xlog_recover_process_one_iunlink(
-+static struct xfs_inode *
-+xlog_recover_get_one_iunlink(
- 	struct xfs_mount		*mp,
- 	xfs_agnumber_t			agno,
--	xfs_agino_t			agino,
-+	xfs_agino_t			*agino,
- 	int				bucket)
- {
- 	struct xfs_buf			*ibp;
-@@ -2695,48 +2695,35 @@ xlog_recover_process_one_iunlink(
- 	xfs_ino_t			ino;
- 	int				error;
- 
--	ino = XFS_AGINO_TO_INO(mp, agno, agino);
-+	ino = XFS_AGINO_TO_INO(mp, agno, *agino);
- 	error = xfs_iget(mp, NULL, ino, 0, 0, &ip);
- 	if (error)
--		goto fail;
-+		return NULL;
- 
- 	/*
--	 * Get the on disk inode to find the next inode in the bucket.
-+	 * Get the on disk inode to find the next inode in the bucket. Should
-+	 * not fail because we just read the inode from this buffer, but if it
-+	 * does then we still have to allow the caller to set up and release
-+	 * the inode we just looked up. Make sure the list walk terminates here,
-+	 * though.
- 	 */
- 	error = xfs_imap_to_bp(mp, NULL, &ip->i_imap, &dip, &ibp, 0);
--	if (error)
--		goto fail_iput;
-+	if (error) {
-+		ASSERT(0);
-+		*agino = NULLAGINO;
-+		return ip;
-+	}
-+
- 
- 	xfs_iflags_clear(ip, XFS_IRECOVERY);
- 	ASSERT(VFS_I(ip)->i_nlink == 0);
- 	ASSERT(VFS_I(ip)->i_mode != 0);
- 
--	/* setup for the next pass */
--	agino = be32_to_cpu(dip->di_next_unlinked);
-+	/* Get the next inode we will be looking up. */
-+	*agino = be32_to_cpu(dip->di_next_unlinked);
- 	xfs_buf_relse(ibp);
- 
--	/*
--	 * Prevent any DMAPI event from being sent when the reference on
--	 * the inode is dropped.
--	 */
--	ip->i_d.di_dmevmask = 0;
--
--	xfs_irele(ip);
--	return agino;
--
-- fail_iput:
--	xfs_irele(ip);
-- fail:
--	/*
--	 * We can't read in the inode this bucket points to, or this inode
--	 * is messed up.  Just ditch this bucket of inodes.  We will lose
--	 * some inodes and space, but at least we won't hang.
--	 *
--	 * Call xlog_recover_clear_agi_bucket() to perform a transaction to
--	 * clear the inode pointer in the bucket.
--	 */
--	xlog_recover_clear_agi_bucket(mp, agno, bucket);
--	return NULLAGINO;
-+	return ip;
- }
- 
- /*
-@@ -2762,58 +2749,106 @@ xlog_recover_process_one_iunlink(
-  * scheduled on this CPU to ensure other scheduled work can run without undue
-  * latency.
-  */
--STATIC void
--xlog_recover_process_iunlinks(
--	struct xlog	*log)
-+static int
-+xlog_recover_iunlinks_ag(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno)
- {
--	xfs_mount_t	*mp;
--	xfs_agnumber_t	agno;
--	xfs_agi_t	*agi;
--	xfs_buf_t	*agibp;
--	xfs_agino_t	agino;
--	int		bucket;
--	int		error;
-+	struct xfs_agi		*agi;
-+	struct xfs_buf		*agibp;
-+	int			bucket;
-+	int			error;
- 
--	mp = log->l_mp;
-+	/*
-+	 * Find the agi for this ag.
-+	 */
-+	error = xfs_read_agi(mp, NULL, agno, &agibp);
-+	if (error) {
- 
--	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
- 		/*
--		 * Find the agi for this ag.
-+		 * AGI is b0rked. Don't process it.
-+		 *
-+		 * We should probably mark the filesystem as corrupt after we've
-+		 * recovered all the ag's we can....
- 		 */
--		error = xfs_read_agi(mp, NULL, agno, &agibp);
-+		return 0;
-+	}
-+
-+	/*
-+	 * Unlock the buffer so that it can be acquired in the normal course of
-+	 * the transaction to truncate and free each inode.  Because we are not
-+	 * racing with anyone else here for the AGI buffer, we don't even need
-+	 * to hold it locked to read the initial unlinked bucket entries out of
-+	 * the buffer. We keep buffer reference though, so that it stays pinned
-+	 * in memory while we need the buffer.
-+	 */
-+	agi = agibp->b_addr;
-+	xfs_buf_unlock(agibp);
-+
-+	/*
-+	 * The unlinked inode list is maintained on incore inodes as a double
-+	 * linked list. We don't have any of that state in memory, so we have to
-+	 * create it as we go. This is simple as we are only removing from the
-+	 * head of the list and that means we only need to pull the current
-+	 * inode in and the next inode.  Inodes are unlinked when their
-+	 * reference count goes to zero, so we can overlap the xfs_iget() and
-+	 * xfs_irele() calls so we always have the first two inodes on the list
-+	 * in memory. Hence we can fake up the necessary in memory state for the
-+	 * unlink to "just work".
-+	 */
-+	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
-+		struct xfs_inode	*ip, *prev_ip = NULL;
-+		xfs_agino_t		agino;
-+
-+		agino = be32_to_cpu(agi->agi_unlinked[bucket]);
-+		while (agino != NULLAGINO) {
-+			ip = xlog_recover_get_one_iunlink(mp, agno, &agino,
-+							  bucket);
-+			if (!ip) {
-+				/*
-+				 * something busted, but still got to release
-+				 * prev_ip, so make it look like it's at the end
-+				 * of the list before it gets released.
-+				 */
-+				error = -EFSCORRUPTED;
-+				break;
-+			}
-+			list_add_tail(&ip->i_unlink,
-+					&agibp->b_pag->pag_ici_unlink_list);
-+			if (prev_ip)
-+				xfs_irele(prev_ip);
-+			prev_ip = ip;
-+			cond_resched();
-+		}
-+		if (prev_ip)
-+			xfs_irele(prev_ip);
- 		if (error) {
- 			/*
--			 * AGI is b0rked. Don't process it.
--			 *
--			 * We should probably mark the filesystem as corrupt
--			 * after we've recovered all the ag's we can....
-+			 * We can't read an inode this bucket points to, or an
-+			 * inode is messed up.  Just ditch this bucket of
-+			 * inodes.  We will lose some inodes and space, but at
-+			 * least we won't hang.
- 			 */
--			continue;
--		}
--		/*
--		 * Unlock the buffer so that it can be acquired in the normal
--		 * course of the transaction to truncate and free each inode.
--		 * Because we are not racing with anyone else here for the AGI
--		 * buffer, we don't even need to hold it locked to read the
--		 * initial unlinked bucket entries out of the buffer. We keep
--		 * buffer reference though, so that it stays pinned in memory
--		 * while we need the buffer.
--		 */
--		agi = agibp->b_addr;
--		xfs_buf_unlock(agibp);
--
--		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
--			agino = be32_to_cpu(agi->agi_unlinked[bucket]);
--			while (agino != NULLAGINO) {
--				agino = xlog_recover_process_one_iunlink(mp,
--							agno, agino, bucket);
--				cond_resched();
--			}
-+			xlog_recover_clear_agi_bucket(mp, agno, bucket);
-+			break;
- 		}
--		xfs_buf_rele(agibp);
- 	}
-+	xfs_buf_rele(agibp);
-+	return error;
- }
- 
-+void
-+xlog_recover_process_iunlinks(
-+       struct xlog             *log)
-+{
-+       struct xfs_mount        *mp = log->l_mp;
-+       xfs_agnumber_t          agno;
-+
-+       for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
-+               xlog_recover_iunlinks_ag(mp, agno);
-+}
-+
-+
- STATIC void
- xlog_unpack_data(
- 	struct xlog_rec_header	*rhead,
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index bbfd1d5b1c04..2def15297a5f 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -200,6 +200,7 @@ xfs_initialize_perag(
- 		pag->pag_mount = mp;
- 		spin_lock_init(&pag->pag_ici_lock);
- 		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
-+		INIT_LIST_HEAD(&pag->pag_ici_unlink_list);
- 		if (xfs_buf_hash_init(pag))
- 			goto out_free_pag;
- 		init_waitqueue_head(&pag->pagb_wait);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a72cfcaa4ad1..c35a6c463529 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -355,6 +355,7 @@ typedef struct xfs_perag {
- 	struct radix_tree_root pag_ici_root;	/* incore inode cache root */
- 	int		pag_ici_reclaimable;	/* reclaimable inodes */
- 	unsigned long	pag_ici_reclaim_cursor;	/* reclaim restart point */
-+	struct list_head pag_ici_unlink_list;	/* unlinked inode list */
- 
- 	/* buffer cache index */
- 	spinlock_t	pag_buf_lock;	/* lock for pag_buf_hash */
--- 
-2.26.2.761.g0e0b3e54be
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_inode.c | 22 ++++++++++++----------
+>  1 file changed, 12 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index ce128ff12762..7ee778bcde06 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -2283,14 +2283,13 @@ xfs_ifree_cluster(
+>  }
+>  
+>  /*
+> - * This is called to return an inode to the inode free list.
+> - * The inode should already be truncated to 0 length and have
+> - * no pages associated with it.  This routine also assumes that
+> - * the inode is already a part of the transaction.
+> + * This is called to return an inode to the inode free list.  The inode should
+> + * already be truncated to 0 length and have no pages associated with it.  This
+> + * routine also assumes that the inode is already a part of the transaction.
+>   *
+> - * The on-disk copy of the inode will have been added to the list
+> - * of unlinked inodes in the AGI. We need to remove the inode from
+> - * that list atomically with respect to freeing it here.
+> + * The on-disk copy of the inode will have been added to the list of unlinked
+> + * inodes in the AGI. We need to remove the inode from that list atomically with
+> + * respect to freeing it here.
+>   */
+>  int
+>  xfs_ifree(
+> @@ -2308,13 +2307,16 @@ xfs_ifree(
+>  	ASSERT(ip->i_d.di_nblocks == 0);
+>  
+>  	/*
+> -	 * Pull the on-disk inode from the AGI unlinked list.
+> +	 * Free the inode first so that we guarantee that the AGI lock is going
+> +	 * to be taken before we remove the inode from the unlinked list. This
+> +	 * makes the AGI lock -> unlinked list modification order the same as
+> +	 * used in O_TMPFILE creation.
+>  	 */
+> -	error = xfs_iunlink_remove(tp, ip);
+> +	error = xfs_difree(tp, ip->i_ino, &xic);
+>  	if (error)
+>  		return error;
+>  
+> -	error = xfs_difree(tp, ip->i_ino, &xic);
+> +	error = xfs_iunlink_remove(tp, ip);
+>  	if (error)
+>  		return error;
+>  
+> -- 
+> 2.26.2.761.g0e0b3e54be
+> 
 
