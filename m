@@ -2,161 +2,107 @@ Return-Path: <SRS0=yY6+=BX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F71C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 05:44:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DB8EC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 06:03:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 135E52078B
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 05:44:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 599712078B
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 06:03:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HULmAaOC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725972AbgHMFo0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Aug 2020 01:44:26 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:37826 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725949AbgHMFo0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Aug 2020 01:44:26 -0400
-Received: from dread.disaster.area (pa49-180-53-24.pa.nsw.optusnet.com.au [49.180.53.24])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id B48491A951B;
-        Thu, 13 Aug 2020 15:44:20 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k662E-0001gE-Lg; Thu, 13 Aug 2020 15:44:18 +1000
-Date:   Thu, 13 Aug 2020 15:44:18 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Qian Cai <cai@lca.pw>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Matthew Wilcox <willy@infradead.org>, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, khlebnikov@yandex-team.ru
-Subject: Re: WARN_ON_ONCE(1) in iomap_dio_actor()
-Message-ID: <20200813054418.GB3339@dread.disaster.area>
-References: <20200619211750.GA1027@lca.pw>
- <20200620001747.GC8681@bombadil.infradead.org>
- <20200724182431.GA4871@lca.pw>
- <20200726152412.GA26614@infradead.org>
- <20200811020302.GD5307@lca.pw>
+        id S1726597AbgHMGDc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Aug 2020 02:03:32 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:25349 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726204AbgHMGDc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Aug 2020 02:03:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597298610;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=qFLSxfJ/Au2GoliABl0heSh59wXsTWD2h2MhW2Aiv5A=;
+        b=HULmAaOCu3prDqSQkWFEIrqLUyBluCdXFx/e9HEcXspolWoZNlIrDSr5pBR1UNIGSfFDEA
+        rnhh585mxcEdk6vPzAjDRaYQ+p9YSGgahB9P5geawB/LyFuTJHHIeNSaSzdcmw8wI7t3f7
+        WlNoXUiMsHOeyLm8CP9m1k7fq2VNn3o=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-211-q-dUqiPqNci6_9ADTA3Ewg-1; Thu, 13 Aug 2020 02:03:29 -0400
+X-MC-Unique: q-dUqiPqNci6_9ADTA3Ewg-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 20ABD180DE3A
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2020 06:03:28 +0000 (UTC)
+Received: from bogon.redhat.com (ovpn-12-47.pek2.redhat.com [10.72.12.47])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 24FD45F1EF
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2020 06:03:26 +0000 (UTC)
+From:   Zorro Lang <zlang@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs_db: use correct inode to set inode type
+Date:   Thu, 13 Aug 2020 14:03:24 +0800
+Message-Id: <20200813060324.8159-1-zlang@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200811020302.GD5307@lca.pw>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LPwYv6e9 c=1 sm=1 tr=0
-        a=moVtWZxmCkf3aAMJKIb/8g==:117 a=moVtWZxmCkf3aAMJKIb/8g==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=F2pTjGBfAAAA:20 a=7-415B0cAAAA:8
-        a=_eiJewZb4kaZAsKqs4MA:9 a=4YkHEp-ugCOE0eHm:21 a=rzLbzqL5k24iaUm9:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 10, 2020 at 10:03:03PM -0400, Qian Cai wrote:
-> On Sun, Jul 26, 2020 at 04:24:12PM +0100, Christoph Hellwig wrote:
-> > On Fri, Jul 24, 2020 at 02:24:32PM -0400, Qian Cai wrote:
-> > > On Fri, Jun 19, 2020 at 05:17:47PM -0700, Matthew Wilcox wrote:
-> > > > On Fri, Jun 19, 2020 at 05:17:50PM -0400, Qian Cai wrote:
-> > > > > Running a syscall fuzzer by a normal user could trigger this,
-> > > > > 
-> > > > > [55649.329999][T515839] WARNING: CPU: 6 PID: 515839 at fs/iomap/direct-io.c:391 iomap_dio_actor+0x29c/0x420
-> > > > ...
-> > > > > 371 static loff_t
-> > > > > 372 iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
-> > > > > 373                 void *data, struct iomap *iomap, struct iomap *srcmap)
-> > > > > 374 {
-> > > > > 375         struct iomap_dio *dio = data;
-> > > > > 376
-> > > > > 377         switch (iomap->type) {
-> > > > > 378         case IOMAP_HOLE:
-> > > > > 379                 if (WARN_ON_ONCE(dio->flags & IOMAP_DIO_WRITE))
-> > > > > 380                         return -EIO;
-> > > > > 381                 return iomap_dio_hole_actor(length, dio);
-> > > > > 382         case IOMAP_UNWRITTEN:
-> > > > > 383                 if (!(dio->flags & IOMAP_DIO_WRITE))
-> > > > > 384                         return iomap_dio_hole_actor(length, dio);
-> > > > > 385                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
-> > > > > 386         case IOMAP_MAPPED:
-> > > > > 387                 return iomap_dio_bio_actor(inode, pos, length, dio, iomap);
-> > > > > 388         case IOMAP_INLINE:
-> > > > > 389                 return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
-> > > > > 390         default:
-> > > > > 391                 WARN_ON_ONCE(1);
-> > > > > 392                 return -EIO;
-> > > > > 393         }
-> > > > > 394 }
-> > > > > 
-> > > > > Could that be iomap->type == IOMAP_DELALLOC ? Looking throught the logs,
-> > > > > it contains a few pread64() calls until this happens,
-> > > > 
-> > > > It _shouldn't_ be able to happen.  XFS writes back ranges which exist
-> > > > in the page cache upon seeing an O_DIRECT I/O.  So it's not supposed to
-> > > > be possible for there to be an extent which is waiting for the contents
-> > > > of the page cache to be written back.
-> > > 
-> > > Okay, it is IOMAP_DELALLOC. We have,
-> > 
-> > Can you share the fuzzer?  If we end up with delalloc space here we
-> > probably need to fix a bug in the cache invalidation code.
-> 
-> Here is a simple reproducer (I believe it can also be reproduced using xfstests
-> generic/503 on a plain xfs without DAX when SCRATCH_MNT == TEST_DIR),
-> 
-> # git clone https://gitlab.com/cailca/linux-mm
-> # cd linux-mm; make
-> # ./random 14
+A test fails as:
+  # xfs_db -c "inode 133" -c "addr" -c "p core.size" -c "type inode" -c "addr" -c "p core.size" /dev/sdb1
+  current
+          byte offset 68096, length 512
+          buffer block 128 (fsbno 16), 32 bbs
+          inode 133, dir inode -1, type inode
+  core.size = 123142
+  current
+          byte offset 65536, length 512
+          buffer block 128 (fsbno 16), 32 bbs
+          inode 128, dir inode 128, type inode
+  core.size = 42
 
-Ok:
+The "type inode" get wrong inode addr due to it trys to get the
+beginning of an inode chunk, refer to "533d1d229 xfs_db: properly set
+inode type".
 
-file.fd_write = safe_open("./testfile", O_RDWR|O_CREAT);
-....
-file.fd_read = safe_open("./testfile", O_RDWR|O_CREAT|O_DIRECT);
-....
-file.ptr = safe_mmap(NULL, fsize, PROT_READ|PROT_WRITE, MAP_SHARED,
-			file.fd_write, 0);
+We don't need to get the beginning of a chunk in set_iocur_type, due
+to set_cur_inode(ino) will help to do all of that and make a proper
+verification. We just need to give it a correct inode.
 
-So this is all IO to the same inode....
+Reported-by: Jianhong Yin <jiyin@redhat.com>
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
+ db/io.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-and you loop
-
-while !done {
-
-	do {
-		rc = pread(file.fd_read, file.ptr + read, fsize - read,
-			read);
-		if (rc > 0)
-			read += rc;
-	} while (rc > 0);
-
-	rc = safe_fallocate(file.fd_write,
-			FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE,
-			0, fsize);
-}
-
-On two threads at once?
-
-So, essentially, you do a DIO read into a mmap()d range from the
-same file, with DIO read ascending and the mmap() range descending,
-then once that is done you hole punch the file and do it again?
-
-IOWs, this is a racing page_mkwrite()/DIO read workload, and the
-moment the two threads hit the same block of the file with a
-DIO read and a page_mkwrite at the same time, it throws a warning.
-
-Well, that's completely expected behaviour. DIO is not serialised
-against mmap() access at all, and so if the page_mkwrite occurs
-between the writeback and the iomap_apply() call in the dio path,
-then it will see the delalloc block taht the page-mkwrite allocated.
-
-No sane application would ever do this, it's behaviour as expected,
-so I don't think there's anything to care about here.
-
-Cheers,
-
-Dave.
+diff --git a/db/io.c b/db/io.c
+index 6628d061..61940a07 100644
+--- a/db/io.c
++++ b/db/io.c
+@@ -591,6 +591,7 @@ set_iocur_type(
+ 	/* Inodes are special; verifier checks all inodes in the chunk */
+ 	if (type->typnm == TYP_INODE) {
+ 		xfs_daddr_t	b = iocur_top->bb;
++		int		bo = iocur_top->boff;
+ 		xfs_ino_t	ino;
+ 
+ 		/*
+@@ -598,7 +599,7 @@ set_iocur_type(
+  		 * which contains the current disk location; daddr may change.
+  		 */
+ 		ino = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, b),
+-			((b << BBSHIFT) >> mp->m_sb.sb_inodelog) %
++			(((b << BBSHIFT) + bo) >> mp->m_sb.sb_inodelog) %
+ 			XFS_AGB_TO_AGINO(mp, mp->m_sb.sb_agblocks));
+ 		set_cur_inode(ino);
+ 		return;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
+
