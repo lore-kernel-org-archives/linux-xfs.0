@@ -2,51 +2,54 @@ Return-Path: <SRS0=yY6+=BX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D25DC433E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 14:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 547E1C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 14:26:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3413020791
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 14:26:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3020C20716
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 14:26:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BQR4y+LR"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Lg9gUKG/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726131AbgHMO0s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Aug 2020 10:26:48 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:54710 "EHLO
+        id S1726167AbgHMO0v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Aug 2020 10:26:51 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:56848 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726082AbgHMO0r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Aug 2020 10:26:47 -0400
+        with ESMTP id S1726082AbgHMO0u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Aug 2020 10:26:50 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597328806;
+        s=mimecast20190719; t=1597328808;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=++1bWx9Bj6bU4gRRj0LZq5QeusbZgbZx9UAC22MiD7E=;
-        b=BQR4y+LR9NfCK/XVJrPUsYO6pN9ykBO3g6dgkIex6OybKi+EEDjZ/2f+DvuAFBHhEx8I6U
-        ffAV1vomy1CqlyhTnWqgW/26K8yV/kYKz8EV5hG2yFlPSHQdZL8KM1xLPGfNojFhtQavfd
-        RHVcQ8GFllznVEjhJVMRhegol3xTVBI=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=UAvvRyfL6HEWum3CAEvmB45/CuhYgj1ClFsOO4C70ZA=;
+        b=Lg9gUKG/KB9Q76ZpmRk2kWY1HoW4Yi8JVC9AwZSN4rdtKQdT6GiIGoT8PA5enMvIU1Y7TO
+        Mc/WSPI5CGbSCOOgC5esUeNXag7NulxXQRYQaN+W3ch2PSdJ+x8Xm08AmJ6ToDvGPcnPXc
+        xx7SSJh2uiywILytJa4wgpmElsfYadk=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-230-eeg6H7iDNHqnHF-uPEkXWA-1; Thu, 13 Aug 2020 10:26:44 -0400
-X-MC-Unique: eeg6H7iDNHqnHF-uPEkXWA-1
+ us-mta-328-Gaq6OD30MS6-mKKGHxyF-w-1; Thu, 13 Aug 2020 10:26:46 -0400
+X-MC-Unique: Gaq6OD30MS6-mKKGHxyF-w-1
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0574F100CF64
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2020 14:26:44 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A98FE100CF6A
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2020 14:26:45 +0000 (UTC)
 Received: from eorzea.redhat.com (unknown [10.40.195.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2F3F95B696
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2020 14:26:42 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1135C5B696
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2020 14:26:44 +0000 (UTC)
 From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/2] Get rid of kmem_realloc()
-Date:   Thu, 13 Aug 2020 16:26:38 +0200
-Message-Id: <20200813142640.47923-1-cmaiolino@redhat.com>
+Subject: [PATCH 1/2] xfs: remove kmem_realloc() users
+Date:   Thu, 13 Aug 2020 16:26:39 +0200
+Message-Id: <20200813142640.47923-2-cmaiolino@redhat.com>
+In-Reply-To: <20200813142640.47923-1-cmaiolino@redhat.com>
+References: <20200813142640.47923-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
@@ -55,28 +58,85 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks.
+As a part of the memory cleanup, this patch remove all users of
+kmem_realloc(). Next patch will remove the function.
 
-This is just to give continuity to the kmem cleanup. This series get rid of
-kmem_realloc() and its users.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/libxfs/xfs_iext_tree.c  | 2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c | 8 ++++----
+ fs/xfs/xfs_log_recover.c       | 2 +-
+ fs/xfs/xfs_mount.c             | 4 ++--
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
-Patches have been tested with xfstests, no issues reported so far.
-
-Cheers
-
-Carlos Maiolino (2):
-  xfs: remove kmem_realloc() users
-  xfs: remove kmem_realloc()
-
- fs/xfs/kmem.c                  | 22 ----------------------
- fs/xfs/kmem.h                  |  1 -
- fs/xfs/libxfs/xfs_iext_tree.c  |  2 +-
- fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++----
- fs/xfs/xfs_log_recover.c       |  2 +-
- fs/xfs/xfs_mount.c             |  4 ++--
- fs/xfs/xfs_trace.h             |  1 -
- 7 files changed, 8 insertions(+), 32 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index 52451809c478..b4164256993d 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -603,7 +603,7 @@ xfs_iext_realloc_root(
+ 	if (new_size / sizeof(struct xfs_iext_rec) == RECS_PER_LEAF)
+ 		new_size = NODE_SIZE;
+ 
+-	new = kmem_realloc(ifp->if_u1.if_root, new_size, KM_NOFS);
++	new = krealloc(ifp->if_u1.if_root, new_size, GFP_NOFS | __GFP_NOFAIL);
+ 	memset(new + ifp->if_bytes, 0, new_size - ifp->if_bytes);
+ 	ifp->if_u1.if_root = new;
+ 	cur->leaf = new;
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 0cf853d42d62..7575de5cecb1 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -386,8 +386,8 @@ xfs_iroot_realloc(
+ 		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
+ 		new_max = cur_max + rec_diff;
+ 		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
+-		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
+-				KM_NOFS);
++		ifp->if_broot = krealloc(ifp->if_broot, new_size,
++					 GFP_NOFS | __GFP_NOFAIL);
+ 		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
+ 						     ifp->if_broot_bytes);
+ 		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
+@@ -496,8 +496,8 @@ xfs_idata_realloc(
+ 	 * in size so that it can be logged and stay on word boundaries.
+ 	 * We enforce that here.
+ 	 */
+-	ifp->if_u1.if_data = kmem_realloc(ifp->if_u1.if_data,
+-			roundup(new_size, 4), KM_NOFS);
++	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, roundup(new_size, 4),
++				      GFP_NOFS | __GFP_NOFAIL);
+ 	ifp->if_bytes = new_size;
+ }
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e2ec91b2d0f4..45dca18a9520 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2097,7 +2097,7 @@ xlog_recover_add_to_cont_trans(
+ 	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
+ 	old_len = item->ri_buf[item->ri_cnt-1].i_len;
+ 
+-	ptr = kmem_realloc(old_ptr, len + old_len, 0);
++	ptr = krealloc(old_ptr, len + old_len, GFP_KERNEL | __GFP_NOFAIL);
+ 	memcpy(&ptr[old_len], dp, len);
+ 	item->ri_buf[item->ri_cnt-1].i_len += len;
+ 	item->ri_buf[item->ri_cnt-1].i_addr = ptr;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index c8ae49a1e99c..0bc623c175e9 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -80,9 +80,9 @@ xfs_uuid_mount(
+ 	}
+ 
+ 	if (hole < 0) {
+-		xfs_uuid_table = kmem_realloc(xfs_uuid_table,
++		xfs_uuid_table = krealloc(xfs_uuid_table,
+ 			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
+-			0);
++			GFP_KERNEL | __GFP_NOFAIL);
+ 		hole = xfs_uuid_table_size++;
+ 	}
+ 	xfs_uuid_table[hole] = *uuid;
 -- 
 2.26.2
 
