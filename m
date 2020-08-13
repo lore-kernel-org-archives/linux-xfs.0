@@ -7,65 +7,63 @@ X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75657C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 15:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48242C433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 15:24:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51CEC20829
-	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 15:16:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A29F2078D
+	for <linux-xfs@archiver.kernel.org>; Thu, 13 Aug 2020 15:24:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NN6VgKem"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q0VVRWQp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726334AbgHMPQW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 13 Aug 2020 11:16:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35977 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726249AbgHMPQV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Aug 2020 11:16:21 -0400
+        id S1726292AbgHMPYN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 13 Aug 2020 11:24:13 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:25909 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726167AbgHMPYN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Aug 2020 11:24:13 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597331779;
+        s=mimecast20190719; t=1597332251;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=8cXTvs1Egwhhe27GvmxyjlqaXKfZPm8Vi5j5tj00vdA=;
-        b=NN6VgKem5ZJecJmAYfBqskDchRXBAGmM1AyXOqTH0bdcLeO5kTp3CLnyUAKO0aBM/zDRVK
-        F2EjO8COZZX7VA2prTs4IrNyU6tbVxSRMibfkDRL5rSNXQN8WCDArc+do6kleDzGabgz+S
-        CRZHenbYrjmp/5WTUeF63MU9s1Pn30o=
+        bh=iY1AO6Cl+iX9KpbIfCZima1ku/k4HjlhP/5334joxXM=;
+        b=Q0VVRWQpjXay1SxLMGFDnPbKtucNSllIttju0/UhmA0gYoNHsJz9ZPKqz7ydPXS2tFCn5t
+        rk/gYvplBoR6MDj9GSo0z47hfhjttFUewlenYtvHonyfxM05uomwHGaWgWez5FBPDuYFbb
+        JsdaWDnnlTG/B1ht9q/uYMHYj0DyPMQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-115-kOED2gzRN_659_F4un8EsA-1; Thu, 13 Aug 2020 11:16:17 -0400
-X-MC-Unique: kOED2gzRN_659_F4un8EsA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-287-N7UB4bQ7MHauieEthZbL3Q-1; Thu, 13 Aug 2020 11:24:09 -0400
+X-MC-Unique: N7UB4bQ7MHauieEthZbL3Q-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AD89B1800D41
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Aug 2020 15:16:16 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 083DB1DDF9;
+        Thu, 13 Aug 2020 15:24:08 +0000 (UTC)
 Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 266D519C78;
-        Thu, 13 Aug 2020 15:16:13 +0000 (UTC)
-Date:   Thu, 13 Aug 2020 23:29:05 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 75BE75D990;
+        Thu, 13 Aug 2020 15:24:07 +0000 (UTC)
+Date:   Thu, 13 Aug 2020 23:36:59 +0800
 From:   Zorro Lang <zlang@redhat.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: [PATCH] xfs_db: use correct inode to set inode type
-Message-ID: <20200813152905.GP2937@dhcp-12-102.nay.redhat.com>
-Mail-Followup-To: Gao Xiang <hsiangkao@redhat.com>,
+Message-ID: <20200813153659.GQ2937@dhcp-12-102.nay.redhat.com>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org
 References: <20200813060324.8159-1-zlang@redhat.com>
- <20200813135345.GA3176@xiangao.remote.csb>
+ <20200813145616.GI6096@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200813135345.GA3176@xiangao.remote.csb>
+In-Reply-To: <20200813145616.GI6096@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 13, 2020 at 09:53:45PM +0800, Gao Xiang wrote:
-> Hi,
-> 
+On Thu, Aug 13, 2020 at 07:56:16AM -0700, Darrick J. Wong wrote:
 > On Thu, Aug 13, 2020 at 02:03:24PM +0800, Zorro Lang wrote:
 > > A test fails as:
 > >   # xfs_db -c "inode 133" -c "addr" -c "p core.size" -c "type inode" -c "addr" -c "p core.size" /dev/sdb1
@@ -84,15 +82,21 @@ On Thu, Aug 13, 2020 at 09:53:45PM +0800, Gao Xiang wrote:
 > > beginning of an inode chunk, refer to "533d1d229 xfs_db: properly set
 > > inode type".
 > 
-> From the kernel side, the prefered way is
-> commit id ("subject")
+> It took me a minute to figure out what this was referring to (though it
 
-Hi Xiang,
+Sorry about that :-p
 
-Thanks for your review. I'll change my commit log.
+> was obvious from the code change).  Might I suggest something like:
+> 
+> The "type inode" command accidentally moves the io cursor because it
+> forgets to include the io cursor's buffer offset when it computes the
+> inode number from the io cursor's location.
+> 
+> Fixes: 533d1d229a88 ("xfs_db: properly set inode type")
+
+Sure, thanks for this detailed suggestion.
 
 > 
-> > 
 > > We don't need to get the beginning of a chunk in set_iocur_type, due
 > > to set_cur_inode(ino) will help to do all of that and make a proper
 > > verification. We just need to give it a correct inode.
@@ -122,39 +126,30 @@ Thanks for your review. I'll change my commit log.
 > > -			((b << BBSHIFT) >> mp->m_sb.sb_inodelog) %
 > > +			(((b << BBSHIFT) + bo) >> mp->m_sb.sb_inodelog) %
 > >  			XFS_AGB_TO_AGINO(mp, mp->m_sb.sb_agblocks));
-> >  		set_cur_inode(ino);
-> >  		return;
 > 
-> Not familar with such code, but after looking into a bit, (my premature
-> thought is that) I'm wondering if we need to reverify original buffer in
+> /me feels like this whole thing ought to be revised into something
+> involving XFS_OFFBNO_TO_AGINO to make the unit conversions easier to
+> read, e.g.:
 > 
-> if (type->fields) {
-> 	...
-> 	set_cur()
-> }
+> 	xfs_daddr_t	b = iocur_top->bb;
+> 	xfs_agbno_t	agbno;
+> 	xfs_agino_t	agino;
 > 
-> iocur_top->typ = type;
-> 
-> /* verify the buffer if the type has one. */
-> ...
-> 
-> since set_cur() already verified the buffer in
-> set_cur->libxfs_buf_read->...->libxfs_readbuf_verify?
-> 
-> Not related to this patchset but I'm a bit curious about it now...
+> 	agbno = xfs_daddr_to_agbno(mp, b);
+> 	agino = XFS_OFFBNO_TO_AGINO(mp, agbno,
+> 			iocur_top->boff / mp->m_sb.sb_inodesize);
+> 	ino = XFS_AGINO_TO_INO(mp, xfs_daddr_to_agno(mp, b), agino);
 
-I'm not the one who learn about xfsprogs best:) But by looking into
-set_cur_inode() -> set_cur(), I think the set_cur() does the xfs_buf
-verification, so I don't think we need to do that again at the end
-of set_iocur_type().
+Sure, that looks clearer.
 
 Thanks,
 Zorro
 
 > 
-> Thanks,
-> Gao Xiang
+> --D
 > 
+> >  		set_cur_inode(ino);
+> >  		return;
 > > -- 
 > > 2.20.1
 > > 
