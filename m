@@ -2,128 +2,177 @@ Return-Path: <SRS0=kyg5=BY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C3A4C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:10:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0922C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 18:43:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB5E72068E
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:10:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LAMheQXH"
+	by mail.kernel.org (Postfix) with ESMTP id C3823205CB
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 18:43:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726990AbgHNIKF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Aug 2020 04:10:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35766 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726124AbgHNIKF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Aug 2020 04:10:05 -0400
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E16FC061383
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:10:05 -0700 (PDT)
-Received: by mail-pj1-x1044.google.com with SMTP id ep8so4029990pjb.3
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:10:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=9NQNiEsE2oSpO8KD806KMNjp9qpAmlHnF7jbyd7kmx0=;
-        b=LAMheQXHQh42fmWBBoEYHcKfKesNLobvsM6kj5U2cjlUvLwM5TpolbH+O04HqfKnPB
-         J9v7MFZRGOPC1asl2XOx+zACe2g3KRc133KrNF9I9OlEnRInZpXEznEM3Uc49C8HqLY7
-         ASArVxsOiniqAHKgB1fBdUHuly+1k/68X3SerX7oONkwAKa8L7oVv1M3zUcVHArVJBg2
-         LgD3XNymI03Yg34dZPz4TGU6KB4D4AFQuquRnPVB+zFklOLJ7UhySJ7oz+gvgujUQMWz
-         gN7KgzBUAIdnxopS9cJL7A3AEW357V2GYVyc0yLMqRnAxO4K8y83hXZKf11XxDb0jjEa
-         hxyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=9NQNiEsE2oSpO8KD806KMNjp9qpAmlHnF7jbyd7kmx0=;
-        b=cZcrW8nZy3RhWuhSWKfa4t/KM1tJK1Kv4FHgTkTx1d6Yip2jLlunvwOmW5/mmp4tPn
-         LhYcNNTwxeImdd1TuaBdrj1k5aOk8nMguYMxGvs3J4AgRh10+8+gz1/9LZYn86qIkowo
-         Fo25q/IJI7e+pDvXcghqSd+byHcl+nrzi95d80hhxVCOYvTmbqPYx2iUtL4MmwjZ9uYg
-         YAQnH05UvaC8ecgYkyNiiVBy893BJk5u5xoXhrfq02nYkjGJi+pfk1S5JzA2JtKGS/FB
-         k/dgoH4hr4xitHZ7ODT2b+VOvejEKWoCM39bQxanth1m6/A1mUR6ACXWUxYiEj0Kebx7
-         7njQ==
-X-Gm-Message-State: AOAM53196UOOr2iYSxzOr3f4VEOZEZoqmBcKXPr+ltuESDHM8hsjaHAQ
-        fBBLzsH77E+Kg28hYXoRL66ldR2Ps8E=
-X-Google-Smtp-Source: ABdhPJyz6+ybJ0oGzLVL29I8eBUmmDfgn0m7IDHN+1Ec6vS41qfsbMRhmlyvFoQ6Ex2mol6Qz9aUyQ==
-X-Received: by 2002:a17:90a:d78e:: with SMTP id z14mr1232014pju.133.1597392602591;
-        Fri, 14 Aug 2020 01:10:02 -0700 (PDT)
-Received: from localhost.localdomain ([122.179.47.119])
-        by smtp.gmail.com with ESMTPSA id z17sm8594289pfq.38.2020.08.14.01.10.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2020 01:10:02 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
+        id S1726636AbgHNSnT convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Aug 2020 14:43:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50124 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726541AbgHNSnT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 14 Aug 2020 14:43:19 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
-        david@fromorbit.com
-Subject: [PATCH V2 10/10] xfs: Check for extent overflow when swapping extents
-Date:   Fri, 14 Aug 2020 13:38:33 +0530
-Message-Id: <20200814080833.84760-11-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200814080833.84760-1-chandanrlinux@gmail.com>
-References: <20200814080833.84760-1-chandanrlinux@gmail.com>
+Subject: [Bug 208907] New: [fstests generic/074 on xfs]: 5.7.10 fails with a
+ hung task on
+Date:   Fri, 14 Aug 2020 18:43:18 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: mcgrof@kernel.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression
+Message-ID: <bug-208907-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Removing an initial range of source/donor file's extent and adding a new
-extent (from donor/source file) in its place will cause extent count to
-increase by 1.
+https://bugzilla.kernel.org/show_bug.cgi?id=208907
 
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
----
- fs/xfs/libxfs/xfs_inode_fork.h |  6 ++++++
- fs/xfs/xfs_bmap_util.c         | 11 +++++++++++
- 2 files changed, 17 insertions(+)
+            Bug ID: 208907
+           Summary: [fstests generic/074 on xfs]: 5.7.10 fails with a hung
+                    task on
+           Product: File System
+           Version: 2.5
+    Kernel Version: 5.7.10
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: mcgrof@kernel.org
+        Regression: No
 
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index afff20703270..82b26536f218 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -98,6 +98,12 @@ struct xfs_ifork {
-  */
- #define XFS_IEXT_REFLINK_REMAP_CNT(smap_real, dmap_written) \
- 	(((smap_real) ? 1 : 0) + ((dmap_written) ? 1 : 0))
-+/*
-+ * Removing an initial range of source/donor file's extent and
-+ * adding a new extent (from donor/source file) in its place
-+ * will cause extent count to increase by 1.
-+ */
-+#define XFS_IEXT_SWAP_RMAP_CNT 1
- 
- 
- /*
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index f6352b5e5552..8159306a8c41 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1375,6 +1375,17 @@ xfs_swap_extent_rmap(
- 		/* Unmap the old blocks in the source file. */
- 		while (tirec.br_blockcount) {
- 			ASSERT(tp->t_firstblock == NULLFSBLOCK);
-+
-+			error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+					XFS_IEXT_SWAP_RMAP_CNT);
-+			if (error)
-+				goto out;
-+
-+			error = xfs_iext_count_may_overflow(tip, XFS_DATA_FORK,
-+					XFS_IEXT_SWAP_RMAP_CNT);
-+			if (error)
-+				goto out;
-+
- 			trace_xfs_swap_extent_rmap_remap_piece(tip, &tirec);
- 
- 			/* Read extent from the source file */
+Should be extremely easy to reproduce in 5 commands with kdevops [0], leave
+everything with the defaults, and then just enable fstests.
+
+[0] https://github.com/mcgrof/kdevops
+
+make bringup
+make fstests
+
+Just ssh to kdevops-xfs and run:
+
+cd /var/lib/xfstests/
+./gendisks.sh -m
+./check generic/074
+
+Aug 14 18:27:34 kdevops-xfs-dev kernel: XFS (loop16): Mounting V5 Filesystem
+Aug 14 18:27:34 kdevops-xfs-dev kernel: XFS (loop16): Ending clean mount
+Aug 14 18:27:34 kdevops-xfs-dev kernel: xfs filesystem being mounted at
+/media/test supports timestamps until 2038 (0x7fffffff)
+Aug 14 18:28:16 kdevops-xfs-dev kernel: nvme nvme1: I/O 128 QID 2 timeout,
+aborting
+Aug 14 18:28:16 kdevops-xfs-dev kernel: nvme nvme1: Abort status: 0x4001
+Aug 14 18:28:47 kdevops-xfs-dev kernel: nvme nvme1: I/O 128 QID 2 timeout,
+reset controller
+Aug 14 18:28:54 kdevops-xfs-dev kernel: sched: RT throttling activated
+Aug 14 18:31:12 kdevops-xfs-dev kernel: INFO: task xfsaild/nvme1n1:289 blocked
+for more than 120 seconds.
+Aug 14 18:31:12 kdevops-xfs-dev kernel:       Not tainted 5.7.0-2-amd64 #1
+Debian 5.7.10-1
+Aug 14 18:31:12 kdevops-xfs-dev kernel: "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Aug 14 18:31:12 kdevops-xfs-dev kernel: xfsaild/nvme1n1 D    0   289      2
+0x80004000
+Aug 14 18:31:12 kdevops-xfs-dev kernel: Call Trace:
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  __schedule+0x2da/0x770
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? xlog_cil_force_lsn+0xc0/0x220 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  schedule+0x4a/0xb0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  xlog_wait_on_iclog+0x113/0x130 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? wake_up_q+0xa0/0xa0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  xfsaild+0x1bd/0x810 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? __switch_to+0x80/0x3c0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  kthread+0xf9/0x130
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? xfs_trans_ail_cursor_first+0x80/0x80
+[xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? kthread_park+0x90/0x90
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ret_from_fork+0x35/0x40
+Aug 14 18:31:12 kdevops-xfs-dev kernel: INFO: task loop16:912 blocked for more
+than 120 seconds.
+Aug 14 18:31:12 kdevops-xfs-dev kernel:       Not tainted 5.7.0-2-amd64 #1
+Debian 5.7.10-1
+Aug 14 18:31:12 kdevops-xfs-dev kernel: "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Aug 14 18:31:12 kdevops-xfs-dev kernel: loop16          D    0   912      2
+0x80004000
+Aug 14 18:31:12 kdevops-xfs-dev kernel: Call Trace:
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  __schedule+0x2da/0x770
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? xlog_cil_force_lsn+0xc0/0x220 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  schedule+0x4a/0xb0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  xlog_wait_on_iclog+0x113/0x130 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? wake_up_q+0xa0/0xa0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  xfsaild+0x1bd/0x810 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? __switch_to+0x80/0x3c0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  kthread+0xf9/0x130
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? xfs_trans_ail_cursor_first+0x80/0x80
+[xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? kthread_park+0x90/0x90
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ret_from_fork+0x35/0x40
+Aug 14 18:31:12 kdevops-xfs-dev kernel: INFO: task loop16:912 blocked for more
+than 120 seconds.
+Aug 14 18:31:12 kdevops-xfs-dev kernel:       Not tainted 5.7.0-2-amd64 #1
+Debian 5.7.10-1
+Aug 14 18:31:12 kdevops-xfs-dev kernel: "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Aug 14 18:31:12 kdevops-xfs-dev kernel: loop16          D    0   912      2
+0x80004000
+Aug 14 18:31:12 kdevops-xfs-dev kernel: Call Trace:
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  __schedule+0x2da/0x770
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  schedule+0x4a/0xb0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  xlog_wait_on_iclog+0x113/0x130 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? wake_up_q+0xa0/0xa0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  __xfs_log_force_lsn+0x10a/0x1d0 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? xfs_file_fsync+0x1f4/0x230 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  xfs_log_force_lsn+0x91/0x120 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  xfs_file_fsync+0x1f4/0x230 [xfs]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? __switch_to_asm+0x34/0x70
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  loop_queue_work+0x47d/0xa50 [loop]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? __switch_to+0x80/0x3c0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? __schedule+0x2e2/0x770
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  kthread_worker_fn+0x73/0x1d0
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  kthread+0xf9/0x130
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? loop_info64_to_compat+0x220/0x220
+[loop]
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ? kthread_park+0x90/0x90
+Aug 14 18:31:12 kdevops-xfs-dev kernel:  ret_from_fork+0x35/0x40
+Aug 14 18:31:12 kdevops-xfs-dev kernel: INFO: task umount:2212 blocked for more
+than 120 seconds.
+Aug 14 18:31:12 kdevops-xfs-dev kernel:       Not tainted 5.7.0-2-amd64 #1
+Debian 5.7.10-1
+Aug 14 18:31:12 kdevops-xfs-dev kernel: "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Aug 14 18:31:12 kdevops-xfs-dev kernel: umount          D    0  2212   2208
+0x00004000
+
 -- 
-2.28.0
-
+You are receiving this mail because:
+You are watching the assignee of the bug.
