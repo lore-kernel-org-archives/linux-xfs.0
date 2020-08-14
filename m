@@ -2,70 +2,72 @@ Return-Path: <SRS0=kyg5=BY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B807CC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:09:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF85DC433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:09:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 943D12068E
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:09:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF6A620771
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:09:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZamMkwth"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B+BwYPqg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726139AbgHNIJk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Aug 2020 04:09:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35682 "EHLO
+        id S1726895AbgHNIJn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Aug 2020 04:09:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35688 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726124AbgHNIJk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Aug 2020 04:09:40 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 232CCC061383
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:09:40 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id r11so4176570pfl.11
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:09:40 -0700 (PDT)
+        with ESMTP id S1726124AbgHNIJm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Aug 2020 04:09:42 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6000CC061383
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:09:42 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id d19so4161117pgl.10
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:09:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zch9OcvnfmuUL7C/4JEtGYWRdUtMt1IZ6FBFW2v/gRE=;
-        b=ZamMkwthyX5VogcS5hE0hbElL2K1LNfyGFjCFrPCQrEKsL7s+gsDuUITUX1m0g7UKL
-         +F6fIZGHBUPv+CeMt3wxX45qNJgTq/RdpLiK7/hBtd8m31U5g8sG/u6KnZEyi2gaFH3C
-         VaBWP3tNxSiv40nGUxWU7Rezc5l760geZRf1aTMJpNdPGDyFZYxWjihBPzmOmsSGAf9+
-         qAYhGaRdsCqNggpfGNr8hQAobxBMLiigtKswbIzk5FyteRZ5GZ1KaFRd0nGhw2bhqDmL
-         QJ7wEWYgfzNdbEhoPi8TsQm7VmrSRT6TTRDF36wJg0IYU+K/9yylcY7TLOM5ANi7EcUy
-         5OuA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=jHxSR/pm2ySJla9ecEacKlDwTrfPRZHpq7fjIF3KGuc=;
+        b=B+BwYPqgPa4nvP2Fs9GFbi3EQsmJpmUseCqklQCij+rtwoyUqx8jTxPYiJxicxqvHg
+         W8+XarEdVFZ4lox3UPcZX/aVT708Anrr9aUAkD/VfLd/p50zImNs9kfhmh76d52hEVde
+         iARMij4j5tBSHTXF8OgUWiZT6RaWIHpNNAXikeETwZu/ndNW0rXjVBGmXkAGDl3DsE/R
+         UXO1OaBCZ4GCfXMrz78jRS0UK7Q+PMIG8br500m859Uzqfn9R5JQ7lwhl9zArxn2sfvY
+         Waa7eNf1RyhQEa4CUjwndH5TSpDmiWsq44RybKrIUdkNqDVV/Swds18JPp/88nCcNR+i
+         FxYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=zch9OcvnfmuUL7C/4JEtGYWRdUtMt1IZ6FBFW2v/gRE=;
-        b=TBcssV8u346hoqxo8v41bMV00bcs2uU9AoxIHw0cWpJ8/qiYn8qb21ttVjYYCU7pja
-         xSGyYyIcudfXplSGL/eHlMvNu5xh7WYHgRZ+hTPJLXEXw7zMIlw+Z1zwtgfZ8+1Zezbz
-         CKpS7NwS1p438OJuT+TFZjLYj6uIHyLul/npeVMceU2sR/c/2jK1Vi1OMfYED6IeSOaV
-         X+RYArNoYUikC7bNjxdVaojUmWVS/b2IgW7mbcAEUDyqbYduCHPU5cMdOnkUKynIsjwO
-         9OoHLQYd1ZfEZsnaCfbY2sY1vPE8yHOAiKHj0W7JMzBVx2j3ZW7wwUrLLMpVcA0+Mimp
-         6nag==
-X-Gm-Message-State: AOAM532t/JqSF8icpFLDyfmGvSn7QuRkQrQ2Th9g1MJ6L0tmOwCrP1Va
-        jyKxP2SJ4dH82FyXsZqT+GwXcTzaccc=
-X-Google-Smtp-Source: ABdhPJwqYqlry9brGCWJuPliIWaBK9kH9Hfl80H7WdcQU2KVceTY/M+TaLPUrnHvmUf1Q9GPy5bjVA==
-X-Received: by 2002:aa7:9219:: with SMTP id 25mr1050875pfo.4.1597392579243;
-        Fri, 14 Aug 2020 01:09:39 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=jHxSR/pm2ySJla9ecEacKlDwTrfPRZHpq7fjIF3KGuc=;
+        b=UB4UsKZAgWGPzheoSnGGjht6N1RvsoJDLcX2KdsLar55H8o/LgJoZh97QcPTF8yEm/
+         T9iVjzsxTV1sq2bSncHODgCXtX5HrTk5WGjQ+xL6HhuRfd0+UDw42y6cJUK9/TA1yrHV
+         1dlcZSqFevZXI2FlDyXXchVycdJY7GZmxHm24oSZp3+2DpouHE28+SKUGFVl5/QzfW1Y
+         TTkyOKOQJ4hosd3o2EQjDEWYlfW56h0N25ogDDH7AHSAsWxLmrm+/BvfWZC8ccfjLTQz
+         vJflmdnndyzCYykFA4a/3nUUNS21pUVK/3fvcaqm44MQd4zQ596Ei0+A/109bwApbeN1
+         81oA==
+X-Gm-Message-State: AOAM5331OcaJCpE8aaHfO3rcj8XBrHanaYPzk7ZyqdaVUJ3irv1D9Vir
+        OYBks2xBzeQS5qBZDEa22hqf9d/YLYg=
+X-Google-Smtp-Source: ABdhPJxw1hEyZFi0NYP8hxPzAesaor2yRsvQFkYXPAC12JrlInP1lB0FkhvAnw2I+IKeNqJqlDSmFQ==
+X-Received: by 2002:a62:3303:: with SMTP id z3mr1054349pfz.252.1597392581653;
+        Fri, 14 Aug 2020 01:09:41 -0700 (PDT)
 Received: from localhost.localdomain ([122.179.47.119])
-        by smtp.gmail.com with ESMTPSA id z17sm8594289pfq.38.2020.08.14.01.09.36
+        by smtp.gmail.com with ESMTPSA id z17sm8594289pfq.38.2020.08.14.01.09.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2020 01:09:38 -0700 (PDT)
+        Fri, 14 Aug 2020 01:09:41 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
         david@fromorbit.com
-Subject: [PATCH V2 00/10] Bail out if transaction can cause extent count to overflow
-Date:   Fri, 14 Aug 2020 13:38:23 +0530
-Message-Id: <20200814080833.84760-1-chandanrlinux@gmail.com>
+Subject: [PATCH V2 01/10] xfs: Add helper for checking per-inode extent count overflow
+Date:   Fri, 14 Aug 2020 13:38:24 +0530
+Message-Id: <20200814080833.84760-2-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200814080833.84760-1-chandanrlinux@gmail.com>
+References: <20200814080833.84760-1-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -89,64 +91,79 @@ For e.g.
    quantity. However the on-disk extent counter is an unsigned 16-bit
    quantity and hence cannot hold 98511 extents.
 
-4. The following incorrect value is stored in the xattr extent counter,
+4. The following incorrect value is stored in the attr extent counter,
    # xfs_db -f -c 'inode 131' -c 'print core.naextents' /dev/loop0
    core.naextents = -32561
 
-This patchset adds a new helper function
-(i.e. xfs_iext_count_may_overflow()) to check for overflow of the
-per-inode data and xattr extent counters and invokes it before
-starting an fs operation (e.g. creating a new directory entry). With
-this patchset applied, XFS detects counter overflows and returns with
-an error rather than causing a silent corruption.
+This commit adds a new helper function (i.e.
+xfs_iext_count_may_overflow()) to check for overflow of the per-inode
+data and xattr extent counters. Future patches will use this function to
+make sure that an FS operation will not cause the extent counter to
+overflow.
 
-The patchset has been tested by executing xfstests with the following
-mkfs.xfs options,
-1. -m crc=0 -b size=1k
-2. -m crc=0 -b size=4k
-3. -m crc=0 -b size=512
-4. -m rmapbt=1,reflink=1 -b size=1k
-5. -m rmapbt=1,reflink=1 -b size=4k
+Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+ fs/xfs/libxfs/xfs_trans_resv.c | 33 +++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_trans_resv.h |  2 ++
+ 2 files changed, 35 insertions(+)
 
-The patches can also be obtained from
-https://github.com/chandanr/linux.git at branch xfs-reserve-extent-count-v2.
-
-Changelog:
-V1 -> V2:
-  1. Rename helper function from xfs_trans_resv_ext_cnt() to
-     xfs_iext_count_may_overflow().
-  2. Define and use macros to represent fs operations and the
-     corresponding increase in extent count.
-  3. Split the patches based on the fs operation being performed.
-
-Chandan Babu R (10):
-  xfs: Add helper for checking per-inode extent count overflow
-  xfs: Check for extent overflow when trivally adding a new extent
-  xfs: Check for extent overflow when deleting an extent
-  xfs: Check for extent overflow when adding/removing xattrs
-  xfs: Check for extent overflow when adding/removing dir entries
-  xfs: Check for extent overflow when writing to unwritten extent
-  xfs: Check for extent overflow when inserting a hole
-  xfs: Check for extent overflow when moving extent from cow to data
-    fork
-  xfs: Check for extent overflow when remapping an extent
-  xfs: Check for extent overflow when swapping extents
-
- fs/xfs/libxfs/xfs_attr.c       | 13 ++++++
- fs/xfs/libxfs/xfs_bmap.c       |  8 ++++
- fs/xfs/libxfs/xfs_inode_fork.h | 72 ++++++++++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_trans_resv.c | 33 ++++++++++++++++
- fs/xfs/libxfs/xfs_trans_resv.h |  2 +
- fs/xfs/xfs_bmap_item.c         |  4 ++
- fs/xfs/xfs_bmap_util.c         | 30 ++++++++++++++
- fs/xfs/xfs_dquot.c             |  8 +++-
- fs/xfs/xfs_inode.c             | 27 +++++++++++++
- fs/xfs/xfs_iomap.c             | 10 +++++
- fs/xfs/xfs_reflink.c           | 11 ++++++
- fs/xfs/xfs_rtalloc.c           |  5 +++
- fs/xfs/xfs_symlink.c           |  5 +++
- 13 files changed, 227 insertions(+), 1 deletion(-)
-
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
+index d1a0848cb52e..d21990d9df7a 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.c
++++ b/fs/xfs/libxfs/xfs_trans_resv.c
+@@ -832,6 +832,39 @@ xfs_calc_sb_reservation(
+ 	return xfs_calc_buf_res(1, mp->m_sb.sb_sectsize);
+ }
+ 
++int
++xfs_iext_count_may_overflow(
++	struct xfs_inode	*ip,
++	int			whichfork,
++	int			nr_to_add)
++{
++	struct xfs_ifork	*ifp;
++	uint64_t		max_exts = 0;
++	uint64_t		nr_exts;
++
++	switch (whichfork) {
++	case XFS_DATA_FORK:
++		max_exts = MAXEXTNUM;
++		break;
++
++	case XFS_ATTR_FORK:
++		max_exts = MAXAEXTNUM;
++		break;
++
++	default:
++		ASSERT(0);
++		break;
++	}
++
++	ifp = XFS_IFORK_PTR(ip, whichfork);
++	nr_exts = ifp->if_nextents + nr_to_add;
++
++	if (nr_exts > max_exts)
++		return -EFBIG;
++
++	return 0;
++}
++
+ void
+ xfs_trans_resv_calc(
+ 	struct xfs_mount	*mp,
+diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+index 7241ab28cf84..9d71b51990ac 100644
+--- a/fs/xfs/libxfs/xfs_trans_resv.h
++++ b/fs/xfs/libxfs/xfs_trans_resv.h
+@@ -93,5 +93,7 @@ struct xfs_trans_resv {
+ 
+ void xfs_trans_resv_calc(struct xfs_mount *mp, struct xfs_trans_resv *resp);
+ uint xfs_allocfree_log_count(struct xfs_mount *mp, uint num_ops);
++int xfs_iext_count_may_overflow(struct xfs_inode *ip, int whichfork,
++		int nr_exts);
+ 
+ #endif	/* __XFS_TRANS_RESV_H__ */
 -- 
 2.28.0
 
