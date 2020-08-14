@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72F19C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:10:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C3A4C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:10:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 488D420771
-	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:10:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB5E72068E
+	for <linux-xfs@archiver.kernel.org>; Fri, 14 Aug 2020 08:10:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iOjVvRid"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LAMheQXH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726989AbgHNIKB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 14 Aug 2020 04:10:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35754 "EHLO
+        id S1726990AbgHNIKF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 14 Aug 2020 04:10:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726124AbgHNIKB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Aug 2020 04:10:01 -0400
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 046B2C061383
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:10:01 -0700 (PDT)
-Received: by mail-pl1-x641.google.com with SMTP id u10so3835978plr.7
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:10:01 -0700 (PDT)
+        with ESMTP id S1726124AbgHNIKF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Aug 2020 04:10:05 -0400
+Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E16FC061383
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:10:05 -0700 (PDT)
+Received: by mail-pj1-x1044.google.com with SMTP id ep8so4029990pjb.3
+        for <linux-xfs@vger.kernel.org>; Fri, 14 Aug 2020 01:10:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=JsRw6B599oq+UPDByCJYf/bZpP5uc5Yihgn4D62MRKs=;
-        b=iOjVvRidRMPl8oVXq2CdDkzGlLSn3z0oiWGcefHfFO85mfL8/yBdHU1EiiWatLy+s5
-         I04WH2/lUDi3q2qHmrXzgRUBGOJ/CrgX0AFXC6eQKFAXkVJUb3Gyrbx7jFKzUL6nXFPo
-         huFFdI1RoIpswzPW+AWMj5CGF1jOsoHgCE2fgyWNwQkNsbb46taAlgBTZ40gYA4huor8
-         CYOZV+VkBZYsK7gVr5+biX01jXJRN/Zpw8klvcfcYfpmOZE4oQv2tFKM5bTHR85+bk33
-         Q2dLDnUZ43EqN1urUj33xgZ1Wa+5UTt5YIGvUxV2eGVWGCbvVrtLIpSkTxsspU4rni+f
-         pZyA==
+        bh=9NQNiEsE2oSpO8KD806KMNjp9qpAmlHnF7jbyd7kmx0=;
+        b=LAMheQXHQh42fmWBBoEYHcKfKesNLobvsM6kj5U2cjlUvLwM5TpolbH+O04HqfKnPB
+         J9v7MFZRGOPC1asl2XOx+zACe2g3KRc133KrNF9I9OlEnRInZpXEznEM3Uc49C8HqLY7
+         ASArVxsOiniqAHKgB1fBdUHuly+1k/68X3SerX7oONkwAKa8L7oVv1M3zUcVHArVJBg2
+         LgD3XNymI03Yg34dZPz4TGU6KB4D4AFQuquRnPVB+zFklOLJ7UhySJ7oz+gvgujUQMWz
+         gN7KgzBUAIdnxopS9cJL7A3AEW357V2GYVyc0yLMqRnAxO4K8y83hXZKf11XxDb0jjEa
+         hxyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JsRw6B599oq+UPDByCJYf/bZpP5uc5Yihgn4D62MRKs=;
-        b=VlBqumqsKwlJhms925vEMLPU2/oT0s/CrC7XdZ+WaXiv2aN/AvmDYYm5B8gIKxHEzL
-         w8Mt36A4hIqQG5d+X4rDzGGR/Bit6f5bdLwZzgD1X0AYQrtqRFN79drvvyqMineD1tbL
-         niXA253ayVN+M6i1iunt++LDHXOU6RJHcs3OVv/442W2NRseUw6Thp28tZKdgmQhifWH
-         EHk9Sk8koSvb5caBq4po/ZRbpbuSwF8k4VE2vscf5+BNNuXl4O7zo0HpuBXOS+z7+jIR
-         21YJddanru7UXv1leQu5j3aIqqrbZEaQQUPuaUF/sw7r7zsWZ0BKlgdDt6D90Gy/NCJb
-         blaw==
-X-Gm-Message-State: AOAM533OOX/Wqq4yTH+TzVpLBeu0sd2KbXD8WqcRi5eXn0cSqG23ez33
-        WJp9UP11qjKIZQ/hQESWNxaqKBVCqzk=
-X-Google-Smtp-Source: ABdhPJyW0j2pufYY+YlubFoehDO/GELR/5iFeUVCFkAaIZ1GWBpCThmJUhatRq0Kvdbfy0zolsZZDQ==
-X-Received: by 2002:a17:90b:b18:: with SMTP id bf24mr1322778pjb.94.1597392600272;
-        Fri, 14 Aug 2020 01:10:00 -0700 (PDT)
+        bh=9NQNiEsE2oSpO8KD806KMNjp9qpAmlHnF7jbyd7kmx0=;
+        b=cZcrW8nZy3RhWuhSWKfa4t/KM1tJK1Kv4FHgTkTx1d6Yip2jLlunvwOmW5/mmp4tPn
+         LhYcNNTwxeImdd1TuaBdrj1k5aOk8nMguYMxGvs3J4AgRh10+8+gz1/9LZYn86qIkowo
+         Fo25q/IJI7e+pDvXcghqSd+byHcl+nrzi95d80hhxVCOYvTmbqPYx2iUtL4MmwjZ9uYg
+         YAQnH05UvaC8ecgYkyNiiVBy893BJk5u5xoXhrfq02nYkjGJi+pfk1S5JzA2JtKGS/FB
+         k/dgoH4hr4xitHZ7ODT2b+VOvejEKWoCM39bQxanth1m6/A1mUR6ACXWUxYiEj0Kebx7
+         7njQ==
+X-Gm-Message-State: AOAM53196UOOr2iYSxzOr3f4VEOZEZoqmBcKXPr+ltuESDHM8hsjaHAQ
+        fBBLzsH77E+Kg28hYXoRL66ldR2Ps8E=
+X-Google-Smtp-Source: ABdhPJyz6+ybJ0oGzLVL29I8eBUmmDfgn0m7IDHN+1Ec6vS41qfsbMRhmlyvFoQ6Ex2mol6Qz9aUyQ==
+X-Received: by 2002:a17:90a:d78e:: with SMTP id z14mr1232014pju.133.1597392602591;
+        Fri, 14 Aug 2020 01:10:02 -0700 (PDT)
 Received: from localhost.localdomain ([122.179.47.119])
-        by smtp.gmail.com with ESMTPSA id z17sm8594289pfq.38.2020.08.14.01.09.58
+        by smtp.gmail.com with ESMTPSA id z17sm8594289pfq.38.2020.08.14.01.10.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Aug 2020 01:09:59 -0700 (PDT)
+        Fri, 14 Aug 2020 01:10:02 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
         david@fromorbit.com
-Subject: [PATCH V2 09/10] xfs: Check for extent overflow when remapping an extent
-Date:   Fri, 14 Aug 2020 13:38:32 +0530
-Message-Id: <20200814080833.84760-10-chandanrlinux@gmail.com>
+Subject: [PATCH V2 10/10] xfs: Check for extent overflow when swapping extents
+Date:   Fri, 14 Aug 2020 13:38:33 +0530
+Message-Id: <20200814080833.84760-11-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200814080833.84760-1-chandanrlinux@gmail.com>
 References: <20200814080833.84760-1-chandanrlinux@gmail.com>
@@ -75,63 +75,55 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remapping an extent involves unmapping the existing extent and mapping
-in the new extent. When unmapping, an extent containing the entire unmap
-range can be split into two extents,
-i.e. | Old extent | hole | Old extent |
-Hence extent count increases by 1.
-
-Mapping in the new extent into the destination file can increase the
-extent count by 1.
+Removing an initial range of source/donor file's extent and adding a new
+extent (from donor/source file) in its place will cause extent count to
+increase by 1.
 
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- fs/xfs/libxfs/xfs_inode_fork.h | 15 +++++++++++++++
- fs/xfs/xfs_reflink.c           |  5 +++++
- 2 files changed, 20 insertions(+)
+ fs/xfs/libxfs/xfs_inode_fork.h |  6 ++++++
+ fs/xfs/xfs_bmap_util.c         | 11 +++++++++++
+ 2 files changed, 17 insertions(+)
 
 diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index d750bdff17c9..afff20703270 100644
+index afff20703270..82b26536f218 100644
 --- a/fs/xfs/libxfs/xfs_inode_fork.h
 +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -85,6 +85,21 @@ struct xfs_ifork {
-  * Hence number of extents increases by 2.
+@@ -98,6 +98,12 @@ struct xfs_ifork {
   */
- #define XFS_IEXT_REFLINK_END_COW_CNT 2
+ #define XFS_IEXT_REFLINK_REMAP_CNT(smap_real, dmap_written) \
+ 	(((smap_real) ? 1 : 0) + ((dmap_written) ? 1 : 0))
 +/*
-+ * Remapping an extent involves unmapping the existing extent and
-+ * mapping in the new extent.
-+ * When unmapping, an extent containing the entire unmap
-+ * range can be split into two extents,
-+ * i.e. | Old extent | hole | Old extent |
-+ * Hence extent count increases by 1.
-+ *
-+ * Mapping in the new extent into the destination file can increase
-+ * the extent count by 1.
++ * Removing an initial range of source/donor file's extent and
++ * adding a new extent (from donor/source file) in its place
++ * will cause extent count to increase by 1.
 + */
-+#define XFS_IEXT_REFLINK_REMAP_CNT(smap_real, dmap_written) \
-+	(((smap_real) ? 1 : 0) + ((dmap_written) ? 1 : 0))
-+
-+
- /*
-  * Fork handling.
-  */
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 04a7754ee681..134d49f8c941 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1100,6 +1100,11 @@ xfs_reflink_remap_extent(
- 			goto out_cancel;
- 	}
++#define XFS_IEXT_SWAP_RMAP_CNT 1
  
-+	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+			XFS_IEXT_REFLINK_REMAP_CNT(smap_real, dmap_written));
-+	if (error)
-+		goto out_cancel;
+ 
+ /*
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index f6352b5e5552..8159306a8c41 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1375,6 +1375,17 @@ xfs_swap_extent_rmap(
+ 		/* Unmap the old blocks in the source file. */
+ 		while (tirec.br_blockcount) {
+ 			ASSERT(tp->t_firstblock == NULLFSBLOCK);
 +
- 	if (smap_real) {
- 		/*
- 		 * If the extent we're unmapping is backed by storage (written
++			error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++					XFS_IEXT_SWAP_RMAP_CNT);
++			if (error)
++				goto out;
++
++			error = xfs_iext_count_may_overflow(tip, XFS_DATA_FORK,
++					XFS_IEXT_SWAP_RMAP_CNT);
++			if (error)
++				goto out;
++
+ 			trace_xfs_swap_extent_rmap_remap_piece(tip, &tirec);
+ 
+ 			/* Read extent from the source file */
 -- 
 2.28.0
 
