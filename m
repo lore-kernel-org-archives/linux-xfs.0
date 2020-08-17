@@ -2,127 +2,283 @@ Return-Path: <SRS0=2cgH=B3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CECF6C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 07:44:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9B60C433E1
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 07:49:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A44E320738
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 07:44:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AFE1C2072D
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 07:49:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ptAaqCtm"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aLoSimYU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726673AbgHQHoZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Aug 2020 03:44:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46130 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726297AbgHQHoV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Aug 2020 03:44:21 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E558C061388
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2020 00:44:21 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id g7so5955606plq.1
-        for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2020 00:44:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=kCKK1m4DeKXe8j07IISHG9uAZMSVEywH5nblLUgPc/Q=;
-        b=ptAaqCtmxOsJjss59RwA87f84QrJHd7txxZ8F1E5QkLaCwC/QopyNH4yvlWSOm4ZbP
-         Qrj5+e71us/Xst3OQLjGCA14dKTmj2Z3ba/uMJTdAmipe8dsmEDbP+jLhne2taAQ/UVs
-         kD4xmu5fqmu8RCW1C/Gb854ylvT9DEliK3hTfg57nlBOYoqDm3MEFj1J8I8kfCvE7L7f
-         SSw9H+4PPslwPAxhP8r9aOCg0Z/YtcMAP7+FktyPJ+rnB3dsUwFsqGLYeGSDA1EvRKnx
-         KbhghiEVC63pXHvPjgJsOILHhtue4qpRFoebAyAX6B9nI62PMZL3et1kccPBrikVSk17
-         KKxg==
+        id S1726265AbgHQHt4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Aug 2020 03:49:56 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:60418 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726089AbgHQHty (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Aug 2020 03:49:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597650592;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=cRwUKUAgHQU/Br+9CJJW/SQJIlgAG6AUACubTcWu9kQ=;
+        b=aLoSimYUWzKbl6myoK92cZOKekT/hwWrFrh6KuOd1+5aSZwNs5xb103k7yNXCXkpLgu7Gx
+        TRDqtprYHsfy7Ddkj+wJKtvvekJYmPmpcXf3Sc0YGkbkDKqrJcNdgxoeqnaVPeFOLMMjDR
+        8ALlAiFjdSn7MmSgPgwLKFzWgYnyYLU=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-180-9qgVjerxOQ2uC-2yd5UYTA-1; Mon, 17 Aug 2020 03:49:48 -0400
+X-MC-Unique: 9qgVjerxOQ2uC-2yd5UYTA-1
+Received: by mail-pg1-f199.google.com with SMTP id f18so9840481pgl.1
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2020 00:49:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=kCKK1m4DeKXe8j07IISHG9uAZMSVEywH5nblLUgPc/Q=;
-        b=cIla3lqquSV3olnac7shjxECNZ5DZGfkLbyYJKHmYIbBtW8Jm7Iz7fymNFIx/sYQwP
-         IBkHvg0d6s0ZTdhBbK34YsplKwCQXF0JyFWtVhuzG+Fxmy3w8fPkMH6U6FOJHD8AfH8F
-         Xgja7ZB4M0/+xPIds4ZLPxceukJf020LWvJmWn/WzLUnEFHAJHeEblY8y3C/y6HqkzIR
-         Rz96d0fayKlDgHspzGKzM3ATw0o4QqlgOA+mwZAakzYqOh9tmWDX3tDAF9RlStcK0gJ3
-         2ahu66uadJGkbiW4oDoAOMOeJxLmc1WhAG8h7697aD1YQbKBKiMn89VKwPsPhfPRbOPT
-         AGjw==
-X-Gm-Message-State: AOAM5326BYB609Nk2xu+Hmcvpbyl+0C/IuTr7iv7m6fqxrVLfz8TSafj
-        ORBhd9pmJm93tPAMUXwq5/XlYJA57zc=
-X-Google-Smtp-Source: ABdhPJxoQDjAbxxSv65iWU8BwnCHEGRAkCoR4O6YxJQ+k2vKwLh5wh4ZhO1S5q5Zx9OldXJKTUJSIg==
-X-Received: by 2002:a17:90a:e687:: with SMTP id s7mr11707855pjy.48.1597650259725;
-        Mon, 17 Aug 2020 00:44:19 -0700 (PDT)
-Received: from garuda.localnet ([171.48.27.213])
-        by smtp.gmail.com with ESMTPSA id c17sm18059110pfp.214.2020.08.17.00.44.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Aug 2020 00:44:19 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        david@fromorbit.com
-Subject: Re: [PATCH V2 02/10] xfs: Check for extent overflow when trivally adding a new extent
-Date:   Mon, 17 Aug 2020 13:14:16 +0530
-Message-ID: <1740557.YaExq995uO@garuda>
-In-Reply-To: <20200817065307.GB23516@infradead.org>
-References: <20200814080833.84760-1-chandanrlinux@gmail.com> <20200814080833.84760-3-chandanrlinux@gmail.com> <20200817065307.GB23516@infradead.org>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=cRwUKUAgHQU/Br+9CJJW/SQJIlgAG6AUACubTcWu9kQ=;
+        b=IGHuawHhamdYPsRrrdKKEt8TIdYEsGWUNy79CBZ3MqZWVLICU14iXygKrDuNb0g+K2
+         uzMpNTE1g4Z/aYPbKgW2BD4J4UuTmSa5zGVNqob//8WXFeK24Ej10/dE6K4tOmWk44PC
+         /RJh3CEahGO040Df0Pf/Z6Va6Nq3HWhpSDhxTQelp4NwmXzibPFuzcsk82qR8YtBS+KK
+         8U6wQWYg0mYMXAtRRrHTJ1wlN1L0HdbBvFYyuRvsL4GYmRSAShQdJOHwtDCwHoy9p3T+
+         c1GPJO3btsqDa7JHiiPl7q1NivBzESa5ZQOy9IMbdl4clTcsUwue2qQlNvmIn+EuUt09
+         Q+Pw==
+X-Gm-Message-State: AOAM533RHDr2JUVO3itBYsD914/Rzrk5l7oL9E9Gh7zLSAHxTNxd6nmI
+        ErFXCS+V84BJbR/6zZQKIWznN3uNK2MSt7TW5XZuF5sZDFrBjsIAkz+E8Xv7twJGOG81Zh0b0EP
+        tx+NrhOjemlN+yl4Br7qH
+X-Received: by 2002:a17:902:c402:: with SMTP id k2mr94419plk.308.1597650587403;
+        Mon, 17 Aug 2020 00:49:47 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzueq0IKKElz/SyVLOuJIUIIO8gj6sTYrlAZi6eb3A4SYyDkE3uYBspiPYUtqa5sUzhcYQnSQ==
+X-Received: by 2002:a17:902:c402:: with SMTP id k2mr94407plk.308.1597650587060;
+        Mon, 17 Aug 2020 00:49:47 -0700 (PDT)
+Received: from don.don ([60.224.129.195])
+        by smtp.gmail.com with ESMTPSA id j5sm18717144pfg.80.2020.08.17.00.49.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 17 Aug 2020 00:49:46 -0700 (PDT)
+Subject: Re: [PATCH v2] xfstests: add test for xfs_repair progress reporting
+To:     Eryu Guan <guan@eryu.me>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+References: <20200519160125.GB17621@magnolia>
+ <20200520035258.298516-1-ddouwsma@redhat.com> <20200524164648.GB3363@desktop>
+From:   Donald Douwsma <ddouwsma@redhat.com>
+Message-ID: <7fb5ce19-dd6e-1e02-3120-16138320c5f6@redhat.com>
+Date:   Mon, 17 Aug 2020 17:49:43 +1000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20200524164648.GB3363@desktop>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Monday 17 August 2020 12:23:07 PM IST Christoph Hellwig wrote:
-> On Fri, Aug 14, 2020 at 01:38:25PM +0530, Chandan Babu R wrote:
-> > When adding a new data extent (without modifying an inode's existing
-> > extents) the extent count increases only by 1. This commit checks for
-> > extent count overflow in such cases.
-> > 
-> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_bmap.c       | 8 ++++++++
-> >  fs/xfs/libxfs/xfs_inode_fork.h | 2 ++
-> >  fs/xfs/xfs_bmap_util.c         | 5 +++++
-> >  fs/xfs/xfs_dquot.c             | 8 +++++++-
-> >  fs/xfs/xfs_iomap.c             | 5 +++++
-> >  fs/xfs/xfs_rtalloc.c           | 5 +++++
-> >  6 files changed, 32 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 9c40d5971035..e64f645415b1 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -4527,6 +4527,14 @@ xfs_bmapi_convert_delalloc(
-> >  		return error;
-> >  
-> >  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> > +
-> > +	if (whichfork == XFS_DATA_FORK) {
-> 
-> Should we add COW fork special casing to xfs_iext_count_may_overflow
-> instead?
+Hi Eryu, 
 
-I agree. Making xfs_iext_count_may_overflow() to always return success in the
-case of CoW fork would mean that the if condition can be removed and hence
-makes the code more readable.
+Thanks for the feedback. Apologies for the delay getting back to you,
+I hadn't noticed the rest of your questions under Darrick's reply.
+
+
+On 25/05/2020 02:46, Eryu Guan wrote:
+> On Wed, May 20, 2020 at 01:52:58PM +1000, Donald Douwsma wrote:
+>> xfs_repair's interval based progress has been broken for
+>> some time, create a test based on dmdelay to stretch out
+>> the time and use ag_stride to force parallelism.
+>>
+>> Signed-off-by: Donald Douwsma <ddouwsma@redhat.com>
+>> ---
+>> Changes since v1:
+>> - Use _scratch_xfs_repair
+>> - Filter only repair output
+>> - Make the filter more tolerant of whitespace and plurals
+>> - Take golden output from 'xfs_repair: fix progress reporting'
+> 
+> I saw failures like below, and I'm using v5.7-rc4 kernel and v5.4.0
+> xfsprogs, is this expected failure?
+
+This should be passing now.
 
 > 
-> > +		error = xfs_iext_count_may_overflow(ip, whichfork,
-> > +				XFS_IEXT_ADD_CNT);
+> @@ -2,8 +2,6 @@
+>  Format and populate
+>  Introduce a dmdelay
+>  Run repair
+> - - #:#:#: Phase #: #% done - estimated remaining time # minute, # second
+> - - #:#:#: Phase #: elapsed time # second - processed # inodes per minute
+>   - #:#:#: check for inodes claiming duplicate blocks - # of # inodes done
+>   - #:#:#: process known inodes and inode discovery - # of # inodes done
+>   - #:#:#: process newly discovered inodes - # of # allocation groups done
+> @@ -12,4 +10,3 @@
+>   - #:#:#: scanning filesystem freespace - # of # allocation groups done
+>   - #:#:#: setting up duplicate extent list - # of # allocation groups done
+>   - #:#:#: verify and correct link counts - # of # allocation groups done
+> - - #:#:#: zeroing log - # of # blocks done
 > 
-> I find the XFS_IEXT_ADD_CNT define very confusing.  An explicit 1 passed
-> for a counter parameter makes a lot more sense to me.
+>>
+>>  tests/xfs/516     | 76 +++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/516.out | 15 ++++++++++
+>>  tests/xfs/group   |  1 +
+>>  3 files changed, 92 insertions(+)
+>>  create mode 100755 tests/xfs/516
+>>  create mode 100644 tests/xfs/516.out
+>>
+>> diff --git a/tests/xfs/516 b/tests/xfs/516
+>> new file mode 100755
+>> index 00000000..1c0508ef
+>> --- /dev/null
+>> +++ b/tests/xfs/516
+>> @@ -0,0 +1,76 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 516
+>> +#
+>> +# Test xfs_repair's progress reporting
+>> +#
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1	# failure is the default!
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +_cleanup()
+>> +{
+> 
+> 	rm -f $tmp.*
+> 
+> As some common helpers would use $tmp. files as well.
+> 
+>> +	cd /
+>> +	_dmsetup_remove delay-test > /dev/null 2>&1
+> 
+> I think we could do _cleanup_delay here and discard the outputs.
+> 
 
-The reason to do this was to consolidate the comment descriptions at one
-place. For e.g. the comment for XFS_IEXT_DIR_MANIP_CNT (from "[PATCH V2 05/10]
-xfs: Check for extent overflow when adding/removing dir entries") is slightly
-larger. Using constants (instead of macros) would mean that the same comment
-has to be replicated across the 6 locations it is being used.
+Fixed.
 
--- 
-chandan
+>> +}
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +. ./common/dmdelay
+>> +. ./common/populate
+>> +
+>> +# remove previous $seqres.full before test
+>> +rm -f $seqres.full
+>> +
+>> +# real QA test starts here
+>> +
+>> +# Modify as appropriate.
+>> +_supported_fs xfs
+>> +_supported_os Linux
+>> +_require_scratch
+>> +_require_dm_target delay
+>> +
+>> +# Filter output specific to the formatters in xfs_repair/progress.c
+>> +# Ideally we'd like to see hits on anything that matches
+>> +# awk '/{FMT/' repair/progress.c
+>> +_filter_repair()
+> 
+> Function names with the leading underscore are reserved for common
+> helpers, filter_repair would be fine.
 
+Fixed.
 
+> 
+>> +{
+>> +	sed -ne '
+>> +	s/[0-9]\+/#/g;
+>> +	s/^\s\+/ /g;
+>> +	s/\(second\|minute\)s/\1/g
+>> +	/#:#:#:/p
+>> +	'
+>> +}
+>> +
+>> +echo "Format and populate"
+>> +_scratch_populate_cached nofill > $seqres.full 2>&1
+>> +
+>> +echo "Introduce a dmdelay"
+>> +_init_delay
+>> +
+>> +# Introduce a read I/O delay
+>> +# The default in common/dmdelay is a bit too agressive
+>> +BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
+>> +DELAY_TABLE_RDELAY="0 $BLK_DEV_SIZE delay $SCRATCH_DEV 0 100 $SCRATCH_DEV 0 0"
+>> +_load_delay_table $DELAY_READ
+>> +
+>> +echo "Run repair"
+>> +SCRATCH_DEV=$DELAY_DEV _scratch_xfs_repair -o ag_stride=4 -t 1 2>&1 |
+>> +        tee -a $seqres.full > $seqres.xfs_repair.out
+>> +
+>> +cat $seqres.xfs_repair.out | _filter_repair | sort -u
+> 
+> I agreed with Darrick here. redirect output to $tmp.repair is better, as
+> we already cleanup $tmp.* in _cleanup, and no one is cleaning up
+> $seqres.xfs_repair.out file.
+> 
+>> +
+>> +_cleanup_delay
+> 
+> We could remove this one if do it in _cleanup.
+
+Done!
+
+> 
+>> +
+>> +# success, all done
+>> +status=0
+>> +exit
+>> diff --git a/tests/xfs/516.out b/tests/xfs/516.out
+>> new file mode 100644
+>> index 00000000..85018b93
+>> --- /dev/null
+>> +++ b/tests/xfs/516.out
+>> @@ -0,0 +1,15 @@
+>> +QA output created by 516
+>> +Format and populate
+>> +Introduce a dmdelay
+>> +Run repair
+>> + - #:#:#: Phase #: #% done - estimated remaining time # minute, # second
+>> + - #:#:#: Phase #: elapsed time # second - processed # inodes per minute
+>> + - #:#:#: check for inodes claiming duplicate blocks - # of # inodes done
+>> + - #:#:#: process known inodes and inode discovery - # of # inodes done
+>> + - #:#:#: process newly discovered inodes - # of # allocation groups done
+>> + - #:#:#: rebuild AG headers and trees - # of # allocation groups done
+>> + - #:#:#: scanning agi unlinked lists - # of # allocation groups done
+>> + - #:#:#: scanning filesystem freespace - # of # allocation groups done
+>> + - #:#:#: setting up duplicate extent list - # of # allocation groups done
+>> + - #:#:#: verify and correct link counts - # of # allocation groups done
+>> + - #:#:#: zeroing log - # of # blocks done
+>> diff --git a/tests/xfs/group b/tests/xfs/group
+>> index 12eb55c9..aeeca23f 100644
+>> --- a/tests/xfs/group
+>> +++ b/tests/xfs/group
+>> @@ -513,3 +513,4 @@
+>>  513 auto mount
+>>  514 auto quick db
+>>  515 auto quick quota
+>> +516 repair
+> 
+> Should be in auto group as well? Only tests in auto (and quick, which is
+> a sub-set of auto) will be run by default.
+
+It doesn't seem there were any objections to adding it, so I've added it to
+auto, I've left it out of quick for now. 
+
+Regards, 
+Don
 
