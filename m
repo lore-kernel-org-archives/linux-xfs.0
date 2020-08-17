@@ -2,161 +2,114 @@ Return-Path: <SRS0=2cgH=B3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94FF9C433E1
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 20:33:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 994DBC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 22:56:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F5A820760
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 20:33:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72E002078B
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 22:56:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ES9T7pay"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XbzS40LS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726575AbgHQUd3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Aug 2020 16:33:29 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:55351 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726272AbgHQUdX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Aug 2020 16:33:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597696399;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=d5zOdh8QNedyFAH3gLKHkTn3fN4ptKEdIpf5pGM+yrw=;
-        b=ES9T7payEOQ9YaVefPk5ZHOdO2yl7V55Dnx6SEVTdx/+IwzZnPmHUylOTrVswS/CdD7fUn
-        aksOAJZxHoHKZ4qjR9x21k3sjBdHbwbAbLLrSl4fV6S2NS1givbDyhJpGaoKqFCcvhLX31
-        YxTi0pcYNAQxt1qVIQJcgZX5r3u26E0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-532-tUJAaEfoOom4dZp9E0INKQ-1; Mon, 17 Aug 2020 16:33:17 -0400
-X-MC-Unique: tUJAaEfoOom4dZp9E0INKQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3487181F007;
-        Mon, 17 Aug 2020 20:33:16 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D9F195C1DC;
-        Mon, 17 Aug 2020 20:33:15 +0000 (UTC)
-Reply-To: sandeen@redhat.com
-Subject: Re: [PATCH] [xfs_db:type] do nothing if 'current type' == 'the
- requested type'
-To:     Jianhong Yin <jiyin@redhat.com>, linux-xfs@vger.kernel.org
-Cc:     Jianhong Yin <yin-jianhong@163.com>
-References: <20200817090048.17991-1-jiyin@redhat.com>
-From:   Eric Sandeen <esandeen@redhat.com>
-Autocrypt: addr=esandeen@redhat.com; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <16bf0257-dbfa-ff0a-cb96-b247acadb2ef@redhat.com>
-Date:   Mon, 17 Aug 2020 15:33:15 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.11.0
+        id S1726474AbgHQW4h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 17 Aug 2020 18:56:37 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:33886 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726630AbgHQW4g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Aug 2020 18:56:36 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07HMmBdY145169
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2020 22:56:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=T+W7gMYMxSD6s8upa2YUcerIkjA0prm1K9/cpSXpPNQ=;
+ b=XbzS40LSc+l0Gmr2sb/racUi2GBZrpd26GjVCF+9qZuxDnUB+AEk0wdrZS3znaK2bAUo
+ FgwQ+GposhUTqKUemmoaQM6nEYo+QUSdj1maQNYHd384eX0TsOz9HYuUNXHHnSDEM4Mw
+ aaejVIAqzNc1bNazR/zV37F/v+2JyZOp8d66BcKnuFnwzt3Q4nzB1khPn7FSlMGpW7Gb
+ K3hDmXDHU8PnP5ev3bg7OFUa2CJJkeluc8mAKqEB21turrbBhpwbler8LegwYQsofOiE
+ zYwWE9xksmFpPfk61mjVKP0KmuPWofY7UPEHEBqY+lu3V2R5sEUE1YVon2DQ2SWUIEVv 2g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 32x74r1mjf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2020 22:56:35 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07HMm8v4045960
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2020 22:56:34 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 32xsfr57nc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2020 22:56:34 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07HMuXvC013127
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Aug 2020 22:56:33 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 17 Aug 2020 15:56:33 -0700
+Subject: [PATCH v2 0/2] xfs: add inode btree blocks counters to the AGI header
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Date:   Mon, 17 Aug 2020 15:56:31 -0700
+Message-ID: <159770499163.3956743.11547013163186111497.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-In-Reply-To: <20200817090048.17991-1-jiyin@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ spamscore=0 suspectscore=0 mlxscore=0 phishscore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008170152
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxlogscore=999
+ priorityscore=1501 phishscore=0 spamscore=0 mlxscore=0 adultscore=0
+ suspectscore=0 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008170152
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/17/20 4:00 AM, Jianhong Yin wrote:
-> From: Jianhong Yin <yin-jianhong@163.com>
-> 
-> for power saving and also as a workaround of below issue:
->> xfs_db -r /dev/vda3 -c "inode 132" -c "type inode" -c "inode"
->> current inode number is 128
-> 
-> Reported-by: Jianhong Yin <jiyin@redhat.com>
-> Suggested-by: Eric Sandeen <esandeen@redhat.com>
-> Tested-by: Jianhong Yin <yin-jianhong@163.com>
-> Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
-> ---
->  db/type.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/db/type.c b/db/type.c
-> index 3cb1e868..679de1b0 100644
-> --- a/db/type.c
-> +++ b/db/type.c
-> @@ -213,6 +213,9 @@ type_f(
->  
->  
->  	} else {
-> +		if (cur_typ != NULL && strcmp(cur_typ->name, argv[1]) == 0)
-> +			return 0;
-> +
->  		tt = findtyp(argv[1]);
->  		if (tt == NULL) {
->  			dbprintf(_("no such type %s\n"), argv[1]);
+Hi all,
 
-Thanks for this - I had a patch on my stack to do the same thing,
-but did I it this way:
+Years ago, Christoph diagnosed a problem where freeing an inode on a
+totally full filesystem could fail due to finobt expansion not being
+able to allocate enough blocks.  He solved the problem by using the
+per-AG block reservation system to ensure that there are always enough
+blocks for finobt expansion, but that came at the cost of having to walk
+the entire finobt at mount time.  This new feature solves that
+performance regression by adding inode btree block counts to the AGI
+header.
 
-diff --git a/db/type.c b/db/type.c
-index 3cb1e868..5433bcfb 100644
---- a/db/type.c
-+++ b/db/type.c
-@@ -219,6 +219,8 @@ type_f(
- 		} else {
- 			if (iocur_top->typ == NULL)
- 				dbprintf(_("no current object\n"));
-+			else if (iocur_top->typ == tt)
-+				return 0;
- 			else {
- 				cur_typ = tt;
- 				set_iocur_type(tt);
+v2: rebase to 5.9
 
-which I guess I like a little better than using strcmp on the argument...
-it compares the type structure directly, rather than comparing the names.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
--Eric
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=inobt-counters
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=inobt-counters
+---
+ fs/xfs/libxfs/xfs_ag.c           |    4 ++
+ fs/xfs/libxfs/xfs_format.h       |   22 ++++++++++-
+ fs/xfs/libxfs/xfs_ialloc.c       |    1 
+ fs/xfs/libxfs/xfs_ialloc_btree.c |   78 +++++++++++++++++++++++++++++++++++---
+ fs/xfs/scrub/agheader.c          |   30 +++++++++++++++
+ fs/xfs/scrub/agheader_repair.c   |   17 ++++++++
+ fs/xfs/xfs_ondisk.h              |    2 -
+ fs/xfs/xfs_super.c               |    4 ++
+ 8 files changed, 148 insertions(+), 10 deletions(-)
 
