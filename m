@@ -7,70 +7,70 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28196C433E3
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D03E7C433E4
 	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 23:00:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1318204EC
-	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 23:00:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC4A6204EC
+	for <linux-xfs@archiver.kernel.org>; Mon, 17 Aug 2020 23:00:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AUHNorEO"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HHejy9Oo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726727AbgHQXAg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726653AbgHQXAg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 17 Aug 2020 19:00:36 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:52924 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726653AbgHQXAe (ORCPT
+Received: from userp2120.oracle.com ([156.151.31.85]:41792 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726575AbgHQXAe (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Aug 2020 19:00:34 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07HMvbxW050119;
-        Mon, 17 Aug 2020 23:00:32 GMT
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07HMuw9Q136142;
+        Mon, 17 Aug 2020 23:00:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=X5sWABW6pmCKbb5bhb6PC5fTyixPHtTwwRolz0x8Ha8=;
- b=AUHNorEOtVamCm94gL2I+1owJTiPURRonoPNlSHeQaV1SdNfTBZuVSjNzL40VurqVolS
- bFtQLODt6RFK7msqr6voFpK4tgFPDv+3ungKXysaF9MqRHbjCZqhcpfDngW2zBhKUdqm
- V1gQyW3GrzGDNha6lZs6oJSDELzThBWgD5NcQ0ZhDmawhUq38DJ3L7Xzl3dOFAx5B4en
- voFzsb4g2g8etyb58jZ3JRFtK+8L+KrrPN4l2z0fUkk7HxU3MFV/3IsMuyDitpTb0K74
- QXFK1AePMt14P30rZVIOoLhpD7KUiziQpx531LduB27lHZrYDT/bH2bMCI+zj+v+pMqy 1Q== 
+ bh=HsRxM1oSlxMo1eeof782reUI9q/L3hg6Oz7kwDvvZVU=;
+ b=HHejy9OofTsXxy8XA9WzCUWt0nTEN8rxEEWG2ThsZ5DSO46138byprr/nTUtWs2nT6DS
+ yGP0/dlGEtBCaqOKeAvK8ulwen4NCdbxxBCCbpH4iYmmWEH8l9yYtaEvybw3Xp9hC/Xz
+ Z/mKDnuT+pXP7F7jmxRSjCOBkyuf531TNzzzHtDWrsDsFzFTnuqLWbfgG03IlAco2P8I
+ r08ZW9ZabG/ZvCfdth7tP3v66AeeXd1cOavyt2BBpg2KwHgFipc4sNJlkYVP+llPStn/
+ +wiAF/cxYNop11/GYReBb+JMq2HyxcK8ivZw/tJ8XUpJ9Ab5OPXWQYAhnFBx6oQeLR0i kA== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 32x7nm9jvb-1
+        by userp2120.oracle.com with ESMTP id 32x8bn1g4a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 17 Aug 2020 23:00:32 +0000
+        Mon, 17 Aug 2020 23:00:33 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07HMw9Dc084724;
-        Mon, 17 Aug 2020 23:00:31 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 32xsfr5b23-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07HMw9rJ084669;
+        Mon, 17 Aug 2020 22:58:32 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 32xsfr591g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 17 Aug 2020 23:00:31 +0000
+        Mon, 17 Aug 2020 22:58:32 +0000
 Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07HN0UNf015383;
-        Mon, 17 Aug 2020 23:00:30 GMT
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07HMwVUD025142;
+        Mon, 17 Aug 2020 22:58:31 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 17 Aug 2020 16:00:30 -0700
-Subject: [PATCH 15/18] xfs_db: support printing time limits
+        with ESMTP ; Mon, 17 Aug 2020 15:58:31 -0700
+Subject: [PATCH 4/7] xfs_repair: check inode btree block counters in AGI
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 17 Aug 2020 16:00:28 -0700
-Message-ID: <159770522842.3958786.974580388335386010.stgit@magnolia>
-In-Reply-To: <159770513155.3958786.16108819726679724438.stgit@magnolia>
-References: <159770513155.3958786.16108819726679724438.stgit@magnolia>
+Date:   Mon, 17 Aug 2020 15:58:30 -0700
+Message-ID: <159770511056.3958545.1816196170854601929.stgit@magnolia>
+In-Reply-To: <159770508586.3958545.417872750558976156.stgit@magnolia>
+References: <159770508586.3958545.417872750558976156.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- spamscore=0 suspectscore=0 mlxscore=0 phishscore=0 bulkscore=0
+ spamscore=0 suspectscore=2 mlxscore=0 phishscore=0 bulkscore=0
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2008170153
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0
- impostorscore=0 priorityscore=1501 adultscore=0 mlxscore=0 mlxlogscore=999
- lowpriorityscore=0 bulkscore=0 phishscore=0 malwarescore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
+ impostorscore=0 suspectscore=2 adultscore=0 spamscore=0 malwarescore=0
+ mlxlogscore=999 priorityscore=1501 bulkscore=0 clxscore=1015 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008170153
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,242 +80,103 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Support printing the minimum and maxium timestamp limits on this
-filesystem.
+Make sure that both inode btree block counters in the AGI are correct.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/Makefile       |    2 -
- db/command.c      |    1 
- db/command.h      |    1 
- db/timelimit.c    |  152 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_db.8 |   23 ++++++++
- 5 files changed, 178 insertions(+), 1 deletion(-)
- create mode 100644 db/timelimit.c
+ repair/scan.c |   38 +++++++++++++++++++++++++++++++++++---
+ 1 file changed, 35 insertions(+), 3 deletions(-)
 
 
-diff --git a/db/Makefile b/db/Makefile
-index 9bd9bf514f5d..9d502bf0d0d6 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -14,7 +14,7 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
- 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
- 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
- 	fuzz.h
--CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c
-+CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c timelimit.c
- LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
- 
- LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-diff --git a/db/command.c b/db/command.c
-index 0fb44efaec59..438283699b2e 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -139,4 +139,5 @@ init_commands(void)
- 	write_init();
- 	dquot_init();
- 	fuzz_init();
-+	timelimit_init();
+diff --git a/repair/scan.c b/repair/scan.c
+index 42b299f75067..f05d0c918ce9 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1948,6 +1948,12 @@ _("invalid inode count, inode chunk %d/%u, count %d ninodes %d\n"),
+ 	return suspect;
  }
-diff --git a/db/command.h b/db/command.h
-index b8499de0be17..6913c8171fe1 100644
---- a/db/command.h
-+++ b/db/command.h
-@@ -32,3 +32,4 @@ extern void		convert_init(void);
- extern void		btdump_init(void);
- extern void		info_init(void);
- extern void		btheight_init(void);
-+extern void		timelimit_init(void);
-diff --git a/db/timelimit.c b/db/timelimit.c
-new file mode 100644
-index 000000000000..3cb24f563e3a
---- /dev/null
-+++ b/db/timelimit.c
-@@ -0,0 +1,152 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2020 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "libxfs.h"
-+#include "command.h"
-+#include "output.h"
-+#include "init.h"
-+
-+enum show_what {
-+	SHOW_AUTO,
-+	SHOW_CLASSIC,
-+	SHOW_BIGTIME,
+ 
++struct ino_priv {
++	struct aghdr_cnts	*agcnts;
++	uint32_t		ino_blocks;
++	uint32_t		fino_blocks;
 +};
 +
-+
-+enum print_how {
-+	PRINT_RAW,
-+	PRINT_PRETTY,
-+	PRINT_COMPACT,
-+};
-+
-+static void
-+show_limit(
-+	const char	*tag,
-+	int64_t		limit,
-+	int		how)
-+{
-+	time_t		tt = limit;
-+	char		*c;
-+
-+	if (how == PRINT_COMPACT) {
-+		dbprintf("%" PRId64 " ", limit);
-+		return;
-+	}
-+
-+	if (how == PRINT_RAW || limit > LONG_MAX) {
-+		dbprintf("%s = %" PRId64 "\n", tag, limit);
-+		return;
-+	}
-+
-+	c = ctime(&tt);
-+	dbprintf("%s = %24.24s\n", tag, c);
-+}
-+
-+static void
-+show_limits(
-+	int	whatkind,
-+	int	how)
-+{
-+	int	grace_how = how;
-+
-+	switch (whatkind) {
-+	case SHOW_AUTO:
-+		/* should never get here */
+ /*
+  * this one walks the inode btrees sucking the info there into
+  * the incore avl tree.  We try and rescue corrupted btree records
+@@ -1976,7 +1982,8 @@ scan_inobt(
+ 	void			*priv,
+ 	const struct xfs_buf_ops *ops)
+ {
+-	struct aghdr_cnts	*agcnts = priv;
++	struct ino_priv		*ipriv = priv;
++	struct aghdr_cnts	*agcnts = ipriv->agcnts;
+ 	char			*name;
+ 	xfs_agino_t		lastino = 0;
+ 	int			i;
+@@ -2022,6 +2029,17 @@ scan_inobt(
+ 			return;
+ 	}
+ 
++	switch (magic) {
++	case XFS_FIBT_MAGIC:
++	case XFS_FIBT_CRC_MAGIC:
++		ipriv->fino_blocks++;
 +		break;
-+	case SHOW_CLASSIC:
-+		show_limit("time.min", XFS_INO_TIME_MIN, how);
-+		show_limit("time.max", XFS_INO_TIME_MAX, how);
-+		show_limit("dqtimer.min", XFS_DQ_TIMEOUT_MIN, how);
-+		show_limit("dqtimer.max", XFS_DQ_TIMEOUT_MAX, how);
-+		break;
-+	case SHOW_BIGTIME:
-+		show_limit("time.min", XFS_INO_BIGTIME_MIN, how);
-+		show_limit("time.max", XFS_INO_BIGTIME_MAX, how);
-+		show_limit("dqtimer.min", XFS_DQ_BIGTIMEOUT_MIN, how);
-+		show_limit("dqtimer.max", XFS_DQ_BIGTIMEOUT_MAX, how);
++	case XFS_IBT_MAGIC:
++	case XFS_IBT_CRC_MAGIC:
++		ipriv->ino_blocks++;
 +		break;
 +	}
 +
-+	/* grace periods are always integers */
-+	if (grace_how != PRINT_COMPACT)
-+		grace_how = PRINT_RAW;
-+	show_limit("dqgrace.min", XFS_DQ_GRACE_MIN, grace_how);
-+	show_limit("dqgrace.min", XFS_DQ_GRACE_MAX, grace_how);
-+
-+	if (how == PRINT_COMPACT)
-+		dbprintf("\n");
-+}
-+
-+static int
-+timelimit_f(
-+	int	argc,
-+	char	**argv)
-+{
-+	int	whatkind = SHOW_AUTO;
-+	int	how = PRINT_RAW;
-+	int	i;
-+
-+	for (i = 1; i < argc; i++) {
-+		if (!strcmp("--classic", argv[i]))
-+			whatkind = SHOW_CLASSIC;
-+		else if (!strcmp("--bigtime", argv[i]))
-+			whatkind = SHOW_BIGTIME;
-+		else if (!strcmp("--pretty", argv[i]))
-+			how = PRINT_PRETTY;
-+		else if (!strcmp("--compact", argv[i]))
-+			how = PRINT_COMPACT;
-+		else {
-+			dbprintf(_("%s: bad option for timelimit command\n"),
-+					argv[i]);
-+			return 1;
-+		}
+ 	/*
+ 	 * check for btree blocks multiply claimed, any unknown/free state
+ 	 * is ok in the bitmap block.
+@@ -2347,6 +2365,9 @@ validate_agi(
+ 	xfs_agnumber_t		agno,
+ 	struct aghdr_cnts	*agcnts)
+ {
++	struct ino_priv		priv = {
++		.agcnts = agcnts,
++	};
+ 	xfs_agblock_t		bno;
+ 	int			i;
+ 	uint32_t		magic;
+@@ -2356,7 +2377,7 @@ validate_agi(
+ 		magic = xfs_sb_version_hascrc(&mp->m_sb) ? XFS_IBT_CRC_MAGIC
+ 							 : XFS_IBT_MAGIC;
+ 		scan_sbtree(bno, be32_to_cpu(agi->agi_level),
+-			    agno, 0, scan_inobt, 1, magic, agcnts,
++			    agno, 0, scan_inobt, 1, magic, &priv,
+ 			    &xfs_inobt_buf_ops);
+ 	} else {
+ 		do_warn(_("bad agbno %u for inobt root, agno %d\n"),
+@@ -2369,7 +2390,7 @@ validate_agi(
+ 			magic = xfs_sb_version_hascrc(&mp->m_sb) ?
+ 					XFS_FIBT_CRC_MAGIC : XFS_FIBT_MAGIC;
+ 			scan_sbtree(bno, be32_to_cpu(agi->agi_free_level),
+-				    agno, 0, scan_inobt, 1, magic, agcnts,
++				    agno, 0, scan_inobt, 1, magic, &priv,
+ 				    &xfs_finobt_buf_ops);
+ 		} else {
+ 			do_warn(_("bad agbno %u for finobt root, agno %d\n"),
+@@ -2377,6 +2398,17 @@ validate_agi(
+ 		}
+ 	}
+ 
++	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
++		if (be32_to_cpu(agi->agi_iblocks) != priv.ino_blocks)
++			do_warn(_("bad inobt block count %u, saw %u\n"),
++					priv.ino_blocks,
++					be32_to_cpu(agi->agi_iblocks));
++		if (be32_to_cpu(agi->agi_fblocks) != priv.fino_blocks)
++			do_warn(_("bad finobt block count %u, saw %u\n"),
++					priv.fino_blocks,
++					be32_to_cpu(agi->agi_fblocks));
 +	}
 +
-+	if (whatkind == SHOW_AUTO) {
-+		if (xfs_sb_version_hasbigtime(&mp->m_sb))
-+			whatkind = SHOW_BIGTIME;
-+		else
-+			whatkind = SHOW_CLASSIC;
-+	}
-+
-+	show_limits(whatkind, how);
-+	return 0;
-+}
-+
-+static void
-+timelimit_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" Print the minimum and maximum supported values for inode timestamps,\n"
-+" disk quota expiration timers, and disk quota grace periods supported\n"
-+" by this filesystem.\n"
-+"\n"
-+" Options:\n"
-+"   --classic -- Force printing of the classic time limits.\n"
-+"   --bigtime -- Force printing of the bigtime limits.\n"
-+"   --pretty  -- Pretty-print the time limits.\n"
-+"   --compact -- Print the limits in a single line.\n"
-+"\n"
-+));
-+
-+}
-+
-+static const cmdinfo_t	timelimit_cmd = {
-+	.name		= "timelimit",
-+	.cfunc		= timelimit_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.canpush	= 0,
-+	.args		= N_("[--classic|--bigtime] [--pretty]"),
-+	.oneline	= N_("display timestamp limits"),
-+	.help		= timelimit_help,
-+};
-+
-+void
-+timelimit_init(void)
-+{
-+	add_command(&timelimit_cmd);
-+}
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index 7f73d458cf76..55388be68b93 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -887,6 +887,29 @@ The possible data types are:
- .BR rtsummary ", " sb ", " symlink " and " text .
- See the TYPES section below for more information on these data types.
- .TP
-+.BI "timelimit [" OPTIONS ]
-+Print the minimum and maximum supported values for inode timestamps,
-+quota expiration timers, and quota grace periods supported by this
-+filesystem.
-+Options include:
-+.RS 1.0i
-+.TP 0.4i
-+.B \--bigtime
-+Print the time limits of an XFS filesystem with the
-+.B bigtime
-+feature enabled.
-+.TP 0.4i
-+.B \--classic
-+Print the time limits of a classic XFS filesystem.
-+.TP 0.4i
-+.B \--compact
-+Print all limits as raw values on a single line.
-+.TP 0.4i
-+.B \--pretty
-+Print the timestamps in the current locale's date and time format instead of
-+raw seconds since the Unix epoch.
-+.RE
-+.TP
- .BI "uuid [" uuid " | " generate " | " rewrite " | " restore ]
- Set the filesystem universally unique identifier (UUID).
- The filesystem UUID can be used by
+ 	if (be32_to_cpu(agi->agi_count) != agcnts->agicount) {
+ 		do_warn(_("agi_count %u, counted %u in ag %u\n"),
+ 			 be32_to_cpu(agi->agi_count), agcnts->agicount, agno);
 
