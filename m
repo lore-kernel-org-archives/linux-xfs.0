@@ -2,200 +2,104 @@ Return-Path: <SRS0=PyEN=B4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF509C433E3
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 09:16:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67719C433E3
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 10:07:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A398E2075E
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 09:16:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4738320786
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 10:07:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E5TM3Af6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726203AbgHRJQt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 05:16:49 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:17919 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726474AbgHRJQr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 05:16:47 -0400
-X-IronPort-AV: E=Sophos;i="5.76,326,1592841600"; 
-   d="scan'208";a="98221465"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 18 Aug 2020 17:16:42 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id DE4424CE38A1;
-        Tue, 18 Aug 2020 17:16:41 +0800 (CST)
-Received: from [10.167.225.206] (10.167.225.206) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Tue, 18 Aug 2020 17:16:41 +0800
-Subject: Re: Can we change the S_DAX flag immediately on XFS without dropping
- caches?
-To:     Ira Weiny <ira.weiny@intel.com>, Yasunori Goto <y-goto@fujitsu.com>
-CC:     Dave Chinner <david@fromorbit.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>
-References: <9dc179147f6a47279d801445f3efeecc@G08CNEXMBPEKD04.g08.fujitsu.local>
- <20200728022059.GX2005@dread.disaster.area>
- <573feb69-bc38-8eb4-ee9b-7c49802eb737@fujitsu.com>
- <20200729232131.GC2005@dread.disaster.area>
- <0d380010-cccd-162d-32bc-07d094cb152d@fujitsu.com>
- <20200807170858.GU1573827@iweiny-DESK2.sc.intel.com>
-From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
-Message-ID: <ba98b77e-a806-048a-a0dc-ca585677daf3@cn.fujitsu.com>
-Date:   Tue, 18 Aug 2020 17:16:25 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.1.0
+        id S1726273AbgHRKH1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 06:07:27 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:45138 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726043AbgHRKH1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 06:07:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597745246;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1hpL6DEwUd1smOXQLXeZsHLSUxnXNu+oLlO4+HAzvog=;
+        b=E5TM3Af6bHv/lHei9WpxVZwP1ui2EHeX60XKInjXzwZEjaV5nXh1x1ZUD7fJuN4z7/F+bq
+        geSN1RJgBhC684jh27ycBFqv3QDzgkqY8zy02l1ouy3KsLhfgrV0dLGbRP5WVB+GI5nsn0
+        6IJgQG11MyMbUrOoW3X/B+0AZdO+uew=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-490-WYQ8DeZFOcWOKD_Y82SRyQ-1; Tue, 18 Aug 2020 06:07:24 -0400
+X-MC-Unique: WYQ8DeZFOcWOKD_Y82SRyQ-1
+Received: by mail-wm1-f72.google.com with SMTP id z10so7206786wmi.8
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 03:07:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=1hpL6DEwUd1smOXQLXeZsHLSUxnXNu+oLlO4+HAzvog=;
+        b=cstysSbLmIepndVz8bqOAKkaEeGu/zjpWu8Czg5eV30sWabfZBFk/QMmqhWUrGMtlr
+         5HCm3H95eKE+bNbPkOfsqSzv8DnwwiCjOzSIytkzUrzc8deNmGOcN53x97wmcpjIoMOP
+         zao/iYwg+Y8kBIxMwyW+DrLIf6oPTEb0rr88oQsKjDfWdX6KaYUb+zaKs4xs4FghoYvG
+         nP1mB0tS7HVCjBAG5IlZzwHVpAHfmIONT8faR5kYLWK8/3dWi6FnJZZW+rlmRvLhTBlP
+         T7SzAg8gqNZR1gs8C+Bgu/a4aqFMuxE1JdKuJm7zBadDwwmyzrypNgiaVTJXcobpmBIr
+         9QpA==
+X-Gm-Message-State: AOAM533Bkto1BnGuXWzm7BWMdyurv5FgMdwTQYy7svlozpBllv9GFTnU
+        ItctXV5DgfmmVfa8aZi5f/w3QIlZz653uGDBQGgZyWBRTlquwSi4wD/eFLG8wUwQ5G8nkaRca5s
+        X9OC2Rt413AVjVSuKTZ5M
+X-Received: by 2002:a1c:24d5:: with SMTP id k204mr18049456wmk.159.1597745243084;
+        Tue, 18 Aug 2020 03:07:23 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzZ+1cONYDUB8CGWbTu3DUu2DbLNXuwZur57bVPdx7e5bNfqO8ANIH4FnQnJz+dsrPVhjsfPg==
+X-Received: by 2002:a1c:24d5:: with SMTP id k204mr18049445wmk.159.1597745242888;
+        Tue, 18 Aug 2020 03:07:22 -0700 (PDT)
+Received: from eorzea (ip-86-49-45-232.net.upcbroadband.cz. [86.49.45.232])
+        by smtp.gmail.com with ESMTPSA id y203sm33358617wmc.29.2020.08.18.03.07.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Aug 2020 03:07:22 -0700 (PDT)
+Date:   Tue, 18 Aug 2020 12:07:20 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/2] Get rid of kmem_realloc()
+Message-ID: <20200818100720.oiwqk3yi2dsvjqav@eorzea>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+References: <20200813142640.47923-1-cmaiolino@redhat.com>
+ <20200817065533.GG23516@infradead.org>
+ <20200817101716.mmcgbdpkimc6wvl7@eorzea>
+ <20200817153922.GJ6096@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200807170858.GU1573827@iweiny-DESK2.sc.intel.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [10.167.225.206]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
-X-yoursite-MailScanner-ID: DE4424CE38A1.ACD23
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200817153922.GJ6096@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Mon, Aug 17, 2020 at 08:39:22AM -0700, Darrick J. Wong wrote:
+> On Mon, Aug 17, 2020 at 12:17:16PM +0200, Carlos Maiolino wrote:
+> > On Mon, Aug 17, 2020 at 07:55:33AM +0100, Christoph Hellwig wrote:
+> > > Both patches looks good:
+> > > 
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > 
+> > > although personally I would have simply sent them as a single patch.
+> > 
+> > Thanks Christoph. I have no preference, I just submitted the patches according
+> > to what I was doing, 'remove users, nothing broke? Remove functions', but I
+> > particularly have no preference, Darrick, if the patches need to be merged just
+> > give me a heads up.
+> 
+> Yes, the two patches are simple enough that they ought to be merged.
 
-On 2020/8/8 1:09, Ira Weiny wrote:
-> On Fri, Jul 31, 2020 at 06:59:32PM +0900, Yasunori Goto wrote:
->> On 2020/07/30 8:21, Dave Chinner wrote:
->>> On Wed, Jul 29, 2020 at 11:23:21AM +0900, Yasunori Goto wrote:
->>>> Hi,
->>>>
->>>> On 2020/07/28 11:20, Dave Chinner wrote:
->>>>> On Tue, Jul 28, 2020 at 02:00:08AM +0000, Li, Hao wrote:
->>>>>> Hi,
->>>>>>
->>>>>> I have noticed that we have to drop caches to make the changing of S_DAX
->>>>>> flag take effect after using chattr +x to turn on DAX for a existing
->>>>>> regular file. The related function is xfs_diflags_to_iflags, whose
->>>>>> second parameter determines whether we should set S_DAX immediately.
->>>>> Yup, as documented in Documentation/filesystems/dax.txt. Specifically:
->>>>>
->>>>>    6. When changing the S_DAX policy via toggling the persistent FS_XFLAG_DAX flag,
->>>>>       the change in behaviour for existing regular files may not occur
->>>>>       immediately.  If the change must take effect immediately, the administrator
->>>>>       needs to:
->>>>>
->>>>>       a) stop the application so there are no active references to the data set
->>>>>          the policy change will affect
->>>>>
->>>>>       b) evict the data set from kernel caches so it will be re-instantiated when
->>>>>          the application is restarted. This can be achieved by:
->>>>>
->>>>>          i. drop-caches
->>>>>          ii. a filesystem unmount and mount cycle
->>>>>          iii. a system reboot
->>>>>
->>>>>> I can't figure out why we do this. Is this because the page caches in
->>>>>> address_space->i_pages are hard to deal with?
->>>>> Because of unfixable races in the page fault path that prevent
->>>>> changing the caching behaviour of the inode while concurrent access
->>>>> is possible. The only way to guarantee races can't happen is to
->>>>> cycle the inode out of cache.
->>>> I understand why the drop_cache operation is necessary. Thanks.
->>>>
->>>> BTW, even normal user becomes to able to change DAX flag for an inode,
->>>> drop_cache operation still requires root permission, right?
->>> Step back for a minute and explain why you want to be able to change
->>> the DAX mode of a file -as a user-.
->>
->> For example, there are 2 containers executed in a system, which is named as
->> container A and container B, and these host gives FS-DAX files to each
->> containers.
->> If the user of container A would like to change DAX-off for tuning, then he
->> will stop his application
->> and change DAX flag, but the flag may not be changed.
->>
->> Then he will "need" to ask host operator to execute drop_cache, and the
->> operator did it.
->> As a result, not only container A, but also container B get the impact of
->> drop_cache.
->>
->> Especially, if this is multi tenant container system, then I think this is
->> not acceptable.
->>
->> Probably, there are 2 problems I think.
->> 1) drop_cache requires root permission.
->> 2) drop_cache has too wide effect.
->>
->>>> So, if kernel have a feature for normal user can operate drop cache for "a
->>>> inode" with
->>>> its permission, I think it improve the above limitation, and
->>>> we would like to try to implement it recently.
->>> No, drop_caches is not going to be made available to users. That
->>> makes it s trivial system wide DoS vector.
->> The current drop_cache feature tries to drop ALL of cache (page cache and/or
->> slab cache).
->> Then, I agree that normal user should not drop all of them.
->>
->> But my intention was that drop cache of ONE file which is changed dax flag,
->> (and if possible, drop only the inode cache.)
->> Do you mean it will be still cause of weakness against DoS attack?
->> If so, I should give up to solve problem 1) at least.
-> FWIW changing the on disk flag automatically flags the inode to be dropped as
-> soon as all references are done.
->
-> See:
->
-> 2c567af418e3 fs: Introduce DCACHE_DONTCACHE
-> dae2f8ed7992 fs: Lift XFS_IDONTCACHE to the VFS layer
-Hi,
+Ok, you want me to resend or it's just a heads up for the next time?
 
-I find that DCACHE_DONTCACHE doesn't work well.
-If DCACHE_REFERENCED is not set, dput() can drop the inode successfully as
-soon as all references are gone. By contrast, if DCACHE_REFERENCED is set,
-dput() only decreases the reference count of dentry and don't evict inode.
 
-Example 1:
-
-echo abcdefg > test.txt
-echo 3 > /proc/sys/vm/drop_caches
-xfs_io -c 'chattr +x' test.txt
-
-In this example, we can say the DAX policy takes effects immediately as we
-don't need to drop cache after chattr.
-In this circumstance, DCACHE_REFERENCED is not set, and DCACHE_DONTCACHE
-can drop the inode as expected.
-
-Example 2:
-
-echo abcdefg > test.txt
-xfs_io -c 'chattr +x' test.txt
-
-In this example, we must drop caches after chattr to make DAX policy
-take effects. This is because DCACHE_REFERENCED is set, and fast_dput() will
-return true, and then retain_dentry() have no chance to check DCACHE_DONTCACHE.
-
-If this is the desired behavior, I can't understand the necessity
-of DCACHE_DONTCACHE.
-
-Regards,
-Hao Li
->
-> But from a users perspective you just don't know when that will happen.  The
-> system just can't guarantee it.  The best the user can do is stop taking
-> references to the file and close all references, and periodically check the
-> state.  But this will take a reference so...  Kind of a catch-22 here...  :-(
->
-> Ira
->
->>
->> Thanks,
->>
->>> Cheers,
->>>
->>> Dave.
->> -- 
->> Yasunori Goto
->>
->
-
+-- 
+Carlos
 
