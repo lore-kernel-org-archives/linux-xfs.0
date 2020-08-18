@@ -2,120 +2,117 @@ Return-Path: <SRS0=PyEN=B4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53EEBC433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 18:50:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B043DC433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 20:01:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F855221E2
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 18:50:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88E352075E
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 20:01:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JG/9UHLb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aSjSuQso"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726632AbgHRSuW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 14:50:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36918 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726552AbgHRSuV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 14:50:21 -0400
-Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A4E5C061389
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 11:50:21 -0700 (PDT)
-Received: by mail-il1-x144.google.com with SMTP id t4so18552550iln.1
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 11:50:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=2MAxY9BHfofC4uuTrJrGOH9YUSHV+zNUJRDxxueW4es=;
-        b=JG/9UHLbm8bGUQfKoB/5AEpiJfUCwa05wGps/od4BWEDIncsQ0uWE9njk43y9+rWbC
-         CRN6TH3GenAVBB53QWEUZ+DYZawB15I6K9uU+lPOjIj3XIdzd6bo4wRAc7WAnc4021QW
-         e/lGp1DzGuhPDqQMtRImT9pryALXw5tUKQsPRqyddjqJFR9cbsUwkihlbLaQmGuIKcZ/
-         Y1JZ3RvcoWtIUyl6fEVAKKMYV6YqYt3sy4TfaVRwWoVtB6RL7k8DCLFdxrfgK6m0B7+X
-         zzIOKApZ4PGhzbnM7Rh5R4Yn4gVBs9vZyTrvsOkxKdlRvoyb/b63qyVOeV/kyalZw1Nn
-         5NaA==
+        id S1726682AbgHRUB6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 16:01:58 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:20706 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726675AbgHRUB5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 16:01:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597780915;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZWWapVsW4gpQEIu2n5B3MaMa4FVFV+urol1Vn5uNIWI=;
+        b=aSjSuQsowm0SYVk+oEBCMUKwSaLnx0wCDV4jfZo4kIxTvqQByPmEhv20NKAkbnKrAaSqOp
+        20gRLHvsLaA6xGdwO1AGQWzrt/D8UI3EGbPV5rtFl32aWGFmYLoZamIB+YxF8VBHFpKXSQ
+        ZV3aegNjo1QVOtwp2TQ8vCDiQ1yR6kA=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-186-JYoVm-YHPK6kibU_fs4fmQ-1; Tue, 18 Aug 2020 16:01:53 -0400
+X-MC-Unique: JYoVm-YHPK6kibU_fs4fmQ-1
+Received: by mail-pf1-f200.google.com with SMTP id b16so9898059pft.18
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 13:01:53 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=2MAxY9BHfofC4uuTrJrGOH9YUSHV+zNUJRDxxueW4es=;
-        b=dI9aIOxwozkJlybU3P+jBiKiGYwQBplinpPzOTqdCNjYMmlzfERSvpxDeoKzWWJw5w
-         EzEVwcuD/zb6+jnw7F6nUOL297rf8jbG5jeLGlLCUxeNxYiTQ0kKhfVg66FYp4ynXBUB
-         jD7CV+hhqSIx/3XPrQcbQNkN2hdJudqorb6oexIXf9j0aMi4r+WLzUyL2UttIooP49gF
-         GHePMnYx2Rj96kFtcdaX/sCut53gq1R5/ZBKWaOfQHhZcPQWq2Zf63YojhU8TJ/EKmwD
-         gWz0qEYQnvhRGh7xQKvEytt3pIatPhY3NbEsr/h+LLMFAHkUg6EjR9FJuhNvq+Do0h52
-         bU5A==
-X-Gm-Message-State: AOAM532RutLiAU21/h8sY7pDPE5ZTTEITATIXbzpzbiF1eYcVoBxn9Rh
-        /e3iJVkXiMFjg4QaYTkr9qApRk84tF5BUHFG1/4=
-X-Google-Smtp-Source: ABdhPJyEc85NN/1+baqyEbHx3KEC3YXD5pgv6qRxU67MG8LkngUuHvS9IeKCNcc3S1Uyy7Zng9PtsHiA6D5XikIr6rI=
-X-Received: by 2002:a92:1fd9:: with SMTP id f86mr19507673ilf.250.1597776619765;
- Tue, 18 Aug 2020 11:50:19 -0700 (PDT)
-MIME-Version: 1.0
-References: <159770513155.3958786.16108819726679724438.stgit@magnolia>
- <159770515211.3958786.7094290347539609121.stgit@magnolia> <CAOQ4uxjKta9UgtJ6rWE4Wy9hxGGGJOOxu+LuLY0Mf5i1kR69Ew@mail.gmail.com>
- <20200818152523.GO6096@magnolia>
-In-Reply-To: <20200818152523.GO6096@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 18 Aug 2020 21:50:08 +0300
-Message-ID: <CAOQ4uxj1cR+AONf3hk0H41wxGcAbK3xVSqhPnTJpz4zVXrexVw@mail.gmail.com>
-Subject: Re: [PATCH 03/18] xfs: refactor quota expiration timer modification
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=ZWWapVsW4gpQEIu2n5B3MaMa4FVFV+urol1Vn5uNIWI=;
+        b=qStIbSIOj+Av8PdTr84ARnuVdLiPs2amIyTqsIKEqi4Mw+rBsSTkQW6CWACT4RLe71
+         6uBtOoXBxQRKcZujGZ83UOWBa/u2uB4O6OlAbUuJ3JL9H55JAiREY5m9pz3IQlk0d7Wp
+         8wHdXpNMa3I9xtcaKURNrBSMkSe2ozDEI4SZLy4IYjlmMnrfKE8Pn9uOD4t+lhLGr1rp
+         ScNENXFIPv02X5dqYQjZ7mF2FjNVQJLPlXSRIL+CUtKS85LwXnc7MB1Lur+ryKliW9kn
+         7lwerFkeSuh90+cPyOB2uE1cMTi6+1Z/IZnW4Rc9GM5AYfM/4TNIvyUITiIZXGh6Wy42
+         wnJA==
+X-Gm-Message-State: AOAM532lmOZ4eVqOC1UnIQ8kksqDDjg2vEXNc0eoJ520VjO9K6ydSUbF
+        guUrsm8mMLVqL4gpRVViEwlpK+ujoN1Uk06sfgfKtlrfNPdaiRZrBTaApPCxbAaYxJPnz3fGWki
+        kaGgUDbQlfqNjWgqm/bRf
+X-Received: by 2002:a65:6a55:: with SMTP id o21mr1690706pgu.64.1597780912324;
+        Tue, 18 Aug 2020 13:01:52 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxIh+DNWrBo3UKApdFeN2w1oC/ON2qmNuwAZOgsPOAiy4RKtSlwz6kVVld3Cv2wskuHFQVoFg==
+X-Received: by 2002:a65:6a55:: with SMTP id o21mr1690682pgu.64.1597780912025;
+        Tue, 18 Aug 2020 13:01:52 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id h5sm26336470pfk.0.2020.08.18.13.01.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Aug 2020 13:01:51 -0700 (PDT)
+Date:   Wed, 19 Aug 2020 04:01:41 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 00/13] xfs: in memory inode unlink log items
+Message-ID: <20200818200141.GA11372@xiangao.remote.csb>
+References: <20200812092556.2567285-1-david@fromorbit.com>
+ <20200818181745.GL6107@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200818181745.GL6107@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 18, 2020 at 6:25 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Tue, Aug 18, 2020 at 05:21:59PM +0300, Amir Goldstein wrote:
-> > On Tue, Aug 18, 2020 at 2:24 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > >
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > >
-> > > Define explicit limits on the range of quota grace period expiration
-> > > timeouts and refactor the code that modifies the timeouts into helpers
-> > > that clamp the values appropriately.
-> > >
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > There is no refactoring here, but I suppose you want to keep the commit
-> > names aligned with kernel commits, so
->
-> FWIW, these patches of mine where (1) 'xfs: ' is in the subject; (2) the
-> changes only touch things in libxfs and the bare minimum to avoid build
-> breakage; and (3) whose commit log don't really match the changes are
-> straight ports of the kernel-space patches.
->
-> I hesitate to use the libxfs-apply script for these patches (even though
-> Eric will do that when he's resyncing for real) because the source
-> commit ids will probably never match what ends up in Linus tree.
->
-> I don't know if anyone /else/ follows this convention, but in my
-> xfsprogs series, I try to prefix patches that change /only/ userspace
-> libxfs with the tag 'libxfs: ', so that reviewers can spend more time on
-> the patches that tag either libxfs directly or some userspace program.
->
-> That said, this is really not obvious.  I've wondered if I should amend
-> libxfs-apply to be able to quote the source commit subject line so that
-> it's more obvious when a patch is simply a userspace port.  Would that
-> help?
->
+On Tue, Aug 18, 2020 at 11:17:45AM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 12, 2020 at 07:25:43PM +1000, Dave Chinner wrote:
+> > Hi folks,
+> > 
+> > This is a cleaned up version of the original RFC I posted here:
+> > 
+> > https://lore.kernel.org/linux-xfs/20200623095015.1934171-1-david@fromorbit.com/
+> > 
+> > The original description is preserved below for quick reference,
+> > I'll just walk though the changes in this version:
+> > 
+> > - rebased on current TOT and xfs/for-next
+> > - split up into many smaller patches
+> > - includes Xiang's single unlinked list bucket modification
+> > - uses a list_head for the in memory double unlinked inode list
+> >   rather than aginos and lockless inode lookups
+> > - much simpler as it doesn't need to look up inodes from agino
+> >   values
+> > - iunlink log item changed to take an xfs_inode pointer rather than
+> >   an imap and agino values
+> > - a handful of small cleanups that breaking up into small patches
+> >   allowed.
+> 
+> Two questions: How does this patchset intersect with the other one that
+> changes the iunlink series?  I guess the v4 of that series (when it
+> appears) is intended to be applied directly after this one?
 
-This wasn't a problem for me when reviewing the patches.
-Kernel patches were fresh in my head and I could tell when patches were
-partially applied.
+(confirmed from IRC) Yeah, I looked through this patchset these days
+and sent out another rebased version and yes it can be applied directly
+instead.
 
-I think it is more of a concern for long term maintenance of xfsprogs -
-having patches with obscure commit messages that do not match the
-change, so it is really up to Eric and you guys as main stakeholders.
+also put a link here:
+https://lore.kernel.org/r/20200818133015.25398-1-hsiangkao@redhat.com
 
-FWIW, quoting the kernel source commit sounds like a good idea.
+Sorry for that I shouldn't use --in-reply-to as deep as this way.
 
 Thanks,
-Amir.
+Gao Xiang
+
