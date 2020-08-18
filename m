@@ -2,118 +2,174 @@ Return-Path: <SRS0=PyEN=B4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 003BDC433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 12:54:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6B59C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 13:31:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BABE220706
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 12:54:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D94520738
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 13:31:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LvCrqDUX"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="W9LlCt9C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726634AbgHRMyM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 08:54:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36848 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726569AbgHRMyL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 08:54:11 -0400
-Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E76DC061389
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 05:54:10 -0700 (PDT)
-Received: by mail-io1-xd44.google.com with SMTP id g19so21004876ioh.8
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 05:54:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=x47s96B48Zd3DIYIzL98/zYSlqxgWd2UjaPAVK7AxEc=;
-        b=LvCrqDUXwBDRzAEK3tA/1WzBxCz/6cSoU9FDdg/CHoQ4l97o0Lm2anTlQJ3NwT3+Hp
-         P38iSOehxj8ShaRdTkkCD3oak+SeEEQtJ2ifZ8tu2/WQgOhNYVKUjmwJHR912UFyDHcd
-         39M4oaqA5yvZqJAw+RcbvgON3MhMzw2+y8iuaw2jIKENPoalns29MFZgqvU6ZYAUBOjc
-         PYL+ZAeZPCv54I2X3uDD+txFEZiDWbFO7mU+AXYheu+EQBx8CMnS48DM6H7H/CgjAv69
-         R+vlz4SsHGlXiB2/++WV9621QsfkogaVLii0s1qsmIRkWypEtuE5YAbj9EsT5kSNNwP+
-         TBvw==
+        id S1726697AbgHRNbd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 09:31:33 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:32829 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726398AbgHRNb2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 09:31:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597757468;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=Hezqc3eWpXIdLLQbKDneGoj3ZQtxZvBzf/n8JakxaDs=;
+        b=W9LlCt9CJ4etDZr/5jzfrlRMzBB9gd7shqnMPAdcJBMlPD0kBJQ7U8bFPV3VT7pYzw/ND4
+        UTNt3vhkFibLdXxnn5S0E7Ptin8xjctZquzAWnusBAo0Qr55UejVb/PL3d3hzWR7bJRsKo
+        +WqWfipRU6aQPOi0yeLPJJo/rtXQZY0=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-67-nvBTkpmQOYSv7fl-e7nBIA-1; Tue, 18 Aug 2020 09:31:07 -0400
+X-MC-Unique: nvBTkpmQOYSv7fl-e7nBIA-1
+Received: by mail-pl1-f198.google.com with SMTP id w20so3279193plp.8
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 06:31:07 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=x47s96B48Zd3DIYIzL98/zYSlqxgWd2UjaPAVK7AxEc=;
-        b=ZaeRQC4r90/l/vFH5NAZuYFMPYA326z68vNQDv32wUJ8jgXtPNTZ3C5Nh/sfql25Qf
-         UO4Hp5gGQyUKexE5UK+HBFlSNCK1GohSaRyf+MMidAJillpiirqHFIaEu3L5mhxM78TI
-         Mh116KPccCtlYlagGkgVpVy/F5EGTCe4SgJaslZ1ayckMA5+zaoQ51+CuFtmv+XCeWjV
-         iSNSA7d51wCo0jUZRZSkrqwTZYehqNoaetVbwXTJ8umjP+1VlLwyElrsBRydP6xnvvkV
-         Py+85tYiXjCSr6hXWB5Q9g98Uy6ts2VvcCdE31yVoajllO+W3If3X2Vyqm+ZsEGmzgmQ
-         bwiA==
-X-Gm-Message-State: AOAM533BljabHOig4lPAzEmAIOT3xCuekS/hNffz2F9ezFEHMvpyVg4S
-        D3/By1wLJ93qU6KYE8P4oi4p7h3bGOZ83JBegJg=
-X-Google-Smtp-Source: ABdhPJySFAsrtdSEzU07BEKcOBEylM42XnNQV/nFFLxL6+9uEdbqJ2IbE7QPBKDVBrrtc61gAAzVCQW7D+W0k0iK6dk=
-X-Received: by 2002:a6b:5d0a:: with SMTP id r10mr16252015iob.186.1597755249146;
- Tue, 18 Aug 2020 05:54:09 -0700 (PDT)
-MIME-Version: 1.0
-References: <159770500809.3956827.8869892960975362931.stgit@magnolia>
- <159770505894.3956827.5973810026298120596.stgit@magnolia> <CAOQ4uxj=K5TCTZoKxd9G4F0cTRYeE73-6iQgmp+3pR3QJKYdvg@mail.gmail.com>
-In-Reply-To: <CAOQ4uxj=K5TCTZoKxd9G4F0cTRYeE73-6iQgmp+3pR3QJKYdvg@mail.gmail.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 18 Aug 2020 15:53:57 +0300
-Message-ID: <CAOQ4uxgiVdzVNo00-mzDjRn4x3+40dXWGx78n-KucrOBxMcREA@mail.gmail.com>
-Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038 problem
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=Hezqc3eWpXIdLLQbKDneGoj3ZQtxZvBzf/n8JakxaDs=;
+        b=KQprlNQ5frqELmUhgpYJ5ZIYGTryuZZV83IkB6J0KifgcVWrPJ/w3BkDGabJvo6mA2
+         1ZHXwuyKPLjHdnrOu2erh+tI++Q3T+h3LYgQSqnDA0qm24kuwfEk8yUxOHezIeJGOoDU
+         z5Pd7YpHCS6cHat+rTGv8A6qv8C7r8EUy8N5Uj+k6TB8V+i+KMYkdtsdqSzFHq3l9ii1
+         bq619HanNeF/EvFhOv687gWRktdL4djEOOIEPToZUf7CuqG1NOxD4DphhxhtdSDCi8bz
+         k6Nk+gr3yUvIWcNcyptLTpUWR+SlpRuDGN5/zq3bN4MRUJa0GEjWUsb2/fpto5cgjbG8
+         87kw==
+X-Gm-Message-State: AOAM532cMyLgZnEDFK9UrSGrQdESzMhuBWWZjKa6jOMGxbjAAz4pXlWV
+        cB+uDov6VeykJafYuA9uHZ6qPH4zYEXDXaqz0wtSFgCozGG4/HMmtcvolLc2pVOCt+xq37q7r3u
+        Z/wpHx8KKk/Rs6DdwMsCu
+X-Received: by 2002:a17:902:6f01:: with SMTP id w1mr15229569plk.49.1597757465773;
+        Tue, 18 Aug 2020 06:31:05 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzYUpGB/521ywfIoa4wU97h4VO1nAfTqNv38M0YK5IzJGkHNT7sjPmCCdWe2KBfObSjKGtezw==
+X-Received: by 2002:a17:902:6f01:: with SMTP id w1mr15229541plk.49.1597757465445;
+        Tue, 18 Aug 2020 06:31:05 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id h5sm24563099pfq.146.2020.08.18.06.31.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Aug 2020 06:31:04 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [RFC PATCH v4 0/3] xfs: more unlinked inode list optimization v4
+Date:   Tue, 18 Aug 2020 21:30:12 +0800
+Message-Id: <20200818133015.25398-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.1
+In-Reply-To: <20200724061259.5519-1-hsiangkao@redhat.com>
+References: <20200724061259.5519-1-hsiangkao@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 18, 2020 at 3:00 PM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> On Tue, Aug 18, 2020 at 1:57 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > Redesign the ondisk timestamps to be a simple unsigned 64-bit counter of
-> > nanoseconds since 14 Dec 1901 (i.e. the minimum time in the 32-bit unix
-> > time epoch).  This enables us to handle dates up to 2486, which solves
-> > the y2038 problem.
-> >
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> ...
->
-> > diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-> > index 9f036053fdb7..b354825f4e51 100644
-> > --- a/fs/xfs/scrub/inode.c
-> > +++ b/fs/xfs/scrub/inode.c
-> > @@ -190,6 +190,11 @@ xchk_inode_flags2(
-> >         if ((flags2 & XFS_DIFLAG2_DAX) && (flags2 & XFS_DIFLAG2_REFLINK))
-> >                 goto bad;
-> >
-> > +       /* the incore bigtime iflag always follows the feature flag */
-> > +       if (!!xfs_sb_version_hasbigtime(&mp->m_sb) ^
-> > +           !!(flags2 & XFS_DIFLAG2_BIGTIME))
-> > +               goto bad;
-> > +
->
-> Seems like flags2 are not the incore iflags and that the dinode iflags
-> can very well
-> have no bigtime on fs with bigtime support:
->
-> xchk_dinode(...
-> ...
->                 flags2 = be64_to_cpu(dip->di_flags2);
->
-> What am I missing?
->
+Hi forks,
 
-Another question. Do we need to worry about xfs_reinit_inode()?
-It seems not because incore inode should already have the correct bigtime
-flag. Right? But by same logic, xfs_ifree() should already have the correct
-bigtime flag as well, so we don't need to set the flag, maybe assert the flag?
+This is RFC v4 version which is based on Dave's latest patchset:
+ https://lore.kernel.org/r/20200812092556.2567285-1-david@fromorbit.com
+
+I didn't send out v3 because it was based on Dave's previous RFC
+patchset, but I'm still not quite sure to drop RFC tag since this
+version is different from the previous versions...
+
+Changes since v2:
+ - rebase on new patchset, and omit the original first patch
+   "xfs: arrange all unlinked inodes into one list" since it now
+   has better form in the base patchset;
+
+ - a tail xfs_inode pointer is no longer needed since the original
+   patchset introduced list_head iunlink infrastructure and it can
+   be used to get the tail inode;
+
+ - take pag_iunlink_mutex lock until all iunlink log items are
+   committed. Otherwise, xfs_iunlink_log() order would not be equal
+   to the trans commit order so it can mis-reorder and cause metadata
+   corruption I mentioned in v2.
+
+   In order to archive that, some recursive count is introduced since
+   there could be several iunlink operations in one transaction,
+   and introduce some per-AG fields as well since these operations
+   in the transaction may not operate inodes in the same AG. we may
+   also need to take AGI buffer lock in advance (e.g. whiteout rename
+   path) due to iunlink operations and locking order constraint.
+   For more details, see related inlined comments as well...
+
+ - "xfs: get rid of unused pagi_unlinked_hash" would be better folded
+   into original patchset since pagi_unlinked_hash is no longer needed.
+
+============
+
+[Original text]
+
+This RFC patchset mainly addresses the thoughts [*] and [**] from Dave's
+original patchset,
+https://lore.kernel.org/r/20200623095015.1934171-1-david@fromorbit.com
+
+In short, it focues on the following ideas mentioned by Dave:
+ - use bucket 0 instead of multiple buckets since in-memory double
+   linked list finally works;
+
+ - avoid taking AGI buffer and unnecessary AGI update if possible, so
+   1) add a new lock and keep proper locking order to avoid deadlock;
+   2) insert a new unlinked inode from the tail instead of head;
+
+In addition, it's worth noticing 3 things:
+ - xfs_iunlink_remove() should support old multiple buckets in order
+   to keep old inode unlinked list (old image) working when recovering.
+
+ - (but) OTOH, the old kernel recovery _shouldn't_ work with new image
+   since the bucket_index from old xfs_iunlink_remove() is generated
+   by the old formula (rather than keep in xfs_inode), which is now
+   fixed as 0. So this feature is not forward compatible without some
+   extra backport patches;
+
+ - a tail xfs_inode pointer is also added in the perag, which keeps 
+   track of the tail of bucket 0 since it's mainly used for xfs_iunlink().
+
+
+The git tree is also available at
+git://git.kernel.org/pub/scm/linux/kernel/git/xiang/linux.git tags/xfs/iunlink_opt_v4
+
+Gitweb:
+https://git.kernel.org/pub/scm/linux/kernel/git/xiang/linux.git/log/?h=xfs/iunlink_opt_v4
+
+
+Some preliminary tests are done (including fstests, but there seems
+some pre-exist failures and I haven't looked into yet). And I confirmed
+there was no previous metadata corruption mentioned in RFC v2 anymore.
+
+To confirm that I'm in the right direction, I post the latest version
+now since it haven't been updated for a while.
+
+Comments and directions are welcomed. :)
 
 Thanks,
-Amir.
+Gao Xiang
+
+Gao Xiang (3):
+  xfs: get rid of unused pagi_unlinked_hash
+  xfs: introduce perag iunlink lock
+  xfs: insert unlinked inodes from tail
+
+ fs/xfs/xfs_inode.c        | 194 ++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_inode.h        |   1 +
+ fs/xfs/xfs_iunlink_item.c |  16 ++++
+ fs/xfs/xfs_mount.c        |   4 +
+ fs/xfs/xfs_mount.h        |  14 +--
+ 5 files changed, 193 insertions(+), 36 deletions(-)
+
+-- 
+2.18.1
+
