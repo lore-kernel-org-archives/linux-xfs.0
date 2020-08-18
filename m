@@ -2,64 +2,65 @@ Return-Path: <SRS0=PyEN=B4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07E95C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 12:26:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 003BDC433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 12:54:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D77AE207D3
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 12:25:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BABE220706
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 12:54:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fO0OP+Tv"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LvCrqDUX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726391AbgHRMZ7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 08:25:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60262 "EHLO
+        id S1726634AbgHRMyM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 08:54:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36848 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726336AbgHRMZ5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 08:25:57 -0400
-Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 688ADC061389
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 05:25:57 -0700 (PDT)
-Received: by mail-il1-x144.google.com with SMTP id p13so17400764ilh.4
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 05:25:57 -0700 (PDT)
+        with ESMTP id S1726569AbgHRMyL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 08:54:11 -0400
+Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E76DC061389
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 05:54:10 -0700 (PDT)
+Received: by mail-io1-xd44.google.com with SMTP id g19so21004876ioh.8
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 05:54:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=hXi9Ggj5DXa5CNhckkeGGVXOmxJktk4U2qFb5wWI8Mo=;
-        b=fO0OP+TvT0pu+IU+KVcRIuu2z6scdm2qrLwsgtSey7b3KQvX/wPQP+v1B/w7/WgILu
-         jnggWOnq9olqyrIXTZyYjAgh51JW0HOFASc4al3Kr0Qb4L6aQP147jCNSr2tUo6/KgQY
-         gYA5LwENjytO1DmwxFx6A6yMJrx1ZTPKzxI4sg6f56d/NAx2vGOLxHILKF6B+J5hie/q
-         Ob8dXAHtDwtkZj6qbem5rIWPY1N2vC+c/JKC7TtiG1zfsRnRd1N49Lw0GFuMhy0YA6LU
-         yquPg+7IGO5UKMrIKxttrAEdV4Yx0cTczqTIqwFcqll39IYzZH7iS5yTrC+vyEuNxUkh
-         awpw==
+        bh=x47s96B48Zd3DIYIzL98/zYSlqxgWd2UjaPAVK7AxEc=;
+        b=LvCrqDUXwBDRzAEK3tA/1WzBxCz/6cSoU9FDdg/CHoQ4l97o0Lm2anTlQJ3NwT3+Hp
+         P38iSOehxj8ShaRdTkkCD3oak+SeEEQtJ2ifZ8tu2/WQgOhNYVKUjmwJHR912UFyDHcd
+         39M4oaqA5yvZqJAw+RcbvgON3MhMzw2+y8iuaw2jIKENPoalns29MFZgqvU6ZYAUBOjc
+         PYL+ZAeZPCv54I2X3uDD+txFEZiDWbFO7mU+AXYheu+EQBx8CMnS48DM6H7H/CgjAv69
+         R+vlz4SsHGlXiB2/++WV9621QsfkogaVLii0s1qsmIRkWypEtuE5YAbj9EsT5kSNNwP+
+         TBvw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=hXi9Ggj5DXa5CNhckkeGGVXOmxJktk4U2qFb5wWI8Mo=;
-        b=VTf0A6ALu1NIv1U50bxrZDoizHsUS/85/YtZTabdA/AgN6mZhbebyCGedw8wDG3sMv
-         glwC0CYeXVXV5GomnxCC0Ig+mROTrn5yCTb3HP+quNdAuVhpQQjv4/pl7B4/a2J5o5OG
-         PTM33oWULZLve0bP/HPHh6OZT39F/xlUPAoNcvTkAyFpZWjqOpLwtqjXoKtPIBLLgU1w
-         wpYHdTojQ8+CJtMo6d4vCIScags398aF4cI++z8BaQsbHvZh5gZXTQASPxXVgV/vKiHE
-         KCcSowUlaJDBF3N5+BrwyqSNUwYDIDl5O6YJTVXRWUQ68kiUPoZZjqqecshk5Bpxyt/n
-         yPng==
-X-Gm-Message-State: AOAM530NYZRFBbgpYMETbN0+AimoCEhYbpjWvC5Ho8RANQ2/esEg4N4H
-        PEKUvKyQ4/cy/pBByfIIzzgQlXupcBdMyaDKVPA=
-X-Google-Smtp-Source: ABdhPJycIyx48xxiq467YwvYvdTuAbeMU32H1B/La0xpKfYphu/crP0g5+ns4EPIeIufX9mrV2Pzv83JDT/tPLsRpm0=
-X-Received: by 2002:a92:1fd9:: with SMTP id f86mr18182441ilf.250.1597753556686;
- Tue, 18 Aug 2020 05:25:56 -0700 (PDT)
+        bh=x47s96B48Zd3DIYIzL98/zYSlqxgWd2UjaPAVK7AxEc=;
+        b=ZaeRQC4r90/l/vFH5NAZuYFMPYA326z68vNQDv32wUJ8jgXtPNTZ3C5Nh/sfql25Qf
+         UO4Hp5gGQyUKexE5UK+HBFlSNCK1GohSaRyf+MMidAJillpiirqHFIaEu3L5mhxM78TI
+         Mh116KPccCtlYlagGkgVpVy/F5EGTCe4SgJaslZ1ayckMA5+zaoQ51+CuFtmv+XCeWjV
+         iSNSA7d51wCo0jUZRZSkrqwTZYehqNoaetVbwXTJ8umjP+1VlLwyElrsBRydP6xnvvkV
+         Py+85tYiXjCSr6hXWB5Q9g98Uy6ts2VvcCdE31yVoajllO+W3If3X2Vyqm+ZsEGmzgmQ
+         bwiA==
+X-Gm-Message-State: AOAM533BljabHOig4lPAzEmAIOT3xCuekS/hNffz2F9ezFEHMvpyVg4S
+        D3/By1wLJ93qU6KYE8P4oi4p7h3bGOZ83JBegJg=
+X-Google-Smtp-Source: ABdhPJySFAsrtdSEzU07BEKcOBEylM42XnNQV/nFFLxL6+9uEdbqJ2IbE7QPBKDVBrrtc61gAAzVCQW7D+W0k0iK6dk=
+X-Received: by 2002:a6b:5d0a:: with SMTP id r10mr16252015iob.186.1597755249146;
+ Tue, 18 Aug 2020 05:54:09 -0700 (PDT)
 MIME-Version: 1.0
-References: <159770500809.3956827.8869892960975362931.stgit@magnolia> <159770506536.3956827.8490982017014132952.stgit@magnolia>
-In-Reply-To: <159770506536.3956827.8490982017014132952.stgit@magnolia>
+References: <159770500809.3956827.8869892960975362931.stgit@magnolia>
+ <159770505894.3956827.5973810026298120596.stgit@magnolia> <CAOQ4uxj=K5TCTZoKxd9G4F0cTRYeE73-6iQgmp+3pR3QJKYdvg@mail.gmail.com>
+In-Reply-To: <CAOQ4uxj=K5TCTZoKxd9G4F0cTRYeE73-6iQgmp+3pR3QJKYdvg@mail.gmail.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 18 Aug 2020 15:25:45 +0300
-Message-ID: <CAOQ4uxghu9w883G7HOYNVtteEnuJwLUTC5CWh0ggoNgohUz44w@mail.gmail.com>
-Subject: Re: [PATCH 09/11] xfs: refactor quota timestamp coding
+Date:   Tue, 18 Aug 2020 15:53:57 +0300
+Message-ID: <CAOQ4uxgiVdzVNo00-mzDjRn4x3+40dXWGx78n-KucrOBxMcREA@mail.gmail.com>
+Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038 problem
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         Eric Sandeen <sandeen@sandeen.net>
@@ -69,13 +70,50 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 18, 2020 at 1:57 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+On Tue, Aug 18, 2020 at 3:00 PM Amir Goldstein <amir73il@gmail.com> wrote:
 >
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+> On Tue, Aug 18, 2020 at 1:57 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > Redesign the ondisk timestamps to be a simple unsigned 64-bit counter of
+> > nanoseconds since 14 Dec 1901 (i.e. the minimum time in the 32-bit unix
+> > time epoch).  This enables us to handle dates up to 2486, which solves
+> > the y2038 problem.
+> >
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> ...
 >
-> Refactor quota timestamp encoding and decoding into helper functions so
-> that we can add extra behavior in the next patch.
+> > diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> > index 9f036053fdb7..b354825f4e51 100644
+> > --- a/fs/xfs/scrub/inode.c
+> > +++ b/fs/xfs/scrub/inode.c
+> > @@ -190,6 +190,11 @@ xchk_inode_flags2(
+> >         if ((flags2 & XFS_DIFLAG2_DAX) && (flags2 & XFS_DIFLAG2_REFLINK))
+> >                 goto bad;
+> >
+> > +       /* the incore bigtime iflag always follows the feature flag */
+> > +       if (!!xfs_sb_version_hasbigtime(&mp->m_sb) ^
+> > +           !!(flags2 & XFS_DIFLAG2_BIGTIME))
+> > +               goto bad;
+> > +
 >
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Seems like flags2 are not the incore iflags and that the dinode iflags
+> can very well
+> have no bigtime on fs with bigtime support:
+>
+> xchk_dinode(...
+> ...
+>                 flags2 = be64_to_cpu(dip->di_flags2);
+>
+> What am I missing?
+>
 
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Another question. Do we need to worry about xfs_reinit_inode()?
+It seems not because incore inode should already have the correct bigtime
+flag. Right? But by same logic, xfs_ifree() should already have the correct
+bigtime flag as well, so we don't need to set the flag, maybe assert the flag?
+
+Thanks,
+Amir.
