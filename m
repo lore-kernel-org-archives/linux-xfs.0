@@ -7,72 +7,72 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA3E1C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 15:32:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE00C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 15:36:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6FB820786
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 15:32:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F031820786
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 15:36:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DJ8mWsXF"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="phWIAltg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726639AbgHRPck (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 11:32:40 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47692 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727955AbgHRPch (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 11:32:37 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07IFRe6w091497;
-        Tue, 18 Aug 2020 15:32:34 GMT
+        id S1727955AbgHRPgn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 11:36:43 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:58648 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726585AbgHRPgm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 11:36:42 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07IFR8ei160119;
+        Tue, 18 Aug 2020 15:36:39 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=dMxEZOoPSz41A5fmtDug0JWkOCZL/JAd4Te1L5aASUQ=;
- b=DJ8mWsXFPCeAcmWdo+Y5TaUHpgFnWPmHbjA7FNDH4zezzwWWtqMsI0iEsXxSCBAXpq4g
- AiPuKL6bu+QfX5N10TgJwalgmF5TvKzFeJQnxUom/MornocR0uC+A9YMz0qDrjQouVMx
- A0Ir1JH2ee9KO97oZWh6sa+qSV2UR1fs66FCERpoMLvwlbCF/vsZcWXy+cF+Tut2ezgt
- sa4V76tTOAVjbyDtiR2mJfqasyEoGz906AfaJ5bCf5S6RuN64ep0cM6+5+ahw76wViAC
- sJPGbwbY9h7F7WLrFGUEsgH5LYniTv13+bYxEJm53J9qbZZDVqDnPKzdp/DrilP7tuqc EA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 32x7nmdjyk-1
+ bh=fM4EhbDtCplbETGEGzZ3mqfNQjXM+BKaPcH/xZb39hs=;
+ b=phWIAltgQRHD94X8o7Z3b990GEqJTWEV1K3M/GogDLrevRbBLzyuXj9HtABVoRwKOgIk
+ 32lpLV4OjB6YtFMZ+lUvjClTrqLOIoVncxPgTUWazgAHfQfvrX3inLMdK5L5KHxfOMQ2
+ wNg1Nz/+wt+8R3g2Oq8dr7rESgWDRiufddGuxxbTw8anpHuFrXQUkZcKQXpaLGn8uhvA
+ PL0xGv70iXOLhCK46o0Y1c4xr7YAxGiJXE/UeB3wPONATmgxLRMCm8DOLIeaGEirP5xi
+ 6Yd/IM/N94gAYA8exWK5tb4s59usPd1GGNtDDGrn5FB67BhZXnl/mFrSbRrsEjGS1b57 OA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 32x8bn5h8b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 18 Aug 2020 15:32:34 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07IFTD6M107470;
-        Tue, 18 Aug 2020 15:32:34 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 32xsmxcdsp-1
+        Tue, 18 Aug 2020 15:36:39 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07IFYZVn110860;
+        Tue, 18 Aug 2020 15:34:39 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 32xsfs12d3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 18 Aug 2020 15:32:33 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07IFWWg4011474;
-        Tue, 18 Aug 2020 15:32:32 GMT
+        Tue, 18 Aug 2020 15:34:37 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07IFYQDq004614;
+        Tue, 18 Aug 2020 15:34:26 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 18 Aug 2020 08:32:32 -0700
-Date:   Tue, 18 Aug 2020 08:32:31 -0700
+        with ESMTP ; Tue, 18 Aug 2020 08:34:25 -0700
+Date:   Tue, 18 Aug 2020 08:34:24 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Amir Goldstein <amir73il@gmail.com>
 Cc:     Eric Sandeen <sandeen@sandeen.net>,
         linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 17/18] xfs_repair: support bigtime
-Message-ID: <20200818153231.GP6096@magnolia>
+Subject: Re: [PATCH 18/18] mkfs: format bigtime filesystems
+Message-ID: <20200818153424.GQ6096@magnolia>
 References: <159770513155.3958786.16108819726679724438.stgit@magnolia>
- <159770524187.3958786.13522554876108493954.stgit@magnolia>
- <CAOQ4uxiw7oPFwy2J-hGAoN6qTu_Hnx9E2vy2qBO9x5M-oaT5AQ@mail.gmail.com>
+ <159770524797.3958786.6498012041319904192.stgit@magnolia>
+ <CAOQ4uxgL9cUm3wqbSgRnRC-uOpDAJ4_KaZA+3CUx5rLDLaY19A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxiw7oPFwy2J-hGAoN6qTu_Hnx9E2vy2qBO9x5M-oaT5AQ@mail.gmail.com>
+In-Reply-To: <CAOQ4uxgL9cUm3wqbSgRnRC-uOpDAJ4_KaZA+3CUx5rLDLaY19A@mail.gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 mlxscore=0 suspectscore=1 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008180112
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ spamscore=0 suspectscore=1 mlxscore=0 phishscore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008180112
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 spamscore=0
- impostorscore=0 priorityscore=1501 adultscore=0 mlxscore=0 mlxlogscore=999
- lowpriorityscore=0 bulkscore=0 phishscore=0 malwarescore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
+ impostorscore=0 suspectscore=1 adultscore=0 spamscore=0 malwarescore=0
+ mlxlogscore=999 priorityscore=1501 bulkscore=0 clxscore=1015 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008180112
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,64 +80,90 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 18, 2020 at 05:58:11PM +0300, Amir Goldstein wrote:
+On Tue, Aug 18, 2020 at 05:45:41PM +0300, Amir Goldstein wrote:
 > On Tue, Aug 18, 2020 at 2:23 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 > >
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > >
-> > Check the bigtime iflag in relation to the fs feature set.
+> > Allow formatting with large timestamps.
 > >
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 > 
-> and some questions below...
+> Other than one comment below...
 > 
 > > ---
-> >  repair/dinode.c |   13 ++++++++++++-
-> >  1 file changed, 12 insertions(+), 1 deletion(-)
+> >  man/man8/mkfs.xfs.8 |   16 ++++++++++++++++
+> >  mkfs/xfs_mkfs.c     |   24 +++++++++++++++++++++++-
+> >  2 files changed, 39 insertions(+), 1 deletion(-)
 > >
 > >
-> > diff --git a/repair/dinode.c b/repair/dinode.c
-> > index ad2f672d8703..3507cd06075d 100644
-> > --- a/repair/dinode.c
-> > +++ b/repair/dinode.c
-> > @@ -2173,7 +2173,8 @@ check_nsec(
-> >         union xfs_timestamp     *t,
-> >         int                     *dirty)
-> >  {
-> > -       if ((dip->di_flags2 & be64_to_cpu(XFS_DIFLAG2_BIGTIME)) ||
-> > +       if ((dip->di_version >= 3 &&
+> > diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+> > index 082f3ab6c063..7434b9f2b4cd 100644
+> > --- a/man/man8/mkfs.xfs.8
+> > +++ b/man/man8/mkfs.xfs.8
+> > @@ -154,6 +154,22 @@ valid
+> >  are:
+> >  .RS 1.2i
+> >  .TP
+> > +.BI bigtime= value
+> > +This option enables filesystems that can handle inode timestamps from December
+> > +1901 to July 2486, and quota timer expirations from January 1970 to July 2486.
+> > +The value is either 0 to disable the feature, or 1 to enable large timestamps.
+> > +.IP
+> > +If this feature is not enabled, the filesystem can only handle timestamps from
+> > +December 1901 to January 2038, and quota timers from January 1970 to February
+> > +2106.
+> > +.IP
+> > +By default,
+> > +.B mkfs.xfs
+> > +will not enable this feature.
+> > +If the option
+> > +.B \-m crc=0
+> > +is used, the large timestamp feature is not supported and is disabled.
+> > +.TP
+> >  .BI crc= value
+> >  This is used to create a filesystem which maintains and checks CRC information
+> >  in all metadata objects on disk. The value is either 0 to disable the feature,
+> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> > index 037246effd70..f9f78a020092 100644
+> > --- a/mkfs/xfs_mkfs.c
+> > +++ b/mkfs/xfs_mkfs.c
+> > @@ -120,6 +120,7 @@ enum {
+> >         M_RMAPBT,
+> >         M_REFLINK,
+> >         M_INOBTCNT,
+> > +       M_BIGTIME,
+> >         M_MAX_OPTS,
+> >  };
+> >
+> > @@ -667,6 +668,7 @@ static struct opt_params mopts = {
+> >                 [M_RMAPBT] = "rmapbt",
+> >                 [M_REFLINK] = "reflink",
+> >                 [M_INOBTCNT] = "inobtcount",
+> > +               [M_BIGTIME] = "bigtime",
+> >         },
+> >         .subopt_params = {
+> >                 { .index = M_CRC,
+> > @@ -703,6 +705,12 @@ static struct opt_params mopts = {
+> >                   .maxval = 1,
+> >                   .defaultval = 1,
+> >                 },
+> > +               { .index = M_BIGTIME,
+> > +                 .conflicts = { { NULL, LAST_CONFLICT } },
+> > +                 .minval = 0,
+> > +                 .maxval = 1,
+> > +                 .defaultval = 1,
 > 
-> It seems a bit strange that di_version check was added by this commit.
+>                  .defaultval = 0 ?
 
-Ooh, yeah.  That was added a few patches back, though it shouldn't have
-been.
+The (somewhat misnamed) defaultval determines the implied value if the
+user doesn't specify one, e.g. "-m bigtime" instead of "-m bigtime=1".
+Therefore, we want it to default to 1 like all the other feature flag
+arguments.
 
-> > +            (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME))) ||
-> >             be32_to_cpu(t->t_nsec) < NSEC_PER_SEC)
-> >                 return;
-> >
-> > @@ -2601,6 +2602,16 @@ _("bad (negative) size %" PRId64 " on inode %" PRIu64 "\n"),
-> >                         flags2 &= ~XFS_DIFLAG2_COWEXTSIZE;
-> >                 }
-> >
-> > +               if ((flags2 & XFS_DIFLAG2_BIGTIME) &&
-> > +                   !xfs_sb_version_hasbigtime(&mp->m_sb)) {
-> > +                       if (!uncertain) {
-> > +                               do_warn(
-> > +       _("inode %" PRIu64 " is marked bigtime but file system does not support large timestamps\n"),
-> > +                                       lino);
-> > +                       }
-> > +                       flags2 &= ~XFS_DIFLAG2_BIGTIME;
-> 
-> Should we maybe also reset the timestamps to epoc in this case?
-
-Yeah, since it's possible that the timestamp would then have an invalid
-nsec field once the bigtime field is cleared.  This also needs to log
-something about logging "...would zero timestamps and clear flag".
-
-Thanks for catching this. :)
+Thanks for reviewing most of this featureset! :)
 
 --D
 
