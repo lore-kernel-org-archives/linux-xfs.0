@@ -2,104 +2,80 @@ Return-Path: <SRS0=PyEN=B4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67719C433E3
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 10:07:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89D82C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 10:47:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4738320786
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 10:07:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62DE1207DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 10:47:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E5TM3Af6"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L0eR2sKW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726273AbgHRKH1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 06:07:27 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:45138 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726043AbgHRKH1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 06:07:27 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597745246;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1hpL6DEwUd1smOXQLXeZsHLSUxnXNu+oLlO4+HAzvog=;
-        b=E5TM3Af6bHv/lHei9WpxVZwP1ui2EHeX60XKInjXzwZEjaV5nXh1x1ZUD7fJuN4z7/F+bq
-        geSN1RJgBhC684jh27ycBFqv3QDzgkqY8zy02l1ouy3KsLhfgrV0dLGbRP5WVB+GI5nsn0
-        6IJgQG11MyMbUrOoW3X/B+0AZdO+uew=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-490-WYQ8DeZFOcWOKD_Y82SRyQ-1; Tue, 18 Aug 2020 06:07:24 -0400
-X-MC-Unique: WYQ8DeZFOcWOKD_Y82SRyQ-1
-Received: by mail-wm1-f72.google.com with SMTP id z10so7206786wmi.8
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 03:07:24 -0700 (PDT)
+        id S1726598AbgHRKrB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 06:47:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44714 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726203AbgHRKrA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 06:47:00 -0400
+Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C4BF3C061389
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 03:46:59 -0700 (PDT)
+Received: by mail-io1-xd44.google.com with SMTP id h4so20682814ioe.5
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 03:46:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=vsIXYXW2WJLM80jj2APP8YYVXigkfgnMa+SyCT29yLc=;
+        b=L0eR2sKW3UtDRPEUUKRP8t/A7xkdUH6M+JNe1vIYz7UfK7wkpK7Zd5lV7m/Slp323E
+         WJRrsq6bio0aRDpQn5u5dh/eCEdCQi0EJxDitQ72EWhLmTSkdTMgATCMLxdKZmap/2Sy
+         MvUVyx+7btakDF5adzwJV6p0ewfa2NrdGn4E3XzZ0Oo6GztMqvq/EjHFuANkSC1FdVnA
+         opuyAg2yzo5KBQOWFp0ysuZs0CwcKFivk1vAoe1etKjZF19xXdeJJDTJKe1wpewKcF3y
+         lWslwCnST+yWfObIBWnuYSGgvtAfs+MKRyDL+jQ9ryLfSq+23xZktUMu2bRG5uh9WSWg
+         mpYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=1hpL6DEwUd1smOXQLXeZsHLSUxnXNu+oLlO4+HAzvog=;
-        b=cstysSbLmIepndVz8bqOAKkaEeGu/zjpWu8Czg5eV30sWabfZBFk/QMmqhWUrGMtlr
-         5HCm3H95eKE+bNbPkOfsqSzv8DnwwiCjOzSIytkzUrzc8deNmGOcN53x97wmcpjIoMOP
-         zao/iYwg+Y8kBIxMwyW+DrLIf6oPTEb0rr88oQsKjDfWdX6KaYUb+zaKs4xs4FghoYvG
-         nP1mB0tS7HVCjBAG5IlZzwHVpAHfmIONT8faR5kYLWK8/3dWi6FnJZZW+rlmRvLhTBlP
-         T7SzAg8gqNZR1gs8C+Bgu/a4aqFMuxE1JdKuJm7zBadDwwmyzrypNgiaVTJXcobpmBIr
-         9QpA==
-X-Gm-Message-State: AOAM533Bkto1BnGuXWzm7BWMdyurv5FgMdwTQYy7svlozpBllv9GFTnU
-        ItctXV5DgfmmVfa8aZi5f/w3QIlZz653uGDBQGgZyWBRTlquwSi4wD/eFLG8wUwQ5G8nkaRca5s
-        X9OC2Rt413AVjVSuKTZ5M
-X-Received: by 2002:a1c:24d5:: with SMTP id k204mr18049456wmk.159.1597745243084;
-        Tue, 18 Aug 2020 03:07:23 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzZ+1cONYDUB8CGWbTu3DUu2DbLNXuwZur57bVPdx7e5bNfqO8ANIH4FnQnJz+dsrPVhjsfPg==
-X-Received: by 2002:a1c:24d5:: with SMTP id k204mr18049445wmk.159.1597745242888;
-        Tue, 18 Aug 2020 03:07:22 -0700 (PDT)
-Received: from eorzea (ip-86-49-45-232.net.upcbroadband.cz. [86.49.45.232])
-        by smtp.gmail.com with ESMTPSA id y203sm33358617wmc.29.2020.08.18.03.07.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Aug 2020 03:07:22 -0700 (PDT)
-Date:   Tue, 18 Aug 2020 12:07:20 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/2] Get rid of kmem_realloc()
-Message-ID: <20200818100720.oiwqk3yi2dsvjqav@eorzea>
-Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-References: <20200813142640.47923-1-cmaiolino@redhat.com>
- <20200817065533.GG23516@infradead.org>
- <20200817101716.mmcgbdpkimc6wvl7@eorzea>
- <20200817153922.GJ6096@magnolia>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=vsIXYXW2WJLM80jj2APP8YYVXigkfgnMa+SyCT29yLc=;
+        b=Wr02skdZNsFKYVTKlaDUTMpu4X9lfIauqEuO6RjoQRVtokwDxyRN6WcYioSHbEjpFX
+         5xRgmUtxLgLMyY1Uw1UHyOztRTfGjlwBJ9Vh+7Sf4vQxaAhfy8u7LqLIRp2eNJjlDx8+
+         KSpjP8LIrl8EJo255jatmTob60ztS7R5aoO/DEF71wjuqie4X6qq1iLg4GhsbmneBj1p
+         kmyznUZe2EibQFXNWiVHJWR/JUGg6u68/C2qTJJi4ucQ4Dgd+jtG1gB8ur35n+hWjstm
+         u6Q/I49CySpJUXF/au3ii4N0d7SBuhQFbHFU54W2sQHCDQ0rp6aIEyw7KH35lg8URdK5
+         swVA==
+X-Gm-Message-State: AOAM530YZe3bf3icFGQXNPZSFUxkzzGfC6cVjFXPbmRWKFk1alRTmgxn
+        jwqem0fmVn/EeoBZTn9b917ROkyG2SyrDvHFNfhUFy7MjAc=
+X-Google-Smtp-Source: ABdhPJyOG4b5eVmbER+XhqFXV9fM667QMFwLZYgVXtA7G5lfEmmCFyasDa+eUK7a3FihLpSIrdMpR/6frei9EaCVR68=
+X-Received: by 2002:a05:6638:1413:: with SMTP id k19mr18093649jad.93.1597747618528;
+ Tue, 18 Aug 2020 03:46:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200817153922.GJ6096@magnolia>
+References: <159770500809.3956827.8869892960975362931.stgit@magnolia> <159770502702.3956827.5672717512043351449.stgit@magnolia>
+In-Reply-To: <159770502702.3956827.5672717512043351449.stgit@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 18 Aug 2020 13:46:47 +0300
+Message-ID: <CAOQ4uxggq1oN_p61ZLqMntb5yUJYJvNHLhvtS6VV7WZhMAFM_w@mail.gmail.com>
+Subject: Re: [PATCH 03/11] xfs: refactor default quota grace period setting code
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 17, 2020 at 08:39:22AM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 17, 2020 at 12:17:16PM +0200, Carlos Maiolino wrote:
-> > On Mon, Aug 17, 2020 at 07:55:33AM +0100, Christoph Hellwig wrote:
-> > > Both patches looks good:
-> > > 
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > 
-> > > although personally I would have simply sent them as a single patch.
-> > 
-> > Thanks Christoph. I have no preference, I just submitted the patches according
-> > to what I was doing, 'remove users, nothing broke? Remove functions', but I
-> > particularly have no preference, Darrick, if the patches need to be merged just
-> > give me a heads up.
-> 
-> Yes, the two patches are simple enough that they ought to be merged.
+On Tue, Aug 18, 2020 at 1:59 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Refactor the code that sets the default quota grace period into a helper
+> function so that we can override the ondisk behavior later.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, you want me to resend or it's just a heads up for the next time?
-
-
--- 
-Carlos
-
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
