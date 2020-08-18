@@ -2,147 +2,210 @@ Return-Path: <SRS0=PyEN=B4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18DB4C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 03:25:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A4DAC433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 06:16:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9F2D207DE
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 03:25:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B2CA2075E
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 06:16:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Om+U1qDV"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fzbms95A"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726403AbgHRDZt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 17 Aug 2020 23:25:49 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:23840 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726422AbgHRDZt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Aug 2020 23:25:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597721147;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=sjvunXuH427JuUewluiKQ62JX/ns9cVyx8gwJh3RHQc=;
-        b=Om+U1qDVb6iqi96X/SGL7kTwVCTUaPW4oeMGFc/P2kxLRpjdX2MFHQqCzg6J81TPXJmuYj
-        RIpkTfaD4EFmwTrtKsSLx7eFBpfDY0q1497LqNDoG8ACg+oIMYXWwHnuwZZsvU+9kyj8Z8
-        5k7Q9mn90TtUcTL8uktVSB1Jmn3sZew=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-389-sX4-tMxJNnaglyza-pwuJw-1; Mon, 17 Aug 2020 23:25:45 -0400
-X-MC-Unique: sX4-tMxJNnaglyza-pwuJw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8F0271006702;
-        Tue, 18 Aug 2020 03:25:44 +0000 (UTC)
-Received: from colo-mx.corp.redhat.com (colo-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.21])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8807D1A7CD;
-        Tue, 18 Aug 2020 03:25:44 +0000 (UTC)
-Received: from zmail21.collab.prod.int.phx2.redhat.com (zmail21.collab.prod.int.phx2.redhat.com [10.5.83.24])
-        by colo-mx.corp.redhat.com (Postfix) with ESMTP id 7D67B60345;
-        Tue, 18 Aug 2020 03:25:44 +0000 (UTC)
-Date:   Mon, 17 Aug 2020 23:25:44 -0400 (EDT)
-From:   Jianhong Yin <jiyin@redhat.com>
-To:     sandeen@redhat.com
-Cc:     linux-xfs@vger.kernel.org, Jianhong Yin <yin-jianhong@163.com>
-Message-ID: <1538111614.12358313.1597721144157.JavaMail.zimbra@redhat.com>
-In-Reply-To: <16bf0257-dbfa-ff0a-cb96-b247acadb2ef@redhat.com>
-References: <20200817090048.17991-1-jiyin@redhat.com> <16bf0257-dbfa-ff0a-cb96-b247acadb2ef@redhat.com>
-Subject: Re: [PATCH] [xfs_db:type] do nothing if 'current type' == 'the
- requested type'
+        id S1726391AbgHRGQd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 02:16:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58332 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726381AbgHRGQd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 02:16:33 -0400
+Received: from mail-io1-xd41.google.com (mail-io1-xd41.google.com [IPv6:2607:f8b0:4864:20::d41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BA8DC061389;
+        Mon, 17 Aug 2020 23:16:33 -0700 (PDT)
+Received: by mail-io1-xd41.google.com with SMTP id h4so20089569ioe.5;
+        Mon, 17 Aug 2020 23:16:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=wX5l5fWiRv/scGbr9LXATXAyYwy0PIHFLJ5vxXRUvlw=;
+        b=Fzbms95AwV4cjbiqWwYKVrySDybK1lK7CmDrStjV4eKtJbsYGCzC6cWsmceAk95VHQ
+         TqriT+VkAJwhP32DizVdpJDNmdWKpn+lBr6C2l7v9ohBWyg5/eENZK/VseS3x/LduuEC
+         e2LN+uBVIegLzp+D5W8bIaBUavXCMejL2s9k9o7VcYUJHrjo3IuB/pXbbDMv7mfOhUvo
+         opz34kd5cqRvUNdqOe+HMQCy8IfkRTD6opT8cGCdsASZMDHEj6gxIvhwjJ9RQCv+wCzp
+         gEFjSaJTS/y7LSvHeZ7kIF4H1N4x1cXxzFaoZRKzXfBNcOeDRgxiJHr1Gl+Iyq/6ZqZr
+         svmw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=wX5l5fWiRv/scGbr9LXATXAyYwy0PIHFLJ5vxXRUvlw=;
+        b=anpxvhkXntPdnIH9K53dgVBRyAiD0dkadB+c4EXIOGuSLquQmD23tA5g2vzm2/KITx
+         IuxAnCDzv35syECK9GGSumvKbaqYfYPCBkK17iB4CP3fGWuEGkhgHXM7tYbDlaAlLMMN
+         4vz84JCv11jVa1WgqayfrmtL+uocRD/p/pcOewC5mzmogYWpSjfTIuU2HPJ09Haf2PHU
+         DskivRus9OFBed9U29tyuUL3JxxLeSPU19UY0Gc0EDU3082aOYujEZs+sti0HB5nePpI
+         zZJYbuxoga3b1DnwZyq72RyGhid5LCuAQAWxBOZ4iitrCbeqwB+EIGfUYQZesgYcbmB4
+         pWxw==
+X-Gm-Message-State: AOAM530g29mMVNjLfWWYJq+GCoOeDpDSH6rlLXPAdpWxhVhm4dlBuRCo
+        o19AuxFt7Gtp0tl49HzqA0VtmFYItXkwK4nCUDM=
+X-Google-Smtp-Source: ABdhPJzlBbx6jbkTn9ZCiMt7UGxCaoD/9X2NsGthGHq4SLI8vnDNO9J5RMcZhdYrT1lH/5M5wsBsuK4Wl9xtzkqmCYE=
+X-Received: by 2002:a05:6602:1405:: with SMTP id t5mr7868751iov.72.1597731392183;
+ Mon, 17 Aug 2020 23:16:32 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Originating-IP: [10.68.5.41, 10.4.195.1]
-Thread-Topic: do nothing if 'current type' == 'the requested type'
-Thread-Index: kUAjyUoEjPOC8ejdVYBOP2ZA6K61rg==
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+References: <159770525400.3960575.11977829712550002800.stgit@magnolia> <159770527916.3960575.1560206777561534458.stgit@magnolia>
+In-Reply-To: <159770527916.3960575.1560206777561534458.stgit@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 18 Aug 2020 09:16:21 +0300
+Message-ID: <CAOQ4uxg9MG8N=hF++y=RtXLo7Up0wM3uF=tC3HW8c2ivWsjqCA@mail.gmail.com>
+Subject: Re: [PATCH 4/4] xfs: test upgrading filesystem to bigtime
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>,
+        Deepa Dinamani <deepa.kernel@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Tue, Aug 18, 2020 at 2:23 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Test that we can upgrade an existing filesystem to use bigtime.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/xfs        |   16 +++++++++++
+>  tests/xfs/908     |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/908.out |    3 ++
+>  tests/xfs/909     |   77 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/909.out |   12 ++++++++
+>  tests/xfs/group   |    2 +
+>  6 files changed, 184 insertions(+)
+>  create mode 100755 tests/xfs/908
+>  create mode 100644 tests/xfs/908.out
+>  create mode 100755 tests/xfs/909
+>  create mode 100644 tests/xfs/909.out
+>
+>
+> diff --git a/common/xfs b/common/xfs
+> index 252a5c0d..c0735a51 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -985,3 +985,19 @@ _xfs_timestamp_range()
+>                 $dbprog -f -c 'timelimit --compact' | awk '{printf("%s %s", $1, $2);}'
+>         fi
+>  }
+> +
+> +_require_xfs_mkfs_bigtime()
+> +{
+> +       _scratch_mkfs_xfs_supported -m bigtime=1 >/dev/null 2>&1 \
+> +          || _notrun "mkfs.xfs doesn't have bigtime feature"
+> +}
+> +
+> +_require_xfs_scratch_bigtime()
+> +{
+> +       _require_scratch
+> +
+> +       _scratch_mkfs -m bigtime=1 > /dev/null
+> +       _try_scratch_mount || \
+> +               _notrun "bigtime not supported by scratch filesystem type: $FSTYP"
+> +       _scratch_unmount
+> +}
+> diff --git a/tests/xfs/908 b/tests/xfs/908
+> new file mode 100755
+> index 00000000..e313e14b
+> --- /dev/null
+> +++ b/tests/xfs/908
+> @@ -0,0 +1,74 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 908
+> +#
+> +# Check that we can upgrade a filesystem to support bigtime and that inode
+> +# timestamps work properly after the upgrade.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +       cd /
+> +       rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +_require_xfs_mkfs_crc
+> +_require_xfs_mkfs_bigtime
+> +_require_xfs_scratch_bigtime
+> +
+> +date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
+> +       _notrun "Userspace does not support dates past 2038."
+> +
+> +rm -f $seqres.full
+> +
+> +# Format V5 filesystem without bigtime support and populate it
+> +_scratch_mkfs -m crc=1,bigtime=0 > $seqres.full
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +touch $SCRATCH_MNT/a
+> +touch $SCRATCH_MNT/b
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +_scratch_unmount
+> +_check_scratch_fs
+> +
+> +# Now upgrade to bigtime support
+> +_scratch_xfs_admin -O bigtime >> $seqres.full
+> +_check_scratch_fs
+> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
+> +
+> +# Mount again, look at our files
+> +_scratch_mount >> $seqres.full
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +
+> +# Modify some timestamps
+> +touch -d 'Feb 22 22:22:22 UTC 2222' $SCRATCH_MNT/b
+> +
+> +_scratch_cycle_mount
+> +
+> +# Did the timestamp survive?
+> +ls -la $SCRATCH_MNT/* >> $seqres.full
+> +TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
+> +
 
------ =E5=8E=9F=E5=A7=8B=E9=82=AE=E4=BB=B6 -----
-> =E5=8F=91=E4=BB=B6=E4=BA=BA: "Eric Sandeen" <esandeen@redhat.com>
-> =E6=94=B6=E4=BB=B6=E4=BA=BA: "Jianhong Yin" <jiyin@redhat.com>, linux-xfs=
-@vger.kernel.org
-> =E6=8A=84=E9=80=81: "Jianhong Yin" <yin-jianhong@163.com>
-> =E5=8F=91=E9=80=81=E6=97=B6=E9=97=B4: =E6=98=9F=E6=9C=9F=E4=BA=8C, 2020=
-=E5=B9=B4 8 =E6=9C=88 18=E6=97=A5 =E4=B8=8A=E5=8D=88 4:33:15
-> =E4=B8=BB=E9=A2=98: Re: [PATCH] [xfs_db:type] do nothing if 'current type=
-' =3D=3D 'the requested type'
->=20
-> On 8/17/20 4:00 AM, Jianhong Yin wrote:
-> > From: Jianhong Yin <yin-jianhong@163.com>
-> >=20
-> > for power saving and also as a workaround of below issue:
-> >> xfs_db -r /dev/vda3 -c "inode 132" -c "type inode" -c "inode"
-> >> current inode number is 128
-> >=20
-> > Reported-by: Jianhong Yin <jiyin@redhat.com>
-> > Suggested-by: Eric Sandeen <esandeen@redhat.com>
-> > Tested-by: Jianhong Yin <yin-jianhong@163.com>
-> > Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
-> > ---
-> >  db/type.c | 3 +++
-> >  1 file changed, 3 insertions(+)
-> >=20
-> > diff --git a/db/type.c b/db/type.c
-> > index 3cb1e868..679de1b0 100644
-> > --- a/db/type.c
-> > +++ b/db/type.c
-> > @@ -213,6 +213,9 @@ type_f(
-> > =20
-> > =20
-> >  =09} else {
-> > +=09=09if (cur_typ !=3D NULL && strcmp(cur_typ->name, argv[1]) =3D=3D 0=
-)
-> > +=09=09=09return 0;
-> > +
-> >  =09=09tt =3D findtyp(argv[1]);
-> >  =09=09if (tt =3D=3D NULL) {
-> >  =09=09=09dbprintf(_("no such type %s\n"), argv[1]);
->=20
-> Thanks for this - I had a patch on my stack to do the same thing,
-> but did I it this way:
->=20
-> diff --git a/db/type.c b/db/type.c
-> index 3cb1e868..5433bcfb 100644
-> --- a/db/type.c
-> +++ b/db/type.c
-> @@ -219,6 +219,8 @@ type_f(
->  =09=09} else {
->  =09=09=09if (iocur_top->typ =3D=3D NULL)
->  =09=09=09=09dbprintf(_("no current object\n"));
-> +=09=09=09else if (iocur_top->typ =3D=3D tt)
-> +=09=09=09=09return 0;
->  =09=09=09else {
->  =09=09=09=09cur_typ =3D tt;
->  =09=09=09=09set_iocur_type(tt);
->=20
-> which I guess I like a little better than using strcmp on the argument...
-> it compares the type structure directly, rather than comparing the names.
-Good to know that :)
+Darrick,
 
-I just thought that 'tt' is also come from findtyp()->forearch:strcmp(argv,=
-)
- and it could save more cpu instructions if compare before findtyp().
+These tests look great, but I wonder.
+generic/402 has more test coverage than above.
+It tests several data points and it tests them with and without mount cycle.
 
-but seems I forgot that findtyp() is always needed if curtyp !=3D requested=
- type
+With your current tests, bigtime will enjoy this test coverage only if
+the entire
+run is configured with custom XFS_MKFS_OPTIONS or when bigtime
+becomes default for mkfs.
 
-"Premature optimization is the root of all evil" ...
+Do you think we should have a temporary clone of generic/402 for xfs which
+enables bigtime for the time being?
 
-Thanks
-Jianhong
-
->=20
-> -Eric
->=20
-
+Thanks,
+Amir.
