@@ -2,81 +2,98 @@ Return-Path: <SRS0=PyEN=B4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 422FFC433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 10:51:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECAF1C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 11:08:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 232CE2078B
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 10:51:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C827C206B5
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 11:08:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A4qSnKhV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XushXTJJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726751AbgHRKvw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 06:51:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45444 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726203AbgHRKvs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 06:51:48 -0400
-Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6F116C061389
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 03:51:48 -0700 (PDT)
-Received: by mail-io1-xd42.google.com with SMTP id q75so20773467iod.1
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 03:51:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8kaC3MMyjWVO/sW8zKNABAuRcUorNMXcMqii/IZ4a8c=;
-        b=A4qSnKhVMQtTnx6pzwTl1GbzrPpDlzuJozhti2x1OXwVn9k8YIYGDLYzMx5T29wqVp
-         qq1tYeajVVHRzx/O0fPxsgdTlSpgOw4HBf6NMF5vF+3YrT8pldwUkPZadVDY3Vm3FFXi
-         Cc86NHXXcgbhrN2VyAJtw8ohV5m+FPX7cvNiAf4j7eK56hA4GuzeZ9yx6GwHmos9zbo2
-         nKsHpd74Tle1kAEK4pfQzYsmmvQ2Epw1Qcl1vu9K7LcXH8JQ7f6tdxRLWyH+MApsk8gA
-         qYU5OC6+MW/W0qAvd0/u9atOft/tooX7pXul6t1xEKmzB1xpU8i4yPgUroCMyoqVqIAP
-         Y25A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8kaC3MMyjWVO/sW8zKNABAuRcUorNMXcMqii/IZ4a8c=;
-        b=Je2Z5ZZyUueuERCZSdm8uSDBEOjZHwbNa4EFj/usxDj3JthST2sRPJgpMSsehAEpzx
-         +gADpIcr2on6opqtDzRzv3w31WYtAyDum3AkmLIeo7sJChXQ6J6wJb0A/EnpQ99lB6YS
-         hiKjQg/NH9KdQEt2sIb/5JdIy91d6HvZkPkteq3IB8N9WI3dKnCAheDT42+QWOGdjZ6P
-         l8pwPLNR/zC+7QZIF0iM7bockNkWy+9mMDzwwUAstXQeh5sm5YUwQjIP+WnwQ+nTgOda
-         nWdfsYTbY93h5VmO6izvddP3umrvjMEPFSyd74Cr5Z93vD15lB124/5451Fc97+FyPYH
-         rOmw==
-X-Gm-Message-State: AOAM533Jp8olTdobdMUajOA09PgrmoIQ7gW3duLCgxqZuKfYyyzeqCdC
-        bVpcOqdqRHj2XHsOPq/JClfmR958C9+MzaMBCvyXuQHG5yU=
-X-Google-Smtp-Source: ABdhPJxWtFE5baL4I5FvEemjsEUw6CqZqUsJKjKA4odiCH4HU9w3gX0xRbIWokkNKAQ+wUwnngtxzu9ATsRzjoKk/Y0=
-X-Received: by 2002:a6b:5d0a:: with SMTP id r10mr15913053iob.186.1597747906559;
- Tue, 18 Aug 2020 03:51:46 -0700 (PDT)
+        id S1726145AbgHRLIu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 07:08:50 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:31945 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726391AbgHRLIr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 07:08:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597748925;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=q3QUKlDhdr/h2ohkuJlNxVvsk7+HfJwaxMaeyH4iCAA=;
+        b=XushXTJJyBmrp4QrAAn8cVj6ZPWnLndnuy8ygxZKoClQxg2Sycvv6GkAX1J31bJKYZETrO
+        bamzxBvkh4d1qlbGwRsuSsThjzyo8i2sOsHlrcksELXqtSGrwRtyh/VL1cs+i4PrV0lILq
+        ctPFm1cYqAiwC2Wl644oZbYeLFF3090=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-161-znyc265UPpuP1ni4MKFyDQ-1; Tue, 18 Aug 2020 07:08:43 -0400
+X-MC-Unique: znyc265UPpuP1ni4MKFyDQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 50EE751B6
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 11:08:42 +0000 (UTC)
+Received: from bfoster (ovpn-112-11.rdu2.redhat.com [10.10.112.11])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 156785B680
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 11:08:42 +0000 (UTC)
+Date:   Tue, 18 Aug 2020 07:08:40 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: finish dfops on every insert range shift iteration
+Message-ID: <20200818110840.GA94675@bfoster>
+References: <20200713202151.64750-1-bfoster@redhat.com>
 MIME-Version: 1.0
-References: <159770500809.3956827.8869892960975362931.stgit@magnolia> <159770503952.3956827.2088625885596961750.stgit@magnolia>
-In-Reply-To: <159770503952.3956827.2088625885596961750.stgit@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 18 Aug 2020 13:51:35 +0300
-Message-ID: <CAOQ4uxhHJSGnFGLpdULuDbEkh046jEsYoiFg4SYaoHRS78ySgA@mail.gmail.com>
-Subject: Re: [PATCH 05/11] xfs: move xfs_log_dinode_to_disk to the log code
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200713202151.64750-1-bfoster@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 18, 2020 at 1:57 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Move this function to xfs_inode_item.c to match the encoding function
-> that's already there.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jul 13, 2020 at 04:21:51PM -0400, Brian Foster wrote:
+> The recent change to make insert range an atomic operation used the
+> incorrect transaction rolling mechanism. The explicit transaction
+> roll does not finish deferred operations. This means that intents
+> for rmapbt updates caused by extent shifts are not logged until the
+> final transaction commits. Thus if a crash occurs during an insert
+> range, log recovery might leave the rmapbt in an inconsistent state.
+> This was discovered by repeated runs of generic/455.
+> 
+> Update insert range to finish dfops on every shift iteration. This
+> is similar to collapse range and ensures that intents are logged
+> with the transactions that make associated changes.
+> 
+> Fixes: dd87f87d87fa ("xfs: rework insert range into an atomic operation")
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
 
-Ok.
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Ping?
+
+>  fs/xfs/xfs_bmap_util.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index afdc7f8e0e70..feb277874a1f 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1165,7 +1165,7 @@ xfs_insert_file_space(
+>  		goto out_trans_cancel;
+>  
+>  	do {
+> -		error = xfs_trans_roll_inode(&tp, ip);
+> +		error = xfs_defer_finish(&tp);
+>  		if (error)
+>  			goto out_trans_cancel;
+>  
+> -- 
+> 2.21.3
+> 
+
