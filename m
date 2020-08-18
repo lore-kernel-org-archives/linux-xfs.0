@@ -7,59 +7,59 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A05E1C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 11:31:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6E93C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 12:01:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 818D82075E
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 11:31:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB71220786
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 12:01:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KCUjs9nN"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ECOAcP5M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726696AbgHRLbK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 07:31:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51768 "EHLO
+        id S1726391AbgHRMBG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 08:01:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56394 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726570AbgHRLay (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 07:30:54 -0400
-Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E58E8C061342
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 04:20:33 -0700 (PDT)
-Received: by mail-il1-x144.google.com with SMTP id f12so9662679ils.6
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 04:20:33 -0700 (PDT)
+        with ESMTP id S1726366AbgHRMBC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 08:01:02 -0400
+Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47F7CC061389
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 05:01:01 -0700 (PDT)
+Received: by mail-il1-x142.google.com with SMTP id p13so17337811ilh.4
+        for <linux-xfs@vger.kernel.org>; Tue, 18 Aug 2020 05:01:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=7OLfmk7pXbOiOzOdP7Rduut7BhZBQzcP6nPIr5wC4wo=;
-        b=KCUjs9nN1LHWe+NjUZiiUskkY+k4KGtqXMdfCjg4+iIL22IUJrMWiU5oWnmNgQxDX0
-         ShP+ST52PYP8mUvUBA7fTsV2t8ui3HkK7CQ+9yDHhVUVgD/PlqZtSJ8gufRcv6CWxTXO
-         QGIgs1pUsc4sixDOLeuCJIGDPLWm3e0Vf16Fo5OwNxmn4PPYFMEuPp7Lf5wQEngnnqkC
-         ByY8RXJxbFl5frO517B7C/IPIJhDOSsoIKkKc3m/mx3T7Etdv70vTV1w7zTio/rOXQM/
-         ES9F5FcQRrFZOwy0GfB2CAsCIpzGxkm7ok5BonHkNbtL3gzMyhdWMSutJLmMK/b1zfxd
-         p4Mg==
+        bh=3l2MEZmF5bn+Wsu2kK/TGD68wHKDxPP+TH25U5JBvjc=;
+        b=ECOAcP5Mp+tQeYK2IHxPZRbtAMUI16dz4/ayDYvqkSa8a7H3d2s5yVvbZT60len0Ki
+         E17YU8JqDksUWxMyl6tajONultlEuN/6VUnfV+SOhLLsfktoTbCKTX9vPP6cWuKLui4i
+         Amc7OpAsq+7DKEo8vkDWmDMrHe/LbuFdckMJr+2cQTkVSOCZjsimxtabI4D+TNlNgU05
+         r2xWy7WbYaJWwpwp63X72TMoZqWufjxChbNJgi6RJipNOK+FXPUU8tXyMvBrMtuCnZkT
+         b9qhaL4JxcQT7awRk0XoXA70g/rt65uv0u2FvCMT7cZtN8CVwvIIt9TjPAbxkkl4jp+w
+         CrIw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=7OLfmk7pXbOiOzOdP7Rduut7BhZBQzcP6nPIr5wC4wo=;
-        b=czeDekG6q4vycEHplgqKnGpQ9MPNjK4pztJmGiCzBrIly7IyVyVP6u1RABQdK4RLQq
-         eg51Hmn7SJ/ImUJS5Jcy2qek0iGiwLwSWFTt/l+aBwE2kYaZMDJ4HyOEedgjg7G5KU0S
-         XA+zRA3TWLYBEfIbmrhdqpAr4kO1Md5JFwBpwvf4a1AIi95se8b28asnrbyEWZ7W0oHE
-         /npiF0NkOkJp55TnMaXQq2TPGGljBaLisTaZNg2Tu56VWJ+iB5MsPfdKSFZiI7t6E8up
-         AeSNWJftPby4qGof69sShsQCQzP2sR8AOg0YIdZ3bhXwATg6o0cofN8DIVMXhl4ByLBA
-         xigA==
-X-Gm-Message-State: AOAM532B6zmRj63sZhOaxJUiMF1VI78df9ezvihIyc3f1eMGQfCCE5l4
-        L65ZEShHulBuBEOS1w6LwAf4smdLsDZfZsL9DR0=
-X-Google-Smtp-Source: ABdhPJzmpxNq7bHGhooNJTQ0VEoJiRQ0qf9OqIfHfp6jJJvHlFXoG20bWD9GLZoPdpdYQflhIvtoiSTgpEVHCz+HzC4=
-X-Received: by 2002:a92:1fd9:: with SMTP id f86mr17974128ilf.250.1597749633268;
- Tue, 18 Aug 2020 04:20:33 -0700 (PDT)
+        bh=3l2MEZmF5bn+Wsu2kK/TGD68wHKDxPP+TH25U5JBvjc=;
+        b=BqRvBZkxBJSz1764dA+rXLthtX1SQeU6JYGoXMQcYbRwWL0RbVDq6to6UDm7zDJ1Oz
+         n8FWJaIOCS0tmT3EbRj99J37u0siRJjhZCBhwuC4bKQiAoymOkp6R3CQjgQJHxerGUC9
+         DKw2yp+TQhmeITBY7jCfFGL1UYrWthqWYzWby23C6oVT15Jcmv3HcU9kvl6LQDdcd+5k
+         rJ5udFmCTVfPyzOjQjyxVAuMjFxRhgbz65VUjsDgYt3qG+QKix1P3ylnvVlJAQp9Tpbl
+         TqKci4JSMrHQWIr2joHZfur8xQn5YK4SZUwmcV1dkKDHMJ1kW7RL9bjVkmXAa7+r+fnj
+         ee1w==
+X-Gm-Message-State: AOAM530ExOrPa/zCKXg+ZnWFn0Ktq4DA7HMzdnv/6SxCrNRX+Z9ux/LO
+        oNIVzHbEo9qacNowG2BIVQhhAvyD9HDoz2N7WXQ=
+X-Google-Smtp-Source: ABdhPJyE+2B1nSOFBzhBg5/jrb0dzmCsMfRjQLsnbAjwdBooW2b+w9Yk4voGaCLCHSimpH9JH/dAnx1PRp89aQtuwIs=
+X-Received: by 2002:a92:1fd9:: with SMTP id f86mr18100631ilf.250.1597752060672;
+ Tue, 18 Aug 2020 05:01:00 -0700 (PDT)
 MIME-Version: 1.0
-References: <159770500809.3956827.8869892960975362931.stgit@magnolia> <159770504627.3956827.1457402206153045570.stgit@magnolia>
-In-Reply-To: <159770504627.3956827.1457402206153045570.stgit@magnolia>
+References: <159770500809.3956827.8869892960975362931.stgit@magnolia> <159770505894.3956827.5973810026298120596.stgit@magnolia>
+In-Reply-To: <159770505894.3956827.5973810026298120596.stgit@magnolia>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 18 Aug 2020 14:20:22 +0300
-Message-ID: <CAOQ4uxhcf1-MKsyenuHnJ5WhpZk7eM53DSmyKYr-EGoSCieTSg@mail.gmail.com>
-Subject: Re: [PATCH 06/11] xfs: refactor inode timestamp coding
+Date:   Tue, 18 Aug 2020 15:00:49 +0300
+Message-ID: <CAOQ4uxj=K5TCTZoKxd9G4F0cTRYeE73-6iQgmp+3pR3QJKYdvg@mail.gmail.com>
+Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038 problem
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         Eric Sandeen <sandeen@sandeen.net>
@@ -73,60 +73,38 @@ On Tue, Aug 18, 2020 at 1:57 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 >
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 >
-> Refactor inode timestamp encoding and decoding into helper functions so
-> that we can add extra behaviors in subsequent patches.
+> Redesign the ondisk timestamps to be a simple unsigned 64-bit counter of
+> nanoseconds since 14 Dec 1901 (i.e. the minimum time in the 32-bit unix
+> time epoch).  This enables us to handle dates up to 2486, which solves
+> the y2038 problem.
 >
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-
-With nit below...
-
+> ---
 ...
 
-> diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> index d95a00376fad..c2f9a0adeed2 100644
-> --- a/fs/xfs/xfs_inode_item.c
-> +++ b/fs/xfs/xfs_inode_item.c
-> @@ -295,6 +295,15 @@ xfs_inode_item_format_attr_fork(
->         }
->  }
+> diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> index 9f036053fdb7..b354825f4e51 100644
+> --- a/fs/xfs/scrub/inode.c
+> +++ b/fs/xfs/scrub/inode.c
+> @@ -190,6 +190,11 @@ xchk_inode_flags2(
+>         if ((flags2 & XFS_DIFLAG2_DAX) && (flags2 & XFS_DIFLAG2_REFLINK))
+>                 goto bad;
 >
-> +static inline void
-> +xfs_from_log_timestamp(
-> +       struct xfs_timestamp            *ts,
-> +       const struct xfs_ictimestamp    *its)
-> +{
-> +       ts->t_sec = cpu_to_be32(its->t_sec);
-> +       ts->t_nsec = cpu_to_be32(its->t_nsec);
-> +}
+> +       /* the incore bigtime iflag always follows the feature flag */
+> +       if (!!xfs_sb_version_hasbigtime(&mp->m_sb) ^
+> +           !!(flags2 & XFS_DIFLAG2_BIGTIME))
+> +               goto bad;
 > +
->  void
->  xfs_log_dinode_to_disk(
 
-Following convention of xfs_inode_{to,from}_disk_timestamp()
-I think it would be less confusing to name these helpers
-xfs_log_to_disk_timestamp()
+Seems like flags2 are not the incore iflags and that the dinode iflags
+can very well
+have no bigtime on fs with bigtime support:
 
-and...
+xchk_dinode(...
+...
+                flags2 = be64_to_cpu(dip->di_flags2);
 
->
-> +static inline void
-> +xfs_to_log_timestamp(
-> +       struct xfs_ictimestamp          *its,
-> +       const struct timespec64         *ts)
-> +{
-> +       its->t_sec = ts->tv_sec;
-> +       its->t_nsec = ts->tv_nsec;
-> +}
-> +
->  static void
->  xfs_inode_to_log_dinode(
-
-xfs_inode_to_log_timestamp()
-
-Because xfs_{to,from}_log_timestamp() may sound like a matching pair,
-to your average code reviewer, but they are not.
+What am I missing?
 
 Thanks,
 Amir.
