@@ -7,72 +7,73 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BAFAC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 15:42:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB598C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 15:44:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6766220674
-	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 15:42:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7CD4207D3
+	for <linux-xfs@archiver.kernel.org>; Tue, 18 Aug 2020 15:44:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MOa/AkdK"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PoO5rQ3Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726896AbgHRPmL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 11:42:11 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36360 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726639AbgHRPmK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 11:42:10 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07IFSPC8006767;
-        Tue, 18 Aug 2020 15:42:06 GMT
+        id S1727831AbgHRPoz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 11:44:55 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:36956 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727020AbgHRPos (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 11:44:48 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07IFR8KM160070;
+        Tue, 18 Aug 2020 15:44:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=ertlmH34CuXN9mTj5zN38HLPABXVB4pEbE6kha2eyaM=;
- b=MOa/AkdKWmZTOVs504z1AdnFxsNoTy2QACW3lC9SEpGGB2zbEafiEZGglZLbKJGDR34H
- GHIV7EINc8k5CdG65V+v6+siAPOQTGvnXD8t61Quc4zQEGRg2pOliPEwTio15N4Ilz5H
- GVBcdNDDsNDAnARsPeqfvJLF/gxMSWfSJYjNcyUsOblyJLmVlNMJoIo4dwigLb6yg1VK
- QmGU99aMKN7CpuKbmLsAo/uHBTE3pojI7/kTSflsVNC5B0X7X7nwcbxmB6qYwvjPUU3L
- rKrO/cJijZa/jpD56h9Uzp9WvuAcgdA9nzXJd3OVBDc6S5jo4dzAOemVUHoRP20tWwRq Ew== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 32x74r5p8f-1
+ bh=nKvKZpfb9r+wPiT+LaVho0xeNUtFIy4Qb/LzRQE+UcA=;
+ b=PoO5rQ3QY/rrr8A10th4mVBtuCz4cR4OeXjizqLO0HqG3dq8a50qQmyVnoZWtr24Ydur
+ neIyXJLierkbcH4CiXBTL2lTZ9KYHx5B/6dY6d1MymAp+hLJc4naY9OOSRewneCNtqLO
+ BZ2QuKVTJgrVIKW1ud4qUT2eL+GDLjill92L308WnQH4k2SRmANf3d8L/cGzyEPM0b+z
+ mQW7mtFMi9l06xnzzcgwD3nSnzHqajheMNqJxsM+y/Zm9AuQjRSfpWl3Nn1hfipgvAGT
+ 8QCCw/q0/umBwpmdM4VHRbR8K5afo72posqyOP/cmqdp8meV4OBdzs4pKb156magX52F Rg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 32x8bn5jsd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 18 Aug 2020 15:42:06 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07IFY0DG027414;
-        Tue, 18 Aug 2020 15:42:05 GMT
+        Tue, 18 Aug 2020 15:44:45 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07IFYueP129638;
+        Tue, 18 Aug 2020 15:44:45 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 32xsm359q5-1
+        by userp3030.oracle.com with ESMTP id 32xsmxcw4p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 18 Aug 2020 15:42:05 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07IFg5LU028455;
-        Tue, 18 Aug 2020 15:42:05 GMT
+        Tue, 18 Aug 2020 15:44:44 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07IFihe3031289;
+        Tue, 18 Aug 2020 15:44:43 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 18 Aug 2020 08:42:04 -0700
-Date:   Tue, 18 Aug 2020 08:42:03 -0700
+        with ESMTP ; Tue, 18 Aug 2020 08:44:43 -0700
+Date:   Tue, 18 Aug 2020 08:44:42 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Amir Goldstein <amir73il@gmail.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 06/11] xfs: refactor inode timestamp coding
-Message-ID: <20200818154203.GT6096@magnolia>
+Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038
+ problem
+Message-ID: <20200818154442.GU6096@magnolia>
 References: <159770500809.3956827.8869892960975362931.stgit@magnolia>
- <159770504627.3956827.1457402206153045570.stgit@magnolia>
- <CAOQ4uxhcf1-MKsyenuHnJ5WhpZk7eM53DSmyKYr-EGoSCieTSg@mail.gmail.com>
+ <159770505894.3956827.5973810026298120596.stgit@magnolia>
+ <CAOQ4uxj=K5TCTZoKxd9G4F0cTRYeE73-6iQgmp+3pR3QJKYdvg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxhcf1-MKsyenuHnJ5WhpZk7eM53DSmyKYr-EGoSCieTSg@mail.gmail.com>
+In-Reply-To: <CAOQ4uxj=K5TCTZoKxd9G4F0cTRYeE73-6iQgmp+3pR3QJKYdvg@mail.gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=1
- malwarescore=0 mlxscore=0 phishscore=0 spamscore=0 mlxlogscore=999
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008180112
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
+ mlxlogscore=999 phishscore=0 mlxscore=0 suspectscore=1 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008180112
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9716 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxlogscore=999
- priorityscore=1501 phishscore=0 spamscore=0 mlxscore=0 adultscore=0
- suspectscore=1 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
+ impostorscore=0 suspectscore=1 adultscore=0 spamscore=0 malwarescore=0
+ mlxlogscore=999 priorityscore=1501 bulkscore=0 clxscore=1015 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008180112
 Sender: linux-xfs-owner@vger.kernel.org
@@ -80,69 +81,55 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 18, 2020 at 02:20:22PM +0300, Amir Goldstein wrote:
+On Tue, Aug 18, 2020 at 03:00:49PM +0300, Amir Goldstein wrote:
 > On Tue, Aug 18, 2020 at 1:57 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 > >
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > >
-> > Refactor inode timestamp encoding and decoding into helper functions so
-> > that we can add extra behaviors in subsequent patches.
+> > Redesign the ondisk timestamps to be a simple unsigned 64-bit counter of
+> > nanoseconds since 14 Dec 1901 (i.e. the minimum time in the 32-bit unix
+> > time epoch).  This enables us to handle dates up to 2486, which solves
+> > the y2038 problem.
 > >
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-> 
-> With nit below...
-> 
+> > ---
 > ...
 > 
-> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-> > index d95a00376fad..c2f9a0adeed2 100644
-> > --- a/fs/xfs/xfs_inode_item.c
-> > +++ b/fs/xfs/xfs_inode_item.c
-> > @@ -295,6 +295,15 @@ xfs_inode_item_format_attr_fork(
-> >         }
-> >  }
+> > diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> > index 9f036053fdb7..b354825f4e51 100644
+> > --- a/fs/xfs/scrub/inode.c
+> > +++ b/fs/xfs/scrub/inode.c
+> > @@ -190,6 +190,11 @@ xchk_inode_flags2(
+> >         if ((flags2 & XFS_DIFLAG2_DAX) && (flags2 & XFS_DIFLAG2_REFLINK))
+> >                 goto bad;
 > >
-> > +static inline void
-> > +xfs_from_log_timestamp(
-> > +       struct xfs_timestamp            *ts,
-> > +       const struct xfs_ictimestamp    *its)
-> > +{
-> > +       ts->t_sec = cpu_to_be32(its->t_sec);
-> > +       ts->t_nsec = cpu_to_be32(its->t_nsec);
-> > +}
+> > +       /* the incore bigtime iflag always follows the feature flag */
+> > +       if (!!xfs_sb_version_hasbigtime(&mp->m_sb) ^
+> > +           !!(flags2 & XFS_DIFLAG2_BIGTIME))
+> > +               goto bad;
 > > +
-> >  void
-> >  xfs_log_dinode_to_disk(
 > 
-> Following convention of xfs_inode_{to,from}_disk_timestamp()
-> I think it would be less confusing to name these helpers
-> xfs_log_to_disk_timestamp()
+> Seems like flags2 are not the incore iflags and that the dinode iflags
+> can very well
+> have no bigtime on fs with bigtime support:
 > 
-> and...
+> xchk_dinode(...
+> ...
+>                 flags2 = be64_to_cpu(dip->di_flags2);
 > 
-> >
-> > +static inline void
-> > +xfs_to_log_timestamp(
-> > +       struct xfs_ictimestamp          *its,
-> > +       const struct timespec64         *ts)
-> > +{
-> > +       its->t_sec = ts->tv_sec;
-> > +       its->t_nsec = ts->tv_nsec;
-> > +}
-> > +
-> >  static void
-> >  xfs_inode_to_log_dinode(
-> 
-> xfs_inode_to_log_timestamp()
-> 
-> Because xfs_{to,from}_log_timestamp() may sound like a matching pair,
-> to your average code reviewer, but they are not.
+> What am I missing?
 
-Ok, will do.
+Nothing.  That chunk is just plain wrong and needs to reworked.  Repair
+gets it right, the only failure case is if the inode flag is set but the
+feature isn't.
+
+I probably wrote this before I had the thought of letting people upgrade
+existing filesystems.
+
+Will fix, thanks for catching this.
 
 --D
 
+> 
 > Thanks,
 > Amir.
