@@ -2,107 +2,228 @@ Return-Path: <SRS0=dccG=B5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4CFBC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 16:42:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEF13C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 16:51:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9051520888
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 16:42:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94792207FF
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 16:51:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jVzs6ShF"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fPu242pu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725275AbgHSQm5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Aug 2020 12:42:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42860 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726211AbgHSQm4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Aug 2020 12:42:56 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58446C061757
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2020 09:42:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
-        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=yGYVnfqZ4rVROePU2rnkc64vexYKxKTf36sGdYJqMxg=; b=jVzs6ShFOdpqLOS/H6Gw+LUqKK
-        +uFTBW3FtT39WXDNwcFu/gOfLkO1YSabth2EPaQEFFBtBsAJRbdC7SZHN+6G1WYhr7+gJ8ZghPRiV
-        1My4AcQKfuSWUBkXk2yYUuq3+mveBxbWJ/5uFEp6KN8HpSBsNCN+RaXQxN6SakRlQpSzyta/ea3gd
-        2ZqknBuc1i7/n+tPQFPCbz8Bjo8U1+BLYZYkdLNbVdppDyncSp8I4uWse3qnW1+ctEyhsZeo3uEsk
-        yhSWkYp+d5J/dwDef7nT8fB4ldNy7KB64ClTezO/VRO0MyshX+pT1EiQYiAMZIY0nQ3oXKJZqXJ3X
-        /kRtG30w==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k8RAs-0006Tt-3K
-        for linux-xfs@vger.kernel.org; Wed, 19 Aug 2020 16:42:54 +0000
-Date:   Wed, 19 Aug 2020 17:42:54 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     linux-xfs@vger.kernel.org
-Subject: occasional failures in generic/455 and generic/457
-Message-ID: <20200819164254.GG17456@casper.infradead.org>
+        id S1726794AbgHSQvq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Aug 2020 12:51:46 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:35100 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726211AbgHSQvp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Aug 2020 12:51:45 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07JGgJcO185680;
+        Wed, 19 Aug 2020 16:51:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=oFma/arm+OR4ccDJXqljkOwrPqh7e3xTQCOgoSb8Bjk=;
+ b=fPu242puhuQGQxljH7hNZJabgLufZbKL4SjqLhme9961vnR13oVHQQ9YwbOwuh6e+KpB
+ rJCmNWgnXDSb4DCtNnRsN8DWAjsDuYpxNG/SWX5KEWIjiWeqXmNWgc/a7OOHMbMJpWB1
+ lhxaOD8p2mAmDuy6smrKA6Obj45nNR3FyhkP5Q72EmCd4Z1Lp+NaEZfsAWRkPMKdTFos
+ wjAqjfVzjOGPEY9wPepULeZ9+y3eLQggSeVejS1VDOevBq1C7NtOaCiRjlp7hSr2YT65
+ k2wxntwUGW3AFqYWoqi4xGqXPl+2sLJncqzHi8qlJ8hVpN3Xi1W6DTsWGhbvnp1SiKA7 ew== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 32x74rbs8y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 19 Aug 2020 16:51:38 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07JGgx4K070116;
+        Wed, 19 Aug 2020 16:51:37 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 32xsn007hr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 Aug 2020 16:51:37 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07JGpbRK022671;
+        Wed, 19 Aug 2020 16:51:37 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 19 Aug 2020 09:51:36 -0700
+Date:   Wed, 19 Aug 2020 09:51:36 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Carlos Maiolino <cmaiolino@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V2] xfs: remove kmem_realloc()
+Message-ID: <20200819165136.GD6096@magnolia>
+References: <20200819130050.115687-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20200819130050.115687-1-cmaiolino@redhat.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9718 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
+ mlxlogscore=999 phishscore=0 mlxscore=0 suspectscore=5 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008190139
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9718 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxlogscore=999
+ priorityscore=1501 phishscore=0 spamscore=0 mlxscore=0 adultscore=0
+ suspectscore=5 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008190139
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is with 5.8.0-rc1 plus the series of seven patches to modify how
-pagevec_lookup_entries + find_get_entries() work [1].  I think it's unlikely
-those patches caused this, but it's sporadic so I can't be sure.
+On Wed, Aug 19, 2020 at 03:00:50PM +0200, Carlos Maiolino wrote:
+> Remove kmem_realloc() function and convert its users to use MM API
+> directly (krealloc())
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-This one is from generic/457 but I've seen something similar from
-generic/455.  I'm using the following:
-+    echo 'MKFS_OPTIONS="-m reflink=1,rmapbt=1 -i sparse=1 -b size=1024"' >> /ktest/tests/xfstests/local.config
-+    mkfs.$FSTYP -q $TEST_DEV -m reflink=1,rmapbt=1 -i sparse=1 -b size=1024
+woot!
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-[1] https://lore.kernel.org/linux-mm/20200819150555.31669-1-willy@infradead.org/T/
+--D
 
-6946 XFS (sdc): Internal error ltrec.rm_startblock > bno || ltrec.rm_startblock + ltrec.rm_blockcount < bno + len at line 575 of file fs/xfs/libxfs/xfs_rmap.c.  Caller xfs_rmap_unmap+0x5fc/0x900
-6946 CPU: 2 PID: 13591 Comm: mount Kdump: loaded Tainted: G        W         5.9.0-rc1-00007-g96650d19d84b #452
-6946 Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-1 04/01/2014
-6946 Call Trace:
-6946  dump_stack+0x5e/0x7a
-6946  xfs_corruption_error+0x7c/0x80
-6946  ? xfs_rmap_unmap+0x5fc/0x900
-6946  xfs_rmap_unmap+0x626/0x900
-6946  ? xfs_rmap_unmap+0x5fc/0x900
-6946  ? xfs_free_extent_fix_freelist+0x81/0xc0
-6946  ? xfs_rmapbt_init_cursor+0x31/0x90
-6946  xfs_rmap_finish_one+0x1dd/0x330
-6946  xfs_rmap_update_finish_item+0x3f/0x70
-6946  xfs_defer_finish_noroll+0x153/0x400
-6946  ? kmem_alloc+0x74/0x120
-6946  ? xfs_trans_commit+0xb/0x10
-6946  __xfs_trans_commit+0x138/0x340
-6946  xfs_trans_commit+0xb/0x10
-6946  xfs_refcount_recover_cow_leftovers+0x1b9/0x300
-6946  xfs_reflink_recover_cow+0x36/0x50
-6946  xfs_mountfs+0x5a4/0x910
-6946  xfs_fc_fill_super+0x34c/0x560
-6946  get_tree_bdev+0x169/0x260
-6946  ? xfs_setup_devices+0x80/0x80
-6946  xfs_fc_get_tree+0x10/0x20
-6946  vfs_get_tree+0x19/0x80
-6946  path_mount+0x6ba/0x9f0
-6946  __x64_sys_mount+0xe5/0x120
-6946  do_syscall_64+0x32/0x50
-6946  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-6946 RIP: 0033:0x7fa229f96fea
-6946 Code: 48 8b 0d a9 0e 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 76 0e 0c 00 f7 d8 64 89 01 48
-6946 RSP: 002b:00007ffcb19cf128 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
-6946 RAX: ffffffffffffffda RBX: 000055eb7a037970 RCX: 00007fa229f96fea
-6946 RDX: 000055eb7a037b80 RSI: 000055eb7a037bc0 RDI: 000055eb7a037ba0
-6946 RBP: 00007fa22a2e41c4 R08: 0000000000000000 R09: 000055eb7a03a890
-6946 R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-6946 R13: 0000000000000000 R14: 000055eb7a037ba0 R15: 000055eb7a037b80
-6946 XFS (sdc): Corruption detected. Unmount and run xfs_repair
-6946 XFS (sdc): xfs_do_force_shutdown(0x8) called from line 450 of file fs/xfs/libxfs/xfs_defer.c. Return address = ffffffff812ee23b
-6946 XFS (sdc): Corruption of in-memory data detected.  Shutting down filesystem
-6946 XFS (sdc): Please unmount the filesystem and rectify the problem(s)
-6946 XFS (sdc): Error -117 recovering leftover CoW allocations.
-6946 [failed, exit status 1]XFS (sdb): Unmounting Filesystem
-
-
+> ---
+> 
+> This is essentially the same patches as the original series, just both patches
+> squashed together.
+> 
+>  fs/xfs/kmem.c                  | 22 ----------------------
+>  fs/xfs/kmem.h                  |  1 -
+>  fs/xfs/libxfs/xfs_iext_tree.c  |  2 +-
+>  fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++----
+>  fs/xfs/xfs_log_recover.c       |  2 +-
+>  fs/xfs/xfs_mount.c             |  4 ++--
+>  fs/xfs/xfs_trace.h             |  1 -
+>  7 files changed, 8 insertions(+), 32 deletions(-)
+> 
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index e841ed781a257..e986b95d94c9b 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -93,25 +93,3 @@ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+>  		return ptr;
+>  	return __kmem_vmalloc(size, flags);
+>  }
+> -
+> -void *
+> -kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
+> -{
+> -	int	retries = 0;
+> -	gfp_t	lflags = kmem_flags_convert(flags);
+> -	void	*ptr;
+> -
+> -	trace_kmem_realloc(newsize, flags, _RET_IP_);
+> -
+> -	do {
+> -		ptr = krealloc(old, newsize, lflags);
+> -		if (ptr || (flags & KM_MAYFAIL))
+> -			return ptr;
+> -		if (!(++retries % 100))
+> -			xfs_err(NULL,
+> -	"%s(%u) possible memory allocation deadlock size %zu in %s (mode:0x%x)",
+> -				current->comm, current->pid,
+> -				newsize, __func__, lflags);
+> -		congestion_wait(BLK_RW_ASYNC, HZ/50);
+> -	} while (1);
+> -}
+> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+> index 8e8555817e6d3..fb1d066770723 100644
+> --- a/fs/xfs/kmem.h
+> +++ b/fs/xfs/kmem.h
+> @@ -59,7 +59,6 @@ kmem_flags_convert(xfs_km_flags_t flags)
+>  extern void *kmem_alloc(size_t, xfs_km_flags_t);
+>  extern void *kmem_alloc_io(size_t size, int align_mask, xfs_km_flags_t flags);
+>  extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
+> -extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
+>  static inline void  kmem_free(const void *ptr)
+>  {
+>  	kvfree(ptr);
+> diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+> index 52451809c4786..b4164256993d8 100644
+> --- a/fs/xfs/libxfs/xfs_iext_tree.c
+> +++ b/fs/xfs/libxfs/xfs_iext_tree.c
+> @@ -603,7 +603,7 @@ xfs_iext_realloc_root(
+>  	if (new_size / sizeof(struct xfs_iext_rec) == RECS_PER_LEAF)
+>  		new_size = NODE_SIZE;
+>  
+> -	new = kmem_realloc(ifp->if_u1.if_root, new_size, KM_NOFS);
+> +	new = krealloc(ifp->if_u1.if_root, new_size, GFP_NOFS | __GFP_NOFAIL);
+>  	memset(new + ifp->if_bytes, 0, new_size - ifp->if_bytes);
+>  	ifp->if_u1.if_root = new;
+>  	cur->leaf = new;
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index 0cf853d42d622..7575de5cecb1f 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -386,8 +386,8 @@ xfs_iroot_realloc(
+>  		cur_max = xfs_bmbt_maxrecs(mp, ifp->if_broot_bytes, 0);
+>  		new_max = cur_max + rec_diff;
+>  		new_size = XFS_BMAP_BROOT_SPACE_CALC(mp, new_max);
+> -		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
+> -				KM_NOFS);
+> +		ifp->if_broot = krealloc(ifp->if_broot, new_size,
+> +					 GFP_NOFS | __GFP_NOFAIL);
+>  		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
+>  						     ifp->if_broot_bytes);
+>  		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
+> @@ -496,8 +496,8 @@ xfs_idata_realloc(
+>  	 * in size so that it can be logged and stay on word boundaries.
+>  	 * We enforce that here.
+>  	 */
+> -	ifp->if_u1.if_data = kmem_realloc(ifp->if_u1.if_data,
+> -			roundup(new_size, 4), KM_NOFS);
+> +	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, roundup(new_size, 4),
+> +				      GFP_NOFS | __GFP_NOFAIL);
+>  	ifp->if_bytes = new_size;
+>  }
+>  
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index e2ec91b2d0f46..45dca18a95204 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2097,7 +2097,7 @@ xlog_recover_add_to_cont_trans(
+>  	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
+>  	old_len = item->ri_buf[item->ri_cnt-1].i_len;
+>  
+> -	ptr = kmem_realloc(old_ptr, len + old_len, 0);
+> +	ptr = krealloc(old_ptr, len + old_len, GFP_KERNEL | __GFP_NOFAIL);
+>  	memcpy(&ptr[old_len], dp, len);
+>  	item->ri_buf[item->ri_cnt-1].i_len += len;
+>  	item->ri_buf[item->ri_cnt-1].i_addr = ptr;
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index c8ae49a1e99c3..0bc623c175e93 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -80,9 +80,9 @@ xfs_uuid_mount(
+>  	}
+>  
+>  	if (hole < 0) {
+> -		xfs_uuid_table = kmem_realloc(xfs_uuid_table,
+> +		xfs_uuid_table = krealloc(xfs_uuid_table,
+>  			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
+> -			0);
+> +			GFP_KERNEL | __GFP_NOFAIL);
+>  		hole = xfs_uuid_table_size++;
+>  	}
+>  	xfs_uuid_table[hole] = *uuid;
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index abb1d859f226a..d898d7ac4dc31 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -3676,7 +3676,6 @@ DEFINE_EVENT(xfs_kmem_class, name, \
+>  DEFINE_KMEM_EVENT(kmem_alloc);
+>  DEFINE_KMEM_EVENT(kmem_alloc_io);
+>  DEFINE_KMEM_EVENT(kmem_alloc_large);
+> -DEFINE_KMEM_EVENT(kmem_realloc);
+>  
+>  TRACE_EVENT(xfs_check_new_dalign,
+>  	TP_PROTO(struct xfs_mount *mp, int new_dalign, xfs_ino_t calc_rootino),
+> -- 
+> 2.26.2
+> 
