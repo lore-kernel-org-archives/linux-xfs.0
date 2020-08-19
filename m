@@ -2,194 +2,134 @@ Return-Path: <SRS0=dccG=B5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40D45C433E3
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 05:50:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50894C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 10:29:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1CE2120738
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 05:50:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0B8C20786
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 10:29:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JMnBeDhb"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="lRjpuSCp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726410AbgHSFuN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Aug 2020 01:50:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54352 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726211AbgHSFuM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Aug 2020 01:50:12 -0400
-Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 071BEC061389;
-        Tue, 18 Aug 2020 22:50:12 -0700 (PDT)
-Received: by mail-io1-xd42.google.com with SMTP id t15so23644696iob.3;
-        Tue, 18 Aug 2020 22:50:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=FWORnw1azmbSbvzLnh/tIRdOU+3S3lvKRvzW43g3p2w=;
-        b=JMnBeDhbIEpSSRZGvurhYc+pGaAGIrbMaMl1813GA6QctAE2ylv5occLjJTYAx5ubq
-         maARt6EJlG5pfR3dW0y4IjDxcqqS8MD333FA8+2CD0ZZLthlNgWf03Ypih7DeXB62ffv
-         EkSzzf3R8Ku47raX3Ry0VEBCb6bctlJucbBnidY8RIaWCRP3iSFbZvaORPWQVCsHqlys
-         ry1en3ZTKW83VLg1NF3jAX9RXmh9qk+cwz4KsIQ6t6cqbg8RNpHpABb6zD8/Undn3SX3
-         p+d2qvgFSdUhymwW/G0Txsr/A0bSMJ/nCRVkq61VsWVizKwuVcdslMcX6/eGzeBHPIQY
-         dKIw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=FWORnw1azmbSbvzLnh/tIRdOU+3S3lvKRvzW43g3p2w=;
-        b=T6+H150tuspcqH3cUDqJqVTfE2EqDoqXBs/1/hUUE32NGJrbE5jsayaVFZZdh4Jr0l
-         3KBOeJjVrs669sHOPElYrA0DD1fBLDuTL5njHHlAg2y5kIpb47xczAFqbBc/PCR5aaqm
-         inknNklFuPcxlBQ7OICUNBtAJoZ+YDEXnWKys53i2j92EREWOyB48c3yAQYz+IKNpAGa
-         bkrYLQV4ioNgyZ6jIieB0N3vaLmZSfA0j7DAVpD73gpOsCC3bg3Uhu/Prcrv4ymlkiLg
-         32eYmal0hqSA09E3UxqjfuKuKc9QCJmkqLaXxEiPCRWivEKU4kYlm5IFTd1uRp2n/52W
-         glTw==
-X-Gm-Message-State: AOAM5332Q8fQp7nDRyAh68qSvOQs00+0AkX0Q/LN9Slak4wFFs9DMoXN
-        M3Rr8WT/jtPAvao83ovsusGYhcgONJVtSoN7cnU=
-X-Google-Smtp-Source: ABdhPJxs/FnoumZ+flV4yn0aL3VPpcffDP4FcVyZBIaaRWA+RRu5MB8bmikf88LxvrChlUaek0ceQ1JYbzNQvvb8SA4=
-X-Received: by 2002:a05:6638:22d0:: with SMTP id j16mr22572725jat.97.1597816211407;
- Tue, 18 Aug 2020 22:50:11 -0700 (PDT)
+        id S1726970AbgHSK3D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Aug 2020 06:29:03 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:18594 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726642AbgHSK3A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Aug 2020 06:29:00 -0400
+Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07JA1a06146945;
+        Wed, 19 Aug 2020 06:28:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id : mime-version : content-transfer-encoding; s=pp1;
+ bh=vAVx19PN5evAuL1yft8QctVm3MEbjgVTzM0AEmd3lu8=;
+ b=lRjpuSCp10DoMysfqOcmcU5aufeygLjPEgxdiJ8jV5YUS4CgcCkxwzVaSaLD/9UtEnnI
+ VDpJ73Npda2qV4zp9hHT+04djr14hFHB42sM+CPXjCfPc77mOSMf7ueX6Xuj5EBr6ZTP
+ YCoJhjDzDVdaNSgbfYnKc2JSjqDCPiU89jnjxWTf/5WKD6MiebeDLiBgSXXKbbm0qljL
+ DK9gnm6nA8LHUxfSTUtGTYOUtQa18Xm6jY3W3+0HLPMj8M1yTkZWwdTetIEnz2Xh/Bp0
+ MNmUhiz19X5EGHEvAgZzmtjGCg/MTf6xzWEqtHmikvYkSeLRDKkZxP1yAYXq7w0rDMpN pg== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3304ru5fny-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 19 Aug 2020 06:28:51 -0400
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 07JAPIms005141;
+        Wed, 19 Aug 2020 10:28:49 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma03ams.nl.ibm.com with ESMTP id 3304um1q59-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 19 Aug 2020 10:28:49 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 07JASkkB21365094
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 Aug 2020 10:28:46 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B0BBA42064;
+        Wed, 19 Aug 2020 10:28:46 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 0409242041;
+        Wed, 19 Aug 2020 10:28:45 +0000 (GMT)
+Received: from localhost.localdomain.com (unknown [9.85.116.28])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed, 19 Aug 2020 10:28:44 +0000 (GMT)
+From:   Anju T Sudhakar <anju@linux.vnet.ibm.com>
+To:     hch@infradead.org, darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, willy@infradead.org,
+        riteshh@linux.ibm.com, anju@linux.vnet.ibm.com
+Subject: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
+Date:   Wed, 19 Aug 2020 15:58:41 +0530
+Message-Id: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-References: <20200819022425.25188-1-laoar.shao@gmail.com> <20200819022425.25188-2-laoar.shao@gmail.com>
- <20200819030852.GX17456@casper.infradead.org>
-In-Reply-To: <20200819030852.GX17456@casper.infradead.org>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Wed, 19 Aug 2020 13:49:35 +0800
-Message-ID: <CALOAHbBoJbKJ82iPzBumqSm81fUmrJkP_+wPiA+A5dJiD24cdA@mail.gmail.com>
-Subject: Re: [PATCH v5 1/2] mm: Add become_kswapd and restore_kswapd
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Michal Hocko <mhocko@kernel.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Linux MM <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-08-19_04:2020-08-19,2020-08-19 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ mlxlogscore=708 priorityscore=1501 suspectscore=0 phishscore=0 spamscore=0
+ impostorscore=0 adultscore=0 mlxscore=0 clxscore=1011 bulkscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008190082
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 19, 2020 at 11:08 AM Matthew Wilcox <willy@infradead.org> wrote:
->
-> On Wed, Aug 19, 2020 at 10:24:24AM +0800, Yafang Shao wrote:
-> > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
-> >
-> > Since XFS needs to pretend to be kswapd in some of its worker threads,
-> > create methods to save & restore kswapd state.  Don't bother restoring
-> > kswapd state in kswapd -- the only time we reach this code is when we're
-> > exiting and the task_struct is about to be destroyed anyway.
-> >
-> > Cc: Dave Chinner <david@fromorbit.com>
-> > Cc: Christoph Hellwig <hch@infradead.org>
-> > Cc: Michal Hocko <mhocko@kernel.org>
-> > Cc: Darrick J. Wong <darrick.wong@oracle.com>
-> > Cc: Matthew Wilcox <willy@infradead.org>
-> > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
->
-> See https://lore.kernel.org/linux-mm/20200625123143.GK1320@dhcp22.suse.cz/
->
-> Please add:
->
-> Acked-by: Michal Hocko <mhocko@suse.com>
->
+From: Ritesh Harjani <riteshh@linux.ibm.com>
 
-Sure.
-I missed that discussion.
+__bio_try_merge_page() may return same_page = 1 and merged = 0. 
+This could happen when bio->bi_iter.bi_size + len > UINT_MAX. 
+Handle this case in iomap_add_to_ioend() by incrementing write_count.
+This scenario mostly happens where we have too much dirty data accumulated. 
 
-> > +/*
-> > + * Tell the memory management that we're a "memory allocator",
-> > + * and that if we need more memory we should get access to it
-> > + * regardless (see "__alloc_pages()"). "kswapd" should
-> > + * never get caught in the normal page freeing logic.
-> > + *
-> > + * (Kswapd normally doesn't need memory anyway, but sometimes
-> > + * you need a small amount of memory in order to be able to
-> > + * page out something else, and this flag essentially protects
-> > + * us from recursively trying to free more memory as we're
-> > + * trying to free the first piece of memory in the first place).
-> > + */
->
-> And let's change that comment as suggested by Michal (slightly edited
-> by me):
->
-> /*
->  * Tell the memory management code that this thread is working on behalf
->  * of background memory reclaim (like kswapd).  That means that it will
->  * get access to memory reserves should it need to allocate memory in
->  * order to make forward progress.  With this great power comes great
->  * responsibility to not exhaust those reserves.
->  */
->
+w/o the patch we hit below kernel warning,
+ 
+ WARNING: CPU: 18 PID: 5130 at fs/iomap/buffered-io.c:74 iomap_page_release+0x120/0x150
+ CPU: 18 PID: 5130 Comm: fio Kdump: loaded Tainted: G        W         5.8.0-rc3 #6
+ Call Trace:
+  __remove_mapping+0x154/0x320 (unreliable)
+  iomap_releasepage+0x80/0x180
+  try_to_release_page+0x94/0xe0
+  invalidate_inode_page+0xc8/0x110
+  invalidate_mapping_pages+0x1dc/0x540
+  generic_fadvise+0x3c8/0x450
+  xfs_file_fadvise+0x2c/0xe0 [xfs]
+  vfs_fadvise+0x3c/0x60
+  ksys_fadvise64_64+0x68/0xe0
+  sys_fadvise64+0x28/0x40
+  system_call_exception+0xf8/0x1c0
+  system_call_common+0xf0/0x278
 
-I will update it with that comment.
+Reported-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
+Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+Signed-off-by: Anju T Sudhakar <anju@linux.vnet.ibm.com>
+---
+ fs/iomap/buffered-io.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> > +#define KSWAPD_PF_FLAGS              (PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
-> > +
-> > +static inline unsigned long become_kswapd(void)
-> > +{
-> > +     unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
-> > +
-> > +     current->flags |= KSWAPD_PF_FLAGS;
-> > +
-> > +     return flags;
-> > +}
-> > +
-> > +static inline void restore_kswapd(unsigned long flags)
-> > +{
-> > +     current->flags &= ~(flags ^ KSWAPD_PF_FLAGS);
-> > +}
-> > +
-> >  #ifdef CONFIG_MEMCG
-> >  /**
-> >   * memalloc_use_memcg - Starts the remote memcg charging scope.
-> > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > index 99e1796eb833..3a2615bfde35 100644
-> > --- a/mm/vmscan.c
-> > +++ b/mm/vmscan.c
-> > @@ -3859,19 +3859,7 @@ static int kswapd(void *p)
-> >       if (!cpumask_empty(cpumask))
-> >               set_cpus_allowed_ptr(tsk, cpumask);
-> >
-> > -     /*
-> > -      * Tell the memory management that we're a "memory allocator",
-> > -      * and that if we need more memory we should get access to it
-> > -      * regardless (see "__alloc_pages()"). "kswapd" should
-> > -      * never get caught in the normal page freeing logic.
-> > -      *
-> > -      * (Kswapd normally doesn't need memory anyway, but sometimes
-> > -      * you need a small amount of memory in order to be able to
-> > -      * page out something else, and this flag essentially protects
-> > -      * us from recursively trying to free more memory as we're
-> > -      * trying to free the first piece of memory in the first place).
-> > -      */
-> > -     tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-> > +     become_kswapd();
-> >       set_freezable();
-> >
-> >       WRITE_ONCE(pgdat->kswapd_order, 0);
-> > @@ -3921,8 +3909,6 @@ static int kswapd(void *p)
-> >                       goto kswapd_try_sleep;
-> >       }
-> >
-> > -     tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
-> > -
-> >       return 0;
-> >  }
-> >
-> > --
-> > 2.18.1
-> >
-
-
-
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index bcfc288dba3f..4e8062279e66 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1332,10 +1332,12 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
+ 
+ 	merged = __bio_try_merge_page(wpc->ioend->io_bio, page, len, poff,
+ 			&same_page);
+-	if (iop && !same_page)
++	if (iop && merged && !same_page)
+ 		atomic_inc(&iop->write_count);
+ 
+ 	if (!merged) {
++		if (iop)
++			atomic_inc(&iop->write_count);
+ 		if (bio_full(wpc->ioend->io_bio, len)) {
+ 			wpc->ioend->io_bio =
+ 				iomap_chain_bio(wpc->ioend->io_bio);
 -- 
-Thanks
-Yafang
+2.25.4
+
