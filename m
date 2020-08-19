@@ -7,66 +7,66 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CFA8C433E1
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 00:23:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A798FC433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 00:31:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 138AF20772
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 00:23:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 761FE207BB
+	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 00:31:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q178lvJA"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="T89paX/N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726410AbgHSAXj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 18 Aug 2020 20:23:39 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58216 "EHLO
+        id S1726838AbgHSAb4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 18 Aug 2020 20:31:56 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34416 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726367AbgHSAXi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 20:23:38 -0400
+        with ESMTP id S1726410AbgHSAbz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Aug 2020 20:31:55 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07J0NZ4P104135;
-        Wed, 19 Aug 2020 00:23:35 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07J0N4pw104018;
+        Wed, 19 Aug 2020 00:31:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=qNNZcR6C7GZTHRY4aW3rwUYuZbpQhM8RoSOhC0R9vQk=;
- b=q178lvJA0Oh7c93YX673j5/smIELeVAi4jpJIGrg5q2asgDr9uHp9BaZb70hytqDX8Il
- W8RSFmH23dgf7PSWnJ032nipeR/h3qTARqc1WiBgVp4xuINAScRvZdYjvnucDhI8XyqB
- Zm/4ot/dAg3x0xuYJPFgiL1HuRXZbqJW8x2MOZEw+9P9U6lHoVEU713irkW9kBjrSn3X
- +QWHn5i1hVQkMylEs4veO7QwTLoiOBzme/YHgl53Pow+0Ekp+BByO2RpsSBgopYXLo0Z
- 3AmUofMKTIpDVvhL+Snojhvr7yxgNHcOYZy/GH+sxJHcRgmXAcjGuFNLQrgE2kVMD0Zx vQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 32x8bn7t1m-1
+ bh=sTBTGSjDElM6VXF8qbV4aNuds0hvHo+4ic2k10iCxBY=;
+ b=T89paX/NhAcNzc5Va63mjJwcso9SSsZicfLzad9T9cN2Pk6iSI+pKX5o1QzE5EwlSLWb
+ VWMGeXCNmuU5GwoLHEYUK8wA5G0PZYGo67W8zNm0xRVEthzLaYQJosMQ7T0xr0iHLKWw
+ f0fRG/gRo/jovaKFE5xLd3tRZ42fgvgx8GGrOgMJuh0qgTng9slTD9ktXscPqgMd7Woq
+ 7Zp2Kmafd7wdS6uAikKcvRw6gVuWDzTjZASjUsDiUGOQNSPYQ+O2OSh9iHRL5dOTRqix
+ StMxe/a1aqJ4tzQHokJOltObpD7U1ddKaHf0OjOk44msKnyJKftOW2WcU3k0DHZhVF3p CQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 32x8bn7tje-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 19 Aug 2020 00:23:35 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07J0HlrI133105;
-        Wed, 19 Aug 2020 00:23:35 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 330pvhsy52-1
+        Wed, 19 Aug 2020 00:31:52 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07J0SFat148782;
+        Wed, 19 Aug 2020 00:29:52 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 32xs9nj3fp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 19 Aug 2020 00:23:34 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07J0NYfB019916;
-        Wed, 19 Aug 2020 00:23:34 GMT
+        Wed, 19 Aug 2020 00:29:51 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07J0ToSM006529;
+        Wed, 19 Aug 2020 00:29:50 GMT
 Received: from localhost (/10.159.129.94)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 18 Aug 2020 17:23:34 -0700
-Date:   Tue, 18 Aug 2020 17:23:32 -0700
+        with ESMTP ; Tue, 18 Aug 2020 17:29:50 -0700
+Date:   Tue, 18 Aug 2020 17:29:48 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 09/13] xfs: validate the unlinked list pointer on update
-Message-ID: <20200819002332.GW6096@magnolia>
+Subject: Re: [PATCH 10/13] xfs: re-order AGI updates in unlink list updates
+Message-ID: <20200819002948.GX6096@magnolia>
 References: <20200812092556.2567285-1-david@fromorbit.com>
- <20200812092556.2567285-10-david@fromorbit.com>
+ <20200812092556.2567285-11-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200812092556.2567285-10-david@fromorbit.com>
+In-Reply-To: <20200812092556.2567285-11-david@fromorbit.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9717 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 phishscore=0
- malwarescore=0 adultscore=0 bulkscore=0 suspectscore=1 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 spamscore=0
+ mlxscore=0 mlxlogscore=999 suspectscore=1 malwarescore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008190000
+ definitions=main-2008190002
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9717 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 lowpriorityscore=0
  impostorscore=0 suspectscore=1 adultscore=0 spamscore=0 malwarescore=0
@@ -78,105 +78,187 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 12, 2020 at 07:25:52PM +1000, Dave Chinner wrote:
+On Wed, Aug 12, 2020 at 07:25:53PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Factor this check into xfs_iunlink_update_inode() when are updating
-> the code. This replaces the checks that were removed in previous
-> patches as bits of functionality were removed from the update
-> process.
-
-I had wondered about that, though I saw it end up in xfs_iunlink_item.c
-so I hadn't thought too much about that.
-
+> We always access and check the AGI bucket entry for the unlinked
+> list even if we are not going to need it either for lookup or remove
+> purposes. Move the code that accesses the AGI to the code that
+> modifes the AGI, hence keeping the AGI accesses local to the code
+> that needs to modify it.
+> 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_inode.c | 84 ++++++++++++++++------------------------------
+>  1 file changed, 28 insertions(+), 56 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index b098e5df07e7..4f616e1b64dc 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -1918,44 +1918,53 @@ xfs_inactive(
+>   */
+>  
+>  /*
+> - * Point the AGI unlinked bucket at an inode and log the results.  The caller
+> - * is responsible for validating the old value.
+> + * Point the AGI unlinked bucket at an inode and log the results. The caller
+> + * passes in the expected current agino the bucket points at via @cur_agino so
+> + * we can validate that we are about to remove the inode we expect to be
+> + * removing from the AGI bucket.
+>   */
+> -STATIC int
+> +static int
+>  xfs_iunlink_update_bucket(
+>  	struct xfs_trans	*tp,
+>  	xfs_agnumber_t		agno,
+>  	struct xfs_buf		*agibp,
+> -	xfs_agino_t		old_agino,
+> +	xfs_agino_t		cur_agino,
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hm.  So I think I understand the new role of this function better now
+that this patch moves into this function the checking of the bucket
+pointer and whatnot.  Would it be difficult to merge this patch with
+patch 4?
 
 --D
 
-> ---
->  fs/xfs/xfs_inode.c | 38 ++++++++++++++------------------------
->  1 file changed, 14 insertions(+), 24 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 4dde1970f7cd..b098e5df07e7 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -1998,6 +1998,7 @@ xfs_iunlink_update_inode(
->  	struct xfs_trans	*tp,
->  	struct xfs_inode	*ip,
->  	xfs_agnumber_t		agno,
-> +	xfs_agino_t		old_agino,
->  	xfs_agino_t		next_agino)
+>  	xfs_agino_t		new_agino)
+>  {
+> -	struct xlog		*log = tp->t_mountp->m_log;
+> +	struct xfs_mount	*mp = tp->t_mountp;
+> +	struct xlog		*log = mp->m_log;
+>  	struct xfs_agi		*agi = agibp->b_addr;
+> -	xfs_agino_t		old_value;
+> +	xfs_agino_t		old_agino;
+>  	unsigned int		bucket_index;
+>  	int                     offset;
+>  
+> -	ASSERT(xfs_verify_agino_or_null(tp->t_mountp, agno, new_agino));
+> +	ASSERT(xfs_verify_agino_or_null(mp, agno, new_agino));
+>  
+> +	/*
+> +	 * We don't need to traverse the on disk unlinked list to find the
+> +	 * previous inode in the list when removing inodes anymore, so we don't
+> +	 * use multiple on-disk lists anymore. Hence we always use bucket 0
+> +	 * unless we are in log recovery in which case we might be recovering an
+> +	 * old filesystem that has multiple buckets.
+> +	 */
+>  	bucket_index = 0;
+> -	/* During recovery, the old multiple bucket index can be applied */
+>  	if (!log || log->l_flags & XLOG_RECOVERY_NEEDED) {
+> -		ASSERT(old_agino != NULLAGINO);
+> +		ASSERT(cur_agino != NULLAGINO);
+>  
+> -		if (be32_to_cpu(agi->agi_unlinked[0]) != old_agino)
+> -			bucket_index = old_agino % XFS_AGI_UNLINKED_BUCKETS;
+> +		if (be32_to_cpu(agi->agi_unlinked[0]) != cur_agino)
+> +			bucket_index = cur_agino % XFS_AGI_UNLINKED_BUCKETS;
+>  	}
+>  
+> -	old_value = be32_to_cpu(agi->agi_unlinked[bucket_index]);
+> -	trace_xfs_iunlink_update_bucket(tp->t_mountp, agno, bucket_index,
+> -			old_value, new_agino);
+> -
+> -	/* check if the old agi_unlinked head is as expected */
+> -	if (old_value != old_agino) {
+> +	old_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
+> +	if (new_agino == old_agino || cur_agino != old_agino ||
+> +	    !xfs_verify_agino_or_null(mp, agno, old_agino)) {
+>  		xfs_buf_mark_corrupt(agibp);
+>  		return -EFSCORRUPTED;
+>  	}
+>  
+> +	trace_xfs_iunlink_update_bucket(mp, agno, bucket_index,
+> +			old_agino, new_agino);
+> +
+>  	agi->agi_unlinked[bucket_index] = cpu_to_be32(new_agino);
+>  	offset = offsetof(struct xfs_agi, agi_unlinked) +
+>  			(sizeof(xfs_agino_t) * bucket_index);
+> @@ -2032,44 +2041,25 @@ xfs_iunlink_insert_inode(
+>  	struct xfs_inode	*ip)
 >  {
 >  	struct xfs_mount	*mp = tp->t_mountp;
-> @@ -2011,6 +2012,13 @@ xfs_iunlink_update_inode(
->  	if (error)
->  		return error;
+> -	struct xfs_agi		*agi;
+>  	struct xfs_inode	*nip;
+> -	xfs_agino_t		next_agino;
+> +	xfs_agino_t		next_agino = NULLAGINO;
+>  	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+>  	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+>  	int			error;
 >  
-> +	if (be32_to_cpu(dip->di_next_unlinked) != old_agino) {
-> +		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, dip,
-> +					sizeof(*dip), __this_address);
-> +		xfs_trans_brelse(tp, ibp);
-> +		return -EFSCORRUPTED;
-> +	}
-> +
->  	/* Ok, update the new pointer. */
->  	xfs_iunlink_update_dinode(tp, agno, XFS_INO_TO_AGINO(mp, ip->i_ino),
->  			ibp, dip, &ip->i_imap, next_agino);
-> @@ -2056,7 +2064,8 @@ xfs_iunlink_insert_inode(
+> -	agi = agibp->b_addr;
+> -
+> -	/*
+> -	 * We don't need to traverse the on disk unlinked list to find the
+> -	 * previous inode in the list when removing inodes anymore, so we don't
+> -	 * need multiple on-disk lists anymore. Hence we always use bucket 0.
+> -	 * Make sure the pointer isn't garbage and that this inode isn't already
+> -	 * on the list.
+> -	 */
+> -	next_agino = be32_to_cpu(agi->agi_unlinked[0]);
+> -	if (next_agino == agino ||
+> -	    !xfs_verify_agino_or_null(mp, agno, next_agino)) {
+> -		xfs_buf_mark_corrupt(agibp);
+> -		return -EFSCORRUPTED;
+> -	}
+> -
+>  	nip = list_first_entry_or_null(&agibp->b_pag->pag_ici_unlink_list,
+>  					struct xfs_inode, i_unlink);
+>  	if (nip) {
+> -		ASSERT(next_agino == XFS_INO_TO_AGINO(mp, nip->i_ino));
+>  
+>  		/*
 >  		 * There is already another inode in the bucket, so point this
 >  		 * inode to the current head of the list.
 >  		 */
-> -		error = xfs_iunlink_update_inode(tp, ip, agno, next_agino);
-> +		error = xfs_iunlink_update_inode(tp, ip, agno, NULLAGINO,
-> +						 next_agino);
+> +		next_agino = XFS_INO_TO_AGINO(mp, nip->i_ino);
+>  		error = xfs_iunlink_update_inode(tp, ip, agno, NULLAGINO,
+>  						 next_agino);
 >  		if (error)
 >  			return error;
->  	} else {
-> @@ -2147,37 +2156,18 @@ xfs_iunlink_remove_inode(
+> -	} else {
+> -		ASSERT(next_agino == NULLAGINO);
 >  	}
 >  
->  	/* Clear the on disk next unlinked pointer for this inode. */
-> -	error = xfs_iunlink_update_inode(tp, ip, agno, NULLAGINO);
-> +	error = xfs_iunlink_update_inode(tp, ip, agno, next_agino, NULLAGINO);
->  	if (error)
->  		return error;
+>  	/* Point the head of the list to point to this inode. */
+> @@ -2122,28 +2112,11 @@ xfs_iunlink_remove_inode(
+>  	struct xfs_inode	*ip)
+>  {
+>  	struct xfs_mount	*mp = tp->t_mountp;
+> -	struct xfs_agi		*agi;
+>  	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ip->i_ino);
+>  	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, ip->i_ino);
+>  	xfs_agino_t		next_agino = NULLAGINO;
+> -	xfs_agino_t		head_agino;
+>  	int			error;
 >  
->  
->  	if (ip != list_first_entry(&agibp->b_pag->pag_ici_unlink_list,
+> -	agi = agibp->b_addr;
+> -
+> -	/*
+> -	 * We don't need to traverse the on disk unlinked list to find the
+> -	 * previous inode in the list when removing inodes anymore, so we don't
+> -	 * need multiple on-disk lists anymore. Hence we always use bucket 0.
+> -	 * Make sure the head pointer isn't garbage.
+> -	 */
+> -	head_agino = be32_to_cpu(agi->agi_unlinked[0]);
+> -	if (!xfs_verify_agino(mp, agno, head_agino)) {
+> -		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp,
+> -				agi, sizeof(*agi));
+> -		return -EFSCORRUPTED;
+> -	}
+> -
+>  	/*
+>  	 * Get the next agino in the list. If we are at the end of the list,
+>  	 * then the previous inode's i_next_unlinked filed will get cleared.
+> @@ -2165,7 +2138,6 @@ xfs_iunlink_remove_inode(
 >  					struct xfs_inode, i_unlink)) {
-> -
-> -		struct xfs_inode	*pip;
-> -		xfs_agino_t		prev_agino;
-> -		struct xfs_buf		*last_ibp;
-> -		struct xfs_dinode	*last_dip = NULL;
-> +		struct xfs_inode *pip = list_prev_entry(ip, i_unlink);
+>  		struct xfs_inode *pip = list_prev_entry(ip, i_unlink);
 >  
->  		ASSERT(head_agino != agino);
-> -
-> -		pip = list_prev_entry(ip, i_unlink);
-> -		prev_agino = XFS_INO_TO_AGINO(mp, pip->i_ino);
-> -
-> -		error = xfs_imap_to_bp(mp, tp, &pip->i_imap, &last_dip, 
-> -						&last_ibp, 0);
-> -		if (error)
-> -			return error;
-> -
-> -		if (be32_to_cpu(last_dip->di_next_unlinked) != agino)
-> -			return -EFSCORRUPTED;
-> -
-> -		/* Point the previous inode on the list to the next inode. */
-> -		xfs_iunlink_update_dinode(tp, agno, prev_agino, last_ibp,
-> -				last_dip, &pip->i_imap, next_agino);
-> -
-> -		return 0;
-> +		return xfs_iunlink_update_inode(tp, pip, agno, agino,
-> +						next_agino);
+> -		ASSERT(head_agino != agino);
+>  		return xfs_iunlink_update_inode(tp, pip, agno, agino,
+>  						next_agino);
 >  	}
->  
->  	/* Point the head of the list to the next unlinked inode. */
 > -- 
 > 2.26.2.761.g0e0b3e54be
 > 
