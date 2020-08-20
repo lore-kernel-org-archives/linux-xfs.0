@@ -2,253 +2,366 @@ Return-Path: <SRS0=hW3p=B6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E18C433E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 11:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E97AC433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 16:24:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5658F207BB
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 11:47:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F26AC207BB
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 16:24:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kPKNyOUG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730659AbgHTLrK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Aug 2020 07:47:10 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:9793 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729640AbgHTLqy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Aug 2020 07:46:54 -0400
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id D5DE7A295A6771F01718;
-        Thu, 20 Aug 2020 19:46:44 +0800 (CST)
-Received: from huawei.com (10.175.104.175) by DGGEMS402-HUB.china.huawei.com
- (10.3.19.202) with Microsoft SMTP Server id 14.3.487.0; Thu, 20 Aug 2020
- 19:46:36 +0800
-From:   Miaohe Lin <linmiaohe@huawei.com>
-To:     <darrick.wong@oracle.com>, <cmaiolino@redhat.com>,
-        <dchinner@redhat.com>, <bfoster@redhat.com>,
-        <chandanrlinux@gmail.com>, <sandeen@redhat.com>
-CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linmiaohe@huawei.com>
-Subject: [PATCH] xfs: Convert to use the preferred fallthrough macro
-Date:   Thu, 20 Aug 2020 07:45:31 -0400
-Message-ID: <20200820114531.47465-1-linmiaohe@huawei.com>
-X-Mailer: git-send-email 2.19.1
+        id S1728549AbgHTQYd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Aug 2020 12:24:33 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:49908 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727780AbgHTQY0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 12:24:26 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07KGMHpR053611;
+        Thu, 20 Aug 2020 16:23:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=l2+qbDG1OgegFQCzESjTZ8Bh0+PB+8qUktTHGcU2LQk=;
+ b=kPKNyOUGp93mWiCy1p1R9IbPcadt5KrTlCd+PvhXfzz013ADGRf2IEmrlSHwm78MBme5
+ JlWQ3V04Hjmdma43x2l2nqeZe4a5kDK5mheDB6mle128rFe7AnMJA9n0CTn3MVC2A1eR
+ dXxpUgkI6CX3z8asEKNMxB8mkYF4eSnlxGp3gXHhTzAjkbWWTiunXfcu9WxuUjs+QGJj
+ rRiTmrKjwOqJ3s1V2OSya/mY19EM6qJIC20Tu9/ieaxhncra96oTSZB2vNGartVSSypP
+ 7Yio9icDq/ktiA2yH/YdmrDELBWRVxwyX1Me3bYQDoW4T1aRE19uaJ5aDvULJJY3GU8b lw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 32x74rhkbh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 20 Aug 2020 16:23:33 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07KGILvn038408;
+        Thu, 20 Aug 2020 16:23:33 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 32xsfv7qeb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 20 Aug 2020 16:23:33 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07KGNQln026549;
+        Thu, 20 Aug 2020 16:23:32 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 20 Aug 2020 09:23:25 -0700
+Date:   Thu, 20 Aug 2020 09:23:24 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     griffin tucker <xfssxsltislti2490@griffintucker.id.au>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038
+ problem
+Message-ID: <20200820162049.GI6096@magnolia>
+References: <159770500809.3956827.8869892960975362931.stgit@magnolia>
+ <159770505894.3956827.5973810026298120596.stgit@magnolia>
+ <20200818233535.GD21744@dread.disaster.area>
+ <20200819214322.GE6096@magnolia>
+ <20200820000102.GF6096@magnolia>
+ <CAH3XsHH8i4GY7TcMvLPy6F1Gs-UMaR1Kcx5BJnt=XzR42t+EqA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.104.175]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAH3XsHH8i4GY7TcMvLPy6F1Gs-UMaR1Kcx5BJnt=XzR42t+EqA@mail.gmail.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9718 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
+ spamscore=0 suspectscore=1 mlxscore=0 phishscore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008200132
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9718 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxlogscore=999
+ priorityscore=1501 phishscore=0 spamscore=0 mlxscore=0 adultscore=0
+ suspectscore=1 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1011
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008200133
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Convert the uses of fallthrough comments to fallthrough macro. Please see
-commit 294f69e662d1 ("compiler_attributes.h: Add 'fallthrough' pseudo
-keyword for switch/case use") for detail.
+On Thu, Aug 20, 2020 at 02:42:29PM +1000, griffin tucker wrote:
+> how difficult would it be to implement 128 bit timestamps?
 
-Signed-off-by: Hongxiang Lou <louhongxiang@huawei.com>
-Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
----
- fs/xfs/libxfs/xfs_ag_resv.c  | 4 ++--
- fs/xfs/libxfs/xfs_da_btree.c | 2 +-
- fs/xfs/scrub/bmap.c          | 2 +-
- fs/xfs/scrub/btree.c         | 2 +-
- fs/xfs/scrub/common.c        | 6 +++---
- fs/xfs/scrub/dabtree.c       | 2 +-
- fs/xfs/scrub/repair.c        | 2 +-
- fs/xfs/xfs_bmap_util.c       | 2 +-
- fs/xfs/xfs_file.c            | 2 +-
- fs/xfs/xfs_fsmap.c           | 2 +-
- fs/xfs/xfs_ioctl.c           | 2 +-
- fs/xfs/xfs_trans_buf.c       | 2 +-
- 12 files changed, 15 insertions(+), 15 deletions(-)
+Somewhat.  __uint128_t exists as a gcc extension, but you'd also have to
+expand the ondisk inode structure definition to accomodate 64 more bits
+of data per timestamp.  If you split the timestamp between a low u64 and
+a high u64 you'd also need to recombine them carefully to avoid screwing
+up sign extension like ext4 did when they adopted 34-bit timestamps.
 
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index fdfe6dc0d307..0b061a027e4e 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -338,7 +338,7 @@ xfs_ag_resv_alloc_extent(
- 		break;
- 	default:
- 		ASSERT(0);
--		/* fall through */
-+		fallthrough;
- 	case XFS_AG_RESV_NONE:
- 		field = args->wasdel ? XFS_TRANS_SB_RES_FDBLOCKS :
- 				       XFS_TRANS_SB_FDBLOCKS;
-@@ -380,7 +380,7 @@ xfs_ag_resv_free_extent(
- 		break;
- 	default:
- 		ASSERT(0);
--		/* fall through */
-+		fallthrough;
- 	case XFS_AG_RESV_NONE:
- 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (int64_t)len);
- 		return;
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index e46bc03365db..5a13bfe0ebbf 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -282,7 +282,7 @@ xfs_da3_node_read_verify(
- 						__this_address);
- 				break;
- 			}
--			/* fall through */
-+			fallthrough;
- 		case XFS_DA_NODE_MAGIC:
- 			fa = xfs_da3_node_verify(bp);
- 			if (fa)
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 955302e7cdde..6abd469d49d2 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -270,7 +270,7 @@ xchk_bmap_iextent_xref(
- 	case XFS_DATA_FORK:
- 		if (xfs_is_reflink_inode(info->sc->ip))
- 			break;
--		/* fall through */
-+		fallthrough;
- 	case XFS_ATTR_FORK:
- 		xchk_xref_is_not_shared(info->sc, agbno,
- 				irec->br_blockcount);
-diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
-index f52a7b8256f9..990a379fc322 100644
---- a/fs/xfs/scrub/btree.c
-+++ b/fs/xfs/scrub/btree.c
-@@ -43,7 +43,7 @@ __xchk_btree_process_error(
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
- 		*error = 0;
--		/* fall through */
-+		fallthrough;
- 	default:
- 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
- 			trace_xchk_ifork_btree_op_error(sc, cur, level,
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 18876056e5e0..63f13c8ed8c7 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -81,7 +81,7 @@ __xchk_process_error(
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
- 		*error = 0;
--		/* fall through */
-+		fallthrough;
- 	default:
- 		trace_xchk_op_error(sc, agno, bno, *error,
- 				ret_ip);
-@@ -134,7 +134,7 @@ __xchk_fblock_process_error(
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= errflag;
- 		*error = 0;
--		/* fall through */
-+		fallthrough;
- 	default:
- 		trace_xchk_file_op_error(sc, whichfork, offset, *error,
- 				ret_ip);
-@@ -713,7 +713,7 @@ xchk_get_inode(
- 		if (error)
- 			return -ENOENT;
- 		error = -EFSCORRUPTED;
--		/* fall through */
-+		fallthrough;
- 	default:
- 		trace_xchk_op_error(sc,
- 				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
-diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-index e56786f0a13c..2b3fb0b37e18 100644
---- a/fs/xfs/scrub/dabtree.c
-+++ b/fs/xfs/scrub/dabtree.c
-@@ -47,7 +47,7 @@ xchk_da_process_error(
- 		/* Note the badness but don't abort. */
- 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 		*error = 0;
--		/* fall through */
-+		fallthrough;
- 	default:
- 		trace_xchk_file_op_error(sc, ds->dargs.whichfork,
- 				xfs_dir2_da_to_db(ds->dargs.geo,
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index 25e86c71e7b9..c814b18efba9 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -944,7 +944,7 @@ xrep_ino_dqattach(
- 			xrep_force_quotacheck(sc, XFS_DQTYPE_GROUP);
- 		if (XFS_IS_PQUOTA_ON(sc->mp) && !sc->ip->i_pdquot)
- 			xrep_force_quotacheck(sc, XFS_DQTYPE_PROJ);
--		/* fall through */
-+		fallthrough;
- 	case -ESRCH:
- 		error = 0;
- 		break;
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 73cafc843cd7..6045cc20b0fb 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -244,7 +244,7 @@ xfs_bmap_count_blocks(
- 		 */
- 		*count += btblocks - 1;
- 
--		/* fall through */
-+		fallthrough;
- 	case XFS_DINODE_FMT_EXTENTS:
- 		*nextents = xfs_bmap_count_leaves(ifp, count);
- 		break;
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index c31cd3be9fb2..976306724093 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -772,7 +772,7 @@ xfs_break_layouts(
- 			error = xfs_break_dax_layouts(inode, &retry);
- 			if (error || retry)
- 				break;
--			/* fall through */
-+			fallthrough;
- 		case BREAK_WRITE:
- 			error = xfs_break_leased_layouts(inode, iolock, &retry);
- 			break;
-diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-index 4eebcec4aae6..c334550aeea7 100644
---- a/fs/xfs/xfs_fsmap.c
-+++ b/fs/xfs/xfs_fsmap.c
-@@ -100,7 +100,7 @@ xfs_fsmap_owner_to_rmap(
- 		dest->rm_owner = XFS_RMAP_OWN_COW;
- 		break;
- 	case XFS_FMR_OWN_DEFECTIVE:	/* not implemented */
--		/* fall through */
-+		fallthrough;
- 	default:
- 		return -EINVAL;
- 	}
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 6f22a66777cd..85d6631f7e99 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -557,7 +557,7 @@ xfs_ioc_attrmulti_one(
- 	case ATTR_OP_REMOVE:
- 		value = NULL;
- 		*len = 0;
--		/* fall through */
-+		fallthrough;
- 	case ATTR_OP_SET:
- 		error = mnt_want_write_file(parfilp);
- 		if (error)
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 11cd666cd99a..86ba71580ffd 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -310,7 +310,7 @@ xfs_trans_read_buf_map(
- 	default:
- 		if (tp && (tp->t_flags & XFS_TRANS_DIRTY))
- 			xfs_force_shutdown(tp->t_mountp, SHUTDOWN_META_IO_ERROR);
--		/* fall through */
-+		fallthrough;
- 	case -ENOMEM:
- 	case -EAGAIN:
- 		return error;
--- 
-2.19.1
+> and how much further in time beyond 2486 would this allow?
 
+I dunno.  2^66 seconds beyond December 1901, I suppose.
+
+That's what, the year ... 2338218323135 or something?  Far beyond what
+the maximum kernel supports (2^63-1 seconds).
+
+> is the implementation of 128 bit timestamps just not feasible due to
+> 64 bit alu width?
+
+Just my opinion, but I think the difficulty here is the added complexity
+to push XFS beyond the 25th century.  I don't plan to be around for
+that, and prefer to let Captain Picard deal with that expansion. ;)
+
+> how long is it until hardware capability reaches beyond the 16exabyte limit?
+
+Still a few years, even if you staple together all the SMR HDDs in the
+world.  You'd need, what, like, 400,000 20TB HDDs to reach 8EB?
+
+--D
+
+> On Thu, 20 Aug 2020 at 10:01, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> >
+> > On Wed, Aug 19, 2020 at 02:43:22PM -0700, Darrick J. Wong wrote:
+> > > On Wed, Aug 19, 2020 at 09:35:35AM +1000, Dave Chinner wrote:
+> > > > On Mon, Aug 17, 2020 at 03:57:39PM -0700, Darrick J. Wong wrote:
+> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > >
+> > > > > Redesign the ondisk timestamps to be a simple unsigned 64-bit counter of
+> > > > > nanoseconds since 14 Dec 1901 (i.e. the minimum time in the 32-bit unix
+> > > > > time epoch).  This enables us to handle dates up to 2486, which solves
+> > > > > the y2038 problem.
+> > > > >
+> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > ---
+> > > > .....
+> > > > > +/* Convert an ondisk timestamp into the 64-bit safe incore format. */
+> > > > >  void
+> > > > >  xfs_inode_from_disk_timestamp(
+> > > > > + struct xfs_dinode               *dip,
+> > > > >   struct timespec64               *tv,
+> > > > >   const union xfs_timestamp       *ts)
+> > > > >  {
+> > > > > + if (dip->di_version >= 3 &&
+> > > > > +     (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME))) {
+> > > > > +         uint64_t                t = be64_to_cpu(ts->t_bigtime);
+> > > > > +         uint64_t                s;
+> > > > > +         uint32_t                n;
+> > > > > +
+> > > > > +         s = div_u64_rem(t, NSEC_PER_SEC, &n);
+> > > > > +         tv->tv_sec = s - XFS_INO_BIGTIME_EPOCH;
+> > > > > +         tv->tv_nsec = n;
+> > > > > +         return;
+> > > > > + }
+> > > > > +
+> > > > >   tv->tv_sec = (int)be32_to_cpu(ts->t_sec);
+> > > > >   tv->tv_nsec = (int)be32_to_cpu(ts->t_nsec);
+> > > > >  }
+> > > >
+> > > > Can't say I'm sold on this union. It seems cleaner to me to just
+> > > > make the timestamp an opaque 64 bit field on disk and convert it to
+> > > > the in-memory representation directly in the to/from disk
+> > > > operations. e.g.:
+> > > >
+> > > > void
+> > > > xfs_inode_from_disk_timestamp(
+> > > >     struct xfs_dinode               *dip,
+> > > >     struct timespec64               *tv,
+> > > >     __be64                          ts)
+> > > > {
+> > > >
+> > > >     uint64_t                t = be64_to_cpu(ts);
+> > > >     uint64_t                s;
+> > > >     uint32_t                n;
+> > > >
+> > > >     if (xfs_dinode_is_bigtime(dip)) {
+> > > >             s = div_u64_rem(t, NSEC_PER_SEC, &n) - XFS_INO_BIGTIME_EPOCH;
+> > > >     } else {
+> > > >             s = (int)(t >> 32);
+> > > >             n = (int)(t & 0xffffffff);
+> > > >     }
+> > > >     tv->tv_sec = s;
+> > > >     tv->tv_nsec = n;
+> > > > }
+> > >
+> > > I don't like this open-coded union approach at all because now I have to
+> > > keep the t_sec and t_nsec bits separate in my head instead of letting
+> > > the C compiler take care of that detail.  The sample code above doesn't
+> > > handle that correctly either:
+> > >
+> > > Start with an old kernel on a little endian system; each uppercase
+> > > letter represents a byte (A is the LSB of t_sec, D is the MSB of t_sec,
+> > > E is the LSB of t_nsec, and H is the MSB of t_nsec):
+> > >
+> > >       sec  nsec (incore)
+> > >       ABCD EFGH
+> > >
+> > > That gets written out as:
+> > >
+> > >       sec  nsec (ondisk)
+> > >       DCBA HGFE
+> > >
+> > > Now reboot with a new kernel that only knows 64bit timestamps on disk:
+> > >
+> > >       64bit (ondisk)
+> > >       DCBAHGFE
+> > >
+> > > Now it does the first be64_to_cpu conversion:
+> > >       64bit (incore)
+> > >       EFGHABCD
+> > >
+> > > And then masks and shifts:
+> > >       sec  nsec (incore)
+> > >       EFGH ABCD
+> > >
+> > > Oops, we just switched the values!
+> > >
+> > > The correct approach (I think) is to perform the shifting and masking on
+> > > the raw __be64 value before converting them to incore format via
+> > > be32_to_cpu, but now I have to work out all four cases by hand instead
+> > > of letting the compiler do the legwork for me.  I don't remember if it's
+> > > correct to go around shifting and masking __be64 values.
+> > >
+> > > I guess the good news is that at least we have generic/402 to catch
+> > > these kinds of persistence problems, but ugh.
+> > >
+> > > Anyway, what are you afraid of?  The C compiler smoking crack and not
+> > > actually overlapping the two union elements?  We could control for
+> > > that...
+> >
+> > (Following up on the mailing list with something I pasted into IRC)
+> >
+> > Ok, so I temporarily patched up my dev tree with this approximation of
+> > how that would work, properly done:
+> >
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index c59ddb56bb90..7c71e4440402 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -176,8 +176,8 @@ xfs_inode_from_disk_timestamp(
+> >                 return;
+> >         }
+> >
+> > -       tv->tv_sec = (int)be32_to_cpu(ts->t_sec);
+> > -       tv->tv_nsec = (int)be32_to_cpu(ts->t_nsec);
+> > +       tv->tv_sec = (time64_t)be32_to_cpu((__be32)(ts->t_bigtime >> 32));
+> > +       tv->tv_nsec = be32_to_cpu(ts->t_bigtime & 0xFFFFFFFFU);
+> >  }
+> >
+> >  int
+> > @@ -294,8 +294,8 @@ xfs_inode_to_disk_timestamp(
+> >                 return;
+> >         }
+> >
+> > -       ts->t_sec = cpu_to_be32(tv->tv_sec);
+> > -       ts->t_nsec = cpu_to_be32(tv->tv_nsec);
+> > +       ts->t_bigtime = (__be64)cpu_to_be32(tv->tv_sec) << 32 |
+> > +                       cpu_to_be32(tv->tv_nsec);
+> >  }
+> >
+> >  void
+> > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > index d44e8932979b..5d36d6dea326 100644
+> > --- a/fs/xfs/xfs_inode_item.c
+> > +++ b/fs/xfs/xfs_inode_item.c
+> > @@ -308,8 +308,8 @@ xfs_log_dinode_to_disk_ts(
+> >                 return;
+> >         }
+> >
+> > -       ts->t_sec = cpu_to_be32(its->t_sec);
+> > -       ts->t_nsec = cpu_to_be32(its->t_nsec);
+> > +       ts->t_bigtime = (__be64)cpu_to_be32(its->t_sec) << 32 |
+> > +                       cpu_to_be32(its->t_nsec);
+> >  }
+> >
+> > And immediately got a ton of smatch warnings:
+> >
+> > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > xfs_inode_buf.c:297:26: warning: cast to restricted __be64
+> > xfs_inode_buf.c:297:26: warning: cast from restricted __be32
+> > xfs_inode_buf.c:297:26: warning: restricted __be64 degrades to integer
+> > xfs_inode_buf.c:298:25: warning: restricted __be32 degrades to integer
+> > xfs_inode_buf.c:297:23: warning: incorrect type in assignment (different base types)
+> > xfs_inode_buf.c:297:23:    expected restricted __be64 [usertype] t_bigtime
+> > xfs_inode_buf.c:297:23:    got unsigned long long
+> >
+> > (and even more in xfs_inode_item.c)
+> >
+> > So... while we could get rid of the union and hand-decode the timestamp
+> > from a __be64 on legacy filesystems, I see the static checker complaints
+> > as a second piece of evidence that this would be unnecessarily risky.
+> >
+> > --D
+> >
+> > > > > @@ -220,9 +234,9 @@ xfs_inode_from_disk(
+> > > > >    * a time before epoch is converted to a time long after epoch
+> > > > >    * on 64 bit systems.
+> > > > >    */
+> > > > > - xfs_inode_from_disk_timestamp(&inode->i_atime, &from->di_atime);
+> > > > > - xfs_inode_from_disk_timestamp(&inode->i_mtime, &from->di_mtime);
+> > > > > - xfs_inode_from_disk_timestamp(&inode->i_ctime, &from->di_ctime);
+> > > > > + xfs_inode_from_disk_timestamp(from, &inode->i_atime, &from->di_atime);
+> > > > > + xfs_inode_from_disk_timestamp(from, &inode->i_mtime, &from->di_mtime);
+> > > > > + xfs_inode_from_disk_timestamp(from, &inode->i_ctime, &from->di_ctime);
+> > > > >
+> > > > >   to->di_size = be64_to_cpu(from->di_size);
+> > > > >   to->di_nblocks = be64_to_cpu(from->di_nblocks);
+> > > > > @@ -235,9 +249,17 @@ xfs_inode_from_disk(
+> > > > >   if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
+> > > > >           inode_set_iversion_queried(inode,
+> > > > >                                      be64_to_cpu(from->di_changecount));
+> > > > > -         xfs_inode_from_disk_timestamp(&to->di_crtime, &from->di_crtime);
+> > > > > +         xfs_inode_from_disk_timestamp(from, &to->di_crtime,
+> > > > > +                         &from->di_crtime);
+> > > > >           to->di_flags2 = be64_to_cpu(from->di_flags2);
+> > > > >           to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
+> > > > > +         /*
+> > > > > +          * Set the bigtime flag incore so that we automatically convert
+> > > > > +          * this inode's ondisk timestamps to bigtime format the next
+> > > > > +          * time we write the inode core to disk.
+> > > > > +          */
+> > > > > +         if (xfs_sb_version_hasbigtime(&ip->i_mount->m_sb))
+> > > > > +                 to->di_flags2 |= XFS_DIFLAG2_BIGTIME;
+> > > > >   }
+> > > >
+> > > > We do not want on-disk flags to be changed outside transactions like
+> > > > this. Indeed, this has implications for O_DSYNC operation, in that
+> > > > we do not trigger inode sync operations if the inode is only
+> > > > timestamp dirty. If we've changed this flag, then the inode is more
+> > > > than "timestamp dirty" and O_DSYNC will need to flush the entire
+> > > > inode.... :/
+> > >
+> > > I forgot about XFS_ILOG_TIMESTAMP.
+> > >
+> > > > IOWs, I think we should only change this flag in a timestamp
+> > > > transaction where the timestamps are actually being logged and hence
+> > > > we can set inode dirty state appropriately so that everything will
+> > > > get logged, changed and written back correctly....
+> > >
+> > > Yeah, that's fair.  I'll change xfs_trans_log_inode to set the bigtime
+> > > flag if we're logging either the timestamps or the core.
+> > >
+> > > --D
+> > >
+> > > > Cheers,
+> > > >
+> > > > Dave.
+> > > > --
+> > > > Dave Chinner
+> > > > david@fromorbit.com
