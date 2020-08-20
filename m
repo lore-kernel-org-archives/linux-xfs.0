@@ -7,45 +7,47 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41531C433E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90786C433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:11:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E2D1208C7
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:10:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E2812075E
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:11:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597882228;
-	bh=ObB8scPObpqBxHgYAz3uByh5AW7ZXQnLWcvr0snphRw=;
+	s=default; t=1597882268;
+	bh=bEjCleIxmOPiFhdtMIeCAd9DTLvi9E9m0OfrRBUtUA0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jS0IXSjkcdsX6dApKdEZdfy60uQA14MNGxNKQCpJcGNtlrf/nK8W8ccq2WtSxX9YZ
-	 vM1fX+kb+sEbw2qNzPwOo/qFgPXEIZhO1CDCPB014sDGNyjx2LlTORTOUxNUyP+HUH
-	 p/23/wi/6xdtHlw8UBaLdBaQUE6byiUQBUFLpT9g=
+	b=vqYe4oosafwmyUlAPMEodsXowkXM2B1xcT89xEyRvwx7c1Qg9oFsxWL6A3PL9K8N2
+	 rpQAt2QA+jMDsHGJbAsG8e4LYaprNXMf/ZojbJGx7KWJrzoDqbYfitbC6iDcm/MHa0
+	 dDUP+Bem1yv3jzRMKzScpWaLT2GVp1Yc+ZHF7ngY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728240AbgHTAKW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Aug 2020 20:10:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59234 "EHLO mail.kernel.org"
+        id S1727837AbgHTACP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Aug 2020 20:02:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727941AbgHTACZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Aug 2020 20:02:25 -0400
+        id S1727829AbgHTACK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Aug 2020 20:02:10 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A2551207FB;
-        Thu, 20 Aug 2020 00:02:24 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6294D208E4;
+        Thu, 20 Aug 2020 00:02:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597881745;
-        bh=ObB8scPObpqBxHgYAz3uByh5AW7ZXQnLWcvr0snphRw=;
+        s=default; t=1597881730;
+        bh=bEjCleIxmOPiFhdtMIeCAd9DTLvi9E9m0OfrRBUtUA0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SKporQPeXzBCRAvKMnx7aBDoszrpZZlstb95xcyqifP3flZ3UmHBq4VV0EqEjZ5B5
-         gJdQuh6QXjEAa4FteRM59Xu9DlzEEKfis0rxTEZcsRljCzwmpboBJWzE1mmYDFqL3t
-         UsrkpT2lJ3m6I2/A7y7x8XD394LcKF9IIElR/Moc=
+        b=IcH1dPvAqzjcJMjRaJ+/Q1FFAbDCCGyHWGIKjoeJATpBkuTZGMQDsy03Iof52IrXF
+         V4XAAHqPI+Fy7fBy7p2wkIwp+uHd1GVhIsekP3TJmi1FuyvsIVEg2TxHeh2XHDhauH
+         aBv1BYxzuNepsr7xMEHLlcI+teS+lmtnC9iO+U8A=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Eiichi Tsukata <devel@etsukata.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Chandan Babu R <chandanrlinux@gmail.com>,
+        Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 22/24] xfs: Fix UBSAN null-ptr-deref in xfs_sysfs_init
-Date:   Wed, 19 Aug 2020 20:01:53 -0400
-Message-Id: <20200820000155.215089-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 11/24] xfs: fix inode quota reservation checks
+Date:   Wed, 19 Aug 2020 20:01:42 -0400
+Message-Id: <20200820000155.215089-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200820000155.215089-1-sashal@kernel.org>
 References: <20200820000155.215089-1-sashal@kernel.org>
@@ -58,57 +60,54 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eiichi Tsukata <devel@etsukata.com>
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-[ Upstream commit 96cf2a2c75567ff56195fe3126d497a2e7e4379f ]
+[ Upstream commit f959b5d037e71a4d69b5bf71faffa065d9269b4a ]
 
-If xfs_sysfs_init is called with parent_kobj == NULL, UBSAN
-shows the following warning:
+xfs_trans_dqresv is the function that we use to make reservations
+against resource quotas.  Each resource contains two counters: the
+q_core counter, which tracks resources allocated on disk; and the dquot
+reservation counter, which tracks how much of that resource has either
+been allocated or reserved by threads that are working on metadata
+updates.
 
-  UBSAN: null-ptr-deref in ./fs/xfs/xfs_sysfs.h:37:23
-  member access within null pointer of type 'struct xfs_kobj'
-  Call Trace:
-   dump_stack+0x10e/0x195
-   ubsan_type_mismatch_common+0x241/0x280
-   __ubsan_handle_type_mismatch_v1+0x32/0x40
-   init_xfs_fs+0x12b/0x28f
-   do_one_initcall+0xdd/0x1d0
-   do_initcall_level+0x151/0x1b6
-   do_initcalls+0x50/0x8f
-   do_basic_setup+0x29/0x2b
-   kernel_init_freeable+0x19f/0x20b
-   kernel_init+0x11/0x1e0
-   ret_from_fork+0x22/0x30
+For disk blocks, we compare the proposed reservation counter against the
+hard and soft limits to decide if we're going to fail the operation.
+However, for inodes we inexplicably compare against the q_core counter,
+not the incore reservation count.
 
-Fix it by checking parent_kobj before the code accesses its member.
+Since the q_core counter is always lower than the reservation count and
+we unlock the dquot between reservation and transaction commit, this
+means that multiple threads can reserve the last inode count before we
+hit the hard limit, and when they commit, we'll be well over the hard
+limit.
 
-Signed-off-by: Eiichi Tsukata <devel@etsukata.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-[darrick: minor whitespace edits]
+Fix this by checking against the incore inode reservation counter, since
+we would appear to maintain that correctly (and that's what we report in
+GETQUOTA).
+
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/xfs_sysfs.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_trans_dquot.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index e9f810fc67317..43585850f1546 100644
---- a/fs/xfs/xfs_sysfs.h
-+++ b/fs/xfs/xfs_sysfs.h
-@@ -32,9 +32,11 @@ xfs_sysfs_init(
- 	struct xfs_kobj		*parent_kobj,
- 	const char		*name)
- {
-+	struct kobject		*parent;
-+
-+	parent = parent_kobj ? &parent_kobj->kobject : NULL;
- 	init_completion(&kobj->complete);
--	return kobject_init_and_add(&kobj->kobject, ktype,
--				    &parent_kobj->kobject, "%s", name);
-+	return kobject_init_and_add(&kobj->kobject, ktype, parent, "%s", name);
- }
- 
- static inline void
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index d1b9869bc5fa6..af3636a99bf60 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -647,7 +647,7 @@ xfs_trans_dqresv(
+ 			}
+ 		}
+ 		if (ninos > 0) {
+-			total_count = be64_to_cpu(dqp->q_core.d_icount) + ninos;
++			total_count = dqp->q_res_icount + ninos;
+ 			timer = be32_to_cpu(dqp->q_core.d_itimer);
+ 			warns = be16_to_cpu(dqp->q_core.d_iwarns);
+ 			warnlimit = dqp->q_mount->m_quotainfo->qi_iwarnlimit;
 -- 
 2.25.1
 
