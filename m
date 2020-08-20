@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A386DC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:03:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B4BC433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:03:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65325208E4
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:03:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EB6B214F1
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:03:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597881806;
-	bh=HQT20XGqQI8d/gf9N4iBNXI/s5dsOAil5OIsTKXIwtw=;
+	s=default; t=1597881822;
+	bh=+RV2FbktRp7uqlTiDsB12n09uKQ1Y76sFMGEZrnZyhU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WkzXEjW4IA4g3s7QpP/p47B4AQSLJBC++knix9cbtw6f09iEYwdczrQ3rWTcPUGNR
-	 iHQWy4NysOCWb04hgll8wr/rZ569vxw+mhA1TdEsTB0Zcl1UXm8D8jvoGXxtmPEMyx
-	 zCgbQGm6zvd3jEsTOr5UhYTj83nd63WkQ/pFkjl8=
+	b=phg3TjR20gyojDoNuBJKVpYtM6zoKdjdnQFX0m3R6l9Tq+YtKAoeHybRIGfPXhN2W
+	 mPvapfpeo99Qe9OB6IreMm4oXcVKiEe/Srr7emr0+KIapNjqXHtuOOqttKnvnGqfOF
+	 l7MztqvPmtHMIgfW4DkOKEnUBSGB7BLfRgR+qOlM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728131AbgHTADT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Aug 2020 20:03:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60970 "EHLO mail.kernel.org"
+        id S1728335AbgHTADl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Aug 2020 20:03:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33474 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728245AbgHTADS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Aug 2020 20:03:18 -0400
+        id S1728320AbgHTADj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Aug 2020 20:03:39 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 994AC208C7;
-        Thu, 20 Aug 2020 00:03:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id ADADB2245C;
+        Thu, 20 Aug 2020 00:03:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597881794;
-        bh=HQT20XGqQI8d/gf9N4iBNXI/s5dsOAil5OIsTKXIwtw=;
+        s=default; t=1597881818;
+        bh=+RV2FbktRp7uqlTiDsB12n09uKQ1Y76sFMGEZrnZyhU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uDjwvrInQjlcViKH2K2Ijkf7DoLPwRK19dvO2+cjZ0CniQTXO1VJoFqzjIMtXKo7A
-         q/g1AY3anecFZvj22qezfKQdaHT1kUGud9DKCnrhWStAUNh9awbRSp9WeYOOsfNXtf
-         EcQwUbsl7sIpWThn7mVxraRY6IZz0nUTayypvI6c=
+        b=BFZqBLI4J0juRSBzlX2cHpBD7As3VMwG+BH7EGM0M2SACGFtXQ4ftrzgZ0Rgckmp6
+         VMa6/ggNatW4AoCQebA6mJRx8MPjL2TISUmkB5QYph2Z8J7BftrJB2MZq2iZsAG660
+         jG3YHtdezYHEMWhlLhYXgFuNkLyZBmUEBJSBgTZU=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
@@ -45,12 +45,12 @@ Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Chandan Babu R <chandanrlinux@gmail.com>,
         Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 09/18] xfs: fix inode quota reservation checks
-Date:   Wed, 19 Aug 2020 20:02:52 -0400
-Message-Id: <20200820000302.215560-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 07/13] xfs: fix inode quota reservation checks
+Date:   Wed, 19 Aug 2020 20:03:22 -0400
+Message-Id: <20200820000328.215755-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200820000302.215560-1-sashal@kernel.org>
-References: <20200820000302.215560-1-sashal@kernel.org>
+In-Reply-To: <20200820000328.215755-1-sashal@kernel.org>
+References: <20200820000328.215755-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -96,10 +96,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index c23257a26c2b8..b8f05d5909b59 100644
+index c3d547211d160..9c42e50a5cb7e 100644
 --- a/fs/xfs/xfs_trans_dquot.c
 +++ b/fs/xfs/xfs_trans_dquot.c
-@@ -657,7 +657,7 @@ xfs_trans_dqresv(
+@@ -669,7 +669,7 @@ xfs_trans_dqresv(
  			}
  		}
  		if (ninos > 0) {
