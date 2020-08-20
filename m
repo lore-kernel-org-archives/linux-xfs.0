@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF3EC433E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:06:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AF80C433E3
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:07:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF8A3208E4
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:06:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A8F0208C7
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:07:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1597881990;
-	bh=YpO6n/hx+XryrWAOxjzu0xvCNugcUj0aDwhi0NSNc6w=;
+	s=default; t=1597882040;
+	bh=ObB8scPObpqBxHgYAz3uByh5AW7ZXQnLWcvr0snphRw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=YSjh429HkjribQP0BkjbehvEflFWZJx4IySLZnUH3mk/CZoGLsCFiDy/15mN8hEA5
-	 yxAVxBPp9+66QPFvrTSicU9JXJaY6P9npYqXvSMRMwMc+BqMKQ6kt/12/BbN2EBbA0
-	 H5JUZNIkoX33OI8nlhfonwNgZxVrTJ+GIxHf7s+k=
+	b=F5BeaddC0yCYfCN6TreE/xxWly+d8asmW8HXrg6W/MQrFz4L4UMmOCf0/1/bcKLt7
+	 A7HNDk2RdGMwutBSKtPAKhKSUG4V98ZN3Logyd8MtE5hJ+VLPBQzTx9tHXg9+rmXPT
+	 R/5KN4u6aI4NOQFCYGaQlURNoRJ0ETWXVl/3jhPQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728363AbgHTADr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Aug 2020 20:03:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33630 "EHLO mail.kernel.org"
+        id S1728355AbgHTAHT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Aug 2020 20:07:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33020 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728355AbgHTADq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 19 Aug 2020 20:03:46 -0400
+        id S1728218AbgHTADY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Aug 2020 20:03:24 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CB80A207FB;
-        Thu, 20 Aug 2020 00:03:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 8F6F221744;
+        Thu, 20 Aug 2020 00:03:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1597881825;
-        bh=YpO6n/hx+XryrWAOxjzu0xvCNugcUj0aDwhi0NSNc6w=;
+        s=default; t=1597881804;
+        bh=ObB8scPObpqBxHgYAz3uByh5AW7ZXQnLWcvr0snphRw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=nBpjAVd5hhhnIIEW+Rk3fUZtkwxIkyO2DSP3rcj03oUTjhQhfpJIwT1JwcuozWu23
-         x0enYQsoY58SzD+mgcMshp02aNObmHpMvOk0ejqGK8vutlgrLOi6uV/0n9IY7oLVzT
-         rpVt9Hz9IqfPkBHf+ZgMQB4MOqrygXiq3I5DaYH4=
+        b=uqm0mfw+5Q5D8TGM+ZBOdFnlHaWifAFpwMCu6878jFd/1PuX4CuccVkQpoK/zA367
+         XScB1B7tN3fhzEhKED4MWxjbrUOWTxHt7XVHwNcLefEnTTo251Qo4oDfp8sG5CmFsb
+         D197oi9EYQrhhon7oZE55lQxvOPb8I9sIt85/Qow=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Eiichi Tsukata <devel@etsukata.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 12/13] xfs: Fix UBSAN null-ptr-deref in xfs_sysfs_init
-Date:   Wed, 19 Aug 2020 20:03:27 -0400
-Message-Id: <20200820000328.215755-12-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 16/18] xfs: Fix UBSAN null-ptr-deref in xfs_sysfs_init
+Date:   Wed, 19 Aug 2020 20:02:59 -0400
+Message-Id: <20200820000302.215560-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200820000328.215755-1-sashal@kernel.org>
-References: <20200820000328.215755-1-sashal@kernel.org>
+In-Reply-To: <20200820000302.215560-1-sashal@kernel.org>
+References: <20200820000302.215560-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -92,10 +92,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
-index d04637181ef21..980c9429abec5 100644
+index e9f810fc67317..43585850f1546 100644
 --- a/fs/xfs/xfs_sysfs.h
 +++ b/fs/xfs/xfs_sysfs.h
-@@ -44,9 +44,11 @@ xfs_sysfs_init(
+@@ -32,9 +32,11 @@ xfs_sysfs_init(
  	struct xfs_kobj		*parent_kobj,
  	const char		*name)
  {
