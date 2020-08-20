@@ -2,62 +2,77 @@ Return-Path: <SRS0=hW3p=B6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,FROM_LOCAL_NOVOWEL,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4778C433E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 04:47:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D0DEC433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 05:11:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62DAE2078D
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 04:47:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A5832078B
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 05:11:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BnoHuiC5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725780AbgHTErZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Aug 2020 00:47:25 -0400
-Received: from smtp.netregistry.net ([202.124.241.204]:39834 "EHLO
-        smtp.netregistry.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725768AbgHTErY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 00:47:24 -0400
-X-Greylist: delayed 308 seconds by postgrey-1.27 at vger.kernel.org; Thu, 20 Aug 2020 00:47:22 EDT
-Received: from mail-ed1-f46.google.com ([209.85.208.46]:28634)
-        by smtp-1.servers.netregistry.net protocol: esmtpa (Exim 4.84_2 #1 (Debian))
-        id 1k8cOw-0003Jf-5C
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Aug 2020 14:42:13 +1000
-Received: by mail-ed1-f46.google.com with SMTP id v22so615065edy.0
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2020 21:42:10 -0700 (PDT)
-X-Gm-Message-State: AOAM530RW77w+TBSm4IcKT9qdYY6c4BOZJb0/APi48zhBCCrUfYchl/I
-        5ewWJmoVd1gE8nlldjXfzovq7mlqLPMNxX0hFXk=
-X-Google-Smtp-Source: ABdhPJwoEIRz5gQWmcRMfrpE3pfj+zFLnVFoVVPycnRuvMe9jjJdaXbXaF/csxiwDEhSX7ZaJUtv82WUR7AqGFzppFA=
-X-Received: by 2002:a50:f687:: with SMTP id d7mr1216016edn.306.1597898528470;
- Wed, 19 Aug 2020 21:42:08 -0700 (PDT)
+        id S1725819AbgHTFLk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Aug 2020 01:11:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45450 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725768AbgHTFLj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 01:11:39 -0400
+Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3BC2C061757
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2020 22:11:38 -0700 (PDT)
+Received: by mail-il1-x144.google.com with SMTP id v2so709831ilq.4
+        for <linux-xfs@vger.kernel.org>; Wed, 19 Aug 2020 22:11:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=XATOR1sfYrj8EZrpetOmbOdo492pK7/k4DrbdmFy7WQ=;
+        b=BnoHuiC5CygOHtqqnTSyNTGrKJphTxRrPiLbv3X3HV/Ppoge9D+AC9ODQc4XAqNXsf
+         0RhZevtlAEpHIkWWB90taaxOyJQ5Y2Nrxn+N4XCSOVkKjRqEwPbxfdbAQenthgrX4L/i
+         W265UG3pqjfVgeyuMCnOhuIOCvzEdXfYQF6qcR7qkT3m68jnuZ/jT5XtkFjvpqxp4XfC
+         9xSw+nJMV68xsiw2mtRInRm82xdRLDZHx1ireorwcskYTLdPSq0VufxlwzgB8cdZirsZ
+         L1Yw7xCXxOUbKiN58z7F9NQTiculivLbgjLPzwIVvSgyygNvHRBawwF4DWc9rqN4S6fV
+         ap+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=XATOR1sfYrj8EZrpetOmbOdo492pK7/k4DrbdmFy7WQ=;
+        b=c7xppqWPhlP9GWyFs8iIxu1SEXWDxHpldQxo+JUmUw68dLns/hfWNnqpUGKsL3lJry
+         7qouilyJoa0BLynsdppGRndgJSo5uBsL8RpUw7eMPu+vDwQa1CwcnYYt5s1EJK5R+YEM
+         A2RRveJOroV90m3i4lh1bd/iomMQc848UPanewvvWyFJL+i6IDM+2usgEy4AXGf0WQIz
+         7O24c4kVZTTxpt2N5rkuka6vVj6IW3qhIj75Ld8tuQ7foGDeDYbxHd3M1CqVCt/X52oR
+         IfbKwjQT0Bz34l9ObGJRUptaUbn1N8QAABc5cgqJN7XK04bxzlz1uCBAGWSpOiYIPcdW
+         RGbg==
+X-Gm-Message-State: AOAM530n83NoWzjPqRDHXjE9YafNJMuDUVTCV2wqfB2oznSQQjbxf/wU
+        QDLMWQFQgXUj9X9qxUjD4S+RTVXF8icZe/Ba97qpi3MR/Bg=
+X-Google-Smtp-Source: ABdhPJyF95KCDdHK0evCPGCGmcsZ0bPkqfrALq0jwY3zfQeaxkKqZf3an1VH0g+MZvyWghraa1oPG3s++35pllFbNtY=
+X-Received: by 2002:a92:da0a:: with SMTP id z10mr1235321ilm.275.1597900297934;
+ Wed, 19 Aug 2020 22:11:37 -0700 (PDT)
 MIME-Version: 1.0
 References: <159770500809.3956827.8869892960975362931.stgit@magnolia>
  <159770505894.3956827.5973810026298120596.stgit@magnolia> <20200818233535.GD21744@dread.disaster.area>
  <20200819214322.GE6096@magnolia> <20200820000102.GF6096@magnolia>
 In-Reply-To: <20200820000102.GF6096@magnolia>
-From:   griffin tucker <xfssxsltislti2490@griffintucker.id.au>
-Date:   Thu, 20 Aug 2020 14:42:29 +1000
-X-Gmail-Original-Message-ID: <CAH3XsHH8i4GY7TcMvLPy6F1Gs-UMaR1Kcx5BJnt=XzR42t+EqA@mail.gmail.com>
-Message-ID: <CAH3XsHH8i4GY7TcMvLPy6F1Gs-UMaR1Kcx5BJnt=XzR42t+EqA@mail.gmail.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 20 Aug 2020 08:11:27 +0300
+Message-ID: <CAOQ4uxiinUPDB6K=cZ=4h1hwzOefoLgCR8pF3B+cn3u0HTWj0A@mail.gmail.com>
 Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038 problem
-To:     linux-xfs@vger.kernel.org
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>
 Content-Type: text/plain; charset="UTF-8"
-X-Authenticated-User: xfssxsltislti2490@griffintucker.id.au
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-how difficult would it be to implement 128 bit timestamps? and how
-much further in time beyond 2486 would this allow?
-
-is the implementation of 128 bit timestamps just not feasible due to
-64 bit alu width?
-
-how long is it until hardware capability reaches beyond the 16exabyte limit?
-
-On Thu, 20 Aug 2020 at 10:01, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+On Thu, Aug 20, 2020 at 3:03 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 >
 > On Wed, Aug 19, 2020 at 02:43:22PM -0700, Darrick J. Wong wrote:
 > > On Wed, Aug 19, 2020 at 09:35:35AM +1000, Dave Chinner wrote:
@@ -251,61 +266,17 @@ On Thu, 20 Aug 2020 at 10:01, Darrick J. Wong <darrick.wong@oracle.com> wrote:
 > from a __be64 on legacy filesystems, I see the static checker complaints
 > as a second piece of evidence that this would be unnecessarily risky.
 >
-> --D
->
-> > > > @@ -220,9 +234,9 @@ xfs_inode_from_disk(
-> > > >    * a time before epoch is converted to a time long after epoch
-> > > >    * on 64 bit systems.
-> > > >    */
-> > > > - xfs_inode_from_disk_timestamp(&inode->i_atime, &from->di_atime);
-> > > > - xfs_inode_from_disk_timestamp(&inode->i_mtime, &from->di_mtime);
-> > > > - xfs_inode_from_disk_timestamp(&inode->i_ctime, &from->di_ctime);
-> > > > + xfs_inode_from_disk_timestamp(from, &inode->i_atime, &from->di_atime);
-> > > > + xfs_inode_from_disk_timestamp(from, &inode->i_mtime, &from->di_mtime);
-> > > > + xfs_inode_from_disk_timestamp(from, &inode->i_ctime, &from->di_ctime);
-> > > >
-> > > >   to->di_size = be64_to_cpu(from->di_size);
-> > > >   to->di_nblocks = be64_to_cpu(from->di_nblocks);
-> > > > @@ -235,9 +249,17 @@ xfs_inode_from_disk(
-> > > >   if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
-> > > >           inode_set_iversion_queried(inode,
-> > > >                                      be64_to_cpu(from->di_changecount));
-> > > > -         xfs_inode_from_disk_timestamp(&to->di_crtime, &from->di_crtime);
-> > > > +         xfs_inode_from_disk_timestamp(from, &to->di_crtime,
-> > > > +                         &from->di_crtime);
-> > > >           to->di_flags2 = be64_to_cpu(from->di_flags2);
-> > > >           to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
-> > > > +         /*
-> > > > +          * Set the bigtime flag incore so that we automatically convert
-> > > > +          * this inode's ondisk timestamps to bigtime format the next
-> > > > +          * time we write the inode core to disk.
-> > > > +          */
-> > > > +         if (xfs_sb_version_hasbigtime(&ip->i_mount->m_sb))
-> > > > +                 to->di_flags2 |= XFS_DIFLAG2_BIGTIME;
-> > > >   }
-> > >
-> > > We do not want on-disk flags to be changed outside transactions like
-> > > this. Indeed, this has implications for O_DSYNC operation, in that
-> > > we do not trigger inode sync operations if the inode is only
-> > > timestamp dirty. If we've changed this flag, then the inode is more
-> > > than "timestamp dirty" and O_DSYNC will need to flush the entire
-> > > inode.... :/
-> >
-> > I forgot about XFS_ILOG_TIMESTAMP.
-> >
-> > > IOWs, I think we should only change this flag in a timestamp
-> > > transaction where the timestamps are actually being logged and hence
-> > > we can set inode dirty state appropriately so that everything will
-> > > get logged, changed and written back correctly....
-> >
-> > Yeah, that's fair.  I'll change xfs_trans_log_inode to set the bigtime
-> > flag if we're logging either the timestamps or the core.
-> >
-> > --D
-> >
-> > > Cheers,
-> > >
-> > > Dave.
-> > > --
-> > > Dave Chinner
-> > > david@fromorbit.com
+
+And unnecessarily make the code less readable and harder to review.
+To what end? Dave writes:
+"I just didn't really like the way the code in the encode/decode
+helpers turned out..."
+
+Cannot respond to that argument on a technical review.
+I can only say that as a reviewer, the posted version was clear and easy
+for me to verify and the posted alternative that turned out to have a bug,
+I would never have never caught that bug in review and I would not have
+felt confident about verifying the code in review either.
+
+Thanks,
+Amir.
