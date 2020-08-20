@@ -1,76 +1,114 @@
-Return-Path: <SRS0=dccG=B5=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=hW3p=B6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7F8FC433E1
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 23:58:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21113C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:03:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F2B620888
-	for <linux-xfs@archiver.kernel.org>; Wed, 19 Aug 2020 23:58:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2A3420FC3
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 00:03:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1597881785;
+	bh=ObB8scPObpqBxHgYAz3uByh5AW7ZXQnLWcvr0snphRw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=re3q7mVdAbYMBFUlLBvV4gPkdr1vAaPpVhHW0b0kcJQloogoWghuCyrHuZSKE9EDr
+	 mtJqfswWCWvLWl7JxbIl81R23gobr9aEZ/PJ27J6DctKFgoOIHijlgJ7JewTnooJaC
+	 MoxLBMOJ/NBP2ALcf3k2/9Qqnu9JCZ1dG2EdEHRg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726772AbgHSX6s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 19 Aug 2020 19:58:48 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43091 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726617AbgHSX6r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Aug 2020 19:58:47 -0400
-Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8F34D821B8C;
-        Thu, 20 Aug 2020 09:58:41 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k8Xya-0004DL-Kq; Thu, 20 Aug 2020 09:58:40 +1000
-Date:   Thu, 20 Aug 2020 09:58:40 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, amir73il@gmail.com, sandeen@sandeen.net
-Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038
- problem
-Message-ID: <20200819235840.GA7941@dread.disaster.area>
-References: <159770500809.3956827.8869892960975362931.stgit@magnolia>
- <159770505894.3956827.5973810026298120596.stgit@magnolia>
- <20200818233535.GD21744@dread.disaster.area>
- <20200819214322.GE6096@magnolia>
+        id S1728183AbgHTADB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 19 Aug 2020 20:03:01 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60430 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728173AbgHTAC6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Aug 2020 20:02:58 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id CEE3D21744;
+        Thu, 20 Aug 2020 00:02:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1597881777;
+        bh=ObB8scPObpqBxHgYAz3uByh5AW7ZXQnLWcvr0snphRw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=HsuFwN+yuWh0rkLumLJIijSnX/m8OCPY3sK5HCJgiSsfS5tQcF8HD8ED7uRAxVcAz
+         n8CkX+a7wtyxg6V8bha0A5+lAm042Fkk1xl5gYaESDR9BPPr2bfD38ADDITjzDVgz1
+         JMK6/FIrjRcqpyiq9FKOkQuAfgiR8RhEgUHHtVmc=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Eiichi Tsukata <devel@etsukata.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 20/22] xfs: Fix UBSAN null-ptr-deref in xfs_sysfs_init
+Date:   Wed, 19 Aug 2020 20:02:27 -0400
+Message-Id: <20200820000229.215333-20-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200820000229.215333-1-sashal@kernel.org>
+References: <20200820000229.215333-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200819214322.GE6096@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LPwYv6e9 c=1 sm=1 tr=0 cx=a_idp_d
-        a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=7-415B0cAAAA:8
-        a=slvXnHkSztNsWyrOnaMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 19, 2020 at 02:43:22PM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 19, 2020 at 09:35:35AM +1000, Dave Chinner wrote:
-> > On Mon, Aug 17, 2020 at 03:57:39PM -0700, Darrick J. Wong wrote:
-> The correct approach (I think) is to perform the shifting and masking on
-> the raw __be64 value before converting them to incore format via
-> be32_to_cpu, but now I have to work out all four cases by hand instead
-> of letting the compiler do the legwork for me.  I don't remember if it's
-> correct to go around shifting and masking __be64 values.
-> 
-> I guess the good news is that at least we have generic/402 to catch
-> these kinds of persistence problems, but ugh.
-> 
-> Anyway, what are you afraid of?  The C compiler smoking crack and not
-> actually overlapping the two union elements?  We could control for
-> that...
+From: Eiichi Tsukata <devel@etsukata.com>
 
-No, I just didn't really like the way the code in the encode/decode
-helpers turned out...
+[ Upstream commit 96cf2a2c75567ff56195fe3126d497a2e7e4379f ]
 
-Cheers,
+If xfs_sysfs_init is called with parent_kobj == NULL, UBSAN
+shows the following warning:
 
-Dave.
+  UBSAN: null-ptr-deref in ./fs/xfs/xfs_sysfs.h:37:23
+  member access within null pointer of type 'struct xfs_kobj'
+  Call Trace:
+   dump_stack+0x10e/0x195
+   ubsan_type_mismatch_common+0x241/0x280
+   __ubsan_handle_type_mismatch_v1+0x32/0x40
+   init_xfs_fs+0x12b/0x28f
+   do_one_initcall+0xdd/0x1d0
+   do_initcall_level+0x151/0x1b6
+   do_initcalls+0x50/0x8f
+   do_basic_setup+0x29/0x2b
+   kernel_init_freeable+0x19f/0x20b
+   kernel_init+0x11/0x1e0
+   ret_from_fork+0x22/0x30
+
+Fix it by checking parent_kobj before the code accesses its member.
+
+Signed-off-by: Eiichi Tsukata <devel@etsukata.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+[darrick: minor whitespace edits]
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ fs/xfs/xfs_sysfs.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
+index e9f810fc67317..43585850f1546 100644
+--- a/fs/xfs/xfs_sysfs.h
++++ b/fs/xfs/xfs_sysfs.h
+@@ -32,9 +32,11 @@ xfs_sysfs_init(
+ 	struct xfs_kobj		*parent_kobj,
+ 	const char		*name)
+ {
++	struct kobject		*parent;
++
++	parent = parent_kobj ? &parent_kobj->kobject : NULL;
+ 	init_completion(&kobj->complete);
+-	return kobject_init_and_add(&kobj->kobject, ktype,
+-				    &parent_kobj->kobject, "%s", name);
++	return kobject_init_and_add(&kobj->kobject, ktype, parent, "%s", name);
+ }
+ 
+ static inline void
 -- 
-Dave Chinner
-david@fromorbit.com
+2.25.1
+
