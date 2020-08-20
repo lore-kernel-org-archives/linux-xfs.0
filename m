@@ -1,69 +1,67 @@
-Return-Path: <SRS0=hW3p=B6=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=59Ki=B7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BCC9C433E1
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 23:11:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F45C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 00:01:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FD42207DE
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 23:11:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C52C20702
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 00:01:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cKvvbWDF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728538AbgHTXLp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Aug 2020 19:11:45 -0400
-Received: from mail108.syd.optusnet.com.au ([211.29.132.59]:50583 "EHLO
-        mail108.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728368AbgHTXLp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 19:11:45 -0400
-Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
-        by mail108.syd.optusnet.com.au (Postfix) with ESMTPS id 12B711A96D6;
-        Fri, 21 Aug 2020 09:11:41 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k8tie-0007W7-9n; Fri, 21 Aug 2020 09:11:40 +1000
-Date:   Fri, 21 Aug 2020 09:11:40 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Anju T Sudhakar <anju@linux.vnet.ibm.com>
-Cc:     hch@infradead.org, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, willy@infradead.org,
-        riteshh@linux.ibm.com
-Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
-Message-ID: <20200820231140.GE7941@dread.disaster.area>
-References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
+        id S1727074AbgHUAAN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Aug 2020 20:00:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56825 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726435AbgHUAAD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 20:00:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1597968002;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=QDsAMG8hbGhNZYYdhC7Pkma+xhI3WousCXn/FC1J+MM=;
+        b=cKvvbWDFXJ5WVnYTOD3FCEn8WtCscZY/jVGtsEYM9UYcv5XI672eyv3iodIMheTJgU/D6E
+        RiIJiHDr0+2zSHAVeeW5Vg4zvESnZEuH7qR22XF+izpwINlT9CiBDoRnu3ELHEMoqBOQoA
+        pBFN/Z8eoy6vMSEbmRrJm125I1wFeak=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-313-YLtSK3YrMyWqijpsvhPA7g-1; Thu, 20 Aug 2020 19:44:42 -0400
+X-MC-Unique: YLtSK3YrMyWqijpsvhPA7g-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 218D3100CFC0
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Aug 2020 23:44:42 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B7E8510098A7
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Aug 2020 23:44:41 +0000 (UTC)
+To:     linux-xfs@vger.kernel.org
+From:   Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 0/2] xfs_db: more type_f cleanups
+Message-ID: <8b1ab1c4-64f6-5410-bf40-30776dae4dd5@redhat.com>
+Date:   Thu, 20 Aug 2020 18:44:41 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.1.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LPwYv6e9 c=1 sm=1 tr=0 cx=a_idp_d
-        a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=VnNF1IyMAAAA:8 a=7-415B0cAAAA:8
-        a=QKTNYlJRi8Dho5xtcI0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 19, 2020 at 03:58:41PM +0530, Anju T Sudhakar wrote:
-> From: Ritesh Harjani <riteshh@linux.ibm.com>
-> 
-> __bio_try_merge_page() may return same_page = 1 and merged = 0. 
-> This could happen when bio->bi_iter.bi_size + len > UINT_MAX. 
+These go on top of Zorro's
 
-Ummm, silly question, but exactly how are we getting a bio that
-large in ->writepages getting built? Even with 64kB pages, that's a
-bio with 2^16 pages attached to it. We shouldn't be building single
-bios in writeback that large - what storage hardware is allowing
-such huge bios to be built? (i.e. can you dump all the values in
-/sys/block/<dev>/queue/* for that device for us?)
+"xfs_db: use correct inode to set inode type"
 
-Cheers,
+-Eric
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
