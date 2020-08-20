@@ -2,129 +2,253 @@ Return-Path: <SRS0=hW3p=B6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E665C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 11:22:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E18C433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 11:47:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD6EE20855
-	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 11:22:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JZyOpTMZ"
+	by mail.kernel.org (Postfix) with ESMTP id 5658F207BB
+	for <linux-xfs@archiver.kernel.org>; Thu, 20 Aug 2020 11:47:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728106AbgHTLWG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Aug 2020 07:22:06 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:47817 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730413AbgHTLVk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 07:21:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1597922490;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PWEeo5kHocG15wCFsx0YqvaNv6ZN4K2dk9uYSUt2wQA=;
-        b=JZyOpTMZh1yal+oXwSJwwelQPOCFFdIlANm6afRGaqqnQBpaC24QKY4zxtImHET309y9m6
-        lsJaaQQkCP0oG7IqVlJigrNuYy0Kw5IbOncIplkzdVnxS8tB2mUqMRnwRtm0SGxsAe2wrC
-        CQUK9YtHoIgWvID4wiQLXjK3H6R6QU4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-209-cW_Vme6QN1S7njM_m80eSg-1; Thu, 20 Aug 2020 07:21:26 -0400
-X-MC-Unique: cW_Vme6QN1S7njM_m80eSg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B89D610052ED;
-        Thu, 20 Aug 2020 11:21:25 +0000 (UTC)
-Received: from bfoster (ovpn-112-11.rdu2.redhat.com [10.10.112.11])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5E17E7A40D;
-        Thu, 20 Aug 2020 11:21:25 +0000 (UTC)
-Date:   Thu, 20 Aug 2020 07:21:23 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: occasional failures in generic/455 and generic/457
-Message-ID: <20200820112123.GA179505@bfoster>
-References: <20200819164254.GG17456@casper.infradead.org>
+        id S1730659AbgHTLrK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Aug 2020 07:47:10 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:9793 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1729640AbgHTLqy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Aug 2020 07:46:54 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id D5DE7A295A6771F01718;
+        Thu, 20 Aug 2020 19:46:44 +0800 (CST)
+Received: from huawei.com (10.175.104.175) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.487.0; Thu, 20 Aug 2020
+ 19:46:36 +0800
+From:   Miaohe Lin <linmiaohe@huawei.com>
+To:     <darrick.wong@oracle.com>, <cmaiolino@redhat.com>,
+        <dchinner@redhat.com>, <bfoster@redhat.com>,
+        <chandanrlinux@gmail.com>, <sandeen@redhat.com>
+CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linmiaohe@huawei.com>
+Subject: [PATCH] xfs: Convert to use the preferred fallthrough macro
+Date:   Thu, 20 Aug 2020 07:45:31 -0400
+Message-ID: <20200820114531.47465-1-linmiaohe@huawei.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200819164254.GG17456@casper.infradead.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.104.175]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 19, 2020 at 05:42:54PM +0100, Matthew Wilcox wrote:
-> This is with 5.8.0-rc1 plus the series of seven patches to modify how
-> pagevec_lookup_entries + find_get_entries() work [1].  I think it's unlikely
-> those patches caused this, but it's sporadic so I can't be sure.
-> 
-> This one is from generic/457 but I've seen something similar from
-> generic/455.  I'm using the following:
-> +    echo 'MKFS_OPTIONS="-m reflink=1,rmapbt=1 -i sparse=1 -b size=1024"' >> /ktest/tests/xfstests/local.config
-> +    mkfs.$FSTYP -q $TEST_DEV -m reflink=1,rmapbt=1 -i sparse=1 -b size=1024
-> 
-> [1] https://lore.kernel.org/linux-mm/20200819150555.31669-1-willy@infradead.org/T/
-> 
-> 6946 XFS (sdc): Internal error ltrec.rm_startblock > bno || ltrec.rm_startblock + ltrec.rm_blockcount < bno + len at line 575 of file fs/xfs/libxfs/xfs_rmap.c.  Caller xfs_rmap_unmap+0x5fc/0x900
-> 6946 CPU: 2 PID: 13591 Comm: mount Kdump: loaded Tainted: G        W         5.9.0-rc1-00007-g96650d19d84b #452
-> 6946 Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-1 04/01/2014
+Convert the uses of fallthrough comments to fallthrough macro. Please see
+commit 294f69e662d1 ("compiler_attributes.h: Add 'fallthrough' pseudo
+keyword for switch/case use") for detail.
 
-This looks similar to rmapbt related failures I saw with generic/455 and
-addressed with the following patch:
+Signed-off-by: Hongxiang Lou <louhongxiang@huawei.com>
+Signed-off-by: Miaohe Lin <linmiaohe@huawei.com>
+---
+ fs/xfs/libxfs/xfs_ag_resv.c  | 4 ++--
+ fs/xfs/libxfs/xfs_da_btree.c | 2 +-
+ fs/xfs/scrub/bmap.c          | 2 +-
+ fs/xfs/scrub/btree.c         | 2 +-
+ fs/xfs/scrub/common.c        | 6 +++---
+ fs/xfs/scrub/dabtree.c       | 2 +-
+ fs/xfs/scrub/repair.c        | 2 +-
+ fs/xfs/xfs_bmap_util.c       | 2 +-
+ fs/xfs/xfs_file.c            | 2 +-
+ fs/xfs/xfs_fsmap.c           | 2 +-
+ fs/xfs/xfs_ioctl.c           | 2 +-
+ fs/xfs/xfs_trans_buf.c       | 2 +-
+ 12 files changed, 15 insertions(+), 15 deletions(-)
 
-  https://lore.kernel.org/linux-xfs/20200713202151.64750-1-bfoster@redhat.com/
-
-Care to give that a whirl?
-
-Brian
-
-> 6946 Call Trace:
-> 6946  dump_stack+0x5e/0x7a
-> 6946  xfs_corruption_error+0x7c/0x80
-> 6946  ? xfs_rmap_unmap+0x5fc/0x900
-> 6946  xfs_rmap_unmap+0x626/0x900
-> 6946  ? xfs_rmap_unmap+0x5fc/0x900
-> 6946  ? xfs_free_extent_fix_freelist+0x81/0xc0
-> 6946  ? xfs_rmapbt_init_cursor+0x31/0x90
-> 6946  xfs_rmap_finish_one+0x1dd/0x330
-> 6946  xfs_rmap_update_finish_item+0x3f/0x70
-> 6946  xfs_defer_finish_noroll+0x153/0x400
-> 6946  ? kmem_alloc+0x74/0x120
-> 6946  ? xfs_trans_commit+0xb/0x10
-> 6946  __xfs_trans_commit+0x138/0x340
-> 6946  xfs_trans_commit+0xb/0x10
-> 6946  xfs_refcount_recover_cow_leftovers+0x1b9/0x300
-> 6946  xfs_reflink_recover_cow+0x36/0x50
-> 6946  xfs_mountfs+0x5a4/0x910
-> 6946  xfs_fc_fill_super+0x34c/0x560
-> 6946  get_tree_bdev+0x169/0x260
-> 6946  ? xfs_setup_devices+0x80/0x80
-> 6946  xfs_fc_get_tree+0x10/0x20
-> 6946  vfs_get_tree+0x19/0x80
-> 6946  path_mount+0x6ba/0x9f0
-> 6946  __x64_sys_mount+0xe5/0x120
-> 6946  do_syscall_64+0x32/0x50
-> 6946  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> 6946 RIP: 0033:0x7fa229f96fea
-> 6946 Code: 48 8b 0d a9 0e 0c 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 76 0e 0c 00 f7 d8 64 89 01 48
-> 6946 RSP: 002b:00007ffcb19cf128 EFLAGS: 00000246 ORIG_RAX: 00000000000000a5
-> 6946 RAX: ffffffffffffffda RBX: 000055eb7a037970 RCX: 00007fa229f96fea
-> 6946 RDX: 000055eb7a037b80 RSI: 000055eb7a037bc0 RDI: 000055eb7a037ba0
-> 6946 RBP: 00007fa22a2e41c4 R08: 0000000000000000 R09: 000055eb7a03a890
-> 6946 R10: 0000000000000000 R11: 0000000000000246 R12: 0000000000000000
-> 6946 R13: 0000000000000000 R14: 000055eb7a037ba0 R15: 000055eb7a037b80
-> 6946 XFS (sdc): Corruption detected. Unmount and run xfs_repair
-> 6946 XFS (sdc): xfs_do_force_shutdown(0x8) called from line 450 of file fs/xfs/libxfs/xfs_defer.c. Return address = ffffffff812ee23b
-> 6946 XFS (sdc): Corruption of in-memory data detected.  Shutting down filesystem
-> 6946 XFS (sdc): Please unmount the filesystem and rectify the problem(s)
-> 6946 XFS (sdc): Error -117 recovering leftover CoW allocations.
-> 6946 [failed, exit status 1]XFS (sdb): Unmounting Filesystem
-> 
-> 
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index fdfe6dc0d307..0b061a027e4e 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -338,7 +338,7 @@ xfs_ag_resv_alloc_extent(
+ 		break;
+ 	default:
+ 		ASSERT(0);
+-		/* fall through */
++		fallthrough;
+ 	case XFS_AG_RESV_NONE:
+ 		field = args->wasdel ? XFS_TRANS_SB_RES_FDBLOCKS :
+ 				       XFS_TRANS_SB_FDBLOCKS;
+@@ -380,7 +380,7 @@ xfs_ag_resv_free_extent(
+ 		break;
+ 	default:
+ 		ASSERT(0);
+-		/* fall through */
++		fallthrough;
+ 	case XFS_AG_RESV_NONE:
+ 		xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, (int64_t)len);
+ 		return;
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index e46bc03365db..5a13bfe0ebbf 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -282,7 +282,7 @@ xfs_da3_node_read_verify(
+ 						__this_address);
+ 				break;
+ 			}
+-			/* fall through */
++			fallthrough;
+ 		case XFS_DA_NODE_MAGIC:
+ 			fa = xfs_da3_node_verify(bp);
+ 			if (fa)
+diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+index 955302e7cdde..6abd469d49d2 100644
+--- a/fs/xfs/scrub/bmap.c
++++ b/fs/xfs/scrub/bmap.c
+@@ -270,7 +270,7 @@ xchk_bmap_iextent_xref(
+ 	case XFS_DATA_FORK:
+ 		if (xfs_is_reflink_inode(info->sc->ip))
+ 			break;
+-		/* fall through */
++		fallthrough;
+ 	case XFS_ATTR_FORK:
+ 		xchk_xref_is_not_shared(info->sc, agbno,
+ 				irec->br_blockcount);
+diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+index f52a7b8256f9..990a379fc322 100644
+--- a/fs/xfs/scrub/btree.c
++++ b/fs/xfs/scrub/btree.c
+@@ -43,7 +43,7 @@ __xchk_btree_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		if (cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+ 			trace_xchk_ifork_btree_op_error(sc, cur, level,
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 18876056e5e0..63f13c8ed8c7 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -81,7 +81,7 @@ __xchk_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_op_error(sc, agno, bno, *error,
+ 				ret_ip);
+@@ -134,7 +134,7 @@ __xchk_fblock_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= errflag;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_file_op_error(sc, whichfork, offset, *error,
+ 				ret_ip);
+@@ -713,7 +713,7 @@ xchk_get_inode(
+ 		if (error)
+ 			return -ENOENT;
+ 		error = -EFSCORRUPTED;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_op_error(sc,
+ 				XFS_INO_TO_AGNO(mp, sc->sm->sm_ino),
+diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+index e56786f0a13c..2b3fb0b37e18 100644
+--- a/fs/xfs/scrub/dabtree.c
++++ b/fs/xfs/scrub/dabtree.c
+@@ -47,7 +47,7 @@ xchk_da_process_error(
+ 		/* Note the badness but don't abort. */
+ 		sc->sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+ 		*error = 0;
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		trace_xchk_file_op_error(sc, ds->dargs.whichfork,
+ 				xfs_dir2_da_to_db(ds->dargs.geo,
+diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+index 25e86c71e7b9..c814b18efba9 100644
+--- a/fs/xfs/scrub/repair.c
++++ b/fs/xfs/scrub/repair.c
+@@ -944,7 +944,7 @@ xrep_ino_dqattach(
+ 			xrep_force_quotacheck(sc, XFS_DQTYPE_GROUP);
+ 		if (XFS_IS_PQUOTA_ON(sc->mp) && !sc->ip->i_pdquot)
+ 			xrep_force_quotacheck(sc, XFS_DQTYPE_PROJ);
+-		/* fall through */
++		fallthrough;
+ 	case -ESRCH:
+ 		error = 0;
+ 		break;
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 73cafc843cd7..6045cc20b0fb 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -244,7 +244,7 @@ xfs_bmap_count_blocks(
+ 		 */
+ 		*count += btblocks - 1;
+ 
+-		/* fall through */
++		fallthrough;
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		*nextents = xfs_bmap_count_leaves(ifp, count);
+ 		break;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c31cd3be9fb2..976306724093 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -772,7 +772,7 @@ xfs_break_layouts(
+ 			error = xfs_break_dax_layouts(inode, &retry);
+ 			if (error || retry)
+ 				break;
+-			/* fall through */
++			fallthrough;
+ 		case BREAK_WRITE:
+ 			error = xfs_break_leased_layouts(inode, iolock, &retry);
+ 			break;
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index 4eebcec4aae6..c334550aeea7 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -100,7 +100,7 @@ xfs_fsmap_owner_to_rmap(
+ 		dest->rm_owner = XFS_RMAP_OWN_COW;
+ 		break;
+ 	case XFS_FMR_OWN_DEFECTIVE:	/* not implemented */
+-		/* fall through */
++		fallthrough;
+ 	default:
+ 		return -EINVAL;
+ 	}
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6f22a66777cd..85d6631f7e99 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -557,7 +557,7 @@ xfs_ioc_attrmulti_one(
+ 	case ATTR_OP_REMOVE:
+ 		value = NULL;
+ 		*len = 0;
+-		/* fall through */
++		fallthrough;
+ 	case ATTR_OP_SET:
+ 		error = mnt_want_write_file(parfilp);
+ 		if (error)
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 11cd666cd99a..86ba71580ffd 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -310,7 +310,7 @@ xfs_trans_read_buf_map(
+ 	default:
+ 		if (tp && (tp->t_flags & XFS_TRANS_DIRTY))
+ 			xfs_force_shutdown(tp->t_mountp, SHUTDOWN_META_IO_ERROR);
+-		/* fall through */
++		fallthrough;
+ 	case -ENOMEM:
+ 	case -EAGAIN:
+ 		return error;
+-- 
+2.19.1
 
