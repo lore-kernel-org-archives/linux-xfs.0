@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70B7FC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D6C3C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 17:20:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DE8C20656
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 17:09:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 504A12075E
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 17:20:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598029765;
-	bh=MNw6hv+n4FmolpYNZqWRXgFUcU0srZLtGhvIID2kPU4=;
+	s=default; t=1598030418;
+	bh=6hGfcRIphleuAYcqTaa24I3W/RhvfskpVxpCaxeJGPY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=qXZkJ7qkHRcifD383za2YxS2hd2kXyPHM4VGALQNNkQ2rABNYrELHN42xTatRn+3K
-	 bf7cKLBzM+Iuz3tD6Vn8CFNRDK3IJrTfRdoX/vWZoFTzPcYt/lQP0Eu/+TIvQqwaji
-	 z8eqBRSqZ3rHOPTjw5xZa+a5HfWmJHcVYdewMZxE=
+	b=stb4YbcAShcY5cFKHfCUIItIFTRQE6a2ByNKUo3QkkjqtxhwVtPuKpES079OBxMQj
+	 d+v+nUeL/hKd6B8Cz1yEHmfwwp86qa5JfjrcAht94E7iEZdieJKHD+TYZU0Lpk4BBS
+	 oVAcCFNv43p/URcA5qp3Td/LxXQSqJeCvTEKP+Vk=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728261AbgHURJY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Aug 2020 13:09:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48870 "EHLO mail.kernel.org"
+        id S1728782AbgHURTi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Aug 2020 13:19:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48780 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726693AbgHUQRh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:17:37 -0400
+        id S1728071AbgHUQQY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Aug 2020 12:16:24 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 65A1222CBE;
-        Fri, 21 Aug 2020 16:17:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 056EA208DB;
+        Fri, 21 Aug 2020 16:16:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026653;
-        bh=MNw6hv+n4FmolpYNZqWRXgFUcU0srZLtGhvIID2kPU4=;
+        s=default; t=1598026583;
+        bh=6hGfcRIphleuAYcqTaa24I3W/RhvfskpVxpCaxeJGPY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=1AI8CHk4xcVauaSleUA/Y1rZwgASIjD0s+UMvOWnhhvOtUL/wyam7QAk+AhqByT43
-         8yMBld39jsXzAmSnAIXovhN74ox5l//Hv5pVVlUQXGqRF1KLSG9aGVX1plN9y3Oixn
-         NiUjQM7+PDhKA2vax7SbjeQrZck3gTXkVW3ETLj8=
+        b=v1Y9liOGpBOmzzwSd1uNwyS5w/Ncd5naOhA40ZI8CYbGM2TjLl124Od9fam5qQbcY
+         wh70NLmmLgLNrvgCr/s7KQ/D14hxwbQyocnp9/m/DXvidHkYwa6tM7Ec1T8djB0Ltn
+         DsPovQZ9eC7ZscrXWmSmtIoPyrv1QY+gJ7EDu4NY=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dave Chinner <dchinner@redhat.com>,
         Brian Foster <bfoster@redhat.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 23/48] xfs: Don't allow logging of XFS_ISTALE inodes
-Date:   Fri, 21 Aug 2020 12:16:39 -0400
-Message-Id: <20200821161704.348164-23-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.7 31/61] xfs: Don't allow logging of XFS_ISTALE inodes
+Date:   Fri, 21 Aug 2020 12:15:15 -0400
+Message-Id: <20200821161545.347622-31-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200821161704.348164-1-sashal@kernel.org>
-References: <20200821161704.348164-1-sashal@kernel.org>
+In-Reply-To: <20200821161545.347622-1-sashal@kernel.org>
+References: <20200821161545.347622-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -124,7 +124,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  3 files changed, 26 insertions(+), 4 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index a9ad90926b873..6c7354abd0aea 100644
+index 2b8ccb5b975df..e59507a24a839 100644
 --- a/fs/xfs/libxfs/xfs_trans_inode.c
 +++ b/fs/xfs/libxfs/xfs_trans_inode.c
 @@ -36,6 +36,7 @@ xfs_trans_ijoin(
@@ -135,7 +135,7 @@ index a9ad90926b873..6c7354abd0aea 100644
  
  	/*
  	 * Get a log_item_desc to point at the new item.
-@@ -91,6 +92,7 @@ xfs_trans_log_inode(
+@@ -89,6 +90,7 @@ xfs_trans_log_inode(
  
  	ASSERT(ip->i_itemp != NULL);
  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
@@ -144,10 +144,10 @@ index a9ad90926b873..6c7354abd0aea 100644
  	/*
  	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index d95dc9b0f0bba..a1135b86e79f9 100644
+index 8bf1d15be3f6a..67c232283a171 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1132,7 +1132,7 @@ xfs_reclaim_inode(
+@@ -1136,7 +1136,7 @@ xfs_reclaim_inode(
  			goto out_ifunlock;
  		xfs_iunpin_wait(ip);
  	}
@@ -156,7 +156,7 @@ index d95dc9b0f0bba..a1135b86e79f9 100644
  		xfs_ifunlock(ip);
  		goto reclaim;
  	}
-@@ -1219,6 +1219,7 @@ xfs_reclaim_inode(
+@@ -1223,6 +1223,7 @@ xfs_reclaim_inode(
  	xfs_ilock(ip, XFS_ILOCK_EXCL);
  	xfs_qm_dqdetach(ip);
  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
@@ -165,10 +165,10 @@ index d95dc9b0f0bba..a1135b86e79f9 100644
  	__xfs_inode_free(ip);
  	return error;
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 18f4b262e61ce..b339ff93df997 100644
+index 8845faa8161a9..e38dd625e914b 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -1761,10 +1761,31 @@ xfs_inactive_ifree(
+@@ -1744,10 +1744,31 @@ xfs_inactive_ifree(
  		return error;
  	}
  
@@ -201,7 +201,7 @@ index 18f4b262e61ce..b339ff93df997 100644
  	if (error) {
  		/*
  		 * If we fail to free the inode, shut down.  The cancel
-@@ -1777,7 +1798,6 @@ xfs_inactive_ifree(
+@@ -1760,7 +1781,6 @@ xfs_inactive_ifree(
  			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
  		}
  		xfs_trans_cancel(tp);
@@ -209,7 +209,7 @@ index 18f4b262e61ce..b339ff93df997 100644
  		return error;
  	}
  
-@@ -1795,7 +1815,6 @@ xfs_inactive_ifree(
+@@ -1778,7 +1798,6 @@ xfs_inactive_ifree(
  		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
  			__func__, error);
  
