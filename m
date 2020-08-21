@@ -6,42 +6,42 @@ X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 877E1C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 15:51:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34607C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 16:09:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3922F207BB
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 15:51:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1074920855
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 16:09:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="TtJwLxSO"
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="NpdT7OOv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727937AbgHUPvx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Aug 2020 11:51:53 -0400
-Received: from fanzine.igalia.com ([178.60.130.6]:50457 "EHLO
+        id S1726548AbgHUQJ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Aug 2020 12:09:27 -0400
+Received: from fanzine.igalia.com ([178.60.130.6]:34150 "EHLO
         fanzine.igalia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727864AbgHUPvv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 11:51:51 -0400
+        with ESMTP id S1725828AbgHUQJ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 12:09:27 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com; s=20170329;
-        h=Content-Type:MIME-Version:Message-ID:Date:References:In-Reply-To:Subject:Cc:To:From; bh=soWk78RUWdSJLsgAMjhRJyzG2A4x8sm7fZrAJgSXdJI=;
-        b=TtJwLxSOOAOugfZDqmLSdmMehwjiyDmG9+rqrsOuwnvMuQqgk4ghZV4uMdBUykQheAWBCU/ewHRNAFS3u/f3dEBCLgh7AcOjRyGg3jYsdBUhiSXAzfeewIp+rGkDa/DW9wBI8nXIE6oAYeBlmp+W4bK40i5GzF6Saq+xvsCHcDABGauyQnBo9ccZJS6gDNsVe7jxqYJ7jxu1BvT967lLhyuUi4dJd/5nZQSj7/S2qglFOMbVKIsGKLq6pKBluEDHs9GtY4BpAf37lj747+J85TEuM6FgHE/cQ4VkfxSrFYN3mqmGaYzGWWQwhraXJtt5sKNgxJoQRwqIwNit61MCPA==;
+        h=Content-Type:MIME-Version:Message-ID:Date:References:In-Reply-To:Subject:Cc:To:From; bh=HKTMsNp5hdfddF2CMEl3UvWb/KifxWfDDcTpl5rgRVU=;
+        b=NpdT7OOv3uSjYlG0n1d1NqLGxmDh4/0absUWX1et7DLHJdDyuluOh+MJwNjZkuF+Y5Wv0hNlrO9LIKCMmtw0tyFG7s5IQBPdxuFnz4dQ7kWYZYkHsBFkHKowhJYtvo/Rdr8u0OFsvvfhFwWUDmit3p+QtShaJLkHY75y9LGwzUrS8W3OcjuVO6SopYMo1BztZ6yjGKREIDbDv1krY2oVZigi3tw0BSLVMQjTa39f7Q9+Dtcoeb1N3km3R36sGbQjA8dXKtM58EKN5NVxyrs0zmdi30hHE5PeaSUPl0KNuoAc2HRPC9nlMPbT7WMHm8bA6ti6gUQVhfANvnyuN86SfA==;
 Received: from maestria.local.igalia.com ([192.168.10.14] helo=mail.igalia.com)
         by fanzine.igalia.com with esmtps 
         (Cipher TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128) (Exim)
-        id 1k99KM-0005fs-C7; Fri, 21 Aug 2020 17:51:38 +0200
+        id 1k99bR-0000ar-GM; Fri, 21 Aug 2020 18:09:17 +0200
 Received: from berto by mail.igalia.com with local (Exim)
-        id 1k99KM-00017v-2h; Fri, 21 Aug 2020 17:51:38 +0200
+        id 1k99bR-0002JJ-6v; Fri, 21 Aug 2020 18:09:17 +0200
 From:   Alberto Garcia <berto@igalia.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>, Kevin Wolf <kwolf@redhat.com>,
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Brian Foster <bfoster@redhat.com>, Kevin Wolf <kwolf@redhat.com>,
         qemu-devel@nongnu.org, qemu-block@nongnu.org,
         Max Reitz <mreitz@redhat.com>,
         Vladimir Sementsov-Ogievskiy <vsementsov@virtuozzo.com>,
         linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 0/1] qcow2: Skip copy-on-write when allocating a zero cluster
-In-Reply-To: <20200821125944.GC212879@bfoster>
-References: <20200817101019.GD11402@linux.fritz.box> <w518sedz3td.fsf@maestria.local.igalia.com> <20200817155307.GS11402@linux.fritz.box> <w51pn7memr7.fsf@maestria.local.igalia.com> <20200819150711.GE10272@linux.fritz.box> <20200819175300.GA141399@bfoster> <w51v9hdultt.fsf@maestria.local.igalia.com> <20200820215811.GC7941@dread.disaster.area> <20200821110506.GB212879@bfoster> <w51364gjkcj.fsf@maestria.local.igalia.com> <20200821125944.GC212879@bfoster>
+In-Reply-To: <20200820215811.GC7941@dread.disaster.area>
+References: <cover.1597416317.git.berto@igalia.com> <20200817101019.GD11402@linux.fritz.box> <w518sedz3td.fsf@maestria.local.igalia.com> <20200817155307.GS11402@linux.fritz.box> <w51pn7memr7.fsf@maestria.local.igalia.com> <20200819150711.GE10272@linux.fritz.box> <20200819175300.GA141399@bfoster> <w51v9hdultt.fsf@maestria.local.igalia.com> <20200820215811.GC7941@dread.disaster.area>
 User-Agent: Notmuch/0.18.2 (http://notmuchmail.org) Emacs/24.4.1 (i586-pc-linux-gnu)
-Date:   Fri, 21 Aug 2020 17:51:38 +0200
-Message-ID: <w51sgcghu9h.fsf@maestria.local.igalia.com>
+Date:   Fri, 21 Aug 2020 18:09:17 +0200
+Message-ID: <w51pn7khtg2.fsf@maestria.local.igalia.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
@@ -49,86 +49,98 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 21 Aug 2020 02:59:44 PM CEST, Brian Foster wrote:
->> > Option 4 is described above as initial file preallocation whereas
->> > option 1 is per 64k cluster prealloc. Prealloc mode mixup aside, Berto
->> > is reporting that the initial file preallocation mode is slower than
->> > the per cluster prealloc mode. Berto, am I following that right?
+On Thu 20 Aug 2020 11:58:11 PM CEST, Dave Chinner wrote:
+>> The virtual drive (/dev/vdb) is a freshly created qcow2 file stored on
+>> the host (on an xfs or ext4 filesystem as the table above shows), and
+>> it is attached to QEMU using a virtio-blk-pci device:
 >> 
->> Option (1) means that no qcow2 cluster is allocated at the beginning of
->> the test so, apart from updating the relevant qcow2 metadata, each write
->> request clears the cluster first (with fallocate(ZERO_RANGE)) then
->> writes the requested 4KB of data. Further writes to the same cluster
->> don't need changes on the qcow2 metadata so they go directly to the area
->> that was cleared with fallocate().
->> 
->> Option (4) means that all clusters are allocated when the image is
->> created and they are initialized with fallocate() (actually with
->> posix_fallocate() now that I read the code, I suppose it's the same for
->> xfs?). Only after that the test starts. All write requests are simply
->> forwarded to the disk, there is no need to touch any qcow2 metadata nor
->> do anything else.
->> 
+>>    -drive if=virtio,file=image.qcow2,cache=none,l2-cache-size=200M
 >
-> Ok, I think that's consistent with what I described above (sorry, I find
-> the preallocation mode names rather confusing so I was trying to avoid
-> using them). Have you confirmed that posix_fallocate() in this case
-> translates directly to fallocate()? I suppose that's most likely the
-> case, otherwise you'd see numbers more like with preallocation=full
-> (file preallocated via writing zeroes).
+> You're not using AIO on this image file, so it can't do
+> concurrent IO? what happens when you add "aio=native" to this?
 
-Yes, it seems to be:
+I sent the results on a reply to Brian.
 
-   https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/posix_fallocate.c;h=7238b000383af2f3878a9daf8528819645b6aa31;hb=HEAD
-
-And that's also what the posix_fallocate() manual page says.
-
->> And yes, (4) is a bit slower than (1) in my tests. On ext4 I get 10%
->> more IOPS.
->> 
->> I just ran the tests with aio=native and with a raw image instead of
->> qcow2, here are the results:
->> 
->> qcow2:
->> |----------------------+-------------+------------|
->> | preallocation        | aio=threads | aio=native |
->> |----------------------+-------------+------------|
->> | off                  |        8139 |       7649 |
->> | off (w/o ZERO_RANGE) |        2965 |       2779 |
->> | metadata             |        7768 |       8265 |
->> | falloc               |        7742 |       7956 |
->> | full                 |       41389 |      56668 |
->> |----------------------+-------------+------------|
->> 
+>> cache=none means that the image is opened with O_DIRECT and
+>> l2-cache-size is large enough so QEMU is able to cache all the
+>> relevant qcow2 metadata in memory.
 >
-> So this seems like Dave's suggestion to use native aio produced more
-> predictable results with full file prealloc being a bit faster than per
-> cluster prealloc. Not sure why that isn't the case with aio=threads. I
-> was wondering if perhaps the threading affects something indirectly like
-> the qcow2 metadata allocation itself, but I guess that would be
-> inconsistent with ext4 showing a notable jump from (1) to (4) (assuming
-> the previous ext4 numbers were with aio=threads).
-
-Yes, I took the ext4 numbers with aio=threads
-
->> raw:
->> |---------------+-------------+------------|
->> | preallocation | aio=threads | aio=native |
->> |---------------+-------------+------------|
->> | off           |        7647 |       7928 |
->> | falloc        |        7662 |       7856 |
->> | full          |       45224 |      58627 |
->> |---------------+-------------+------------|
->> 
->> A qcow2 file with preallocation=metadata is more or less similar to a
->> sparse raw file (and the numbers are indeed similar).
->> 
->> preallocation=off on qcow2 does not have an equivalent on raw files.
+> What happens when you just use a sparse file (i.e. a raw image) with
+> aio=native instead of using qcow2? XFS, ext4, btrfs, etc all support
+> sparse files so using qcow2 to provide sparse image file support is
+> largely an unnecessary layer of indirection and overhead...
 >
-> It sounds like preallocation=off for qcow2 would be roughly equivalent
-> to a raw file with a 64k extent size hint (on XFS).
+> And with XFS, you don't need qcow2 for snapshots either because you
+> can use reflink copies to take an atomic copy-on-write snapshot of the
+> raw image file... (assuming you made the xfs filesystem with reflink
+> support (which is the TOT default now)).
 
-There's the overhead of handling the qcow2 metadata but QEMU keeps a
-memory cache so it should not be too big.
+To be clear, I'm not trying to advocate for or against qcow2 on xfs, we
+were just analyzing different allocation strategies for qcow2 and we
+came across these results which we don't quite understand.
+
+>> 1) off: for every write request QEMU initializes the cluster (64KB)
+>>         with fallocate(ZERO_RANGE) and then writes the 4KB of data.
+>> 
+>> 2) off w/o ZERO_RANGE: QEMU writes the 4KB of data and fills the rest
+>>         of the cluster with zeroes.
+>> 
+>> 3) metadata: all clusters were allocated when the image was created
+>>         but they are sparse, QEMU only writes the 4KB of data.
+>> 
+>> 4) falloc: all clusters were allocated with fallocate() when the image
+>>         was created, QEMU only writes 4KB of data.
+>> 
+>> 5) full: all clusters were allocated by writing zeroes to all of them
+>>         when the image was created, QEMU only writes 4KB of data.
+>> 
+>> As I said in a previous message I'm not familiar with xfs, but the
+>> parts that I don't understand are
+>> 
+>>    - Why is (4) slower than (1)?
+>
+> Because fallocate() is a full IO serialisation barrier at the
+> filesystem level. If you do:
+>
+> fallocate(whole file)
+> <IO>
+> <IO>
+> <IO>
+> .....
+>
+> The IO can run concurrent and does not serialise against anything in
+> the filesysetm except unwritten extent conversions at IO completion
+> (see answer to next question!)
+>
+> However, if you just use (4) you get:
+>
+> falloc(64k)
+>   <wait for inflight IO to complete>
+>   <allocates 64k as unwritten>
+> <4k io>
+>   ....
+> falloc(64k)
+>   <wait for inflight IO to complete>
+>   ....
+>   <4k IO completes, converts 4k to written>
+>   <allocates 64k as unwritten>
+> <4k io>
+
+I think Brian pointed it out already, but scenario (4) is rather
+falloc(25GB), then QEMU is launched and the actual 4k IO requests start
+to happen.
+
+So I would expect that after falloc(25GB) all clusters are initialized
+and the end result would be closer to a full preallocation (i.e. writing
+25GB worth of zeroes to disk).
+
+> IOWs, typical "write once" benchmark testing indicates the *worst*
+> performance you are going to see. As the guest filesytsem ages and
+> initialises more of the underlying image file, it will get faster, not
+> slower.
+
+Yes, that's clear, once everything is allocation then it is fast (and
+really much faster in the case of xfs vs ext4), what we try to optimize
+in qcow2 is precisely the allocation of new clusters.
 
 Berto
