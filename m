@@ -2,137 +2,165 @@ Return-Path: <SRS0=59Ki=B7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CAC9C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 18:11:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B54C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 21:54:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E3EC2075E
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 18:11:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="VIJtt3CG"
+	by mail.kernel.org (Postfix) with ESMTP id 998CF207DE
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 21:54:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726358AbgHUSLj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Aug 2020 14:11:39 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49422 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726057AbgHUSLj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 14:11:39 -0400
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07LI1dKk193635;
-        Fri, 21 Aug 2020 14:11:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : mime-version : content-transfer-encoding; s=pp1;
- bh=8yvEI0g2E8xG0SJMCtpKCuoNmNMpLdEw9u+yzYkMfTk=;
- b=VIJtt3CGuTG5sUiykNJVYhLxmszHb9Wdm6J2EYpLcqgQckwJbpZSCOXpbpZTT7qfDYek
- khVO23HbKGkVeXfY7yvjblSsk5ons8MFYnUE+xfiKmPxrpQy2O1Uzm3t5KljAQGAS3Bi
- JVDBAhSLcbgn8Q/8zPHOpshUdkZ+z1NKbejUMvQAwJmfqD5Cb+GA0p96cn0q/15zvROB
- kz1jz3TOeBsOPq4XU9WgyJQDHOHnllQQ5W6D/cbf6KeGIc+tarqDXE2nurzt4C1Xegzr
- zNxTx2jCdFLnGYmixgTjm89ER17TSvq+cH5qFnlKiQjfTRrfDAjs6hfREYhPvOx3uYJk 1Q== 
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3327xucbrh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 21 Aug 2020 14:11:31 -0400
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 07LIB7c5003354;
-        Fri, 21 Aug 2020 18:11:28 GMT
-Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
-        by ppma05fra.de.ibm.com with ESMTP id 3304bujubn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 21 Aug 2020 18:11:28 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 07LI9ucF56230152
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Aug 2020 18:09:56 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 767124C044;
-        Fri, 21 Aug 2020 18:11:25 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C639E4C04A;
-        Fri, 21 Aug 2020 18:11:23 +0000 (GMT)
-Received: from localhost.localdomain.com (unknown [9.199.33.217])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 21 Aug 2020 18:11:23 +0000 (GMT)
-From:   Ritesh Harjani <riteshh@linux.ibm.com>
-To:     linux-block@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, axboe@kernel.dk,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Shivaprasad G Bhat <sbhat@linux.ibm.com>,
-        Anju T Sudhakar <anju@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] block: Set same_page to false in __bio_try_merge_page if ret is false
-Date:   Fri, 21 Aug 2020 23:41:17 +0530
-Message-Id: <e50582833c897c1a51a676d7726d1380a3e5a678.1598032711.git.riteshh@linux.ibm.com>
-X-Mailer: git-send-email 2.25.4
+        id S1726747AbgHUVyM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Aug 2020 17:54:12 -0400
+Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:35825 "EHLO
+        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726672AbgHUVyM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 17:54:12 -0400
+Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
+        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id DC7B6108A69;
+        Sat, 22 Aug 2020 07:53:59 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1k9Ez0-0002OM-F0; Sat, 22 Aug 2020 07:53:58 +1000
+Date:   Sat, 22 Aug 2020 07:53:58 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ritesh Harjani <riteshh@linux.ibm.com>
+Cc:     Anju T Sudhakar <anju@linux.vnet.ibm.com>, hch@infradead.org,
+        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        willy@infradead.org
+Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
+Message-ID: <20200821215358.GG7941@dread.disaster.area>
+References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
+ <20200820231140.GE7941@dread.disaster.area>
+ <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-21_08:2020-08-21,2020-08-21 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- impostorscore=0 mlxscore=0 phishscore=0 adultscore=0 suspectscore=0
- spamscore=0 priorityscore=1501 mlxlogscore=981 lowpriorityscore=0
- bulkscore=0 clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008210166
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0 cx=a_idp_d
+        a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
+        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=VnNF1IyMAAAA:8 a=7-415B0cAAAA:8
+        a=Qh6IE-2GF9-oy0DaVTgA:9 a=RXxoB3lGECdc3DDF:21 a=r0DmFvm1JCai0nq2:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If we hit the UINT_MAX limit of bio->bi_iter.bi_size and so we are anyway
-not merging this page in this bio, then it make sense to make same_page
-also as false before returning.
+On Fri, Aug 21, 2020 at 10:15:33AM +0530, Ritesh Harjani wrote:
+> Hello Dave,
+> 
+> Thanks for reviewing this.
+> 
+> On 8/21/20 4:41 AM, Dave Chinner wrote:
+> > On Wed, Aug 19, 2020 at 03:58:41PM +0530, Anju T Sudhakar wrote:
+> > > From: Ritesh Harjani <riteshh@linux.ibm.com>
+> > > 
+> > > __bio_try_merge_page() may return same_page = 1 and merged = 0.
+> > > This could happen when bio->bi_iter.bi_size + len > UINT_MAX.
+> > 
+> > Ummm, silly question, but exactly how are we getting a bio that
+> > large in ->writepages getting built? Even with 64kB pages, that's a
+> > bio with 2^16 pages attached to it. We shouldn't be building single
+> > bios in writeback that large - what storage hardware is allowing
+> > such huge bios to be built? (i.e. can you dump all the values in
+> > /sys/block/<dev>/queue/* for that device for us?)
+> 
+> Please correct me here, but as I see, bio has only these two limits
+> which it checks for adding page to bio. It doesn't check for limits
+> of /sys/block/<dev>/queue/* no? I guess then it could be checked
+> by block layer below b4 submitting the bio?
+> 
+> 113 static inline bool bio_full(struct bio *bio, unsigned len)
+> 114 {
+> 115         if (bio->bi_vcnt >= bio->bi_max_vecs)
+> 116                 return true;
+> 117
+> 118         if (bio->bi_iter.bi_size > UINT_MAX - len)
+> 119                 return true;
+> 120
+> 121         return false;
+> 122 }
 
-Without this patch, we hit below WARNING in iomap.
-This mostly happens with very large memory system and / or after tweaking
-vm dirty threshold params to delay writeback of dirty data.
+but iomap only allows BIO_MAX_PAGES when creating the bio. And:
 
-WARNING: CPU: 18 PID: 5130 at fs/iomap/buffered-io.c:74 iomap_page_release+0x120/0x150
- CPU: 18 PID: 5130 Comm: fio Kdump: loaded Tainted: G        W         5.8.0-rc3 #6
- Call Trace:
-  __remove_mapping+0x154/0x320 (unreliable)
-  iomap_releasepage+0x80/0x180
-  try_to_release_page+0x94/0xe0
-  invalidate_inode_page+0xc8/0x110
-  invalidate_mapping_pages+0x1dc/0x540
-  generic_fadvise+0x3c8/0x450
-  xfs_file_fadvise+0x2c/0xe0 [xfs]
-  vfs_fadvise+0x3c/0x60
-  ksys_fadvise64_64+0x68/0xe0
-  sys_fadvise64+0x28/0x40
-  system_call_exception+0xf8/0x1c0
-  system_call_common+0xf0/0x278
+#define BIO_MAX_PAGES 256
 
-Suggested-by: Christoph Hellwig <hch@infradead.org>
-Reported-by: Shivaprasad G Bhat <sbhat@linux.ibm.com>
-Signed-off-by: Anju T Sudhakar <anju@linux.vnet.ibm.com>
-Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
----
-[prev discussion]:- https://patchwork.kernel.org/patch/11723453/
+So even on a 64k page machine, we should not be building a bio with
+more than 16MB of data in it. So how are we getting 4GB of data into
+it?
 
- block/bio.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Further, the writeback code is designed around the bios having a
+bound size that is relatively small to keep IO submission occurring
+as we pack pages into bios. This keeps IO latency down and minimises
+the individual IO completion overhead of each IO. This is especially
+important as the writeback path is critical for memory relcaim to
+make progress because we do not want to trap gigabytes of dirty
+memory in the writeback IO path.
 
-diff --git a/block/bio.c b/block/bio.c
-index a7366c02c9b5..675ecd81047b 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -877,8 +877,10 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
- 		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
- 
- 		if (page_is_mergeable(bv, page, len, off, same_page)) {
--			if (bio->bi_iter.bi_size > UINT_MAX - len)
-+			if (bio->bi_iter.bi_size > UINT_MAX - len) {
-+				*same_page = false;
- 				return false;
-+			}
- 			bv->bv_len += len;
- 			bio->bi_iter.bi_size += len;
- 			return true;
+IOWs, seeing huge bios being built by writeback is indicative of
+design assumptions and contraints being violated - huge bios on the
+buffered writeback path like this are not a good thing to see.
+
+FWIW, We've also recently got reports of hard lockups in IO
+completion of overwrites because our ioend bio chains have grown to
+almost 3 million pages and all the writeback pages get processed as
+a single completion. This is a similar situation to this bug report
+in that the bio chains are unbound in length, and I'm betting the
+cause is the same: overwrite a 10GB file in memory (with dirty
+limits turned up), then run fsync so we do a single writepages call
+that tries to write 10GB of dirty pages....
+
+The only reason we don't normally see this is that background
+writeback caps the number of pages written per writepages call to
+1024. i.e.  it caps writeback IO sizes to a small amount so that IO
+latency, writeback fairness across dirty inodes, etc can be
+maintained for background writeback - no one dirty file can
+monopolise the available writeback bandwidth and starve writeback
+to other dirty inodes.
+
+So combine the two, and we've got a problem that the writeback IO
+sizes are not being bound to sane IO sizes. I have no problems with
+building individual bios that are 4MB or even 16MB in size - that
+allows the block layer to work efficiently. Problems at a system
+start to occur, however, when individual bios or bio chains built
+by writeback end up being orders of magnitude larger than this....
+
+i.e. I'm not looking at this as a "bio overflow bug" - I'm
+commenting on what this overflow implies from an architectural point
+of view. i.e. that uncapped bio sizes and bio chain lengths in
+writeback are actually a bad thing and something we've always
+tried to avoid doing....
+
+.....
+
+> /sys/block/<dev>/queue/*
+> ========================
+> 
+> setup:/run/perf$ cat /sys/block/loop1/queue/max_segments
+> 128
+> setup:/run/perf$ cat /sys/block/loop1/queue/max_segment_size
+> 65536
+
+A maximumally size bio (16MB) will get split into two bios for this
+hardware based on this (8MB max size).
+
+> setup:/run/perf$ cat /sys/block/loop1/queue/max_hw_sectors_kb
+> 1280
+
+Except this says 1280kB is the max size, so it will actually get
+split into 14 bios.
+
+So a stream of 16MB bios from writeback will be more than large
+enough to keep this hardware's pipeline full....
+
+Cheers,
+
+Dave.
 -- 
-2.25.4
-
+Dave Chinner
+david@fromorbit.com
