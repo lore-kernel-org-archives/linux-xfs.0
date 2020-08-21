@@ -2,221 +2,167 @@ Return-Path: <SRS0=59Ki=B7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63193C433E3
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 16:59:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2709BC433E4
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 17:03:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B94020702
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 16:59:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598029150;
-	bh=qyqwTQIk7XiYQuTBMvnvPBCOSvb10PS+nczVnbe08Hw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=MZCBYfpJlPh1yLjLI7zBGYMEUIun3QqIgcelK5s+poyDwxB7u7TNt/Qr3K6PkOof1
-	 yJN9K2Wj7zqlaOjdYrlvAGTFRSeb9R+Uz2tEomw8HfAFDJosEsJZBjIYz9fThir5Fc
-	 2uyPvZMCwUVuIcRT7UjyCMGUB01R8Kq0TGZtvwXU=
+	by mail.kernel.org (Postfix) with ESMTP id EC08320656
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 17:03:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gMth1jke"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728649AbgHUQ7H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Aug 2020 12:59:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50114 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728002AbgHUQTT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Aug 2020 12:19:19 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1728576AbgHURDt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Aug 2020 13:03:49 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:21900 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728587AbgHURCk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 13:02:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598029358;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lwS+kAPJtqLdpQqI1czJvEdFIatqGdZKK7fsajHisA0=;
+        b=gMth1jkeraWlQnmaLvLtVyUW6NTc+hAV+VNZgeoraESfnm4QGaSFBS5EROiZzMYQvgtBP5
+        zG2obFY+eLJOjbQhsWjA3zzrhFq3vFsUxZMa/czm9k9oLHajPVLcDQCdHajt0NrvW1syI2
+        TefZRgg6DwJWfs80NigqecLwecAy0AY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-574-SF_3072jPQajpoxq_FW_aQ-1; Fri, 21 Aug 2020 13:02:36 -0400
+X-MC-Unique: SF_3072jPQajpoxq_FW_aQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id AB463208DB;
-        Fri, 21 Aug 2020 16:18:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598026711;
-        bh=qyqwTQIk7XiYQuTBMvnvPBCOSvb10PS+nczVnbe08Hw=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EqrZctOBGyNeav0Gd4xgrvMNZ1dEs9Zyd0eXoJtazqOxvfEmqS5NXAgoavWXm//M2
-         cIzwssCwmHJG6JVDRXsCEmKu2xDxIQuzSrToY9Lv+r3r3u7j4Gnqa6mbADJHIFEgMb
-         OzrcI7xG/Z6yz/bBhghSG/2G0ZJK8YX7R9xSjh1M=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dave Chinner <dchinner@redhat.com>,
-        Brian Foster <bfoster@redhat.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 19/38] xfs: Don't allow logging of XFS_ISTALE inodes
-Date:   Fri, 21 Aug 2020 12:17:48 -0400
-Message-Id: <20200821161807.348600-19-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200821161807.348600-1-sashal@kernel.org>
-References: <20200821161807.348600-1-sashal@kernel.org>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4D178AEF63;
+        Fri, 21 Aug 2020 17:02:35 +0000 (UTC)
+Received: from bfoster (ovpn-112-11.rdu2.redhat.com [10.10.112.11])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 34FEE5D9CC;
+        Fri, 21 Aug 2020 17:02:33 +0000 (UTC)
+Date:   Fri, 21 Aug 2020 13:02:32 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Alberto Garcia <berto@igalia.com>
+Cc:     Dave Chinner <david@fromorbit.com>, Kevin Wolf <kwolf@redhat.com>,
+        Vladimir Sementsov-Ogievskiy <vsementsov@virtuozzo.com>,
+        qemu-block@nongnu.org, qemu-devel@nongnu.org,
+        Max Reitz <mreitz@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/1] qcow2: Skip copy-on-write when allocating a zero
+ cluster
+Message-ID: <20200821170232.GA220086@bfoster>
+References: <w518sedz3td.fsf@maestria.local.igalia.com>
+ <20200817155307.GS11402@linux.fritz.box>
+ <w51pn7memr7.fsf@maestria.local.igalia.com>
+ <20200819150711.GE10272@linux.fritz.box>
+ <20200819175300.GA141399@bfoster>
+ <w51v9hdultt.fsf@maestria.local.igalia.com>
+ <20200820215811.GC7941@dread.disaster.area>
+ <20200821110506.GB212879@bfoster>
+ <w51364gjkcj.fsf@maestria.local.igalia.com>
+ <w51zh6oi4en.fsf@maestria.local.igalia.com>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <w51zh6oi4en.fsf@maestria.local.igalia.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Aug 21, 2020 at 02:12:32PM +0200, Alberto Garcia wrote:
+> On Fri 21 Aug 2020 01:42:52 PM CEST, Alberto Garcia wrote:
+> > On Fri 21 Aug 2020 01:05:06 PM CEST, Brian Foster <bfoster@redhat.com> wrote:
+> >>> > 1) off: for every write request QEMU initializes the cluster (64KB)
+> >>> >         with fallocate(ZERO_RANGE) and then writes the 4KB of data.
+> >>> > 
+> >>> > 2) off w/o ZERO_RANGE: QEMU writes the 4KB of data and fills the rest
+> >>> >         of the cluster with zeroes.
+> >>> > 
+> >>> > 3) metadata: all clusters were allocated when the image was created
+> >>> >         but they are sparse, QEMU only writes the 4KB of data.
+> >>> > 
+> >>> > 4) falloc: all clusters were allocated with fallocate() when the image
+> >>> >         was created, QEMU only writes 4KB of data.
+> >>> > 
+> >>> > 5) full: all clusters were allocated by writing zeroes to all of them
+> >>> >         when the image was created, QEMU only writes 4KB of data.
+> >>> > 
+> >>> > As I said in a previous message I'm not familiar with xfs, but the
+> >>> > parts that I don't understand are
+> >>> > 
+> >>> >    - Why is (4) slower than (1)?
+> >>> 
+> >>> Because fallocate() is a full IO serialisation barrier at the
+> >>> filesystem level. If you do:
+> >>> 
+> >>> fallocate(whole file)
+> >>> <IO>
+> >>> <IO>
+> >>> <IO>
+> >>> .....
+> >>> 
+> >>> The IO can run concurrent and does not serialise against anything in
+> >>> the filesysetm except unwritten extent conversions at IO completion
+> >>> (see answer to next question!)
+> >>> 
+> >>> However, if you just use (4) you get:
+> >>> 
+> >>> falloc(64k)
+> >>>   <wait for inflight IO to complete>
+> >>>   <allocates 64k as unwritten>
+> >>> <4k io>
+> >>>   ....
+> >>> falloc(64k)
+> >>>   <wait for inflight IO to complete>
+> >>>   ....
+> >>>   <4k IO completes, converts 4k to written>
+> >>>   <allocates 64k as unwritten>
+> >>> <4k io>
+> >>> falloc(64k)
+> >>>   <wait for inflight IO to complete>
+> >>>   ....
+> >>>   <4k IO completes, converts 4k to written>
+> >>>   <allocates 64k as unwritten>
+> >>> <4k io>
+> >>>   ....
+> >>> 
+> >>
+> >> Option 4 is described above as initial file preallocation whereas
+> >> option 1 is per 64k cluster prealloc. Prealloc mode mixup aside, Berto
+> >> is reporting that the initial file preallocation mode is slower than
+> >> the per cluster prealloc mode. Berto, am I following that right?
+> 
+> After looking more closely at the data I can see that there is a peak of
+> ~30K IOPS during the first 5 or 6 seconds and then it suddenly drops to
+> ~7K for the rest of the test.
+> 
+> I was running fio with --ramp_time=5 which ignores the first 5 seconds
+> of data in order to let performance settle, but if I remove that I can
+> see the effect more clearly. I can observe it with raw files (in 'off'
+> and 'prealloc' modes) and qcow2 files in 'prealloc' mode. With qcow2 and
+> preallocation=off the performance is stable during the whole test.
+> 
 
-[ Upstream commit 96355d5a1f0ee6dcc182c37db4894ec0c29f1692 ]
+That's interesting. I ran your fio command (without --ramp_time and with
+--runtime=5m) against a file on XFS (so no qcow2, no zero_range) once
+with sparse file with a 64k extent size hint and again with a fully
+preallocated 25GB file and I saw similar results in terms of the delta.
+This was just against an SSD backed vdisk in my local dev VM, but I saw
+~5800 iops for the full preallocation test and ~6200 iops with the
+extent size hint.
 
-In tracking down a problem in this patchset, I discovered we are
-reclaiming dirty stale inodes. This wasn't discovered until inodes
-were always attached to the cluster buffer and then the rcu callback
-that freed inodes was assert failing because the inode still had an
-active pointer to the cluster buffer after it had been reclaimed.
+I do notice an initial iops burst as described for both tests, so I
+switched to use a 60s ramp time and 60s runtime. With that longer ramp
+up time, I see ~5000 iops with the 64k extent size hint and ~5500 iops
+with the full 25GB prealloc. Perhaps the unexpected performance delta
+with qcow2 is similarly transient towards the start of the test and the
+runtime is short enough that it skews the final results..?
 
-Debugging the issue indicated that this was a pre-existing issue
-resulting from the way the inodes are handled in xfs_inactive_ifree.
-When we free a cluster buffer from xfs_ifree_cluster, all the inodes
-in cache are marked XFS_ISTALE. Those that are clean have nothing
-else done to them and so eventually get cleaned up by background
-reclaim. i.e. it is assumed we'll never dirty/relog an inode marked
-XFS_ISTALE.
+Brian
 
-On journal commit dirty stale inodes as are handled by both
-buffer and inode log items to run though xfs_istale_done() and
-removed from the AIL (buffer log item commit) or the log item will
-simply unpin it because the buffer log item will clean it. What happens
-to any specific inode is entirely dependent on which log item wins
-the commit race, but the result is the same - stale inodes are
-clean, not attached to the cluster buffer, and not in the AIL. Hence
-inode reclaim can just free these inodes without further care.
-
-However, if the stale inode is relogged, it gets dirtied again and
-relogged into the CIL. Most of the time this isn't an issue, because
-relogging simply changes the inode's location in the current
-checkpoint. Problems arise, however, when the CIL checkpoints
-between two transactions in the xfs_inactive_ifree() deferops
-processing. This results in the XFS_ISTALE inode being redirtied
-and inserted into the CIL without any of the other stale cluster
-buffer infrastructure being in place.
-
-Hence on journal commit, it simply gets unpinned, so it remains
-dirty in memory. Everything in inode writeback avoids XFS_ISTALE
-inodes so it can't be written back, and it is not tracked in the AIL
-so there's not even a trigger to attempt to clean the inode. Hence
-the inode just sits dirty in memory until inode reclaim comes along,
-sees that it is XFS_ISTALE, and goes to reclaim it. This reclaiming
-of a dirty inode caused use after free, list corruptions and other
-nasty issues later in this patchset.
-
-Hence this patch addresses a violation of the "never log XFS_ISTALE
-inodes" caused by the deferops processing rolling a transaction
-and relogging a stale inode in xfs_inactive_free. It also adds a
-bunch of asserts to catch this problem in debug kernels so that
-we don't reintroduce this problem in future.
-
-Reproducer for this issue was generic/558 on a v4 filesystem.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/xfs/xfs_icache.c      |  3 ++-
- fs/xfs/xfs_inode.c       | 25 ++++++++++++++++++++++---
- fs/xfs/xfs_trans_inode.c |  2 ++
- 3 files changed, 26 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 901f27ac94abc..56e9043bddc71 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1127,7 +1127,7 @@ xfs_reclaim_inode(
- 			goto out_ifunlock;
- 		xfs_iunpin_wait(ip);
- 	}
--	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
-+	if (xfs_inode_clean(ip)) {
- 		xfs_ifunlock(ip);
- 		goto reclaim;
- 	}
-@@ -1214,6 +1214,7 @@ xfs_reclaim_inode(
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_qm_dqdetach(ip);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	ASSERT(xfs_inode_clean(ip));
- 
- 	__xfs_inode_free(ip);
- 	return error;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index f2d06e1e49066..cd81d6d9848d1 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1772,10 +1772,31 @@ xfs_inactive_ifree(
- 		return error;
- 	}
- 
-+	/*
-+	 * We do not hold the inode locked across the entire rolling transaction
-+	 * here. We only need to hold it for the first transaction that
-+	 * xfs_ifree() builds, which may mark the inode XFS_ISTALE if the
-+	 * underlying cluster buffer is freed. Relogging an XFS_ISTALE inode
-+	 * here breaks the relationship between cluster buffer invalidation and
-+	 * stale inode invalidation on cluster buffer item journal commit
-+	 * completion, and can result in leaving dirty stale inodes hanging
-+	 * around in memory.
-+	 *
-+	 * We have no need for serialising this inode operation against other
-+	 * operations - we freed the inode and hence reallocation is required
-+	 * and that will serialise on reallocating the space the deferops need
-+	 * to free. Hence we can unlock the inode on the first commit of
-+	 * the transaction rather than roll it right through the deferops. This
-+	 * avoids relogging the XFS_ISTALE inode.
-+	 *
-+	 * We check that xfs_ifree() hasn't grown an internal transaction roll
-+	 * by asserting that the inode is still locked when it returns.
-+	 */
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, ip, 0);
-+	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
- 
- 	error = xfs_ifree(tp, ip);
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	if (error) {
- 		/*
- 		 * If we fail to free the inode, shut down.  The cancel
-@@ -1788,7 +1809,6 @@ xfs_inactive_ifree(
- 			xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
- 		}
- 		xfs_trans_cancel(tp);
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		return error;
- 	}
- 
-@@ -1806,7 +1826,6 @@ xfs_inactive_ifree(
- 		xfs_notice(mp, "%s: xfs_trans_commit returned error %d",
- 			__func__, error);
- 
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index 542927321a61b..ae453dd236a69 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -39,6 +39,7 @@ xfs_trans_ijoin(
- 
- 	ASSERT(iip->ili_lock_flags == 0);
- 	iip->ili_lock_flags = lock_flags;
-+	ASSERT(!xfs_iflags_test(ip, XFS_ISTALE));
- 
- 	/*
- 	 * Get a log_item_desc to point at the new item.
-@@ -90,6 +91,7 @@ xfs_trans_log_inode(
- 
- 	ASSERT(ip->i_itemp != NULL);
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
-+	ASSERT(!xfs_iflags_test(ip, XFS_ISTALE));
- 
- 	/*
- 	 * Don't bother with i_lock for the I_DIRTY_TIME check here, as races
--- 
-2.25.1
+> Berto
+> 
 
