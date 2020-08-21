@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB67C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:14:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73D71C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:14:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED2EB207DE
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:14:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49C692076E
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:14:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Q3vpUo1b"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Uz8oaf71"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727073AbgHUCO3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Aug 2020 22:14:29 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:44902 "EHLO
+        id S1727075AbgHUCOn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Aug 2020 22:14:43 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:45112 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726969AbgHUCO3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 22:14:29 -0400
+        with ESMTP id S1726969AbgHUCOn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 22:14:43 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L26p1S111237;
-        Fri, 21 Aug 2020 02:14:24 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L26stu111245;
+        Fri, 21 Aug 2020 02:14:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=6WTb1IHXn9KpZ5lxmruL9rTTK9Q4ilD29mXZXLvznjw=;
- b=Q3vpUo1bllUvqF5tJNWI32EkncA93afXvNRALgqUbkhO5CrfU+1GcnO3rI0IN8N+vlvo
- xJwUptt4dsjJRBa3krDEsKLzL2HtuRORKupsqEHVM5jvjr1wFxHV0rcLSniVj5PF+Zst
- dLfR9lyso6kPHJ8apTN00ZOu/0CD/x2BdhOLggJruT63KH5XV960ipT70b1syILT+cOG
- j9bE0jVX6+yU5WbYaFIhU8PImPLo8XF9HrbHvnaifYS96PsJ1arz35YlvbDRbqWCI3Uy
- YizqvgC5nSpKvtfyU6NRIcka8wtaL6cAzQ4WIp8peOoIZr5druMGcwAjdkXnJOogT0Bg sA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 32x74rkwff-1
+ bh=XOpBSH+h8R5xzNiGeeESg6mih/hBM8QnmcukLBshMmM=;
+ b=Uz8oaf717sKjKmHmqHuXSf/NWStSUtXL2FZdREBTUciUJEco7CCtU1mCkToILu/AApEx
+ rg2E2zqXH4LlV0+4hXJJPwHjBcxFingHRrHlJBqZMpuMliXJZ3stzjl7B8lLgrfLCX6J
+ saHqbie++1n6hReDlphZ4T1OxLTs1JQYmW70si2i3UjXi2pBTf26BMFFV2aoJywZNgF1
+ kiRU5lHMn/u3hNIwuw+cU9NWUr7IdMt8w9U+dx6VGPNoZcmphxfEiAirN0RiAmvga4j8
+ V869pz7iE/GAza2fysnzTZ5OuX8Y8I30Jb6J5+7yrfHjyQ4U5FvM45Rn3IlcTi1ekUtY 4g== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 32x74rkwg4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 21 Aug 2020 02:14:24 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L293Xg012101;
-        Fri, 21 Aug 2020 02:12:24 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 32xsn2308t-1
+        Fri, 21 Aug 2020 02:14:38 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L27sPu034663;
+        Fri, 21 Aug 2020 02:12:37 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 330pvqm3yp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Aug 2020 02:12:24 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07L2CNoS003094;
-        Fri, 21 Aug 2020 02:12:23 GMT
+        Fri, 21 Aug 2020 02:12:37 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07L2Cajw019865;
+        Fri, 21 Aug 2020 02:12:36 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 20 Aug 2020 19:12:22 -0700
-Subject: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038 problem
+        with ESMTP ; Thu, 20 Aug 2020 19:12:35 -0700
+Subject: [PATCH 10/11] xfs: enable bigtime for quota timers
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, sandeen@sandeen.net
-Date:   Thu, 20 Aug 2020 19:12:21 -0700
-Message-ID: <159797594159.965217.2504039364311840477.stgit@magnolia>
+Date:   Thu, 20 Aug 2020 19:12:34 -0700
+Message-ID: <159797595474.965217.7111215541487615114.stgit@magnolia>
 In-Reply-To: <159797588727.965217.7260803484540460144.stgit@magnolia>
 References: <159797588727.965217.7260803484540460144.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -64,14 +64,14 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9719 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 mlxscore=0 suspectscore=3 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 phishscore=0
+ malwarescore=0 adultscore=0 bulkscore=0 suspectscore=1 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008210018
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9719 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxlogscore=999
  priorityscore=1501 phishscore=0 spamscore=0 mlxscore=0 adultscore=0
- suspectscore=3 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+ suspectscore=1 lowpriorityscore=0 bulkscore=0 malwarescore=0 clxscore=1015
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008210018
 Sender: linux-xfs-owner@vger.kernel.org
@@ -81,558 +81,326 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Redesign the ondisk timestamps to be a simple unsigned 64-bit counter of
-nanoseconds since 14 Dec 1901 (i.e. the minimum time in the 32-bit unix
-time epoch).  This enables us to handle dates up to 2486, which solves
-the y2038 problem.
+Enable the bigtime feature for quota timers.  We decrease the accuracy
+of the timers to ~4s in exchange for being able to set timers up to the
+bigtime maximum.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/libxfs/xfs_format.h      |   38 +++++++++++++++++++++++++++
- fs/xfs/libxfs/xfs_fs.h          |    1 +
- fs/xfs/libxfs/xfs_inode_buf.c   |   54 +++++++++++++++++++++++++++++++++------
- fs/xfs/libxfs/xfs_inode_buf.h   |    8 +++---
- fs/xfs/libxfs/xfs_log_format.h  |    3 ++
- fs/xfs/libxfs/xfs_sb.c          |    2 +
- fs/xfs/libxfs/xfs_trans_inode.c |   11 ++++++++
- fs/xfs/scrub/inode.c            |   16 ++++++++----
- fs/xfs/xfs_inode.c              |   15 ++++++++++-
- fs/xfs/xfs_inode_item.c         |   33 ++++++++++++++++++------
- fs/xfs/xfs_ioctl.c              |    3 +-
- fs/xfs/xfs_ondisk.h             |    6 ++++
- fs/xfs/xfs_super.c              |   13 ++++++++-
- 13 files changed, 173 insertions(+), 30 deletions(-)
+ fs/xfs/libxfs/xfs_dquot_buf.c  |   32 ++++++++++++++++++++++++++++++--
+ fs/xfs/libxfs/xfs_format.h     |   27 ++++++++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_quota_defs.h |    3 ++-
+ fs/xfs/xfs_dquot.c             |   25 +++++++++++++++++++++----
+ fs/xfs/xfs_dquot.h             |    3 ++-
+ fs/xfs/xfs_ondisk.h            |    7 +++++++
+ fs/xfs/xfs_qm.c                |    2 ++
+ fs/xfs/xfs_qm_syscalls.c       |    9 +++++----
+ fs/xfs/xfs_trans_dquot.c       |    6 ++++++
+ 9 files changed, 101 insertions(+), 13 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 772113db41aa..57343973e5e5 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -467,6 +467,7 @@ xfs_sb_has_ro_compat_feature(
- #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
- #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
- #define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
-+#define XFS_SB_FEAT_INCOMPAT_BIGTIME	(1 << 3)	/* large timestamps */
- #define XFS_SB_FEAT_INCOMPAT_ALL \
- 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
- 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
-@@ -565,6 +566,12 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
- 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
- }
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index 7f5291022b11..f5997fbdd308 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -69,6 +69,13 @@ xfs_dquot_verify(
+ 	    ddq_type != XFS_DQTYPE_GROUP)
+ 		return __this_address;
  
-+static inline bool xfs_sb_version_hasbigtime(struct xfs_sb *sbp)
-+{
-+	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_BIGTIME);
-+}
-+
- /*
-  * Inode btree block counter.  We record the number of inobt and finobt blocks
-  * in the AGI header so that we can skip the finobt walk at mount time when
-@@ -855,12 +862,18 @@ struct xfs_agfl {
-  *
-  * Inode timestamps consist of signed 32-bit counters for seconds and
-  * nanoseconds; time zero is the Unix epoch, Jan  1 00:00:00 UTC 1970.
-+ *
-+ * When bigtime is enabled, timestamps become an unsigned 64-bit nanoseconds
-+ * counter.  Time zero is the start of the classic timestamp range.
-  */
- union xfs_timestamp {
- 	struct {
- 		__be32		t_sec;		/* timestamp seconds */
- 		__be32		t_nsec;		/* timestamp nanoseconds */
- 	};
-+
-+	/* Nanoseconds since the bigtime epoch. */
-+	__be64			t_bigtime;
- };
- 
- /*
-@@ -875,6 +888,25 @@ union xfs_timestamp {
-  */
- #define XFS_INO_TIME_MAX	((int64_t)S32_MAX)
- 
-+/*
-+ * Number of seconds between the start of the bigtime timestamp range and the
-+ * start of the Unix epoch.
-+ */
-+#define XFS_INO_BIGTIME_EPOCH	(-XFS_INO_TIME_MIN)
-+
-+/*
-+ * Smallest possible timestamp with big timestamps, which is
-+ * Dec 13 20:45:52 UTC 1901.
-+ */
-+#define XFS_INO_BIGTIME_MIN	(XFS_INO_TIME_MIN)
-+
-+/*
-+ * Largest possible timestamp with big timestamps, which is
-+ * Jul  2 20:20:25 UTC 2486.
-+ */
-+#define XFS_INO_BIGTIME_MAX	((int64_t)((-1ULL / NSEC_PER_SEC) - \
-+					   XFS_INO_BIGTIME_EPOCH))
-+
- /*
-  * On-disk inode structure.
-  *
-@@ -1100,12 +1132,16 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- #define XFS_DIFLAG2_DAX_BIT	0	/* use DAX for this inode */
- #define XFS_DIFLAG2_REFLINK_BIT	1	/* file's blocks may be shared */
- #define XFS_DIFLAG2_COWEXTSIZE_BIT   2  /* copy on write extent size hint */
-+#define XFS_DIFLAG2_BIGTIME_BIT	3	/* big timestamps */
-+
- #define XFS_DIFLAG2_DAX		(1 << XFS_DIFLAG2_DAX_BIT)
- #define XFS_DIFLAG2_REFLINK     (1 << XFS_DIFLAG2_REFLINK_BIT)
- #define XFS_DIFLAG2_COWEXTSIZE  (1 << XFS_DIFLAG2_COWEXTSIZE_BIT)
-+#define XFS_DIFLAG2_BIGTIME	(1 << XFS_DIFLAG2_BIGTIME_BIT)
- 
- #define XFS_DIFLAG2_ANY \
--	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE)
-+	(XFS_DIFLAG2_DAX | XFS_DIFLAG2_REFLINK | XFS_DIFLAG2_COWEXTSIZE | \
-+	 XFS_DIFLAG2_BIGTIME)
- 
- /*
-  * Inode number format:
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 84bcffa87753..2a2e3cfd94f0 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -249,6 +249,7 @@ typedef struct xfs_fsop_resblks {
- #define XFS_FSOP_GEOM_FLAGS_SPINODES	(1 << 18) /* sparse inode chunks   */
- #define XFS_FSOP_GEOM_FLAGS_RMAPBT	(1 << 19) /* reverse mapping btree */
- #define XFS_FSOP_GEOM_FLAGS_REFLINK	(1 << 20) /* files can share blocks */
-+#define XFS_FSOP_GEOM_FLAGS_BIGTIME	(1 << 21) /* 64-bit nsec timestamps */
- 
- /*
-  * Minimum and maximum sizes need for growth checks.
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index cc1316a5fe0c..c59ddb56bb90 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -157,11 +157,25 @@ xfs_imap_to_bp(
- 	return 0;
- }
- 
-+/* Convert an ondisk timestamp into the 64-bit safe incore format. */
- void
- xfs_inode_from_disk_timestamp(
-+	struct xfs_dinode		*dip,
- 	struct timespec64		*tv,
- 	const union xfs_timestamp	*ts)
- {
-+	if (dip->di_version >= 3 &&
-+	    (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME))) {
-+		uint64_t		t = be64_to_cpu(ts->t_bigtime);
-+		uint64_t		s;
-+		uint32_t		n;
-+
-+		s = div_u64_rem(t, NSEC_PER_SEC, &n);
-+		tv->tv_sec = s - XFS_INO_BIGTIME_EPOCH;
-+		tv->tv_nsec = n;
-+		return;
-+	}
-+
- 	tv->tv_sec = (int)be32_to_cpu(ts->t_sec);
- 	tv->tv_nsec = (int)be32_to_cpu(ts->t_nsec);
- }
-@@ -220,9 +234,9 @@ xfs_inode_from_disk(
- 	 * a time before epoch is converted to a time long after epoch
- 	 * on 64 bit systems.
- 	 */
--	xfs_inode_from_disk_timestamp(&inode->i_atime, &from->di_atime);
--	xfs_inode_from_disk_timestamp(&inode->i_mtime, &from->di_mtime);
--	xfs_inode_from_disk_timestamp(&inode->i_ctime, &from->di_ctime);
-+	xfs_inode_from_disk_timestamp(from, &inode->i_atime, &from->di_atime);
-+	xfs_inode_from_disk_timestamp(from, &inode->i_mtime, &from->di_mtime);
-+	xfs_inode_from_disk_timestamp(from, &inode->i_ctime, &from->di_ctime);
- 
- 	to->di_size = be64_to_cpu(from->di_size);
- 	to->di_nblocks = be64_to_cpu(from->di_nblocks);
-@@ -235,9 +249,17 @@ xfs_inode_from_disk(
- 	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
- 		inode_set_iversion_queried(inode,
- 					   be64_to_cpu(from->di_changecount));
--		xfs_inode_from_disk_timestamp(&to->di_crtime, &from->di_crtime);
-+		xfs_inode_from_disk_timestamp(from, &to->di_crtime,
-+				&from->di_crtime);
- 		to->di_flags2 = be64_to_cpu(from->di_flags2);
- 		to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
-+		/*
-+		 * Set the bigtime flag incore so that we automatically convert
-+		 * this inode's ondisk timestamps to bigtime format the next
-+		 * time we write the inode core to disk.
-+		 */
-+		if (xfs_sb_version_hasbigtime(&ip->i_mount->m_sb))
-+			to->di_flags2 |= XFS_DIFLAG2_BIGTIME;
- 	}
- 
- 	error = xfs_iformat_data_fork(ip, from);
-@@ -259,9 +281,19 @@ xfs_inode_from_disk(
- 
- void
- xfs_inode_to_disk_timestamp(
-+	struct xfs_icdinode		*from,
- 	union xfs_timestamp		*ts,
- 	const struct timespec64		*tv)
- {
-+	if (from->di_flags2 & XFS_DIFLAG2_BIGTIME) {
-+		uint64_t		t;
-+
-+		t = (uint64_t)(tv->tv_sec + XFS_INO_BIGTIME_EPOCH);
-+		t *= NSEC_PER_SEC;
-+		ts->t_bigtime = cpu_to_be64(t + tv->tv_nsec);
-+		return;
-+	}
-+
- 	ts->t_sec = cpu_to_be32(tv->tv_sec);
- 	ts->t_nsec = cpu_to_be32(tv->tv_nsec);
- }
-@@ -285,9 +317,9 @@ xfs_inode_to_disk(
- 	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
- 
- 	memset(to->di_pad, 0, sizeof(to->di_pad));
--	xfs_inode_to_disk_timestamp(&to->di_atime, &inode->i_atime);
--	xfs_inode_to_disk_timestamp(&to->di_mtime, &inode->i_mtime);
--	xfs_inode_to_disk_timestamp(&to->di_ctime, &inode->i_ctime);
-+	xfs_inode_to_disk_timestamp(from, &to->di_atime, &inode->i_atime);
-+	xfs_inode_to_disk_timestamp(from, &to->di_mtime, &inode->i_mtime);
-+	xfs_inode_to_disk_timestamp(from, &to->di_ctime, &inode->i_ctime);
- 	to->di_nlink = cpu_to_be32(inode->i_nlink);
- 	to->di_gen = cpu_to_be32(inode->i_generation);
- 	to->di_mode = cpu_to_be16(inode->i_mode);
-@@ -306,7 +338,8 @@ xfs_inode_to_disk(
- 	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
- 		to->di_version = 3;
- 		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
--		xfs_inode_to_disk_timestamp(&to->di_crtime, &from->di_crtime);
-+		xfs_inode_to_disk_timestamp(from, &to->di_crtime,
-+				&from->di_crtime);
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
- 		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
- 		to->di_ino = cpu_to_be64(ip->i_ino);
-@@ -526,6 +559,11 @@ xfs_dinode_verify(
- 	if (fa)
- 		return fa;
- 
-+	/* bigtime iflag can only happen on bigtime filesystems */
-+	if ((flags2 & (XFS_DIFLAG2_BIGTIME)) &&
++	if ((ddq->d_type & XFS_DQTYPE_BIGTIME) &&
 +	    !xfs_sb_version_hasbigtime(&mp->m_sb))
 +		return __this_address;
++
++	if ((ddq->d_type & XFS_DQTYPE_BIGTIME) && !ddq->d_id)
++		return __this_address;
++
+ 	if (id != -1 && id != be32_to_cpu(ddq->d_id))
+ 		return __this_address;
+ 
+@@ -296,7 +303,15 @@ xfs_dquot_from_disk_timestamp(
+ 	time64_t		*timer,
+ 	__be32			dtimer)
+ {
+-	*timer = be32_to_cpu(dtimer);
++	uint64_t		t;
++
++	if (!timer || !(ddq->d_type & XFS_DQTYPE_BIGTIME)) {
++		*timer = be32_to_cpu(dtimer);
++		return;
++	}
++
++	t = be32_to_cpu(dtimer);
++	*timer = t << XFS_DQ_BIGTIME_SHIFT;
+ }
+ 
+ /* Convert an incore timer value into an on-disk timer value. */
+@@ -306,5 +321,18 @@ xfs_dquot_to_disk_timestamp(
+ 	__be32			*dtimer,
+ 	time64_t		timer)
+ {
+-	*dtimer = cpu_to_be32(timer);
++	uint64_t		t;
++
++	if (!timer || !(dqp->q_type & XFS_DQTYPE_BIGTIME)) {
++		*dtimer = cpu_to_be32(timer);
++		return;
++	}
++
++	/*
++	 * Round the end of the grace period up to the nearest bigtime
++	 * interval that we support, to give users the most time to fix
++	 * the problems.
++	 */
++	t = timer + XFS_DQ_BIGTIME_SLACK;
++	*dtimer = cpu_to_be32(t >> XFS_DQ_BIGTIME_SHIFT);
+ }
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 57343973e5e5..7ce0fb3bd4d1 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1227,13 +1227,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ #define XFS_DQTYPE_USER		0x01		/* user dquot record */
+ #define XFS_DQTYPE_PROJ		0x02		/* project dquot record */
+ #define XFS_DQTYPE_GROUP	0x04		/* group dquot record */
++#define XFS_DQTYPE_BIGTIME	0x08		/* large expiry timestamps */
+ 
+ /* bitmask to determine if this is a user/group/project dquot */
+ #define XFS_DQTYPE_REC_MASK	(XFS_DQTYPE_USER | \
+ 				 XFS_DQTYPE_PROJ | \
+ 				 XFS_DQTYPE_GROUP)
+ 
+-#define XFS_DQTYPE_ANY		(XFS_DQTYPE_REC_MASK)
++#define XFS_DQTYPE_ANY		(XFS_DQTYPE_REC_MASK | \
++				 XFS_DQTYPE_BIGTIME)
+ 
+ /*
+  * XFS Quota Timers
+@@ -1270,6 +1272,29 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
+ #define XFS_DQ_GRACE_MIN	((int64_t)0)
+ #define XFS_DQ_GRACE_MAX	((int64_t)U32_MAX)
+ 
++/*
++ * When bigtime is enabled, we trade a few bits of precision to expand the
++ * expiration timeout range to match that of big inode timestamps.  The grace
++ * periods stored in dquot 0 are not shifted, since they record an interval,
++ * not a timestamp.
++ */
++#define XFS_DQ_BIGTIME_SHIFT	(2)
++#define XFS_DQ_BIGTIME_SLACK	((int64_t)(1ULL << XFS_DQ_BIGTIME_SHIFT) - 1)
++
++/*
++ * Smallest possible quota expiration with big timestamps, which is
++ * Jan  1 00:00:01 UTC 1970.
++ */
++#define XFS_DQ_BIGTIMEOUT_MIN		(XFS_DQ_TIMEOUT_MIN)
++
++/*
++ * Largest supported quota expiration with traditional timestamps, which is
++ * the largest bigtime inode timestamp, or Jul  2 20:20:25 UTC 2486.  The field
++ * is large enough that it's possible to fit expirations up to 2514, but we
++ * want to keep the maximum timestamp in sync.
++ */
++#define XFS_DQ_BIGTIMEOUT_MAX		(XFS_INO_BIGTIME_MAX)
++
+ /*
+  * This is the main portion of the on-disk representation of quota information
+  * for a user.  We pad this with some more expansion room to construct the on
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index b524059faab5..b9a47eae684b 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -23,7 +23,8 @@ typedef uint8_t		xfs_dqtype_t;
+ #define XFS_DQTYPE_STRINGS \
+ 	{ XFS_DQTYPE_USER,	"USER" }, \
+ 	{ XFS_DQTYPE_PROJ,	"PROJ" }, \
+-	{ XFS_DQTYPE_GROUP,	"GROUP" }
++	{ XFS_DQTYPE_GROUP,	"GROUP" }, \
++	{ XFS_DQTYPE_BIGTIME,	"BIGTIME" }
+ 
+ /*
+  * flags for q_flags field in the dquot.
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 08d497d413b9..6bc1f6e90c3e 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -110,9 +110,15 @@ xfs_dquot_set_grace_period(
+ /* Set the expiration time of a quota's grace period. */
+ void
+ xfs_dquot_set_timeout(
++	struct xfs_mount	*mp,
+ 	time64_t		*timer,
+ 	time64_t		value)
+ {
++	if (xfs_sb_version_hasbigtime(&mp->m_sb)) {
++		*timer = clamp_t(time64_t, value, XFS_DQ_BIGTIMEOUT_MIN,
++						  XFS_DQ_BIGTIMEOUT_MAX);
++		return;
++	}
+ 	*timer = clamp_t(time64_t, value, XFS_DQ_TIMEOUT_MIN,
+ 					  XFS_DQ_TIMEOUT_MAX);
+ }
+@@ -123,6 +129,7 @@ xfs_dquot_set_timeout(
+  */
+ static inline void
+ xfs_qm_adjust_res_timer(
++	struct xfs_dquot	*dqp,
+ 	struct xfs_dquot_res	*res,
+ 	struct xfs_quota_limits	*qlim)
+ {
+@@ -131,7 +138,7 @@ xfs_qm_adjust_res_timer(
+ 	if ((res->softlimit && res->count > res->softlimit) ||
+ 	    (res->hardlimit && res->count > res->hardlimit)) {
+ 		if (res->timer == 0)
+-			xfs_dquot_set_timeout(&res->timer,
++			xfs_dquot_set_timeout(dqp->q_mount, &res->timer,
+ 					ktime_get_real_seconds() + qlim->time);
+ 	} else {
+ 		if (res->timer == 0)
+@@ -165,9 +172,9 @@ xfs_qm_adjust_dqtimers(
+ 	ASSERT(dq->q_id);
+ 	defq = xfs_get_defquota(qi, xfs_dquot_type(dq));
+ 
+-	xfs_qm_adjust_res_timer(&dq->q_blk, &defq->blk);
+-	xfs_qm_adjust_res_timer(&dq->q_ino, &defq->ino);
+-	xfs_qm_adjust_res_timer(&dq->q_rtb, &defq->rtb);
++	xfs_qm_adjust_res_timer(dq, &dq->q_blk, &defq->blk);
++	xfs_qm_adjust_res_timer(dq, &dq->q_ino, &defq->ino);
++	xfs_qm_adjust_res_timer(dq, &dq->q_rtb, &defq->rtb);
+ }
+ 
+ /*
+@@ -221,6 +228,8 @@ xfs_qm_init_dquot_blk(
+ 		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+ 		d->dd_diskdq.d_id = cpu_to_be32(curid);
+ 		d->dd_diskdq.d_type = type;
++		if (curid > 0 && xfs_sb_version_hasbigtime(&mp->m_sb))
++			d->dd_diskdq.d_type |= XFS_DQTYPE_BIGTIME;
+ 		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+ 			uuid_copy(&d->dd_uuid, &mp->m_sb.sb_meta_uuid);
+ 			xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
+@@ -1165,6 +1174,14 @@ xfs_qm_dqflush_check(
+ 	    !dqp->q_rtb.timer)
+ 		return __this_address;
+ 
++	/* bigtime flag should never be set on root dquots */
++	if (dqp->q_type & XFS_DQTYPE_BIGTIME) {
++		if (!xfs_sb_version_hasbigtime(&dqp->q_mount->m_sb))
++			return __this_address;
++		if (dqp->q_id == 0)
++			return __this_address;
++	}
 +
  	return NULL;
  }
  
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index f6160033fcbd..3b25e43eafa1 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -58,9 +58,9 @@ xfs_failaddr_t xfs_inode_validate_cowextsize(struct xfs_mount *mp,
- 		uint32_t cowextsize, uint16_t mode, uint16_t flags,
- 		uint64_t flags2);
+diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
+index 0ba4d91c3a11..74ca87e02a14 100644
+--- a/fs/xfs/xfs_dquot.h
++++ b/fs/xfs/xfs_dquot.h
+@@ -238,6 +238,7 @@ int xfs_qm_dqiterate(struct xfs_mount *mp, xfs_dqtype_t type,
+ 		xfs_qm_dqiterate_fn iter_fn, void *priv);
  
--void xfs_inode_from_disk_timestamp(struct timespec64 *tv,
--		const union xfs_timestamp *ts);
--void xfs_inode_to_disk_timestamp(union xfs_timestamp *ts,
--		const struct timespec64 *tv);
-+void xfs_inode_from_disk_timestamp(struct xfs_dinode *dip,
-+		struct timespec64 *tv, const union xfs_timestamp *ts);
-+void xfs_inode_to_disk_timestamp(struct xfs_icdinode *from,
-+		union xfs_timestamp *ts, const struct timespec64 *tv);
+ void xfs_dquot_set_grace_period(time64_t *timer, time64_t limit);
+-void xfs_dquot_set_timeout(time64_t *timer, time64_t limit);
++void xfs_dquot_set_timeout(struct xfs_mount *mp, time64_t *timer,
++		time64_t limit);
  
- #endif	/* __XFS_INODE_BUF_H__ */
-diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
-index 17c83d29998c..569721f7f9e5 100644
---- a/fs/xfs/libxfs/xfs_log_format.h
-+++ b/fs/xfs/libxfs/xfs_log_format.h
-@@ -373,6 +373,9 @@ union xfs_ictimestamp {
- 		int32_t		t_sec;		/* timestamp seconds */
- 		int32_t		t_nsec;		/* timestamp nanoseconds */
- 	};
-+
-+	/* Nanoseconds since the bigtime epoch. */
-+	uint64_t		t_bigtime;
- };
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-index ae9aaf1f34bf..d5d60cd1c2ea 100644
---- a/fs/xfs/libxfs/xfs_sb.c
-+++ b/fs/xfs/libxfs/xfs_sb.c
-@@ -1166,6 +1166,8 @@ xfs_fs_geometry(
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_RMAPBT;
- 	if (xfs_sb_version_hasreflink(sbp))
- 		geo->flags |= XFS_FSOP_GEOM_FLAGS_REFLINK;
-+	if (xfs_sb_version_hasbigtime(sbp))
-+		geo->flags |= XFS_FSOP_GEOM_FLAGS_BIGTIME;
- 	if (xfs_sb_version_hassector(sbp))
- 		geo->logsectsize = sbp->sb_logsectsize;
- 	else
-diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-index e15129647e00..71aca4587715 100644
---- a/fs/xfs/libxfs/xfs_trans_inode.c
-+++ b/fs/xfs/libxfs/xfs_trans_inode.c
-@@ -131,6 +131,17 @@ xfs_trans_log_inode(
- 			iversion_flags = XFS_ILOG_CORE;
- 	}
- 
-+	/*
-+	 * If we're updating the inode core or the timestamps and it's possible
-+	 * to upgrade this inode to bigtime format, do so now.
-+	 */
-+	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
-+	    xfs_sb_version_hasbigtime(&tp->t_mountp->m_sb) &&
-+	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_BIGTIME)) {
-+		ip->i_d.di_flags2 |= XFS_DIFLAG2_BIGTIME;
-+		flags |= XFS_ILOG_CORE;
-+	}
-+
- 	/*
- 	 * Record the specific change for fdatasync optimisation. This allows
- 	 * fdatasync to skip log forces for inodes that are only timestamp
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 9f036053fdb7..6f00309de2d4 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -190,6 +190,11 @@ xchk_inode_flags2(
- 	if ((flags2 & XFS_DIFLAG2_DAX) && (flags2 & XFS_DIFLAG2_REFLINK))
- 		goto bad;
- 
-+	/* no bigtime iflag without the bigtime feature */
-+	if (!xfs_sb_version_hasbigtime(&mp->m_sb) &&
-+	    (flags2 & XFS_DIFLAG2_BIGTIME))
-+		goto bad;
-+
- 	return;
- bad:
- 	xchk_ino_set_corrupt(sc, ino);
-@@ -199,11 +204,12 @@ static inline void
- xchk_dinode_nsec(
- 	struct xfs_scrub		*sc,
- 	xfs_ino_t			ino,
-+	struct xfs_dinode		*dip,
- 	const union xfs_timestamp	*ts)
- {
- 	struct timespec64		tv;
- 
--	xfs_inode_from_disk_timestamp(&tv, ts);
-+	xfs_inode_from_disk_timestamp(dip, &tv, ts);
- 	if (tv.tv_nsec < 0 || tv.tv_nsec >= NSEC_PER_SEC)
- 		xchk_ino_set_corrupt(sc, ino);
- }
-@@ -306,9 +312,9 @@ xchk_dinode(
- 	}
- 
- 	/* di_[amc]time.nsec */
--	xchk_dinode_nsec(sc, ino, &dip->di_atime);
--	xchk_dinode_nsec(sc, ino, &dip->di_mtime);
--	xchk_dinode_nsec(sc, ino, &dip->di_ctime);
-+	xchk_dinode_nsec(sc, ino, dip, &dip->di_atime);
-+	xchk_dinode_nsec(sc, ino, dip, &dip->di_mtime);
-+	xchk_dinode_nsec(sc, ino, dip, &dip->di_ctime);
- 
- 	/*
- 	 * di_size.  xfs_dinode_verify checks for things that screw up
-@@ -413,7 +419,7 @@ xchk_dinode(
- 	}
- 
- 	if (dip->di_version >= 3) {
--		xchk_dinode_nsec(sc, ino, &dip->di_crtime);
-+		xchk_dinode_nsec(sc, ino, dip, &dip->di_crtime);
- 		xchk_inode_flags2(sc, dip, ino, mode, flags, flags2);
- 		xchk_inode_cowextsize(sc, dip, ino, mode, flags,
- 				flags2);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index c06129cffba9..bbc309bc70c4 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -841,6 +841,8 @@ xfs_ialloc(
- 	if (xfs_sb_version_has_v3inode(&mp->m_sb)) {
- 		inode_set_iversion(inode, 1);
- 		ip->i_d.di_flags2 = 0;
-+		if (xfs_sb_version_hasbigtime(&mp->m_sb))
-+			ip->i_d.di_flags2 |= XFS_DIFLAG2_BIGTIME;
- 		ip->i_d.di_cowextsize = 0;
- 		ip->i_d.di_crtime = tv;
- 	}
-@@ -2717,7 +2719,11 @@ xfs_ifree(
- 
- 	VFS_I(ip)->i_mode = 0;		/* mark incore inode as free */
- 	ip->i_d.di_flags = 0;
--	ip->i_d.di_flags2 = 0;
-+	/*
-+	 * Preserve the bigtime flag so that di_ctime accurately stores the
-+	 * deletion time.
-+	 */
-+	ip->i_d.di_flags2 &= XFS_DIFLAG2_BIGTIME;
- 	ip->i_d.di_dmevmask = 0;
- 	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
- 	ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
-@@ -3503,6 +3509,13 @@ xfs_iflush(
- 			__func__, ip->i_ino, ip->i_d.di_forkoff, ip);
- 		goto flush_out;
- 	}
-+	if (xfs_sb_version_hasbigtime(&mp->m_sb) &&
-+	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_BIGTIME)) {
-+		xfs_alert_tag(mp, XFS_PTAG_IFLUSH,
-+			"%s: bad inode %Lu, bigtime unset, ptr "PTR_FMT,
-+			__func__, ip->i_ino, ip);
-+		goto flush_out;
-+	}
- 
- 	/*
- 	 * Inode item log recovery for v2 inodes are dependent on the
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index cec6d4d82bc4..c38af3eea48f 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -298,9 +298,16 @@ xfs_inode_item_format_attr_fork(
- /* Write a log_dinode timestamp into an ondisk inode timestamp. */
- static inline void
- xfs_log_dinode_to_disk_ts(
-+	struct xfs_log_dinode		*from,
- 	union xfs_timestamp		*ts,
- 	const union xfs_ictimestamp	*its)
- {
-+	if (from->di_version >= 3 &&
-+	    (from->di_flags2 & XFS_DIFLAG2_BIGTIME)) {
-+		ts->t_bigtime = cpu_to_be64(its->t_bigtime);
-+		return;
-+	}
-+
- 	ts->t_sec = cpu_to_be32(its->t_sec);
- 	ts->t_nsec = cpu_to_be32(its->t_nsec);
- }
-@@ -322,9 +329,9 @@ xfs_log_dinode_to_disk(
- 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
- 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
- 
--	xfs_log_dinode_to_disk_ts(&to->di_atime, &from->di_atime);
--	xfs_log_dinode_to_disk_ts(&to->di_mtime, &from->di_mtime);
--	xfs_log_dinode_to_disk_ts(&to->di_ctime, &from->di_ctime);
-+	xfs_log_dinode_to_disk_ts(from, &to->di_atime, &from->di_atime);
-+	xfs_log_dinode_to_disk_ts(from, &to->di_mtime, &from->di_mtime);
-+	xfs_log_dinode_to_disk_ts(from, &to->di_ctime, &from->di_ctime);
- 
- 	to->di_size = cpu_to_be64(from->di_size);
- 	to->di_nblocks = cpu_to_be64(from->di_nblocks);
-@@ -340,7 +347,7 @@ xfs_log_dinode_to_disk(
- 
- 	if (from->di_version == 3) {
- 		to->di_changecount = cpu_to_be64(from->di_changecount);
--		xfs_log_dinode_to_disk_ts(&to->di_crtime, &from->di_crtime);
-+		xfs_log_dinode_to_disk_ts(from, &to->di_crtime, &from->di_crtime);
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
- 		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
- 		to->di_ino = cpu_to_be64(from->di_ino);
-@@ -356,9 +363,19 @@ xfs_log_dinode_to_disk(
- /* Write an incore inode timestamp into a log_dinode timestamp. */
- static inline void
- xfs_inode_to_log_dinode_ts(
-+	struct xfs_icdinode		*from,
- 	union xfs_ictimestamp		*its,
- 	const struct timespec64		*ts)
- {
-+	if (from->di_flags2 & XFS_DIFLAG2_BIGTIME) {
-+		uint64_t		t;
-+
-+		t = (uint64_t)(ts->tv_sec + XFS_INO_BIGTIME_EPOCH);
-+		t *= NSEC_PER_SEC;
-+		its->t_bigtime = t + ts->tv_nsec;
-+		return;
-+	}
-+
- 	its->t_sec = ts->tv_sec;
- 	its->t_nsec = ts->tv_nsec;
- }
-@@ -381,9 +398,9 @@ xfs_inode_to_log_dinode(
- 
- 	memset(to->di_pad, 0, sizeof(to->di_pad));
- 	memset(to->di_pad3, 0, sizeof(to->di_pad3));
--	xfs_inode_to_log_dinode_ts(&to->di_atime, &inode->i_atime);
--	xfs_inode_to_log_dinode_ts(&to->di_mtime, &inode->i_mtime);
--	xfs_inode_to_log_dinode_ts(&to->di_ctime, &inode->i_ctime);
-+	xfs_inode_to_log_dinode_ts(from, &to->di_atime, &inode->i_atime);
-+	xfs_inode_to_log_dinode_ts(from, &to->di_mtime, &inode->i_mtime);
-+	xfs_inode_to_log_dinode_ts(from, &to->di_ctime, &inode->i_ctime);
- 	to->di_nlink = inode->i_nlink;
- 	to->di_gen = inode->i_generation;
- 	to->di_mode = inode->i_mode;
-@@ -405,7 +422,7 @@ xfs_inode_to_log_dinode(
- 	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
- 		to->di_version = 3;
- 		to->di_changecount = inode_peek_iversion(inode);
--		xfs_inode_to_log_dinode_ts(&to->di_crtime, &from->di_crtime);
-+		xfs_inode_to_log_dinode_ts(from, &to->di_crtime, &from->di_crtime);
- 		to->di_flags2 = from->di_flags2;
- 		to->di_cowextsize = from->di_cowextsize;
- 		to->di_ino = ip->i_ino;
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 6f22a66777cd..13396c3665d1 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1190,7 +1190,8 @@ xfs_flags2diflags2(
- 	unsigned int		xflags)
- {
- 	uint64_t		di_flags2 =
--		(ip->i_d.di_flags2 & XFS_DIFLAG2_REFLINK);
-+		(ip->i_d.di_flags2 & (XFS_DIFLAG2_REFLINK |
-+				      XFS_DIFLAG2_BIGTIME));
- 
- 	if (xflags & FS_XFLAG_DAX)
- 		di_flags2 |= XFS_DIFLAG2_DAX;
+ #endif /* __XFS_DQUOT_H__ */
 diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 7158a8de719f..3e0c677cff15 100644
+index 3e0c677cff15..cc12d6e1c89a 100644
 --- a/fs/xfs/xfs_ondisk.h
 +++ b/fs/xfs/xfs_ondisk.h
-@@ -25,6 +25,9 @@ xfs_check_limits(void)
- 	/* make sure timestamp limits are correct */
- 	XFS_CHECK_VALUE(XFS_INO_TIME_MIN,			-2147483648LL);
- 	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
-+	XFS_CHECK_VALUE(XFS_INO_BIGTIME_EPOCH,			2147483648LL);
-+	XFS_CHECK_VALUE(XFS_INO_BIGTIME_MIN,			-2147483648LL);
-+	XFS_CHECK_VALUE(XFS_INO_BIGTIME_MAX,			16299260425LL);
- 	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MIN,			1LL);
+@@ -32,6 +32,13 @@ xfs_check_limits(void)
  	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MAX,			4294967295LL);
  	XFS_CHECK_VALUE(XFS_DQ_GRACE_MIN,			0LL);
-@@ -58,6 +61,9 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_key,		20);
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_rmap_rec,		24);
- 	XFS_CHECK_STRUCT_SIZE(union xfs_timestamp,		8);
-+	XFS_CHECK_OFFSET(union xfs_timestamp, t_bigtime,	0);
-+	XFS_CHECK_OFFSET(union xfs_timestamp, t_sec,		0);
-+	XFS_CHECK_OFFSET(union xfs_timestamp, t_nsec,		4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_alloc_key_t,			8);
- 	XFS_CHECK_STRUCT_SIZE(xfs_alloc_ptr_t,			4);
- 	XFS_CHECK_STRUCT_SIZE(xfs_alloc_rec_t,			8);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 375f05a47ba4..b19ae052f7a3 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1484,8 +1484,13 @@ xfs_fc_fill_super(
- 	sb->s_maxbytes = MAX_LFS_FILESIZE;
- 	sb->s_max_links = XFS_MAXLINK;
- 	sb->s_time_gran = 1;
--	sb->s_time_min = XFS_INO_TIME_MIN;
--	sb->s_time_max = XFS_INO_TIME_MAX;
-+	if (xfs_sb_version_hasbigtime(&mp->m_sb)) {
-+		sb->s_time_min = XFS_INO_BIGTIME_MIN;
-+		sb->s_time_max = XFS_INO_BIGTIME_MAX;
-+	} else {
-+		sb->s_time_min = XFS_INO_TIME_MIN;
-+		sb->s_time_max = XFS_INO_TIME_MAX;
-+	}
- 	sb->s_iflags |= SB_I_CGROUPWB;
- 
- 	set_posix_acl_flag(sb);
-@@ -1494,6 +1499,10 @@ xfs_fc_fill_super(
- 	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
- 		sb->s_flags |= SB_I_VERSION;
- 
-+	if (xfs_sb_version_hasbigtime(&mp->m_sb))
-+		xfs_warn(mp,
-+ "EXPERIMENTAL big timestamp feature in use. Use at your own risk!");
+ 	XFS_CHECK_VALUE(XFS_DQ_GRACE_MAX,			4294967295LL);
++	XFS_CHECK_VALUE(XFS_DQ_BIGTIMEOUT_MIN,			1LL);
++	XFS_CHECK_VALUE(XFS_DQ_BIGTIMEOUT_MAX,			16299260425LL);
 +
- 	if (mp->m_flags & XFS_MOUNT_DAX_ALWAYS) {
- 		bool rtdev_is_dax = false, datadev_is_dax;
++	BUILD_BUG_ON_MSG((XFS_DQ_TIMEOUT_MAX << XFS_DQ_BIGTIME_SHIFT) <
++			 XFS_DQ_BIGTIMEOUT_MAX,
++			 "XFS: quota timeout field is not large enough to fit "
++			 "XFS_DQ_BIGTIMEOUT_MAX");
+ }
  
+ static inline void __init
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index be67570badf8..a5136e40e118 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -879,6 +879,8 @@ xfs_qm_reset_dqcounts(
+ 			ddq->d_bwarns = 0;
+ 			ddq->d_iwarns = 0;
+ 			ddq->d_rtbwarns = 0;
++			if (xfs_sb_version_hasbigtime(&mp->m_sb))
++				ddq->d_type |= XFS_DQTYPE_BIGTIME;
+ 		}
+ 
+ 		if (xfs_sb_version_hascrc(&mp->m_sb)) {
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index 95b0c25b9969..4d9c245d65c2 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -479,6 +479,7 @@ xfs_setqlim_warns(
+ 
+ static inline void
+ xfs_setqlim_timer(
++	struct xfs_dquot	*dqp,
+ 	struct xfs_dquot_res	*res,
+ 	struct xfs_quota_limits	*qlim,
+ 	s64			timer)
+@@ -489,7 +490,7 @@ xfs_setqlim_timer(
+ 		qlim->time = res->timer;
+ 	} else {
+ 		/* Set the grace period expiration on a quota. */
+-		xfs_dquot_set_timeout(&res->timer, timer);
++		xfs_dquot_set_timeout(dqp->q_mount, &res->timer, timer);
+ 	}
+ }
+ 
+@@ -579,7 +580,7 @@ xfs_qm_scall_setqlim(
+ 	if (newlim->d_fieldmask & QC_SPC_WARNS)
+ 		xfs_setqlim_warns(res, qlim, newlim->d_spc_warns);
+ 	if (newlim->d_fieldmask & QC_SPC_TIMER)
+-		xfs_setqlim_timer(res, qlim, newlim->d_spc_timer);
++		xfs_setqlim_timer(dqp, res, qlim, newlim->d_spc_timer);
+ 
+ 	/* Blocks on the realtime device. */
+ 	hard = (newlim->d_fieldmask & QC_RT_SPC_HARD) ?
+@@ -595,7 +596,7 @@ xfs_qm_scall_setqlim(
+ 	if (newlim->d_fieldmask & QC_RT_SPC_WARNS)
+ 		xfs_setqlim_warns(res, qlim, newlim->d_rt_spc_warns);
+ 	if (newlim->d_fieldmask & QC_RT_SPC_TIMER)
+-		xfs_setqlim_timer(res, qlim, newlim->d_rt_spc_timer);
++		xfs_setqlim_timer(dqp, res, qlim, newlim->d_rt_spc_timer);
+ 
+ 	/* Inodes */
+ 	hard = (newlim->d_fieldmask & QC_INO_HARD) ?
+@@ -611,7 +612,7 @@ xfs_qm_scall_setqlim(
+ 	if (newlim->d_fieldmask & QC_INO_WARNS)
+ 		xfs_setqlim_warns(res, qlim, newlim->d_ino_warns);
+ 	if (newlim->d_fieldmask & QC_INO_TIMER)
+-		xfs_setqlim_timer(res, qlim, newlim->d_ino_timer);
++		xfs_setqlim_timer(dqp, res, qlim, newlim->d_ino_timer);
+ 
+ 	if (id != 0) {
+ 		/*
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index c6ba7ef18e06..133fc6fc3edd 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -55,6 +55,12 @@ xfs_trans_log_dquot(
+ {
+ 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
+ 
++	/* Upgrade the dquot to bigtime format if possible. */
++	if (dqp->q_id != 0 &&
++	    xfs_sb_version_hasbigtime(&tp->t_mountp->m_sb) &&
++	    !(dqp->q_type & XFS_DQTYPE_BIGTIME))
++		dqp->q_type |= XFS_DQTYPE_BIGTIME;
++
+ 	tp->t_flags |= XFS_TRANS_DIRTY;
+ 	set_bit(XFS_LI_DIRTY, &dqp->q_logitem.qli_item.li_flags);
+ }
 
