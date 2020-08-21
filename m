@@ -2,151 +2,135 @@ Return-Path: <SRS0=59Ki=B7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,FORGED_MUA_MOZILLA,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E00FEC433E3
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 06:18:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3218CC433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 08:54:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDF842075E
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 06:18:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09056214F1
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 08:54:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Y4jFZd58"
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ROGpziHz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727837AbgHUGSA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Aug 2020 02:18:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52412 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727822AbgHUGR7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 02:17:59 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C085C061385;
-        Thu, 20 Aug 2020 23:17:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=IBcexKFr3UjZZmXJsxriFU+NEblTsPCGVKw6LJaZq6g=; b=Y4jFZd58hCGWF6Xt6uTzcnBXxC
-        UWtop2H3owB7z8izxB38rhYUBWzbMNcfGF/ZbKA0of3MSSGs4NQaKztvqV9BDUpRVEyZJptkpmFLB
-        eHZ5eUt+m/6J/A4wdP7EESaEV5liZvZfwbZtkswrXPxv9gneKZZ7Q4CLnAnyEyTg7b3sB729YufK9
-        IRx3e5Gu6yO2cex9ZECh9Ci2L0FU60l/zlPbPI/LJmRmkCkLWVoIQNSHeAZjBvAHmdauVr7YPXpJv
-        jBqr6WseTRQf+buwuQLScNsP5fKKfFg9m5mjh5K6k2emz1kUBkSy6mo8I4xRd9ThC4JeRxnP7VO2b
-        VYTysohw==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k90N6-0001K8-RX; Fri, 21 Aug 2020 06:17:52 +0000
-Date:   Fri, 21 Aug 2020 07:17:52 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Yu Kuai <yukuai3@huawei.com>
-Cc:     hch@infradead.org, darrick.wong@oracle.com, willy@infradead.org,
-        david@fromorbit.com, linux-xfs@vger.kernel.org,
+        id S1727082AbgHUIyJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Aug 2020 04:54:09 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55564 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726243AbgHUIyG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 04:54:06 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07L8X7fK072907;
+        Fri, 21 Aug 2020 04:54:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : date : mime-version : in-reply-to : content-type :
+ content-transfer-encoding : message-id; s=pp1;
+ bh=tMpNeTWf65DjC70rS5HyK/935zN2nZFWJAbrMtoWLWM=;
+ b=ROGpziHzLer7q4RxRNMlsIh02QHcsuW4nx++4W55MlAtDvOnm/34MSU8qEoaLAzmD+7w
+ nqAjYrE1XeOtfd8QRjezVGQfBhj6Sd0bbGl7Bo751retTKKsInVQwOhtx9QscBOoaYne
+ 0rY8IHweV1QP7Mo0k7L/MZMzooxmsfqVyBdJlWGwGRiln6UxMRjbz/neUvPF6qZ3bEOw
+ b+HXkegr5fRrIG5z2nG0fwUTDXaduQntoBkSWO+/FFsYVwv1fk59mY/82uYE/hUk4ag0
+ j93qu64MIdTR5+BTPYz1fVQ4QxOhjkqoIS3wfbfGLBovyc+ehlsOaclW4gqGgD8noq7L ng== 
+Received: from ppma06ams.nl.ibm.com (66.31.33a9.ip4.static.sl-reverse.com [169.51.49.102])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 33257sshsd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 21 Aug 2020 04:54:02 -0400
+Received: from pps.filterd (ppma06ams.nl.ibm.com [127.0.0.1])
+        by ppma06ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 07L8q58q025176;
+        Fri, 21 Aug 2020 08:54:00 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma06ams.nl.ibm.com with ESMTP id 330tbvtupg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 21 Aug 2020 08:54:00 +0000
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 07L8rwYK65405230
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 21 Aug 2020 08:53:58 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 16D634C044;
+        Fri, 21 Aug 2020 08:53:58 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 93CF64C040;
+        Fri, 21 Aug 2020 08:53:56 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.199.33.217])
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Fri, 21 Aug 2020 08:53:56 +0000 (GMT)
+Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
+To:     Christoph Hellwig <hch@infradead.org>,
+        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
+        linux-block@vger.kernel.org
+Cc:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com
-Subject: Re: [RFC PATCH V3] iomap: add support to track dirty state of sub
- pages
-Message-ID: <20200821061752.GF31091@infradead.org>
-References: <20200819120542.3780727-1-yukuai3@huawei.com>
+        willy@infradead.org
+References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
+ <20200821060710.GC31091@infradead.org>
+From:   Ritesh Harjani <riteshh@linux.ibm.com>
+Date:   Fri, 21 Aug 2020 14:23:55 +0530
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200819120542.3780727-1-yukuai3@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200821060710.GC31091@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+Message-Id: <20200821085356.93CF64C040@d06av22.portsmouth.uk.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-08-21_06:2020-08-21,2020-08-21 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
+ mlxlogscore=840 suspectscore=0 impostorscore=0 mlxscore=0 adultscore=0
+ spamscore=0 clxscore=1011 priorityscore=1501 lowpriorityscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008210079
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index bcfc288dba3f..b6a7457d8581 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -21,15 +21,20 @@
->  
->  #include "../internal.h"
->  
-> +#define DIRTY_BITS(x)	((x) + PAGE_SIZE / SECTOR_SIZE)
->  /*
 
-Nit: please keep an empty line between a definition and a comment.
 
-> +	 * The first half bits are used to track sub-page uptodate status,
-> +	 * the second half bits are for dirty status.
-> +	 */
-> +	DECLARE_BITMAP(state, PAGE_SIZE * 2 / SECTOR_SIZE);
->  };
->  
->  static inline struct iomap_page *to_iomap_page(struct page *page)
-> @@ -52,8 +57,8 @@ iomap_page_create(struct inode *inode, struct page *page)
->  	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
->  	atomic_set(&iop->read_count, 0);
->  	atomic_set(&iop->write_count, 0);
-> -	spin_lock_init(&iop->uptodate_lock);
-> -	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
-> +	spin_lock_init(&iop->state_lock);
-> +	bitmap_zero(iop->state, PAGE_SIZE * 2 / SECTOR_SIZE);
+On 8/21/20 11:37 AM, Christoph Hellwig wrote:
+> On Wed, Aug 19, 2020 at 03:58:41PM +0530, Anju T Sudhakar wrote:
+>> From: Ritesh Harjani <riteshh@linux.ibm.com>
+>>
+>> __bio_try_merge_page() may return same_page = 1 and merged = 0.
+>> This could happen when bio->bi_iter.bi_size + len > UINT_MAX.
+>> Handle this case in iomap_add_to_ioend() by incrementing write_count.
+>> This scenario mostly happens where we have too much dirty data accumulated.
+>>
+>> w/o the patch we hit below kernel warning,
+> 
+> I think this is better fixed in the block layer rather than working
+> around the problem in the callers.  Something like this:
+> 
+> diff --git a/block/bio.c b/block/bio.c
+> index c63ba04bd62967..ef321cd1072e4e 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -879,8 +879,10 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
+>   		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+>   
+>   		if (page_is_mergeable(bv, page, len, off, same_page)) {
+> -			if (bio->bi_iter.bi_size > UINT_MAX - len)
+> +			if (bio->bi_iter.bi_size > UINT_MAX - len) {
+> +				*same_page = false;
+>   				return false;
+> +			}
+>   			bv->bv_len += len;
+>   			bio->bi_iter.bi_size += len;
+>   			return true;
+> 
 
-Maybe add a
+Ya, we had think of that. But what we then thought was, maybe the
+API does return the right thing. Meaning, what API says is, same_page is
+true, but the page couldn't be merged hence it returned ret = false.
+With that thought, we fixed this in the caller.
 
-#define IOMAP_STATE_ARRAY_SIZE	(PAGE_SIZE * 2 / SECTOR_SIZE)
+But agree with you that with ret = false, there is no meaning of
+same_page being true. Ok, so let linux-block comment on whether
+above also looks good. If yes, I can spin out an official patch with
+all details.
 
-and use?  That isn't much shorter, but a little easier to read at least.
-
-> +	spin_lock_irqsave(&iop->state_lock, flags);
-> +	for (i = first; i <= last; i++)
-> +		set_bit(i, iop->state);
-
-I think Matthew had some patches to move the these days pointlessly
-atomic bitops to use the bitmap_* routines.  It might make sense to
-start out that way for new code as well.
-
-> +
-> +	if (last >= first)
-> +		iomap_set_page_dirty(page);
-> +
-> +	spin_unlock_irqrestore(&iop->state_lock, flags);
-
-As aready pointed out, this probably needs to move out of the lock.
-
-> +static void
-> +iomap_set_range_dirty(struct page *page, unsigned int off,
-> +		unsigned int len)
-> +{
-> +	if (PageError(page))
-> +		return;
-> +
-> +	if (page_has_private(page))
-> +		iomap_iop_set_range_dirty(page, off, len);
-
-I'd be tempted to merge this function and iomap_iop_set_range_dirty,
-and just return early if there is an error or no iomap_page structure,
-relying on the fact that to_iomap_page returns NULL for that case.
-
-> +static void
-> +iomap_iop_clear_range_dirty(struct page *page, unsigned int off,
-> +		unsigned int len)
-> +{
-> +	struct iomap_page *iop = to_iomap_page(page);
-> +	struct inode *inode = page->mapping->host;
-> +	unsigned int first = DIRTY_BITS(off >> inode->i_blkbits);
-> +	unsigned int last = DIRTY_BITS((off + len - 1) >> inode->i_blkbits);
-> +	unsigned long flags;
-> +	unsigned int i;
-> +
-> +	spin_lock_irqsave(&iop->state_lock, flags);
-> +	for (i = first; i <= last; i++)
-> +		clear_bit(i, iop->state);
-
-should probably use bitmap_clear().
-
-> +static void
-> +iomap_clear_range_dirty(struct page *page, unsigned int off,
-> +		unsigned int len)
-> +{
-> +	if (PageError(page))
-> +		return;
-> +
-> +	if (page_has_private(page))
-> +		iomap_iop_clear_range_dirty(page, off, len);
-> +}
-
-Same comment about merging the two functions as above.
+-ritesh
