@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FE68C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:11:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B5A5C433E1
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:12:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38B5E2076E
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:11:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 568CA2076E
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:12:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FJaH1+4S"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FDf4z2Jx"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727006AbgHUCLs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Aug 2020 22:11:48 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:34472 "EHLO
+        id S1726983AbgHUCMB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Aug 2020 22:12:01 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34660 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726969AbgHUCLr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 22:11:47 -0400
+        with ESMTP id S1726969AbgHUCMB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 22:12:01 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L27Dod043451;
-        Fri, 21 Aug 2020 02:11:43 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L28qnS044208;
+        Fri, 21 Aug 2020 02:11:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=q0eZn6ljrRRnRRwgY6wnSckiGqNH+BBScAwjfyV/cFU=;
- b=FJaH1+4SIDJhsKsVvHhj3qqxyiL8bgP+6QCWOMcFt+G+zu9c5wIU5ZqeRsK6gdQlz2jw
- nLMNjQRx5eJjBuZPITB4EdA9tBamziTQSJ7zFDG7YsjeX8+daWXz65O5pp1xiX+7yfqX
- g24+idQRPPILeA/c8b1cAzU7spmDAgB1s7nsVDQDuhq3g+b2RSFEzwWExdBZ30dYYCXf
- fYrKSZUqGVnXRsyBkr19aY3PsbInyaoUbbHG7DsvemoMyQIZh+QsQjkxfQ0plZ48LLHP
- 7fDvo+ONkgDZzfL/WcJuKQmUDxkIIQBKll80lCbtI9H7NALpYD5pCjGsrlyHyyWyLOWz QA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 32x8bnkr6t-1
+ bh=UpnAS7NjUc23HA8NkWwQSTgBXckWHTKjt9FWzaQ5K4U=;
+ b=FDf4z2JxNQaP8ZVYJ5AJwYBTt1TaKwyFpZjGdGn+MWiLgmUZrcPZD2mfhU4tx3BrbqMQ
+ byhJBgdbjKhD1rZhHs+JPMbrup1OWfVQgeDNMZiMiQn6czU/yuoIKVHZPeJ4SJdxvrBl
+ /4F4TmAozWuRymwowTVfT2enN/E/+jgkTqeD4mAsKpVCaCbLFcrABnUq2Y1veEIVkArT
+ PzAZKn5GoR2L+JOIeqVMINkUHZIQBirAMsMAa93ouOZeIdVbjfCsCs4nhGPSh4b9EMOK
+ oGx5mTwDPDz1qn5iEaavyP7YjfHL0jovoYKFfI5nlaJ4rMeYlhf4JWMeupMUzIKMLNu2 hA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 32x8bnkr77-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 21 Aug 2020 02:11:42 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L294nV012379;
-        Fri, 21 Aug 2020 02:11:42 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 32xsn22ym3-1
+        Fri, 21 Aug 2020 02:11:58 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L28V2h140974;
+        Fri, 21 Aug 2020 02:11:57 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 331b2e8txw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Aug 2020 02:11:42 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07L2Bf7R019518;
-        Fri, 21 Aug 2020 02:11:42 GMT
+        Fri, 21 Aug 2020 02:11:57 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07L2Bvoe028340;
+        Fri, 21 Aug 2020 02:11:57 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 20 Aug 2020 19:11:41 -0700
-Subject: [PATCH 02/11] xfs: refactor quota expiration timer modification
+        with ESMTP ; Thu, 20 Aug 2020 19:11:54 -0700
+Subject: [PATCH 04/11] xfs: remove xfs_timestamp_t
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, sandeen@sandeen.net
-Date:   Thu, 20 Aug 2020 19:11:40 -0700
-Message-ID: <159797590052.965217.10856208107922013686.stgit@magnolia>
+Date:   Thu, 20 Aug 2020 19:11:53 -0700
+Message-ID: <159797591321.965217.7549298717995336302.stgit@magnolia>
 In-Reply-To: <159797588727.965217.7260803484540460144.stgit@magnolia>
 References: <159797588727.965217.7260803484540460144.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -64,8 +64,8 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9719 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
- mlxlogscore=999 phishscore=0 mlxscore=0 suspectscore=1 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 bulkscore=0
+ mlxlogscore=999 adultscore=0 suspectscore=1 phishscore=0 spamscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008210018
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9719 signatures=668679
@@ -81,129 +81,92 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Define explicit limits on the range of quota grace period expiration
-timeouts and refactor the code that modifies the timeouts into helpers
-that clamp the values appropriately.  Note that we'll deal with the
-grace period timer separately.
+Kill this old typedef.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/libxfs/xfs_format.h |   22 ++++++++++++++++++++++
- fs/xfs/xfs_dquot.c         |   13 ++++++++++++-
- fs/xfs/xfs_dquot.h         |    2 ++
- fs/xfs/xfs_ondisk.h        |    2 ++
- fs/xfs/xfs_qm_syscalls.c   |    9 +++++++--
- 5 files changed, 45 insertions(+), 3 deletions(-)
+ fs/xfs/libxfs/xfs_format.h     |   12 ++++++------
+ fs/xfs/libxfs/xfs_log_format.h |   12 ++++++------
+ 2 files changed, 12 insertions(+), 12 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index b1b8a5c05cea..ef36978239ac 100644
+index e9e6248b35be..1f3a2be6c396 100644
 --- a/fs/xfs/libxfs/xfs_format.h
 +++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1197,6 +1197,28 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
- 
- #define XFS_DQTYPE_ANY		(XFS_DQTYPE_REC_MASK)
- 
-+/*
-+ * XFS Quota Timers
-+ * ================
-+ *
-+ * Quota grace period expiration timers are an unsigned 32-bit seconds counter;
-+ * time zero is the Unix epoch, Jan  1 00:00:01 UTC 1970.  An expiration value
-+ * of zero means that the quota limit has not been reached, and therefore no
-+ * expiration has been set.
-+ */
-+
-+/*
-+ * Smallest possible quota expiration with traditional timestamps, which is
-+ * Jan  1 00:00:01 UTC 1970.
-+ */
-+#define XFS_DQ_TIMEOUT_MIN	((int64_t)1)
-+
-+/*
-+ * Largest possible quota expiration with traditional timestamps, which is
-+ * Feb  7 06:28:15 UTC 2106.
-+ */
-+#define XFS_DQ_TIMEOUT_MAX	((int64_t)U32_MAX)
-+
- /*
-  * This is the main portion of the on-disk representation of quota information
-  * for a user.  We pad this with some more expansion room to construct the on
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index bcd73b9c2994..2425b1c30d11 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -98,6 +98,16 @@ xfs_qm_adjust_dqlimits(
- 		xfs_dquot_set_prealloc_limits(dq);
- }
- 
-+/* Set the expiration time of a quota's grace period. */
-+void
-+xfs_dquot_set_timeout(
-+	time64_t		*timer,
-+	time64_t		value)
-+{
-+	*timer = clamp_t(time64_t, value, XFS_DQ_TIMEOUT_MIN,
-+					  XFS_DQ_TIMEOUT_MAX);
-+}
-+
- /*
-  * Determine if this quota counter is over either limit and set the quota
-  * timers as appropriate.
-@@ -112,7 +122,8 @@ xfs_qm_adjust_res_timer(
- 	if ((res->softlimit && res->count > res->softlimit) ||
- 	    (res->hardlimit && res->count > res->hardlimit)) {
- 		if (res->timer == 0)
--			res->timer = ktime_get_real_seconds() + qlim->time;
-+			xfs_dquot_set_timeout(&res->timer,
-+					ktime_get_real_seconds() + qlim->time);
- 	} else {
- 		if (res->timer == 0)
- 			res->warnings = 0;
-diff --git a/fs/xfs/xfs_dquot.h b/fs/xfs/xfs_dquot.h
-index 282a65da93c7..11bd0ee9b0fa 100644
---- a/fs/xfs/xfs_dquot.h
-+++ b/fs/xfs/xfs_dquot.h
-@@ -237,4 +237,6 @@ typedef int (*xfs_qm_dqiterate_fn)(struct xfs_dquot *dq,
- int xfs_qm_dqiterate(struct xfs_mount *mp, xfs_dqtype_t type,
- 		xfs_qm_dqiterate_fn iter_fn, void *priv);
- 
-+void xfs_dquot_set_timeout(time64_t *timer, time64_t limit);
-+
- #endif /* __XFS_DQUOT_H__ */
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 48a64fa49f91..38ccffcf3336 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -25,6 +25,8 @@ xfs_check_limits(void)
- 	/* make sure timestamp limits are correct */
- 	XFS_CHECK_VALUE(XFS_INO_TIME_MIN,			-2147483648LL);
- 	XFS_CHECK_VALUE(XFS_INO_TIME_MAX,			2147483647LL);
-+	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MIN,			1LL);
-+	XFS_CHECK_VALUE(XFS_DQ_TIMEOUT_MAX,			4294967295LL);
- }
- 
- static inline void __init
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 1c542b4a5220..b16d533a6feb 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -483,9 +483,14 @@ xfs_setqlim_timer(
- 	struct xfs_quota_limits	*qlim,
- 	s64			timer)
- {
--	res->timer = timer;
--	if (qlim)
-+	if (qlim) {
-+		/* Set the length of the default grace period. */
-+		res->timer = timer;
- 		qlim->time = timer;
-+	} else {
-+		/* Set the grace period expiration on a quota. */
-+		xfs_dquot_set_timeout(&res->timer, timer);
-+	}
- }
+@@ -856,10 +856,10 @@ struct xfs_agfl {
+  * Inode timestamps consist of signed 32-bit counters for seconds and
+  * nanoseconds; time zero is the Unix epoch, Jan  1 00:00:00 UTC 1970.
+  */
+-typedef struct xfs_timestamp {
++struct xfs_timestamp {
+ 	__be32		t_sec;		/* timestamp seconds */
+ 	__be32		t_nsec;		/* timestamp nanoseconds */
+-} xfs_timestamp_t;
++};
  
  /*
+  * Smallest possible timestamp with traditional timestamps, which is
+@@ -904,9 +904,9 @@ typedef struct xfs_dinode {
+ 	__be16		di_projid_hi;	/* higher part owner's project id */
+ 	__u8		di_pad[6];	/* unused, zeroed space */
+ 	__be16		di_flushiter;	/* incremented on flush */
+-	xfs_timestamp_t	di_atime;	/* time last accessed */
+-	xfs_timestamp_t	di_mtime;	/* time last modified */
+-	xfs_timestamp_t	di_ctime;	/* time created/inode modified */
++	struct xfs_timestamp di_atime;	/* time last accessed */
++	struct xfs_timestamp di_mtime;	/* time last modified */
++	struct xfs_timestamp di_ctime;	/* time created/inode modified */
+ 	__be64		di_size;	/* number of bytes in file */
+ 	__be64		di_nblocks;	/* # of direct & btree blocks used */
+ 	__be32		di_extsize;	/* basic/minimum extent size for file */
+@@ -931,7 +931,7 @@ typedef struct xfs_dinode {
+ 	__u8		di_pad2[12];	/* more padding for future expansion */
+ 
+ 	/* fields only written to during inode creation */
+-	xfs_timestamp_t	di_crtime;	/* time created */
++	struct xfs_timestamp di_crtime;	/* time created */
+ 	__be64		di_ino;		/* inode number */
+ 	uuid_t		di_uuid;	/* UUID of the filesystem */
+ 
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index e3400c9c71cd..f2fac9bea66d 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -368,10 +368,10 @@ static inline int xfs_ilog_fdata(int w)
+  * directly mirrors the xfs_dinode structure as it must contain all the same
+  * information.
+  */
+-typedef struct xfs_ictimestamp {
++struct xfs_ictimestamp {
+ 	int32_t		t_sec;		/* timestamp seconds */
+ 	int32_t		t_nsec;		/* timestamp nanoseconds */
+-} xfs_ictimestamp_t;
++};
+ 
+ /*
+  * Define the format of the inode core that is logged. This structure must be
+@@ -390,9 +390,9 @@ struct xfs_log_dinode {
+ 	uint16_t	di_projid_hi;	/* higher part of owner's project id */
+ 	uint8_t		di_pad[6];	/* unused, zeroed space */
+ 	uint16_t	di_flushiter;	/* incremented on flush */
+-	xfs_ictimestamp_t di_atime;	/* time last accessed */
+-	xfs_ictimestamp_t di_mtime;	/* time last modified */
+-	xfs_ictimestamp_t di_ctime;	/* time created/inode modified */
++	struct xfs_ictimestamp di_atime;	/* time last accessed */
++	struct xfs_ictimestamp di_mtime;	/* time last modified */
++	struct xfs_ictimestamp di_ctime;	/* time created/inode modified */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+ 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+@@ -417,7 +417,7 @@ struct xfs_log_dinode {
+ 	uint8_t		di_pad2[12];	/* more padding for future expansion */
+ 
+ 	/* fields only written to during inode creation */
+-	xfs_ictimestamp_t di_crtime;	/* time created */
++	struct xfs_ictimestamp di_crtime;	/* time created */
+ 	xfs_ino_t	di_ino;		/* inode number */
+ 	uuid_t		di_uuid;	/* UUID of the filesystem */
+ 
 
