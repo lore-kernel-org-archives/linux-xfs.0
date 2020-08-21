@@ -2,239 +2,339 @@ Return-Path: <SRS0=59Ki=B7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,FORGED_MUA_MOZILLA,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,FROM_LOCAL_NOVOWEL,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6343C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 04:45:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BA31C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 05:02:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7096B20639
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 04:45:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="Tm4paieN"
+	by mail.kernel.org (Postfix) with ESMTP id 7780921744
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 05:02:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726002AbgHUEpu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Aug 2020 00:45:50 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:29468 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725908AbgHUEpt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 00:45:49 -0400
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 07L4YIj8171262;
-        Fri, 21 Aug 2020 00:45:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : date : mime-version : in-reply-to : content-type :
- content-transfer-encoding : message-id; s=pp1;
- bh=0ZFBYPwt7oIVi0zmqeJRyIDzSpcn6H+lTuSgoG9Orfs=;
- b=Tm4paieNOb5oiMkvHPHyiSTyuTM949sfziNbtoqEj5RCydHx+d+nQ1EMl8iqi7FTKfSd
- 3n4QHe/w9GgiLkgfO0WLh1QUoKgwfSLV+jgdXAGBedEMs+XAv3v2RgKE06+mtGFFwLKI
- i8N0twuDUzMeOQu7eTkoOR1Z1jm3DdvgC/qRBWSzR7b+5XiUxhYYBVhVzKTKQJmNmhpk
- cwWChONIcvbiZ6c25PNiMHb2hdRSr0o3916V08dHrl6FIZoWSutgw2RonaeIMAdiKVCN
- DrR7hN0gDd9ih5fuohQAmOr36AGyYISH6HRU50wCJJyDV9xpeYOvTrdG15OMTsZFqIqe Vw== 
-Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3326d7sgxc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 21 Aug 2020 00:45:40 -0400
-Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
-        by ppma03fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 07L4iVsM014671;
-        Fri, 21 Aug 2020 04:45:37 GMT
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
-        by ppma03fra.de.ibm.com with ESMTP id 3304c92dmp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 21 Aug 2020 04:45:37 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 07L4jZWN32243982
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Aug 2020 04:45:35 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 1ADA9A405B;
-        Fri, 21 Aug 2020 04:45:35 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id BBFD1A405F;
-        Fri, 21 Aug 2020 04:45:33 +0000 (GMT)
-Received: from localhost.localdomain (unknown [9.199.33.217])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Fri, 21 Aug 2020 04:45:33 +0000 (GMT)
-Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
-To:     Dave Chinner <david@fromorbit.com>,
-        Anju T Sudhakar <anju@linux.vnet.ibm.com>
-Cc:     hch@infradead.org, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, willy@infradead.org
-References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
- <20200820231140.GE7941@dread.disaster.area>
-From:   Ritesh Harjani <riteshh@linux.ibm.com>
-Date:   Fri, 21 Aug 2020 10:15:33 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S1725948AbgHUFCv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 21 Aug 2020 01:02:51 -0400
+Received: from smtp.netregistry.net ([202.124.241.204]:36006 "EHLO
+        smtp.netregistry.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725908AbgHUFCv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 01:02:51 -0400
+Received: from mail-ed1-f48.google.com ([209.85.208.48]:63865)
+        by smtp-1.servers.netregistry.net protocol: esmtpa (Exim 4.84_2 #1 (Debian))
+        id 1k8zBt-0005WU-76
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Aug 2020 15:02:45 +1000
+Received: by mail-ed1-f48.google.com with SMTP id c10so428220edk.6
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Aug 2020 22:02:13 -0700 (PDT)
+X-Gm-Message-State: AOAM533FSQ5eNOGgf513Sw/cKnktTBttbNUx6EGyyKNtGOH77m4/9VfM
+        fF6dqtu566fvRwbl6Fa6lPiy9iA3tmycyZYpiuo=
+X-Google-Smtp-Source: ABdhPJzmiFi+HghyGVGj/3LgsEIx5kpXXJ61ny2s+pYwy/JXg0AaX/1nlWEHN+/zHm4LhJ0HJI2GQFjKEn+oOEnVSXo=
+X-Received: by 2002:a05:6402:1299:: with SMTP id w25mr1052648edv.247.1597986131917;
+ Thu, 20 Aug 2020 22:02:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20200820231140.GE7941@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-Message-Id: <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
- definitions=2020-08-21_03:2020-08-19,2020-08-21 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 suspectscore=0
- spamscore=0 malwarescore=0 lowpriorityscore=0 impostorscore=0 bulkscore=0
- mlxscore=0 clxscore=1015 adultscore=0 mlxlogscore=999 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008210037
+References: <159770500809.3956827.8869892960975362931.stgit@magnolia>
+ <159770505894.3956827.5973810026298120596.stgit@magnolia> <20200818233535.GD21744@dread.disaster.area>
+ <20200819214322.GE6096@magnolia> <20200820000102.GF6096@magnolia>
+ <CAH3XsHH8i4GY7TcMvLPy6F1Gs-UMaR1Kcx5BJnt=XzR42t+EqA@mail.gmail.com> <20200820162049.GI6096@magnolia>
+In-Reply-To: <20200820162049.GI6096@magnolia>
+From:   griffin tucker <xfssxsltislti2490@griffintucker.id.au>
+Date:   Fri, 21 Aug 2020 15:02:33 +1000
+X-Gmail-Original-Message-ID: <CAH3XsHF=bPBvogcWTRaK8XDFF2zu5Q5Mc++FUJYb8eHY9u_zqQ@mail.gmail.com>
+Message-ID: <CAH3XsHF=bPBvogcWTRaK8XDFF2zu5Q5Mc++FUJYb8eHY9u_zqQ@mail.gmail.com>
+Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038 problem
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+X-Authenticated-User: xfssxsltislti2490@griffintucker.id.au
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello Dave,
+thanks for taking the time to respond to my seemingly stupid questions.
 
-Thanks for reviewing this.
+what about interplanetary timestamps? and during transit to the
+moon/planets when time slows?
 
-On 8/21/20 4:41 AM, Dave Chinner wrote:
-> On Wed, Aug 19, 2020 at 03:58:41PM +0530, Anju T Sudhakar wrote:
->> From: Ritesh Harjani <riteshh@linux.ibm.com>
->>
->> __bio_try_merge_page() may return same_page = 1 and merged = 0.
->> This could happen when bio->bi_iter.bi_size + len > UINT_MAX.
-> 
-> Ummm, silly question, but exactly how are we getting a bio that
-> large in ->writepages getting built? Even with 64kB pages, that's a
-> bio with 2^16 pages attached to it. We shouldn't be building single
-> bios in writeback that large - what storage hardware is allowing
-> such huge bios to be built? (i.e. can you dump all the values in
-> /sys/block/<dev>/queue/* for that device for us?)
-
-Please correct me here, but as I see, bio has only these two limits
-which it checks for adding page to bio. It doesn't check for limits
-of /sys/block/<dev>/queue/* no? I guess then it could be checked
-by block layer below b4 submitting the bio?
-
-113 static inline bool bio_full(struct bio *bio, unsigned len)
-114 {
-115         if (bio->bi_vcnt >= bio->bi_max_vecs)
-116                 return true;
-117
-118         if (bio->bi_iter.bi_size > UINT_MAX - len)
-119                 return true;
-120
-121         return false;
-122 }
-
-
-This issue was first observed while running a fio run on a system with
-huge memory. But then here is an easy way we figured out to trigger the
-issue almost everytime with loop device on my VM setup. I have provided
-all the details on this below.
-
-<cmds to trigger it fairly quickly>
-===================================
-echo 99999999 > /proc/sys/vm/dirtytime_expire_seconds
-echo 99999999 > /proc/sys/vm/dirty_expire_centisecs
-echo 90  > /proc/sys/vm/dirty_rati0
-echo 90  > /proc/sys/vm/dirty_background_ratio
-echo 0  > /proc/sys/vm/dirty_writeback_centisecs
-
-sudo perf probe -s ~/host_shared/src/linux/ -a '__bio_try_merge_page:10 
-bio page page->index bio->bi_iter.bi_size len same_page[0]'
-
-sudo perf record -e probe:__bio_try_merge_page_L10 -a --filter 'bi_size 
- > 0xff000000' sudo fio --rw=write --bs=1M --numjobs=1 
---name=/mnt/testfile --size=24G --ioengine=libaio
-
-
-# on running this 2nd time it gets hit everytime on my setup
-
-sudo perf record -e probe:__bio_try_merge_page_L10 -a --filter 'bi_size 
- > 0xff000000' sudo fio --rw=write --bs=1M --numjobs=1 
---name=/mnt/testfile --size=24G --ioengine=libaio
-
-
-Perf o/p from above filter causing overflow
-===========================================
-<...>
-              fio 25194 [029] 70471.559084: 
-probe:__bio_try_merge_page_L10: (c000000000aa054c) 
-bio=0xc0000013d49a4b80 page=0xc00c000004029d80 index=0x10a9d 
-bi_size=0xffff8000 len=0x1000 same_page=0x1
-              fio 25194 [029] 70471.559087: 
-probe:__bio_try_merge_page_L10: (c000000000aa054c) 
-bio=0xc0000013d49a4b80 page=0xc00c000004029d80 index=0x10a9d 
-bi_size=0xffff9000 len=0x1000 same_page=0x1
-              fio 25194 [029] 70471.559090: 
-probe:__bio_try_merge_page_L10: (c000000000aa054c) 
-bio=0xc0000013d49a4b80 page=0xc00c000004029d80 index=0x10a9d 
-bi_size=0xffffa000 len=0x1000 same_page=0x1
-              fio 25194 [029] 70471.559093: 
-probe:__bio_try_merge_page_L10: (c000000000aa054c) 
-bio=0xc0000013d49a4b80 page=0xc00c000004029d80 index=0x10a9d 
-bi_size=0xffffb000 len=0x1000 same_page=0x1
-              fio 25194 [029] 70471.559095: 
-probe:__bio_try_merge_page_L10: (c000000000aa054c) 
-bio=0xc0000013d49a4b80 page=0xc00c000004029d80 index=0x10a9d 
-bi_size=0xffffc000 len=0x1000 same_page=0x1
-              fio 25194 [029] 70471.559098: 
-probe:__bio_try_merge_page_L10: (c000000000aa054c) 
-bio=0xc0000013d49a4b80 page=0xc00c000004029d80 index=0x10a9d 
-bi_size=0xffffd000 len=0x1000 same_page=0x1
-              fio 25194 [029] 70471.559101: 
-probe:__bio_try_merge_page_L10: (c000000000aa054c) 
-bio=0xc0000013d49a4b80 page=0xc00c000004029d80 index=0x10a9d 
-bi_size=0xffffe000 len=0x1000 same_page=0x1
-              fio 25194 [029] 70471.559104: 
-probe:__bio_try_merge_page_L10: (c000000000aa054c) 
-bio=0xc0000013d49a4b80 page=0xc00c000004029d80 index=0x10a9d 
-bi_size=0xfffff000 len=0x1000 same_page=0x1
-
-^^^^^^ (this could cause an overflow)
-
-loop dev
-=========
-NAME       SIZELIMIT OFFSET AUTOCLEAR RO BACK-FILE    DIO LOG-SEC
-/dev/loop1         0      0         0  0 /mnt1/filefs   0     512
-
-
-mount o/p
-=========
-/dev/loop1 on /mnt type xfs 
-(rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
-
-
-/sys/block/<dev>/queue/*
-========================
-
-setup:/run/perf$ cat /sys/block/loop1/queue/max_segments
-128
-setup:/run/perf$ cat /sys/block/loop1/queue/max_segment_size
-65536
-setup:/run/perf$ cat /sys/block/loop1/queue/max_hw_sectors_kb
-1280
-setup:/run/perf$ cat /sys/block/loop1/queue/logical_block_size
-512
-setup:/run/perf$ cat /sys/block/loop1/queue/max_sectors_kb
-1280
-setup:/run/perf$ cat /sys/block/loop1/queue/hw_sector_size
-512
-setup:/run/perf$ cat /sys/block/loop1/queue/discard_max_bytes
-4294966784
-setup:/run/perf$ cat /sys/block/loop1/queue/discard_max_hw_bytes
-4294966784
-setup:/run/perf$ cat /sys/block/loop1/queue/discard_zeroes_data
-0
-setup:/run/perf$ cat /sys/block/loop1/queue/discard_granularity
-4096
-setup:/run/perf$ cat /sys/block/loop1/queue/chunk_sectors
-0
-setup:/run/perf$ cat /sys/block/loop1/queue/max_discard_segments
-1
-setup:/run/perf$ cat /sys/block/loop1/queue/read_ahead_kb
-128
-setup:/run/perf$ cat /sys/block/loop1/queue/rotational
-1
-setup:/run/perf$ cat /sys/block/loop1/queue/physical_block_size
-512
-setup:/run/perf$ cat /sys/block/loop1/queue/write_same_max_bytes
-0
-setup:/run/perf$ cat /sys/block/loop1/queue/write_zeroes_max_bytes
-4294966784
+On Fri, 21 Aug 2020 at 02:24, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Thu, Aug 20, 2020 at 02:42:29PM +1000, griffin tucker wrote:
+> > how difficult would it be to implement 128 bit timestamps?
+>
+> Somewhat.  __uint128_t exists as a gcc extension, but you'd also have to
+> expand the ondisk inode structure definition to accomodate 64 more bits
+> of data per timestamp.  If you split the timestamp between a low u64 and
+> a high u64 you'd also need to recombine them carefully to avoid screwing
+> up sign extension like ext4 did when they adopted 34-bit timestamps.
+>
+> > and how much further in time beyond 2486 would this allow?
+>
+> I dunno.  2^66 seconds beyond December 1901, I suppose.
+>
+> That's what, the year ... 2338218323135 or something?  Far beyond what
+> the maximum kernel supports (2^63-1 seconds).
+>
+> > is the implementation of 128 bit timestamps just not feasible due to
+> > 64 bit alu width?
+>
+> Just my opinion, but I think the difficulty here is the added complexity
+> to push XFS beyond the 25th century.  I don't plan to be around for
+> that, and prefer to let Captain Picard deal with that expansion. ;)
+>
+> > how long is it until hardware capability reaches beyond the 16exabyte limit?
+>
+> Still a few years, even if you staple together all the SMR HDDs in the
+> world.  You'd need, what, like, 400,000 20TB HDDs to reach 8EB?
+>
+> --D
+>
+> > On Thu, 20 Aug 2020 at 10:01, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > >
+> > > On Wed, Aug 19, 2020 at 02:43:22PM -0700, Darrick J. Wong wrote:
+> > > > On Wed, Aug 19, 2020 at 09:35:35AM +1000, Dave Chinner wrote:
+> > > > > On Mon, Aug 17, 2020 at 03:57:39PM -0700, Darrick J. Wong wrote:
+> > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > >
+> > > > > > Redesign the ondisk timestamps to be a simple unsigned 64-bit counter of
+> > > > > > nanoseconds since 14 Dec 1901 (i.e. the minimum time in the 32-bit unix
+> > > > > > time epoch).  This enables us to handle dates up to 2486, which solves
+> > > > > > the y2038 problem.
+> > > > > >
+> > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > > > ---
+> > > > > .....
+> > > > > > +/* Convert an ondisk timestamp into the 64-bit safe incore format. */
+> > > > > >  void
+> > > > > >  xfs_inode_from_disk_timestamp(
+> > > > > > + struct xfs_dinode               *dip,
+> > > > > >   struct timespec64               *tv,
+> > > > > >   const union xfs_timestamp       *ts)
+> > > > > >  {
+> > > > > > + if (dip->di_version >= 3 &&
+> > > > > > +     (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME))) {
+> > > > > > +         uint64_t                t = be64_to_cpu(ts->t_bigtime);
+> > > > > > +         uint64_t                s;
+> > > > > > +         uint32_t                n;
+> > > > > > +
+> > > > > > +         s = div_u64_rem(t, NSEC_PER_SEC, &n);
+> > > > > > +         tv->tv_sec = s - XFS_INO_BIGTIME_EPOCH;
+> > > > > > +         tv->tv_nsec = n;
+> > > > > > +         return;
+> > > > > > + }
+> > > > > > +
+> > > > > >   tv->tv_sec = (int)be32_to_cpu(ts->t_sec);
+> > > > > >   tv->tv_nsec = (int)be32_to_cpu(ts->t_nsec);
+> > > > > >  }
+> > > > >
+> > > > > Can't say I'm sold on this union. It seems cleaner to me to just
+> > > > > make the timestamp an opaque 64 bit field on disk and convert it to
+> > > > > the in-memory representation directly in the to/from disk
+> > > > > operations. e.g.:
+> > > > >
+> > > > > void
+> > > > > xfs_inode_from_disk_timestamp(
+> > > > >     struct xfs_dinode               *dip,
+> > > > >     struct timespec64               *tv,
+> > > > >     __be64                          ts)
+> > > > > {
+> > > > >
+> > > > >     uint64_t                t = be64_to_cpu(ts);
+> > > > >     uint64_t                s;
+> > > > >     uint32_t                n;
+> > > > >
+> > > > >     if (xfs_dinode_is_bigtime(dip)) {
+> > > > >             s = div_u64_rem(t, NSEC_PER_SEC, &n) - XFS_INO_BIGTIME_EPOCH;
+> > > > >     } else {
+> > > > >             s = (int)(t >> 32);
+> > > > >             n = (int)(t & 0xffffffff);
+> > > > >     }
+> > > > >     tv->tv_sec = s;
+> > > > >     tv->tv_nsec = n;
+> > > > > }
+> > > >
+> > > > I don't like this open-coded union approach at all because now I have to
+> > > > keep the t_sec and t_nsec bits separate in my head instead of letting
+> > > > the C compiler take care of that detail.  The sample code above doesn't
+> > > > handle that correctly either:
+> > > >
+> > > > Start with an old kernel on a little endian system; each uppercase
+> > > > letter represents a byte (A is the LSB of t_sec, D is the MSB of t_sec,
+> > > > E is the LSB of t_nsec, and H is the MSB of t_nsec):
+> > > >
+> > > >       sec  nsec (incore)
+> > > >       ABCD EFGH
+> > > >
+> > > > That gets written out as:
+> > > >
+> > > >       sec  nsec (ondisk)
+> > > >       DCBA HGFE
+> > > >
+> > > > Now reboot with a new kernel that only knows 64bit timestamps on disk:
+> > > >
+> > > >       64bit (ondisk)
+> > > >       DCBAHGFE
+> > > >
+> > > > Now it does the first be64_to_cpu conversion:
+> > > >       64bit (incore)
+> > > >       EFGHABCD
+> > > >
+> > > > And then masks and shifts:
+> > > >       sec  nsec (incore)
+> > > >       EFGH ABCD
+> > > >
+> > > > Oops, we just switched the values!
+> > > >
+> > > > The correct approach (I think) is to perform the shifting and masking on
+> > > > the raw __be64 value before converting them to incore format via
+> > > > be32_to_cpu, but now I have to work out all four cases by hand instead
+> > > > of letting the compiler do the legwork for me.  I don't remember if it's
+> > > > correct to go around shifting and masking __be64 values.
+> > > >
+> > > > I guess the good news is that at least we have generic/402 to catch
+> > > > these kinds of persistence problems, but ugh.
+> > > >
+> > > > Anyway, what are you afraid of?  The C compiler smoking crack and not
+> > > > actually overlapping the two union elements?  We could control for
+> > > > that...
+> > >
+> > > (Following up on the mailing list with something I pasted into IRC)
+> > >
+> > > Ok, so I temporarily patched up my dev tree with this approximation of
+> > > how that would work, properly done:
+> > >
+> > > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > > index c59ddb56bb90..7c71e4440402 100644
+> > > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > > @@ -176,8 +176,8 @@ xfs_inode_from_disk_timestamp(
+> > >                 return;
+> > >         }
+> > >
+> > > -       tv->tv_sec = (int)be32_to_cpu(ts->t_sec);
+> > > -       tv->tv_nsec = (int)be32_to_cpu(ts->t_nsec);
+> > > +       tv->tv_sec = (time64_t)be32_to_cpu((__be32)(ts->t_bigtime >> 32));
+> > > +       tv->tv_nsec = be32_to_cpu(ts->t_bigtime & 0xFFFFFFFFU);
+> > >  }
+> > >
+> > >  int
+> > > @@ -294,8 +294,8 @@ xfs_inode_to_disk_timestamp(
+> > >                 return;
+> > >         }
+> > >
+> > > -       ts->t_sec = cpu_to_be32(tv->tv_sec);
+> > > -       ts->t_nsec = cpu_to_be32(tv->tv_nsec);
+> > > +       ts->t_bigtime = (__be64)cpu_to_be32(tv->tv_sec) << 32 |
+> > > +                       cpu_to_be32(tv->tv_nsec);
+> > >  }
+> > >
+> > >  void
+> > > diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+> > > index d44e8932979b..5d36d6dea326 100644
+> > > --- a/fs/xfs/xfs_inode_item.c
+> > > +++ b/fs/xfs/xfs_inode_item.c
+> > > @@ -308,8 +308,8 @@ xfs_log_dinode_to_disk_ts(
+> > >                 return;
+> > >         }
+> > >
+> > > -       ts->t_sec = cpu_to_be32(its->t_sec);
+> > > -       ts->t_nsec = cpu_to_be32(its->t_nsec);
+> > > +       ts->t_bigtime = (__be64)cpu_to_be32(its->t_sec) << 32 |
+> > > +                       cpu_to_be32(its->t_nsec);
+> > >  }
+> > >
+> > > And immediately got a ton of smatch warnings:
+> > >
+> > > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:179:32: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:179:32: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:180:23: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:180:23: warning: cast to restricted __be32
+> > > xfs_inode_buf.c:297:26: warning: cast to restricted __be64
+> > > xfs_inode_buf.c:297:26: warning: cast from restricted __be32
+> > > xfs_inode_buf.c:297:26: warning: restricted __be64 degrades to integer
+> > > xfs_inode_buf.c:298:25: warning: restricted __be32 degrades to integer
+> > > xfs_inode_buf.c:297:23: warning: incorrect type in assignment (different base types)
+> > > xfs_inode_buf.c:297:23:    expected restricted __be64 [usertype] t_bigtime
+> > > xfs_inode_buf.c:297:23:    got unsigned long long
+> > >
+> > > (and even more in xfs_inode_item.c)
+> > >
+> > > So... while we could get rid of the union and hand-decode the timestamp
+> > > from a __be64 on legacy filesystems, I see the static checker complaints
+> > > as a second piece of evidence that this would be unnecessarily risky.
+> > >
+> > > --D
+> > >
+> > > > > > @@ -220,9 +234,9 @@ xfs_inode_from_disk(
+> > > > > >    * a time before epoch is converted to a time long after epoch
+> > > > > >    * on 64 bit systems.
+> > > > > >    */
+> > > > > > - xfs_inode_from_disk_timestamp(&inode->i_atime, &from->di_atime);
+> > > > > > - xfs_inode_from_disk_timestamp(&inode->i_mtime, &from->di_mtime);
+> > > > > > - xfs_inode_from_disk_timestamp(&inode->i_ctime, &from->di_ctime);
+> > > > > > + xfs_inode_from_disk_timestamp(from, &inode->i_atime, &from->di_atime);
+> > > > > > + xfs_inode_from_disk_timestamp(from, &inode->i_mtime, &from->di_mtime);
+> > > > > > + xfs_inode_from_disk_timestamp(from, &inode->i_ctime, &from->di_ctime);
+> > > > > >
+> > > > > >   to->di_size = be64_to_cpu(from->di_size);
+> > > > > >   to->di_nblocks = be64_to_cpu(from->di_nblocks);
+> > > > > > @@ -235,9 +249,17 @@ xfs_inode_from_disk(
+> > > > > >   if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
+> > > > > >           inode_set_iversion_queried(inode,
+> > > > > >                                      be64_to_cpu(from->di_changecount));
+> > > > > > -         xfs_inode_from_disk_timestamp(&to->di_crtime, &from->di_crtime);
+> > > > > > +         xfs_inode_from_disk_timestamp(from, &to->di_crtime,
+> > > > > > +                         &from->di_crtime);
+> > > > > >           to->di_flags2 = be64_to_cpu(from->di_flags2);
+> > > > > >           to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
+> > > > > > +         /*
+> > > > > > +          * Set the bigtime flag incore so that we automatically convert
+> > > > > > +          * this inode's ondisk timestamps to bigtime format the next
+> > > > > > +          * time we write the inode core to disk.
+> > > > > > +          */
+> > > > > > +         if (xfs_sb_version_hasbigtime(&ip->i_mount->m_sb))
+> > > > > > +                 to->di_flags2 |= XFS_DIFLAG2_BIGTIME;
+> > > > > >   }
+> > > > >
+> > > > > We do not want on-disk flags to be changed outside transactions like
+> > > > > this. Indeed, this has implications for O_DSYNC operation, in that
+> > > > > we do not trigger inode sync operations if the inode is only
+> > > > > timestamp dirty. If we've changed this flag, then the inode is more
+> > > > > than "timestamp dirty" and O_DSYNC will need to flush the entire
+> > > > > inode.... :/
+> > > >
+> > > > I forgot about XFS_ILOG_TIMESTAMP.
+> > > >
+> > > > > IOWs, I think we should only change this flag in a timestamp
+> > > > > transaction where the timestamps are actually being logged and hence
+> > > > > we can set inode dirty state appropriately so that everything will
+> > > > > get logged, changed and written back correctly....
+> > > >
+> > > > Yeah, that's fair.  I'll change xfs_trans_log_inode to set the bigtime
+> > > > flag if we're logging either the timestamps or the core.
+> > > >
+> > > > --D
+> > > >
+> > > > > Cheers,
+> > > > >
+> > > > > Dave.
+> > > > > --
+> > > > > Dave Chinner
+> > > > > david@fromorbit.com
