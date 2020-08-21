@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2982CC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:12:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E12C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:12:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F0D80207BB
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:12:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9A212076E
+	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 02:12:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yRQ/cpJJ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z11SLGAc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727046AbgHUCMS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 20 Aug 2020 22:12:18 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:34820 "EHLO
+        id S1727048AbgHUCMe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 20 Aug 2020 22:12:34 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:35034 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726969AbgHUCMQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 22:12:16 -0400
+        with ESMTP id S1726969AbgHUCMe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Aug 2020 22:12:34 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L271v9043414;
-        Fri, 21 Aug 2020 02:12:12 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L274Kq043422;
+        Fri, 21 Aug 2020 02:12:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=pdj+aoi0PdfIY2bEndGGdGUvW+LTNGDpHxY/47YfGqY=;
- b=yRQ/cpJJRC7Uogs2B6yyGVzUfisMN2tRzputAduwoIg67wKJo4VKBto1QOpcUfvZ7gb4
- BSk6TGEGqAqeGvtb/GdAdx/Cs3Dzn9o6gzwTnlVoHG0VGBvs/r6i61SnL63XDcd4t1uV
- xFOAaKFL6ykBPIqw2IkAH0oMhuEBznGnPI+4D++oagQCw3vr0sDpOVamNn3BNV/jeUZK
- PfG3rlcT5ujaxCgnSS+BYC8YCGEoAH2eQb4VZtuyUAr0LyOK5gsphnhSvI8t84dfpRU9
- 7LHSVW/gIlGxklHur9+MriMRmpVsJQZm0pdjHWBCctSzTd7O70klY5AJxXRP/eOfDvr9 TQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 32x8bnkr7u-1
+ bh=TFDGAHLyE+yo8vBTQrrfnNYuB+17IDntmPWtH4u21DQ=;
+ b=Z11SLGAcKtUt9RQzB5siKghYptnuUaW+D03zJW+Oifq7i77b+pvw/loFWKdzaGA3pBsj
+ P4UcJJLxoOfoJpMC+3K7i0TiLD0s4RdOEUV8fTeZ5wy22WId5Avb1LoR7XEVC28MuNN6
+ a2QY79+J/eY2/+pQgutIsWFdCDRCUxkDjAsMU5Dzv6h19G5s9zVoJ2gYHQJJS6LsCVEX
+ lJ8ZEqmL2MBZQ1Lh6gX6k1PGxX/Vm7hiuj3AE3i+VxKtSpXzlVyfpQO8hmMv3PBTqRfY
+ EWOhrYAgM4fvokPzGdlR8LWr1qNSoz+0zjry/WUGO81A/5c8ntcGOPlS0rUYGqfLjGDw 8Q== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 32x8bnkr94-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 21 Aug 2020 02:12:12 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L27s4N034727;
-        Fri, 21 Aug 2020 02:12:11 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 330pvqm3g4-1
+        Fri, 21 Aug 2020 02:12:31 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07L292RM012051;
+        Fri, 21 Aug 2020 02:12:30 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 32xsn230d0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 21 Aug 2020 02:12:11 +0000
+        Fri, 21 Aug 2020 02:12:30 +0000
 Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07L2CAQQ019704;
-        Fri, 21 Aug 2020 02:12:10 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07L2CTYT011276;
+        Fri, 21 Aug 2020 02:12:29 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 20 Aug 2020 19:12:09 -0700
-Subject: [PATCH 06/11] xfs: refactor inode timestamp coding
+        with ESMTP ; Thu, 20 Aug 2020 19:12:29 -0700
+Subject: [PATCH 09/11] xfs: refactor quota timestamp coding
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, sandeen@sandeen.net
-Date:   Thu, 20 Aug 2020 19:12:08 -0700
-Message-ID: <159797592873.965217.7436192080471557112.stgit@magnolia>
+Date:   Thu, 20 Aug 2020 19:12:28 -0700
+Message-ID: <159797594823.965217.2346364691307432620.stgit@magnolia>
 In-Reply-To: <159797588727.965217.7260803484540460144.stgit@magnolia>
 References: <159797588727.965217.7260803484540460144.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -64,8 +64,8 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9719 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 phishscore=0
- malwarescore=0 adultscore=0 bulkscore=0 suspectscore=1 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 bulkscore=0
+ mlxlogscore=999 phishscore=0 mlxscore=0 suspectscore=1 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2008210018
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9719 signatures=668679
@@ -81,259 +81,89 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor inode timestamp encoding and decoding into helper functions so
-that we can add extra behaviors in subsequent patches.
+Refactor quota timestamp encoding and decoding into helper functions so
+that we can add extra behavior in the next patch.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 ---
- fs/xfs/libxfs/xfs_inode_buf.c |   42 ++++++++++++++++++++++++---------------
- fs/xfs/libxfs/xfs_inode_buf.h |    5 +++++
- fs/xfs/scrub/inode.c          |   25 ++++++++++++++++-------
- fs/xfs/xfs_inode_item.c       |   44 ++++++++++++++++++++++++++---------------
- 4 files changed, 76 insertions(+), 40 deletions(-)
+ fs/xfs/libxfs/xfs_dquot_buf.c  |   20 ++++++++++++++++++++
+ fs/xfs/libxfs/xfs_quota_defs.h |    6 ++++++
+ fs/xfs/xfs_dquot.c             |   12 ++++++------
+ 3 files changed, 32 insertions(+), 6 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
-index fa83591ca89b..4930eabed6d8 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.c
-+++ b/fs/xfs/libxfs/xfs_inode_buf.c
-@@ -157,6 +157,15 @@ xfs_imap_to_bp(
- 	return 0;
- }
- 
+diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
+index 5a2db00b9d5f..7f5291022b11 100644
+--- a/fs/xfs/libxfs/xfs_dquot_buf.c
++++ b/fs/xfs/libxfs/xfs_dquot_buf.c
+@@ -288,3 +288,23 @@ const struct xfs_buf_ops xfs_dquot_buf_ra_ops = {
+ 	.verify_read = xfs_dquot_buf_readahead_verify,
+ 	.verify_write = xfs_dquot_buf_write_verify,
+ };
++
++/* Convert an on-disk timer value into an incore timer value. */
 +void
-+xfs_inode_from_disk_timestamp(
-+	struct timespec64		*tv,
-+	const struct xfs_timestamp	*ts)
++xfs_dquot_from_disk_timestamp(
++	struct xfs_disk_dquot	*ddq,
++	time64_t		*timer,
++	__be32			dtimer)
 +{
-+	tv->tv_sec = (int)be32_to_cpu(ts->t_sec);
-+	tv->tv_nsec = (int)be32_to_cpu(ts->t_nsec);
++	*timer = be32_to_cpu(dtimer);
 +}
 +
- int
- xfs_inode_from_disk(
- 	struct xfs_inode	*ip,
-@@ -211,12 +220,9 @@ xfs_inode_from_disk(
- 	 * a time before epoch is converted to a time long after epoch
- 	 * on 64 bit systems.
- 	 */
--	inode->i_atime.tv_sec = (int)be32_to_cpu(from->di_atime.t_sec);
--	inode->i_atime.tv_nsec = (int)be32_to_cpu(from->di_atime.t_nsec);
--	inode->i_mtime.tv_sec = (int)be32_to_cpu(from->di_mtime.t_sec);
--	inode->i_mtime.tv_nsec = (int)be32_to_cpu(from->di_mtime.t_nsec);
--	inode->i_ctime.tv_sec = (int)be32_to_cpu(from->di_ctime.t_sec);
--	inode->i_ctime.tv_nsec = (int)be32_to_cpu(from->di_ctime.t_nsec);
-+	xfs_inode_from_disk_timestamp(&inode->i_atime, &from->di_atime);
-+	xfs_inode_from_disk_timestamp(&inode->i_mtime, &from->di_mtime);
-+	xfs_inode_from_disk_timestamp(&inode->i_ctime, &from->di_ctime);
- 
- 	to->di_size = be64_to_cpu(from->di_size);
- 	to->di_nblocks = be64_to_cpu(from->di_nblocks);
-@@ -229,8 +235,7 @@ xfs_inode_from_disk(
- 	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
- 		inode_set_iversion_queried(inode,
- 					   be64_to_cpu(from->di_changecount));
--		to->di_crtime.tv_sec = be32_to_cpu(from->di_crtime.t_sec);
--		to->di_crtime.tv_nsec = be32_to_cpu(from->di_crtime.t_nsec);
-+		xfs_inode_from_disk_timestamp(&to->di_crtime, &from->di_crtime);
- 		to->di_flags2 = be64_to_cpu(from->di_flags2);
- 		to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
- 	}
-@@ -252,6 +257,15 @@ xfs_inode_from_disk(
- 	return error;
- }
- 
++/* Convert an incore timer value into an on-disk timer value. */
 +void
-+xfs_inode_to_disk_timestamp(
-+	struct xfs_timestamp		*ts,
-+	const struct timespec64		*tv)
++xfs_dquot_to_disk_timestamp(
++	struct xfs_dquot	*dqp,
++	__be32			*dtimer,
++	time64_t		timer)
 +{
-+	ts->t_sec = cpu_to_be32(tv->tv_sec);
-+	ts->t_nsec = cpu_to_be32(tv->tv_nsec);
++	*dtimer = cpu_to_be32(timer);
 +}
-+
- void
- xfs_inode_to_disk(
- 	struct xfs_inode	*ip,
-@@ -271,12 +285,9 @@ xfs_inode_to_disk(
- 	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
+diff --git a/fs/xfs/libxfs/xfs_quota_defs.h b/fs/xfs/libxfs/xfs_quota_defs.h
+index 076bdc7037ee..b524059faab5 100644
+--- a/fs/xfs/libxfs/xfs_quota_defs.h
++++ b/fs/xfs/libxfs/xfs_quota_defs.h
+@@ -143,4 +143,10 @@ extern int xfs_calc_dquots_per_chunk(unsigned int nbblks);
+ extern void xfs_dqblk_repair(struct xfs_mount *mp, struct xfs_dqblk *dqb,
+ 		xfs_dqid_t id, xfs_dqtype_t type);
  
- 	memset(to->di_pad, 0, sizeof(to->di_pad));
--	to->di_atime.t_sec = cpu_to_be32(inode->i_atime.tv_sec);
--	to->di_atime.t_nsec = cpu_to_be32(inode->i_atime.tv_nsec);
--	to->di_mtime.t_sec = cpu_to_be32(inode->i_mtime.tv_sec);
--	to->di_mtime.t_nsec = cpu_to_be32(inode->i_mtime.tv_nsec);
--	to->di_ctime.t_sec = cpu_to_be32(inode->i_ctime.tv_sec);
--	to->di_ctime.t_nsec = cpu_to_be32(inode->i_ctime.tv_nsec);
-+	xfs_inode_to_disk_timestamp(&to->di_atime, &inode->i_atime);
-+	xfs_inode_to_disk_timestamp(&to->di_mtime, &inode->i_mtime);
-+	xfs_inode_to_disk_timestamp(&to->di_ctime, &inode->i_ctime);
- 	to->di_nlink = cpu_to_be32(inode->i_nlink);
- 	to->di_gen = cpu_to_be32(inode->i_generation);
- 	to->di_mode = cpu_to_be16(inode->i_mode);
-@@ -295,8 +306,7 @@ xfs_inode_to_disk(
- 	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
- 		to->di_version = 3;
- 		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
--		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.tv_sec);
--		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.tv_nsec);
-+		xfs_inode_to_disk_timestamp(&to->di_crtime, &from->di_crtime);
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
- 		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
- 		to->di_ino = cpu_to_be64(ip->i_ino);
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 89f7bea8efd6..9c63f3f932d7 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -58,4 +58,9 @@ xfs_failaddr_t xfs_inode_validate_cowextsize(struct xfs_mount *mp,
- 		uint32_t cowextsize, uint16_t mode, uint16_t flags,
- 		uint64_t flags2);
- 
-+void xfs_inode_from_disk_timestamp(struct timespec64 *tv,
-+		const struct xfs_timestamp *ts);
-+void xfs_inode_to_disk_timestamp(struct xfs_timestamp *ts,
-+		const struct timespec64 *tv);
++struct xfs_dquot;
++void xfs_dquot_from_disk_timestamp(struct xfs_disk_dquot *ddq,
++		time64_t *timer, __be32 dtimer);
++void xfs_dquot_to_disk_timestamp(struct xfs_dquot *ddq,
++		__be32 *dtimer, time64_t timer);
 +
- #endif	/* __XFS_INODE_BUF_H__ */
-diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
-index 6d483ab29e63..ccb5c217c0ee 100644
---- a/fs/xfs/scrub/inode.c
-+++ b/fs/xfs/scrub/inode.c
-@@ -195,6 +195,19 @@ xchk_inode_flags2(
- 	xchk_ino_set_corrupt(sc, ino);
- }
+ #endif	/* __XFS_QUOTA_H__ */
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index ed3fa6ada0d3..08d497d413b9 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -534,9 +534,9 @@ xfs_dquot_from_disk(
+ 	dqp->q_ino.warnings = be16_to_cpu(ddqp->d_iwarns);
+ 	dqp->q_rtb.warnings = be16_to_cpu(ddqp->d_rtbwarns);
  
-+static inline void
-+xchk_dinode_nsec(
-+	struct xfs_scrub		*sc,
-+	xfs_ino_t			ino,
-+	const struct xfs_timestamp	*ts)
-+{
-+	struct timespec64		tv;
-+
-+	xfs_inode_from_disk_timestamp(&tv, ts);
-+	if (tv.tv_nsec < 0 || tv.tv_nsec >= NSEC_PER_SEC)
-+		xchk_ino_set_corrupt(sc, ino);
-+}
-+
- /* Scrub all the ondisk inode fields. */
- STATIC void
- xchk_dinode(
-@@ -293,12 +306,9 @@ xchk_dinode(
- 	}
- 
- 	/* di_[amc]time.nsec */
--	if (be32_to_cpu(dip->di_atime.t_nsec) >= NSEC_PER_SEC)
--		xchk_ino_set_corrupt(sc, ino);
--	if (be32_to_cpu(dip->di_mtime.t_nsec) >= NSEC_PER_SEC)
--		xchk_ino_set_corrupt(sc, ino);
--	if (be32_to_cpu(dip->di_ctime.t_nsec) >= NSEC_PER_SEC)
--		xchk_ino_set_corrupt(sc, ino);
-+	xchk_dinode_nsec(sc, ino, &dip->di_atime);
-+	xchk_dinode_nsec(sc, ino, &dip->di_mtime);
-+	xchk_dinode_nsec(sc, ino, &dip->di_ctime);
+-	dqp->q_blk.timer = be32_to_cpu(ddqp->d_btimer);
+-	dqp->q_ino.timer = be32_to_cpu(ddqp->d_itimer);
+-	dqp->q_rtb.timer = be32_to_cpu(ddqp->d_rtbtimer);
++	xfs_dquot_from_disk_timestamp(ddqp, &dqp->q_blk.timer, ddqp->d_btimer);
++	xfs_dquot_from_disk_timestamp(ddqp, &dqp->q_ino.timer, ddqp->d_itimer);
++	xfs_dquot_from_disk_timestamp(ddqp, &dqp->q_rtb.timer, ddqp->d_rtbtimer);
  
  	/*
- 	 * di_size.  xfs_dinode_verify checks for things that screw up
-@@ -403,8 +413,7 @@ xchk_dinode(
- 	}
+ 	 * Reservation counters are defined as reservation plus current usage
+@@ -579,9 +579,9 @@ xfs_dquot_to_disk(
+ 	ddqp->d_iwarns = cpu_to_be16(dqp->q_ino.warnings);
+ 	ddqp->d_rtbwarns = cpu_to_be16(dqp->q_rtb.warnings);
  
- 	if (dip->di_version >= 3) {
--		if (be32_to_cpu(dip->di_crtime.t_nsec) >= NSEC_PER_SEC)
--			xchk_ino_set_corrupt(sc, ino);
-+		xchk_dinode_nsec(sc, ino, &dip->di_crtime);
- 		xchk_inode_flags2(sc, dip, ino, mode, flags, flags2);
- 		xchk_inode_cowextsize(sc, dip, ino, mode, flags,
- 				flags2);
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index d95a00376fad..dac0ab59e88f 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -295,6 +295,16 @@ xfs_inode_item_format_attr_fork(
- 	}
+-	ddqp->d_btimer = cpu_to_be32(dqp->q_blk.timer);
+-	ddqp->d_itimer = cpu_to_be32(dqp->q_ino.timer);
+-	ddqp->d_rtbtimer = cpu_to_be32(dqp->q_rtb.timer);
++	xfs_dquot_to_disk_timestamp(dqp, &ddqp->d_btimer, dqp->q_blk.timer);
++	xfs_dquot_to_disk_timestamp(dqp, &ddqp->d_itimer, dqp->q_ino.timer);
++	xfs_dquot_to_disk_timestamp(dqp, &ddqp->d_rtbtimer, dqp->q_rtb.timer);
  }
  
-+/* Write a log_dinode timestamp into an ondisk inode timestamp. */
-+static inline void
-+xfs_log_dinode_to_disk_ts(
-+	struct xfs_timestamp		*ts,
-+	const struct xfs_ictimestamp	*its)
-+{
-+	ts->t_sec = cpu_to_be32(its->t_sec);
-+	ts->t_nsec = cpu_to_be32(its->t_nsec);
-+}
-+
- void
- xfs_log_dinode_to_disk(
- 	struct xfs_log_dinode	*from,
-@@ -312,12 +322,9 @@ xfs_log_dinode_to_disk(
- 	to->di_projid_hi = cpu_to_be16(from->di_projid_hi);
- 	memcpy(to->di_pad, from->di_pad, sizeof(to->di_pad));
- 
--	to->di_atime.t_sec = cpu_to_be32(from->di_atime.t_sec);
--	to->di_atime.t_nsec = cpu_to_be32(from->di_atime.t_nsec);
--	to->di_mtime.t_sec = cpu_to_be32(from->di_mtime.t_sec);
--	to->di_mtime.t_nsec = cpu_to_be32(from->di_mtime.t_nsec);
--	to->di_ctime.t_sec = cpu_to_be32(from->di_ctime.t_sec);
--	to->di_ctime.t_nsec = cpu_to_be32(from->di_ctime.t_nsec);
-+	xfs_log_dinode_to_disk_ts(&to->di_atime, &from->di_atime);
-+	xfs_log_dinode_to_disk_ts(&to->di_mtime, &from->di_mtime);
-+	xfs_log_dinode_to_disk_ts(&to->di_ctime, &from->di_ctime);
- 
- 	to->di_size = cpu_to_be64(from->di_size);
- 	to->di_nblocks = cpu_to_be64(from->di_nblocks);
-@@ -333,8 +340,7 @@ xfs_log_dinode_to_disk(
- 
- 	if (from->di_version == 3) {
- 		to->di_changecount = cpu_to_be64(from->di_changecount);
--		to->di_crtime.t_sec = cpu_to_be32(from->di_crtime.t_sec);
--		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
-+		xfs_log_dinode_to_disk_ts(&to->di_crtime, &from->di_crtime);
- 		to->di_flags2 = cpu_to_be64(from->di_flags2);
- 		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
- 		to->di_ino = cpu_to_be64(from->di_ino);
-@@ -347,6 +353,16 @@ xfs_log_dinode_to_disk(
- 	}
- }
- 
-+/* Write an incore inode timestamp into a log_dinode timestamp. */
-+static inline void
-+xfs_inode_to_log_dinode_ts(
-+	struct xfs_ictimestamp		*its,
-+	const struct timespec64		*ts)
-+{
-+	its->t_sec = ts->tv_sec;
-+	its->t_nsec = ts->tv_nsec;
-+}
-+
- static void
- xfs_inode_to_log_dinode(
- 	struct xfs_inode	*ip,
-@@ -365,12 +381,9 @@ xfs_inode_to_log_dinode(
- 
- 	memset(to->di_pad, 0, sizeof(to->di_pad));
- 	memset(to->di_pad3, 0, sizeof(to->di_pad3));
--	to->di_atime.t_sec = inode->i_atime.tv_sec;
--	to->di_atime.t_nsec = inode->i_atime.tv_nsec;
--	to->di_mtime.t_sec = inode->i_mtime.tv_sec;
--	to->di_mtime.t_nsec = inode->i_mtime.tv_nsec;
--	to->di_ctime.t_sec = inode->i_ctime.tv_sec;
--	to->di_ctime.t_nsec = inode->i_ctime.tv_nsec;
-+	xfs_inode_to_log_dinode_ts(&to->di_atime, &inode->i_atime);
-+	xfs_inode_to_log_dinode_ts(&to->di_mtime, &inode->i_mtime);
-+	xfs_inode_to_log_dinode_ts(&to->di_ctime, &inode->i_ctime);
- 	to->di_nlink = inode->i_nlink;
- 	to->di_gen = inode->i_generation;
- 	to->di_mode = inode->i_mode;
-@@ -392,8 +405,7 @@ xfs_inode_to_log_dinode(
- 	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
- 		to->di_version = 3;
- 		to->di_changecount = inode_peek_iversion(inode);
--		to->di_crtime.t_sec = from->di_crtime.tv_sec;
--		to->di_crtime.t_nsec = from->di_crtime.tv_nsec;
-+		xfs_inode_to_log_dinode_ts(&to->di_crtime, &from->di_crtime);
- 		to->di_flags2 = from->di_flags2;
- 		to->di_cowextsize = from->di_cowextsize;
- 		to->di_ino = ip->i_ino;
+ /* Allocate and initialize the dquot buffer for this in-core dquot. */
 
