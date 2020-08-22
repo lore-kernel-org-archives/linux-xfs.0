@@ -1,166 +1,191 @@
-Return-Path: <SRS0=59Ki=B7=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=ZMk+=CA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B54C433E1
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 21:54:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 219FFC433E5
+	for <linux-xfs@archiver.kernel.org>; Sat, 22 Aug 2020 04:21:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 998CF207DE
-	for <linux-xfs@archiver.kernel.org>; Fri, 21 Aug 2020 21:54:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECEA42071A
+	for <linux-xfs@archiver.kernel.org>; Sat, 22 Aug 2020 04:21:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="CR22qrcQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726747AbgHUVyM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 21 Aug 2020 17:54:12 -0400
-Received: from mail110.syd.optusnet.com.au ([211.29.132.97]:35825 "EHLO
-        mail110.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726672AbgHUVyM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Aug 2020 17:54:12 -0400
-Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
-        by mail110.syd.optusnet.com.au (Postfix) with ESMTPS id DC7B6108A69;
-        Sat, 22 Aug 2020 07:53:59 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1k9Ez0-0002OM-F0; Sat, 22 Aug 2020 07:53:58 +1000
-Date:   Sat, 22 Aug 2020 07:53:58 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ritesh Harjani <riteshh@linux.ibm.com>
-Cc:     Anju T Sudhakar <anju@linux.vnet.ibm.com>, hch@infradead.org,
-        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        willy@infradead.org
-Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
-Message-ID: <20200821215358.GG7941@dread.disaster.area>
-References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
- <20200820231140.GE7941@dread.disaster.area>
- <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
+        id S1726086AbgHVEVQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 22 Aug 2020 00:21:16 -0400
+Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:14458 "EHLO
+        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726000AbgHVEVG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Aug 2020 00:21:06 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5f409cbd0000>; Fri, 21 Aug 2020 21:19:10 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Fri, 21 Aug 2020 21:21:06 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Fri, 21 Aug 2020 21:21:06 -0700
+Received: from HQMAIL111.nvidia.com (172.20.187.18) by HQMAIL109.nvidia.com
+ (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 22 Aug
+ 2020 04:21:05 +0000
+Received: from hqnvemgw03.nvidia.com (10.124.88.68) by HQMAIL111.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Sat, 22 Aug 2020 04:21:05 +0000
+Received: from sandstorm.nvidia.com (Not Verified[10.2.94.162]) by hqnvemgw03.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5f409d310002>; Fri, 21 Aug 2020 21:21:05 -0700
+From:   John Hubbard <jhubbard@nvidia.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+CC:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, Jeff Layton <jlayton@kernel.org>,
+        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-block@vger.kernel.org>, <ceph-devel@vger.kernel.org>,
+        <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH 0/5] bio: Direct IO: convert to pin_user_pages_fast()
+Date:   Fri, 21 Aug 2020 21:20:54 -0700
+Message-ID: <20200822042059.1805541-1-jhubbard@nvidia.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0 cx=a_idp_d
-        a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=VnNF1IyMAAAA:8 a=7-415B0cAAAA:8
-        a=Qh6IE-2GF9-oy0DaVTgA:9 a=RXxoB3lGECdc3DDF:21 a=r0DmFvm1JCai0nq2:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+X-NVConfidentiality: public
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1598069950; bh=iXBAhlDsGHGJ0BL2z0xZCdQ0KPj09q9n3S14YFuk7Lw=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         MIME-Version:X-NVConfidentiality:Content-Transfer-Encoding:
+         Content-Type;
+        b=CR22qrcQtjZToR+Y4AXxJBXCfRczkFv9gLGIEHhDFMLUu4lf6rgLvtPhciCvG0fvf
+         8JMCctIFdDTWGAzXzUKbKnyYt6PwVt10412J6p/kV+Y0t4d87XeRWNvV7rAJ2JgP31
+         d/5x/ygntRNdZv7aMmnGbKeHHcc0OCfwjSwvgZMX+1lVs78tO1hDzy8fykG7Hz3ok1
+         mw6vWF1LW8LjO7d+e41OQ4iw21XaLGKwEc023ZXuR+EN1hRFez1kp1TmDXy5s91Yv8
+         Yy8oSMjNVP/9FDFofUWl7D5rayjXLwB32kN+Y8cF+l0u4qTOBIqNxYvbqe1Xo9DjGq
+         kGQPDLQF/puTQ==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 21, 2020 at 10:15:33AM +0530, Ritesh Harjani wrote:
-> Hello Dave,
-> 
-> Thanks for reviewing this.
-> 
-> On 8/21/20 4:41 AM, Dave Chinner wrote:
-> > On Wed, Aug 19, 2020 at 03:58:41PM +0530, Anju T Sudhakar wrote:
-> > > From: Ritesh Harjani <riteshh@linux.ibm.com>
-> > > 
-> > > __bio_try_merge_page() may return same_page = 1 and merged = 0.
-> > > This could happen when bio->bi_iter.bi_size + len > UINT_MAX.
-> > 
-> > Ummm, silly question, but exactly how are we getting a bio that
-> > large in ->writepages getting built? Even with 64kB pages, that's a
-> > bio with 2^16 pages attached to it. We shouldn't be building single
-> > bios in writeback that large - what storage hardware is allowing
-> > such huge bios to be built? (i.e. can you dump all the values in
-> > /sys/block/<dev>/queue/* for that device for us?)
-> 
-> Please correct me here, but as I see, bio has only these two limits
-> which it checks for adding page to bio. It doesn't check for limits
-> of /sys/block/<dev>/queue/* no? I guess then it could be checked
-> by block layer below b4 submitting the bio?
-> 
-> 113 static inline bool bio_full(struct bio *bio, unsigned len)
-> 114 {
-> 115         if (bio->bi_vcnt >= bio->bi_max_vecs)
-> 116                 return true;
-> 117
-> 118         if (bio->bi_iter.bi_size > UINT_MAX - len)
-> 119                 return true;
-> 120
-> 121         return false;
-> 122 }
+Hi,
 
-but iomap only allows BIO_MAX_PAGES when creating the bio. And:
+This converts the Direct IO block/bio layer over to use FOLL_PIN pages
+(those acquired via pin_user_pages*()). This effectively converts
+several file systems (ext4, for example) that use the common Direct IO
+routines. See "Remaining work", below for a bit more detail there.
 
-#define BIO_MAX_PAGES 256
+Quite a few approaches have been considered over the years. This one is
+inspired by Christoph Hellwig's July, 2019 observation that there are
+only 5 ITER_ types, and we can simplify handling of them for Direct IO
+[1]. After working through how bio submission and completion works, I
+became convinced that this is the simplest and cleanest approach to
+conversion.
 
-So even on a 64k page machine, we should not be building a bio with
-more than 16MB of data in it. So how are we getting 4GB of data into
-it?
+Not content to let well enough alone, I then continued on to the
+unthinkable: adding a new flag to struct bio, whose "short int" flags
+field was full, thuse triggering an expansion of the field from 16, to
+32 bits. This allows for a nice assertion in bio_release_pages(), that
+the bio page release mechanism matches the page acquisition mechanism.
+This is especially welcome for a change that affects a lot of callers
+and could really make a mess if there is a bug somewhere.
 
-Further, the writeback code is designed around the bios having a
-bound size that is relatively small to keep IO submission occurring
-as we pack pages into bios. This keeps IO latency down and minimises
-the individual IO completion overhead of each IO. This is especially
-important as the writeback path is critical for memory relcaim to
-make progress because we do not want to trap gigabytes of dirty
-memory in the writeback IO path.
+I'm unable to spot any performance implications, either theoretically or
+via (rather light) performance testing, from enlarging bio.bi_flags, but
+I suspect that there are maybe still valid reasons for having such a
+tiny bio.bi_flags field. I just have no idea what they are. (Hardware
+that knows the size of a bio? No, because there would be obvious
+build-time assertions, and comments about such a constraint.) Anyway, I
+can drop that patch if it seems like too much cost for too little
+benefit.
 
-IOWs, seeing huge bios being built by writeback is indicative of
-design assumptions and contraints being violated - huge bios on the
-buffered writeback path like this are not a good thing to see.
+And finally, as long as we're all staring at the iter_iov code, I'm
+including a nice easy ceph patch, that removes one more caller of
+iter_iov_get_pages().
 
-FWIW, We've also recently got reports of hard lockups in IO
-completion of overwrites because our ioend bio chains have grown to
-almost 3 million pages and all the writeback pages get processed as
-a single completion. This is a similar situation to this bug report
-in that the bio chains are unbound in length, and I'm betting the
-cause is the same: overwrite a 10GB file in memory (with dirty
-limits turned up), then run fsync so we do a single writepages call
-that tries to write 10GB of dirty pages....
+Design notes =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-The only reason we don't normally see this is that background
-writeback caps the number of pages written per writepages call to
-1024. i.e.  it caps writeback IO sizes to a small amount so that IO
-latency, writeback fairness across dirty inodes, etc can be
-maintained for background writeback - no one dirty file can
-monopolise the available writeback bandwidth and starve writeback
-to other dirty inodes.
+This whole approach depends on certain concepts:
 
-So combine the two, and we've got a problem that the writeback IO
-sizes are not being bound to sane IO sizes. I have no problems with
-building individual bios that are 4MB or even 16MB in size - that
-allows the block layer to work efficiently. Problems at a system
-start to occur, however, when individual bios or bio chains built
-by writeback end up being orders of magnitude larger than this....
+1) Each struct bio instance must not mix different types of pages:
+FOLL_PIN and non-FOLL_PIN pages. (By FOLL_PIN I'm referring to pages
+that were acquired and pinned via pin_user_page*() routines.)
+Fortunately, this is already an enforced constraint for bio's, as
+evidenced by the existence and use of BIO_NO_PAGE_REF.
 
-i.e. I'm not looking at this as a "bio overflow bug" - I'm
-commenting on what this overflow implies from an architectural point
-of view. i.e. that uncapped bio sizes and bio chain lengths in
-writeback are actually a bad thing and something we've always
-tried to avoid doing....
+2) Christoph Hellwig's July, 2019 observation that there are
+only 5 ITER_ types, and we can simplify handling of them for Direct IO
+[1]. Accordingly, this series implements the following pseudocode:
 
-.....
+Direct IO behavior:
 
-> /sys/block/<dev>/queue/*
-> ========================
-> 
-> setup:/run/perf$ cat /sys/block/loop1/queue/max_segments
-> 128
-> setup:/run/perf$ cat /sys/block/loop1/queue/max_segment_size
-> 65536
+    ITER_IOVEC:
+        pin_user_pages_fast();
+        break;
 
-A maximumally size bio (16MB) will get split into two bios for this
-hardware based on this (8MB max size).
+    ITER_KVEC:    // already elevated page refcount, leave alone
+    ITER_BVEC:    // already elevated page refcount, leave alone
+    ITER_PIPE:    // just, no :)
+    ITER_DISCARD: // discard
+        return -EFAULT or -ENVALID;
 
-> setup:/run/perf$ cat /sys/block/loop1/queue/max_hw_sectors_kb
-> 1280
+...which works for callers that already have sorted out which case they
+are in. Such as, Direct IO in the block/bio layers.
 
-Except this says 1280kB is the max size, so it will actually get
-split into 14 bios.
+Now, this does leave ITER_KVEC and ITER_BVEC unconverted, but on the
+other hand, it's not clear that these are actually affected in the real
+world, by the get_user_pages()+filesystem interaction problems of [2].
+If it turns out to matter, then those can be handled too, but it's just
+more refactoring and surgery to do so.
 
-So a stream of 16MB bios from writeback will be more than large
-enough to keep this hardware's pipeline full....
+Testing
+=3D=3D=3D=3D=3D=3D=3D
 
-Cheers,
+Performance: no obvious regressions from running fio (direct=3D1: Direct
+IO) on both SSD and NVMe drives.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Functionality: selected non-destructive bare metal xfstests on xfs,
+ext4, btrfs, orangefs filesystems, plus LTP tests.
+
+Note that I have only a single x86 64-bit test machine, though.
+
+Remaining work
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Non-converted call sites for iter_iov_get_pages*() at the
+moment include: net, crypto, cifs, ceph, vhost, fuse, nfs/direct,
+vhost/scsi.
+
+About-to-be-converted sites (in a subsequent patch) are: Direct IO for
+filesystems that use the generic read/write functions.
+
+[1] https://lore.kernel.org/kvm/20190724061750.GA19397@infradead.org/
+
+[2] "Explicit pinning of user-space pages":
+    https://lwn.net/Articles/807108/
+
+
+John Hubbard (5):
+  iov_iter: introduce iov_iter_pin_user_pages*() routines
+  mm/gup: introduce pin_user_page()
+  bio: convert get_user_pages_fast() --> pin_user_pages_fast()
+  bio: introduce BIO_FOLL_PIN flag
+  fs/ceph: use pipe_get_pages_alloc() for pipe
+
+ block/bio.c               | 29 +++++++------
+ block/blk-map.c           |  7 +--
+ fs/ceph/file.c            |  3 +-
+ fs/direct-io.c            | 30 ++++++-------
+ fs/iomap/direct-io.c      |  2 +-
+ include/linux/blk_types.h |  5 ++-
+ include/linux/mm.h        |  2 +
+ include/linux/uio.h       |  9 +++-
+ lib/iov_iter.c            | 91 +++++++++++++++++++++++++++++++++++++--
+ mm/gup.c                  | 30 +++++++++++++
+ 10 files changed, 169 insertions(+), 39 deletions(-)
+
+--=20
+2.28.0
+
