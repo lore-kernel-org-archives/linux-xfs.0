@@ -1,83 +1,75 @@
-Return-Path: <SRS0=ZMk+=CA=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=zZWs=CB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3586BC433E1
-	for <linux-xfs@archiver.kernel.org>; Sat, 22 Aug 2020 16:43:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAFDDC433DF
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Aug 2020 06:26:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D85A20825
-	for <linux-xfs@archiver.kernel.org>; Sat, 22 Aug 2020 16:43:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C040C2074D
+	for <linux-xfs@archiver.kernel.org>; Sun, 23 Aug 2020 06:26:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Fkp1ehUB"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Z8iL7NHa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728534AbgHVQn4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 22 Aug 2020 12:43:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32876 "EHLO
+        id S1725926AbgHWG0J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Aug 2020 02:26:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47130 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727856AbgHVQn4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 22 Aug 2020 12:43:56 -0400
+        with ESMTP id S1725920AbgHWG0I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Aug 2020 02:26:08 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22E0DC061573;
-        Sat, 22 Aug 2020 09:43:55 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98164C061573;
+        Sat, 22 Aug 2020 23:26:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=oFuDeXF5XTQkzKHIHDTB3fkJIr4yRoHkr/iTMIInKAo=; b=Fkp1ehUBmRd07mlHbBu82Z0UJF
-        XYNwHVDBi0sORpPOufYmQn/L6gACvzmYKqaXg7imKFdFCkp296kzKMjlbnAvabviqPcwXiA3DPKAP
-        tgPTrS4i8X2tMz8dLVtjbSoGWwHDT/nIVPCxeh7YQDD9DGGVCymd4V3PojOCrqCry5IjsUCDR3A8b
-        HuoRFgbPcUwiWn/zgsDeFYeRo4llJmlNr6cvmuKPYJlBYrHAf3SJO6N2pSfAK8rdiLUkk6yaa4Nds
-        ID1To+9HoUjIPqkUhls33C4Ijv/CAGsRYPh/r0Ila9WaLWMQDY1YHFHTaTaDu/r7yhrV6DkCOtLPc
-        xpbKsL8g==;
+        bh=xHNPas4uqQzNSMZwEJoiWBVI4RMLp8MHwIUwAk63z1Q=; b=Z8iL7NHaVRxDIHyP/BmrtuGDZ+
+        I3inqX3HSz47Eu4p/9fCIK7Ou1agE7Br+HXlXAhWqVJLphgfELGc8HxD/uYIkXiWjce1/x9sro9QI
+        2qEqhUHGzfhI8een9gxSRNmavstFClnpCjaxcVODYD8N3Q88GUYCsxvDBgIZl/vSPvgIJtlE5Sof8
+        aHpBoBqhRWzfbZdyGrunlo2/RjGLrbPSxgASQT38gDhqileNV1DWTwfwzZZ0kiJ/YK+5uCrcFyJHB
+        pu4cLFn8i0vmYE1TYlPMdBjeMmoEUaeJid5e43hj1CRXiusab3pmDyoGjfHZOs+UIAORqg/SGWndc
+        KvlFXrhA==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1k9WcA-0000jU-U1; Sat, 22 Aug 2020 16:43:34 +0000
-Date:   Sat, 22 Aug 2020 17:43:34 +0100
+        id 1k9jS3-0000G8-9B; Sun, 23 Aug 2020 06:25:59 +0000
+Date:   Sun, 23 Aug 2020 07:25:59 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "yukuai (C)" <yukuai3@huawei.com>,
-        Gao Xiang <hsiangkao@redhat.com>, darrick.wong@oracle.com,
-        david@fromorbit.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com
-Subject: Re: [RFC PATCH V3] iomap: add support to track dirty state of sub
- pages
-Message-ID: <20200822164334.GA2625@infradead.org>
-References: <20200819120542.3780727-1-yukuai3@huawei.com>
- <20200819125608.GA24051@xiangao.remote.csb>
- <43dc04bf-17bb-9f15-4f1c-dfd6c47c3fb1@huawei.com>
- <20200821061234.GE31091@infradead.org>
- <20200821133657.GU17456@casper.infradead.org>
- <20200822060345.GD17129@infradead.org>
- <20200822142414.GY17456@casper.infradead.org>
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, Jeff Layton <jlayton@kernel.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-block@vger.kernel.org, ceph-devel@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 4/5] bio: introduce BIO_FOLL_PIN flag
+Message-ID: <20200823062559.GA32480@infradead.org>
+References: <20200822042059.1805541-1-jhubbard@nvidia.com>
+ <20200822042059.1805541-5-jhubbard@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200822142414.GY17456@casper.infradead.org>
+In-Reply-To: <20200822042059.1805541-5-jhubbard@nvidia.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 22, 2020 at 03:24:14PM +0100, Matthew Wilcox wrote:
-> The case I was worrying about:
+On Fri, Aug 21, 2020 at 09:20:58PM -0700, John Hubbard wrote:
+> Add a new BIO_FOLL_PIN flag to struct bio, whose "short int" flags field
+> was full, thuse triggering an expansion of the field from 16, to 32
+> bits. This allows for a nice assertion in bio_release_pages(), that the
+> bio page release mechanism matches the page acquisition mechanism.
 > 
-> fill a filesystem so that free space is very fragmented
-> readahead into a hole
-> hole is large, don't allocate an iop
-> writeback the page
-> don't have an iop, can't track the write count
-> 
-> I'd be fine with choosing to allocate an iop later (and indeed I do that
-> as part of the THP work).  But does this scenario make you think of any
-> other corner cases?
+> Set BIO_FOLL_PIN whenever pin_user_pages_fast() is used, and check for
+> BIO_FOLL_PIN before using unpin_user_page().
 
-Can't think of a corner case.  And as said last time this comes up I
-think trying to allocate the iop as late and lazy as possible is
-probably a good thing.  I just went for the dumb way because it was
-simpler and already a huge improvement over buffer heads.
+When would the flag not be set when BIO_NO_PAGE_REF is not set?
+
+Also I don't think we can't just expand the flags field, but I can send
+a series to kill off two flags.
