@@ -2,52 +2,48 @@ Return-Path: <SRS0=BK4F=CC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4870DC433E3
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:26:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFA2EC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:26:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 264AD2074D
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:26:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A35B92074D
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:26:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KjEwPAyZ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mYU+Wo1z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727040AbgHXPZg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 11:25:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41310 "EHLO
+        id S1727000AbgHXPQB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 11:16:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727073AbgHXPRN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:17:13 -0400
+        with ESMTP id S1726697AbgHXPG5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:06:57 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A63EEC061755;
-        Mon, 24 Aug 2020 08:17:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D83E8C06179A;
+        Mon, 24 Aug 2020 07:55:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=dHPPYRW7Wyiha4H6WrrBOpZ59u0yhrJkqhE0Dkrp7hM=; b=KjEwPAyZ8OUP/RcNmcLBjN6pV9
-        DYxhARYtqve1duOzKEr5Xcr8ocVEgCPy5en8ISypdz3pD0/emFMaoaK964ggJbBJd4CHSpyT3WEhu
-        0y6wYMVR7+fRIFcOy93o7M7VjwVQJ2xwbm+pdChAWPmGp+OmWbWtvw+aOaVa57kmuz7SRhwBIN4Fc
-        30r8ipYwGYpOa8V4zgtr8UIVLB1lL3cJvWUX0JclfJMAnpd40fQMPlocGCq31ZPxGn3lcZpHClZrm
-        zqQ8gd6k7v8fIGqGlKFqh8jNJvV/8acgEr2H0EAiXuLTwto1N6KPDtw4/WKYOVuujDGyEcyB9Ml0W
-        Dnaqwevg==;
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=rtPWePEP2e2MrA1B6+d56D/W6SCtPdzXjGVhB68Hm9E=; b=mYU+Wo1zHLWgAf8PtstxsMTzeM
+        l89zOmYzJ4RAebFtunciW1qLOccTUYbRyCdTC0HFhRUaFysVsGgifHdVuV+nAICugexygDYupVHqV
+        Pgx88p5wQgJt3gvzhQmSRhuRsWVxpyeb3EOAahpwBmkUxMJssYiXiFutGNnBlHme91mw0lrufX/dt
+        bx5Jm4KquFZu8cyiMXr7xv+0CHqsS7c/CnzDPyx3OGlyMbSVg+plp6m2GJXAthNPGuz3oVbU9HsFS
+        C9b1dq1AShibohWaSk/lWESu2oP6BM+zNJFGDBsrG1QOBj4Tc/Kwcp9qKnijfzIHWXVdM+9wKdOXa
+        ZIB2/1BA==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kAEDX-0004Cj-1b; Mon, 24 Aug 2020 15:17:03 +0000
+        id 1kADsO-0002lr-Li; Mon, 24 Aug 2020 14:55:12 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-block@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 04/11] block: Add bio_for_each_thp_segment_all
-Date:   Mon, 24 Aug 2020 16:16:53 +0100
-Message-Id: <20200824151700.16097-5-willy@infradead.org>
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/9] THP iomap patches for 5.10
+Date:   Mon, 24 Aug 2020 15:55:01 +0100
+Message-Id: <20200824145511.10500-1-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
-In-Reply-To: <20200824151700.16097-1-willy@infradead.org>
-References: <20200824151700.16097-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -55,80 +51,35 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Iterate once for each THP instead of once for each base page.
+These patches are carefully plucked from the THP series.  I would like
+them to hit 5.10 to make the THP patchset merge easier.  Some of these
+are just generic improvements that make sense on their own terms, but
+the overall intent is to support THPs in iomap.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- include/linux/bio.h  | 13 +++++++++++++
- include/linux/bvec.h | 27 +++++++++++++++++++++++++++
- 2 files changed, 40 insertions(+)
+I'll send another patch series later today which are the changes to
+iomap which don't pay their own way until we actually have THPs in the
+page cache.  I would like those to be reviewed with an eye to merging
+them into 5.11.
 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index c6d765382926..a0e104910097 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -129,12 +129,25 @@ static inline bool bio_next_segment(const struct bio *bio,
- 	return true;
- }
- 
-+static inline bool bio_next_thp_segment(const struct bio *bio,
-+				    struct bvec_iter_all *iter)
-+{
-+	if (iter->idx >= bio->bi_vcnt)
-+		return false;
-+
-+	bvec_thp_advance(&bio->bi_io_vec[iter->idx], iter);
-+	return true;
-+}
-+
- /*
-  * drivers should _never_ use the all version - the bio may have been split
-  * before it got to the driver and the driver won't own all of it
-  */
- #define bio_for_each_segment_all(bvl, bio, iter) \
- 	for (bvl = bvec_init_iter_all(&iter); bio_next_segment((bio), &iter); )
-+#define bio_for_each_thp_segment_all(bvl, bio, iter) \
-+	for (bvl = bvec_init_iter_all(&iter); \
-+	     bio_next_thp_segment((bio), &iter); )
- 
- static inline void bio_advance_iter(const struct bio *bio,
- 				    struct bvec_iter *iter, unsigned int bytes)
-diff --git a/include/linux/bvec.h b/include/linux/bvec.h
-index ac0c7299d5b8..ea8a37a7515b 100644
---- a/include/linux/bvec.h
-+++ b/include/linux/bvec.h
-@@ -162,4 +162,31 @@ static inline void bvec_advance(const struct bio_vec *bvec,
- 	}
- }
- 
-+static inline void bvec_thp_advance(const struct bio_vec *bvec,
-+				struct bvec_iter_all *iter_all)
-+{
-+	struct bio_vec *bv = &iter_all->bv;
-+	unsigned int page_size;
-+
-+	if (iter_all->done) {
-+		bv->bv_page += thp_nr_pages(bv->bv_page);
-+		page_size = thp_size(bv->bv_page);
-+		bv->bv_offset = 0;
-+	} else {
-+		bv->bv_page = thp_head(bvec->bv_page +
-+				(bvec->bv_offset >> PAGE_SHIFT));
-+		page_size = thp_size(bv->bv_page);
-+		bv->bv_offset = bvec->bv_offset -
-+				(bv->bv_page - bvec->bv_page) * PAGE_SIZE;
-+		BUG_ON(bv->bv_offset >= page_size);
-+	}
-+	bv->bv_len = min(page_size - bv->bv_offset,
-+			 bvec->bv_len - iter_all->done);
-+	iter_all->done += bv->bv_len;
-+
-+	if (iter_all->done == bvec->bv_len) {
-+		iter_all->idx++;
-+		iter_all->done = 0;
-+	}
-+}
- #endif /* __LINUX_BVEC_ITER_H */
+Matthew Wilcox (Oracle) (9):
+  iomap: Fix misplaced page flushing
+  fs: Introduce i_blocks_per_page
+  iomap: Use kzalloc to allocate iomap_page
+  iomap: Use bitmap ops to set uptodate bits
+  iomap: Support arbitrarily many blocks per page
+  iomap: Convert read_count to byte count
+  iomap: Convert write_count to byte count
+  iomap: Convert iomap_write_end types
+  iomap: Change calling convention for zeroing
+
+ fs/dax.c                |  13 ++--
+ fs/iomap/buffered-io.c  | 145 ++++++++++++++++------------------------
+ fs/jfs/jfs_metapage.c   |   2 +-
+ fs/xfs/xfs_aops.c       |   2 +-
+ include/linux/dax.h     |   3 +-
+ include/linux/pagemap.h |  16 +++++
+ 6 files changed, 83 insertions(+), 98 deletions(-)
+
 -- 
 2.28.0
 
