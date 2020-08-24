@@ -6,69 +6,88 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB5EC433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 14:42:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C92FFC433E3
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F5CF20738
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 14:42:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9128206B5
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:04:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fMe0QfTQ"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="abBFOKCu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725916AbgHXOmR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 10:42:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35790 "EHLO
+        id S1726187AbgHXPEb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 11:04:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39304 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725780AbgHXOmQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 10:42:16 -0400
+        with ESMTP id S1726026AbgHXPE0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:04:26 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDCCBC061573;
-        Mon, 24 Aug 2020 07:42:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C3D0C0617A9;
+        Mon, 24 Aug 2020 08:04:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Sm/ikGBMT7yXr66/WCvwl+PKMe6pOWKqSkgLkHzx4Lc=; b=fMe0QfTQ4FBKF7HgdD2AKcKJDy
-        jpK1GN1HR/22cjzUb0XYK5lfB6YRhA9AfdqZKo0uLpe7Blh31bdMq37c40i/jLxm2YkB3oSX4/OJj
-        TYv0GzPrdpMG7xkBSyFews/4uSp3ImPuE96kVv3zjIy/ZJFPZYnz7VWg6HULLbJltSIvqekw/b8b9
-        RKFdsxEV8Q7OHuVh4OwAwpT0NBPSZaAQrlwvPHCYOXl7XNO9BQI5IlfSGfYJnUzs81goecyjvlHWy
-        9Qkayszt+5jdBZtaXYqsqcOD0WGuP7wjZvlXkdmYMgkDqfXsDlz962mCjUAE50IjJRRlxUchCKDhL
-        4u3jkxrw==;
+        bh=8CP6fVQFmATmTA1mY6X4BjyYws+1260yHBdv8vP3vaA=; b=abBFOKCuZv5f3di1oL2KpM+NYX
+        3jL/ZHpavzavy6HHSEvGScySN4B2OLgWxbltw14zWrUpj7tQFvq2IlvmFiLgtzkhTcycrFXioZVCj
+        jVUGq4nLATCW0S1bNtYkidrzspSdwR8K60jIsr0RPBF2cxijXTBLeOJ1WeOMZSp/vBHi+UpQV85/0
+        5fSNqFHc+ZTkoHT8XmdxHNDlmHH8fdzjWJF/uE49Z8OYVBbH348GA0dQ8c7yT06WZcSIL7cdyySc8
+        SAu7lKtuxV8m9AJo5nGSa8Hw5lYXnAqpy8p0CTJuO4czS5S6jQgEEHkR8bD5CEjMjb9QrJeMOK2Wd
+        iZalW7Yg==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kADff-00027L-AM; Mon, 24 Aug 2020 14:42:03 +0000
-Date:   Mon, 24 Aug 2020 15:42:03 +0100
+        id 1kAE1B-0003Nv-An; Mon, 24 Aug 2020 15:04:17 +0000
+Date:   Mon, 24 Aug 2020 16:04:17 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Jens Axboe <axboe@kernel.dk>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     Christoph Hellwig <hch@infradead.org>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jeff Layton <jlayton@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-mm@kvack.org,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 4/5] bio: introduce BIO_FOLL_PIN flag
-Message-ID: <20200824144203.GA8070@infradead.org>
-References: <20200822042059.1805541-1-jhubbard@nvidia.com>
- <20200822042059.1805541-5-jhubbard@nvidia.com>
- <20200823062559.GA32480@infradead.org>
- <d75ce230-6c8d-8623-49a2-500835f6cdfc@kernel.dk>
+        Dave Chinner <david@fromorbit.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
+        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        willy@infradead.org
+Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
+Message-ID: <20200824150417.GA12258@infradead.org>
+References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
+ <20200820231140.GE7941@dread.disaster.area>
+ <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
+ <20200821215358.GG7941@dread.disaster.area>
+ <20200822131312.GA17997@infradead.org>
+ <20200824142823.GA295033@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d75ce230-6c8d-8623-49a2-500835f6cdfc@kernel.dk>
+In-Reply-To: <20200824142823.GA295033@bfoster>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 24, 2020 at 03:20:26AM -0600, Jens Axboe wrote:
-> (not relevant to this series as this patch has thankfully already been
-> dropped, just in general - but yes, definitely need a *strong* justification
-> to bump the bio size).
-> 
-> Would actually be nice to kill off a few flags, if possible, so the
-> flags space isn't totally full.
+On Mon, Aug 24, 2020 at 10:28:23AM -0400, Brian Foster wrote:
+> Do I understand the current code (__bio_try_merge_page() ->
+> page_is_mergeable()) correctly in that we're checking for physical page
+> contiguity and not necessarily requiring a new bio_vec per physical
+> page?
 
-I have a series to kill two flags that I need to resurrect and post.
+
+Yes.
+
+> With regard to Dave's earlier point around seeing excessively sized bio
+> chains.. If I set up a large memory box with high dirty mem ratios and
+> do contiguous buffered overwrites over a 32GB range followed by fsync, I
+> can see upwards of 1GB per bio and thus chains on the order of 32+ bios
+> for the entire write. If I play games with how the buffered overwrite is
+> submitted (i.e., in reverse) however, then I can occasionally reproduce
+> a ~32GB chain of ~32k bios, which I think is what leads to problems in
+> I/O completion on some systems. Granted, I don't reproduce soft lockup
+> issues on my system with that behavior, so perhaps there's more to that
+> particular issue.
+> 
+> Regardless, it seems reasonable to me to at least have a conservative
+> limit on the length of an ioend bio chain. Would anybody object to
+> iomap_ioend growing a chain counter and perhaps forcing into a new ioend
+> if we chain something like more than 1k bios at once?
+
+So what exactly is the problem of processing a long chain in the
+workqueue vs multiple small chains?  Maybe we need a cond_resched()
+here and there, but I don't see how we'd substantially change behavior.
