@@ -2,137 +2,107 @@ Return-Path: <SRS0=BK4F=CC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F849C433E3
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 10:53:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B564BC433E1
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 14:28:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5493207D3
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 10:53:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598266427;
-	bh=qH9tu8/66AnvcmnbDrUOe52jE1Smh8r+3XYyB4XlwpE=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
-	b=grVHf3NzkPczJ2/1C8nmhD0cKqQxzKj11CZ19Q5WY6mRnCuAeuBwSQVi83BSg1nyB
-	 UrQz55wHuQzFI9gOTy93LE5WULHaS7n0JdwYAaazwLfb2mR+as3U6ujPz85utfOOAL
-	 arNV+IRFGFX/wDgFXyga2LkxTSJVgilIW4HWqS6Y=
+	by mail.kernel.org (Postfix) with ESMTP id 893DE2071E
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 14:28:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eHt6YHV4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727037AbgHXKxm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 06:53:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44164 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727022AbgHXKxi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Aug 2020 06:53:38 -0400
-Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726158AbgHXO2f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 10:28:35 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:35180 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725968AbgHXO2d (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 10:28:33 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598279311;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=fI05Fs4HjD1Fspp+mWg44gsKdGpjEIRqNmomRhV5I5A=;
+        b=eHt6YHV4aVV8UzBHsC8vZgM3kEWwMuli+1qPcR5ss4EceE93tIklLPcfqoAgsg8eU2Bwfw
+        jaoZ9PQ/2OxrJhdWLfbPjGwEagGxN42L29Qe02vuSQVdmsF9kSUWwAUmKGvPZTr4KcWzcz
+        KULZj6DLvuvqX6Wti1XBlyHcHA61gWk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-560-XFK-FZUrPsutsyHWEvahyw-1; Mon, 24 Aug 2020 10:28:27 -0400
+X-MC-Unique: XFK-FZUrPsutsyHWEvahyw-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CCF082071E;
-        Mon, 24 Aug 2020 10:53:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598266416;
-        bh=qH9tu8/66AnvcmnbDrUOe52jE1Smh8r+3XYyB4XlwpE=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=HqjPVk4t1jp1MayrpuV57WmBoGVegaoD8GrQl82u/Vio8K/GP/BCgrbESv+PT51ur
-         wu4x1lBLs17gp9cWFVnCtWfwZvtiJCI6bokKbwMD2upcCCNi9Sw7eEBKS8BFbYRQCx
-         BOo0ClFbxA7dS2oWLRAo1OC7wqhkSTeCI39L6tmg=
-Message-ID: <048e78f2b440820d936eb67358495cc45ba579c3.camel@kernel.org>
-Subject: Re: [PATCH 5/5] fs/ceph: use pipe_get_pages_alloc() for pipe
-From:   Jeff Layton <jlayton@kernel.org>
-To:     John Hubbard <jhubbard@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-mm@kvack.org,
-        LKML <linux-kernel@vger.kernel.org>
-Date:   Mon, 24 Aug 2020 06:53:34 -0400
-In-Reply-To: <20200822042059.1805541-6-jhubbard@nvidia.com>
-References: <20200822042059.1805541-1-jhubbard@nvidia.com>
-         <20200822042059.1805541-6-jhubbard@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5FB7F81F018;
+        Mon, 24 Aug 2020 14:28:26 +0000 (UTC)
+Received: from bfoster (ovpn-112-11.rdu2.redhat.com [10.10.112.11])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7B1F727CD4;
+        Mon, 24 Aug 2020 14:28:25 +0000 (UTC)
+Date:   Mon, 24 Aug 2020 10:28:23 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
+        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        willy@infradead.org
+Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
+Message-ID: <20200824142823.GA295033@bfoster>
+References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
+ <20200820231140.GE7941@dread.disaster.area>
+ <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
+ <20200821215358.GG7941@dread.disaster.area>
+ <20200822131312.GA17997@infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200822131312.GA17997@infradead.org>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2020-08-21 at 21:20 -0700, John Hubbard wrote:
-> This reduces, by one, the number of callers of iov_iter_get_pages().
-> That's helpful because these calls are being audited and converted over
-> to use iov_iter_pin_user_pages(), where applicable. And this one here is
-> already known by the caller to be only for ITER_PIPE, so let's just
-> simplify it now.
+On Sat, Aug 22, 2020 at 02:13:12PM +0100, Christoph Hellwig wrote:
+> On Sat, Aug 22, 2020 at 07:53:58AM +1000, Dave Chinner wrote:
+> > but iomap only allows BIO_MAX_PAGES when creating the bio. And:
+> > 
+> > #define BIO_MAX_PAGES 256
+> > 
+> > So even on a 64k page machine, we should not be building a bio with
+> > more than 16MB of data in it. So how are we getting 4GB of data into
+> > it?
 > 
-> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
-> ---
->  fs/ceph/file.c      | 3 +--
->  include/linux/uio.h | 3 ++-
->  lib/iov_iter.c      | 6 +++---
->  3 files changed, 6 insertions(+), 6 deletions(-)
+> BIO_MAX_PAGES is the number of bio_vecs in the bio, it has no
+> direct implication on the size, as each entry can fit up to UINT_MAX
+> bytes.
 > 
-> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-> index d51c3f2fdca0..d3d7dd957390 100644
-> --- a/fs/ceph/file.c
-> +++ b/fs/ceph/file.c
-> @@ -879,8 +879,7 @@ static ssize_t ceph_sync_read(struct kiocb *iocb, struct iov_iter *to,
->  		more = len < iov_iter_count(to);
->  
->  		if (unlikely(iov_iter_is_pipe(to))) {
-> -			ret = iov_iter_get_pages_alloc(to, &pages, len,
-> -						       &page_off);
-> +			ret = pipe_get_pages_alloc(to, &pages, len, &page_off);
->  			if (ret <= 0) {
->  				ceph_osdc_put_request(req);
->  				ret = -ENOMEM;
-> diff --git a/include/linux/uio.h b/include/linux/uio.h
-> index 62bcf5e45f2b..76cd47ab3dfd 100644
-> --- a/include/linux/uio.h
-> +++ b/include/linux/uio.h
-> @@ -227,7 +227,8 @@ ssize_t iov_iter_get_pages(struct iov_iter *i, struct page **pages,
->  ssize_t iov_iter_get_pages_alloc(struct iov_iter *i, struct page ***pages,
->  			size_t maxsize, size_t *start);
->  int iov_iter_npages(const struct iov_iter *i, int maxpages);
-> -
-> +ssize_t pipe_get_pages_alloc(struct iov_iter *i, struct page ***pages,
-> +			     size_t maxsize, size_t *start);
->  const void *dup_iter(struct iov_iter *new, struct iov_iter *old, gfp_t flags);
->  
->  ssize_t iov_iter_pin_user_pages(struct bio *bio, struct iov_iter *i, struct page **pages,
-> diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-> index a4bc1b3a3fda..f571fe3ddbe8 100644
-> --- a/lib/iov_iter.c
-> +++ b/lib/iov_iter.c
-> @@ -1396,9 +1396,8 @@ static struct page **get_pages_array(size_t n)
->  	return kvmalloc_array(n, sizeof(struct page *), GFP_KERNEL);
->  }
->  
-> -static ssize_t pipe_get_pages_alloc(struct iov_iter *i,
-> -		   struct page ***pages, size_t maxsize,
-> -		   size_t *start)
-> +ssize_t pipe_get_pages_alloc(struct iov_iter *i, struct page ***pages,
-> +			     size_t maxsize, size_t *start)
->  {
->  	struct page **p;
->  	unsigned int iter_head, npages;
-> @@ -1428,6 +1427,7 @@ static ssize_t pipe_get_pages_alloc(struct iov_iter *i,
->  		kvfree(p);
->  	return n;
->  }
-> +EXPORT_SYMBOL(pipe_get_pages_alloc);
->  
->  ssize_t iov_iter_pin_user_pages_alloc(struct bio *bio, struct iov_iter *i,
->  		   struct page ***pages, size_t maxsize,
 
+Do I understand the current code (__bio_try_merge_page() ->
+page_is_mergeable()) correctly in that we're checking for physical page
+contiguity and not necessarily requiring a new bio_vec per physical
+page?
 
-This looks fine to me. Let me know if you need this merged via the ceph
-tree. Thanks!
+With regard to Dave's earlier point around seeing excessively sized bio
+chains.. If I set up a large memory box with high dirty mem ratios and
+do contiguous buffered overwrites over a 32GB range followed by fsync, I
+can see upwards of 1GB per bio and thus chains on the order of 32+ bios
+for the entire write. If I play games with how the buffered overwrite is
+submitted (i.e., in reverse) however, then I can occasionally reproduce
+a ~32GB chain of ~32k bios, which I think is what leads to problems in
+I/O completion on some systems. Granted, I don't reproduce soft lockup
+issues on my system with that behavior, so perhaps there's more to that
+particular issue.
 
-Acked-by: Jeff Layton <jlayton@kernel.org>
+Regardless, it seems reasonable to me to at least have a conservative
+limit on the length of an ioend bio chain. Would anybody object to
+iomap_ioend growing a chain counter and perhaps forcing into a new ioend
+if we chain something like more than 1k bios at once?
+
+Brian
 
