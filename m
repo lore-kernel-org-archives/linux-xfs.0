@@ -7,43 +7,44 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68BB1C433E1
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7026C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:10:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4718B2224D
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:10:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6301206F0
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:10:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="l/Qk/h0H"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CisPEMty"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726783AbgHXPKI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 11:10:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39688 "EHLO
+        id S1725926AbgHXPKO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 11:10:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727029AbgHXPIh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:08:37 -0400
+        with ESMTP id S1727019AbgHXPIg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:08:36 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5993AC061798;
-        Mon, 24 Aug 2020 07:55:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD9F1C061575;
+        Mon, 24 Aug 2020 07:55:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=wD3WKtFt1cnznRgdSUY1WyUqGEQPEbuG+Sb3tBG4EoM=; b=l/Qk/h0H2fjqi6K2zYdHPAKr12
-        d6PzknXLBGxZ/gT7/Eu1anApPwE6pY3qW4VqmbGLIBj6NQ6X931vhSuTyFR+idWNrg98/skHqAlQm
-        GDLGfyFw0//Eka3eMNkkdR0yVgNhf0MZqMekWfiAwzg2WUnPKM/VYKHOQ2V7e5tMwXlqrWQ5vynvl
-        Yl01RbK/AIX5fm8VwjQn3QWFdM9hiW72ZMzaAv4HhyBuYt0S86OiRYNRlTNXws7j/RWoQAXCA8Tsj
-        anISLBlS6GUBVN1zFkZmQsh9fl1jv3WLZRz6piJFC3e/mxW3Ig5F9vbXRMj/187Cgw8j8z8+quAWD
-        +neMTvag==;
+        bh=9t5Nd6itfXneJoCG+4+nlOQPHaX5dotOdJBb6HG6NCQ=; b=CisPEMtyv9tHJ8UXhEjITSj6ro
+        e55s5UhIYB9KqOc0tY7ShmdbSSODyCcIGIv56v/qFmbGtSzJpV8lU+uTTyzThFKH8onX15DBFgokQ
+        6Pr334cFBhSX34CWshalSFv2drBRGB2bRqemwBS/UGUz2S8kAHPRFda8gauJIjZOsm1//3GVVeC+w
+        6uJ53dj4fYOjll48a6T1b3hjthIGtWdsXQO05I6X8bXrgCYqMXblLL+N0fpyvXt2bdVTERlSTP/9w
+        kn4ziZ+OVhYtBgG7xC4azdO4De+orNL9OCGXJgeZ1ZHdF9TXTMucj+w1r7T4N4SUqMGAkff4YBaIw
+        U99ubkdg==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kADsR-0002mn-NG; Mon, 24 Aug 2020 14:55:15 +0000
+        id 1kADsP-0002lz-8X; Mon, 24 Aug 2020 14:55:13 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 9/9] iomap: Change calling convention for zeroing
-Date:   Mon, 24 Aug 2020 15:55:10 +0100
-Message-Id: <20200824145511.10500-10-willy@infradead.org>
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/9] fs: Introduce i_blocks_per_page
+Date:   Mon, 24 Aug 2020 15:55:03 +0100
+Message-Id: <20200824145511.10500-3-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20200824145511.10500-1-willy@infradead.org>
 References: <20200824145511.10500-1-willy@infradead.org>
@@ -54,148 +55,110 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Pass the full length to iomap_zero() and dax_iomap_zero(), and have
-them return how many bytes they actually handled.  This is preparatory
-work for handling THP, although it looks like DAX could actually take
-advantage of it if there's a larger contiguous area.
+This helper is useful for both THPs and for supporting block size larger
+than page size.  Convert all users that I could find (we have a few
+different ways of writing this idiom, and I may have missed some).
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/dax.c               | 13 ++++++-------
- fs/iomap/buffered-io.c | 33 +++++++++++++++------------------
- include/linux/dax.h    |  3 +--
- 3 files changed, 22 insertions(+), 27 deletions(-)
+ fs/iomap/buffered-io.c  |  8 ++++----
+ fs/jfs/jfs_metapage.c   |  2 +-
+ fs/xfs/xfs_aops.c       |  2 +-
+ include/linux/pagemap.h | 16 ++++++++++++++++
+ 4 files changed, 22 insertions(+), 6 deletions(-)
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 95341af1a966..f2b912cb034e 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -1037,18 +1037,18 @@ static vm_fault_t dax_load_hole(struct xa_state *xas,
- 	return ret;
- }
- 
--int dax_iomap_zero(loff_t pos, unsigned offset, unsigned size,
--		   struct iomap *iomap)
-+loff_t dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
- {
- 	sector_t sector = iomap_sector(iomap, pos & PAGE_MASK);
- 	pgoff_t pgoff;
- 	long rc, id;
- 	void *kaddr;
- 	bool page_aligned = false;
--
-+	unsigned offset = offset_in_page(pos);
-+	unsigned size = min_t(u64, PAGE_SIZE - offset, length);
- 
- 	if (IS_ALIGNED(sector << SECTOR_SHIFT, PAGE_SIZE) &&
--	    IS_ALIGNED(size, PAGE_SIZE))
-+	    (size == PAGE_SIZE))
- 		page_aligned = true;
- 
- 	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
-@@ -1058,8 +1058,7 @@ int dax_iomap_zero(loff_t pos, unsigned offset, unsigned size,
- 	id = dax_read_lock();
- 
- 	if (page_aligned)
--		rc = dax_zero_page_range(iomap->dax_dev, pgoff,
--					 size >> PAGE_SHIFT);
-+		rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
- 	else
- 		rc = dax_direct_access(iomap->dax_dev, pgoff, 1, &kaddr, NULL);
- 	if (rc < 0) {
-@@ -1072,7 +1071,7 @@ int dax_iomap_zero(loff_t pos, unsigned offset, unsigned size,
- 		dax_flush(iomap->dax_dev, kaddr + offset, size);
- 	}
- 	dax_read_unlock(id);
--	return 0;
-+	return size;
- }
- 
- static loff_t
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 7f618ab4b11e..2dba054095e8 100644
+index cffd575e57b6..13d5cdab8dcd 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -901,11 +901,13 @@ iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
- }
- EXPORT_SYMBOL_GPL(iomap_file_unshare);
- 
--static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
--		unsigned bytes, struct iomap *iomap, struct iomap *srcmap)
-+static loff_t iomap_zero(struct inode *inode, loff_t pos, u64 length,
-+		struct iomap *iomap, struct iomap *srcmap)
+@@ -46,7 +46,7 @@ iomap_page_create(struct inode *inode, struct page *page)
  {
- 	struct page *page;
- 	int status;
-+	unsigned offset = offset_in_page(pos);
-+	unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
+ 	struct iomap_page *iop = to_iomap_page(page);
  
- 	status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap, srcmap);
- 	if (status)
-@@ -917,38 +919,33 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- 	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
+-	if (iop || i_blocksize(inode) == PAGE_SIZE)
++	if (iop || i_blocks_per_page(inode, page) <= 1)
+ 		return iop;
+ 
+ 	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
+@@ -147,7 +147,7 @@ iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+ 	unsigned int i;
+ 
+ 	spin_lock_irqsave(&iop->uptodate_lock, flags);
+-	for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
++	for (i = 0; i < i_blocks_per_page(inode, page); i++) {
+ 		if (i >= first && i <= last)
+ 			set_bit(i, iop->uptodate);
+ 		else if (!test_bit(i, iop->uptodate))
+@@ -1078,7 +1078,7 @@ iomap_finish_page_writeback(struct inode *inode, struct page *page,
+ 		mapping_set_error(inode->i_mapping, -EIO);
+ 	}
+ 
+-	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE && !iop);
++	WARN_ON_ONCE(i_blocks_per_page(inode, page) > 1 && !iop);
+ 	WARN_ON_ONCE(iop && atomic_read(&iop->write_count) <= 0);
+ 
+ 	if (!iop || atomic_dec_and_test(&iop->write_count))
+@@ -1374,7 +1374,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 	int error = 0, count = 0, i;
+ 	LIST_HEAD(submit_list);
+ 
+-	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE && !iop);
++	WARN_ON_ONCE(i_blocks_per_page(inode, page) > 1 && !iop);
+ 	WARN_ON_ONCE(iop && atomic_read(&iop->write_count) != 0);
+ 
+ 	/*
+diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
+index a2f5338a5ea1..176580f54af9 100644
+--- a/fs/jfs/jfs_metapage.c
++++ b/fs/jfs/jfs_metapage.c
+@@ -473,7 +473,7 @@ static int metapage_readpage(struct file *fp, struct page *page)
+ 	struct inode *inode = page->mapping->host;
+ 	struct bio *bio = NULL;
+ 	int block_offset;
+-	int blocks_per_page = PAGE_SIZE >> inode->i_blkbits;
++	int blocks_per_page = i_blocks_per_page(inode, page);
+ 	sector_t page_start;	/* address of page in fs blocks */
+ 	sector_t pblock;
+ 	int xlen;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index b35611882ff9..55d126d4e096 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -544,7 +544,7 @@ xfs_discard_page(
+ 			page, ip->i_ino, offset);
+ 
+ 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+-			PAGE_SIZE / i_blocksize(inode));
++			i_blocks_per_page(inode, page));
+ 	if (error && !XFS_FORCED_SHUTDOWN(mp))
+ 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+ out_invalidate:
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 7de11dcd534d..853733286138 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -899,4 +899,20 @@ static inline int page_mkwrite_check_truncate(struct page *page,
+ 	return offset;
  }
  
--static loff_t
--iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
--		void *data, struct iomap *iomap, struct iomap *srcmap)
-+static loff_t iomap_zero_range_actor(struct inode *inode, loff_t pos,
-+		loff_t length, void *data, struct iomap *iomap,
-+		struct iomap *srcmap)
- {
- 	bool *did_zero = data;
- 	loff_t written = 0;
--	int status;
- 
- 	/* already zeroed?  we're done. */
- 	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
--		return count;
-+		return length;
- 
- 	do {
--		unsigned offset, bytes;
--
--		offset = offset_in_page(pos);
--		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
-+		loff_t bytes;
- 
- 		if (IS_DAX(inode))
--			status = dax_iomap_zero(pos, offset, bytes, iomap);
-+			bytes = dax_iomap_zero(pos, length, iomap);
- 		else
--			status = iomap_zero(inode, pos, offset, bytes, iomap,
--					srcmap);
--		if (status < 0)
--			return status;
-+			bytes = iomap_zero(inode, pos, length, iomap, srcmap);
-+		if (bytes < 0)
-+			return bytes;
- 
- 		pos += bytes;
--		count -= bytes;
-+		length -= bytes;
- 		written += bytes;
- 		if (did_zero)
- 			*did_zero = true;
--	} while (count > 0);
-+	} while (length > 0);
- 
- 	return written;
- }
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 6904d4e0b2e0..80f17946f940 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -214,8 +214,7 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
- int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
- int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
- 				      pgoff_t index);
--int dax_iomap_zero(loff_t pos, unsigned offset, unsigned size,
--			struct iomap *iomap);
-+loff_t dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap);
- static inline bool dax_mapping(struct address_space *mapping)
- {
- 	return mapping->host && IS_DAX(mapping->host);
++/**
++ * i_blocks_per_page - How many blocks fit in this page.
++ * @inode: The inode which contains the blocks.
++ * @page: The page (head page if the page is a THP).
++ *
++ * If the block size is larger than the size of this page, return zero.
++ *
++ * Context: The caller should hold a refcount on the page to prevent it
++ * from being split.
++ * Return: The number of filesystem blocks covered by this page.
++ */
++static inline
++unsigned int i_blocks_per_page(struct inode *inode, struct page *page)
++{
++	return thp_size(page) >> inode->i_blkbits;
++}
+ #endif /* _LINUX_PAGEMAP_H */
 -- 
 2.28.0
 
