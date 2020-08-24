@@ -2,92 +2,94 @@ Return-Path: <SRS0=BK4F=CC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C92FFC433E3
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:04:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BA3FC433E3
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:07:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9128206B5
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:04:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 080EE206B5
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:07:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="abBFOKCu"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uxRmPdWX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726187AbgHXPEb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 11:04:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39304 "EHLO
+        id S1726766AbgHXPHH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 11:07:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39614 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726026AbgHXPE0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:04:26 -0400
+        with ESMTP id S1726882AbgHXPGX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:06:23 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C3D0C0617A9;
-        Mon, 24 Aug 2020 08:04:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CD2C1C061755;
+        Mon, 24 Aug 2020 07:55:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=8CP6fVQFmATmTA1mY6X4BjyYws+1260yHBdv8vP3vaA=; b=abBFOKCuZv5f3di1oL2KpM+NYX
-        3jL/ZHpavzavy6HHSEvGScySN4B2OLgWxbltw14zWrUpj7tQFvq2IlvmFiLgtzkhTcycrFXioZVCj
-        jVUGq4nLATCW0S1bNtYkidrzspSdwR8K60jIsr0RPBF2cxijXTBLeOJ1WeOMZSp/vBHi+UpQV85/0
-        5fSNqFHc+ZTkoHT8XmdxHNDlmHH8fdzjWJF/uE49Z8OYVBbH348GA0dQ8c7yT06WZcSIL7cdyySc8
-        SAu7lKtuxV8m9AJo5nGSa8Hw5lYXnAqpy8p0CTJuO4czS5S6jQgEEHkR8bD5CEjMjb9QrJeMOK2Wd
-        iZalW7Yg==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kAE1B-0003Nv-An; Mon, 24 Aug 2020 15:04:17 +0000
-Date:   Mon, 24 Aug 2020 16:04:17 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
-        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        willy@infradead.org
-Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
-Message-ID: <20200824150417.GA12258@infradead.org>
-References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
- <20200820231140.GE7941@dread.disaster.area>
- <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
- <20200821215358.GG7941@dread.disaster.area>
- <20200822131312.GA17997@infradead.org>
- <20200824142823.GA295033@bfoster>
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=ubi2ubkSzmcUgKFA9Ty93Z77356b507gvbujH4zOh5I=; b=uxRmPdWXScdnVsVqrOytVE+3pX
+        AfNakxy/jXMIeQk1mrNaeGszT7gwlzKTJW4zKApginebWwL+8a3GK4DkxG6e3qtrAe6OrV/rKKFoW
+        WLNCWseG6+ZfPiG28STSAnIkkdgyq235kHqwtyi/vvSXY+y7bgCoAFnPzakWr6aGmDXahjy54ojPB
+        iKqWCmjjJVSdMq9U0v1TgmYdal24DeOA1OsPiilA1dB1RlJ6PO11/ekIBoyS6VDi9neoy4W6nvdUh
+        iLjbjh4KAsGEnlLZkShdZexS2paK0ywCcCD/CrO9rGrJhFXFnlTClKUaO0WHz77iQg6i2VilcP4LE
+        lDXtmWtg==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kADsP-0002m7-MX; Mon, 24 Aug 2020 14:55:14 +0000
+From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 4/9] iomap: Use bitmap ops to set uptodate bits
+Date:   Mon, 24 Aug 2020 15:55:05 +0100
+Message-Id: <20200824145511.10500-5-willy@infradead.org>
+X-Mailer: git-send-email 2.21.3
+In-Reply-To: <20200824145511.10500-1-willy@infradead.org>
+References: <20200824145511.10500-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200824142823.GA295033@bfoster>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 24, 2020 at 10:28:23AM -0400, Brian Foster wrote:
-> Do I understand the current code (__bio_try_merge_page() ->
-> page_is_mergeable()) correctly in that we're checking for physical page
-> contiguity and not necessarily requiring a new bio_vec per physical
-> page?
+Now that the bitmap is protected by a spinlock, we can use the
+more efficient bitmap ops instead of individual test/set bit ops.
 
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap/buffered-io.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-Yes.
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 639d54a4177e..dbf9572dabe9 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -134,19 +134,11 @@ iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+ 	struct inode *inode = page->mapping->host;
+ 	unsigned first = off >> inode->i_blkbits;
+ 	unsigned last = (off + len - 1) >> inode->i_blkbits;
+-	bool uptodate = true;
+ 	unsigned long flags;
+-	unsigned int i;
+ 
+ 	spin_lock_irqsave(&iop->uptodate_lock, flags);
+-	for (i = 0; i < i_blocks_per_page(inode, page); i++) {
+-		if (i >= first && i <= last)
+-			set_bit(i, iop->uptodate);
+-		else if (!test_bit(i, iop->uptodate))
+-			uptodate = false;
+-	}
+-
+-	if (uptodate)
++	bitmap_set(iop->uptodate, first, last - first + 1);
++	if (bitmap_full(iop->uptodate, i_blocks_per_page(inode, page)))
+ 		SetPageUptodate(page);
+ 	spin_unlock_irqrestore(&iop->uptodate_lock, flags);
+ }
+-- 
+2.28.0
 
-> With regard to Dave's earlier point around seeing excessively sized bio
-> chains.. If I set up a large memory box with high dirty mem ratios and
-> do contiguous buffered overwrites over a 32GB range followed by fsync, I
-> can see upwards of 1GB per bio and thus chains on the order of 32+ bios
-> for the entire write. If I play games with how the buffered overwrite is
-> submitted (i.e., in reverse) however, then I can occasionally reproduce
-> a ~32GB chain of ~32k bios, which I think is what leads to problems in
-> I/O completion on some systems. Granted, I don't reproduce soft lockup
-> issues on my system with that behavior, so perhaps there's more to that
-> particular issue.
-> 
-> Regardless, it seems reasonable to me to at least have a conservative
-> limit on the length of an ioend bio chain. Would anybody object to
-> iomap_ioend growing a chain counter and perhaps forcing into a new ioend
-> if we chain something like more than 1k bios at once?
-
-So what exactly is the problem of processing a long chain in the
-workqueue vs multiple small chains?  Maybe we need a cond_resched()
-here and there, but I don't see how we'd substantially change behavior.
