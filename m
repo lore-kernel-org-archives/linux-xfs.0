@@ -5,24 +5,24 @@ X-Spam-Level:
 X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C6D5C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 21:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DEBFC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 21:49:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78AA820706
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 21:29:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48ABF20702
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 21:49:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726504AbgHXV3q convert rfc822-to-8bit (ORCPT
+        id S1727011AbgHXVtr convert rfc822-to-8bit (ORCPT
         <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 17:29:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56908 "EHLO mail.kernel.org"
+        Mon, 24 Aug 2020 17:49:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41038 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726189AbgHXV3p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Aug 2020 17:29:45 -0400
+        id S1726090AbgHXVtr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Aug 2020 17:49:47 -0400
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
 Subject: [Bug 209005] xfs_repair 5.7.0: missing newline in message: entry at
  block N offset NN in directory inode NNNNNN has illegal name "/foo":
-Date:   Mon, 24 Aug 2020 21:29:44 +0000
+Date:   Mon, 24 Aug 2020 21:49:46 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -38,7 +38,7 @@ X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-209005-201763-XAwpby7d5Z@https.bugzilla.kernel.org/>
+Message-ID: <bug-209005-201763-Zj8vJdFqmm@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-209005-201763@https.bugzilla.kernel.org/>
 References: <bug-209005-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -53,10 +53,9 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=209005
 
---- Comment #4 from Eric Sandeen (sandeen@redhat.com) ---
-Actually, backing up, which version of xfsprogs are you using.
-
-I'll wait for these answers before proceeding.
+--- Comment #5 from Eric Sandeen (sandeen@redhat.com) ---
+Actually nvm on the metadump; I think I can reproduce this with a hand-edited
+filesystem.
 
 -- 
 You are receiving this mail because:
