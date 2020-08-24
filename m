@@ -2,198 +2,204 @@ Return-Path: <SRS0=BK4F=CC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD1BC433E1
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 02:39:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F9CC433E1
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 02:43:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDB612078A
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 02:39:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D37D0206F7
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 02:43:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yCZM6DrG"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vs5dk/WU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727949AbgHXCjr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 23 Aug 2020 22:39:47 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:37052 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727942AbgHXCjq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Aug 2020 22:39:46 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07O2YnxP151972;
-        Mon, 24 Aug 2020 02:39:40 GMT
+        id S1726904AbgHXCnz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 23 Aug 2020 22:43:55 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:46380 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726737AbgHXCnz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Aug 2020 22:43:55 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07O2hjJP137572;
+        Mon, 24 Aug 2020 02:43:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=puusuTCLugDoYgJ0KJDHGfRVYaw4XBuSnDZXNpsn8T4=;
- b=yCZM6DrGDmjx8gxxCk901lz1R2LVIUnNID7dsCXqsc/jkrIOtsDLYP4qVE/0Y4TEDbRu
- vMT/BHBIeA6Kw+ptF8YDJMY9LfuclxAPOXujN3GP9AAURgdZmdmcn/tjjh/1CJ0TEdhN
- tKIz2HlOTpSSuuGO322isDbeYj599OWFp8qK9C0A0zwf6fUa0jLEdsBijGs8DZbK8pna
- Pjq6Dnz9XDDSgtz9oJUIQ2me8PtoLV8tf5tYGYhZ+yx83zWhe+3/F7rxkBzaclzky0kg
- 8yxmLCbmeVW+1uKKe7yf1WgkCHMyQwT9Zfz496N1xGSY/y1MJIHipQ3EQ5p+lzpfwCv7 CA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 333csht44a-1
+ bh=jmEc7LEX72M9J+SWhhgI/bXZ1snMJxDO6mGt0Wu/CL8=;
+ b=vs5dk/WUlBPLcxqPSBcy5iJ/8NOSs2h2nCEZnpFH8jIGitSSsH56ZEjSUrIAgOabhyvv
+ s856cuoefe1+KB8NL/5MnhFcmkF4nrVzpLf+p5F7FYEA1cty6qKk6L8T/WS6QXhORSP8
+ PcHtcYqWWkSOgVTGmf4urzItzfs4sVU+8GKOskO6Ts9Mat1rBM9/MI1r4w3lbdKEGDqE
+ FJ9Zc0kZrA3529pWQpvsauerl66O4tW80BSHRhNyNudBvj3rwfn41HGLswmV8IJTIOfP
+ VN1R48/m+nfMeJCfuBtKH4zCgl30ZZ561qlOmgGdCSplwgXELCRTHEiyNAgXnpEtj4Vf lg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 333dbrj38n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 24 Aug 2020 02:39:40 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07O2ZBSw063898;
-        Mon, 24 Aug 2020 02:39:39 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 333r9gmaa4-1
+        Mon, 24 Aug 2020 02:43:45 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07O2eVv8145172;
+        Mon, 24 Aug 2020 02:43:44 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 333rtvvege-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 24 Aug 2020 02:39:39 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07O2dcnh005656;
-        Mon, 24 Aug 2020 02:39:39 GMT
+        Mon, 24 Aug 2020 02:43:44 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07O2hgvw029153;
+        Mon, 24 Aug 2020 02:43:43 GMT
 Received: from localhost (/10.159.140.7)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 23 Aug 2020 19:39:38 -0700
-Date:   Sun, 23 Aug 2020 19:39:37 -0700
+        with ESMTP ; Sun, 23 Aug 2020 19:43:42 -0700
+Date:   Sun, 23 Aug 2020 19:43:41 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@infradead.org>
 Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org,
         sandeen@sandeen.net
-Subject: Re: [PATCH 10/11] xfs: enable bigtime for quota timers
-Message-ID: <20200824023937.GS6096@magnolia>
+Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038
+ problem
+Message-ID: <20200824024341.GT6096@magnolia>
 References: <159797588727.965217.7260803484540460144.stgit@magnolia>
- <159797595474.965217.7111215541487615114.stgit@magnolia>
- <20200822073600.GJ1629@infradead.org>
+ <159797594159.965217.2504039364311840477.stgit@magnolia>
+ <20200822073319.GH1629@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200822073600.GJ1629@infradead.org>
+In-Reply-To: <20200822073319.GH1629@infradead.org>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9722 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
- suspectscore=1 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008240009
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
+ phishscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008240010
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9722 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 clxscore=1015
- spamscore=0 priorityscore=1501 impostorscore=0 adultscore=0
- lowpriorityscore=0 suspectscore=1 mlxlogscore=999 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008240009
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015
+ priorityscore=1501 impostorscore=0 phishscore=0 malwarescore=0
+ mlxlogscore=999 spamscore=0 mlxscore=0 lowpriorityscore=0 suspectscore=1
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008240010
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 22, 2020 at 08:36:00AM +0100, Christoph Hellwig wrote:
-> On Thu, Aug 20, 2020 at 07:12:34PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Enable the bigtime feature for quota timers.  We decrease the accuracy
-> > of the timers to ~4s in exchange for being able to set timers up to the
-> > bigtime maximum.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_dquot_buf.c  |   32 ++++++++++++++++++++++++++++++--
-> >  fs/xfs/libxfs/xfs_format.h     |   27 ++++++++++++++++++++++++++-
-> >  fs/xfs/libxfs/xfs_quota_defs.h |    3 ++-
-> >  fs/xfs/xfs_dquot.c             |   25 +++++++++++++++++++++----
-> >  fs/xfs/xfs_dquot.h             |    3 ++-
-> >  fs/xfs/xfs_ondisk.h            |    7 +++++++
-> >  fs/xfs/xfs_qm.c                |    2 ++
-> >  fs/xfs/xfs_qm_syscalls.c       |    9 +++++----
-> >  fs/xfs/xfs_trans_dquot.c       |    6 ++++++
-> >  9 files changed, 101 insertions(+), 13 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_dquot_buf.c b/fs/xfs/libxfs/xfs_dquot_buf.c
-> > index 7f5291022b11..f5997fbdd308 100644
-> > --- a/fs/xfs/libxfs/xfs_dquot_buf.c
-> > +++ b/fs/xfs/libxfs/xfs_dquot_buf.c
-> > @@ -69,6 +69,13 @@ xfs_dquot_verify(
-> >  	    ddq_type != XFS_DQTYPE_GROUP)
-> >  		return __this_address;
-> >  
-> > +	if ((ddq->d_type & XFS_DQTYPE_BIGTIME) &&
-> > +	    !xfs_sb_version_hasbigtime(&mp->m_sb))
-> > +		return __this_address;
+On Sat, Aug 22, 2020 at 08:33:19AM +0100, Christoph Hellwig wrote:
+> >   * in the AGI header so that we can skip the finobt walk at mount time when
+> > @@ -855,12 +862,18 @@ struct xfs_agfl {
+> >   *
+> >   * Inode timestamps consist of signed 32-bit counters for seconds and
+> >   * nanoseconds; time zero is the Unix epoch, Jan  1 00:00:00 UTC 1970.
+> > + *
+> > + * When bigtime is enabled, timestamps become an unsigned 64-bit nanoseconds
+> > + * counter.  Time zero is the start of the classic timestamp range.
+> >   */
+> >  union xfs_timestamp {
+> >  	struct {
+> >  		__be32		t_sec;		/* timestamp seconds */
+> >  		__be32		t_nsec;		/* timestamp nanoseconds */
+> >  	};
 > > +
-> > +	if ((ddq->d_type & XFS_DQTYPE_BIGTIME) && !ddq->d_id)
-> > +		return __this_address;
-> > +
-> >  	if (id != -1 && id != be32_to_cpu(ddq->d_id))
-> >  		return __this_address;
-> >  
-> > @@ -296,7 +303,15 @@ xfs_dquot_from_disk_timestamp(
-> >  	time64_t		*timer,
-> >  	__be32			dtimer)
-> >  {
-> > -	*timer = be32_to_cpu(dtimer);
-> > +	uint64_t		t;
-> > +
-> > +	if (!timer || !(ddq->d_type & XFS_DQTYPE_BIGTIME)) {
-> > +		*timer = be32_to_cpu(dtimer);
+> > +	/* Nanoseconds since the bigtime epoch. */
+> > +	__be64			t_bigtime;
+> >  };
 > 
-> I don't think setting *time makes any sense if time is NULL..
+> So do we really need the union here?  What about:
+> 
+>  (1) keep the typedef instead of removing it
+>  (2) switch the typedef to be just a __be64, and use trivial helpers
+>      to extract the two separate legacy sec/nsec field
+>  (3) PROFIT!!!
 
-Oops, yeah, I introduced that bug when reworking this function. :(
+Been there, done that.  Dave suggested some replacement code (which
+corrupted the values), then I modified that into a correct version,
+which then made smatch angry because it doesn't like code that does bit
+shifts on __be64 values.
 
+> > +/* Convert an ondisk timestamp into the 64-bit safe incore format. */
+> >  void
+> >  xfs_inode_from_disk_timestamp(
+> > +	struct xfs_dinode		*dip,
+> >  	struct timespec64		*tv,
+> >  	const union xfs_timestamp	*ts)
+> 
+> I think passing ts by value might lead to somewhat better code
+> generation on modern ABIs (and older ABIs just fall back to pass
+> by reference transparently).
+
+Hm, ok.  I did not know that. :)
+
+> >  {
+> > +	if (dip->di_version >= 3 &&
+> > +	    (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME))) {
+> 
+> Do we want a helper for this condition?
+
+Yes, yes we do.  Will add.
+
+> > +		uint64_t		t = be64_to_cpu(ts->t_bigtime);
+> > +		uint64_t		s;
+> > +		uint32_t		n;
+> > +
+> > +		s = div_u64_rem(t, NSEC_PER_SEC, &n);
+> > +		tv->tv_sec = s - XFS_INO_BIGTIME_EPOCH;
+> > +		tv->tv_nsec = n;
 > > +		return;
 > > +	}
 > > +
-> > +	t = be32_to_cpu(dtimer);
-> > +	*timer = t << XFS_DQ_BIGTIME_SHIFT;
+> >  	tv->tv_sec = (int)be32_to_cpu(ts->t_sec);
+> >  	tv->tv_nsec = (int)be32_to_cpu(ts->t_nsec);
 > 
-> Why not:
+> Nit: for these kinds of symmetric conditions and if/else feels a little
+> more natural.
 > 
-> 	*timer = (time64_t)be32_to_cpu(dtimer) << XFS_DQ_BIGTIME_SHIFT;
+> > +		xfs_log_dinode_to_disk_ts(from, &to->di_crtime, &from->di_crtime);
 > 
-> or (with my previous suggestion):
-> 
-> 	return (time64_t)be32_to_cpu(dtimer) << XFS_DQ_BIGTIME_SHIFT;
+> This adds a > 80 char line.
 
-<nod>  Looks good to me.
+Do we care now that checkpatch has been changed to allow up to 100
+columns?
+
+> > +	if (from->di_flags2 & XFS_DIFLAG2_BIGTIME) {
+> > +		uint64_t		t;
+> > +
+> > +		t = (uint64_t)(ts->tv_sec + XFS_INO_BIGTIME_EPOCH);
+> > +		t *= NSEC_PER_SEC;
+> > +		its->t_bigtime = t + ts->tv_nsec;
+> 
+> This calculation is dupliated in two places, might be worth
+> adding a little helper (which will need to get the sec/nsec values
+> passed separately due to the different structures).
+> 
+> > +		xfs_inode_to_log_dinode_ts(from, &to->di_crtime, &from->di_crtime);
+> 
+> Another line over 8 characters here.
+> 
+> > +	if (xfs_sb_version_hasbigtime(&mp->m_sb)) {
+> > +		sb->s_time_min = XFS_INO_BIGTIME_MIN;
+> > +		sb->s_time_max = XFS_INO_BIGTIME_MAX;
+> > +	} else {
+> > +		sb->s_time_min = XFS_INO_TIME_MIN;
+> > +		sb->s_time_max = XFS_INO_TIME_MAX;
+> > +	}
+> 
+> This is really a comment on the earlier patch, but maybe we should
+> name the old constants with "OLD" or "LEGACY" or "SMALL" in the name?
+
+Yes, good suggestion!
+
+> > @@ -1494,6 +1499,10 @@ xfs_fc_fill_super(
+> >  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
+> >  		sb->s_flags |= SB_I_VERSION;
+> >  
+> > +	if (xfs_sb_version_hasbigtime(&mp->m_sb))
+> > +		xfs_warn(mp,
+> > + "EXPERIMENTAL big timestamp feature in use. Use at your own risk!");
+> > +
+> 
+> Is there any good reason to mark this experimental?
+
+As you and Dave have both pointed out, there are plenty of stupid bugs
+still in this.  I think I'd like to have at least one EXPERIMENTAL cycle
+to make sure I didn't commit anything pathologically stupid in here.
+
+<cough> ext4 34-bit sign extension bug <cough>.
 
 --D
-
-> 
-> ?
-> 
-> > @@ -1227,13 +1227,15 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
-> >  #define XFS_DQTYPE_USER		0x01		/* user dquot record */
-> >  #define XFS_DQTYPE_PROJ		0x02		/* project dquot record */
-> >  #define XFS_DQTYPE_GROUP	0x04		/* group dquot record */
-> > +#define XFS_DQTYPE_BIGTIME	0x08		/* large expiry timestamps */
-> >  
-> >  /* bitmask to determine if this is a user/group/project dquot */
-> >  #define XFS_DQTYPE_REC_MASK	(XFS_DQTYPE_USER | \
-> >  				 XFS_DQTYPE_PROJ | \
-> >  				 XFS_DQTYPE_GROUP)
-> >  
-> > -#define XFS_DQTYPE_ANY		(XFS_DQTYPE_REC_MASK)
-> > +#define XFS_DQTYPE_ANY		(XFS_DQTYPE_REC_MASK | \
-> > +				 XFS_DQTYPE_BIGTIME)
-> >  
-> >  /*
-> >   * XFS Quota Timers
-> > @@ -1270,6 +1272,29 @@ static inline void xfs_dinode_put_rdev(struct xfs_dinode *dip, xfs_dev_t rdev)
-> >  #define XFS_DQ_GRACE_MIN	((int64_t)0)
-> >  #define XFS_DQ_GRACE_MAX	((int64_t)U32_MAX)
-> >  
-> > +/*
-> > + * When bigtime is enabled, we trade a few bits of precision to expand the
-> > + * expiration timeout range to match that of big inode timestamps.  The grace
-> > + * periods stored in dquot 0 are not shifted, since they record an interval,
-> > + * not a timestamp.
-> > + */
-> > +#define XFS_DQ_BIGTIME_SHIFT	(2)
-> > +#define XFS_DQ_BIGTIME_SLACK	((int64_t)(1ULL << XFS_DQ_BIGTIME_SHIFT) - 1)
-> > +
-> > +/*
-> > + * Smallest possible quota expiration with big timestamps, which is
-> > + * Jan  1 00:00:01 UTC 1970.
-> > + */
-> > +#define XFS_DQ_BIGTIMEOUT_MIN		(XFS_DQ_TIMEOUT_MIN)
-> > +
-> > +/*
-> > + * Largest supported quota expiration with traditional timestamps, which is
-> > + * the largest bigtime inode timestamp, or Jul  2 20:20:25 UTC 2486.  The field
-> 
-> This adds and > 80 char line.
