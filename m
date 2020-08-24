@@ -2,68 +2,91 @@ Return-Path: <SRS0=BK4F=CC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01C02C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 18:54:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 466AAC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 19:02:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB3C620897
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 18:54:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="r4GUC126"
+	by mail.kernel.org (Postfix) with ESMTP id 1A5EB207DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 19:02:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726466AbgHXSyM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 14:54:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47002 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725963AbgHXSyI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 14:54:08 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A37ECC061573;
-        Mon, 24 Aug 2020 11:54:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=/RZ8lu4GLqWgx2SJy7gstpvyOrfX+P6Ib1IzLL5uMvU=; b=r4GUC126jrVcHWcAK7iDriIIMT
-        xQQdHj1FiRNXVRnXsSD5TnlV5iKg0relX2TxVrk5gKJfT+iz/+PelC7p5NpgeOhKHPK4UKVPdj0/1
-        GUO9GYv2mQ9+x0RQ6kElcjX4wwgs8J+qm2KROL3HH2GDwNlQZfghoaGk94YF9b+9a1G2yRa2rKn1H
-        y8OB50lIr/isEArR1LHELITcDAwYBB+aJWzDAphJ64foh07hSD9sdklDUBA4Tbs3Xb5ueEno8/IJK
-        vA1p4/W5ihT0FpBgEYptG6cvRIfeFYw0CSupxEcgVmeG9AfKtWS2YhvdGbdVJBY6jg6Xm+if97dVK
-        3cPWSzDA==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kAHbU-0002Xb-SQ; Mon, 24 Aug 2020 18:54:00 +0000
-Date:   Mon, 24 Aug 2020 19:54:00 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     John Hubbard <jhubbard@nvidia.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
+        id S1726697AbgHXTCa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 15:02:30 -0400
+Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:19347 "EHLO
+        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725963AbgHXTCa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 15:02:30 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5f440e880000>; Mon, 24 Aug 2020 12:01:28 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Mon, 24 Aug 2020 12:02:30 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Mon, 24 Aug 2020 12:02:30 -0700
+Received: from [10.2.58.8] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 24 Aug
+ 2020 19:02:29 +0000
+Subject: Re: [PATCH 5/5] fs/ceph: use pipe_get_pages_alloc() for pipe
+To:     Matthew Wilcox <willy@infradead.org>,
+        Jeff Layton <jlayton@kernel.org>
+CC:     Andrew Morton <akpm@linux-foundation.org>,
         Alexander Viro <viro@zeniv.linux.org.uk>,
         Christoph Hellwig <hch@infradead.org>,
         Ilya Dryomov <idryomov@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        ceph-devel@vger.kernel.org, linux-mm@kvack.org,
+        Jens Axboe <axboe@kernel.dk>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <ceph-devel@vger.kernel.org>, <linux-mm@kvack.org>,
         LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 5/5] fs/ceph: use pipe_get_pages_alloc() for pipe
-Message-ID: <20200824185400.GE17456@casper.infradead.org>
 References: <20200822042059.1805541-1-jhubbard@nvidia.com>
  <20200822042059.1805541-6-jhubbard@nvidia.com>
  <048e78f2b440820d936eb67358495cc45ba579c3.camel@kernel.org>
  <c943337b-1c1e-9c85-4ded-39931986c6a3@nvidia.com>
  <af70d334271913a6b09bfd818bc3d81eef5a19b2.camel@kernel.org>
+ <20200824185400.GE17456@casper.infradead.org>
+From:   John Hubbard <jhubbard@nvidia.com>
+Message-ID: <16ccf2d8-824f-8c8b-201c-95da8790c524@nvidia.com>
+Date:   Mon, 24 Aug 2020 12:02:29 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <af70d334271913a6b09bfd818bc3d81eef5a19b2.camel@kernel.org>
+In-Reply-To: <20200824185400.GE17456@casper.infradead.org>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 24, 2020 at 02:47:53PM -0400, Jeff Layton wrote:
-> Ok, I'll plan to pick it up providing no one has issues with exporting that symbol.
+On 8/24/20 11:54 AM, Matthew Wilcox wrote:
+> On Mon, Aug 24, 2020 at 02:47:53PM -0400, Jeff Layton wrote:
+>> Ok, I'll plan to pick it up providing no one has issues with exporting that symbol.
+> 
+> _GPL, perhaps?
+> 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+	t=1598295688; bh=TGtHrKY9YE9vgbD3P6YUTHn7yhP+gCmFr3Z8XIdh17s=;
+	h=X-PGP-Universal:Subject:To:CC:References:From:Message-ID:Date:
+	 User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
+	 X-ClientProxiedBy:Content-Type:Content-Language:
+	 Content-Transfer-Encoding;
+	b=KWZ+bMZ8RXIxd4CMBL8Dn6hn0ggsojx1vJaaueo+/+Xwe0yKBa+bMZfnn1XUDWvJs
+	 KMZJ22FgEdc+HO/8Mx0JKVQsLfKj74dwj3kGjs1z0KA5Vcnx93pzd/iMXDFhClf3uz
+	 KmyGEdar0p6poBaBOlsapOb59acP6ot16rhi7ZbTch+7ErO/Rupx6VinU1A2Ydc3OP
+	 mBYXZqz35DZ/H5eqhoE84MuOFj8Ti/Wpen637pLLa5dmtXjSMRmYTQXMRygUmQXdaw
+	 g9XLuqaxKRxp2lnuoVdFK0T90Hfu/71T+S8asZZYhH9zHY2Wzhgp1VkR07ZtXmMNqI
+	 W/lB00RAVtj3Q==
 
-_GPL, perhaps?
+I looked at that, and the equivalent iov_iter_get_pages* and related stuff was
+just EXPORT_SYMBOL, so I tried to match that. But if it needs to be _GPL then
+that's fine too...
+
+thanks,
+-- 
+John Hubbard
+NVIDIA
