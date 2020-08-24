@@ -2,88 +2,67 @@ Return-Path: <SRS0=BK4F=CC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA3BC433E3
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 20:57:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 465EEC433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 21:03:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E03B2067C
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 20:57:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YIumQ8y4"
+	by mail.kernel.org (Postfix) with ESMTP id 21B63208E4
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 21:03:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727061AbgHXU47 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 16:56:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38000 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726051AbgHXU45 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 16:56:57 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0865FC061574;
-        Mon, 24 Aug 2020 13:56:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=LN+DUOfKEizX8QNr7bOwZ5+JguobMK44E5m8RnNF9Bo=; b=YIumQ8y4HB+kfazl4vAjZnFq5I
-        ThgurHTGnN47Ze7FwjQqITnlhn2Ur3gbvUmcmDLFxwPgwqs0GjbJwF5CijWhrftuNbV8gciSlc6IA
-        2sVxlIzk3XAnFI3haLRU02ms/eYmP5hYD/+Ez7d45xYoHKe5Km/CYMH/w8I81YgdKlTIH8OC3L7Mk
-        VJyuRhAlgCt96qKP5ucvgaMMQN/F0zPKVot4QAraIb+i7suzQtegpxyJXL6K+312IcN6PSbO+2Fc2
-        1NAEV4+VcJm/odK74IlYsEUbCQdiKfpktGI4fBo01D4SJQcWXN4RfGs4dw8FAm6TfZKenoUmchtQ6
-        8bzl2kuQ==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kAJWJ-0001kY-OF; Mon, 24 Aug 2020 20:56:48 +0000
-Date:   Mon, 24 Aug 2020 21:56:47 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     Yafang Shao <laoar.shao@gmail.com>, david@fromorbit.com,
-        hch@infradead.org, darrick.wong@oracle.com, mhocko@kernel.org,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [PATCH v6 2/2] xfs: avoid transaction reservation recursion
-Message-ID: <20200824205647.GG17456@casper.infradead.org>
-References: <20200824014234.7109-1-laoar.shao@gmail.com>
- <20200824014234.7109-3-laoar.shao@gmail.com>
- <20200824130925.a3d2d2b75ac3a6b4eba72fb9@linux-foundation.org>
+        id S1726051AbgHXVDl convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 17:03:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35648 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725904AbgHXVDl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Aug 2020 17:03:41 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 209005] xfs_repair 5.7.0: missing newline in message: entry at
+ block N offset NN in directory inode NNNNNN has illegal name "/foo":
+Date:   Mon, 24 Aug 2020 21:03:40 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: low
+X-Bugzilla-Who: sandeen@redhat.com
+X-Bugzilla-Status: NEEDINFO
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-209005-201763-njhnZyhZxR@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-209005-201763@https.bugzilla.kernel.org/>
+References: <bug-209005-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200824130925.a3d2d2b75ac3a6b4eba72fb9@linux-foundation.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 24, 2020 at 01:09:25PM -0700, Andrew Morton wrote:
-> On Mon, 24 Aug 2020 09:42:34 +0800 Yafang Shao <laoar.shao@gmail.com> wrote:
-> 
-> > --- a/include/linux/iomap.h
-> > +++ b/include/linux/iomap.h
-> > @@ -271,4 +271,11 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
-> >  # define iomap_swapfile_activate(sis, swapfile, pagespan, ops)	(-EIO)
-> >  #endif /* CONFIG_SWAP */
-> >  
-> > +/* Use the journal_info to indicate current is in a transaction */
-> > +static inline bool
-> > +fstrans_context_active(void)
-> > +{
-> > +	return current->journal_info != NULL;
-> > +}
-> 
-> Why choose iomap.h for this?
+https://bugzilla.kernel.org/show_bug.cgi?id=209005
 
-Because it gets used in iomap/buffered-io.c
+--- Comment #3 from Eric Sandeen (sandeen@redhat.com) ---
+IOWs this looks like more than just a missing "\n" - setting the first
+character of a directory entry to "/" is an internal flag for certain entries
+which is normally handled in a specific way.
 
-I don't think this is necessarily a useful abstraction, to be honest.
-I'd just open-code 'if (current->journal_info)' or !current->journal_info,
-whichever way round the code is:
+But it doesn't look like your filenames are overwritten; it looks like they
+actually started with "/" prior to repair?  So it may not be handling this
+flagging properly when the leading "/" came from elsewhere... a metadump would
+be helpful.
 
-fs/btrfs/delalloc-space.c:              if (current->journal_info)
-fs/ceph/xattr.c:                if (current->journal_info) {
-fs/gfs2/bmap.c:         if (current->journal_info) {
-fs/jbd2/transaction.c:  if (WARN_ON(current->journal_info)) {
-fs/reiserfs/super.c:    if (!current->journal_info) {
-
-(to pluck a few examples from existing filesystems)
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
