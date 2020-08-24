@@ -7,46 +7,47 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9215C433E1
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:16:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24912C433E1
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:18:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 91792206B5
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:16:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAD1D206B5
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:18:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pmIh7Ufd"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ipPBqSL0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727029AbgHXPQD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 11:16:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39720 "EHLO
+        id S1726156AbgHXPSD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 11:18:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726885AbgHXPG5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:06:57 -0400
+        with ESMTP id S1727024AbgHXPRN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:17:13 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA472C06179B;
-        Mon, 24 Aug 2020 07:55:21 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14814C061574;
+        Mon, 24 Aug 2020 08:17:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=pESaBZIQUbmTuqEp0QvjJ/1J69UiEMBwpDyvyHVUJqY=; b=pmIh7UfdQ7/LQD7SvCjLKXe2jy
-        0wpFTf2dGM/ZnEtdSJ6epnFIKDfGNnUmnku83ljK6wvI7+Ma5sKSCeqldh0oMYxGDqhJ0VVWgJnAr
-        YyJzxIouvgs33CASyOTuDV1IE5IsaqfkXgAMt8zOMVnRq1GwpJJAtVyGRlN7LHscQu423L4+u7ngi
-        MA6urfnXaOMrQazL/Dmzgda2GTnaRR8SXJps6PnsT9FvflPmKRR2F38sm8X58SfTK0U8yVcJLfH3s
-        hWnpZYdxqcumvCJs15ueYg11+t2L6Uq8w4XegKtsGHsJjONe3hX8+cDbjotp3oYfinH4VlGveQ0t7
-        JqWe1kyQ==;
+        bh=tkgRxuTPYnxNgLBArPqLRlqKK9A+6igTAfP7nCRNlGc=; b=ipPBqSL0oCa/1OAlUVtSdjtfv2
+        Mo1C7lgQoUgRLN7mAE+JJBRcm3iDG6EieL+HncqJyRG0Tq2GR2v0eztW+76Pg2S25SdGtahheyFcS
+        ZXG8ptTDyp5Tz4IabCSQ9+Dy8rwmzx0aY6H4J8Ie8V6xnDmHjryYm1/zMTBW1wshnkVRuCdEKUlmS
+        SlMOmuyRrWwYawR0VbPF9aHDh8nv0JlIc6lpEYqsvoram5ePLMh6oNrUH7jxsoaMBpmeDpmgwYaEM
+        4rdFFo005AFOFKfKv2tL+DMTVsvIRkofZA5JBTE8P6a2xeesmHcJuGjbUPV4aty34sSt0k4Hor31P
+        KyFKs2OQ==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kADsO-0002lv-VY; Mon, 24 Aug 2020 14:55:13 +0000
+        id 1kAEDW-0004CU-Ie; Mon, 24 Aug 2020 15:17:02 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/9] iomap: Fix misplaced page flushing
-Date:   Mon, 24 Aug 2020 15:55:02 +0100
-Message-Id: <20200824145511.10500-2-willy@infradead.org>
+        linux-block@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 02/11] mm: Support THPs in zero_user_segments
+Date:   Mon, 24 Aug 2020 16:16:51 +0100
+Message-Id: <20200824151700.16097-3-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
-In-Reply-To: <20200824145511.10500-1-willy@infradead.org>
-References: <20200824145511.10500-1-willy@infradead.org>
+In-Reply-To: <20200824151700.16097-1-willy@infradead.org>
+References: <20200824151700.16097-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -54,37 +55,129 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If iomap_unshare_actor() unshares to an inline iomap, the page was
-not being flushed.  block_write_end() and __iomap_write_end() already
-contain flushes, so adding it to iomap_write_end_inline() seems like
-the best place.  That means we can remove it from iomap_write_actor().
+We can only kmap() one subpage of a THP at a time, so loop over all
+relevant subpages, skipping ones which don't need to be zeroed.  This is
+too large to inline when THPs are enabled and we actually need highmem,
+so put it in highmem.c.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/iomap/buffered-io.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ include/linux/highmem.h | 15 +++++++---
+ mm/highmem.c            | 62 +++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 71 insertions(+), 6 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index bcfc288dba3f..cffd575e57b6 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -715,6 +715,7 @@ iomap_write_end_inline(struct inode *inode, struct page *page,
+diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+index 14e6202ce47f..5390bfd4bdd3 100644
+--- a/include/linux/highmem.h
++++ b/include/linux/highmem.h
+@@ -284,13 +284,18 @@ static inline void clear_highpage(struct page *page)
+ 	kunmap_atomic(kaddr);
+ }
+ 
++#if defined(CONFIG_HIGHMEM) && defined(CONFIG_TRANSPARENT_HUGEPAGE)
++void zero_user_segments(struct page *page, unsigned start1, unsigned end1,
++		unsigned start2, unsigned end2);
++#else /* !HIGHMEM || !TRANSPARENT_HUGEPAGE */
+ static inline void zero_user_segments(struct page *page,
+-	unsigned start1, unsigned end1,
+-	unsigned start2, unsigned end2)
++		unsigned start1, unsigned end1,
++		unsigned start2, unsigned end2)
  {
- 	void *addr;
+ 	void *kaddr = kmap_atomic(page);
++	unsigned int i;
  
-+	flush_dcache_page(page);
- 	WARN_ON_ONCE(!PageUptodate(page));
- 	BUG_ON(pos + copied > PAGE_SIZE - offset_in_page(iomap->inline_data));
+-	BUG_ON(end1 > PAGE_SIZE || end2 > PAGE_SIZE);
++	BUG_ON(end1 > thp_size(page) || end2 > thp_size(page));
  
-@@ -811,8 +812,6 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	if (end1 > start1)
+ 		memset(kaddr + start1, 0, end1 - start1);
+@@ -299,8 +304,10 @@ static inline void zero_user_segments(struct page *page,
+ 		memset(kaddr + start2, 0, end2 - start2);
  
- 		copied = iov_iter_copy_from_user_atomic(page, i, offset, bytes);
+ 	kunmap_atomic(kaddr);
+-	flush_dcache_page(page);
++	for (i = 0; i < thp_nr_pages(page); i++)
++		flush_dcache_page(page + i);
+ }
++#endif /* !HIGHMEM || !TRANSPARENT_HUGEPAGE */
  
--		flush_dcache_page(page);
+ static inline void zero_user_segment(struct page *page,
+ 	unsigned start, unsigned end)
+diff --git a/mm/highmem.c b/mm/highmem.c
+index 64d8dea47dd1..c0f1e389a153 100644
+--- a/mm/highmem.c
++++ b/mm/highmem.c
+@@ -367,9 +367,67 @@ void kunmap_high(struct page *page)
+ 	if (need_wakeup)
+ 		wake_up(pkmap_map_wait);
+ }
 -
- 		status = iomap_write_end(inode, pos, bytes, copied, page, iomap,
- 				srcmap);
- 		if (unlikely(status < 0))
+ EXPORT_SYMBOL(kunmap_high);
+-#endif
++
++#ifdef CONFIG_TRANSPARENT_HUGEPAGE
++void zero_user_segments(struct page *page, unsigned start1, unsigned end1,
++		unsigned start2, unsigned end2)
++{
++	unsigned int i;
++
++	BUG_ON(end1 > thp_size(page) || end2 > thp_size(page));
++
++	for (i = 0; i < thp_nr_pages(page); i++) {
++		void *kaddr;
++		unsigned this_end;
++
++		if (end1 == 0 && start2 >= PAGE_SIZE) {
++			start2 -= PAGE_SIZE;
++			end2 -= PAGE_SIZE;
++			continue;
++		}
++
++		if (start1 >= PAGE_SIZE) {
++			start1 -= PAGE_SIZE;
++			end1 -= PAGE_SIZE;
++			if (start2) {
++				start2 -= PAGE_SIZE;
++				end2 -= PAGE_SIZE;
++			}
++			continue;
++		}
++
++		kaddr = kmap_atomic(page + i);
++
++		this_end = min_t(unsigned, end1, PAGE_SIZE);
++		if (end1 > start1)
++			memset(kaddr + start1, 0, this_end - start1);
++		end1 -= this_end;
++		start1 = 0;
++
++		if (start2 >= PAGE_SIZE) {
++			start2 -= PAGE_SIZE;
++			end2 -= PAGE_SIZE;
++		} else {
++			this_end = min_t(unsigned, end2, PAGE_SIZE);
++			if (end2 > start2)
++				memset(kaddr + start2, 0, this_end - start2);
++			end2 -= this_end;
++			start2 = 0;
++		}
++
++		kunmap_atomic(kaddr);
++		flush_dcache_page(page + i);
++
++		if (!end1 && !end2)
++			break;
++	}
++
++	BUG_ON((start1 | start2 | end1 | end2) != 0);
++}
++EXPORT_SYMBOL(zero_user_segments);
++#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
++#endif /* CONFIG_HIGHMEM */
+ 
+ #if defined(HASHED_PAGE_VIRTUAL)
+ 
 -- 
 2.28.0
 
