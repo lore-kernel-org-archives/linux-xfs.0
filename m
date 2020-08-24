@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6108C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:25:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC24DC433E3
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:26:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84864214F1
-	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:25:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C133C2078D
+	for <linux-xfs@archiver.kernel.org>; Mon, 24 Aug 2020 15:26:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KNITFqto"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="udgs60rQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728041AbgHXPYx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 11:24:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41360 "EHLO
+        id S1727890AbgHXPZg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 11:25:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727816AbgHXPRZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:17:25 -0400
+        with ESMTP id S1727068AbgHXPRN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 11:17:13 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08A86C061796;
-        Mon, 24 Aug 2020 08:17:06 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7526EC061575;
+        Mon, 24 Aug 2020 08:17:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=6v6sxL9n7n7WqGQ7gCiCB5GZIc0luvdHyz2bcr1RQfk=; b=KNITFqto3qR1lC83tciVGERcJ8
-        Ud8xyxeHgC8obkoXv0ujny3E3xheErjrM6iaM89jBUF3PJXghzWhI+jRS/+KPc37Typi8yLronrIR
-        vnCvSo6qlkYa2TS6b09bJ//ByhEbWmfKWhZZMvz/0Wuto0d92ZweL1SUc3yooHxGDj0VA/k8tN1Bs
-        3KRjTrvzG40z2Yil+hka0gIS/iGLx+v2prWrtqZri2knxemrCNJKqA0LqeHRmgB9wb+TCHDZyW5av
-        IX+e2b1Iw1BSbfYWdmHFv0w+S4dLsXfyb7XuvkP/B5wHLIwx9RyYjWDewsNFC5gt1sMN0BuR63gMs
-        0yIcBFRA==;
+        bh=EnhOr651fYG//wVSSI2lABo+UhZFOxuqGW2PFxxTzF8=; b=udgs60rQFoUDneH6c+cOnxYloe
+        oP2a2dWBv33jQrN/PrdqpCym621ma9scUuR8om7YiIO8QqKMEr8jXHJDDXf4A+j9dOcecTa7CAJRY
+        qTzNmzkVcIq/ORNZaKLOQk9wNnfLBllsEJX59nQ/7/4FR1f/LzW5IkcJ3qpJ/k+nKWwUKg7eFH+ko
+        EFxsIJFDg5er5xfChA9HgBSodRIVTTwUS7u9GLfQVIry20YBBhVxKNurwfEYpumD60GgPcdmOt/08
+        rllwFwgX+ekgdSz1i3SPpC/nEbn+G09/J3Ew4w+qnOE0kUEvCLwyV6hBgXD5Dsfc3DMg8gyUJIPJN
+        HcO2EHtg==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kAEDX-0004D6-Sv; Mon, 24 Aug 2020 15:17:03 +0000
+        id 1kAEDW-0004Ca-QM; Mon, 24 Aug 2020 15:17:02 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         linux-block@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 07/11] iomap: Support THPs in read paths
-Date:   Mon, 24 Aug 2020 16:16:56 +0100
-Message-Id: <20200824151700.16097-8-willy@infradead.org>
+Subject: [PATCH 03/11] mm: Zero the head page, not the tail page
+Date:   Mon, 24 Aug 2020 16:16:52 +0100
+Message-Id: <20200824151700.16097-4-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20200824151700.16097-1-willy@infradead.org>
 References: <20200824151700.16097-1-willy@infradead.org>
@@ -55,75 +55,62 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use thp_size() instead of PAGE_SIZE, offset_in_thp() instead
-of offset_in_page() and bio_for_each_thp_segment_all().
+Pass the head page to zero_user_segment(), not the tail page, and adjust
+the byte offsets appropriately.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/iomap/buffered-io.c | 21 ++++++++++++++++-----
- 1 file changed, 16 insertions(+), 5 deletions(-)
+ mm/shmem.c    | 7 +++++++
+ mm/truncate.c | 7 +++++++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 9ea162617398..d14de8886d5c 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -187,7 +187,7 @@ iomap_read_end_io(struct bio *bio)
- 	struct bio_vec *bvec;
- 	struct bvec_iter_all iter_all;
- 
--	bio_for_each_segment_all(bvec, bio, iter_all)
-+	bio_for_each_thp_segment_all(bvec, bio, iter_all)
- 		iomap_read_page_end_io(bvec, error);
- 	bio_put(bio);
- }
-@@ -227,6 +227,16 @@ static inline bool iomap_block_needs_zeroing(struct inode *inode,
- 		pos >= i_size_read(inode);
- }
- 
-+/*
-+ * Estimate the number of vectors we need based on the current page size;
-+ * if we're wrong we'll end up doing an overly large allocation or needing
-+ * to do a second allocation, neither of which is a big deal.
-+ */
-+static unsigned int iomap_nr_vecs(struct page *page, loff_t length)
-+{
-+	return (length + thp_size(page) - 1) >> page_shift(page);
-+}
-+
- static loff_t
- iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct iomap *iomap, struct iomap *srcmap)
-@@ -280,7 +290,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	if (!ctx->bio || !is_contig || bio_full(ctx->bio, plen)) {
- 		gfp_t gfp = mapping_gfp_constraint(page->mapping, GFP_KERNEL);
- 		gfp_t orig_gfp = gfp;
--		int nr_vecs = (length + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+		int nr_vecs = iomap_nr_vecs(page, length);
- 
- 		if (ctx->bio)
- 			submit_bio(ctx->bio);
-@@ -324,9 +334,9 @@ iomap_readpage(struct page *page, const struct iomap_ops *ops)
- 
- 	trace_iomap_readpage(page->mapping->host, 1);
- 
--	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
-+	for (poff = 0; poff < thp_size(page); poff += ret) {
- 		ret = iomap_apply(inode, page_offset(page) + poff,
--				PAGE_SIZE - poff, 0, ops, &ctx,
-+				thp_size(page) - poff, 0, ops, &ctx,
- 				iomap_readpage_actor);
- 		if (ret <= 0) {
- 			WARN_ON_ONCE(ret == 0);
-@@ -360,7 +370,8 @@ iomap_readahead_actor(struct inode *inode, loff_t pos, loff_t length,
- 	loff_t done, ret;
- 
- 	for (done = 0; done < length; done += ret) {
--		if (ctx->cur_page && offset_in_page(pos + done) == 0) {
-+		if (ctx->cur_page &&
-+		    offset_in_thp(ctx->cur_page, pos + done) == 0) {
- 			if (!ctx->cur_page_in_bio)
- 				unlock_page(ctx->cur_page);
- 			put_page(ctx->cur_page);
+diff --git a/mm/shmem.c b/mm/shmem.c
+index 271548ca20f3..77982149b437 100644
+--- a/mm/shmem.c
++++ b/mm/shmem.c
+@@ -958,11 +958,18 @@ static void shmem_undo_range(struct inode *inode, loff_t lstart, loff_t lend,
+ 		struct page *page = NULL;
+ 		shmem_getpage(inode, start - 1, &page, SGP_READ);
+ 		if (page) {
++			struct page *head = thp_head(page);
+ 			unsigned int top = PAGE_SIZE;
+ 			if (start > end) {
+ 				top = partial_end;
+ 				partial_end = 0;
+ 			}
++			if (head != page) {
++				unsigned int diff = start - 1 - head->index;
++				partial_start += diff << PAGE_SHIFT;
++				top += diff << PAGE_SHIFT;
++				page = head;
++			}
+ 			zero_user_segment(page, partial_start, top);
+ 			set_page_dirty(page);
+ 			unlock_page(page);
+diff --git a/mm/truncate.c b/mm/truncate.c
+index dd9ebc1da356..152974888124 100644
+--- a/mm/truncate.c
++++ b/mm/truncate.c
+@@ -374,12 +374,19 @@ void truncate_inode_pages_range(struct address_space *mapping,
+ 	if (partial_start) {
+ 		struct page *page = find_lock_page(mapping, start - 1);
+ 		if (page) {
++			struct page *head = thp_head(page);
+ 			unsigned int top = PAGE_SIZE;
+ 			if (start > end) {
+ 				/* Truncation within a single page */
+ 				top = partial_end;
+ 				partial_end = 0;
+ 			}
++			if (head != page) {
++				unsigned int diff = start - 1 - head->index;
++				partial_start += diff << PAGE_SHIFT;
++				top += diff << PAGE_SHIFT;
++				page = head;
++			}
+ 			wait_on_page_writeback(page);
+ 			zero_user_segment(page, partial_start, top);
+ 			cleancache_invalidate_page(mapping, page);
 -- 
 2.28.0
 
