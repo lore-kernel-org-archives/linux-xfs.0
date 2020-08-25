@@ -2,70 +2,125 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 320DDC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:43:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDC7FC433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:47:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13943206EB
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:43:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4C772075F
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:47:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726551AbgHYWnC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 18:43:02 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:49882 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726542AbgHYWnC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 18:43:02 -0400
+        id S1726570AbgHYWrb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 18:47:31 -0400
+Received: from mail107.syd.optusnet.com.au ([211.29.132.53]:38057 "EHLO
+        mail107.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726466AbgHYWr1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 18:47:27 -0400
 Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id DA4486AC19E;
-        Wed, 26 Aug 2020 08:42:59 +1000 (AEST)
+        by mail107.syd.optusnet.com.au (Postfix) with ESMTPS id A3EF5D5C5D3;
+        Wed, 26 Aug 2020 08:47:22 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kAhed-0000XK-4G; Wed, 26 Aug 2020 08:42:59 +1000
-Date:   Wed, 26 Aug 2020 08:42:59 +1000
+        id 1kAhir-0000YA-VI; Wed, 26 Aug 2020 08:47:21 +1000
+Date:   Wed, 26 Aug 2020 08:47:21 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH] xfs: initialize the shortform attr header padding entry
-Message-ID: <20200825224259.GT12131@dread.disaster.area>
-References: <20200825202853.GE6096@magnolia>
+To:     Yafang Shao <laoar.shao@gmail.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Michal Hocko <mhocko@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Linux MM <linux-mm@kvack.org>
+Subject: Re: [PATCH v6 2/2] xfs: avoid transaction reservation recursion
+Message-ID: <20200825224721.GU12131@dread.disaster.area>
+References: <20200824014234.7109-1-laoar.shao@gmail.com>
+ <20200824014234.7109-3-laoar.shao@gmail.com>
+ <20200824130925.a3d2d2b75ac3a6b4eba72fb9@linux-foundation.org>
+ <20200824205647.GG17456@casper.infradead.org>
+ <20200825053233.GN12131@dread.disaster.area>
+ <CALOAHbAhhGXn3N7BTBqh336q0_P1WJH5xXtnBhdsBdS516NAvA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200825202853.GE6096@magnolia>
+In-Reply-To: <CALOAHbAhhGXn3N7BTBqh336q0_P1WJH5xXtnBhdsBdS516NAvA@mail.gmail.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0 cx=a_idp_d
         a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=iznvsACjZTC2k9t3KwoA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=7-415B0cAAAA:8 a=pGLkceISAAAA:8
+        a=nJcYd_7gk-7Rvg5WbY0A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 01:28:53PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Aug 25, 2020 at 02:22:08PM +0800, Yafang Shao wrote:
+> On Tue, Aug 25, 2020 at 1:32 PM Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > On Mon, Aug 24, 2020 at 09:56:47PM +0100, Matthew Wilcox wrote:
+> > > On Mon, Aug 24, 2020 at 01:09:25PM -0700, Andrew Morton wrote:
+> > > > On Mon, 24 Aug 2020 09:42:34 +0800 Yafang Shao <laoar.shao@gmail.com> wrote:
+> > > >
+> > > > > --- a/include/linux/iomap.h
+> > > > > +++ b/include/linux/iomap.h
+> > > > > @@ -271,4 +271,11 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+> > > > >  # define iomap_swapfile_activate(sis, swapfile, pagespan, ops)   (-EIO)
+> > > > >  #endif /* CONFIG_SWAP */
+> > > > >
+> > > > > +/* Use the journal_info to indicate current is in a transaction */
+> > > > > +static inline bool
+> > > > > +fstrans_context_active(void)
+> > > > > +{
+> > > > > + return current->journal_info != NULL;
+> > > > > +}
+> > > >
+> > > > Why choose iomap.h for this?
+> > >
+> > > Because it gets used in iomap/buffered-io.c
+> > >
+> > > I don't think this is necessarily a useful abstraction, to be honest.
+> > > I'd just open-code 'if (current->journal_info)' or !current->journal_info,
+> > > whichever way round the code is:
+> > >
+> > > fs/btrfs/delalloc-space.c:              if (current->journal_info)
+> > > fs/ceph/xattr.c:                if (current->journal_info) {
+> > > fs/gfs2/bmap.c:         if (current->journal_info) {
+> > > fs/jbd2/transaction.c:  if (WARN_ON(current->journal_info)) {
+> > > fs/reiserfs/super.c:    if (!current->journal_info) {
+> >
+> > /me wonders idly if any of the other filesystems that use
+> > current->journal_info can have an active transaction while calling
+> > ->writepages...
+> >
+> > .... and if so, whether this patchset has taken the wrong path in
+> > trying to use current->journal_info for XFS to re-implement this
+> > warning.....
+> >
+> > .... so we'll have to remove or rework this yet again when other
+> > filesystems are converted to use iomap....
+> >
+> > /me suspects the btrfs_write_and_wait_transaction() is a path where
+> > this can actually happen...
+> >
 > 
-> Don't leak kernel memory contents into the shortform attr fork.
+> How about adding a flag in struct writeback_control ?
+> struct writeback_control {
+>     ...
+>     unsigned fstrans_check:1; /* Whether to check the current is in fstrans */
+> };
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr_leaf.c |    1 +
->  1 file changed, 1 insertion(+)
+> Then we can set it in xfs_vm_writepage(s), for example,
 > 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 8623c815164a..e1a3d225a77d 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -656,6 +656,7 @@ xfs_attr_shortform_create(
->  	hdr = (xfs_attr_sf_hdr_t *)ifp->if_u1.if_data;
->  	hdr->count = 0;
->  	hdr->totsize = cpu_to_be16(sizeof(*hdr));
-> +	hdr->padding = 0;
+> xfs_vm_writepage
+> {
+>     wbc->fstrans_check = 1;  // set it for XFS only.
+>     return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
+> }
 
-memset(hdr, 0, sizeof(*hdr)), please.
+Yeah, but if we are doing that then I think we should just remove
+the check completely from iomap_writepage() and move it up into
+xfs_vm_writepage() and xfs_vm_writepages().
 
 Cheers,
 
