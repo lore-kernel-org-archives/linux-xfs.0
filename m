@@ -2,319 +2,139 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A04B9C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 00:40:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 030AEC433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 00:42:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71F952074D
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 00:40:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IAKt72yL"
+	by mail.kernel.org (Postfix) with ESMTP id D0D2C2072D
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 00:42:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726593AbgHYAkB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 20:40:01 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:39670 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726090AbgHYAkA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 20:40:00 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07P0a2tD168933;
-        Tue, 25 Aug 2020 00:39:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=0EUSFg2llWZjClj6oBxOKJIAMD8HhcKJkh7uLcUiswo=;
- b=IAKt72yLj2/1b1xTfPOyIwbkiexo/lroNdNY+u39S3xzYAKdBzxmSo2XXPUMdsZF1P7D
- VYI2oeIDAwiqzwB8I4TfP4lw7ju3aiAEq5RqYHwSzCBSsJv/ec8Zob4SiEA3a4+SW8nJ
- yV1l/QqoxgsdCcMe9WIG5J99KOxm6Hll4pzBcxr7HvsLm/gYcWyQeZzFRtrnxJPY2ZyV
- fF27Lte2QPN2I//92b0/4NH6XlT+mTNyiufAasPPSUBHcLIgLp91TrixqeHMx04Rmwo+
- 5lxkLzC15V87HCh1WJz7WFQvFhUXp1Nogq1bTAYkAXxXeY2GdRb4UzxVzLia0aHorCWh 1g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 333cshymhe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 25 Aug 2020 00:39:50 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07P0aZHW005514;
-        Tue, 25 Aug 2020 00:39:50 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 333rtx5x1g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Aug 2020 00:39:50 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07P0dkFN010805;
-        Tue, 25 Aug 2020 00:39:47 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 24 Aug 2020 17:39:46 -0700
-Date:   Mon, 24 Aug 2020 17:39:45 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>, linux-xfs@vger.kernel.org,
-        sandeen@sandeen.net
-Subject: Re: [PATCH 08/11] xfs: widen ondisk timestamps to deal with y2038
- problem
-Message-ID: <20200825003945.GA6096@magnolia>
-References: <159797588727.965217.7260803484540460144.stgit@magnolia>
- <159797594159.965217.2504039364311840477.stgit@magnolia>
- <20200822073319.GH1629@infradead.org>
- <20200824024341.GT6096@magnolia>
+        id S1726531AbgHYAmL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 20:42:11 -0400
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:59878 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726090AbgHYAmL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 20:42:11 -0400
+Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
+        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 3BD726AFD27;
+        Tue, 25 Aug 2020 10:42:04 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kAN2J-0005pG-Kx; Tue, 25 Aug 2020 10:42:03 +1000
+Date:   Tue, 25 Aug 2020 10:42:03 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
+        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        willy@infradead.org
+Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
+Message-ID: <20200825004203.GJ12131@dread.disaster.area>
+References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
+ <20200820231140.GE7941@dread.disaster.area>
+ <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
+ <20200821215358.GG7941@dread.disaster.area>
+ <20200822131312.GA17997@infradead.org>
+ <20200824142823.GA295033@bfoster>
+ <20200824150417.GA12258@infradead.org>
+ <20200824154841.GB295033@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200824024341.GT6096@magnolia>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9723 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
- phishscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008250002
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9723 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 clxscore=1015
- spamscore=0 priorityscore=1501 impostorscore=0 adultscore=0
- lowpriorityscore=0 suspectscore=1 mlxlogscore=999 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008250002
+In-Reply-To: <20200824154841.GB295033@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=LPwYv6e9 c=1 sm=1 tr=0 cx=a_idp_d
+        a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
+        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=7-415B0cAAAA:8
+        a=6_Yu4yksRqBpIYSk360A:9 a=Cckdbgs5SKQHxyt1:21 a=uiPvv5w2ab8WhoyN:21
+        a=CjuIK1q_8ugA:10 a=igBNqPyMv6gA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 23, 2020 at 07:43:41PM -0700, Darrick J. Wong wrote:
-> On Sat, Aug 22, 2020 at 08:33:19AM +0100, Christoph Hellwig wrote:
-> > >   * in the AGI header so that we can skip the finobt walk at mount time when
-> > > @@ -855,12 +862,18 @@ struct xfs_agfl {
-> > >   *
-> > >   * Inode timestamps consist of signed 32-bit counters for seconds and
-> > >   * nanoseconds; time zero is the Unix epoch, Jan  1 00:00:00 UTC 1970.
-> > > + *
-> > > + * When bigtime is enabled, timestamps become an unsigned 64-bit nanoseconds
-> > > + * counter.  Time zero is the start of the classic timestamp range.
-> > >   */
-> > >  union xfs_timestamp {
-> > >  	struct {
-> > >  		__be32		t_sec;		/* timestamp seconds */
-> > >  		__be32		t_nsec;		/* timestamp nanoseconds */
-> > >  	};
-> > > +
-> > > +	/* Nanoseconds since the bigtime epoch. */
-> > > +	__be64			t_bigtime;
-> > >  };
+On Mon, Aug 24, 2020 at 11:48:41AM -0400, Brian Foster wrote:
+> On Mon, Aug 24, 2020 at 04:04:17PM +0100, Christoph Hellwig wrote:
+> > On Mon, Aug 24, 2020 at 10:28:23AM -0400, Brian Foster wrote:
+> > > Do I understand the current code (__bio_try_merge_page() ->
+> > > page_is_mergeable()) correctly in that we're checking for physical page
+> > > contiguity and not necessarily requiring a new bio_vec per physical
+> > > page?
 > > 
-> > So do we really need the union here?  What about:
 > > 
-> >  (1) keep the typedef instead of removing it
-> >  (2) switch the typedef to be just a __be64, and use trivial helpers
-> >      to extract the two separate legacy sec/nsec field
-> >  (3) PROFIT!!!
+> > Yes.
+> > 
 > 
-> Been there, done that.  Dave suggested some replacement code (which
-> corrupted the values), then I modified that into a correct version,
-> which then made smatch angry because it doesn't like code that does bit
-> shifts on __be64 values.
-
-Backing up here, I've realized that my own analysis of Dave's pseudocode
-was incorrect.
-
-On a little endian machine, we'll start with the following.  A is the
-LSB of seconds; D is the MSB of seconds; E is the LSB of nsec, and H is
-the MSB of nsec.
-
-  sec  nsec (incore)
-  l  m l  m
-  ABCD EFGH
-
-Now we encode that with an old kernel, which calls cpu_to_be32 to turn
-that into:
-
-  sec  nsec (ondisk)
-  m  l m  l
-  DCBA HGFE
-
-Move over to a new kernel, and that becomes:
-
-  tstamp (ondisk)
-  m      l
-  DCBAHGFE
-
-Next we decode with be64_to_cpu:
-
-  tstamp (incore)
-  l      m
-  EFGHABCD
-
-Now we extract nsec from (tstamp & -1U) and sec from (tstamp >> 32):
-
-  sec  nsec
-  l  m l  m
-  ABCD EFGH
-
-So yes, masking and shifting /after/ the endian conversion works just
-fine and doesn't throw any sparse/smatch errors.
-
-Now on a big endian machine:
-
-  sec  nsec (incore)
-  m  l m  l
-  DCBA HGFE
-
-Now we encode that with an old kernel, which calls cpu_to_be32 (a nop)
-to turn that into:
-
-  sec  nsec (ondisk)
-  m  l m  l
-  DCBA HGFE
-
-Move over to a new kernel, and that becomes:
-
-  tstamp (ondisk)
-  m      l
-  DCBAHGFE
-
-Next we decode with be64_to_cpu (a nop):
-
-  tstamp (incore)
-  m      l
-  DCBAHGFE
-
-Now we extract nsec from (tstamp & -1U) and sec from (tstamp >> 32):
-
-  sec  nsec
-  m  l m  l
-  DCBA HGFE
-
-Works fine here too.
-
-Now the /truly/ nasty case here is xfs_ictimestamp, since we log the
-inode core in host endian format.  If we start with this the vfs
-timestamp on a new kernel:
-
-  sec  nsec (incore)
-  l  m l  m
-  ABCD EFGH
-
-We need to encode that as:
-
-  tstamp (ondisk)
-  l      m
-  ABCDEFGH
-
-The only way to do this is: (nsec << 32) | (sec & -1U).  That makes the
-log timestamp encoding is the opposite of what we do for the ondisk
-inodes, because log formats don't use cpu_to_be64.
-
-At least for a big endian machine, log timestamp coding is easy:
-
-  sec  nsec (incore)
-  m  l m  l
-  DCBA HGFE
-
-We need to encode that as:
-
-  tstamp (ondisk)
-  m      l
-  DCBAHGFE
-
-And the only way to get there is (sec << 32) | (nsec & -1U), which is
-what the ondisk inode timestamp coding does.
-
-I still think this is grody, but at least now now I have a new fstest to
-make sure that log recovery doesn't trip over this.  So, you were
-technically right and I was wrong.  We'll see how you like the new
-stuff. ;)
-
---D
-
-> > > +/* Convert an ondisk timestamp into the 64-bit safe incore format. */
-> > >  void
-> > >  xfs_inode_from_disk_timestamp(
-> > > +	struct xfs_dinode		*dip,
-> > >  	struct timespec64		*tv,
-> > >  	const union xfs_timestamp	*ts)
-> > 
-> > I think passing ts by value might lead to somewhat better code
-> > generation on modern ABIs (and older ABIs just fall back to pass
-> > by reference transparently).
+> Ok. I also realize now that this occurs on a kernel without commit
+> 07173c3ec276 ("block: enable multipage bvecs"). That is probably a
+> contributing factor, but it's not clear to me whether it's feasible to
+> backport whatever supporting infrastructure is required for that
+> mechanism to work (I suspect not).
 > 
-> Hm, ok.  I did not know that. :)
-> 
-> > >  {
-> > > +	if (dip->di_version >= 3 &&
-> > > +	    (dip->di_flags2 & cpu_to_be64(XFS_DIFLAG2_BIGTIME))) {
+> > > With regard to Dave's earlier point around seeing excessively sized bio
+> > > chains.. If I set up a large memory box with high dirty mem ratios and
+> > > do contiguous buffered overwrites over a 32GB range followed by fsync, I
+> > > can see upwards of 1GB per bio and thus chains on the order of 32+ bios
+> > > for the entire write. If I play games with how the buffered overwrite is
+> > > submitted (i.e., in reverse) however, then I can occasionally reproduce
+> > > a ~32GB chain of ~32k bios, which I think is what leads to problems in
+> > > I/O completion on some systems. Granted, I don't reproduce soft lockup
+> > > issues on my system with that behavior, so perhaps there's more to that
+> > > particular issue.
+> > > 
+> > > Regardless, it seems reasonable to me to at least have a conservative
+> > > limit on the length of an ioend bio chain. Would anybody object to
+> > > iomap_ioend growing a chain counter and perhaps forcing into a new ioend
+> > > if we chain something like more than 1k bios at once?
 > > 
-> > Do we want a helper for this condition?
-> 
-> Yes, yes we do.  Will add.
-> 
-> > > +		uint64_t		t = be64_to_cpu(ts->t_bigtime);
-> > > +		uint64_t		s;
-> > > +		uint32_t		n;
-> > > +
-> > > +		s = div_u64_rem(t, NSEC_PER_SEC, &n);
-> > > +		tv->tv_sec = s - XFS_INO_BIGTIME_EPOCH;
-> > > +		tv->tv_nsec = n;
-> > > +		return;
-> > > +	}
-> > > +
-> > >  	tv->tv_sec = (int)be32_to_cpu(ts->t_sec);
-> > >  	tv->tv_nsec = (int)be32_to_cpu(ts->t_nsec);
+> > So what exactly is the problem of processing a long chain in the
+> > workqueue vs multiple small chains?  Maybe we need a cond_resched()
+> > here and there, but I don't see how we'd substantially change behavior.
 > > 
-> > Nit: for these kinds of symmetric conditions and if/else feels a little
-> > more natural.
-> > 
-> > > +		xfs_log_dinode_to_disk_ts(from, &to->di_crtime, &from->di_crtime);
-> > 
-> > This adds a > 80 char line.
 > 
-> Do we care now that checkpatch has been changed to allow up to 100
-> columns?
+> The immediate problem is a watchdog lockup detection in bio completion:
 > 
-> > > +	if (from->di_flags2 & XFS_DIFLAG2_BIGTIME) {
-> > > +		uint64_t		t;
-> > > +
-> > > +		t = (uint64_t)(ts->tv_sec + XFS_INO_BIGTIME_EPOCH);
-> > > +		t *= NSEC_PER_SEC;
-> > > +		its->t_bigtime = t + ts->tv_nsec;
-> > 
-> > This calculation is dupliated in two places, might be worth
-> > adding a little helper (which will need to get the sec/nsec values
-> > passed separately due to the different structures).
-> > 
-> > > +		xfs_inode_to_log_dinode_ts(from, &to->di_crtime, &from->di_crtime);
-> > 
-> > Another line over 8 characters here.
-> > 
-> > > +	if (xfs_sb_version_hasbigtime(&mp->m_sb)) {
-> > > +		sb->s_time_min = XFS_INO_BIGTIME_MIN;
-> > > +		sb->s_time_max = XFS_INO_BIGTIME_MAX;
-> > > +	} else {
-> > > +		sb->s_time_min = XFS_INO_TIME_MIN;
-> > > +		sb->s_time_max = XFS_INO_TIME_MAX;
-> > > +	}
-> > 
-> > This is really a comment on the earlier patch, but maybe we should
-> > name the old constants with "OLD" or "LEGACY" or "SMALL" in the name?
+>   NMI watchdog: Watchdog detected hard LOCKUP on cpu 25
 > 
-> Yes, good suggestion!
+> This effectively lands at the following segment of iomap_finish_ioend():
 > 
-> > > @@ -1494,6 +1499,10 @@ xfs_fc_fill_super(
-> > >  	if (XFS_SB_VERSION_NUM(&mp->m_sb) == XFS_SB_VERSION_5)
-> > >  		sb->s_flags |= SB_I_VERSION;
-> > >  
-> > > +	if (xfs_sb_version_hasbigtime(&mp->m_sb))
-> > > +		xfs_warn(mp,
-> > > + "EXPERIMENTAL big timestamp feature in use. Use at your own risk!");
-> > > +
-> > 
-> > Is there any good reason to mark this experimental?
+> 		...
+>                /* walk each page on bio, ending page IO on them */
+>                 bio_for_each_segment_all(bv, bio, iter_all)
+>                         iomap_finish_page_writeback(inode, bv->bv_page, error);
 > 
-> As you and Dave have both pointed out, there are plenty of stupid bugs
-> still in this.  I think I'd like to have at least one EXPERIMENTAL cycle
-> to make sure I didn't commit anything pathologically stupid in here.
-> 
-> <cough> ext4 34-bit sign extension bug <cough>.
-> 
-> --D
+> I suppose we could add a cond_resched(), but is that safe directly
+> inside of a ->bi_end_io() handler? Another option could be to dump large
+> chains into the completion workqueue, but we may still need to track the
+> length to do that. Thoughts?
+
+We have ioend completion merging that will run the compeltion once
+for all the pending ioend completions on that inode. IOWs, we do not
+need to build huge chains at submission time to batch up completions
+efficiently. However, huge bio chains at submission time do cause
+issues with writeback fairness, pinning GBs of ram as unreclaimable
+for seconds because they are queued for completion while we are
+still submitting the bio chain and submission is being throttled by
+the block layer writeback throttle, etc. Not to mention the latency
+of stable pages in a situation like this - a mmap() write fault
+could stall for many seconds waiting for a huge bio chain to finish
+submission and run completion processing even when the IO for the
+given page we faulted on was completed before the page fault
+occurred...
+
+Hence I think we really do need to cap the length of the bio
+chains here so that we start completing and ending page writeback on
+large writeback ranges long before the writeback code finishes
+submitting the range it was asked to write back.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
