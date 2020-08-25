@@ -7,71 +7,67 @@ X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58292C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:14:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A20D3C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:18:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3559620706
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:14:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6D18E206EB
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:18:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lYVNsW7b"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="R/7Tol5i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726475AbgHYWO3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 18:14:29 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43344 "EHLO
+        id S1726391AbgHYWSs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 18:18:48 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:46070 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726471AbgHYWO1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 18:14:27 -0400
+        with ESMTP id S1726303AbgHYWSr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 18:18:47 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PM9nN5171494;
-        Tue, 25 Aug 2020 22:14:22 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PM9nNO171494;
+        Tue, 25 Aug 2020 22:18:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=n+SDM3E28nCnOj/ZIdYxllNKqwlO0WVL977/aXzCToM=;
- b=lYVNsW7bRgguHLyVdZRvbHXMwu8efoU7zXQ4RCyySuj1uHi21FUYr8brkWIgSRe2dwqe
- o6Vfz6U006JdqRAiS/8CySQBaXR+rM3xiNwOVnIZk7KZOkHEy9j+NUjb7W8Ua7nMK8k6
- X/mkGh8cK7lVJ9GoMCemSwGdwzolgXDMN8Tk43iyJpL1kIvgEhvhU8Wt2y4D9UvKytN+
- kGifzHOwQ+TifMMygaqqkgReDs6cA1gJj5A0nwivtp4AsPllQAC/HTCe2O3UL/5rKliz
- wFORPcFoC3kFuvwY4dTqf6CjE1CyJGDOsg0geDjvc6Qh4iDFrXB12eJ0qJ7IzKd7nnnr Ew== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 333dbrw6y6-1
+ bh=+sr3hUKnzuHbS5ZpQN25AWHoIXmqmeAytVcFuZ9ixMY=;
+ b=R/7Tol5iLiHAwmPjcC4YJNKBGHF1MImaKOnUIehP+zwNEqrSTuSYR8bZidrgugIGI6gc
+ t5kZOgV7ck6VEVQkOx50GW2d5kuAvpY0Rsi0wPDL3TM+xmQ+r2c+l1Hzeu6AGkKbPjOu
+ R02IxUHk7C3LdnxYBnR1khYfBEMLW9krCHnJlLu9ozodHhD9JF8gEolGoP1aXTnIFZ0X
+ 3kwrzbr9dDTT9Wviz5UQv6pSEDiMxPaRASmtUkBl9Rie7EkFV2D6WAdGjoHTgzq022oQ
+ drO8mSuWRt4OeKnsvYrkfbGiF9QYQYVFCB7ojQ972spRCuuXWny286j2l9E+oBVc38/7 gg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 333dbrw7d8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 25 Aug 2020 22:14:21 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PMAbwF110146;
-        Tue, 25 Aug 2020 22:14:21 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 333rtyccw0-1
+        Tue, 25 Aug 2020 22:18:45 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PMBJWG189974;
+        Tue, 25 Aug 2020 22:18:44 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 333r9k4x0v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Aug 2020 22:14:21 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07PMEHkx010818;
-        Tue, 25 Aug 2020 22:14:17 GMT
+        Tue, 25 Aug 2020 22:18:44 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07PMIh3V004780;
+        Tue, 25 Aug 2020 22:18:43 GMT
 Received: from localhost (/10.159.234.29)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Aug 2020 15:14:17 -0700
-Date:   Tue, 25 Aug 2020 15:14:16 -0700
+        with ESMTP ; Tue, 25 Aug 2020 15:18:43 -0700
+Date:   Tue, 25 Aug 2020 15:18:42 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 6/9] iomap: Convert read_count to byte count
-Message-ID: <20200825221416.GK6096@magnolia>
-References: <20200824145511.10500-1-willy@infradead.org>
- <20200824145511.10500-7-willy@infradead.org>
- <20200825000902.GG12131@dread.disaster.area>
+To:     Alexey Dobriyan <adobriyan@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: "signed < sizeof()" bug in xfs_attr_shortform_verify() ?
+Message-ID: <20200825221842.GR6107@magnolia>
+References: <20200825211048.GA2162993@localhost.localdomain>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200825000902.GG12131@dread.disaster.area>
+In-Reply-To: <20200825211048.GA2162993@localhost.localdomain>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9724 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
- phishscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
+ suspectscore=1 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2008250166
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9724 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1011
  priorityscore=1501 impostorscore=0 phishscore=0 malwarescore=0
  mlxlogscore=999 spamscore=0 mlxscore=0 lowpriorityscore=0 suspectscore=1
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
@@ -81,27 +77,26 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 10:09:02AM +1000, Dave Chinner wrote:
-> On Mon, Aug 24, 2020 at 03:55:07PM +0100, Matthew Wilcox (Oracle) wrote:
-> > Instead of counting bio segments, count the number of bytes submitted.
-> > This insulates us from the block layer's definition of what a 'same page'
-> > is, which is not necessarily clear once THPs are involved.
+On Wed, Aug 26, 2020 at 12:10:48AM +0300, Alexey Dobriyan wrote:
+> xfs_attr_shortform_verify() contains the following code:
 > 
-> I'd like to see a comment on the definition of struct iomap_page to
-> indicate that read_count (and write count) reflect the byte count of
-> IO currently in flight on the page, not an IO count, because THP
-> makes tracking this via bio state hard. Otherwise it is not at all
-> obvious why it is done and why it is intentional...
+> 
+> 	int64_t size = ifp->if_bytes;
+>         /*
+>          * Give up if the attribute is way too short.
+>          */
+>         if (size < sizeof(struct xfs_attr_sf_hdr))
+>                 return __this_address;
+> 
+> 
+> In general "if (signed < sizeof())" is wrong because of how type
+> promotions work. Such check won't catch small negative values.
+> 
+> I don't know XFS well enough to know if negative values were excluded
+> somewhere above the callchain, but maybe someone else does.
 
-Agreed. :)
+The initial allocations are always positive and the subsequent
+xfs_idata_realloc are checked to prevent if_bytes from going negative,
+but it does seem funny to me that if_bytes is declared int64_t...
 
 --D
-
-> Otherwise the code looks OK.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
