@@ -7,116 +7,91 @@ X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 552B6C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 20:27:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C752C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 20:31:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2714D2074D
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 20:27:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6116D20738
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 20:31:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uir48NtQ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ow6ZRy6X"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726149AbgHYU07 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 16:26:59 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54404 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726090AbgHYU06 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 16:26:58 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PKNjhS186080;
-        Tue, 25 Aug 2020 20:26:52 GMT
+        id S1726149AbgHYUbB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 16:31:01 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:34702 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726090AbgHYUbA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 16:31:00 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PKOv3T115003;
+        Tue, 25 Aug 2020 20:30:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=d5xliLnhJ+y98A9kRGvzIOVrxrgbEfWbSTLEtQ6dS30=;
- b=uir48NtQajrFkOmapxnjlGI5SuDVsLQgvni/Uz7ulKhpiOXjnyvG8nHBHYdW5u0O7Dfz
- 8XAykX/7JQR/n6OCLFLhCqrt+xk4fjD+6GlvyWxItp0B4rF8ypUbbYjoULhRqqa0g6jt
- iVPzDarS3eokRhJ+Ay49fL4BsQm6kdj5oIZC8PY9iHSxl3tNzymSm7kYPeII1Z4PCMzr
- zZy6SK6uG7CX9kJN3I71jmUbCbRh5N2/4cOUcdaRADh5yjh5Zk4NsU7U707TSjLM4VvA
- t7yugj8N/k1Qk8c4fYhCyFxBTGsgAznYJAoOuQwEu7AphGKPxtVBWyypt0CCKkk/rJJA Yw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 333dbrvrxb-1
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=EEk+ilij2GAQP4zS5JzK26462xFVoruqF95gj2o9R+g=;
+ b=ow6ZRy6Xf2horua7t2qu0b01kGSyVIm3KsWb2+5xtfUCwi4GLuZ22syE29hejMnCJj0h
+ PIhLm0WlOrPwsWflwmzqfaYGveVxQN4/OSw/ZT4MVkTaeUoCkue+0Z7kyX0bHSa3eg5C
+ AnLTp16dWi3GOGvbaIaQq/6OBjjoC7n6NproxGtg5r48jPmkPWDmyzAd5SPyz/xKma88
+ T7Z2G4hi9QHp/m3e9hr3VhAxdyUndI0qW6vzf6wr33kUniO5Jl0SGL4M6oxYr3YZFadH
+ W4x030V1OGyd2UkAJ2VKqNLG7psQN68OgVBTznleo5QnosM/AWWbnjnzX+ypaGAftkE3 cg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 333csj4uhd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 25 Aug 2020 20:26:52 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PKQcbN082826;
-        Tue, 25 Aug 2020 20:26:52 GMT
+        Tue, 25 Aug 2020 20:30:56 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PKPJHr154015;
+        Tue, 25 Aug 2020 20:28:55 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 333rty95dw-1
+        by userp3030.oracle.com with ESMTP id 333r9k1g0q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Aug 2020 20:26:51 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07PKQn4j017562;
-        Tue, 25 Aug 2020 20:26:50 GMT
+        Tue, 25 Aug 2020 20:28:55 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07PKSsPm025619;
+        Tue, 25 Aug 2020 20:28:54 GMT
 Received: from localhost (/10.159.234.29)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Aug 2020 13:26:49 -0700
-Date:   Tue, 25 Aug 2020 13:26:48 -0700
+        with ESMTP ; Tue, 25 Aug 2020 13:28:54 -0700
+Date:   Tue, 25 Aug 2020 13:28:53 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: fix boundary test in xfs_attr_shortform_verify
-Message-ID: <20200825202648.GD6096@magnolia>
-References: <63722af5-2d8d-2455-17ee-988defd3126f@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: initialize the shortform attr header padding entry
+Message-ID: <20200825202853.GE6096@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <63722af5-2d8d-2455-17ee-988defd3126f@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9724 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
- phishscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
+ suspectscore=3 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2008250154
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9724 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015
- priorityscore=1501 impostorscore=0 phishscore=0 malwarescore=0
- mlxlogscore=999 spamscore=0 mlxscore=0 lowpriorityscore=0 suspectscore=1
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 clxscore=1015
+ spamscore=0 priorityscore=1501 impostorscore=0 adultscore=0
+ lowpriorityscore=0 suspectscore=3 mlxlogscore=999 phishscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2008250154
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 03:25:29PM -0500, Eric Sandeen wrote:
-> The boundary test for the fixed-offset parts of xfs_attr_sf_entry
-> in xfs_attr_shortform_verify is off by one.  endp is the address
-> just past the end of the valid data; to check the last byte of
-> a structure at offset of size "size" we must subtract one.
-> (i.e. for an object at offset 10, size 4, last byte is 13 not 14).
-> 
-> This can be shown by:
-> 
-> # touch file
-> # setfattr -n root.a file
-> 
-> and subsequent verifications will fail when it's reread from disk.
-> 
-> This only matters for a last attribute which has a single-byte name
-> and no value, otherwise the combination of namelen & valuelen will
-> push endp out and this test won't fail.
-> 
-> Fixes: 1e1bbd8e7ee06 ("xfs: create structure verifier function for shortform xattrs")
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-NGGHGHGHG array[1]s that are actually array[0]...
+Don't leak kernel memory contents into the shortform attr fork.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c |    1 +
+ 1 file changed, 1 insertion(+)
 
---D
-
-> ---
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 8623c815164a..a0cf22f0c904 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -1037,7 +1037,7 @@ xfs_attr_shortform_verify(
->  		 * Check the fixed-offset parts of the structure are
->  		 * within the data buffer.
->  		 */
-> -		if (((char *)sfep + sizeof(*sfep)) >= endp)
-> +		if (((char *)sfep + sizeof(*sfep)-1) >= endp)
->  			return __this_address;
->  
->  		/* Don't allow names with known bad length. */
-> 
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 8623c815164a..e1a3d225a77d 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -656,6 +656,7 @@ xfs_attr_shortform_create(
+ 	hdr = (xfs_attr_sf_hdr_t *)ifp->if_u1.if_data;
+ 	hdr->count = 0;
+ 	hdr->totsize = cpu_to_be16(sizeof(*hdr));
++	hdr->padding = 0;
+ 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE | XFS_ILOG_ADATA);
+ }
+ 
