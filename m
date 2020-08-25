@@ -2,147 +2,146 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D054DC433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 06:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF37C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 08:48:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99A85207D3
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 06:22:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q+m2Hw1S"
+	by mail.kernel.org (Postfix) with ESMTP id AA77F2065F
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 08:48:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728683AbgHYGWp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 02:22:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41282 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725946AbgHYGWo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 02:22:44 -0400
-Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5BF9C061574;
-        Mon, 24 Aug 2020 23:22:44 -0700 (PDT)
-Received: by mail-il1-x143.google.com with SMTP id k4so9451129ilr.12;
-        Mon, 24 Aug 2020 23:22:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=nJnF6NzmSch03bI5+ZVNRt+pUANjQezLXGWDqR64ZyE=;
-        b=q+m2Hw1SeiQXjmCeL5sOpmQ/Q7e7rxTjM9Crx/jDVjVDNid8RGwY33P8onK0iNDsnX
-         neuwYqxm2KrM/aBS0s91yNN/YO86OAaA8/dtY2Mq4Wp0y3bv62ipQH9IKOKmps3C3K74
-         z7qvnaQaLqYPg1hdb8aAdoSw53YI66Ixvrxf3TWgzNiL9xmoOHKTZxiS10D+oz0WppPB
-         vzMVfTV7+HNlMrAZdu4P0SyXScJdKuCYsgkrBdQyOESpxpmcZDLtiskzzt56UPoNfEXI
-         FfDdvPSoDnjiF8Dz/xxGoJXTPFVoTKXmqesRBj0WDx1hyL8DYn5wabA8IP9KLXLRI9OL
-         uPig==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=nJnF6NzmSch03bI5+ZVNRt+pUANjQezLXGWDqR64ZyE=;
-        b=kFwuQznf29BTHeLvXDK4ilG1TCOr6sNR5PhvniLxeCsPpF7LlQNm/jrMrhM1kAFYfl
-         isTuZKoJAZ8mmfvYaar5y08MC7MwAHbA2+FRa1i50Yl07k8t6h5WumPd4Lyv3pnw/AtR
-         SICvafoV8QF6lJp78hsijGFinsSXhSizfPnsbxuSrT1BjtR+H9VZSi7IFbs4e7sChuXR
-         4R1+wPSSShf2QvPQT75GjMU9Oj/HzaChJWDlJwn5l7mjzy5wQe9xlsmPQJGrRkpAKPPI
-         5JpUM4THVXTxoG+VV2G+vfNd1duEQLJjQRYhnm0cgbTAXvPWgRqe5wHZQhzpTFgPXUbK
-         9Mog==
-X-Gm-Message-State: AOAM530MpQycEZKw06Hlg/brkaUBk1DsvH5/2/WyjdCQsvyIEtPXaVDj
-        Ol2aJZzy23050B0WC2kcrzOETS4El8hvvsatDsM=
-X-Google-Smtp-Source: ABdhPJzQfbaRyHzQbR9fyU0qXLrO4Y2S+GlY4XMCXjt/Xr0ZQ+i+TOlj55R6o1mM/ROaK6ZHgSzas1SCwe69FKAmeqk=
-X-Received: by 2002:a92:9f57:: with SMTP id u84mr8100793ili.203.1598336564033;
- Mon, 24 Aug 2020 23:22:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200824014234.7109-1-laoar.shao@gmail.com> <20200824014234.7109-3-laoar.shao@gmail.com>
- <20200824130925.a3d2d2b75ac3a6b4eba72fb9@linux-foundation.org>
- <20200824205647.GG17456@casper.infradead.org> <20200825053233.GN12131@dread.disaster.area>
-In-Reply-To: <20200825053233.GN12131@dread.disaster.area>
-From:   Yafang Shao <laoar.shao@gmail.com>
-Date:   Tue, 25 Aug 2020 14:22:08 +0800
-Message-ID: <CALOAHbAhhGXn3N7BTBqh336q0_P1WJH5xXtnBhdsBdS516NAvA@mail.gmail.com>
-Subject: Re: [PATCH v6 2/2] xfs: avoid transaction reservation recursion
+        id S1728820AbgHYIsN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 04:48:13 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40314 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728124AbgHYIsL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Aug 2020 04:48:11 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id C25A0AC58;
+        Tue, 25 Aug 2020 08:48:39 +0000 (UTC)
+Date:   Tue, 25 Aug 2020 10:48:08 +0200
+From:   Anthony Iliopoulos <ailiop@suse.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Michal Hocko <mhocko@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, Linux MM <linux-mm@kvack.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/6] xfsprogs: blockdev dax detection and warnings
+Message-ID: <20200825084808.GC3357@technoir>
+References: <20200824203724.13477-1-ailiop@suse.com>
+ <20200824225533.GA12131@dread.disaster.area>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200824225533.GA12131@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 1:32 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Mon, Aug 24, 2020 at 09:56:47PM +0100, Matthew Wilcox wrote:
-> > On Mon, Aug 24, 2020 at 01:09:25PM -0700, Andrew Morton wrote:
-> > > On Mon, 24 Aug 2020 09:42:34 +0800 Yafang Shao <laoar.shao@gmail.com> wrote:
-> > >
-> > > > --- a/include/linux/iomap.h
-> > > > +++ b/include/linux/iomap.h
-> > > > @@ -271,4 +271,11 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
-> > > >  # define iomap_swapfile_activate(sis, swapfile, pagespan, ops)   (-EIO)
-> > > >  #endif /* CONFIG_SWAP */
-> > > >
-> > > > +/* Use the journal_info to indicate current is in a transaction */
-> > > > +static inline bool
-> > > > +fstrans_context_active(void)
-> > > > +{
-> > > > + return current->journal_info != NULL;
-> > > > +}
-> > >
-> > > Why choose iomap.h for this?
-> >
-> > Because it gets used in iomap/buffered-io.c
-> >
-> > I don't think this is necessarily a useful abstraction, to be honest.
-> > I'd just open-code 'if (current->journal_info)' or !current->journal_info,
-> > whichever way round the code is:
-> >
-> > fs/btrfs/delalloc-space.c:              if (current->journal_info)
-> > fs/ceph/xattr.c:                if (current->journal_info) {
-> > fs/gfs2/bmap.c:         if (current->journal_info) {
-> > fs/jbd2/transaction.c:  if (WARN_ON(current->journal_info)) {
-> > fs/reiserfs/super.c:    if (!current->journal_info) {
->
-> /me wonders idly if any of the other filesystems that use
-> current->journal_info can have an active transaction while calling
-> ->writepages...
->
-> .... and if so, whether this patchset has taken the wrong path in
-> trying to use current->journal_info for XFS to re-implement this
-> warning.....
->
-> .... so we'll have to remove or rework this yet again when other
-> filesystems are converted to use iomap....
->
-> /me suspects the btrfs_write_and_wait_transaction() is a path where
-> this can actually happen...
->
+On Tue, Aug 25, 2020 at 08:55:33AM +1000, Dave Chinner wrote:
+> On Mon, Aug 24, 2020 at 10:37:18PM +0200, Anthony Iliopoulos wrote:
+> > Hi all,
+> > 
+> > This short series adds blockdev dax capability detection via libblkid,
+> > and subsequently uses this bit to warn on a couple of incompatible
+> > configurations during mkfs.
+> > 
+> > The first patch adds the detection capability to libtopology, and the
+> > following two patches add mkfs warnings that are issued when the fs
+> > block size is not matching the page size, and when reflink is being
+> > enabled in conjunction with dax.
+> 
+> This makes the assumption that anyone running mkfs on a dax capable
+> device is going to use DAX, and prevents mkfs from running if the
+> config is not DAX compatible.
+> 
+> The issue here is that making a filesystem that is not DAX
+> compatible on a DAX capable device is not a fatal error. The
+> filesystem will work just fine using buffered and direct IO, and
+> there are definitely workloads where we want to use buffered IO on
+> pmem and not DAX. Why? Because existing pmem is terribly slow for
+> write intensive applications compared to page cache based mmap().
+> And even buffered writes are faster than DAX direct writes because
+> the slow writeback is done in the background via async writeback.
+> 
+> Also, what happens if you have a 64kB page size? mkfs defaults to
+> 4kB block size, so with these changes mkfs will refuse to run on a
+> dax capable device unless the user specifically directs it to do
+> something different. That's not a good behaviour for the default
+> config to have....
+> 
+> Hence I don't think that preventing mkfs from running unless the config
+> is exactly waht DAX requires or the "force" option is set is the
+> right policy here.
+> 
+> I agree that mkfs needs to be aware of DAX capability of the block
+> device, but that capability existing should not cause mkfs to fail.
+> If we want users to be able to direct mkfs to to create a DAX
+> capable filesystem then adding a -d dax option would be a better
+> idea. This would direct mkfs to align/size all the data options to
+> use a DAX compatible topology if blkid supports reporting the DAX
+> topology. It would also do things like turn off reflink (until that
+> is supported w/ DAX), etc.
 
-How about adding a flag in struct writeback_control ?
-struct writeback_control {
-    ...
-    unsigned fstrans_check:1; /* Whether to check the current is in fstrans */
-};
+I do like the idea of adding an explicit dax option, but I'm not sure
+what the right policy would be:
 
-Then we can set it in xfs_vm_writepage(s), for example,
+1. -d dax option specified, set dax-compatible parameters irrespective
+   of dax capability (blkid detection not strictly required)
 
-xfs_vm_writepage
-{
-    wbc->fstrans_check = 1;  // set it for XFS only.
-    return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
-}
+2. -d dax option specified, set dax-compatible parameters only if
+   blockdev is dax capable; fallback to default params otherwise
 
-And then we check this flag in iomap_do_writepage():
-iomap_do_writepage
-    if (WARN_ON_ONCE(wbc->fstrans_check && current->journal_info))
-        goto redirty;
+3. autodetect dax capability and automatically set dax-compatible
+   params, irrespective of if the option is specified or not
+   (potentially also needs an explicit override option e.g. -d dax=0).
 
+I'd be inclined to go with the second option which should lead to the
+least amount of surprises for users.
 
--- 
-Thanks
-Yafang
+Still, this doesn't address the exact thing I was trying to do (see
+below).
+
+> i.e. if the user knows they are going to use DAX (and they will)
+> then they can tell mkfs to make a DAX compatible filesystem.
+
+So I've been trying to prevent cases where users create a filesystem
+with the default params, go on to populate it, and at some later point
+of time find themselves wanting to mount it with dax only to realize
+that this is not possible without mkfs (most commonly due to the
+mismatch of the 64kB page size on ppc64). We could potentially just
+issue the warning and not force mkfs to bail out, but I'm afraid that
+warnings aren't very discernible and are easily missed. I do agree
+though that requiring an override may not be the best model here.
+
+Would it make sense to simply emit the warnings and drop the bail-out
+and override logic altogether?
+
+Alternatively the third option above (autodetection), would take care of
+those cases at the expense of overriding otherwise potentially desirable
+options (e.g. switching off reflink), which will come as a surprise to
+users that don't intent to use dax. I don't think this would be a good
+default policy.
+
+> > The next patch adds a new cli option that can be used to override
+> > warnings, and converts all warnings that can be forced to this option
+> > instead the overloaded -f option. This avoids cases where forcing a
+> > warning may also be implicitly forcing overwriting an existing
+> > partition.
+>
+> I don't want both an "ignore warnings" and a "force" CLI option.
+> They both do the same thing - allow the user to override things that
+> are potentially destructive or result in an unusable config - so why
+> should we add the complexity of having a different "force" options
+> for every different possible thing that can be overridden?
+
+The rationale here was to only make a distinction between destructive
+and (conditionally) unusable, otherwise we would indeed need an override
+toggle per warning - which I totally agree is an overkill. If implicitly
+suppressing the destructive operation confirmation isn't a concern, then
+I'd definitely drop this patch.
+
+Thanks for the feedback!
+
+Anthony
