@@ -2,131 +2,89 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0334FC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 10:29:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8745C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 12:25:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5DAC2075F
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 10:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADD942074A
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 12:25:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="J/arBTGQ"
+	dkim=pass (2048-bit key) header.d=igalia.com header.i=@igalia.com header.b="JXdLEEac"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728117AbgHYK3b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 06:29:31 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36924 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729698AbgHYK3a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 06:29:30 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PAPOJx078060;
-        Tue, 25 Aug 2020 10:29:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=content-type :
- mime-version : subject : from : in-reply-to : date : cc :
- content-transfer-encoding : message-id : references : to;
- s=corp-2020-01-29; bh=eYOBrGq+oIN0aCgQgUHudJMPRgvhB81SD1iHx4MSQQ4=;
- b=J/arBTGQW/QHlSBjkq9YtT0uCotUCrSo7RyLr1Q5UjfA9XzjxXOZb8ukdTTio6bcVass
- F3/3JySMpw5/8eMSsiFWLI1x3hRZVPXe0YEgfU/d6ktOONu3xGvUFLBhRVX9Mg3ENs3U
- vN4iUEiI6CJGYMlOhD8BZAtPNXgmWIqVt8W0eHK43l1IY/yAo9vSC0i8XiLVVl+JmgKL
- VpiFpuLOApElDLdSp9WpO5MX46CorU6Ch2bqgGrZNtNOTMV9aapa7v//m47uNJlkmq3S
- 1A9BQpju++mbT5eoSXgVb8tdhfbgzf55KzEhDwVFzdkvJwJhJnmnKNMvWvq7ZH40FTGJ EA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 333csj1qf5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 25 Aug 2020 10:29:18 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07PAPHQB176374;
-        Tue, 25 Aug 2020 10:29:18 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 333r9jcmjm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 25 Aug 2020 10:29:18 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07PATHMO005180;
-        Tue, 25 Aug 2020 10:29:17 GMT
-Received: from localhost.localdomain (/73.243.10.6)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Aug 2020 03:29:17 -0700
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.0.3\))
-Subject: Re: [PATCH 00/11] iomap/fs/block patches for 5.11
-From:   William Kucharski <william.kucharski@oracle.com>
-In-Reply-To: <20200824151700.16097-1-willy@infradead.org>
-Date:   Tue, 25 Aug 2020 04:29:16 -0600
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-block@vger.kernel.org, linux-mm <linux-mm@kvack.org>,
-        linux-kernel@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <1E04AE83-85F0-4C90-924C-9A6792D453DE@oracle.com>
-References: <20200824151700.16097-1-willy@infradead.org>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-X-Mailer: Apple Mail (2.3654.0.3)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9723 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
- suspectscore=0 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008250078
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9723 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 clxscore=1011
- spamscore=0 priorityscore=1501 impostorscore=0 adultscore=0
- lowpriorityscore=0 suspectscore=0 mlxlogscore=999 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008250078
+        id S1729071AbgHYMZM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 08:25:12 -0400
+Received: from fanzine.igalia.com ([178.60.130.6]:37174 "EHLO
+        fanzine.igalia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728117AbgHYMZL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 08:25:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=igalia.com; s=20170329;
+        h=Content-Type:MIME-Version:Message-ID:Date:References:In-Reply-To:Subject:Cc:To:From; bh=vEJ72oUvlbdcg4o2id9m0UzjAK8cG0VRRCH/ZBpex8g=;
+        b=JXdLEEaccbWpTEp9kni3rB2AlGgnik7+tsM1t/IxvNxXisDwnGJTvPu0sP+hGy44Dl29f98TmXJaiVlypmvbJf90ELsvgYeOwymxJuLY5A7w+fqAaTtktpUyDFBK5WLrpSb22ap0QNw18t3EhRRX1cyEBfl911UTCTo8+byjFiInr80axhFsksYsOBVwjiKq4d0FfeTL3/kialNaS3NUy4OM/XI4lHPkf69ve7GiRq8Uymtl0BSidyou7nr/OLpEgfxJIPcE8401z4sgBlq7r7V7GFihsq1LsspxqYfDvtW5Du4e51T6QwrQtw4x2WGxFuQjQFx/MKIWID+S0/cjyA==;
+Received: from maestria.local.igalia.com ([192.168.10.14] helo=mail.igalia.com)
+        by fanzine.igalia.com with esmtps 
+        (Cipher TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128) (Exim)
+        id 1kAY0Y-0006qR-Uy; Tue, 25 Aug 2020 14:24:58 +0200
+Received: from berto by mail.igalia.com with local (Exim)
+        id 1kAY0Y-0000Kq-LT; Tue, 25 Aug 2020 14:24:58 +0200
+From:   Alberto Garcia <berto@igalia.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>, Kevin Wolf <kwolf@redhat.com>,
+        Vladimir Sementsov-Ogievskiy <vsementsov@virtuozzo.com>,
+        qemu-block@nongnu.org, qemu-devel@nongnu.org,
+        Max Reitz <mreitz@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/1] qcow2: Skip copy-on-write when allocating a zero cluster
+In-Reply-To: <20200821170232.GA220086@bfoster>
+References: <w518sedz3td.fsf@maestria.local.igalia.com> <20200817155307.GS11402@linux.fritz.box> <w51pn7memr7.fsf@maestria.local.igalia.com> <20200819150711.GE10272@linux.fritz.box> <20200819175300.GA141399@bfoster> <w51v9hdultt.fsf@maestria.local.igalia.com> <20200820215811.GC7941@dread.disaster.area> <20200821110506.GB212879@bfoster> <w51364gjkcj.fsf@maestria.local.igalia.com> <w51zh6oi4en.fsf@maestria.local.igalia.com> <20200821170232.GA220086@bfoster>
+User-Agent: Notmuch/0.18.2 (http://notmuchmail.org) Emacs/24.4.1 (i586-pc-linux-gnu)
+Date:   Tue, 25 Aug 2020 14:24:58 +0200
+Message-ID: <w51d03evrol.fsf@maestria.local.igalia.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Really nice improvements here.
+On Fri 21 Aug 2020 07:02:32 PM CEST, Brian Foster wrote:
+>> I was running fio with --ramp_time=5 which ignores the first 5 seconds
+>> of data in order to let performance settle, but if I remove that I can
+>> see the effect more clearly. I can observe it with raw files (in 'off'
+>> and 'prealloc' modes) and qcow2 files in 'prealloc' mode. With qcow2 and
+>> preallocation=off the performance is stable during the whole test.
+>
+> That's interesting. I ran your fio command (without --ramp_time and
+> with --runtime=5m) against a file on XFS (so no qcow2, no zero_range)
+> once with sparse file with a 64k extent size hint and again with a
+> fully preallocated 25GB file and I saw similar results in terms of the
+> delta.  This was just against an SSD backed vdisk in my local dev VM,
+> but I saw ~5800 iops for the full preallocation test and ~6200 iops
+> with the extent size hint.
+>
+> I do notice an initial iops burst as described for both tests, so I
+> switched to use a 60s ramp time and 60s runtime. With that longer ramp
+> up time, I see ~5000 iops with the 64k extent size hint and ~5500 iops
+> with the full 25GB prealloc. Perhaps the unexpected performance delta
+> with qcow2 is similarly transient towards the start of the test and
+> the runtime is short enough that it skews the final results..?
 
-Reviewed-by: William Kucharski <william.kucharski@oracle.com>
+I also tried running directly against a file on xfs (no qcow2, no VMs)
+but it doesn't really matter whether I use --ramp_time=5 or 60.
 
-> On Aug 24, 2020, at 9:16 AM, Matthew Wilcox (Oracle) =
-<willy@infradead.org> wrote:
->=20
-> As promised earlier [1], here are the patches which I would like to
-> merge into 5.11 to support THPs.  They depend on that earlier series.
-> If there's anything in here that you'd like to see pulled out and =
-added
-> to that earlier series, let me know.
->=20
-> There are a couple of pieces in here which aren't exactly part of
-> iomap, but I think make sense to take through the iomap tree.
->=20
-> [1] =
-https://lore.kernel.org/linux-fsdevel/20200824145511.10500-1-willy@infrade=
-ad.org/
->=20
-> Matthew Wilcox (Oracle) (11):
->  fs: Make page_mkwrite_check_truncate thp-aware
->  mm: Support THPs in zero_user_segments
->  mm: Zero the head page, not the tail page
->  block: Add bio_for_each_thp_segment_all
->  iomap: Support THPs in iomap_adjust_read_range
->  iomap: Support THPs in invalidatepage
->  iomap: Support THPs in read paths
->  iomap: Change iomap_write_begin calling convention
->  iomap: Support THPs in write paths
->  iomap: Inline data shouldn't see THPs
->  iomap: Handle tail pages in iomap_page_mkwrite
->=20
-> fs/iomap/buffered-io.c  | 178 ++++++++++++++++++++++++----------------
-> include/linux/bio.h     |  13 +++
-> include/linux/bvec.h    |  27 ++++++
-> include/linux/highmem.h |  15 +++-
-> include/linux/pagemap.h |  10 +--
-> mm/highmem.c            |  62 +++++++++++++-
-> mm/shmem.c              |   7 ++
-> mm/truncate.c           |   7 ++
-> 8 files changed, 236 insertions(+), 83 deletions(-)
->=20
-> --=20
-> 2.28.0
->=20
->=20
+Here are the results:
 
+|---------------+-------+-------|
+| preallocation |   xfs |  ext4 |
+|---------------+-------+-------|
+| off           |  7277 | 43260 |
+| fallocate     |  7299 | 42810 |
+| full          | 88404 | 83197 |
+|---------------+-------+-------|
+
+I ran the first case (no preallocation) for 5 minutes and I said there's
+a peak during the first 5 seconds, but then the number remains under 10k
+IOPS for the rest of the 5 minutes.
+
+Berto
