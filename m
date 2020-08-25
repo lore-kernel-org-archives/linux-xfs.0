@@ -2,87 +2,68 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3977C433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 21:10:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCEFBC433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:05:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2A2E20665
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 21:10:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o1+Ga/3+"
+	by mail.kernel.org (Postfix) with ESMTP id C374B20706
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:05:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726542AbgHYVKz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 17:10:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39448 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726149AbgHYVKx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 17:10:53 -0400
-Received: from mail-ej1-x635.google.com (mail-ej1-x635.google.com [IPv6:2a00:1450:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0C4AC061574
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Aug 2020 14:10:52 -0700 (PDT)
-Received: by mail-ej1-x635.google.com with SMTP id d26so10253ejr.1
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Aug 2020 14:10:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
-        bh=M61YkM2EGZM7C+AO87egaaUA1bKcbiaDgTY2Z2xt/1E=;
-        b=o1+Ga/3+vG4PKIXBhnjvOF5prfySob+Zzq+3ml09CSzQQYHE8gdwHaZliOs5WeEMOB
-         /lj8GuMHA6cHpLBbl0GSd6ygzopcZlmiobNRNtMVkUfArhOhKTMdzRo68tIysMk2g3wI
-         oW3gGhiDe7ayp4QFEzsQ4a/JGi1OIU5LFBNhb4gTyBatCBFzoOYiCIcpDp+ECDRhqO0O
-         W3AdsA/X30hUoEgGVSp5xBi7OvFaRBbJUxCgBqmWzVOXBGYUtcveUOxHTgpYYtl4Y/5S
-         xP05ZFF9mbezgLvfhGzrgxYezhbwMsEkvmbxzXRnm8a38IMVmtMpxn6L7n4bv6XrpvBP
-         un8Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=M61YkM2EGZM7C+AO87egaaUA1bKcbiaDgTY2Z2xt/1E=;
-        b=DIvd9TRzG4vVqy8OHU+kUnBfkn6u2xRn920w+Qv0xflgMYEW5TC+c5DoleUlAUzvta
-         M8G0jT4nbmr1SZY0jtSSbC7AYmtlKtQ/THRPpXCX/w2Sd8UYAKm3VEhljpuvF/KZ4Fc5
-         cTvxq+wLg6x1Nu7CsoAwK9dhYDa9P397CWGahPRs6xpX0/b5uS5uZ/c/6PcftIrt0Z4u
-         Ip7ockMhDwLKOpFc8by4cmTiZ/n7jDAjdoCuX2fCWNmppYTn9iquomHSxZX2Z716a7qL
-         +teuPZ2GNqsTebF6e18Ecv9x2nhNC3FdvCeSuZ5EuzTyOvx24sbFKqLIU/vuKmOXRGdu
-         CwrA==
-X-Gm-Message-State: AOAM5318teaia34FNehNGwyyfQ3w+7lXXT/a8q6FhGh7udOFuMliaqqf
-        48nUwcqZSMxSngdv8yN6zMYDSL1TWQ==
-X-Google-Smtp-Source: ABdhPJyOp2ieRNfsu+2E3EFLqHWekRIAbODJGn+pSjsR3EIrE6WSALeNWEVBKLUkpORtoi46at8l6w==
-X-Received: by 2002:a17:906:a085:: with SMTP id q5mr12319275ejy.136.1598389851377;
-        Tue, 25 Aug 2020 14:10:51 -0700 (PDT)
-Received: from localhost.localdomain ([46.53.251.143])
-        by smtp.gmail.com with ESMTPSA id ca3sm157967edb.72.2020.08.25.14.10.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Aug 2020 14:10:50 -0700 (PDT)
-Date:   Wed, 26 Aug 2020 00:10:48 +0300
-From:   Alexey Dobriyan <adobriyan@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com
-Subject: "signed < sizeof()" bug in xfs_attr_shortform_verify() ?
-Message-ID: <20200825211048.GA2162993@localhost.localdomain>
+        id S1726471AbgHYWF3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 18:05:29 -0400
+Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:53878 "EHLO
+        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726303AbgHYWF3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 18:05:29 -0400
+Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
+        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 13A45D7D47D;
+        Wed, 26 Aug 2020 08:05:24 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kAh4E-0000RK-Vc; Wed, 26 Aug 2020 08:05:22 +1000
+Date:   Wed, 26 Aug 2020 08:05:22 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Andreas Dilger <adilger@dilger.ca>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 9/9] iomap: Change calling convention for zeroing
+Message-ID: <20200825220522.GO12131@dread.disaster.area>
+References: <20200824145511.10500-1-willy@infradead.org>
+ <20200824145511.10500-10-willy@infradead.org>
+ <20200825002735.GI12131@dread.disaster.area>
+ <20200825032603.GL17456@casper.infradead.org>
+ <E47B2C68-43F2-496F-AA91-A83EB3D91F28@dilger.ca>
+ <20200825042711.GL12131@dread.disaster.area>
+ <20200825124024.GN17456@casper.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20200825124024.GN17456@casper.infradead.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0 cx=a_idp_d
+        a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
+        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=7-415B0cAAAA:8
+        a=2U9gKF9mzcrskAPIHE4A:9 a=CjuIK1q_8ugA:10 a=n3xvM8a_0i4A:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_attr_shortform_verify() contains the following code:
+On Tue, Aug 25, 2020 at 01:40:24PM +0100, Matthew Wilcox wrote:
+> Any objection to leaving this patch as-is with a u64 length?
 
+No objection here - I just wanted to make sure that signed/unsigned
+overflow was not going to be an issue...
 
-	int64_t size = ifp->if_bytes;
-        /*
-         * Give up if the attribute is way too short.
-         */
-        if (size < sizeof(struct xfs_attr_sf_hdr))
-                return __this_address;
+Cheers,
 
-
-In general "if (signed < sizeof())" is wrong because of how type
-promotions work. Such check won't catch small negative values.
-
-I don't know XFS well enough to know if negative values were excluded
-somewhere above the callchain, but maybe someone else does.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
