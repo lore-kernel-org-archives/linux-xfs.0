@@ -2,77 +2,86 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CFE8C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:37:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D8CC433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:41:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 639D5206EB
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:37:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB4D0206EB
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 22:41:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726580AbgHYWhL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 18:37:11 -0400
-Received: from mail109.syd.optusnet.com.au ([211.29.132.80]:42271 "EHLO
-        mail109.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726466AbgHYWhJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 18:37:09 -0400
+        id S1726483AbgHYWlr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 18:41:47 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53341 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726466AbgHYWlr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 18:41:47 -0400
 Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
-        by mail109.syd.optusnet.com.au (Postfix) with ESMTPS id 933DFD7C82B;
-        Wed, 26 Aug 2020 08:37:07 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 33E3A8233CE;
+        Wed, 26 Aug 2020 08:41:45 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kAhYw-0000WR-MH; Wed, 26 Aug 2020 08:37:06 +1000
-Date:   Wed, 26 Aug 2020 08:37:06 +1000
+        id 1kAhdQ-0000X5-Fm; Wed, 26 Aug 2020 08:41:44 +1000
+Date:   Wed, 26 Aug 2020 08:41:44 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Carlos Maiolino <cmaiolino@redhat.com>
+To:     Eric Sandeen <sandeen@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Remove kmem_zalloc_large()
-Message-ID: <20200825223706.GR12131@dread.disaster.area>
-References: <20200825143458.41887-1-cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: fix boundary test in xfs_attr_shortform_verify
+Message-ID: <20200825224144.GS12131@dread.disaster.area>
+References: <63722af5-2d8d-2455-17ee-988defd3126f@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200825143458.41887-1-cmaiolino@redhat.com>
+In-Reply-To: <63722af5-2d8d-2455-17ee-988defd3126f@redhat.com>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=QIgWuTDL c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=QKgWuTDL c=1 sm=1 tr=0 cx=a_idp_d
         a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
         a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=tGE-6bYUNIfWuXT9wxAA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=9fyAema9bXBvwAnuQNcA:9 a=MhcgDuqDX5QtXdhj:21 a=U7NfGzJuHbRGv60s:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 04:34:58PM +0200, Carlos Maiolino wrote:
-> This patch aims to replace kmem_zalloc_large() with global kernel memory
-> API. So, all its callers are now using kvzalloc() directly, so kmalloc()
-> fallsback to vmalloc() automatically.
+On Tue, Aug 25, 2020 at 03:25:29PM -0500, Eric Sandeen wrote:
+> The boundary test for the fixed-offset parts of xfs_attr_sf_entry
+> in xfs_attr_shortform_verify is off by one.  endp is the address
+> just past the end of the valid data; to check the last byte of
+> a structure at offset of size "size" we must subtract one.
+> (i.e. for an object at offset 10, size 4, last byte is 13 not 14).
 > 
-> __GFP_RETRY_MAYFAIL has been set because according to memory documentation,
-> it should be used in case kmalloc() is preferred over vmalloc().
+> This can be shown by:
 > 
-> Patch survives xfstests with large (32GiB) and small (4GiB) RAM memory amounts.
+> # touch file
+> # setfattr -n root.a file
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> and subsequent verifications will fail when it's reread from disk.
+> 
+> This only matters for a last attribute which has a single-byte name
+> and no value, otherwise the combination of namelen & valuelen will
+> push endp out and this test won't fail.
+> 
+> Fixes: 1e1bbd8e7ee06 ("xfs: create structure verifier function for shortform xattrs")
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  fs/xfs/kmem.h          | 6 ------
->  fs/xfs/scrub/symlink.c | 4 +++-
->  fs/xfs/xfs_acl.c       | 3 ++-
->  fs/xfs/xfs_ioctl.c     | 5 +++--
->  fs/xfs/xfs_rtalloc.c   | 3 ++-
->  5 files changed, 10 insertions(+), 11 deletions(-)
 > 
-> I'm not entirely sure passing __GFP_RETRY_MAYFAIL is the right thing to do here,
-> but since current api attempts a kmalloc before falling back to vmalloc, it
-> seems to be correct to pass it.
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 8623c815164a..a0cf22f0c904 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -1037,7 +1037,7 @@ xfs_attr_shortform_verify(
+>  		 * Check the fixed-offset parts of the structure are
+>  		 * within the data buffer.
+>  		 */
+> -		if (((char *)sfep + sizeof(*sfep)) >= endp)
+> +		if (((char *)sfep + sizeof(*sfep)-1) >= endp)
 
-I don't think __GFP_RETRY_MAYFAIL is necessary. If the allocation is
-larger than ALLOC_ORDER_COSTLY (8 pages, I think) then kmalloc()
-will fail rather than retry forever and then it falls back to
-vmalloc. Hence I don't think we need to tell the kmalloc() it needs
-to fail large allocations if it can't make progress...
+whitespace? And a comment explaining the magic "- 1" would be nice.
+
+Did you audit the code for other occurrences of this same problem?
 
 Cheers,
 
