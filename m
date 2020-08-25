@@ -2,181 +2,129 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 344ECC433E1
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 16:22:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87F69C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 16:54:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEC1E20786
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 16:22:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598372544;
-	bh=Ob6Ya4sG/9TFYtRrP6g9VXPseZ2X38wAlcrlrPayfhY=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
-	b=GDtRjVSosSk8RIwG6HqzmrxX9oNu9dwcH2p3h48fWtZ8ALcUHCgaWylG0k2ea/rdp
-	 4zhABpkx25D5inObxjZ1eBAfwWxFDfcYkLLx3W9B/w1IisNjm5ZlPSJ367xHJpc6Y6
-	 ip44T0bDrPtT+06OIM/DCKijpjGrtlSQEMuHklyg=
+	by mail.kernel.org (Postfix) with ESMTP id 4E6DA2075F
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 16:54:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eYV0pmfO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727040AbgHYQWW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 12:22:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54614 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725805AbgHYQWV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Aug 2020 12:22:21 -0400
-Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726187AbgHYQy0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 12:54:26 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:37721 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726104AbgHYQyY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 12:54:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598374462;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=wECHHcRasIiEBwmQBh1AMtTtR0cT1Rkt61KaI1O3MeI=;
+        b=eYV0pmfOKMC3aDeZPL2bi0WBLYXRKzSRJNT9usAwyv20PtF/y6NkmDNtFk9xLPcrjYQcGr
+        Ck4824bwMie6d9o0OJ0bm1DcjDuM33bZ+GjgCmSvcf9kdAO527U31Rf/4Z7YhEsPJCGbEl
+        ePSYO/6II9BE+hADrWhKWlMQ0G7rpug=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-536-5OBC34NzOBubylbRk_5iZQ-1; Tue, 25 Aug 2020 12:54:20 -0400
+X-MC-Unique: 5OBC34NzOBubylbRk_5iZQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 204672076C;
-        Tue, 25 Aug 2020 16:22:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598372540;
-        bh=Ob6Ya4sG/9TFYtRrP6g9VXPseZ2X38wAlcrlrPayfhY=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=yj+xSLQWrJYsteoxUDzI4203SRM4N7vwTUF/ZLxu3kZZTD61PsVNefCJ2heTYdXez
-         ZjUPhgm7YB7fwVIZoz++Avg+NgquXhY3ARdasGto7IuSRSJT7cNRqt1af9BdF/Zw0o
-         sQQn//fM6Q7RI/4QY5VStkEfy1CYo69EUGd8g2to=
-Message-ID: <578fb1e557d1990f768b7fdf5c6e4505db4c24e6.camel@kernel.org>
-Subject: Re: [PATCH v2] fs/ceph: use pipe_get_pages_alloc() for pipe
-From:   Jeff Layton <jlayton@kernel.org>
-To:     John Hubbard <jhubbard@nvidia.com>, willy@infradead.org
-Cc:     akpm@linux-foundation.org, axboe@kernel.dk,
-        ceph-devel@vger.kernel.org, hch@infradead.org, idryomov@gmail.com,
-        linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk,
-        "Yan, Zheng" <ukernel@gmail.com>
-Date:   Tue, 25 Aug 2020 12:22:17 -0400
-In-Reply-To: <20200825012034.1962362-1-jhubbard@nvidia.com>
-References: <20200824185400.GE17456@casper.infradead.org>
-         <20200825012034.1962362-1-jhubbard@nvidia.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5B6E2189E607;
+        Tue, 25 Aug 2020 16:54:19 +0000 (UTC)
+Received: from bfoster (ovpn-112-11.rdu2.redhat.com [10.10.112.11])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 67E35747D1;
+        Tue, 25 Aug 2020 16:54:17 +0000 (UTC)
+Date:   Tue, 25 Aug 2020 12:54:15 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Alberto Garcia <berto@igalia.com>
+Cc:     Dave Chinner <david@fromorbit.com>, Kevin Wolf <kwolf@redhat.com>,
+        Vladimir Sementsov-Ogievskiy <vsementsov@virtuozzo.com>,
+        qemu-block@nongnu.org, qemu-devel@nongnu.org,
+        Max Reitz <mreitz@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/1] qcow2: Skip copy-on-write when allocating a zero
+ cluster
+Message-ID: <20200825165415.GB321765@bfoster>
+References: <w51pn7memr7.fsf@maestria.local.igalia.com>
+ <20200819150711.GE10272@linux.fritz.box>
+ <20200819175300.GA141399@bfoster>
+ <w51v9hdultt.fsf@maestria.local.igalia.com>
+ <20200820215811.GC7941@dread.disaster.area>
+ <20200821110506.GB212879@bfoster>
+ <w51364gjkcj.fsf@maestria.local.igalia.com>
+ <w51zh6oi4en.fsf@maestria.local.igalia.com>
+ <20200821170232.GA220086@bfoster>
+ <w51d03evrol.fsf@maestria.local.igalia.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <w51d03evrol.fsf@maestria.local.igalia.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, 2020-08-24 at 18:20 -0700, John Hubbard wrote:
-> This reduces, by one, the number of callers of iov_iter_get_pages().
-> That's helpful because these calls are being audited and converted over
-> to use iov_iter_pin_user_pages(), where applicable. And this one here is
-> already known by the caller to be only for ITER_PIPE, so let's just
-> simplify it now.
+On Tue, Aug 25, 2020 at 02:24:58PM +0200, Alberto Garcia wrote:
+> On Fri 21 Aug 2020 07:02:32 PM CEST, Brian Foster wrote:
+> >> I was running fio with --ramp_time=5 which ignores the first 5 seconds
+> >> of data in order to let performance settle, but if I remove that I can
+> >> see the effect more clearly. I can observe it with raw files (in 'off'
+> >> and 'prealloc' modes) and qcow2 files in 'prealloc' mode. With qcow2 and
+> >> preallocation=off the performance is stable during the whole test.
+> >
+> > That's interesting. I ran your fio command (without --ramp_time and
+> > with --runtime=5m) against a file on XFS (so no qcow2, no zero_range)
+> > once with sparse file with a 64k extent size hint and again with a
+> > fully preallocated 25GB file and I saw similar results in terms of the
+> > delta.  This was just against an SSD backed vdisk in my local dev VM,
+> > but I saw ~5800 iops for the full preallocation test and ~6200 iops
+> > with the extent size hint.
+> >
+> > I do notice an initial iops burst as described for both tests, so I
+> > switched to use a 60s ramp time and 60s runtime. With that longer ramp
+> > up time, I see ~5000 iops with the 64k extent size hint and ~5500 iops
+> > with the full 25GB prealloc. Perhaps the unexpected performance delta
+> > with qcow2 is similarly transient towards the start of the test and
+> > the runtime is short enough that it skews the final results..?
 > 
-> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
-> ---
+> I also tried running directly against a file on xfs (no qcow2, no VMs)
+> but it doesn't really matter whether I use --ramp_time=5 or 60.
 > 
-> OK, here's a v2 that does EXPORT_SYMBOL_GPL, instead of EXPORT_SYMBOL,
-> that's the only change from v1. That should help give this patch a
-> clear bill of passage. :)
+> Here are the results:
 > 
-> thanks,
-> John Hubbard
-> NVIDIA
+> |---------------+-------+-------|
+> | preallocation |   xfs |  ext4 |
+> |---------------+-------+-------|
+> | off           |  7277 | 43260 |
+> | fallocate     |  7299 | 42810 |
+> | full          | 88404 | 83197 |
+> |---------------+-------+-------|
 > 
->  fs/ceph/file.c      | 3 +--
->  include/linux/uio.h | 3 ++-
->  lib/iov_iter.c      | 6 +++---
->  3 files changed, 6 insertions(+), 6 deletions(-)
+> I ran the first case (no preallocation) for 5 minutes and I said there's
+> a peak during the first 5 seconds, but then the number remains under 10k
+> IOPS for the rest of the 5 minutes.
 > 
-> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-> index d51c3f2fdca0..d3d7dd957390 100644
-> --- a/fs/ceph/file.c
-> +++ b/fs/ceph/file.c
-> @@ -879,8 +879,7 @@ static ssize_t ceph_sync_read(struct kiocb *iocb, struct iov_iter *to,
->  		more = len < iov_iter_count(to);
->  
->  		if (unlikely(iov_iter_is_pipe(to))) {
-> -			ret = iov_iter_get_pages_alloc(to, &pages, len,
-> -						       &page_off);
-> +			ret = pipe_get_pages_alloc(to, &pages, len, &page_off);
->  			if (ret <= 0) {
->  				ceph_osdc_put_request(req);
->  				ret = -ENOMEM;
-> diff --git a/include/linux/uio.h b/include/linux/uio.h
-> index 3835a8a8e9ea..270a4dcf5453 100644
-> --- a/include/linux/uio.h
-> +++ b/include/linux/uio.h
-> @@ -226,7 +226,8 @@ ssize_t iov_iter_get_pages(struct iov_iter *i, struct page **pages,
->  ssize_t iov_iter_get_pages_alloc(struct iov_iter *i, struct page ***pages,
->  			size_t maxsize, size_t *start);
->  int iov_iter_npages(const struct iov_iter *i, int maxpages);
-> -
-> +ssize_t pipe_get_pages_alloc(struct iov_iter *i, struct page ***pages,
-> +			     size_t maxsize, size_t *start);
->  const void *dup_iter(struct iov_iter *new, struct iov_iter *old, gfp_t flags);
->  
->  static inline size_t iov_iter_count(const struct iov_iter *i)
-> diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-> index 5e40786c8f12..6290998df480 100644
-> --- a/lib/iov_iter.c
-> +++ b/lib/iov_iter.c
-> @@ -1355,9 +1355,8 @@ static struct page **get_pages_array(size_t n)
->  	return kvmalloc_array(n, sizeof(struct page *), GFP_KERNEL);
->  }
->  
-> -static ssize_t pipe_get_pages_alloc(struct iov_iter *i,
-> -		   struct page ***pages, size_t maxsize,
-> -		   size_t *start)
-> +ssize_t pipe_get_pages_alloc(struct iov_iter *i, struct page ***pages,
-> +			     size_t maxsize, size_t *start)
->  {
->  	struct page **p;
->  	unsigned int iter_head, npages;
-> @@ -1387,6 +1386,7 @@ static ssize_t pipe_get_pages_alloc(struct iov_iter *i,
->  		kvfree(p);
->  	return n;
->  }
-> +EXPORT_SYMBOL_GPL(pipe_get_pages_alloc);
->  
->  ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
->  		   struct page ***pages, size_t maxsize,
 
-Thanks. I've got a v1 of this in the ceph-client/testing branch and it
-seems fine so far.
+I don't think we're talking about the same thing. I was referring to the
+difference between full file preallocation and the extent size hint in
+XFS, and how the latter was faster with the shorter ramp time but that
+swapped around when the test ramped up for longer. Here, it looks like
+you're comparing XFS to ext4 writing direct to a file..
 
-I'd prefer an ack from Al on one or the other though, since I'm not sure
-he wants to expose this primitive, and in the past he hasn't been
-enamored with EXPORT_SYMBOL_GPL, because its meaning wasn't well
-defined. Maybe that's changed since.
+If I compare this 5m fio test between XFS and ext4 on a couple of my
+systems (with either no prealloc or full file prealloc), I end up seeing
+ext4 run slightly faster on my vm and XFS slightly faster on bare metal.
+Either way, I don't see that huge disparity where ext4 is 5-6 times
+faster than XFS. Can you describe the test, filesystem and storage in
+detail where you observe such a discrepancy?
 
-As a side note, Al also asked privately why ceph special cases
-ITER_PIPE. I wasn't sure either, so I did a bit of git-archaeology. The
-change was added here:
-
----------------------------8<---------------------------
-commit
-7ce469a53e7106acdaca2e25027941d0f7c12a8e
-Author: Yan, Zheng <zyan@redhat.com>
-Date:   Tue Nov 8 21:54:34 2016 +0800
-
-    ceph: fix splice read for no Fc capability case
-    
-    When iov_iter type is ITER_PIPE, copy_page_to_iter() increases
-    the page's reference and add the page to a pipe_buffer. It also
-    set the pipe_buffer's ops to page_cache_pipe_buf_ops. The comfirm
-    callback in page_cache_pipe_buf_ops expects the page is from page
-    cache and uptodate, otherwise it return error.
-    
-    For ceph_sync_read() case, pages are not from page cache. So we
-    can't call copy_page_to_iter() when iov_iter type is ITER_PIPE.
-    The fix is using iov_iter_get_pages_alloc() to allocate pages
-    for the pipe. (the code is similar to default_file_splice_read)
-    
-    Signed-off-by: Yan, Zheng <zyan@redhat.com>
----------------------------8<---------------------------
-
-If we don't have Fc (FILE_CACHE) caps then the client's not allowed to
-cache data and so we can't use the pagecache. I'm not certain special
-casing pipes in ceph, is the best approach to handle that, but the
-confirm callback still seems to work the same way today.
-
-Cheers,
--- 
-Jeff Layton <jlayton@kernel.org>
+Brian
 
