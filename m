@@ -2,109 +2,142 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88781C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 17:32:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91633C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 19:47:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6AE992076C
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 17:32:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F6372074D
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 19:47:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZZkb0ejq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726180AbgHYRcJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 13:32:09 -0400
-Received: from sandeen.net ([63.231.237.45]:34770 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726090AbgHYRcJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Aug 2020 13:32:09 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726542AbgHYTrf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 15:47:35 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:37306 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726090AbgHYTre (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 15:47:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598384853;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=kpNcf7z1kt5bCNe5xLbtO4jyioxa3rzabBYBmt8aO2c=;
+        b=ZZkb0ejqL3yIYpzXCOGbb7Ld49JISNUS5Num/Y8N7IkjJnSxo56/eJgwqDWOdyffWP4ZbZ
+        C/GoefXOfurD096MwidNyt+INGHv7Hjc8jBiEJlUNJUUM4GUOQy2rhNt3Fxd7mi3WYm44f
+        GBa7+kcYH8HJq+IlrJyIM5PvhbrsTj8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-34-PrCzxna_NCSqLNv5WZdDWw-1; Tue, 25 Aug 2020 15:47:30 -0400
+X-MC-Unique: PrCzxna_NCSqLNv5WZdDWw-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 706D1EF4;
-        Tue, 25 Aug 2020 12:31:58 -0500 (CDT)
-Subject: Re: [PATCH 0/6] xfsprogs: blockdev dax detection and warnings
-To:     Anthony Iliopoulos <ailiop@suse.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-References: <20200824203724.13477-1-ailiop@suse.com>
- <20200824225533.GA12131@dread.disaster.area>
- <4aa834dd-5220-6312-e28f-1a94a56b1cc0@sandeen.net>
- <20200825150915.GD3357@technoir>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2200404f-acdb-690c-a0ac-540f7d93902f@sandeen.net>
-Date:   Tue, 25 Aug 2020 12:32:07 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.1.1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7C4EAF6C0C;
+        Tue, 25 Aug 2020 19:47:27 +0000 (UTC)
+Received: from bfoster (ovpn-112-11.rdu2.redhat.com [10.10.112.11])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 77B1B6198E;
+        Tue, 25 Aug 2020 19:47:26 +0000 (UTC)
+Date:   Tue, 25 Aug 2020 15:47:24 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Alberto Garcia <berto@igalia.com>
+Cc:     Dave Chinner <david@fromorbit.com>, Kevin Wolf <kwolf@redhat.com>,
+        Vladimir Sementsov-Ogievskiy <vsementsov@virtuozzo.com>,
+        qemu-block@nongnu.org, qemu-devel@nongnu.org,
+        Max Reitz <mreitz@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 0/1] qcow2: Skip copy-on-write when allocating a zero
+ cluster
+Message-ID: <20200825194724.GA338144@bfoster>
+References: <20200819175300.GA141399@bfoster>
+ <w51v9hdultt.fsf@maestria.local.igalia.com>
+ <20200820215811.GC7941@dread.disaster.area>
+ <20200821110506.GB212879@bfoster>
+ <w51364gjkcj.fsf@maestria.local.igalia.com>
+ <w51zh6oi4en.fsf@maestria.local.igalia.com>
+ <20200821170232.GA220086@bfoster>
+ <w51d03evrol.fsf@maestria.local.igalia.com>
+ <20200825165415.GB321765@bfoster>
+ <w51d03etzj8.fsf@maestria.local.igalia.com>
 MIME-Version: 1.0
-In-Reply-To: <20200825150915.GD3357@technoir>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <w51d03etzj8.fsf@maestria.local.igalia.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/25/20 10:09 AM, Anthony Iliopoulos wrote:
-> On Tue, Aug 25, 2020 at 08:59:39AM -0500, Eric Sandeen wrote:
->> On 8/24/20 5:55 PM, Dave Chinner wrote:
->>> I agree that mkfs needs to be aware of DAX capability of the block
->>> device, but that capability existing should not cause mkfs to fail.
->>> If we want users to be able to direct mkfs to to create a DAX
->>> capable filesystem then adding a -d dax option would be a better
->>> idea. This would direct mkfs to align/size all the data options to
->>> use a DAX compatible topology if blkid supports reporting the DAX
->>> topology. It would also do things like turn off reflink (until that
->>> is supported w/ DAX), etc.
->>>
->>> i.e. if the user knows they are going to use DAX (and they will)
->>> then they can tell mkfs to make a DAX compatible filesystem.
->>
->> FWIW, Darrick /just/ added a -d daxinherit option, though all it does
->> now is set the inheritable dax flag on the root dir, it doesn't enforce
->> things like page vs block size, etc.
+On Tue, Aug 25, 2020 at 07:18:19PM +0200, Alberto Garcia wrote:
+> On Tue 25 Aug 2020 06:54:15 PM CEST, Brian Foster wrote:
+> > If I compare this 5m fio test between XFS and ext4 on a couple of my
+> > systems (with either no prealloc or full file prealloc), I end up seeing
+> > ext4 run slightly faster on my vm and XFS slightly faster on bare metal.
+> > Either way, I don't see that huge disparity where ext4 is 5-6 times
+> > faster than XFS. Can you describe the test, filesystem and storage in
+> > detail where you observe such a discrepancy?
 > 
-> I am aware of that patch, but I considered the option to be somewhat
-> orthogonal, given that FS_XFLAG_DAX can be set (and inherited)
-> irrespective of dax support in the block device (and overridden via
-> mount opts if need be), so I didn't want to overload daxinherit.
-
-OK fair enough.
-
->> That change is currently staged in my local tree.
->>
->> I suppose we could condition that on other requirements, although we've
->> always had the ability to mkfs a filesystem that can't necessarily be
->> used on the current machine - i.e. you can make a 64k block size filesystem
->> on a 4k page machine, etc.  So I'm not sure we want to tie mkfs abilities
->> to the current mkfs environment....
+> Here's the test:
 > 
-> Agreed, so I suppose any dax option should be an opt-in, e.g. similar to
-> the -d dax=1 proposal. That won't prevent users from neglecting it and
-> creating a fs which will be later incompatible with -o dax, but that's a
-> different story I guess..
-
-I guess my overarching desire here is to not try to predict too much, or to
-make predictions that won't stand the test of time. Inferring what the admin
-wants can be tricky.  :)  
-
-I also want to be consistent; i.e. today we can mkfs a 64k block filesystem
-on a 4k block machine, and no warning is emitted. If we mkfs a V5/CRC filesystem
-or a reflink filesystem on an old kernel that doesn't support it, no warning is
-emitted.
-
-If we're going to warn every time when "this filesystem can't be used under the
-currently running kernel" then there are quite a lot of cases to handle... I
-don't want to warn about some things and not others, so we need to decide if
-this is actually something we want to do in general, not just for dax.  I'm 
-somewhat disinclined, TBH, and would rather rely on a mount failure to alert
-the admin to the problem.  (It's not like there are a lot of resources invested
-between mkfs & mount).
-
-I'll reread this thread & Dave's responses and give this some more thought.
-
-Thanks,
--Eric
-
-> - Anthony
+> fio --filename=/path/to/file.raw --direct=1 --randrepeat=1 \
+>     --eta=always --ioengine=libaio --iodepth=32 --numjobs=1 \
+>     --name=test --size=25G --io_limit=25G --ramp_time=0 \
+>     --rw=randwrite --bs=4k --runtime=300 --time_based=1
 > 
+
+My fio fallocates the entire file by default with this command. Is that
+the intent of this particular test? I added --fallocate=none to my test
+runs to incorporate the allocation cost in the I/Os.
+
+> The size of the XFS filesystem is 126 GB and it's almost empty, here's
+> the xfs_info output:
+> 
+> meta-data=/dev/vg/test           isize=512    agcount=4, agsize=8248576
+> blks
+>          =                       sectsz=512   attr=2, projid32bit=1
+>          =                       crc=1        finobt=1, sparse=1,
+>          rmapbt=0
+>          =                       reflink=0
+> data     =                       bsize=4096   blocks=32994304, imaxpct=25
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+> log      =internal log           bsize=4096   blocks=16110, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> The size of the ext4 filesystem is 99GB, of which 49GB are free (that
+> is, without the file used in this test). The filesystem uses 4KB
+> blocks, a 128M journal and these features:
+> 
+> Filesystem revision #:    1 (dynamic)
+> Filesystem features:      has_journal ext_attr resize_inode dir_index
+>                           filetype needs_recovery extent flex_bg
+>                           sparse_super large_file huge_file uninit_bg
+>                           dir_nlink extra_isize
+> Filesystem flags:         signed_directory_hash
+> Default mount options:    user_xattr acl
+> 
+> In both cases I'm using LVM on top of LUKS and the hard drive is a
+> Samsung SSD 850 PRO 1TB.
+> 
+> The Linux version is 4.19.132-1 from Debian.
+> 
+
+Thanks. I don't have LUKS in the mix on my box, but I was running on a
+more recent kernel (Fedora 5.7.15-100). I threw v4.19 on the box and saw
+a bit more of a delta between XFS (~14k iops) and ext4 (~24k). The same
+test shows ~17k iops for XFS and ~19k iops for ext4 on v5.7. If I
+increase the size of the LVM volume from 126G to >1TB, ext4 runs at
+roughly the same rate and XFS closes the gap to around ~19k iops as
+well. I'm not sure what might have changed since v4.19, but care to see
+if this is still an issue on a more recent kernel?
+
+Brian
+
+> Berto
+> 
+
