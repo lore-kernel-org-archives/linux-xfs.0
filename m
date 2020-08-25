@@ -2,139 +2,83 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 030AEC433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 00:42:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E22D7C433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 01:06:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0D2C2072D
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 00:42:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3D1C20738
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 01:06:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gw+T08pM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726531AbgHYAmL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 24 Aug 2020 20:42:11 -0400
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:59878 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726090AbgHYAmL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 20:42:11 -0400
-Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
-        by mail106.syd.optusnet.com.au (Postfix) with ESMTPS id 3BD726AFD27;
-        Tue, 25 Aug 2020 10:42:04 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kAN2J-0005pG-Kx; Tue, 25 Aug 2020 10:42:03 +1000
-Date:   Tue, 25 Aug 2020 10:42:03 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
-        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        willy@infradead.org
-Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
-Message-ID: <20200825004203.GJ12131@dread.disaster.area>
-References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
- <20200820231140.GE7941@dread.disaster.area>
- <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
- <20200821215358.GG7941@dread.disaster.area>
- <20200822131312.GA17997@infradead.org>
- <20200824142823.GA295033@bfoster>
- <20200824150417.GA12258@infradead.org>
- <20200824154841.GB295033@bfoster>
+        id S1726189AbgHYBGK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 24 Aug 2020 21:06:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48578 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726041AbgHYBGJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Aug 2020 21:06:09 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25A50C061574;
+        Mon, 24 Aug 2020 18:06:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=xzdunZmDdu/tuWxDqIrXIq5mvQShEvSrh2WBDyB9JHs=; b=Gw+T08pM8yf5l2lRbR+PV/GPw3
+        a6J9xQN1X7CiVASDZBWQD8ZppaZXqkQmDbsY581gBBycjBYuteqT7aX3oPt0ssNMy+zftlITNbp+P
+        ITlxwxxr9UGu+F9v2lAfvo5b2ObAkB3iIZ22h+r8F0dwJMaHQWi6kxy9YTjhtbUxsaLVjVgklnglb
+        NELmocqxLdHU+OcFcUVu4XvPPRjS0TB3CcOWM0qqvDwxP4nQ5RsHj5EQAxVxyD+Ows1Y9RwbcphjD
+        ZijhXNt5TQr9INGaJI6KBsKOO5ZSsAzSWygUjx7nkf06fpYBpEAViN0kTIPfg3jlRVePv7iGpfItQ
+        31Y9Ay2Q==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kANPZ-00088W-KT; Tue, 25 Aug 2020 01:06:05 +0000
+Date:   Tue, 25 Aug 2020 02:06:05 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 8/9] iomap: Convert iomap_write_end types
+Message-ID: <20200825010605.GJ17456@casper.infradead.org>
+References: <20200824145511.10500-1-willy@infradead.org>
+ <20200824145511.10500-9-willy@infradead.org>
+ <20200825001223.GH12131@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200824154841.GB295033@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=LPwYv6e9 c=1 sm=1 tr=0 cx=a_idp_d
-        a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=7-415B0cAAAA:8
-        a=6_Yu4yksRqBpIYSk360A:9 a=Cckdbgs5SKQHxyt1:21 a=uiPvv5w2ab8WhoyN:21
-        a=CjuIK1q_8ugA:10 a=igBNqPyMv6gA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200825001223.GH12131@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 24, 2020 at 11:48:41AM -0400, Brian Foster wrote:
-> On Mon, Aug 24, 2020 at 04:04:17PM +0100, Christoph Hellwig wrote:
-> > On Mon, Aug 24, 2020 at 10:28:23AM -0400, Brian Foster wrote:
-> > > Do I understand the current code (__bio_try_merge_page() ->
-> > > page_is_mergeable()) correctly in that we're checking for physical page
-> > > contiguity and not necessarily requiring a new bio_vec per physical
-> > > page?
-> > 
-> > 
-> > Yes.
-> > 
+On Tue, Aug 25, 2020 at 10:12:23AM +1000, Dave Chinner wrote:
+> > -static int
+> > -__iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+> > -		unsigned copied, struct page *page)
+> > +static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
+> > +		size_t copied, struct page *page)
+> >  {
 > 
-> Ok. I also realize now that this occurs on a kernel without commit
-> 07173c3ec276 ("block: enable multipage bvecs"). That is probably a
-> contributing factor, but it's not clear to me whether it's feasible to
-> backport whatever supporting infrastructure is required for that
-> mechanism to work (I suspect not).
-> 
-> > > With regard to Dave's earlier point around seeing excessively sized bio
-> > > chains.. If I set up a large memory box with high dirty mem ratios and
-> > > do contiguous buffered overwrites over a 32GB range followed by fsync, I
-> > > can see upwards of 1GB per bio and thus chains on the order of 32+ bios
-> > > for the entire write. If I play games with how the buffered overwrite is
-> > > submitted (i.e., in reverse) however, then I can occasionally reproduce
-> > > a ~32GB chain of ~32k bios, which I think is what leads to problems in
-> > > I/O completion on some systems. Granted, I don't reproduce soft lockup
-> > > issues on my system with that behavior, so perhaps there's more to that
-> > > particular issue.
-> > > 
-> > > Regardless, it seems reasonable to me to at least have a conservative
-> > > limit on the length of an ioend bio chain. Would anybody object to
-> > > iomap_ioend growing a chain counter and perhaps forcing into a new ioend
-> > > if we chain something like more than 1k bios at once?
-> > 
-> > So what exactly is the problem of processing a long chain in the
-> > workqueue vs multiple small chains?  Maybe we need a cond_resched()
-> > here and there, but I don't see how we'd substantially change behavior.
-> > 
-> 
-> The immediate problem is a watchdog lockup detection in bio completion:
-> 
->   NMI watchdog: Watchdog detected hard LOCKUP on cpu 25
-> 
-> This effectively lands at the following segment of iomap_finish_ioend():
-> 
-> 		...
->                /* walk each page on bio, ending page IO on them */
->                 bio_for_each_segment_all(bv, bio, iter_all)
->                         iomap_finish_page_writeback(inode, bv->bv_page, error);
-> 
-> I suppose we could add a cond_resched(), but is that safe directly
-> inside of a ->bi_end_io() handler? Another option could be to dump large
-> chains into the completion workqueue, but we may still need to track the
-> length to do that. Thoughts?
+> Please leave the function declarations formatted the same way as
+> they currently are. They are done that way intentionally so it is
+> easy to grep for function definitions. Not to mention is't much
+> easier to read than when the function name is commingled into the
+> multiline paramener list like...
 
-We have ioend completion merging that will run the compeltion once
-for all the pending ioend completions on that inode. IOWs, we do not
-need to build huge chains at submission time to batch up completions
-efficiently. However, huge bio chains at submission time do cause
-issues with writeback fairness, pinning GBs of ram as unreclaimable
-for seconds because they are queued for completion while we are
-still submitting the bio chain and submission is being throttled by
-the block layer writeback throttle, etc. Not to mention the latency
-of stable pages in a situation like this - a mmap() write fault
-could stall for many seconds waiting for a huge bio chain to finish
-submission and run completion processing even when the IO for the
-given page we faulted on was completed before the page fault
-occurred...
+I understand that's true for XFS, but it's not true throughout the
+rest of the kernel.  This file isn't even consistent:
 
-Hence I think we really do need to cap the length of the bio
-chains here so that we start completing and ending page writeback on
-large writeback ranges long before the writeback code finishes
-submitting the range it was asked to write back.
+buffered-io.c:static inline struct iomap_page *to_iomap_page(struct page *page)
+buffered-io.c:static inline bool iomap_block_needs_zeroing(struct inode
+buffered-io.c:static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+buffered-io.c:static void iomap_writepage_end_bio(struct bio *bio)
+buffered-io.c:static int __init iomap_init(void)
 
-Cheers,
+(i just grepped for ^static so there're other functions not covered by this)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The other fs/iomap/ files are equally inconsistent.
+
