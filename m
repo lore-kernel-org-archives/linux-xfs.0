@@ -2,146 +2,198 @@ Return-Path: <SRS0=ldVD=CD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAF37C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 08:48:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1AFC433E1
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 10:06:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA77F2065F
-	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 08:48:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 442792068E
+	for <linux-xfs@archiver.kernel.org>; Tue, 25 Aug 2020 10:06:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NHbdrLRN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728820AbgHYIsN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 04:48:13 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40314 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728124AbgHYIsL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Aug 2020 04:48:11 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id C25A0AC58;
-        Tue, 25 Aug 2020 08:48:39 +0000 (UTC)
-Date:   Tue, 25 Aug 2020 10:48:08 +0200
-From:   Anthony Iliopoulos <ailiop@suse.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/6] xfsprogs: blockdev dax detection and warnings
-Message-ID: <20200825084808.GC3357@technoir>
-References: <20200824203724.13477-1-ailiop@suse.com>
- <20200824225533.GA12131@dread.disaster.area>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200824225533.GA12131@dread.disaster.area>
+        id S1729456AbgHYKGr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 25 Aug 2020 06:06:47 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:31369 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726000AbgHYKGr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 06:06:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598350005;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
+        bh=cN3ogaTWLiUQM5qi6rq+x6SyLW5kXQnWEzTmvZKQ9EA=;
+        b=NHbdrLRNAr+4s+VVCWwl97TvhgvCd18PDVRFGLaOjGpsyhcoQBvsgT/uE44NwTJDyWX5Cv
+        0cXhbXkq/V55gfxgkuyKULr1dxwSoN5KRPDczfzgvVTfbXcifSripSEprZ6VG+znHhm+/p
+        gUHwgFHbfydJsdXg0pIXQbnZE68e284=
+Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
+ [209.85.215.197]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-262-y5Y9AGjcMA2B-MUv06nwqQ-1; Tue, 25 Aug 2020 06:06:43 -0400
+X-MC-Unique: y5Y9AGjcMA2B-MUv06nwqQ-1
+Received: by mail-pg1-f197.google.com with SMTP id k32so7482238pgm.15
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Aug 2020 03:06:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=cN3ogaTWLiUQM5qi6rq+x6SyLW5kXQnWEzTmvZKQ9EA=;
+        b=lGK0XIsXygK/TficXK3FyL9v0ppJuOxCzGp/DHV2Fb5GgR51L7u34fyewCwJ6oaxUH
+         ii46fcdGXP4ViDbUhUm9u2QYYK6uJWOvC4jYrSoHF6AEupWRZ82dYocnJF22CnIbT21R
+         JSRLSh9qLa7c4dBjFD0kel1tReqffe6C6583pzMm3pTKfQrQWf/SHDvdcB6/w7Hhs8Qs
+         gIbyo4R4mfotHsIzNs+b0ad7eZ+JQerymnVgYssNWauQdE8l/Hy9y5SVIDjBinSA0X5g
+         XTpouH7O7jweleqDJ6TcL9vPXOxUmSCwNDQDCVIihOizKql5kkNrUbhmMaolTKmGlmUe
+         yf4Q==
+X-Gm-Message-State: AOAM531+NQkXoopQXz4H3blkDqSPH+JJfpDp2uA+oM825imyPuZLwMIs
+        9nVsPeDsfJV2MgWgfV/dvRxLa9x8dw1VAFgCgQuaca1y5r5VLmn/kHHpmBmH7iIWKj+mjIX3l4q
+        n3b7CB306Tp44vCTneX8B
+X-Received: by 2002:a62:a203:: with SMTP id m3mr7020985pff.86.1598350002262;
+        Tue, 25 Aug 2020 03:06:42 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzcK2DQr+fqEP4sv0NVhQRkKqXhzEppbWXjWEuzWrGvIkEZTHz5Snx/8E7Fq7kPd7AUh9uFvQ==
+X-Received: by 2002:a62:a203:: with SMTP id m3mr7020971pff.86.1598350001960;
+        Tue, 25 Aug 2020 03:06:41 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id s125sm14499821pfb.125.2020.08.25.03.06.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Aug 2020 03:06:41 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH] xfs: use log_incompat feature instead of speculate matching
+Date:   Tue, 25 Aug 2020 18:06:01 +0800
+Message-Id: <20200825100601.2529-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.1
+In-Reply-To: <20200824154120.GA23868@xiangao.remote.csb>
+References: <20200824154120.GA23868@xiangao.remote.csb>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 08:55:33AM +1000, Dave Chinner wrote:
-> On Mon, Aug 24, 2020 at 10:37:18PM +0200, Anthony Iliopoulos wrote:
-> > Hi all,
-> > 
-> > This short series adds blockdev dax capability detection via libblkid,
-> > and subsequently uses this bit to warn on a couple of incompatible
-> > configurations during mkfs.
-> > 
-> > The first patch adds the detection capability to libtopology, and the
-> > following two patches add mkfs warnings that are issued when the fs
-> > block size is not matching the page size, and when reflink is being
-> > enabled in conjunction with dax.
-> 
-> This makes the assumption that anyone running mkfs on a dax capable
-> device is going to use DAX, and prevents mkfs from running if the
-> config is not DAX compatible.
-> 
-> The issue here is that making a filesystem that is not DAX
-> compatible on a DAX capable device is not a fatal error. The
-> filesystem will work just fine using buffered and direct IO, and
-> there are definitely workloads where we want to use buffered IO on
-> pmem and not DAX. Why? Because existing pmem is terribly slow for
-> write intensive applications compared to page cache based mmap().
-> And even buffered writes are faster than DAX direct writes because
-> the slow writeback is done in the background via async writeback.
-> 
-> Also, what happens if you have a 64kB page size? mkfs defaults to
-> 4kB block size, so with these changes mkfs will refuse to run on a
-> dax capable device unless the user specifically directs it to do
-> something different. That's not a good behaviour for the default
-> config to have....
-> 
-> Hence I don't think that preventing mkfs from running unless the config
-> is exactly waht DAX requires or the "force" option is set is the
-> right policy here.
-> 
-> I agree that mkfs needs to be aware of DAX capability of the block
-> device, but that capability existing should not cause mkfs to fail.
-> If we want users to be able to direct mkfs to to create a DAX
-> capable filesystem then adding a -d dax option would be a better
-> idea. This would direct mkfs to align/size all the data options to
-> use a DAX compatible topology if blkid supports reporting the DAX
-> topology. It would also do things like turn off reflink (until that
-> is supported w/ DAX), etc.
+Add a log_incompat (v5) or sb_features2 (v4) feature
+of a single long iunlinked list just to be safe. Hence,
+older kernels will refuse to replay log for v5 images
+or mount entirely for v4 images.
 
-I do like the idea of adding an explicit dax option, but I'm not sure
-what the right policy would be:
+If the current mount is in RO state, it will defer
+to the next RW (re)mount to add such flag instead.
 
-1. -d dax option specified, set dax-compatible parameters irrespective
-   of dax capability (blkid detection not strictly required)
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+---
+Different combinations have been tested (v4/v5 and before/after patch).
 
-2. -d dax option specified, set dax-compatible parameters only if
-   blockdev is dax capable; fallback to default params otherwise
+Based on the top of
+`[PATCH 13/13] xfs: reorder iunlink remove operation in xfs_ifree`
+https://lore.kernel.org/r/20200812092556.2567285-14-david@fromorbit.com
 
-3. autodetect dax capability and automatically set dax-compatible
-   params, irrespective of if the option is specified or not
-   (potentially also needs an explicit override option e.g. -d dax=0).
+Either folding or rearranging this patch would be okay.
 
-I'd be inclined to go with the second option which should lead to the
-least amount of surprises for users.
+Maybe xfsprogs could be also patched as well to change the default
+feature setting, but let me send out this first...
 
-Still, this doesn't address the exact thing I was trying to do (see
-below).
+(It's possible that I'm still missing something...
+ Kindly point out any time.)
 
-> i.e. if the user knows they are going to use DAX (and they will)
-> then they can tell mkfs to make a DAX compatible filesystem.
+ fs/xfs/libxfs/xfs_format.h | 29 +++++++++++++++++++++++++++--
+ fs/xfs/xfs_inode.c         |  2 +-
+ fs/xfs/xfs_mount.c         |  6 ++++++
+ 3 files changed, 34 insertions(+), 3 deletions(-)
 
-So I've been trying to prevent cases where users create a filesystem
-with the default params, go on to populate it, and at some later point
-of time find themselves wanting to mount it with dax only to realize
-that this is not possible without mkfs (most commonly due to the
-mismatch of the 64kB page size on ppc64). We could potentially just
-issue the warning and not force mkfs to bail out, but I'm afraid that
-warnings aren't very discernible and are easily missed. I do agree
-though that requiring an override may not be the best model here.
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 31b7ece985bb..a859fe601f6e 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -79,12 +79,14 @@ struct xfs_ifork;
+ #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
+ #define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
+ #define XFS_SB_VERSION2_FTYPE		0x00000200	/* inode type in dir */
++#define XFS_SB_VERSION2_NEW_IUNLINK	0x00000400	/* (v4) new iunlink */
+ 
+ #define	XFS_SB_VERSION2_OKBITS		\
+ 	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
+ 	 XFS_SB_VERSION2_ATTR2BIT	| \
+ 	 XFS_SB_VERSION2_PROJID32BIT	| \
+-	 XFS_SB_VERSION2_FTYPE)
++	 XFS_SB_VERSION2_FTYPE		| \
++	 XFS_SB_VERSION2_NEW_IUNLINK)
+ 
+ /* Maximum size of the xfs filesystem label, no terminating NULL */
+ #define XFSLABEL_MAX			12
+@@ -479,7 +481,9 @@ xfs_sb_has_incompat_feature(
+ 	return (sbp->sb_features_incompat & feature) != 0;
+ }
+ 
+-#define XFS_SB_FEAT_INCOMPAT_LOG_ALL 0
++#define XFS_SB_FEAT_INCOMPAT_LOG_NEW_IUNLINK	(1 << 0)
++#define XFS_SB_FEAT_INCOMPAT_LOG_ALL	\
++		(XFS_SB_FEAT_INCOMPAT_LOG_NEW_IUNLINK)
+ #define XFS_SB_FEAT_INCOMPAT_LOG_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_LOG_ALL
+ static inline bool
+ xfs_sb_has_incompat_log_feature(
+@@ -563,6 +567,27 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+ 		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+ }
+ 
++static inline bool xfs_sb_has_new_iunlink(struct xfs_sb *sbp)
++{
++	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5)
++		return sbp->sb_features_log_incompat &
++			XFS_SB_FEAT_INCOMPAT_LOG_NEW_IUNLINK;
++
++	return xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_NEW_IUNLINK);
++}
++
++static inline void xfs_sb_add_new_iunlink(struct xfs_sb *sbp)
++{
++	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) {
++		sbp->sb_features_log_incompat |=
++			XFS_SB_FEAT_INCOMPAT_LOG_NEW_IUNLINK;
++		return;
++	}
++	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
++	sbp->sb_features2 |= XFS_SB_VERSION2_NEW_IUNLINK;
++}
++
+ /*
+  * end of superblock version macros
+  */
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7ee778bcde06..1656ed7dcadf 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1952,7 +1952,7 @@ xfs_iunlink_update_bucket(
+ 	if (!log || log->l_flags & XLOG_RECOVERY_NEEDED) {
+ 		ASSERT(cur_agino != NULLAGINO);
+ 
+-		if (be32_to_cpu(agi->agi_unlinked[0]) != cur_agino)
++		if (!xfs_sb_has_new_iunlink(&mp->m_sb))
+ 			bucket_index = cur_agino % XFS_AGI_UNLINKED_BUCKETS;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index f28c969af272..a3b2e3c3d32f 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -836,6 +836,12 @@ xfs_mountfs(
+ 		goto out_fail_wait;
+ 	}
+ 
++	if (!xfs_sb_has_new_iunlink(sbp)) {
++		xfs_warn(mp, "will switch to long iunlinked list on r/w");
++		xfs_sb_add_new_iunlink(sbp);
++		mp->m_update_sb = true;
++	}
++
+ 	/* Make sure the summary counts are ok. */
+ 	error = xfs_check_summary_counts(mp);
+ 	if (error)
+-- 
+2.18.1
 
-Would it make sense to simply emit the warnings and drop the bail-out
-and override logic altogether?
-
-Alternatively the third option above (autodetection), would take care of
-those cases at the expense of overriding otherwise potentially desirable
-options (e.g. switching off reflink), which will come as a surprise to
-users that don't intent to use dax. I don't think this would be a good
-default policy.
-
-> > The next patch adds a new cli option that can be used to override
-> > warnings, and converts all warnings that can be forced to this option
-> > instead the overloaded -f option. This avoids cases where forcing a
-> > warning may also be implicitly forcing overwriting an existing
-> > partition.
->
-> I don't want both an "ignore warnings" and a "force" CLI option.
-> They both do the same thing - allow the user to override things that
-> are potentially destructive or result in an unusable config - so why
-> should we add the complexity of having a different "force" options
-> for every different possible thing that can be overridden?
-
-The rationale here was to only make a distinction between destructive
-and (conditionally) unusable, otherwise we would indeed need an override
-toggle per warning - which I totally agree is an overkill. If implicitly
-suppressing the destructive operation confirmation isn't a concern, then
-I'd definitely drop this patch.
-
-Thanks for the feedback!
-
-Anthony
