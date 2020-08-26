@@ -2,129 +2,157 @@ Return-Path: <SRS0=J8xT=CE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B3EFC433E1
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 10:18:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09611C433E1
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 10:33:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2772C2071E
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 10:18:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D342320786
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 10:33:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EkdaCMLU"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ND5g5xsm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728150AbgHZKSc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Aug 2020 06:18:32 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:25537 "EHLO
+        id S1728468AbgHZKdt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Aug 2020 06:33:49 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:21359 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728015AbgHZKSc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Aug 2020 06:18:32 -0400
+        with ESMTP id S1728132AbgHZKdq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Aug 2020 06:33:46 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1598437110;
+        s=mimecast20190719; t=1598438024;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=symE4wOkW6dLsN40iekObYaxC+uVi7Iqkfvk+tuiVfY=;
-        b=EkdaCMLUqXTdOJrmvkFQekkpDR5A3ehXmetAIAEJmy+rToGEMkXFhLMq6LTD82Fknq0Qgb
-        PjNMqNkXr33duA5W5BGwi/YC1xTIcVzA7cYYeyYaV7Q6FJOl/InBXbPxlViWbqJBFR2qm5
-        q2QezyPdAQPnuZzhegJJAa9BUvDyYqE=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-380-F5kR55AWM6qVTV7IBEzaIA-1; Wed, 26 Aug 2020 06:18:28 -0400
-X-MC-Unique: F5kR55AWM6qVTV7IBEzaIA-1
-Received: by mail-wr1-f70.google.com with SMTP id 89so354316wrr.15
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Aug 2020 03:18:28 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=symE4wOkW6dLsN40iekObYaxC+uVi7Iqkfvk+tuiVfY=;
-        b=XP2dagK4mfO9QbIg9kn1VBPvPPE67OczwoHuKLQre2v6Px2lx28zN5LdHwofSppmTI
-         sj1/uM7p7WvIeRdBYXCTygHclGH2ABrqEDw1Ynd1rXlUZm2druXkkJM9cPyJBeYy+CUh
-         mkoORekTVYYCPS9AYyHddIyqkf3yN4W3IuMg7CZtyL7a62XvLPcSNL+1BVPn0jpcVi57
-         kMRTzLsq0IgjSvjICtHqMj6m2XnZGUCSytFaaxxIdSLWJpYq9lOEGCfhfpW5Nary4ING
-         p8gKFcTPcdyDu1tOM3ci2+nN6IxETJybXt4vd3FjjzFfjlG3gGoR8hTM5UOBxVjC7N67
-         gstA==
-X-Gm-Message-State: AOAM533rTFhAPLS9S7F9Y9HI/+ibuc2wmsRaHdQVOSlzH0zstr3LoMUU
-        GZJ7p1G+4F3Pc6SHxFnswCbAJY9a+bdM9l+5gyqZxdr12AQMRYjvxWj6e68IX6Xs+PhyUbUORAq
-        2Je2AxMLPq7uZR1sGoq/v
-X-Received: by 2002:adf:94a5:: with SMTP id 34mr16086953wrr.198.1598437106817;
-        Wed, 26 Aug 2020 03:18:26 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwp8Ac1kS73ZJOIt3Om8WMt1zjRJH6Gz7jmviTCeZiDU8iUxBnV71XsOoKLa6ImCzaKfYkpBw==
-X-Received: by 2002:adf:94a5:: with SMTP id 34mr16086930wrr.198.1598437106593;
-        Wed, 26 Aug 2020 03:18:26 -0700 (PDT)
-Received: from eorzea (ip-89-102-9-109.net.upcbroadband.cz. [89.102.9.109])
-        by smtp.gmail.com with ESMTPSA id r16sm5601066wrv.33.2020.08.26.03.18.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 26 Aug 2020 03:18:26 -0700 (PDT)
-Date:   Wed, 26 Aug 2020 12:18:24 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
+        bh=wAyQ9pl6w1Uleq0G50f+7T2F2RA5fjsYKTQVPqWVtYc=;
+        b=ND5g5xsmlVkxyXOU+bENQ1MB5zBjQiX5cvbXpSFucU3nK43Mybnz35nftbKeeVMDYkxL2H
+        XWRWWQjoi0fql2Gm1yDTAItw5lLBh9nZTqjco+OrsqLhDlMdJTePbqp3pJ0w1EnDw+VOdL
+        lyJS2ZQ2jePMDPqFFd+6wttrmRUhDho=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-86-izhif0rxOLKzydx9OtAiAg-1; Wed, 26 Aug 2020 06:33:42 -0400
+X-MC-Unique: izhif0rxOLKzydx9OtAiAg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E5C15189594E;
+        Wed, 26 Aug 2020 10:33:41 +0000 (UTC)
+Received: from bfoster (ovpn-112-11.rdu2.redhat.com [10.10.112.11])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8BD481992F;
+        Wed, 26 Aug 2020 10:33:41 +0000 (UTC)
+Date:   Wed, 26 Aug 2020 06:33:39 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     bugzilla-daemon@bugzilla.kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: Remove kmem_zalloc_large()
-Message-ID: <20200826101824.u4snwrzotds5fkli@eorzea>
-Mail-Followup-To: Dave Chinner <david@fromorbit.com>,
-        linux-xfs@vger.kernel.org
-References: <20200825143458.41887-1-cmaiolino@redhat.com>
- <20200825223706.GR12131@dread.disaster.area>
+Subject: Re: [Bug 209039] New: xfs_fsr skips most of the files as no
+ improvement will be made
+Message-ID: <20200826103339.GA355009@bfoster>
+References: <bug-209039-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200825223706.GR12131@dread.disaster.area>
+In-Reply-To: <bug-209039-201763@https.bugzilla.kernel.org/>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 26, 2020 at 08:37:06AM +1000, Dave Chinner wrote:
-> On Tue, Aug 25, 2020 at 04:34:58PM +0200, Carlos Maiolino wrote:
-> > This patch aims to replace kmem_zalloc_large() with global kernel memory
-> > API. So, all its callers are now using kvzalloc() directly, so kmalloc()
-> > fallsback to vmalloc() automatically.
-> > 
-> > __GFP_RETRY_MAYFAIL has been set because according to memory documentation,
-> > it should be used in case kmalloc() is preferred over vmalloc().
-> > 
-> > Patch survives xfstests with large (32GiB) and small (4GiB) RAM memory amounts.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  fs/xfs/kmem.h          | 6 ------
-> >  fs/xfs/scrub/symlink.c | 4 +++-
-> >  fs/xfs/xfs_acl.c       | 3 ++-
-> >  fs/xfs/xfs_ioctl.c     | 5 +++--
-> >  fs/xfs/xfs_rtalloc.c   | 3 ++-
-> >  5 files changed, 10 insertions(+), 11 deletions(-)
-> > 
-> > I'm not entirely sure passing __GFP_RETRY_MAYFAIL is the right thing to do here,
-> > but since current api attempts a kmalloc before falling back to vmalloc, it
-> > seems to be correct to pass it.
+On Wed, Aug 26, 2020 at 07:40:57AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=209039
 > 
-> I don't think __GFP_RETRY_MAYFAIL is necessary. If the allocation is
-> larger than ALLOC_ORDER_COSTLY (8 pages, I think) then kmalloc()
-> will fail rather than retry forever and then it falls back to
-> vmalloc. Hence I don't think we need to tell the kmalloc() it needs
-> to fail large allocations if it can't make progress...
+>             Bug ID: 209039
+>            Summary: xfs_fsr skips most of the files as no improvement will
+>                     be made
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: 4.19.107-Unraid
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: marc@gutt.it
+>         Regression: No
 > 
-> Cheers,
+> I checked the fragmentation factor of disk1 as follows:
+> 
+>     xfs_db -c frag -r /dev/md1
+>     actual 1718, ideal 674, fragmentation factor 60.77%
+>     Note, this number is largely meaningless.
+>     Files on this filesystem average 2.55 extents per file
+> 
 
-Thanks Dave!
+Without knowing the details of your fs, it sounds like it's not very
+fragmented from the cursory numbers.
 
-If nobody has any other comment, I'll submit a version without RETRY_MAYFAIL
-later today.
+> I tried to defrag disk1:
+> 
+>     xfs_fsr /dev/md1 -v -d
+>     /mnt/disk1 start inode=0
+>     ino=133
+>     ino=133 extents=4 can_save=3 tmp=/mnt/disk1/.fsr/ag0/tmp23917
+>     DEBUG: fsize=30364684107 blsz_dio=16773120 d_min=512 d_max=2147483136
+> pgsz=4096
+>     Temporary file has 4 extents (4 in original)
+>     No improvement will be made (skipping): ino=133
+>     ino=135
+>     ino=135 extents=4 can_save=3 tmp=/mnt/disk1/.fsr/ag1/tmp23917
+>     orig forkoff 288, temp forkoff 0
+>     orig forkoff 288, temp forkoff 296
+>     orig forkoff 288, temp forkoff 296
+>     orig forkoff 288, temp forkoff 296
+>     orig forkoff 288, temp forkoff 296
+>     orig forkoff 288, temp forkoff 296
+>     orig forkoff 288, temp forkoff 296
+>     orig forkoff 288, temp forkoff 288
+>     set temp attr
+>     DEBUG: fsize=28400884827 blsz_dio=16773120 d_min=512 d_max=2147483136
+> pgsz=4096
+>     Temporary file has 4 extents (4 in original)
+>     No improvement will be made (skipping): ino=135
+>     ino=138
+>     ...
+> 
+> This means the file would still consist of 4 parts across the hdd platter after
+> defragmentation and because of that it's skipped. But why isn't it able to
+> merge the parts of this and hundreds of other files?
+> 
 
-cheers.
+Note that fsr is not guaranteed to do anything. It simply attempts to
+reallocate a file and if the new file has better contiguity than the
+original, the old is swapped out for the new. The effectiveness depends
+on how fragmented the original file is, how much contiguous free space
+is available to create the new one, etc. It's usually not worth playing
+with fsr unless you observe some measurable performance impact of
+fragmentation (as opposed to just reading the fragmentation numbers,
+which can be misleading). Is that the case here?
+
+> More details about inode 133:
+> 
+>     xfs_db -r /dev/md1 -c "inode 133" -c "bmap -d"
+>     data offset 0 startblock 1314074773 (4/240332949) count 2097151 flag 0
+>     data offset 2097151 startblock 1316171924 (4/242430100) count 2097151 flag
+> 0
+>     data offset 4194302 startblock 1318269075 (4/244527251) count 2097151 flag
+> 0
+>     data offset 6291453 startblock 1320366226 (4/246624402) count 1121800 flag
+> 0
+
+In this case, it looks like you already have maximum sized (~8GB)
+extents for the first three. The extent map for this file is as
+efficient as it can possibly be on XFS.
+
+Brian
 
 > 
-> Dave.
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> You are receiving this mail because:
+> You are watching the assignee of the bug.
 > 
-
--- 
-Carlos
 
