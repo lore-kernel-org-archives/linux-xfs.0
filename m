@@ -2,112 +2,102 @@ Return-Path: <SRS0=J8xT=CE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D558C433E3
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 15:20:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B56D0C433E1
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 15:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7B532075E
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 15:20:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A9FC2078D
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 15:39:40 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pkSIeRAu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726905AbgHZPUJ convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Aug 2020 11:20:09 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40688 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727107AbgHZPUI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Aug 2020 11:20:08 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
+        id S1727022AbgHZPjk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Aug 2020 11:39:40 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41190 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727779AbgHZPja (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Aug 2020 11:39:30 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07QFYgl8147882;
+        Wed, 26 Aug 2020 15:39:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=2HHhdsG0AiLg8yf6hGRaYcFPoZzWMRT5OBUFHhB7lTY=;
+ b=pkSIeRAumrMkN1A7Ul4KtfmbFCMdr9868dC6LCC3Kfv3iHymbHBfIngnOeaxosriwW6n
+ UHRiYTu2ByQd9o785L9zUWrwFPvSJBcIocBGsrfCMulvk5ai74OK6NUhgsrIi4xzWVT9
+ 2vypV/mkTOi4iTSAyyFtgTvDBBepm9vZ6GTpKkyWTRrbAcfxnWnWsBn28oFP4OHvppr9
+ waBbaQrihHW0i5JXpCG65Y4wZflMaAsPq0vTPPk5ZAWNHANkwNzHjhP03V1AF8NIZ03V
+ RHnRP7R4m9I01xiFk/Uiby0X6BycFzPNGTbodzntlQPttKSmdnsaaAq2ldOjwcXsZYtg lw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 335gw832yp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 26 Aug 2020 15:39:25 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07QFVMwl010083;
+        Wed, 26 Aug 2020 15:39:25 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 333r9m2jwf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 26 Aug 2020 15:39:25 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07QFdOgJ027266;
+        Wed, 26 Aug 2020 15:39:24 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 26 Aug 2020 08:39:24 -0700
+Date:   Wed, 26 Aug 2020 08:39:22 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [Bug 208805] XFS: iozone possible memory allocation deadlock
-Date:   Wed, 26 Aug 2020 15:20:05 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bfoster@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-208805-201763-Gba1ispQSA@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-208805-201763@https.bugzilla.kernel.org/>
-References: <bug-208805-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH v2] xfs: initialize the shortform attr header padding entry
+Message-ID: <20200826153912.GN6096@magnolia>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9725 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
+ suspectscore=3 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008260116
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9725 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 lowpriorityscore=0
+ mlxscore=0 phishscore=0 bulkscore=0 impostorscore=0 adultscore=0
+ malwarescore=0 clxscore=1015 spamscore=0 mlxlogscore=999
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008260116
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=208805
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
---- Comment #1 from bfoster@redhat.com ---
-On Tue, Aug 04, 2020 at 09:52:48AM +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=208805
-> 
->             Bug ID: 208805
->            Summary: XFS: iozone possible memory allocation deadlock
->            Product: File System
->            Version: 2.5
->     Kernel Version: Linux 5.4
->           Hardware: x86-64
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: XFS
->           Assignee: filesystem_xfs@kernel-bugs.kernel.org
->           Reporter: jjzuming@outlook.com
->         Regression: No
-> 
-> When I ran iozone to test XFS in a memory insufficient situation，I found that
-> iozone was blocked and The log "XFS: iozone possible memory allocation
-> deadlock" was printed.
-> 
-> Reviewing the XFS code, I found that kmem_alloc(), xfs_buf_allocate_memory(),
-> kmem_zone_alloc() and kmem_realloc() were implemented with "while" loops.
-> These
-> functions kept trying to get memory while the memory was insufficient, as a
-> result of which "memory allocation deadlock" happened.
-> 
-> I think it may be a little unreasonable, although it can guarantee that the
-> memory allocation succeed. Maybe using error handling code to handle the
-> memory
-> allocation failures is better.
-> 
+Don't leak kernel memory contents into the shortform attr fork.
 
-I think some of this memory allocation code is currently being reworked,
-but that aside most of the above cases do break the retry loop if the
-caller passes KM_MAYFAIL. So it's a case by case basis as to whether a
-particular allocation should be allowed to fail and potentially return
-an error to userspace or should continue to retry.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: memset instead of setting padding by hand
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-A more useful approach to this bug would be to describe your test, the
-specific system/memory conditions, and provide the full log output
-(stack trace?) associated with the issue. Then perhaps we can analyze
-the cause and determine whether it's something that can be addressed or
-improved, or if you just need more memory. ;)
-
-Brian
-
-> -- 
-> You are receiving this mail because:
-> You are watching the assignee of the bug.
->
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index 8623c815164a..e730586bff85 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -653,8 +653,8 @@ xfs_attr_shortform_create(
+ 		ASSERT(ifp->if_flags & XFS_IFINLINE);
+ 	}
+ 	xfs_idata_realloc(dp, sizeof(*hdr), XFS_ATTR_FORK);
+-	hdr = (xfs_attr_sf_hdr_t *)ifp->if_u1.if_data;
+-	hdr->count = 0;
++	hdr = (struct xfs_attr_sf_hdr *)ifp->if_u1.if_data;
++	memset(hdr, 0, sizeof(*hdr));
+ 	hdr->totsize = cpu_to_be16(sizeof(*hdr));
+ 	xfs_trans_log_inode(args->trans, dp, XFS_ILOG_CORE | XFS_ILOG_ADATA);
+ }
