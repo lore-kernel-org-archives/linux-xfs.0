@@ -2,100 +2,152 @@ Return-Path: <SRS0=J8xT=CE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A04C433E1
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 03:32:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31E95C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 04:31:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9E8720715
-	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 03:32:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E2532071E
+	for <linux-xfs@archiver.kernel.org>; Wed, 26 Aug 2020 04:31:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vSHPff2Y"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lZaJYGuD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726765AbgHZDcS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 25 Aug 2020 23:32:18 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:40926 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726682AbgHZDcR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Aug 2020 23:32:17 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07Q3PJVC052820;
-        Wed, 26 Aug 2020 03:32:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=okvAgslA9s05bet9RqzgtLjPhzBIyWiPkt2b3bP/bYE=;
- b=vSHPff2Yifsj0zi3bmrYfVGUepFiWCce0CYR5xvlgbAumROeM1EOejvnHiuIsCiCWJRQ
- 8HgTlK5Z7iQNg3QDFgDDnGjOIxtOaZUpXE7Wwi0yakmhiBp466lVn8kcnnk/S3VhD/rF
- KhTCBvobMwE7DShABebEgbXrPj12M95ewXYzRGjWaWlCOgvFDO6bMYS149krW3h0/qto
- FJCuRzblMk9DvaSnn3Fx//0EUH4ngQdkwLPrQKJ1KGX/dKYydn1OkazzCdn6JbVLtLr/
- HA3GtnnBXroAuVjzqL1t47SyF8aqchwJNB8gkXf3FrnKOXRH06OgtrHaEU/rU8yx6/yx Iw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 333w6tvhmj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 26 Aug 2020 03:32:10 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07Q3VLwM011072;
-        Wed, 26 Aug 2020 03:32:10 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 333r9kbj1c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 26 Aug 2020 03:32:10 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07Q3W9af008012;
-        Wed, 26 Aug 2020 03:32:09 GMT
-Received: from localhost (/10.159.139.182)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 25 Aug 2020 20:32:09 -0700
-Date:   Tue, 25 Aug 2020 20:32:08 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/9] iomap: Support arbitrarily many blocks per page
-Message-ID: <20200826033208.GS6107@magnolia>
-References: <20200824145511.10500-1-willy@infradead.org>
- <20200824145511.10500-6-willy@infradead.org>
- <20200825210203.GJ6096@magnolia>
- <20200826022623.GQ17456@casper.infradead.org>
+        id S1726074AbgHZEbX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Aug 2020 00:31:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50832 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbgHZEbW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Aug 2020 00:31:22 -0400
+Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED89C061574;
+        Tue, 25 Aug 2020 21:31:21 -0700 (PDT)
+Received: by mail-il1-x144.google.com with SMTP id e11so648066ils.10;
+        Tue, 25 Aug 2020 21:31:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=OBuaD5BaR2/EGCVaGN6hCXlzR5PN4Ki6fYU4xrxHw9g=;
+        b=lZaJYGuD+p/YHplr4Xk5CjSZ0k84/MWoewzFEgD+aOYtajQgoPeut3P7h7u3dhHhXI
+         rCRscD0nO5cH7i4+gc4zY4MwXibsEXyDfH32lEp/5yzavUulAWdHf6/tKPcuUyu4yM4f
+         pMA7l6Tmab7UBMMFjyNX+QlhPxOVzw4rft2pswOXkNGz+xw6ZtpG/aqEipFbs0OW8MSs
+         MHUF2TcPKV99jBZAAnJO4q398hJ2IFWRi8BJHLh3U9TpKsQyOrl5964FqY9qZwWf/z0k
+         wsgoWhx7qMr6yiAVoerN38NtXijWJc03tUuOHtC6bwlnE40ZTv2oJSOusG+yyUxifH/S
+         aezg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=OBuaD5BaR2/EGCVaGN6hCXlzR5PN4Ki6fYU4xrxHw9g=;
+        b=RWh9sMvdYHk9PN6gqbDgATLjD3leHSOuq7q+Y3T94zhZEh55DIWMsJjpHpa6ud+1Aw
+         N/ewCR0iW0WLetkPTA/50rrfERQqxTpKkV+K43iNsfMLb5GwU2UdsIKtMR7ogc82rGKb
+         /JkNa62vrmM8Jb1592rApcDsdIJ0EsPmnfYPwaGoeYH8uGYViA5b+KAUkwksEjcPsYxB
+         SKIeEruR8e6zv5lWAhF1dIRbRoaJQ/TD48Jqd9NkdmFqzTgU2aOYggbqBdiQLyQM1f9f
+         +ONtbGEIcvmOXki0JbIho7avXdgCODq2O+Xs3tjGdlrlhjEE9Q7dd32q0rs2nc40r6FX
+         xgUw==
+X-Gm-Message-State: AOAM53343aF+RUfvqy3QH1L1ATh60DZkE+8JxedWATbCDpBufDip215y
+        r7cvcwCo/heOehJVOPNSDNidxG1krlcIPxEQaXk=
+X-Google-Smtp-Source: ABdhPJzPmiF6ccG2bMScN7vxr3mxxWPakKUF3i3sOXSNmnGAOYWqsZ2IP5cQwHbO/ltvKRTafUPNXuCviBqi0o5RLJI=
+X-Received: by 2002:a92:c849:: with SMTP id b9mr12556382ilq.168.1598416281120;
+ Tue, 25 Aug 2020 21:31:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200826022623.GQ17456@casper.infradead.org>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9724 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0
- suspectscore=1 malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008260025
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9724 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 impostorscore=0
- mlxlogscore=999 suspectscore=1 phishscore=0 malwarescore=0 spamscore=0
- priorityscore=1501 clxscore=1015 mlxscore=0 lowpriorityscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008260024
+References: <20200824014234.7109-1-laoar.shao@gmail.com> <20200824014234.7109-3-laoar.shao@gmail.com>
+ <20200824130925.a3d2d2b75ac3a6b4eba72fb9@linux-foundation.org>
+ <20200824205647.GG17456@casper.infradead.org> <20200825053233.GN12131@dread.disaster.area>
+ <CALOAHbAhhGXn3N7BTBqh336q0_P1WJH5xXtnBhdsBdS516NAvA@mail.gmail.com> <20200825224721.GU12131@dread.disaster.area>
+In-Reply-To: <20200825224721.GU12131@dread.disaster.area>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Wed, 26 Aug 2020 12:30:45 +0800
+Message-ID: <CALOAHbA1h1nmJrkFzb3FdyF3JL9Tws6=73vJ=v-ajzWoHsp7vQ@mail.gmail.com>
+Subject: Re: [PATCH v6 2/2] xfs: avoid transaction reservation recursion
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Matthew Wilcox <willy@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Michal Hocko <mhocko@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, Linux MM <linux-mm@kvack.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 26, 2020 at 03:26:23AM +0100, Matthew Wilcox wrote:
-> On Tue, Aug 25, 2020 at 02:02:03PM -0700, Darrick J. Wong wrote:
-> > >  /*
-> > > - * Structure allocated for each page when block size < PAGE_SIZE to track
-> > > + * Structure allocated for each page when block size < page size to track
-> > >   * sub-page uptodate status and I/O completions.
-> > 
-> > "for each regular page or head page of a huge page"?  Or whatever we're
-> > calling them nowadays?
-> 
-> Well, that's what I'm calling a "page" ;-)
-> 
-> How about "for each page or THP"?  The fact that it's stored in the
-> head page is incidental -- it's allocated for the THP.
+On Wed, Aug 26, 2020 at 6:47 AM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Tue, Aug 25, 2020 at 02:22:08PM +0800, Yafang Shao wrote:
+> > On Tue, Aug 25, 2020 at 1:32 PM Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > On Mon, Aug 24, 2020 at 09:56:47PM +0100, Matthew Wilcox wrote:
+> > > > On Mon, Aug 24, 2020 at 01:09:25PM -0700, Andrew Morton wrote:
+> > > > > On Mon, 24 Aug 2020 09:42:34 +0800 Yafang Shao <laoar.shao@gmail.com> wrote:
+> > > > >
+> > > > > > --- a/include/linux/iomap.h
+> > > > > > +++ b/include/linux/iomap.h
+> > > > > > @@ -271,4 +271,11 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+> > > > > >  # define iomap_swapfile_activate(sis, swapfile, pagespan, ops)   (-EIO)
+> > > > > >  #endif /* CONFIG_SWAP */
+> > > > > >
+> > > > > > +/* Use the journal_info to indicate current is in a transaction */
+> > > > > > +static inline bool
+> > > > > > +fstrans_context_active(void)
+> > > > > > +{
+> > > > > > + return current->journal_info != NULL;
+> > > > > > +}
+> > > > >
+> > > > > Why choose iomap.h for this?
+> > > >
+> > > > Because it gets used in iomap/buffered-io.c
+> > > >
+> > > > I don't think this is necessarily a useful abstraction, to be honest.
+> > > > I'd just open-code 'if (current->journal_info)' or !current->journal_info,
+> > > > whichever way round the code is:
+> > > >
+> > > > fs/btrfs/delalloc-space.c:              if (current->journal_info)
+> > > > fs/ceph/xattr.c:                if (current->journal_info) {
+> > > > fs/gfs2/bmap.c:         if (current->journal_info) {
+> > > > fs/jbd2/transaction.c:  if (WARN_ON(current->journal_info)) {
+> > > > fs/reiserfs/super.c:    if (!current->journal_info) {
+> > >
+> > > /me wonders idly if any of the other filesystems that use
+> > > current->journal_info can have an active transaction while calling
+> > > ->writepages...
+> > >
+> > > .... and if so, whether this patchset has taken the wrong path in
+> > > trying to use current->journal_info for XFS to re-implement this
+> > > warning.....
+> > >
+> > > .... so we'll have to remove or rework this yet again when other
+> > > filesystems are converted to use iomap....
+> > >
+> > > /me suspects the btrfs_write_and_wait_transaction() is a path where
+> > > this can actually happen...
+> > >
+> >
+> > How about adding a flag in struct writeback_control ?
+> > struct writeback_control {
+> >     ...
+> >     unsigned fstrans_check:1; /* Whether to check the current is in fstrans */
+> > };
+> >
+> > Then we can set it in xfs_vm_writepage(s), for example,
+> >
+> > xfs_vm_writepage
+> > {
+> >     wbc->fstrans_check = 1;  // set it for XFS only.
+> >     return iomap_writepage(page, wbc, &wpc.ctx, &xfs_writeback_ops);
+> > }
+>
+> Yeah, but if we are doing that then I think we should just remove
+> the check completely from iomap_writepage() and move it up into
+> xfs_vm_writepage() and xfs_vm_writepages().
+>
 
-Ok.
+Sure.
 
---D
+-- 
+Thanks
+Yafang
