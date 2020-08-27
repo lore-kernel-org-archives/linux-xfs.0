@@ -2,182 +2,162 @@ Return-Path: <SRS0=R4OI=CF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0023C433E3
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 06:58:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40C89C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 06:58:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDB6322CB2
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 06:58:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 202BD22CB1
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 06:58:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AoX7wfSz"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uDbHUAs7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726299AbgH0G6T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Aug 2020 02:58:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43696 "EHLO
+        id S1726826AbgH0G6V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Aug 2020 02:58:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726157AbgH0G6S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 02:58:18 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92A82C061264
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Aug 2020 23:58:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=hxl/d3c810uRZcarO0gj0xFBFpATGMNG8gQNkf72we0=; b=AoX7wfSzHGRfuD9LsDvwIBZjfz
-        o4SsTyvRJZx3vSJqs1NA1eUmWi06PTervFbj51uiaX/UQ3JTxGn1kfQAOCm+PK6233NBF1Af7DVMt
-        1ThiLreOdnAeU51+1DjyJrIAlxQN34KpKsNXb0x708qzCgBQfxpkBdFT0skb3poZWvw0IrLMUGz1q
-        L6/PnKEhyF6q8tn95VzCvu7FRNvNd78njH5njMDecbl61gXLTXd3/pQ98BzSxwu+KLhBOnGysuZmI
-        xnYBhRx47i3RfxtblaoE02MiYPTF0ydptTxolgKjZqlgwjKdy4DllWvVFaUkjVWQgdqm6SIXDBzqK
-        TnfBkYPA==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kBBrU-0005Rv-5H; Thu, 27 Aug 2020 06:58:16 +0000
-Date:   Thu, 27 Aug 2020 07:58:16 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     david@fromorbit.com, hch@infradead.org, linux-xfs@vger.kernel.org,
-        amir73il@gmail.com, sandeen@sandeen.net
-Subject: Re: [PATCH 08/11] xfs: widen ondisk inode timestamps to deal with
- y2038+
-Message-ID: <20200827065816.GB17534@infradead.org>
-References: <159847949739.2601708.16579235017313836378.stgit@magnolia>
- <159847954997.2601708.12578930799217289682.stgit@magnolia>
+        with ESMTP id S1726157AbgH0G6V (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 02:58:21 -0400
+Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC15FC061264;
+        Wed, 26 Aug 2020 23:58:20 -0700 (PDT)
+Received: by mail-il1-x144.google.com with SMTP id c6so3983172ilo.13;
+        Wed, 26 Aug 2020 23:58:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=umXYkWphpijjeghdwFU5ZWoU2/HsPMaTEPL14+6DbZ0=;
+        b=uDbHUAs7Ku9OZNTfklnf42MnyA2DgTl7NVJbP3mxSQzwG2BeWLeLMdHLJSbJ85d0Rq
+         6cCIX8NZuz4OOrPo48vrCRBjeWO5s6XG9yWk5TogbfEE9cLuJMnmDVOWSoicBR9AMHhc
+         /PK5FC/nDZp/jEa3BPzWL2KsJJ6pU1IL7lzKXwD7OR5halo6BctcZvE/vGtS+Kf0/DhP
+         tVwNiFv2hqmw8F4iFcyghbey/itIJqguY4H8HKVUJMEdDjDt/fwSsnXbjAGSbrHXSbAl
+         X0PTBnME5zRy4wGdHdfti5erFDworUoAAnmSwTEmTvAcHx19R9Ha+cOPEUpmzPCPWsUZ
+         sLgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=umXYkWphpijjeghdwFU5ZWoU2/HsPMaTEPL14+6DbZ0=;
+        b=OSMf8RwiF9MTTgkOTJU6X9U/rY/0n6jWXBGVk8cIaYKgCJQxHK4NJAE5V7hDiFo4X8
+         uZWxoZ7Np0m8MX6+umPWS8S96sxCyBSn3Hd4nsG5XIPSM/u4mIsNw2lDA1anwrqrMb90
+         wGR1zPo12WxlBxyWxxy1Qr5C8bJFqAo3nAdAExdKNyPeVhmYlXmo4KOgUJvggy4ANABI
+         966iEvD0G10LE244eeMCdMyv/fiqhc1SXEBkHeuAPXtaOMQL/VkK7Wpd/eujo9fuTgT/
+         E//dDOAVi4azOA56uki9w9a5feb7pJKIlGZEovpL4b/UinlY1MTVzrvR2YQnQcw4GZXW
+         NJNA==
+X-Gm-Message-State: AOAM530okO7g68AYd5Ec6x/w6otXRVqk/pUZiXLdokVN7Uw5Gr11k/XC
+        6sXslrhrp7Vb9WqKBd3VPpttACmFao3+v6cBgTAvlik3
+X-Google-Smtp-Source: ABdhPJxSGGRw/M8Q4dCQmp7i/tNFsXBNg8QutPs/3qHq2iE6CPXKY1nXIKFlm7yyXuc515sIYlpZ7GU5z1ikXz3cZgo=
+X-Received: by 2002:a92:da0a:: with SMTP id z10mr16004358ilm.275.1598511500164;
+ Wed, 26 Aug 2020 23:58:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <159847954997.2601708.12578930799217289682.stgit@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+References: <20200826143815.360002-1-bfoster@redhat.com> <20200826143815.360002-2-bfoster@redhat.com>
+In-Reply-To: <20200826143815.360002-2-bfoster@redhat.com>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 27 Aug 2020 09:58:09 +0300
+Message-ID: <CAOQ4uxjYf2Hb4+Zid7KeWUcu3sOgqR30de_0KwwjVbwNw1HfJg@mail.gmail.com>
+Subject: Re: [PATCH 1/4] generic: require discard zero behavior for
+ dmlogwrites on XFS
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     fstests <fstests@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> -	tv.tv_sec = (int64_t)t >> 32;
-> -	tv.tv_nsec = (int32_t)(t & 0xffffffff);
-> +	if (xfs_dinode_has_bigtime(dip)) {
-> +		s = xfs_bigtime_to_unix(div_u64_rem(t, NSEC_PER_SEC, &n));
-> +	} else {
-> +		s = (int64_t)t >> 32;
-> +		n = (int32_t)(t & 0xffffffff);
-
-Move this branche into a xfs_legacytime_to_unix helper just to be
-symmetric?
-
-This also made me think of the encoding:  another sensible option
-would be to always read the time stamps as two 32-bit values using the
-struct type, and just add them up for the bigtime case.
-
-> +	if (xfs_inode_has_bigtime(ip))
-> +		t = xfs_inode_encode_bigtime(tv);
-> +	else
-> +		t = ((int64_t)tv.tv_sec << 32) | (tv.tv_nsec & 0xffffffff);
+On Wed, Aug 26, 2020 at 5:38 PM Brian Foster <bfoster@redhat.com> wrote:
+>
+> Several generic fstests use dm-log-writes to test the filesystem for
+> consistency at various crash recovery points. dm-log-writes and the
+> associated replay mechanism rely on zeroing via discard to clear
+> stale blocks when moving to various points in time of the fs. If the
+> storage doesn't provide zeroing or the discard requests exceed the
+> hardcoded maximum (128MB) of the fallback solution to physically
+> write zeroes, stale blocks are left around in the target fs. This
+> scheme is known to cause issues on XFS v5 superblocks if recovery
+> observes metadata from a future variant of an fs that has been
+> replayed to an older point in time. This corrupts the filesystem and
+> leads to false test failures.
+>
+> generic/482 already works around this problem by using a thin volume
+> as the target device, which provides consistent and efficient
+> discard zeroing behavior, but other tests have seen similar issues
+> on XFS. Add an XFS specific check to the dmlogwrites init time code
+> that requires discard zeroing support and otherwise skips the test
+> to avoid false positive failures.
+>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  common/dmlogwrites | 10 ++++++++--
+>  common/rc          | 14 ++++++++++++++
+>  tests/generic/470  |  2 +-
+>  3 files changed, 23 insertions(+), 3 deletions(-)
+>
+> diff --git a/common/dmlogwrites b/common/dmlogwrites
+> index 573f4b8a..92cc6ce2 100644
+> --- a/common/dmlogwrites
+> +++ b/common/dmlogwrites
+> @@ -43,9 +43,10 @@ _require_log_writes_dax_mountopt()
+>         _require_test_program "log-writes/replay-log"
+>
+>         local ret=0
+> -       local mountopt=$1
+> +       local dev=$1
+> +       local mountopt=$2
+>
+> -       _log_writes_init $SCRATCH_DEV
+> +       _log_writes_init $dev
+>         _log_writes_mkfs > /dev/null 2>&1
+>         _log_writes_mount "-o $mountopt" > /dev/null 2>&1
+>         # Check options to be sure.
+> @@ -66,6 +67,11 @@ _log_writes_init()
+>         [ -z "$blkdev" ] && _fail \
+>         "block dev must be specified for _log_writes_init"
+>
+> +       # XFS requires discard zeroing support on the target device to work
+> +       # reliably with dm-log-writes. Use dm-thin devices in tests that want
+> +       # to provide reliable discard zeroing support.
+> +       [ $FSTYP == "xfs" ] && _require_discard_zeroes $blkdev
 > +
 
-Same here.
+I imagine that ext4 could also be burned by this.
+Do we have a reason to limit this requirement to xfs?
+I prefer to make it generic.
 
-> @@ -305,9 +320,9 @@ xfs_inode_to_disk(
->  	to->di_projid_hi = cpu_to_be16(from->di_projid >> 16);
->  
->  	memset(to->di_pad, 0, sizeof(to->di_pad));
-> -	to->di_atime = xfs_inode_to_disk_ts(inode->i_atime);
-> -	to->di_mtime = xfs_inode_to_disk_ts(inode->i_mtime);
-> -	to->di_ctime = xfs_inode_to_disk_ts(inode->i_ctime);
-> +	to->di_atime = xfs_inode_to_disk_ts(ip, inode->i_atime);
-> +	to->di_mtime = xfs_inode_to_disk_ts(ip, inode->i_mtime);
-> +	to->di_ctime = xfs_inode_to_disk_ts(ip, inode->i_ctime);
->  	to->di_nlink = cpu_to_be32(inode->i_nlink);
->  	to->di_gen = cpu_to_be32(inode->i_generation);
->  	to->di_mode = cpu_to_be16(inode->i_mode);
-> @@ -326,7 +341,7 @@ xfs_inode_to_disk(
->  	if (xfs_sb_version_has_v3inode(&ip->i_mount->m_sb)) {
->  		to->di_version = 3;
->  		to->di_changecount = cpu_to_be64(inode_peek_iversion(inode));
-> -		to->di_crtime = xfs_inode_to_disk_ts(from->di_crtime);
-> +		to->di_crtime = xfs_inode_to_disk_ts(ip, from->di_crtime);
->  		to->di_flags2 = cpu_to_be64(from->di_flags2);
->  		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
->  		to->di_ino = cpu_to_be64(ip->i_ino);
-> @@ -546,6 +561,11 @@ xfs_dinode_verify(
->  	if (fa)
->  		return fa;
->  
-> +	/* bigtime iflag can only happen on bigtime filesystems */
-> +	if (xfs_dinode_has_bigtime(dip) &&
-> +	    !xfs_sb_version_hasbigtime(&mp->m_sb))
-> +		return __this_address;
-> +
->  	return NULL;
+>         local BLK_DEV_SIZE=`blockdev --getsz $blkdev`
+>         LOGWRITES_NAME=logwrites-test
+>         LOGWRITES_DMDEV=/dev/mapper/$LOGWRITES_NAME
+> diff --git a/common/rc b/common/rc
+> index aa5a7409..fedb5221 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -4313,6 +4313,20 @@ _require_mknod()
+>         rm -f $TEST_DIR/$seq.null
 >  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-> index 3060ecd24a2e..e05bfe52fd8f 100644
-> --- a/fs/xfs/libxfs/xfs_inode_buf.h
-> +++ b/fs/xfs/libxfs/xfs_inode_buf.h
-> @@ -32,6 +32,11 @@ struct xfs_icdinode {
->  	struct timespec64 di_crtime;	/* time created */
->  };
->  
-> +static inline bool xfs_icdinode_has_bigtime(const struct xfs_icdinode *icd)
+>
+> +# check that discard is supported and subsequent reads return zeroes
+> +_require_discard_zeroes()
 > +{
-> +	return icd->di_flags2 & XFS_DIFLAG2_BIGTIME;
+> +       local dev=$1
+> +
+> +       _require_command "$BLKDISCARD_PROG" blkdiscard
+> +
+> +       $XFS_IO_PROG -c "pwrite -S 0xcd 0 4k" $dev > /dev/null 2>&1 ||
+> +               _fail "write error"
+> +       $BLKDISCARD_PROG -o 0 -l 1m $dev || _notrun "no discard support"
+> +       hexdump -n 4096 $dev | head -n 1 | grep cdcd &&
+> +               _notrun "no discard zeroing support"
 > +}
 > +
->  /*
->   * Inode location information.  Stored in the inode and passed to
->   * xfs_imap_to_bp() to get a buffer and dinode for a given inode.
-> @@ -58,6 +63,14 @@ xfs_failaddr_t xfs_inode_validate_cowextsize(struct xfs_mount *mp,
->  		uint32_t cowextsize, uint16_t mode, uint16_t flags,
->  		uint64_t flags2);
->  
-> -struct timespec64 xfs_inode_from_disk_ts(const xfs_timestamp_t ts);
-> +static inline uint64_t xfs_inode_encode_bigtime(struct timespec64 tv)
-> +{
-> +	uint64_t	t = xfs_unix_to_bigtime(tv.tv_sec) * NSEC_PER_SEC;
-> +
-> +	return t + tv.tv_nsec;
 
-Why not:
+I am fine with your solution, but if there was a discussion on the best way to
+solve the problem, I missed it, so would like to hear what Chritoph has to say.
 
-	return xfs_unix_to_bigtime(tv.tv_sec) * NSEC_PER_SEC + tv.tv_nsec;
-
-?
-
-> +static inline bool xfs_inode_want_bigtime_upgrade(struct xfs_inode *ip)
-> +{
-> +	return xfs_sb_version_hasbigtime(&ip->i_mount->m_sb) &&
-> +	       !xfs_inode_has_bigtime(ip);
-> +}
-> +
->  /*
->   * This is called to mark the fields indicated in fieldmask as needing to be
->   * logged when the transaction is committed.  The inode must already be
-> @@ -131,6 +137,16 @@ xfs_trans_log_inode(
->  			iversion_flags = XFS_ILOG_CORE;
->  	}
->  
-> +	/*
-> +	 * If we're updating the inode core or the timestamps and it's possible
-> +	 * to upgrade this inode to bigtime format, do so now.
-> +	 */
-> +	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
-> +	    xfs_inode_want_bigtime_upgrade(ip)) {
-> +		ip->i_d.di_flags2 |= XFS_DIFLAG2_BIGTIME;
-> +		flags |= XFS_ILOG_CORE;
-> +	}
-
-I find the way to directly set XFS_DIFLAG2_BIGTIME but using a helper
-to check it here rather confusing.
-
-Why not:
-
-	if (xfs_sb_version_hasbigtime(&ip->i_mount->m_sb) &&
-	    (flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
-	    !(ip->i_d.di_flags2 & XFS_DIFLAG2_BIGTIME)) {
-		ip->i_d.di_flags2 |= XFS_DIFLAG2_BIGTIME;
-		flags |= XFS_ILOG_CORE;
-	}
-
-?
+Thanks,
+Amir.
