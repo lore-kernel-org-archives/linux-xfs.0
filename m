@@ -4,113 +4,186 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F4BBC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 14:53:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44FEFC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 14:55:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EC1E22B4B
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 14:53:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 219A522CB3
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 14:55:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ayFr2/ag"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lGl3haOh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727107AbgH0Oxt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Aug 2020 10:53:49 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:22930 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726246AbgH0Oxf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 10:53:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1598540014;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=2zilKfYwgjMrFuSV8fWV/l7TmFQQ3eWRspySIR0VXC0=;
-        b=ayFr2/agddfhII4xlLkUfT8JXMKBWRcXxrjFs+6QuoR/pOK7dkJBxUUlLo3r9eicdkB0vP
-        qWHOvLCOQY6xy7cM3F3dgSBGgTWw3roEEoxJpTcel2gqiIFKeC/42lPJwGDVYF7P/xKG7A
-        5u+nlQsy4PM8275k1p7bggSJ8uyOPC0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-323-1hFCRlCsP_SLRfFghfTjsg-1; Thu, 27 Aug 2020 10:53:31 -0400
-X-MC-Unique: 1hFCRlCsP_SLRfFghfTjsg-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8289E100CEC0;
-        Thu, 27 Aug 2020 14:53:30 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-112-11.rdu2.redhat.com [10.10.112.11])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 29151757F2;
-        Thu, 27 Aug 2020 14:53:30 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     fstests@vger.kernel.org
+        id S1726839AbgH0OzR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Aug 2020 10:55:17 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37026 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726093AbgH0OzE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 10:55:04 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07REohCP149021;
+        Thu, 27 Aug 2020 14:55:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=yslJy3c0uQsTHT2gf9jVUbk2QTH7c+XVmm5eDmaqU9A=;
+ b=lGl3haOhTh8zVppsslYkFFbJqRyXmq9QgjyKWJ50aYv6UbpmqwEsxrjYkPI6ox8tM0x/
+ QKwnzWMSd/fXwJw4cNhE0HndmQV6ACnNUjvV9MWc3pi4wayceWZhLpWBZ9ktk0nt4XHl
+ ovGYgOfzXnGVbOpq80ujxkGWBSVAXuIcSVNxeqvyQGMQFy/XmF7rHhwEMcjUbvn4S0Mm
+ lrb1UkTV94XMsTNZ48vF9tGMNsbabyIVXc4xe53WsGERlHrV5xFSTH0mToQo9L5RaC7u
+ J73AnWLfZqFS9g6bC1noNYhNo9skDtk1G8bGHnwPqsdxnNnbKyUu/ZhgNA2ZudHkfhTJ TQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 335gw88pht-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 27 Aug 2020 14:55:00 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07REoK8G104011;
+        Thu, 27 Aug 2020 14:54:59 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 333rud7p8n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 27 Aug 2020 14:54:59 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07REswnp011125;
+        Thu, 27 Aug 2020 14:54:58 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 27 Aug 2020 07:54:57 -0700
+Date:   Thu, 27 Aug 2020 07:54:57 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Carlos Maiolino <cmaiolino@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2] generic: disable dmlogwrites tests on XFS
-Date:   Thu, 27 Aug 2020 10:53:29 -0400
-Message-Id: <20200827145329.435398-1-bfoster@redhat.com>
+Subject: Re: [PATCH V3] xfs: Remove kmem_zalloc_large()
+Message-ID: <20200827145457.GS6096@magnolia>
+References: <20200827092417.7973-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200827092417.7973-1-cmaiolino@redhat.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9725 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ bulkscore=0 suspectscore=5 spamscore=0 mlxscore=0 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008270114
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9726 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=5 lowpriorityscore=0
+ mlxscore=0 phishscore=0 bulkscore=0 impostorscore=0 adultscore=0
+ malwarescore=0 clxscore=1015 spamscore=0 mlxlogscore=999
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008270114
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Several generic fstests use dm-log-writes to test the filesystem for
-consistency at various crash recovery points. dm-log-writes and the
-associated replay mechanism rely on discard to clear stale blocks
-when moving to various points in time of the fs. If the storage
-doesn't provide discard zeroing or the discard requests exceed the
-hardcoded maximum (128MB) of the fallback solution to physically
-write zeroes, stale blocks are left around in the target fs. This
-causes issues on XFS if recovery observes metadata from a future
-version of an fs that has been replayed to an older point in time.
-This corrupts the filesystem and leads to spurious test failures
-that are nontrivial to diagnose.
+On Thu, Aug 27, 2020 at 11:24:17AM +0200, Carlos Maiolino wrote:
+> This patch aims to replace kmem_zalloc_large() with global kernel memory
+> API. So, all its callers are now using kvzalloc() directly, so kmalloc()
+> fallsback to vmalloc() automatically.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Disable the generic dmlogwrites tests on XFS for the time being.
-This is intended to be a temporary change until a solution is found
-that allows these tests to predictably clear stale data while still
-allowing them to run in a reasonable amount of time.
+Looks good to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+--D
 
-v2:
-- Drop all dmthinp changes. Unconditionally disable tests on XFS.
-v1: https://lore.kernel.org/fstests/20200826143815.360002-2-bfoster@redhat.com/
-
- common/dmlogwrites | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/common/dmlogwrites b/common/dmlogwrites
-index 573f4b8a..b0a28ce8 100644
---- a/common/dmlogwrites
-+++ b/common/dmlogwrites
-@@ -9,6 +9,14 @@ _require_log_writes()
- 	[ -z "$LOGWRITES_DEV" -o ! -b "$LOGWRITES_DEV" ] && \
- 		_notrun "This test requires a valid \$LOGWRITES_DEV"
- 
-+	# The logwrites mechanism relies on discard to provide zeroing behavior
-+	# to clear out stale filesystem content. Discard doesn't reliably
-+	# provide this behavior, and this leads to spurious corruptions on XFS
-+	# filesystems by leaving out of order metadata in the fs. We must
-+	# disable dmlogwrites on XFS until it implements a predictable mechanism
-+	# to clear stale data.
-+	[ $FSTYP == "xfs" ] && _notrun "dmlogwrites not supported on XFS"
-+
- 	_exclude_scratch_mount_option dax
- 	_require_dm_target log-writes
- 	_require_test_program "log-writes/replay-log"
-@@ -39,6 +47,8 @@ _require_log_writes_dax_mountopt()
- 	[ -z "$LOGWRITES_DEV" -o ! -b "$LOGWRITES_DEV" ] && \
- 		_notrun "This test requires a valid \$LOGWRITES_DEV"
- 
-+	[ $FSTYP == "xfs" ] && _notrun "dmlogwrites not supported on XFS"
-+
- 	_require_dm_target log-writes
- 	_require_test_program "log-writes/replay-log"
- 
--- 
-2.25.4
-
+> ---
+> 
+> Changelog:
+> 
+> 	V2:
+> 		Remove __GFP_RETRY_MAYFAIL from the kvzalloc() calls
+> 	V3:
+> 		Remove extra newline
+> 
+>  fs/xfs/kmem.h          | 6 ------
+>  fs/xfs/scrub/symlink.c | 2 +-
+>  fs/xfs/xfs_acl.c       | 2 +-
+>  fs/xfs/xfs_ioctl.c     | 4 ++--
+>  fs/xfs/xfs_rtalloc.c   | 2 +-
+>  5 files changed, 5 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+> index fb1d066770723..38007117697ef 100644
+> --- a/fs/xfs/kmem.h
+> +++ b/fs/xfs/kmem.h
+> @@ -71,12 +71,6 @@ kmem_zalloc(size_t size, xfs_km_flags_t flags)
+>  	return kmem_alloc(size, flags | KM_ZERO);
+>  }
+>  
+> -static inline void *
+> -kmem_zalloc_large(size_t size, xfs_km_flags_t flags)
+> -{
+> -	return kmem_alloc_large(size, flags | KM_ZERO);
+> -}
+> -
+>  /*
+>   * Zone interfaces
+>   */
+> diff --git a/fs/xfs/scrub/symlink.c b/fs/xfs/scrub/symlink.c
+> index 5641ae512c9ef..c08be5ede0661 100644
+> --- a/fs/xfs/scrub/symlink.c
+> +++ b/fs/xfs/scrub/symlink.c
+> @@ -22,7 +22,7 @@ xchk_setup_symlink(
+>  	struct xfs_inode	*ip)
+>  {
+>  	/* Allocate the buffer without the inode lock held. */
+> -	sc->buf = kmem_zalloc_large(XFS_SYMLINK_MAXLEN + 1, 0);
+> +	sc->buf = kvzalloc(XFS_SYMLINK_MAXLEN + 1, GFP_KERNEL);
+>  	if (!sc->buf)
+>  		return -ENOMEM;
+>  
+> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> index d4c687b5cd067..c544951a0c07f 100644
+> --- a/fs/xfs/xfs_acl.c
+> +++ b/fs/xfs/xfs_acl.c
+> @@ -192,7 +192,7 @@ __xfs_set_acl(struct inode *inode, struct posix_acl *acl, int type)
+>  
+>  	if (acl) {
+>  		args.valuelen = XFS_ACL_SIZE(acl->a_count);
+> -		args.value = kmem_zalloc_large(args.valuelen, 0);
+> +		args.value = kvzalloc(args.valuelen, GFP_KERNEL);
+>  		if (!args.value)
+>  			return -ENOMEM;
+>  		xfs_acl_to_disk(args.value, acl);
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 6f22a66777cd0..4428b893f8372 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -404,7 +404,7 @@ xfs_ioc_attr_list(
+>  	     context.cursor.offset))
+>  		return -EINVAL;
+>  
+> -	buffer = kmem_zalloc_large(bufsize, 0);
+> +	buffer = kvzalloc(bufsize, GFP_KERNEL);
+>  	if (!buffer)
+>  		return -ENOMEM;
+>  
+> @@ -1690,7 +1690,7 @@ xfs_ioc_getbmap(
+>  	if (bmx.bmv_count > ULONG_MAX / recsize)
+>  		return -ENOMEM;
+>  
+> -	buf = kmem_zalloc_large(bmx.bmv_count * sizeof(*buf), 0);
+> +	buf = kvzalloc(bmx.bmv_count * sizeof(*buf), GFP_KERNEL);
+>  	if (!buf)
+>  		return -ENOMEM;
+>  
+> diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> index 6209e7b6b895b..0558f92ecdb83 100644
+> --- a/fs/xfs/xfs_rtalloc.c
+> +++ b/fs/xfs/xfs_rtalloc.c
+> @@ -862,7 +862,7 @@ xfs_alloc_rsum_cache(
+>  	 * lower bound on the minimum level with any free extents. We can
+>  	 * continue without the cache if it couldn't be allocated.
+>  	 */
+> -	mp->m_rsum_cache = kmem_zalloc_large(rbmblocks, 0);
+> +	mp->m_rsum_cache = kvzalloc(rbmblocks, GFP_KERNEL);
+>  	if (!mp->m_rsum_cache)
+>  		xfs_warn(mp, "could not allocate realtime summary cache");
+>  }
+> -- 
+> 2.26.2
+> 
