@@ -2,80 +2,116 @@ Return-Path: <SRS0=R4OI=CF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5E59C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 08:15:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4396BC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 08:17:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92FE32075B
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 08:15:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D7DC22B47
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 08:17:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YinFMawU"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vCpXDGyd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726395AbgH0IPa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Aug 2020 04:15:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55786 "EHLO
+        id S1726266AbgH0IRs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Aug 2020 04:17:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726157AbgH0IP3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 04:15:29 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CB2EC061264
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 01:15:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ZEUn/0ov4W/ACnlCqTOHP4s7oQVUAub65OSz6mEd5rM=; b=YinFMawUMVS8IBOxU4V91n1WJq
-        Lm2SQlFX5jaJrWiKeTCRu4akqjCQtcHFRMUMVV0OT9S3jJg1UHx4IFGexHYaVGUexrkCAafq4AAh9
-        l8hqbdwIMhGdueOb0y1YOsSN6fBdovQ2yt64N0KqODxBV/Y+kb0gGuUxqNmdK7Y2fcVErbSqP4Q3l
-        alfhphV8iA4Jl+GYR20yhyRB1fvgUEDgAOt18WcZnbzkkoqf8/zkqHUOGuaovJFAj0oThW0X6pfya
-        lVYVaQpbCJglHzQpqW+BJZ66uL/mK4P43p0kZTTIpZ9Mcacfki5Op6/QZjHYFd+7KyX3X7y89Q/RD
-        y7Bd8NdQ==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kBD4A-0002So-LF; Thu, 27 Aug 2020 08:15:26 +0000
-Date:   Thu, 27 Aug 2020 09:15:26 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Alexey Dobriyan <adobriyan@gmail.com>, linux-xfs@vger.kernel.org
-Subject: Re: "signed < sizeof()" bug in xfs_attr_shortform_verify() ?
-Message-ID: <20200827081526.GE7605@infradead.org>
-References: <20200825211048.GA2162993@localhost.localdomain>
- <20200825221842.GR6107@magnolia>
+        with ESMTP id S1726851AbgH0IRr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 04:17:47 -0400
+Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD0F0C061264
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 01:17:46 -0700 (PDT)
+Received: by mail-il1-x142.google.com with SMTP id f75so4161544ilh.3
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 01:17:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=bibxd2o41dYg40BtxvXnRbmJgKKhy9PyqC2iAFCW6r4=;
+        b=vCpXDGydtr4/A6wZV5+gyYrFtj+Rq6yHR/5je7PhHHOI9yCVOWjr8GGWC7agZhIVGm
+         cmi9GwAMA/3/JmxxN/eYGINKR+634qJqjCZh9kodmrM66ojtG9qU0kir1P+gXP/UerWO
+         IbXHCnKMXAMUeXP1Y96l747yX7w31kU9qQ+AZG7DMYaHMOw4ilpyFsLZGoyx7lU8BkvU
+         PyxZlm822zpsI6fTZ9kpPFUqNOZikxQ/QIbQ2qLxftDHCE/IehSxjqWzaAsUpg+b1jEx
+         44NG9WuTpdQ3nD59U+KYmuw+Ec4Dnckr2KzElyuSf1Bgv8/8EXJDp8TNRvXJbFAbHlWI
+         jSOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bibxd2o41dYg40BtxvXnRbmJgKKhy9PyqC2iAFCW6r4=;
+        b=ohH7kcB55i8UbGVIuA1ZFuPjkjaZ/r7A6YQl/1ehoijPw92nVAcLsMP0IIMGhqgzqy
+         xfBbhTb6MOEMmO6+fVGNXHhXdctRBheWyItSdpLAF82/Js25LdDuVFEF9MC4ljqPvumb
+         xUFFA3rHx0TjWU8IFT7Si3PQeglhcm6JOMxFo9SCoYoBviFJ8aciCqZZ13dmTRdfhn2O
+         ypF6H/ZjeVCqmxOC4mSY3rWdlnSfZbmJtDOkpwT/AeNwRQh6NXGPjekVyOnLL6Tt3x47
+         bG/P+rb+5mU7TtYboAf9URqv7HFjD4T1GpDD9co6OxfLMGt97tEjZaqxpSTXGJ06txzh
+         OKoQ==
+X-Gm-Message-State: AOAM533xI8xfP9jUqXTWh3wKVhWkUjT0LZWTEBzM7eh9tzJQUMZS1Dal
+        EyhHZgZKKu9KEDeGx3yvwL/1gOkKyDNd88NgcVcNkJLL
+X-Google-Smtp-Source: ABdhPJx+QNSYRrp1gc4jlAkW9mmpHZLl8AHagET3TxKlaPPDIITyn03VorWyBHdDeetrN6pMqMXsfOjK68SPvOve4Ks=
+X-Received: by 2002:a05:6e02:dc3:: with SMTP id l3mr16739233ilj.137.1598516265849;
+ Thu, 27 Aug 2020 01:17:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200825221842.GR6107@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+References: <159847949739.2601708.16579235017313836378.stgit@magnolia>
+ <159847954327.2601708.9783406435973854389.stgit@magnolia> <20200827065114.GA17534@infradead.org>
+In-Reply-To: <20200827065114.GA17534@infradead.org>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 27 Aug 2020 11:17:34 +0300
+Message-ID: <CAOQ4uxiXNaboUgCs6A5zjfnMpmb8+=m+TaZ6fKj0-5sknie3Ag@mail.gmail.com>
+Subject: Re: [PATCH 07/11] xfs: kill struct xfs_ictimestamp
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 03:18:42PM -0700, Darrick J. Wong wrote:
-> On Wed, Aug 26, 2020 at 12:10:48AM +0300, Alexey Dobriyan wrote:
-> > xfs_attr_shortform_verify() contains the following code:
-> > 
-> > 
-> > 	int64_t size = ifp->if_bytes;
-> >         /*
-> >          * Give up if the attribute is way too short.
-> >          */
-> >         if (size < sizeof(struct xfs_attr_sf_hdr))
-> >                 return __this_address;
-> > 
-> > 
-> > In general "if (signed < sizeof())" is wrong because of how type
-> > promotions work. Such check won't catch small negative values.
-> > 
-> > I don't know XFS well enough to know if negative values were excluded
-> > somewhere above the callchain, but maybe someone else does.
-> 
-> The initial allocations are always positive and the subsequent
-> xfs_idata_realloc are checked to prevent if_bytes from going negative,
-> but it does seem funny to me that if_bytes is declared int64_t...
+On Thu, Aug 27, 2020 at 9:51 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> > + */
+> > +static inline xfs_ictimestamp_t
+> > +xfs_inode_to_log_dinode_ts(
+> > +     const struct timespec64 tv)
+> > +{
+> > +     uint64_t                t;
+> > +
+> > +#ifdef __LITTLE_ENDIAN
+> > +     t = ((uint64_t)tv.tv_nsec << 32) | ((uint64_t)tv.tv_sec & 0xffffffff);
+> > +#elif __BIG_ENDIAN
+> > +     t = ((int64_t)tv.tv_sec << 32) | ((uint64_t)tv.tv_nsec & 0xffffffff);
+> > +#else
+> > +# error System is neither little nor big endian?
+> > +#endif
+> > +     return t;
+>
+> Looking at this I wonder if we should just keep the struct and cast
+> to it locally in the conversion functions, as that should take
+> care of everything.  Or just keep the union from the previous version,
+> sorry..
 
-Yes, the int64_t is weird.  IIRC the signednes was done to simplify
-some arithmertics in the reallocation case, but that shouldn't really
-leak out..
+Looking at this my eyes pop out.
+I realize that maintaining on-disk format of the log is challenging,
+so if there is no other technical solution that will be easier for humans
+to review and maintain going forward, I will step back and let others
+review this code.
+
+But it bears the question: do we have to support replaying on BE a
+log that was recorded on LE? Especially with so little BE machines
+around these days, this sounds like over design to me.
+Wouldn't it be better just to keep a bit in the log if it is LE or BE and refuse
+to replay it on the wrong architecture?
+
+Sure, we need to support whatever we supported up to now, but "bigtime"
+can require a new incompat log feature "host order" (or something).
+
+Anyway, I am probably mumbling utter garbage, do feel free to ignore
+or set me straight.
+
+Thanks,
+Amir.
