@@ -2,246 +2,154 @@ Return-Path: <SRS0=R4OI=CF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C96FC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 00:00:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33B11C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 00:29:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D6A7207CD
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 00:00:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02A9A2087C
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 00:29:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WtmP8KYf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726825AbgH0AAD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 26 Aug 2020 20:00:03 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:50807 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726820AbgH0AAC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Aug 2020 20:00:02 -0400
-Received: from dread.disaster.area (pa49-181-146-199.pa.nsw.optusnet.com.au [49.181.146.199])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 953483A690F;
-        Thu, 27 Aug 2020 09:59:57 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kB5Kd-00048k-Pe; Thu, 27 Aug 2020 09:59:55 +1000
-Date:   Thu, 27 Aug 2020 09:59:55 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] mkfs: hook up suboption parsing to ini files
-Message-ID: <20200826235955.GZ12131@dread.disaster.area>
-References: <20200826015634.3974785-1-david@fromorbit.com>
- <20200826015634.3974785-4-david@fromorbit.com>
- <5da00b2e-69e1-09e2-89d2-63623494d244@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5da00b2e-69e1-09e2-89d2-63623494d244@sandeen.net>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=XJ9OtjpE c=1 sm=1 tr=0 cx=a_idp_d
-        a=GorAHYkI+xOargNMzM6qxQ==:117 a=GorAHYkI+xOargNMzM6qxQ==:17
-        a=kj9zAlcOel0A:10 a=y4yBn9ojGxQA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=kNCllGYz0TfvLhzG8TMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1726790AbgH0A3J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 26 Aug 2020 20:29:09 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:37586 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726753AbgH0A3J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Aug 2020 20:29:09 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07R0FgBb144946
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 00:29:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id; s=corp-2020-01-29;
+ bh=u57ihfld6tVjAe3xaOTVTdyw/7UWRBh6riqio+QLbyU=;
+ b=WtmP8KYfdjIWfsVuwfyREkhKPvGOa9S1ZFZnPi6CJlGQGqQjXKtPHBCj4P2VE6EUA/yG
+ 09Y5hlG6XyFbhEtdQrYjCaxCISGBFBBj48BnSBkd2xhJHTh4KwjFaFj9qoO4w3nnlTSy
+ TNuemeG20r3d0sDxRnO5nMG/VjtXOthAQ93IdIiA3aalgJR5Ovpjm6ChxoFLWGVS8Jzt
+ UBCQR/9F0KG7iNuYmC1BemfAqMbqMCO8vAnJ6ZhC6QhCiTpw9U4OJfy62icJ9k5qBFHV
+ X2QGf5ruzMwrLig2n3ZJW/gq3ChDlZN6p+Y5b4b4ZrN8cBHyDcAHLjr50y4ECLdJYIH6 7A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 333w6u1yve-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 00:29:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07R0AHZ9121694
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 00:29:07 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 333rubkfx9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 00:29:07 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07R0T68c016799
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 00:29:06 GMT
+Received: from localhost.localdomain (/67.1.244.254)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 26 Aug 2020 17:29:06 -0700
+From:   Allison Collins <allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v12 00/32] xfsprogs: Delayed Attributes
+Date:   Wed, 26 Aug 2020 17:28:24 -0700
+Message-Id: <20200827002856.1131-1-allison.henderson@oracle.com>
+X-Mailer: git-send-email 2.17.1
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9725 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ bulkscore=0 suspectscore=0 spamscore=0 mlxscore=0 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008270000
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9725 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 impostorscore=0
+ mlxlogscore=999 suspectscore=0 phishscore=0 malwarescore=0 spamscore=0
+ priorityscore=1501 clxscore=1015 mlxscore=0 lowpriorityscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008270000
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 26, 2020 at 05:21:13PM -0500, Eric Sandeen wrote:
-> On 8/25/20 8:56 PM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Now we have the config file parsing hooked up and feeding in
-> > parameters to mkfs, wire the parameters up to the existing CLI
-> > option parsing functions. THis gives the config file exactly the
-> > same capabilities and constraints as the command line option
-> > specification.
-> 
-> And as such, as you already mentioned, respecifications on the command
-> line will fail.  That can be documented in the man page :)
-> 
-> The section names will need to be documented too.
-> 
-> (In a very much not-bikeshedding way, we could consider [b] rather than
-> [block] so you can cover it with "the section names match the option
-> characters, i.e. for -b one would use section name [b]" but I really don't
-> care and will not mention this again because as long as it's documented
-> it's fine.)
+Hi all,
 
-No, I want the ini file to be human readable. The other thing to
-consider here is that this is the equivalent of the long option
-CLI parameter definition (i.e. -b size=foo vs --block="size=foo").
-They'll get documented in the man page....
+This set applies the corresponding changes for delayed attributes to
+xfsprogs. I will pick up the reviews from the kernel side series and mirror
+them here.  This set also includes some patches from the kernel side that have
+not yet been ported. This set also includes patches needed for the user space
+cli and log printing routines
 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  include/linux.h |   2 +-
-> >  mkfs/xfs_mkfs.c | 121 +++++++++++++++++++++++++++++++++++++-----------
-> >  2 files changed, 95 insertions(+), 28 deletions(-)
-> > 
-> > diff --git a/include/linux.h b/include/linux.h
-> > index 57726bb12b74..03b3278bb895 100644
-> > --- a/include/linux.h
-> > +++ b/include/linux.h
-> > @@ -92,7 +92,7 @@ static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
-> >  	uuid_unparse(*uu, buffer);
-> >  }
-> >  
-> > -static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
-> > +static __inline__ int platform_uuid_parse(const char *buffer, uuid_t *uu)
-> >  {
-> >  	return uuid_parse(buffer, *uu);
-> >  }
-> > diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> > index 6a373d614a56..deaed551b6d1 100644
-> > --- a/mkfs/xfs_mkfs.c
-> > +++ b/mkfs/xfs_mkfs.c
-> > @@ -142,6 +142,13 @@ enum {
-> >   * name MANDATORY
-> >   *   Name is a single char, e.g., for '-d file', name is 'd'.
-> >   *
-> > + * ini_name MANDATORY
-> > + *   Name is a string, not longer than MAX_INI_NAME_LEN, that is used as the
-> > + *   section name for this option set in INI format config files. The only
-> > + *   option set this is not required for is the command line config file
-> > + *   specification options, everything else must be configurable via config
-> > + *   files.
-> 
-> Nothing actually enforces this MANDATORY, right, this is just documentation.
-> So the fact that struct opt_params copts doesn't have it, is fine.
-> 
-> > @@ -967,13 +984,24 @@ respec(
-> >  
-> >  static void
-> >  unknown(
-> > -	char		opt,
-> > -	char		*s)
-> > +	const char	opt,
-> > +	const char	*s)
-> 
-> (can all of the constification could maybe go in its own patch just to cut
-> down on the patch doomscrolling or does it have to go with the other changes?)
+This series can also be viewed on github here:
+https://github.com/allisonhenderson/xfs_work/tree/delay_ready_attrs_xfsprogs_v12
 
-It is a result of the ini parser callback using "const char *" for
-it's variables. I just whack-a-moled it to get it compile.
+And also the extended delayed attribute and parent pointer series:
+https://github.com/allisonhenderson/xfs_work/tree/delay_ready_attrs_xfsprogs_v12_extended
 
-> >  {
-> >  	fprintf(stderr, _("unknown option -%c %s\n"), opt, s);
-> >  	usage();
-> >  }
-> >  
-> > +static void
-> > +unknown_cfgfile_opt(
-> > +	const char	*section,
-> > +	const char	*name,
-> > +	const char	*value)
-> > +{
-> > +	fprintf(stderr, _("unknown config file option: [%s]:%s=%s\n"),
-> > +		section, name, value);
-> 
-> If we allow more than one -c subopt in the future we might want to print
-> the filename. Wouldn't /hurt/ to do so now, or just remember to do it if
-> we ever add a 2nd -c subopt.
+Thanks all!
+Allison
 
-OK.
+Allison Collins (31):
+  xfsprogs: Add xfs_has_attr and subroutines
+  xfsprogs: Check for -ENOATTR or -EEXIST
+  xfsprogs: Factor out new helper functions xfs_attr_rmtval_set
+  xfsprogs: Pull up trans handling in xfs_attr3_leaf_flipflags
+  xfsprogs: Split apart xfs_attr_leaf_addname
+  xfsprogs: Refactor xfs_attr_try_sf_addname
+  xfsprogs: Pull up trans roll from xfs_attr3_leaf_setflag
+  xfsprogs: Factor out xfs_attr_rmtval_invalidate
+  xfsprogs: Pull up trans roll in xfs_attr3_leaf_clearflag
+  xfsprogs: Refactor xfs_attr_rmtval_remove
+  xfsprogs: Pull up xfs_attr_rmtval_invalidate
+  xfsprogs: Add helper function xfs_attr_node_shrink
+  xfsprogs: Remove unneeded xfs_trans_roll_inode calls
+  xfsprogs: Remove xfs_trans_roll in xfs_attr_node_removename
+  xfsprogs: Add helpers xfs_attr_is_shortform and xfs_attr_set_shortform
+  xfsprogs: Add helper function xfs_attr_leaf_mark_incomplete
+  xfsprogs: Add remote block helper functions
+  xfsprogs: Add helper function xfs_attr_node_removename_setup
+  xfsprogs: Add helper function xfs_attr_node_removename_rmt
+  xfsprogs: Simplify xfs_attr_leaf_addname
+  xfsprogs: Simplify xfs_attr_node_addname
+  xfsprogs: Lift -ENOSPC handler from xfs_attr_leaf_addname
+  xfsprogs: Add delay ready attr remove routines
+  xfsprogs: Add delay ready attr set routines
+  xfsprogs: Rename __xfs_attr_rmtval_remove
+  xfsprogs: Set up infastructure for deferred attribute operations
+  xfsprogs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+  xfsprogs: Add feature bit XFS_SB_FEAT_INCOMPAT_LOG_DELATTR
+  xfsprogs: Enable delayed attributes
+  xfs_io: Add delayed attributes error tag
+  xfsprogs: Add delayed attribute flag to cmd
 
-> 
-> > +	usage();
-> > +}
-> > +
-> >  static void
-> >  check_device_type(
-> >  	const char	*name,
-> > @@ -1379,7 +1407,7 @@ getnum(
-> >   */
-> >  static char *
-> >  getstr(
-> > -	char			*str,
-> > +	const char		*str,
-> >  	struct opt_params	*opts,
-> >  	int			index)
-> >  {
-> > @@ -1388,14 +1416,14 @@ getstr(
-> >  	/* empty strings for string options are not valid */
-> >  	if (!str || *str == '\0')
-> >  		reqval(opts->name, opts->subopts, index);
-> > -	return str;
-> > +	return (char *)str;
-> 
-> (what's the cast for?)
+Allison Henderson (1):
+  [RFC] xfsprogs: Add log item printing for ATTRI and ATTRD
 
-Because I got tired of whack-a-mole and these returned strings are
-stored in the cli parameter structure and I didn't feel like chasing
-the const rabbit down that hole.
+ include/libxfs.h         |    1 +
+ io/inject.c              |    1 +
+ libxfs/defer_item.c      |  171 ++++++
+ libxfs/libxfs_priv.h     |    1 +
+ libxfs/xfs_attr.c        | 1307 ++++++++++++++++++++++++++++++++--------------
+ libxfs/xfs_attr.h        |  244 +++++++++
+ libxfs/xfs_attr_leaf.c   |  116 ++--
+ libxfs/xfs_attr_leaf.h   |    3 +
+ libxfs/xfs_attr_remote.c |  258 ++++++---
+ libxfs/xfs_attr_remote.h |    8 +-
+ libxfs/xfs_defer.c       |    1 +
+ libxfs/xfs_defer.h       |    2 +
+ libxfs/xfs_errortag.h    |    4 +-
+ libxfs/xfs_format.h      |   11 +-
+ libxfs/xfs_fs.h          |    1 +
+ libxfs/xfs_log_format.h  |   43 +-
+ libxfs/xfs_sb.c          |    2 +
+ libxfs/xfs_types.h       |    1 +
+ logprint/log_misc.c      |   31 +-
+ logprint/log_print_all.c |   12 +
+ logprint/log_redo.c      |  197 +++++++
+ logprint/logprint.h      |   10 +
+ mkfs/xfs_mkfs.c          |   24 +-
+ 23 files changed, 1920 insertions(+), 529 deletions(-)
 
-i.e. the const on the input parameter goes as far as the input
-parsing to verify it runs, and the verified input string that is
-returned and stored is no longer const. Perhaps it would be better
-to just strdup the string here and return that instead?
-
-> > @@ -1682,23 +1710,22 @@ sector_opts_parser(
-> >  }
-> >  
-> >  static struct subopts {
-> > -	char		opt;
-> >  	struct opt_params *opts;
-> >  	int		(*parser)(struct opt_params	*opts,
-> >  				  int			subopt,
-> > -				  char			*value,
-> > +				  const char		*value,
-> >  				  struct cli_params	*cli);
-> >  } subopt_tab[] = {
-> > -	{ 'b', &bopts, block_opts_parser },
-> > -	{ 'c', &copts, cfgfile_opts_parser },
-> > -	{ 'd', &dopts, data_opts_parser },
-> > -	{ 'i', &iopts, inode_opts_parser },
-> > -	{ 'l', &lopts, log_opts_parser },
-> > -	{ 'm', &mopts, meta_opts_parser },
-> > -	{ 'n', &nopts, naming_opts_parser },
-> > -	{ 'r', &ropts, rtdev_opts_parser },
-> > -	{ 's', &sopts, sector_opts_parser },
-> > -	{ '\0', NULL, NULL },
-> > +	{ &bopts, block_opts_parser },
-> > +	{ &copts, cfgfile_opts_parser },
-> > +	{ &dopts, data_opts_parser },
-> > +	{ &iopts, inode_opts_parser },
-> > +	{ &lopts, log_opts_parser },
-> > +	{ &mopts, meta_opts_parser },
-> > +	{ &nopts, naming_opts_parser },
-> > +	{ &ropts, rtdev_opts_parser },
-> > +	{ &sopts, sector_opts_parser },
-> > +	{ NULL, NULL },
-> >  };
-> >  
-> >  static void
-> > @@ -1712,12 +1739,12 @@ parse_subopts(
-> >  	int		ret = 0;
-> >  
-> >  	while (sop->opts) {
-> > -		if (sop->opt == opt)
-> > +		if (opt && sop->opts->name == opt)
-> >  			break;
-> >  		sop++;
-> >  	}
-> >  
-> > -	/* should never happen */
-> > +	/* Should not happen */
-> 
-> ok? :)
-
-Ah, I modified this function first, then realised that it would be
-better to keep the subopt table iteration separate because we didn't
-need to use getsubopt() to separate "name=value" strings. I'll clean
-that up.
-
-> Overall this seems remarkably tidy, thanks.
-
-I've been saying config file parsing is simple and easy to fit into
-the existing option parsing infrastructure for a long time. :)
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
