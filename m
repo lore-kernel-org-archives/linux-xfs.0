@@ -6,62 +6,69 @@ X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12AB1C433E3
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 07:02:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E4B5C433E1
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 07:20:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEA7D22BED
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 07:02:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09B5D22BED
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 07:20:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DvYQCihI"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HPuaAQhp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727793AbgH0HCo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Aug 2020 03:02:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44390 "EHLO
+        id S1727772AbgH0HUG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Aug 2020 03:20:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727030AbgH0HCk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 03:02:40 -0400
+        with ESMTP id S1726851AbgH0HUE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 03:20:04 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5AE38C061264;
-        Thu, 27 Aug 2020 00:02:40 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7CC95C061264
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 00:20:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Y14PR7vEoAxt2obEPID1Vajcbw7gBwRiB+nqg5pFyH8=; b=DvYQCihIgcV6v3Nlkuw6pmeFkN
-        /2z1eWEW9N6acMfWl3yQvKQamKYNUu7jX/1UORrUbuncLxQ6V3+KUUlhYAV/520DekGLEm8VvmGGF
-        whdGdXMRJNRPUWIDfbY/Wl4KX+BLrJFYMM3dPZbwXHix8mRuLiqQ+zb2H5UDU7QDFtp8EUC9nSdQ7
-        0BiylTZE86nCAXL3G+8gYgbAnU5AFk5RyfeuLziKYJZY3XHxyhfpUDD5dYE80LR6gk+bAstQETlKo
-        VMOFeSWrwHOgwlYsTgROXpd0A5199RwqtGkGvV3L26O7jnJ7pGtx5TdBGAYyOnMeDS3dGayDacocv
-        dHRSwNRQ==;
+        bh=OJR09EXRNyp0xmLkzODcbHNy6+kW9Uvd3d3wztb0Aew=; b=HPuaAQhpYoLZpLiMBUs8ZzUihs
+        Rp0NV3YyKgy51H296qIJwGxMOPvPe5RUmcamHHadNXqDAcCiXmNvoGWv1AR/PX/KaRht8lxSGVztv
+        J7dG88yhOAGZ6gDkYx3OcojXHR9skLrafln1r40btXkQjpOFDSsIB5DoIqCOlo0JUWIMM965tF20T
+        IrrDypev1ej1qMv5AqyaORALazdq4RZXmyVCQ3VUMTzM7dDLqOOZZ+Hwdck6MWXlgqxJvZiiakr8a
+        xRKv8uB42EN3P+/lTE71L86AVTmK+axAVPUJuAFQZU0Lr0SqsLhF8wA0voPcA+0ZqgWzmXOHaOzMY
+        2nXnVLkg==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kBBvh-0005pk-O8; Thu, 27 Aug 2020 07:02:37 +0000
-Date:   Thu, 27 Aug 2020 08:02:37 +0100
+        id 1kBCCV-0006x0-8t; Thu, 27 Aug 2020 07:19:59 +0000
+Date:   Thu, 27 Aug 2020 08:19:59 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Amir Goldstein <amir73il@gmail.com>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        fstests <fstests@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org,
+        Dave Chinner <david@fromorbit.com>,
         Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/4] generic: require discard zero behavior for
- dmlogwrites on XFS
-Message-ID: <20200827070237.GA22194@infradead.org>
-References: <20200826143815.360002-1-bfoster@redhat.com>
- <20200826143815.360002-2-bfoster@redhat.com>
- <CAOQ4uxjYf2Hb4+Zid7KeWUcu3sOgqR30de_0KwwjVbwNw1HfJg@mail.gmail.com>
+Subject: Re: [PATCH] xfs: use log_incompat feature instead of speculate
+ matching
+Message-ID: <20200827071959.GD25305@infradead.org>
+References: <20200824154120.GA23868@xiangao.remote.csb>
+ <20200825100601.2529-1-hsiangkao@redhat.com>
+ <20200825145458.GC6096@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxjYf2Hb4+Zid7KeWUcu3sOgqR30de_0KwwjVbwNw1HfJg@mail.gmail.com>
+In-Reply-To: <20200825145458.GC6096@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 27, 2020 at 09:58:09AM +0300, Amir Goldstein wrote:
-> I imagine that ext4 could also be burned by this.
-> Do we have a reason to limit this requirement to xfs?
-> I prefer to make it generic.
+On Tue, Aug 25, 2020 at 07:54:58AM -0700, Darrick J. Wong wrote:
+> > +	 XFS_SB_VERSION2_FTYPE		| \
+> > +	 XFS_SB_VERSION2_NEW_IUNLINK)
+> 
+> NAK on this part; as I said earlier, don't add things to V4 filesystems.
+> 
+> If the rest of you have compelling reasons to want V4 support, now is
+> the time to speak up.
 
-The whole idea that discard zeroes data is just completely broken.
-Discard is a hint that is explicitly allowed to do nothing.
+I think that it because the series uses the longer unhashed chains
+unconditionally.  And given that old kernels can't deal with that
+at all I suspect that needs to be changed and support the old buckets
+for old file systems.  And once that is done I don't think we should
+enable the long single chain without the log item anyway, and remove
+another possibly combination of flags.
