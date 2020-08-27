@@ -2,116 +2,112 @@ Return-Path: <SRS0=R4OI=CF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 782CCC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 15:57:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 416FAC433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 16:00:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C8D42177B
-	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 15:57:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1498E2080C
+	for <linux-xfs@archiver.kernel.org>; Thu, 27 Aug 2020 16:00:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20150623.gappssmtp.com header.i=@toxicpanda-com.20150623.gappssmtp.com header.b="LEP9G9et"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MSbMoz7V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726344AbgH0P5H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 27 Aug 2020 11:57:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43660 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726321AbgH0P5H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 11:57:07 -0400
-Received: from mail-qk1-x741.google.com (mail-qk1-x741.google.com [IPv6:2607:f8b0:4864:20::741])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2404EC061264
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 08:57:07 -0700 (PDT)
-Received: by mail-qk1-x741.google.com with SMTP id o196so5765088qke.8
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 08:57:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=2d/kLksGLg8BmoGE94UbDXQhgCXyKqUn+Wd/kGZnKp4=;
-        b=LEP9G9ete+wX6Own3Eg51JDXOHDeJTvnZE0CP0YxcxHZfQlPv8sxL3Y1SRtYoe1aJv
-         g+ihMkbBCMrqVlXpC7KO649zuQQ0lR3b/B8PovP34g6Sm/Fw5AhHRpXr7lHfVYuWRvFL
-         s4CpitXVdtR0fvsme+0Nb6l/gT3WciW2gvNYvDVJz61n8SxwG426vfHJnZzcNxbCtcqq
-         xOhRrhm+D7Mm0f/xLOd+WvPcpRKcyS4fnXoX4XjUMp3VIwqORQjLj8VJz3hH/vCU14zW
-         IrtKX8X2Y9M1xihF9jgC4H9FlXIKJC2tB7rDllTYcUbXl89BiSIM8NcVkSd4Lh6SIag2
-         CSRw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=2d/kLksGLg8BmoGE94UbDXQhgCXyKqUn+Wd/kGZnKp4=;
-        b=K/ECYcFu4bc3KGd6anfRb4562/V/Hd9tebRyqzVIjIpbjCVh1Qd1zlRqajzkB33Zml
-         wPgxeXsuvtqIiW9kenSjrBCRJ186nKfn/SSI8FqxEiBCNA7ej8H/k+sw/dx2/Lo0S65B
-         Q4KjcmrO7lwjQW03f9i/g6bWPzlq8BdTgriBQD1OwpgMblmnJbX6BavqHJ0oDH5c7Cdm
-         sN+sbI25+myFdANu4kdwUiDk2iT+FR9flTiilu+Df66WprLmoVwQCZlJChzFt00V2R3K
-         2u5EhHczLFjqlIyDQv+1PAcr3YGMCQDfyAbMGW59Ko18ma221QGwxzdIDEPRIbXNqmNg
-         H9aA==
-X-Gm-Message-State: AOAM533mh+6KCYKsdSz+A5kAyapPcGqKBJcEOOHFHt12W4gXUDb5ymY4
-        B/gclDBLQM9l80Kbr9e05O/DKuYjVV9cWaHe
-X-Google-Smtp-Source: ABdhPJzyfjpD0FGKP9jCR5+pk+mS6EwehghX6FdkGLGoHlaFemUZBTkMdTgvpRl0uNi5ncjVA17Wrw==
-X-Received: by 2002:a37:ad0a:: with SMTP id f10mr19298391qkm.154.1598543825741;
-        Thu, 27 Aug 2020 08:57:05 -0700 (PDT)
-Received: from [192.168.1.210] (cpe-174-109-172-136.nc.res.rr.com. [174.109.172.136])
-        by smtp.gmail.com with ESMTPSA id h25sm2011175qka.106.2020.08.27.08.57.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 27 Aug 2020 08:57:05 -0700 (PDT)
-Subject: Re: [PATCH 1/4] generic: require discard zero behavior for
- dmlogwrites on XFS
-To:     Christoph Hellwig <hch@infradead.org>,
-        Amir Goldstein <amir73il@gmail.com>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        fstests <fstests@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-References: <20200826143815.360002-1-bfoster@redhat.com>
- <20200826143815.360002-2-bfoster@redhat.com>
- <CAOQ4uxjYf2Hb4+Zid7KeWUcu3sOgqR30de_0KwwjVbwNw1HfJg@mail.gmail.com>
- <20200827070237.GA22194@infradead.org>
- <CAOQ4uxhhN6Gj9AZBvEHUDLjTRKWi7=rOhitmbDLWFA=dCZQxXw@mail.gmail.com>
- <20200827073700.GA30374@infradead.org>
-From:   Josef Bacik <josef@toxicpanda.com>
-Message-ID: <c59a4ed6-2698-ab61-6a73-143e273d9e22@toxicpanda.com>
-Date:   Thu, 27 Aug 2020 11:57:03 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726820AbgH0QAf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 27 Aug 2020 12:00:35 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:54006 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726234AbgH0QAf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Aug 2020 12:00:35 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07RFxuoA176597
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 16:00:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=VYP6cUdNXWyrJWK+Fd6/IhOumYGayv1IzJgh55HtQBU=;
+ b=MSbMoz7V1uKVgjMOixRUKM8LtPqIiotsFAakpc2gRR7iyAL6KG7I/0W54Dz6DG88xFeO
+ Cw5ru+mCjOiYCNp/VpxPLEYeNnr08r6QuxcyX+NuXnaEFokJ0qH++s1JhszViBuLZNr8
+ Rgum3kiffbOMhq3Mcrx6OPNxxANqXik2jnYz28bhZDhEE5DVqbqSsmRzPKnBHTJQah9y
+ 3omBNuV5mXnh70AFcYN0le51uvZ17pmxlqsGuykA7ku77yhjDzZumtbaO6CwMDTp7s2M
+ +5fAuW3UpBq24ee4N3D6o7gHf4UIrj6rlJ5+Ox1RC8jazf/LV7yyD2nVoXN/l8xWL7Ra /Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 333dbs77m4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 16:00:32 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07RG0Kwp141916
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 16:00:32 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 333rudcb8n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 16:00:31 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07RG0VtA021510
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Aug 2020 16:00:31 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 27 Aug 2020 09:00:30 -0700
+Date:   Thu, 27 Aug 2020 09:00:30 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 125eac243806
+Message-ID: <20200827160030.GV6096@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200827073700.GA30374@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9726 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ bulkscore=0 suspectscore=2 spamscore=0 mlxscore=0 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008270118
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9726 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 clxscore=1015
+ priorityscore=1501 impostorscore=0 phishscore=0 malwarescore=0
+ mlxlogscore=999 spamscore=0 mlxscore=0 lowpriorityscore=0 suspectscore=2
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008270118
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/27/20 3:37 AM, Christoph Hellwig wrote:
-> On Thu, Aug 27, 2020 at 10:29:05AM +0300, Amir Goldstein wrote:
->> I figured you'd say something like that :)
->> but since we are talking about dm-thin as a solution for predictable
->> behavior at the moment and this sanity check helps avoiding adding
->> new tests that can fail to some extent, is the proposed bandaid good enough
->> to keep those tests alive until a better solution is proposed?
-> 
-> Well, the problem is that a test that wants to reliable nuke data needs
-> to... *drumroll* reliably nuke data.  Which means zeroing or at least
-> a known pattern.  discard doesn't give you that.
-> 
-> I don't see how a plain discard is going to work for any file system
-> for that particular case.
-> 
+Hi folks,
 
-This sort of brings up a good point, the whole point of DISCARD support 
-in log-writes was to expose problems where we may have been discarding 
-real data we cared about, hence adding the forced zero'ing stuff for 
-devices that didn't support discard.  But that made the incorrect 
-assumption that a drive with actual discard support would actually 
-return 0's for discarded data.  That assumption was based on hardware 
-that did actually do that, but now we live in the brave new world of 
-significantly shittier drives.  Does dm-thinp reliably unmap the ranges 
-we discard, and thus give us this zero'ing behavior?  Because we might 
-as well just use that for everything so log-writes doesn't have to 
-resort to pwrite()'ing zeros everywhere.  Thanks,
+The for-next branch of the xfs-linux repository at:
 
-Josef
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  We're still in the stabilization phase for 5.9, and I
+wanted to get the fix for the <cough> nasty xattr bug moving asap.
+
+The new head of the for-next branch is commit:
+
+125eac243806 xfs: initialize the shortform attr header padding entry
+
+New Commits:
+
+Brian Foster (2):
+      [9c516e0e4554] xfs: finish dfops on every insert range shift iteration
+      [657f101930bc] xfs: fix off-by-one in inode alloc block reservation calculation
+
+Darrick J. Wong (1):
+      [125eac243806] xfs: initialize the shortform attr header padding entry
+
+Eric Sandeen (1):
+      [f4020438fab0] xfs: fix boundary test in xfs_attr_shortform_verify
+
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_attr_leaf.c   | 8 +++++---
+ fs/xfs/libxfs/xfs_ialloc.c      | 4 ++--
+ fs/xfs/libxfs/xfs_trans_space.h | 2 +-
+ fs/xfs/xfs_bmap_util.c          | 2 +-
+ 4 files changed, 9 insertions(+), 7 deletions(-)
