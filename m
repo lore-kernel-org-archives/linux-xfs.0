@@ -2,40 +2,40 @@ Return-Path: <SRS0=2Dxs=CH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 278CFC433E6
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 08:09:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 836C6C433E7
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 08:09:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 023D3208A9
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 08:09:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 630322076D
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 08:09:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="IkHoOYwM"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="YgiZCIp7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727969AbgH2IJC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727950AbgH2IJC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Sat, 29 Aug 2020 04:09:02 -0400
-Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:6398 "EHLO
-        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727930AbgH2II4 (ORCPT
+Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:6665 "EHLO
+        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727929AbgH2II4 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Aug 2020 04:08:56 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5f4a0d090000>; Sat, 29 Aug 2020 01:08:41 -0700
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5f4a0c9b0001>; Sat, 29 Aug 2020 01:06:51 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
+  by hqpgpgate102.nvidia.com (PGP Universal service);
   Sat, 29 Aug 2020 01:08:55 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Sat, 29 Aug 2020 01:08:55 -0700
-Received: from HQMAIL105.nvidia.com (172.20.187.12) by HQMAIL101.nvidia.com
- (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 29 Aug
+        by hqpgpgate102.nvidia.com on Sat, 29 Aug 2020 01:08:55 -0700
+Received: from HQMAIL101.nvidia.com (172.20.187.10) by HQMAIL111.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 29 Aug
  2020 08:08:54 +0000
-Received: from hqnvemgw03.nvidia.com (10.124.88.68) by HQMAIL105.nvidia.com
- (172.20.187.12) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+Received: from hqnvemgw03.nvidia.com (10.124.88.68) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
  Transport; Sat, 29 Aug 2020 08:08:54 +0000
 Received: from sandstorm.nvidia.com (Not Verified[10.2.50.252]) by hqnvemgw03.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5f4a0d160002>; Sat, 29 Aug 2020 01:08:54 -0700
+        id <B5f4a0d160000>; Sat, 29 Aug 2020 01:08:54 -0700
 From:   John Hubbard <jhubbard@nvidia.com>
 To:     Andrew Morton <akpm@linux-foundation.org>
 CC:     Alexander Viro <viro@zeniv.linux.org.uk>,
@@ -45,264 +45,138 @@ CC:     Alexander Viro <viro@zeniv.linux.org.uk>,
         <linux-fsdevel@vger.kernel.org>, <linux-block@vger.kernel.org>,
         <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>,
         John Hubbard <jhubbard@nvidia.com>
-Subject: [PATCH v2 2/3] iov_iter: introduce iov_iter_pin_user_pages*() routines
-Date:   Sat, 29 Aug 2020 01:08:52 -0700
-Message-ID: <20200829080853.20337-3-jhubbard@nvidia.com>
+Subject: [PATCH v2 0/3] bio: Direct IO: convert to pin_user_pages_fast()
+Date:   Sat, 29 Aug 2020 01:08:50 -0700
+Message-ID: <20200829080853.20337-1-jhubbard@nvidia.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200829080853.20337-1-jhubbard@nvidia.com>
-References: <20200829080853.20337-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
 X-NVConfidentiality: public
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1598688521; bh=Vy/aicbsaikOMN7ktN/NsGfhFPk9fOg1k934MsKFztI=;
+        t=1598688411; bh=f29+8U51sN7xD9DRBLq2nw+qMqJ1oMDZgC0r44yrcd4=;
         h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         In-Reply-To:References:MIME-Version:X-NVConfidentiality:
-         Content-Transfer-Encoding:Content-Type;
-        b=IkHoOYwMr+a3rkYodr7JMkibHrLP5gB6QnWW58BFLudMDnkVIVKMkG3++1GuG+rml
-         nTlpsQtrq34EDfvVMEOmS30XkqnbTeEBJA1401I/Suloe8fnOTn2AiDbinkuNajMlR
-         iMRgDyIgGlxp9X+SJc2JrIbSvsjEejN66a6JV0fNVz7uYLlbHlIM8olv9XW87WswZ1
-         7sezpbZfoH1N69FsPFNqYttCo43H+hplqf5TXajBOd0ziKnLHbFZrMOvw2v0mNraep
-         CYVJAlxCAIX/ZGsZ80xzC9r0bGFnG5CDSpXp+kSNvH+AryxkoJIoCtfm9V5mhECa1M
-         BP4yGPU1yiOlA==
+         MIME-Version:X-NVConfidentiality:Content-Transfer-Encoding:
+         Content-Type;
+        b=YgiZCIp71QQJea8/vSz5N0nHpsgBzIi0hXzOJenMST3nt/uuXRZZSpoJHi9YtQct2
+         ezsZJUW49zUEDtxWGF0BDcHrlMkY5InjJbmU5P6x2EZcxc5VsRDP6RGKVWOPKj3w3w
+         VvUaB/dBj0biYcaDSOqpPt7WUX6t/U7UEhLGAb+aM+5NsqAjnTRDIV1Q4TlwnruzD5
+         gaqWuWNVmyXMTI1YwrQORDgbYm7ROAvIH/Bm9+oVAo27XBmbLOrZrj/bb0bFrLG43I
+         RrgkJsGFTbBX9G2561TGfdgMRKGid0ReqWDUxnaTvLzHDOJahcILSK6BkyOfTkVY07
+         KNzSt1O5kalQA==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The new routines are:
-    iov_iter_pin_user_pages()
-    iov_iter_pin_user_pages_alloc()
+Hi,
 
-and those correspond to these pre-existing routines:
-    iov_iter_get_pages()
-    iov_iter_get_pages_alloc()
+Changes since v1:
 
-Also, pipe_get_pages() and related are changed so as to pass
-down a "use_pup" (use pin_user_page() instead of get_page()) bool
-argument.
+* Now handles ITER_PIPE, by appying pin_user_page() to ITER_PIPE pages,
+on the Direct IO path. Thanks to Al Viro for pointing me in the right
+direction there.
 
-Unlike the iov_iter_get_pages*() routines, the
-iov_iter_pin_user_pages*() routines assert that only ITER_IOVEC or
-ITER_PIPE items are passed in. They then call pin_user_page*(), instead
-of get_user_pages_fast() or get_page().
+* Removed the ceph and BIO_FOLL_PIN patches: the ceph improvements were
+handled separately as a different patch entirely, by Jeff Layton. And
+the BIO_FOLL_PIN idea turned out to be completely undesirable here.
 
-Why: In order to incrementally change Direct IO callers from calling
-get_user_pages_fast() and put_page(), over to calling
-pin_user_pages_fast() and unpin_user_page(), there need to be mid-level
-routines that specifically call one or the other systems, for both page
-acquisition and page release.
+Original cover letter, updated for v2:
 
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
----
- include/linux/uio.h |   5 ++
- lib/iov_iter.c      | 110 ++++++++++++++++++++++++++++++++++++++++----
- 2 files changed, 107 insertions(+), 8 deletions(-)
+This converts the Direct IO block/bio layer over to use FOLL_PIN pages
+(those acquired via pin_user_pages*()). This effectively converts
+several file systems (ext4, for example) that use the common Direct IO
+routines. See "Remaining work", below for a bit more detail there.
 
-diff --git a/include/linux/uio.h b/include/linux/uio.h
-index 3835a8a8e9ea..29b0504a27cc 100644
---- a/include/linux/uio.h
-+++ b/include/linux/uio.h
-@@ -229,6 +229,11 @@ int iov_iter_npages(const struct iov_iter *i, int maxp=
-ages);
-=20
- const void *dup_iter(struct iov_iter *new, struct iov_iter *old, gfp_t fla=
-gs);
-=20
-+ssize_t iov_iter_pin_user_pages(struct iov_iter *i, struct page **pages,
-+			size_t maxsize, unsigned int maxpages, size_t *start);
-+ssize_t iov_iter_pin_user_pages_alloc(struct iov_iter *i, struct page ***p=
-ages,
-+			size_t maxsize, size_t *start);
-+
- static inline size_t iov_iter_count(const struct iov_iter *i)
- {
- 	return i->count;
-diff --git a/lib/iov_iter.c b/lib/iov_iter.c
-index 5e40786c8f12..f25555eb3279 100644
---- a/lib/iov_iter.c
-+++ b/lib/iov_iter.c
-@@ -1269,7 +1269,8 @@ static inline ssize_t __pipe_get_pages(struct iov_ite=
-r *i,
- 				size_t maxsize,
- 				struct page **pages,
- 				int iter_head,
--				size_t *start)
-+				size_t *start,
-+				bool use_pup)
- {
- 	struct pipe_inode_info *pipe =3D i->pipe;
- 	unsigned int p_mask =3D pipe->ring_size - 1;
-@@ -1280,7 +1281,11 @@ static inline ssize_t __pipe_get_pages(struct iov_it=
-er *i,
- 	maxsize =3D n;
- 	n +=3D *start;
- 	while (n > 0) {
--		get_page(*pages++ =3D pipe->bufs[iter_head & p_mask].page);
-+		if (use_pup)
-+			pin_user_page(*pages++ =3D pipe->bufs[iter_head & p_mask].page);
-+		else
-+			get_page(*pages++ =3D pipe->bufs[iter_head & p_mask].page);
-+
- 		iter_head++;
- 		n -=3D PAGE_SIZE;
- 	}
-@@ -1290,7 +1295,7 @@ static inline ssize_t __pipe_get_pages(struct iov_ite=
-r *i,
-=20
- static ssize_t pipe_get_pages(struct iov_iter *i,
- 		   struct page **pages, size_t maxsize, unsigned maxpages,
--		   size_t *start)
-+		   size_t *start, bool use_pup)
- {
- 	unsigned int iter_head, npages;
- 	size_t capacity;
-@@ -1306,8 +1311,51 @@ static ssize_t pipe_get_pages(struct iov_iter *i,
- 	npages =3D pipe_space_for_user(iter_head, i->pipe->tail, i->pipe);
- 	capacity =3D min(npages, maxpages) * PAGE_SIZE - *start;
-=20
--	return __pipe_get_pages(i, min(maxsize, capacity), pages, iter_head, star=
-t);
-+	return __pipe_get_pages(i, min(maxsize, capacity), pages, iter_head,
-+				start, use_pup);
-+}
-+
-+ssize_t iov_iter_pin_user_pages(struct iov_iter *i,
-+		   struct page **pages, size_t maxsize, unsigned int maxpages,
-+		   size_t *start)
-+{
-+	size_t skip =3D i->iov_offset;
-+	const struct iovec *iov;
-+	struct iovec v;
-+
-+	if (unlikely(iov_iter_is_pipe(i)))
-+		return pipe_get_pages(i, pages, maxsize, maxpages, start, true);
-+	if (unlikely(iov_iter_is_discard(i)))
-+		return -EFAULT;
-+	if (WARN_ON_ONCE(!iter_is_iovec(i)))
-+		return -EFAULT;
-+
-+	if (unlikely(!maxsize))
-+		return 0;
-+	maxsize =3D min(maxsize, i->count);
-+
-+	iterate_iovec(i, maxsize, v, iov, skip, ({
-+		unsigned long addr =3D (unsigned long)v.iov_base;
-+		size_t len =3D v.iov_len + (*start =3D addr & (PAGE_SIZE - 1));
-+		int n;
-+		int res;
-+
-+		if (len > maxpages * PAGE_SIZE)
-+			len =3D maxpages * PAGE_SIZE;
-+		addr &=3D ~(PAGE_SIZE - 1);
-+		n =3D DIV_ROUND_UP(len, PAGE_SIZE);
-+
-+		res =3D pin_user_pages_fast(addr, n,
-+				iov_iter_rw(i) !=3D WRITE ?  FOLL_WRITE : 0,
-+				pages);
-+		if (unlikely(res < 0))
-+			return res;
-+		return (res =3D=3D n ? len : res * PAGE_SIZE) - *start;
-+		0;
-+	}))
-+	return 0;
- }
-+EXPORT_SYMBOL(iov_iter_pin_user_pages);
-=20
- ssize_t iov_iter_get_pages(struct iov_iter *i,
- 		   struct page **pages, size_t maxsize, unsigned maxpages,
-@@ -1317,7 +1365,7 @@ ssize_t iov_iter_get_pages(struct iov_iter *i,
- 		maxsize =3D i->count;
-=20
- 	if (unlikely(iov_iter_is_pipe(i)))
--		return pipe_get_pages(i, pages, maxsize, maxpages, start);
-+		return pipe_get_pages(i, pages, maxsize, maxpages, start, false);
- 	if (unlikely(iov_iter_is_discard(i)))
- 		return -EFAULT;
-=20
-@@ -1357,7 +1405,7 @@ static struct page **get_pages_array(size_t n)
-=20
- static ssize_t pipe_get_pages_alloc(struct iov_iter *i,
- 		   struct page ***pages, size_t maxsize,
--		   size_t *start)
-+		   size_t *start, bool use_pup)
- {
- 	struct page **p;
- 	unsigned int iter_head, npages;
-@@ -1380,7 +1428,7 @@ static ssize_t pipe_get_pages_alloc(struct iov_iter *=
-i,
- 	p =3D get_pages_array(npages);
- 	if (!p)
- 		return -ENOMEM;
--	n =3D __pipe_get_pages(i, maxsize, p, iter_head, start);
-+	n =3D __pipe_get_pages(i, maxsize, p, iter_head, start, use_pup);
- 	if (n > 0)
- 		*pages =3D p;
- 	else
-@@ -1388,6 +1436,52 @@ static ssize_t pipe_get_pages_alloc(struct iov_iter =
-*i,
- 	return n;
- }
-=20
-+ssize_t iov_iter_pin_user_pages_alloc(struct iov_iter *i,
-+		   struct page ***pages, size_t maxsize,
-+		   size_t *start)
-+{
-+	struct page **p;
-+	size_t skip =3D i->iov_offset;
-+	const struct iovec *iov;
-+	struct iovec v;
-+
-+	if (unlikely(iov_iter_is_pipe(i)))
-+		return pipe_get_pages_alloc(i, pages, maxsize, start, true);
-+	if (unlikely(iov_iter_is_discard(i)))
-+		return -EFAULT;
-+	if (WARN_ON_ONCE(!iter_is_iovec(i)))
-+		return -EFAULT;
-+
-+	if (unlikely(!maxsize))
-+		return 0;
-+	maxsize =3D min(maxsize, i->count);
-+
-+	iterate_iovec(i, maxsize, v, iov, skip, ({
-+		unsigned long addr =3D (unsigned long)v.iov_base;
-+		size_t len =3D v.iov_len + (*start =3D addr & (PAGE_SIZE - 1));
-+		int n;
-+		int res;
-+
-+		addr &=3D ~(PAGE_SIZE - 1);
-+		n =3D DIV_ROUND_UP(len, PAGE_SIZE);
-+		p =3D get_pages_array(n);
-+		if (!p)
-+			return -ENOMEM;
-+
-+		res =3D pin_user_pages_fast(addr, n,
-+				iov_iter_rw(i) !=3D WRITE ?  FOLL_WRITE : 0, p);
-+		if (unlikely(res < 0)) {
-+			kvfree(p);
-+			return res;
-+		}
-+		*pages =3D p;
-+		return (res =3D=3D n ? len : res * PAGE_SIZE) - *start;
-+		0;
-+	}))
-+	return 0;
-+}
-+EXPORT_SYMBOL(iov_iter_pin_user_pages_alloc);
-+
- ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
- 		   struct page ***pages, size_t maxsize,
- 		   size_t *start)
-@@ -1398,7 +1492,7 @@ ssize_t iov_iter_get_pages_alloc(struct iov_iter *i,
- 		maxsize =3D i->count;
-=20
- 	if (unlikely(iov_iter_is_pipe(i)))
--		return pipe_get_pages_alloc(i, pages, maxsize, start);
-+		return pipe_get_pages_alloc(i, pages, maxsize, start, false);
- 	if (unlikely(iov_iter_is_discard(i)))
- 		return -EFAULT;
-=20
+Quite a few approaches have been considered over the years. This one is
+inspired by Christoph Hellwig's July, 2019 observation that there are
+only 5 ITER_ types, and we can simplify handling of them for Direct IO
+[1]. After working through how bio submission and completion works, I
+became convinced that this is the simplest and cleanest approach to
+conversion.
+
+Design notes =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+This whole approach depends on certain concepts:
+
+1) Each struct bio instance must not mix different types of pages:
+FOLL_PIN and non-FOLL_PIN pages. (By FOLL_PIN I'm referring to pages
+that were acquired and pinned via pin_user_page*() routines.)
+Fortunately, this is already an enforced constraint for bio's, as
+evidenced by the existence and use of BIO_NO_PAGE_REF.
+
+2) Christoph Hellwig's July, 2019 observation that there are
+only 5 ITER_ types, and we can simplify handling of them for Direct IO
+[1]. Accordingly, this series implements the following pseudocode:
+
+Direct IO behavior:
+
+    ITER_IOVEC:
+        pin_user_pages_fast();
+        break;
+
+    ITER_PIPE:
+        for each page:
+             pin_user_page();
+        break;
+
+    ITER_KVEC:    // already elevated page refcount, leave alone
+    ITER_BVEC:    // already elevated page refcount, leave alone
+    ITER_DISCARD: // discard
+        return -EFAULT or -ENVALID;
+
+...which works for callers that already have sorted out which case they
+are in. Such as, Direct IO in the block/bio layers.
+
+Now, this does leave ITER_KVEC and ITER_BVEC unconverted, but on the
+other hand, it's not clear that these are actually affected in the real
+world, by the get_user_pages()+filesystem interaction problems of [2].
+If it turns out to matter, then those can be handled too, but it's just
+more refactoring and surgery to do so.
+
+Testing
+=3D=3D=3D=3D=3D=3D=3D
+
+Performance: no obvious regressions from running fio (direct=3D1: Direct
+IO) on both SSD and NVMe drives.
+
+Functionality: selected non-destructive bare metal xfstests on xfs,
+ext4, btrfs, orangefs filesystems, plus LTP tests.
+
+Note that I have only a single x86 64-bit test machine, though.
+
+Remaining work
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Non-converted call sites for iter_iov_get_pages*() at the
+moment include: net, crypto, cifs, ceph, vhost, fuse, nfs/direct,
+vhost/scsi. However, it's not clear which of those really have to be
+converted, because some of them probably use ITER_BVEC or ITER_KVEC.
+
+About-to-be-converted sites (in a subsequent patch) are: Direct IO for
+filesystems that use the generic read/write functions.
+
+[1] https://lore.kernel.org/kvm/20190724061750.GA19397@infradead.org/
+
+[2] "Explicit pinning of user-space pages":
+    https://lwn.net/Articles/807108/
+
+
+John Hubbard (3):
+  mm/gup: introduce pin_user_page()
+  iov_iter: introduce iov_iter_pin_user_pages*() routines
+  bio: convert get_user_pages_fast() --> pin_user_pages_fast()
+
+ block/bio.c          |  24 +++++-----
+ block/blk-map.c      |   6 +--
+ fs/direct-io.c       |  28 +++++------
+ fs/iomap/direct-io.c |   2 +-
+ include/linux/mm.h   |   2 +
+ include/linux/uio.h  |   5 ++
+ lib/iov_iter.c       | 110 +++++++++++++++++++++++++++++++++++++++----
+ mm/gup.c             |  30 ++++++++++++
+ 8 files changed, 169 insertions(+), 38 deletions(-)
+
 --=20
 2.28.0
 
