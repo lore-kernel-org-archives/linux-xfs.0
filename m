@@ -2,76 +2,154 @@ Return-Path: <SRS0=2Dxs=CH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28207C43461
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 06:48:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE89BC433E6
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 08:09:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F108C21527
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 06:48:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BADDE20776
+	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 08:09:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YEK8/5Op"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="GeCR42p0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727784AbgH2Gsx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 29 Aug 2020 02:48:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38102 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727804AbgH2Gsw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Aug 2020 02:48:52 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4EB17C061236;
-        Fri, 28 Aug 2020 23:48:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=mkp4zEKeYotqWDLoI1xLlqrVzDDIPwtK9tCd9RMvqwA=; b=YEK8/5OpOssnGRjAU21oyyIRb/
-        KwYmcDsXBAVmy+0+/4ZceUU69BVoGzBieenle8+sc7WB9mZ67r2gSYK59pq9LRXG2zPbt40DUMJTc
-        t7IngTdYEZ+Lc63SWJIyUYzRO9lDJscB6miz5DqW1Wyzue2BRX4C2sHpqFhPZb++ranP5PKOqmNKo
-        DQovnjh09342yT8kjsYAeRXBQoQk+XK8iyo98t3cyVy8vrojS0dAarlO9r1lOWaVsGhWM+ry5GX6l
-        oF8asjD/s/4afSJ3K5nGcVDg7Kw2UoBqlSv4wad2RFnvAZYaNzGCCjImG9w+FvNc7RWxLorUgtbl8
-        ftv0KjvA==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kBufS-0007xL-RU; Sat, 29 Aug 2020 06:48:50 +0000
-Date:   Sat, 29 Aug 2020 07:48:50 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] generic: disable dmlogwrites tests on XFS
-Message-ID: <20200829064850.GC29069@infradead.org>
-References: <20200827145329.435398-1-bfoster@redhat.com>
+        id S1727944AbgH2IJB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 29 Aug 2020 04:09:01 -0400
+Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:6667 "EHLO
+        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727931AbgH2II4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Aug 2020 04:08:56 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5f4a0c9b0000>; Sat, 29 Aug 2020 01:06:51 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Sat, 29 Aug 2020 01:08:55 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Sat, 29 Aug 2020 01:08:55 -0700
+Received: from HQMAIL107.nvidia.com (172.20.187.13) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 29 Aug
+ 2020 08:08:54 +0000
+Received: from hqnvemgw03.nvidia.com (10.124.88.68) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Sat, 29 Aug 2020 08:08:54 +0000
+Received: from sandstorm.nvidia.com (Not Verified[10.2.50.252]) by hqnvemgw03.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5f4a0d160001>; Sat, 29 Aug 2020 01:08:54 -0700
+From:   John Hubbard <jhubbard@nvidia.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+CC:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH v2 1/3] mm/gup: introduce pin_user_page()
+Date:   Sat, 29 Aug 2020 01:08:51 -0700
+Message-ID: <20200829080853.20337-2-jhubbard@nvidia.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200829080853.20337-1-jhubbard@nvidia.com>
+References: <20200829080853.20337-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200827145329.435398-1-bfoster@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+X-NVConfidentiality: public
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1598688411; bh=nt0PtF6oHhEk4Ehi11ZCG1lTaPX813pQeWdo2szO18M=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         In-Reply-To:References:MIME-Version:X-NVConfidentiality:
+         Content-Transfer-Encoding:Content-Type;
+        b=GeCR42p0vG1Y/mcPDPfFg8Jr+t+lxTu2SPIfM2gbW6ioXBlHyDFBEpuWKpukI54u+
+         wsuDo2DHLHKzyLlIOzIMY4I1LBumbthJEXfQmWXbbOStiZGBDqfFygVpB3cAvHtCxJ
+         O7vNWk/2AOqUKjPA6p+gj8ZomZWK4+T5oteaJhEgJEmZcyDIMb4EFnfTlOEIici30Q
+         IBgbsi1Eg0hhZ4Jobh5b6/CjdUvus97FqFJ/WqgEUtSAFqIA33aVOm1GONjDKd6GC3
+         ODte/dvdN6LsXZp/2yOMJiuHmDsUiIwW+lNAgUdH40w5HufWhROtZDg4IwW21uTptn
+         FfBYqJQiWcdAg==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 27, 2020 at 10:53:29AM -0400, Brian Foster wrote:
-> Several generic fstests use dm-log-writes to test the filesystem for
-> consistency at various crash recovery points. dm-log-writes and the
-> associated replay mechanism rely on discard to clear stale blocks
-> when moving to various points in time of the fs. If the storage
-> doesn't provide discard zeroing or the discard requests exceed the
-> hardcoded maximum (128MB) of the fallback solution to physically
-> write zeroes, stale blocks are left around in the target fs. This
-> causes issues on XFS if recovery observes metadata from a future
-> version of an fs that has been replayed to an older point in time.
-> This corrupts the filesystem and leads to spurious test failures
-> that are nontrivial to diagnose.
-> 
-> Disable the generic dmlogwrites tests on XFS for the time being.
-> This is intended to be a temporary change until a solution is found
-> that allows these tests to predictably clear stale data while still
-> allowing them to run in a reasonable amount of time.
+pin_user_page() is the FOLL_PIN equivalent of get_page().
 
-As said in the other discussion I don't think this is correct.  The
-intent of the tests is to ensure the data can't be read.  You just
-happen to trigger over that with XFS, but it also means that tests
-don't work correctly on other file systems in that configuration.
+This was always a missing piece of the pin/unpin API calls (early
+reviewers of pin_user_pages() asked about it, in fact), but until now,
+it just wasn't needed. Finally though, now that the Direct IO pieces in
+block/bio are about to be converted to use FOLL_PIN, it turns out that
+there are some cases in which get_page() and get_user_pages_fast() were
+both used. Converting those sites requires a drop-in replacement for
+get_page(), which this patch supplies.
+
+[1] and [2] provide some background about pin_user_pages() in general.
+
+[1] "Explicit pinning of user-space pages":
+    https://lwn.net/Articles/807108/
+
+[2] Documentation/core-api/pin_user_pages.rst
+
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+---
+ include/linux/mm.h |  2 ++
+ mm/gup.c           | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 97c83773b6f0..51c6ae4b63f7 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1152,6 +1152,8 @@ static inline void get_page(struct page *page)
+ 	page_ref_inc(page);
+ }
+=20
++void pin_user_page(struct page *page);
++
+ bool __must_check try_grab_page(struct page *page, unsigned int flags);
+=20
+ static inline __must_check bool try_get_page(struct page *page)
+diff --git a/mm/gup.c b/mm/gup.c
+index ae096ea7583f..2cae5bbbc862 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -123,6 +123,36 @@ static __maybe_unused struct page *try_grab_compound_h=
+ead(struct page *page,
+ 	return NULL;
+ }
+=20
++/*
++ * pin_user_page() - elevate the page refcount, and mark as FOLL_PIN
++ *
++ * This the FOLL_PIN equivalent of get_page(). It is intended for use when=
+ the
++ * page will be released via unpin_user_page().
++ */
++void pin_user_page(struct page *page)
++{
++	int refs =3D 1;
++
++	page =3D compound_head(page);
++
++	VM_BUG_ON_PAGE(page_ref_count(page) <=3D 0, page);
++
++	if (hpage_pincount_available(page))
++		hpage_pincount_add(page, 1);
++	else
++		refs =3D GUP_PIN_COUNTING_BIAS;
++
++	/*
++	 * Similar to try_grab_compound_head(): even if using the
++	 * hpage_pincount_add/_sub() routines, be sure to
++	 * *also* increment the normal page refcount field at least
++	 * once, so that the page really is pinned.
++	 */
++	page_ref_add(page, refs);
++
++	mod_node_page_state(page_pgdat(page), NR_FOLL_PIN_ACQUIRED, 1);
++}
++
+ /**
+  * try_grab_page() - elevate a page's refcount by a flag-dependent amount
+  *
+--=20
+2.28.0
 
