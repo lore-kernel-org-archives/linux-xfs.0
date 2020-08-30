@@ -2,183 +2,129 @@ Return-Path: <SRS0=6Z+e=CI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7085FC433E2
-	for <linux-xfs@archiver.kernel.org>; Sun, 30 Aug 2020 06:15:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 233ADC433E2
+	for <linux-xfs@archiver.kernel.org>; Sun, 30 Aug 2020 13:31:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BFC6204EA
-	for <linux-xfs@archiver.kernel.org>; Sun, 30 Aug 2020 06:15:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFCB82078D
+	for <linux-xfs@archiver.kernel.org>; Sun, 30 Aug 2020 13:31:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lq3S+4lH"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OC+Nc2ub"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726479AbgH3GPb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 30 Aug 2020 02:15:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57038 "EHLO
+        id S1728609AbgH3NbT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 30 Aug 2020 09:31:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39696 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726477AbgH3GPa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Aug 2020 02:15:30 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40FB9C061573
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Aug 2020 23:15:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:
-        Content-Type:Content-ID:Content-Description;
-        bh=yBpBflAjZzhFLJ/zoAnTf8pfL12X1RMVeAizGqVBG/k=; b=lq3S+4lHuqrrxWCulyqR7m17Cd
-        l1SZi2nUO9Jgrozx4GlEftw3o1VN1h5UZ/M+zFrmQj4DdjN7wnin1IpXaJZO/tvJD8MZozhFAiZM1
-        rKIXYBOSTecDh3pTrQ8bASnaT0AhKNwkkNKUpV6TM03b5/8ZfsAa4VBibWO8m7Eof2vdyS5s9PozV
-        3csm5fqpgbbvCYF/izA1qCtDS62q3Wf62Q1PBqYjuQfcVkiHeBBidNnlHGRwSFos6F42+dmnN5bsM
-        0qb1nxp59wfizb4u/4blRUemRwNX9u3MFpU7McJZFtEjo7RGtpLVz1GYyjQv2TuKmiNHoflGYy1Wi
-        pVj6L18g==;
-Received: from [2001:4bb8:18c:45ba:9892:9e86:5202:32f0] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kCGci-0001zg-Pq
-        for linux-xfs@vger.kernel.org; Sun, 30 Aug 2020 06:15:28 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 13/13] xfs: reuse _xfs_buf_read for re-reading the superblock
-Date:   Sun, 30 Aug 2020 08:15:12 +0200
-Message-Id: <20200830061512.1148591-14-hch@lst.de>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200830061512.1148591-1-hch@lst.de>
-References: <20200830061512.1148591-1-hch@lst.de>
+        with ESMTP id S1728780AbgH3Nag (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Aug 2020 09:30:36 -0400
+Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FFFDC061573;
+        Sun, 30 Aug 2020 06:30:35 -0700 (PDT)
+Received: by mail-io1-xd44.google.com with SMTP id g128so3406535iof.11;
+        Sun, 30 Aug 2020 06:30:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EVyvtFVtqUEjubDTj46AnJ/udn3jbNd5SDkjfeFdLNo=;
+        b=OC+Nc2ubfIoreWhOwa3idZwr/JeaqFyIFU7obd9UZax3+fDbd8NdqocASnWhQnT7ie
+         OZpXIC8W+vvaylc9xdckpnmBoEl0+gWSTpgDOPCtts8UE8znFoAE5nqdNc3zM7DxrqF5
+         jdDzZg9fgeRm03Feb6XlYZgg0dZJJuMlj6k1QO1IHBKY6nyEJlYQrRHdiyT2OYOE+my6
+         YlT2GBl4jcZF8ejKdDL6Y/Q6VBh+HW3QBalc7YVMoNjbYkhE6azVR/wQi3Xe3/3inCLI
+         sEZp1jF4yphCJenhnsO1c33Xu2ttsPtgqueRoySKLmOSxFc8SdXKHnRJ2bta9ZoTlL+g
+         fcOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EVyvtFVtqUEjubDTj46AnJ/udn3jbNd5SDkjfeFdLNo=;
+        b=tDSqscuojE8tQtojXleFbZ0BUxYjx1PVSUG8IxNDSAwHRzzq9RhlJJhYlUAnuuKdxG
+         N4BHn7n31BUK4E0EuJ56jq7JkHYbt0PcXkrITyEnox6vc1E5JIropQPjS0ob3VSKzBwu
+         dasoP5xlwZKSOS/w2mi2lspYuCokJgRwTpDHyr0aeDVQeM+GCOfYYeb6agQIm7v2Qyw7
+         PvCcwFvWhLmvDJyIodeHSM/jprRRLEnbs00VSbyQTXWGNTs+eyAdHjlV5Bs2GUMb5Vbk
+         MLquMgYAFbI+DH8jBeWHQS+GuQ00pGMil+eP6pTJcQmXKoXBVnEEvKvNJjJmuZ6VL49O
+         4Krg==
+X-Gm-Message-State: AOAM531riYNcV+44Q78zLTIVV3gBtKFM1LkXxz/5klpBWxxc9MD03ZZ6
+        mHV33xE5GuwZc0xZ9VlqpbQHa7nMy00HgxvIsaU=
+X-Google-Smtp-Source: ABdhPJy+EuliOJKW4j8ef76Jn/hQWq/t2TiNEckAHkXCAFB2uLc0ew9cAEXThl+znZ6aSyr3dn1o8Q4YUrENpfebmI4=
+X-Received: by 2002:a6b:ec17:: with SMTP id c23mr5486508ioh.186.1598794234831;
+ Sun, 30 Aug 2020 06:30:34 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+References: <20200826143815.360002-1-bfoster@redhat.com> <20200826143815.360002-2-bfoster@redhat.com>
+ <CAOQ4uxjYf2Hb4+Zid7KeWUcu3sOgqR30de_0KwwjVbwNw1HfJg@mail.gmail.com>
+ <20200827070237.GA22194@infradead.org> <CAOQ4uxhhN6Gj9AZBvEHUDLjTRKWi7=rOhitmbDLWFA=dCZQxXw@mail.gmail.com>
+ <20200827073700.GA30374@infradead.org> <c59a4ed6-2698-ab61-6a73-143e273d9e22@toxicpanda.com>
+ <20200827170242.GA16905@infradead.org> <20200827183507.GB434083@bfoster> <20200829064659.GB29069@infradead.org>
+In-Reply-To: <20200829064659.GB29069@infradead.org>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Sun, 30 Aug 2020 16:30:23 +0300
+Message-ID: <CAOQ4uxiKsFKZkLaDLgfc7NEdHnMmuKW1zNLdzVaWP-1gw0kK+w@mail.gmail.com>
+Subject: Re: [PATCH 1/4] generic: require discard zero behavior for
+ dmlogwrites on XFS
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        fstests <fstests@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Instead of poking deeply into buffer cache internals when re-reading the
-superblock during log recovery just generalize _xfs_buf_read and use it
-there.
+On Sat, Aug 29, 2020 at 9:47 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Thu, Aug 27, 2020 at 02:35:07PM -0400, Brian Foster wrote:
+> > OTOH, perhaps the thinp behavior could be internal, but conditional
+> > based on XFS. It's not really clear to me if this problem is more of an
+> > XFS phenomenon or just that XFS happens to have some unique recovery
+> > checking logic that explicitly detects it. It seems more like the
+> > latter, but I don't know enough about ext4 or btrfs to say..
+>
+> The way I understand the tests (and Josefs mail seems to confirm that)
+> is that it uses discards to ensure data disappears.  Unfortunately
+> that's only how discard sometimes work, but not all the time.
+>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_buf.c         | 24 +++++++++++++++++-------
- fs/xfs/xfs_buf.h         | 10 ++--------
- fs/xfs/xfs_log_recover.c | 11 +++--------
- 3 files changed, 22 insertions(+), 23 deletions(-)
+I think we are confusing two slightly different uses of discard in those tests.
+One use case is that dm-logwrites records discards in test workloads and then
+needs to replay them to simulate the sequence of IO event up to a crash point.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 7f8abcbe98a447..0de6b110391202 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -52,6 +52,15 @@ static kmem_zone_t *xfs_buf_zone;
-  *	  b_lock (trylock due to inversion)
-  */
- 
-+static int __xfs_buf_submit(struct xfs_buf *bp, bool wait);
-+
-+static inline int
-+xfs_buf_submit(
-+	struct xfs_buf		*bp)
-+{
-+	return __xfs_buf_submit(bp, !(bp->b_flags & XBF_ASYNC));
-+}
-+
- static inline int
- xfs_buf_is_vmapped(
- 	struct xfs_buf	*bp)
-@@ -751,16 +760,18 @@ xfs_buf_get_map(
- 	return 0;
- }
- 
--STATIC int
-+int
- _xfs_buf_read(
--	xfs_buf_t		*bp,
--	xfs_buf_flags_t		flags)
-+	struct xfs_buf		*bp,
-+	xfs_buf_flags_t		flags,
-+	const struct xfs_buf_ops *ops)
- {
- 	ASSERT(!(flags & XBF_WRITE));
- 	ASSERT(bp->b_maps[0].bm_bn != XFS_BUF_DADDR_NULL);
- 
--	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
-+	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD | XBF_DONE);
- 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
-+	bp->b_ops = ops;
- 
- 	return xfs_buf_submit(bp);
- }
-@@ -825,8 +836,7 @@ xfs_buf_read_map(
- 	if (!(bp->b_flags & XBF_DONE)) {
- 		/* Initiate the buffer read and wait. */
- 		XFS_STATS_INC(target->bt_mount, xb_get_read);
--		bp->b_ops = ops;
--		error = _xfs_buf_read(bp, flags);
-+		error = _xfs_buf_read(bp, flags, ops);
- 
- 		/* Readahead iodone already dropped the buffer, so exit. */
- 		if (flags & XBF_ASYNC)
-@@ -1639,7 +1649,7 @@ xfs_buf_iowait(
-  * safe to reference the buffer after a call to this function unless the caller
-  * holds an additional reference itself.
-  */
--int
-+static int
- __xfs_buf_submit(
- 	struct xfs_buf	*bp,
- 	bool		wait)
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 9eb4044597c985..db172599d32dc1 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -249,6 +249,8 @@ int xfs_buf_get_uncached(struct xfs_buftarg *target, size_t numblks, int flags,
- int xfs_buf_read_uncached(struct xfs_buftarg *target, xfs_daddr_t daddr,
- 			  size_t numblks, int flags, struct xfs_buf **bpp,
- 			  const struct xfs_buf_ops *ops);
-+int _xfs_buf_read(struct xfs_buf *bp, xfs_buf_flags_t flags,
-+		const struct xfs_buf_ops *ops);
- void xfs_buf_hold(struct xfs_buf *bp);
- 
- /* Releasing Buffers */
-@@ -275,14 +277,6 @@ extern void __xfs_buf_ioerror(struct xfs_buf *bp, int error,
- #define xfs_buf_ioerror(bp, err) __xfs_buf_ioerror((bp), (err), __this_address)
- extern void xfs_buf_ioerror_alert(struct xfs_buf *bp, xfs_failaddr_t fa);
- void xfs_buf_ioend_fail(struct xfs_buf *);
--
--extern int __xfs_buf_submit(struct xfs_buf *bp, bool);
--static inline int xfs_buf_submit(struct xfs_buf *bp)
--{
--	bool wait = bp->b_flags & XBF_ASYNC ? false : true;
--	return __xfs_buf_submit(bp, wait);
--}
--
- void xfs_buf_zero(struct xfs_buf *bp, size_t boff, size_t bsize);
- void __xfs_buf_mark_corrupt(struct xfs_buf *bp, xfs_failaddr_t fa);
- #define xfs_buf_mark_corrupt(bp) __xfs_buf_mark_corrupt((bp), __this_address)
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 5449cba657352c..1771bc3646f4b1 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3305,16 +3305,11 @@ xlog_do_recover(
- 	xlog_assign_tail_lsn(mp);
- 
- 	/*
--	 * Now that we've finished replaying all buffer and inode
--	 * updates, re-read in the superblock and reverify it.
-+	 * Now that we've finished replaying all buffer and inode updates,
-+	 * re-read in the superblock and reverify it.
- 	 */
- 	bp = xfs_getsb(mp);
--	bp->b_flags &= ~(XBF_DONE | XBF_ASYNC);
--	ASSERT(!(bp->b_flags & XBF_WRITE));
--	bp->b_flags |= XBF_READ;
--	bp->b_ops = &xfs_sb_buf_ops;
--
--	error = xfs_buf_submit(bp);
-+	error = _xfs_buf_read(bp, XBF_READ, &xfs_sb_buf_ops);
- 	if (error) {
- 		if (!XFS_FORCED_SHUTDOWN(mp)) {
- 			xfs_buf_ioerror_alert(bp, __this_address);
--- 
-2.28.0
+I think that use case is less interesting, because as Christoph points out,
+discard is not reliable, so I think we should get rid of " -o discard"
+in the tests -
+it did not catch any issues that I know of.
 
+But there is another discard in those tests issued by _log_writes_mkfs
+(at least it does for xfs and ext4). This discard has the by product of
+making sure that replay from the start to point in time, first wipes all
+stale data from the replay block device.
+
+Of course the problems we encounter is that it does not wipe all stale
+data when not running on dm-thinp, which is why I suggested to always
+use dm-thinp for replay device, but I can live perfectly well with Brian's
+v1 patches where both workload and replay are done on dm-thinp.
+
+Josef had two variants for those tests, one doing "replay from start"
+for every checkpoint and utilizing this discard-as-wipe behavior
+and one flavor that used dm-thinp to take snapshots and replay
+from snapshot T to the next mark.
+
+I remember someone tried converting some of the tests to the snapshot
+flavor, but it turned out to be slower, so we left it as is (always replay from
+the start).
+
+In conclusion, I *think* the correct fix for the failing tests is:
+1. Use dm-thinp for all those tests (as v1 does)
+2. In _log_writes_replay_log{,_range}() start by explicitly
+    wiping dm-thinp, either with with hole punch command or by
+    re-creating the new thinp volume, whichever is faster.
+    instead of relying on the replay of discard operation recorded
+    from mkfs that sort of kind of worked by mistake.
+
+Thanks,
+Amir.
