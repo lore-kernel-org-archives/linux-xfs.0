@@ -1,101 +1,105 @@
-Return-Path: <SRS0=2Dxs=CH=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=6Z+e=CI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLACK,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C308C433E7
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 22:08:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06F84C433E6
+	for <linux-xfs@archiver.kernel.org>; Sun, 30 Aug 2020 01:31:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A317208CA
-	for <linux-xfs@archiver.kernel.org>; Sat, 29 Aug 2020 22:08:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D866D207BB
+	for <linux-xfs@archiver.kernel.org>; Sun, 30 Aug 2020 01:31:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="cmCW/N36"
+	dkim=pass (2048-bit key) header.d=lca.pw header.i=@lca.pw header.b="snIHPNIt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727888AbgH2WIa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 29 Aug 2020 18:08:30 -0400
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:7220 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726944AbgH2WIa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Aug 2020 18:08:30 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5f4ad1610000>; Sat, 29 Aug 2020 15:06:25 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Sat, 29 Aug 2020 15:08:29 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Sat, 29 Aug 2020 15:08:29 -0700
-Received: from [10.2.61.161] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 29 Aug
- 2020 22:08:28 +0000
-Subject: Re: [PATCH v2 3/3] bio: convert get_user_pages_fast() -->
- pin_user_pages_fast()
-To:     Christoph Hellwig <hch@infradead.org>
-CC:     Andrew Morton <akpm@linux-foundation.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, <linux-xfs@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
-References: <20200829080853.20337-1-jhubbard@nvidia.com>
- <20200829080853.20337-4-jhubbard@nvidia.com>
- <20200829150223.GC12470@infradead.org>
-From:   John Hubbard <jhubbard@nvidia.com>
-Message-ID: <95880e98-f4d6-add1-db96-ae349064d3c6@nvidia.com>
-Date:   Sat, 29 Aug 2020 15:08:28 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
-MIME-Version: 1.0
-In-Reply-To: <20200829150223.GC12470@infradead.org>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1598738785; bh=prw38Q2A3ZZ+rOHUhaGtFVP9FzXw/WOtwBNM0K0dXqc=;
-        h=X-PGP-Universal:Subject:To:CC:References:From:Message-ID:Date:
-         User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
-         X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=cmCW/N36vGdG5BvU4mtxJvp2EBjq5feBrcE15+24CUg8gsHL7R9Ml6tvtSvVZDC3V
-         C5cWuWNj9/fFSaSox6IK8bcBxmU6Ji72Nj1th3n+XsSgv6bPBsG7wPFosqgf7Mi636
-         ULH/I8q6JRheOie5rqqyXQ8jzKdVvVkRKnIo1uOz50Ckb670Dq4FoVvxSYuJOu0e3X
-         kRa9THr9jTPRON+e5X+v5Vbc8a9J9ISJbhLWH3MIKsI3hgIS9qYQbef8M11D7QkU2j
-         KVZe2lHZrN42XOSVVGaXHO+rDdktsBOq5ORqg8QjDME0O60/AJvX9UG+fF8s6S6vKK
-         0IO4i2sVBJlnA==
+        id S1728577AbgH3BbY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 29 Aug 2020 21:31:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41740 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728384AbgH3BbX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Aug 2020 21:31:23 -0400
+Received: from mail-qt1-x844.google.com (mail-qt1-x844.google.com [IPv6:2607:f8b0:4864:20::844])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12FF7C061575
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Aug 2020 18:31:22 -0700 (PDT)
+Received: by mail-qt1-x844.google.com with SMTP id 60so2426108qtc.9
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Aug 2020 18:31:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=lca.pw; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=oTXPJKxAg5XxTQVL81YppTbJbKKdp2qoMjgryaZThzc=;
+        b=snIHPNItiSzMiNbfMvHkwKcuLJe8cG++Oz2ae8qgnrH1ekSHdofCVjHTa1VxsLoeYQ
+         kY0fJQw17HrhhvbknPyQU/+X2QJodjqBIL7rjSl0u+38tvX6s4n2Wla57G/6YcU1Q4YG
+         yY4w0S5FAIv+SbABcIvu/T4WSScBA/64RzO6UC6leqD4skku42yNm9Tf5qF4sXguMP9D
+         dJtoK1aXxn5zgfJIREsXq9lAZ7QcP/JT+MFLzFUBdHDorjQyScUo8DvQuM/mAj2K6Sel
+         s4KotxmA3eplfUQ2FecY/AX3Pma+7DhPYL2MATUNCQDeCb4Ax5fxktpf6dLOQiHay9Yp
+         NJlw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=oTXPJKxAg5XxTQVL81YppTbJbKKdp2qoMjgryaZThzc=;
+        b=UlAh3tvOX9IMDhpN9atRnq4Pdwg08ZByMwX5AZcrvCFsTvn1fZT56gqiWblBxvJRRQ
+         ALItDbsEKnMgLCqOu8+HPfWNcJ+S3mb8IJjGmyTsOahmfxWrsK6jHhY9Uh+saNHzo0vj
+         t36pxbcijNVSTB/+WPkrzm9bRvDXr5S9OXw0VmI3SXDTHqG6nJ2gpGvi7FqrDzF/q8at
+         gXnMhZfJqeUmxXiiIfiaZam56OgkRj/i12XGm0hZht8kk8/SA9UK6hD0lo62y8B8/V2Q
+         O9TG88629CLuZP9+T3H/ENeY3mfy+gOnzanFVxFU0eqoVhhbqq0/fqFcJH5+kxXcsb00
+         RZtQ==
+X-Gm-Message-State: AOAM5313J3z13wnkPjW2rqI+2mexf7lY9jJwGYs4sRQ93sznq2Bv98GI
+        5FP16oAWQq6zHQ9fNg69IZovOFHkIfiDyQ==
+X-Google-Smtp-Source: ABdhPJzwUsBp/+777eFsa+X2LXOqWrmMmxFxP7fZxqjoql/YJZT6UN4uCbSqzHfAc+XBjx1QqoB52g==
+X-Received: by 2002:ac8:2baa:: with SMTP id m39mr7636519qtm.204.1598751080998;
+        Sat, 29 Aug 2020 18:31:20 -0700 (PDT)
+Received: from localhost.localdomain.com (pool-71-184-117-43.bstnma.fios.verizon.net. [71.184.117.43])
+        by smtp.gmail.com with ESMTPSA id e21sm4017553qkl.88.2020.08.29.18.31.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 29 Aug 2020 18:31:20 -0700 (PDT)
+From:   Qian Cai <cai@lca.pw>
+To:     darrick.wong@oracle.com
+Cc:     hch@infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Qian Cai <cai@lca.pw>
+Subject: [PATCH] iomap: fix WARN_ON_ONCE() from unprivileged users
+Date:   Sat, 29 Aug 2020 21:30:57 -0400
+Message-Id: <20200830013057.14664-1-cai@lca.pw>
+X-Mailer: git-send-email 2.18.4
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/29/20 8:02 AM, Christoph Hellwig wrote:
->> -	size = iov_iter_get_pages(iter, pages, LONG_MAX, nr_pages, &offset);
->> +	size = iov_iter_pin_user_pages(iter, pages, LONG_MAX, nr_pages, &offset);
-> 
-> This is really a comment to the previous patch, but I only spotted it
-> here:  I think the right name is iov_iter_pin_pages, as bvec, kvec and
-> pipe aren't usually user pages.  Same as iov_iter_get_pages vs
-> get_user_pages.  Same for the _alloc variant.
-> 
+It is trivial to trigger a WARN_ON_ONCE(1) in iomap_dio_actor() by
+unprivileged users which would taint the kernel, or worse - panic if
+panic_on_warn or panic_on_taint is set. Hence, just convert it to
+pr_warn_ratelimited() to let users know their workloads are racing.
+Thanks Dave Chinner for the initial analysis of the racing reproducers.
 
-Yes, it is clearly misnamed now! Will fix.
+Signed-off-by: Qian Cai <cai@lca.pw>
+---
+ fs/iomap/direct-io.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
->> + * here on.  It will run one unpin_user_page() against each page
->> + * and will run one bio_put() against the BIO.
-> 
-> Nit: the ant and the will still fit on the previous line.
-> 
-
-Sorry about that, *usually* my text editor does the Right Thing for
-those, I must have interfered with the natural flow of things. :)
-
-
-thanks,
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index c1aafb2ab990..6a6b4bc13269 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -389,7 +389,14 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 	case IOMAP_INLINE:
+ 		return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
+ 	default:
+-		WARN_ON_ONCE(1);
++		/*
++		 * DIO is not serialised against mmap() access at all, and so
++		 * if the page_mkwrite occurs between the writeback and the
++		 * iomap_apply() call in the DIO path, then it will see the
++		 * DELALLOC block that the page-mkwrite allocated.
++		 */
++		pr_warn_ratelimited("page_mkwrite() is racing with DIO read (iomap->type = %u).\n",
++				    iomap->type);
+ 		return -EIO;
+ 	}
+ }
 -- 
-John Hubbard
-NVIDIA
+2.18.4
+
