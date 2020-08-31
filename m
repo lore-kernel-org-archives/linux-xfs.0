@@ -2,126 +2,178 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BBDAC433E7
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:48:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D1C6C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 20:27:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 70FAD206F0
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:48:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61E0A20866
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 20:27:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bb8HY1CG"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gg7FWyuO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729765AbgHaTsk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 15:48:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39374 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728273AbgHaTsj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 15:48:39 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A3EC061573;
-        Mon, 31 Aug 2020 12:48:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=lCbGSkGKUU8F1R9YT3KZ6FWEFaUZVzQp7ByD3Mg/eQQ=; b=bb8HY1CGR7xPK7g0ER8gDDtzKm
-        sKjn7irzf13v6WwDkgC7bZ9M13Lr7/uV57MqN7evtV3T8kIwluG+Nh6586EmE6u4Zl1oe/1g5YwkZ
-        G3BklKMwixfU1DZEB9kuG4WF9UfnokgdHuG1g7RN6dfTOYxdueQ0AA9nwxKZjF3iDZYb/nT1KpRPB
-        eV+DiNM7n6yCr3TzsGzNN9anwQQ2eucwFJM9A2cPRmBGR8v+W2lC49CLKjhYEAFsB5PMjRxyCxFaJ
-        i331AdMA94NOUHyFPg0J75g7EIPdNVzx1yoh/pS6FCNFPRsP4ctt3cCS+9czLdMsuBg+Guh1DK0I5
-        jS6KwdyA==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kCpnB-0000ZU-5D; Mon, 31 Aug 2020 19:48:37 +0000
-Date:   Mon, 31 Aug 2020 20:48:37 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-block@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 04/11] block: Add bio_for_each_thp_segment_all
-Message-ID: <20200831194837.GJ14765@casper.infradead.org>
-References: <20200824151700.16097-1-willy@infradead.org>
- <20200824151700.16097-5-willy@infradead.org>
- <20200827084431.GA15909@infradead.org>
+        id S1728165AbgHaU1E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 16:27:04 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:39430 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726928AbgHaU1D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 16:27:03 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VKOHNp033630;
+        Mon, 31 Aug 2020 20:26:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=irpaklGGtTP13x7ibnWoEpa7qrAtfjx1jC9v37AOysE=;
+ b=gg7FWyuOH4skIxYb1w50HSgMgqrqlBV8xizgPmbA9bCdFLLAFpdyBHuLz20AS5yIGTsb
+ /IzAHTuT6PTRa2WMWJTFZ59l9nkCS5jdbDIkMQh4gEMDjPSqWDp401CA1Q4JK0oZpO0E
+ EMHI+mSf+erUXSdkuV2a7J9xEX9vtKL7jsL0Sn+BwpxpoTJ+argEfGK8DArjvm5bRaZ7
+ ZnMUJQ1PanC5AI7n0LezhwUJ26nGtjkLmuodBx1dj9ukDr0h+HJRY/bjlGUl//Lmz3vP
+ kNEa8f6PNbyD2TJ69z8TGXH+HlQQZexk/YfaYPx8rCxIefb/1/54R32LaSjNyoEqf7As mw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 337eym0cuw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 31 Aug 2020 20:26:58 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VKKYJ2119243;
+        Mon, 31 Aug 2020 20:26:58 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 3380x1866j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 31 Aug 2020 20:26:57 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07VKQqkt022649;
+        Mon, 31 Aug 2020 20:26:52 GMT
+Received: from localhost (/10.159.252.155)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 31 Aug 2020 13:26:52 -0700
+Date:   Mon, 31 Aug 2020 13:26:56 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/13] xfs: simplify the xfs_buf_ioend_disposition
+ calling convention
+Message-ID: <20200831202656.GU6107@magnolia>
+References: <20200830061512.1148591-1-hch@lst.de>
+ <20200830061512.1148591-10-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200827084431.GA15909@infradead.org>
+In-Reply-To: <20200830061512.1148591-10-hch@lst.de>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 suspectscore=1 bulkscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008310120
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 clxscore=1015 spamscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2008310120
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 27, 2020 at 09:44:31AM +0100, Christoph Hellwig wrote:
-> On Mon, Aug 24, 2020 at 04:16:53PM +0100, Matthew Wilcox (Oracle) wrote:
-> > Iterate once for each THP instead of once for each base page.
+On Sun, Aug 30, 2020 at 08:15:08AM +0200, Christoph Hellwig wrote:
+> Now that all the actual error handling is in a single place,
+> xfs_buf_ioend_disposition just needs to return true if took ownership of
+> the buffer, or false if not instead of the tristate.  Also move the
+> error check back in the caller to optimize for the fast path, and give
+> the function a better fitting name.
 > 
-> FYI, I've always been wondering if bio_for_each_segment_all is the
-> right interface for the I/O completions, because we generally don't
-> need the fake bvecs for each page.  Only the first page can have an
-> offset, and only the last page can be end earlier than the end of
-> the page size.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks good to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_buf.c | 36 +++++++++---------------------------
+>  1 file changed, 9 insertions(+), 27 deletions(-)
 > 
-> It would seem way more efficient to just have a helper that extracts
-> the offset and end, and just use that in a loop that does the way
-> cheaper iteration over the physical addresses only.  This might (or
-> might) not be a good time to switch to that model for iomap.
-
-Something like this?
-
-static void iomap_read_end_io(struct bio *bio)
-{
-        int i, error = blk_status_to_errno(bio->bi_status);
-
-        for (i = 0; i < bio->bi_vcnt; i++) {
-                struct bio_vec *bvec = &bio->bi_io_vec[i];
-                size_t offset = bvec->bv_offset;
-                size_t length = bvec->bv_len;
-                struct page *page = bvec->bv_page;
-
-                while (length > 0) { 
-                        size_t count = thp_size(page) - offset;
-                        
-                        if (count > length)
-                                count = length;
-                        iomap_read_page_end_io(page, offset, count, error);
-                        page += (offset + count) / PAGE_SIZE;
-                        length -= count;
-                        offset = 0;
-                }
-        }
-
-        bio_put(bio);
-}
-
-Maybe I'm missing something important here, but it's significantly
-simpler code -- iomap_read_end_io() goes down from 816 bytes to 560 bytes
-(256 bytes less!) iomap_read_page_end_io is inlined into it both before
-and after.
-
-There is some weirdness going on with regards to bv_offset that I don't
-quite understand.  In the original bvec_advance:
-
-                bv->bv_page = bvec->bv_page + (bvec->bv_offset >> PAGE_SHIFT);
-                bv->bv_offset = bvec->bv_offset & ~PAGE_MASK;
-
-which I cargo-culted into bvec_thp_advance as:
-
-                bv->bv_page = thp_head(bvec->bv_page +
-                                (bvec->bv_offset >> PAGE_SHIFT));
-                page_size = thp_size(bv->bv_page);
-                bv->bv_offset = bvec->bv_offset -
-                                (bv->bv_page - bvec->bv_page) * PAGE_SIZE;
-
-Is it possible to have a bvec with an offset that is larger than the
-size of bv_page?  That doesn't seem like a useful thing to do, but
-if that needs to be supported, then the code up top doesn't do that.
-We maybe gain a little bit by counting length down to 0 instead of
-counting it up to bv_len.  I dunno; reading the code over now, it
-doesn't seem like that much of a difference.
-
-Maybe you meant something different?
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 951d9c35b3170c..13435cce2699e4 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1223,29 +1223,17 @@ xfs_buf_ioerror_permanent(
+>   * If we get repeated async write failures, then we take action according to the
+>   * error configuration we have been set up to use.
+>   *
+> - * Multi-state return value:
+> - *
+> - * XBF_IOEND_FINISH: run callback completions
+> - * XBF_IOEND_DONE: resubmitted immediately, do not run any completions
+> - * XBF_IOEND_FAIL: transient error, run failure callback completions and then
+> - *    release the buffer
+> + * Returns true if this function took care of error handling and the caller must
+> + * not touch the buffer again.  Return false if the caller should proceed with
+> + * normal I/O completion handling.
+>   */
+> -enum xfs_buf_ioend_disposition {
+> -	XBF_IOEND_FINISH,
+> -	XBF_IOEND_DONE,
+> -	XBF_IOEND_FAIL,
+> -};
+> -
+> -static enum xfs_buf_ioend_disposition
+> -xfs_buf_ioend_disposition(
+> +static bool
+> +xfs_buf_ioend_handle_error(
+>  	struct xfs_buf		*bp)
+>  {
+>  	struct xfs_mount	*mp = bp->b_mount;
+>  	struct xfs_error_cfg	*cfg;
+>  
+> -	if (likely(!bp->b_error))
+> -		return XBF_IOEND_FINISH;
+> -
+>  	/*
+>  	 * If we've already decided to shutdown the filesystem because of I/O
+>  	 * errors, there's no point in giving this a retry.
+> @@ -1291,18 +1279,18 @@ xfs_buf_ioend_disposition(
+>  		ASSERT(list_empty(&bp->b_li_list));
+>  	xfs_buf_ioerror(bp, 0);
+>  	xfs_buf_relse(bp);
+> -	return XBF_IOEND_FAIL;
+> +	return true;
+>  
+>  resubmit:
+>  	xfs_buf_ioerror(bp, 0);
+>  	bp->b_flags |= (XBF_WRITE | XBF_DONE | XBF_WRITE_FAIL);
+>  	xfs_buf_submit(bp);
+> -	return XBF_IOEND_DONE;
+> +	return true;
+>  out_stale:
+>  	xfs_buf_stale(bp);
+>  	bp->b_flags |= XBF_DONE;
+>  	trace_xfs_buf_error_relse(bp, _RET_IP_);
+> -	return XBF_IOEND_FINISH;
+> +	return false;
+>  }
+>  
+>  static void
+> @@ -1340,14 +1328,8 @@ xfs_buf_ioend(
+>  			bp->b_flags |= XBF_DONE;
+>  		}
+>  
+> -		switch (xfs_buf_ioend_disposition(bp)) {
+> -		case XBF_IOEND_DONE:
+> -			return;
+> -		case XBF_IOEND_FAIL:
+> +		if (unlikely(bp->b_error) && xfs_buf_ioend_handle_error(bp))
+>  			return;
+> -		default:
+> -			break;
+> -		}
+>  
+>  		/* clear the retry state */
+>  		bp->b_last_error = 0;
+> -- 
+> 2.28.0
+> 
