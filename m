@@ -2,142 +2,126 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22E00C433E2
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BBDAC433E7
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:48:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEC3E2083E
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:46:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70FAD206F0
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:48:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QodpyMel"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bb8HY1CG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728126AbgHaTq0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 15:46:26 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:44042 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726755AbgHaTqX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 15:46:23 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VJhbPf019739;
-        Mon, 31 Aug 2020 19:46:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=UZupMG9/TgQavRA+RfNip5BSCmBqFZCsPCLz9fxlKY8=;
- b=QodpyMeliutzTAuVvEtpX+tdlEapB5roQEDQiwq/67xWwrG2/W3NjcQZuZpIu6dN27o9
- ShQ9XLO2wl0tcsaBjDt8cPwfOZttyvk9TC5IfkOJfVw5lgysehgDXbJNcDVMnbH1VU/S
- SWapKTKL+6EaPkXwookD66cy1CK8R8QUEeV97O5l+Zrv2tbSKqzBMPltmbr9GyG5sJTw
- ESujusqDPHePzVX0Upue/lAAek4Vu+gh9siO+qoUeIYkMLg1cUx6wCziglhZDIJ+h1jk
- urlNvLGsPRch6FtONJjcsIe1rB06cJfWbKm2JAGku5B6kLX7nHYfztTVOdVcWL33d0uL 1g== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 337qrhf9gp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 31 Aug 2020 19:46:14 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VJZAeS090146;
-        Mon, 31 Aug 2020 19:44:13 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 3380km53qq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 31 Aug 2020 19:44:13 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07VJi5PF014914;
-        Mon, 31 Aug 2020 19:44:05 GMT
-Received: from localhost (/10.159.252.155)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 31 Aug 2020 12:44:05 -0700
-Date:   Mon, 31 Aug 2020 12:44:08 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1729765AbgHaTsk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 15:48:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39374 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728273AbgHaTsj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 15:48:39 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58A3EC061573;
+        Mon, 31 Aug 2020 12:48:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=lCbGSkGKUU8F1R9YT3KZ6FWEFaUZVzQp7ByD3Mg/eQQ=; b=bb8HY1CGR7xPK7g0ER8gDDtzKm
+        sKjn7irzf13v6WwDkgC7bZ9M13Lr7/uV57MqN7evtV3T8kIwluG+Nh6586EmE6u4Zl1oe/1g5YwkZ
+        G3BklKMwixfU1DZEB9kuG4WF9UfnokgdHuG1g7RN6dfTOYxdueQ0AA9nwxKZjF3iDZYb/nT1KpRPB
+        eV+DiNM7n6yCr3TzsGzNN9anwQQ2eucwFJM9A2cPRmBGR8v+W2lC49CLKjhYEAFsB5PMjRxyCxFaJ
+        i331AdMA94NOUHyFPg0J75g7EIPdNVzx1yoh/pS6FCNFPRsP4ctt3cCS+9czLdMsuBg+Guh1DK0I5
+        jS6KwdyA==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kCpnB-0000ZU-5D; Mon, 31 Aug 2020 19:48:37 +0000
+Date:   Mon, 31 Aug 2020 20:48:37 +0100
+From:   Matthew Wilcox <willy@infradead.org>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     david@fromorbit.com, linux-xfs@vger.kernel.org, amir73il@gmail.com,
-        sandeen@sandeen.net
-Subject: Re: [PATCH 08/11] xfs: widen ondisk inode timestamps to deal with
- y2038+
-Message-ID: <20200831194408.GU6096@magnolia>
-References: <159885400575.3608006.17716724192510967135.stgit@magnolia>
- <159885405947.3608006.8484361543372730964.stgit@magnolia>
- <20200831160810.GC7091@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-block@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 04/11] block: Add bio_for_each_thp_segment_all
+Message-ID: <20200831194837.GJ14765@casper.infradead.org>
+References: <20200824151700.16097-1-willy@infradead.org>
+ <20200824151700.16097-5-willy@infradead.org>
+ <20200827084431.GA15909@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200831160810.GC7091@infradead.org>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- mlxscore=0 suspectscore=1 malwarescore=0 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008310115
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- adultscore=0 mlxscore=0 lowpriorityscore=0 phishscore=0 clxscore=1015
- suspectscore=1 priorityscore=1501 spamscore=0 malwarescore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008310116
+In-Reply-To: <20200827084431.GA15909@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 31, 2020 at 05:08:10PM +0100, Christoph Hellwig wrote:
-> On Sun, Aug 30, 2020 at 11:07:39PM -0700, Darrick J. Wong wrote:
-> > +static inline uint64_t xfs_inode_encode_bigtime(struct timespec64 tv)
-> > +{
-> > +	return (xfs_unix_to_bigtime(tv.tv_sec) * NSEC_PER_SEC) + tv.tv_nsec;
+On Thu, Aug 27, 2020 at 09:44:31AM +0100, Christoph Hellwig wrote:
+> On Mon, Aug 24, 2020 at 04:16:53PM +0100, Matthew Wilcox (Oracle) wrote:
+> > Iterate once for each THP instead of once for each base page.
 > 
-> Nit: no need for the braces due to operator precedence.
-
-Fixed.
-
-> > +	return xfs_sb_version_hasbigtime(&ip->i_mount->m_sb) &&
-> > +	       !xfs_inode_has_bigtime(ip);
-> > +}
-> > +
-> >  /*
-> >   * This is called to mark the fields indicated in fieldmask as needing to be
-> >   * logged when the transaction is committed.  The inode must already be
-> > @@ -131,6 +137,16 @@ xfs_trans_log_inode(
-> >  			iversion_flags = XFS_ILOG_CORE;
-> >  	}
-> >  
-> > +	/*
-> > +	 * If we're updating the inode core or the timestamps and it's possible
-> > +	 * to upgrade this inode to bigtime format, do so now.
-> > +	 */
-> > +	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
-> > +	    xfs_inode_want_bigtime_upgrade(ip)) {
-> > +		ip->i_d.di_flags2 |= XFS_DIFLAG2_BIGTIME;
-> > +		flags |= XFS_ILOG_CORE;
-> > +	}
+> FYI, I've always been wondering if bio_for_each_segment_all is the
+> right interface for the I/O completions, because we generally don't
+> need the fake bvecs for each page.  Only the first page can have an
+> offset, and only the last page can be end earlier than the end of
+> the page size.
 > 
-> Despite the disagree with Dave I find it very confusing to use
-> both a direct reference to XFS_DIFLAG2_BIGTIME and one hidden under
-> two layers of abstraction in the direct same piece of code.
+> It would seem way more efficient to just have a helper that extracts
+> the offset and end, and just use that in a loop that does the way
+> cheaper iteration over the physical addresses only.  This might (or
+> might) not be a good time to switch to that model for iomap.
 
-Same here, I'll change it back to:
+Something like this?
 
-	/*
-	 * If we're updating the inode core or the timestamps and it's possible
-	 * to upgrade this inode to bigtime format, do so now.
-	 */
-	if ((flags & (XFS_ILOG_CORE | XFS_ILOG_TIMESTAMP)) &&
-	    xfs_sb_version_hasbigtime(&ip->i_mount->m_sb) &&
-	    !xfs_inode_has_bigtime(ip)) {
-		ip->i_d.di_flags2 |= XFS_DIFLAG2_BIGTIME;
-		flags |= XFS_ILOG_CORE;
-	}
+static void iomap_read_end_io(struct bio *bio)
+{
+        int i, error = blk_status_to_errno(bio->bi_status);
 
-I'm not a huge fan of the single-line inode-has-bigtime predicate
-either, but at least it's consistent stylistically with the predicate
-for the dinode and the log dinode...
+        for (i = 0; i < bio->bi_vcnt; i++) {
+                struct bio_vec *bvec = &bio->bi_io_vec[i];
+                size_t offset = bvec->bv_offset;
+                size_t length = bvec->bv_len;
+                struct page *page = bvec->bv_page;
 
-Anyway, thanks for the review!  Now on to the buffer disposition v2
-series....
+                while (length > 0) { 
+                        size_t count = thp_size(page) - offset;
+                        
+                        if (count > length)
+                                count = length;
+                        iomap_read_page_end_io(page, offset, count, error);
+                        page += (offset + count) / PAGE_SIZE;
+                        length -= count;
+                        offset = 0;
+                }
+        }
 
---D
+        bio_put(bio);
+}
 
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+Maybe I'm missing something important here, but it's significantly
+simpler code -- iomap_read_end_io() goes down from 816 bytes to 560 bytes
+(256 bytes less!) iomap_read_page_end_io is inlined into it both before
+and after.
+
+There is some weirdness going on with regards to bv_offset that I don't
+quite understand.  In the original bvec_advance:
+
+                bv->bv_page = bvec->bv_page + (bvec->bv_offset >> PAGE_SHIFT);
+                bv->bv_offset = bvec->bv_offset & ~PAGE_MASK;
+
+which I cargo-culted into bvec_thp_advance as:
+
+                bv->bv_page = thp_head(bvec->bv_page +
+                                (bvec->bv_offset >> PAGE_SHIFT));
+                page_size = thp_size(bv->bv_page);
+                bv->bv_offset = bvec->bv_offset -
+                                (bv->bv_page - bvec->bv_page) * PAGE_SIZE;
+
+Is it possible to have a bvec with an offset that is larger than the
+size of bv_page?  That doesn't seem like a useful thing to do, but
+if that needs to be supported, then the code up top doesn't do that.
+We maybe gain a little bit by counting length down to 0 instead of
+counting it up to bv_len.  I dunno; reading the code over now, it
+doesn't seem like that much of a difference.
+
+Maybe you meant something different?
