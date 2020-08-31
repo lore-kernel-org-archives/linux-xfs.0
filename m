@@ -2,110 +2,189 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6473EC433E7
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 13:55:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DB52C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 14:35:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FAD3207DA
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 13:55:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5238B20E65
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 14:35:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZFQZCK+F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726326AbgHaNzf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 09:55:35 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:35690 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726292AbgHaNzd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 09:55:33 -0400
-X-IronPort-AV: E=Sophos;i="5.76,375,1592841600"; 
-   d="scan'208";a="98737371"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 31 Aug 2020 21:55:31 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id 7D54448990CB;
-        Mon, 31 Aug 2020 21:55:29 +0800 (CST)
-Received: from G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Mon, 31 Aug 2020 21:55:33 +0800
-Received: from Fedora-31.g08.fujitsu.local (10.167.220.31) by
- G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Mon, 31 Aug 2020 21:55:33 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-To:     <linux-xfs@vger.kernel.org>
-CC:     <darrick.wong@oracle.com>, <ira.weiny@intel.com>,
-        Xiao Yang <yangx.jy@cn.fujitsu.com>
-Subject: [PATCH] xfs: Add check for unsupported xflags
-Date:   Mon, 31 Aug 2020 21:37:45 +0800
-Message-ID: <20200831133745.33276-1-yangx.jy@cn.fujitsu.com>
-X-Mailer: git-send-email 2.25.1
+        id S1726858AbgHaOfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 10:35:20 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:55764 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726292AbgHaOfT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 10:35:19 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1598884517;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=IRcH1QrakF0IsYJp4hbZXZgp2yQVN+FIrfhZjhE8mxc=;
+        b=ZFQZCK+Fqll3BvkYd5LYjnak9UQEPzDMlN3oPZ1F1C6EVtZMrNBP2rchgGhAbJNnXPmPB0
+        UQUVUuVIZ5jo96q4JQ3Da0FkKcA827p8cGquwxauCuQuYU2OeDFaqsBuHjU0A3ed+goLQ9
+        Kx8tYasso5osua1sL6SX2Xnix0GwvOQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-444-7QI9I7AEPfeS_1wfOMIfTw-1; Mon, 31 Aug 2020 10:35:13 -0400
+X-MC-Unique: 7QI9I7AEPfeS_1wfOMIfTw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 547A751B1;
+        Mon, 31 Aug 2020 14:35:12 +0000 (UTC)
+Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1D1311002391;
+        Mon, 31 Aug 2020 14:35:11 +0000 (UTC)
+Date:   Mon, 31 Aug 2020 10:35:09 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
+        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        willy@infradead.org, minlei@redhat.com
+Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
+Message-ID: <20200831143509.GA12035@bfoster>
+References: <20200820231140.GE7941@dread.disaster.area>
+ <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
+ <20200821215358.GG7941@dread.disaster.area>
+ <20200822131312.GA17997@infradead.org>
+ <20200824142823.GA295033@bfoster>
+ <20200824150417.GA12258@infradead.org>
+ <20200824154841.GB295033@bfoster>
+ <20200825004203.GJ12131@dread.disaster.area>
+ <20200825144917.GA321765@bfoster>
+ <20200831040107.GB257809@T590>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 7D54448990CB.AA0FC
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200831040107.GB257809@T590>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Current ioctl(FSSETXATTR) ignores unsupported xflags silently
-so it it not clear for user to know unsupported xflags.
-For example, use ioctl(FSSETXATTR) to set dax flag on kernel
-v4.4 which doesn't support dax flag:
---------------------------------
-# xfs_io -f -c "chattr +x" testfile;echo $?
-0
-# xfs_io -c "lsattr" testfile
-----------------X testfile
---------------------------------
+On Mon, Aug 31, 2020 at 12:01:07PM +0800, Ming Lei wrote:
+> On Tue, Aug 25, 2020 at 10:49:17AM -0400, Brian Foster wrote:
+> > cc Ming
+> > 
+> > On Tue, Aug 25, 2020 at 10:42:03AM +1000, Dave Chinner wrote:
+> > > On Mon, Aug 24, 2020 at 11:48:41AM -0400, Brian Foster wrote:
+> > > > On Mon, Aug 24, 2020 at 04:04:17PM +0100, Christoph Hellwig wrote:
+> > > > > On Mon, Aug 24, 2020 at 10:28:23AM -0400, Brian Foster wrote:
+> > > > > > Do I understand the current code (__bio_try_merge_page() ->
+> > > > > > page_is_mergeable()) correctly in that we're checking for physical page
+> > > > > > contiguity and not necessarily requiring a new bio_vec per physical
+> > > > > > page?
+> > > > > 
+> > > > > 
+> > > > > Yes.
+> > > > > 
+> > > > 
+> > > > Ok. I also realize now that this occurs on a kernel without commit
+> > > > 07173c3ec276 ("block: enable multipage bvecs"). That is probably a
+> > > > contributing factor, but it's not clear to me whether it's feasible to
+> > > > backport whatever supporting infrastructure is required for that
+> > > > mechanism to work (I suspect not).
+> > > > 
+> > > > > > With regard to Dave's earlier point around seeing excessively sized bio
+> > > > > > chains.. If I set up a large memory box with high dirty mem ratios and
+> > > > > > do contiguous buffered overwrites over a 32GB range followed by fsync, I
+> > > > > > can see upwards of 1GB per bio and thus chains on the order of 32+ bios
+> > > > > > for the entire write. If I play games with how the buffered overwrite is
+> > > > > > submitted (i.e., in reverse) however, then I can occasionally reproduce
+> > > > > > a ~32GB chain of ~32k bios, which I think is what leads to problems in
+> > > > > > I/O completion on some systems. Granted, I don't reproduce soft lockup
+> > > > > > issues on my system with that behavior, so perhaps there's more to that
+> > > > > > particular issue.
+> > > > > > 
+> > > > > > Regardless, it seems reasonable to me to at least have a conservative
+> > > > > > limit on the length of an ioend bio chain. Would anybody object to
+> > > > > > iomap_ioend growing a chain counter and perhaps forcing into a new ioend
+> > > > > > if we chain something like more than 1k bios at once?
+> > > > > 
+> > > > > So what exactly is the problem of processing a long chain in the
+> > > > > workqueue vs multiple small chains?  Maybe we need a cond_resched()
+> > > > > here and there, but I don't see how we'd substantially change behavior.
+> > > > > 
+> > > > 
+> > > > The immediate problem is a watchdog lockup detection in bio completion:
+> > > > 
+> > > >   NMI watchdog: Watchdog detected hard LOCKUP on cpu 25
+> > > > 
+> > > > This effectively lands at the following segment of iomap_finish_ioend():
+> > > > 
+> > > > 		...
+> > > >                /* walk each page on bio, ending page IO on them */
+> > > >                 bio_for_each_segment_all(bv, bio, iter_all)
+> > > >                         iomap_finish_page_writeback(inode, bv->bv_page, error);
+> > > > 
+> > > > I suppose we could add a cond_resched(), but is that safe directly
+> > > > inside of a ->bi_end_io() handler? Another option could be to dump large
+> > > > chains into the completion workqueue, but we may still need to track the
+> > > > length to do that. Thoughts?
+> > > 
+> > > We have ioend completion merging that will run the compeltion once
+> > > for all the pending ioend completions on that inode. IOWs, we do not
+> > > need to build huge chains at submission time to batch up completions
+> > > efficiently. However, huge bio chains at submission time do cause
+> > > issues with writeback fairness, pinning GBs of ram as unreclaimable
+> > > for seconds because they are queued for completion while we are
+> > > still submitting the bio chain and submission is being throttled by
+> > > the block layer writeback throttle, etc. Not to mention the latency
+> > > of stable pages in a situation like this - a mmap() write fault
+> > > could stall for many seconds waiting for a huge bio chain to finish
+> > > submission and run completion processing even when the IO for the
+> > > given page we faulted on was completed before the page fault
+> > > occurred...
+> > > 
+> > > Hence I think we really do need to cap the length of the bio
+> > > chains here so that we start completing and ending page writeback on
+> > > large writeback ranges long before the writeback code finishes
+> > > submitting the range it was asked to write back.
+> > > 
+> > 
+> > Ming pointed out separately that limiting the bio chain itself might not
+> > be enough because with multipage bvecs, we can effectively capture the
+> > same number of pages in much fewer bios. Given that, what do you think
+> > about something like the patch below to limit ioend size? This
+> > effectively limits the number of pages per ioend regardless of whether
+> > in-core state results in a small chain of dense bios or a large chain of
+> > smaller bios, without requiring any new explicit page count tracking.
+> 
+> Hello Brian,
+> 
+> This patch looks fine.
+> 
+> However, I am wondering why iomap has to chain bios in one ioend, and why not
+> submit each bio in usual way just like what fs/direct-io.c does? Then each bio
+> can complete the pages in its own .bi_end_io().
+> 
 
-Add check to report unsupported info as ioctl(SETXFLAGS) does.
+I think it's mainly for efficiency and code simplicity reasons. The
+ioend describes a contiguous range of blocks with the same io type
+(written, unwritten, append, etc.), so whatever post-completion action
+might be required for a particular ioend (i.e. unwritten conversion)
+shouldn't execute until I/O completes on the entire range. I believe
+this goes back to XFS commit 0e51a8e191db ("xfs: optimize bio handling
+in the buffer writeback path"), which basically reimplemented similar,
+custom ioend behavior to rely on bio chains and was eventually lifted
+from XFS into iomap.
 
-Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
----
- fs/xfs/xfs_ioctl.c      | 4 ++++
- include/uapi/linux/fs.h | 8 ++++++++
- 2 files changed, 12 insertions(+)
+Brian
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 6f22a66777cd..cfe7f20c94fe 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1439,6 +1439,10 @@ xfs_ioctl_setattr(
- 
- 	trace_xfs_ioctl_setattr(ip);
- 
-+	/* Check if fsx_xflags have unsupported xflags */
-+	if (fa->fsx_xflags & ~FS_XFLAG_ALL)
-+                return -EOPNOTSUPP;
-+
- 	code = xfs_ioctl_setattr_check_projid(ip, fa);
- 	if (code)
- 		return code;
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index f44eb0a04afd..31b6856f6877 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -142,6 +142,14 @@ struct fsxattr {
- #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
- #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
- 
-+#define FS_XFLAG_ALL \
-+	(FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
-+	 FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME | FS_XFLAG_NODUMP | \
-+	 FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
-+	 FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
-+	 FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
-+	 FS_XFLAG_HASATTR)
-+
- /* the read-only stuff doesn't really belong here, but any other place is
-    probably as bad and I don't want to create yet another include file. */
- 
--- 
-2.25.1
-
-
+> 
+> thanks,
+> Ming
+> 
 
