@@ -2,97 +2,110 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B573C433E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 13:37:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6473EC433E7
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 13:55:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 643C920936
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 13:37:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LDsfAU8k"
+	by mail.kernel.org (Postfix) with ESMTP id 3FAD3207DA
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 13:55:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726167AbgHaNhm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 09:37:42 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:27821 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726121AbgHaNhl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 09:37:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1598881059;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=huIc2brJ2Y87/fvIX9rpSMlVmVaCtQdQPkXWsAobIjk=;
-        b=LDsfAU8k9HMeLz3GPlogEUFnnEO3qD0gje76nwLS4xjwGY+4hM8OQI2N1jsKa17BZhNROR
-        5nC9ykAz86BSQNwauKDxRJRRZgDoDDss3FXgrbXTY60Y7CN6wFRI98xbT/vrC3GtSmw/zm
-        R8rxT5tSJAEPdsKgSNke3YL7kbYrfj0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-337-709N_SKFNSO0ifmKW_Ep-A-1; Mon, 31 Aug 2020 09:37:35 -0400
-X-MC-Unique: 709N_SKFNSO0ifmKW_Ep-A-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DEB108030A5;
-        Mon, 31 Aug 2020 13:37:34 +0000 (UTC)
-Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6C8518658E;
-        Mon, 31 Aug 2020 13:37:34 +0000 (UTC)
-Date:   Mon, 31 Aug 2020 09:37:32 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] generic: disable dmlogwrites tests on XFS
-Message-ID: <20200831133732.GB2667@bfoster>
-References: <20200827145329.435398-1-bfoster@redhat.com>
- <20200829064850.GC29069@infradead.org>
+        id S1726326AbgHaNzf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 09:55:35 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:35690 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726292AbgHaNzd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 09:55:33 -0400
+X-IronPort-AV: E=Sophos;i="5.76,375,1592841600"; 
+   d="scan'208";a="98737371"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 31 Aug 2020 21:55:31 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 7D54448990CB;
+        Mon, 31 Aug 2020 21:55:29 +0800 (CST)
+Received: from G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Mon, 31 Aug 2020 21:55:33 +0800
+Received: from Fedora-31.g08.fujitsu.local (10.167.220.31) by
+ G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Mon, 31 Aug 2020 21:55:33 +0800
+From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
+To:     <linux-xfs@vger.kernel.org>
+CC:     <darrick.wong@oracle.com>, <ira.weiny@intel.com>,
+        Xiao Yang <yangx.jy@cn.fujitsu.com>
+Subject: [PATCH] xfs: Add check for unsupported xflags
+Date:   Mon, 31 Aug 2020 21:37:45 +0800
+Message-ID: <20200831133745.33276-1-yangx.jy@cn.fujitsu.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200829064850.GC29069@infradead.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 7D54448990CB.AA0FC
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 29, 2020 at 07:48:50AM +0100, Christoph Hellwig wrote:
-> On Thu, Aug 27, 2020 at 10:53:29AM -0400, Brian Foster wrote:
-> > Several generic fstests use dm-log-writes to test the filesystem for
-> > consistency at various crash recovery points. dm-log-writes and the
-> > associated replay mechanism rely on discard to clear stale blocks
-> > when moving to various points in time of the fs. If the storage
-> > doesn't provide discard zeroing or the discard requests exceed the
-> > hardcoded maximum (128MB) of the fallback solution to physically
-> > write zeroes, stale blocks are left around in the target fs. This
-> > causes issues on XFS if recovery observes metadata from a future
-> > version of an fs that has been replayed to an older point in time.
-> > This corrupts the filesystem and leads to spurious test failures
-> > that are nontrivial to diagnose.
-> > 
-> > Disable the generic dmlogwrites tests on XFS for the time being.
-> > This is intended to be a temporary change until a solution is found
-> > that allows these tests to predictably clear stale data while still
-> > allowing them to run in a reasonable amount of time.
-> 
-> As said in the other discussion I don't think this is correct.  The
-> intent of the tests is to ensure the data can't be read.  You just
-> happen to trigger over that with XFS, but it also means that tests
-> don't work correctly on other file systems in that configuration.
-> 
+Current ioctl(FSSETXATTR) ignores unsupported xflags silently
+so it it not clear for user to know unsupported xflags.
+For example, use ioctl(FSSETXATTR) to set dax flag on kernel
+v4.4 which doesn't support dax flag:
+--------------------------------
+# xfs_io -f -c "chattr +x" testfile;echo $?
+0
+# xfs_io -c "lsattr" testfile
+----------------X testfile
+--------------------------------
 
-Yes, but the goal of this patch is not to completely fix the dmlogwrites
-infrastructure and set of tests. The goal is to disable a subset of
-tests that are known to produce spurious corruptions on XFS until that
-issue can be addressed, so it doesn't result in continued bug reports in
-the meantime. I don't run these tests routinely on other fs', so it's
-not really my place to decide that the tradeoff between this problem and
-the ability of the test to reproduce legitimate bugs justifies disabling
-the test on those configs.
+Add check to report unsupported info as ioctl(SETXFLAGS) does.
 
-Brian
+Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+---
+ fs/xfs/xfs_ioctl.c      | 4 ++++
+ include/uapi/linux/fs.h | 8 ++++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6f22a66777cd..cfe7f20c94fe 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1439,6 +1439,10 @@ xfs_ioctl_setattr(
+ 
+ 	trace_xfs_ioctl_setattr(ip);
+ 
++	/* Check if fsx_xflags have unsupported xflags */
++	if (fa->fsx_xflags & ~FS_XFLAG_ALL)
++                return -EOPNOTSUPP;
++
+ 	code = xfs_ioctl_setattr_check_projid(ip, fa);
+ 	if (code)
+ 		return code;
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index f44eb0a04afd..31b6856f6877 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -142,6 +142,14 @@ struct fsxattr {
+ #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+ #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+ 
++#define FS_XFLAG_ALL \
++	(FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
++	 FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME | FS_XFLAG_NODUMP | \
++	 FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
++	 FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
++	 FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
++	 FS_XFLAG_HASATTR)
++
+ /* the read-only stuff doesn't really belong here, but any other place is
+    probably as bad and I don't want to create yet another include file. */
+ 
+-- 
+2.25.1
+
+
 
