@@ -2,163 +2,427 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ADC5C433E2
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 06:11:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8AF5C433E7
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 07:15:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D3AE20707
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 06:11:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 833052072D
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 07:15:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="grPFk6bT"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="biJEmAt8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725949AbgHaGLF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 02:11:05 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:50786 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725794AbgHaGLE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 02:11:04 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07V5s6q5019120;
-        Mon, 31 Aug 2020 06:08:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=6Gby8EVcTGpd/FR4ZKgCKw1RpJjhllla92JWuJOQGwQ=;
- b=grPFk6bTsV3HnKLQd95wT4WNHwIQUwG0f3U9PLmgS/ZVuqm6zdQ8Nik0cURR+MXV0xtj
- A3GML4UAhndH9gmw0fmNFLNf1wTbAF4IM3rqGf2YqGlpw1cvXkZYA0OQhYQqVIhhd8ze
- x2mNxYGJ5XahlqLACmQMzFlJYw14jCPIDbugwn4f1Zl445z8azk9ylxH93mFfCaIyq0Z
- wIccHyB3JoPvVgckKB3sK4x9xGLmrJQiLXIl9gb82efOOx1YekOk0hPaPwA9XaWinH30
- N6HA0IQVeeymEkw5KCX74VScAfdzByeAYT2A3dhgPOZZOqmpAMHP783r+jxHebTBe6k0 qA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 337qrhbdf1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 31 Aug 2020 06:08:55 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07V5t7Vu021272;
-        Mon, 31 Aug 2020 06:06:54 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 3380kk6uu1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 31 Aug 2020 06:06:54 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07V66hae004540;
-        Mon, 31 Aug 2020 06:06:43 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 30 Aug 2020 23:06:42 -0700
-Subject: [PATCH v5 00/11] xfs: widen timestamps to deal with y2038
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com, david@fromorbit.com, hch@infradead.org
-Cc:     Allison Collins <allison.henderson@oracle.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        amir73il@gmail.com, sandeen@sandeen.net
-Date:   Sun, 30 Aug 2020 23:06:46 -0700
-Message-ID: <159885400575.3608006.17716724192510967135.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S1728001AbgHaHOx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 03:14:53 -0400
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:9943 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725978AbgHaHOs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 03:14:48 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5f4ca3590000>; Mon, 31 Aug 2020 00:14:33 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Mon, 31 Aug 2020 00:14:47 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Mon, 31 Aug 2020 00:14:47 -0700
+Received: from HQMAIL109.nvidia.com (172.20.187.15) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 31 Aug
+ 2020 07:14:46 +0000
+Received: from rnnvemgw01.nvidia.com (10.128.109.123) by HQMAIL109.nvidia.com
+ (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
+ Transport; Mon, 31 Aug 2020 07:14:46 +0000
+Received: from sandstorm.nvidia.com (Not Verified[10.2.61.194]) by rnnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
+        id <B5f4ca3650002>; Mon, 31 Aug 2020 00:14:46 -0700
+From:   John Hubbard <jhubbard@nvidia.com>
+To:     Andrew Morton <akpm@linux-foundation.org>
+CC:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>,
+        John Hubbard <jhubbard@nvidia.com>
+Subject: [PATCH v3 3/3] bio: convert get_user_pages_fast() --> pin_user_pages_fast()
+Date:   Mon, 31 Aug 2020 00:14:39 -0700
+Message-ID: <20200831071439.1014766-4-jhubbard@nvidia.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200831071439.1014766-1-jhubbard@nvidia.com>
+References: <20200831071439.1014766-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9729 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- mlxscore=0 suspectscore=0 malwarescore=0 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008310042
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9729 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- adultscore=0 mlxscore=0 lowpriorityscore=0 phishscore=0 clxscore=1015
- suspectscore=0 priorityscore=1501 spamscore=0 malwarescore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008310042
+X-NVConfidentiality: public
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1598858073; bh=Mgmhx7MxlormERSy5m5hA+CT8AL2TlMSJ/1FsF2TodE=;
+        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
+         In-Reply-To:References:MIME-Version:X-NVConfidentiality:
+         Content-Transfer-Encoding:Content-Type;
+        b=biJEmAt8Fu1372bMrTva0n0kV/jdU2U+h6V3BFWjbxkkXC3u0EhOS9Cs7IqImnOyp
+         RyiXOdB2mjs8+MKyD70Q7RTjgysLpH0T6ePrXVhb+ijWxcJG9drwtSD7rIbQ5A4FLP
+         ivcLNunNfh10/Oez+AU8BEVv1kIBOv8FKZwv3/4Pv9IvkQvZKuC3HwiD/TTg2KxTyp
+         64PGWqnU/PG4L3niPjVPNzmR1pw+6k6/z9ay8M+qZG+sV2+SJOYpwjjuDH6VjbKbRE
+         08/AJHB/QfakVELyqZJrnC5vfw75HR2jEgY8uR7HdZ2DabIMTnpuoQ5w6Qb7Q97Zvg
+         /J5Z/YHhe05Pw==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+Change generic block/bio Direct IO routines, to acquire FOLL_PIN user
+pages via the recently added routines:
 
-This series performs some refactoring of our timestamp and inode
-encoding functions, then retrofits the timestamp union to handle
-timestamps as a 64-bit nanosecond counter.  Next, it adds bit shifting
-to the non-root dquot timer fields to boost their effective size to 34
-bits.  These two changes enable correct time handling on XFS through the
-year 2486.
+    iov_iter_pin_pages()
+    iov_iter_pin_pages_alloc()
+    pin_page()
 
-On a current V5 filesystem, inodes timestamps are a signed 32-bit
-seconds counter, with 0 being the Unix epoch.  Quota timers are an
-unsigned 32-bit seconds counter, with 0 also being the Unix epoch.
+This effectively converts several file systems (ext4, for example) that
+use the common Direct IO routines.
 
-This means that inode timestamps can range from:
--(2^31-1) (13 Dec 1901) through (2^31-1) (19 Jan 2038).
+Change the corresponding page release calls from put_page() to
+unpin_user_page().
 
-And quota timers can range from:
-0 (1 Jan 1970) through (2^32-1) (7 Feb 2106).
+Change bio_release_pages() to handle FOLL_PIN pages. In fact, after this
+patch, that is the *only* type of pages that bio_release_pages()
+handles.
 
-With the bigtime encoding turned on, inode timestamps are an unsigned
-64-bit nanoseconds counter, with 0 being the 1901 epoch.  Quota timers
-are a 34-bit unsigned second counter right shifted two bits, with 0
-being the Unix epoch, and capped at the maximum inode timestamp value.
+Design notes
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-This means that inode timestamps can range from:
-0 (13 Dec 1901) through (2^64-1 / 1e9) (2 Jul 2486)
+Quite a few approaches have been considered over the years. This one is
+inspired by Christoph Hellwig's July, 2019 observation that there are
+only 5 ITER_ types, and we can simplify handling of them for Direct IO
+[1]. Accordingly, this patch implements the following pseudocode:
 
-Quota timers could theoretically range from:
-0 (1 Jan 1970) through (((2^34-1) + (2^31-1)) & ~3) (16 Jun 2582).
+Direct IO behavior:
 
-But with the capping in place, the quota timers maximum is:
-max((2^64-1 / 1e9) - (2^31-1), (((2^34-1) + (2^31-1)) & ~3) (2 Jul 2486).
+    ITER_IOVEC:
+        pin_user_pages_fast();
+        break;
 
-v2: rebase to 5.9, having landed the quota refactoring
-v3: various suggestions by Amir and Dave
-v4: drop the timestamp unions, add "is bigtime?" predicates everywhere
-v5: reintroduce timestamp unions as *legacy* timestamp unions
+    ITER_PIPE:
+        for each page:
+             pin_page();
+        break;
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+    ITER_KVEC:    // already elevated page refcount, leave alone
+    ITER_BVEC:    // already elevated page refcount, leave alone
+    ITER_DISCARD: // discard
+        return -EFAULT or -ENVALID;
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+...which works for callers that already have sorted out which case they
+are in. Such as, Direct IO in the block/bio layers.
 
---D
+Note that this does leave ITER_KVEC and ITER_BVEC unconverted, for now.
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bigtime
+Page acquisition: The iov_iter_get_pages*() routines above are at just
+the right level in the call stack: the callers already know which system
+to use, and so it's a small change to just drop in the replacement
+routines. And it's a fan-in/fan-out point: block/bio call sites for
+Direct IO funnel their page acquisitions through the
+iov_iter_get_pages*() routines, and there are many other callers of
+those. And we can't convert all of the callers at once--too many
+subsystems are involved, and it would be a too large and too risky
+patch.
 
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=bigtime
+Page release: there are already separate release routines: put_page()
+vs. unpin_user_page(), so it's already done there.
 
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=bigtime
+[1] https://lore.kernel.org/kvm/20190724061750.GA19397@infradead.org/
+
+[2] "Explicit pinning of user-space pages":
+    https://lwn.net/Articles/807108/
+
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- fs/xfs/libxfs/xfs_dquot_buf.c   |   35 +++++++
- fs/xfs/libxfs/xfs_format.h      |  190 ++++++++++++++++++++++++++++++++++++++-
- fs/xfs/libxfs/xfs_fs.h          |    1 
- fs/xfs/libxfs/xfs_ialloc.c      |    4 +
- fs/xfs/libxfs/xfs_inode_buf.c   |  130 +++++++++++++--------------
- fs/xfs/libxfs/xfs_inode_buf.h   |   15 +++
- fs/xfs/libxfs/xfs_log_format.h  |    7 +
- fs/xfs/libxfs/xfs_quota_defs.h  |    8 +-
- fs/xfs/libxfs/xfs_sb.c          |    2 
- fs/xfs/libxfs/xfs_shared.h      |    3 +
- fs/xfs/libxfs/xfs_trans_inode.c |   16 +++
- fs/xfs/scrub/inode.c            |   31 +++++-
- fs/xfs/xfs_dquot.c              |   52 +++++++++--
- fs/xfs/xfs_dquot.h              |    3 +
- fs/xfs/xfs_inode.c              |    4 -
- fs/xfs/xfs_inode.h              |    5 +
- fs/xfs/xfs_inode_item.c         |   34 +++++--
- fs/xfs/xfs_inode_item_recover.c |   76 ++++++++++++++++
- fs/xfs/xfs_ioctl.c              |    3 -
- fs/xfs/xfs_ondisk.h             |   24 +++++
- fs/xfs/xfs_qm.c                 |   13 +++
- fs/xfs/xfs_qm.h                 |    4 +
- fs/xfs/xfs_qm_syscalls.c        |   18 ++--
- fs/xfs/xfs_super.c              |   14 ++-
- fs/xfs/xfs_trace.h              |   26 +++++
- fs/xfs/xfs_trans_dquot.c        |    6 +
- 26 files changed, 607 insertions(+), 117 deletions(-)
+ block/bio.c          | 24 ++++++++++++------------
+ block/blk-map.c      |  6 +++---
+ fs/direct-io.c       | 28 ++++++++++++++--------------
+ fs/iomap/direct-io.c |  2 +-
+ 4 files changed, 30 insertions(+), 30 deletions(-)
+
+diff --git a/block/bio.c b/block/bio.c
+index a9931f23d933..76c5843f6050 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -955,7 +955,7 @@ void bio_release_pages(struct bio *bio, bool mark_dirty=
+)
+ 	bio_for_each_segment_all(bvec, bio, iter_all) {
+ 		if (mark_dirty && !PageCompound(bvec->bv_page))
+ 			set_page_dirty_lock(bvec->bv_page);
+-		put_page(bvec->bv_page);
++		unpin_user_page(bvec->bv_page);
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(bio_release_pages);
+@@ -986,9 +986,9 @@ static int __bio_iov_bvec_add_pages(struct bio *bio, st=
+ruct iov_iter *iter)
+  * @iter: iov iterator describing the region to be mapped
+  *
+  * Pins pages from *iter and appends them to @bio's bvec array. The
+- * pages will have to be released using put_page() when done.
+- * For multi-segment *iter, this function only adds pages from the
+- * next non-empty segment of the iov iterator.
++ * pages will have to be released using put_page() or unpin_user_page() wh=
+en
++ * done. For multi-segment *iter, this function only adds pages from the n=
+ext
++ * non-empty segment of the iov iterator.
+  */
+ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter=
+)
+ {
+@@ -1009,7 +1009,7 @@ static int __bio_iov_iter_get_pages(struct bio *bio, =
+struct iov_iter *iter)
+ 	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
+ 	pages +=3D entries_left * (PAGE_PTRS_PER_BVEC - 1);
+=20
+-	size =3D iov_iter_get_pages(iter, pages, LONG_MAX, nr_pages, &offset);
++	size =3D iov_iter_pin_pages(iter, pages, LONG_MAX, nr_pages, &offset);
+ 	if (unlikely(size <=3D 0))
+ 		return size ? size : -EFAULT;
+=20
+@@ -1020,7 +1020,7 @@ static int __bio_iov_iter_get_pages(struct bio *bio, =
+struct iov_iter *iter)
+=20
+ 		if (__bio_try_merge_page(bio, page, len, offset, &same_page)) {
+ 			if (same_page)
+-				put_page(page);
++				unpin_user_page(page);
+ 		} else {
+ 			if (WARN_ON_ONCE(bio_full(bio, len)))
+                                 return -EINVAL;
+@@ -1056,7 +1056,7 @@ static int __bio_iov_append_get_pages(struct bio *bio=
+, struct iov_iter *iter)
+ 	BUILD_BUG_ON(PAGE_PTRS_PER_BVEC < 2);
+ 	pages +=3D entries_left * (PAGE_PTRS_PER_BVEC - 1);
+=20
+-	size =3D iov_iter_get_pages(iter, pages, LONG_MAX, nr_pages, &offset);
++	size =3D iov_iter_pin_pages(iter, pages, LONG_MAX, nr_pages, &offset);
+ 	if (unlikely(size <=3D 0))
+ 		return size ? size : -EFAULT;
+=20
+@@ -1069,7 +1069,7 @@ static int __bio_iov_append_get_pages(struct bio *bio=
+, struct iov_iter *iter)
+ 				max_append_sectors, &same_page) !=3D len)
+ 			return -EINVAL;
+ 		if (same_page)
+-			put_page(page);
++			unpin_user_page(page);
+ 		offset =3D 0;
+ 	}
+=20
+@@ -1113,8 +1113,8 @@ int bio_iov_iter_get_pages(struct bio *bio, struct io=
+v_iter *iter)
+ 		} else {
+ 			if (is_bvec)
+ 				ret =3D __bio_iov_bvec_add_pages(bio, iter);
+-			else
+-				ret =3D __bio_iov_iter_get_pages(bio, iter);
++		else
++			ret =3D __bio_iov_iter_get_pages(bio, iter);
+ 		}
+ 	} while (!ret && iov_iter_count(iter) && !bio_full(bio, 0));
+=20
+@@ -1326,8 +1326,8 @@ void bio_set_pages_dirty(struct bio *bio)
+  * the BIO and re-dirty the pages in process context.
+  *
+  * It is expected that bio_check_pages_dirty() will wholly own the BIO fro=
+m
+- * here on.  It will run one put_page() against each page and will run one
+- * bio_put() against the BIO.
++ * here on. It will run one unpin_user_page() against each page, and will =
+run
++ * one bio_put() against the BIO.
+  */
+=20
+ static void bio_dirty_fn(struct work_struct *work);
+diff --git a/block/blk-map.c b/block/blk-map.c
+index 6e804892d5ec..2057a8e5b4bc 100644
+--- a/block/blk-map.c
++++ b/block/blk-map.c
+@@ -275,7 +275,7 @@ static struct bio *bio_map_user_iov(struct request_queu=
+e *q,
+ 		size_t offs, added =3D 0;
+ 		int npages;
+=20
+-		bytes =3D iov_iter_get_pages_alloc(iter, &pages, LONG_MAX, &offs);
++		bytes =3D iov_iter_pin_pages_alloc(iter, &pages, LONG_MAX, &offs);
+ 		if (unlikely(bytes <=3D 0)) {
+ 			ret =3D bytes ? bytes : -EFAULT;
+ 			goto out_unmap;
+@@ -298,7 +298,7 @@ static struct bio *bio_map_user_iov(struct request_queu=
+e *q,
+ 				if (!bio_add_hw_page(q, bio, page, n, offs,
+ 						     max_sectors, &same_page)) {
+ 					if (same_page)
+-						put_page(page);
++						unpin_user_page(page);
+ 					break;
+ 				}
+=20
+@@ -312,7 +312,7 @@ static struct bio *bio_map_user_iov(struct request_queu=
+e *q,
+ 		 * release the pages we didn't map into the bio, if any
+ 		 */
+ 		while (j < npages)
+-			put_page(pages[j++]);
++			unpin_user_page(pages[j++]);
+ 		kvfree(pages);
+ 		/* couldn't stuff something into bio? */
+ 		if (bytes)
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 183299892465..5130ba32ae91 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -170,7 +170,7 @@ static inline int dio_refill_pages(struct dio *dio, str=
+uct dio_submit *sdio)
+ {
+ 	ssize_t ret;
+=20
+-	ret =3D iov_iter_get_pages(sdio->iter, dio->pages, LONG_MAX, DIO_PAGES,
++	ret =3D iov_iter_pin_pages(sdio->iter, dio->pages, LONG_MAX, DIO_PAGES,
+ 				&sdio->from);
+=20
+ 	if (ret < 0 && sdio->blocks_available && (dio->op =3D=3D REQ_OP_WRITE)) {
+@@ -182,7 +182,7 @@ static inline int dio_refill_pages(struct dio *dio, str=
+uct dio_submit *sdio)
+ 		 */
+ 		if (dio->page_errors =3D=3D 0)
+ 			dio->page_errors =3D ret;
+-		get_page(page);
++		pin_page(page);
+ 		dio->pages[0] =3D page;
+ 		sdio->head =3D 0;
+ 		sdio->tail =3D 1;
+@@ -472,7 +472,7 @@ static inline void dio_bio_submit(struct dio *dio, stru=
+ct dio_submit *sdio)
+ static inline void dio_cleanup(struct dio *dio, struct dio_submit *sdio)
+ {
+ 	while (sdio->head < sdio->tail)
+-		put_page(dio->pages[sdio->head++]);
++		unpin_user_page(dio->pages[sdio->head++]);
+ }
+=20
+ /*
+@@ -739,7 +739,7 @@ static inline int dio_bio_add_page(struct dio_submit *s=
+dio)
+ 		 */
+ 		if ((sdio->cur_page_len + sdio->cur_page_offset) =3D=3D PAGE_SIZE)
+ 			sdio->pages_in_io--;
+-		get_page(sdio->cur_page);
++		pin_page(sdio->cur_page);
+ 		sdio->final_block_in_bio =3D sdio->cur_page_block +
+ 			(sdio->cur_page_len >> sdio->blkbits);
+ 		ret =3D 0;
+@@ -853,13 +853,13 @@ submit_page_section(struct dio *dio, struct dio_submi=
+t *sdio, struct page *page,
+ 	 */
+ 	if (sdio->cur_page) {
+ 		ret =3D dio_send_cur_page(dio, sdio, map_bh);
+-		put_page(sdio->cur_page);
++		unpin_user_page(sdio->cur_page);
+ 		sdio->cur_page =3D NULL;
+ 		if (ret)
+ 			return ret;
+ 	}
+=20
+-	get_page(page);		/* It is in dio */
++	pin_page(page);		/* It is in dio */
+ 	sdio->cur_page =3D page;
+ 	sdio->cur_page_offset =3D offset;
+ 	sdio->cur_page_len =3D len;
+@@ -874,7 +874,7 @@ submit_page_section(struct dio *dio, struct dio_submit =
+*sdio, struct page *page,
+ 		ret =3D dio_send_cur_page(dio, sdio, map_bh);
+ 		if (sdio->bio)
+ 			dio_bio_submit(dio, sdio);
+-		put_page(sdio->cur_page);
++		unpin_user_page(sdio->cur_page);
+ 		sdio->cur_page =3D NULL;
+ 	}
+ 	return ret;
+@@ -974,7 +974,7 @@ static int do_direct_IO(struct dio *dio, struct dio_sub=
+mit *sdio,
+=20
+ 				ret =3D get_more_blocks(dio, sdio, map_bh);
+ 				if (ret) {
+-					put_page(page);
++					unpin_user_page(page);
+ 					goto out;
+ 				}
+ 				if (!buffer_mapped(map_bh))
+@@ -1019,7 +1019,7 @@ static int do_direct_IO(struct dio *dio, struct dio_s=
+ubmit *sdio,
+=20
+ 				/* AKPM: eargh, -ENOTBLK is a hack */
+ 				if (dio->op =3D=3D REQ_OP_WRITE) {
+-					put_page(page);
++					unpin_user_page(page);
+ 					return -ENOTBLK;
+ 				}
+=20
+@@ -1032,7 +1032,7 @@ static int do_direct_IO(struct dio *dio, struct dio_s=
+ubmit *sdio,
+ 				if (sdio->block_in_file >=3D
+ 						i_size_aligned >> blkbits) {
+ 					/* We hit eof */
+-					put_page(page);
++					unpin_user_page(page);
+ 					goto out;
+ 				}
+ 				zero_user(page, from, 1 << blkbits);
+@@ -1072,7 +1072,7 @@ static int do_direct_IO(struct dio *dio, struct dio_s=
+ubmit *sdio,
+ 						  sdio->next_block_for_io,
+ 						  map_bh);
+ 			if (ret) {
+-				put_page(page);
++				unpin_user_page(page);
+ 				goto out;
+ 			}
+ 			sdio->next_block_for_io +=3D this_chunk_blocks;
+@@ -1087,8 +1087,8 @@ static int do_direct_IO(struct dio *dio, struct dio_s=
+ubmit *sdio,
+ 				break;
+ 		}
+=20
+-		/* Drop the ref which was taken in get_user_pages() */
+-		put_page(page);
++		/* Drop the ref which was taken in pin_user_pages() */
++		unpin_user_page(page);
+ 	}
+ out:
+ 	return ret;
+@@ -1327,7 +1327,7 @@ do_blockdev_direct_IO(struct kiocb *iocb, struct inod=
+e *inode,
+ 		ret2 =3D dio_send_cur_page(dio, &sdio, &map_bh);
+ 		if (retval =3D=3D 0)
+ 			retval =3D ret2;
+-		put_page(sdio.cur_page);
++		unpin_user_page(sdio.cur_page);
+ 		sdio.cur_page =3D NULL;
+ 	}
+ 	if (sdio.bio)
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index c1aafb2ab990..ea29f0892a8c 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -194,7 +194,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iom=
+ap, loff_t pos,
+ 	bio->bi_private =3D dio;
+ 	bio->bi_end_io =3D iomap_dio_bio_end_io;
+=20
+-	get_page(page);
++	pin_page(page);
+ 	__bio_add_page(bio, page, len, 0);
+ 	bio_set_op_attrs(bio, REQ_OP_WRITE, flags);
+ 	iomap_dio_submit_bio(dio, iomap, bio, pos);
+--=20
+2.28.0
 
