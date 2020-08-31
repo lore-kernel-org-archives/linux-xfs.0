@@ -1,109 +1,121 @@
-Return-Path: <SRS0=6Z+e=CI=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLACK autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D07AC433E6
-	for <linux-xfs@archiver.kernel.org>; Sun, 30 Aug 2020 20:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09C92C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 00:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E78620757
-	for <linux-xfs@archiver.kernel.org>; Sun, 30 Aug 2020 20:44:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D37742074B
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 00:30:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="JoJTBvi4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uKscBZWh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726282AbgH3UoC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 30 Aug 2020 16:44:02 -0400
-Received: from hqnvemgate24.nvidia.com ([216.228.121.143]:10824 "EHLO
-        hqnvemgate24.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726150AbgH3UoB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Aug 2020 16:44:01 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate24.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5f4c0f130002>; Sun, 30 Aug 2020 13:41:55 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Sun, 30 Aug 2020 13:44:00 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Sun, 30 Aug 2020 13:44:00 -0700
-Received: from [10.2.61.194] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sun, 30 Aug
- 2020 20:44:00 +0000
-Subject: Re: [PATCH v2 2/3] iov_iter: introduce iov_iter_pin_user_pages*()
- routines
-To:     Al Viro <viro@zeniv.linux.org.uk>
-CC:     Andrew Morton <akpm@linux-foundation.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, <linux-xfs@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>
-References: <20200829080853.20337-1-jhubbard@nvidia.com>
- <20200829080853.20337-3-jhubbard@nvidia.com>
- <20200830201705.GV1236603@ZenIV.linux.org.uk>
-From:   John Hubbard <jhubbard@nvidia.com>
-Message-ID: <86b4af1b-12c1-4e01-3663-e87eb551c25b@nvidia.com>
-Date:   Sun, 30 Aug 2020 13:44:00 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726447AbgHaAan (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 30 Aug 2020 20:30:43 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:38614 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726179AbgHaAam (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Aug 2020 20:30:42 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07V0P2TH047948;
+        Mon, 31 Aug 2020 00:30:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=5tC/wlNp0puD7zLA31pTRgiOEnDcLFU5sUbJV8KxuXM=;
+ b=uKscBZWhSvshBAPv2PtL4Yu6Jd1xQS0miJM5DBl2CS1NoZjFK1cuIzIOqpK3KzU5sEma
+ NdXkgjbIvsao7PmWWAM7yrHwKRCS8M5K7rilMvwkhUsg/hR20xZnv0PiMreBkATk4cpC
+ X/tg8FlbJNnBskybbXh+i5CC/eWMPEAJ1bDiWmoFdoZ1LDuBweB1Y5r0Lc71E8sP5Ktm
+ 6phRhBpYHzI7JSKuxuayY9glVHh7R9adxBNtam0Q7egYKX1pvzeHmhrkMcLl+08IxJ+v
+ dO6N3Ahu3RcymviBhoWg+3clSP0CwA4z7z/e/0wFEogiejlC+KK4O6PoPWDiS5zmTnhj RQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 337eeqknmp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 31 Aug 2020 00:30:33 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07V0QVv0016374;
+        Mon, 31 Aug 2020 00:30:33 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 3380wxrrs2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 31 Aug 2020 00:30:32 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07V0UUSV028133;
+        Mon, 31 Aug 2020 00:30:30 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 30 Aug 2020 17:30:30 -0700
+Date:   Sun, 30 Aug 2020 17:30:33 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Qian Cai <cai@lca.pw>
+Cc:     hch@infradead.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iomap: fix WARN_ON_ONCE() from unprivileged users
+Message-ID: <20200831003033.GZ6096@magnolia>
+References: <20200830013057.14664-1-cai@lca.pw>
 MIME-Version: 1.0
-In-Reply-To: <20200830201705.GV1236603@ZenIV.linux.org.uk>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1598820115; bh=VpXWPapMvQEi4/NaEs92wBWmsY7/i8I/51IItbed+yc=;
-        h=X-PGP-Universal:Subject:To:CC:References:From:Message-ID:Date:
-         User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
-         X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=JoJTBvi4j3NiX8QlotO9XwFW+WadrSTY53plUvJlG458WCiiZ0d8cFbYb6GDFJ1HT
-         FrB7mA6enVZ6v2s35eh8bY/SQyDzJF81f278lMCqjUsGtQdLMfOSkN+PmH8B9qI9Z4
-         rrxqZ5a9DmmBtGiuk7KlZ9GqeC3XjTjq+q+5JleCZNSUoEzhog+Z5Rkj17aAJ/D87p
-         k/KdUIByXkFSGvyOKDYBERQ1ZjA5GAqgPJ18/KIiX6E6r2N83asmT/IbE4m0jQpxme
-         1/g0f/tFQOPzlckT49nG1NIz2wDHNJx6fKhLboWOud33LT+CFcd211t6wln4NGUkiG
-         94S9chEHiwPXQ==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200830013057.14664-1-cai@lca.pw>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9729 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 suspectscore=56 bulkscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008310001
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9729 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxscore=0
+ phishscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0 suspectscore=56
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008310001
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/30/20 1:17 PM, Al Viro wrote:
-...
->> Why: In order to incrementally change Direct IO callers from calling
->> get_user_pages_fast() and put_page(), over to calling
->> pin_user_pages_fast() and unpin_user_page(), there need to be mid-level
->> routines that specifically call one or the other systems, for both page
->> acquisition and page release.
+On Sat, Aug 29, 2020 at 09:30:57PM -0400, Qian Cai wrote:
+> It is trivial to trigger a WARN_ON_ONCE(1) in iomap_dio_actor() by
+> unprivileged users which would taint the kernel, or worse - panic if
+> panic_on_warn or panic_on_taint is set. Hence, just convert it to
+> pr_warn_ratelimited() to let users know their workloads are racing.
+> Thanks Dave Chinner for the initial analysis of the racing reproducers.
 > 
-> Hmm...  Do you plan to kill iov_iter_get_pages* off, eventually getting
-> rid of that use_pup argument?
+> Signed-off-by: Qian Cai <cai@lca.pw>
+> ---
+>  fs/iomap/direct-io.c | 9 ++++++++-
+>  1 file changed, 8 insertions(+), 1 deletion(-)
 > 
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index c1aafb2ab990..6a6b4bc13269 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -389,7 +389,14 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  	case IOMAP_INLINE:
+>  		return iomap_dio_inline_actor(inode, pos, length, dio, iomap);
+>  	default:
+> -		WARN_ON_ONCE(1);
+> +		/*
+> +		 * DIO is not serialised against mmap() access at all, and so
+> +		 * if the page_mkwrite occurs between the writeback and the
+> +		 * iomap_apply() call in the DIO path, then it will see the
+> +		 * DELALLOC block that the page-mkwrite allocated.
+> +		 */
+> +		pr_warn_ratelimited("page_mkwrite() is racing with DIO read (iomap->type = %u).\n",
+> +				    iomap->type);
 
-Yes. That is definitely something I'm interested in doing, and in fact,
-I started to write words to that effect into the v1 cover letter. I lost
-confidence at the last minute, after poking around the remaining call
-sites (which are mostly network file systems, plus notably io_uring),
-and wondering if I really understood what the hell I was doing. :)
+Shouldn't we log the name of triggering process and the file path?  Sort
+of like what dio_warn_stale_pagecache does?
 
-So I decided to reduce the scope of the proposal, until I got some
-feedback. Which I now have!
+--D
 
-Looking at this again, I see that there are actually *very* few
-ITER_KVEC and ITER_BVEC callers, so...yes, maybe this can all be
-collapsed down to calling the new functions, which would always use pup,
-and lead to the simplification you asked about.
-
-Any advance warnings, advice, design thoughts are definitely welcome
-here.
-
-
-thanks,
--- 
-John Hubbard
-NVIDIA
+>  		return -EIO;
+>  	}
+>  }
+> -- 
+> 2.18.4
+> 
