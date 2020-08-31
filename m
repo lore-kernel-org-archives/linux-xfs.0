@@ -2,156 +2,122 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EABDC433E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 07:15:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE422C433E2
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 08:07:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29256214D8
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 07:15:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA7A0206F0
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 08:07:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="AgIKKxMP"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RhzBgCb0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726255AbgHaHPU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 03:15:20 -0400
-Received: from hqnvemgate25.nvidia.com ([216.228.121.64]:1358 "EHLO
-        hqnvemgate25.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727881AbgHaHOt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 03:14:49 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate25.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5f4ca3380001>; Mon, 31 Aug 2020 00:14:01 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Mon, 31 Aug 2020 00:14:46 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Mon, 31 Aug 2020 00:14:46 -0700
-Received: from HQMAIL107.nvidia.com (172.20.187.13) by HQMAIL109.nvidia.com
- (172.20.187.15) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 31 Aug
- 2020 07:14:45 +0000
-Received: from rnnvemgw01.nvidia.com (10.128.109.123) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3 via Frontend
- Transport; Mon, 31 Aug 2020 07:14:45 +0000
-Received: from sandstorm.nvidia.com (Not Verified[10.2.61.194]) by rnnvemgw01.nvidia.com with Trustwave SEG (v7,5,8,10121)
-        id <B5f4ca3640001>; Mon, 31 Aug 2020 00:14:45 -0700
-From:   John Hubbard <jhubbard@nvidia.com>
-To:     Andrew Morton <akpm@linux-foundation.org>
-CC:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@infradead.org>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, <linux-xfs@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>,
-        John Hubbard <jhubbard@nvidia.com>
-Subject: [PATCH v3 0/3] bio: Direct IO: convert to pin_user_pages_fast()
-Date:   Mon, 31 Aug 2020 00:14:36 -0700
-Message-ID: <20200831071439.1014766-1-jhubbard@nvidia.com>
-X-Mailer: git-send-email 2.28.0
+        id S1728143AbgHaIHi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 04:07:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42444 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726102AbgHaIH2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 04:07:28 -0400
+Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55204C061575
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2020 01:07:26 -0700 (PDT)
+Received: by mail-io1-xd44.google.com with SMTP id z25so2225786iol.10
+        for <linux-xfs@vger.kernel.org>; Mon, 31 Aug 2020 01:07:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=0JNLe56CbCGm4XvCoLyh75xipq6M5chRS47yiYOapUQ=;
+        b=RhzBgCb0PYlBo8h8B3oy18q62GBB3DxxVSX9SL7LVVhHHnDmlsgP3ChKF9JowVaARq
+         tQ5TuCyDDy2M+oc5agUXs4Iji8aZEKgz4N9pGN5mPr08GZSER/wmCPz54fG6OeKME3Fn
+         bkGE1sFl2NcrzONuBwQvV/t0aEq0TsGwGkMlfPCUF3MG/7dzY6awjgeGNHy1ls5kiMIf
+         KboMNgmuh4RbC5uZLpoHzqhnmf/WrKfGwXJg6E80bK14rSvyRXdEb6bac00epCr+5VIe
+         vDc0lCj4TuYdzeZV/lqKkiK1hxslUBEW5z7L0IO86Ka4kKodqJ+N4tMK71FMTRct10om
+         C14w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=0JNLe56CbCGm4XvCoLyh75xipq6M5chRS47yiYOapUQ=;
+        b=gqp5Ay2OFI4W9oWkHsQLQlr7BZ5HjLBUrCWQThgAjSLLWHB7kVwQJ8tEQZhbzH+s9E
+         vRhHO7cT5Dyo/T5ikR2qvh+djumncKkV7IBhluFIL91RLYaljiEbfZft03G4gVHjOiC2
+         x5/FF6q6RZcN8e5eMhhY9rYx/JA/ABO79fUX9lIXOKLAsgYit2cwGoKRehkvY6/LtH5L
+         yjGWFVcLtFFnJe4BNLFBr0v50KCBuCGjEqNOqaGsnoOQ+TN8AFkhYVh63mLAZNuLdC+D
+         fBHtKCDx+cRXifWbQ7Esgl1jFt3U+wud/PAX/w2WP25b5YJOOoU066DUEjN47xRGsd/B
+         if4A==
+X-Gm-Message-State: AOAM531sjprWe1BnIsGgaoZZC5jiFZ8WAoRCPB0k/ZzVWxU02J3z/0Ue
+        TPFxrs0+AP7QGRUTxIvRFvvbH/bemTLckt+pvXarjBm/
+X-Google-Smtp-Source: ABdhPJzUx4tL6EDu0zaNrGwtMnU7iJuY5aesFBTEHg33FBJsdA8cUf5FuSGjwYXwvjJD1LRnne36MuwWnFbbCNCxPQw=
+X-Received: by 2002:a05:6602:1d6:: with SMTP id w22mr398273iot.64.1598861245571;
+ Mon, 31 Aug 2020 01:07:25 -0700 (PDT)
 MIME-Version: 1.0
-X-NVConfidentiality: public
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1598858041; bh=lyrZ2gUylyRDxgfVzrsrWPEjnlS8I/rM0/dBNY/ekqg=;
-        h=X-PGP-Universal:From:To:CC:Subject:Date:Message-ID:X-Mailer:
-         MIME-Version:X-NVConfidentiality:Content-Transfer-Encoding:
-         Content-Type;
-        b=AgIKKxMPpvPxMJX1X6WknDKq7jsksqwEJe5FEcBiW0igy4qyYjQ84yGeMTbtq+TWF
-         zTn6BBJbfbTKPXo+7YWdA+YA2fCiYofpXzPA9gyg3abtY4Py9wyzm65QkQvH5d0MgM
-         J35idY/iyfHlBPCGXm/0LYqqmhTzoehWr/2E9D9cnf4LcDr0rP9ocdqym538+ZwzhN
-         OA/mVZs5qZg+OwrNX+rebHjMGMVXa0lrHflwoEV3kbh6gRVMa0DEb7fuowvO2JeBJR
-         hxflPqdMFfa4mjGIpQMOdgm2ZwdC6ypG/z9nDW+l1P6WsXJaoNzBUNJGM8kf/6Uh3m
-         g7wtUVLD5D+6g==
+References: <159885400575.3608006.17716724192510967135.stgit@magnolia>
+In-Reply-To: <159885400575.3608006.17716724192510967135.stgit@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Mon, 31 Aug 2020 11:07:14 +0300
+Message-ID: <CAOQ4uxh+fLzGTVbXEB8L__jVQCbw53GxcYYv96=2N0-piHz4-Q@mail.gmail.com>
+Subject: Re: [PATCH v5 00/11] xfs: widen timestamps to deal with y2038
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-bio: convert get_user_pages_fast() --> pin_user_pages_fast()
+On Mon, Aug 31, 2020 at 9:08 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> Hi all,
+>
+> This series performs some refactoring of our timestamp and inode
+> encoding functions, then retrofits the timestamp union to handle
+> timestamps as a 64-bit nanosecond counter.  Next, it adds bit shifting
+> to the non-root dquot timer fields to boost their effective size to 34
+> bits.  These two changes enable correct time handling on XFS through the
+> year 2486.
+>
+> On a current V5 filesystem, inodes timestamps are a signed 32-bit
+> seconds counter, with 0 being the Unix epoch.  Quota timers are an
+> unsigned 32-bit seconds counter, with 0 also being the Unix epoch.
+>
+> This means that inode timestamps can range from:
+> -(2^31-1) (13 Dec 1901) through (2^31-1) (19 Jan 2038).
+>
+> And quota timers can range from:
+> 0 (1 Jan 1970) through (2^32-1) (7 Feb 2106).
+>
+> With the bigtime encoding turned on, inode timestamps are an unsigned
+> 64-bit nanoseconds counter, with 0 being the 1901 epoch.  Quota timers
+> are a 34-bit unsigned second counter right shifted two bits, with 0
+> being the Unix epoch, and capped at the maximum inode timestamp value.
+>
+> This means that inode timestamps can range from:
+> 0 (13 Dec 1901) through (2^64-1 / 1e9) (2 Jul 2486)
+>
+> Quota timers could theoretically range from:
+> 0 (1 Jan 1970) through (((2^34-1) + (2^31-1)) & ~3) (16 Jun 2582).
+>
+> But with the capping in place, the quota timers maximum is:
+> max((2^64-1 / 1e9) - (2^31-1), (((2^34-1) + (2^31-1)) & ~3) (2 Jul 2486).
+>
+> v2: rebase to 5.9, having landed the quota refactoring
+> v3: various suggestions by Amir and Dave
+> v4: drop the timestamp unions, add "is bigtime?" predicates everywhere
+> v5: reintroduce timestamp unions as *legacy* timestamp unions
 
-Change generic block/bio Direct IO routines, to acquire FOLL_PIN user
-pages via the recently added routines:
+I went over the relevant patches briefly.
+I do not have time for thorough re-review and seems like you have enough
+reviewers already, but wanted to say that IMO v5 is "approachable" for
+novice xfs developers and I can follow the conversions easily, so that's
+probably a good thing ;-)
 
-    iov_iter_pin_pages()
-    iov_iter_pin_pages_alloc()
-    pin_page()
-
-This effectively converts several file systems (ext4, for example) that
-use the common Direct IO routines.
-
-Change the corresponding page release calls from put_page() to
-unpin_user_page().
-
-Change bio_release_pages() to handle FOLL_PIN pages. In fact, after this
-patch, that is the *only* type of pages that bio_release_pages()
-handles.
-
-Design notes
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-Quite a few approaches have been considered over the years. This one is
-inspired by Christoph Hellwig's July, 2019 observation that there are
-only 5 ITER_ types, and we can simplify handling of them for Direct IO
-[1]. Accordingly, this patch implements the following pseudocode:
-
-Direct IO behavior:
-
-    ITER_IOVEC:
-        pin_user_pages_fast();
-        break;
-
-    ITER_PIPE:
-        for each page:
-             pin_page();
-        break;
-
-    ITER_KVEC:    // already elevated page refcount, leave alone
-    ITER_BVEC:    // already elevated page refcount, leave alone
-    ITER_DISCARD: // discard
-        return -EFAULT or -ENVALID;
-
-...which works for callers that already have sorted out which case they
-are in. Such as, Direct IO in the block/bio layers.
-
-Note that this does leave ITER_KVEC and ITER_BVEC unconverted, for now.
-
-Page acquisition: The iov_iter_get_pages*() routines above are at just
-the right level in the call stack: the callers already know which system
-to use, and so it's a small change to just drop in the replacement
-routines. And it's a fan-in/fan-out point: block/bio call sites for
-Direct IO funnel their page acquisitions through the
-iov_iter_get_pages*() routines, and there are many other callers of
-those. And we can't convert all of the callers at once--too many
-subsystems are involved, and it would be a too large and too risky
-patch.
-
-Page release: there are already separate release routines: put_page()
-vs. unpin_user_page(), so it's already done there.
-
-[1] https://lore.kernel.org/kvm/20190724061750.GA19397@infradead.org/
-
-[2] "Explicit pinning of user-space pages":
-    https://lwn.net/Articles/807108/
-
-
-
-John Hubbard (3):
-  mm/gup: introduce pin_page()
-  iov_iter: introduce iov_iter_pin_pages*() routines
-  bio: convert get_user_pages_fast() --> pin_user_pages_fast()
-
- block/bio.c          |  24 ++++-----
- block/blk-map.c      |   6 +--
- fs/direct-io.c       |  28 +++++------
- fs/iomap/direct-io.c |   2 +-
- include/linux/mm.h   |   2 +
- include/linux/uio.h  |   5 ++
- lib/iov_iter.c       | 113 ++++++++++++++++++++++++++++++++++++++++---
- mm/gup.c             |  33 +++++++++++++
- 8 files changed, 175 insertions(+), 38 deletions(-)
-
---=20
-2.28.0
-
+Thanks,
+Amir.
