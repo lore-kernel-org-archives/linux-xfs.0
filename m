@@ -2,116 +2,143 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A10E2C433E6
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 17:13:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EEB3C433E2
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 17:25:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62A8F20658
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 17:13:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DAC02083E
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 17:25:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bjSn654y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728486AbgHaRNC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 13:13:02 -0400
-Received: from mga05.intel.com ([192.55.52.43]:45914 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727044AbgHaRNC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 31 Aug 2020 13:13:02 -0400
-IronPort-SDR: dfkRCZWL5j641E5QWBkEgOypzc5Y+42uo89zke1iEls5xve07dGl+G9A9fLqA8P4R6H7/FPUMe
- UX1BaYxfmtBg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9730"; a="241838518"
-X-IronPort-AV: E=Sophos;i="5.76,376,1592895600"; 
-   d="scan'208";a="241838518"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2020 10:12:59 -0700
-IronPort-SDR: Y41XvCv6aivpF6BcwaaJivkQ0Jd2PyWIKbmvWPSvEAOkXy+DJxzAzfn8LfU6MWpD59gSRgXXqf
- uvR5w9wPR7IQ==
-X-IronPort-AV: E=Sophos;i="5.76,376,1592895600"; 
-   d="scan'208";a="301118539"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2020 10:12:58 -0700
-Date:   Mon, 31 Aug 2020 10:12:57 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Hao Li <lihao2018.fnst@cn.fujitsu.com>
-Cc:     viro@zeniv.linux.org.uk, david@fromorbit.com,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, y-goto@fujitsu.com
-Subject: Re: [PATCH] fs: Handle I_DONTCACHE in iput_final() instead of
- generic_drop_inode()
-Message-ID: <20200831171257.GF1422350@iweiny-DESK2.sc.intel.com>
-References: <20200831101313.168889-1-lihao2018.fnst@cn.fujitsu.com>
+        id S1728306AbgHaRZJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 13:25:09 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37372 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726927AbgHaRZJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 13:25:09 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VHIts7052626;
+        Mon, 31 Aug 2020 17:24:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=EjvK2pFpOLxW6MRxILxqRUbLzoCGpKZjQR+Srv/gIak=;
+ b=bjSn654yr0BM9YuN+XCefKJokdJR+M+Gl0/WKD9C7TBK2RSh2ep76wKyE9oo5TsBJn0h
+ uI35z9OaF4CU26L2//miJeUP1Rjr3otnHWlDMhoAvbl5KoTy9fgfFxoPfG1SYXkQTuw4
+ q/ioFYvSrjSQsBCxPpgzwHJJmqfW/kndcbN4VCbPUppQ5jfIF6skSj2psr6TJqNI90vE
+ znlI80vcqGJoQvceb9NhpVNlVt07Qc3o2r7MqlzoBzjCxXd2qBRDu2uk3uYCsckrkbIB
+ E3EofX8P6CBkIvwH3zXJYsIdRFUZe6LG7Lr7QH2Sk9oPUX6/8qT9NuQnTSLmWHUAi/1L Og== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 337eeqqhwf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 31 Aug 2020 17:24:50 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VHLcTQ019213;
+        Mon, 31 Aug 2020 17:22:50 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 3380xv301d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 31 Aug 2020 17:22:50 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 07VHMnJv000335;
+        Mon, 31 Aug 2020 17:22:49 GMT
+Received: from localhost (/10.159.252.155)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 31 Aug 2020 10:22:48 -0700
+Date:   Mon, 31 Aug 2020 10:22:50 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Xiao Yang <yangx.jy@cn.fujitsu.com>
+Cc:     linux-xfs@vger.kernel.org, ira.weiny@intel.com
+Subject: Re: [PATCH] xfs: Add check for unsupported xflags
+Message-ID: <20200831172250.GT6107@magnolia>
+References: <20200831133745.33276-1-yangx.jy@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200831101313.168889-1-lihao2018.fnst@cn.fujitsu.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20200831133745.33276-1-yangx.jy@cn.fujitsu.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
+ malwarescore=0 bulkscore=0 mlxscore=0 mlxlogscore=999 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008310103
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxscore=0
+ phishscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2008310103
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 31, 2020 at 06:13:13PM +0800, Hao Li wrote:
-> If generic_drop_inode() returns true, it means iput_final() can evict
-> this inode regardless of whether it is dirty or not. If we check
-> I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
-> evicted unconditionally. This is not the desired behavior because
-> I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
-> As for whether we need to evict this inode, this is what
-> generic_drop_inode() should do. This patch corrects the usage of
-> I_DONTCACHE.
+On Mon, Aug 31, 2020 at 09:37:45PM +0800, Xiao Yang wrote:
+> Current ioctl(FSSETXATTR) ignores unsupported xflags silently
+> so it it not clear for user to know unsupported xflags.
+> For example, use ioctl(FSSETXATTR) to set dax flag on kernel
+> v4.4 which doesn't support dax flag:
+> --------------------------------
+> # xfs_io -f -c "chattr +x" testfile;echo $?
+> 0
+> # xfs_io -c "lsattr" testfile
+> ----------------X testfile
+> --------------------------------
 > 
-> This patch was proposed in [1].
+> Add check to report unsupported info as ioctl(SETXFLAGS) does.
 > 
-> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
-> 
-> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
-
-Thanks!  I think this looks good, but shouldn't we add?  It seems like this is
-a bug right?
-
-Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
-
-Reviewed-by: Ira Weiny <ira.weiny@intel.com>
-
+> Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
 > ---
->  fs/inode.c         | 3 ++-
->  include/linux/fs.h | 3 +--
->  2 files changed, 3 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_ioctl.c      | 4 ++++
+>  include/uapi/linux/fs.h | 8 ++++++++
+>  2 files changed, 12 insertions(+)
 > 
-> diff --git a/fs/inode.c b/fs/inode.c
-> index 72c4c347afb7..4e45d5ea3d0f 100644
-> --- a/fs/inode.c
-> +++ b/fs/inode.c
-> @@ -1625,7 +1625,8 @@ static void iput_final(struct inode *inode)
->  	else
->  		drop = generic_drop_inode(inode);
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 6f22a66777cd..cfe7f20c94fe 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1439,6 +1439,10 @@ xfs_ioctl_setattr(
 >  
-> -	if (!drop && (sb->s_flags & SB_ACTIVE)) {
-> +	if (!drop && !(inode->i_state & I_DONTCACHE) &&
-> +			(sb->s_flags & SB_ACTIVE)) {
->  		inode_add_lru(inode);
->  		spin_unlock(&inode->i_lock);
->  		return;
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index e019ea2f1347..93caee80ce47 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -2922,8 +2922,7 @@ extern int inode_needs_sync(struct inode *inode);
->  extern int generic_delete_inode(struct inode *inode);
->  static inline int generic_drop_inode(struct inode *inode)
->  {
-> -	return !inode->i_nlink || inode_unhashed(inode) ||
-> -		(inode->i_state & I_DONTCACHE);
-> +	return !inode->i_nlink || inode_unhashed(inode);
->  }
->  extern void d_mark_dontcache(struct inode *inode);
+>  	trace_xfs_ioctl_setattr(ip);
+>  
+> +	/* Check if fsx_xflags have unsupported xflags */
+> +	if (fa->fsx_xflags & ~FS_XFLAG_ALL)
+> +                return -EOPNOTSUPP;
+
+Shouldn't this be in vfs_ioc_fssetxattr_check, since we're checking
+against all the vfs defined XFLAGS?
+
+--D
+
+> +
+>  	code = xfs_ioctl_setattr_check_projid(ip, fa);
+>  	if (code)
+>  		return code;
+> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> index f44eb0a04afd..31b6856f6877 100644
+> --- a/include/uapi/linux/fs.h
+> +++ b/include/uapi/linux/fs.h
+> @@ -142,6 +142,14 @@ struct fsxattr {
+>  #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+>  #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>  
+> +#define FS_XFLAG_ALL \
+> +	(FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
+> +	 FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME | FS_XFLAG_NODUMP | \
+> +	 FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
+> +	 FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
+> +	 FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
+> +	 FS_XFLAG_HASATTR)
+> +
+>  /* the read-only stuff doesn't really belong here, but any other place is
+>     probably as bad and I don't want to create yet another include file. */
 >  
 > -- 
-> 2.28.0
+> 2.25.1
 > 
 > 
 > 
