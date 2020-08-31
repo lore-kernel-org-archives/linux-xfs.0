@@ -2,140 +2,73 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23158C433E2
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 16:48:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A8A8C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 16:52:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFADB20707
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 16:48:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="s2QvquEq"
+	by mail.kernel.org (Postfix) with ESMTP id 3DCB520866
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 16:52:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727799AbgHaQsn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 12:48:43 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55436 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726927AbgHaQsn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 12:48:43 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VGdtO1093079;
-        Mon, 31 Aug 2020 16:48:38 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=AdKD9wj4GiZDb6foYzCcCe55i5bAcW4aiNPFmxa9BpE=;
- b=s2QvquEqgOAz9q11CGkbVbDfzRPxeQ1UmFM7ldtA8umXilSGJ+XeP9kVz1YYGIY4fzM8
- xTbNwRnqVVM95OsmDWhna4r/0fTBD8pW1Jj7/Vl0N2+R3ovJSSkZhnA0os1Lh7j1UBDR
- HaqprIBLJP8AP+TdqZqOxqTfdVVxdk+osjxpLqHrKgfiR43ka3TOHZMknFRH9qVheEbk
- VmYgUaTahwwZfTuwr+zg5jgbcCtMBgaSHAUcHwqm5Scn+4VICTKhk8yupEmOqjWqT6Lq
- 179gCMK1BC4cRyLOx30IciQu7BL4qIbULrHaLz67O1Q8fxldPGsS3x406Cik6fL5v5vw YA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 337qrhecth-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 31 Aug 2020 16:48:38 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 07VGf9t3042407;
-        Mon, 31 Aug 2020 16:46:37 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 3380kkw2vg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 31 Aug 2020 16:46:37 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 07VGkb2b004734;
-        Mon, 31 Aug 2020 16:46:37 GMT
-Received: from localhost (/10.159.252.155)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 31 Aug 2020 09:46:36 -0700
-Date:   Mon, 31 Aug 2020 09:46:35 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org
-Subject: Re: [PATCH V3 07/10] xfs: Check for extent overflow when inserting a
- hole
-Message-ID: <20200831164635.GQ6096@magnolia>
-References: <20200820054349.5525-1-chandanrlinux@gmail.com>
- <20200820054349.5525-8-chandanrlinux@gmail.com>
+        id S1728815AbgHaQwZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 12:52:25 -0400
+Received: from mga01.intel.com ([192.55.52.88]:32509 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728772AbgHaQwZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 31 Aug 2020 12:52:25 -0400
+IronPort-SDR: uQmyXIbDaE76I5btjcgNkFxTP1fKaZTdxPVobPta2pd2ZBrk4qboaYcFZNqR7Qx0PIk30Bi9Ck
+ Ej+u7pulqyXg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9730"; a="175066387"
+X-IronPort-AV: E=Sophos;i="5.76,376,1592895600"; 
+   d="scan'208";a="175066387"
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2020 09:52:23 -0700
+IronPort-SDR: W2+IE27pQLjMaQbC7PYHRurSpcOOAvO8WlyMWDfsKP/zKKBAXOlnNvxMwl67pea2uOmir0Z/fg
+ 4h0UqW2z0TEg==
+X-IronPort-AV: E=Sophos;i="5.76,376,1592895600"; 
+   d="scan'208";a="476800745"
+Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2020 09:52:23 -0700
+Date:   Mon, 31 Aug 2020 09:52:22 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     John Hubbard <jhubbard@nvidia.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-mm@kvack.org, LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 3/3] bio: convert get_user_pages_fast() -->
+ pin_user_pages_fast()
+Message-ID: <20200831165222.GD1422350@iweiny-DESK2.sc.intel.com>
+References: <20200831071439.1014766-1-jhubbard@nvidia.com>
+ <20200831071439.1014766-4-jhubbard@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200820054349.5525-8-chandanrlinux@gmail.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- mlxscore=0 suspectscore=1 malwarescore=0 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2008310100
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9730 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 bulkscore=0
- adultscore=0 mlxscore=0 lowpriorityscore=0 phishscore=0 clxscore=1015
- suspectscore=1 priorityscore=1501 spamscore=0 malwarescore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2008310100
+In-Reply-To: <20200831071439.1014766-4-jhubbard@nvidia.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 20, 2020 at 11:13:46AM +0530, Chandan Babu R wrote:
-> The extent mapping the file offset at which a hole has to be
-> inserted will be split into two extents causing extent count to
-> increase by 1.
-> 
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> ---
->  fs/xfs/libxfs/xfs_inode_fork.h | 6 ++++++
->  fs/xfs/xfs_bmap_util.c         | 9 +++++++++
->  2 files changed, 15 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> index 83ff90e2a5fe..d0e49b015b62 100644
-> --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> @@ -73,6 +73,12 @@ struct xfs_ifork {
->   * Hence extent count can increase by 2.
->   */
->  #define XFS_IEXT_WRITE_UNWRITTEN_CNT	(2)
-> +/*
-> + * The extent mapping the file offset at which a hole has to be inserted will be
-> + * split into two extents causing extent count to increase by 1.
-> + */
-> +#define XFS_IEXT_INSERT_HOLE_CNT	(1)
+On Mon, Aug 31, 2020 at 12:14:39AM -0700, John Hubbard wrote:
+> @@ -1113,8 +1113,8 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+>  		} else {
+>  			if (is_bvec)
+>  				ret = __bio_iov_bvec_add_pages(bio, iter);
+> -			else
+> -				ret = __bio_iov_iter_get_pages(bio, iter);
+> +		else
+> +			ret = __bio_iov_iter_get_pages(bio, iter);
 
-Given my earlier comments about how patch 3 is really only testing the
-hole punching case, maybe it should be folded into this one?  They're
-both inserting holes in the extent map.
+Why the white space change?
 
-Otherwise this patch looks good to me.
+Ira
 
---D
-
-> +
->  
->  /*
->   * Fork handling.
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 59d4da38aadf..e682eecebb1f 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1165,6 +1165,15 @@ xfs_insert_file_space(
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	xfs_trans_ijoin(tp, ip, 0);
->  
-> +	/*
-> +	 * Splitting the extent mapping containing stop_fsb will cause
-> +	 * extent count to increase by 1.
-> +	 */
-> +	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-> +			XFS_IEXT_INSERT_HOLE_CNT);
-> +	if (error)
-> +		goto out_trans_cancel;
-> +
->  	/*
->  	 * The extent shifting code works on extent granularity. So, if stop_fsb
->  	 * is not the starting block of extent, we need to split the extent at
-> -- 
-> 2.28.0
-> 
