@@ -2,91 +2,100 @@ Return-Path: <SRS0=tsMC=CJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00767C433E2
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:07:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E778C433E6
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:09:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C91D620866
-	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:07:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3AE320866
+	for <linux-xfs@archiver.kernel.org>; Mon, 31 Aug 2020 19:09:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FoUGdzIn"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="ksPuWCmc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729357AbgHaTH0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 15:07:26 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27239 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727993AbgHaTH0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 15:07:26 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1598900845;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LTPwOZwYOLA/07WZQ1G2FxDCTGYHF8PyWt0i8ueqjOw=;
-        b=FoUGdzIn6/l0CGX8avs4D/+n578+TyBJ+4+q4FLZ8itI5sydd8BEBGZ7JCndXiClrTL1+y
-        0p1vY7aq48vf6z6A4ZVpqz83iUHU4wj/acVzu2ZLfGvEaz9Na+kCSP49IfjPCutvYsMk3J
-        0Ewmb2fN8sL3N02j4O/ZQ4qBKgQi80w=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-541-hNuEC-fdM6y5ea2EfQmcbQ-1; Mon, 31 Aug 2020 15:07:23 -0400
-X-MC-Unique: hNuEC-fdM6y5ea2EfQmcbQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 632411888A16;
-        Mon, 31 Aug 2020 19:07:22 +0000 (UTC)
-Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 124AC60C04;
-        Mon, 31 Aug 2020 19:07:21 +0000 (UTC)
-Date:   Mon, 31 Aug 2020 15:07:20 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs: enable new inode btree counters feature
-Message-ID: <20200831190720.GG12035@bfoster>
-References: <159858219107.3058056.6897728273666872031.stgit@magnolia>
- <159858222199.3058056.17495955382261687992.stgit@magnolia>
+        id S1729391AbgHaTJS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 31 Aug 2020 15:09:18 -0400
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:10110 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727993AbgHaTJS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 15:09:18 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5f4d4acf0000>; Mon, 31 Aug 2020 12:09:03 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Mon, 31 Aug 2020 12:09:17 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Mon, 31 Aug 2020 12:09:17 -0700
+Received: from [10.2.61.194] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 31 Aug
+ 2020 19:09:13 +0000
+Subject: Re: [PATCH v3 3/3] bio: convert get_user_pages_fast() -->
+ pin_user_pages_fast()
+To:     Ira Weiny <ira.weiny@intel.com>
+CC:     Andrew Morton <akpm@linux-foundation.org>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Ilya Dryomov" <idryomov@gmail.com>, Jens Axboe <axboe@kernel.dk>,
+        <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-block@vger.kernel.org>, <linux-mm@kvack.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20200831071439.1014766-1-jhubbard@nvidia.com>
+ <20200831071439.1014766-4-jhubbard@nvidia.com>
+ <20200831165222.GD1422350@iweiny-DESK2.sc.intel.com>
+From:   John Hubbard <jhubbard@nvidia.com>
+Message-ID: <35f751d4-bae4-e91e-d5f1-ddc38e2091ba@nvidia.com>
+Date:   Mon, 31 Aug 2020 12:09:12 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <159858222199.3058056.17495955382261687992.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20200831165222.GD1422350@iweiny-DESK2.sc.intel.com>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1598900943; bh=hmlm7qZUmqe8ZIX2tGp4tRD8QX+HOSHwmnTYYOtpD7o=;
+        h=X-PGP-Universal:Subject:To:CC:References:From:Message-ID:Date:
+         User-Agent:MIME-Version:In-Reply-To:X-Originating-IP:
+         X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=ksPuWCmcI3fUby20QQ0e06U1xsnQvObWtkl1QqqrjT6r9MT4nLTq2sY7Hx53H/xPd
+         K3REe7NKoue3je9odo7fYIpnsM1yCMJJf3rC9HFhWsAmclzlYtdLwFD79uiVTEvuhX
+         XuL6fbEr5SFGg1oF85YrW6EnLPMuyfcS2RqoXZk4QG2OZisogf6GaqjWrJ0FuSLKaN
+         cUcfChhysPRi9lDrSsGadFMV82UWrm7C7lBbarJGsVQ7k2/O1iqW7ME46kNkgtrGYw
+         nM0FWNhyHT/Vorx+AlvG7SLjqoagaQ9FLNF9Wemd+xSYuP/9SlVBkZWa3zVhgtXWZW
+         ef492fMyHwtrA==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 27, 2020 at 07:37:02PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 8/31/20 9:52 AM, Ira Weiny wrote:
+> On Mon, Aug 31, 2020 at 12:14:39AM -0700, John Hubbard wrote:
+>> @@ -1113,8 +1113,8 @@ int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+>>   		} else {
+>>   			if (is_bvec)
+>>   				ret = __bio_iov_bvec_add_pages(bio, iter);
+>> -			else
+>> -				ret = __bio_iov_iter_get_pages(bio, iter);
+>> +		else
+>> +			ret = __bio_iov_iter_get_pages(bio, iter);
 > 
-> Enable the new inode btree counters feature.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/libxfs/xfs_format.h |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index 03cbedb7eafc..fe129fe16d5f 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -453,7 +453,8 @@ xfs_sb_has_compat_feature(
->  #define XFS_SB_FEAT_RO_COMPAT_ALL \
->  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
->  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
-> -		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-> +		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-> +		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
->  #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
->  static inline bool
->  xfs_sb_has_ro_compat_feature(
+> Why the white space change?
 > 
 
+Yikes, that's an oversight, and...yes, it goes all the way back to v1.
+Thanks for spotting it!
+
+There is not supposed to be any diff at all, in that region of code.
+I'll restore the hunk to its rightful, undisturbed state, in v4.
+
+
+thanks,
+-- 
+John Hubbard
+NVIDIA
