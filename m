@@ -2,155 +2,166 @@ Return-Path: <SRS0=ZxTw=CK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A2A3C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 05:34:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C2FC433E6
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 06:06:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 05CE6208CA
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 05:34:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="N0law7Zr"
+	by mail.kernel.org (Postfix) with ESMTP id 15B9D208DB
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 06:06:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726139AbgIAFeb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Sep 2020 01:34:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46884 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726044AbgIAFea (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 01:34:30 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F32C7C061290;
-        Mon, 31 Aug 2020 22:34:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ZSo4Kk3lGyfakbzAOPf8+T3dlZFXdTrrp8cG3ND3CNc=; b=N0law7ZrT/Xc3xr2dooUsCVfPc
-        nZkvh3GnonhgfEn5o5VQ6gOZA65oAMMu5Iz9sI+Z3RWX/372JQxqtjkiXBBGTmgCuugQECYCkv1+u
-        Q7LmtbnpzGMZxpYhvM3KfSmgZwj10w1zrk/m5Njt/q2fKA5CtBErJfDWv5hINfAyY0Jjp2i5p4IIl
-        TGdGrjgtvxwY7t2CGWm+NZWgQVECHmx/gmN1L6VeSNUVJO7IK+bw8FkuDLmi9OG6NkjvXI+zGvW6s
-        ibS07B5cYF8p7v5Dx+gbtRN7Pg7NqvkVqahCgo3F6tehsPKsz9MlrCZmh7kFZ96T8vA4Rt8M1vWk4
-        5439Eg7w==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kCyw6-0007KE-DH; Tue, 01 Sep 2020 05:34:26 +0000
-Date:   Tue, 1 Sep 2020 06:34:26 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-block@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 04/11] block: Add bio_for_each_thp_segment_all
-Message-ID: <20200901053426.GB24560@infradead.org>
-References: <20200824151700.16097-1-willy@infradead.org>
- <20200824151700.16097-5-willy@infradead.org>
- <20200827084431.GA15909@infradead.org>
- <20200831194837.GJ14765@casper.infradead.org>
+        id S1726012AbgIAGGJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 02:06:09 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:37502 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725987AbgIAGGJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 02:06:09 -0400
+X-IronPort-AV: E=Sophos;i="5.76,378,1592841600"; 
+   d="scan'208";a="98762408"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 01 Sep 2020 14:05:58 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 1C50248990DD;
+        Tue,  1 Sep 2020 14:05:56 +0800 (CST)
+Received: from [10.167.220.69] (10.167.220.69) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Tue, 1 Sep 2020 14:05:54 +0800
+Message-ID: <5F4DE4C1.6010403@cn.fujitsu.com>
+Date:   Tue, 1 Sep 2020 14:05:53 +0800
+From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.2; zh-CN; rv:1.9.2.18) Gecko/20110616 Thunderbird/3.1.11
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200831194837.GJ14765@casper.infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+CC:     <linux-xfs@vger.kernel.org>, <ira.weiny@intel.com>
+Subject: Re: [PATCH] xfs: Add check for unsupported xflags
+References: <20200831133745.33276-1-yangx.jy@cn.fujitsu.com> <20200831172250.GT6107@magnolia>
+In-Reply-To: <20200831172250.GT6107@magnolia>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.167.220.69]
+X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206)
+X-yoursite-MailScanner-ID: 1C50248990DD.A9D55
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 31, 2020 at 08:48:37PM +0100, Matthew Wilcox wrote:
-> static void iomap_read_end_io(struct bio *bio)
-> {
->         int i, error = blk_status_to_errno(bio->bi_status);
-> 
->         for (i = 0; i < bio->bi_vcnt; i++) {
->                 struct bio_vec *bvec = &bio->bi_io_vec[i];
+On 2020/9/1 1:22, Darrick J. Wong wrote:
+> On Mon, Aug 31, 2020 at 09:37:45PM +0800, Xiao Yang wrote:
+>> Current ioctl(FSSETXATTR) ignores unsupported xflags silently
+>> so it it not clear for user to know unsupported xflags.
+Hi Darrick,
 
-This should probably use bio_for_each_bvec_all instead of directly
-poking into the bio.  I'd also be tempted to move the loop body into
-a separate helper, but that's just a slight stylistic preference.
-
->                 size_t offset = bvec->bv_offset;
->                 size_t length = bvec->bv_len;
->                 struct page *page = bvec->bv_page;
-> 
->                 while (length > 0) { 
->                         size_t count = thp_size(page) - offset;
->                         
->                         if (count > length)
->                                 count = length;
->                         iomap_read_page_end_io(page, offset, count, error);
->                         page += (offset + count) / PAGE_SIZE;
-
-Shouldn't the page_size here be thp_size?
-
-> Maybe I'm missing something important here, but it's significantly
-> simpler code -- iomap_read_end_io() goes down from 816 bytes to 560 bytes
-> (256 bytes less!) iomap_read_page_end_io is inlined into it both before
-> and after.
-
-Yes, that's exactly why I think avoiding bio_for_each_segment_all is
-a good idea in general.
-
-> There is some weirdness going on with regards to bv_offset that I don't
-> quite understand.  In the original bvec_advance:
-> 
->                 bv->bv_page = bvec->bv_page + (bvec->bv_offset >> PAGE_SHIFT);
->                 bv->bv_offset = bvec->bv_offset & ~PAGE_MASK;
-> 
-> which I cargo-culted into bvec_thp_advance as:
-> 
->                 bv->bv_page = thp_head(bvec->bv_page +
->                                 (bvec->bv_offset >> PAGE_SHIFT));
->                 page_size = thp_size(bv->bv_page);
->                 bv->bv_offset = bvec->bv_offset -
->                                 (bv->bv_page - bvec->bv_page) * PAGE_SIZE;
-> 
-> Is it possible to have a bvec with an offset that is larger than the
-> size of bv_page?  That doesn't seem like a useful thing to do, but
-> if that needs to be supported, then the code up top doesn't do that.
-> We maybe gain a little bit by counting length down to 0 instead of
-> counting it up to bv_len.  I dunno; reading the code over now, it
-> doesn't seem like that much of a difference.
-
-Drivers can absolutely see a bv_offset that is larger due to bio
-splitting.  However the submitting file system should never see one
-unless it creates one, which would be stupid.
-
-And yes, eventually bv_page and bv_offset should be replaced with a
-
-	phys_addr_t		bv_phys;
-
-and life would become simpler in many places (and the bvec would
-shrink for most common setups as well).
-
-For now I'd end up with something like:
-
-static void iomap_read_end_bvec(struct page *page, size_t offset,
-		size_t length, int error)
+Sorry for a typo(s/it it/it is/).
+>> For example, use ioctl(FSSETXATTR) to set dax flag on kernel
+>> v4.4 which doesn't support dax flag:
+>> --------------------------------
+>> # xfs_io -f -c "chattr +x" testfile;echo $?
+>> 0
+>> # xfs_io -c "lsattr" testfile
+>> ----------------X testfile
+>> --------------------------------
+>>
+>> Add check to report unsupported info as ioctl(SETXFLAGS) does.
+>>
+>> Signed-off-by: Xiao Yang<yangx.jy@cn.fujitsu.com>
+>> ---
+>>   fs/xfs/xfs_ioctl.c      | 4 ++++
+>>   include/uapi/linux/fs.h | 8 ++++++++
+>>   2 files changed, 12 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index 6f22a66777cd..cfe7f20c94fe 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -1439,6 +1439,10 @@ xfs_ioctl_setattr(
+>>
+>>   	trace_xfs_ioctl_setattr(ip);
+>>
+>> +	/* Check if fsx_xflags have unsupported xflags */
+>> +	if (fa->fsx_xflags&  ~FS_XFLAG_ALL)
+>> +                return -EOPNOTSUPP;
+> Shouldn't this be in vfs_ioc_fssetxattr_check, since we're checking
+> against all the vfs defined XFLAGS?
+Right, different filesystems support different XFLAGS so I think it is 
+hard to put this
+check into vfs_ioc_fssetxattr_check().  For example,
+1) ext4 defines EXT4_SUPPORTED_FS_XFLAGS and do the check before
+vfs_ioc_fssetxattr_check():
+-------------------------------------------------------------------------------
+ext4/ioctl.c:
+#define EXT4_SUPPORTED_FS_XFLAGS (FS_XFLAG_SYNC | FS_XFLAG_IMMUTABLE | \
+                                   FS_XFLAG_APPEND | FS_XFLAG_NODUMP | \
+                                   FS_XFLAG_NOATIME | 
+FS_XFLAG_PROJINHERIT | \
+                                   FS_XFLAG_DAX)
+...
+                 if (fa.fsx_xflags & ~EXT4_SUPPORTED_FS_XFLAGS)
+                         return -EOPNOTSUPP;
+...
+-------------------------------------------------------------------------------
+2) btrfs adds check_xflags() and calls it before vfs_ioc_fssetxattr_check():
+-------------------------------------------------------------------------------
+btrfs/ioctl.c:
+static int check_xflags(unsigned int flags)
 {
-	while (length > 0) {
-		size_t page_size = thp_size(page);
-		size_t count = min(page_size - offset, length);
-
-		iomap_read_page_end_io(page, offset, count, error);
-
-		page += (offset + count) / page_size;
-		length -= count;
-		offset = 0;
-	}
+         if (flags & ~(FS_XFLAG_APPEND | FS_XFLAG_IMMUTABLE | 
+FS_XFLAG_NOATIME |
+                       FS_XFLAG_NODUMP | FS_XFLAG_SYNC))
+                 return -EOPNOTSUPP;
+         return 0;
 }
+...
+         ret = check_xflags(fa.fsx_xflags);
+         if (ret)
+                 return ret;
+...
+-------------------------------------------------------------------------------
 
-static void iomap_read_end_io(struct bio *bio)
-{
-	int i, error = blk_status_to_errno(bio->bi_status);
-	struct bio_vec *bvec;
+Perhaps, I should rename FS_XFLAG_ALL to XFS_SUPPORTED_FS_XFLAGS and move
+it into libxfs/xfs_fs.h.
 
-	bio_for_each_bvec_all(bvec, bio, i)
-		iomap_read_end_bvec(bvec->bv_page, bvec->bv_offset,
-				    bvec->bv_len, error;
-        bio_put(bio);
-}
+Best Regards,
+Xiao Yang
+> --D
+>
+>> +
+>>   	code = xfs_ioctl_setattr_check_projid(ip, fa);
+>>   	if (code)
+>>   		return code;
+>> diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+>> index f44eb0a04afd..31b6856f6877 100644
+>> --- a/include/uapi/linux/fs.h
+>> +++ b/include/uapi/linux/fs.h
+>> @@ -142,6 +142,14 @@ struct fsxattr {
+>>   #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
+>>   #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
+>>
+>> +#define FS_XFLAG_ALL \
+>> +	(FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
+>> +	 FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME | FS_XFLAG_NODUMP | \
+>> +	 FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
+>> +	 FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
+>> +	 FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
+>> +	 FS_XFLAG_HASATTR)
+>> +
+>>   /* the read-only stuff doesn't really belong here, but any other place is
+>>      probably as bad and I don't want to create yet another include file. */
+>>
+>> -- 
+>> 2.25.1
+>>
+>>
+>>
+>
+> .
+>
 
-and maybe even merge iomap_read_page_end_io into iomap_read_end_bvec.
+
+
