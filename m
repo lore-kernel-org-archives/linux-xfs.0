@@ -2,147 +2,96 @@ Return-Path: <SRS0=ZxTw=CK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EED61C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:14:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E034C433E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:18:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B53802137B
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:14:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1E3E206EF
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:18:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Fg3L5Dd/"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="s763gG5r"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727794AbgIAON4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Sep 2020 10:13:56 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:55612 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728288AbgIAONu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 10:13:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1598969629;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jf5yG0PZro7cmIhKmGXIng++78MYkp945pYe3ACO57Y=;
-        b=Fg3L5Dd/MuK7c3gNQ7H15axnU07cLAP5/joxjFq6LZpzyRcVEnSW+gJP7oDGqW0rtABeKV
-        +9OTAtlc5Yhe3DnSJtkR+9oQYTJI22oujQGK4y5IbX7P5i2E3kMOWjQNTJzoXTNOUUv3aK
-        +XBrhf9CLKO9MtLO/jrDVO6/OMERFCQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-296-u50_sXMuO-OTjdOmC6mTog-1; Tue, 01 Sep 2020 10:13:48 -0400
-X-MC-Unique: u50_sXMuO-OTjdOmC6mTog-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 67180807336
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Sep 2020 14:13:46 +0000 (UTC)
-Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 01A135C1A3;
-        Tue,  1 Sep 2020 14:13:43 +0000 (UTC)
-Date:   Tue, 1 Sep 2020 10:13:41 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Carlos Maiolino <cmaiolino@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs: add inline helper to convert from data fork to
- xfs_attr_shortform
-Message-ID: <20200901141341.GB174813@bfoster>
-References: <20200901095919.238598-1-cmaiolino@redhat.com>
+        id S1726928AbgIAOSR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 10:18:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42810 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728245AbgIAOQo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 10:16:44 -0400
+Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1635C061245;
+        Tue,  1 Sep 2020 07:05:05 -0700 (PDT)
+Received: by mail-il1-x143.google.com with SMTP id w3so1261971ilh.5;
+        Tue, 01 Sep 2020 07:05:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=QfanSJsnDHXMBJydOhcBySoqPAhHQDknT274Z3FU9oY=;
+        b=s763gG5rUSl5/Ne7hAD9UlsMJFSpVWC70EtUTsVOJY+lWd9DcdZQGbSSOLALXL61VJ
+         N2cBtp2Jpt7egCQG42hRzvZZV4e6EX/GDErjMRXfMXhGvT0AM3Pwq2T6b6+msY7JYUn6
+         3jHqcAGjgE++6Dcm+Dj3Ne4UGWF6lIO7nDZbEaohtAGBzRIBGnNkkj8JFuafjCe51TBC
+         +uV7yxFAMf1xuGpi+udidYHVd7/Yrsrp881T/sg6WV/Qw0HBrxi31LqN2GoME3ea+tMU
+         em0vXU5ReipxFi0IbMl/DJJ0T7caFiQER92Bs/z4TPFft/BTBPXtLgdPK9YeGwIu80a1
+         XnyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=QfanSJsnDHXMBJydOhcBySoqPAhHQDknT274Z3FU9oY=;
+        b=R/oqau17hM/EInvbdneuFO3T38TXdvV3OMnXyPN2go1VfbUt05QzOn2SYle55wmola
+         LY4EmOhZz/QvHPonJaKSu/e0OMP6Rf2h/RQ2Fng5bQRkawCGqv/e8ZiFVgrK82eBlUzW
+         fUzg3zyYsVWksyeXVWF732SZOviUKpXblGRGa61Tv/mmyDFP3SfHBoIFOPskTy2WSiED
+         pBw1zIk228qd8aJK0TUdQO1F2opghZ3LZYXswLpD5x8JVHdGL3LgyjQCjx69MQbAt3/1
+         sAfakMbHbAu8ExAIlt6hzhS1p5uwsUUJ80+43aSeHPLrDgTaiGCLqPeTB7rlfjK8b8OZ
+         6YHA==
+X-Gm-Message-State: AOAM53007urUBccPynj5SjbpETeDlBOiyfgW8Em/cVYZIxUPVpBgR+wz
+        cZ8PxYETdO35sJhhUdlRSUJx79/IWrYDXWjOWIM=
+X-Google-Smtp-Source: ABdhPJxdPa8glBoHPUvSTojjOn7Xx4AKgY6EUMb+cwPV9k9BSCGsB1FpeCWWnH51mobvJEpdbe78enkZ4mh74VOQBw4=
+X-Received: by 2002:a05:6e02:685:: with SMTP id o5mr1434383ils.72.1598969104493;
+ Tue, 01 Sep 2020 07:05:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200901095919.238598-1-cmaiolino@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+References: <20200827145329.435398-1-bfoster@redhat.com> <20200829064850.GC29069@infradead.org>
+ <20200831133732.GB2667@bfoster> <CAOQ4uxiqtoDTfkDvwL2Vs28reRmgLqg1ZVGoQEk=bkU1o-Mwrw@mail.gmail.com>
+ <20200901123130.GA174813@bfoster>
+In-Reply-To: <20200901123130.GA174813@bfoster>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 1 Sep 2020 17:04:53 +0300
+Message-ID: <CAOQ4uxi=OD5Pk3c44AFhyH9fv=76U=ygj5+_rAuFgks_Eu2jtw@mail.gmail.com>
+Subject: Re: [PATCH v2] generic: disable dmlogwrites tests on XFS
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        fstests <fstests@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 01, 2020 at 11:59:19AM +0200, Carlos Maiolino wrote:
-> Hi folks, while working on the attr structs cleanup, I've noticed there
-> are so many places where we do:
-> 
-> (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-> 
-> So, I thought it would be worth to add another inline function to do
-> this conversion and remove all these casts.
-> 
-> To achieve this, it will be required to include xfs_inode.h header on
-> xfs_attr_sf.h, so it can access the xfs_inode definition. Also, if this
-> patch is an acceptable idea, it will make sense then to keep the
-> xfs_attr_sf_totsize() function also inside xfs_attr_sf.h (which has been
-> moved on my series to avoid the additional #include), so, I thought on
-> sending this RFC patch to get comments if it's a good idea or not, and,
-> if it is, I'll add this patch to my series before sending it over.
-> 
-> I didn't focus on check if this patch is totally correct (only build
-> test), since my idea is to gather you guys opinions about having this
-> new inline function, so don't bother on reviewing the patch itself by
-> now, only the function name if you guys prefer some other name.
-> 
-> Also, this patch is build on top of my clean up series (V2), not yet
-> sent to the list, so it won't apply anyway.
-> 
-> Cheers.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c      |  4 ++--
->  fs/xfs/libxfs/xfs_attr_leaf.c | 16 ++++++++--------
->  fs/xfs/libxfs/xfs_attr_sf.h   |  6 ++++++
->  fs/xfs/xfs_attr_list.c        |  2 +-
->  4 files changed, 17 insertions(+), 11 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
-> index 540ad3332a9c8..a51aed1dab6c1 100644
-> --- a/fs/xfs/libxfs/xfs_attr_sf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_sf.h
-> @@ -3,6 +3,8 @@
->   * Copyright (c) 2000,2002,2005 Silicon Graphics, Inc.
->   * All Rights Reserved.
->   */
-> +
-> +#include "xfs_inode.h"
+> I don't see much difference with zero/punch on dm-thinp. An
+> fallocate(FL_PUNCH_HOLE|FL_KEEP_SIZE) doesn't work because it explicitly
+> requests hardware zeroing, which I don't have.
+> fallocate(FL_ZERO_RANGE|FL_KEEP_SIZE) works, but takes a minute or two
+> on my 10G device because it falls back to manual zeroing. There is a
+> NO_HIDE_STALE variant of PUNCH_HOLE, but I don't seem to have any
+> userspace tools that define NO_HIDE_STALE and it looks like it just
+> sends discards anyways. Of course, a 'blkdiscard -o 0 -l 10g <thindev>'
+> unmaps nearly the entire device in ~1s, but then we're back to the
+> argument of using discard for zeroing. :P
+>
 
-FWIW, I thought we tried to avoid including headers from other headers
-like this. I'm also wondering if it's an issue that we'd be including a
-a header that is external to libxfs from a libxfs header. Perhaps this
-could be simplified by passing the xfs_ifork pointer to the new helper
-rather than the xfs_inode and/or moving the helper to
-libxfs/xfs_inode_fork.h and putting a forward declaration of
-xfs_attr_shortform in there..?
+I don't think that is a problem if we build the test around thinp and its
+well defined behavior on discard. This is what I was getting at:
+1. Move dm-thinp setup inside the dm-logwrite helpers, so dm-logwrites
+    tests cannot be written without dm-thinp by mistake.
+2. Use explicit discard in start of replay helper to zap everything before
+    replay
 
-Brian
+I'll add to my TODO list.
 
->  #ifndef __XFS_ATTR_SF_H__
->  #define	__XFS_ATTR_SF_H__
->  
-> @@ -47,4 +49,8 @@ xfs_attr_sf_nextentry(struct xfs_attr_sf_entry *sfep) {
->  					    xfs_attr_sf_entsize(sfep));
->  }
->  
-> +static inline struct xfs_attr_shortform *
-> +xfs_attr_ifork_to_sf(struct xfs_inode *ino) {
-> +	return (struct xfs_attr_shortform *)ino->i_afp->if_u1.if_data;
-> +}
->  #endif	/* __XFS_ATTR_SF_H__ */
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index 8f8837fe21cf0..7c0ebdeb43567 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -61,7 +61,7 @@ xfs_attr_shortform_list(
->  	int				error = 0;
->  
->  	ASSERT(dp->i_afp != NULL);
-> -	sf = (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-> +	sf = xfs_attr_ifork_to_sf(dp);
->  	ASSERT(sf != NULL);
->  	if (!sf->hdr.count)
->  		return 0;
-> -- 
-> 2.26.2
-> 
-
+Thanks,
+Amir.
