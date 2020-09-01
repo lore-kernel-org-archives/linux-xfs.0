@@ -5,61 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B625DC433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:43:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70A3FC433E7
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:43:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D18021897
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:43:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B603215A4
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:43:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ab5mf4aO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pHOhf8qo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728242AbgIAOnF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Sep 2020 10:43:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42812 "EHLO
+        id S1728524AbgIAOnG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 10:43:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42806 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728303AbgIAOQq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 10:16:46 -0400
-Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3E5BC06124F;
-        Tue,  1 Sep 2020 07:07:39 -0700 (PDT)
-Received: by mail-il1-x143.google.com with SMTP id t13so1267891ile.9;
-        Tue, 01 Sep 2020 07:07:39 -0700 (PDT)
+        with ESMTP id S1728298AbgIAOQo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 10:16:44 -0400
+Received: from mail-io1-xd44.google.com (mail-io1-xd44.google.com [IPv6:2607:f8b0:4864:20::d44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A01EC061249;
+        Tue,  1 Sep 2020 07:06:38 -0700 (PDT)
+Received: by mail-io1-xd44.google.com with SMTP id g128so1310606iof.11;
+        Tue, 01 Sep 2020 07:06:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=NzYrrH8MqG1W9WvmESAQjiflUNBqSZCwQfZpzWxPnCY=;
-        b=ab5mf4aOnI8uRd+jXamfptdbSLFpNGFxpRVnpYlYq1xHzv5PwsnoJCMY/vrTtjavc5
-         ei5QSl/rLce/MaczldSDT5OyOgHHShwyUHbYtJlUea47bE2F/Ne7DYFmpWtBgnww3hq6
-         cjrvl/NeJEoyLePswWXWSZPX3vCfmw8DISsXa6mGdEnIQACrD03UA9eToTlny582QCmI
-         nDPaBlhCUiXBPmoCinjOpLRH7GxVRgECGPOAVsFItDdsaLGWvj/lMupR1oe+5R3CnUVX
-         Ma4CsqPSRMxz8WO3WypahwgFJ+xdqhArYaqceB1t17+0E9x5FGnChZ1ZAx1CVJsTp/1E
-         MULA==
+        bh=SlcdSlLzZ6hPoD339tdXeJ72A7Nyi9kOiMrYaOpBy5U=;
+        b=pHOhf8qoVh/AFXmH4TccYjS5k6OcqKrB7FttLc2BOuiibG46DtUBwjyk9rInCvNv3j
+         z5v1mcQtwdNlqdube8aLR34xKOqXAu/iVVnCYV7SVwzkENtThq3lYUmGbTQD4+EKFijc
+         kgHXHzJfbMMuavY6wAdp2yN+RKYQTivnT4Nzbdtb7QlJigTrE3w4iRikn5XgEO94r6wK
+         IsSdg0qZrkDzuBOVL2EKZlUzLp1KiqW8vmjq1LIS/KxVnFDl4lLDvOPTR0nvfwUr30Eo
+         0ULcidz9B4VXLuLjkuicTGVoKU4i8Xoz1b3MqR58imFp8nOm43SXwUWlk4hhdiZPlXaC
+         Wx5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=NzYrrH8MqG1W9WvmESAQjiflUNBqSZCwQfZpzWxPnCY=;
-        b=S5GmrXv8opXi4ZOdWV/LmS9m1wBnIOk2Nh/1h/CpRkBvZO+1PivTOlVsKQyle6xEaD
-         xzx3GsxArj+Lnkojt0614Z/5PGVK0KgkrFpHtTjWLlq3BA4ztUu98R8XCODXWcKVTWiS
-         nvAzIuHleL0f/IwvSzcw2/B2bhrSxWAFHl5a+iVX+kel0Ag6JwvBjgVG1TZVnIvcFNse
-         FUTRFOhPxNf4yOltbAWVcJhLZ+QdkGrphVtg4xPmJDm3Fn+62xgARSVKFSiWjW5slrW+
-         cHDB3EdPg3cZn/xfFKG0zkaBXJDYW2K79Cu+ttWOeEqD1SV3URjsdGmULZ+xSS0Q57WK
-         FI7Q==
-X-Gm-Message-State: AOAM531D1tk6Ws2/0gbNfEZnd+3j0V4jaMzpTEobl22D0P6x0hoqK0/y
-        s7Sczkios923xOdVJZnBVlZH+w/J75ZReGj/HM4=
-X-Google-Smtp-Source: ABdhPJznlWgoi+a/4skLlfmSItsHcltQxQXLIgZqN4AM798P1TFM/ix7zxfT2QN/vbhE0RDdqqfr+bBbg9Ow52Yhrao=
-X-Received: by 2002:a05:6e02:dc3:: with SMTP id l3mr1441222ilj.137.1598969258978;
- Tue, 01 Sep 2020 07:07:38 -0700 (PDT)
+        bh=SlcdSlLzZ6hPoD339tdXeJ72A7Nyi9kOiMrYaOpBy5U=;
+        b=HUE+v2qUE0H4vwHyYytBLMtoMSKooHP9rZsjXKxqnjaVQUWncQVrD79SoTjF2wxZGc
+         Q4hq4pTL7WCnTW/frz0ly4c5yHsgHmkTblt0Sfx9E926YMabqiV7cM7vyPkNoe2LSgUw
+         JhbUEj2eZPjDED1b5CydDRAwvt4/teGZq8snXZv/jOArMNvy65iMpPZRj7WUS9nOt4LP
+         lANwqdZrcYbrEec5+GmGpQ8gGJFjgYka0+N8ZoZubETLrB0jRZxQl7H/CI9V3G9UCG+o
+         2HKqZT1q5CYPMWxDwIfmSN6tYKmkuSKqXOuxvhuRz49lTvXtMQYVln+SrCbXXglyWWoH
+         snSA==
+X-Gm-Message-State: AOAM530SurxTWca2qO5y+o3yJ/XJGqV9ceu99RejtIqPZPSlK2sha65h
+        /7YMM2d2bp3xkvrNfP+6MF7ZMJQRjICW2ntWQrLzqX8WF5Q=
+X-Google-Smtp-Source: ABdhPJxpcc+GxRAGWCYtALIphgwrRGKv7puf/8IeXL7vW8gJH3XwTM6vArnfJeKmRarcLFVM45mgN7UgWrm1mTzYLkw=
+X-Received: by 2002:a05:6602:1d6:: with SMTP id w22mr1620315iot.64.1598969197660;
+ Tue, 01 Sep 2020 07:06:37 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200901134728.185353-1-bfoster@redhat.com> <20200901134728.185353-3-bfoster@redhat.com>
-In-Reply-To: <20200901134728.185353-3-bfoster@redhat.com>
+References: <20200901134728.185353-1-bfoster@redhat.com> <20200901134728.185353-2-bfoster@redhat.com>
+In-Reply-To: <20200901134728.185353-2-bfoster@redhat.com>
 From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 1 Sep 2020 17:07:27 +0300
-Message-ID: <CAOQ4uxgr9B-5Wgx_H4qv0r74Wq4zONZjtae6fjeSCTq=WEzvZw@mail.gmail.com>
-Subject: Re: [PATCH v3 2/3] generic/457: use thin volume for dmlogwrites
+Date:   Tue, 1 Sep 2020 17:06:26 +0300
+Message-ID: <CAOQ4uxiEW9LmftT5a-4RPgqj3v29Z+1Y7m_ZKELHf+uAz6xueA@mail.gmail.com>
+Subject: Re: [PATCH v3 1/3] generic/455: use thin volume for dmlogwrites
  target device
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     fstests <fstests@vger.kernel.org>,
@@ -70,7 +70,7 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 1, 2020 at 4:49 PM Brian Foster <bfoster@redhat.com> wrote:
+On Tue, Sep 1, 2020 at 4:48 PM Brian Foster <bfoster@redhat.com> wrote:
 >
 > dmlogwrites support for XFS depends on discard zeroing support of
 > the intended target device. Update the test to use a thin volume and
@@ -78,17 +78,17 @@ On Tue, Sep 1, 2020 at 4:49 PM Brian Foster <bfoster@redhat.com> wrote:
 >
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
 > ---
-
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
->  tests/generic/457 | 33 +++++++++++++++++++++------------
->  1 file changed, 21 insertions(+), 12 deletions(-)
+
+>  tests/generic/455 | 36 ++++++++++++++++++++++--------------
+>  1 file changed, 22 insertions(+), 14 deletions(-)
 >
-> diff --git a/tests/generic/457 b/tests/generic/457
-> index 82367304..42a064d8 100755
-> --- a/tests/generic/457
-> +++ b/tests/generic/457
-> @@ -16,6 +16,7 @@ status=1      # failure is the default!
+> diff --git a/tests/generic/455 b/tests/generic/455
+> index 05621220..72a44fda 100755
+> --- a/tests/generic/455
+> +++ b/tests/generic/455
+> @@ -16,12 +16,14 @@ status=1    # failure is the default!
 >  _cleanup()
 >  {
 >         _log_writes_cleanup
@@ -96,23 +96,22 @@ Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 >  }
 >  trap "_cleanup; exit \$status" 0 1 2 3 15
 >
-> @@ -23,6 +24,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+>  # get standard environment, filters and checks
 >  . ./common/rc
 >  . ./common/filter
->  . ./common/reflink
 > +. ./common/dmthin
 >  . ./common/dmlogwrites
 >
 >  # real QA test starts here
-> @@ -32,6 +34,7 @@ _require_test
->  _require_scratch_reflink
->  _require_cp_reflink
+> @@ -30,6 +32,7 @@ _supported_os Linux
+>  _require_test
+>  _require_scratch_nocheck
 >  _require_log_writes
 > +_require_dm_target thin-pool
 >
 >  rm -f $seqres.full
 >
-> @@ -44,13 +47,12 @@ check_files()
+> @@ -42,13 +45,12 @@ check_files()
 >                 local filename=$(basename $i)
 >                 local mark="${filename##*.}"
 >                 echo "checking $filename" >> $seqres.full
@@ -129,7 +128,7 @@ Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 >         done
 >  }
 >
-> @@ -58,8 +60,16 @@ SANITY_DIR=$TEST_DIR/fsxtests
+> @@ -56,8 +58,16 @@ SANITY_DIR=$TEST_DIR/fsxtests
 >  rm -rf $SANITY_DIR
 >  mkdir $SANITY_DIR
 >
@@ -147,7 +146,7 @@ Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 >
 >  _log_writes_mkfs >> $seqres.full 2>&1
 >
-> @@ -92,14 +102,13 @@ _log_writes_mark last
+> @@ -88,14 +98,13 @@ _log_writes_mark last
 >  _log_writes_unmount
 >  _log_writes_mark end
 >  _log_writes_remove
@@ -166,7 +165,7 @@ Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 >
 >  for j in `seq 0 $((NUM_FILES-1))`; do
 >         check_files testfile$j
-> @@ -107,8 +116,8 @@ done
+> @@ -103,14 +112,13 @@ done
 >
 >  # Check the end
 >  echo "checking post umount" >> $seqres.full
@@ -177,6 +176,13 @@ Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 >  for j in `seq 0 $((NUM_FILES-1))`; do
 >         md5=$(_md5_checksum $SCRATCH_MNT/testfile$j)
 >         [ "${md5}" != "${test_md5[$j]}" ] && _fail "testfile$j end md5sum mismatched"
+>  done
+> -_scratch_unmount
+> -_check_scratch_fs
+> +_dmthin_check_fs
+>
+>  echo "Silence is golden"
+>  status=0
 > --
 > 2.25.4
 >
