@@ -2,137 +2,68 @@ Return-Path: <SRS0=ZxTw=CK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F13FC433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 03:48:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6486EC433E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 05:21:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F464205F4
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 03:48:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CB9F2098B
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 05:21:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Fu+IsqQ1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726020AbgIADsa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 31 Aug 2020 23:48:30 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:15047 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725987AbgIADs3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 31 Aug 2020 23:48:29 -0400
-X-IronPort-AV: E=Sophos;i="5.76,377,1592841600"; 
-   d="scan'208";a="98758136"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 01 Sep 2020 11:48:26 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id A5F2F48990DB;
-        Tue,  1 Sep 2020 11:48:23 +0800 (CST)
-Received: from [10.167.225.206] (10.167.225.206) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Tue, 1 Sep 2020 11:48:22 +0800
-Subject: Re: [PATCH] fs: Handle I_DONTCACHE in iput_final() instead of
- generic_drop_inode()
-To:     Ira Weiny <ira.weiny@intel.com>
-CC:     <viro@zeniv.linux.org.uk>, <david@fromorbit.com>,
-        <linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>, <y-goto@fujitsu.com>
-References: <20200831101313.168889-1-lihao2018.fnst@cn.fujitsu.com>
- <20200831171257.GF1422350@iweiny-DESK2.sc.intel.com>
-From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
-Message-ID: <db5d145a-3b63-48db-6bd2-eb1d91323697@cn.fujitsu.com>
-Date:   Tue, 1 Sep 2020 11:48:21 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.1.1
+        id S1726078AbgIAFVc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 01:21:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44896 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726020AbgIAFVb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 01:21:31 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9565BC061290;
+        Mon, 31 Aug 2020 22:21:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=EzqIhDH/cS54YzDgua0GxgVXInNJr6f5YbW8VLVuLQQ=; b=Fu+IsqQ1R5N7FaDD2KFtevAcvx
+        JiqK2dJ8/zNpFi0T9iIrf3fOp+S9ygP0UnlFSvtH7EQUKtNBSMoYtwukPB577hxGKJroHZ/FKXtVl
+        1CTKfTd2D08X+WENY4ZSR+ffF8UX/l1192EwNmeiROvtG2kWjkSYS+GTtQVEBFfctB0DTIqPGS1Og
+        D0lfMu8ZifSEn7y1/2tXjQafrDY4fK8iW88BFOHPyOILKZanfowaclsqOwT3yLvSLTVFFjKtIZ93b
+        QK69UKpP+aFBt/s1FZC3QLDHJlO/6Cc381Sjt8eLeO+Zn7XirlZtufDPK6AY2HmbEYMqc25bjJmJv
+        fOY4yrvg==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kCyjX-0006ea-Dj; Tue, 01 Sep 2020 05:21:27 +0000
+Date:   Tue, 1 Sep 2020 06:21:27 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Qian Cai <cai@lca.pw>
+Cc:     darrick.wong@oracle.com, hch@infradead.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4] iomap: fix WARN_ON_ONCE() from unprivileged users
+Message-ID: <20200901052127.GA24560@infradead.org>
+References: <20200831182353.14593-1-cai@lca.pw>
 MIME-Version: 1.0
-In-Reply-To: <20200831171257.GF1422350@iweiny-DESK2.sc.intel.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Originating-IP: [10.167.225.206]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
-X-yoursite-MailScanner-ID: A5F2F48990DB.ADBB7
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200831182353.14593-1-cai@lca.pw>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/9/1 1:12, Ira Weiny wrote:
-> On Mon, Aug 31, 2020 at 06:13:13PM +0800, Hao Li wrote:
->> If generic_drop_inode() returns true, it means iput_final() can evict
->> this inode regardless of whether it is dirty or not. If we check
->> I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
->> evicted unconditionally. This is not the desired behavior because
->> I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
->> As for whether we need to evict this inode, this is what
->> generic_drop_inode() should do. This patch corrects the usage of
->> I_DONTCACHE.
->>
->> This patch was proposed in [1].
->>
->> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
->>
->> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
->
-> Thanks!  I think this looks good, but shouldn't we add?  It seems like this is
-> a bug right?
->
-> Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
+On Mon, Aug 31, 2020 at 02:23:53PM -0400, Qian Cai wrote:
+> It is trivial to trigger a WARN_ON_ONCE(1) in iomap_dio_actor() by
+> unprivileged users which would taint the kernel, or worse - panic if
+> panic_on_warn or panic_on_taint is set. Hence, just convert it to
+> pr_warn_ratelimited() to let users know their workloads are racing.
+> Thank Dave Chinner for the initial analysis of the racing reproducers.
+> 
+> Signed-off-by: Qian Cai <cai@lca.pw>
 
-Yeah, this is more meaningful.
+Looks good,
 
-I'm not sure if I need to submit a v2 patch, or this tag will be added
-by the maintainer when applying this patch. I have no experience with
-this before. Thanks!
-
-Regards,
-Hao Li
-
->
->
-> Reviewed-by: Ira Weiny <ira.weiny@intel.com>
->
->> ---
->>  fs/inode.c         | 3 ++-
->>  include/linux/fs.h | 3 +--
->>  2 files changed, 3 insertions(+), 3 deletions(-)
->>
->> diff --git a/fs/inode.c b/fs/inode.c
->> index 72c4c347afb7..4e45d5ea3d0f 100644
->> --- a/fs/inode.c
->> +++ b/fs/inode.c
->> @@ -1625,7 +1625,8 @@ static void iput_final(struct inode *inode)
->>      else
->>          drop = generic_drop_inode(inode);
->>  
->> -    if (!drop && (sb->s_flags & SB_ACTIVE)) {
->> +    if (!drop && !(inode->i_state & I_DONTCACHE) &&
->> +            (sb->s_flags & SB_ACTIVE)) {
->>          inode_add_lru(inode);
->>          spin_unlock(&inode->i_lock);
->>          return;
->> diff --git a/include/linux/fs.h b/include/linux/fs.h
->> index e019ea2f1347..93caee80ce47 100644
->> --- a/include/linux/fs.h
->> +++ b/include/linux/fs.h
->> @@ -2922,8 +2922,7 @@ extern int inode_needs_sync(struct inode *inode);
->>  extern int generic_delete_inode(struct inode *inode);
->>  static inline int generic_drop_inode(struct inode *inode)
->>  {
->> -    return !inode->i_nlink || inode_unhashed(inode) ||
->> -        (inode->i_state & I_DONTCACHE);
->> +    return !inode->i_nlink || inode_unhashed(inode);
->>  }
->>  extern void d_mark_dontcache(struct inode *inode);
->>  
->> --
->> 2.28.0
->>
->>
->>
->
->
-
-
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
