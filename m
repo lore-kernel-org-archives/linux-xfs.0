@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D891C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:37:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2B15C433E6
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:37:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FA33206FA
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:37:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5D6A20BED
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:37:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MERfcUS8"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YhRVYBMm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728304AbgIAOhL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Sep 2020 10:37:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43196 "EHLO
+        id S1728315AbgIAOhO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 10:37:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728315AbgIAOTY (ORCPT
+        with ESMTP id S1728309AbgIAOTY (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 10:19:24 -0400
-Received: from mail-pj1-x1042.google.com (mail-pj1-x1042.google.com [IPv6:2607:f8b0:4864:20::1042])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C8CDC061258
-        for <linux-xfs@vger.kernel.org>; Tue,  1 Sep 2020 07:19:06 -0700 (PDT)
-Received: by mail-pj1-x1042.google.com with SMTP id b16so483309pjp.0
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Sep 2020 07:19:06 -0700 (PDT)
+Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47517C061247
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Sep 2020 07:18:59 -0700 (PDT)
+Received: by mail-pj1-x1041.google.com with SMTP id mm21so690342pjb.4
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Sep 2020 07:18:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=cOe3Kzab6vTM6l3yww+Ql98ao0Cw7G5GswmUt4mxiug=;
-        b=MERfcUS8jsmoqD8fhFECm1odPFtt458WBdzi06DrUxI4bYDU8x9VTyTHbr/rxcZ6w2
-         OSI1go0hbp1xEV8ivu8w/06JvllTZvonWV3hryBekNM2qW4ZiOxIbgMhONifpjNwMXvo
-         VOki/AZCZUG7i7hklvlM0qaLAYW9ggOrLgOxjjl5Z/IqisKEPkV99TATFjFAhdxk0s1J
-         caqbAJ7srLhzOKnoCHDuO57PyYXf8IxazxzdDyXjSPyEN8tyV9xf+X/v6KLFl7nPvhQY
-         2Hajoh2WAo3JlWtvAqQmBu6xtREJ+0YlYCBAQmLNfLACmkp8syPOzeZA6t17PvYkklRJ
-         hhCw==
+        bh=A7Bs08+hU4qQvXldGC3f1WvD5Mr35B4sghoRuEXjco4=;
+        b=YhRVYBMm1hxzdZWWZdK9VUsYobSKxjuIK8oesEbVw1nKxmxlwjL9FakaRQFHg1RdEf
+         HH7oi3UcfF66/fXuKBI5iNWPoGMXj2Lkncgjpxh66IdKcC6r2TXX6u24LVhBTU3mx5Uo
+         yantcAt6AgpCjNAAbuG7/gr7PVO71XZGIiHtzp2gAX8Oapzgj2QLd7pDNikj/fFfBKPc
+         bZXRxMFI8Du6SCBnKbc9gK2quPBDWtU6hOLOrzwirlH7BpF+q0U/bZ2AHjwaxcohQRwx
+         TyKpl8uyNCY2x+y9yl6Sjpkv+IrC9hYi4ZLqx4MNDUmwPE/nmJKu1U3JHUIroeZIcNSK
+         MkGQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=cOe3Kzab6vTM6l3yww+Ql98ao0Cw7G5GswmUt4mxiug=;
-        b=EpOKo0K7DBljhVSgN5MYEjI+5rXGcr1d+9lQXvkOVW2aqTZ4nbklIuPXcnyAxL2wny
-         YcLSmUk5+59TcQEtR4vYgtWDDfLzNpMUOuVUjV/tMQ3bsPh84gKtpA+10XZ/ky1bzPaI
-         pa6LepzDxIkxfLkkT5SFHxZ7tuO0/tiwOb4lQLg4I8Ev1joDqykitKZcURYulPTkRSrQ
-         /6gpDdAWwHQ16wsxy1hLXrCrVlBxJn5zI0ZGBrF96pun5q3DUTeYnLqtsxJW6UoVtEuT
-         KWIGSyn8PglvbQFzLNzqY81zskCbOaaqgeb/3YSNjA6d0BUpwrHPQoxYElzrA4V98XnQ
-         5tLQ==
-X-Gm-Message-State: AOAM531M6ub6hVFcYEEk4dL3tfqOelwTRxuO+FPm2sYoKF/qWWQApHno
-        oGkhM+R7MlBc/qdlDsN72JA=
-X-Google-Smtp-Source: ABdhPJzqBhwSiWefWwK6JMI5UNMg6IOnWmJNca+6xuhEHa7msCJG5pTv/gJEvEEAdN0VnRZxfR/tow==
-X-Received: by 2002:a17:902:b081:: with SMTP id p1mr1604887plr.195.1598969945814;
-        Tue, 01 Sep 2020 07:19:05 -0700 (PDT)
+        bh=A7Bs08+hU4qQvXldGC3f1WvD5Mr35B4sghoRuEXjco4=;
+        b=qqSv1r2EaW/BSkWsUVG68rVADcV0PUJw8OaIn/EJIkgs+IrEVA+edLDH/EeFvFgbKN
+         PF5iVJfO05YUU+hQFeyCduHgC8dztEKDGIaQm4XEW0i0A2JYs+P4kydr2Dy0zLBAKkh4
+         WcGElUC3ULulpJ0GupY1r1H7xjmQ1eI5JmSGdYNR9l3awejKyHwpxFluHVWDnXFKSqUV
+         PFwE2cRdHCK9l0XxHFcum4f6Y0n/a3atYFy76EkSWj4Em1sxBuWsyt2zC0dvEQLeHQi/
+         +E8IU7LOhAs4B5evbFZceC1iJCbFn8KTmPeChkT57S0lAY3vuUWxZhLFoiCMheCm2VBE
+         Ibcw==
+X-Gm-Message-State: AOAM530kvfJLv+w4GIKaTuyJCf8gNs6iB5vvbdsCMvfx5a9gPzbD1W9o
+        frMbbAsTmU0zOvOYJwbnx58=
+X-Google-Smtp-Source: ABdhPJy02KYIjar1Y/DB7JYFm7LZJU9foMblC16dOZiEW9sY+v7muS6myJxkEFQbjXHHRIwo9yZNMw==
+X-Received: by 2002:a17:902:bd96:b029:d0:5c75:38da with SMTP id q22-20020a170902bd96b02900d05c7538damr1937141pls.1.1598969938771;
+        Tue, 01 Sep 2020 07:18:58 -0700 (PDT)
 Received: from garuda.localnet ([122.171.183.205])
-        by smtp.gmail.com with ESMTPSA id z17sm2211416pfq.38.2020.09.01.07.19.03
+        by smtp.gmail.com with ESMTPSA id f18sm2111613pfj.35.2020.09.01.07.18.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Sep 2020 07:19:05 -0700 (PDT)
+        Tue, 01 Sep 2020 07:18:58 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, bfoster@redhat.com
-Subject: Re: [PATCH 3/4] xfsprogs: Extend data/attr fork extent counter width
-Date:   Tue, 01 Sep 2020 19:47:51 +0530
-Message-ID: <6555365.zWS9b0YojA@garuda>
-In-Reply-To: <20200831210032.GY6096@magnolia>
-References: <20200831130102.507-1-chandanrlinux@gmail.com> <20200831130102.507-4-chandanrlinux@gmail.com> <20200831210032.GY6096@magnolia>
+Subject: Re: [PATCH 2/3] xfs: Introduce xfs_dfork_nextents() helper
+Date:   Tue, 01 Sep 2020 19:48:30 +0530
+Message-ID: <1734571.3Z8NNOGFWv@garuda>
+In-Reply-To: <20200831204832.GW6096@magnolia>
+References: <20200831130010.454-1-chandanrlinux@gmail.com> <20200831130010.454-3-chandanrlinux@gmail.com> <20200831204832.GW6096@magnolia>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -73,798 +73,291 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tuesday 1 September 2020 2:30:32 AM IST Darrick J. Wong wrote:
-> On Mon, Aug 31, 2020 at 06:31:01PM +0530, Chandan Babu R wrote:
-> > The kernel commit xfs: fix inode fork extent count overflow
-> > (3f8a4f1d876d3e3e49e50b0396eaffcc4ba71b08) mentions that 10 billion
-> > data fork extents should be possible to create. However the
-> > corresponding on-disk field has a signed 32-bit type. Hence this
-> > commit extends the per-inode data extent counter to 47 bits. The
-> > length of 47-bits was chosen because,
-> > Maximum file size = 2^63.
-> > Maximum extent count when using 64k block size = 2^63 / 2^16 = 2^47.
+On Tuesday 1 September 2020 2:18:32 AM IST Darrick J. Wong wrote:
+> On Mon, Aug 31, 2020 at 06:30:09PM +0530, Chandan Babu R wrote:
+> > This commit replaces the macro XFS_DFORK_NEXTENTS() with the helper
+> > function xfs_dfork_nextents(). As of this commit, xfs_dfork_nextents()
+> > returns the same value as XFS_DFORK_NEXTENTS(). A future commit which
+> > extends inode's extent counter fields will add more logic to this
+> > helper.
 > > 
-> > Also, XFS has a per-inode xattr extent counter which is 16 bits
-> > wide. A workload which
-> > 1. Creates 1 million 255-byte sized xattrs,
-> > 2. Deletes 50% of these xattrs in an alternating manner,
-> > 3. Tries to insert 400,000 new 255-byte sized xattrs
-> >    causes the xattr extent counter to overflow.
+> > This commit also replaces direct accesses to xfs_dinode->di_[a]nextents
+> > with calls to xfs_dfork_nextents().
 > > 
-> > Dave tells me that there are instances where a single file has more than
-> > 100 million hardlinks. With parent pointers being stored in xattrs, we
-> > will overflow the signed 16-bits wide xattr extent counter when large
-> > number of hardlinks are created. Hence this commit extends the on-disk
-> > field to 32-bits.
-> > 
-> > The following changes are made to accomplish this,
-> > 
-> > 1. A new incompat superblock flag to prevent older kernels from mounting
-> >    the filesystem. This flag has to be set during mkfs time.
-> > 2. Carve out a new 32-bit field from xfs_dinode->di_pad2[]. This field
-> >    holds the most significant 15 bits of the data extent counter.
-> > 3. Carve out a new 16-bit field from xfs_dinode->di_pad2[]. This field
-> >    holds the most significant 16 bits of the attr extent counter.
+> > No functional changes have been made.
 > > 
 > > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 > > ---
-> >  db/bmap.c                  |  2 +-
-> >  db/field.c                 |  4 ---
-> >  db/field.h                 |  2 --
-> >  db/inode.c                 | 17 ++++++++++--
-> >  include/libxlog.h          |  6 +++--
-> >  libxfs/xfs_bmap.c          | 12 +++++----
-> >  libxfs/xfs_format.h        | 20 ++++++++++----
-> >  libxfs/xfs_inode_buf.c     | 53 ++++++++++++++++++++++++++++++--------
-> >  libxfs/xfs_inode_buf.h     |  4 +--
-> >  libxfs/xfs_inode_fork.c    |  4 +--
-> >  libxfs/xfs_inode_fork.h    | 15 ++++++++---
-> >  libxfs/xfs_log_format.h    |  8 +++---
-> >  libxfs/xfs_types.h         |  6 +++--
-> >  logprint/log_misc.c        | 21 +++++++++++----
-> >  logprint/log_print_all.c   | 30 ++++++++++++++++-----
-> >  logprint/log_print_trans.c |  2 +-
-> >  repair/dinode.c            | 28 ++++++++++++--------
-> >  17 files changed, 165 insertions(+), 69 deletions(-)
+> >  fs/xfs/libxfs/xfs_format.h     |  4 ----
+> >  fs/xfs/libxfs/xfs_inode_buf.c  | 29 ++++++++++++++++++++++++-----
+> >  fs/xfs/libxfs/xfs_inode_buf.h  |  2 ++
+> >  fs/xfs/libxfs/xfs_inode_fork.c | 10 +++++++---
+> >  fs/xfs/scrub/inode.c           | 12 +++++++-----
+> >  5 files changed, 40 insertions(+), 17 deletions(-)
 > > 
-> > diff --git a/db/bmap.c b/db/bmap.c
-> > index 9800a909..c374fa48 100644
-> > --- a/db/bmap.c
-> > +++ b/db/bmap.c
-> > @@ -47,7 +47,7 @@ bmap(
-> >  	int			n;
-> >  	int			nex;
-> >  	xfs_fsblock_t		nextbno;
-> > -	int			nextents;
-> > +	xfs_extnum_t		nextents;
-> >  	xfs_bmbt_ptr_t		*pp;
-> >  	xfs_bmdr_block_t	*rblock;
-> >  	typnm_t			typ;
-> > diff --git a/db/field.c b/db/field.c
-> > index aa0154d8..2d707e4e 100644
-> > --- a/db/field.c
-> > +++ b/db/field.c
-> > @@ -25,8 +25,6 @@
-> >  #include "symlink.h"
+> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > index 31b7ece985bb..5f41e177dbda 100644
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -992,10 +992,6 @@ enum xfs_dinode_fmt {
+> >  	((w) == XFS_DATA_FORK ? \
+> >  		(dip)->di_format : \
+> >  		(dip)->di_aformat)
+> > -#define XFS_DFORK_NEXTENTS(dip,w) \
+> > -	((w) == XFS_DATA_FORK ? \
+> > -		be32_to_cpu((dip)->di_nextents) : \
+> > -		be16_to_cpu((dip)->di_anextents))
 > >  
-> >  const ftattr_t	ftattrtab[] = {
-> > -	{ FLDT_AEXTNUM, "aextnum", fp_num, "%d", SI(bitsz(xfs_aextnum_t)),
-> > -	  FTARG_SIGNED, NULL, NULL },
-> >  	{ FLDT_AGBLOCK, "agblock", fp_num, "%u", SI(bitsz(xfs_agblock_t)),
-> >  	  FTARG_DONULL, fa_agblock, NULL },
-> >  	{ FLDT_AGBLOCKNZ, "agblocknz", fp_num, "%u", SI(bitsz(xfs_agblock_t)),
-> > @@ -300,8 +298,6 @@ const ftattr_t	ftattrtab[] = {
-> >  	  FTARG_DONULL, fa_drtbno, NULL },
-> >  	{ FLDT_EXTLEN, "extlen", fp_num, "%u", SI(bitsz(xfs_extlen_t)), 0, NULL,
-> >  	  NULL },
-> > -	{ FLDT_EXTNUM, "extnum", fp_num, "%d", SI(bitsz(xfs_extnum_t)),
-> > -	  FTARG_SIGNED, NULL, NULL },
-> >  	{ FLDT_FSIZE, "fsize", fp_num, "%lld", SI(bitsz(xfs_fsize_t)),
-> >  	  FTARG_SIGNED, NULL, NULL },
-> >  	{ FLDT_INO, "ino", fp_num, "%llu", SI(bitsz(xfs_ino_t)), FTARG_DONULL,
-> > diff --git a/db/field.h b/db/field.h
-> > index 15065373..7ebc9a1e 100644
-> > --- a/db/field.h
-> > +++ b/db/field.h
-> > @@ -5,7 +5,6 @@
-> >   */
+> >  /*
+> >   * For block and character special files the 32bit dev_t is stored at the
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index 5dcd71bfab2e..cce2aa99aad8 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -368,9 +368,11 @@ xfs_dinode_verify_fork(
+> >  	struct xfs_mount	*mp,
+> >  	int			whichfork)
+> >  {
+> > -	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
+> > +	uint32_t		di_nextents;
+> >  	xfs_extnum_t		max_extents;
 > >  
-> >  typedef enum fldt	{
-> > -	FLDT_AEXTNUM,
-> >  	FLDT_AGBLOCK,
-> >  	FLDT_AGBLOCKNZ,
-> >  	FLDT_AGF,
-> > @@ -143,7 +142,6 @@ typedef enum fldt	{
-> >  	FLDT_DRFSBNO,
-> >  	FLDT_DRTBNO,
-> >  	FLDT_EXTLEN,
-> > -	FLDT_EXTNUM,
-> >  	FLDT_FSIZE,
-> >  	FLDT_INO,
-> >  	FLDT_INOBT,
-> > diff --git a/db/inode.c b/db/inode.c
-> > index 3853092c..50a942b6 100644
-> > --- a/db/inode.c
-> > +++ b/db/inode.c
-> > @@ -37,6 +37,7 @@ static int	inode_u_muuid_count(void *obj, int startoff);
-> >  static int	inode_u_sfdir2_count(void *obj, int startoff);
-> >  static int	inode_u_sfdir3_count(void *obj, int startoff);
-> >  static int	inode_u_symlink_count(void *obj, int startoff);
-> > +static int	inode_v3_wideextcnt_count(void *obj, int startoff);
+> > +	di_nextents = xfs_dfork_nextents(&mp->m_sb, dip, whichfork);
+> > +
+> >  	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
+> >  	case XFS_DINODE_FMT_LOCAL:
+> >  		/*
+> > @@ -401,6 +403,19 @@ xfs_dinode_verify_fork(
+> >  	return NULL;
+> >  }
 > >  
-> >  static const cmdinfo_t	inode_cmd =
-> >  	{ "inode", NULL, inode_f, 0, 1, 1, "[inode#]",
-> > @@ -100,8 +101,8 @@ const field_t	inode_core_flds[] = {
-> >  	{ "size", FLDT_FSIZE, OI(COFF(size)), C1, 0, TYP_NONE },
-> >  	{ "nblocks", FLDT_DRFSBNO, OI(COFF(nblocks)), C1, 0, TYP_NONE },
-> >  	{ "extsize", FLDT_EXTLEN, OI(COFF(extsize)), C1, 0, TYP_NONE },
-> > -	{ "nextents", FLDT_EXTNUM, OI(COFF(nextents)), C1, 0, TYP_NONE },
-> > -	{ "naextents", FLDT_AEXTNUM, OI(COFF(anextents)), C1, 0, TYP_NONE },
-> > +	{ "nextents_lo", FLDT_UINT32D, OI(COFF(nextents_lo)), C1, 0, TYP_NONE },
-> > +	{ "naextents_lo", FLDT_UINT16D, OI(COFF(anextents_lo)), C1, 0, TYP_NONE },
-> >  	{ "forkoff", FLDT_UINT8D, OI(COFF(forkoff)), C1, 0, TYP_NONE },
-> >  	{ "aformat", FLDT_DINODE_FMT, OI(COFF(aformat)), C1, 0, TYP_NONE },
-> >  	{ "dmevmask", FLDT_UINT32X, OI(COFF(dmevmask)), C1, 0, TYP_NONE },
-> > @@ -162,6 +163,10 @@ const field_t	inode_v3_flds[] = {
-> >  	{ "lsn", FLDT_UINT64X, OI(COFF(lsn)), C1, 0, TYP_NONE },
-> >  	{ "flags2", FLDT_UINT64X, OI(COFF(flags2)), C1, 0, TYP_NONE },
-> >  	{ "cowextsize", FLDT_EXTLEN, OI(COFF(cowextsize)), C1, 0, TYP_NONE },
-> > +	{ "nextents_hi", FLDT_UINT32D, OI(COFF(nextents_hi)),
-> > +	  inode_v3_wideextcnt_count, FLD_COUNT, TYP_NONE },
-> > +	{ "naextents_hi", FLDT_UINT16D, OI(COFF(anextents_hi)),
-> > +	  inode_v3_wideextcnt_count, FLD_COUNT, TYP_NONE },
+> > +xfs_extnum_t
+> > +xfs_dfork_nextents(struct xfs_sb *sbp, struct xfs_dinode *dip, int whichfork)
 > 
-> Frankly, I would rather see you add new fp_ functions to db/fprint.c to
-> extract the relevant bits and keep them a single field rather than
-> splitting them into separate nextents_lo and nextents_hi fields.  I
-> don't really want to go doing that bit shifting in my head to figure out
-> how many extents an inode has.
+> The first arg probaly should be a (struct xfs_mount *) to save the
+> callers some typing.
 
-I agree. I will make the above suggested change.
+Hmm. I actually did try that ... but ended up failing. I don't recall the
+reason now. I will implement this suggestion.
 
 > 
-> Also: Same suggestion as the last patch -- API conversions to non-libxfs
-> code are fine to include in the "xfs:" patches to avoid breaking the
-> build, but all the other changes should be separate.
+> > +{
+> > +	xfs_extnum_t nextents;
+> > +
+> > +	if (whichfork == XFS_DATA_FORK)
+> > +		nextents = be32_to_cpu(dip->di_nextents);
+> > +	else
+> > +		nextents = be16_to_cpu(dip->di_anextents);
+> > +
+> > +	return nextents;
 > 
-> Notice how this patch has gotten very long because it adds widextcount
-> support to xfs_db, log dumping support to xfs_logprint, and the ability
-> to fix things to xfs_repair?
+> Would this be cleaner (as well as barf loudly on invalid args)?
+> 
+> 	switch (whichfork) {
+> 	case XFS_DATA_FORK:
+> 		return be32_to_cpu(...);
+> 	case XFS_ATTR_FORK:
+> 		return be16_to_cpu(...);
+> 	default:
+> 		ASSERT(0);
+> 		return 0;
+> 	}
 
-I will fix this up too.
+Yes, This is much better. I will include this in the next version of the
+patchset.
+
+> 
+> 
+> > +}
+> > +
+> >  static xfs_failaddr_t
+> >  xfs_dinode_verify_forkoff(
+> >  	struct xfs_dinode	*dip,
+> > @@ -437,6 +452,8 @@ xfs_dinode_verify(
+> >  	uint16_t		flags;
+> >  	uint64_t		flags2;
+> >  	uint64_t		di_size;
+> > +	xfs_extnum_t            nextents;
+> > +	int64_t			nblocks;
+> >  
+> >  	if (dip->di_magic != cpu_to_be16(XFS_DINODE_MAGIC))
+> >  		return __this_address;
+> > @@ -467,10 +484,12 @@ xfs_dinode_verify(
+> >  	if ((S_ISLNK(mode) || S_ISDIR(mode)) && di_size == 0)
+> >  		return __this_address;
+> >  
+> > +	nextents = xfs_dfork_nextents(&mp->m_sb, dip, XFS_DATA_FORK);
+> > +	nextents += xfs_dfork_nextents(&mp->m_sb, dip, XFS_ATTR_FORK);
+> > +	nblocks = be64_to_cpu(dip->di_nblocks);
+> > +
+> >  	/* Fork checks carried over from xfs_iformat_fork */
+> > -	if (mode &&
+> > -	    be32_to_cpu(dip->di_nextents) + be16_to_cpu(dip->di_anextents) >
+> > -			be64_to_cpu(dip->di_nblocks))
+> > +	if (mode && nextents > nblocks)
+> >  		return __this_address;
+> >  
+> >  	if (mode && XFS_DFORK_BOFF(dip) > mp->m_sb.sb_inodesize)
+> > @@ -527,7 +546,7 @@ xfs_dinode_verify(
+> >  		default:
+> >  			return __this_address;
+> >  		}
+> > -		if (dip->di_anextents)
+> > +		if (xfs_dfork_nextents(&mp->m_sb, dip, XFS_ATTR_FORK))
+> >  			return __this_address;
+> >  	}
+> >  
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+> > index 6b08b9d060c2..a97caf675aaf 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.h
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.h
+> > @@ -59,5 +59,7 @@ xfs_failaddr_t xfs_inode_validate_extsize(struct xfs_mount *mp,
+> >  xfs_failaddr_t xfs_inode_validate_cowextsize(struct xfs_mount *mp,
+> >  		uint32_t cowextsize, uint16_t mode, uint16_t flags,
+> >  		uint64_t flags2);
+> > +xfs_extnum_t xfs_dfork_nextents(struct xfs_sb *sbp, struct xfs_dinode *dip,
+> > +				int whichfork);
+> 
+> Please try to match the second-line indentation of the declaration above
+> it.  Or: two tabs is enough.
+
+Sorry, I missed out on this one. I will fix this up.
+
+> 
+> >  
+> >  #endif	/* __XFS_INODE_BUF_H__ */
+> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> > index 3a084aea8f85..2ce80bb5c70a 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> > @@ -10,6 +10,7 @@
+> >  #include "xfs_format.h"
+> >  #include "xfs_log_format.h"
+> >  #include "xfs_trans_resv.h"
+> > +#include "xfs_sb.h"
+> >  #include "xfs_mount.h"
+> >  #include "xfs_inode.h"
+> >  #include "xfs_trans.h"
+> > @@ -104,9 +105,10 @@ xfs_iformat_extents(
+> >  	int			whichfork)
+> >  {
+> >  	struct xfs_mount	*mp = ip->i_mount;
+> > +	struct xfs_sb		*sbp = &mp->m_sb;
+> >  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> > +	int			nex = xfs_dfork_nextents(sbp, dip, whichfork);
+> >  	int			state = xfs_bmap_fork_to_state(whichfork);
+> > -	int			nex = XFS_DFORK_NEXTENTS(dip, whichfork);
+> >  	int			size = nex * sizeof(xfs_bmbt_rec_t);
+> >  	struct xfs_iext_cursor	icur;
+> >  	struct xfs_bmbt_rec	*dp;
+> > @@ -226,6 +228,7 @@ xfs_iformat_data_fork(
+> >  	struct xfs_inode	*ip,
+> >  	struct xfs_dinode	*dip)
+> >  {
+> > +	struct xfs_sb		*sbp = &ip->i_mount->m_sb;
+> >  	struct inode		*inode = VFS_I(ip);
+> >  	int			error;
+> >  
+> > @@ -234,7 +237,7 @@ xfs_iformat_data_fork(
+> >  	 * depend on it.
+> >  	 */
+> >  	ip->i_df.if_format = dip->di_format;
+> > -	ip->i_df.if_nextents = be32_to_cpu(dip->di_nextents);
+> > +	ip->i_df.if_nextents = xfs_dfork_nextents(sbp, dip, XFS_DATA_FORK);
+> >  
+> >  	switch (inode->i_mode & S_IFMT) {
+> >  	case S_IFIFO:
+> > @@ -286,6 +289,7 @@ xfs_iformat_attr_fork(
+> >  	struct xfs_inode	*ip,
+> >  	struct xfs_dinode	*dip)
+> >  {
+> > +	struct xfs_sb		*sbp = &ip->i_mount->m_sb;
+> >  	int			error = 0;
+> >  
+> >  	/*
+> > @@ -296,7 +300,7 @@ xfs_iformat_attr_fork(
+> >  	ip->i_afp->if_format = dip->di_aformat;
+> >  	if (unlikely(ip->i_afp->if_format == 0)) /* pre IRIX 6.2 file system */
+> >  		ip->i_afp->if_format = XFS_DINODE_FMT_EXTENTS;
+> > -	ip->i_afp->if_nextents = be16_to_cpu(dip->di_anextents);
+> > +	ip->i_afp->if_nextents = xfs_dfork_nextents(sbp, dip, XFS_ATTR_FORK);
+> >  
+> >  	switch (ip->i_afp->if_format) {
+> >  	case XFS_DINODE_FMT_LOCAL:
+> > diff --git a/fs/xfs/scrub/inode.c b/fs/xfs/scrub/inode.c
+> > index 6d483ab29e63..e428ad0eef03 100644
+> > --- a/fs/xfs/scrub/inode.c
+> > +++ b/fs/xfs/scrub/inode.c
+> > @@ -354,7 +354,7 @@ xchk_dinode(
+> >  	xchk_inode_extsize(sc, dip, ino, mode, flags);
+> >  
+> >  	/* di_nextents */
+> > -	nextents = be32_to_cpu(dip->di_nextents);
+> > +	nextents = xfs_dfork_nextents(&mp->m_sb, dip, XFS_DATA_FORK);
+> >  	fork_recs =  XFS_DFORK_DSIZE(dip, mp) / sizeof(struct xfs_bmbt_rec);
+> >  	switch (dip->di_format) {
+> >  	case XFS_DINODE_FMT_EXTENTS:
+> > @@ -371,10 +371,12 @@ xchk_dinode(
+> >  		break;
+> >  	}
+> >  
+> > +	nextents = xfs_dfork_nextents(&mp->m_sb, dip, XFS_ATTR_FORK);
+> 
+> Might be a good time to change these all to "naextents"?
+
+Sure, I will make the change.
+
+> 
+> > +
+> >  	/* di_forkoff */
+> >  	if (XFS_DFORK_APTR(dip) >= (char *)dip + mp->m_sb.sb_inodesize)
+> >  		xchk_ino_set_corrupt(sc, ino);
+> > -	if (dip->di_anextents != 0 && dip->di_forkoff == 0)
+> > +	if (nextents != 0 && dip->di_forkoff == 0)
+> >  		xchk_ino_set_corrupt(sc, ino);
+> >  	if (dip->di_forkoff == 0 && dip->di_aformat != XFS_DINODE_FMT_EXTENTS)
+> >  		xchk_ino_set_corrupt(sc, ino);
+> > @@ -386,7 +388,6 @@ xchk_dinode(
+> >  		xchk_ino_set_corrupt(sc, ino);
+> >  
+> >  	/* di_anextents */
+> > -	nextents = be16_to_cpu(dip->di_anextents);
+> >  	fork_recs =  XFS_DFORK_ASIZE(dip, mp) / sizeof(struct xfs_bmbt_rec);
+> >  	switch (dip->di_aformat) {
+> >  	case XFS_DINODE_FMT_EXTENTS:
+> > @@ -464,6 +465,7 @@ xchk_inode_xref_bmap(
+> >  	struct xfs_scrub	*sc,
+> >  	struct xfs_dinode	*dip)
+> >  {
+> > +	xfs_mount_t		*mp = sc->mp;
+> 
+> Don't increase the usage of structure typedefs, please.
+
+Sorry, I will replace it with 'struct xfs_mount'.
 
 > 
 > --D
 > 
-> >  	{ "pad2", FLDT_UINT8X, OI(OFF(pad2)), CI(12), FLD_ARRAY|FLD_SKIPALL, TYP_NONE },
-> >  	{ "crtime", FLDT_TIMESTAMP, OI(COFF(crtime)), C1, 0, TYP_NONE },
-> >  	{ "inumber", FLDT_INO, OI(COFF(ino)), C1, 0, TYP_NONE },
-> > @@ -396,6 +401,14 @@ inode_core_projid_count(
-> >  	return dic->di_version >= 2;
-> >  }
-> >  
-> > +static int
-> > +inode_v3_wideextcnt_count(
-> > +	void		*obj,
-> > +	int		startoff)
-> > +{
-> > +	return xfs_sb_version_haswideextcnt(&mp->m_sb);
-> > +}
-> > +
-> >  static int
-> >  inode_f(
-> >  	int		argc,
-> > diff --git a/include/libxlog.h b/include/libxlog.h
-> > index 5e94fa1e..1aab108c 100644
-> > --- a/include/libxlog.h
-> > +++ b/include/libxlog.h
-> > @@ -89,13 +89,15 @@ extern int	xlog_find_tail(struct xlog *log, xfs_daddr_t *head_blk,
-> >  
-> >  extern int	xlog_recover(struct xlog *log, int readonly);
-> >  extern void	xlog_recover_print_data(char *p, int len);
-> > -extern void	xlog_recover_print_logitem(xlog_recover_item_t *item);
-> > +extern void	xlog_recover_print_logitem(struct xlog *log,
-> > +			xlog_recover_item_t *item);
-> >  extern void	xlog_recover_print_trans_head(struct xlog_recover *tr);
-> >  extern int	xlog_print_find_oldest(struct xlog *log, xfs_daddr_t *last_blk);
-> >  
-> >  /* for transactional view */
-> >  extern void	xlog_recover_print_trans_head(struct xlog_recover *tr);
-> > -extern void	xlog_recover_print_trans(struct xlog_recover *trans,
-> > +extern void	xlog_recover_print_trans(struct xlog *log,
-> > +				struct xlog_recover *trans,
-> >  				struct list_head *itemq, int print);
-> >  extern int	xlog_do_recovery_pass(struct xlog *log, xfs_daddr_t head_blk,
-> >  				xfs_daddr_t tail_blk, int pass);
-> > diff --git a/libxfs/xfs_bmap.c b/libxfs/xfs_bmap.c
-> > index dae4d339..118b6e96 100644
-> > --- a/libxfs/xfs_bmap.c
-> > +++ b/libxfs/xfs_bmap.c
-> > @@ -45,19 +45,21 @@ xfs_bmap_compute_maxlevels(
-> >  	xfs_mount_t	*mp,		/* file system mount structure */
-> >  	int		whichfork)	/* data or attr fork */
-> >  {
-> > +	xfs_extnum_t	maxleafents;	/* max leaf entries possible */
-> >  	int		level;		/* btree level */
-> >  	uint		maxblocks;	/* max blocks at this level */
-> > -	uint		maxleafents;	/* max leaf entries possible */
-> >  	int		maxrootrecs;	/* max records in root block */
-> >  	int		minleafrecs;	/* min records in leaf block */
-> >  	int		minnoderecs;	/* min records in node block */
-> >  	int		sz;		/* root block size */
-> >  
-> >  	/*
-> > -	 * The maximum number of extents in a file, hence the maximum
-> > -	 * number of leaf entries, is controlled by the type of di_nextents
-> > -	 * (a signed 32-bit number, xfs_extnum_t), or by di_anextents
-> > -	 * (a signed 16-bit number, xfs_aextnum_t).
-> > +	 * The maximum number of extents in a file, hence the maximum number of
-> > +	 * leaf entries, is controlled by the size of the on-disk extent count,
-> > +	 * either a signed 32-bit number for the data fork, or a signed 16-bit
-> > +	 * number for the attr fork. With mkfs.xfs' wide-extcount option
-> > +	 * enabled, the data fork extent count is unsigned 47-bits wide, while
-> > +	 * the corresponding attr fork extent count is unsigned 32-bits wide.
-> >  	 *
-> >  	 * Note that we can no longer assume that if we are in ATTR1 that
-> >  	 * the fork offset of all the inodes will be
-> > diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-> > index 188deada..ab44bcb4 100644
-> > --- a/libxfs/xfs_format.h
-> > +++ b/libxfs/xfs_format.h
-> > @@ -464,11 +464,13 @@ xfs_sb_has_ro_compat_feature(
-> >  
-> >  #define XFS_SB_FEAT_INCOMPAT_FTYPE	(1 << 0)	/* filetype in dirent */
-> >  #define XFS_SB_FEAT_INCOMPAT_SPINODES	(1 << 1)	/* sparse inode chunks */
-> > -#define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)	/* metadata UUID */
-> > +#define XFS_SB_FEAT_INCOMPAT_META_UUID	(1 << 2)        /* metadata UUID */
-> > +#define XFS_SB_FEAT_INCOMPAT_WIDEEXTCNT	(1 << 3)	/* Wider data/attr fork extent counters */
-> >  #define XFS_SB_FEAT_INCOMPAT_ALL \
-> >  		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
-> >  		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
-> > -		 XFS_SB_FEAT_INCOMPAT_META_UUID)
-> > +		 XFS_SB_FEAT_INCOMPAT_META_UUID| \
-> > +		 XFS_SB_FEAT_INCOMPAT_WIDEEXTCNT)
-> >  
-> >  #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
-> >  static inline bool
-> > @@ -551,6 +553,12 @@ static inline bool xfs_sb_version_hasmetauuid(struct xfs_sb *sbp)
-> >  		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_META_UUID);
-> >  }
-> >  
-> > +static inline bool xfs_sb_version_haswideextcnt(struct xfs_sb *sbp)
-> > +{
-> > +	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
-> > +		(sbp->sb_features_incompat & XFS_SB_FEAT_INCOMPAT_WIDEEXTCNT);
-> > +}
-> > +
-> >  static inline bool xfs_sb_version_hasrmapbt(struct xfs_sb *sbp)
-> >  {
-> >  	return (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5) &&
-> > @@ -873,8 +881,8 @@ typedef struct xfs_dinode {
-> >  	__be64		di_size;	/* number of bytes in file */
-> >  	__be64		di_nblocks;	/* # of direct & btree blocks used */
-> >  	__be32		di_extsize;	/* basic/minimum extent size for file */
-> > -	__be32		di_nextents;	/* number of extents in data fork */
-> > -	__be16		di_anextents;	/* number of extents in attribute fork*/
-> > +	__be32		di_nextents_lo;	/* lower part of data fork extent count */
-> > +	__be16		di_anextents_lo;/* lower part of attr fork extent count */
-> >  	__u8		di_forkoff;	/* attr fork offs, <<3 for 64b align */
-> >  	__s8		di_aformat;	/* format of attr fork's data */
-> >  	__be32		di_dmevmask;	/* DMIG event mask */
-> > @@ -891,7 +899,9 @@ typedef struct xfs_dinode {
-> >  	__be64		di_lsn;		/* flush sequence */
-> >  	__be64		di_flags2;	/* more random flags */
-> >  	__be32		di_cowextsize;	/* basic cow extent size for file */
-> > -	__u8		di_pad2[12];	/* more padding for future expansion */
-> > +	__be32		di_nextents_hi; /* higher part of data fork extent count */
-> > +	__be16		di_anextents_hi;/* higher part of attr fork extent count */
-> > +	__u8		di_pad2[6];	/* more padding for future expansion */
-> >  
-> >  	/* fields only written to during inode creation */
-> >  	xfs_timestamp_t	di_crtime;	/* time created */
-> > diff --git a/libxfs/xfs_inode_buf.c b/libxfs/xfs_inode_buf.c
-> > index d5584372..219d0234 100644
-> > --- a/libxfs/xfs_inode_buf.c
-> > +++ b/libxfs/xfs_inode_buf.c
-> > @@ -188,6 +188,7 @@ xfs_inode_from_disk(
-> >  	struct xfs_inode	*ip,
-> >  	struct xfs_dinode	*from)
-> >  {
-> > +	struct xfs_sb		*sbp = &ip->i_mount->m_sb;
-> >  	struct xfs_icdinode	*to = &ip->i_d;
-> >  	struct inode		*inode = VFS_I(ip);
-> >  
-> > @@ -228,8 +229,8 @@ xfs_inode_from_disk(
-> >  	to->di_size = be64_to_cpu(from->di_size);
-> >  	to->di_nblocks = be64_to_cpu(from->di_nblocks);
-> >  	to->di_extsize = be32_to_cpu(from->di_extsize);
-> > -	to->di_nextents = be32_to_cpu(from->di_nextents);
-> > -	to->di_anextents = be16_to_cpu(from->di_anextents);
-> > +	to->di_nextents = be32_to_cpu(from->di_nextents_lo);
-> > +	to->di_anextents = be16_to_cpu(from->di_anextents_lo);
-> >  	to->di_forkoff = from->di_forkoff;
-> >  	to->di_aformat	= from->di_aformat;
-> >  	to->di_dmevmask	= be32_to_cpu(from->di_dmevmask);
-> > @@ -243,6 +244,13 @@ xfs_inode_from_disk(
-> >  		to->di_crtime.tv_nsec = be32_to_cpu(from->di_crtime.t_nsec);
-> >  		to->di_flags2 = be64_to_cpu(from->di_flags2);
-> >  		to->di_cowextsize = be32_to_cpu(from->di_cowextsize);
-> > +
-> > +		if (xfs_sb_version_haswideextcnt(sbp)) {
-> > +			to->di_nextents |=
-> > +				((uint64_t)(be32_to_cpu(from->di_nextents_hi)) << 32);
-> > +			to->di_anextents |=
-> > +				((uint32_t)(be16_to_cpu(from->di_anextents_hi)) << 16);
-> > +		}
-> >  	}
-> >  }
-> >  
-> > @@ -252,6 +260,7 @@ xfs_inode_to_disk(
-> >  	struct xfs_dinode	*to,
-> >  	xfs_lsn_t		lsn)
-> >  {
-> > +	struct xfs_sb		*sbp = &ip->i_mount->m_sb;
-> >  	struct xfs_icdinode	*from = &ip->i_d;
-> >  	struct inode		*inode = VFS_I(ip);
-> >  
-> > @@ -278,8 +287,8 @@ xfs_inode_to_disk(
-> >  	to->di_size = cpu_to_be64(from->di_size);
-> >  	to->di_nblocks = cpu_to_be64(from->di_nblocks);
-> >  	to->di_extsize = cpu_to_be32(from->di_extsize);
-> > -	to->di_nextents = cpu_to_be32(from->di_nextents);
-> > -	to->di_anextents = cpu_to_be16(from->di_anextents);
-> > +	to->di_nextents_lo = cpu_to_be32(from->di_nextents);
-> > +	to->di_anextents_lo = cpu_to_be16(from->di_anextents);
-> >  	to->di_forkoff = from->di_forkoff;
-> >  	to->di_aformat = from->di_aformat;
-> >  	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
-> > @@ -293,6 +302,12 @@ xfs_inode_to_disk(
-> >  		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.tv_nsec);
-> >  		to->di_flags2 = cpu_to_be64(from->di_flags2);
-> >  		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
-> > +		if (xfs_sb_version_haswideextcnt(sbp)) {
-> > +			to->di_nextents_hi
-> > +				= cpu_to_be32(from->di_nextents >> 32);
-> > +			to->di_anextents_hi
-> > +				= cpu_to_be16(from->di_nextents >> 16);
-> > +		}
-> >  		to->di_ino = cpu_to_be64(ip->i_ino);
-> >  		to->di_lsn = cpu_to_be64(lsn);
-> >  		memset(to->di_pad2, 0, sizeof(to->di_pad2));
-> > @@ -306,9 +321,12 @@ xfs_inode_to_disk(
-> >  
-> >  void
-> >  xfs_log_dinode_to_disk(
-> > +	struct xfs_mount	*mp,
-> >  	struct xfs_log_dinode	*from,
-> >  	struct xfs_dinode	*to)
-> >  {
-> > +	struct xfs_sb		*sbp = &mp->m_sb;
-> > +
-> >  	to->di_magic = cpu_to_be16(from->di_magic);
-> >  	to->di_mode = cpu_to_be16(from->di_mode);
-> >  	to->di_version = from->di_version;
-> > @@ -331,8 +349,8 @@ xfs_log_dinode_to_disk(
-> >  	to->di_size = cpu_to_be64(from->di_size);
-> >  	to->di_nblocks = cpu_to_be64(from->di_nblocks);
-> >  	to->di_extsize = cpu_to_be32(from->di_extsize);
-> > -	to->di_nextents = cpu_to_be32(from->di_nextents);
-> > -	to->di_anextents = cpu_to_be16(from->di_anextents);
-> > +	to->di_nextents_lo = cpu_to_be32(from->di_nextents_lo);
-> > +	to->di_anextents_lo = cpu_to_be16(from->di_anextents_lo);
-> >  	to->di_forkoff = from->di_forkoff;
-> >  	to->di_aformat = from->di_aformat;
-> >  	to->di_dmevmask = cpu_to_be32(from->di_dmevmask);
-> > @@ -346,6 +364,10 @@ xfs_log_dinode_to_disk(
-> >  		to->di_crtime.t_nsec = cpu_to_be32(from->di_crtime.t_nsec);
-> >  		to->di_flags2 = cpu_to_be64(from->di_flags2);
-> >  		to->di_cowextsize = cpu_to_be32(from->di_cowextsize);
-> > +		if (xfs_sb_version_haswideextcnt(sbp)) {
-> > +			to->di_nextents_hi = cpu_to_be32(from->di_nextents_hi);
-> > +			to->di_anextents_hi = cpu_to_be16(from->di_anextents_hi);
-> > +		}
-> >  		to->di_ino = cpu_to_be64(from->di_ino);
-> >  		to->di_lsn = cpu_to_be64(from->di_lsn);
-> >  		memcpy(to->di_pad2, from->di_pad2, sizeof(to->di_pad2));
-> > @@ -363,7 +385,7 @@ xfs_dinode_verify_fork(
-> >  	int			whichfork)
-> >  {
-> >  	xfs_extnum_t		max_extents;
-> > -	uint32_t		di_nextents;
-> > +	xfs_extnum_t		di_nextents;
-> >  
-> >  	di_nextents = xfs_dfork_nextents(&mp->m_sb, dip, whichfork);
-> >  
-> > @@ -400,10 +422,19 @@ xfs_dinode_verify_fork(
-> >  xfs_extnum_t
-> >  xfs_dfork_nextents(struct xfs_sb *sbp, struct xfs_dinode *dip, int whichfork)
-> >  {
-> > -	if (whichfork == XFS_DATA_FORK)
-> > -		return be32_to_cpu(dip->di_nextents);
-> > -	else
-> > -		return be16_to_cpu(dip->di_anextents);
-> > +	xfs_extnum_t nextents;
-> > +
-> > +	if (whichfork == XFS_DATA_FORK) {
-> > +		nextents = be32_to_cpu(dip->di_nextents_lo);
-> > +		if (xfs_sb_version_haswideextcnt(sbp))
-> > +			nextents |= ((uint64_t)be32_to_cpu(dip->di_nextents_hi) << 32);
-> > +	} else {
-> > +		nextents = be16_to_cpu(dip->di_anextents_lo);
-> > +		if (xfs_sb_version_haswideextcnt(sbp))
-> > +			nextents |= ((uint32_t)be16_to_cpu(dip->di_anextents_hi) << 16);
-> > +	}
-> > +
-> > +	return nextents;
-> >  }
-> >  
-> >  static xfs_failaddr_t
-> > diff --git a/libxfs/xfs_inode_buf.h b/libxfs/xfs_inode_buf.h
-> > index f97b3428..0dee0235 100644
-> > --- a/libxfs/xfs_inode_buf.h
-> > +++ b/libxfs/xfs_inode_buf.h
-> > @@ -55,8 +55,8 @@ void	xfs_dinode_calc_crc(struct xfs_mount *, struct xfs_dinode *);
-> >  void	xfs_inode_to_disk(struct xfs_inode *ip, struct xfs_dinode *to,
-> >  			  xfs_lsn_t lsn);
-> >  void	xfs_inode_from_disk(struct xfs_inode *ip, struct xfs_dinode *from);
-> > -void	xfs_log_dinode_to_disk(struct xfs_log_dinode *from,
-> > -			       struct xfs_dinode *to);
-> > +void	xfs_log_dinode_to_disk(struct xfs_mount *mp,
-> > +			struct xfs_log_dinode *from, struct xfs_dinode *to);
-> >  
-> >  #if defined(DEBUG)
-> >  void	xfs_inobp_check(struct xfs_mount *, struct xfs_buf *);
-> > diff --git a/libxfs/xfs_inode_fork.c b/libxfs/xfs_inode_fork.c
-> > index 8c32f993..af4f893f 100644
-> > --- a/libxfs/xfs_inode_fork.c
-> > +++ b/libxfs/xfs_inode_fork.c
-> > @@ -213,14 +213,14 @@ xfs_iformat_extents(
-> >  	struct xfs_iext_cursor	icur;
-> >  	struct xfs_bmbt_rec	*dp;
-> >  	struct xfs_bmbt_irec	new;
-> > -	int			i;
-> > +	xfs_extnum_t		i;
-> >  
-> >  	/*
-> >  	 * If the number of extents is unreasonable, then something is wrong and
-> >  	 * we just bail out rather than crash in kmem_alloc() or memcpy() below.
-> >  	 */
-> >  	if (unlikely(size < 0 || size > XFS_DFORK_SIZE(dip, mp, whichfork))) {
-> > -		xfs_warn(ip->i_mount, "corrupt inode %Lu ((a)extents = %d).",
-> > +		xfs_warn(ip->i_mount, "corrupt inode %Lu ((a)extents = %llu).",
-> >  			(unsigned long long) ip->i_ino, nex);
-> >  		xfs_inode_verifier_error(ip, -EFSCORRUPTED,
-> >  				"xfs_iformat_extents(1)", dip, sizeof(*dip),
-> > diff --git a/libxfs/xfs_inode_fork.h b/libxfs/xfs_inode_fork.h
-> > index e318dfdd..22f3c9b3 100644
-> > --- a/libxfs/xfs_inode_fork.h
-> > +++ b/libxfs/xfs_inode_fork.h
-> > @@ -90,10 +90,17 @@ static inline xfs_extnum_t xfs_iext_max(struct xfs_sb *sbp, int whichfork)
-> >  {
-> >  	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
-> >  
-> > -	if (whichfork == XFS_DATA_FORK)
-> > -		return MAXEXTNUM;
-> > -	else
-> > -		return MAXAEXTNUM;
-> > +	if (whichfork == XFS_DATA_FORK) {
-> > +		if (xfs_sb_version_haswideextcnt(sbp))
-> > +			return MAXEXTNUM_HI;
-> > +		else
-> > +			return MAXEXTNUM;
-> > +	} else {
-> > +		if (xfs_sb_version_haswideextcnt(sbp))
-> > +			return MAXAEXTNUM_HI;
-> > +		else
-> > +			return MAXAEXTNUM;
-> > +	}
-> >  }
-> >  
-> >  struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
-> > diff --git a/libxfs/xfs_log_format.h b/libxfs/xfs_log_format.h
-> > index e3400c9c..809f8ce6 100644
-> > --- a/libxfs/xfs_log_format.h
-> > +++ b/libxfs/xfs_log_format.h
-> > @@ -396,8 +396,8 @@ struct xfs_log_dinode {
-> >  	xfs_fsize_t	di_size;	/* number of bytes in file */
-> >  	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
-> >  	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
-> > -	xfs_extnum_t	di_nextents;	/* number of extents in data fork */
-> > -	xfs_aextnum_t	di_anextents;	/* number of extents in attribute fork*/
-> > +	uint32_t	di_nextents_lo;	/* lower part of data fork extent count */
-> > +	uint16_t	di_anextents_lo;/* lower part of attr fork extent count*/
-> >  	uint8_t		di_forkoff;	/* attr fork offs, <<3 for 64b align */
-> >  	int8_t		di_aformat;	/* format of attr fork's data */
-> >  	uint32_t	di_dmevmask;	/* DMIG event mask */
-> > @@ -414,7 +414,9 @@ struct xfs_log_dinode {
-> >  	xfs_lsn_t	di_lsn;		/* flush sequence */
-> >  	uint64_t	di_flags2;	/* more random flags */
-> >  	uint32_t	di_cowextsize;	/* basic cow extent size for file */
-> > -	uint8_t		di_pad2[12];	/* more padding for future expansion */
-> > +	uint32_t	di_nextents_hi; /* higher part of data fork extent count */
-> > +	uint16_t	di_anextents_hi;/* higher part of attr fork extent count */
-> > +	uint8_t		di_pad2[6];	/* more padding for future expansion */
-> >  
-> >  	/* fields only written to during inode creation */
-> >  	xfs_ictimestamp_t di_crtime;	/* time created */
-> > diff --git a/libxfs/xfs_types.h b/libxfs/xfs_types.h
-> > index 397d9477..23ff8166 100644
-> > --- a/libxfs/xfs_types.h
-> > +++ b/libxfs/xfs_types.h
-> > @@ -12,8 +12,8 @@ typedef uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
-> >  typedef uint32_t	xfs_agino_t;	/* inode # within allocation grp */
-> >  typedef uint32_t	xfs_extlen_t;	/* extent length in blocks */
-> >  typedef uint32_t	xfs_agnumber_t;	/* allocation group number */
-> > -typedef int32_t		xfs_extnum_t;	/* # of extents in a file */
-> > -typedef int16_t		xfs_aextnum_t;	/* # extents in an attribute fork */
-> > +typedef uint64_t	xfs_extnum_t;	/* # of extents in a file */
-> > +typedef uint32_t	xfs_aextnum_t;	/* # extents in an attribute fork */
-> >  typedef int64_t		xfs_fsize_t;	/* bytes in a file */
-> >  typedef uint64_t	xfs_ufsize_t;	/* unsigned bytes in a file */
-> >  
-> > @@ -61,6 +61,8 @@ typedef void *		xfs_failaddr_t;
-> >  #define	MAXEXTLEN	((xfs_extlen_t)0x001fffff)	/* 21 bits */
-> >  #define	MAXEXTNUM	((xfs_extnum_t)0x7fffffff)	/* signed int */
-> >  #define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
-> > +#define MAXEXTNUM_HI	((xfs_extnum_t)0x7fffffffffff)	/* unsigned 47 bits */
-> > +#define MAXAEXTNUM_HI	((xfs_aextnum_t)0xffffffff)	/* unsigned 32 bits */
-> >  
-> >  /*
-> >   * Minimum and maximum blocksize and sectorsize.
-> > diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-> > index be889887..4d09f357 100644
-> > --- a/logprint/log_misc.c
-> > +++ b/logprint/log_misc.c
-> > @@ -438,8 +438,11 @@ xlog_print_trans_qoff(char **ptr, uint len)
-> >  
-> >  static void
-> >  xlog_print_trans_inode_core(
-> > +	struct xfs_mount	*mp,
-> >  	struct xfs_log_dinode	*ip)
-> >  {
-> > +	xfs_extnum_t		nextents;
-> > +
-> >      printf(_("INODE CORE\n"));
-> >      printf(_("magic 0x%hx mode 0%ho version %d format %d\n"),
-> >  	   ip->di_magic, ip->di_mode, (int)ip->di_version,
-> > @@ -448,11 +451,19 @@ xlog_print_trans_inode_core(
-> >  	   ip->di_nlink, ip->di_uid, ip->di_gid);
-> >      printf(_("atime 0x%x mtime 0x%x ctime 0x%x\n"),
-> >  	   ip->di_atime.t_sec, ip->di_mtime.t_sec, ip->di_ctime.t_sec);
-> > -    printf(_("size 0x%llx nblocks 0x%llx extsize 0x%x nextents 0x%x\n"),
-> > +
-> > +    nextents = ip->di_nextents_lo;
-> > +    if (xfs_sb_version_haswideextcnt(&mp->m_sb))
-> > +	    nextents |= ((xfs_extnum_t)ip->di_nextents_hi << 32);
-> > +    printf(_("size 0x%llx nblocks 0x%llx extsize 0x%x nextents 0x%lx\n"),
-> >  	   (unsigned long long)ip->di_size, (unsigned long long)ip->di_nblocks,
-> > -	   ip->di_extsize, ip->di_nextents);
-> > -    printf(_("naextents 0x%x forkoff %d dmevmask 0x%x dmstate 0x%hx\n"),
-> > -	   ip->di_anextents, (int)ip->di_forkoff, ip->di_dmevmask,
-> > +	   ip->di_extsize, nextents);
-> > +
-> > +    nextents = ip->di_anextents_lo;
-> > +    if (xfs_sb_version_haswideextcnt(&mp->m_sb))
-> > +	    nextents |= ((xfs_extnum_t)ip->di_anextents_hi << 16);
-> > +    printf(_("naextents 0x%lx forkoff %d dmevmask 0x%x dmstate 0x%hx\n"),
-> > +	   nextents, (int)ip->di_forkoff, ip->di_dmevmask,
-> >  	   ip->di_dmstate);
-> >      printf(_("flags 0x%x gen 0x%x\n"),
-> >  	   ip->di_flags, ip->di_gen);
-> > @@ -562,7 +573,7 @@ xlog_print_trans_inode(
-> >      memmove(&dino, *ptr, sizeof(dino));
-> >      mode = dino.di_mode & S_IFMT;
-> >      size = (int)dino.di_size;
-> > -    xlog_print_trans_inode_core(&dino);
-> > +    xlog_print_trans_inode_core(log->l_mp, &dino);
-> >      *ptr += xfs_log_dinode_size(log->l_mp);
-> >      skip_count--;
-> >  
-> > diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
-> > index e2e28b9c..aa171dfb 100644
-> > --- a/logprint/log_print_all.c
-> > +++ b/logprint/log_print_all.c
-> > @@ -238,9 +238,14 @@ xlog_recover_print_dquot(
-> >  
-> >  STATIC void
-> >  xlog_recover_print_inode_core(
-> > +	struct xlog		*log,
-> >  	struct xfs_log_dinode	*di)
-> >  {
-> > -	printf(_("	CORE inode:\n"));
-> > +	struct xfs_sb		*sbp = &log->l_mp->m_sb;
-> > +	xfs_aextnum_t		anextents;
-> > +	xfs_extnum_t		nextents;
-> > +
-> > +        printf(_("	CORE inode:\n"));
-> >  	if (!print_inode)
+> >  	xfs_extnum_t		nextents;
+> >  	xfs_filblks_t		count;
+> >  	xfs_filblks_t		acount;
+> > @@ -477,14 +479,14 @@ xchk_inode_xref_bmap(
+> >  			&nextents, &count);
+> >  	if (!xchk_should_check_xref(sc, &error, NULL))
 > >  		return;
-> >  	printf(_("		magic:%c%c  mode:0x%x  ver:%d  format:%d\n"),
-> > @@ -252,10 +257,17 @@ xlog_recover_print_inode_core(
-> >  	printf(_("		atime:%d  mtime:%d  ctime:%d\n"),
-> >  	       di->di_atime.t_sec, di->di_mtime.t_sec, di->di_ctime.t_sec);
-> >  	printf(_("		flushiter:%d\n"), di->di_flushiter);
-> > +
-> > +	nextents = di->di_nextents_lo;
-> > +	anextents = di->di_anextents_lo;
-> > +	if (xfs_sb_version_haswideextcnt(sbp)) {
-> > +		nextents |= ((xfs_extnum_t)di->di_nextents_hi << 32);
-> > +		anextents |= ((xfs_aextnum_t)di->di_anextents_hi << 16);
-> > +	}
-> >  	printf(_("		size:0x%llx  nblks:0x%llx  exsize:%d  "
-> > -	     "nextents:%d  anextents:%d\n"), (unsigned long long)
-> > +	     "nextents:%lu  anextents:%u\n"), (unsigned long long)
-> >  	       di->di_size, (unsigned long long)di->di_nblocks,
-> > -	       di->di_extsize, di->di_nextents, (int)di->di_anextents);
-> > +	       di->di_extsize, nextents, anextents);
-> >  	printf(_("		forkoff:%d  dmevmask:0x%x  dmstate:%d  flags:0x%x  "
-> >  	     "gen:%u\n"),
-> >  	       (int)di->di_forkoff, di->di_dmevmask, (int)di->di_dmstate,
-> > @@ -268,6 +280,7 @@ xlog_recover_print_inode_core(
+> > -	if (nextents < be32_to_cpu(dip->di_nextents))
+> > +	if (nextents < xfs_dfork_nextents(&mp->m_sb, dip, XFS_DATA_FORK))
+> >  		xchk_ino_xref_set_corrupt(sc, sc->ip->i_ino);
 > >  
-> >  STATIC void
-> >  xlog_recover_print_inode(
-> > +	struct xlog		*log,
-> >  	xlog_recover_item_t	*item)
-> >  {
-> >  	struct xfs_inode_log_format	f_buf;
-> > @@ -289,7 +302,7 @@ xlog_recover_print_inode(
-> >  	ASSERT(item->ri_buf[1].i_len ==
-> >  			offsetof(struct xfs_log_dinode, di_next_unlinked) ||
-> >  	       item->ri_buf[1].i_len == sizeof(struct xfs_log_dinode));
-> > -	xlog_recover_print_inode_core((struct xfs_log_dinode *)
-> > +	xlog_recover_print_inode_core(log, (struct xfs_log_dinode *)
-> >  				      item->ri_buf[1].i_addr);
+> >  	error = xfs_bmap_count_blocks(sc->tp, sc->ip, XFS_ATTR_FORK,
+> >  			&nextents, &acount);
+> >  	if (!xchk_should_check_xref(sc, &error, NULL))
+> >  		return;
+> > -	if (nextents != be16_to_cpu(dip->di_anextents))
+> > +	if (nextents != xfs_dfork_nextents(&mp->m_sb, dip, XFS_ATTR_FORK))
+> >  		xchk_ino_xref_set_corrupt(sc, sc->ip->i_ino);
 > >  
-> >  	hasdata = (f->ilf_fields & XFS_ILOG_DFORK) != 0;
-> > @@ -384,6 +397,7 @@ xlog_recover_print_icreate(
-> >  
-> >  void
-> >  xlog_recover_print_logitem(
-> > +	struct xlog		*log,
-> >  	xlog_recover_item_t	*item)
-> >  {
-> >  	switch (ITEM_TYPE(item)) {
-> > @@ -394,7 +408,7 @@ xlog_recover_print_logitem(
-> >  		xlog_recover_print_icreate(item);
-> >  		break;
-> >  	case XFS_LI_INODE:
-> > -		xlog_recover_print_inode(item);
-> > +		xlog_recover_print_inode(log, item);
-> >  		break;
-> >  	case XFS_LI_EFD:
-> >  		xlog_recover_print_efd(item);
-> > @@ -434,6 +448,7 @@ xlog_recover_print_logitem(
-> >  
-> >  static void
-> >  xlog_recover_print_item(
-> > +	struct xlog		*log,
-> >  	xlog_recover_item_t	*item)
-> >  {
-> >  	int			i;
-> > @@ -493,11 +508,12 @@ xlog_recover_print_item(
-> >  		       (long)item->ri_buf[i].i_addr, item->ri_buf[i].i_len);
-> >  	}
-> >  	printf("\n");
-> > -	xlog_recover_print_logitem(item);
-> > +	xlog_recover_print_logitem(log, item);
-> >  }
-> >  
-> >  void
-> >  xlog_recover_print_trans(
-> > +	struct xlog		*log,
-> >  	struct xlog_recover	*trans,
-> >  	struct list_head	*itemq,
-> >  	int			print)
-> > @@ -510,5 +526,5 @@ xlog_recover_print_trans(
-> >  	print_xlog_record_line();
-> >  	xlog_recover_print_trans_head(trans);
-> >  	list_for_each_entry(item, itemq, ri_list)
-> > -		xlog_recover_print_item(item);
-> > +		xlog_recover_print_item(log, item);
-> >  }
-> > diff --git a/logprint/log_print_trans.c b/logprint/log_print_trans.c
-> > index 2004b5a0..c6386fb0 100644
-> > --- a/logprint/log_print_trans.c
-> > +++ b/logprint/log_print_trans.c
-> > @@ -24,7 +24,7 @@ xlog_recover_do_trans(
-> >  	struct xlog_recover	*trans,
-> >  	int			pass)
-> >  {
-> > -	xlog_recover_print_trans(trans, &trans->r_itemq, 3);
-> > +	xlog_recover_print_trans(log, trans, &trans->r_itemq, 3);
-> >  	return 0;
-> >  }
-> >  
-> > diff --git a/repair/dinode.c b/repair/dinode.c
-> > index 98bb4a17..5a8de0f6 100644
-> > --- a/repair/dinode.c
-> > +++ b/repair/dinode.c
-> > @@ -71,7 +71,9 @@ _("would have cleared inode %" PRIu64 " attributes\n"), ino_num);
-> >  	if (xfs_dfork_nextents(&mp->m_sb, dino, XFS_ATTR_FORK) != 0) {
-> >  		if (no_modify)
-> >  			return(1);
-> > -		dino->di_anextents = cpu_to_be16(0);
-> > +		dino->di_anextents_lo = cpu_to_be16(0);
-> > +		if (xfs_sb_version_haswideextcnt(&mp->m_sb))
-> > +			dino->di_anextents_hi = cpu_to_be16(0);
-> >  	}
-> >  
-> >  	if (dino->di_aformat != XFS_DINODE_FMT_EXTENTS)  {
-> > @@ -959,7 +961,7 @@ process_symlink_extlist(xfs_mount_t *mp, xfs_ino_t lino, xfs_dinode_t *dino)
-> >  	xfs_fileoff_t		expected_offset;
-> >  	xfs_bmbt_rec_t		*rp;
-> >  	xfs_bmbt_irec_t		irec;
-> > -	int			numrecs;
-> > +	xfs_extnum_t		numrecs;
-> >  	int			i;
-> >  	int			max_blocks;
-> >  
-> > @@ -989,7 +991,7 @@ _("mismatch between format (%d) and size (%" PRId64 ") in symlink inode %" PRIu6
-> >  	 */
-> >  	if (numrecs > max_symlink_blocks)  {
-> >  		do_warn(
-> > -_("bad number of extents (%d) in symlink %" PRIu64 " data fork\n"),
-> > +_("bad number of extents (%lu) in symlink %" PRIu64 " data fork\n"),
-> >  			numrecs, lino);
-> >  		return(1);
-> >  	}
-> > @@ -1556,7 +1558,7 @@ _("realtime summary inode %" PRIu64 " has bad type 0x%x, "),
-> >  		nextents = xfs_dfork_nextents(&mp->m_sb, dinoc, XFS_DATA_FORK);
-> >  		if (mp->m_sb.sb_rblocks == 0 && nextents != 0)  {
-> >  			do_warn(
-> > -_("bad # of extents (%u) for realtime summary inode %" PRIu64 "\n"),
-> > +_("bad # of extents (%lu) for realtime summary inode %" PRIu64 "\n"),
-> >  				nextents, lino);
-> >  			return 1;
-> >  		}
-> > @@ -1579,7 +1581,7 @@ _("realtime bitmap inode %" PRIu64 " has bad type 0x%x, "),
-> >  		nextents = xfs_dfork_nextents(&mp->m_sb, dinoc, XFS_DATA_FORK);
-> >  		if (mp->m_sb.sb_rblocks == 0 && nextents != 0)  {
-> >  			do_warn(
-> > -_("bad # of extents (%u) for realtime bitmap inode %" PRIu64 "\n"),
-> > +_("bad # of extents (%lu) for realtime bitmap inode %" PRIu64 "\n"),
-> >  				nextents, lino);
-> >  			return 1;
-> >  		}
-> > @@ -1772,13 +1774,15 @@ _("too many data fork extents (%" PRIu64 ") in inode %" PRIu64 "\n"),
-> >  	if (nextents != dnextents)  {
-> >  		if (!no_modify)  {
-> >  			do_warn(
-> > -_("correcting nextents for inode %" PRIu64 ", was %d - counted %" PRIu64 "\n"),
-> > +_("correcting nextents for inode %" PRIu64 ", was %lu - counted %" PRIu64 "\n"),
-> >  				lino, dnextents, nextents);
-> > -			dino->di_nextents = cpu_to_be32(nextents);
-> > +			dino->di_nextents_lo = cpu_to_be32(nextents);
-> > +			if (xfs_sb_version_haswideextcnt(&mp->m_sb))
-> > +				dino->di_nextents_hi = cpu_to_be32(nextents >> 32);
-> >  			*dirty = 1;
-> >  		} else  {
-> >  			do_warn(
-> > -_("bad nextents %d for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
-> > +_("bad nextents %lu for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
-> >  				dnextents, lino, nextents);
-> >  		}
-> >  	}
-> > @@ -1795,13 +1799,15 @@ _("too many attr fork extents (%" PRIu64 ") in inode %" PRIu64 "\n"),
-> >  	if (anextents != dnextents)  {
-> >  		if (!no_modify)  {
-> >  			do_warn(
-> > -_("correcting anextents for inode %" PRIu64 ", was %d - counted %" PRIu64 "\n"),
-> > +_("correcting anextents for inode %" PRIu64 ", was %lu - counted %" PRIu64 "\n"),
-> >  				lino, dnextents, anextents);
-> > -			dino->di_anextents = cpu_to_be16(anextents);
-> > +			dino->di_anextents_lo = cpu_to_be16(anextents);
-> > +			if (xfs_sb_version_haswideextcnt(&mp->m_sb))
-> > +				dino->di_anextents_hi = cpu_to_be16(anextents >> 16);
-> >  			*dirty = 1;
-> >  		} else  {
-> >  			do_warn(
-> > -_("bad anextents %d for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
-> > +_("bad anextents %lu for inode %" PRIu64 ", would reset to %" PRIu64 "\n"),
-> >  				dnextents, lino, anextents);
-> >  		}
-> >  	}
+> >  	/* Check nblocks against the inode. */
 > 
 
 
