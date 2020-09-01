@@ -5,169 +5,217 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DD46C433E6
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 16:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC6CC2BC0E
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 16:58:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D1D3207D3
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 16:55:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48FD9214D8
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 16:58:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hcmPXvjc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GIVML+4j"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729785AbgIAQzU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Sep 2020 12:55:20 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:38732 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729875AbgIAPYB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 11:24:01 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 081FK6v0114232;
-        Tue, 1 Sep 2020 15:23:57 GMT
+        id S1732310AbgIAQ63 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 12:58:29 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55138 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729753AbgIAQ63 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 12:58:29 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 081GsqIC013967;
+        Tue, 1 Sep 2020 16:58:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=JGy3GYbxInrxU0/MA3jBWR7QwwLBjuB+Wi6STJ95QhY=;
- b=hcmPXvjcrjqZwyoTms2PsiWmMiYwZY2Zd7BvGwjAdcGpfijoVxRM2JvlSECPkxe5EuF3
- 4OYha5SCBuMGc001l3GFLRgVqdVlMYEYQiyJRruxwdDkMfMXV+bcRDzGuHdlCLlb+MMy
- cqyK2WhaO5p2kxoUUkOp51BahqylyKYzNLzI5Jp2g1HcdjoNNnbJtAXtzLeqm3qpCRGG
- MALBpf7erFPqxzh4wuAh2sl16jUyXbEcWKR0AMW+jh6ESH/OgJ0oNzRUQq6fN7Sh8nBl
- t56iYGhuwBzPnnZBiTbx9Cg+1D7FJ112plhb4Oz3bdb7VFj1aO6DTLVf54A7/KItbdva AQ== 
+ bh=chjhHiC2k/sqNWn5/4uxgE//BhRfgaLCUPDPnlhOZvA=;
+ b=GIVML+4jINdApfy/Z8/1qy+I88HQCLU4AF036hMYtfUkxOWFhLoCDlPg7grEw4CZtpR0
+ fJxdq4gnMxYOaCmugXiAxYjZlkLTZZcVas5EX2fLUN68+oX8ikzXXSepNJmErDAc7EFl
+ Opp62q5j648nHV632GR5NYd5tCZxQMBbgfrlbci0tNt6jTMJCAGAeBR6u9RIoayyRaW3
+ YQTvnBB1Xzs7V1UBG0u7dRIWpIORErCv/6naq+5qKWguJ8XvbpsZJTPdXoazVwfVRWdn
+ QjsE5pjREueJT/H/Juakd1dLfvHChZDwEzld9t8JDfH5oLRESkxtdk0Y7H5bT4uer4o4 lQ== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 337eym4yaa-1
+        by userp2130.oracle.com with ESMTP id 337eeqwqgu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 01 Sep 2020 15:23:57 +0000
+        Tue, 01 Sep 2020 16:58:25 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 081FL2pN020396;
-        Tue, 1 Sep 2020 15:23:56 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 3380srxgrw-1
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 081Gt2OP055502;
+        Tue, 1 Sep 2020 16:58:25 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 3380ss523n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 01 Sep 2020 15:23:56 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 081FNtwP031291;
-        Tue, 1 Sep 2020 15:23:55 GMT
-Received: from localhost (/67.169.218.210)
+        Tue, 01 Sep 2020 16:58:24 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 081GwOmN017517;
+        Tue, 1 Sep 2020 16:58:24 GMT
+Received: from localhost (/10.159.133.7)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 01 Sep 2020 08:23:55 -0700
-Date:   Tue, 1 Sep 2020 08:23:59 -0700
+        with ESMTP ; Tue, 01 Sep 2020 09:58:23 -0700
+Date:   Tue, 1 Sep 2020 09:58:21 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Carlos Maiolino <cmaiolino@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs: add inline helper to convert from data fork to
- xfs_attr_shortform
-Message-ID: <20200901152359.GD6096@magnolia>
-References: <20200901095919.238598-1-cmaiolino@redhat.com>
- <20200901141341.GB174813@bfoster>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 13/15] xfs: simplify xfs_trans_getsb
+Message-ID: <20200901165821.GF6096@magnolia>
+References: <20200901155018.2524-1-hch@lst.de>
+ <20200901155018.2524-14-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200901141341.GB174813@bfoster>
+In-Reply-To: <20200901155018.2524-14-hch@lst.de>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
  phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
  suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009010126
+ engine=8.12.0-2006250000 definitions=main-2009010141
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
- priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
- lowpriorityscore=0 clxscore=1015 spamscore=0 bulkscore=0 impostorscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009010126
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxscore=0
+ phishscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009010141
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 01, 2020 at 10:13:41AM -0400, Brian Foster wrote:
-> On Tue, Sep 01, 2020 at 11:59:19AM +0200, Carlos Maiolino wrote:
-> > Hi folks, while working on the attr structs cleanup, I've noticed there
-> > are so many places where we do:
-> > 
-> > (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-> > 
-> > So, I thought it would be worth to add another inline function to do
-> > this conversion and remove all these casts.
-> > 
-> > To achieve this, it will be required to include xfs_inode.h header on
-> > xfs_attr_sf.h, so it can access the xfs_inode definition. Also, if this
-> > patch is an acceptable idea, it will make sense then to keep the
-> > xfs_attr_sf_totsize() function also inside xfs_attr_sf.h (which has been
-> > moved on my series to avoid the additional #include), so, I thought on
-> > sending this RFC patch to get comments if it's a good idea or not, and,
-> > if it is, I'll add this patch to my series before sending it over.
-> > 
-> > I didn't focus on check if this patch is totally correct (only build
-> > test), since my idea is to gather you guys opinions about having this
-> > new inline function, so don't bother on reviewing the patch itself by
-> > now, only the function name if you guys prefer some other name.
-> > 
-> > Also, this patch is build on top of my clean up series (V2), not yet
-> > sent to the list, so it won't apply anyway.
-> > 
-> > Cheers.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_attr.c      |  4 ++--
-> >  fs/xfs/libxfs/xfs_attr_leaf.c | 16 ++++++++--------
-> >  fs/xfs/libxfs/xfs_attr_sf.h   |  6 ++++++
-> >  fs/xfs/xfs_attr_list.c        |  2 +-
-> >  4 files changed, 17 insertions(+), 11 deletions(-)
-> > 
-> ...
-> > diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
-> > index 540ad3332a9c8..a51aed1dab6c1 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_sf.h
-> > +++ b/fs/xfs/libxfs/xfs_attr_sf.h
-> > @@ -3,6 +3,8 @@
-> >   * Copyright (c) 2000,2002,2005 Silicon Graphics, Inc.
-> >   * All Rights Reserved.
-> >   */
-> > +
-> > +#include "xfs_inode.h"
+On Tue, Sep 01, 2020 at 05:50:16PM +0200, Christoph Hellwig wrote:
+> Remove the mp argument as this function is only called in transaction
+> context, and open code xfs_getsb given that the function already accesses
+> the buffer pointer in the mount point directly.
 > 
-> FWIW, I thought we tried to avoid including headers from other headers
-> like this. I'm also wondering if it's an issue that we'd be including a
-> a header that is external to libxfs from a libxfs header. Perhaps this
-> could be simplified by passing the xfs_ifork pointer to the new helper
-> rather than the xfs_inode and/or moving the helper to
-> libxfs/xfs_inode_fork.h and putting a forward declaration of
-> xfs_attr_shortform in there..?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-If you change if_data to a (void *), all the casts become unnecessary,
-right?
+Looks pretty straightforward to me,
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Brian
+> ---
+>  fs/xfs/libxfs/xfs_sb.c |  4 ++--
+>  fs/xfs/xfs_trans.c     |  2 +-
+>  fs/xfs/xfs_trans.h     |  2 +-
+>  fs/xfs/xfs_trans_buf.c | 46 ++++++++++++++----------------------------
+>  4 files changed, 19 insertions(+), 35 deletions(-)
 > 
-> >  #ifndef __XFS_ATTR_SF_H__
-> >  #define	__XFS_ATTR_SF_H__
-> >  
-> > @@ -47,4 +49,8 @@ xfs_attr_sf_nextentry(struct xfs_attr_sf_entry *sfep) {
-> >  					    xfs_attr_sf_entsize(sfep));
-> >  }
-> >  
-> > +static inline struct xfs_attr_shortform *
-> > +xfs_attr_ifork_to_sf(struct xfs_inode *ino) {
-> > +	return (struct xfs_attr_shortform *)ino->i_afp->if_u1.if_data;
-> > +}
-> >  #endif	/* __XFS_ATTR_SF_H__ */
-> > diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> > index 8f8837fe21cf0..7c0ebdeb43567 100644
-> > --- a/fs/xfs/xfs_attr_list.c
-> > +++ b/fs/xfs/xfs_attr_list.c
-> > @@ -61,7 +61,7 @@ xfs_attr_shortform_list(
-> >  	int				error = 0;
-> >  
-> >  	ASSERT(dp->i_afp != NULL);
-> > -	sf = (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-> > +	sf = xfs_attr_ifork_to_sf(dp);
-> >  	ASSERT(sf != NULL);
-> >  	if (!sf->hdr.count)
-> >  		return 0;
-> > -- 
-> > 2.26.2
-> > 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index ae9aaf1f34bfcc..15d03d96753769 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -954,7 +954,7 @@ xfs_log_sb(
+>  	struct xfs_trans	*tp)
+>  {
+>  	struct xfs_mount	*mp = tp->t_mountp;
+> -	struct xfs_buf		*bp = xfs_trans_getsb(tp, mp);
+> +	struct xfs_buf		*bp = xfs_trans_getsb(tp);
+>  
+>  	mp->m_sb.sb_icount = percpu_counter_sum(&mp->m_icount);
+>  	mp->m_sb.sb_ifree = percpu_counter_sum(&mp->m_ifree);
+> @@ -1084,7 +1084,7 @@ xfs_sync_sb_buf(
+>  	if (error)
+>  		return error;
+>  
+> -	bp = xfs_trans_getsb(tp, mp);
+> +	bp = xfs_trans_getsb(tp);
+>  	xfs_log_sb(tp);
+>  	xfs_trans_bhold(tp, bp);
+>  	xfs_trans_set_sync(tp);
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index ed72867b1a1937..ca18a040336a1d 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -468,7 +468,7 @@ xfs_trans_apply_sb_deltas(
+>  	xfs_buf_t	*bp;
+>  	int		whole = 0;
+>  
+> -	bp = xfs_trans_getsb(tp, tp->t_mountp);
+> +	bp = xfs_trans_getsb(tp);
+>  	sbp = bp->b_addr;
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> index b752501818d257..f46534b7523698 100644
+> --- a/fs/xfs/xfs_trans.h
+> +++ b/fs/xfs/xfs_trans.h
+> @@ -209,7 +209,7 @@ xfs_trans_read_buf(
+>  				      flags, bpp, ops);
+>  }
+>  
+> -struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *);
+> +struct xfs_buf	*xfs_trans_getsb(struct xfs_trans *);
+>  
+>  void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
+>  void		xfs_trans_bjoin(xfs_trans_t *, struct xfs_buf *);
+> diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+> index 11cd666cd99a63..42d63b830cb9c8 100644
+> --- a/fs/xfs/xfs_trans_buf.c
+> +++ b/fs/xfs/xfs_trans_buf.c
+> @@ -166,50 +166,34 @@ xfs_trans_get_buf_map(
+>  }
+>  
+>  /*
+> - * Get and lock the superblock buffer of this file system for the
+> - * given transaction.
+> - *
+> - * We don't need to use incore_match() here, because the superblock
+> - * buffer is a private buffer which we keep a pointer to in the
+> - * mount structure.
+> + * Get and lock the superblock buffer for the given transaction.
+>   */
+> -xfs_buf_t *
+> +struct xfs_buf *
+>  xfs_trans_getsb(
+> -	xfs_trans_t		*tp,
+> -	struct xfs_mount	*mp)
+> +	struct xfs_trans	*tp)
+>  {
+> -	xfs_buf_t		*bp;
+> -	struct xfs_buf_log_item	*bip;
+> +	struct xfs_buf		*bp = tp->t_mountp->m_sb_bp;
+>  
+>  	/*
+> -	 * Default to just trying to lock the superblock buffer
+> -	 * if tp is NULL.
+> +	 * Just increment the lock recursion count if the buffer is already
+> +	 * attached to this transaction.
+>  	 */
+> -	if (tp == NULL)
+> -		return xfs_getsb(mp);
+> -
+> -	/*
+> -	 * If the superblock buffer already has this transaction
+> -	 * pointer in its b_fsprivate2 field, then we know we already
+> -	 * have it locked.  In this case we just increment the lock
+> -	 * recursion count and return the buffer to the caller.
+> -	 */
+> -	bp = mp->m_sb_bp;
+>  	if (bp->b_transp == tp) {
+> -		bip = bp->b_log_item;
+> +		struct xfs_buf_log_item	*bip = bp->b_log_item;
+> +
+>  		ASSERT(bip != NULL);
+>  		ASSERT(atomic_read(&bip->bli_refcount) > 0);
+>  		bip->bli_recur++;
+> +
+>  		trace_xfs_trans_getsb_recur(bip);
+> -		return bp;
+> -	}
+> +	} else {
+> +		xfs_buf_lock(bp);
+> +		xfs_buf_hold(bp);
+> +		_xfs_trans_bjoin(tp, bp, 1);
+>  
+> -	bp = xfs_getsb(mp);
+> -	if (bp == NULL)
+> -		return NULL;
+> +		trace_xfs_trans_getsb(bp->b_log_item);
+> +	}
+>  
+> -	_xfs_trans_bjoin(tp, bp, 1);
+> -	trace_xfs_trans_getsb(bp->b_log_item);
+>  	return bp;
+>  }
+>  
+> -- 
+> 2.28.0
 > 
