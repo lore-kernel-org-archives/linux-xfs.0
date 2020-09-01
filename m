@@ -7,144 +7,174 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DBCDC433E2
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:19:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA102C433E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:19:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 63E04206EF
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:19:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4ACC2078B
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 14:19:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RwUGH06O"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XtxIE56Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726946AbgIAOSi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Sep 2020 10:18:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42748 "EHLO
+        id S1728204AbgIAOTo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 10:19:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728302AbgIAOQp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 10:16:45 -0400
-Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37404C061258;
-        Tue,  1 Sep 2020 07:08:39 -0700 (PDT)
-Received: by mail-il1-x143.google.com with SMTP id w3so1273837ilh.5;
-        Tue, 01 Sep 2020 07:08:39 -0700 (PDT)
+        with ESMTP id S1728313AbgIAOTY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 10:19:24 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75AB8C06124F
+        for <linux-xfs@vger.kernel.org>; Tue,  1 Sep 2020 07:19:02 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id y6so597305plk.10
+        for <linux-xfs@vger.kernel.org>; Tue, 01 Sep 2020 07:19:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=td0ICH2xNq/CHmD71me9EyhcsICT9Kh4ztqwaFSKtRI=;
-        b=RwUGH06OcU4La3EK0xzsNLfoIvDvnse+yg0P4rwlruB3KnVWUlCSQBGnaP2m28Bsa+
-         zzssF32v40X2xkYSeis1Kg0qANnECLljIv1R0u/2UJ2xWKbErzy7WH71Hqwguf2u3KmG
-         MX/Rro3QB4KUBvryHorpA7+ak3R3xLtb0xFrUGudHKpwzEObAdSIVDL1YT7qCqry55Bq
-         lF3uUserOX+A0Z5ejx1A8NTkP9GbL05mJVG5owYXRLVQoJDVQnIiL57P/lqZHgyau93d
-         4leZbhVLUPjYAs5TtLCpthKvKjQ9hAEcGCZ5Kl6N3h7Hfdy/gTgaXp8KTNqZOq2qcLD9
-         4T5g==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=v11SjyOsuI/B6VQH0Mb3spC9mABv57EZFh+BrgGZcoA=;
+        b=XtxIE56Yug/MNivc566j2wvKbxgIT/9loqDjsMWVEzghxg8TuiKjgRo/YcY0lNAaEw
+         BOb1hLfCZxevTwKuX3+it5QFtoubcWYcDbWqktGLC5JWUFFPhlv/YoquStGCMtowI/Ud
+         MoaI9QFGQVwtPp7XlH0eWdTngKiXeUDjCc9DrJBVoeNGyiQ952cttHzwBKqDSEcgwY8y
+         EXbkESG2NEq2/IaD7DljDrO1hNLkosx2dCFrEhiIuq2eWtT2lemTWHX+m/7Q59tsGgm8
+         f0FdrgulAUCjOKF4RdTJQ4TUWE3RZis5u0g9EVTInFigWGdXK4yff2Suj2GGX3OxAHPj
+         xeOQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=td0ICH2xNq/CHmD71me9EyhcsICT9Kh4ztqwaFSKtRI=;
-        b=ew9W5oaFvG0ISAhYoww4ksQhkp9GNAZLGcJDbYaR+kG9pmh4rdAA1+cZN+cEUvq4FS
-         +BqEE/aXUsYywf/+V3fnG3OLoOdbTZs+nUDuR7Y1I3XuBfncW55Kthm4gwHv0CRHuBgq
-         FKe53hAILqt5BUbDBMjDTohvybhDosuslPGrXugWPXBIroHKqhroJLttcMkWwBbOvGUz
-         RY9aaAWadFe8Vj/EBNl8kbaR/GHALhxp+6523PGy6Py0fRTM+HqDzc7YQFA0CemF2Uee
-         MLwZNL9tXk3Y3DqTGR0IBz1TjEmRpqGNZGA9eTxw0fChinMx8FO7agHySLzsYA0BqSUY
-         ZsXg==
-X-Gm-Message-State: AOAM530sTjxnf3ISrbadZcpMAPa2BhydVyafTDo1ZRL9PyHszLpp5zZG
-        zc1mrt6ERn9TDUjbVMP3xPcKKEuytzioyRuZkQo=
-X-Google-Smtp-Source: ABdhPJwPtb/6O5gixQFSOYIJQtvlD4OGSyFzlmNc7mvdx/m3W25Y1ydrHW7nbIYEx++fsYtxIi5j2u7nwsHlv+o52xk=
-X-Received: by 2002:a05:6e02:dc3:: with SMTP id l3mr1444630ilj.137.1598969318525;
- Tue, 01 Sep 2020 07:08:38 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=v11SjyOsuI/B6VQH0Mb3spC9mABv57EZFh+BrgGZcoA=;
+        b=lcBEOEGr/OBFKlIj58ir4Qh0SPvBXas/wK2bbgVCjnUE/Hs0bVnt3Dp56k+q5BhINr
+         9aR/s1lWcola/HvuBVgmlFiBh0untzTIW35CgNu8/riGI+smL8pUmJXefL0SrjJcgpjt
+         l2PGysrWn/XDPm4OjW5Spf09RLhaKPQvZSEWi6NxZVobj+Xfpc2wurl/0I6kb1lWqMV7
+         15XDpbTA5x9zW0ijgB1bCkBveCPcQplJxj9gPRAk5hd6yuFOEZf1+SvEi746xdwXBT9g
+         GJT/dWkWiS8Etqx934Sec0p+jrmtQ4PFI9ynJxZ0WGgOcExBi4m8wpoVfODB1j1rAtxe
+         vf7Q==
+X-Gm-Message-State: AOAM531OSOAm9guaj4ePD31OM6zOWpNehLfX4WDdBY87C7eOoRljDI3V
+        iVCQwf4KTGRybqjxcLDvVw0=
+X-Google-Smtp-Source: ABdhPJwGLO337z94l5hIfxXWKu7uFRV4zruQBs4NYOpeYJdwVlKleA+YQDPCbw06dE+/Tfep8er2HQ==
+X-Received: by 2002:a17:902:7606:: with SMTP id k6mr1626300pll.171.1598969942058;
+        Tue, 01 Sep 2020 07:19:02 -0700 (PDT)
+Received: from garuda.localnet ([122.171.183.205])
+        by smtp.gmail.com with ESMTPSA id gb19sm1699244pjb.38.2020.09.01.07.18.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Sep 2020 07:19:01 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, bfoster@redhat.com
+Subject: Re: [PATCH 1/3] xfs: Introduce xfs_iext_max() helper
+Date:   Tue, 01 Sep 2020 19:48:03 +0530
+Message-ID: <11106167.P8SlRhgUvP@garuda>
+In-Reply-To: <20200831204340.GV6096@magnolia>
+References: <20200831130010.454-1-chandanrlinux@gmail.com> <20200831130010.454-2-chandanrlinux@gmail.com> <20200831204340.GV6096@magnolia>
 MIME-Version: 1.0
-References: <20200901134728.185353-1-bfoster@redhat.com> <20200901134728.185353-4-bfoster@redhat.com>
-In-Reply-To: <20200901134728.185353-4-bfoster@redhat.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Tue, 1 Sep 2020 17:08:27 +0300
-Message-ID: <CAOQ4uxhKGUkyEYUsyH=X4YD6EJmu+_FbHhoL+ZtarXqU0NfNkw@mail.gmail.com>
-Subject: Re: [PATCH v3 3/3] generic/470: use thin volume for dmlogwrites
- target device
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     fstests <fstests@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 1, 2020 at 4:48 PM Brian Foster <bfoster@redhat.com> wrote:
->
-> dmlogwrites support for XFS depends on discard zeroing support of
-> the intended target device. Update the test to use a thin volume and
-> allow it to run consistently and reliably on XFS.
->
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+On Tuesday 1 September 2020 2:13:40 AM IST Darrick J. Wong wrote:
+> On Mon, Aug 31, 2020 at 06:30:08PM +0530, Chandan Babu R wrote:
+> > xfs_iext_max() returns the maximum number of extents possible for either
+> > data fork or attribute fork. This helper will be extended further in a
+> > future commit when maximum extent counts associated with data/attribute
+> > forks are increased.
+> > 
+> > No functional changes have been made.
+> 
+> Hmm....
+> 
+> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c       |  9 ++++-----
+> >  fs/xfs/libxfs/xfs_inode_buf.c  |  8 +++-----
+> >  fs/xfs/libxfs/xfs_inode_fork.h | 10 ++++++++++
+> >  3 files changed, 17 insertions(+), 10 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index dcc8eeecd571..16b983b8977d 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -74,13 +74,12 @@ xfs_bmap_compute_maxlevels(
+> >  	 * for both ATTR1 and ATTR2 we have to assume the worst case scenario
+> >  	 * of a minimum size available.
+> >  	 */
+> > -	if (whichfork == XFS_DATA_FORK) {
+> > -		maxleafents = MAXEXTNUM;
+> > +	maxleafents = xfs_iext_max(&mp->m_sb, whichfork);
+> > +	if (whichfork == XFS_DATA_FORK)
+> >  		sz = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
+> > -	} else {
+> > -		maxleafents = MAXAEXTNUM;
+> > +	else
+> >  		sz = XFS_BMDR_SPACE_CALC(MINABTPTRS);
+> > -	}
+> > +
+> >  	maxrootrecs = xfs_bmdr_maxrecs(sz, 0);
+> >  	minleafrecs = mp->m_bmap_dmnr[0];
+> >  	minnoderecs = mp->m_bmap_dmnr[1];
+> > diff --git a/fs/xfs/libxfs/xfs_inode_buf.c b/fs/xfs/libxfs/xfs_inode_buf.c
+> > index 8d5dd08eab75..5dcd71bfab2e 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_buf.c
+> > +++ b/fs/xfs/libxfs/xfs_inode_buf.c
+> > @@ -369,6 +369,7 @@ xfs_dinode_verify_fork(
+> >  	int			whichfork)
+> >  {
+> >  	uint32_t		di_nextents = XFS_DFORK_NEXTENTS(dip, whichfork);
+> > +	xfs_extnum_t		max_extents;
+> >  
+> >  	switch (XFS_DFORK_FORMAT(dip, whichfork)) {
+> >  	case XFS_DINODE_FMT_LOCAL:
+> > @@ -390,12 +391,9 @@ xfs_dinode_verify_fork(
+> >  			return __this_address;
+> >  		break;
+> >  	case XFS_DINODE_FMT_BTREE:
+> > -		if (whichfork == XFS_ATTR_FORK) {
+> > -			if (di_nextents > MAXAEXTNUM)
+> > -				return __this_address;
+> > -		} else if (di_nextents > MAXEXTNUM) {
+> > +		max_extents = xfs_iext_max(&mp->m_sb, whichfork);
+> > +		if (di_nextents > max_extents)
+> >  			return __this_address;
+> > -		}
+> >  		break;
+> >  	default:
+> >  		return __this_address;
+> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> > index 4219b01f1034..75e07078967e 100644
+> > --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> > @@ -153,6 +153,16 @@ static inline int8_t xfs_ifork_format(struct xfs_ifork *ifp)
+> >  	return ifp->if_format;
+> >  }
+> >  
+> > +static inline xfs_extnum_t xfs_iext_max(struct xfs_sb *sbp, int whichfork)
+> > +{
+> > +	ASSERT(whichfork == XFS_DATA_FORK || whichfork == XFS_ATTR_FORK);
+> > +
+> > +	if (whichfork == XFS_DATA_FORK)
+> > +		return MAXEXTNUM;
+> > +	else
+> > +		return MAXAEXTNUM;
+> 
+> ...I kinda wish you /had/ made the functional change to make this return
+> MAXEXTNUM for cow forks, even if none of the callers actually care. :)
 
->  tests/generic/470 | 23 +++++++++++++++++------
->  1 file changed, 17 insertions(+), 6 deletions(-)
->
-> diff --git a/tests/generic/470 b/tests/generic/470
-> index fd6da563..c77499a2 100755
-> --- a/tests/generic/470
-> +++ b/tests/generic/470
-> @@ -20,12 +20,14 @@ _cleanup()
->  {
->         cd /
->         _log_writes_cleanup
-> +       _dmthin_cleanup
->         rm -f $tmp.*
->  }
->
->  # get standard environment, filters and checks
->  . ./common/rc
->  . ./common/filter
-> +. ./common/dmthin
->  . ./common/dmlogwrites
->
->  # remove previous $seqres.full before test
-> @@ -34,12 +36,21 @@ rm -f $seqres.full
->  # real QA test starts here
->  _supported_fs generic
->  _supported_os Linux
-> -_require_scratch
-> +_require_scratch_nocheck
->  _require_log_writes_dax_mountopt "dax"
-> +_require_dm_target thin-pool
->  _require_xfs_io_command "mmap" "-S"
->  _require_xfs_io_command "log_writes"
->
-> -_log_writes_init $SCRATCH_DEV
-> +devsize=$((1024*1024*200 / 512))        # 200m phys/virt size
-> +csize=$((1024*64 / 512))                # 64k cluster size
-> +lowspace=$((1024*1024 / 512))           # 1m low space threshold
-> +
-> +# Use a thin device to provide deterministic discard behavior. Discards are used
-> +# by the log replay tool for fast zeroing to prevent out-of-order replay issues.
-> +_dmthin_init $devsize $devsize $csize $lowspace
-> +
-> +_log_writes_init $DMTHIN_VOL_DEV
->  _log_writes_mkfs >> $seqres.full 2>&1
->  _log_writes_mount -o dax
->
-> @@ -52,14 +63,14 @@ $XFS_IO_PROG -t -c "truncate $LEN" -c "mmap -S 0 $LEN" -c "mwrite 0 $LEN" \
->  # Unmount the scratch dir and tear down the log writes target
->  _log_writes_unmount
->  _log_writes_remove
-> -_check_scratch_fs
-> +_dmthin_check_fs
->
->  # destroy previous filesystem so we can be sure our rebuild works
-> -_scratch_mkfs >> $seqres.full 2>&1
-> +_mkfs_dev $DMTHIN_VOL_DEV >> $seqres.full 2>&1
->
->  # check pre-unmap state
-> -_log_writes_replay_log preunmap $SCRATCH_DEV
-> -_scratch_mount
-> +_log_writes_replay_log preunmap $DMTHIN_VOL_DEV
-> +_dmthin_mount
->
->  # We should see $SCRATCH_MNT/test as having 1 MiB in block allocations
->  du -sh $SCRATCH_MNT/test | _filter_scratch | _filter_spaces
-> --
-> 2.25.4
->
+Ok. I will include that change in the next version.
+
+> 
+> --D
+> 
+> > +}
+> > +
+> >  struct xfs_ifork *xfs_iext_state_to_fork(struct xfs_inode *ip, int state);
+> >  
+> >  int		xfs_iformat_data_fork(struct xfs_inode *, struct xfs_dinode *);
+> 
+
+
+-- 
+chandan
+
+
+
