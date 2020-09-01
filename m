@@ -2,90 +2,232 @@ Return-Path: <SRS0=ZxTw=CK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76DD1C433E2
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 13:02:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B76FEC433E6
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 13:15:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CF99207BC
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 13:02:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CD1020767
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Sep 2020 13:15:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MwdzzmLF"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hbrvoG+v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727796AbgIANAa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Sep 2020 09:00:30 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:44809 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727051AbgIANAS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 09:00:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1598965201;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6RdzeKs0WLb+HvEMTVay7AQ7Ox4Alb+u2f+jmXPq3A4=;
-        b=MwdzzmLFZkWPEYAabigBcEZVEFOH1EaDsQzXVduM/HsoX4xfcVF30tAFQ0Vb64mGNZ8sie
-        okGbfgWfIwztxMz0ELSRNZvAOOBLT033J/ZmYTCr8QxSJ8dguTMwptX6qUxQAwAEjTpZHl
-        VS3VtvIEw1h0E8hIKSD8Xewr5wtSoGk=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-273-x-DVEq-yMkaEGD5A1MoF1w-1; Tue, 01 Sep 2020 09:00:00 -0400
-X-MC-Unique: x-DVEq-yMkaEGD5A1MoF1w-1
-Received: by mail-wm1-f72.google.com with SMTP id b14so371751wmj.3
-        for <linux-xfs@vger.kernel.org>; Tue, 01 Sep 2020 06:00:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=6RdzeKs0WLb+HvEMTVay7AQ7Ox4Alb+u2f+jmXPq3A4=;
-        b=ZkcqKrB3Zj9j2toLWmjF2YxChZMJy+eqO7Cx2zSIqySD7ZEO+NNEIAcD4O7ZvxpwMT
-         pcOTkANhc/1oZO8Zbfyce+1IZKhbnlU4Sd80zGpy/rtE0P2E0Zt5qFUeJITUmoi8O6Go
-         0B5z4+QI2i/Dcqp2MNFFuQueQbVrML1Um68ux+MZieHdjAhlXEyIc2TVva2SHKy/MB2l
-         coNRKYuAzRsZ2gEZ2keHFpJVSboUbpoW9/R5FQxoW2gJMGkZAxcoRnXE9UYH7f03vK7P
-         HkDXDDW6yXgg6tXgPCgJyAaOB/ldnQmi8CNLRu2rbRlms3raBPVCHjhrHS2/n1sjF6pR
-         GwnA==
-X-Gm-Message-State: AOAM530PTgqL5yPtMwXQX4aQA4IDcKKsMHFI0GZay7+3rUIbyB0IbyNe
-        7b5GLlv0y32lEY2EfJSahVrIPV9lF4TCYiSrLiLHYscrO0NV1x00j2CEb+hpmNgP1czULrLzZPE
-        tOzeYufXkkoGYJleCnekj
-X-Received: by 2002:a1c:b143:: with SMTP id a64mr1630485wmf.43.1598965198931;
-        Tue, 01 Sep 2020 05:59:58 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzPTJBfknR+aJyUOmUJD34v2V+kmw9+HTzyeGpfgVDa1C64SWid/X49wJuv7I8TSGLBwBXKdw==
-X-Received: by 2002:a1c:b143:: with SMTP id a64mr1630478wmf.43.1598965198796;
-        Tue, 01 Sep 2020 05:59:58 -0700 (PDT)
-Received: from localhost.localdomain (243.206.broadband12.iol.cz. [90.179.206.243])
-        by smtp.gmail.com with ESMTPSA id s11sm2105916wrt.43.2020.09.01.05.59.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Sep 2020 05:59:58 -0700 (PDT)
-Subject: Re: [PATCH V2] xfs: fix boundary test in xfs_attr_shortform_verify
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <63722af5-2d8d-2455-17ee-988defd3126f@redhat.com>
- <689c4eda-dd80-c1bd-843f-1b485bfddc5a@redhat.com>
- <20200826164420.GP6096@magnolia>
-From:   Pavel Reichl <preichl@redhat.com>
-Message-ID: <b8c1482a-4efb-0208-d750-f00dd3c68003@redhat.com>
-Date:   Tue, 1 Sep 2020 14:59:57 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1727999AbgIANPT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 09:15:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60020 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727061AbgIANFr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 09:05:47 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDE6EC061244;
+        Tue,  1 Sep 2020 06:05:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=3snyZCqcx6nfDLLd1J100WLPuaRed18WUzYLSt3TcWw=; b=hbrvoG+vks0CAtQ3N78qWmX5eX
+        /NQfB0lIwhTw+JIeEG3UTUpEED73WYlkgwy+xZx68o+RkOBAMNP+7v0DFBexLsFKpbTNNJqIkP6Sd
+        H6pciRK1QoYcmLs5njnhEbPp+JKo6UVT0Z2NUYWZ0NZMse5fdbv3S2XuHDf10GHYZZybDqcLfFk/m
+        6Ff6CFmabe6TrkJZ8Igy1YjbGZv8aeXp4VPkCG8+XCmqKf9ApGKGXpb6Ta7X8f9XykbBpBWgS6fzO
+        /NVVDgQQqK3n9YAn9yxLyPSnjhSjdboM3fBHH/AaYwQ2ZCYOiPObZHa/hk33V3BnzVpg0bhQsq0h8
+        +f07oIzA==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kD5yX-0000KA-In; Tue, 01 Sep 2020 13:05:25 +0000
+Date:   Tue, 1 Sep 2020 14:05:25 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        linux-block@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 04/11] block: Add bio_for_each_thp_segment_all
+Message-ID: <20200901130525.GK14765@casper.infradead.org>
+References: <20200824151700.16097-1-willy@infradead.org>
+ <20200824151700.16097-5-willy@infradead.org>
+ <20200827084431.GA15909@infradead.org>
+ <20200831194837.GJ14765@casper.infradead.org>
+ <20200901053426.GB24560@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20200826164420.GP6096@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200901053426.GB24560@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> From whom should I be expecting a test case?
-Hi,
+On Tue, Sep 01, 2020 at 06:34:26AM +0100, Christoph Hellwig wrote:
+> On Mon, Aug 31, 2020 at 08:48:37PM +0100, Matthew Wilcox wrote:
+> > static void iomap_read_end_io(struct bio *bio)
+> > {
+> >         int i, error = blk_status_to_errno(bio->bi_status);
+> > 
+> >         for (i = 0; i < bio->bi_vcnt; i++) {
+> >                 struct bio_vec *bvec = &bio->bi_io_vec[i];
+> 
+> This should probably use bio_for_each_bvec_all instead of directly
+> poking into the bio.  I'd also be tempted to move the loop body into
+> a separate helper, but that's just a slight stylistic preference.
 
-I took the task, I hope it will be done soon - I'll do my best.
+Ah, got it.
 
-Pavel
+> >                 size_t offset = bvec->bv_offset;
+> >                 size_t length = bvec->bv_len;
+> >                 struct page *page = bvec->bv_page;
+> > 
+> >                 while (length > 0) { 
+> >                         size_t count = thp_size(page) - offset;
+> >                         
+> >                         if (count > length)
+> >                                 count = length;
+> >                         iomap_read_page_end_io(page, offset, count, error);
+> >                         page += (offset + count) / PAGE_SIZE;
+> 
+> Shouldn't the page_size here be thp_size?
+
+No.  Let's suppose we have a 20kB I/O which starts on a page boundary and
+the first page is order-2.  To get from the first head page to the second
+page, we need to add 4, which is 16kB / 4kB, not 16kB / 16kB.
+
+> > Maybe I'm missing something important here, but it's significantly
+> > simpler code -- iomap_read_end_io() goes down from 816 bytes to 560 bytes
+> > (256 bytes less!) iomap_read_page_end_io is inlined into it both before
+> > and after.
+> 
+> Yes, that's exactly why I think avoiding bio_for_each_segment_all is
+> a good idea in general.
+
+I took out all the attempts to cope with insane bv_offset to compare like
+with like and I got the bio_for_each_thp_segment_all() version down to
+656 bytes:
+
+@@ -166,21 +166,15 @@ static inline void bvec_thp_advance(const struct bio_vec *
+bvec,
+                                struct bvec_iter_all *iter_all)
+ {
+        struct bio_vec *bv = &iter_all->bv;
+-       unsigned int page_size;
+ 
+        if (iter_all->done) {
+                bv->bv_page += thp_nr_pages(bv->bv_page);
+-               page_size = thp_size(bv->bv_page);
+                bv->bv_offset = 0;
+        } else {
+-               bv->bv_page = thp_head(bvec->bv_page +
+-                               (bvec->bv_offset >> PAGE_SHIFT));
+-               page_size = thp_size(bv->bv_page);
+-               bv->bv_offset = bvec->bv_offset -
+-                               (bv->bv_page - bvec->bv_page) * PAGE_SIZE;
+-               BUG_ON(bv->bv_offset >= page_size);
++               bv->bv_page = bvec->bv_page;
++               bv->bv_offset = bvec->bv_offset;
+        }
+-       bv->bv_len = min(page_size - bv->bv_offset,
++       bv->bv_len = min_t(unsigned int, thp_size(bv->bv_page) - bv->bv_offset,
+                         bvec->bv_len - iter_all->done);
+        iter_all->done += bv->bv_len;
+
+> And yes, eventually bv_page and bv_offset should be replaced with a
+> 
+> 	phys_addr_t		bv_phys;
+> 
+> and life would become simpler in many places (and the bvec would
+> shrink for most common setups as well).
+
+I'd very much like to see that.  It causes quite considerable pain for
+our virtualisation people that we need a struct page.  They'd like the
+hypervisor to not have struct pages for the guest's memory, but if they
+don't have them, they can't do I/O to them.  Perhaps I'll try getting
+one of them to work on this.
+
+I'm not entirely sure the bvec would shrink.  On 64-bit systems, it's
+currently 8 bytes for the struct page, 4 bytes for the len and 4 bytes
+for the offset.  Sure, we can get rid of the offset, but the compiler
+will just pad the struct from 12 bytes back to 16.  On 32-bit systems
+with 32-bit phys_addr_t, we go from 12 bytes down to 8, but most 32-bit
+systems have a 64-bit phys_addr_t these days, don't they?
+
+> For now I'd end up with something like:
+> 
+> static void iomap_read_end_bvec(struct page *page, size_t offset,
+> 		size_t length, int error)
+> {
+> 	while (length > 0) {
+> 		size_t page_size = thp_size(page);
+> 		size_t count = min(page_size - offset, length);
+> 
+> 		iomap_read_page_end_io(page, offset, count, error);
+> 
+> 		page += (offset + count) / page_size;
+> 		length -= count;
+> 		offset = 0;
+> 	}
+> }
+> 
+> static void iomap_read_end_io(struct bio *bio)
+> {
+> 	int i, error = blk_status_to_errno(bio->bi_status);
+> 	struct bio_vec *bvec;
+> 
+> 	bio_for_each_bvec_all(bvec, bio, i)
+> 		iomap_read_end_bvec(bvec->bv_page, bvec->bv_offset,
+> 				    bvec->bv_len, error;
+>         bio_put(bio);
+> }
+> 
+> and maybe even merge iomap_read_page_end_io into iomap_read_end_bvec.
+
+The lines start to get a bit long.  Here's what I currently have on
+the write side:
+
+@@ -1104,6 +1117,20 @@ iomap_finish_page_writeback(struct inode *inode, struct p
+age *page,
+                end_page_writeback(page);
+ }
+ 
++static void iomap_finish_bvec_write(struct inode *inode, struct page *page,
++               size_t offset, size_t length, int error)
++{
++       while (length > 0) {
++               size_t count = min(thp_size(page) - offset, length);
++
++               iomap_finish_page_writeback(inode, page, error, count);
++
++               page += (offset + count) / PAGE_SIZE;
++               offset = 0;
++               length -= count;
++       }
++}
++
+ /*
+  * We're now finished for good with this ioend structure.  Update the page
+  * state, release holds on bios, and finally free up memory.  Do not use the
+@@ -1121,7 +1148,7 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+ 
+        for (bio = &ioend->io_inline_bio; bio; bio = next) {
+                struct bio_vec *bv;
+-               struct bvec_iter_all iter_all;
++               int i;
+ 
+                /*
+                 * For the last bio, bi_private points to the ioend, so we
+@@ -1133,9 +1160,9 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+                        next = bio->bi_private;
+ 
+                /* walk each page on bio, ending page IO on them */
+-               bio_for_each_thp_segment_all(bv, bio, iter_all)
+-                       iomap_finish_page_writeback(inode, bv->bv_page, error,
+-                                       bv->bv_len);
++               bio_for_each_bvec_all(bv, bio, i)
++                       iomap_finish_bvec_writeback(inode, bv->bv_page,
++                                       bv->bv_offset, bv->bv_len, error);
+                bio_put(bio);
+        }
+        /* The ioend has been freed by bio_put() */
+
+That's a bit more boilerplate than I'd like, but if bio_vec is going to
+lose its bv_page then I don't see a better way.  Unless we come up with
+a different page/offset/length struct that bio_vecs are decomposed into.
 
