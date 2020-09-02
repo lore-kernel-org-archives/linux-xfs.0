@@ -2,205 +2,209 @@ Return-Path: <SRS0=53rf=CL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20AF5C433E7
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 14:43:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28831C433E7
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 14:49:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00B10207D3
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 14:43:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03BE0207D3
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 14:49:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QTVsBiL3"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OXR/HbGo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727025AbgIBOmy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:42:54 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43009 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728029AbgIBOlb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 10:41:31 -0400
+        id S1726941AbgIBOsm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:48:42 -0400
+Received: from us-smtp-1.mimecast.com ([207.211.31.81]:41910 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726247AbgIBOK5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 10:10:57 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599057676;
+        s=mimecast20190719; t=1599055855;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bbR3adVBgOeC2gqOdaZcGBD8eQS9BQkxQ91v+UCOB+0=;
-        b=QTVsBiL3+wOLoXxFD8IAkhbnpODfs8JkTtTSk2XyA1vb9a9BfwoWfOrTt0ROhVUN7taMm2
-        MzqO/ooaOfxoRizBwxFqP5Ibme9c5Casch27yq6wKSXQdvKxHytrHq7eKLgRFKQsOzas4L
-        hTKMu0o+pcXD0vpQIu5UetTbCPioz/U=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-250-6M5XFxxmOjC3vF4WeidKAA-1; Wed, 02 Sep 2020 10:41:15 -0400
-X-MC-Unique: 6M5XFxxmOjC3vF4WeidKAA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3584A90ADA4
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Sep 2020 14:41:14 +0000 (UTC)
-Received: from eorzea.redhat.com (unknown [10.40.195.119])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8655F7EEB2
-        for <linux-xfs@vger.kernel.org>; Wed,  2 Sep 2020 14:41:13 +0000 (UTC)
-From:   Carlos Maiolino <cmaiolino@redhat.com>
+         to:to:cc:cc; bh=KmrgyA/hyUiaujkQSzCHpY2TX6sqvTru/42+8F0xVtU=;
+        b=OXR/HbGoBPilM0+npw27mhsDaTDHUGxHGjg9SzPl1UfTiINhnOfApeRWAmIRTgI0+IuAUu
+        WTX1NzkcET/2j5ulVWIfDA7aYK1F74CAKz+VaIMgwPjS5DslFdqY8GKA/S7G3/SCTBXubl
+        CYFho1V14e89AhjhVMBE2/llEzMye38=
+Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
+ [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-197-EL35WWDEMl-Yo24yIiU55w-1; Wed, 02 Sep 2020 10:10:54 -0400
+X-MC-Unique: EL35WWDEMl-Yo24yIiU55w-1
+Received: by mail-pf1-f198.google.com with SMTP id c190so2792795pfa.10
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Sep 2020 07:10:54 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=KmrgyA/hyUiaujkQSzCHpY2TX6sqvTru/42+8F0xVtU=;
+        b=NfWV7CAzkyiUD0eBZqG4vxsTAdQedNGzOQsX7463NWJPovroZxYufWyYhMpKM4IK3S
+         g0lxq4bxhU6RaiesZdJ0DJ0Lwm9nVvA+JFDJmXJahHt6U6q6/HGUGbfb8NNhLpJ7w2o6
+         yNNjcOz1G2vaoHYqnxJIyaQYmvNME8e8u2HrYV3mGzFmAI5ZHpd58LPuHUJbVYJ3VsTf
+         AhyMk7OeinvRyaVsmoIEHPoxAUR3XgcY/PLpzu6t+1hVVVZ9UYz1sOKQKhD/VVZvS4R9
+         CAAC/H0+ibd6wXtAO5/TyKCC/Z1QNu+5RI0OWLfLWqbEuC3z+xPNCR82QWf58bANKIsT
+         u8gA==
+X-Gm-Message-State: AOAM532IC3wqSAs67nA2og0LCpghG3cE0hC+peEGdNheb45PnjPDyjBc
+        LEq4Tfod0FMempk3UXgatvVMTXoKotYItU5J568RhIwqPEKvguqa85GIDzomF3qOX71HmKPKjqR
+        8gNOgi3C8kk6SP5/lLWY3
+X-Received: by 2002:a17:902:e789:: with SMTP id cp9mr2161068plb.215.1599055852863;
+        Wed, 02 Sep 2020 07:10:52 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwqxNQ6KkqrCtCrIBgax2u3p0ZQHUMf0jxT1gpp3bSueHf6jduXnYlJYefb7EvM34mme0IEBQ==
+X-Received: by 2002:a17:902:e789:: with SMTP id cp9mr2161043plb.215.1599055852546;
+        Wed, 02 Sep 2020 07:10:52 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id 82sm4024005pgd.6.2020.09.02.07.10.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Sep 2020 07:10:52 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH V2 2/4] xfs: Remove typedef xfs_attr_shortform_t
-Date:   Wed,  2 Sep 2020 16:40:57 +0200
-Message-Id: <20200902144059.284726-3-cmaiolino@redhat.com>
-In-Reply-To: <20200902144059.284726-1-cmaiolino@redhat.com>
-References: <20200902144059.284726-1-cmaiolino@redhat.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Cc:     Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH] xfs: avoid LR buffer overrun due to crafted h_len
+Date:   Wed,  2 Sep 2020 22:10:12 +0800
+Message-Id: <20200902141012.24605-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Currently, crafted h_len has been blocked for the log
+header of the tail block in commit a70f9fe52daa ("xfs:
+detect and handle invalid iclog size set by mkfs").
+
+However, each log record could still have crafted
+h_len and cause log record buffer overrun. So let's
+check h_len for each log record as well instead.
+
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 ---
+something random when I read log recovery code...
 
-Changelog:
-	V2:
-	 - Reordered within the series, no functional changes.
+ fs/xfs/xfs_log_recover.c | 70 +++++++++++++++++++++-------------------
+ 1 file changed, 37 insertions(+), 33 deletions(-)
 
- fs/xfs/libxfs/xfs_attr_leaf.c | 16 ++++++++--------
- fs/xfs/libxfs/xfs_da_format.h |  4 ++--
- fs/xfs/xfs_attr_list.c        |  2 +-
- fs/xfs/xfs_ondisk.h           | 12 ++++++------
- 4 files changed, 17 insertions(+), 17 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index 76d3814f9dc79..d920183b08a99 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -728,14 +728,14 @@ xfs_attr_shortform_add(
- 
- 	ifp = dp->i_afp;
- 	ASSERT(ifp->if_flags & XFS_IFINLINE);
--	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
-+	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
- 	if (xfs_attr_sf_findname(args, &sfe, NULL) == -EEXIST)
- 		ASSERT(0);
- 
- 	offset = (char *)sfe - (char *)sf;
- 	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
- 	xfs_idata_realloc(dp, size, XFS_ATTR_FORK);
--	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
-+	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
- 	sfe = (struct xfs_attr_sf_entry *)((char *)sf + offset);
- 
- 	sfe->namelen = args->namelen;
-@@ -787,7 +787,7 @@ xfs_attr_shortform_remove(
- 
- 	dp = args->dp;
- 	mp = dp->i_mount;
--	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
-+	sf = (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
- 
- 	error = xfs_attr_sf_findname(args, &sfe, &base);
- 	if (error != -EEXIST)
-@@ -837,7 +837,7 @@ xfs_attr_shortform_remove(
- int
- xfs_attr_shortform_lookup(xfs_da_args_t *args)
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e2ec91b2d0f4..2d9195fb9367 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2904,7 +2904,8 @@ STATIC int
+ xlog_valid_rec_header(
+ 	struct xlog		*log,
+ 	struct xlog_rec_header	*rhead,
+-	xfs_daddr_t		blkno)
++	xfs_daddr_t		blkno,
++	int			hsize)
  {
--	xfs_attr_shortform_t *sf;
-+	struct xfs_attr_shortform *sf;
- 	struct xfs_attr_sf_entry *sfe;
- 	int i;
- 	struct xfs_ifork *ifp;
-@@ -846,7 +846,7 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+ 	int			hlen;
  
- 	ifp = args->dp->i_afp;
- 	ASSERT(ifp->if_flags & XFS_IFINLINE);
--	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
-+	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
- 	sfe = &sf->list[0];
- 	for (i = 0; i < sf->hdr.count;
- 				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
-@@ -873,7 +873,7 @@ xfs_attr_shortform_getvalue(
- 	int			i;
+@@ -2920,10 +2921,39 @@ xlog_valid_rec_header(
+ 		return -EFSCORRUPTED;
+ 	}
  
- 	ASSERT(args->dp->i_afp->if_flags == XFS_IFINLINE);
--	sf = (xfs_attr_shortform_t *)args->dp->i_afp->if_u1.if_data;
-+	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
- 	sfe = &sf->list[0];
- 	for (i = 0; i < sf->hdr.count;
- 				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
-@@ -908,12 +908,12 @@ xfs_attr_shortform_to_leaf(
+-	/* LR body must have data or it wouldn't have been written */
++	/*
++	 * LR body must have data (or it wouldn't have been written) and
++	 * h_len must not be greater than h_size with one exception.
++	 *
++	 * That is that xfsprogs has a bug where record length is based on
++	 * lsunit but h_size (iclog size) is hardcoded to 32k. This means
++	 * the log buffer allocated can be too small for the record to
++	 * cause an overrun.
++	 *
++	 * Detect this condition here. Use lsunit for the buffer size as
++	 * long as this looks like the mkfs case. Otherwise, return an
++	 * error to avoid a buffer overrun.
++	 */
+ 	hlen = be32_to_cpu(rhead->h_len);
+-	if (XFS_IS_CORRUPT(log->l_mp, hlen <= 0 || hlen > INT_MAX))
++	if (XFS_IS_CORRUPT(log->l_mp, hlen <= 0))
+ 		return -EFSCORRUPTED;
++
++	if (hsize && XFS_IS_CORRUPT(log->l_mp,
++				    hsize < be32_to_cpu(rhead->h_size)))
++		return -EFSCORRUPTED;
++	hsize = be32_to_cpu(rhead->h_size);
++
++	if (unlikely(hlen >= hsize)) {
++		if (XFS_IS_CORRUPT(log->l_mp, hlen > log->l_mp->m_logbsize ||
++				   rhead->h_num_logops != cpu_to_be32(1)))
++			return -EFSCORRUPTED;
++
++		xfs_warn(log->l_mp,
++		"invalid iclog size (%d bytes), using lsunit (%d bytes)",
++			 hsize, log->l_mp->m_logbsize);
++		rhead->h_size = cpu_to_be32(log->l_mp->m_logbsize);
++	}
++
+ 	if (XFS_IS_CORRUPT(log->l_mp,
+ 			   blkno > log->l_logBBsize || blkno > INT_MAX))
+ 		return -EFSCORRUPTED;
+@@ -2951,7 +2981,7 @@ xlog_do_recovery_pass(
+ 	xfs_daddr_t		rhead_blk;
+ 	char			*offset;
+ 	char			*hbp, *dbp;
+-	int			error = 0, h_size, h_len;
++	int			error = 0, h_size;
+ 	int			error2 = 0;
+ 	int			bblks, split_bblks;
+ 	int			hblks, split_hblks, wrapped_hblks;
+@@ -2984,37 +3014,11 @@ xlog_do_recovery_pass(
+ 			goto bread_err1;
  
- 	dp = args->dp;
- 	ifp = dp->i_afp;
--	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
-+	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
- 	size = be16_to_cpu(sf->hdr.totsize);
- 	tmpbuffer = kmem_alloc(size, 0);
- 	ASSERT(tmpbuffer != NULL);
- 	memcpy(tmpbuffer, ifp->if_u1.if_data, size);
--	sf = (xfs_attr_shortform_t *)tmpbuffer;
-+	sf = (struct xfs_attr_shortform *)tmpbuffer;
+ 		rhead = (xlog_rec_header_t *)offset;
+-		error = xlog_valid_rec_header(log, rhead, tail_blk);
++		error = xlog_valid_rec_header(log, rhead, tail_blk, 0);
+ 		if (error)
+ 			goto bread_err1;
  
- 	xfs_idata_realloc(dp, -size, XFS_ATTR_FORK);
- 	xfs_bmap_local_to_extents_empty(args->trans, dp, XFS_ATTR_FORK);
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 059ac108b1b39..e708b714bf99d 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -579,7 +579,7 @@ xfs_dir2_block_leaf_p(struct xfs_dir2_block_tail *btp)
- /*
-  * Entries are packed toward the top as tight as possible.
-  */
--typedef struct xfs_attr_shortform {
-+struct xfs_attr_shortform {
- 	struct xfs_attr_sf_hdr {	/* constant-structure header block */
- 		__be16	totsize;	/* total bytes in shortform list */
- 		__u8	count;	/* count of active entries */
-@@ -591,7 +591,7 @@ typedef struct xfs_attr_shortform {
- 		uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
- 		uint8_t nameval[1];	/* name & value bytes concatenated */
- 	} list[1];			/* variable sized array */
--} xfs_attr_shortform_t;
-+};
+-		/*
+-		 * xfsprogs has a bug where record length is based on lsunit but
+-		 * h_size (iclog size) is hardcoded to 32k. Now that we
+-		 * unconditionally CRC verify the unmount record, this means the
+-		 * log buffer can be too small for the record and cause an
+-		 * overrun.
+-		 *
+-		 * Detect this condition here. Use lsunit for the buffer size as
+-		 * long as this looks like the mkfs case. Otherwise, return an
+-		 * error to avoid a buffer overrun.
+-		 */
+ 		h_size = be32_to_cpu(rhead->h_size);
+-		h_len = be32_to_cpu(rhead->h_len);
+-		if (h_len > h_size) {
+-			if (h_len <= log->l_mp->m_logbsize &&
+-			    be32_to_cpu(rhead->h_num_logops) == 1) {
+-				xfs_warn(log->l_mp,
+-		"invalid iclog size (%d bytes), using lsunit (%d bytes)",
+-					 h_size, log->l_mp->m_logbsize);
+-				h_size = log->l_mp->m_logbsize;
+-			} else {
+-				XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+-						log->l_mp);
+-				error = -EFSCORRUPTED;
+-				goto bread_err1;
+-			}
+-		}
  
- typedef struct xfs_attr_leaf_map {	/* RLE map of free bytes */
- 	__be16	base;			  /* base of free region */
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 50f922cad91a4..4eb1d6faecfb2 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -61,7 +61,7 @@ xfs_attr_shortform_list(
- 	int				error = 0;
+ 		if ((be32_to_cpu(rhead->h_version) & XLOG_VERSION_2) &&
+ 		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
+@@ -3096,7 +3100,7 @@ xlog_do_recovery_pass(
+ 			}
+ 			rhead = (xlog_rec_header_t *)offset;
+ 			error = xlog_valid_rec_header(log, rhead,
+-						split_hblks ? blk_no : 0);
++					split_hblks ? blk_no : 0, h_size);
+ 			if (error)
+ 				goto bread_err2;
  
- 	ASSERT(dp->i_afp != NULL);
--	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
-+	sf = (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
- 	ASSERT(sf != NULL);
- 	if (!sf->hdr.count)
- 		return 0;
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 5f04d8a5ab2a9..ad51c8eb447b1 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -84,12 +84,12 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, namelen,	8);
- 	XFS_CHECK_OFFSET(xfs_attr_leaf_name_remote_t, name,	9);
- 	XFS_CHECK_STRUCT_SIZE(xfs_attr_leafblock_t,		40);
--	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.totsize,	0);
--	XFS_CHECK_OFFSET(xfs_attr_shortform_t, hdr.count,	2);
--	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].namelen,	4);
--	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].valuelen, 5);
--	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].flags,	6);
--	XFS_CHECK_OFFSET(xfs_attr_shortform_t, list[0].nameval,	7);
-+	XFS_CHECK_OFFSET(struct xfs_attr_shortform, hdr.totsize, 0);
-+	XFS_CHECK_OFFSET(struct xfs_attr_shortform, hdr.count,	 2);
-+	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].namelen,	4);
-+	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].valuelen,	5);
-+	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].flags,	6);
-+	XFS_CHECK_OFFSET(struct xfs_attr_shortform, list[0].nameval,	7);
- 	XFS_CHECK_STRUCT_SIZE(xfs_da_blkinfo_t,			12);
- 	XFS_CHECK_STRUCT_SIZE(xfs_da_intnode_t,			16);
- 	XFS_CHECK_STRUCT_SIZE(xfs_da_node_entry_t,		8);
+@@ -3177,7 +3181,7 @@ xlog_do_recovery_pass(
+ 			goto bread_err2;
+ 
+ 		rhead = (xlog_rec_header_t *)offset;
+-		error = xlog_valid_rec_header(log, rhead, blk_no);
++		error = xlog_valid_rec_header(log, rhead, blk_no, h_size);
+ 		if (error)
+ 			goto bread_err2;
+ 
 -- 
-2.26.2
+2.18.1
 
