@@ -2,99 +2,102 @@ Return-Path: <SRS0=53rf=CL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16C6AC433E2
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 16:40:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39D4AC433E7
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:00:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE7A3206E7
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 16:40:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HITl78w8"
+	by mail.kernel.org (Postfix) with ESMTP id 0C2F52067C
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:00:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599066045;
+	bh=5TBnPOJmm+0HmBQ0PdJBZ3arGLJewAGOBH/ZEfVwIUo=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=yAVmypmPcL/+mZsdNlFrY6Nmecw5z6dufAanFLOOMqTKqzxnaZXB4dB8FmJcGPWVh
+	 kamf0nriPupOjtmDrlIiGPEVwUbFLT4H7wF8cV6FCSOdDQWccp2u4xAIsGmQ5O8UiD
+	 Jknm9ulumWhx5pawBVgMRLofPp+sSrqMQmzRLt64=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726814AbgIBQkQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Sep 2020 12:40:16 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:59554 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726526AbgIBQkP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 12:40:15 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082Gdx1T132436
-        for <linux-xfs@vger.kernel.org>; Wed, 2 Sep 2020 16:40:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=a1dFYZrprKt4kwyxkcXkFm22LO+uZ4d57eCWv/rudXg=;
- b=HITl78w8Yi6ci3TQdTHIo+2Ljj6Lwf6xQGRfS8scjupM38ixKwyp9puvhZYMt2YHO2+A
- 63uLAnmzJIdGN1m2wJ/c+z51kHoSXSxuZsJsHW/TQ1S4i12OIFVCaGL+KWHnSl780my9
- PsuJNc9Wq0Y0eu3xGvZWchyelvi8stoczOwtmZ1H8Q5w8f0CcWO9gANiFvG56whAVmTN
- Kjb9rk7mh50E/Ax3UDksCj1TjlBOzH7EgUununde5gfSbWgEZS17VZYiVnzrCcqs3YPK
- wOXKKOqLAsVdxRsF4cw0Ti86EJvREXSv5HWac7NM/RU0Bu6eqJXcNR5aFR4d2Zd1FxEm HA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 339dmn284e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Sep 2020 16:40:14 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082GZERr184705
-        for <linux-xfs@vger.kernel.org>; Wed, 2 Sep 2020 16:40:13 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 3380kq9hxy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Sep 2020 16:40:13 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 082GeDM1007093
-        for <linux-xfs@vger.kernel.org>; Wed, 2 Sep 2020 16:40:13 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 02 Sep 2020 09:40:13 -0700
-Date:   Wed, 2 Sep 2020 09:40:12 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: fix xfs_bmap_validate_extent_raw when checking attr
- fork of rt files
-Message-ID: <20200902164012.GN6096@magnolia>
+        id S1728310AbgIBRAV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Sep 2020 13:00:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56962 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727028AbgIBRAU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Sep 2020 13:00:20 -0400
+Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 0BCE5208B3;
+        Wed,  2 Sep 2020 17:00:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599066020;
+        bh=5TBnPOJmm+0HmBQ0PdJBZ3arGLJewAGOBH/ZEfVwIUo=;
+        h=Date:From:To:Cc:Subject:From;
+        b=e6Co5i4digpWyRfPQH8LhZkzjhwpQdGRjBJ8U4/uB+OburtVXSoIbrheLw6LqVwLZ
+         BBtwG19Ln+tnpPlE93pCGqt6gsFIuq67+2oD0WdXeWmOCkiAT8O7IE8Jwrj1AgjamX
+         rzOY0UyunhREWOJ5fC6XTLgjQ4QngUz/Qpx08fSY=
+Date:   Wed, 2 Sep 2020 10:00:19 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
+Subject: [GIT PULL] xfs: small fixes for 5.9
+Message-ID: <20200902170019.GO6096@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- mlxscore=0 suspectscore=1 malwarescore=0 mlxlogscore=999 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009020158
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=1
- spamscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009020159
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Linus,
 
-The realtime flag only applies to the data fork, so don't use the
-realtime block number checks on the attr fork of a realtime file.
+Please pull these various corruption fixes that have come in during the
+past month.  The branch merges cleanly with upstream as of a few minutes
+ago, so please let me know if anything strange happens.
 
-Fixes: 30b0984d9117 ("xfs: refactor bmap record validation")
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_bmap.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index ce2e702b6b43..d35250c9bb07 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6310,7 +6310,7 @@ xfs_bmap_validate_extent_raw(
- 	xfs_fsblock_t		endfsb;
- 
- 	endfsb = irec->br_startblock + irec->br_blockcount - 1;
--	if (isrt) {
-+	if (isrt && whichfork == XFS_DATA_FORK) {
- 		if (!xfs_verify_rtbno(mp, irec->br_startblock))
- 			return __this_address;
- 		if (!xfs_verify_rtbno(mp, endfsb))
+--D
+The following changes since commit 9123e3a74ec7b934a4a099e98af6a61c2f80bbf5:
+
+  Linux 5.9-rc1 (2020-08-16 13:04:57 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.9-fixes-1
+
+for you to fetch changes up to 125eac243806e021f33a1fdea3687eccbb9f7636:
+
+  xfs: initialize the shortform attr header padding entry (2020-08-27 08:01:31 -0700)
+
+----------------------------------------------------------------
+Fixes for 5.9:
+- Avoid a log recovery failure for an insert range operation by rolling
+deferred ops incrementally instead of at the end.
+- Fix an off-by-one error when calculating log space reservations for
+anything involving an inode allocation or free.
+- Fix a broken shortform xattr verifier.
+- Ensure that the shortform xattr header padding is always initialized
+to zero.
+
+----------------------------------------------------------------
+Brian Foster (2):
+      xfs: finish dfops on every insert range shift iteration
+      xfs: fix off-by-one in inode alloc block reservation calculation
+
+Darrick J. Wong (1):
+      xfs: initialize the shortform attr header padding entry
+
+Eric Sandeen (1):
+      xfs: fix boundary test in xfs_attr_shortform_verify
+
+ fs/xfs/libxfs/xfs_attr_leaf.c   | 8 +++++---
+ fs/xfs/libxfs/xfs_ialloc.c      | 4 ++--
+ fs/xfs/libxfs/xfs_trans_space.h | 2 +-
+ fs/xfs/xfs_bmap_util.c          | 2 +-
+ 4 files changed, 9 insertions(+), 7 deletions(-)
