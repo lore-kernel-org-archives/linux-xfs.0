@@ -7,204 +7,178 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28831C433E7
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 14:49:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D3A3C433E2
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 14:49:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03BE0207D3
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 14:49:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37C4F20829
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 14:49:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OXR/HbGo"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HwbXJwzo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726941AbgIBOsm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:48:42 -0400
-Received: from us-smtp-1.mimecast.com ([207.211.31.81]:41910 "EHLO
+        id S1727842AbgIBOtK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:49:10 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:58905 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726247AbgIBOK5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 10:10:57 -0400
+        by vger.kernel.org with ESMTP id S1727984AbgIBOKK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 10:10:10 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599055855;
+        s=mimecast20190719; t=1599055809;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=KmrgyA/hyUiaujkQSzCHpY2TX6sqvTru/42+8F0xVtU=;
-        b=OXR/HbGoBPilM0+npw27mhsDaTDHUGxHGjg9SzPl1UfTiINhnOfApeRWAmIRTgI0+IuAUu
-        WTX1NzkcET/2j5ulVWIfDA7aYK1F74CAKz+VaIMgwPjS5DslFdqY8GKA/S7G3/SCTBXubl
-        CYFho1V14e89AhjhVMBE2/llEzMye38=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-197-EL35WWDEMl-Yo24yIiU55w-1; Wed, 02 Sep 2020 10:10:54 -0400
-X-MC-Unique: EL35WWDEMl-Yo24yIiU55w-1
-Received: by mail-pf1-f198.google.com with SMTP id c190so2792795pfa.10
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Sep 2020 07:10:54 -0700 (PDT)
+         to:to:cc:cc; bh=mNa1NaMjxdys9KYFz9KPwerqjfEdBejN7COS9aOfJOs=;
+        b=HwbXJwzoJxf2aeGdsGPbb7DdffUe/TK0kswqsfYiPqw1N+MRqUz3SdmkfRyIbBojXG2i2n
+        QEllkq7gWA/UkjfN0NWuoY3fgxm0Mj0mS8Axb5nWYGXZMtPoLsfK+yehIy96M9gqgJtT3o
+        Z9wTN+GSWesyul5hnDiUxvpuVp94y5w=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-476-rgAzRN8BNIOa3HYFLW5UFw-1; Wed, 02 Sep 2020 10:10:06 -0400
+X-MC-Unique: rgAzRN8BNIOa3HYFLW5UFw-1
+Received: by mail-pj1-f71.google.com with SMTP id ic18so2168366pjb.3
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Sep 2020 07:10:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=KmrgyA/hyUiaujkQSzCHpY2TX6sqvTru/42+8F0xVtU=;
-        b=NfWV7CAzkyiUD0eBZqG4vxsTAdQedNGzOQsX7463NWJPovroZxYufWyYhMpKM4IK3S
-         g0lxq4bxhU6RaiesZdJ0DJ0Lwm9nVvA+JFDJmXJahHt6U6q6/HGUGbfb8NNhLpJ7w2o6
-         yNNjcOz1G2vaoHYqnxJIyaQYmvNME8e8u2HrYV3mGzFmAI5ZHpd58LPuHUJbVYJ3VsTf
-         AhyMk7OeinvRyaVsmoIEHPoxAUR3XgcY/PLpzu6t+1hVVVZ9UYz1sOKQKhD/VVZvS4R9
-         CAAC/H0+ibd6wXtAO5/TyKCC/Z1QNu+5RI0OWLfLWqbEuC3z+xPNCR82QWf58bANKIsT
-         u8gA==
-X-Gm-Message-State: AOAM532IC3wqSAs67nA2og0LCpghG3cE0hC+peEGdNheb45PnjPDyjBc
-        LEq4Tfod0FMempk3UXgatvVMTXoKotYItU5J568RhIwqPEKvguqa85GIDzomF3qOX71HmKPKjqR
-        8gNOgi3C8kk6SP5/lLWY3
-X-Received: by 2002:a17:902:e789:: with SMTP id cp9mr2161068plb.215.1599055852863;
-        Wed, 02 Sep 2020 07:10:52 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwqxNQ6KkqrCtCrIBgax2u3p0ZQHUMf0jxT1gpp3bSueHf6jduXnYlJYefb7EvM34mme0IEBQ==
-X-Received: by 2002:a17:902:e789:: with SMTP id cp9mr2161043plb.215.1599055852546;
-        Wed, 02 Sep 2020 07:10:52 -0700 (PDT)
+        bh=mNa1NaMjxdys9KYFz9KPwerqjfEdBejN7COS9aOfJOs=;
+        b=hHyCbLbXJJfFJ5VHsR9BQe6vZUfIPwLFlz7xXIzYI0MsXzyy73Fi7x5oPFbp+t1CFA
+         9IpFUfj70gXNiT6OhBFHb9Gu4qMpbZ77tmdW6GyrSKk81o3hpNHxdx18vu9sOC+MwLgK
+         YRsrM014wDX7mW66vTlMgiLBXO66O2STjmkBGWD4MqnJbhZOVF//TICQYF8V1yh/vRWG
+         VUrL3ns5FQf9lEPSIeClGgafU7oMPib04KlwHbRcZbrcjyH897m1s5x2+YpGoesCBDOx
+         wBcyObr29dS04RyW9Ui56CIJWjOyx9050hSYk6Nn9RD8xr3fcWPAL/cXN4Bn1KoL5nGz
+         rERg==
+X-Gm-Message-State: AOAM531t1ytQjm32351Eitmn/Miimo8CDjXqy6zjj0CIw+BuTmBhQu3L
+        EX+gIjc1ZRXeLVGDzAJRSOIIwadRhg8MakQnlI+MQmI1HCS1xNtflDq0aeWmaYdA8towlBdDQGt
+        BBm18jO/8SwxRsROMlxzg
+X-Received: by 2002:a17:90b:3750:: with SMTP id ne16mr2387162pjb.6.1599055804726;
+        Wed, 02 Sep 2020 07:10:04 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJweZ0DNFy87fGJodk/5oI6jT8Ucgnk9dZO56l+ccpmrmIQchHe98RfNQpQqavktv7i8RZgcew==
+X-Received: by 2002:a17:90b:3750:: with SMTP id ne16mr2387142pjb.6.1599055804416;
+        Wed, 02 Sep 2020 07:10:04 -0700 (PDT)
 Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id 82sm4024005pgd.6.2020.09.02.07.10.50
+        by smtp.gmail.com with ESMTPSA id a19sm5679705pfn.10.2020.09.02.07.10.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Sep 2020 07:10:52 -0700 (PDT)
+        Wed, 02 Sep 2020 07:10:04 -0700 (PDT)
 From:   Gao Xiang <hsiangkao@redhat.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH] xfs: avoid LR buffer overrun due to crafted h_len
-Date:   Wed,  2 Sep 2020 22:10:12 +0800
-Message-Id: <20200902141012.24605-1-hsiangkao@redhat.com>
+Subject: [PATCH] xfs: clean up calculation of LR header blocks
+Date:   Wed,  2 Sep 2020 22:09:23 +0800
+Message-Id: <20200902140923.24392-1-hsiangkao@redhat.com>
 X-Mailer: git-send-email 2.18.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Currently, crafted h_len has been blocked for the log
-header of the tail block in commit a70f9fe52daa ("xfs:
-detect and handle invalid iclog size set by mkfs").
-
-However, each log record could still have crafted
-h_len and cause log record buffer overrun. So let's
-check h_len for each log record as well instead.
+Let's use DIV_ROUND_UP() to calculate log record header
+blocks as what did in xlog_get_iclog_buffer_size() and
+also wrap up a common helper for log recovery code.
 
 Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 ---
-something random when I read log recovery code...
+ fs/xfs/libxfs/xfs_log_format.h | 10 +++++++++
+ fs/xfs/xfs_log.c               |  4 +---
+ fs/xfs/xfs_log_recover.c       | 37 ++++++++--------------------------
+ 3 files changed, 19 insertions(+), 32 deletions(-)
 
- fs/xfs/xfs_log_recover.c | 70 +++++++++++++++++++++-------------------
- 1 file changed, 37 insertions(+), 33 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index e3400c9c71cd..f273a7db5702 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -860,4 +860,14 @@ struct xfs_icreate_log {
+ 	__be32		icl_gen;	/* inode generation number to use */
+ };
+ 
++static inline int xlog_logv2_rec_hblks(struct xlog_rec_header *rh)
++{
++	int	h_size = be32_to_cpu(rh->h_size);
++
++	if ((be32_to_cpu(rh->h_version) & XLOG_VERSION_2) &&
++	    (h_size > XLOG_HEADER_CYCLE_SIZE))
++		return DIV_ROUND_UP(h_size, XLOG_HEADER_CYCLE_SIZE);
++	return 1;
++}
++
+ #endif /* __XFS_LOG_FORMAT_H__ */
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index ad0c69ee8947..7a4ba408a3a2 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1604,9 +1604,7 @@ xlog_cksum(
+ 		int		i;
+ 		int		xheads;
+ 
+-		xheads = size / XLOG_HEADER_CYCLE_SIZE;
+-		if (size % XLOG_HEADER_CYCLE_SIZE)
+-			xheads++;
++		xheads = DIV_ROUND_UP(size, XLOG_HEADER_CYCLE_SIZE);
+ 
+ 		for (i = 1; i < xheads; i++) {
+ 			crc = crc32c(crc, &xhdr[i].hic_xheader,
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index e2ec91b2d0f4..2d9195fb9367 100644
+index e2ec91b2d0f4..5fecc0c7aeb2 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -2904,7 +2904,8 @@ STATIC int
- xlog_valid_rec_header(
- 	struct xlog		*log,
- 	struct xlog_rec_header	*rhead,
--	xfs_daddr_t		blkno)
-+	xfs_daddr_t		blkno,
-+	int			hsize)
- {
- 	int			hlen;
+@@ -489,15 +489,10 @@ xlog_find_verify_log_record(
+ 	 * reset last_blk.  Only when last_blk points in the middle of a log
+ 	 * record do we update last_blk.
+ 	 */
+-	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
+-		uint	h_size = be32_to_cpu(head->h_size);
+-
+-		xhdrs = h_size / XLOG_HEADER_CYCLE_SIZE;
+-		if (h_size % XLOG_HEADER_CYCLE_SIZE)
+-			xhdrs++;
+-	} else {
++	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb))
++		xhdrs = xlog_logv2_rec_hblks(head);
++	else
+ 		xhdrs = 1;
+-	}
  
-@@ -2920,10 +2921,39 @@ xlog_valid_rec_header(
- 		return -EFSCORRUPTED;
- 	}
- 
--	/* LR body must have data or it wouldn't have been written */
-+	/*
-+	 * LR body must have data (or it wouldn't have been written) and
-+	 * h_len must not be greater than h_size with one exception.
-+	 *
-+	 * That is that xfsprogs has a bug where record length is based on
-+	 * lsunit but h_size (iclog size) is hardcoded to 32k. This means
-+	 * the log buffer allocated can be too small for the record to
-+	 * cause an overrun.
-+	 *
-+	 * Detect this condition here. Use lsunit for the buffer size as
-+	 * long as this looks like the mkfs case. Otherwise, return an
-+	 * error to avoid a buffer overrun.
-+	 */
- 	hlen = be32_to_cpu(rhead->h_len);
--	if (XFS_IS_CORRUPT(log->l_mp, hlen <= 0 || hlen > INT_MAX))
-+	if (XFS_IS_CORRUPT(log->l_mp, hlen <= 0))
- 		return -EFSCORRUPTED;
-+
-+	if (hsize && XFS_IS_CORRUPT(log->l_mp,
-+				    hsize < be32_to_cpu(rhead->h_size)))
-+		return -EFSCORRUPTED;
-+	hsize = be32_to_cpu(rhead->h_size);
-+
-+	if (unlikely(hlen >= hsize)) {
-+		if (XFS_IS_CORRUPT(log->l_mp, hlen > log->l_mp->m_logbsize ||
-+				   rhead->h_num_logops != cpu_to_be32(1)))
-+			return -EFSCORRUPTED;
-+
-+		xfs_warn(log->l_mp,
-+		"invalid iclog size (%d bytes), using lsunit (%d bytes)",
-+			 hsize, log->l_mp->m_logbsize);
-+		rhead->h_size = cpu_to_be32(log->l_mp->m_logbsize);
-+	}
-+
- 	if (XFS_IS_CORRUPT(log->l_mp,
- 			   blkno > log->l_logBBsize || blkno > INT_MAX))
- 		return -EFSCORRUPTED;
-@@ -2951,7 +2981,7 @@ xlog_do_recovery_pass(
- 	xfs_daddr_t		rhead_blk;
- 	char			*offset;
- 	char			*hbp, *dbp;
--	int			error = 0, h_size, h_len;
-+	int			error = 0, h_size;
- 	int			error2 = 0;
- 	int			bblks, split_bblks;
- 	int			hblks, split_hblks, wrapped_hblks;
-@@ -2984,37 +3014,11 @@ xlog_do_recovery_pass(
- 			goto bread_err1;
- 
- 		rhead = (xlog_rec_header_t *)offset;
--		error = xlog_valid_rec_header(log, rhead, tail_blk);
-+		error = xlog_valid_rec_header(log, rhead, tail_blk, 0);
- 		if (error)
- 			goto bread_err1;
- 
--		/*
--		 * xfsprogs has a bug where record length is based on lsunit but
--		 * h_size (iclog size) is hardcoded to 32k. Now that we
--		 * unconditionally CRC verify the unmount record, this means the
--		 * log buffer can be too small for the record and cause an
--		 * overrun.
--		 *
--		 * Detect this condition here. Use lsunit for the buffer size as
--		 * long as this looks like the mkfs case. Otherwise, return an
--		 * error to avoid a buffer overrun.
--		 */
- 		h_size = be32_to_cpu(rhead->h_size);
--		h_len = be32_to_cpu(rhead->h_len);
--		if (h_len > h_size) {
--			if (h_len <= log->l_mp->m_logbsize &&
--			    be32_to_cpu(rhead->h_num_logops) == 1) {
--				xfs_warn(log->l_mp,
--		"invalid iclog size (%d bytes), using lsunit (%d bytes)",
--					 h_size, log->l_mp->m_logbsize);
--				h_size = log->l_mp->m_logbsize;
--			} else {
--				XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
--						log->l_mp);
--				error = -EFSCORRUPTED;
--				goto bread_err1;
--			}
+ 	if (*last_blk - i + extra_bblks !=
+ 	    BTOBB(be32_to_cpu(head->h_len)) + xhdrs)
+@@ -1184,21 +1179,10 @@ xlog_check_unmount_rec(
+ 	 * below. We won't want to clear the unmount record if there is one, so
+ 	 * we pass the lsn of the unmount record rather than the block after it.
+ 	 */
+-	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
+-		int	h_size = be32_to_cpu(rhead->h_size);
+-		int	h_version = be32_to_cpu(rhead->h_version);
+-
+-		if ((h_version & XLOG_VERSION_2) &&
+-		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
+-			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
+-			if (h_size % XLOG_HEADER_CYCLE_SIZE)
+-				hblks++;
+-		} else {
+-			hblks = 1;
 -		}
+-	} else {
++	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb))
++		hblks = xlog_logv2_rec_hblks(rhead);
++	else
+ 		hblks = 1;
+-	}
  
- 		if ((be32_to_cpu(rhead->h_version) & XLOG_VERSION_2) &&
- 		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
-@@ -3096,7 +3100,7 @@ xlog_do_recovery_pass(
+ 	after_umount_blk = xlog_wrap_logbno(log,
+ 			rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len)));
+@@ -3016,15 +3000,10 @@ xlog_do_recovery_pass(
  			}
- 			rhead = (xlog_rec_header_t *)offset;
- 			error = xlog_valid_rec_header(log, rhead,
--						split_hblks ? blk_no : 0);
-+					split_hblks ? blk_no : 0, h_size);
- 			if (error)
- 				goto bread_err2;
+ 		}
  
-@@ -3177,7 +3181,7 @@ xlog_do_recovery_pass(
- 			goto bread_err2;
- 
- 		rhead = (xlog_rec_header_t *)offset;
--		error = xlog_valid_rec_header(log, rhead, blk_no);
-+		error = xlog_valid_rec_header(log, rhead, blk_no, h_size);
- 		if (error)
- 			goto bread_err2;
- 
+-		if ((be32_to_cpu(rhead->h_version) & XLOG_VERSION_2) &&
+-		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
+-			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
+-			if (h_size % XLOG_HEADER_CYCLE_SIZE)
+-				hblks++;
++		hblks = xlog_logv2_rec_hblks(rhead);
++		if (hblks != 1) {
+ 			kmem_free(hbp);
+ 			hbp = xlog_alloc_buffer(log, hblks);
+-		} else {
+-			hblks = 1;
+ 		}
+ 	} else {
+ 		ASSERT(log->l_sectBBsize == 1);
 -- 
 2.18.1
 
