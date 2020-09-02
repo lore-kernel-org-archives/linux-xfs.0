@@ -7,379 +7,278 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AB86C433E7
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:03:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AA2EC433E2
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:13:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 676A62067C
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:03:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2640F2071B
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:13:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fGBHy9x1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nUDK16rl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728048AbgIBRDr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Sep 2020 13:03:47 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:49712 "EHLO
+        id S1726226AbgIBRN4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Sep 2020 13:13:56 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:58400 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbgIBRDo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 13:03:44 -0400
+        with ESMTP id S1726269AbgIBRNz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 13:13:55 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082Gs1Nw157674;
-        Wed, 2 Sep 2020 17:03:29 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082H9nLh185305;
+        Wed, 2 Sep 2020 17:13:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=UVAEbla4jXq8BKMVsZeNkWUXF1JCM0Xeg7gyG1yvW7E=;
- b=fGBHy9x1/SPgUX3LurxnsmULuTA/EFyd4/KU+50HNNZMf/y2c0ElH6AFyATTzMcxEKD7
- jFAp5TreIsJH6IvYJk2BDJcwmZ7YxECt1I2ggX9D9k229T8wJXN6nU7LpEp1EDp4W2cB
- mBVXNnAQiRiplxudCdTxm8tpYsVYq+y91n3jvnox99NwIizlQpueOX0Gymp5z3ZdP7n9
- Cxk+UQiL8LEqFUGGBbKUrQXakuGje+KfTeq8tQ8hT2FcHzB8P+qQCXMl6Sep575VjFQS
- tcez+IPLXPta4HGZE9pHqJVFQ+wQMt62AOthERAU1RDkZhBcmJJnqVmlA97fqqB0GZM7 zA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 339dmn2ckp-1
+ in-reply-to; s=corp-2020-01-29;
+ bh=XgNTLAzWTze7+I4k4GI+3gFaEYsKhXeDElG+/rNjD+Y=;
+ b=nUDK16rl1/thpbqlzVXgMO3CnyPmdeVi7jr/uOE/BjdYctNf21YDM61m3D0YPx+3pkdB
+ GGI411kX5ewA/TU5B6PcnTmbiKv34MYI8Nl8hq5cZGkx85J6P0h3wEtgVqbQG+JRg968
+ kqmrXfb7MUNJsuXTRC/daAUSDK8MLtRDXzkSP1X6lSV3syMNKWLvz2I+lnptwQOCWTlA
+ 8SSbiMxOLJ3gDhkrUeARwm773pXZfn/y7fOpoOA+Cwmy0x3kersqRgsyHhr029mNSruD
+ MqNKixGJHPdMExpFVpDNAqMpXKCNlyeuCj9+ZZKR/kLgvCBn4UEk8JYhjR2XNhbdSSUd 6g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 339dmn2etu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 02 Sep 2020 17:03:29 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082Gtl97166718;
-        Wed, 2 Sep 2020 17:03:29 GMT
+        Wed, 02 Sep 2020 17:13:51 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082HB7J5161080;
+        Wed, 2 Sep 2020 17:13:51 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 3380y02p5f-1
+        by userp3020.oracle.com with ESMTP id 3380subkyv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Sep 2020 17:03:29 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 082H3RtA020345;
-        Wed, 2 Sep 2020 17:03:27 GMT
+        Wed, 02 Sep 2020 17:13:51 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 082HDokY026730;
+        Wed, 2 Sep 2020 17:13:50 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 02 Sep 2020 10:03:27 -0700
-Date:   Wed, 2 Sep 2020 10:03:26 -0700
+        with ESMTP ; Wed, 02 Sep 2020 10:13:49 -0700
+Date:   Wed, 2 Sep 2020 10:13:48 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Xiao Yang <yangx.jy@cn.fujitsu.com>
-Cc:     linux-xfs@vger.kernel.org, ira.weiny@intel.com
-Subject: Re: [PATCH] xfs: Add check for unsupported xflags
-Message-ID: <20200902170326.GP6096@magnolia>
-References: <20200831133745.33276-1-yangx.jy@cn.fujitsu.com>
- <20200831172250.GT6107@magnolia>
- <5F4DE4C1.6010403@cn.fujitsu.com>
- <20200901163551.GW6107@magnolia>
- <5F4F0647.5060305@cn.fujitsu.com>
- <20200902030946.GL6096@magnolia>
- <5F4F12E2.3080200@cn.fujitsu.com>
- <20200902041039.GM6096@magnolia>
- <5F4F2964.8050809@cn.fujitsu.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/5] xfs: store inode btree block counts in AGI header
+Message-ID: <20200902171348.GQ6096@magnolia>
+References: <159901535219.547164.1381621861988558776.stgit@magnolia>
+ <159901535858.547164.11928856896363415325.stgit@magnolia>
+ <20200902132336.GA289426@bfoster>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <5F4F2964.8050809@cn.fujitsu.com>
+In-Reply-To: <20200902132336.GA289426@bfoster>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
- malwarescore=0 bulkscore=0 mlxscore=0 mlxlogscore=999 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009020162
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
+ suspectscore=7 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009020164
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=1
+ mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=7
  spamscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
  priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009020162
+ engine=8.12.0-2006250000 definitions=main-2009020164
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 02, 2020 at 01:11:00PM +0800, Xiao Yang wrote:
-> 于 2020/9/2 12:10, Darrick J. Wong 写道:
-> > On Wed, Sep 02, 2020 at 11:34:58AM +0800, Xiao Yang wrote:
-> > > 于 2020/9/2 11:09, Darrick J. Wong 写道:
-> > > > On Wed, Sep 02, 2020 at 10:41:11AM +0800, Xiao Yang wrote:
-> > > > > On 2020/9/2 0:35, Darrick J. Wong wrote:
-> > > > > > On Tue, Sep 01, 2020 at 02:05:53PM +0800, Xiao Yang wrote:
-> > > > > > > On 2020/9/1 1:22, Darrick J. Wong wrote:
-> > > > > > > > On Mon, Aug 31, 2020 at 09:37:45PM +0800, Xiao Yang wrote:
-> > > > > > > > > Current ioctl(FSSETXATTR) ignores unsupported xflags silently
-> > > > > > > > > so it it not clear for user to know unsupported xflags.
-> > > > > > > Hi Darrick,
-> > > > > > > 
-> > > > > > > Sorry for a typo(s/it it/it is/).
-> > > > > > > > > For example, use ioctl(FSSETXATTR) to set dax flag on kernel
-> > > > > > > > > v4.4 which doesn't support dax flag:
-> > > > > > > > > --------------------------------
-> > > > > > > > > # xfs_io -f -c "chattr +x" testfile;echo $?
-> > > > > > > > > 0
-> > > > > > > > > # xfs_io -c "lsattr" testfile
-> > > > > > > > > ----------------X testfile
-> > > > > > > > > --------------------------------
-> > > > > > > > > 
-> > > > > > > > > Add check to report unsupported info as ioctl(SETXFLAGS) does.
-> > > > > > > > > 
-> > > > > > > > > Signed-off-by: Xiao Yang<yangx.jy@cn.fujitsu.com>
-> > > > > > > > > ---
-> > > > > > > > >      fs/xfs/xfs_ioctl.c      | 4 ++++
-> > > > > > > > >      include/uapi/linux/fs.h | 8 ++++++++
-> > > > > > > > >      2 files changed, 12 insertions(+)
-> > > > > > > > > 
-> > > > > > > > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > > > > > > > index 6f22a66777cd..cfe7f20c94fe 100644
-> > > > > > > > > --- a/fs/xfs/xfs_ioctl.c
-> > > > > > > > > +++ b/fs/xfs/xfs_ioctl.c
-> > > > > > > > > @@ -1439,6 +1439,10 @@ xfs_ioctl_setattr(
-> > > > > > > > > 
-> > > > > > > > >      	trace_xfs_ioctl_setattr(ip);
-> > > > > > > > > 
-> > > > > > > > > +	/* Check if fsx_xflags have unsupported xflags */
-> > > > > > > > > +	if (fa->fsx_xflags&     ~FS_XFLAG_ALL)
-> > > > > > > > > +                return -EOPNOTSUPP;
-> > > > > > > > Shouldn't this be in vfs_ioc_fssetxattr_check, since we're checking
-> > > > > > > > against all the vfs defined XFLAGS?
-> > > > > > > Right, different filesystems support different XFLAGS so I think it is hard
-> > > > > > > to put this
-> > > > > > > check into vfs_ioc_fssetxattr_check().  For example,
-> > > > > > > 1) ext4 defines EXT4_SUPPORTED_FS_XFLAGS and do the check before
-> > > > > > > vfs_ioc_fssetxattr_check():
-> > > > > > I guess I wasn't clear enough about the xflags checks.
-> > > > > > 
-> > > > > > Historically, XFS never checked the flags value for set bits that don't
-> > > > > > correspond to a known (X)FS_XFLAG_ value.  If your program passes in a
-> > > > > > set bit that the kernel doesn't know about, the kernel does nothing
-> > > > > > about it, and a subsequent FSGETXATTR will not have that bit set.
-> > > > > Hi Darrick,
-> > > > > 
-> > > > > Yes, we have to confirm if XFS supports the specified xflag by both
-> > > > > FSSETXATTR and
-> > > > > FSGETXATT(instead of the single FSSETXATTR) so it is not clear and simple
-> > > > > for user.
-> > > > > This patch just makes ioctl(FSSETXATTR) return -EOPNOTSUPP when XFS doesn't
-> > > > > support
-> > > > > the specified xflag.
-> > > > > Note: ext4/f2fs/btrfs have implemented the behavior.
-> > > > > 
-> > > > > BTW:
-> > > > > With this patch, current '_require_xfs_io_command "chattr"' in xfstests can
-> > > > > check XFS's
-> > > > > supported xflags directly and don't need to check them by extra
-> > > > > ioctl(FSGETXATTR).
-> > > > > > The old ioctl (back when it was xfs only) wasn't officially documented,
-> > > > > > so it wasn't clear whether the kernel should do that or return EINVAL.
-> > > > > > 
-> > > > > > Then the ioctl pair was hoisted to the VFS, a manpage was written
-> > > > > > specifying an EINVAL return for invalid arguments, and ext4, f2fs, and
-> > > > > > btrfs followed this.
-> > > > > > 
-> > > > > > FS_XFLAG_ALL is the set of all defined FS_XFLAG_* values.  Therefore,
-> > > > > > the VFS needs to check that userspace does not try to pass in a flags
-> > > > > > value with totally unknown bits set in it.  That's what I thought you
-> > > > > > were trying to do with this patch.
-> > > > > > 
-> > > > > > Since you bring it up, however -- ext4/f2fs/btrfs support only a subset
-> > > > > > of the (X)FS_XFLAG values, so they implement a second check to constrain
-> > > > > > the flags values to the ones that those filesystems support.  I doubt
-> > > > > > that the set of flags that XFS supports will stay the same as the set of
-> > > > > > flags that the VFS header establishes, so it would be wise to implement
-> > > > > > a second check in XFS, even if right now it provides no added benefit
-> > > > > > over the VFS check.
-> > > > > This patch just tries to implement the second check in XFS.
-> > > > > 
-> > > > > Different filesystems(ext4/f2fs/btrfs/xfs) support different xflags so the
-> > > > > check depends
-> > > > > on these filesystems instead of vfs.  I am not sure why we need to implement
-> > > > > the first
-> > > > > check?(I think the first check seems surplus)
-> > Oops, sorry, I didn't notice this.
+On Wed, Sep 02, 2020 at 09:23:36AM -0400, Brian Foster wrote:
+> On Tue, Sep 01, 2020 at 07:55:58PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > The reason for checking both in the VFS and in the fs driver itself is
-> > to ensure that there's at least some checking of the syscall inputs even
-> > if a new fs implementation neglects to check the flags.
-> Hi Darrick,
+> > Add a btree block usage counters for both inode btrees to the AGI header
+> > so that we don't have to walk the entire finobt at mount time to create
+> > the per-AG reservations.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
 > 
-> It is reasonable for your concern to add a check in VFS, but checking all
-> defined xflags is too rough in VFS if one filesystem only supports few
-> xflags. :-)
+> A couple nits..
+> 
+> >  fs/xfs/libxfs/xfs_ag.c           |    5 +++++
+> >  fs/xfs/libxfs/xfs_format.h       |   18 +++++++++++++++++-
+> >  fs/xfs/libxfs/xfs_ialloc.c       |    1 +
+> >  fs/xfs/libxfs/xfs_ialloc_btree.c |   24 ++++++++++++++++++++++++
+> >  fs/xfs/xfs_ondisk.h              |    2 +-
+> >  fs/xfs/xfs_super.c               |    4 ++++
+> >  6 files changed, 52 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> > index 8cf73fe4338e..9331f3516afa 100644
+> > --- a/fs/xfs/libxfs/xfs_ag.c
+> > +++ b/fs/xfs/libxfs/xfs_ag.c
+> > @@ -333,6 +333,11 @@ xfs_agiblock_init(
+> >  	}
+> >  	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++)
+> >  		agi->agi_unlinked[bucket] = cpu_to_be32(NULLAGINO);
+> > +	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
+> > +		agi->agi_iblocks = cpu_to_be32(1);
+> > +		if (xfs_sb_version_hasfinobt(&mp->m_sb))
+> > +			agi->agi_fblocks = cpu_to_be32(1);
+> > +	}
+> >  }
+> >  
+> >  typedef void (*aghdr_init_work_f)(struct xfs_mount *mp, struct xfs_buf *bp,
+> > diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> > index 31b7ece985bb..03cbedb7eafc 100644
+> > --- a/fs/xfs/libxfs/xfs_format.h
+> > +++ b/fs/xfs/libxfs/xfs_format.h
+> > @@ -449,6 +449,7 @@ xfs_sb_has_compat_feature(
+> >  #define XFS_SB_FEAT_RO_COMPAT_FINOBT   (1 << 0)		/* free inode btree */
+> >  #define XFS_SB_FEAT_RO_COMPAT_RMAPBT   (1 << 1)		/* reverse map btree */
+> >  #define XFS_SB_FEAT_RO_COMPAT_REFLINK  (1 << 2)		/* reflinked files */
+> > +#define XFS_SB_FEAT_RO_COMPAT_INOBTCNT (1 << 3)		/* inobt block counts */
+> >  #define XFS_SB_FEAT_RO_COMPAT_ALL \
+> >  		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
+> >  		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
+> > @@ -563,6 +564,17 @@ static inline bool xfs_sb_version_hasreflink(struct xfs_sb *sbp)
+> >  		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_REFLINK);
+> >  }
+> >  
+> > +/*
+> > + * Inode btree block counter.  We record the number of inobt and finobt blocks
+> > + * in the AGI header so that we can skip the finobt walk at mount time when
+> > + * setting up per-AG reservations.
+> > + */
+> > +static inline bool xfs_sb_version_hasinobtcounts(struct xfs_sb *sbp)
+> > +{
+> > +	return XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> > +		(sbp->sb_features_ro_compat & XFS_SB_FEAT_RO_COMPAT_INOBTCNT);
+> > +}
+> > +
+> >  /*
+> >   * end of superblock version macros
+> >   */
+> > @@ -765,6 +777,9 @@ typedef struct xfs_agi {
+> >  	__be32		agi_free_root; /* root of the free inode btree */
+> >  	__be32		agi_free_level;/* levels in free inode btree */
+> >  
+> > +	__be32		agi_iblocks;	/* inobt blocks used */
+> > +	__be32		agi_fblocks;	/* finobt blocks used */
+> > +
+> >  	/* structure must be padded to 64 bit alignment */
+> >  } xfs_agi_t;
+> >  
+> > @@ -785,7 +800,8 @@ typedef struct xfs_agi {
+> >  #define	XFS_AGI_ALL_BITS_R1	((1 << XFS_AGI_NUM_BITS_R1) - 1)
+> >  #define	XFS_AGI_FREE_ROOT	(1 << 11)
+> >  #define	XFS_AGI_FREE_LEVEL	(1 << 12)
+> > -#define	XFS_AGI_NUM_BITS_R2	13
+> > +#define	XFS_AGI_IBLOCKS		(1 << 13) /* both inobt/finobt block counters */
+> > +#define	XFS_AGI_NUM_BITS_R2	14
+> 
+> I still find it a little odd that we'd log both fields if only one might
+> be supported/modified, as opposed to just tracking them both
+> independently with a couple extra lines of code. That said, I don't see
+> it as a functional problem that couldn't be fixed later.
 
-I was advocating for two levels of flags checks: one in the VFS for
-undefined flags, and a second check in each filesystem for whichever
-flag it wants to recognize.  I was not implying that the VFS checks
-would be sufficient on their own.
+Yeah.  I didn't want to go burning two bits for this since in all
+likelihood the finobt will be enabled anytime inobtcounts are active.
+
+I guess we could revisit that if someone uses db to frankenstein a
+filesystem into having inobtcounts without a finobt and shows that the
+overhead makes a difference, but the xfs_admin and mkfs tools aren't
+going to allow that combination.
+
+> >  
+> >  /* disk block (xfs_daddr_t) in the AG */
+> >  #define XFS_AGI_DADDR(mp)	((xfs_daddr_t)(2 << (mp)->m_sectbb_log))
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+> > index f742a96a2fe1..fef1d94c60a4 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc.c
+> > @@ -2473,6 +2473,7 @@ xfs_ialloc_log_agi(
+> >  		offsetof(xfs_agi_t, agi_unlinked),
+> >  		offsetof(xfs_agi_t, agi_free_root),
+> >  		offsetof(xfs_agi_t, agi_free_level),
+> > +		offsetof(xfs_agi_t, agi_iblocks),
+> >  		sizeof(xfs_agi_t)
+> >  	};
+> >  #ifdef DEBUG
+> > diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > index 3c8aebc36e64..cf51b342b6ef 100644
+> > --- a/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > +++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+> > @@ -67,6 +67,28 @@ xfs_finobt_set_root(
+> >  			   XFS_AGI_FREE_ROOT | XFS_AGI_FREE_LEVEL);
+> >  }
+> >  
+> > +/* Update the inode btree block counter for this btree. */
+> > +static inline void
+> > +xfs_inobt_mod_blockcount(
+> > +	struct xfs_btree_cur	*cur,
+> > +	int			howmuch)
+> > +{
+> > +	struct xfs_buf		*agbp = cur->bc_ag.agbp;
+> > +	struct xfs_agi		*agi = agbp->b_addr;
+> > +
+> > +	if (!xfs_sb_version_hasinobtcounts(&cur->bc_mp->m_sb))
+> > +		return;
+> > +
+> > +	if (cur->bc_btnum == XFS_BTNUM_FINO &&
+> > +	    xfs_sb_version_hasfinobt(&cur->bc_mp->m_sb)) {
+> 
+> This check might be spurious because I suspect you wouldn't get a finobt
+> cursor without the feature enabled. Those nits aside:
+
+Heh, yeah.  I'll fix that one up, at least.  Thanks for the review!
 
 --D
 
-> Best Regards,
-> Xiao Yang
-> > (Or the original implementation<cough>.)
-> > 
-> > > Hi Darrick,
-> > > 
-> > > Do you agree this point that only implements the second check in XFS? :-)
-> > Yes.
-> > 
-> > > > > > IOWs, I'm suggesting that you write one patch to define a FS_XFLAG_ALL
-> > > > > > consisting of all known FS_XFLAG_* values, and a check in
-> > > > > > vfs_ioc_fssetxattr_check that uses that to establish basic sanity of the
-> > > > > > arguments; and a second patch to define a XFS_XFLAG_ALL consisting of
-> > > > > > all the flags that XFS supports, and a check in xfs_ioctl_setattr that
-> > > > > > uses XFS_XFLAG_ALL to establish that we're not passing in an XFLAG that
-> > > > > > XFS doesn't support.
-> > > > > How about the following patch(i.e. add a check in xfs_ioctl_setattr):
-> > > > > -----------------------------------------------------------
-> > > > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > > > > index 84bcffa87753..8ac19f55c701 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_fs.h
-> > > > > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > > > > @@ -92,6 +92,14 @@ struct getbmapx {
-> > > > >    #define XFS_FMR_OWN_COW                FMR_OWNER('X', 7) /* cow staging */
-> > > > >    #define XFS_FMR_OWN_DEFECTIVE  FMR_OWNER('X', 8) /* bad blocks */
-> > > > > 
-> > > > > +#define XFS_SUPPORTED_FS_XFLAGS \
-> > > > > +       (FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
-> > > > > +        FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME |
-> > > > > FS_XFLAG_NODUMP | \
-> > > > > +        FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
-> > > > > +        FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
-> > > > > +        FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
-> > > > > +        FS_XFLAG_HASATTR)
-> > > > This is an implementation detail, so you might as well put it right
-> > > > above xfs_ioctl_setattr.
-> > > > 
-> > > > That and xfs_fs.h gets packaged in /usr/include so we don't want to have
-> > > > to support that symbol for userspace programs forever.
-> > > Will put the macro above xfs_ioctl_setattr, as below:
-> > > -------------------------------------------------------------
-> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > index 6f22a66777cd..e188e81961bd 100644
-> > > --- a/fs/xfs/xfs_ioctl.c
-> > > +++ b/fs/xfs/xfs_ioctl.c
-> > > @@ -1425,6 +1425,14 @@ xfs_ioctl_setattr_check_projid(
-> > > return 0;
-> > > }
-> > > 
-> > > +#define XFS_SUPPORTED_FS_XFLAGS \
-> > > + (FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
-> > > + FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME | FS_XFLAG_NODUMP | \
-> > > + FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
-> > > + FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
-> > > + FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
-> > > + FS_XFLAG_HASATTR)
-> > > +
-> > > STATIC int
-> > > xfs_ioctl_setattr(
-> > > xfs_inode_t *ip,
-> > > @@ -1439,6 +1447,10 @@ xfs_ioctl_setattr(
-> > > 
-> > > trace_xfs_ioctl_setattr(ip);
-> > > 
-> > > + /* Check if fsx_xflags has unsupported xflags */
-> > > + if (fa->fsx_xflags&  ~XFS_SUPPORTED_FS_XFLAGS)
-> > > + return -EOPNOTSUPP;
-> > > +
-> > > code = xfs_ioctl_setattr_check_projid(ip, fa);
-> > > if (code)
-> > > return code;
-> > > -------------------------------------------------------------
-> > > 
-> > > Best Regards,
-> > > Xiao Yang
-> > > > --D
-> > > > 
-> > > > > +
-> > > > >    /*
-> > > > >     * Structure for XFS_IOC_FSSETDM.
-> > > > >     * For use by backup and restore programs to set the XFS on-disk inode
-> > > > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > > > index 6f22a66777cd..ec5feaa8dec8 100644
-> > > > > --- a/fs/xfs/xfs_ioctl.c
-> > > > > +++ b/fs/xfs/xfs_ioctl.c
-> > > > > @@ -1439,6 +1439,10 @@ xfs_ioctl_setattr(
-> > > > > 
-> > > > >           trace_xfs_ioctl_setattr(ip);
-> > > > > 
-> > > > > +       /* Check if fsx_xflags have unsupported xflags */
-> > > > > +       if (fa->fsx_xflags&   ~XFS_SUPPORTED_FS_XFLAGS)
-> > > > > +                return -EOPNOTSUPP;
-> > > > > +
-> > > > >           code = xfs_ioctl_setattr_check_projid(ip, fa);
-> > > > >           if (code)
-> > > > >                   return code;
-> > > > > -----------------------------------------------------------
-> > > > > 
-> > > > > Best Regards,
-> > > > > Xiao Yang
-> > > > > > --D
-> > > > > > 
-> > > > > > > -------------------------------------------------------------------------------
-> > > > > > > ext4/ioctl.c:
-> > > > > > > #define EXT4_SUPPORTED_FS_XFLAGS (FS_XFLAG_SYNC | FS_XFLAG_IMMUTABLE | \
-> > > > > > >                                      FS_XFLAG_APPEND | FS_XFLAG_NODUMP | \
-> > > > > > >                                      FS_XFLAG_NOATIME | FS_XFLAG_PROJINHERIT |
-> > > > > > > \
-> > > > > > >                                      FS_XFLAG_DAX)
-> > > > > > > ...
-> > > > > > >                    if (fa.fsx_xflags&    ~EXT4_SUPPORTED_FS_XFLAGS)
-> > > > > > >                            return -EOPNOTSUPP;
-> > > > > > > ...
-> > > > > > > -------------------------------------------------------------------------------
-> > > > > > > 2) btrfs adds check_xflags() and calls it before vfs_ioc_fssetxattr_check():
-> > > > > > > -------------------------------------------------------------------------------
-> > > > > > > btrfs/ioctl.c:
-> > > > > > > static int check_xflags(unsigned int flags)
-> > > > > > > {
-> > > > > > >            if (flags&    ~(FS_XFLAG_APPEND | FS_XFLAG_IMMUTABLE |
-> > > > > > > FS_XFLAG_NOATIME |
-> > > > > > >                          FS_XFLAG_NODUMP | FS_XFLAG_SYNC))
-> > > > > > >                    return -EOPNOTSUPP;
-> > > > > > >            return 0;
-> > > > > > > }
-> > > > > > > ...
-> > > > > > >            ret = check_xflags(fa.fsx_xflags);
-> > > > > > >            if (ret)
-> > > > > > >                    return ret;
-> > > > > > > ...
-> > > > > > > -------------------------------------------------------------------------------
-> > > > > > > 
-> > > > > > > Perhaps, I should rename FS_XFLAG_ALL to XFS_SUPPORTED_FS_XFLAGS and move
-> > > > > > > it into libxfs/xfs_fs.h.
-> > > > > > > 
-> > > > > > > Best Regards,
-> > > > > > > Xiao Yang
-> > > > > > > > --D
-> > > > > > > > 
-> > > > > > > > > +
-> > > > > > > > >      	code = xfs_ioctl_setattr_check_projid(ip, fa);
-> > > > > > > > >      	if (code)
-> > > > > > > > >      		return code;
-> > > > > > > > > diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> > > > > > > > > index f44eb0a04afd..31b6856f6877 100644
-> > > > > > > > > --- a/include/uapi/linux/fs.h
-> > > > > > > > > +++ b/include/uapi/linux/fs.h
-> > > > > > > > > @@ -142,6 +142,14 @@ struct fsxattr {
-> > > > > > > > >      #define FS_XFLAG_COWEXTSIZE	0x00010000	/* CoW extent size allocator hint */
-> > > > > > > > >      #define FS_XFLAG_HASATTR	0x80000000	/* no DIFLAG for this	*/
-> > > > > > > > > 
-> > > > > > > > > +#define FS_XFLAG_ALL \
-> > > > > > > > > +	(FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
-> > > > > > > > > +	 FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME | FS_XFLAG_NODUMP | \
-> > > > > > > > > +	 FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
-> > > > > > > > > +	 FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
-> > > > > > > > > +	 FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
-> > > > > > > > > +	 FS_XFLAG_HASATTR)
-> > > > > > > > > +
-> > > > > > > > >      /* the read-only stuff doesn't really belong here, but any other place is
-> > > > > > > > >         probably as bad and I don't want to create yet another include file. */
-> > > > > > > > > 
-> > > > > > > > > -- 
-> > > > > > > > > 2.25.1
-> > > > > > > > > 
-> > > > > > > > > 
-> > > > > > > > > 
-> > > > > > > > .
-> > > > > > > > 
-> > > > > > .
-> > > > > > 
-> > > > > 
-> > > > .
-> > > > 
-> > > 
-> > > 
-> > 
-> > .
-> > 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-> 
+> > +		be32_add_cpu(&agi->agi_fblocks, howmuch);
+> > +		xfs_ialloc_log_agi(cur->bc_tp, agbp, XFS_AGI_IBLOCKS);
+> > +	} else if (cur->bc_btnum == XFS_BTNUM_INO) {
+> > +		be32_add_cpu(&agi->agi_iblocks, howmuch);
+> > +		xfs_ialloc_log_agi(cur->bc_tp, agbp, XFS_AGI_IBLOCKS);
+> > +	}
+> > +}
+> > +
+> >  STATIC int
+> >  __xfs_inobt_alloc_block(
+> >  	struct xfs_btree_cur	*cur,
+> > @@ -102,6 +124,7 @@ __xfs_inobt_alloc_block(
+> >  
+> >  	new->s = cpu_to_be32(XFS_FSB_TO_AGBNO(args.mp, args.fsbno));
+> >  	*stat = 1;
+> > +	xfs_inobt_mod_blockcount(cur, 1);
+> >  	return 0;
+> >  }
+> >  
+> > @@ -134,6 +157,7 @@ __xfs_inobt_free_block(
+> >  	struct xfs_buf		*bp,
+> >  	enum xfs_ag_resv_type	resv)
+> >  {
+> > +	xfs_inobt_mod_blockcount(cur, -1);
+> >  	return xfs_free_extent(cur->bc_tp,
+> >  			XFS_DADDR_TO_FSB(cur->bc_mp, XFS_BUF_ADDR(bp)), 1,
+> >  			&XFS_RMAP_OINFO_INOBT, resv);
+> > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> > index 5f04d8a5ab2a..acb9b737fe6b 100644
+> > --- a/fs/xfs/xfs_ondisk.h
+> > +++ b/fs/xfs/xfs_ondisk.h
+> > @@ -23,7 +23,7 @@ xfs_check_ondisk_structs(void)
+> >  	XFS_CHECK_STRUCT_SIZE(struct xfs_acl_entry,		12);
+> >  	XFS_CHECK_STRUCT_SIZE(struct xfs_agf,			224);
+> >  	XFS_CHECK_STRUCT_SIZE(struct xfs_agfl,			36);
+> > -	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			336);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_agi,			344);
+> >  	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_key,		8);
+> >  	XFS_CHECK_STRUCT_SIZE(struct xfs_bmbt_rec,		16);
+> >  	XFS_CHECK_STRUCT_SIZE(struct xfs_bmdr_block,		4);
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 71ac6c1cdc36..c7ffcb57b586 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -1549,6 +1549,10 @@ xfs_fc_fill_super(
+> >  		goto out_filestream_unmount;
+> >  	}
+> >  
+> > +	if (xfs_sb_version_hasinobtcounts(&mp->m_sb))
+> > +		xfs_warn(mp,
+> > + "EXPERIMENTAL inode btree counters feature in use. Use at your own risk!");
+> > +
+> >  	error = xfs_mountfs(mp);
+> >  	if (error)
+> >  		goto out_filestream_unmount;
+> > 
 > 
