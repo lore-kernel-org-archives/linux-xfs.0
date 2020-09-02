@@ -5,227 +5,153 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35F86C433E7
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:21:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F7E4C433E2
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:35:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED79D20829
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:21:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B377207EA
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 17:35:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pxLIZs/o"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oVFIOcCH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726654AbgIBRVE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Sep 2020 13:21:04 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:42508 "EHLO
+        id S1726285AbgIBRf6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Sep 2020 13:35:58 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:54062 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726140AbgIBRVE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 13:21:04 -0400
+        with ESMTP id S1726177AbgIBRf5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 13:35:57 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082HB2lA061738;
-        Wed, 2 Sep 2020 17:20:52 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082HYtTK109300;
+        Wed, 2 Sep 2020 17:35:54 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=4HLDigxdcpLn42CKisOd7x9w9Lj7LpnFjiH/mRSwaR4=;
- b=pxLIZs/oyQjC2pqkY7pXvRgr7avs+STY8s4EADNSE70alsQPlacPgUM5kAcxyC5tKNnL
- pVLiI/FPrxDSR+V1xhyuA3VMeZstDneo0hrJurObYt9hZ3NkFxDu+s0meH/Xa9PXXIZr
- QFdBz5pL1kROXZI0ikqOk+vnJs/4YT657ABrdGyuFesg+GFgVsWlYo+xgksqN104OQFQ
- K6WfSA3VJ8sqLAhfhaoIVFR+z2wBeAHOX6M1B9Ss1TCZnpRRctzccmXFtrij8amf79eB
- cy5JQ9I49tWtMODc66p7Y0ALVwnNiKZNU7pB5+XGXaE1ICDYITLHajqvxk6PymYy/SaF hg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 337eer42ud-1
+ bh=v/CfpU/gP1SuJukrEN8MgKW9yzdyFc+wqKILpOo3Kqw=;
+ b=oVFIOcCHgZa+nqaTuHrg0GHylVX/FpFB5Dkckt3PRvUO7/NqKGtSdvTl3xS45luKpbGV
+ 0X6h9E8Mj0ygEz1goBLQGs+Sq0/0QdlEpRkIpf+BZMSqYyNUM4G3qYtI2ZWlvc5Up0rs
+ jgejnJmW9aMtF0oWXR0IuiwfUG43jJhwqDSC5vlGEOmaZVGY2enL1mNlFw9kNfeE3xe6
+ U+kM5FCMzbDp5kwnFn3SASAc8khoxVrS6QWV/88/UHN1EjfW2uLPkZRv6VUx82FWJlUa
+ S2bKZGQMOx0T776G5+Yru0qDJl5K4x1SBer+Bgd9H0GIxGZnYmqR1ik4O/F0PGq4q6LB hw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 337eer45wm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 02 Sep 2020 17:20:52 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082H9j0M020358;
-        Wed, 2 Sep 2020 17:20:51 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 3380y03hpr-1
+        Wed, 02 Sep 2020 17:35:54 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 082HZ56F045761;
+        Wed, 2 Sep 2020 17:35:53 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 3380sucy77-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Sep 2020 17:20:51 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 082HKoo7030811;
-        Wed, 2 Sep 2020 17:20:50 GMT
+        Wed, 02 Sep 2020 17:35:53 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 082HZqZP012331;
+        Wed, 2 Sep 2020 17:35:52 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 02 Sep 2020 10:20:50 -0700
-Date:   Wed, 2 Sep 2020 10:20:48 -0700
+        with ESMTP ; Wed, 02 Sep 2020 10:35:52 -0700
+Date:   Wed, 2 Sep 2020 10:35:51 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Martijn Coenen <maco@android.com>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 4/4] writeback: Drop I_DIRTY_TIME_EXPIRE
-Message-ID: <20200902172048.GI6090@magnolia>
-References: <20200611075033.1248-1-jack@suse.cz>
- <20200611081203.18161-4-jack@suse.cz>
+To:     Carlos Maiolino <cmaiolino@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V2 1/4] xfs: remove typedef xfs_attr_sf_entry_t
+Message-ID: <20200902173551.GR6096@magnolia>
+References: <20200902144059.284726-1-cmaiolino@redhat.com>
+ <20200902144059.284726-2-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200611081203.18161-4-jack@suse.cz>
+In-Reply-To: <20200902144059.284726-2-cmaiolino@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
- malwarescore=0 bulkscore=0 mlxscore=0 mlxlogscore=999 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009020164
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009020167
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1011 priorityscore=1501
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
  lowpriorityscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxscore=0
  phishscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009020164
+ definitions=main-2009020167
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-[add linux-xfs and xfsprogs maintainer to cc]
+On Wed, Sep 02, 2020 at 04:40:56PM +0200, Carlos Maiolino wrote:
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-On Thu, Jun 11, 2020 at 10:11:55AM +0200, Jan Kara wrote:
-> The only use of I_DIRTY_TIME_EXPIRE is to detect in
-> __writeback_single_inode() that inode got there because flush worker
-> decided it's time to writeback the dirty inode time stamps (either
-> because we are syncing or because of age). However we can detect this
-> directly in __writeback_single_inode() and there's no need for the
-> strange propagation with I_DIRTY_TIME_EXPIRE flag.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/ext4/inode.c                  |  2 +-
->  fs/fs-writeback.c                | 28 +++++++++++-----------------
->  fs/xfs/libxfs/xfs_trans_inode.c  |  4 ++--
-
-Urrk, so I only just noticed this when I rebased my development tree
-onto 5.9-rc3.  If you're going to change things in fs/xfs/, please cc
-the xfs list to keep us in the loop.  Changes to fs/xfs/libxfs/ have to
-be ported to userspace.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
->  include/linux/fs.h               |  1 -
->  include/trace/events/writeback.h |  1 -
->  5 files changed, 14 insertions(+), 22 deletions(-)
+> ---
 > 
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 40ec5c7ef0d3..4db497f02ffb 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -4887,7 +4887,7 @@ static void __ext4_update_other_inode_time(struct super_block *sb,
->  	    (inode->i_state & I_DIRTY_TIME)) {
->  		struct ext4_inode_info	*ei = EXT4_I(inode);
+> Changelog:
+> 	V2:
+> 		- Reordered within the series, no functional changes
+> 
+>  fs/xfs/libxfs/xfs_attr_leaf.c |  4 ++--
+>  fs/xfs/libxfs/xfs_attr_sf.h   | 11 ++++++-----
+>  2 files changed, 8 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index 305d4bc073370..76d3814f9dc79 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -736,7 +736,7 @@ xfs_attr_shortform_add(
+>  	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
+>  	xfs_idata_realloc(dp, size, XFS_ATTR_FORK);
+>  	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
+> -	sfe = (xfs_attr_sf_entry_t *)((char *)sf + offset);
+> +	sfe = (struct xfs_attr_sf_entry *)((char *)sf + offset);
 >  
-> -		inode->i_state &= ~(I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED);
-> +		inode->i_state &= ~I_DIRTY_TIME;
->  		spin_unlock(&inode->i_lock);
->  
->  		spin_lock(&ei->i_raw_lock);
-> diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> index ae17d64a3e18..149227160ff0 100644
-> --- a/fs/fs-writeback.c
-> +++ b/fs/fs-writeback.c
-> @@ -1238,7 +1238,7 @@ static bool inode_dirtied_after(struct inode *inode, unsigned long t)
->   */
->  static int move_expired_inodes(struct list_head *delaying_queue,
->  			       struct list_head *dispatch_queue,
-> -			       int flags, unsigned long dirtied_before)
-> +			       unsigned long dirtied_before)
+>  	sfe->namelen = args->namelen;
+>  	sfe->valuelen = args->valuelen;
+> @@ -838,7 +838,7 @@ int
+>  xfs_attr_shortform_lookup(xfs_da_args_t *args)
 >  {
->  	LIST_HEAD(tmp);
->  	struct list_head *pos, *node;
-> @@ -1254,8 +1254,6 @@ static int move_expired_inodes(struct list_head *delaying_queue,
->  		list_move(&inode->i_io_list, &tmp);
->  		moved++;
->  		spin_lock(&inode->i_lock);
-> -		if (flags & EXPIRE_DIRTY_ATIME)
-> -			inode->i_state |= I_DIRTY_TIME_EXPIRED;
->  		inode->i_state |= I_SYNC_QUEUED;
->  		spin_unlock(&inode->i_lock);
->  		if (sb_is_blkdev_sb(inode->i_sb))
-> @@ -1303,11 +1301,11 @@ static void queue_io(struct bdi_writeback *wb, struct wb_writeback_work *work,
+>  	xfs_attr_shortform_t *sf;
+> -	xfs_attr_sf_entry_t *sfe;
+> +	struct xfs_attr_sf_entry *sfe;
+>  	int i;
+>  	struct xfs_ifork *ifp;
 >  
->  	assert_spin_locked(&wb->list_lock);
->  	list_splice_init(&wb->b_more_io, &wb->b_io);
-> -	moved = move_expired_inodes(&wb->b_dirty, &wb->b_io, 0, dirtied_before);
-> +	moved = move_expired_inodes(&wb->b_dirty, &wb->b_io, dirtied_before);
->  	if (!work->for_sync)
->  		time_expire_jif = jiffies - dirtytime_expire_interval * HZ;
->  	moved += move_expired_inodes(&wb->b_dirty_time, &wb->b_io,
-> -				     EXPIRE_DIRTY_ATIME, time_expire_jif);
-> +				     time_expire_jif);
->  	if (moved)
->  		wb_io_lists_populated(wb);
->  	trace_writeback_queue_io(wb, work, dirtied_before, moved);
-> @@ -1483,18 +1481,14 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
->  	spin_lock(&inode->i_lock);
+> diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
+> index bb004fb7944a7..c4afb33079184 100644
+> --- a/fs/xfs/libxfs/xfs_attr_sf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_sf.h
+> @@ -13,7 +13,6 @@
+>   * to fit into the literal area of the inode.
+>   */
+>  typedef struct xfs_attr_sf_hdr xfs_attr_sf_hdr_t;
+> -typedef struct xfs_attr_sf_entry xfs_attr_sf_entry_t;
 >  
->  	dirty = inode->i_state & I_DIRTY;
-> -	if (inode->i_state & I_DIRTY_TIME) {
-> -		if ((dirty & I_DIRTY_INODE) ||
-> -		    wbc->sync_mode == WB_SYNC_ALL ||
-> -		    unlikely(inode->i_state & I_DIRTY_TIME_EXPIRED) ||
-> -		    unlikely(time_after(jiffies,
-> -					(inode->dirtied_time_when +
-> -					 dirtytime_expire_interval * HZ)))) {
-> -			dirty |= I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED;
-> -			trace_writeback_lazytime(inode);
-> -		}
-> -	} else
-> -		inode->i_state &= ~I_DIRTY_TIME_EXPIRED;
-> +	if ((inode->i_state & I_DIRTY_TIME) &&
-> +	    ((dirty & I_DIRTY_INODE) ||
-> +	     wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
-> +	     time_after(jiffies, inode->dirtied_time_when +
-> +			dirtytime_expire_interval * HZ))) {
-> +		dirty |= I_DIRTY_TIME;
-> +		trace_writeback_lazytime(inode);
-> +	}
->  	inode->i_state &= ~dirty;
+>  /*
+>   * We generate this then sort it, attr_list() must return things in hash-order.
+> @@ -28,15 +27,17 @@ typedef struct xfs_attr_sf_sort {
+>  } xfs_attr_sf_sort_t;
 >  
->  	/*
-> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> index b5dfb6654842..1b4df6636944 100644
-> --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> @@ -96,9 +96,9 @@ xfs_trans_log_inode(
->  	 * to log the timestamps, or will clear already cleared fields in the
->  	 * worst case.
->  	 */
-> -	if (inode->i_state & (I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED)) {
-> +	if (inode->i_state & I_DIRTY_TIME) {
->  		spin_lock(&inode->i_lock);
-> -		inode->i_state &= ~(I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED);
-> +		inode->i_state &= ~I_DIRTY_TIME;
->  		spin_unlock(&inode->i_lock);
->  	}
+>  #define XFS_ATTR_SF_ENTSIZE_BYNAME(nlen,vlen)	/* space name/value uses */ \
+> -	(((int)sizeof(xfs_attr_sf_entry_t)-1 + (nlen)+(vlen)))
+> +	(((int)sizeof(struct xfs_attr_sf_entry)-1 + (nlen)+(vlen)))
+>  #define XFS_ATTR_SF_ENTSIZE_MAX			/* max space for name&value */ \
+>  	((1 << (NBBY*(int)sizeof(uint8_t))) - 1)
+>  #define XFS_ATTR_SF_ENTSIZE(sfep)		/* space an entry uses */ \
+> -	((int)sizeof(xfs_attr_sf_entry_t)-1 + (sfep)->namelen+(sfep)->valuelen)
+> +	((int)sizeof(struct xfs_attr_sf_entry)-1 + \
+> +		(sfep)->namelen+(sfep)->valuelen)
+>  #define XFS_ATTR_SF_NEXTENTRY(sfep)		/* next entry in struct */ \
+> -	((xfs_attr_sf_entry_t *)((char *)(sfep) + XFS_ATTR_SF_ENTSIZE(sfep)))
+> +	((struct xfs_attr_sf_entry *)((char *)(sfep) + \
+> +		XFS_ATTR_SF_ENTSIZE(sfep)))
+>  #define XFS_ATTR_SF_TOTSIZE(dp)			/* total space in use */ \
+> -	(be16_to_cpu(((xfs_attr_shortform_t *)	\
+> +	(be16_to_cpu(((struct xfs_attr_shortform *)	\
+>  		((dp)->i_afp->if_u1.if_data))->hdr.totsize))
 >  
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 48556efcdcf0..45eadf5bea5d 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -2178,7 +2178,6 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
->  #define I_DIO_WAKEUP		(1 << __I_DIO_WAKEUP)
->  #define I_LINKABLE		(1 << 10)
->  #define I_DIRTY_TIME		(1 << 11)
-> -#define I_DIRTY_TIME_EXPIRED	(1 << 12)
->  #define I_WB_SWITCH		(1 << 13)
->  #define I_OVL_INUSE		(1 << 14)
->  #define I_CREATING		(1 << 15)
-> diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
-> index 7565dcd59697..e7cbccc7c14c 100644
-> --- a/include/trace/events/writeback.h
-> +++ b/include/trace/events/writeback.h
-> @@ -20,7 +20,6 @@
->  		{I_CLEAR,		"I_CLEAR"},		\
->  		{I_SYNC,		"I_SYNC"},		\
->  		{I_DIRTY_TIME,		"I_DIRTY_TIME"},	\
-> -		{I_DIRTY_TIME_EXPIRED,	"I_DIRTY_TIME_EXPIRED"}, \
->  		{I_REFERENCED,		"I_REFERENCED"}		\
->  	)
->  
+>  #endif	/* __XFS_ATTR_SF_H__ */
 > -- 
-> 2.16.4
+> 2.26.2
 > 
