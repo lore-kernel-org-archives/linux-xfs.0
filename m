@@ -7,58 +7,59 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9127CC433E6
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 02:59:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B5ACC433E6
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 03:00:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FCCB20866
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 02:59:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 041842087C
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Sep 2020 03:00:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MtocGqPA"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PrrXKqJU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726971AbgIBC76 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Sep 2020 22:59:58 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:48594 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726140AbgIBC7u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 22:59:50 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0822tDdg124970;
-        Wed, 2 Sep 2020 02:57:42 GMT
+        id S1726984AbgIBC77 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Sep 2020 22:59:59 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:35314 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726406AbgIBC75 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Sep 2020 22:59:57 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0822sjBN089848;
+        Wed, 2 Sep 2020 02:57:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=fL8wUvKuhAv9AfP2AFWw/HQW+KazjCx3ahpL5ryvJGo=;
- b=MtocGqPADfhCgzXj/2pSKQq4v7Nn/IL01N5cdiPCPJTwslYcIF3UHmI2cw8JwMRMenJh
- wOeOUlY83/ai8EwEF2NPD3Q4c3msO5uDswRonZ+FGoPtGAK8HKb0/ZXi/4R+ZdXlYrIT
- eKT6ufS1QIeWrI3PRTYnp+1ygm78MFBzeY46/sRSKAXYZxZOPD8VAHUQUaIgBZVPA1PK
- WNT6WCH+8ySFkHCy+1Z716EpTczOJctOzMun6jTk7+fXQb61XAyi4zZaHjpjOlXvkjhV
- yl8Lw4QiAOwZJQKw2KRKmfoIU/1QCuHBpZOGEu8BY7sYRErR1rChi2MXBmVN9wktgr9A Og== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 339dmmxa7r-1
+ bh=Vm3wy0bw6XUhuYueee6LMhNIBSV4TKpOH/58RIw5QVA=;
+ b=PrrXKqJUoTDT3B1w1DaqrjM8ogFEQ0qbh+GnKc89YIfMGG8HP4B6OuUolku6UCF1iYJh
+ 6QRCVOQzOHmggB+himRckNnJJ7ZseslGhzDVYQlvAzUFXW3mjxJHRsvLGuUAbHwERQWe
+ 3JZIe30sxrlYDmTtSFL06v5Sygp1p9gB7G1ZxyWRkQfTfUiIc01qT4ze4aJ51zymqmRZ
+ Bbl6q9V0QMUBtT2NpqTks6VxO8tqke/5RFsZZ8l5nQhgflSu1xuQ5hNARwoZFWAepp6o
+ RixPHhOCc1xA/xffTC4pj1zee/OejQBmgiZDI6xEh+78WrMCkO0tAB/iiEa+uHj2gIwO eg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 337eym7swa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 02 Sep 2020 02:57:41 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0822thDv177228;
-        Wed, 2 Sep 2020 02:57:41 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 3380xxr0f5-1
+        Wed, 02 Sep 2020 02:57:49 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0822t2O1186128;
+        Wed, 2 Sep 2020 02:57:48 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 3380st0xac-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Sep 2020 02:57:41 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0822veUV005138;
-        Wed, 2 Sep 2020 02:57:40 GMT
+        Wed, 02 Sep 2020 02:57:48 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0822vlNv029461;
+        Wed, 2 Sep 2020 02:57:47 GMT
 Received: from localhost (/10.159.133.7)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 01 Sep 2020 19:57:40 -0700
-Subject: [PATCH 10/11] xfs: trace timestamp limits
+        with ESMTP ; Tue, 01 Sep 2020 19:57:47 -0700
+Subject: [PATCH 11/11] xfs: enable big timestamps
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com, david@fromorbit.com, hch@infradead.org
-Cc:     Christoph Hellwig <hch@lst.de>,
+Cc:     Amir Goldstein <amir73il@gmail.com>,
         Allison Collins <allison.henderson@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org,
         amir73il@gmail.com, sandeen@sandeen.net
-Date:   Tue, 01 Sep 2020 19:57:38 -0700
-Message-ID: <159901545812.548109.17681490755116905605.stgit@magnolia>
+Date:   Tue, 01 Sep 2020 19:57:45 -0700
+Message-ID: <159901546497.548109.8889195677857747322.stgit@magnolia>
 In-Reply-To: <159901538766.548109.8040337941204954344.stgit@magnolia>
 References: <159901538766.548109.8040337941204954344.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -66,15 +67,15 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 phishscore=0
- malwarescore=0 bulkscore=0 mlxscore=0 mlxlogscore=999 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009020026
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
+ phishscore=0 malwarescore=0 mlxscore=0 spamscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009020026
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9731 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- mlxlogscore=999 adultscore=0 impostorscore=0 mlxscore=0 suspectscore=0
- spamscore=0 clxscore=1015 malwarescore=0 lowpriorityscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 clxscore=1015 spamscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2009020026
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
@@ -83,80 +84,30 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a couple of tracepoints so that we can check the timestamp limits
-being set on inodes and quotas.
+Enable the big timestamp feature.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Gao Xiang <hsiangkao@redhat.com>
 ---
- fs/xfs/xfs_qm.c    |    2 ++
- fs/xfs/xfs_super.c |    1 +
- fs/xfs/xfs_trace.h |   26 ++++++++++++++++++++++++++
- 3 files changed, 29 insertions(+)
+ fs/xfs/libxfs/xfs_format.h |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 259588a4227d..3f82e0c92c2d 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -670,6 +670,8 @@ xfs_qm_init_quotainfo(
- 		qinf->qi_expiry_min = XFS_DQ_LEGACY_EXPIRY_MIN;
- 		qinf->qi_expiry_max = XFS_DQ_LEGACY_EXPIRY_MAX;
- 	}
-+	trace_xfs_quota_expiry_range(mp, qinf->qi_expiry_min,
-+			qinf->qi_expiry_max);
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 394159808ffa..dd764da08f6f 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -471,7 +471,8 @@ xfs_sb_has_ro_compat_feature(
+ #define XFS_SB_FEAT_INCOMPAT_ALL \
+ 		(XFS_SB_FEAT_INCOMPAT_FTYPE|	\
+ 		 XFS_SB_FEAT_INCOMPAT_SPINODES|	\
+-		 XFS_SB_FEAT_INCOMPAT_META_UUID)
++		 XFS_SB_FEAT_INCOMPAT_META_UUID| \
++		 XFS_SB_FEAT_INCOMPAT_BIGTIME)
  
- 	mp->m_qflags |= (mp->m_sb.sb_qflags & XFS_ALL_QUOTA_CHKD);
- 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 58be2220ae05..8230c902a813 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1491,6 +1491,7 @@ xfs_fc_fill_super(
- 		sb->s_time_min = XFS_LEGACY_TIME_MIN;
- 		sb->s_time_max = XFS_LEGACY_TIME_MAX;
- 	}
-+	trace_xfs_inode_timestamp_range(mp, sb->s_time_min, sb->s_time_max);
- 	sb->s_iflags |= SB_I_CGROUPWB;
- 
- 	set_posix_acl_flag(sb);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index abb1d859f226..a3a35a2d8ed9 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -3844,6 +3844,32 @@ TRACE_EVENT(xfs_btree_bload_block,
- 		  __entry->nr_records)
- )
- 
-+DECLARE_EVENT_CLASS(xfs_timestamp_range_class,
-+	TP_PROTO(struct xfs_mount *mp, time64_t min, time64_t max),
-+	TP_ARGS(mp, min, max),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(long long, min)
-+		__field(long long, max)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->min = min;
-+		__entry->max = max;
-+	),
-+	TP_printk("dev %d:%d min %lld max %lld",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->min,
-+		  __entry->max)
-+)
-+
-+#define DEFINE_TIMESTAMP_RANGE_EVENT(name) \
-+DEFINE_EVENT(xfs_timestamp_range_class, name, \
-+	TP_PROTO(struct xfs_mount *mp, long long min, long long max), \
-+	TP_ARGS(mp, min, max))
-+DEFINE_TIMESTAMP_RANGE_EVENT(xfs_inode_timestamp_range);
-+DEFINE_TIMESTAMP_RANGE_EVENT(xfs_quota_expiry_range);
-+
- #endif /* _TRACE_XFS_H */
- 
- #undef TRACE_INCLUDE_PATH
+ #define XFS_SB_FEAT_INCOMPAT_UNKNOWN	~XFS_SB_FEAT_INCOMPAT_ALL
+ static inline bool
 
