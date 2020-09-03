@@ -6,80 +6,67 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ACB0C433E2
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 09:14:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A6B4C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 09:15:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE1562071B
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 09:14:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F34D3206C0
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 09:15:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FiFkc5X3"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oUgLMdBn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726368AbgICJOj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Sep 2020 05:14:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43944 "EHLO
+        id S1726770AbgICJP2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Sep 2020 05:15:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725984AbgICJOj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 05:14:39 -0400
+        with ESMTP id S1726448AbgICJP1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 05:15:27 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFDE8C061244
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2020 02:14:38 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D7A2C061244
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2020 02:15:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=RBfqzGbqmPxYhjlKqmFmAVf24io94vqhDv4wO2oqAh8=; b=FiFkc5X3AZ9GydpWVgVB8bFWD0
-        6IW2VfOhkFy5PCOd2UfxmEoqSRQEtsECBrKXHiTBgQcgcT9ovIjVrojxCka2stzoWYATrNI5VOAzQ
-        55yzvEMTkVSrDcgI/kUJwk05WsmjRu6ejoN/MS6v2TFGhTX0LN0G9WNFqpCLpv86iN2bFDeVv1bXw
-        thsE/vP9W68iqf9so947s1Lc3XJDbRGdekACJePnCFBcKczFw42nh5IiUlNLTKhbxBBLH8wlv/YXl
-        30hHj3BTuy0p1irmdSDL0qlBxBHPPs33eoDj6Vya6DA9vCORtCSZTeTCdLZ20EawQ84feXfPjsxo7
-        +B8Kiohg==;
+        bh=h7hrOfIDjbeRnPgD6Jytu7OKV09KmrkD9JL0+OsZDtg=; b=oUgLMdBnzpY2RZ8LxQiPmWewGC
+        VXWpAyAmO/5VfM482cwQnFN1vyDyBXnuoG2AYfnrHQftUHhjol5LaGYPJrLK0n2a25F9NTqX/MbQb
+        QuEkINzqkW7dMVgi6GQGeSoxiqEXLAaChEA/+jO7c83gOKv1LbH+tM5GSjt4lQc/mV08L3yh4bdxw
+        iy/SeWhfRjKHzFJbk1HIFGnaMbNgAuY+4F4NUiga6vLZcDSLN7IY5bW9drqOhWYUhCV0a6Ig/DFck
+        e1jfnL24tM3I5G32mxXkoj+NP3avzc9dntrtRorBj55zU+CGQXdoDSk+XbClPpPk+NhfZt/pYXr8p
+        zkzjhh4Q==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDlKG-00045a-TJ; Thu, 03 Sep 2020 09:14:36 +0000
-Date:   Thu, 3 Sep 2020 10:14:36 +0100
+        id 1kDlKw-0004Ap-L3; Thu, 03 Sep 2020 09:15:18 +0000
+Date:   Thu, 3 Sep 2020 10:15:18 +0100
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Carlos Maiolino <cmaiolino@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2 4/4] xfs: Convert xfs_attr_sf macros to inline
- functions
-Message-ID: <20200903091436.GD10584@infradead.org>
-References: <20200902144059.284726-1-cmaiolino@redhat.com>
- <20200902144059.284726-5-cmaiolino@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Carlos Maiolino <cmaiolino@redhat.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [RFC PATCH] xfs: add inline helper to convert from data fork to
+ xfs_attr_shortform
+Message-ID: <20200903091518.GE10584@infradead.org>
+References: <20200901095919.238598-1-cmaiolino@redhat.com>
+ <20200901141341.GB174813@bfoster>
+ <20200901152359.GD6096@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200902144059.284726-5-cmaiolino@redhat.com>
+In-Reply-To: <20200901152359.GD6096@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +/* total space in use */
-> +static inline int xfs_attr_sf_totsize(struct xfs_inode *dp) {
-> +	struct xfs_attr_shortform *sf =
-> +		(struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-> +	return be16_to_cpu(sf->hdr.totsize);
-> +}
+On Tue, Sep 01, 2020 at 08:23:59AM -0700, Darrick J. Wong wrote:
+> > FWIW, I thought we tried to avoid including headers from other headers
+> > like this. I'm also wondering if it's an issue that we'd be including a
+> > a header that is external to libxfs from a libxfs header. Perhaps this
+> > could be simplified by passing the xfs_ifork pointer to the new helper
+> > rather than the xfs_inode and/or moving the helper to
+> > libxfs/xfs_inode_fork.h and putting a forward declaration of
+> > xfs_attr_shortform in there..?
+> 
+> If you change if_data to a (void *), all the casts become unnecessary,
+> right?
 
-The opening curly brace should go on a line of its own.
-
-> +/* space name/value uses */
-> +static inline int xfs_attr_sf_entsize_byname(uint8_t nlen, uint8_t vlen) {
-> +	return sizeof(struct xfs_attr_sf_entry) + nlen + vlen;
-> +}
-> +
-> +/* space an entry uses */
-> +static inline int xfs_attr_sf_entsize(struct xfs_attr_sf_entry *sfep) {
-> +	return struct_size(sfep, nameval, sfep->namelen + sfep->valuelen);
-> +}
-> +
-> +/* next entry in struct */
-> +static inline struct xfs_attr_sf_entry *
-> +xfs_attr_sf_nextentry(struct xfs_attr_sf_entry *sfep) {
-> +	return (struct xfs_attr_sf_entry *)((char *)(sfep) +
-> +					    xfs_attr_sf_entsize(sfep));
-> +}
-
-Same for these.  Also if you cast to void * instead of char * in
-xfs_attr_sf_nextentry (and gcc extension we make heavy use of), you
-don't need the case back.
+Yes, that is probably an even better idea.
