@@ -4,144 +4,142 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B23CC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 16:05:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83B23C433E9
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 16:17:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19F0D208C7
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 16:05:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DD9320775
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 16:17:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KPWwt3d4"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TOH5hRmy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728145AbgICQFT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Sep 2020 12:05:19 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:20402 "EHLO
+        id S1727786AbgICQRq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Sep 2020 12:17:46 -0400
+Received: from us-smtp-2.mimecast.com ([207.211.31.81]:30687 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727065AbgICQFQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 12:05:16 -0400
+        by vger.kernel.org with ESMTP id S1726292AbgICQRq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 12:17:46 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599149115;
+        s=mimecast20190719; t=1599149864;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=hl091aKDnKj+RiKb1YSG8zrHrA1PWM186Lp1JegPsb4=;
-        b=KPWwt3d4R5NJubMeyOo5hw6FDrMoA20y2TsiUQ+kyZU26w0IXCs6gyEEpnlZGVBhuRlTND
-        VEnuvfnc5MwisXV1zhR8sUNPpONX89Uv8O/P7BDI74ZHFrA4urOtJ0eNQ/6K66lNdKhb/e
-        RNw550myvyh10wfm012yZH9JhEVo1Bc=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-107-htUQ9s6gPlOA67btrD-IbA-1; Thu, 03 Sep 2020 12:05:13 -0400
-X-MC-Unique: htUQ9s6gPlOA67btrD-IbA-1
-Received: by mail-wm1-f70.google.com with SMTP id a5so1123026wmj.5
-        for <linux-xfs@vger.kernel.org>; Thu, 03 Sep 2020 09:05:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=hl091aKDnKj+RiKb1YSG8zrHrA1PWM186Lp1JegPsb4=;
-        b=pwJ45tddbJ4eWWsmwHXRSONMkaRdED6DJ4Vv4Xeb+xbetsjEVysfQtFgCFKbGOOz2z
-         SBfZbNTVITUN17gAMzpjsAcNMERG9dKGvQswFkt5NcL2KYNYJe+C/eCJIq8xaSZ2yf9L
-         jfB3K8yCWxQyHrIyp7EgXupi9thT+ql2utH79c/jgQb0hoYjHa8lzJgbVxajVTJoFw3h
-         LcExuoEZsLRlob1alzemXtKJxvXELQdXVd872kxCuV7neXy/8CQRcvlF+d86p/1UK8Z1
-         otS+aQoBbhejqa/qyj2Izx2kmEVi1Dn+AjFGyR6JaY+5Ga9Zk/dTs0BfCgMSPT/4fia3
-         h6VQ==
-X-Gm-Message-State: AOAM531k9vL/njThWrj83q2g7Zy25TadvP2Q8zC9EOcpaDDPqeIntHhO
-        oyiKjkvOSWG4sKYFlb6TxmY2WHCfN2ydqWprghoBFtO3f3mY2j7AdciN4XAZUoJkDFdjby651fU
-        XbMY2tXCsW7LJ1MIzv8HP
-X-Received: by 2002:a5d:5642:: with SMTP id j2mr3185451wrw.417.1599149112597;
-        Thu, 03 Sep 2020 09:05:12 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwcp8QEFsFZJ3RKvBR9fXjKQRUUFvD60FoViyWplAecDzoxAhPhjTnHLHsnjywC8znqa4BNHg==
-X-Received: by 2002:a5d:5642:: with SMTP id j2mr3185426wrw.417.1599149112382;
-        Thu, 03 Sep 2020 09:05:12 -0700 (PDT)
-Received: from eorzea (ip-89-102-9-109.net.upcbroadband.cz. [89.102.9.109])
-        by smtp.gmail.com with ESMTPSA id g8sm5201131wmd.12.2020.09.03.09.05.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Sep 2020 09:05:11 -0700 (PDT)
-Date:   Thu, 3 Sep 2020 18:05:09 +0200
+        bh=WEeCSD9+Q5m8PwDQwVzRDfEDx1PLL7SPMALdQCgv3C4=;
+        b=TOH5hRmyC714E/Tuf7LN5RhQ8JNPuIgEr8NROothqMUiA26iff7oGRoBqqbJ+KQvZlpLsO
+        qfeyGV+rXX2DCO7aJz7rhjwBvDEUalmgV+LR5Elr4ciwVmGP8qulWJQosKLZfYH6vlpTVR
+        pHZm/fFQ9a+Tm6psiOcZ5yn6YGZM+x0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-357-fbpfSKZnOkSrB0JnTBG7bw-1; Thu, 03 Sep 2020 12:17:41 -0400
+X-MC-Unique: fbpfSKZnOkSrB0JnTBG7bw-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1370F1006708
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2020 16:17:41 +0000 (UTC)
+Received: from eorzea.redhat.com (unknown [10.40.194.49])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6B2017C5B5
+        for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2020 16:17:40 +0000 (UTC)
 From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 4/4] xfs: Convert xfs_attr_sf macros to inline
- functions
-Message-ID: <20200903160509.dizravzqitvkbk2l@eorzea>
-Mail-Followup-To: Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org
-References: <20200903142839.72710-1-cmaiolino@redhat.com>
- <20200903142839.72710-5-cmaiolino@redhat.com>
- <20200903143309.GB19892@infradead.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v4 3/4] xfs: Use variable-size array for nameval in xfs_attr_sf_entry
+Date:   Thu,  3 Sep 2020 18:17:24 +0200
+Message-Id: <20200903161724.85328-1-cmaiolino@redhat.com>
+In-Reply-To: <20200903142839.72710-4-cmaiolino@redhat.com>
+References: <20200903142839.72710-4-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200903143309.GB19892@infradead.org>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 03, 2020 at 03:33:09PM +0100, Christoph Hellwig wrote:
-> On Thu, Sep 03, 2020 at 04:28:39PM +0200, Carlos Maiolino wrote:
-> > xfs_attr_sf_totsize() requires access to xfs_inode structure, so, once
-> > xfs_attr_shortform_addname() is its only user, move it to xfs_attr.c
-> > instead of playing with more #includes.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> > 
-> > Changelog:
-> > 	V2:
-> > 	 - keep macro comments above inline functions
-> > 	V3:
-> > 	- Add extra spacing in xfs_attr_sf_totsize()
-> > 	- Fix open curling braces on inline functions
-> > 	- use void * casting on xfs_attr_sf_nextentry()
-> > 
-> >  fs/xfs/libxfs/xfs_attr.c      | 14 +++++++++++---
-> >  fs/xfs/libxfs/xfs_attr_leaf.c | 18 +++++++++---------
-> >  fs/xfs/libxfs/xfs_attr_sf.h   | 30 +++++++++++++++++++-----------
-> >  fs/xfs/xfs_attr_list.c        |  4 ++--
-> >  4 files changed, 41 insertions(+), 25 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index 2e055c079f397..982014499f1ff 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -428,7 +428,7 @@ xfs_attr_set(
-> >  		 */
-> >  		if (XFS_IFORK_Q(dp) == 0) {
-> >  			int sf_size = sizeof(struct xfs_attr_sf_hdr) +
-> > -				XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen,
-> > +				xfs_attr_sf_entsize_byname(args->namelen,
-> >  						args->valuelen);
-> >  
-> >  			error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
-> > @@ -523,6 +523,14 @@ xfs_attr_set(
-> >   * External routines when attribute list is inside the inode
-> >   *========================================================================*/
-> >  
-> > +/* total space in use */
-> > +static inline int xfs_attr_sf_totsize(struct xfs_inode *dp) {
-> > +	struct xfs_attr_shortform *sf =
-> > +		(struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-> > +
-> > +	return be16_to_cpu(sf->hdr.totsize);
-> 
-> The { should go on a line by its own.
+nameval is a variable-size array, so, define it as it, and remove all
+the -1 magic number subtractions
 
-Sorry, I forgot to modify this one
-> 
-> > +static inline struct xfs_attr_sf_entry *
-> > +xfs_attr_sf_nextentry(struct xfs_attr_sf_entry *sfep)
-> > +{
-> > +	return (void *)(sfep) + xfs_attr_sf_entsize(sfep);
-> 
-> No need for the braces around sfep.
-> 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
 
-I'll resend, thanks
+Changelog:
 
+	V2:
+	 - Drop wrong change to XFS_ATTR_SF_ENTSIZE_MAX
+	V3:
+	- Use XFS_ATTR_SF_ENTSIZE_BYNAME in xfs_attr_shortform_allfit()
+	- Remove int casting and fix spacing on
+	  XFS_ATTR_SF_ENTSIZE_BYNAME
+	V4:
+	- Fix indentation on xfs_attr_shortform_allfit()
+
+ fs/xfs/libxfs/xfs_attr_leaf.c | 9 +++------
+ fs/xfs/libxfs/xfs_attr_sf.h   | 4 ++--
+ fs/xfs/libxfs/xfs_da_format.h | 2 +-
+ 3 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index d920183b08a99..b0c8626e166ac 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -992,9 +992,8 @@ xfs_attr_shortform_allfit(
+ 			return 0;
+ 		if (be16_to_cpu(name_loc->valuelen) >= XFS_ATTR_SF_ENTSIZE_MAX)
+ 			return 0;
+-		bytes += sizeof(struct xfs_attr_sf_entry) - 1
+-				+ name_loc->namelen
+-				+ be16_to_cpu(name_loc->valuelen);
++		bytes += XFS_ATTR_SF_ENTSIZE_BYNAME(name_loc->namelen,
++					be16_to_cpu(name_loc->valuelen));
+ 	}
+ 	if ((dp->i_mount->m_flags & XFS_MOUNT_ATTR2) &&
+ 	    (dp->i_df.if_format != XFS_DINODE_FMT_BTREE) &&
+@@ -1036,10 +1035,8 @@ xfs_attr_shortform_verify(
+ 		 * struct xfs_attr_sf_entry has a variable length.
+ 		 * Check the fixed-offset parts of the structure are
+ 		 * within the data buffer.
+-		 * xfs_attr_sf_entry is defined with a 1-byte variable
+-		 * array at the end, so we must subtract that off.
+ 		 */
+-		if (((char *)sfep + sizeof(*sfep) - 1) >= endp)
++		if (((char *)sfep + sizeof(*sfep)) >= endp)
+ 			return __this_address;
+ 
+ 		/* Don't allow names with known bad length. */
+diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
+index c4afb33079184..29934103ce559 100644
+--- a/fs/xfs/libxfs/xfs_attr_sf.h
++++ b/fs/xfs/libxfs/xfs_attr_sf.h
+@@ -27,11 +27,11 @@ typedef struct xfs_attr_sf_sort {
+ } xfs_attr_sf_sort_t;
+ 
+ #define XFS_ATTR_SF_ENTSIZE_BYNAME(nlen,vlen)	/* space name/value uses */ \
+-	(((int)sizeof(struct xfs_attr_sf_entry)-1 + (nlen)+(vlen)))
++	((sizeof(struct xfs_attr_sf_entry) + (nlen) + (vlen)))
+ #define XFS_ATTR_SF_ENTSIZE_MAX			/* max space for name&value */ \
+ 	((1 << (NBBY*(int)sizeof(uint8_t))) - 1)
+ #define XFS_ATTR_SF_ENTSIZE(sfep)		/* space an entry uses */ \
+-	((int)sizeof(struct xfs_attr_sf_entry)-1 + \
++	((int)sizeof(struct xfs_attr_sf_entry) + \
+ 		(sfep)->namelen+(sfep)->valuelen)
+ #define XFS_ATTR_SF_NEXTENTRY(sfep)		/* next entry in struct */ \
+ 	((struct xfs_attr_sf_entry *)((char *)(sfep) + \
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index e708b714bf99d..b40a4e80f5ee6 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -589,7 +589,7 @@ struct xfs_attr_shortform {
+ 		uint8_t namelen;	/* actual length of name (no NULL) */
+ 		uint8_t valuelen;	/* actual length of value (no NULL) */
+ 		uint8_t flags;	/* flags bits (see xfs_attr_leaf.h) */
+-		uint8_t nameval[1];	/* name & value bytes concatenated */
++		uint8_t nameval[];	/* name & value bytes concatenated */
+ 	} list[1];			/* variable sized array */
+ };
+ 
 -- 
-Carlos
+2.26.2
 
