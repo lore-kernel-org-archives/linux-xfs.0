@@ -2,80 +2,72 @@ Return-Path: <SRS0=br+O=CM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 668ACC433E9
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 14:30:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8F15C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 14:31:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28489206EB
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 14:30:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 874CC20665
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 14:31:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZduOFvGC"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="V3e5uAFr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729206AbgICOag (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Sep 2020 10:30:36 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:55307 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728878AbgICO2r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 10:28:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599143326;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=K7Y9S7fpx+ab7HZemyoDghcR2mnt0SrOrT0Zbdctn6s=;
-        b=ZduOFvGCPwP3P3klAvZ/ChUcnIy7Daua/ZaRICbbRLcV1m8RaJlRx38xa6Wfe+OtQJHkJH
-        PS+qEU3TjDxfhNILmWfveT9d0nuNhvy7h2GUfcbIFoF7ivgCs8LSnmgEcvTNL9UaLisbi8
-        853/Zc5I3OCu6qXoXfpZmigTYSJyXgA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-398-p9F4pGJDMhWYEm4kIX8Wog-1; Thu, 03 Sep 2020 10:28:44 -0400
-X-MC-Unique: p9F4pGJDMhWYEm4kIX8Wog-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B805D801AEA
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2020 14:28:43 +0000 (UTC)
-Received: from eorzea.redhat.com (unknown [10.40.194.49])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1F5A010013D9
-        for <linux-xfs@vger.kernel.org>; Thu,  3 Sep 2020 14:28:42 +0000 (UTC)
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3 0/4] Clean up xfs_attr_sf_entry
-Date:   Thu,  3 Sep 2020 16:28:35 +0200
-Message-Id: <20200903142839.72710-1-cmaiolino@redhat.com>
+        id S1729345AbgICOao (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Sep 2020 10:30:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35714 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729348AbgICO1t (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 10:27:49 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 70147C061245;
+        Thu,  3 Sep 2020 07:27:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=mNFw25jVlcdo2HOeyRWdNvqHRP3XxNhZ9gh8UR9BP6c=; b=V3e5uAFr2pYrWuAxT18Z6Ya4Mt
+        AbeWXjbfVj6/jUD82K1+56y+g7jOzYnahDWdf04czK+ngUIoEf1Dwymk6RuN634VptJHYaKxPbimj
+        Zc8rwOLhZD01rAPBVOcpOgr5+zad9skPXEfa3fpHiyyF/199sF0MxE+Q5RPs7BbEeDQChAH+elQV6
+        w51gPFqkVNEGqsGO/xrQ2Ywe7Qw+mzCvgnovuF3NrdkDsyDtxJye4oulORgfusPZw1FxQZ4Twubo5
+        Khxy6HJUi5Rkh6fGV3Hw3j/y9v7Z0N2EA/4SyaxDXS9vSXPOcY+hqIOkUk/cAcQ3oLwTEy5mqBrX9
+        lzNEc6Ww==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kDqCz-0004uM-1q; Thu, 03 Sep 2020 14:27:25 +0000
+Date:   Thu, 3 Sep 2020 15:27:24 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        ocfs2 list <ocfs2-devel@oss.oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Theodore Ts'o <tytso@mit.edu>
+Subject: Re: Broken O_{D,}SYNC behavior with FICLONE*?
+Message-ID: <20200903142724.GA18478@infradead.org>
+References: <20200903035225.GJ6090@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200903035225.GJ6090@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi.
+On Wed, Sep 02, 2020 at 08:52:25PM -0700, Darrick J. Wong wrote:
+> Hi,
+> 
+> I have a question for everyone-- do FICLONE and FICLONERANGE count as a
+> "write operation" for the purposes of reasoning about O_SYNC and
+> O_DSYNC?
 
-This is the V3 version of this series, containing the changes discussed in the
-previous version. Details are on each patch.
-
-Cheers
-
-Carlos Maiolino (4):
-  xfs: remove typedef xfs_attr_sf_entry_t
-  xfs: Remove typedef xfs_attr_shortform_t
-  xfs: Use variable-size array for nameval in xfs_attr_sf_entry
-  xfs: Convert xfs_attr_sf macros to inline functions
-
- fs/xfs/libxfs/xfs_attr.c      | 14 ++++++++---
- fs/xfs/libxfs/xfs_attr_leaf.c | 46 +++++++++++++++++------------------
- fs/xfs/libxfs/xfs_attr_sf.h   | 29 ++++++++++++++--------
- fs/xfs/libxfs/xfs_da_format.h |  6 ++---
- fs/xfs/xfs_attr_list.c        |  6 ++---
- fs/xfs/xfs_ondisk.h           | 12 ++++-----
- 6 files changed, 64 insertions(+), 49 deletions(-)
-
--- 
-2.26.2
-
+They aren't really write operations in the traditional sense as they
+only change metadata.  Then again the metadata is all about the file
+content, so we'd probaby err on the safe side by including them in the
+write operations umbrella term.
