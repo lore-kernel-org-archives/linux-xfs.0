@@ -2,203 +2,147 @@ Return-Path: <SRS0=br+O=CM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD8CC43461
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 10:10:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45E6BC433E9
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 10:36:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2785207EA
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 10:10:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F417F20767
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 10:36:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JIDIk+6u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728329AbgICKKO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Sep 2020 06:10:14 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46510 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726467AbgICKKH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Sep 2020 06:10:07 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id EB406B692;
-        Thu,  3 Sep 2020 10:10:05 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 3998D1E12D1; Thu,  3 Sep 2020 12:10:04 +0200 (CEST)
-Date:   Thu, 3 Sep 2020 12:10:04 +0200
-From:   Jan Kara <jack@suse.cz>
+        id S1726292AbgICKgq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Sep 2020 06:36:46 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:46440 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725984AbgICKgp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 06:36:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1599129403;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=dXzWxiSexDzQ+wXkiUJzhPSd2ps6tlya2pSHapdNsnU=;
+        b=JIDIk+6ubgrQcM/LnPPGbpqEYoAiNIrt5WFyVeRCtSmKOrqL/SadtH7v+74u6QMvCmx+Xv
+        edkKum1zrxexm8MPwq968OSnjOSS+IvE6JdPS9AOCec9GPd2H8pItChnB/olotVeKdgJfW
+        Zn3gx+yg465ommUKvacOQuUNT5jjJ0M=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-567-7fwaiZAPPwyyfos9av6mdQ-1; Thu, 03 Sep 2020 06:36:41 -0400
+X-MC-Unique: 7fwaiZAPPwyyfos9av6mdQ-1
+Received: by mail-wr1-f72.google.com with SMTP id v12so921662wrm.9
+        for <linux-xfs@vger.kernel.org>; Thu, 03 Sep 2020 03:36:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to;
+        bh=dXzWxiSexDzQ+wXkiUJzhPSd2ps6tlya2pSHapdNsnU=;
+        b=njwebF1oLtm1XgtLnmr1VPPoCoSXCjMPWBkPZwaoT/o26DVIB2BtjYq/5RMmYMR2Xo
+         01zzGWTJ4zg0lzgvuShhJ7D90XgUJa5R+Qm533O4gX0iqoHWpySEqYg4pBhPtNQUJ8R+
+         5NMdTA9OfPJbXQlLQeVi3Sey4z4QsECXDrwOaYFiVcGUauyULGJ8AvB1nIEO2EQ9CRAx
+         V1DjnYU0OBWtvzG1TW2j87XeusCpucLsz+nTqPjl5bqxxANKNIOqwp9iZ8rjeUc7an9D
+         +sFn4vFTpb8FGJh4xaaU0lkjC+sI8HF/kSgC32i67C6+dNc3uxeh1iSV7n04Q1J6vJy2
+         ly4w==
+X-Gm-Message-State: AOAM532EdFUj14NVkOP429Y5XWiGIXFJ9w+NFd7s67SLlK7ddpN8bGpU
+        ECGLg4e0cQiraXekV9VwN35Gx5c++bsSoXK80hbL/W8qQvF4zzyMjZSGTIPna3y8ZrzTuW8zr+O
+        grJk7pKjPK9+gjcpYx0gs
+X-Received: by 2002:a5d:4fcc:: with SMTP id h12mr1727139wrw.199.1599129400619;
+        Thu, 03 Sep 2020 03:36:40 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzgusBvZ0lc/LKPAisl8A8nT0HfQM/TN7DGYqw78AvkEIax1r0CD4xXR9kd4ihVxZdkn8JnbQ==
+X-Received: by 2002:a5d:4fcc:: with SMTP id h12mr1727121wrw.199.1599129400409;
+        Thu, 03 Sep 2020 03:36:40 -0700 (PDT)
+Received: from eorzea (ip-89-102-9-109.net.upcbroadband.cz. [89.102.9.109])
+        by smtp.gmail.com with ESMTPSA id f17sm3928404wru.13.2020.09.03.03.36.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Sep 2020 03:36:39 -0700 (PDT)
+Date:   Thu, 3 Sep 2020 12:36:37 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        Martijn Coenen <maco@android.com>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 4/4] writeback: Drop I_DIRTY_TIME_EXPIRE
-Message-ID: <20200903101004.GA17269@quack2.suse.cz>
-References: <20200611075033.1248-1-jack@suse.cz>
- <20200611081203.18161-4-jack@suse.cz>
- <20200902172048.GI6090@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V2 4/4] xfs: Convert xfs_attr_sf macros to inline
+ functions
+Message-ID: <20200903103637.ngs3vhx7oodpry3u@eorzea>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+References: <20200902144059.284726-1-cmaiolino@redhat.com>
+ <20200902144059.284726-5-cmaiolino@redhat.com>
+ <20200902175457.GX6096@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200902172048.GI6090@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200902175457.GX6096@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 02-09-20 10:20:48, Darrick J. Wong wrote:
-> [add linux-xfs and xfsprogs maintainer to cc]
 > 
-> On Thu, Jun 11, 2020 at 10:11:55AM +0200, Jan Kara wrote:
-> > The only use of I_DIRTY_TIME_EXPIRE is to detect in
-> > __writeback_single_inode() that inode got there because flush worker
-> > decided it's time to writeback the dirty inode time stamps (either
-> > because we are syncing or because of age). However we can detect this
-> > directly in __writeback_single_inode() and there's no need for the
-> > strange propagation with I_DIRTY_TIME_EXPIRE flag.
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> >  fs/ext4/inode.c                  |  2 +-
-> >  fs/fs-writeback.c                | 28 +++++++++++-----------------
-> >  fs/xfs/libxfs/xfs_trans_inode.c  |  4 ++--
+> /me suspects you could (ab)use struct_size here too, e.g.
 > 
-> Urrk, so I only just noticed this when I rebased my development tree
-> onto 5.9-rc3.  If you're going to change things in fs/xfs/, please cc
-> the xfs list to keep us in the loop.  Changes to fs/xfs/libxfs/ have to
-> be ported to userspace.
+> 	return struct_size((struct xfs_attr_sf_entry *)NULL, nameval,
+> 			nlen + vlen);
+> 
+> Though now I look at the casting mess and think NAH.
+> Ok never mind. :)
 
-OK, will do next time. I was just dropping a generic flag XFS didn't use in
-any particular way so it didn't occur to me XFS people would be interested...
+I think this could work, yes, but it just makes the inline function hard to read
+with no real gain IMHO.
 
-								Honza
+> 
+> The patch looks ok, modulo that spacing thing from above.
 
-> >  include/linux/fs.h               |  1 -
-> >  include/trace/events/writeback.h |  1 -
-> >  5 files changed, 14 insertions(+), 22 deletions(-)
-> > 
-> > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> > index 40ec5c7ef0d3..4db497f02ffb 100644
-> > --- a/fs/ext4/inode.c
-> > +++ b/fs/ext4/inode.c
-> > @@ -4887,7 +4887,7 @@ static void __ext4_update_other_inode_time(struct super_block *sb,
-> >  	    (inode->i_state & I_DIRTY_TIME)) {
-> >  		struct ext4_inode_info	*ei = EXT4_I(inode);
+Fixing. Thanks for the review :)
+
+> 
+> --D
+> 
+> > +}
+> > +
+> > +/* space an entry uses */
+> > +static inline int xfs_attr_sf_entsize(struct xfs_attr_sf_entry *sfep) {
+> > +	return struct_size(sfep, nameval, sfep->namelen + sfep->valuelen);
+> > +}
+> > +
+> > +/* next entry in struct */
+> > +static inline struct xfs_attr_sf_entry *
+> > +xfs_attr_sf_nextentry(struct xfs_attr_sf_entry *sfep) {
+> > +	return (struct xfs_attr_sf_entry *)((char *)(sfep) +
+> > +					    xfs_attr_sf_entsize(sfep));
+> > +}
 > >  
-> > -		inode->i_state &= ~(I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED);
-> > +		inode->i_state &= ~I_DIRTY_TIME;
-> >  		spin_unlock(&inode->i_lock);
-> >  
-> >  		spin_lock(&ei->i_raw_lock);
-> > diff --git a/fs/fs-writeback.c b/fs/fs-writeback.c
-> > index ae17d64a3e18..149227160ff0 100644
-> > --- a/fs/fs-writeback.c
-> > +++ b/fs/fs-writeback.c
-> > @@ -1238,7 +1238,7 @@ static bool inode_dirtied_after(struct inode *inode, unsigned long t)
-> >   */
-> >  static int move_expired_inodes(struct list_head *delaying_queue,
-> >  			       struct list_head *dispatch_queue,
-> > -			       int flags, unsigned long dirtied_before)
-> > +			       unsigned long dirtied_before)
-> >  {
-> >  	LIST_HEAD(tmp);
-> >  	struct list_head *pos, *node;
-> > @@ -1254,8 +1254,6 @@ static int move_expired_inodes(struct list_head *delaying_queue,
-> >  		list_move(&inode->i_io_list, &tmp);
-> >  		moved++;
-> >  		spin_lock(&inode->i_lock);
-> > -		if (flags & EXPIRE_DIRTY_ATIME)
-> > -			inode->i_state |= I_DIRTY_TIME_EXPIRED;
-> >  		inode->i_state |= I_SYNC_QUEUED;
-> >  		spin_unlock(&inode->i_lock);
-> >  		if (sb_is_blkdev_sb(inode->i_sb))
-> > @@ -1303,11 +1301,11 @@ static void queue_io(struct bdi_writeback *wb, struct wb_writeback_work *work,
-> >  
-> >  	assert_spin_locked(&wb->list_lock);
-> >  	list_splice_init(&wb->b_more_io, &wb->b_io);
-> > -	moved = move_expired_inodes(&wb->b_dirty, &wb->b_io, 0, dirtied_before);
-> > +	moved = move_expired_inodes(&wb->b_dirty, &wb->b_io, dirtied_before);
-> >  	if (!work->for_sync)
-> >  		time_expire_jif = jiffies - dirtytime_expire_interval * HZ;
-> >  	moved += move_expired_inodes(&wb->b_dirty_time, &wb->b_io,
-> > -				     EXPIRE_DIRTY_ATIME, time_expire_jif);
-> > +				     time_expire_jif);
-> >  	if (moved)
-> >  		wb_io_lists_populated(wb);
-> >  	trace_writeback_queue_io(wb, work, dirtied_before, moved);
-> > @@ -1483,18 +1481,14 @@ __writeback_single_inode(struct inode *inode, struct writeback_control *wbc)
-> >  	spin_lock(&inode->i_lock);
-> >  
-> >  	dirty = inode->i_state & I_DIRTY;
-> > -	if (inode->i_state & I_DIRTY_TIME) {
-> > -		if ((dirty & I_DIRTY_INODE) ||
-> > -		    wbc->sync_mode == WB_SYNC_ALL ||
-> > -		    unlikely(inode->i_state & I_DIRTY_TIME_EXPIRED) ||
-> > -		    unlikely(time_after(jiffies,
-> > -					(inode->dirtied_time_when +
-> > -					 dirtytime_expire_interval * HZ)))) {
-> > -			dirty |= I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED;
-> > -			trace_writeback_lazytime(inode);
-> > -		}
-> > -	} else
-> > -		inode->i_state &= ~I_DIRTY_TIME_EXPIRED;
-> > +	if ((inode->i_state & I_DIRTY_TIME) &&
-> > +	    ((dirty & I_DIRTY_INODE) ||
-> > +	     wbc->sync_mode == WB_SYNC_ALL || wbc->for_sync ||
-> > +	     time_after(jiffies, inode->dirtied_time_when +
-> > +			dirtytime_expire_interval * HZ))) {
-> > +		dirty |= I_DIRTY_TIME;
-> > +		trace_writeback_lazytime(inode);
-> > +	}
-> >  	inode->i_state &= ~dirty;
-> >  
-> >  	/*
-> > diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> > index b5dfb6654842..1b4df6636944 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> > @@ -96,9 +96,9 @@ xfs_trans_log_inode(
-> >  	 * to log the timestamps, or will clear already cleared fields in the
-> >  	 * worst case.
-> >  	 */
-> > -	if (inode->i_state & (I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED)) {
-> > +	if (inode->i_state & I_DIRTY_TIME) {
-> >  		spin_lock(&inode->i_lock);
-> > -		inode->i_state &= ~(I_DIRTY_TIME | I_DIRTY_TIME_EXPIRED);
-> > +		inode->i_state &= ~I_DIRTY_TIME;
-> >  		spin_unlock(&inode->i_lock);
+> >  #endif	/* __XFS_ATTR_SF_H__ */
+> > diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+> > index 4eb1d6faecfb2..8f8837fe21cf0 100644
+> > --- a/fs/xfs/xfs_attr_list.c
+> > +++ b/fs/xfs/xfs_attr_list.c
+> > @@ -96,7 +96,7 @@ xfs_attr_shortform_list(
+> >  			 */
+> >  			if (context->seen_enough)
+> >  				break;
+> > -			sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+> > +			sfe = xfs_attr_sf_nextentry(sfe);
+> >  		}
+> >  		trace_xfs_attr_list_sf_all(context);
+> >  		return 0;
+> > @@ -136,7 +136,7 @@ xfs_attr_shortform_list(
+> >  		/* These are bytes, and both on-disk, don't endian-flip */
+> >  		sbp->valuelen = sfe->valuelen;
+> >  		sbp->flags = sfe->flags;
+> > -		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
+> > +		sfe = xfs_attr_sf_nextentry(sfe);
+> >  		sbp++;
+> >  		nsbuf++;
 > >  	}
-> >  
-> > diff --git a/include/linux/fs.h b/include/linux/fs.h
-> > index 48556efcdcf0..45eadf5bea5d 100644
-> > --- a/include/linux/fs.h
-> > +++ b/include/linux/fs.h
-> > @@ -2178,7 +2178,6 @@ static inline void kiocb_clone(struct kiocb *kiocb, struct kiocb *kiocb_src,
-> >  #define I_DIO_WAKEUP		(1 << __I_DIO_WAKEUP)
-> >  #define I_LINKABLE		(1 << 10)
-> >  #define I_DIRTY_TIME		(1 << 11)
-> > -#define I_DIRTY_TIME_EXPIRED	(1 << 12)
-> >  #define I_WB_SWITCH		(1 << 13)
-> >  #define I_OVL_INUSE		(1 << 14)
-> >  #define I_CREATING		(1 << 15)
-> > diff --git a/include/trace/events/writeback.h b/include/trace/events/writeback.h
-> > index 7565dcd59697..e7cbccc7c14c 100644
-> > --- a/include/trace/events/writeback.h
-> > +++ b/include/trace/events/writeback.h
-> > @@ -20,7 +20,6 @@
-> >  		{I_CLEAR,		"I_CLEAR"},		\
-> >  		{I_SYNC,		"I_SYNC"},		\
-> >  		{I_DIRTY_TIME,		"I_DIRTY_TIME"},	\
-> > -		{I_DIRTY_TIME_EXPIRED,	"I_DIRTY_TIME_EXPIRED"}, \
-> >  		{I_REFERENCED,		"I_REFERENCED"}		\
-> >  	)
-> >  
 > > -- 
-> > 2.16.4
+> > 2.26.2
 > > 
+> 
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Carlos
+
