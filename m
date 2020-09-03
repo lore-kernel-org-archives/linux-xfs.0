@@ -2,130 +2,122 @@ Return-Path: <SRS0=br+O=CM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7ECCC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 03:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA24BC2BB84
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 03:52:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2EBD20716
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 03:51:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95F9320716
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Sep 2020 03:52:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="umACb64v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728278AbgICDvh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Sep 2020 23:51:37 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:59825 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728266AbgICDvh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 23:51:37 -0400
-X-IronPort-AV: E=Sophos;i="5.76,384,1592841600"; 
-   d="scan'208";a="98860128"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 03 Sep 2020 11:51:33 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id C893C48990DB;
-        Thu,  3 Sep 2020 11:51:27 +0800 (CST)
-Received: from [10.167.220.69] (10.167.220.69) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 3 Sep 2020 11:51:26 +0800
-Message-ID: <5F50683E.7000209@cn.fujitsu.com>
-Date:   Thu, 3 Sep 2020 11:51:26 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.2; zh-CN; rv:1.9.2.18) Gecko/20110616 Thunderbird/3.1.11
+        id S1728219AbgICDwp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Sep 2020 23:52:45 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47026 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726654AbgICDwn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Sep 2020 23:52:43 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0833obwd191914;
+        Thu, 3 Sep 2020 03:52:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=plrQbRO5We9myfM1D8OZxb2JZVOMVYHNu9vACenTQ7o=;
+ b=umACb64vTspKV52Xcc2OvTOzfLlTJiWJuHOTs9jzlD6zO3V9a3Xcr/kMBdzVreM+DChF
+ 9BKCQK5bYPHT6YHyz/U9aeuNLi4YES3Dq3NuGX/yHXn3+fq96EYCkjeN5JvHkmYjiqtc
+ /x8QihfAhutP8U3M7Yki2WOt2sYSelCosgzJtVhoe41p47nEgTb5BB5tOuNCoaR9o5gd
+ WSPsXdUbv154rNs8yrdoYmmELgCi50Pl/Z7/cOLWSd/QC4GOBJV4GH1ZzCEeGxgndvfJ
+ KudpvhKniH9/J+3E+VWUdcKfafv74WBM/DGcJtFHcY/wTd5FXRUs8/NUpLDNWbbqFW3o Gg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 337eyme83a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 03 Sep 2020 03:52:35 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0833nlUh078075;
+        Thu, 3 Sep 2020 03:52:35 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3030.oracle.com with ESMTP id 3380y12x5u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 03 Sep 2020 03:52:35 +0000
+Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0833qYAW084111;
+        Thu, 3 Sep 2020 03:52:34 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 3380y12x5j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 03 Sep 2020 03:52:34 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0833qQ8V030386;
+        Thu, 3 Sep 2020 03:52:26 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 02 Sep 2020 20:52:26 -0700
+Date:   Wed, 2 Sep 2020 20:52:25 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-btrfs <linux-btrfs@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        ocfs2 list <ocfs2-devel@oss.oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        "Theodore Ts'o" <tytso@mit.edu>
+Subject: Broken O_{D,}SYNC behavior with FICLONE*?
+Message-ID: <20200903035225.GJ6090@magnolia>
 MIME-Version: 1.0
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-CC:     <linux-xfs@vger.kernel.org>, <ira.weiny@intel.com>
-Subject: Re: [PATCH v2] xfs: Add check for unsupported xflags
-References: <20200902040601.10293-1-yangx.jy@cn.fujitsu.com> <20200902175851.GY6096@magnolia>
-In-Reply-To: <20200902175851.GY6096@magnolia>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.220.69]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206)
-X-yoursite-MailScanner-ID: C893C48990DB.A9ED6
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9732 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 clxscore=1015 spamscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009030035
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/9/3 1:58, Darrick J. Wong wrote:
-> On Wed, Sep 02, 2020 at 12:06:01PM +0800, Xiao Yang wrote:
->> Current ioctl(FSSETXATTR) ignores unsupported xflags silently
->> so it is not clear for user to know unsupported xflags.
->> For example, use ioctl(FSSETXATTR) to set dax flag on kernel
->> v4.4 which doesn't support dax flag:
->> --------------------------------
->> 0
->> ----------------X testfile
->> --------------------------------
-Hi Darrick,
+Hi,
 
-Oops, the example shows incomplete info and see the correct one:
---------------------------------------------------------
-# xfs_io -f -c "chattr +x" testfile;echo $?
-0
-# xfs_io -c "lsattr" testfile
-----------------X testfile
---------------------------------------------------------
+I have a question for everyone-- do FICLONE and FICLONERANGE count as a
+"write operation" for the purposes of reasoning about O_SYNC and
+O_DSYNC?  In other words, is it supposed to be the case that
+(paraphrasing the open(2) manpage) "By the time ioctl(FICLONE) returns,
+the output data and associated file metadata have been transferred to
+the underlying hardware (i.e., as though each ioctl(FICLONE) was
+followed by a call to fsync(2))."?
 
-I will send the v3 patch shortly.
+If I open a file with O_SYNC, call FICLONE to reflink some data blocks
+into that file, and hit the reset button as soon as the ioctl call
+returns, should I expect that I will always see the new file contents in
+that file after the system comes back up?  Or am I required to fsync()
+the file despite O_SYNC being set?
 
-Best Regards,
-Xiao Yang
->> Add check to return -EOPNOTSUPP as ext4/f2fs/btrfs does.
->>
->> Signed-off-by: Xiao Yang<yangx.jy@cn.fujitsu.com>
-> Looks good to me,
-> Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
->
-> --D
->
->> ---
->>   fs/xfs/xfs_ioctl.c | 12 ++++++++++++
->>   1 file changed, 12 insertions(+)
->>
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 6f22a66777cd..e188e81961bd 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -1425,6 +1425,14 @@ xfs_ioctl_setattr_check_projid(
->>   	return 0;
->>   }
->>
->> +#define XFS_SUPPORTED_FS_XFLAGS \
->> +	(FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
->> +	 FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME | FS_XFLAG_NODUMP | \
->> +	 FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
->> +	 FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
->> +	 FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
->> +	 FS_XFLAG_HASATTR)
->> +
->>   STATIC int
->>   xfs_ioctl_setattr(
->>   	xfs_inode_t		*ip,
->> @@ -1439,6 +1447,10 @@ xfs_ioctl_setattr(
->>
->>   	trace_xfs_ioctl_setattr(ip);
->>
->> +	/* Check if fsx_xflags has unsupported xflags */
->> +	if (fa->fsx_xflags&  ~XFS_SUPPORTED_FS_XFLAGS)
->> +                return -EOPNOTSUPP;
->> +
->>   	code = xfs_ioctl_setattr_check_projid(ip, fa);
->>   	if (code)
->>   		return code;
->> -- 
->> 2.25.1
->>
->>
->>
->
-> .
->
+The reason I ask is that (a) reflinking can definitely change the file
+contents which seems like a write operation; and (b) we wrote a test to
+examine the copy_file_range() semantics wrt O_SYNC and discovered that
+an unaligned c_f_r through the splice code does indeed honor the
+documented O_SYNC semantics, but a block-aligned c_f_r that uses reflink
+does *not* honor this.
 
+So, that's inconsistent behavior and I want to know if remap_file_range
+is broken or if we all just don't care about O_SYNC for these fancy
+IO accelerators?
 
+I tend to think reflink is broken on XFS, but I converted that O_SYNC
+test into a fstest and discovered that none of XFS, btrfs, or ocfs2
+actually force the fs to persist metadata changes after reflinking into
+an O_SYNC file.  The manpages for the clone ioctls and copy_file_range
+don't explicitly declare those calls to be "write operations".
 
+FWIW I repeated the analysis with a file that had FS_XFLAG_SYNC or
+FS_SYNC_FL set on the inode but O_SYNC was not set on the fd, and
+observed the same results.
+
+--D
