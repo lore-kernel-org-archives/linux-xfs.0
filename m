@@ -2,111 +2,83 @@ Return-Path: <SRS0=m/8K=CN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D86DEC433E2
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 08:00:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03AABC433E2
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 08:25:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AE78206A5
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 08:00:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9C70206CA
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 08:25:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728112AbgIDH7x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Sep 2020 03:59:53 -0400
-Received: from song.cn.fujitsu.com ([218.97.8.244]:53253 "EHLO
-        song.cn.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729674AbgIDH7u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 03:59:50 -0400
-X-IronPort-AV: E=Sophos;i="5.76,388,1592841600"; 
-   d="scan'208";a="4857907"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.250.3])
-  by song.cn.fujitsu.com with ESMTP; 04 Sep 2020 15:59:41 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 5D55241AF17F;
-        Fri,  4 Sep 2020 15:59:41 +0800 (CST)
-Received: from G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 4 Sep 2020 15:59:41 +0800
-Received: from localhost.localdomain (10.167.225.206) by
- G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Fri, 4 Sep 2020 15:59:39 +0800
-From:   Hao Li <lihao2018.fnst@cn.fujitsu.com>
-To:     <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>
-CC:     <david@fromorbit.com>, <ira.weiny@intel.com>,
-        <linux-xfs@vger.kernel.org>, <lihao2018.fnst@cn.fujitsu.com>,
-        <y-goto@fujitsu.com>
-Subject: [PATCH v2] fs: Handle I_DONTCACHE in iput_final() instead of generic_drop_inode()
-Date:   Fri, 4 Sep 2020 15:59:39 +0800
-Message-ID: <20200904075939.176366-1-lihao2018.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.28.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 5D55241AF17F.ABDC4
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
+        id S1729628AbgIDIZu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Sep 2020 04:25:50 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:36578 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726655AbgIDIZt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 04:25:49 -0400
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
+ [209.85.214.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-497-P1pjnzdbM3mzg4nWWOMWWw-1; Fri, 04 Sep 2020 04:25:47 -0400
+X-MC-Unique: P1pjnzdbM3mzg4nWWOMWWw-1
+Received: by mail-pl1-f200.google.com with SMTP id bd4so750718plb.17
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2020 01:25:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=1juGUjS+HJi7/hKzXUbrGr0WbbqVdVe4BJzQvywS7hU=;
+        b=HwPL8eKrFbzC/rk93tP/ipQIlImKS4Ar7XXmcp8swrxv3HOa32/ufgcsKKHoORtmbM
+         pMq6Atv+laqkVGVCdeDOhvm6RyvPcTRZg2RN8Pn08zytvi5PZwLW+P9Dmpg6BM3YILxO
+         H5jcr6NtdqYlb+k7nILJYzK32csWHiHYW1mOq/k4OsSxi93uvfe8nTf20PsHBez31V+y
+         /mlW3y1TmkLLuiMlr4QFUW+8egs8WAMtfxttuR8iqzIKQ/N6YJbAYEYfvjabrMe5wffo
+         2RaF13oavihnjuwZBK5GNf50umqM64oOWMcBE/RmxXBIiARt1YxqCoYqZHVKxAATylRH
+         2duA==
+X-Gm-Message-State: AOAM530pU3Cz5Efy+xVWGDsos8Z1Dso4rMGIAq9eOB0xDh1drsQ6qdOS
+        xAGZ75W/dDdvMpiI6fFaHz7xz23fujavhAtFSQlz0aGJDOVHRhtEgfnpoZvawYwI4WsjuRER2Cg
+        7CrjghhB7zwKHipqOdAOs
+X-Received: by 2002:a17:902:b115:: with SMTP id q21mr7854559plr.191.1599207946369;
+        Fri, 04 Sep 2020 01:25:46 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyuzozwBgR1UeyOrSLZA4QMO1/nyaDPcclx32KwvOQFhukIVuvtw+brca0JdIXTkFi1YbpcRw==
+X-Received: by 2002:a17:902:b115:: with SMTP id q21mr7854543plr.191.1599207946132;
+        Fri, 04 Sep 2020 01:25:46 -0700 (PDT)
+Received: from xiangao.com ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id b64sm5721012pfa.200.2020.09.04.01.25.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Sep 2020 01:25:45 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH 0/2] xfs: random patches on log recovery
+Date:   Fri,  4 Sep 2020 16:25:14 +0800
+Message-Id: <20200904082516.31205-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If generic_drop_inode() returns true, it means iput_final() can evict
-this inode regardless of whether it is dirty or not. If we check
-I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
-evicted unconditionally. This is not the desired behavior because
-I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
-As for whether we need to evict this inode, this is what
-generic_drop_inode() should do. This patch corrects the usage of
-I_DONTCACHE.
+Hi folks,
 
-This patch was proposed in [1].
+Here are some patches after I read recovery code days ago.
+Due to code coupling from this version, I send them as a patchset.
 
-[1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
+I already ran fstests and no strange out and
+changelog is in each individual patch.
 
-Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
-Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
----
-Changes in v2:
- - Adjust code format
- - Add Fixes tag in commit message
+Thanks,
+Gao Xiang
 
- fs/inode.c         | 4 +++-
- include/linux/fs.h | 3 +--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+Gao Xiang (2):
+  xfs: avoid LR buffer overrun due to crafted h_{len,size}
+  xfs: clean up calculation of LR header blocks
 
-diff --git a/fs/inode.c b/fs/inode.c
-index 72c4c347afb7..19ad823f781c 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1625,7 +1625,9 @@ static void iput_final(struct inode *inode)
- 	else
- 		drop = generic_drop_inode(inode);
- 
--	if (!drop && (sb->s_flags & SB_ACTIVE)) {
-+	if (!drop &&
-+	    !(inode->i_state & I_DONTCACHE) &&
-+	    (sb->s_flags & SB_ACTIVE)) {
- 		inode_add_lru(inode);
- 		spin_unlock(&inode->i_lock);
- 		return;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index e019ea2f1347..93caee80ce47 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -2922,8 +2922,7 @@ extern int inode_needs_sync(struct inode *inode);
- extern int generic_delete_inode(struct inode *inode);
- static inline int generic_drop_inode(struct inode *inode)
- {
--	return !inode->i_nlink || inode_unhashed(inode) ||
--		(inode->i_state & I_DONTCACHE);
-+	return !inode->i_nlink || inode_unhashed(inode);
- }
- extern void d_mark_dontcache(struct inode *inode);
- 
+ fs/xfs/xfs_log.c         |   4 +-
+ fs/xfs/xfs_log_recover.c | 103 +++++++++++++++++++--------------------
+ 2 files changed, 51 insertions(+), 56 deletions(-)
+
 -- 
-2.28.0
-
-
+2.18.1
 
