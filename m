@@ -2,255 +2,210 @@ Return-Path: <SRS0=m/8K=CN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8261BC10DAA
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 03:37:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B8B4C2BC84
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 05:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 50B7820716
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 03:37:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E122B2086A
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 05:39:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Xm7dX6HO"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AHI+e2/Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729645AbgIDDhm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Sep 2020 23:37:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44602 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729580AbgIDDhg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 23:37:36 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77375C061244;
-        Thu,  3 Sep 2020 20:37:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=MlDL+jj1BjkOBZ5IVs63oT6JunXcTHCVT3fwzED6qgE=; b=Xm7dX6HOdM1ZcF6vj8L3Zs+L13
-        0qweHQUoX5UXahkix1MNiHbfgTTQdI016/smaFmFmOcHjYEOHGry4h09fYA4oTqxcAk7iParpcCHR
-        a6FsDjbquO0y9lcvtjy5IXoFqtRgidppIQsq38e3ew55Uc/6HiUTFMkEOKsjQbbcS0T5rTY9BnCZb
-        UKV01wz2/iQjXFYRZ3TIVyMAENUtRUb5RrxqwBQWSr9MHtpofxbjmmxddSrs+Q32o5fc4WFxMJ+X8
-        cyvIqaygpC+H+xivFnGIOKmLbbXvqgzwtDlPGj18pQDiXXUUXFAVpmkJijIksO0jYGcRcDRCCZHAv
-        jPO4Xx5A==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kE2XU-0001Jc-Ut; Fri, 04 Sep 2020 03:37:24 +0000
-Date:   Fri, 4 Sep 2020 04:37:24 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     darrick.wong@oracle.com, david@fromorbit.com, yukuai3@huawei.com,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, "Kirill A. Shutemov" <kirill@shutemov.name>
-Subject: Re: Splitting an iomap_page
-Message-ID: <20200904033724.GH14765@casper.infradead.org>
-References: <20200821144021.GV17456@casper.infradead.org>
+        id S1726415AbgIDFjj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Sep 2020 01:39:39 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47428 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726032AbgIDFji (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 01:39:38 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0845YOBP190917;
+        Fri, 4 Sep 2020 05:39:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=PYsmwBTOHx2pxVAHWEvKR4UXw2kGeTrQr9HNJO/W1FA=;
+ b=AHI+e2/Zw2UNkoer0YANiTmY/IOzThkrDIyZjJm3WCKyLCdp+h2NwxqoET0Srl47ooeu
+ ntAogPMQttr1QsuWLFZC1arqKpSNhhLetPwZRhaDrh7oqlKm3lJDyhZAnn1rS74MqT1R
+ sFs+Oa7VnLreO6X2oeK5CZgePVU8/TOOcWI8myTaGueXP8t8OHE7LN2VWNEzcv/IbR9i
+ F6FrDU/GYaGC5Oil6ue+N59eSvyGY2gJ2TPSyeLj8P1Lid1VIPVPepGWn+dU+8q9Wrfx
+ k8WqlyHamXUDJW1pBYkmkaLB9dknYFmuzL5D9FhRBf6NWgni+s8XVma0wxzn7gDv1tyO /A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 337eymmgfm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 04 Sep 2020 05:39:34 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0845ZoJT096836;
+        Fri, 4 Sep 2020 05:39:33 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 33b7v1xcyg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 04 Sep 2020 05:39:33 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0845dWt4030182;
+        Fri, 4 Sep 2020 05:39:32 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 03 Sep 2020 22:39:32 -0700
+Date:   Thu, 3 Sep 2020 22:39:31 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] quota: widen timestamps for the fs_disk_quota structure
+Message-ID: <20200904053931.GB6096@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200821144021.GV17456@casper.infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9733 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
+ mlxlogscore=999 phishscore=0 bulkscore=0 suspectscore=1 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009040052
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9733 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 clxscore=1015 spamscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009040052
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 21, 2020 at 03:40:21PM +0100, Matthew Wilcox wrote:
-> Operations like holepunch or truncate call into
-> truncate_inode_pages_range() which just remove THPs which are
-> entirely within the punched range, but pages which contain one or both
-> ends of the range need to be split.
-> 
-> What I have right now, and works, calls do_invalidatepage() from
-> truncate_inode_pages_range().  The iomap implementation just calls
-> iomap_page_release().  We have the page locked, and we've waited for
-> writeback to finish, so there is no I/O outstanding against the page.
-> We may then get into one of the writepage methods without an iomap being
-> allocated, so we have to allocate it.  Patches here:
-> 
-> http://git.infradead.org/users/willy/pagecache.git/commitdiff/167f81e880ef00d83ab7db50d56ed85bfbae2601
-> http://git.infradead.org/users/willy/pagecache.git/commitdiff/82fe90cde95420c3cf155b54ed66c74d5fb6ffc5
-> 
-> If the page is Uptodate, this works great.  But if it's not, then we're
-> going to unnecessarily re-read data from storage -- indeed, we may as
-> well just dump the entire page if it's !Uptodate.  Of course, right now
-> the only way to get THPs is through readahead and that's going to always
-> read the entire page, so we're never going to see a !Uptodate THP.  But
-> in the future, maybe we shall?  I wouldn't like to rely on that without
-> pasting some big warnings for anyone who tries to change it.
-[first three bad solutions snipped]
-> Alternative 4: Don't support partially-uptodate THPs.  We declare (and
-> enforce with strategic assertions) that all THPs must always be Uptodate
-> (or Error) once unlocked.  If your workload benefits from using THPs,
-> you want to do big I/Os anyway, so these "write 512 bytes at a time
-> using O_SYNC" workloads aren't going to use THPs.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This was the most popular alternative amongst those who cast a ballot.
-Here's my response.  I'd really like to be able to callback from
-split_huge_page() to the filesystem through ->is_partially_uptodate
-in order to set each of the pages to uptodate (if indeed they are).
-Unfortunately, we just disposed of the per-page data right before we
-called split_huge_page(), so that doesn't work.
+Widen the timestamp fields in struct fs_disk_quota to handle quota grace
+expiration times beyond 2038.  Since the only filesystem that's going to
+use this (XFS) only supports unsigned 34-bit quantities, adding an extra
+5 bits here should work fine.  We can rev the structure again in 350
+years.
 
-This solution allows PageError pages to stay in the cache (because
-I/O completions run in contexts where we don't want to call
-split_huge_page()).  The only way (I believe) to get a !Uptodate page
-dirty is to perform a write to the page.  The patch below will split
-the page in this case.  It also splits the page in the case where we
-call ->readpage to attempt to bring the page uptodate (from, eg, the
-filemap read path, or the pagefault path).
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/quota/quota.c               |   40 +++++++++++++++++++++++++++++++++++++---
+ include/uapi/linux/dqblk_xfs.h |   13 +++++++++++--
+ 2 files changed, 48 insertions(+), 5 deletions(-)
 
-We lose the uptodate bits when we split the page, so there may be an
-extra read.  That's not great.  But we do look up whether the current
-subpage we're looking at is entirely uptodate, and if it is, we set the
-page uptodate after it's split.
-
-Kirill, do I have the handling of split_huge_page() failure correct?
-It seems reasonable to me -- unlock the page and drop the reference,
-hoping that somebody else will not have a reference to the page by the
-next time we try to split it.  Or they will split it for us.  There's a
-livelock opportunity here, but I'm not sure it's worse than the one in
-a holepunch scenario.
-
-This is against my current head of the THP patchset, so you'll see some
-earlier bad ideas being deleted (like using thp_size() in iomap_readpage()
-and the VM_WARN_ON_ONCE(!PageUptodate) in iomap_invalidate())
-
-This is all basically untested.  I have the xfstests suite running now,
-but it never hit the VM_WARN_ON_ONCE in iomap_invalidate() so it's
-probably not hitting any of this code.  Anybody want to write an
-xfstest for me with unreliable storage for data, reliable storage
-for metadata and runs fsx like generic/127 does?
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 156cbed1cd2c..03f477f785fe 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -336,6 +336,39 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	return pos - orig_pos + plen;
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 5444d3c4d93f..efa14d9ee06f 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -481,6 +481,14 @@ static inline u64 quota_btobb(u64 bytes)
+ 	return (bytes + (1 << XFS_BB_SHIFT) - 1) >> XFS_BB_SHIFT;
  }
  
-+static bool iomap_range_uptodate(struct inode *inode, struct page *page,
-+		size_t start, size_t len)
++static inline s64 copy_from_xfs_dqblk_ts(const struct fs_disk_quota *d,
++		__s32 timer, __s8 timer_hi)
 +{
-+	struct iomap_page *iop = to_iomap_page(page);
-+	size_t i, first, last;
-+
-+	/* First and last blocks in range within page */
-+	first = start >> inode->i_blkbits;
-+	last = (start + len - 1) >> inode->i_blkbits;
-+
-+	if (!iop)
-+		return false;
-+
-+	for (i = first; i <= last; i++)
-+		if (!test_bit(i, iop->uptodate))
-+			return false;
-+	return true;
++	if (d->d_fieldmask & FS_DQ_BIGTIME)
++		return (u32)timer | (s64)timer_hi << 32;
++	return timer;
 +}
 +
-+static bool iomap_split_page(struct inode *inode, struct page *page)
+ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
+ {
+ 	dst->d_spc_hardlimit = quota_bbtob(src->d_blk_hardlimit);
+@@ -489,14 +497,18 @@ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
+ 	dst->d_ino_softlimit = src->d_ino_softlimit;
+ 	dst->d_space = quota_bbtob(src->d_bcount);
+ 	dst->d_ino_count = src->d_icount;
+-	dst->d_ino_timer = src->d_itimer;
+-	dst->d_spc_timer = src->d_btimer;
++	dst->d_ino_timer = copy_from_xfs_dqblk_ts(src, src->d_itimer,
++						  src->d_itimer_hi);
++	dst->d_spc_timer = copy_from_xfs_dqblk_ts(src, src->d_btimer,
++						  src->d_btimer_hi);
+ 	dst->d_ino_warns = src->d_iwarns;
+ 	dst->d_spc_warns = src->d_bwarns;
+ 	dst->d_rt_spc_hardlimit = quota_bbtob(src->d_rtb_hardlimit);
+ 	dst->d_rt_spc_softlimit = quota_bbtob(src->d_rtb_softlimit);
+ 	dst->d_rt_space = quota_bbtob(src->d_rtbcount);
+ 	dst->d_rt_spc_timer = src->d_rtbtimer;
++	dst->d_rt_spc_timer = copy_from_xfs_dqblk_ts(src, src->d_rtbtimer,
++						     src->d_rtbtimer_hi);
+ 	dst->d_rt_spc_warns = src->d_rtbwarns;
+ 	dst->d_fieldmask = 0;
+ 	if (src->d_fieldmask & FS_DQ_ISOFT)
+@@ -588,10 +600,27 @@ static int quota_setxquota(struct super_block *sb, int type, qid_t id,
+ 	return sb->s_qcop->set_dqblk(sb, qid, &qdq);
+ }
+ 
++static inline __s8 copy_to_xfs_dqblk_ts(const struct fs_disk_quota *d,
++		__s32 *timer_lo, s64 timer)
 +{
-+	struct page *head = thp_head(page);
-+	bool uptodate = iomap_range_uptodate(inode, head,
-+				(page - head) * PAGE_SIZE, PAGE_SIZE);
-+
-+	iomap_page_release(head);
-+	if (split_huge_page(page) < 0)
-+		return false;
-+	if (uptodate)
-+		SetPageUptodate(page);
-+	return true;
++	*timer_lo = timer;
++	if (d->d_fieldmask & FS_DQ_BIGTIME)
++		return timer >> 32;
++	return 0;
 +}
 +
- int
- iomap_readpage(struct page *page, const struct iomap_ops *ops)
++static inline bool want_bigtime(s64 timer)
++{
++	return timer > S32_MAX || timer < S32_MIN;
++}
++
+ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
+ 			      int type, qid_t id)
  {
-@@ -344,11 +377,21 @@ iomap_readpage(struct page *page, const struct iomap_ops *ops)
- 	unsigned poff;
- 	loff_t ret;
- 
--	trace_iomap_readpage(page->mapping->host, 1);
-+	if (PageTransCompound(page)) {
-+		/*
-+		 * The page wasn't exactly truncated, but we want to drop
-+		 * our refcount so somebody else might be able to split it.
-+		 */
-+		if (!iomap_split_page(inode, page))
-+			return AOP_TRUNCATED_PAGE;
-+		if (PageUptodate(page))
-+			return 0;
-+	}
-+	trace_iomap_readpage(inode, 1);
- 
--	for (poff = 0; poff < thp_size(page); poff += ret) {
-+	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
- 		ret = iomap_apply(inode, page_offset(page) + poff,
--				thp_size(page) - poff, 0, ops, &ctx,
-+				PAGE_SIZE - poff, 0, ops, &ctx,
- 				iomap_readpage_actor);
- 		if (ret <= 0) {
- 			WARN_ON_ONCE(ret == 0);
-@@ -458,26 +501,15 @@ int
- iomap_is_partially_uptodate(struct page *page, unsigned long from,
- 		unsigned long count)
- {
--	struct iomap_page *iop = to_iomap_page(page);
--	struct inode *inode = page->mapping->host;
--	unsigned len, first, last;
--	unsigned i;
--
--	/* Limit range to one page */
--	len = min_t(unsigned, thp_size(page) - from, count);
-+	struct page *head = thp_head(page);
-+	size_t len;
- 
--	/* First and last blocks in range within page */
--	first = from >> inode->i_blkbits;
--	last = (from + len - 1) >> inode->i_blkbits;
-+	/* 'from' is relative to page, but the bitmap is relative to head */
-+	from += (page - head) * PAGE_SIZE;
-+	/* Limit range to this page */
-+	len = min(thp_size(head) - from, count);
- 
--	if (iop) {
--		for (i = first; i <= last; i++)
--			if (!test_bit(i, iop->uptodate))
--				return 0;
--		return 1;
--	}
--
--	return 0;
-+	return iomap_range_uptodate(head->mapping->host, head, from, len);
+ 	memset(dst, 0, sizeof(*dst));
++	if (want_bigtime(src->d_ino_timer) || want_bigtime(src->d_spc_timer) ||
++	    want_bigtime(src->d_rt_spc_timer))
++		dst->d_fieldmask |= FS_DQ_BIGTIME;
+ 	dst->d_version = FS_DQUOT_VERSION;
+ 	dst->d_id = id;
+ 	if (type == USRQUOTA)
+@@ -606,6 +635,10 @@ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
+ 	dst->d_ino_softlimit = src->d_ino_softlimit;
+ 	dst->d_bcount = quota_btobb(src->d_space);
+ 	dst->d_icount = src->d_ino_count;
++	dst->d_itimer_hi = copy_to_xfs_dqblk_ts(dst, &dst->d_itimer,
++						src->d_ino_timer);
++	dst->d_btimer_hi = copy_to_xfs_dqblk_ts(dst, &dst->d_btimer,
++						src->d_spc_timer);
+ 	dst->d_itimer = src->d_ino_timer;
+ 	dst->d_btimer = src->d_spc_timer;
+ 	dst->d_iwarns = src->d_ino_warns;
+@@ -613,7 +646,8 @@ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
+ 	dst->d_rtb_hardlimit = quota_btobb(src->d_rt_spc_hardlimit);
+ 	dst->d_rtb_softlimit = quota_btobb(src->d_rt_spc_softlimit);
+ 	dst->d_rtbcount = quota_btobb(src->d_rt_space);
+-	dst->d_rtbtimer = src->d_rt_spc_timer;
++	dst->d_rtbtimer_hi = copy_to_xfs_dqblk_ts(dst, &dst->d_rtbtimer,
++						  src->d_rt_spc_timer);
+ 	dst->d_rtbwarns = src->d_rt_spc_warns;
  }
- EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
  
-@@ -517,7 +549,7 @@ iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
+diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
+index 03d890b80ebc..a684f64d9cc0 100644
+--- a/include/uapi/linux/dqblk_xfs.h
++++ b/include/uapi/linux/dqblk_xfs.h
+@@ -71,8 +71,11 @@ typedef struct fs_disk_quota {
+ 	__u64		d_rtb_softlimit;/* preferred limit on RT disk blks */
+ 	__u64		d_rtbcount;	/* # realtime blocks owned */
+ 	__s32		d_rtbtimer;	/* similar to above; for RT disk blks */
+-	__u16	  	d_rtbwarns;     /* # warnings issued wrt RT disk blks */
+-	__s16		d_padding3;	/* padding3 - for future use */	
++	__u16		d_rtbwarns;     /* # warnings issued wrt RT disk blks */
++	__s8		d_itimer_hi:5;	/* upper 5 bits of timers */
++	__s8		d_btimer_hi:5;
++	__s8		d_rtbtimer_hi:5;
++	__u8		d_padding3:1;	/* padding3 - for future use */
+ 	char		d_padding4[8];	/* yet more padding */
+ } fs_disk_quota_t;
  
- 	/* Punching a hole in a THP requires releasing the iop */
- 	if (PageTransHuge(page)) {
--		VM_WARN_ON_ONCE(!PageUptodate(page));
-+		VM_BUG_ON_PAGE(PageDirty(page), page);
- 		iomap_page_release(page);
- 	}
- }
-@@ -645,12 +677,20 @@ static ssize_t iomap_write_begin(struct inode *inode, loff_t pos, loff_t len,
- 			return status;
- 	}
+@@ -121,6 +124,12 @@ typedef struct fs_disk_quota {
+ #define FS_DQ_RTBCOUNT		(1<<14)
+ #define FS_DQ_ACCT_MASK		(FS_DQ_BCOUNT | FS_DQ_ICOUNT | FS_DQ_RTBCOUNT)
  
-+retry:
- 	page = grab_cache_page_write_begin(inode->i_mapping, pos >> PAGE_SHIFT,
- 			AOP_FLAG_NOFS);
- 	if (!page) {
- 		status = -ENOMEM;
- 		goto out_no_page;
- 	}
-+	if (PageTransCompound(page) && !PageUptodate(page)) {
-+		if (!iomap_split_page(inode, page)) {
-+			unlock_page(page);
-+			put_page(page);
-+			goto retry;
-+		}
-+	}
- 	page = thp_head(page);
- 	offset = offset_in_thp(page, pos);
- 	if (len > thp_size(page) - offset)
++/*
++ * Quota expiration timestamps are 37-bit signed integers, with the upper 5
++ * bits encoded in the _hi fields.
++ */
++#define FS_DQ_BIGTIME		(1<<15)
++
+ /*
+  * Various flags related to quotactl(2).
+  */
