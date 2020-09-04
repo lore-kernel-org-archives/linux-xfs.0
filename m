@@ -2,160 +2,170 @@ Return-Path: <SRS0=m/8K=CN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1062AC43461
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 13:01:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF76DC43461
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 13:46:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD6E5207EA
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 13:01:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="B6RvUqdh"
+	by mail.kernel.org (Postfix) with ESMTP id C0F0B20658
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 13:46:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730378AbgIDNBl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Sep 2020 09:01:41 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:57061 "EHLO
+        id S1730514AbgIDNqj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Sep 2020 09:46:39 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:56912 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730298AbgIDM7o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 08:59:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599224382;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UUtXd1xMQ7KHaZG/zgmMlu2bCG3w6vU0xn87tIL7ihs=;
-        b=B6RvUqdhJ2xLaHMSBndsqMI537p6TgfEdCvHDSGNdD9pwpuq6fEKPSlEGisdjPsx9jlDUv
-        XA2kMLItL8V3mRinmveQXEmx1ZncxXGWSE7RAQFgHJt4DVpQJUGCgvzTb+dW4DyX+HXDWz
-        53IozNQ5s0rov0QmwrqI4IAEn/uyEeU=
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
- [209.85.216.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-108-plr55ZSQNyKl7FknaegStA-1; Fri, 04 Sep 2020 08:59:40 -0400
-X-MC-Unique: plr55ZSQNyKl7FknaegStA-1
-Received: by mail-pj1-f71.google.com with SMTP id lx6so3097675pjb.9
-        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2020 05:59:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=UUtXd1xMQ7KHaZG/zgmMlu2bCG3w6vU0xn87tIL7ihs=;
-        b=WfLiKHWcMzT/6IYKTHiNyTkCcO0hhaHnheDsab5PLUuATZEbt9J8EHVR+Cqxn9OYbx
-         nfsDC0SpcsxQ+XVCO/udA0CIU5H6vRMqHDw1a+0rc/LtvopgNokYfBc473XZU3EWHrKN
-         dFZQHW6TRzhxDojO65j2LUbDAAM7zuLBb3dbbm4P66qiKqb6kNRE1ks9lMjbaNahczvW
-         cmOD7NK4RddQrEoJLUVXT8l1YSY62sAbT5+whUDH7wRB/GGUoL5yNO6XNZn32BxVPtqF
-         /JAKGpq3rh/dJnr4ZrgT3S2Kg6CPPsNs2h8LHtuAUhSwD0i7pWMG9tppy5LMwaf9WhWc
-         5fVg==
-X-Gm-Message-State: AOAM533v5HEC6N+yhfhhDECyhlBQcid4Mih/B80zK7Gt5gPqG8Q9f1sR
-        2KDkhnxLJkft3tATgNjnwxQ+99LU0L/RoeTjljLk0eGbv2WmTF5IMXTkvmVooV+kzZ9K2Gl3T3F
-        w8Jl/FPooJ7axqGni7kj7
-X-Received: by 2002:a17:902:aa03:: with SMTP id be3mr8276000plb.245.1599224379485;
-        Fri, 04 Sep 2020 05:59:39 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzIEz5QYtFzpSNj/1cfERu7m/Phl/UbZM4QlordAZSEoaEm1/7uBNHYZLYFjsubFwW3TtX/Wg==
-X-Received: by 2002:a17:902:aa03:: with SMTP id be3mr8275982plb.245.1599224379132;
-        Fri, 04 Sep 2020 05:59:39 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id q127sm6590411pfb.61.2020.09.04.05.59.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2020 05:59:38 -0700 (PDT)
-Date:   Fri, 4 Sep 2020 20:59:29 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Brian Foster <bfoster@redhat.com>
+        with ESMTP id S1730628AbgIDNqT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 09:46:19 -0400
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-84-186IShRWP9O5AzziFvHiRg-1; Fri, 04 Sep 2020 09:37:07 -0400
+X-MC-Unique: 186IShRWP9O5AzziFvHiRg-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4BC916A29A;
+        Fri,  4 Sep 2020 13:37:06 +0000 (UTC)
+Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CDA1B2C31E;
+        Fri,  4 Sep 2020 13:37:05 +0000 (UTC)
+Date:   Fri, 4 Sep 2020 09:37:04 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
 Cc:     linux-xfs@vger.kernel.org,
         "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/2] xfs: clean up calculation of LR header blocks
-Message-ID: <20200904125929.GB28752@xiangao.remote.csb>
+Subject: Re: [PATCH v3 1/2] xfs: avoid LR buffer overrun due to crafted
+ h_{len,size}
+Message-ID: <20200904133704.GD529978@bfoster>
 References: <20200904082516.31205-1-hsiangkao@redhat.com>
- <20200904082516.31205-3-hsiangkao@redhat.com>
- <20200904112548.GC529978@bfoster>
+ <20200904082516.31205-2-hsiangkao@redhat.com>
+ <20200904112529.GB529978@bfoster>
+ <20200904124634.GA28752@xiangao.remote.csb>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200904112548.GC529978@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200904124634.GA28752@xiangao.remote.csb>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Brian,
-
-On Fri, Sep 04, 2020 at 07:25:48AM -0400, Brian Foster wrote:
-> On Fri, Sep 04, 2020 at 04:25:16PM +0800, Gao Xiang wrote:
-
+On Fri, Sep 04, 2020 at 08:46:34PM +0800, Gao Xiang wrote:
+> Hi Brian,
+> 
+> On Fri, Sep 04, 2020 at 07:25:29AM -0400, Brian Foster wrote:
+> > On Fri, Sep 04, 2020 at 04:25:15PM +0800, Gao Xiang wrote:
+> 
+> ...
+> 
 ...
-
-> >  
-> > +static inline int xlog_logrecv2_hblks(struct xlog_rec_header *rh)
-> > +{
-> > +	int	h_size = be32_to_cpu(rh->h_size);
-> > +
-> > +	if ((be32_to_cpu(rh->h_version) & XLOG_VERSION_2) &&
-> > +	    h_size > XLOG_HEADER_CYCLE_SIZE)
-> > +		return DIV_ROUND_UP(h_size, XLOG_HEADER_CYCLE_SIZE);
-> > +	return 1;
-> > +}
-> > +
-> > +static inline int xlog_logrec_hblks(struct xlog *log, xlog_rec_header_t *rh)
-> > +{
-> > +	if (!xfs_sb_version_haslogv2(&log->l_mp->m_sb))
-> > +		return 1;
-> > +	return xlog_logrecv2_hblks(rh);
-> > +}
-> > +
+> > > @@ -3001,21 +3011,19 @@ xlog_do_recovery_pass(
+> > >  		 */
+> > >  		h_size = be32_to_cpu(rhead->h_size);
+> > >  		h_len = be32_to_cpu(rhead->h_len);
+> > > -		if (h_len > h_size) {
+> > > -			if (h_len <= log->l_mp->m_logbsize &&
+> > > -			    be32_to_cpu(rhead->h_num_logops) == 1) {
+> > > -				xfs_warn(log->l_mp,
+> > > +		if (h_len > h_size && h_len <= log->l_mp->m_logbsize &&
+> > > +		    rhead->h_num_logops == cpu_to_be32(1)) {
+> > > +			xfs_warn(log->l_mp,
+> > >  		"invalid iclog size (%d bytes), using lsunit (%d bytes)",
+> > > -					 h_size, log->l_mp->m_logbsize);
+> > > -				h_size = log->l_mp->m_logbsize;
+> > > -			} else {
+> > > -				XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
+> > > -						log->l_mp);
+> > > -				error = -EFSCORRUPTED;
+> > > -				goto bread_err1;
+> > > -			}
+> > > +				 h_size, log->l_mp->m_logbsize);
+> > > +			h_size = log->l_mp->m_logbsize;
+> > > +			rhead->h_size = cpu_to_be32(h_size);
+> > 
+> > I don't think we should update rhead like this, particularly in a rare
+> > and exclusive case. This structure should reflect what is on disk.
+> > 
+> > All in all, I think this patch should be much more focused:
+> > 
+> > 1.) Add the bufsize parameter and associated corruption check to
+> > xlog_valid_rec_header().
+> > 2.) Pass the related value from the existing calls.
+> > 3.) (Optional) If there's reason to revalidate after executing the mkfs
+> > workaround, add a second call within the branch that implements the
+> > h_size workaround.
+> > 
 > 
-> h_version is assigned based on xfs_sb_version_haslogv2() in the first
-> place so I'm not sure I see the need for multiple helpers like this, at
-> least with the current code. I can't really speak to why some code
-> checks the feature bit and/or the record header version and not the
-> other way around, but perhaps there's some historical reason I'm not
-> aware of. Regardless, is there ever a case where
-> xfs_sb_version_haslogv2() == true and h_version != 2? That strikes me as
-> more of a corruption scenario than anything..
-
-Thanks for this.
-
-Honestly, I'm not quite sure if xfs_sb_version_haslogv2() == true and
-h_version != 2 is useful (or existed historially)... anyway, that is
-another seperate topic though...
-
-Could you kindly give me some code flow on your preferred way about
-this so I could update this patch proper (since we have a complex
-case in xlog_do_recovery_pass(), I'm not sure how the unique helper
-will be like because there are 3 cases below...)
-
- - for the first 2 cases, we already have rhead read in-memory,
-   so the logic is like:
-     ....
-     log_bread (somewhere in advance)
-     ....
-
-     if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-          ...
-     } else {
-          ...
-     }
-     (so I folded this two cases in xlog_logrec_hblks())
-
- - for xlog_do_recovery_pass, it behaves like
-    if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-         log_bread (another extra bread to get h_size for
-         allocated buffer and hblks).
-
-         ...
-    } else {
-         ...
-    }
-    so in this case we don't have rhead until
-xfs_sb_version_haslogv2(&log->l_mp->m_sb) is true...
-
-Thanks in advance!
-
-Thanks,
-Gao Xiang
-
-
+> I moved workaround code to xlog_valid_rec_header() at first is
+> because in xlog_valid_rec_header() actually it has 2 individual
+> checks now:
 > 
-> Brian
+> 1) check rhead->h_len vs rhead->h_size for each individual log record;
+> 2) check rhead->h_size vs the unique allocated buffer size passed in
+>    for each record (since each log record has one stored h_size,
+>    even though there are not used later according to the current
+>    logic of xlog_do_recovery_pass).
+> 
+> if any of the conditions above is not satisfied, xlog_valid_rec_header()
+> will make fs corrupted immediately, so I tried 2 ways up to now:
+> 
+>  - (v1,v2) fold in workaround case into xlog_valid_rec_header()
+>  - (v3) rearrange workaround and xlog_valid_rec_header() order in
+>         xlog_do_recovery_pass() and modify rhead->h_size to the
+>         workaround h_size before xlog_valid_rec_header() validation
+>         so xlog_valid_rec_header() will work as expected since it
+>         has two individual checks as mentioned above.
+> 
+> If there is some better way, kindly let me know :) and I'd like to
+> hear other folks about this in advance as well.... so I can go
+> forward since this part is a bit tricky for now.
+> 
+
+My suggestion is to, at minimum, separate the above two logic changes
+into separate patches. Item #2 above is a functional check in that it
+ensures each record fits into the record buffer size we've allocated
+(based on h_size) at the start of recovery. This item is what my
+feedback above was referring to and I think is a fairly straightforward
+change.
+
+Item #1 is a bit more nebulous. h_size refers to the iclog size used by
+the kernel that wrote to the log. I think it should be uniform across
+all records and AFAICT it doesn't serve a functional purpose (validation
+notwithstanding) for recovery beyond establishing the size of the buffer
+we should allocate to process records. The mkfs workaround implements a
+case where we have to ignore the on-disk h_size and use the in-core
+iclog size, and that is currently isolated to a single place. I'm not
+fundamentally against more h_size verification beyond current usage, but
+if that means we have to consider the workaround for multiple records
+(which is confusing and incorrect) or make subtle runtime changes like
+quietly tweaking the in-core record header structure from what is on
+disk, then I don't think it's worth the complexity.
+
+If we _really_ wanted to include such a change, I think a more
+appropriate validation check might be to similarly track the h_size from
+the initial record and simply verify that the values are uniform across
+all processed records. That way we don't conflict or impose the
+workaround logic on the underlying log format rules. It also catches the
+(unlikely) case that the mkfs workaround is applied on the first record
+incorrectly because h_size is corrupt and there are more records that
+conflict. Also note that v5 filesystems enforce record CRC checks
+anyways, so this still might be of limited value...
+
+Brian
+
+> > Also, please test the workaround case to make sure it still works as
+> > expected (if you haven't already).
+> 
+> ok, will double confirm this, thanks!
+> 
+> Thanks,
+> Gao Xiang
+> 
+> > 
+> > Brian
+> >
+>  
+> 
 
