@@ -2,120 +2,127 @@ Return-Path: <SRS0=m/8K=CN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D70C433E2
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 01:14:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA0B7C433E2
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 03:11:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E13B20758
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 01:14:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A155620E65
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 03:11:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Hm75ukK2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728107AbgIDBOk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Sep 2020 21:14:40 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:26326 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725787AbgIDBOk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 21:14:40 -0400
-X-IronPort-AV: E=Sophos;i="5.76,387,1592841600"; 
-   d="scan'208";a="98891705"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 04 Sep 2020 09:14:35 +0800
-Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
-        by cn.fujitsu.com (Postfix) with ESMTP id 53D8A48990C8;
-        Fri,  4 Sep 2020 09:14:31 +0800 (CST)
-Received: from [10.167.220.69] (10.167.220.69) by
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 4 Sep 2020 09:14:26 +0800
-Message-ID: <5F5194F1.8010607@cn.fujitsu.com>
-Date:   Fri, 4 Sep 2020 09:14:25 +0800
-From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
-User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.2; zh-CN; rv:1.9.2.18) Gecko/20110616 Thunderbird/3.1.11
+        id S1729628AbgIDDLH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Sep 2020 23:11:07 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:48248 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729712AbgIDDLG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Sep 2020 23:11:06 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0843APic161856
+        for <linux-xfs@vger.kernel.org>; Fri, 4 Sep 2020 03:11:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=HFTy0tkp18cdfwSzXH0CBTT9uv2ob36FI0f8eEO3TdY=;
+ b=Hm75ukK2xiXA6yNHMCcCx0SpmeTr/XCab7cx/SRBhu1UiAaCeGsotOY1pL6TnevKsASz
+ g/ab8P+k7nvvF8Q6wfYlSYNu++FSoyb5KpWAYz1bwVcfwgI2jv+fu8DlKCxi8dLm0FR/
+ uNpTZ+Q/v4ZP7TajsM0bVldQX/PdR3cSrfffvQbXIrNCaiHqscbIg1tWofIFJzolB4uc
+ UGIf1OHKI/unD96nqVDhSwruMJBlm0Y6b2uhYRh9dTppYe185vcCCC5yyAnYOCJynUhM
+ phB5lvVlqdbcONRwdTMdOEmDqOdpxMXHEp/mvCAfliNgJmicH+CdYmDlj310rqiJdkca xg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 337eymm5e5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2020 03:11:03 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0843AkMB129594
+        for <linux-xfs@vger.kernel.org>; Fri, 4 Sep 2020 03:11:03 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 3380xbv3v8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 04 Sep 2020 03:11:02 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0843B1nG026224
+        for <linux-xfs@vger.kernel.org>; Fri, 4 Sep 2020 03:11:01 GMT
+Received: from localhost (/10.159.152.247)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 03 Sep 2020 20:11:01 -0700
+Date:   Thu, 3 Sep 2020 20:11:00 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: force the log after remapping a synchronous-writes file
+Message-ID: <20200904031100.GZ6096@magnolia>
 MIME-Version: 1.0
-To:     Dave Chinner <david@fromorbit.com>
-CC:     <linux-xfs@vger.kernel.org>, <darrick.wong@oracle.com>,
-        <ira.weiny@intel.com>
-Subject: Re: [PATCH v3] xfs: Add check for unsupported xflags
-References: <20200903035713.60962-1-yangx.jy@cn.fujitsu.com> <20200903074632.GD12131@dread.disaster.area>
-In-Reply-To: <20200903074632.GD12131@dread.disaster.area>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.220.69]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206)
-X-yoursite-MailScanner-ID: 53D8A48990C8.A995B
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9733 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 suspectscore=1 bulkscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009040028
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9733 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 clxscore=1015 spamscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009040028
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2020/9/3 15:46, Dave Chinner wrote:
-> On Thu, Sep 03, 2020 at 11:57:13AM +0800, Xiao Yang wrote:
->> Current ioctl(FSSETXATTR) ignores unsupported xflags silently
->> so it is not clear for user to know unsupported xflags.
->> For example, use ioctl(FSSETXATTR) to set dax flag on kernel
->> v4.4 which doesn't support dax flag:
->> --------------------------------
->> # xfs_io -f -c "chattr +x" testfile;echo $?
->> 0
->> # xfs_io -c "lsattr" testfile
->> ----------------X testfile
->> --------------------------------
->>
->> Add check to return -EOPNOTSUPP as ext4/f2fs/btrfs does.
->>
->> Signed-off-by: Xiao Yang<yangx.jy@cn.fujitsu.com>
->> Reviewed-by: Darrick J. Wong<darrick.wong@oracle.com>
->> ---
->>   fs/xfs/xfs_ioctl.c | 12 ++++++++++++
->>   1 file changed, 12 insertions(+)
->>
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 6f22a66777cd..59f9a86f29f7 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -1425,6 +1425,14 @@ xfs_ioctl_setattr_check_projid(
->>   	return 0;
->>   }
->>
->> +#define XFS_SUPPORTED_FS_XFLAGS \
->> +	(FS_XFLAG_REALTIME | FS_XFLAG_PREALLOC | FS_XFLAG_IMMUTABLE | \
->> +	 FS_XFLAG_APPEND | FS_XFLAG_SYNC | FS_XFLAG_NOATIME | FS_XFLAG_NODUMP | \
->> +	 FS_XFLAG_RTINHERIT | FS_XFLAG_PROJINHERIT | FS_XFLAG_NOSYMLINKS | \
->> +	 FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT | FS_XFLAG_NODEFRAG | \
->> +	 FS_XFLAG_FILESTREAM | FS_XFLAG_DAX | FS_XFLAG_COWEXTSIZE | \
->> +	 FS_XFLAG_HASATTR)
->> +
->>   STATIC int
->>   xfs_ioctl_setattr(
->>   	xfs_inode_t		*ip,
->> @@ -1439,6 +1447,10 @@ xfs_ioctl_setattr(
->>
->>   	trace_xfs_ioctl_setattr(ip);
->>
->> +	/* Check if fsx_xflags has unsupported xflags */
->> +	if (fa->fsx_xflags&  ~XFS_SUPPORTED_FS_XFLAGS)
->> +                return -EOPNOTSUPP;
-> I don't think we can do this as it may break existing applications
-> that have been working on XFS for many, many years that don't
-> correctly initialise fsx_xflags....
-Hi Dave,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-It seems that the only way is to keep the current behavior. :-(
+Commit 5833112df7e9 tried to make it so that a remap operation would
+force the log out to disk if the filesystem is mounted with mandatory
+synchronous writes.  Unfortunately, that commit failed to handle the
+case where the inode or the file descriptor require mandatory
+synchronous writes.
 
-By the way, _require_xfs_io_command "chattr" in xfstests cannot check XFS's
-unsupported xflags directly because of the behavior, so we may need to check
-them by extra xfs_io -c "lsattr".
+Refactor the check into into a helper that will look for all three
+conditions, and now we can treat reflink just like any other synchronous
+write.
 
-Best Regards,
-Xiao Yang
-> Cheers,
->
-> Dave.
+Fixes: 5833112df7e9 ("xfs: reflink should force the log out if mounted with wsync")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_file.c |   17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-
-
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index c31cd3be9fb2..ee43f137830c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -1008,6 +1008,21 @@ xfs_file_fadvise(
+ 	return ret;
+ }
+ 
++/* Does this file, inode, or mount want synchronous writes? */
++static inline bool xfs_file_sync_writes(struct file *filp)
++{
++	struct xfs_inode	*ip = XFS_I(file_inode(filp));
++
++	if (ip->i_mount->m_flags & XFS_MOUNT_WSYNC)
++		return true;
++	if (filp->f_flags & (__O_SYNC | O_DSYNC))
++		return true;
++	if (IS_SYNC(file_inode(filp)))
++		return true;
++
++	return false;
++}
++
+ STATIC loff_t
+ xfs_file_remap_range(
+ 	struct file		*file_in,
+@@ -1065,7 +1080,7 @@ xfs_file_remap_range(
+ 	if (ret)
+ 		goto out_unlock;
+ 
+-	if (mp->m_flags & XFS_MOUNT_WSYNC)
++	if (xfs_file_sync_writes(file_in) || xfs_file_sync_writes(file_out))
+ 		xfs_log_force_inode(dest);
+ out_unlock:
+ 	xfs_iunlock2_io_mmap(src, dest);
