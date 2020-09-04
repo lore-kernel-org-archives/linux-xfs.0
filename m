@@ -2,210 +2,118 @@ Return-Path: <SRS0=m/8K=CN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B8B4C2BC84
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 05:39:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D25DBC43461
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 07:18:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E122B2086A
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 05:39:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AHI+e2/Z"
+	by mail.kernel.org (Postfix) with ESMTP id A7B9B20722
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 07:18:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726415AbgIDFjj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Sep 2020 01:39:39 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47428 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726032AbgIDFji (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 01:39:38 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0845YOBP190917;
-        Fri, 4 Sep 2020 05:39:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=PYsmwBTOHx2pxVAHWEvKR4UXw2kGeTrQr9HNJO/W1FA=;
- b=AHI+e2/Zw2UNkoer0YANiTmY/IOzThkrDIyZjJm3WCKyLCdp+h2NwxqoET0Srl47ooeu
- ntAogPMQttr1QsuWLFZC1arqKpSNhhLetPwZRhaDrh7oqlKm3lJDyhZAnn1rS74MqT1R
- sFs+Oa7VnLreO6X2oeK5CZgePVU8/TOOcWI8myTaGueXP8t8OHE7LN2VWNEzcv/IbR9i
- F6FrDU/GYaGC5Oil6ue+N59eSvyGY2gJ2TPSyeLj8P1Lid1VIPVPepGWn+dU+8q9Wrfx
- k8WqlyHamXUDJW1pBYkmkaLB9dknYFmuzL5D9FhRBf6NWgni+s8XVma0wxzn7gDv1tyO /A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 337eymmgfm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 04 Sep 2020 05:39:34 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0845ZoJT096836;
-        Fri, 4 Sep 2020 05:39:33 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 33b7v1xcyg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Sep 2020 05:39:33 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0845dWt4030182;
-        Fri, 4 Sep 2020 05:39:32 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Sep 2020 22:39:32 -0700
-Date:   Thu, 3 Sep 2020 22:39:31 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] quota: widen timestamps for the fs_disk_quota structure
-Message-ID: <20200904053931.GB6096@magnolia>
+        id S1726575AbgIDHSE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Sep 2020 03:18:04 -0400
+Received: from song.cn.fujitsu.com ([218.97.8.244]:1711 "EHLO
+        song.cn.fujitsu.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726089AbgIDHSD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 03:18:03 -0400
+X-Greylist: delayed 622 seconds by postgrey-1.27 at vger.kernel.org; Fri, 04 Sep 2020 03:18:00 EDT
+X-IronPort-AV: E=Sophos;i="5.76,388,1592841600"; 
+   d="scan'208";a="4857635"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.250.3])
+  by song.cn.fujitsu.com with ESMTP; 04 Sep 2020 15:07:35 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 6564543DC18E;
+        Fri,  4 Sep 2020 15:07:31 +0800 (CST)
+Received: from [10.167.225.206] (10.167.225.206) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Fri, 4 Sep 2020 15:07:30 +0800
+Subject: Re: [PATCH] fs: Handle I_DONTCACHE in iput_final() instead of
+ generic_drop_inode()
+To:     Dave Chinner <david@fromorbit.com>
+CC:     <viro@zeniv.linux.org.uk>, <ira.weiny@intel.com>,
+        <linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <y-goto@fujitsu.com>
+References: <20200831101313.168889-1-lihao2018.fnst@cn.fujitsu.com>
+ <20200903215832.GF12131@dread.disaster.area>
+From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
+Message-ID: <025cd000-48c7-7cd2-5b89-f76d1b44079a@cn.fujitsu.com>
+Date:   Fri, 4 Sep 2020 15:07:28 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.2.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9733 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
- mlxlogscore=999 phishscore=0 bulkscore=0 suspectscore=1 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009040052
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9733 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
- priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
- lowpriorityscore=0 clxscore=1015 spamscore=0 bulkscore=0 impostorscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009040052
+In-Reply-To: <20200903215832.GF12131@dread.disaster.area>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+X-Originating-IP: [10.167.225.206]
+X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
+X-yoursite-MailScanner-ID: 6564543DC18E.AC4DE
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 2020/9/4 5:58, Dave Chinner wrote:
+> On Mon, Aug 31, 2020 at 06:13:13PM +0800, Hao Li wrote:
+>> If generic_drop_inode() returns true, it means iput_final() can evict
+>> this inode regardless of whether it is dirty or not. If we check
+>> I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
+>> evicted unconditionally. This is not the desired behavior because
+>> I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
+>> As for whether we need to evict this inode, this is what
+>> generic_drop_inode() should do. This patch corrects the usage of
+>> I_DONTCACHE.
+>>
+>> This patch was proposed in [1].
+>>
+>> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
+>>
+>> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
+>> ---
+>>  fs/inode.c         | 3 ++-
+>>  include/linux/fs.h | 3 +--
+>>  2 files changed, 3 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/inode.c b/fs/inode.c
+>> index 72c4c347afb7..4e45d5ea3d0f 100644
+>> --- a/fs/inode.c
+>> +++ b/fs/inode.c
+>> @@ -1625,7 +1625,8 @@ static void iput_final(struct inode *inode)
+>>      else
+>>          drop = generic_drop_inode(inode);
+>>  
+>> -    if (!drop && (sb->s_flags & SB_ACTIVE)) {
+>> +    if (!drop && !(inode->i_state & I_DONTCACHE) &&
+>> +            (sb->s_flags & SB_ACTIVE)) {
+>
+> FWIW, the format used in fs/inode.c is to align the logic
+> statements, not tab indent the additional lines in the statement.
+> i.e.
+>
+>     if (!drop &&
+>         !(inode->i_state & I_DONTCACHE) &&
+>         (sb->s_flags & SB_ACTIVE)) {
+>
+> Which gives a clear indication that there are all at the same
+> precedence and separate logic statements...
+>
+> Otherwise the change looks good.
+>
+> Probably best to resend with the fixes tag :)
 
-Widen the timestamp fields in struct fs_disk_quota to handle quota grace
-expiration times beyond 2038.  Since the only filesystem that's going to
-use this (XFS) only supports unsigned 34-bit quantities, adding an extra
-5 bits here should work fine.  We can rev the structure again in 350
-years.
+Got it! Thanks.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/quota/quota.c               |   40 +++++++++++++++++++++++++++++++++++++---
- include/uapi/linux/dqblk_xfs.h |   13 +++++++++++--
- 2 files changed, 48 insertions(+), 5 deletions(-)
+>
+>
+> Cheers,
+>
+> Dave.
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 5444d3c4d93f..efa14d9ee06f 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -481,6 +481,14 @@ static inline u64 quota_btobb(u64 bytes)
- 	return (bytes + (1 << XFS_BB_SHIFT) - 1) >> XFS_BB_SHIFT;
- }
- 
-+static inline s64 copy_from_xfs_dqblk_ts(const struct fs_disk_quota *d,
-+		__s32 timer, __s8 timer_hi)
-+{
-+	if (d->d_fieldmask & FS_DQ_BIGTIME)
-+		return (u32)timer | (s64)timer_hi << 32;
-+	return timer;
-+}
-+
- static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
- {
- 	dst->d_spc_hardlimit = quota_bbtob(src->d_blk_hardlimit);
-@@ -489,14 +497,18 @@ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
- 	dst->d_ino_softlimit = src->d_ino_softlimit;
- 	dst->d_space = quota_bbtob(src->d_bcount);
- 	dst->d_ino_count = src->d_icount;
--	dst->d_ino_timer = src->d_itimer;
--	dst->d_spc_timer = src->d_btimer;
-+	dst->d_ino_timer = copy_from_xfs_dqblk_ts(src, src->d_itimer,
-+						  src->d_itimer_hi);
-+	dst->d_spc_timer = copy_from_xfs_dqblk_ts(src, src->d_btimer,
-+						  src->d_btimer_hi);
- 	dst->d_ino_warns = src->d_iwarns;
- 	dst->d_spc_warns = src->d_bwarns;
- 	dst->d_rt_spc_hardlimit = quota_bbtob(src->d_rtb_hardlimit);
- 	dst->d_rt_spc_softlimit = quota_bbtob(src->d_rtb_softlimit);
- 	dst->d_rt_space = quota_bbtob(src->d_rtbcount);
- 	dst->d_rt_spc_timer = src->d_rtbtimer;
-+	dst->d_rt_spc_timer = copy_from_xfs_dqblk_ts(src, src->d_rtbtimer,
-+						     src->d_rtbtimer_hi);
- 	dst->d_rt_spc_warns = src->d_rtbwarns;
- 	dst->d_fieldmask = 0;
- 	if (src->d_fieldmask & FS_DQ_ISOFT)
-@@ -588,10 +600,27 @@ static int quota_setxquota(struct super_block *sb, int type, qid_t id,
- 	return sb->s_qcop->set_dqblk(sb, qid, &qdq);
- }
- 
-+static inline __s8 copy_to_xfs_dqblk_ts(const struct fs_disk_quota *d,
-+		__s32 *timer_lo, s64 timer)
-+{
-+	*timer_lo = timer;
-+	if (d->d_fieldmask & FS_DQ_BIGTIME)
-+		return timer >> 32;
-+	return 0;
-+}
-+
-+static inline bool want_bigtime(s64 timer)
-+{
-+	return timer > S32_MAX || timer < S32_MIN;
-+}
-+
- static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
- 			      int type, qid_t id)
- {
- 	memset(dst, 0, sizeof(*dst));
-+	if (want_bigtime(src->d_ino_timer) || want_bigtime(src->d_spc_timer) ||
-+	    want_bigtime(src->d_rt_spc_timer))
-+		dst->d_fieldmask |= FS_DQ_BIGTIME;
- 	dst->d_version = FS_DQUOT_VERSION;
- 	dst->d_id = id;
- 	if (type == USRQUOTA)
-@@ -606,6 +635,10 @@ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
- 	dst->d_ino_softlimit = src->d_ino_softlimit;
- 	dst->d_bcount = quota_btobb(src->d_space);
- 	dst->d_icount = src->d_ino_count;
-+	dst->d_itimer_hi = copy_to_xfs_dqblk_ts(dst, &dst->d_itimer,
-+						src->d_ino_timer);
-+	dst->d_btimer_hi = copy_to_xfs_dqblk_ts(dst, &dst->d_btimer,
-+						src->d_spc_timer);
- 	dst->d_itimer = src->d_ino_timer;
- 	dst->d_btimer = src->d_spc_timer;
- 	dst->d_iwarns = src->d_ino_warns;
-@@ -613,7 +646,8 @@ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
- 	dst->d_rtb_hardlimit = quota_btobb(src->d_rt_spc_hardlimit);
- 	dst->d_rtb_softlimit = quota_btobb(src->d_rt_spc_softlimit);
- 	dst->d_rtbcount = quota_btobb(src->d_rt_space);
--	dst->d_rtbtimer = src->d_rt_spc_timer;
-+	dst->d_rtbtimer_hi = copy_to_xfs_dqblk_ts(dst, &dst->d_rtbtimer,
-+						  src->d_rt_spc_timer);
- 	dst->d_rtbwarns = src->d_rt_spc_warns;
- }
- 
-diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
-index 03d890b80ebc..a684f64d9cc0 100644
---- a/include/uapi/linux/dqblk_xfs.h
-+++ b/include/uapi/linux/dqblk_xfs.h
-@@ -71,8 +71,11 @@ typedef struct fs_disk_quota {
- 	__u64		d_rtb_softlimit;/* preferred limit on RT disk blks */
- 	__u64		d_rtbcount;	/* # realtime blocks owned */
- 	__s32		d_rtbtimer;	/* similar to above; for RT disk blks */
--	__u16	  	d_rtbwarns;     /* # warnings issued wrt RT disk blks */
--	__s16		d_padding3;	/* padding3 - for future use */	
-+	__u16		d_rtbwarns;     /* # warnings issued wrt RT disk blks */
-+	__s8		d_itimer_hi:5;	/* upper 5 bits of timers */
-+	__s8		d_btimer_hi:5;
-+	__s8		d_rtbtimer_hi:5;
-+	__u8		d_padding3:1;	/* padding3 - for future use */
- 	char		d_padding4[8];	/* yet more padding */
- } fs_disk_quota_t;
- 
-@@ -121,6 +124,12 @@ typedef struct fs_disk_quota {
- #define FS_DQ_RTBCOUNT		(1<<14)
- #define FS_DQ_ACCT_MASK		(FS_DQ_BCOUNT | FS_DQ_ICOUNT | FS_DQ_RTBCOUNT)
- 
-+/*
-+ * Quota expiration timestamps are 37-bit signed integers, with the upper 5
-+ * bits encoded in the _hi fields.
-+ */
-+#define FS_DQ_BIGTIME		(1<<15)
-+
- /*
-  * Various flags related to quotactl(2).
-  */
+
+
