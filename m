@@ -2,185 +2,117 @@ Return-Path: <SRS0=m/8K=CN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 830B3C433E2
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 11:27:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75D32C433E2
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 11:30:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4641520684
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 11:27:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Osckwb5s"
+	by mail.kernel.org (Postfix) with ESMTP id 4954B208B3
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 11:30:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730181AbgIDL1T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Sep 2020 07:27:19 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:22117 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730205AbgIDL0V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 07:26:21 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599218756;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8BIKFR1pM/3NwoCXzlWerY2LwOyTaxWq4LD956AaKNE=;
-        b=Osckwb5sSclIbzkroMKpG0PAoXSwpNSv2lHtRqelI2EWNVi4+A6RN6VBjUFh7sMQPG4UGv
-        LRVpaTsDLiQKVioFHvHdsrqKZwKHoo+k2QqW6gX2BXGsfwKuNHaivh58azt1Dp3cZslJ3B
-        0Z4N+22XTNeQNthOHd2rGARy6lNu9P4=
+        id S1728118AbgIDLaT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Sep 2020 07:30:19 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:52348 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1730161AbgIDLY5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 07:24:57 -0400
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-45-mA0W8wwiPEGy0_P1QmDqow-1; Fri, 04 Sep 2020 07:25:54 -0400
-X-MC-Unique: mA0W8wwiPEGy0_P1QmDqow-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+ us-mta-391-1Esvy05qM0q-zl9dT7eM0A-1; Fri, 04 Sep 2020 07:24:55 -0400
+X-MC-Unique: 1Esvy05qM0q-zl9dT7eM0A-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CBA941007470;
-        Fri,  4 Sep 2020 11:25:53 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2812B18A227B;
+        Fri,  4 Sep 2020 11:24:54 +0000 (UTC)
 Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 577A87EED7;
-        Fri,  4 Sep 2020 11:25:50 +0000 (UTC)
-Date:   Fri, 4 Sep 2020 07:25:48 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B5F115C1DA;
+        Fri,  4 Sep 2020 11:24:53 +0000 (UTC)
+Date:   Fri, 4 Sep 2020 07:24:51 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 2/2] xfs: clean up calculation of LR header blocks
-Message-ID: <20200904112548.GC529978@bfoster>
-References: <20200904082516.31205-1-hsiangkao@redhat.com>
- <20200904082516.31205-3-hsiangkao@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: force the log after remapping a synchronous-writes
+ file
+Message-ID: <20200904112451.GA529978@bfoster>
+References: <20200904031100.GZ6096@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200904082516.31205-3-hsiangkao@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <20200904031100.GZ6096@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 04, 2020 at 04:25:16PM +0800, Gao Xiang wrote:
-> Let's use DIV_ROUND_UP() to calculate log record header
-> blocks as what did in xlog_get_iclog_buffer_size() and
-> wrap up common helpers for log recovery.
+On Thu, Sep 03, 2020 at 08:11:00PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> Commit 5833112df7e9 tried to make it so that a remap operation would
+> force the log out to disk if the filesystem is mounted with mandatory
+> synchronous writes.  Unfortunately, that commit failed to handle the
+> case where the inode or the file descriptor require mandatory
+> synchronous writes.
+> 
+> Refactor the check into into a helper that will look for all three
+> conditions, and now we can treat reflink just like any other synchronous
+> write.
+> 
+> Fixes: 5833112df7e9 ("xfs: reflink should force the log out if mounted with wsync")
+
+More of a process thought than an issue with this particular patch, but
+I feel like the Fixes tag thing gets more watered down as we attempt to
+apply it to more patches. Is it really necessary here? If so, what's the
+reasoning? I thought it was more of a "this previous patch has a bug,"
+but that link seems a bit tenuous here given the original patch refers
+specifically to wsync. Sure, a stable kernel probably wants both
+patches, but is that really the primary purpose of "Fixes?"
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
-> v1: https://lore.kernel.org/r/20200902140923.24392-1-hsiangkao@redhat.com
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_file.c |   17 ++++++++++++++++-
+>  1 file changed, 16 insertions(+), 1 deletion(-)
 > 
-> changes since v1:
->  - add another helper xlog_logrec_hblks() for the cases with
->    xfs_sb_version_haslogv2(), and use xlog_logrecv2_hblks()
->    for the case of xlog_do_recovery_pass() since it has more
->    complex logic other than just calculate hblks...
-> 
->  fs/xfs/xfs_log.c         |  4 +--
->  fs/xfs/xfs_log_recover.c | 53 ++++++++++++++++------------------------
->  2 files changed, 22 insertions(+), 35 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 28d952794bfa..c6163065f6e0 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -397,6 +397,23 @@ xlog_find_verify_cycle(
->  	return error;
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index c31cd3be9fb2..ee43f137830c 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1008,6 +1008,21 @@ xfs_file_fadvise(
+>  	return ret;
 >  }
 >  
-> +static inline int xlog_logrecv2_hblks(struct xlog_rec_header *rh)
+> +/* Does this file, inode, or mount want synchronous writes? */
+> +static inline bool xfs_file_sync_writes(struct file *filp)
 > +{
-> +	int	h_size = be32_to_cpu(rh->h_size);
+> +	struct xfs_inode	*ip = XFS_I(file_inode(filp));
 > +
-> +	if ((be32_to_cpu(rh->h_version) & XLOG_VERSION_2) &&
-> +	    h_size > XLOG_HEADER_CYCLE_SIZE)
-> +		return DIV_ROUND_UP(h_size, XLOG_HEADER_CYCLE_SIZE);
-> +	return 1;
+> +	if (ip->i_mount->m_flags & XFS_MOUNT_WSYNC)
+> +		return true;
+> +	if (filp->f_flags & (__O_SYNC | O_DSYNC))
+> +		return true;
+> +	if (IS_SYNC(file_inode(filp)))
+> +		return true;
+> +
+> +	return false;
 > +}
 > +
-> +static inline int xlog_logrec_hblks(struct xlog *log, xlog_rec_header_t *rh)
-> +{
-> +	if (!xfs_sb_version_haslogv2(&log->l_mp->m_sb))
-> +		return 1;
-> +	return xlog_logrecv2_hblks(rh);
-> +}
-> +
-
-h_version is assigned based on xfs_sb_version_haslogv2() in the first
-place so I'm not sure I see the need for multiple helpers like this, at
-least with the current code. I can't really speak to why some code
-checks the feature bit and/or the record header version and not the
-other way around, but perhaps there's some historical reason I'm not
-aware of. Regardless, is there ever a case where
-xfs_sb_version_haslogv2() == true and h_version != 2? That strikes me as
-more of a corruption scenario than anything..
-
-Brian
-
->  /*
->   * Potentially backup over partial log record write.
->   *
-> @@ -489,15 +506,7 @@ xlog_find_verify_log_record(
->  	 * reset last_blk.  Only when last_blk points in the middle of a log
->  	 * record do we update last_blk.
->  	 */
-> -	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-> -		uint	h_size = be32_to_cpu(head->h_size);
-> -
-> -		xhdrs = h_size / XLOG_HEADER_CYCLE_SIZE;
-> -		if (h_size % XLOG_HEADER_CYCLE_SIZE)
-> -			xhdrs++;
-> -	} else {
-> -		xhdrs = 1;
-> -	}
-> +	xhdrs = xlog_logrec_hblks(log, head);
+>  STATIC loff_t
+>  xfs_file_remap_range(
+>  	struct file		*file_in,
+> @@ -1065,7 +1080,7 @@ xfs_file_remap_range(
+>  	if (ret)
+>  		goto out_unlock;
 >  
->  	if (*last_blk - i + extra_bblks !=
->  	    BTOBB(be32_to_cpu(head->h_len)) + xhdrs)
-> @@ -1184,22 +1193,7 @@ xlog_check_unmount_rec(
->  	 * below. We won't want to clear the unmount record if there is one, so
->  	 * we pass the lsn of the unmount record rather than the block after it.
->  	 */
-> -	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-> -		int	h_size = be32_to_cpu(rhead->h_size);
-> -		int	h_version = be32_to_cpu(rhead->h_version);
-> -
-> -		if ((h_version & XLOG_VERSION_2) &&
-> -		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
-> -			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
-> -			if (h_size % XLOG_HEADER_CYCLE_SIZE)
-> -				hblks++;
-> -		} else {
-> -			hblks = 1;
-> -		}
-> -	} else {
-> -		hblks = 1;
-> -	}
-> -
-> +	hblks = xlog_logrec_hblks(log, rhead);
->  	after_umount_blk = xlog_wrap_logbno(log,
->  			rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len)));
->  
-> @@ -3024,15 +3018,10 @@ xlog_do_recovery_pass(
->  		if (error)
->  			goto bread_err1;
->  
-> -		if ((be32_to_cpu(rhead->h_version) & XLOG_VERSION_2) &&
-> -		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
-> -			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
-> -			if (h_size % XLOG_HEADER_CYCLE_SIZE)
-> -				hblks++;
-> +		hblks = xlog_logrecv2_hblks(rhead);
-> +		if (hblks != 1) {
->  			kmem_free(hbp);
->  			hbp = xlog_alloc_buffer(log, hblks);
-> -		} else {
-> -			hblks = 1;
->  		}
->  	} else {
->  		ASSERT(log->l_sectBBsize == 1);
-> -- 
-> 2.18.1
+> -	if (mp->m_flags & XFS_MOUNT_WSYNC)
+> +	if (xfs_file_sync_writes(file_in) || xfs_file_sync_writes(file_out))
+>  		xfs_log_force_inode(dest);
+>  out_unlock:
+>  	xfs_iunlock2_io_mmap(src, dest);
 > 
 
