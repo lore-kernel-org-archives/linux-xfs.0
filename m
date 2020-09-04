@@ -2,205 +2,731 @@ Return-Path: <SRS0=m/8K=CN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1719BC433E2
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 22:29:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89659C433E2
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 23:04:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9D6C2083B
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 22:29:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C6B52087C
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 23:04:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xZBQ/ONN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728084AbgIDW3n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Sep 2020 18:29:43 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39287 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728012AbgIDW3n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 18:29:43 -0400
-Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EA3E6822903;
-        Sat,  5 Sep 2020 08:29:37 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kEKDA-0000RL-FJ; Sat, 05 Sep 2020 08:29:36 +1000
-Date:   Sat, 5 Sep 2020 08:29:36 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
+        id S1728163AbgIDXEN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Sep 2020 19:04:13 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:58830 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728162AbgIDXEI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 19:04:08 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 084N0Il4054477;
+        Fri, 4 Sep 2020 23:04:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=9kz/ZrlILvObo3Hi7tSCoHzB6GV6nvNUEF3r0YrvVXw=;
+ b=xZBQ/ONNq65JIudWCUpCjSuC8JsOPl5RGyt6m5YMT5VLN9gv4LNkX1si4+vjNsx2JdU5
+ ByWwRDFS1y44Ga83ep1kZd+ShFmUtgM/ab6j8CiempaZ/johQCWis4PemamqqFaJIFyw
+ Jt1X9vxGonEh2s4th98jAXX9e/yhE3ZrThHOoxbj9XWlrxd2vp8UMgnE+oclHBN5S313
+ n06Q3094RECle4smB5o0FKYwc6CdMrT7w0lXfursh9XfEABpOqNKh9tVcbsBjQv5BXoh
+ 1BrI3YIcJVJ3aHqQhkql628JFVLWnQAeFLtH9BcGmhi6kdGW4h9sOHaVs2n+pk8Jf3Cm ag== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 337eymrq1f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 04 Sep 2020 23:04:01 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 084MxsWd099903;
+        Fri, 4 Sep 2020 23:04:01 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 33b7v3djtd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 04 Sep 2020 23:04:00 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 084N402Y010454;
+        Fri, 4 Sep 2020 23:04:00 GMT
+Received: from [192.168.1.223] (/67.1.244.254)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 04 Sep 2020 16:03:59 -0700
+Subject: Re: [PATCH v12 1/8] xfs: Add delay ready attr remove routines
+To:     Brian Foster <bfoster@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: quotaoff, transaction quiesce, and dquot logging
-Message-ID: <20200904222936.GH12131@dread.disaster.area>
-References: <20200904155949.GF529978@bfoster>
+References: <20200827003518.1231-1-allison.henderson@oracle.com>
+ <20200827003518.1231-2-allison.henderson@oracle.com>
+ <20200901170020.GC174813@bfoster> <20200901172021.GI6096@magnolia>
+ <20200901180741.GD174813@bfoster> <20200901183134.GK6096@magnolia>
+ <20200902122258.GA285409@bfoster>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <de7920d9-abbb-fd8e-44f0-fb05a5d71bcf@oracle.com>
+Date:   Fri, 4 Sep 2020 16:03:59 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200904155949.GF529978@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=IuRgj43g c=1 sm=1 tr=0 cx=a_idp_d
-        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
-        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=7-415B0cAAAA:8
-        a=cz2PgkpBsDL-bNuyME8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20200902122258.GA285409@bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9734 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 spamscore=0
+ mlxlogscore=999 phishscore=0 bulkscore=0 suspectscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009040195
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9734 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0
+ priorityscore=1501 phishscore=0 mlxlogscore=999 mlxscore=0
+ lowpriorityscore=0 clxscore=1011 spamscore=0 bulkscore=0 impostorscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009040195
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 04, 2020 at 11:59:49AM -0400, Brian Foster wrote:
-> Hi Dave,
+
+
+On 9/2/20 5:22 AM, Brian Foster wrote:
+> On Tue, Sep 01, 2020 at 11:31:34AM -0700, Darrick J. Wong wrote:
+>> On Tue, Sep 01, 2020 at 02:07:41PM -0400, Brian Foster wrote:
+>>> On Tue, Sep 01, 2020 at 10:20:21AM -0700, Darrick J. Wong wrote:
+>>>> On Tue, Sep 01, 2020 at 01:00:20PM -0400, Brian Foster wrote:
+>>>>> On Wed, Aug 26, 2020 at 05:35:11PM -0700, Allison Collins wrote:
+>>>>>> This patch modifies the attr remove routines to be delay ready. This
+>>>>>> means they no longer roll or commit transactions, but instead return
+>>>>>> -EAGAIN to have the calling routine roll and refresh the transaction. In
+>>>>>> this series, xfs_attr_remove_args has become xfs_attr_remove_iter, which
+>>>>>> uses a sort of state machine like switch to keep track of where it was
+>>>>>> when EAGAIN was returned. xfs_attr_node_removename has also been
+>>>>>> modified to use the switch, and a new version of xfs_attr_remove_args
+>>>>>> consists of a simple loop to refresh the transaction until the operation
+>>>>>> is completed.  A new XFS_DAC_DEFER_FINISH flag is used to finish the
+>>>>>> transaction where ever the existing code used to.
+>>>>>>
+>>>>>> Calls to xfs_attr_rmtval_remove are replaced with the delay ready
+>>>>>> version __xfs_attr_rmtval_remove. We will rename
+>>>>>> __xfs_attr_rmtval_remove back to xfs_attr_rmtval_remove when we are
+>>>>>> done.
+>>>>>>
+>>>>>> xfs_attr_rmtval_remove itself is still in use by the set routines (used
+>>>>>> during a rename).  For reasons of perserving existing function, we
+>>>>>
+>>>>> Nit:				preserving
+ok, will fix
+>>>>>
+>>>>>> modify xfs_attr_rmtval_remove to call xfs_defer_finish when the flag is
+>>>>>> set.  Similar to how xfs_attr_remove_args does here.  Once we transition
+>>>>>> the set routines to be delay ready, xfs_attr_rmtval_remove is no longer
+>>>>>> used and will be removed.
+>>>>>>
+>>>>>> This patch also adds a new struct xfs_delattr_context, which we will use
+>>>>>> to keep track of the current state of an attribute operation. The new
+>>>>>> xfs_delattr_state enum is used to track various operations that are in
+>>>>>> progress so that we know not to repeat them, and resume where we left
+>>>>>> off before EAGAIN was returned to cycle out the transaction. Other
+>>>>>> members take the place of local variables that need to retain their
+>>>>>> values across multiple function recalls.  See xfs_attr.h for a more
+>>>>>> detailed diagram of the states.
+>>>>>>
+>>>>>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>>>>>> ---
+>>>>>>   fs/xfs/libxfs/xfs_attr.c        | 162 ++++++++++++++++++++++++++++++----------
+>>>>>>   fs/xfs/libxfs/xfs_attr.h        |  73 ++++++++++++++++++
+>>>>>>   fs/xfs/libxfs/xfs_attr_leaf.c   |   2 +-
+>>>>>>   fs/xfs/libxfs/xfs_attr_remote.c |  39 +++++-----
+>>>>>>   fs/xfs/libxfs/xfs_attr_remote.h |   2 +-
+>>>>>>   fs/xfs/xfs_attr_inactive.c      |   2 +-
+>>>>>>   6 files changed, 220 insertions(+), 60 deletions(-)
+>>>>>>
+>>>>>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>>>>>> index 2e055c0..ea50fc3 100644
+>>>>>> --- a/fs/xfs/libxfs/xfs_attr.c
+>>>>>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>>>>> ...
+>>>>>> @@ -264,6 +264,33 @@ xfs_attr_set_shortform(
+>>>>>>   }
+>>>>>>   
+>>>>>>   /*
+>>>>>> + * Checks to see if a delayed attribute transaction should be rolled.  If so,
+>>>>>> + * also checks for a defer finish.  Transaction is finished and rolled as
+>>>>>> + * needed, and returns true of false if the delayed operation should continue.
+>>>>>> + */
+>>>>>> +int
+>>>>>> +xfs_attr_trans_roll(
+>>>>>> +	struct xfs_delattr_context	*dac)
+>>>>>> +{
+>>>>>> +	struct xfs_da_args              *args = dac->da_args;
+>>>>>> +	int				error = 0;
+>>>>>> +
+>>>>>> +	if (dac->flags & XFS_DAC_DEFER_FINISH) {
+>>>>>> +		/*
+>>>>>> +		 * The caller wants us to finish all the deferred ops so that we
+>>>>>> +		 * avoid pinning the log tail with a large number of deferred
+>>>>>> +		 * ops.
+>>>>>> +		 */
+>>>>>> +		dac->flags &= ~XFS_DAC_DEFER_FINISH;
+>>>>>> +		error = xfs_defer_finish(&args->trans);
+>>>>>> +		if (error)
+>>>>>> +			return error;
+>>>>>> +	}
+>>>>>> +
+>>>>>> +	return xfs_trans_roll_inode(&args->trans, args->dp);
+>>>>>
+>>>>> I'm not sure there's a need to roll the transaction again if the
+>>>>> defer path above executes. xfs_defer_finish() completes the dfops and
+>>>>> always returns a clean transaction.
+>>>>
+>>>> I'm not sure we even really need a DEFER_FINISH flag if (a) xfs_defer.c
+>>>> gets patched to finish all the other defer items before coming back to
+>>>> the next step of the delattr state machine and (b) Allison removes the
+>>>> _iter functions in favor of using the defer op mechanism even when we're
+>>>> not pushing the state changes through the log.
+>>>>
+>>>
+>>> What do you mean by using the dfops mechanism without pushing state
+>>> changes through the log? My understanding was that dfops would be
+>>> involved with the new intent based attr ops and the state management
+>>> handles the original ops until we no longer have to support them..
+>>
+>> I think you were probably still out when Dave and Allison and I had the
+>> brain fart^Wstorm that nothing in the defer ops code actually requires
+>> you to log anything, which means that you can use it to manage a long
+>> running operation that spans multiple transaction rolls! :)
+>>
 > 
-> I'm finally getting back to the quotaoff thing we discussed a ways
-> back[1] and doing some auditing to make sure that I understand the
-> approach and that it seems correct. To refresh, your original prototype
-> and the slightly different one I'm looking into implement the same
-> general scheme:
+> Ok..
 > 
-> 1.) quiesce the transaction subsystem
-> 2.) disable quota(s) (update state flags)
-> 3.) log quotaoff start/end items (synchronous)
-> 4.) open the transaction subsystem
-> 5.) release all inode dquot references and purge dquots
+>> ->create_intent and ->create_done are supposed to create log items and
+>> attach them to the transaction, but the defer finish loop will still
+>> call ->finish_item even if they return NULL pointers.  If the
+>> finish_item call steps around the null pointers and calls whatever upper
+>> level functions are needed to make progress, that works fine.  There's
+>> no log recovery, obviously.
+>>
+>> In other words, we can (ab)use defer ops for attr set/remove even in the
+>> non-logged case, which eliminates the need for the separate control
+>> loop.
+>>
 > 
-> The idea is that the critical invariant requred for quotaoff is that no
-> dquots are logged after the quotaoff end item is committed to the log.
-> Otherwise there is no guarantee that the tail pushes past the quotaoff
-> item and a subsequent crash/recovery incorrectly replays dquot changes
-> for an inactive quota mode.
+> Right, that all makes sense. I'm still missing how this impacts the
+> lower level functional code driven by the control loop...
 > 
-> As it is, I think there's at least one assumption we've made that isn't
-> entirely accurate. It looks to me that steps 1-4 don't guarantee that
-> dquots aren't logged after the transaction subsystem is released. The
-> current code (and my prototype) only clear the *QUOTA_ACTIVE flags at
-> that point, and various transactions might have already acquired or
-> attached dquots to inodes before the transaction allocation even occurs.
-> Once the transaction is allocated, various paths basically only care if
-> we have a dquot or not.
+>> FWIW, I've implemented that strategy as a proof of concept for extent
+>> swapping:
+>>
+>> https://urldefense.com/v3/__https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?h=atomic-file-updates&id=a85883c36e2f3eff50db50fcf58a71d4f13d1f64__;!!GqivPVa7Brio!MQTOxwgVl5y_iE_BCpboDzsjWozVuUj8T-EEE1ICVu3TVeAwAWaWedD-cxFowrJwBzGi$
+>>
+>> Wherein you get atomic swapext if you have the log items enabled, and
+>> if not, you get the old "rmap swapext" that doesn't have log tracking.
+>>
 > 
-> For example, xfs_create() gets the dquots up front, allocs the
-> transaction and xfs_trans_reserve_quota_bydquots() attaches any of the
-> associated dquots to the transaction. xfs_trans_reserve_quota_bydquots()
-> checks for (!QUOTA_ON() || !QUOTA_RUNNING()), but those only help us if
-> all quotas have been disabled. Consider if one of multiple active quotas
-> are being turned off, and that this path already has dquots for both,
-> for example.
+> Interesting, thanks. The whole dfops reuse idea sounds neat to me in
+> that we can presumably condense the new/old implementations even further
+> than originally expected, but I think this side steps the concern
+> related to my initial comment around refactoring. AFAICT this model
+> doesn't necessarily dictate what the underlying code looks like. In the
+> example above, it looks like the swapext code reenters into a
+> xfs_swapext_finish_one() function that trivially understands how to pick
+> up where it left off. This is a fortunate implementation detail of the
+> swapext operation (along with the whole notion of the
+> xfs_op_has_more_work() pattern, which as we've already touched on can be
+> difficult for things like xattr set, etc.).
+> 
+> By contrast, the xattr code is currently a ball of wire that rolls
+> transactions at various points up and down its implementation (generally
+> speaking). The primary intent of all this refactoring work is to isolate
+> the transaction rolling to a single mechanism so we have the ability to
+> use something like dfops in the first place. I don't see how the
+> insertion of unlogged dfops in the design really changes much in that
+> regard. Is there more to the previous discussion that I'm missing?
+> 
+> ISTM that we're potentially talking about different aspects of the
+> implementation. If so, we either need to continue to refactor the xattr
+> code to untangle the existing mess so it can be driven by a single entry
+> point (just like the swapext example), or that retrofitting the existing
+> implementation into the dfops mechanism means something more involved
+> like creating new dfops op types per sub-component of a particular xattr
+> op and queueing/running those individually. Though TBH, the latter
+> sounds like it is getting a bit into crazy infrastructure territory. ;P
+> Thoughts?
+> 
+> Brian
 
-Right, that's one of the main problems I tried to solve.
+Yeah, I'll try some experimenting to see what that ends up looking like. 
+  I've looked at the swap extent code from the link above, and I think I 
+understand now what Darrick is describing with the reuse/abuse the 
+defops mechanics.  We modify the *_create_intent routine to return null 
+to skip recoding it to the log. I THINK this should still work beucase 
+the state machine context is carried around in the xfs_attr_item, not 
+the xfs_attri_log_item.  So we maybe might be able to make it work with 
+out too much crazy.
+
+
 
 > 
-> I do notice that your prototype[1] clears all of the quota flags (not
-> just the ACTIVE flags) after the transaction barrier is released. This
-> prevents further modifications in some cases, but it doesn't seem like
-> that is enough to avoid violating the invariant described above. E.g.,
-> xfs_trans_apply_dquot_deltas() logs the dquot regardless of whether
-> changes are made (and actually looks like it can make some changes on
-> the dquot even if the transaction doesn't) after the dquot is attached
-> to the transaction.
+>>>> (I'm working on (a) still, will have something in a few days...)
+>>>>
+>>>>>> +}
+>>>>>> +
+>>>>>> +/*
+>>>>>>    * Set the attribute specified in @args.
+>>>>>>    */
+>>>>>>   int
+>>>>> ...
+>>>>>> @@ -1218,21 +1288,35 @@ xfs_attr_node_remove_rmt(
+>>>>>>    * This will involve walking down the Btree, and may involve joining
+>>>>>>    * leaf nodes and even joining intermediate nodes up to and including
+>>>>>>    * the root node (a special case of an intermediate node).
+>>>>>> + *
+>>>>>> + * This routine is meant to function as either an inline or delayed operation,
+>>>>>> + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
+>>>>>> + * functions will need to handle this, and recall the function until a
+>>>>>> + * successful error code is returned.
+>>>>>>    */
+>>>>>>   STATIC int
+>>>>>>   xfs_attr_node_removename(
+>>>>>> -	struct xfs_da_args	*args)
+>>>>>> +	struct xfs_delattr_context	*dac)
+>>>>>>   {
+>>>>>> -	struct xfs_da_state	*state;
+>>>>>> -	struct xfs_da_state_blk	*blk;
+>>>>>> -	int			retval, error;
+>>>>>> -	struct xfs_inode	*dp = args->dp;
+>>>>>> +	struct xfs_da_args		*args = dac->da_args;
+>>>>>> +	struct xfs_da_state		*state;
+>>>>>> +	struct xfs_da_state_blk		*blk;
+>>>>>> +	int				retval, error;
+>>>>>> +	struct xfs_inode		*dp = args->dp;
+>>>>>>   
+>>>>>>   	trace_xfs_attr_node_removename(args);
+>>>>>> +	state = dac->da_state;
+>>>>>> +	blk = dac->blk;
+>>>>>>   
+>>>>>> -	error = xfs_attr_node_removename_setup(args, &state);
+>>>>>> -	if (error)
+>>>>>> -		goto out;
+>>>>>> +	if (dac->dela_state == XFS_DAS_RM_SHRINK)
+>>>>>> +		goto das_rm_shrink;
+>>>>>> +
+>>>>>> +	if ((dac->flags & XFS_DAC_NODE_RMVNAME_INIT) == 0) {
+>>>>>> +		dac->flags |= XFS_DAC_NODE_RMVNAME_INIT;
+>>>>>> +		error = xfs_attr_node_removename_setup(dac, &state);
+>>>>>> +		if (error)
+>>>>>> +			goto out;
+>>>>>> +	}
+>>>>>>   
+>>>>>>   	/*
+>>>>>>   	 * If there is an out-of-line value, de-allocate the blocks.
+>>>>>> @@ -1240,8 +1324,13 @@ xfs_attr_node_removename(
+>>>>>>   	 * overflow the maximum size of a transaction and/or hit a deadlock.
+>>>>>>   	 */
+>>>>>>   	if (args->rmtblkno > 0) {
+>>>>>> -		error = xfs_attr_node_remove_rmt(args, state);
+>>>>>> -		if (error)
+>>>>>> +		/*
+>>>>>> +		 * May return -EAGAIN. Remove blocks until args->rmtblkno == 0
+>>>>>> +		 */
+>>>>>> +		error = xfs_attr_node_remove_rmt(dac, state);
+>>>>>> +		if (error == -EAGAIN)
+>>>>>> +			return error;
+>>>>>> +		else if (error)
+>>>>>>   			goto out;
+>>>>>>   	}
+>>>>>>   
+>>>>>> @@ -1260,17 +1349,14 @@ xfs_attr_node_removename(
+>>>>>>   		error = xfs_da3_join(state);
+>>>>>>   		if (error)
+>>>>>>   			goto out;
+>>>>>> -		error = xfs_defer_finish(&args->trans);
+>>>>>> -		if (error)
+>>>>>> -			goto out;
+>>>>>> -		/*
+>>>>>> -		 * Commit the Btree join operation and start a new trans.
+>>>>>> -		 */
+>>>>>> -		error = xfs_trans_roll_inode(&args->trans, dp);
+>>>>>> -		if (error)
+>>>>>> -			goto out;
+>>>>>> +
+>>>>>> +		dac->flags |= XFS_DAC_DEFER_FINISH;
+>>>>>> +		dac->dela_state = XFS_DAS_RM_SHRINK;
+>>>>>> +		return -EAGAIN;
+>>>>>>   	}
+>>>>>>   
+>>>>>> +das_rm_shrink:
+>>>>>> +
+>>>>>>   	/*
+>>>>>>   	 * If the result is small enough, push it all into the inode.
+>>>>>>   	 */
+>>>>>
+>>>>> ISTR that Dave or Darrick previously suggested that we should try to
+>>>>> isolate the state transition code as much as possible to a single
+>>>>> location. That basically means we should look at any place a particular
+>>>>> state check travels through multiple functions and see if we can
+>>>>> refactor things to flatten the state processing code. I tend to agree
+>>>>> that is the ideal approach given how difficult it can be to track state
+>>>>> changes through multiple functions.
+>>>>
+>>>> Yes. :)
+>>>>
+>>>>> In light of that (and as an example), I think the whole
+>>>>> xfs_attr_node_removename() path should be refactored so it looks
+>>>>> something like the following (with obvious error
+>>>>> handling/comment/aesthetic cleanups etc.):
+>>>>>
+>>>>> xfs_attr_node_removename_iter()
+>>>>> {
+>>>>> 	...
+>>>>>
+>>>>> 	if ((dac->flags & XFS_DAC_NODE_RMVNAME_INIT) == 0) {
+>>>>> 		<do init stuff>
+>>>>> 	}
+>>>>>
+>>>>> 	switch (dac->dela_state) {
+>>>>> 	case 0:
+>>>>
+>>>> I kinda wish "0" had its own name, but I don't also want to start
+>>>> another round of naming bikeshed. :)
+>>>>
+>>>>> 		/*
+>>>>> 		 * repeatedly remove remote blocks, remove the entry and
+>>>>> 		 * join. returns -EAGAIN or 0 for completion of the step.
+>>>>> 		 */
+>>>>> 		error = xfs_attr_node_remove_step(dac, state);
+>>>>> 		if (error)
+>>>>> 			break;
+>>>>>
+>>>>> 		/* check whether to shrink or return success */
+>>>>> 		if (!error && xfs_bmap_one_block(...)) {
+>>>>> 			dac->dela_state = XFS_DAS_RM_SHRINK;
+>>>>> 			error = -EAGAIN;
+>>>>> 		}
+>>>>> 		break;
+>>>>> 	case XFS_DAS_RM_SHRINK:
+>>>>> 		/* shrink the fork, no reentry, no next step */
+>>>>> 		error = xfs_attr_node_shrink_step(args, state);	
+>>>>> 		break;
+>>>>
+>>>> <nod> The ASCII art diagrams help assuage my nerves about the fact that
+>>>> we branch based on dela_state but not all the branches actually show us
+>>>> moving to the next state.
+>>>>
+>>>> I've gotten the distinct sense, though, that throwing the new state all
+>>>> the way back up to _iter() to set it is probably a lot more fuss than
+>>>> it's worth for the attr set case, though...
+>>>>
+>>>
+>>> That's quite possible. :P
+Sure, I will see if I can get something similar to this worked out, at 
+least for the remove path.  But yes, the set path would be a bit more of 
+a challenge.
 
-It should, because the transaction barrier includes a draining
-mechanism to wait for all quota modifying transactions already
-running to drain out. That is, any transaction marked with
-XFS_TRANS_QUOTA (via it's initial reservation) will have an elevated
-q->qi_active_trans count, and that only gets decremented when the
-transaction completes and the dquot is released from the
-transaction (i.e. in xfs_trans_free_dqinfo()).
+Thanks all!
 
-The barrier sets the XFS_QUOTA_OFF_RUNNING_BIT, at which point new
-transactions marked with XFS_TRANS_QUOTA will enter
-xfs_trans_quota_enabled() in xfs_trans_alloc(). If the
-XFS_QUOTA_OFF_RUNNING_BIT is set, they block waiting for it to be
-cleared.
+Allison
 
-This forms the "no new quota modifying transactions can start" part
-of the barrier.
-
-If quota is running and the XFS_QUOTA_OFF_RUNNING_BIT is not set,
-they increment q->qi_active_trans to indicate that there is a
-running dquot modifying transaction in progress. This state is
-maintained across transaction duplication/rolling so the reference
-only goes away when the transaction is completely finished with
-dquots and released them from the transaction.
-
-The quota off code sets the XFS_QUOTA_OFF_RUNNING_BIT the waits for
-q->qi_active_trans to go to zero, thereby setting the "stop new
-xacts from starting" barrier and then waiting for all dquot
-modifying xacts to complete. At this point, there are not
-transactions holding dquot references, no dquots being modified,
-and all new transactions that might modify dquots are being held in
-xfs_trans_alloc() and will check xfs_trans_quota_running() when they
-are woken. 
-
-At this point, we might still have uncommitted dquots in the CIL,
-so we do a xfs_log_force(mp, XFS_LOG_SYNC) to flush all the
-modifications to the journal, thereby guaranteeing that we order
-them in the journal before the first quotaoff item is committed.
-
-With all dquot mods being stable now, and no new modifications able
-to occur, we can clear all the quota flags in one go. We
-don't need to keep the quotas we are turning off running while we
-clear out all the inode references to them, because once the
-running/active/acct/enforced flags are cleared, no new modification
-will try to modify that quota because all the "is this quota type
-running" checks will fail the moment we clear all the in-memory
-quota flags.
-
-IOWs, the barrier mechanism I added was designed to provide the
-exact "no dquots are logged after the quotaoff item is committed to
-the log" invariant you describe. It's basically the same mechanism
-we use for draining direct IO via taking IOLOCKs to prevent new
-submissions and calling inode_dio_wait() to drain everything in
-flight....
-
-> This does make me wonder a bit whether we should rework the transaction
-> commit path to avoid modifying/logging the dquot completely if the quota
-> is inactive or accounting is disabled.
-
-If there are no dquots for an inactive quota type attached to the
-transaction, it won't log anything. That's what the barrier+drain
-acheives.
-
-> When starting to look around with
-> that in mind, I see the following in xfs_quota_defs.h:
+>>>
+>>>>> 	default:
+>>>>> 		ASSERT(0);
+>>>>> 		return -EINVAL;
+>>>>> 	}
+>>>>>
+>>>>> 	if (error == -EAGAIN)
+>>>>> 		return error;
+>>>>>
+>>>>> 	<do cleanup stuff>
+>>>>> 	...
+>>>>> 	return error;
+>>>>> }
+>>>>>
+>>>>> The idea here is that we have one _iter() function that does all the
+>>>>> state management for a particular operation and has minimal other logic.
+>>>>> That way we can see the states that repeat, transition, etc. all in one
+>>>>> place. The _step() functions implement the functional components of each
+>>>>> state and do no state management whatsoever beyond return -EAGAIN to
+>>>>> request reentry or return 0 for completion. In the case of the latter,
+>>>>> the _iter() function decides whether to transition to another state
+>>>>> (returning -EAGAIN itself) or complete the operation. If a _step()
+>>>>> function ever needs to set or check ->dela_state, then that is clear
+>>>>> indication it must be broken up into multiple _step() functions.
+>>>>
+>>>> ...because I've frequently had the same thought that the state machine
+>>>> handling ought to be in the same place.  But then I start reading
+>>>> through the xattr code to figure out how that would be done, and get
+>>>> trapped by the fact that some of the decisions about the next state have
+>>>> to happen pretty deep in the xattr code-- stuff like allocating an
+>>>> extent for a remote value, where depending on whether or not we got enough
+>>>> blocks to satisfy the space requirements, either we can move on to the
+>>>> next state and return EAGAIN, or we have to save the current state and
+>>>> EAGAIN to try to get more blocks.
+>>>>
+>>>
+>>> I haven't walked through the set code in a while, but this sort of
+>>> sounds like more of the same (heavy refactoring followed by insertion of
+>>> state management).
+>>>
+>>>> Maybe it would help a little if the setting of DEFER_FINISH and changing
+>>>> of dela_state could be put into a little helper with a tracepoint so
+>>>> that future us can ftrace the state machine to make sure it's working
+>>>> correctly?
+>>>>
+>>>
+>>> I like the idea, but not sure it helps with following the code as much
+>>> as runtime analysis.
+>>
+>> <nod>
+>>
+>>>>> I think this implements the separation of state and functionality model
+>>>>> we're after without introduction of crazy state processing frameworks,
+>>>>
+>>>> "crazy state processing frameworks"... like xfs_defer.c? :)
+>>>>
+>>>
+>>> Re: my question above, I'm curious about reusing dfops as a mechanism
+>>> for both modes if somebody can elaborate on the idea or point me at a
+>>> reference where it was previously discussed..? I could have lost track
+>>> or missed a discussion while I was out...
+>>
+>> (See above...)
+>>
+>>>>> etc., but I admit I've so far only thought about it wrt the remove case
+>>>>> (which is more simple than the set case). Also note that as usual, any
+>>>>> associated refactoring of the functional components should come as
+>>>>> preliminary patches such that this patch only introduces state bits.
+>>>>> Thoughts?
+>>>>
+>>>> (I thought/hoped we'd done all the refactoring in the 23-patch megalith
+>>>> that I tossed into 5.9... :))
+>>>>
+>>>
+>>> Heh. I'm glad to see that snowball got tossed. ;)
+>>
+>> :)
+>>
+>> --D
+>>
+>>> Brian
+>>>
+>>>> --D
+>>>>
+>>>>> Brian
+>>>>>
+>>>>>> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+>>>>>> index 3e97a93..9573949 100644
+>>>>>> --- a/fs/xfs/libxfs/xfs_attr.h
+>>>>>> +++ b/fs/xfs/libxfs/xfs_attr.h
+>>>>>> @@ -74,6 +74,75 @@ struct xfs_attr_list_context {
+>>>>>>   };
+>>>>>>   
+>>>>>>   
+>>>>>> +/*
+>>>>>> + * ========================================================================
+>>>>>> + * Structure used to pass context around among the delayed routines.
+>>>>>> + * ========================================================================
+>>>>>> + */
+>>>>>> +
+>>>>>> +/*
+>>>>>> + * Below is a state machine diagram for attr remove operations. The  XFS_DAS_*
+>>>>>> + * states indicate places where the function would return -EAGAIN, and then
+>>>>>> + * immediately resume from after being recalled by the calling function. States
+>>>>>> + * marked as a "subroutine state" indicate that they belong to a subroutine, and
+>>>>>> + * so the calling function needs to pass them back to that subroutine to allow
+>>>>>> + * it to finish where it left off. But they otherwise do not have a role in the
+>>>>>> + * calling function other than just passing through.
+>>>>>> + *
+>>>>>> + * xfs_attr_remove_iter()
+>>>>>> + *	  XFS_DAS_RM_SHRINK â”€â”�
+>>>>>> + *	  (subroutine state) â”‚
+>>>>>> + *	                     â””â”€>xfs_attr_node_removename()
+>>>>>> + *	                                      â”‚
+>>>>>> + *	                                      v
+>>>>>> + *	                                   need to
+>>>>>> + *	                                shrink tree? â”€nâ”€â”�
+>>>>>> + *	                                      â”‚         â”‚
+>>>>>> + *	                                      y         â”‚
+>>>>>> + *	                                      â”‚         â”‚
+>>>>>> + *	                                      v         â”‚
+>>>>>> + *	                              XFS_DAS_RM_SHRINK â”‚
+>>>>>> + *	                                      â”‚         â”‚
+>>>>>> + *	                                      v         â”‚
+>>>>>> + *	                                     done <â”€â”€â”€â”€â”€â”˜
+>>>>>> + *
+>>>>>> + */
+>>>>>> +
+>>>>>> +/*
+>>>>>> + * Enum values for xfs_delattr_context.da_state
+>>>>>> + *
+>>>>>> + * These values are used by delayed attribute operations to keep track  of where
+>>>>>> + * they were before they returned -EAGAIN.  A return code of -EAGAIN signals the
+>>>>>> + * calling function to roll the transaction, and then recall the subroutine to
+>>>>>> + * finish the operation.  The enum is then used by the subroutine to jump back
+>>>>>> + * to where it was and resume executing where it left off.
+>>>>>> + */
+>>>>>> +enum xfs_delattr_state {
+>>>>>> +				      /* Zero is uninitalized */
+>>>>>> +	XFS_DAS_RM_SHRINK	= 1,  /* We are shrinking the tree */
+>>>>>> +};
+>>>>>> +
+>>>>>> +/*
+>>>>>> + * Defines for xfs_delattr_context.flags
+>>>>>> + */
+>>>>>> +#define XFS_DAC_DEFER_FINISH		0x01 /* finish the transaction */
+>>>>>> +#define XFS_DAC_NODE_RMVNAME_INIT	0x02 /* xfs_attr_node_removename init */
+>>>>>> +
+>>>>>> +/*
+>>>>>> + * Context used for keeping track of delayed attribute operations
+>>>>>> + */
+>>>>>> +struct xfs_delattr_context {
+>>>>>> +	struct xfs_da_args      *da_args;
+>>>>>> +
+>>>>>> +	/* Used in xfs_attr_node_removename to roll through removing blocks */
+>>>>>> +	struct xfs_da_state     *da_state;
+>>>>>> +	struct xfs_da_state_blk *blk;
+>>>>>> +
+>>>>>> +	/* Used to keep track of current state of delayed operation */
+>>>>>> +	unsigned int            flags;
+>>>>>> +	enum xfs_delattr_state  dela_state;
+>>>>>> +};
+>>>>>> +
+>>>>>>   /*========================================================================
+>>>>>>    * Function prototypes for the kernel.
+>>>>>>    *========================================================================*/
+>>>>>> @@ -91,6 +160,10 @@ int xfs_attr_set(struct xfs_da_args *args);
+>>>>>>   int xfs_attr_set_args(struct xfs_da_args *args);
+>>>>>>   int xfs_has_attr(struct xfs_da_args *args);
+>>>>>>   int xfs_attr_remove_args(struct xfs_da_args *args);
+>>>>>> +int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
+>>>>>> +int xfs_attr_trans_roll(struct xfs_delattr_context *dac);
+>>>>>>   bool xfs_attr_namecheck(const void *name, size_t length);
+>>>>>> +void xfs_delattr_context_init(struct xfs_delattr_context *dac,
+>>>>>> +			      struct xfs_da_args *args);
+>>>>>>   
+>>>>>>   #endif	/* __XFS_ATTR_H__ */
+>>>>>> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+>>>>>> index 8623c81..4ed7b31 100644
+>>>>>> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+>>>>>> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+>>>>>> @@ -19,8 +19,8 @@
+>>>>>>   #include "xfs_bmap_btree.h"
+>>>>>>   #include "xfs_bmap.h"
+>>>>>>   #include "xfs_attr_sf.h"
+>>>>>> -#include "xfs_attr_remote.h"
+>>>>>>   #include "xfs_attr.h"
+>>>>>> +#include "xfs_attr_remote.h"
+>>>>>>   #include "xfs_attr_leaf.h"
+>>>>>>   #include "xfs_error.h"
+>>>>>>   #include "xfs_trace.h"
+>>>>>> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+>>>>>> index 3f80ced..7f81b48 100644
+>>>>>> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+>>>>>> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+>>>>>> @@ -676,10 +676,14 @@ xfs_attr_rmtval_invalidate(
+>>>>>>    */
+>>>>>>   int
+>>>>>>   xfs_attr_rmtval_remove(
+>>>>>> -	struct xfs_da_args      *args)
+>>>>>> +	struct xfs_da_args		*args)
+>>>>>>   {
+>>>>>> -	int			error;
+>>>>>> -	int			retval;
+>>>>>> +	xfs_dablk_t			lblkno;
+>>>>>> +	int				blkcnt;
+>>>>>> +	int				error;
+>>>>>> +	struct xfs_delattr_context	dac  = {
+>>>>>> +		.da_args	= args,
+>>>>>> +	};
+>>>>>>   
+>>>>>>   	trace_xfs_attr_rmtval_remove(args);
+>>>>>>   
+>>>>>> @@ -687,19 +691,17 @@ xfs_attr_rmtval_remove(
+>>>>>>   	 * Keep de-allocating extents until the remote-value region is gone.
+>>>>>>   	 */
+>>>>>>   	do {
+>>>>>> -		retval = __xfs_attr_rmtval_remove(args);
+>>>>>> -		if (retval && retval != -EAGAIN)
+>>>>>> -			return retval;
+>>>>>> +		error = __xfs_attr_rmtval_remove(&dac);
+>>>>>> +		if (error != -EAGAIN)
+>>>>>> +			break;
+>>>>>>   
+>>>>>> -		/*
+>>>>>> -		 * Close out trans and start the next one in the chain.
+>>>>>> -		 */
+>>>>>> -		error = xfs_trans_roll_inode(&args->trans, args->dp);
+>>>>>> +		error = xfs_attr_trans_roll(&dac);
+>>>>>>   		if (error)
+>>>>>>   			return error;
+>>>>>> -	} while (retval == -EAGAIN);
+>>>>>>   
+>>>>>> -	return 0;
+>>>>>> +	} while (true);
+>>>>>> +
+>>>>>> +	return error;
+>>>>>>   }
+>>>>>>   
+>>>>>>   /*
+>>>>>> @@ -709,9 +711,10 @@ xfs_attr_rmtval_remove(
+>>>>>>    */
+>>>>>>   int
+>>>>>>   __xfs_attr_rmtval_remove(
+>>>>>> -	struct xfs_da_args	*args)
+>>>>>> +	struct xfs_delattr_context	*dac)
+>>>>>>   {
+>>>>>> -	int			error, done;
+>>>>>> +	struct xfs_da_args		*args = dac->da_args;
+>>>>>> +	int				error, done;
+>>>>>>   
+>>>>>>   	/*
+>>>>>>   	 * Unmap value blocks for this attr.
+>>>>>> @@ -721,12 +724,10 @@ __xfs_attr_rmtval_remove(
+>>>>>>   	if (error)
+>>>>>>   		return error;
+>>>>>>   
+>>>>>> -	error = xfs_defer_finish(&args->trans);
+>>>>>> -	if (error)
+>>>>>> -		return error;
+>>>>>> -
+>>>>>> -	if (!done)
+>>>>>> +	if (!done) {
+>>>>>> +		dac->flags |= XFS_DAC_DEFER_FINISH;
+>>>>>>   		return -EAGAIN;
+>>>>>> +	}
+>>>>>>   
+>>>>>>   	return error;
+>>>>>>   }
+>>>>>> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+>>>>>> index 9eee615..002fd30 100644
+>>>>>> --- a/fs/xfs/libxfs/xfs_attr_remote.h
+>>>>>> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+>>>>>> @@ -14,5 +14,5 @@ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+>>>>>>   int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+>>>>>>   		xfs_buf_flags_t incore_flags);
+>>>>>>   int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+>>>>>> -int __xfs_attr_rmtval_remove(struct xfs_da_args *args);
+>>>>>> +int __xfs_attr_rmtval_remove(struct xfs_delattr_context *dac);
+>>>>>>   #endif /* __XFS_ATTR_REMOTE_H__ */
+>>>>>> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+>>>>>> index bfad669..aaa7e66 100644
+>>>>>> --- a/fs/xfs/xfs_attr_inactive.c
+>>>>>> +++ b/fs/xfs/xfs_attr_inactive.c
+>>>>>> @@ -15,10 +15,10 @@
+>>>>>>   #include "xfs_da_format.h"
+>>>>>>   #include "xfs_da_btree.h"
+>>>>>>   #include "xfs_inode.h"
+>>>>>> +#include "xfs_attr.h"
+>>>>>>   #include "xfs_attr_remote.h"
+>>>>>>   #include "xfs_trans.h"
+>>>>>>   #include "xfs_bmap.h"
+>>>>>> -#include "xfs_attr.h"
+>>>>>>   #include "xfs_attr_leaf.h"
+>>>>>>   #include "xfs_quota.h"
+>>>>>>   #include "xfs_dir2.h"
+>>>>>> -- 
+>>>>>> 2.7.4
+>>>>>>
+>>>>>
+>>>>
+>>>
+>>
 > 
-> /*
->  * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
->  * quota will be not be switched off as long as that inode lock is held.
->  */
-> #define XFS_IS_QUOTA_ON(mp)     ((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
->                                                    XFS_GQUOTA_ACTIVE | \
->                                                    XFS_PQUOTA_ACTIVE))
-> ...
-> 
-> So I'm wondering how safe that actually would be, or even how safe it is
-> to clear the ACCT|ENFD flags before we release/purge dquots.
-
-I don't see any problem with this - we only care that when we
-restart transactions that the dquots for the disabled quota type are
-not joined into new transactions, and clearing the ACTIVE flag for
-that dquot type should do that.
-
-> It seems
-> like that conflicts with the above documentation, at least, but I'm not
-> totally clear on the reason for that rule.
-
-Releasing the dquot in the quota-off code required an inode lock
-cycle to guarantee that the inode was not currently being modified
-in a transaction that might hold a reference to the dquota. Hence
-the ACTIVE check under the inode lock is the only way to guarantee
-the dquot doesn't get ripped out from underneath an inode/dquot
-modification in progress...
-
-> In any event, I'm still
-> poking around a bit, but unless I'm missing something in the analysis
-> above it doesn't seem like this is a matter of simply altering the
-> quotaoff path as originally expected. Thoughts or ideas appreciated.
-
-I suspect you missed the importance of q->qi_active_trans for
-draining all active quota modifying transactions before making quota
-flag changes...
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
