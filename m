@@ -2,246 +2,205 @@ Return-Path: <SRS0=m/8K=CN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C1B4C433E2
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 20:54:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1719BC433E2
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 22:29:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D29A820C09
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 20:54:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9D6C2083B
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Sep 2020 22:29:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727921AbgIDUyt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Sep 2020 16:54:49 -0400
-Received: from sandeen.net ([63.231.237.45]:54864 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727855AbgIDUys (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Sep 2020 16:54:48 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9C8DD323C01
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Sep 2020 15:54:21 -0500 (CDT)
-To:     xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v5.8.0 released
-Message-ID: <9e40920d-2976-cd96-f5d7-335455c2fff3@sandeen.net>
-Date:   Fri, 4 Sep 2020 15:54:46 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.2.1
+        id S1728084AbgIDW3n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Sep 2020 18:29:43 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39287 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728012AbgIDW3n (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Sep 2020 18:29:43 -0400
+Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EA3E6822903;
+        Sat,  5 Sep 2020 08:29:37 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kEKDA-0000RL-FJ; Sat, 05 Sep 2020 08:29:36 +1000
+Date:   Sat, 5 Sep 2020 08:29:36 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: quotaoff, transaction quiesce, and dquot logging
+Message-ID: <20200904222936.GH12131@dread.disaster.area>
+References: <20200904155949.GF529978@bfoster>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="ftvEvk3fBukfbtxUUseKxiwc7sgzT68sR"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200904155949.GF529978@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=IuRgj43g c=1 sm=1 tr=0 cx=a_idp_d
+        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
+        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=7-415B0cAAAA:8
+        a=cz2PgkpBsDL-bNuyME8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---ftvEvk3fBukfbtxUUseKxiwc7sgzT68sR
-Content-Type: multipart/mixed; boundary="4Ex5qWoNk5EZO0URGsukYQ5L7vuiBH9hB";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: xfs <linux-xfs@vger.kernel.org>
-Message-ID: <9e40920d-2976-cd96-f5d7-335455c2fff3@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v5.8.0 released
+On Fri, Sep 04, 2020 at 11:59:49AM -0400, Brian Foster wrote:
+> Hi Dave,
+> 
+> I'm finally getting back to the quotaoff thing we discussed a ways
+> back[1] and doing some auditing to make sure that I understand the
+> approach and that it seems correct. To refresh, your original prototype
+> and the slightly different one I'm looking into implement the same
+> general scheme:
+> 
+> 1.) quiesce the transaction subsystem
+> 2.) disable quota(s) (update state flags)
+> 3.) log quotaoff start/end items (synchronous)
+> 4.) open the transaction subsystem
+> 5.) release all inode dquot references and purge dquots
+> 
+> The idea is that the critical invariant requred for quotaoff is that no
+> dquots are logged after the quotaoff end item is committed to the log.
+> Otherwise there is no guarantee that the tail pushes past the quotaoff
+> item and a subsequent crash/recovery incorrectly replays dquot changes
+> for an inactive quota mode.
+> 
+> As it is, I think there's at least one assumption we've made that isn't
+> entirely accurate. It looks to me that steps 1-4 don't guarantee that
+> dquots aren't logged after the transaction subsystem is released. The
+> current code (and my prototype) only clear the *QUOTA_ACTIVE flags at
+> that point, and various transactions might have already acquired or
+> attached dquots to inodes before the transaction allocation even occurs.
+> Once the transaction is allocated, various paths basically only care if
+> we have a dquot or not.
+> 
+> For example, xfs_create() gets the dquots up front, allocs the
+> transaction and xfs_trans_reserve_quota_bydquots() attaches any of the
+> associated dquots to the transaction. xfs_trans_reserve_quota_bydquots()
+> checks for (!QUOTA_ON() || !QUOTA_RUNNING()), but those only help us if
+> all quotas have been disabled. Consider if one of multiple active quotas
+> are being turned off, and that this path already has dquots for both,
+> for example.
 
---4Ex5qWoNk5EZO0URGsukYQ5L7vuiBH9hB
-Content-Type: multipart/mixed;
- boundary="------------D7269FA9AABE9E4875709FA3"
-Content-Language: en-US
+Right, that's one of the main problems I tried to solve.
 
-This is a multi-part message in MIME format.
---------------D7269FA9AABE9E4875709FA3
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+> 
+> I do notice that your prototype[1] clears all of the quota flags (not
+> just the ACTIVE flags) after the transaction barrier is released. This
+> prevents further modifications in some cases, but it doesn't seem like
+> that is enough to avoid violating the invariant described above. E.g.,
+> xfs_trans_apply_dquot_deltas() logs the dquot regardless of whether
+> changes are made (and actually looks like it can make some changes on
+> the dquot even if the transaction doesn't) after the dquot is attached
+> to the transaction.
 
-Hi folks,
+It should, because the transaction barrier includes a draining
+mechanism to wait for all quota modifying transactions already
+running to drain out. That is, any transaction marked with
+XFS_TRANS_QUOTA (via it's initial reservation) will have an elevated
+q->qi_active_trans count, and that only gets decremented when the
+transaction completes and the dquot is released from the
+transaction (i.e. in xfs_trans_free_dqinfo()).
 
-xfsprogs v5.8.0 has been released, and the xfsprogs repository at:
+The barrier sets the XFS_QUOTA_OFF_RUNNING_BIT, at which point new
+transactions marked with XFS_TRANS_QUOTA will enter
+xfs_trans_quota_enabled() in xfs_trans_alloc(). If the
+XFS_QUOTA_OFF_RUNNING_BIT is set, they block waiting for it to be
+cleared.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+This forms the "no new quota modifying transactions can start" part
+of the barrier.
 
-has just been updated.
+If quota is running and the XFS_QUOTA_OFF_RUNNING_BIT is not set,
+they increment q->qi_active_trans to indicate that there is a
+running dquot modifying transaction in progress. This state is
+maintained across transaction duplication/rolling so the reference
+only goes away when the transaction is completely finished with
+dquots and released them from the transaction.
 
-Tarballs are available at:
+The quota off code sets the XFS_QUOTA_OFF_RUNNING_BIT the waits for
+q->qi_active_trans to go to zero, thereby setting the "stop new
+xacts from starting" barrier and then waiting for all dquot
+modifying xacts to complete. At this point, there are not
+transactions holding dquot references, no dquots being modified,
+and all new transactions that might modify dquots are being held in
+xfs_trans_alloc() and will check xfs_trans_quota_running() when they
+are woken. 
 
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.8.0.tar=
-=2Egz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.8.0.tar=
-=2Exz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.8.0.tar=
-=2Esign
+At this point, we might still have uncommitted dquots in the CIL,
+so we do a xfs_log_force(mp, XFS_LOG_SYNC) to flush all the
+modifications to the journal, thereby guaranteeing that we order
+them in the journal before the first quotaoff item is committed.
 
-The new head of the master branch is commit:
+With all dquot mods being stable now, and no new modifications able
+to occur, we can clear all the quota flags in one go. We
+don't need to keep the quotas we are turning off running while we
+clear out all the inode references to them, because once the
+running/active/acct/enforced flags are cleared, no new modification
+will try to modify that quota because all the "is this quota type
+running" checks will fail the moment we clear all the in-memory
+quota flags.
 
-7fa3a67f "xfsprogs: Release v5.8.0"
+IOWs, the barrier mechanism I added was designed to provide the
+exact "no dquots are logged after the quotaoff item is committed to
+the log" invariant you describe. It's basically the same mechanism
+we use for draining direct IO via taking IOLOCKs to prevent new
+submissions and calling inode_dio_wait() to drain everything in
+flight....
 
-Abbreviated changelog:
+> This does make me wonder a bit whether we should rework the transaction
+> commit path to avoid modifying/logging the dquot completely if the quota
+> is inactive or accounting is disabled.
 
-xfsprogs-5.8.0 (04 Sep 2020)
-        - xfs_db: set b_ops to NULL for types without verifiers (Eric San=
-deen)
+If there are no dquots for an inactive quota type attached to the
+transaction, it won't log anything. That's what the barrier+drain
+acheives.
 
-xfsprogs-5.8.0-rc1 (26 Aug 2020)
-        - mkfs: allow setting dax flag on root directory (Darrick Wong)
-        - xfs_quota: improve reporting and messages (Bill O'Donnell)
-        - xfs_db: use correct inode to set inode type (Zorro Lang)
-        - xfs_db: fix nlink usage in check (Darrick Wong)
-        - xfs_db: report the inode dax flag (Darrick Wong)
-        - man: update mkfs.xfs inode flag option documentation (Darrick W=
-ong)
-        - xfsprogs: move custom interface def'ns to new header (Eric Sand=
-een)
+> When starting to look around with
+> that in mind, I see the following in xfs_quota_defs.h:
+> 
+> /*
+>  * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
+>  * quota will be not be switched off as long as that inode lock is held.
+>  */
+> #define XFS_IS_QUOTA_ON(mp)     ((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
+>                                                    XFS_GQUOTA_ACTIVE | \
+>                                                    XFS_PQUOTA_ACTIVE))
+> ...
+> 
+> So I'm wondering how safe that actually would be, or even how safe it is
+> to clear the ACCT|ENFD flags before we release/purge dquots.
 
-xfsprogs-5.8.0-rc0 (10 Aug 2020)
-        - xfs_repair: check quota counters (Darrick Wong)
-        - xfs_io: fix -D vs -R handling (Xiao Yang)
-        - libxfs changes merged from kernel 5.8
+I don't see any problem with this - we only care that when we
+restart transactions that the dquots for the disabled quota type are
+not joined into new transactions, and clearing the ACTIVE flag for
+that dquot type should do that.
 
+> It seems
+> like that conflicts with the above documentation, at least, but I'm not
+> totally clear on the reason for that rule.
 
-Thanks,
--Eric
+Releasing the dquot in the quota-off code required an inode lock
+cycle to guarantee that the inode was not currently being modified
+in a transaction that might hold a reference to the dquota. Hence
+the ACTIVE check under the inode lock is the only way to guarantee
+the dquot doesn't get ripped out from underneath an inode/dquot
+modification in progress...
 
+> In any event, I'm still
+> poking around a bit, but unless I'm missing something in the analysis
+> above it doesn't seem like this is a matter of simply altering the
+> quotaoff path as originally expected. Thoughts or ideas appreciated.
 
+I suspect you missed the importance of q->qi_active_trans for
+draining all active quota modifying transactions before making quota
+flag changes...
 
---------------D7269FA9AABE9E4875709FA3
-Content-Type: application/pgp-keys;
- name="OpenPGP_0x20AE1692E13DDEE0.asc"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
- filename="OpenPGP_0x20AE1692E13DDEE0.asc"
+Cheers,
 
------BEGIN PGP PUBLIC KEY BLOCK-----
+Dave.
 
-xsFNBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCsn=
-QZV
-32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+WL05O=
-DFQ
-2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQvj5BEeAx7=
-xKk
-yBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtWZiYO7jsg/qIpp=
-R1C
-6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGCsEEHj2khs7GfVv4pm=
-UUH
-f1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2BS6Rg851ay7AypbCPx2w4=
-d8j
-IkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2jgJBs57loTWAGe2Ve3cMy3VoQ4=
-0Wt
-3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftKLKhPj4c7uqjnBjrgOVaVBupGUmvLi=
-ePl
-nW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+XdmYtjDhjf3NAcoBWJuj8euxMB6TcQN2Mr=
-SXy
-5wSKaw40evooGwARAQABzSVFcmljIFIuIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+w=
-sF4
-BBMBAgAiBQJOsffUAhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRAgrhaS4T3e4K8WD=
-/9R
-xynMYm+vXF1lc1ldA4miH1Mcw2y+3RSU4QZA5SrRBz4NX1atqz3OEUpu7qAAZUW9vp3MWEXeK=
-rVR
-/yg0NZTOPe+2a7ZN0J+s7AF6xVjdEsjW4bOo5cmGMcpciyfr9WwZbOOUEWWZ08UkEFa6B+p4E=
-KJ9
-eCOFeHITCkR3AA8uxtGBBAbFzm6wMmDegsvld9bXv5RdfUptyElzqlIukPJRz3/p3bUSCT6mk=
-W7r
-rvBUMwvGnaI2YVabJSLpd2xiVs7+gnslOk35TAMLrJ0uo3Nt2bx3sFlDIr9E2RgKYpbNE39O3=
-5l8
-t+A3asqD8DlqDg+VgTuOKBny/bVeKFuKAJ0Bvy2EU+/GPj/rnNgWh0gCPiaKqRRkPriGwdAXQ=
-2zk
-2oQUq0cfpOQm6oIKKgXEt+W/r0cxuWLAdxMsLYdzrARstfiMYLMnw6z6mGpptgTSSnemw1tOD=
-qe9
-+++Z6yM8JA1RIyCVRlGx4dBh+vtQsFzCJfgIZxmF0rWKgW2aAOHbzNHG+UUODLK0IpOhUYTcg=
-yjl
-vFM3tFwVjy0z/wF8ebmHkzeTMKJ64nPClwwfRfHz6KlgGlzEefNtZoHN7iR7uh282CpQ24NUC=
-hS2
-ORSd85Jt5TwxOfgSrEO9cC7rOeh18fNShCRrTG6WBdxXmxBn/e49nI2KHhMSVxut37YoWtqIu=
-80k
-RXJpYyBSLiBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+wsF4BBMBAgAiBQJOsq5eAhsDB=
-gsJ
-CAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRAgrhaS4T3e4IdpD/wOgkZiBdjErbXm8gZPuj6ce=
-O3L
-finJqWKJMHyPYmoUj4kPi5pgWRPjzGHrBPvPpbEogL88+mBF7H1jJRsx4qohO+ndsUjmFTztq=
-1+8
-ZeE9iffMmZWK4zA5kOoKRXtGQaVZeOQhVGJAWnrpRDLKc2mCx+sxrD44H1ScmJ1veGVy1nK0k=
-4sQ
-TyXA7ZOI+o622NyvHlRYpivkUqugqmYFGfrmgwP8CeJB62LrzN0D27B0K/22EjZFQBcYJRumu=
-Aki
-eMO9P3U/RRW+48499J5mgZgxXLgvsc3nKXH5Wi77hWsrgSbJTKeHm2i/H4Jb57VrEGTPN+tQp=
-I7f
-NrqaNiUWIk65RPV4khBrMVtxKXRU971JiJYGNP16OTxr98ksHBbnEVJNUPY/mV+IAml+bB6UD=
-NN1
-E2g8eIxXRqji5009YX6zEGdxIs1W50FvRzdLJ5vZQ+T+jtXccim2aXr31gX8HUN+UVwWyCg5p=
-mZ8
-CRiYGJeQc4eQ5U9Ce6DFTs3RFWIqVsfNsAah1VuCNbT7p8oK2DvozZ/gS8EQjmESZuQQDcGMd=
-DL1
-pZtzLdzpJFtqW1/gtz+aAHMa35WsNx3hAYvymJMoMaL1pfdyC07FtN0dGjXCOm0nWEf+vKS+B=
-C3c
-exv0i22h39vBc81BY0bzeeZwaDHjzhaNTuirZF10OBm11Xm3b87BTQROsffUARAA0DrUifTrX=
-Qzq
-xO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJX4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2I=
-ZTE
-ajUY0Up+b3ErOpLpZwhvgWatjifpj6bBSKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/o=
-xst
-IViBhMhDwI6XsRlnVBoLLYcEilxA2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBG=
-JQd
-Py94nnlAVn3lH3+N7pXvNUuCGV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ=
-5vV
-XjPxTlkFdT0S0/uerCG51u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avF=
-aNW
-1kKBs0T5M1cnlWZUUtl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LG=
-ff3
-xRQHngeN5fPxze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3j=
-AQn
-sWTru4RVTZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5=
-eth
-eLMOgRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAcLBX=
-wQY
-AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0kiY=
-Pve
-GoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWNmcQT7=
-8hB
-eGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/LKjxnTedX=
-0ay
-gXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPoolLOrU43oqFnD8Q=
-wcN
-56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0MP9JGfj6x+bj/9JMB=
-tCW
-1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+JEexGxczWwN4mrOQWhMT5=
-Jyb
-+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBOPk6ah10C4+R1Jc7dyUsKksMfv=
-vhR
-X1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/m1F3vYvdlE4p2ts1mmixMF7KajN9/=
-E5R
-QtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlffWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/Y=
-udB
-vz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLXpA=3D=3D
-=3DpESb
------END PGP PUBLIC KEY BLOCK-----
-
---------------D7269FA9AABE9E4875709FA3--
-
---4Ex5qWoNk5EZO0URGsukYQ5L7vuiBH9hB--
-
---ftvEvk3fBukfbtxUUseKxiwc7sgzT68sR
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl9SqZYFAwAAAAAACgkQIK4WkuE93uDz
-Bw//ZDHz0KuJYW2jKCZTRvf1/lTMSJy9FStjRRA/xpX03WYBg/ztTvfRKYIWkza2nSLcrdgmePBD
-fMlv5jeD6+kYzx6YHjboURuahkbR6jptZSsVYSRjz/xIIN6rG+ZgzdS+0VyCykg5n82jBcQHpQ9A
-CTlx8cZPRwgjPrZ/PpPwoAAloLD6B+nI6iaLifvsF9P8J+3QlapKang6+MkCkbyBNQTRUk02TBGR
-ZACxvlK5IyfTAw9hAGc4by9EEXSu+TwRFjZT84sioKXYpFTGaiaQKApgSd4EL0v+1GCEoWr7mkxv
-QxftTHxemKtsiICpEUgGTV3C8kcL7DavKAPwXoRnysUn7brdJFW0KuPVK6vE3v1NWC5EjVVMTXwo
-FWrhWd0qglkb0HYBsL5sBiwssFkIV5Qlbv3psZge8cBlKxLu1eJ0+rAk1M2u6149I1KaeCnxT8AV
-efTHZODtWQcfohTu3Hd6dbGes8Hmp96lfdNshPdCcjq898E7AE2lBsjsqt5wPIwPODytZjY1ubq5
-pnrxjpQJdn1LzivSzcT981An8QF1i+qb21UUDLlpzxyyHE5vPhFmnMq1cjngm1PlOlWaXfU1mdFE
-uf3Ffb2S0R1yNKy7mR1n8L5Lvt6p+Q2CT/wMNaYlV7UQ5TSDKY2hjSIgTUJTTpJq4HLN+eNq4rbN
-hJw=
-=6LLI
------END PGP SIGNATURE-----
-
---ftvEvk3fBukfbtxUUseKxiwc7sgzT68sR--
+-- 
+Dave Chinner
+david@fromorbit.com
