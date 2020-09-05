@@ -2,178 +2,139 @@ Return-Path: <SRS0=nhRG=CO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4641C433E2
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0559DC43461
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:54:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80DEC206A5
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:50:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BweMD4L8"
+	by mail.kernel.org (Postfix) with ESMTP id AE3912086A
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:54:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599324895;
+	bh=KCVpQIkRfqk75kLPHTuJDni6NSqWOhUvpOq5UmDg0jY=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=zBFSlfjOrGs8855yvb6Splm3v2nW2bYKSQm/H5bp9i/LW6UdvpsfnymxGH9HIfFrf
+	 TDhe/g82zFN/KpVUJGcTvvCT2UdqRXxSeIHTORVFSkL3dS6c29W77YDb1Zb9A4Ew6I
+	 3ZElBk9I6l5Gfs6Q2y3VM6CG1bUYtdOa7Y7MJgY8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727875AbgIEQud (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 5 Sep 2020 12:50:33 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:34150 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726468AbgIEQud (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Sep 2020 12:50:33 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 085GoTLd027853;
-        Sat, 5 Sep 2020 16:50:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=2ZWHryTH9QAutu83+/PR+DrmK2KdiYbmvl4pc44S1yc=;
- b=BweMD4L8oK8GG8IMajT3kg6UI98LXjWJQsJz+6HhgRLCCSyjVHYCpKJ2xY09CSAWuXr4
- 4CqHKrIQcDeqF7b5fJASZteNIhZNrMwXyqv3OLtiw/7W2Ezj+5c52/4dFMJdoW1w+vpV
- 1LnO/ss2bZDR9DipCABV+X+N6hyDyJc+lB6mO/YRXTJWWyA6G16k5NtxpZ57SiRrVU48
- gYK5GfjupzMmstqQ6pBhelAfwtUE3YWa5qTR0WheAPVvk9Dr/aEM5eu+S9CYQiWFhj0h
- RB0sGxIikmTHBEATBnIhO1+BXsEeay113pqwnhtRfwtQiavHa2X11wRrqhtK7E7btWrb bw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 33c2mkhhac-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 05 Sep 2020 16:50:29 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 085GjHWk005816;
-        Sat, 5 Sep 2020 16:50:28 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 33c20hx3ew-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 05 Sep 2020 16:50:28 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 085GoRwV026001;
-        Sat, 5 Sep 2020 16:50:27 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 05 Sep 2020 09:50:27 -0700
-Date:   Sat, 5 Sep 2020 09:50:26 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] quotatools: support grace period expirations past y2038 in
- userspace
-Message-ID: <20200905165026.GD7955@magnolia>
-References: <20200905164703.GC7955@magnolia>
+        id S1726590AbgIEQyz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 5 Sep 2020 12:54:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48750 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726468AbgIEQyy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Sep 2020 12:54:54 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA3D2C061244
+        for <linux-xfs@vger.kernel.org>; Sat,  5 Sep 2020 09:54:53 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id nw23so12555410ejb.4
+        for <linux-xfs@vger.kernel.org>; Sat, 05 Sep 2020 09:54:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=WiPzQYToprkedvPvy23+d8Sogck/PPDXaDM0aINUTxs=;
+        b=IbD/06LcWNINiD1qQx76yuC4NnGDIsm3+GWIOtgRCjshaVtDI/A02DI5qKetncQ5Eq
+         ETJ/AP0MURo4tMxU2BWA9ZqY9wz8byBe5Nb/ZFb/npAfuJhH/nO2eJvqX1EnmPNcLt9a
+         /DIWjA8HitbuHHT5Zgo8zabEuZouEGY3xlN9Q=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=WiPzQYToprkedvPvy23+d8Sogck/PPDXaDM0aINUTxs=;
+        b=J9jPcT3vugYfonKfq0KLmBLyVWFKICvRY/iy7y7gP5Rd4z242u+EUzS7GKrDX1GTLT
+         7g5Gy8bbL36izRcbbX9Q1PrGZ0vCDOGrzYbl8gNB4c0ojujVkvKG8nXfxDTO8QXQN4t0
+         dvAc9KHnbWzFq6c8VopwxK9ErGRoavvp3FFACOUZu5WchXa3HjUUZ143K/Son1GPTeln
+         MB1wkn3HF2i53Nc8658AdqTFCeHM6+RSOrgkKdUO28S+xzyDW7cWMi0cWanGTkGdqIZV
+         24Rv7ALRB6lx3cORhZ6H1z7H6CxWSEcPBuOZr3dCbIV1GuTz8XLuBmbLSLanwwBWV1Zl
+         MG/Q==
+X-Gm-Message-State: AOAM532ji+vhotrubASBGi3pOxdYFzZCSccrk4cktAdRD8Y15zpIKbIj
+        QVfKmGVur0PIrYiN4+uBd7rimrxrArPJ3g==
+X-Google-Smtp-Source: ABdhPJzX2vjuZjzBji9U5vT9AKC2qF5Qpz94hMZ+UrsS0R4zm47oukMzpMMqIrXsXAUve4PuueR27A==
+X-Received: by 2002:a17:906:2d42:: with SMTP id e2mr12926625eji.10.1599324890893;
+        Sat, 05 Sep 2020 09:54:50 -0700 (PDT)
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com. [209.85.218.52])
+        by smtp.gmail.com with ESMTPSA id r16sm768475edc.57.2020.09.05.09.54.50
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 05 Sep 2020 09:54:50 -0700 (PDT)
+Received: by mail-ej1-f52.google.com with SMTP id z22so12534753ejl.7
+        for <linux-xfs@vger.kernel.org>; Sat, 05 Sep 2020 09:54:50 -0700 (PDT)
+X-Received: by 2002:a19:c8c6:: with SMTP id y189mr6480035lff.125.1599324489251;
+ Sat, 05 Sep 2020 09:48:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200905164703.GC7955@magnolia>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9735 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=1
- mlxlogscore=999 mlxscore=0 spamscore=0 malwarescore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009050163
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9735 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=999
- malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009050164
+References: <alpine.LRH.2.02.2009031328040.6929@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.2009041200570.27312@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.2009050805250.12419@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.2009050812060.12419@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <alpine.LRH.2.02.2009050812060.12419@file01.intranet.prod.int.rdu2.redhat.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sat, 5 Sep 2020 09:47:53 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wh=0V27kdRkBAOkCDXSeFYmB=VzC0hMQVbmaiFV_1ZaCA@mail.gmail.com>
+Message-ID: <CAHk-=wh=0V27kdRkBAOkCDXSeFYmB=VzC0hMQVbmaiFV_1ZaCA@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs: don't update mtime on COW faults
+To:     Mikulas Patocka <mpatocka@redhat.com>
+Cc:     Jan Kara <jack@suse.cz>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Jann Horn <jannh@google.com>, Christoph Hellwig <hch@lst.de>,
+        Oleg Nesterov <oleg@redhat.com>,
+        Kirill Shutemov <kirill@shutemov.name>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andrea Arcangeli <aarcange@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Linux-MM <linux-mm@kvack.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, Sep 5, 2020 at 5:13 AM Mikulas Patocka <mpatocka@redhat.com> wrote:
+>
+> When running in a dax mode, if the user maps a page with MAP_PRIVATE and
+> PROT_WRITE, the xfs filesystem would incorrectly update ctime and mtime
+> when the user hits a COW fault.
 
-Add the ability to interpret the larger quota grace period expiration
-timestamps that the kernel can export via struct xfs_kern_dqblk.
+So your patch is obviously correct,  but at the same time I look at
+the (buggy) ext2/xfs code you fixed, and I go "well, that was a really
+natural mistake to make".
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- quotaio_xfs.c |   33 +++++++++++++++++++++++++++++----
- quotaio_xfs.h |   11 ++++++++++-
- 2 files changed, 39 insertions(+), 5 deletions(-)
+So I get the feeling that "yes, this was an ext2 and xfs bug, but we
+kind of set those filesystems up to fail".
 
-diff --git a/quotaio_xfs.c b/quotaio_xfs.c
-index 3333bb1..9854ec2 100644
---- a/quotaio_xfs.c
-+++ b/quotaio_xfs.c
-@@ -42,6 +42,29 @@ scan_dquots:	xfs_scan_dquots,
- report:		xfs_report
- };
- 
-+static inline time_t xfs_kern2utildqblk_ts(const struct xfs_kern_dqblk *k,
-+		__s32 timer, __s8 timer_hi)
-+{
-+	if (k->d_fieldmask & FS_DQ_BIGTIME)
-+		return (__u32)timer | (__s64)timer_hi << 32;
-+	return timer;
-+}
-+
-+static inline void xfs_util2kerndqblk_ts(const struct xfs_kern_dqblk *k,
-+		__s32 *timer_lo, __s8 *timer_hi, time_t timer)
-+{
-+	*timer_lo = timer;
-+	if (k->d_fieldmask & FS_DQ_BIGTIME)
-+		*timer_hi = timer >> 32;
-+	else
-+		*timer_hi = 0;
-+}
-+
-+static inline int want_bigtime(time_t timer)
-+{
-+	return timer > INT32_MAX || timer < INT32_MIN;
-+}
-+
- /*
-  *	Convert XFS kernel quota format to utility format
-  */
-@@ -53,8 +76,8 @@ static inline void xfs_kern2utildqblk(struct util_dqblk *u, struct xfs_kern_dqbl
- 	u->dqb_bsoftlimit = k->d_blk_softlimit >> 1;
- 	u->dqb_curinodes = k->d_icount;
- 	u->dqb_curspace = ((qsize_t)k->d_bcount) << 9;
--	u->dqb_itime = k->d_itimer;
--	u->dqb_btime = k->d_btimer;
-+	u->dqb_itime = xfs_kern2utildqblk_ts(k, k->d_itimer, k->d_itimer_hi);
-+	u->dqb_btime = xfs_kern2utildqblk_ts(k, k->d_btimer, k->d_btimer_hi);
- }
- 
- /*
-@@ -69,8 +92,10 @@ static inline void xfs_util2kerndqblk(struct xfs_kern_dqblk *k, struct util_dqbl
- 	k->d_blk_softlimit = u->dqb_bsoftlimit << 1;
- 	k->d_icount = u->dqb_curinodes;
- 	k->d_bcount = u->dqb_curspace >> 9;
--	k->d_itimer = u->dqb_itime;
--	k->d_btimer = u->dqb_btime;
-+	if (want_bigtime(u->dqb_itime) || want_bigtime(u->dqb_btime))
-+		k->d_fieldmask |= FS_DQ_BIGTIME;
-+	xfs_util2kerndqblk_ts(k, &k->d_itimer, &k->d_itimer_hi, u->dqb_itime);
-+	xfs_util2kerndqblk_ts(k, &k->d_btimer, &k->d_btimer_hi, u->dqb_btime);
- }
- 
- /*
-diff --git a/quotaio_xfs.h b/quotaio_xfs.h
-index be7f86f..e0c2a62 100644
---- a/quotaio_xfs.h
-+++ b/quotaio_xfs.h
-@@ -72,7 +72,10 @@ typedef struct fs_disk_quota {
- 	__s32 d_btimer;		/* similar to above; for disk blocks */
- 	__u16 d_iwarns;		/* # warnings issued wrt num inodes */
- 	__u16 d_bwarns;		/* # warnings issued wrt disk blocks */
--	__s32 d_padding2;	/* padding2 - for future use */
-+	__s8 d_itimer_hi;	/* upper 8 bits of timer values */
-+	__s8 d_btimer_hi;
-+	__s8 d_rtbtimer_hi;
-+	__s8 d_padding2;	/* padding2 - for future use */
- 	__u64 d_rtb_hardlimit;	/* absolute limit on realtime blks */
- 	__u64 d_rtb_softlimit;	/* preferred limit on RT disk blks */
- 	__u64 d_rtbcount;	/* # realtime blocks owned */
-@@ -114,6 +117,12 @@ typedef struct fs_disk_quota {
- #define FS_DQ_RTBCOUNT          (1<<14)
- #define FS_DQ_ACCT_MASK         (FS_DQ_BCOUNT | FS_DQ_ICOUNT | FS_DQ_RTBCOUNT)
- 
-+/*
-+ * Quota expiration timestamps are 40-bit signed integers, with the upper 8
-+ * bits encoded in the _hi fields.
-+ */
-+#define FS_DQ_BIGTIME		(1<<15)
-+
- /*
-  * Various flags related to quotactl(2).  Only relevant to XFS filesystems.
-  */
+Could this possibly have been avoided by having nicer interfaces?
+
+Grepping around, and doing a bit of "git blame", I note that ext4 used
+to have this exact same bug too, but it was fixed three years ago in
+commit fd96b8da68d3 ("ext4: fix fault handling when mounted with -o
+dax,ro") and nobody at the time clearly realized it might be a
+pattern.
+
+And honestly, it's possible that the pattern came from cut-and-paste
+errors, but it's equally likely that the pattern was there simply
+because it was such a natural pattern and such an easy and natural
+mistake to make.
+
+Maybe it's inevitable. Some people do want (and need) the information
+whether it was a write just because they care about the page table
+issues (ie marking the pte dirty etc). To that kind of situation,
+whether it's shared or not might not matter all that much. But to a
+filesystem, a private write vs a shared write are quite different
+things.
+
+So I don't really have any suggestions, and maybe it's just what it
+is, but maybe somebody has an idea for how to make it slightly less
+natural to make this mistake..
+
+But maybe just a test-case is all it takes, like Darrick suggests.
+
+                  Linus
