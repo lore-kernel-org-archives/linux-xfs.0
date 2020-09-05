@@ -2,174 +2,87 @@ Return-Path: <SRS0=nhRG=CO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05117C2BBD0
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 15:37:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 502A8C43461
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 15:52:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2021206B8
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 15:37:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="A9z6nKTE"
+	by mail.kernel.org (Postfix) with ESMTP id 198AB206B8
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 15:52:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599321172;
+	bh=TZOWi+HBwDSzqqcu2ndK0rh+9RbRR0CjdXfzqDyJjxI=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=crRYIjRdon3jRcsY9o/Aiwohdqa2Y1Qccjhl9iU4Z4LDAUwrcQK64Sn/ICoGH9fyN
+	 ZerqkhbP0JX39Eedm4GE1COBvX1CJeYI1wh2KLIDIDCYdGcQ0FA0zDOnnrUtXJJuMG
+	 VerCreDrH/OyjCHs04EglPu+yFkh3NMXIPzkyhpY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726468AbgIEPhd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 5 Sep 2020 11:37:33 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47826 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726372AbgIEPhc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Sep 2020 11:37:32 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 085FUIW0097218;
-        Sat, 5 Sep 2020 15:37:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=vD/AOAr0WrELqvXdX96uBWr/OfEgaHB8gYfku2p5lG8=;
- b=A9z6nKTE2U3JnSRnGJ5GAezCjU18vJCB6Cqj8K0YYYwtA5Od/ljur95RwdJBgLrpP8PG
- wq7LYBbu90KRTr30uy7kvz457HEszYv5bPvquGTVDSuWtxAb+Ggy+PTLNrJVWNHvERBi
- KQt59h6ECpthJ23tXtlNFEC19keLSUL9DDvdEayeDtOaW7sVUnjcVWf3ChIlcwE1Rwu4
- lVVHUcdSuc4KMeZ+DgnVlBpvsxf+iF6kfDJ2iuK/BMWclr/sodLrVMGZ/k9+jUvZVnHi
- Be+9lPsx0JAsLWlVgi/lrxlLUypVKbHi0BnNB4X1/yyP39DEXntu/iCeMkO6UfU6gQ2L dg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 33c2mkhd8t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 05 Sep 2020 15:37:07 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 085FYoVF123563;
-        Sat, 5 Sep 2020 15:37:06 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 33c2g0p3dv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 05 Sep 2020 15:37:06 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 085Fas0R013808;
-        Sat, 5 Sep 2020 15:36:54 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 05 Sep 2020 08:36:54 -0700
-Date:   Sat, 5 Sep 2020 08:36:52 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Mikulas Patocka <mpatocka@redhat.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Jan Kara <jack@suse.cz>, Dave Chinner <dchinner@redhat.com>,
-        Jann Horn <jannh@google.com>, Christoph Hellwig <hch@lst.de>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Kirill Shutemov <kirill@shutemov.name>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andrea Arcangeli <aarcange@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: don't update mtime on COW faults
-Message-ID: <20200905153652.GA7955@magnolia>
-References: <alpine.LRH.2.02.2009031328040.6929@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.2009041200570.27312@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.2009050805250.12419@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.2009050812060.12419@file01.intranet.prod.int.rdu2.redhat.com>
+        id S1728376AbgIEPwt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 5 Sep 2020 11:52:49 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39442 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726468AbgIEPwr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Sep 2020 11:52:47 -0400
+Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id D0B32206B8;
+        Sat,  5 Sep 2020 15:52:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599321163;
+        bh=TZOWi+HBwDSzqqcu2ndK0rh+9RbRR0CjdXfzqDyJjxI=;
+        h=Date:From:To:Cc:Subject:From;
+        b=SL9DhgYCiHtjAmIr8bvmfhWzaI218iLbtN5hos9Silm6UiEQYqqJivjCtl8yUxOPg
+         7u6jBBRAAo7EC5Bx8UVwNrzak87kQsABH2CWpD+mjcM7Bmw3iWRZkqMrrtaH4z6k+Y
+         udOBMyr0mFm+NVX467c2ZEwWvARHapjBFZHq642Y=
+Date:   Sat, 5 Sep 2020 08:52:43 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
+Subject: [GIT PULL] xfs: small fixes (2) for 5.9
+Message-ID: <20200905155243.GB7955@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.2009050812060.12419@file01.intranet.prod.int.rdu2.redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9735 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxscore=0 phishscore=0
- mlxlogscore=999 spamscore=0 bulkscore=0 adultscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009050151
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9735 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 clxscore=1011 mlxlogscore=999
- malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009050150
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Sep 05, 2020 at 08:13:02AM -0400, Mikulas Patocka wrote:
-> When running in a dax mode, if the user maps a page with MAP_PRIVATE and
-> PROT_WRITE, the xfs filesystem would incorrectly update ctime and mtime
-> when the user hits a COW fault.
-> 
-> This breaks building of the Linux kernel.
-> How to reproduce:
-> 1. extract the Linux kernel tree on dax-mounted xfs filesystem
-> 2. run make clean
-> 3. run make -j12
-> 4. run make -j12
-> - at step 4, make would incorrectly rebuild the whole kernel (although it
->   was already built in step 3).
-> 
-> The reason for the breakage is that almost all object files depend on
-> objtool. When we run objtool, it takes COW page fault on its .data
-> section, and these faults will incorrectly update the timestamp of the
-> objtool binary. The updated timestamp causes make to rebuild the whole
-> tree.
-> 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> Cc: stable@vger.kernel.org
-> 
-> ---
->  fs/xfs/xfs_file.c |   11 +++++++++--
->  1 file changed, 9 insertions(+), 2 deletions(-)
-> 
-> Index: linux-2.6/fs/xfs/xfs_file.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_file.c	2020-09-05 10:01:42.000000000 +0200
-> +++ linux-2.6/fs/xfs/xfs_file.c	2020-09-05 13:59:12.000000000 +0200
-> @@ -1223,6 +1223,13 @@ __xfs_filemap_fault(
->  	return ret;
->  }
->  
-> +static bool
-> +xfs_is_write_fault(
+Hi Linus,
 
-Call this xfs_is_shared_dax_write_fault, and throw in the IS_DAX() test?
-
-You might as well make it a static inline.
-
-> +	struct vm_fault		*vmf)
-> +{
-> +	return vmf->flags & FAULT_FLAG_WRITE && vmf->vma->vm_flags & VM_SHARED;
-
-Also, is "shortcutting the normal fault path" the reason for ext2 and
-xfs both being broken?
-
-/me puzzles over why write_fault is always true for page_mkwrite and
-pfn_mkwrite, but not for fault and huge_fault...
-
-Also: Can you please turn this (checking for timestamp update behavior
-wrt shared and private mapping write faults) into an fstest so we don't
-mess this up again?
+Please pull this single fix for a broken metadata verifier.  The branch
+merges cleanly with upstream as of a few minutes ago, so please let me
+know if anything strange happens.
 
 --D
 
-> +}
-> +
->  static vm_fault_t
->  xfs_filemap_fault(
->  	struct vm_fault		*vmf)
-> @@ -1230,7 +1237,7 @@ xfs_filemap_fault(
->  	/* DAX can shortcut the normal fault path on write faults! */
->  	return __xfs_filemap_fault(vmf, PE_SIZE_PTE,
->  			IS_DAX(file_inode(vmf->vma->vm_file)) &&
-> -			(vmf->flags & FAULT_FLAG_WRITE));
-> +			xfs_is_write_fault(vmf));
->  }
->  
->  static vm_fault_t
-> @@ -1243,7 +1250,7 @@ xfs_filemap_huge_fault(
->  
->  	/* DAX can shortcut the normal fault path on write faults! */
->  	return __xfs_filemap_fault(vmf, pe_size,
-> -			(vmf->flags & FAULT_FLAG_WRITE));
-> +			xfs_is_write_fault(vmf));
->  }
->  
->  static vm_fault_t
-> 
+The following changes since commit 125eac243806e021f33a1fdea3687eccbb9f7636:
+
+  xfs: initialize the shortform attr header padding entry (2020-08-27 08:01:31 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.9-fixes-2
+
+for you to fetch changes up to d0c20d38af135b2b4b90aa59df7878ef0c8fbef4:
+
+  xfs: fix xfs_bmap_validate_extent_raw when checking attr fork of rt files (2020-09-03 08:33:50 -0700)
+
+----------------------------------------------------------------
+Fixes (2) for 5.9:
+- Fix a broken metadata verifier that would incorrectly validate attr
+fork extents of a realtime file against the realtime volume.
+
+----------------------------------------------------------------
+Darrick J. Wong (1):
+      xfs: fix xfs_bmap_validate_extent_raw when checking attr fork of rt files
+
+ fs/xfs/libxfs/xfs_bmap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
