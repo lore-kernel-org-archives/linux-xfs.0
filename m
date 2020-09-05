@@ -2,79 +2,211 @@ Return-Path: <SRS0=nhRG=CO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAFF0C433E2
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:34:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74D47C433E2
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:47:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B0292072D
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:34:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BE092078E
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:47:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SVS7dWGW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726261AbgIEQeR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 5 Sep 2020 12:34:17 -0400
-Received: from mail.qboosh.pl ([217.73.31.61]:59128 "EHLO mail.qboosh.pl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726468AbgIEQeQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 5 Sep 2020 12:34:16 -0400
-X-Greylist: delayed 571 seconds by postgrey-1.27 at vger.kernel.org; Sat, 05 Sep 2020 12:34:15 EDT
-Received: from stranger.qboosh.pl (159-205-223-43.adsl.inetia.pl [159.205.223.43])
-        by mail.qboosh.pl (Postfix) with ESMTPSA id 4A5461A26DA9
-        for <linux-xfs@vger.kernel.org>; Sat,  5 Sep 2020 18:24:46 +0200 (CEST)
-Received: from stranger.qboosh.pl (localhost [127.0.0.1])
-        by stranger.qboosh.pl (8.16.1/8.16.1) with ESMTP id 085GRRbd003120
-        for <linux-xfs@vger.kernel.org>; Sat, 5 Sep 2020 18:27:27 +0200
-Received: (from qboosh@localhost)
-        by stranger.qboosh.pl (8.16.1/8.16.1/Submit) id 085GRQ49003115
-        for linux-xfs@vger.kernel.org; Sat, 5 Sep 2020 18:27:26 +0200
-Date:   Sat, 5 Sep 2020 18:27:26 +0200
-From:   Jakub Bogusz <qboosh@pld-linux.org>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] Polish translation update for xfsprogs 5.8.0
-Message-ID: <20200905162726.GA32628@stranger.qboosh.pl>
+        id S1727875AbgIEQrM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 5 Sep 2020 12:47:12 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37628 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726468AbgIEQrL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 5 Sep 2020 12:47:11 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 085GjQh4025137;
+        Sat, 5 Sep 2020 16:47:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=kyDXhauH7sz7EyCkCw5JPloouhqpGchEOI8FSeyqsoY=;
+ b=SVS7dWGWZawIFcz0WQXMhEX0hT8kiKvEvaDwOdSTCmMaLvaTZUT+E9VowVq96+gvoHIh
+ BMXi1YUvWGudV6Eri7hp9WCz+9jMxN4tSVYUj4Pch2NTjyGPxMbcHGIA9hFP4Tn8VAjA
+ 3hzdJyoBDsGGrI762ioLFxzxw7d1DHrFeoigbSqS3jBpBM2TezKGiICsFjg+spfWEUQG
+ ZSSTEtN8lLQr6AA6IwFTPQz6RAnPugMoe+4EKSWMNlbsBcg6hpGKzli7C9ftVT7eBhot
+ VVxdyWnB/owvi5Wr1/gdPx36SX7mFrxHHKmY2Mex/MEmgfwOr+HzK66NRSIMY01BcZEg jw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 33c23qhkj4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Sat, 05 Sep 2020 16:47:07 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 085GiruY073951;
+        Sat, 5 Sep 2020 16:47:06 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 33c2g0t51b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 05 Sep 2020 16:47:06 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 085Gl43Z000797;
+        Sat, 5 Sep 2020 16:47:04 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sat, 05 Sep 2020 09:47:04 -0700
+Date:   Sat, 5 Sep 2020 09:47:03 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH v2] quota: widen timestamps for the fs_disk_quota structure
+Message-ID: <20200905164703.GC7955@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.12.2 (2019-09-21)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9735 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxscore=0 phishscore=0
+ mlxlogscore=999 spamscore=0 bulkscore=0 adultscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009050163
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9735 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
+ mlxlogscore=999 mlxscore=0 bulkscore=0 suspectscore=1 spamscore=0
+ malwarescore=0 phishscore=0 lowpriorityscore=0 clxscore=1015
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009050163
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I prepared an update of Polish translation of xfsprogs 5.8.0.
-Because of size (whole file is ~551kB, diff is ~837kB),
-I'm sending just diff header to the list and whole file is available
-to download at:
-http://qboosh.pl/pl.po/xfsprogs-5.8.0.pl.po
-(sha256: 2f0946989b9ba885aa3d3d2b28c5568ce0463a5888b06cfa3f750dc925ceef01)
+Soon, XFS will support quota grace period expiration timestamps beyond
+the year 2038, widen the timestamp fields to handle the extra time bits.
+Internally, XFS now stores unsigned 34-bit quantities, so the extra 8
+bits here should work fine.  (Note that XFS is the only user of this
+structure.)
 
-Whole diff is available at:
-http://qboosh.pl/pl.po/xfsprogs-5.8.0-pl.po-update.patch
-(sha256: 355a68fcb9cd7b02b762becabdb100b9498ec8a0147efd5976dc9e743190b050)
-
-Please update.
-
-
-Diff header is:
-
-Polish translation update for xfsprogs 5.8.0.
-
-Signed-off-by: Jakub Bogusz <qboosh@pld-linux.org>
-
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- po/pl.po | 17829 +++++++++++++++++++++++++++++++++++-------------------------------
-  1 file changed, 9711 insertions(+), 8118 deletions(-)
+v2: use __s8 for timestamp extension
+---
+ fs/quota/quota.c               |   43 +++++++++++++++++++++++++++++++++++-----
+ include/uapi/linux/dqblk_xfs.h |   11 +++++++++-
+ 2 files changed, 48 insertions(+), 6 deletions(-)
 
---- xfsprogs-5.8.0/po/pl.po.orig        2020-08-27 02:45:03.000000000 +0200
-+++ xfsprogs-5.8.0/po/pl.po     2020-09-05 18:08:10.009486802 +0200
-[...]
-
-
-Regards,
-
--- 
-Jakub Bogusz    http://qboosh.pl/
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 5444d3c4d93f..eefac57c52fd 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -481,6 +481,14 @@ static inline u64 quota_btobb(u64 bytes)
+ 	return (bytes + (1 << XFS_BB_SHIFT) - 1) >> XFS_BB_SHIFT;
+ }
+ 
++static inline s64 copy_from_xfs_dqblk_ts(const struct fs_disk_quota *d,
++		__s32 timer, __s8 timer_hi)
++{
++	if (d->d_fieldmask & FS_DQ_BIGTIME)
++		return (u32)timer | (s64)timer_hi << 32;
++	return timer;
++}
++
+ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
+ {
+ 	dst->d_spc_hardlimit = quota_bbtob(src->d_blk_hardlimit);
+@@ -489,14 +497,18 @@ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
+ 	dst->d_ino_softlimit = src->d_ino_softlimit;
+ 	dst->d_space = quota_bbtob(src->d_bcount);
+ 	dst->d_ino_count = src->d_icount;
+-	dst->d_ino_timer = src->d_itimer;
+-	dst->d_spc_timer = src->d_btimer;
++	dst->d_ino_timer = copy_from_xfs_dqblk_ts(src, src->d_itimer,
++						  src->d_itimer_hi);
++	dst->d_spc_timer = copy_from_xfs_dqblk_ts(src, src->d_btimer,
++						  src->d_btimer_hi);
+ 	dst->d_ino_warns = src->d_iwarns;
+ 	dst->d_spc_warns = src->d_bwarns;
+ 	dst->d_rt_spc_hardlimit = quota_bbtob(src->d_rtb_hardlimit);
+ 	dst->d_rt_spc_softlimit = quota_bbtob(src->d_rtb_softlimit);
+ 	dst->d_rt_space = quota_bbtob(src->d_rtbcount);
+ 	dst->d_rt_spc_timer = src->d_rtbtimer;
++	dst->d_rt_spc_timer = copy_from_xfs_dqblk_ts(src, src->d_rtbtimer,
++						     src->d_rtbtimer_hi);
+ 	dst->d_rt_spc_warns = src->d_rtbwarns;
+ 	dst->d_fieldmask = 0;
+ 	if (src->d_fieldmask & FS_DQ_ISOFT)
+@@ -588,10 +600,28 @@ static int quota_setxquota(struct super_block *sb, int type, qid_t id,
+ 	return sb->s_qcop->set_dqblk(sb, qid, &qdq);
+ }
+ 
++static inline void copy_to_xfs_dqblk_ts(const struct fs_disk_quota *d,
++		__s32 *timer_lo, __s8 *timer_hi, s64 timer)
++{
++	*timer_lo = timer;
++	if (d->d_fieldmask & FS_DQ_BIGTIME)
++		*timer_hi = timer >> 32;
++	else
++		*timer_hi = 0;
++}
++
++static inline bool want_bigtime(s64 timer)
++{
++	return timer > S32_MAX || timer < S32_MIN;
++}
++
+ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
+ 			      int type, qid_t id)
+ {
+ 	memset(dst, 0, sizeof(*dst));
++	if (want_bigtime(src->d_ino_timer) || want_bigtime(src->d_spc_timer) ||
++	    want_bigtime(src->d_rt_spc_timer))
++		dst->d_fieldmask |= FS_DQ_BIGTIME;
+ 	dst->d_version = FS_DQUOT_VERSION;
+ 	dst->d_id = id;
+ 	if (type == USRQUOTA)
+@@ -606,14 +636,17 @@ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
+ 	dst->d_ino_softlimit = src->d_ino_softlimit;
+ 	dst->d_bcount = quota_btobb(src->d_space);
+ 	dst->d_icount = src->d_ino_count;
+-	dst->d_itimer = src->d_ino_timer;
+-	dst->d_btimer = src->d_spc_timer;
++	copy_to_xfs_dqblk_ts(dst, &dst->d_itimer, &dst->d_itimer_hi,
++			     src->d_ino_timer);
++	copy_to_xfs_dqblk_ts(dst, &dst->d_btimer, &dst->d_btimer_hi,
++			     src->d_spc_timer);
+ 	dst->d_iwarns = src->d_ino_warns;
+ 	dst->d_bwarns = src->d_spc_warns;
+ 	dst->d_rtb_hardlimit = quota_btobb(src->d_rt_spc_hardlimit);
+ 	dst->d_rtb_softlimit = quota_btobb(src->d_rt_spc_softlimit);
+ 	dst->d_rtbcount = quota_btobb(src->d_rt_space);
+-	dst->d_rtbtimer = src->d_rt_spc_timer;
++	copy_to_xfs_dqblk_ts(dst, &dst->d_rtbtimer, &dst->d_rtbtimer_hi,
++			     src->d_rt_spc_timer);
+ 	dst->d_rtbwarns = src->d_rt_spc_warns;
+ }
+ 
+diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
+index 03d890b80ebc..16d73f54376d 100644
+--- a/include/uapi/linux/dqblk_xfs.h
++++ b/include/uapi/linux/dqblk_xfs.h
+@@ -66,7 +66,10 @@ typedef struct fs_disk_quota {
+ 	__s32		d_btimer;	/* similar to above; for disk blocks */
+ 	__u16	  	d_iwarns;       /* # warnings issued wrt num inodes */
+ 	__u16	  	d_bwarns;       /* # warnings issued wrt disk blocks */
+-	__s32		d_padding2;	/* padding2 - for future use */
++	__s8		d_itimer_hi;	/* upper 8 bits of timer values */
++	__s8		d_btimer_hi;
++	__s8		d_rtbtimer_hi;
++	__s8		d_padding2;	/* padding2 - for future use */
+ 	__u64		d_rtb_hardlimit;/* absolute limit on realtime blks */
+ 	__u64		d_rtb_softlimit;/* preferred limit on RT disk blks */
+ 	__u64		d_rtbcount;	/* # realtime blocks owned */
+@@ -121,6 +124,12 @@ typedef struct fs_disk_quota {
+ #define FS_DQ_RTBCOUNT		(1<<14)
+ #define FS_DQ_ACCT_MASK		(FS_DQ_BCOUNT | FS_DQ_ICOUNT | FS_DQ_RTBCOUNT)
+ 
++/*
++ * Quota expiration timestamps are 40-bit signed integers, with the upper 8
++ * bits encoded in the _hi fields.
++ */
++#define FS_DQ_BIGTIME		(1<<15)
++
+ /*
+  * Various flags related to quotactl(2).
+  */
