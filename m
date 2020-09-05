@@ -2,87 +2,79 @@ Return-Path: <SRS0=nhRG=CO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 502A8C43461
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 15:52:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAFF0C433E2
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:34:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 198AB206B8
-	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 15:52:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599321172;
-	bh=TZOWi+HBwDSzqqcu2ndK0rh+9RbRR0CjdXfzqDyJjxI=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=crRYIjRdon3jRcsY9o/Aiwohdqa2Y1Qccjhl9iU4Z4LDAUwrcQK64Sn/ICoGH9fyN
-	 ZerqkhbP0JX39Eedm4GE1COBvX1CJeYI1wh2KLIDIDCYdGcQ0FA0zDOnnrUtXJJuMG
-	 VerCreDrH/OyjCHs04EglPu+yFkh3NMXIPzkyhpY=
+	by mail.kernel.org (Postfix) with ESMTP id 8B0292072D
+	for <linux-xfs@archiver.kernel.org>; Sat,  5 Sep 2020 16:34:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728376AbgIEPwt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 5 Sep 2020 11:52:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39442 "EHLO mail.kernel.org"
+        id S1726261AbgIEQeR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 5 Sep 2020 12:34:17 -0400
+Received: from mail.qboosh.pl ([217.73.31.61]:59128 "EHLO mail.qboosh.pl"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726468AbgIEPwr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 5 Sep 2020 11:52:47 -0400
-Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D0B32206B8;
-        Sat,  5 Sep 2020 15:52:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599321163;
-        bh=TZOWi+HBwDSzqqcu2ndK0rh+9RbRR0CjdXfzqDyJjxI=;
-        h=Date:From:To:Cc:Subject:From;
-        b=SL9DhgYCiHtjAmIr8bvmfhWzaI218iLbtN5hos9Silm6UiEQYqqJivjCtl8yUxOPg
-         7u6jBBRAAo7EC5Bx8UVwNrzak87kQsABH2CWpD+mjcM7Bmw3iWRZkqMrrtaH4z6k+Y
-         udOBMyr0mFm+NVX467c2ZEwWvARHapjBFZHq642Y=
-Date:   Sat, 5 Sep 2020 08:52:43 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: small fixes (2) for 5.9
-Message-ID: <20200905155243.GB7955@magnolia>
+        id S1726468AbgIEQeQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 5 Sep 2020 12:34:16 -0400
+X-Greylist: delayed 571 seconds by postgrey-1.27 at vger.kernel.org; Sat, 05 Sep 2020 12:34:15 EDT
+Received: from stranger.qboosh.pl (159-205-223-43.adsl.inetia.pl [159.205.223.43])
+        by mail.qboosh.pl (Postfix) with ESMTPSA id 4A5461A26DA9
+        for <linux-xfs@vger.kernel.org>; Sat,  5 Sep 2020 18:24:46 +0200 (CEST)
+Received: from stranger.qboosh.pl (localhost [127.0.0.1])
+        by stranger.qboosh.pl (8.16.1/8.16.1) with ESMTP id 085GRRbd003120
+        for <linux-xfs@vger.kernel.org>; Sat, 5 Sep 2020 18:27:27 +0200
+Received: (from qboosh@localhost)
+        by stranger.qboosh.pl (8.16.1/8.16.1/Submit) id 085GRQ49003115
+        for linux-xfs@vger.kernel.org; Sat, 5 Sep 2020 18:27:26 +0200
+Date:   Sat, 5 Sep 2020 18:27:26 +0200
+From:   Jakub Bogusz <qboosh@pld-linux.org>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] Polish translation update for xfsprogs 5.8.0
+Message-ID: <20200905162726.GA32628@stranger.qboosh.pl>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+Hello,
 
-Please pull this single fix for a broken metadata verifier.  The branch
-merges cleanly with upstream as of a few minutes ago, so please let me
-know if anything strange happens.
+I prepared an update of Polish translation of xfsprogs 5.8.0.
+Because of size (whole file is ~551kB, diff is ~837kB),
+I'm sending just diff header to the list and whole file is available
+to download at:
+http://qboosh.pl/pl.po/xfsprogs-5.8.0.pl.po
+(sha256: 2f0946989b9ba885aa3d3d2b28c5568ce0463a5888b06cfa3f750dc925ceef01)
 
---D
+Whole diff is available at:
+http://qboosh.pl/pl.po/xfsprogs-5.8.0-pl.po-update.patch
+(sha256: 355a68fcb9cd7b02b762becabdb100b9498ec8a0147efd5976dc9e743190b050)
 
-The following changes since commit 125eac243806e021f33a1fdea3687eccbb9f7636:
+Please update.
 
-  xfs: initialize the shortform attr header padding entry (2020-08-27 08:01:31 -0700)
 
-are available in the Git repository at:
+Diff header is:
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.9-fixes-2
+Polish translation update for xfsprogs 5.8.0.
 
-for you to fetch changes up to d0c20d38af135b2b4b90aa59df7878ef0c8fbef4:
+Signed-off-by: Jakub Bogusz <qboosh@pld-linux.org>
 
-  xfs: fix xfs_bmap_validate_extent_raw when checking attr fork of rt files (2020-09-03 08:33:50 -0700)
+---
+ po/pl.po | 17829 +++++++++++++++++++++++++++++++++++-------------------------------
+  1 file changed, 9711 insertions(+), 8118 deletions(-)
 
-----------------------------------------------------------------
-Fixes (2) for 5.9:
-- Fix a broken metadata verifier that would incorrectly validate attr
-fork extents of a realtime file against the realtime volume.
+--- xfsprogs-5.8.0/po/pl.po.orig        2020-08-27 02:45:03.000000000 +0200
++++ xfsprogs-5.8.0/po/pl.po     2020-09-05 18:08:10.009486802 +0200
+[...]
 
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: fix xfs_bmap_validate_extent_raw when checking attr fork of rt files
 
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Regards,
+
+-- 
+Jakub Bogusz    http://qboosh.pl/
