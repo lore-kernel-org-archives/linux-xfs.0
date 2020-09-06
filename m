@@ -2,105 +2,82 @@ Return-Path: <SRS0=Ptmy=CP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5F86C43461
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Sep 2020 17:12:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CA69C43461
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Sep 2020 21:40:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7AEB52075A
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Sep 2020 17:12:20 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="emkmwcbt"
+	by mail.kernel.org (Postfix) with ESMTP id E82432078E
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Sep 2020 21:40:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725841AbgIFRMT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Sep 2020 13:12:19 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:41792 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725816AbgIFRMR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Sep 2020 13:12:17 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 086H4Lkl109607;
-        Sun, 6 Sep 2020 17:12:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=Lx7/I1jqph1rKTWu9/vOsiiFtqyYPTpUVfvYUZowWew=;
- b=emkmwcbtLUaSmIcqLZscltx1g1X0SI31NdLIz5pvoERj5kv9k/mnZcagJrcI2JnSlJbg
- n8SDhLBLskikK7v9klcCdzjC+Kljpo6oiwVC7TOmsT89Ilrv6V3eRaUAdcF8bFxVCpPy
- uZGAOWU14flBKkcdrOXdp8J8pZ7G4oFKTBIcf6BQ+W+txIckIoK8g29fpqJ0BAJ4wgac
- 9LvWsy/ZvodTkkbiDGTpiroLK5QsgwgYuljgmlqpukE7Kl2yNasefqEPdIj6HVD12oKh
- g7BoEUOGaajt0PM233WzqJm1vaUz2GLxFhvhRmzTt8tivWz1gp2M7GVzacgksFKltaf6 xw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 33c2mkkf83-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 06 Sep 2020 17:12:06 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 086H52Hr020827;
-        Sun, 6 Sep 2020 17:10:06 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 33cmjxaq0u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 06 Sep 2020 17:10:06 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 086H9wE9020496;
-        Sun, 6 Sep 2020 17:09:59 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 06 Sep 2020 10:09:58 -0700
-Date:   Sun, 6 Sep 2020 10:09:57 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Jan Kara <jack@suse.cz>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2] quota: widen timestamps for the fs_disk_quota
- structure
-Message-ID: <20200906170957.GE7955@magnolia>
-References: <20200905164703.GC7955@magnolia>
- <20200905220231.GB16750@casper.infradead.org>
+        id S1726401AbgIFVkK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Sep 2020 17:40:10 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33116 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726292AbgIFVkJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Sep 2020 17:40:09 -0400
+Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DC6FE824631;
+        Mon,  7 Sep 2020 07:40:03 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kF2OI-0006n6-R9; Mon, 07 Sep 2020 07:40:02 +1000
+Date:   Mon, 7 Sep 2020 07:40:02 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Hao Li <lihao2018.fnst@cn.fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        ira.weiny@intel.com, linux-xfs@vger.kernel.org, y-goto@fujitsu.com
+Subject: Re: [PATCH v2] fs: Handle I_DONTCACHE in iput_final() instead of
+ generic_drop_inode()
+Message-ID: <20200906214002.GI12131@dread.disaster.area>
+References: <20200904075939.176366-1-lihao2018.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200905220231.GB16750@casper.infradead.org>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9736 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009060174
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9736 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=999
- malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009060174
+In-Reply-To: <20200904075939.176366-1-lihao2018.fnst@cn.fujitsu.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=IuRgj43g c=1 sm=1 tr=0 cx=a_idp_d
+        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
+        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=VwQbUJbxAAAA:8 a=omOdbC7AAAAA:8
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=CYq8bQpZl3HkxBxCX-sA:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=baC4JDFNLZpnPwus_NF9:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Sep 05, 2020 at 11:02:31PM +0100, Matthew Wilcox wrote:
-> On Sat, Sep 05, 2020 at 09:47:03AM -0700, Darrick J. Wong wrote:
-> > +static inline void copy_to_xfs_dqblk_ts(const struct fs_disk_quota *d,
-> > +		__s32 *timer_lo, __s8 *timer_hi, s64 timer)
-> > +{
-> > +	*timer_lo = timer;
-> > +	if (d->d_fieldmask & FS_DQ_BIGTIME)
-> > +		*timer_hi = timer >> 32;
-> > +	else
-> > +		*timer_hi = 0;
-> > +}
+On Fri, Sep 04, 2020 at 03:59:39PM +0800, Hao Li wrote:
+> If generic_drop_inode() returns true, it means iput_final() can evict
+> this inode regardless of whether it is dirty or not. If we check
+> I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
+> evicted unconditionally. This is not the desired behavior because
+> I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
+> As for whether we need to evict this inode, this is what
+> generic_drop_inode() should do. This patch corrects the usage of
+> I_DONTCACHE.
 > 
-> Is that actually the right thing to do?  If FS_DQ_BIGTIME is not set,
-> I would expect us to avoid writing to timer_hi at all.  Alternatively, if
-> we do want to write to timer_hi, why not write to it unconditionally?
+> This patch was proposed in [1].
+> 
+> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
+> 
+> Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
+> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
+> ---
+> Changes in v2:
+>  - Adjust code format
+>  - Add Fixes tag in commit message
+> 
+>  fs/inode.c         | 4 +++-
+>  include/linux/fs.h | 3 +--
+>  2 files changed, 4 insertions(+), 3 deletions(-)
 
-If the flag isn't set, then the space used by timer_hi is a zero-filled
-padding field.  Therefore, I made this function zero timer_hi if the
-bigtime flag isn't set.  It's redundant with the memset five lines up
-from the call site, but I don't like leaving logic bombs in case this
-function ever gets exported elsewhere.
+Looks good.
 
---D
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
