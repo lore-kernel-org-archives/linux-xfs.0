@@ -2,64 +2,66 @@ Return-Path: <SRS0=54lF=CQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F021DC43461
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 06:48:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABA26C43461
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 07:07:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2923215A4
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 06:48:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A4B4207C3
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 07:07:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SFA/iSjW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726742AbgIGGsC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Sep 2020 02:48:02 -0400
-Received: from verein.lst.de ([213.95.11.211]:47846 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726278AbgIGGsC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 Sep 2020 02:48:02 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 5A1BB6736F; Mon,  7 Sep 2020 08:47:58 +0200 (CEST)
-Date:   Mon, 7 Sep 2020 08:47:58 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Mikulas Patocka <mpatocka@redhat.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Jan Kara <jack@suse.cz>,
+        id S1726511AbgIGHHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Sep 2020 03:07:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59506 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726384AbgIGHHJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Sep 2020 03:07:09 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 378F7C061573;
+        Mon,  7 Sep 2020 00:07:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Rd5+BO+wcfvR2DH9JGUePavDycNE1Fegbtj9haaWlK8=; b=SFA/iSjWCUlVdK5O159w5509yb
+        zfZBUgtaaXJV8db/l4c7rEYPRVV6aDFq6ZH3ycehB74S7efqOeXM7svGVnwWSxWZPX48LHIBjYtg6
+        5UH0ePFHEKrdFfLrlCV85rakArCUCcC6M6cxwQsIFTiQBwKEEREaaqhENLGAZwxJcqaXUj3OgnbPr
+        Jp4fEjLAmS2bCuzJUYOFYx/acz69sIkgUdQhazDxp5xetBKYRECY8/J2Xq6awZc7K6WJQOcK91Cm/
+        E9hMxkdNzTXysqw2YnKVBkHAtLWRLUUw7Cuj3d6+DlsGk12SkO3VS5dfXguTOvhgAR+6jYsM7GCVF
+        3BtbueOg==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kFBEz-00073a-HM; Mon, 07 Sep 2020 07:07:01 +0000
+Date:   Mon, 7 Sep 2020 08:07:01 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Andreas Gruenbacher <agruenba@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Jann Horn <jannh@google.com>, Christoph Hellwig <hch@lst.de>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Kirill Shutemov <kirill@shutemov.name>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andrea Arcangeli <aarcange@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: don't update mtime on COW faults
-Message-ID: <20200907064758.GA19384@lst.de>
-References: <alpine.LRH.2.02.2009031328040.6929@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.2009041200570.27312@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.2009050805250.12419@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.2009050812060.12419@file01.intranet.prod.int.rdu2.redhat.com>
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, cluster-devel@redhat.com
+Subject: Re: [PATCH] iomap: Fix direct I/O write consistency check
+Message-ID: <20200907070701.GA27019@infradead.org>
+References: <20200903165632.1338996-1-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.2009050812060.12419@file01.intranet.prod.int.rdu2.redhat.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20200903165632.1338996-1-agruenba@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +static bool
-> +xfs_is_write_fault(
-> +	struct vm_fault		*vmf)
-> +{
-> +	return vmf->flags & FAULT_FLAG_WRITE && vmf->vma->vm_flags & VM_SHARED;
-> +}
+On Thu, Sep 03, 2020 at 06:56:32PM +0200, Andreas Gruenbacher wrote:
+> When a direct I/O write falls back to buffered I/O entirely, dio->size
+> will be 0 in iomap_dio_complete.  Function invalidate_inode_pages2_range
+> will try to invalidate the rest of the address space.  If there are any
+> dirty pages in that range, the write will fail and a "Page cache
+> invalidation failure on direct I/O" error will be logged.
 
-This function does not look xfs specific at all.  Why isn't it it in
-fs.h?  While we're at it the name sounds rather generic, and there are
-no good comments.
+Looks good,
 
-Maybe we just need to split FAULT_FLAG_WRITE into two and check those
-instead of such crazy workarounds?
+Reviewed-by: Christoph Hellwig <hch@lst.de>
