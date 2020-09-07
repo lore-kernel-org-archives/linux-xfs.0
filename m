@@ -2,277 +2,143 @@ Return-Path: <SRS0=54lF=CQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4006C43461
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 11:47:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA05C43461
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 15:10:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAB64207C3
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 11:47:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 292732078B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 15:10:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IY92TUgH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZfqJWxdc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729018AbgIGLr3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Sep 2020 07:47:29 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:35805 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729028AbgIGLrX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Sep 2020 07:47:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599479240;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=VyDSfsciHgbDr1fzwNBSt8bnz7u1FpzZWlHFLyD7yS4=;
-        b=IY92TUgHa8ySWxCpueaFpQcnbKY9RKFsTr3htghrplZYfeTcAIHfDoF4kj/4A/0NkydML6
-        WRjBszmbd9azwPHsHJFgFEq1FSbyKBRR157xkEL1Gmlj4xPVCavZisy8K59f3L8n8x316h
-        KbWGBTnLQaU5Nm6DMgTODVD+CZS5ZHY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-442-Ls8lSCc6P5iE8PatSlRxYw-1; Mon, 07 Sep 2020 07:47:18 -0400
-X-MC-Unique: Ls8lSCc6P5iE8PatSlRxYw-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DE1DF1DDEF
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2020 11:47:17 +0000 (UTC)
-Received: from eorzea.redhat.com (unknown [10.40.195.69])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 448CF7B9F5
-        for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2020 11:47:17 +0000 (UTC)
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH V5 4/4] xfs: Convert xfs_attr_sf macros to inline functions
-Date:   Mon,  7 Sep 2020 13:47:15 +0200
-Message-Id: <20200907114715.33190-1-cmaiolino@redhat.com>
-In-Reply-To: <20200903161859.85511-1-cmaiolino@redhat.com>
-References: <20200903161859.85511-1-cmaiolino@redhat.com>
+        id S1730063AbgIGPKN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Sep 2020 11:10:13 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38034 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729948AbgIGPDT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Sep 2020 11:03:19 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 087F0h2i029616;
+        Mon, 7 Sep 2020 15:03:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=dSlqqtgC66uF5bIMzNT6zvaga1HiU1qWA6WLZ4nGzHE=;
+ b=ZfqJWxdcUEXuIYeEMQzU7VB0xi0ba2a4U3WfrEm41N+oPLNsdnYCuPHajVfG+WPGuOf2
+ TJLy6e7Dk8SIypr5OZbN8PfoG9DcENqn103e2qcPa/ORxdDyvSTWHfu+hKKD95xGLIk8
+ N+mdHGxaBryxy8d6lBqFNC9HcwUrApO8Fa0nWhemDlhIupLw8qHSQX87LDsnooEy4WNJ
+ 3BbEJuUYNE6mfD+c9xjKRTHxf2iw0Pmw7k5AhEP5jTEMFdcc5Qkf0aPv9sJ2YD4CshAr
+ LgZLf5C7V7GSTxZ82agupcAEOCHiphfxBgaHgPF6x+ZUYU6F5P4r6q9oMj78/B5duZLD nA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 33c2mkq2u0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 07 Sep 2020 15:03:05 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 087ExTfr123300;
+        Mon, 7 Sep 2020 15:01:05 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 33dacgrm3k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 07 Sep 2020 15:01:05 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 087F14oc006505;
+        Mon, 7 Sep 2020 15:01:04 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 07 Sep 2020 08:01:04 -0700
+Date:   Mon, 7 Sep 2020 08:01:04 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] quota: widen timestamps for the fs_disk_quota
+ structure
+Message-ID: <20200907150104.GF7955@magnolia>
+References: <20200905164703.GC7955@magnolia>
+ <20200907100218.GA18556@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200907100218.GA18556@quack2.suse.cz>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9736 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ bulkscore=0 phishscore=0 adultscore=0 suspectscore=0 spamscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009070149
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9737 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
+ phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=999
+ malwarescore=0 suspectscore=0 lowpriorityscore=0 spamscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009070149
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_attr_sf_totsize() requires access to xfs_inode structure, so, once
-xfs_attr_shortform_addname() is its only user, move it to xfs_attr.c
-instead of playing with more #includes.
+On Mon, Sep 07, 2020 at 12:02:18PM +0200, Jan Kara wrote:
+> On Sat 05-09-20 09:47:03, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Soon, XFS will support quota grace period expiration timestamps beyond
+> > the year 2038, widen the timestamp fields to handle the extra time bits.
+> > Internally, XFS now stores unsigned 34-bit quantities, so the extra 8
+> > bits here should work fine.  (Note that XFS is the only user of this
+> > structure.)
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Looks good to me. Just one question below:
+> 
+> > diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+> > index 5444d3c4d93f..eefac57c52fd 100644
+> > --- a/fs/quota/quota.c
+> > +++ b/fs/quota/quota.c
+> > @@ -481,6 +481,14 @@ static inline u64 quota_btobb(u64 bytes)
+> >  	return (bytes + (1 << XFS_BB_SHIFT) - 1) >> XFS_BB_SHIFT;
+> >  }
+> >  
+> > +static inline s64 copy_from_xfs_dqblk_ts(const struct fs_disk_quota *d,
+> > +		__s32 timer, __s8 timer_hi)
+> > +{
+> > +	if (d->d_fieldmask & FS_DQ_BIGTIME)
+> > +		return (u32)timer | (s64)timer_hi << 32;
+> > +	return timer;
+> > +}
+> > +
+> 
+> So this doesn't do any checks that the resulting time fits into 34-bits you
+> speak about in the changelog. So how will XFS react if malicious / buggy
+> userspace will pass too big timestamp? I suppose xfs_fs_set_dqblk() should
+> return EFBIG or EINVAL or something like that which I'm not sure it does...
+> 
+> For record I've checked VFS quota implementation and it doesn't need any
+> checks because VFS in memory structures and on-disk format use 64-bit
+> timestamps. The ancient quota format uses 32-bit timestamps for 32-bit
+> archs so these would get silently truncated when stored on disk but
+> honestly I don't think I care (that format was deprecated some 20 years
+> ago).
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+XFS will clamp any out-of-bounds value to the nearest representable
+number.  For example, if you tried to extend a quota's grace expiration
+to the year 2600, it set the expiration to 2486, similar to what the vfs
+does for timestamps now.  If you try to set the default grace period to,
+say, 100 years, it will clamp that to 68 years (2^31-1).
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
+(I doubt anyone cares to set a 60+ year grace period, but as some
+apparently immortal person claims to be playing a 600-year musical
+score[1] perhaps we will need to revisit that...)
 
-Changelog:
-	V2:
-	 - keep macro comments above inline functions
-	V3:
-	- Add extra spacing in xfs_attr_sf_totsize()
-	- Fix open curling braces on inline functions
-	- use void * casting on xfs_attr_sf_nextentry()
-	V4:
-	- Fix open curling braces
-	- remove unneeded parenthesis
-	V5:
-	- Remove redundant comment on xfs_attr_sf_totsize()
-	- Rearrange xfs_attr_sf_totsize() to remove weird line breaks
+--D
 
-Darrick, I kept your RVB on it since there is no significant changes on this
-patch other than some cosmetic fixes. Hope that's ok.
+[1] https://en.wikipedia.org/wiki/As_Slow_as_Possible
 
- fs/xfs/libxfs/xfs_attr.c      | 14 +++++++++++---
- fs/xfs/libxfs/xfs_attr_leaf.c | 18 +++++++++---------
- fs/xfs/libxfs/xfs_attr_sf.h   | 30 +++++++++++++++++++-----------
- fs/xfs/xfs_attr_list.c        |  4 ++--
- 4 files changed, 41 insertions(+), 25 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index 2e055c079f397..fd8e6418a0d31 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -428,7 +428,7 @@ xfs_attr_set(
- 		 */
- 		if (XFS_IFORK_Q(dp) == 0) {
- 			int sf_size = sizeof(struct xfs_attr_sf_hdr) +
--				XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen,
-+				xfs_attr_sf_entsize_byname(args->namelen,
- 						args->valuelen);
- 
- 			error = xfs_bmap_add_attrfork(dp, sf_size, rsvd);
-@@ -523,6 +523,14 @@ xfs_attr_set(
-  * External routines when attribute list is inside the inode
-  *========================================================================*/
- 
-+static inline int xfs_attr_sf_totsize(struct xfs_inode *dp)
-+{
-+	struct xfs_attr_shortform *sf;
-+
-+	sf = (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-+	return be16_to_cpu(sf->hdr.totsize);
-+}
-+
- /*
-  * Add a name to the shortform attribute list structure
-  * This is the external routine.
-@@ -555,8 +563,8 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
- 	    args->valuelen >= XFS_ATTR_SF_ENTSIZE_MAX)
- 		return -ENOSPC;
- 
--	newsize = XFS_ATTR_SF_TOTSIZE(args->dp);
--	newsize += XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
-+	newsize = xfs_attr_sf_totsize(args->dp);
-+	newsize += xfs_attr_sf_entsize_byname(args->namelen, args->valuelen);
- 
- 	forkoff = xfs_attr_shortform_bytesfit(args->dp, newsize);
- 	if (!forkoff)
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index b0c8626e166ac..00955484175b1 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -684,9 +684,9 @@ xfs_attr_sf_findname(
- 	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
- 	sfe = &sf->list[0];
- 	end = sf->hdr.count;
--	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
-+	for (i = 0; i < end; sfe = xfs_attr_sf_nextentry(sfe),
- 			     base += size, i++) {
--		size = XFS_ATTR_SF_ENTSIZE(sfe);
-+		size = xfs_attr_sf_entsize(sfe);
- 		if (!xfs_attr_match(args, sfe->namelen, sfe->nameval,
- 				    sfe->flags))
- 			continue;
-@@ -733,7 +733,7 @@ xfs_attr_shortform_add(
- 		ASSERT(0);
- 
- 	offset = (char *)sfe - (char *)sf;
--	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
-+	size = xfs_attr_sf_entsize_byname(args->namelen, args->valuelen);
- 	xfs_idata_realloc(dp, size, XFS_ATTR_FORK);
- 	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
- 	sfe = (struct xfs_attr_sf_entry *)((char *)sf + offset);
-@@ -792,7 +792,7 @@ xfs_attr_shortform_remove(
- 	error = xfs_attr_sf_findname(args, &sfe, &base);
- 	if (error != -EEXIST)
- 		return error;
--	size = XFS_ATTR_SF_ENTSIZE(sfe);
-+	size = xfs_attr_sf_entsize(sfe);
- 
- 	/*
- 	 * Fix up the attribute fork data, covering the hole
-@@ -849,7 +849,7 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
- 	sf = (struct xfs_attr_shortform *)ifp->if_u1.if_data;
- 	sfe = &sf->list[0];
- 	for (i = 0; i < sf->hdr.count;
--				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
-+				sfe = xfs_attr_sf_nextentry(sfe), i++) {
- 		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
- 				sfe->flags))
- 			return -EEXIST;
-@@ -876,7 +876,7 @@ xfs_attr_shortform_getvalue(
- 	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
- 	sfe = &sf->list[0];
- 	for (i = 0; i < sf->hdr.count;
--				sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
-+				sfe = xfs_attr_sf_nextentry(sfe), i++) {
- 		if (xfs_attr_match(args, sfe->namelen, sfe->nameval,
- 				sfe->flags))
- 			return xfs_attr_copy_value(args,
-@@ -951,7 +951,7 @@ xfs_attr_shortform_to_leaf(
- 		ASSERT(error != -ENOSPC);
- 		if (error)
- 			goto out;
--		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-+		sfe = xfs_attr_sf_nextentry(sfe);
- 	}
- 	error = 0;
- 	*leaf_bp = bp;
-@@ -992,7 +992,7 @@ xfs_attr_shortform_allfit(
- 			return 0;
- 		if (be16_to_cpu(name_loc->valuelen) >= XFS_ATTR_SF_ENTSIZE_MAX)
- 			return 0;
--		bytes += XFS_ATTR_SF_ENTSIZE_BYNAME(name_loc->namelen,
-+		bytes += xfs_attr_sf_entsize_byname(name_loc->namelen,
- 					be16_to_cpu(name_loc->valuelen));
- 	}
- 	if ((dp->i_mount->m_flags & XFS_MOUNT_ATTR2) &&
-@@ -1048,7 +1048,7 @@ xfs_attr_shortform_verify(
- 		 * within the data buffer.  The next entry starts after the
- 		 * name component, so nextentry is an acceptable test.
- 		 */
--		next_sfep = XFS_ATTR_SF_NEXTENTRY(sfep);
-+		next_sfep = xfs_attr_sf_nextentry(sfep);
- 		if ((char *)next_sfep > endp)
- 			return __this_address;
- 
-diff --git a/fs/xfs/libxfs/xfs_attr_sf.h b/fs/xfs/libxfs/xfs_attr_sf.h
-index 29934103ce559..37578b369d9b9 100644
---- a/fs/xfs/libxfs/xfs_attr_sf.h
-+++ b/fs/xfs/libxfs/xfs_attr_sf.h
-@@ -26,18 +26,26 @@ typedef struct xfs_attr_sf_sort {
- 	unsigned char	*name;		/* name value, pointer into buffer */
- } xfs_attr_sf_sort_t;
- 
--#define XFS_ATTR_SF_ENTSIZE_BYNAME(nlen,vlen)	/* space name/value uses */ \
--	((sizeof(struct xfs_attr_sf_entry) + (nlen) + (vlen)))
- #define XFS_ATTR_SF_ENTSIZE_MAX			/* max space for name&value */ \
- 	((1 << (NBBY*(int)sizeof(uint8_t))) - 1)
--#define XFS_ATTR_SF_ENTSIZE(sfep)		/* space an entry uses */ \
--	((int)sizeof(struct xfs_attr_sf_entry) + \
--		(sfep)->namelen+(sfep)->valuelen)
--#define XFS_ATTR_SF_NEXTENTRY(sfep)		/* next entry in struct */ \
--	((struct xfs_attr_sf_entry *)((char *)(sfep) + \
--		XFS_ATTR_SF_ENTSIZE(sfep)))
--#define XFS_ATTR_SF_TOTSIZE(dp)			/* total space in use */ \
--	(be16_to_cpu(((struct xfs_attr_shortform *)	\
--		((dp)->i_afp->if_u1.if_data))->hdr.totsize))
-+
-+/* space name/value uses */
-+static inline int xfs_attr_sf_entsize_byname(uint8_t nlen, uint8_t vlen)
-+{
-+	return sizeof(struct xfs_attr_sf_entry) + nlen + vlen;
-+}
-+
-+/* space an entry uses */
-+static inline int xfs_attr_sf_entsize(struct xfs_attr_sf_entry *sfep)
-+{
-+	return struct_size(sfep, nameval, sfep->namelen + sfep->valuelen);
-+}
-+
-+/* next entry in struct */
-+static inline struct xfs_attr_sf_entry *
-+xfs_attr_sf_nextentry(struct xfs_attr_sf_entry *sfep)
-+{
-+	return (void *)sfep + xfs_attr_sf_entsize(sfep);
-+}
- 
- #endif	/* __XFS_ATTR_SF_H__ */
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 4eb1d6faecfb2..8f8837fe21cf0 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -96,7 +96,7 @@ xfs_attr_shortform_list(
- 			 */
- 			if (context->seen_enough)
- 				break;
--			sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-+			sfe = xfs_attr_sf_nextentry(sfe);
- 		}
- 		trace_xfs_attr_list_sf_all(context);
- 		return 0;
-@@ -136,7 +136,7 @@ xfs_attr_shortform_list(
- 		/* These are bytes, and both on-disk, don't endian-flip */
- 		sbp->valuelen = sfe->valuelen;
- 		sbp->flags = sfe->flags;
--		sfe = XFS_ATTR_SF_NEXTENTRY(sfe);
-+		sfe = xfs_attr_sf_nextentry(sfe);
- 		sbp++;
- 		nsbuf++;
- 	}
--- 
-2.26.2
-
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
