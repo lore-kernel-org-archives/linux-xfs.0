@@ -2,120 +2,96 @@ Return-Path: <SRS0=54lF=CQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 621BEC433E2
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 11:33:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20805C43461
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 11:35:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27EB5207C3
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 11:33:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA3B82168B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 11:35:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S6H7M9T6"
+	dkim=pass (2048-bit key) header.d=shutemov-name.20150623.gappssmtp.com header.i=@shutemov-name.20150623.gappssmtp.com header.b="mO1cN1q2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729055AbgIGLdu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Sep 2020 07:33:50 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:42515 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729086AbgIGLdL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Sep 2020 07:33:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599478390;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Dc6vQVoQVIP3ZXwwfJ+jTCDMQKiarIgOjjhXM/a9n0c=;
-        b=S6H7M9T6LDOUkZlMDCbXHlbV2JlHqz9YaQ4/sQKXk1qFIAYbrlW1VlzAbbE5La+Asf6NQl
-        2aPlAuFzusR/0FUAsLw2lftUlUUMs8GhQwfxnqzAFKUZ8PKaTlcJOXoPs27GbmAoYuzeHH
-        0j0WQn/kSrivmrzPdFuct7YtC03wXgg=
-Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
- [209.85.218.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-406-aKb93d9QOkKE8-x-zG4O8w-1; Mon, 07 Sep 2020 07:33:08 -0400
-X-MC-Unique: aKb93d9QOkKE8-x-zG4O8w-1
-Received: by mail-ej1-f71.google.com with SMTP id md9so5150834ejb.8
-        for <linux-xfs@vger.kernel.org>; Mon, 07 Sep 2020 04:33:07 -0700 (PDT)
+        id S1729152AbgIGLft (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Sep 2020 07:35:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44246 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729099AbgIGLdX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Sep 2020 07:33:23 -0400
+Received: from mail-lj1-x242.google.com (mail-lj1-x242.google.com [IPv6:2a00:1450:4864:20::242])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB74AC061574
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Sep 2020 04:33:22 -0700 (PDT)
+Received: by mail-lj1-x242.google.com with SMTP id c2so15679177ljj.12
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Sep 2020 04:33:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=shutemov-name.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=mGeUqCmbhz8+N0Ziop9W7/cr7Tt1+iU1uadkks0K72Y=;
+        b=mO1cN1q2yJxoaXOdd0DtcHUop5S4k60brHvcorYieV0cP6Kj7m3NS9lza+a027+Q3w
+         Zry2an5mQQxfa1/neu3WcVzxRnXSGXPUFDaN10Ztqq88RMDenSN/eBSrmG4uibqQ+18/
+         VySEFTqt9cP3PmmfZKfCRNWGq0LvlnP3+5oTu20LmJcAH39DHYD/w4MmyFxKF+KFpsbL
+         SBJXnjnsXlCKkgHkSk6op53pySfaNrvXrj9iX3vTH8u32kBkkBnH28uKLgTGqcMWkeuF
+         ze526OIVQx6qtEH49VHlpXOPMI02l9fYL3YNoYBfUfHKyjEme4tX807Fi4hRszp+x8T7
+         lI1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=Dc6vQVoQVIP3ZXwwfJ+jTCDMQKiarIgOjjhXM/a9n0c=;
-        b=pCmfTxIdBsFfix/b6n5AAUeUDei9lxCF1tWBjcis9O4rIvdVD6cDse1//vL+H4VH+l
-         fjCdovI5Pi0MGAB+ZIJSEWYTv1p4U7exjWjlm8vOQ/V6xmm1dsFiNfV91W5tpGh1vobf
-         8GGBROCm14w7fte1KHLYJgTLpSFx4keWGJ7FcS2kAZjfzalIRuq/t51nmV6ztN5IK9RS
-         HPaHSGSVnQB2u0KqjevlFp2hBBAyi9yjQD+LiQO9m00phv1XBSKo7GR+d/ZqYDqU7x4F
-         KZrRT8xw49Lgplueqf+2tAdsgcGuEem1fZ1eXFZDososQNlp5ba+v9sw9vIeP0ZeAPFR
-         GRAg==
-X-Gm-Message-State: AOAM531yjXQazTTNEdDQbc9naI+pKwsUqReqw7lWgM5tRA/ZcAsvP1Ap
-        0gJ/0XYX6txPYaFhumRwwfG9Pw/1psqEhrq35KvkrdfZDKj9XLD4twP1TH8vD9AFU90Uhj/MUFU
-        hrmsY7JKzcoAS0wcatwPu
-X-Received: by 2002:aa7:c61a:: with SMTP id h26mr20610857edq.254.1599478386743;
-        Mon, 07 Sep 2020 04:33:06 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzdDX3eoxPw7BrmxBCRdIDXpHewb3DsiztfVSsGo8AcwyKYOLr6Sh/+J5blVdmriLk3l9FRwA==
-X-Received: by 2002:aa7:c61a:: with SMTP id h26mr20610848edq.254.1599478386586;
-        Mon, 07 Sep 2020 04:33:06 -0700 (PDT)
-Received: from eorzea (ip-89-102-9-109.net.upcbroadband.cz. [89.102.9.109])
-        by smtp.gmail.com with ESMTPSA id b13sm2120867edf.89.2020.09.07.04.33.05
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=mGeUqCmbhz8+N0Ziop9W7/cr7Tt1+iU1uadkks0K72Y=;
+        b=d51FBaCfm1pPIDaPCprz2tjjOTL3agfBxMGvc4AfkLzO2ScVBmjFja6vFi/8KKJZy/
+         hUxluzyRwYKz+/DjvtjfsmL9OQ9U8TNp0a+kN5+T/EXWsXW6pMAqgtwjF2bXndJ1F3N+
+         hVE/AV2AYXBgc5W6FvtAgSdQ5c8564tUzDskaMnMfIjrsJsMIIoQffZXxZPA7DxfkIXF
+         3/0XV44wNzV6fHM6t1ioySppWVoFXo5IGWq2KS99WgIREvpCENkxnZe+H4W/Acw31rOz
+         lgwNdO4N36p4S7hDLybLnlolOzpt3/sSfDDunqWOD3WtpnCvqtjZqMW2Ju66RpeGRFJ6
+         UVLQ==
+X-Gm-Message-State: AOAM532VCxaUEQeUBbjxqb4JRDD57+ZH/B9Fdq6Wf2eLSdslnj6PWGyh
+        R323UhLCXKs00dZMT6QuHr3w6g==
+X-Google-Smtp-Source: ABdhPJze8x2PoNOG3NM1iD+Qty/W6bZfyVCXzo+9ShsKGqDLMcJmIKhuHS9SkrU3fYqor4vIpsdudw==
+X-Received: by 2002:a2e:9212:: with SMTP id k18mr5106728ljg.241.1599478401181;
+        Mon, 07 Sep 2020 04:33:21 -0700 (PDT)
+Received: from box.localdomain ([86.57.175.117])
+        by smtp.gmail.com with ESMTPSA id a192sm7280981lfd.51.2020.09.07.04.33.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Sep 2020 04:33:05 -0700 (PDT)
-Date:   Mon, 7 Sep 2020 13:33:03 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 4/4] xfs: Convert xfs_attr_sf macros to inline
- functions
-Message-ID: <20200907113303.hzrziwj3lfzgrpon@eorzea>
-Mail-Followup-To: Dave Chinner <david@fromorbit.com>,
-        linux-xfs@vger.kernel.org
-References: <20200903161724.85328-1-cmaiolino@redhat.com>
- <20200903161859.85511-1-cmaiolino@redhat.com>
- <20200906220011.GN12131@dread.disaster.area>
+        Mon, 07 Sep 2020 04:33:20 -0700 (PDT)
+Received: by box.localdomain (Postfix, from userid 1000)
+        id 50E221034AA; Mon,  7 Sep 2020 14:33:24 +0300 (+03)
+Date:   Mon, 7 Sep 2020 14:33:24 +0300
+From:   "Kirill A. Shutemov" <kirill@shutemov.name>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, darrick.wong@oracle.com,
+        david@fromorbit.com, yukuai3@huawei.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: Splitting an iomap_page
+Message-ID: <20200907113324.2uixo4u5elveoysf@box>
+References: <20200821144021.GV17456@casper.infradead.org>
+ <20200904033724.GH14765@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200906220011.GN12131@dread.disaster.area>
+In-Reply-To: <20200904033724.GH14765@casper.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> >  
-> > +/* total space in use */
-> 
-> Comment is redundant.
-> 
-> > +static inline int xfs_attr_sf_totsize(struct xfs_inode *dp)
-> > +{
-> > +	struct xfs_attr_shortform *sf =
-> > +		(struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-> > +
-> > +	return be16_to_cpu(sf->hdr.totsize);
-> > +}
-> 
-> If you have to break the declaration line like that, you
-> may as well just do:
-> 
-> +	struct xfs_attr_shortform *sf;
-> +
-> +	sf = (struct xfs_attr_shortform *)dp->i_afp->if_u1.if_data;
-> +	return be16_to_cpu(sf->hdr.totsize);
-> 
-> 
-> Otherwise the patch looks fine.
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On Fri, Sep 04, 2020 at 04:37:24AM +0100, Matthew Wilcox wrote:
+> Kirill, do I have the handling of split_huge_page() failure correct?
+> It seems reasonable to me -- unlock the page and drop the reference,
+> hoping that somebody else will not have a reference to the page by the
+> next time we try to split it.  Or they will split it for us.  There's a
+> livelock opportunity here, but I'm not sure it's worse than the one in
+> a holepunch scenario.
 
-Fair enough, I'll re-send this patch, thanks for the review guys.
+The worst case scenario is when the page is referenced (directly or
+indirectly) by the caller. It this case we would end up with endless loop.
+I'm not sure how we can guarantee that this will never happen.
 
-
-> 
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
+Maybe it's safer to return -EINTR if the split is failed and let the
+syscall (or whatever codepath brings us here) to be restarted from the
+scratch? Yes, it's abuse of -EINTR, but should be fine.
 
 -- 
-Carlos
-
+ Kirill A. Shutemov
