@@ -2,66 +2,78 @@ Return-Path: <SRS0=54lF=CQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABA26C43461
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 07:07:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD09DC2BB84
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 09:00:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A4B4207C3
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 07:07:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SFA/iSjW"
+	by mail.kernel.org (Postfix) with ESMTP id B0B342145D
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Sep 2020 09:00:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726511AbgIGHHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Sep 2020 03:07:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59506 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726384AbgIGHHJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Sep 2020 03:07:09 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 378F7C061573;
-        Mon,  7 Sep 2020 00:07:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Rd5+BO+wcfvR2DH9JGUePavDycNE1Fegbtj9haaWlK8=; b=SFA/iSjWCUlVdK5O159w5509yb
-        zfZBUgtaaXJV8db/l4c7rEYPRVV6aDFq6ZH3ycehB74S7efqOeXM7svGVnwWSxWZPX48LHIBjYtg6
-        5UH0ePFHEKrdFfLrlCV85rakArCUCcC6M6cxwQsIFTiQBwKEEREaaqhENLGAZwxJcqaXUj3OgnbPr
-        Jp4fEjLAmS2bCuzJUYOFYx/acz69sIkgUdQhazDxp5xetBKYRECY8/J2Xq6awZc7K6WJQOcK91Cm/
-        E9hMxkdNzTXysqw2YnKVBkHAtLWRLUUw7Cuj3d6+DlsGk12SkO3VS5dfXguTOvhgAR+6jYsM7GCVF
-        3BtbueOg==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFBEz-00073a-HM; Mon, 07 Sep 2020 07:07:01 +0000
-Date:   Mon, 7 Sep 2020 08:07:01 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Andreas Gruenbacher <agruenba@redhat.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
+        id S1728180AbgIGJAA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Sep 2020 05:00:00 -0400
+Received: from mx2.suse.de ([195.135.220.15]:40594 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727989AbgIGI76 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Sep 2020 04:59:58 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id A15FAABD2;
+        Mon,  7 Sep 2020 08:59:57 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 742E41E12D1; Mon,  7 Sep 2020 10:59:56 +0200 (CEST)
+Date:   Mon, 7 Sep 2020 10:59:56 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     Mikulas Patocka <mpatocka@redhat.com>, Jan Kara <jack@suse.cz>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, cluster-devel@redhat.com
-Subject: Re: [PATCH] iomap: Fix direct I/O write consistency check
-Message-ID: <20200907070701.GA27019@infradead.org>
-References: <20200903165632.1338996-1-agruenba@redhat.com>
+        Dave Chinner <dchinner@redhat.com>,
+        Jann Horn <jannh@google.com>, Christoph Hellwig <hch@lst.de>,
+        Oleg Nesterov <oleg@redhat.com>,
+        Kirill Shutemov <kirill@shutemov.name>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andrea Arcangeli <aarcange@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Linux-MM <linux-mm@kvack.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 2/2] xfs: don't update mtime on COW faults
+Message-ID: <20200907085956.GA16559@quack2.suse.cz>
+References: <alpine.LRH.2.02.2009031328040.6929@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.2009041200570.27312@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.2009050805250.12419@file01.intranet.prod.int.rdu2.redhat.com>
+ <alpine.LRH.2.02.2009050812060.12419@file01.intranet.prod.int.rdu2.redhat.com>
+ <CAHk-=wh=0V27kdRkBAOkCDXSeFYmB=VzC0hMQVbmaiFV_1ZaCA@mail.gmail.com>
+ <CAHk-=wgNoq2kh_xYKtTX38GJdEC_iAvoeFU9gpj6kFVaiA0o=A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200903165632.1338996-1-agruenba@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <CAHk-=wgNoq2kh_xYKtTX38GJdEC_iAvoeFU9gpj6kFVaiA0o=A@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 03, 2020 at 06:56:32PM +0200, Andreas Gruenbacher wrote:
-> When a direct I/O write falls back to buffered I/O entirely, dio->size
-> will be 0 in iomap_dio_complete.  Function invalidate_inode_pages2_range
-> will try to invalidate the rest of the address space.  If there are any
-> dirty pages in that range, the write will fail and a "Page cache
-> invalidation failure on direct I/O" error will be logged.
+On Sat 05-09-20 10:03:20, Linus Torvalds wrote:
+> On Sat, Sep 5, 2020 at 9:47 AM Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+> >
+> > So your patch is obviously correct, [..]
+> 
+> Oh, and I had a xfs pull request in my inbox already, so rather than
+> expect Darrick to do another one just for this and have Jan do one for
+> ext2, I just applied these two directly as "ObviouslyCorrect(tm)".
 
-Looks good,
+OK, thanks!
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
