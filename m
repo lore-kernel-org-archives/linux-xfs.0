@@ -7,73 +7,64 @@ X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FCEFC433E2
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 19:55:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E805C2BC11
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 20:01:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 317712137B
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 19:55:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF57E20658
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 20:01:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="t2nS1uzk"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="h1Yf2ewJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730635AbgIHTzD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Sep 2020 15:55:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51028 "EHLO
+        id S1732501AbgIHUAh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Sep 2020 16:00:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50202 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730633AbgIHPhg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Sep 2020 11:37:36 -0400
+        with ESMTP id S1730287AbgIHPf0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Sep 2020 11:35:26 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C095C0A3BDE
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Sep 2020 07:52:58 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4346C08E81D;
+        Tue,  8 Sep 2020 07:33:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=AMgLq1kYZyqxV9AEXO2bzlSBvFlrttNFS1FgelJYwd4=; b=t2nS1uzkl0bzvxMmgZT15jAbYK
-        lCO29zPOChVVGK+6qCWlzyb0NcThMqsiouR6sJjflMNCdFkJDGeiPxwbGFQ0AUKBlXLXo70OlTVJS
-        J+DmwsDu5ExB3Pb0VSh1Vp1OKrBw0ZS3Adt4OA4twU7c9Bgxu5Smf7ECUz7/i1/9C7/oY7CplGEJQ
-        Jehqev00K306HXKr3jc7oCOQbkipAQPc809/PCAZf9SjdoylC9P7YQs5+Vf4iZUcf4XTSWh2oosvf
-        /GFsr5r3wYMvPrFtam5aorcQv9LSXQhqpAxlhI6Nmywzr4zGux6VnQRPX0w/11/dNxVB4ZdTrmgcF
-        Z2THFvWA==;
+        bh=s/ZFP3A4QjWDXlAZV9vLPQDEWpTEXzJrBneXxVLN8q0=; b=h1Yf2ewJmFOXLhqiClP3zy+NZZ
+        0XaMxkev1MwPE3wrcOaqeZbWERyA8fuefnxrrZgGqD8mn0AL3HvSvo8VmWFEOAEPzYmavfJP9kkGp
+        o5u1AcntYdpU3RqFo5kgNPbk6+vlrQxPCO/O+fCV5hgf0AixS7fUCMUwEAW1Sejxx74SAAVAm2Od5
+        N9sLDNmGKz0TQiUJQOzHJhxmGa0f+u3/UAC2YgqAKbaYHpPHX6RhlAzsDFVJwMeUHTT7CHZaETE2j
+        l/kpiHOoFSGm1JP1x6QS5/XyYFW5h/FeCbg0ibdVQpwKjbicx6esZH4pWMLpbGgQMq8/UBf2+5PTc
+        HDN82t4A==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFezL-0002sr-A8; Tue, 08 Sep 2020 14:52:51 +0000
-Date:   Tue, 8 Sep 2020 15:52:51 +0100
+        id 1kFegp-0001qR-QX; Tue, 08 Sep 2020 14:33:52 +0000
+Date:   Tue, 8 Sep 2020 15:33:43 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/7] xfs_repair: fix handling of data blocks colliding
- with existing metadata
-Message-ID: <20200908145251.GJ6039@infradead.org>
-References: <159950111751.567790.16914248540507629904.stgit@magnolia>
- <159950114896.567790.10646736292763230158.stgit@magnolia>
+Cc:     Jan Kara <jack@suse.cz>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] quota: widen timestamps for the fs_disk_quota
+ structure
+Message-ID: <20200908143343.GA6039@infradead.org>
+References: <20200905164703.GC7955@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <159950114896.567790.10646736292763230158.stgit@magnolia>
+In-Reply-To: <20200905164703.GC7955@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 07, 2020 at 10:52:28AM -0700, Darrick J. Wong wrote:
+On Sat, Sep 05, 2020 at 09:47:03AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Prior to commit a406779bc8d8, any blocks in a data fork extent that
-> collided with existing blocks would cause the entire data fork extent to
-> be rejected.  Unfortunately, the patch to add data block sharing support
-> suppressed checking for any collision, including metadata.  What we
-> really wanted to do here during a check_dups==1 scan is to is check for
-> specific collisions and without updating the block mapping data.
+> Soon, XFS will support quota grace period expiration timestamps beyond
+> the year 2038, widen the timestamp fields to handle the extra time bits.
+> Internally, XFS now stores unsigned 34-bit quantities, so the extra 8
+> bits here should work fine.  (Note that XFS is the only user of this
+> structure.)
 > 
-> So, move the check_dups test after the for-switch construction.  This
-> re-enables detecting collisions between data fork blocks and a
-> previously scanned chunk of metadata, and improves the specificity of
-> the error message that results.
-> 
-> This was found by fuzzing recs[2].free=zeroes in xfs/364, though this
-> patch alone does not solve all the problems that scenario presents.
-> 
-> Fixes: a406779bc8d8 ("xfs_repair: handle multiple owners of data blocks")
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Looks good,
