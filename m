@@ -2,95 +2,128 @@ Return-Path: <SRS0=Kgg+=CR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C457C433E2
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 12:28:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80136C433E2
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 14:50:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D61712074D
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 12:28:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LRkfQQ8y"
+	by mail.kernel.org (Postfix) with ESMTP id 531312065E
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 14:50:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730157AbgIHM1p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Sep 2020 08:27:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44204 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730179AbgIHLwb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Sep 2020 07:52:31 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D20FC061757;
-        Tue,  8 Sep 2020 04:43:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=OSVXaZ7xzAGl2y+0kyr1xPePoywMfRGlGnRHQW50WBQ=; b=LRkfQQ8yd07Ax6ojzKhfHj7+0A
-        FTi44s8/UGMuRw82gtO8hdQHFqCf2bzBGN9sMV6OoyMqY7tGLMQgr/2ZR261dJQwQzt0V244x5wIE
-        87dPrBo1GLe0NP/MRZTu4cuX+bbCj3qcabyq91YmfpvAWezxrztATWfKbS/5bvFQdZXQMLubauv+Y
-        g03mML64IJUg7HVM5QVS/qY16Ae/S2Adys/l28GgaBecNaV5y0bdy7948yiqiZbBdv/G0isiJMBB/
-        VRXeMhLpPS80RgZVN3e7BacR2RsXsY4UIt8LF64P8v7qADDseQrTeWc171yhVBxDkldyEZ14ow1tf
-        qDMS+w0w==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFc24-0001RH-GR; Tue, 08 Sep 2020 11:43:28 +0000
-Date:   Tue, 8 Sep 2020 12:43:28 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc:     Christoph Hellwig <hch@infradead.org>, darrick.wong@oracle.com,
-        david@fromorbit.com, yukuai3@huawei.com, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: Splitting an iomap_page
-Message-ID: <20200908114328.GE27537@casper.infradead.org>
-References: <20200821144021.GV17456@casper.infradead.org>
- <20200904033724.GH14765@casper.infradead.org>
- <20200907113324.2uixo4u5elveoysf@box>
+        id S1728957AbgIHOqA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Sep 2020 10:46:00 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:2468 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729785AbgIHO0J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Sep 2020 10:26:09 -0400
+X-IronPort-AV: E=Sophos;i="5.76,405,1592841600"; 
+   d="scan'208";a="99008941"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 08 Sep 2020 21:23:48 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 3538948990E5;
+        Tue,  8 Sep 2020 21:23:47 +0800 (CST)
+Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Tue, 8 Sep 2020 21:23:46 +0800
+Received: from Fedora-30.g08.fujitsu.local (10.167.220.106) by
+ G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Tue, 8 Sep 2020 21:23:42 +0800
+From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
+To:     <fstests@vger.kernel.org>
+CC:     <darrick.wong@oracle.com>, <david@fromorbit.com>,
+        <ira.weiny@intel.com>, <linux-xfs@vger.kernel.org>,
+        Xiao Yang <yangx.jy@cn.fujitsu.com>
+Subject: [PATCH 2/2] common/rc: Add extra check for xfs_io -c "chattr" on XFS
+Date:   Tue, 8 Sep 2020 21:15:23 +0800
+Message-ID: <20200908131523.20899-2-yangx.jy@cn.fujitsu.com>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20200908131523.20899-1-yangx.jy@cn.fujitsu.com>
+References: <20200908131523.20899-1-yangx.jy@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200907113324.2uixo4u5elveoysf@box>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: 3538948990E5.A9CDD
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 07, 2020 at 02:33:24PM +0300, Kirill A. Shutemov wrote:
-> On Fri, Sep 04, 2020 at 04:37:24AM +0100, Matthew Wilcox wrote:
-> > Kirill, do I have the handling of split_huge_page() failure correct?
-> > It seems reasonable to me -- unlock the page and drop the reference,
-> > hoping that somebody else will not have a reference to the page by the
-> > next time we try to split it.  Or they will split it for us.  There's a
-> > livelock opportunity here, but I'm not sure it's worse than the one in
-> > a holepunch scenario.
-> 
-> The worst case scenario is when the page is referenced (directly or
-> indirectly) by the caller. It this case we would end up with endless loop.
-> I'm not sure how we can guarantee that this will never happen.
+On XFS, ioctl(FSSETXATTR)(called by xfs_io -c "chattr") maskes off unsupported
+or invalid flags silently.  For example,
+1) With kernel v4.4 which doesn't support dax flag, try to set dax flag on a
+file by the lastest xfs_io -c "chattr" command:
+--------------------------------------------
+# xfs_io -f -c "chattr +x" testfile;echo $?
+0
+# xfs_io -c "lsattr" testfile
+----------------X testfile
+--------------------------------------------
+2) Realtime inheritance flag is only valid for a directory and try to set
+realtime inheritance flag on a file:
+--------------------------------------------
+# xfs_io -f -c "chattr +t" testfile;echo $?
+0
+# xfs_io -c "lsattr" testfile
+----------------X testfile
+--------------------------------------------
 
-I don't see a way for that to happen at the moment.  We're pretty
-careful not to take references on multiple pages at once in these paths.
-I've fixed the truncate paths to only take one reference per THP too.
+Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+---
+ common/rc | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-I was thinking that if livelock becomes a problem, we could (ab)use the
-THP destructor mechanism somewhat like this:
+diff --git a/common/rc b/common/rc
+index cf31eebc..e40f0a8a 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2158,6 +2158,7 @@ _require_xfs_io_command()
+ 	local param="$*"
+ 	local param_checked=""
+ 	local opts=""
++	local attr_info=""
+ 
+ 	local testfile=$TEST_DIR/$$.xfs_io
+ 	local testio
+@@ -2171,9 +2172,11 @@ _require_xfs_io_command()
+ 		# 'tPnE' flags are only valid for a directory so check them on a directory.
+ 		if echo "$param" | egrep -q 't|P|n|E'; then
+ 			testio=`$XFS_IO_PROG -F -c "chattr +$param" $TEST_DIR 2>&1`
++			attr_info=`$XFS_IO_PROG -F -r -c "lsattr" $TEST_DIR | awk '{print $1}'`
+ 			$XFS_IO_PROG -F -r -c "chattr -$param" $TEST_DIR 2>&1
+ 		else
+ 			testio=`$XFS_IO_PROG -F -f -c "chattr +$param" $testfile 2>&1`
++			attr_info=`$XFS_IO_PROG -F -r -c "lsattr" $testfile | awk '{print $1}'`
+ 			$XFS_IO_PROG -F -r -c "chattr -$param" $testfile 2>&1
+ 		fi
+ 		param_checked="+$param"
+@@ -2297,6 +2300,19 @@ _require_xfs_io_command()
+ 		echo $testio | grep -q "\(invalid option\|not supported\)" && \
+ 			_notrun "xfs_io $command doesn't support $param"
+ 	fi
++
++	# On XFS, ioctl(FSSETXATTR)(called by xfs_io -c "chattr") maskes off unsupported
++	# or invalid flags silently so need to check these flags by extra ioctl(FSGETXATTR)
++	# (called by xfs_io -c "lsattr").
++	# The following URL explains why we don't change the behavior of XFS.
++	# https://www.spinics.net/lists/linux-xfs/msg44725.html
++	if [ -n "$attr_info" -a "$FSTYP" = "xfs" ]; then
++		local num=${#param}
++		for i in $(seq 0 $((num-1))); do
++			echo $attr_info | grep -q "${param:$i:1}" || \
++				_notrun "xfs_io $command +${param:$i:1} support is missing (unknown flag in kernel)"
++		done
++	fi
+ }
+ 
+ # check that kernel and filesystem support direct I/O
+-- 
+2.21.0
 
-Add
-	[TRANSHUGE_PAGE_SPLIT] = split_transhuge_page,
-to the compound_page_dtors array.
 
-New function split_huge_page_wait() which, if !can_split_huge_page()
-first checks if the dtor is already set to TRANSHUGE_PAGE_SPLIT.  If so,
-it returns to its caller, reporting failure (so that it will put its
-reference to the page).  Then it sets the dtor to TRANSHUGE_PAGE_SPLIT
-and sets page refcount to 1.  It goes to sleep on the page.
 
-split_transhuge_page() first has to check if the refcount went to 0
-due to mapcount being reduced.  If so, it resets the refcount to 1 and
-returns to the caller.  If not, it freezes the page and wakes the task
-above which is sleeping in split_huge_page_wait().
-
-It's complicated and I don't love it.  But it might solve livelock, should
-we need to do it.  It wouldn't prevent us from an indefinite wait if the
-caller of split_huge_page_wait() has more than one reference to this page.
-That's better than a livelock though.
