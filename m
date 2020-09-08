@@ -6,68 +6,63 @@ X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBD71C2D0A7
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 16:56:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 530FAC43461
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 19:07:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 871502087C
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 16:56:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E65C02076C
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Sep 2020 19:07:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jtteioPS"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Nmh11ZEh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731648AbgIHQ4U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Sep 2020 12:56:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58284 "EHLO
+        id S1731409AbgIHTGo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Sep 2020 15:06:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731896AbgIHQWx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Sep 2020 12:22:53 -0400
+        with ESMTP id S1731257AbgIHQHN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Sep 2020 12:07:13 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB910C09B046
-        for <linux-xfs@vger.kernel.org>; Tue,  8 Sep 2020 07:40:50 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 926E5C09B055
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Sep 2020 07:51:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=N3QgkPgqHsWmO7HM4ruCbCvu8lIjCz58DRGd5JW/7nc=; b=jtteioPS7aOFuglI6V+aXpefyf
-        DCABCPQqtxigOwSpUtUg1pwu+j6QoxjsJ7WLNkzhy3kpye+D1e99r7GfRvwFpI+hUKTmOX2myPGxv
-        0tjGFR2FeOvvk0PWm13+jV86ShQMpVBpdppAUWlk/CR+VxjoJym13Jt9IKFMundPsOijYqOtkcrsQ
-        3lDG30SgtUUBU62fy0U8BuHXuMm7BiFYcHB3dLv6gdd3CwLsZbjQcwgO3JFlccgj30KBlyzbfVJq2
-        CEDSu6LT+eza11HEu5f9iV9mVuAfd8lradRLp0mlWRBDa3WY+L1HQ3Yjq8angFLoauppQSiElN6gu
-        h0tXQE9g==;
+        bh=MUAeRX7GmBiVM860Jkmek+70sDnyw+AEtfTyEVYpPy8=; b=Nmh11ZEh6xjqKhV6fI1zgQoyor
+        mwcKSVarvkAL5yJwHS2myS9TVrDNKPFzu6ZMBKXSWaIEr6KUd2UPfmKHy0rig0pjVKwrmyuMcpwRA
+        WyBngCl/H20J9p+geqIZgffdIqidTfSr7Derl2zZZM+2q5FWwf+OUGJ768DLR9Lw8vqYCQuPlrBui
+        +JGN0Ux9TJVgytHR89nVF9yW3eqQ9C9VNFGq3XvxgGK6Q/tumcOtKwAWUeASBKKiX3QWvV8LI4eVq
+        31XTaM26F9qmD4gUUZGELq5h9Gh8H1TYUbAonr7WfWlaK3GfF9QWH67scXlBV+C2/qvAz1GT71f/V
+        8kZjUniQ==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFenZ-0002FB-0b; Tue, 08 Sep 2020 14:40:41 +0000
-Date:   Tue, 8 Sep 2020 15:40:40 +0100
+        id 1kFeyF-0002pM-UY; Tue, 08 Sep 2020 14:51:44 +0000
+Date:   Tue, 8 Sep 2020 15:51:43 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] mkfs: set required parts of the realtime geometry
- before computing log geometry
-Message-ID: <20200908144040.GE6039@infradead.org>
-References: <159950108982.567664.1544351129609122663.stgit@magnolia>
- <159950111530.567664.7302518339658104292.stgit@magnolia>
+Subject: Re: [PATCH 4/7] xfs_repair: complain about unwritten extents when
+ they're not appropriate
+Message-ID: <20200908145143.GI6039@infradead.org>
+References: <159950111751.567790.16914248540507629904.stgit@magnolia>
+ <159950114274.567790.13140838452739405641.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <159950111530.567664.7302518339658104292.stgit@magnolia>
+In-Reply-To: <159950114274.567790.13140838452739405641.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 07, 2020 at 10:51:55AM -0700, Darrick J. Wong wrote:
+On Mon, Sep 07, 2020 at 10:52:22AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The minimum log size depends on the transaction reservation sizes, which
-> in turn depend on the realtime device geometry.  Therefore, we need to
-> set up some of the rt geometry before we can compute the real minimum
-> log size.
+> We don't allow unwritten extents in the attr fork, and we don't allow
+> them in the data fork except for regular files.  Check that this is the
+> case.
 > 
-> This fixes a problem where mkfs, given a small data device and a
-> realtime volume, formats a filesystem with a log that is too small to
-> pass the mount time log size checks.
+> Found by manually fuzzing the extentflag field of an attr fork to one.
 
-Do we have a test for that?
-
-Othewise looks good:
+Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
