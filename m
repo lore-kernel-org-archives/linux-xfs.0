@@ -2,94 +2,69 @@ Return-Path: <SRS0=E0aF=CS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 050FBC43461
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 10:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 008CFC43461
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 12:03:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE0C92087C
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 10:51:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCC172166E
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 12:03:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727856AbgIIKvh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Sep 2020 06:51:37 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52316 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726426AbgIIKvg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Sep 2020 06:51:36 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 6FD05ABD2;
-        Wed,  9 Sep 2020 10:51:34 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 79C291E12E1; Wed,  9 Sep 2020 12:51:33 +0200 (CEST)
-Date:   Wed, 9 Sep 2020 12:51:33 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>, hch@lst.de
-Subject: Re: [PATCH v3] quota: widen timestamps for the fs_disk_quota
- structure
-Message-ID: <20200909105133.GC24207@quack2.suse.cz>
-References: <20200909013251.GG7955@magnolia>
- <20200909014933.GC6583@casper.infradead.org>
- <20200909022909.GI7955@magnolia>
+        id S1729993AbgIIMCH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Sep 2020 08:02:07 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:55368 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730140AbgIIMAp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Sep 2020 08:00:45 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 658D98FDACFF76C07082;
+        Wed,  9 Sep 2020 20:00:43 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.487.0; Wed, 9 Sep 2020
+ 20:00:37 +0800
+From:   Zheng Bin <zhengbin13@huawei.com>
+To:     <darrick.wong@oracle.com>, <linux-xfs@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <yi.zhang@huawei.com>, <zhengbin13@huawei.com>
+Subject: [PATCH -next] xfs: Remove unneeded semicolon
+Date:   Wed, 9 Sep 2020 20:07:32 +0800
+Message-ID: <20200909120733.115415-1-zhengbin13@huawei.com>
+X-Mailer: git-send-email 2.26.0.106.g9fadedd
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200909022909.GI7955@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 08-09-20 19:29:09, Darrick J. Wong wrote:
-> On Wed, Sep 09, 2020 at 02:49:33AM +0100, Matthew Wilcox wrote:
-> > On Tue, Sep 08, 2020 at 06:32:51PM -0700, Darrick J. Wong wrote:
-> > > +static inline void copy_to_xfs_dqblk_ts(const struct fs_disk_quota *d,
-> > > +		__s32 *timer_lo, __s8 *timer_hi, s64 timer)
-> > > +{
-> > > +	*timer_lo = timer;
-> > > +	if (d->d_fieldmask & FS_DQ_BIGTIME)
-> > > +		*timer_hi = timer >> 32;
-> > > +	else
-> > > +		*timer_hi = 0;
-> > > +}
-> > 
-> > I'm still confused by this.  What breaks if you just do:
-> > 
-> > 	*timer_lo = timer;
-> > 	*timer_hi = timer >> 32;
-> 
-> "I don't know."
-> 
-> The manpage for quotactl doesn't actually specify the behavior of the
-> padding fields.  The /implementation/ is careful enough to zero
-> everything, but the interface specification doesn't explicitly require
-> software to do so.
-> 
-> Because the contents of the padding fields aren't defined by the
-> documentation, the kernel cannot simply start using the d_padding2 field
-> because there could be an old kernel that doesn't zero the padding,
-> which would lead to confusion if the new userspace were mated to such a
-> kernel.
-> 
-> Therefore, we have to add a flag that states explicitly that we are
-> using the timer_hi fields.  This is also the only way that an old
-> program can detect that it's being fed a structure that it might not
-> recognise.
+Fixes coccicheck warning:
 
-Well, this is in the direction from kernel to userspace and what Matthew
-suggests would just make kernel posssibly store non-zero value in *timer_hi
-without setting FS_DQ_BIGTIME flag (for negative values of timer). I don't
-think it would break anything but I agree the complication isn't big so
-let's be careful and only set *timer_hi to non-zero if FS_DQ_BIGTIME is
-set.
+fs/xfs/xfs_icache.c:1214:2-3: Unneeded semicolon
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Signed-off-by: Zheng Bin <zhengbin13@huawei.com>
+---
+ fs/xfs/xfs_icache.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 101028ebb571..5e926912e507 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1211,7 +1211,7 @@ xfs_reclaim_inodes(
+ 	while (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
+ 		xfs_ail_push_all_sync(mp->m_ail);
+ 		xfs_reclaim_inodes_ag(mp, &nr_to_scan);
+-	};
++	}
+ }
+
+ /*
+--
+2.26.0.106.g9fadedd
+
