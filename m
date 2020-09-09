@@ -1,131 +1,80 @@
 Return-Path: <SRS0=NqjT=CT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+X-Spam-Level: **
+X-Spam-Status: No, score=2.0 required=3.0 tests=BAYES_40,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC05C43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 02:26:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 622E6C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 02:39:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 705D621D40
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 02:26:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3527721941
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 02:39:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730652AbgIJCYY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Sep 2020 22:24:24 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55343 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729479AbgIJCWH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Sep 2020 22:22:07 -0400
-Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6FF91824BF9;
-        Thu, 10 Sep 2020 08:59:38 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kG93x-0002Fj-Hl; Thu, 10 Sep 2020 08:59:37 +1000
-Date:   Thu, 10 Sep 2020 08:59:37 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: quotaoff, transaction quiesce, and dquot logging
-Message-ID: <20200909225937.GS12131@dread.disaster.area>
-References: <20200904155949.GF529978@bfoster>
- <20200904222936.GH12131@dread.disaster.area>
- <20200908155602.GB721341@bfoster>
- <20200908210720.GP12131@dread.disaster.area>
- <20200909150035.GC765129@bfoster>
+        id S1730093AbgIJCis convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Sep 2020 22:38:48 -0400
+Received: from kanlli.eu ([146.255.98.105]:52862 "EHLO mail.foescocursos.es"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730871AbgIJCg1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Sep 2020 22:36:27 -0400
+X-Greylist: delayed 14186 seconds by postgrey-1.27 at vger.kernel.org; Wed, 09 Sep 2020 22:36:26 EDT
+Received: from 131.red-95-120-15.dynamicip.rima-tde.net (131.red-95-120-15.dynamicip.rima-tde.net [95.120.15.131])
+        by mail.foescocursos.es (Postfix) with ESMTPSA id 02BB9B1A4C
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2020 00:37:24 +0200 (CEST)
+Authentication-Results: mail.foescocursos.es;
+        spf=pass (sender IP is 95.120.15.131) smtp.mailfrom=info21@foescoformaciones.es smtp.helo=131.red-95-120-15.dynamicip.rima-tde.net
+Received-SPF: pass (mail.foescocursos.es: connection is authenticated)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200909150035.GC765129@bfoster>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=IuRgj43g c=1 sm=1 tr=0 cx=a_idp_d
-        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
-        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=7-415B0cAAAA:8
-        a=Jvu4AkJxm7GkgfUIu_oA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+From:   "FOESCO" <info21@foescoformaciones.es>
+Reply-To: info21@foescoformaciones.es
+To:     linux-xfs@vger.kernel.org
+Subject: FOESCO Informa
+Content-Type: text/plain
+Content-Transfer-Encoding: 8BIT
+X-Mailer: Smart_Send_4_3_3
+Date:   Thu, 10 Sep 2020 00:37:25 +0200
+Message-ID: <734449557381648184610@DESKTOP-TILJS7C>
+X-PPP-Message-ID: <20200909223725.26409.71619@mail.foescocursos.es>
+X-PPP-Vhost: foescoformaciones.es
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 09, 2020 at 11:00:35AM -0400, Brian Foster wrote:
-> On Wed, Sep 09, 2020 at 07:07:20AM +1000, Dave Chinner wrote:
-> > On Tue, Sep 08, 2020 at 11:56:02AM -0400, Brian Foster wrote:
-> > > - xfs_trans_mod_dquot_byino() (via xfs_bmapi_write() -> ... -> xfs_bmap_btalloc() ->
-> > >   xfs_bmap_btalloc_accounting()) skips accounting the allocated blocks
-> > >   to the group dquot because it is not enabled
-> > 
-> > Right, the reservation functions need to do the same thing as
-> > xfs_trans_mod_dquot_byino(). I simply missed that for the
-> > reservation functions. i.e. Adding the same style of check like:
-> > 
-> > 	if (XFS_IS_UQUOTA_ON(mp) && udq)
-> > 
-> > before doing anything with user quota will avoid this problem as
-> > we are already in transaction context and the UQUOTA on or off state
-> > will not change until the transaction ends.
-> > 
-> > > concept itself. It seems like we should be able to head this issue off
-> > > somewhere in this sequence (i.e., checking the appropriate flag before
-> > > the dquot is attached), but it also seems like the quotaoff start/end
-> > > plus various quota flags all fit together a certain way and I feel like
-> > > some pieces of the puzzle are still missing from a design standpoint...
-> > 
-> > I can't think of anything that is missing - the quota off barrier
-> > gives us an atomic quota state change w.r.t. running transactions,
-> > so we just need to make sure we check the quota state before joining
-> > anything quota related to a transaction rather than assume that the
-> > presence of a dquot attached to an inode means that quotas are on.
-> > 
-> 
-> This gets back to my earlier questions around the various quota flags.
-> If I trace through the code of some operations, it seems like this
-> approach should work (once this logging issue is addressed, and more
-> testing required of course). However if I refer back to the runtime
-> macro comment:
-> 
-> /*
->  * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
->  * quota will be not be switched off as long as that inode lock is held.
->  */
-> 
-> This will technically no longer be the case because the updated quotaoff
-> will clear all of the flags before cycling any ilocks and detaching
-> dquots. I'm aware it will drain the transaction subsystem, but does
-> anything else depend on not seeing such a state change with an inode
-> lock held? I haven't seen anything so far that would conflict, but the
-> comment here is rather vague on details.
+Buenos días
 
-Not that I know of. I would probably rewrite the above comment as:
 
-/*
- * Checking XFS_IS_*QUOTA_ON() while inside an active quota modifying
- * transaction context guarantees quota will be not be switched until after the
- * entire rolling transaction chain is completed.
- */
+Soy Alex Pons, director de FOESCO (Formación Estatal Continua).
 
-To clarify the situation. Having the inode locked will now only
-guarantee that the dquot will not go away while the inode is locked,
-it doesn't guarantee that quota will not switch off any more.
+Llegadas estas fechas y como cada año, recordamos a todas las empresas Españolas su derecho a consumir el Crédito de Formación del que disponen para la formación de sus empleados, antes de su caducidad a final de año.
 
-> Conversely, if not, I'm wondering whether there's a need for an ACTIVE
-> flag at all if we'd clear it at the same time as the ACCT|ENFD flags
-> during quotaoff anyways. It sounds like the answer to both those
-> questions is no based on your previous responses, perhaps reason being
-> that the transaction drain on the quotaoff side effectively replaces the
-> need for this rule on the general transaction side. Hm? Note that I
-> wouldn't remove the ACTIVE flag immediately anyways, but I want to make
-> sure the concern is clear..
 
-Yes, I think you are right - the ACTIVE flag could probably away as
-it doesn't really play a part in the quota-off dance anymore. We'd
-still need the IS_QUOTA_ON() checks, but they'd look at ACCT|ENFD
-instead...
+Actualmente se encuentra abierto el plazo de inscripción para la Convocatoria SEPTIEMBRE 2020 de Cursos Bonificables con cargo al Crédito de Formación 2020.
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Deseáis que os mandemos la información?
+
+
+Quedamos a la espera de vuestra respuesta.
+
+
+Saludos cordiales.
+
+
+Alex Pons
+Director FOESCO.
+
+FOESCO Formación Estatal Continua.
+Entidad Organizadora: B200592AA
+www.foesco.com
+e-mail:     cursos@foesco.net
+Tel:     910 323 794
+(Horario de 9h a 15h y de 17h a 20h de Lunes a Viernes)
+
+FOESCO ofrece formación a empresas y trabajadores en activo a través de cursos bonificados por la Fundación Estatal para la Formación en el Empleo (antiguo FORCEM) que gestiona las acciones formativas de FORMACIÓN CONTINUA para trabajadores y se rige por la ley 30/2015 de 9 de Septiembre.
+
+Antes de imprimir este e-mail piense bien si es necesario hacerlo. Before printing this e-mail please think twice if you really need it. FOESCO Tfno: 910 382 880 Email: cursos@foesco.com. La información transmitida en este mensaje está dirigida solamente a las personas o entidades que figuran en el encabezamiento y contiene información confidencial, por lo que, si usted lo recibiera por error, por favor destrúyalo sin copiarlo, usarlo ni distribuirlo, comunicándolo inmediatamente al emisor del mensaje. De conformidad con lo dispuesto en el Reglamento Europeo del 2016/679, del 27 de Abril de 2016, FOESCO le informa que los datos por usted suministrados serán tratados con las medidas de seguridad conformes a la normativa vigente que se requiere. Dichos datos serán empleados con fines de gestión. Para el ejercicio de sus derechos de transparencia, información, acceso, rectificación, supresión o derecho al olvido, limitación del tratamiento , portabilidad de datos y oposición de sus dato
+ s de carácter personal deberá dirigirse a la dirección del Responsable del tratamiento a C/ LAGUNA DEL MARQUESADO Nº10, 28021, MADRID, "PULSANDO AQUI" <mailto:bajas@foesco.com?Subject=BAJA%20CORREOS> y "ENVIAR" o a traves de la dirección de correo electrónico: bajas@foesco.com <mailto:bajas@foesco.com?Subject=BAJA%20CORREOS>
