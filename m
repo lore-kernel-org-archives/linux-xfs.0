@@ -2,160 +2,211 @@ Return-Path: <SRS0=E0aF=CS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4944EC43461
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 16:00:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E172C10DAA
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 16:37:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDD2E20639
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 16:00:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCCAE2166E
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 16:37:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UoPt2Uow"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="obrDVAgs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730435AbgIIQAe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Sep 2020 12:00:34 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:58637 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730357AbgIIQAQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Sep 2020 12:00:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599667203;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9aotpLURod+TV9CygHv1rjUSRqJ6tcbRaAtOl3mjC0s=;
-        b=UoPt2Uowh4lBuSTWx2Uj0a4Y6biWsNYqshZ/L45/7XutjGonNRskAQJFpnMsUWpqdxAJsE
-        eNU8erG52J28fS3gcjeq8TfvUbRR77/3Jsf5nGJYVBoXxFYxjpDyROvs5z2poDxFXgnhvJ
-        OYiQD7koSGhQGSod3kHzzQBGyCWGDqI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-519-k9Q2YBo_Mf-CZiAxpg_Dxw-1; Wed, 09 Sep 2020 09:35:28 -0400
-X-MC-Unique: k9Q2YBo_Mf-CZiAxpg_Dxw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D86351008314;
-        Wed,  9 Sep 2020 13:35:27 +0000 (UTC)
-Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 875FA5C230;
-        Wed,  9 Sep 2020 13:35:27 +0000 (UTC)
-Date:   Wed, 9 Sep 2020 09:35:25 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: add a free space extent change reservation
-Message-ID: <20200909133525.GB765129@bfoster>
-References: <20200909081912.1185392-1-david@fromorbit.com>
- <20200909081912.1185392-3-david@fromorbit.com>
+        id S1730707AbgIIQhE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Sep 2020 12:37:04 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:35354 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731058AbgIIQgo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Sep 2020 12:36:44 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 089GZOfM082479;
+        Wed, 9 Sep 2020 16:36:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=SP32iSfroOfzx5EsUNUDy4u2mILzGX0N2e00iy6aykM=;
+ b=obrDVAgs8jpKYWNaAi+8HDSENIW6p6fus8gnXU/KHzgxdcKJe7ROab98DasZG++Z18RQ
+ Tn6ni0bzJxwFNrxXnqFRxumnqRGC3Nnw2ZGwHxLK75eDQzSGWnu57i6S4A5NJ4kvgViN
+ HJzq8JC0OCUDBXsdcFGO4Un2Q3loJNxgb0/HNvZMLNUUVn9ku5m2bQqtdMHbMUhwyJ2w
+ s0hhCj6xqBlG5f15xniAVqa111lelRispz/AazXWRLYuRkPbcrDV2ejt5RPntcoAYwz9
+ sCUaFb8w4qMtGMR2eGIPX0HrJ55KuKpzl2UDBJjzCBe47aVu8uIGwTXvM1tWvuYi6nFp PQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 33c23r31ac-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 09 Sep 2020 16:36:23 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 089GUUpm018538;
+        Wed, 9 Sep 2020 16:34:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 33cmky5bjw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 09 Sep 2020 16:34:23 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 089GYFi7014605;
+        Wed, 9 Sep 2020 16:34:15 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 09 Sep 2020 09:34:15 -0700
+Date:   Wed, 9 Sep 2020 09:34:13 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Jan Kara <jack@suse.cz>, Matthew Wilcox <willy@infradead.org>
+Cc:     linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>, hch@lst.de
+Subject: [PATCH v4] quota: widen timestamps for the fs_disk_quota structure
+Message-ID: <20200909163413.GJ7955@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200909081912.1185392-3-david@fromorbit.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=1
+ spamscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009090147
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
+ mlxlogscore=999 mlxscore=0 bulkscore=0 suspectscore=1 spamscore=0
+ malwarescore=0 phishscore=0 lowpriorityscore=0 clxscore=1015
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009090147
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 09, 2020 at 06:19:11PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Lots of the transaction reservation code reserves space for an
-> extent allocation. It is inconsistently implemented, and many of
-> them get it wrong. Introduce a new function to calculate the log
-> space reservation for adding or removing an extent from the free
-> space btrees.
-> 
-> This function reserves space for logging the AGF, the AGFL and the
-> free space btrees, avoiding the need to account for them seperately
-> in every reservation that manipulates free space.
-> 
-> Convert the EFI recovery reservation to use this transaction
-> reservation as EFI recovery only needs to manipulate the free space
-> index.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_trans_resv.c | 19 ++++++++++++++++++-
->  1 file changed, 18 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_trans_resv.c b/fs/xfs/libxfs/xfs_trans_resv.c
-> index da2ec052ac0a..621ddb277dfa 100644
-> --- a/fs/xfs/libxfs/xfs_trans_resv.c
-> +++ b/fs/xfs/libxfs/xfs_trans_resv.c
-> @@ -79,6 +79,23 @@ xfs_allocfree_log_count(
->  	return blocks;
->  }
->  
-> +/*
-> + * Log reservation required to add or remove a single extent to the free space
-> + * btrees.  This requires modifying:
-> + *
-> + * the agf header: 1 sector
-> + * the agfl header: 1 sector
-> + * the allocation btrees: 2 trees * (max depth - 1) * block size
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Nit, but the xfs_allocfree_log_count() helper this uses clearly
-indicates reservation for up to four trees. It might be worth referring
-to that here just to minimize spreading details all over the place that
-are likely to become stale or inconsistent over time.
+Soon, XFS will support quota grace period expiration timestamps beyond
+the year 2038, widen the timestamp fields to handle the extra time bits.
+Internally, XFS now stores unsigned 34-bit quantities, so the extra 8
+bits here should work fine.  (Note that XFS is the only user of this
+structure.)
 
-> + */
-> +uint
-> +xfs_allocfree_extent_res(
-> +	struct xfs_mount *mp)
-> +{
-> +	return xfs_calc_buf_res(2, mp->m_sb.sb_sectsize) +
-> +	       xfs_calc_buf_res(xfs_allocfree_log_count(mp, 1),
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v4: don't set timer_hi if !DQ_BIGTIME
+v3: remove the old rt_spc_timer assignment statement
+v2: fix calling conventions, widen timestamps
+---
+ fs/quota/quota.c               |   42 ++++++++++++++++++++++++++++++++++------
+ include/uapi/linux/dqblk_xfs.h |   11 ++++++++++
+ 2 files changed, 46 insertions(+), 7 deletions(-)
 
-Why calculate for a single extent when an EFI can refer to multiple
-extents? I thought the max was 2, but the extent free portion of the
-itruncate calculation actually uses an op count of 4. The reason for
-that is not immediately clear to me. It actually accounts 4 agf/agfl
-blocks as well, so perhaps there's a wrong assumption somewhere. FWIW,
-the truncate code allows 2 unmaps per transaction and the
-xfs_extent_free_defer_type struct limits the dfp to 16. I suspect the
-latter is not relevant for the current code.
-
-Either way, multiple extents are factored into the current freeing
-reservation and the extent freeing code at runtime (dfops) and during
-recovery both appear to iterate on an extent count (potentially > 1) per
-transaction. The itruncate comment, for reference (I also just noticed
-that the subsequent patch modifies this comment, so you're presumably
-aware of this mess):
-
-/*
- * ...
- * And the bmap_finish transaction can free the blocks and bmap blocks (t2):
- *    the agf for each of the ags: 4 * sector size
- *    the agfl for each of the ags: 4 * sector size
- *    the super block to reflect the freed blocks: sector size
- *    worst case split in allocation btrees per extent assuming 4 extents:
- *              4 exts * 2 trees * (2 * max depth - 1) * block size
- * ...
- */
-
-Brian
-
-> +				XFS_FSB_TO_B(mp, 1));
-> +}
-> +
->  /*
->   * Logging inodes is really tricksy. They are logged in memory format,
->   * which means that what we write into the log doesn't directly translate into
-> @@ -922,7 +939,7 @@ xfs_trans_resv_calc(
->  	 * EFI recovery is itruncate minus the initial transaction that logs
->  	 * logs the EFI.
->  	 */
-> -	resp->tr_efi.tr_logres = resp->tr_itruncate.tr_logres;
-> +	resp->tr_efi.tr_logres = xfs_allocfree_extent_res(mp);
->  	resp->tr_efi.tr_logcount = resp->tr_itruncate.tr_logcount - 1;
->  	resp->tr_efi.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
->  
-> -- 
-> 2.28.0
-> 
-
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index 47f9e151988b..52362eeaea94 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -481,6 +481,14 @@ static inline u64 quota_btobb(u64 bytes)
+ 	return (bytes + (1 << XFS_BB_SHIFT) - 1) >> XFS_BB_SHIFT;
+ }
+ 
++static inline s64 copy_from_xfs_dqblk_ts(const struct fs_disk_quota *d,
++		__s32 timer, __s8 timer_hi)
++{
++	if (d->d_fieldmask & FS_DQ_BIGTIME)
++		return (u32)timer | (s64)timer_hi << 32;
++	return timer;
++}
++
+ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
+ {
+ 	dst->d_spc_hardlimit = quota_bbtob(src->d_blk_hardlimit);
+@@ -489,14 +497,17 @@ static void copy_from_xfs_dqblk(struct qc_dqblk *dst, struct fs_disk_quota *src)
+ 	dst->d_ino_softlimit = src->d_ino_softlimit;
+ 	dst->d_space = quota_bbtob(src->d_bcount);
+ 	dst->d_ino_count = src->d_icount;
+-	dst->d_ino_timer = src->d_itimer;
+-	dst->d_spc_timer = src->d_btimer;
++	dst->d_ino_timer = copy_from_xfs_dqblk_ts(src, src->d_itimer,
++						  src->d_itimer_hi);
++	dst->d_spc_timer = copy_from_xfs_dqblk_ts(src, src->d_btimer,
++						  src->d_btimer_hi);
+ 	dst->d_ino_warns = src->d_iwarns;
+ 	dst->d_spc_warns = src->d_bwarns;
+ 	dst->d_rt_spc_hardlimit = quota_bbtob(src->d_rtb_hardlimit);
+ 	dst->d_rt_spc_softlimit = quota_bbtob(src->d_rtb_softlimit);
+ 	dst->d_rt_space = quota_bbtob(src->d_rtbcount);
+-	dst->d_rt_spc_timer = src->d_rtbtimer;
++	dst->d_rt_spc_timer = copy_from_xfs_dqblk_ts(src, src->d_rtbtimer,
++						     src->d_rtbtimer_hi);
+ 	dst->d_rt_spc_warns = src->d_rtbwarns;
+ 	dst->d_fieldmask = 0;
+ 	if (src->d_fieldmask & FS_DQ_ISOFT)
+@@ -588,10 +599,26 @@ static int quota_setxquota(struct super_block *sb, int type, qid_t id,
+ 	return sb->s_qcop->set_dqblk(sb, qid, &qdq);
+ }
+ 
++static inline void copy_to_xfs_dqblk_ts(const struct fs_disk_quota *d,
++		__s32 *timer_lo, __s8 *timer_hi, s64 timer)
++{
++	*timer_lo = timer;
++	if (d->d_fieldmask & FS_DQ_BIGTIME)
++		*timer_hi = timer >> 32;
++}
++
++static inline bool want_bigtime(s64 timer)
++{
++	return timer > S32_MAX || timer < S32_MIN;
++}
++
+ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
+ 			      int type, qid_t id)
+ {
+ 	memset(dst, 0, sizeof(*dst));
++	if (want_bigtime(src->d_ino_timer) || want_bigtime(src->d_spc_timer) ||
++	    want_bigtime(src->d_rt_spc_timer))
++		dst->d_fieldmask |= FS_DQ_BIGTIME;
+ 	dst->d_version = FS_DQUOT_VERSION;
+ 	dst->d_id = id;
+ 	if (type == USRQUOTA)
+@@ -606,14 +633,17 @@ static void copy_to_xfs_dqblk(struct fs_disk_quota *dst, struct qc_dqblk *src,
+ 	dst->d_ino_softlimit = src->d_ino_softlimit;
+ 	dst->d_bcount = quota_btobb(src->d_space);
+ 	dst->d_icount = src->d_ino_count;
+-	dst->d_itimer = src->d_ino_timer;
+-	dst->d_btimer = src->d_spc_timer;
++	copy_to_xfs_dqblk_ts(dst, &dst->d_itimer, &dst->d_itimer_hi,
++			     src->d_ino_timer);
++	copy_to_xfs_dqblk_ts(dst, &dst->d_btimer, &dst->d_btimer_hi,
++			     src->d_spc_timer);
+ 	dst->d_iwarns = src->d_ino_warns;
+ 	dst->d_bwarns = src->d_spc_warns;
+ 	dst->d_rtb_hardlimit = quota_btobb(src->d_rt_spc_hardlimit);
+ 	dst->d_rtb_softlimit = quota_btobb(src->d_rt_spc_softlimit);
+ 	dst->d_rtbcount = quota_btobb(src->d_rt_space);
+-	dst->d_rtbtimer = src->d_rt_spc_timer;
++	copy_to_xfs_dqblk_ts(dst, &dst->d_rtbtimer, &dst->d_rtbtimer_hi,
++			     src->d_rt_spc_timer);
+ 	dst->d_rtbwarns = src->d_rt_spc_warns;
+ }
+ 
+diff --git a/include/uapi/linux/dqblk_xfs.h b/include/uapi/linux/dqblk_xfs.h
+index 03d890b80ebc..16d73f54376d 100644
+--- a/include/uapi/linux/dqblk_xfs.h
++++ b/include/uapi/linux/dqblk_xfs.h
+@@ -66,7 +66,10 @@ typedef struct fs_disk_quota {
+ 	__s32		d_btimer;	/* similar to above; for disk blocks */
+ 	__u16	  	d_iwarns;       /* # warnings issued wrt num inodes */
+ 	__u16	  	d_bwarns;       /* # warnings issued wrt disk blocks */
+-	__s32		d_padding2;	/* padding2 - for future use */
++	__s8		d_itimer_hi;	/* upper 8 bits of timer values */
++	__s8		d_btimer_hi;
++	__s8		d_rtbtimer_hi;
++	__s8		d_padding2;	/* padding2 - for future use */
+ 	__u64		d_rtb_hardlimit;/* absolute limit on realtime blks */
+ 	__u64		d_rtb_softlimit;/* preferred limit on RT disk blks */
+ 	__u64		d_rtbcount;	/* # realtime blocks owned */
+@@ -121,6 +124,12 @@ typedef struct fs_disk_quota {
+ #define FS_DQ_RTBCOUNT		(1<<14)
+ #define FS_DQ_ACCT_MASK		(FS_DQ_BCOUNT | FS_DQ_ICOUNT | FS_DQ_RTBCOUNT)
+ 
++/*
++ * Quota expiration timestamps are 40-bit signed integers, with the upper 8
++ * bits encoded in the _hi fields.
++ */
++#define FS_DQ_BIGTIME		(1<<15)
++
+ /*
+  * Various flags related to quotactl(2).
+  */
