@@ -2,104 +2,175 @@ Return-Path: <SRS0=E0aF=CS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 111FEC43461
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 19:12:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6EEC433E2
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 21:45:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B337D218AC
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 19:12:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KC5Fc9nn"
+	by mail.kernel.org (Postfix) with ESMTP id 534CE21D7E
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Sep 2020 21:45:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726414AbgIITMX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Sep 2020 15:12:23 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:51938 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725975AbgIITMW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Sep 2020 15:12:22 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 089J4mdw156107;
-        Wed, 9 Sep 2020 19:12:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=fbUL8O06mrKB5fJUTc2RMvjDQTEGwJjxWIIvLYhhoJ4=;
- b=KC5Fc9nnQcfv90Sv0aftuiuy4vvvhWGIMAE5WY/3w+MBoIrFi+4lxwCML0Y+HrcJoP6Z
- rp9m/4xMLErh4K3ZcMHxb6n93gmApBNtWf/EoU63I2m2PkEq+c05RuhQsuiLWCLRCbpo
- OulASqeNFzmvfS4zxqa+eIx1+WVYN8HcaUgQiezks/abNkFhDBPiQ14hVVPMliBw16nA
- crCR3aUP0mKSne2d4HqizXvQb8EXsT1bON8ed5QKdD3MrglCAREv+6Z5sm7KKctfLIcp
- Gm0ag/TxPdTkXEMQi+ItNI2dCS6Ay9mQiFzrX9KjCPRhYKcSx034ysTiADBba9xkA6fy 7Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 33c2mm3ruq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 09 Sep 2020 19:12:18 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 089JAOHh178990;
-        Wed, 9 Sep 2020 19:12:17 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 33cmkyde6q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Sep 2020 19:12:17 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 089JCG8v025449;
-        Wed, 9 Sep 2020 19:12:16 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 09 Sep 2020 12:12:16 -0700
-Date:   Wed, 9 Sep 2020 12:12:14 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 4/4] mkfs: set required parts of the realtime geometry
- before computing log geometry
-Message-ID: <20200909191214.GN7955@magnolia>
-References: <159950108982.567664.1544351129609122663.stgit@magnolia>
- <159950111530.567664.7302518339658104292.stgit@magnolia>
- <20200908144040.GE6039@infradead.org>
+        id S1726489AbgIIVpC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Sep 2020 17:45:02 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58870 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726426AbgIIVpB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Sep 2020 17:45:01 -0400
+Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9F50982480E;
+        Thu, 10 Sep 2020 07:44:56 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kG7tf-00025R-Al; Thu, 10 Sep 2020 07:44:55 +1000
+Date:   Thu, 10 Sep 2020 07:44:55 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: EFI recovery needs it's own transaction
+ reservation
+Message-ID: <20200909214455.GQ12131@dread.disaster.area>
+References: <20200909081912.1185392-1-david@fromorbit.com>
+ <20200909081912.1185392-2-david@fromorbit.com>
+ <20200909133111.GA765129@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200908144040.GE6039@infradead.org>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=1
- spamscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009090170
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=999
- malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009090169
+In-Reply-To: <20200909133111.GA765129@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=IuRgj43g c=1 sm=1 tr=0 cx=a_idp_d
+        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
+        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
+        a=YmwVEFAiMb9cPKlH9xUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 08, 2020 at 03:40:40PM +0100, Christoph Hellwig wrote:
-> On Mon, Sep 07, 2020 at 10:51:55AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Sep 09, 2020 at 09:31:11AM -0400, Brian Foster wrote:
+> On Wed, Sep 09, 2020 at 06:19:10PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > The minimum log size depends on the transaction reservation sizes, which
-> > in turn depend on the realtime device geometry.  Therefore, we need to
-> > set up some of the rt geometry before we can compute the real minimum
-> > log size.
+> > Recovering an EFI currently uses a itruncate reservation, which is
+> > designed for a rolling transaction that modifies the BMBT and
+> > logs the EFI in one commit, then frees the space and logs the EFD in
+> > the second commit.
 > > 
-> > This fixes a problem where mkfs, given a small data device and a
-> > realtime volume, formats a filesystem with a log that is too small to
-> > pass the mount time log size checks.
+> > Recovering the EFI only requires the second transaction in this
+> > pair, and hence has a smaller log space requirement than a truncate
+> > operation. Hence when the extent free is being processed at runtime,
+> > the log reservation that is held by the filesystem is only enough to
+> > complete the extent free, not the entire truncate operation.
+> > 
+> > Hence if the EFI pins the tail of the log and the log fills up while
+> > the extent is being freed, the amount of reserved free space in the
+> > log is not enough to start another entire truncate operation. Hence
+> > if we crash at this point, log recovery will deadlock with the EFI
+> > pinning the tail of the log and the log not having enough free space
+> > to reserve an itruncate transaction.
+> > 
+> > As such, EFI recovery needs it's own log space reservation separate
+> > to the itruncate reservation. We only need what is required free the
+> > extent, and this matches the space we have reserved at runtime for
+> > this operation and hence should prevent the recovery deadlock from
+> > occurring.
+> > 
+> > This patch adds the new reservation in a way that minimises the
+> > change such that it should be back-portable to older kernels easily.
+> > Follow up patches will factor and rework the reservations to be more
+> > correct and more tightly defined.
+> > 
+> > Note: this would appear to be a generic problem with intent
+> > recovery; we use the entire operation reservation for recovery,
+> > not the reservation that was held at runtime after the intent was
+> > logged. I suspect all intents are going to require their own
+> > reservation as a result.
+> > 
 > 
-> Do we have a test for that?
+> It might be worth explicitly pointing out that support for EFI/EFD
+> intents goes farther back than the various intents associated with newer
+> features, hence the value of a targeted fix.
 
-Yeah, I'm going to do a huge fstests patchbomb after I come back from
-vacation next week.  Sorry I didn't quite get to it in time.
+Ok.
 
---D
-
-> Othewise looks good:
+> > @@ -916,6 +916,16 @@ xfs_trans_resv_calc(
+> >  		resp->tr_qm_dqalloc.tr_logcount = XFS_WRITE_LOG_COUNT;
+> >  	resp->tr_qm_dqalloc.tr_logflags |= XFS_TRANS_PERM_LOG_RES;
+> >  
+> > +	/*
+> > +	 * Log recovery reservations for intent replay
+> > +	 *
+> > +	 * EFI recovery is itruncate minus the initial transaction that logs
+> > +	 * logs the EFI.
+> > +	 */
+> > +	resp->tr_efi.tr_logres = resp->tr_itruncate.tr_logres;
+> > +	resp->tr_efi.tr_logcount = resp->tr_itruncate.tr_logcount - 1;
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> tr_itruncate.tr_logcount looks like it's either 2 or 8 depending on
+> whether reflink is enabled. On one hand this seems conservative enough,
+> but do we know exactly what those extra unit counts are accounted for in
+> the reflink case?
+
+Right, in the reflink case we may have to roll the transaction many more
+times to do the refcount btree and reverse map btree modifications.
+Those are done under separate intents and so we have to roll and
+commit the defered ops more times on a reflink/rmap based
+filesystem. Hence the logcount is higher so that the initial
+reservation can roll more times before regrant during a roll has to
+go and physically reserve more write space in the log to continue
+rolling the transaction.
+
+> It looks like extents are only freed when the last
+> reference is dropped (otherwise we log a refcount intent), which makes
+> me wonder whether we really need 7 log count units if recovery
+> encounters an EFI.
+
+I don't know if the numbers are correct, and it really is out of
+scope for this patch to audit/fix that. I really think we need to
+map this whole thing out in a diagram at this point because I now
+suspect that the allocfree log count calculation is not correct,
+either...
+
+> Also, while looking through the code I noticed that truncate does the
+> following:
+> 
+> 		...
+>                 error = xfs_defer_finish(&tp);
+>                 if (error)
+>                         goto out;
+> 
+>                 error = xfs_trans_roll_inode(&tp, ip);
+>                 if (error)
+>                         goto out;
+> 		...
+> 
+> ... which looks like it rolls the transaction an extra time per-extent.
+> I don't think that contributes to this problem vs just being a runtime
+> inefficiency, so maybe I'll fling a patch up for that separately.
+
+Yeah, I'm not sure if this is correct/needed or not. 
+
+> >  	 * The following transactions are logged in logical format with
+> >  	 * a default log count.
+> > diff --git a/fs/xfs/libxfs/xfs_trans_resv.h b/fs/xfs/libxfs/xfs_trans_resv.h
+> > index 7241ab28cf84..13173b3eaac9 100644
+> > --- a/fs/xfs/libxfs/xfs_trans_resv.h
+> > +++ b/fs/xfs/libxfs/xfs_trans_resv.h
+> > @@ -50,6 +50,8 @@ struct xfs_trans_resv {
+> >  	struct xfs_trans_res	tr_qm_equotaoff;/* end of turn quota off */
+> >  	struct xfs_trans_res	tr_sb;		/* modify superblock */
+> >  	struct xfs_trans_res	tr_fsyncts;	/* update timestamps on fsync */
+> > +	struct xfs_trans_res	tr_efi;		/* EFI log item recovery */
+> > +
+> 
+> Extra whitespace line.
+
+Will fix.
+
+Thanks!
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
