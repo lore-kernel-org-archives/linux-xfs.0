@@ -2,114 +2,110 @@ Return-Path: <SRS0=NqjT=CT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE9EC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 18:44:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A521C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 19:40:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1709A21D7E
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 18:44:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4F3D21556
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 19:40:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Enaia+i1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jcfMm38Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727004AbgIJSnl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Sep 2020 14:43:41 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:48280 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725820AbgIJSnH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 14:43:07 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AGPubO045058;
-        Thu, 10 Sep 2020 16:28:39 GMT
+        id S1727997AbgIJTkO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Sep 2020 15:40:14 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38662 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731372AbgIJPjR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 11:39:17 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AFcXjE160622;
+        Thu, 10 Sep 2020 15:39:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=iU/XucBwO3ejuFmZFXIEclD7ztzdiyQP77HA/c7BlDg=;
- b=Enaia+i1olawZLh1E6tvUub+F+mmAIgLMmwNBwX/qsIHBWLsjf1V1ETFGqZg+dzZzZAq
- 6bk5ND8nnPe2W72MWsM3frCpVdyR++ngdDMakDvCKi21D48ASaRTXtNXly+zyBWVhB/X
- x0Km7R4zeFMZiMXulW4jZLL5bhrj0zXfizZgJyO2VmfaFwlhMchC9kRksq4I9qT0qU0y
- ddBXcborFasBz1+ukV+mT70CvloTdc1fV9xW3v9PX9oXHNeDTLJvEYdzkRw3K6nccAC6
- T+OWCWoHQjNC4nL1jcEKYb648oHJ2qLh4Bt1yuVZCH5QA2wAdn/c2YT2GCPReLltMpoE yQ== 
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=Ie+oiBdMx/pfhmauh7Z/OVd0UMkJ8RaAfSVCOnfOL4I=;
+ b=jcfMm38Qq9Y2AjPMcHPROcr3ADK61lpCKN+xgIqcJsKj9Q1gKrgKJSTUTXJCqUBJZ5DE
+ zc0x4mXRIs2y2OM2BawfYS6esR+BOkN6njGSKGz024sIzNrf3UEHkEYIP0Jyj3TnWCCI
+ W5UImP7/7Z2i4eOLTFe94wPTCHaKrDcdhrNxr8RLt0BfjvmuQBZIixu6QAnhGaQncVc6
+ Ps3NNZx7CzbE8rEOO18SCD8RfMmlmwPbJds6nMvIVo3Spa6/PXUA1waCnh4Ox9/XyQxn
+ LgnyiReoaLHfAcyXq345mPwtk+FuQRVz0EnbVXfIADWJJGG55Yr+A5wK0vLlNcgmysjh fg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 33c23r9aad-1
+        by aserp2120.oracle.com with ESMTP id 33c2mm8w97-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 10 Sep 2020 16:28:39 +0000
+        Thu, 10 Sep 2020 15:39:07 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AGP8Jx109006;
-        Thu, 10 Sep 2020 16:28:39 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 33cmka5rtj-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AFZAYY120142;
+        Thu, 10 Sep 2020 15:37:07 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 33cmka26kp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Sep 2020 16:28:39 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08AGScmv021012;
-        Thu, 10 Sep 2020 16:28:38 GMT
+        Thu, 10 Sep 2020 15:37:07 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08AFb26h027690;
+        Thu, 10 Sep 2020 15:37:02 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 10 Sep 2020 09:28:38 -0700
-Date:   Thu, 10 Sep 2020 09:28:36 -0700
+        with ESMTP ; Thu, 10 Sep 2020 08:37:02 -0700
+Date:   Thu, 10 Sep 2020 08:37:01 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Matthew Wilcox <willy@infradead.org>
-Subject: [ANNOUNCE] xfs-linux: iomap-5.10-merge updated to 14284fedf59f
-Message-ID: <20200910162836.GA7949@magnolia>
+To:     Nikolay Borisov <nborisov@suse.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        hch@infradead.org
+Subject: Re: [PATCH] iomap: Use round_down/round_up macros in
+ __iomap_write_begin
+Message-ID: <20200910153701.GC7964@magnolia>
+References: <20200910124743.27603-1-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
+In-Reply-To: <20200910124743.27603-1-nborisov@suse.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=2
+ mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009100151
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
- mlxlogscore=988 mlxscore=0 bulkscore=0 suspectscore=2 spamscore=0
- malwarescore=0 phishscore=0 lowpriorityscore=0 clxscore=1015
+ definitions=main-2009100143
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
+ phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=999
+ malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
  impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009100151
+ engine=8.12.0-2006250000 definitions=main-2009100144
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu, Sep 10, 2020 at 03:47:43PM +0300, Nikolay Borisov wrote:
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 
-The iomap-5.10-merge branch of the xfs-linux repository at:
+Looks ok to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+--D
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update after -rc6.  Nikolay Borisov has a cleanup that's
-already on the list; and I imagine Matthew Wilcox will resend his THP
-refactoring series soon.
-
-The new head of the iomap-5.10-merge branch is commit:
-
-14284fedf59f iomap: Mark read blocks uptodate in write_begin
-
-New Commits:
-
-Andreas Gruenbacher (1):
-      [c114bbc6c423] iomap: Fix direct I/O write consistency check
-
-Matthew Wilcox (Oracle) (2):
-      [e6e7ca92623a] iomap: Clear page error before beginning a write
-      [14284fedf59f] iomap: Mark read blocks uptodate in write_begin
-
-Qian Cai (1):
-      [a805c111650c] iomap: fix WARN_ON_ONCE() from unprivileged users
-
-
-Code Diffstat:
-
- fs/iomap/buffered-io.c | 15 +++++++--------
- fs/iomap/direct-io.c   | 12 +++++++++++-
- 2 files changed, 18 insertions(+), 9 deletions(-)
+> ---
+>  fs/iomap/buffered-io.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index bcfc288dba3f..31eb680d8c64 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -571,8 +571,8 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+>  {
+>  	struct iomap_page *iop = iomap_page_create(inode, page);
+>  	loff_t block_size = i_blocksize(inode);
+> -	loff_t block_start = pos & ~(block_size - 1);
+> -	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
+> +	loff_t block_start = round_down(pos, block_size);
+> +	loff_t block_end = round_up(pos + len, block_size);
+>  	unsigned from = offset_in_page(pos), to = from + len, poff, plen;
+>  	int status;
+>  
+> -- 
+> 2.17.1
+> 
