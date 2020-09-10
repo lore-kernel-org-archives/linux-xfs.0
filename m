@@ -2,125 +2,124 @@ Return-Path: <SRS0=NqjT=CT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE11C433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 20:47:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B8CC43461
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 21:29:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F8DF20829
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 20:47:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1745221E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 21:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725820AbgIJUr3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Sep 2020 16:47:29 -0400
-Received: from sandeen.net ([63.231.237.45]:53548 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726913AbgIJUrW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 10 Sep 2020 16:47:22 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 7A8E9EF1;
-        Thu, 10 Sep 2020 15:46:46 -0500 (CDT)
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-References: <20200910182706.GD7964@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] xfs: deprecate the V4 format
-Message-ID: <f1cb76c7-9a23-36ab-4a25-a3bd344f77db@sandeen.net>
-Date:   Thu, 10 Sep 2020 15:47:21 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.2.1
+        id S1726385AbgIJV3m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Sep 2020 17:29:42 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60146 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728252AbgIJV3f (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 17:29:35 -0400
+Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1E9773A89CE;
+        Fri, 11 Sep 2020 07:29:28 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kGU8F-0005O7-St; Fri, 11 Sep 2020 07:29:27 +1000
+Date:   Fri, 11 Sep 2020 07:29:27 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: EFI recovery needs it's own transaction
+ reservation
+Message-ID: <20200910212927.GT12131@dread.disaster.area>
+References: <20200909081912.1185392-1-david@fromorbit.com>
+ <20200909081912.1185392-2-david@fromorbit.com>
+ <20200909133111.GA765129@bfoster>
+ <20200909214455.GQ12131@dread.disaster.area>
+ <20200910131810.GA1143857@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20200910182706.GD7964@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200910131810.GA1143857@bfoster>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=KcmsTjQD c=1 sm=1 tr=0 cx=a_idp_d
+        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
+        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=7-415B0cAAAA:8
+        a=jrPp3eU74khXgmsAEQ8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/10/20 1:27 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Sep 10, 2020 at 09:18:10AM -0400, Brian Foster wrote:
+> On Thu, Sep 10, 2020 at 07:44:55AM +1000, Dave Chinner wrote:
+> > On Wed, Sep 09, 2020 at 09:31:11AM -0400, Brian Foster wrote:
+> > > It looks like extents are only freed when the last
+> > > reference is dropped (otherwise we log a refcount intent), which makes
+> > > me wonder whether we really need 7 log count units if recovery
+> > > encounters an EFI.
+> > 
+> > I don't know if the numbers are correct, and it really is out of
+> > scope for this patch to audit/fix that. I really think we need to
+> > map this whole thing out in a diagram at this point because I now
+> > suspect that the allocfree log count calculation is not correct,
+> > either...
 > 
-> The V4 filesystem format contains known weaknesses in the on-disk format
-> that make metadata verification diffiult.  In addition, the format will
-> does not support dates past 2038 and will not be upgraded to do so.
-> Therefore, we should start the process of retiring the old format to
-> close off attack surfaces and to encourage users to migrate onto V5.
-> 
-> Therefore, make XFS V4 support a configurable option.  For the first
-> period it will be default Y in case some distributors want to withdraw
-> support early; for the second period it will be default N so that anyone
-> who wishes to continue support can do so; and after that, support will
-> be removed from the kernel.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/Kconfig     |   18 ++++++++++++++++++
->  fs/xfs/xfs_mount.c |   11 +++++++++++
->  2 files changed, 29 insertions(+)
-> 
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index e685299eb3d2..db54ca9914c7 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -22,6 +22,24 @@ config XFS_FS
->  	  system of your root partition is compiled as a module, you'll need
->  	  to use an initial ramdisk (initrd) to boot.
->  
-> +config XFS_SUPPORT_V4
-> +	bool "Support deprecated V4 format"
-> +	default y
-> +	help
-> +	  The V4 filesystem format lacks certain features that are supported
-> +	  by the V5 format, such as metadata checksumming, strengthened
-> +	  metadata verification, and the ability to store timestamps past the
-> +	  year 2038.  Because of this, the V4 format is deprecated.  All users
-> +	  should upgrade by backing up their files, reformatting, and restoring
-> +	  from the backup.
+> I agree up to the point where it relates to this specific EFI recovery
+> issue. reflink is enabled by default, which means the default EFI
+> recovery reservation is going to have 7 logcount units. Is that actually
+> enough of a reduction to prevent this same recovery problem on newer
+> fs'? I'm wondering if the tr_efi logcount should just be set to 1, for
+> example, at least for the short term fix.
 
-As Arekm pointed out, nobody outside of our clique knows what "V4" and "V5" means.
+I spent yesterday mapping out the whole "free extent" chain to
+understand exactly what was necessary, and in discussing this with
+Darrick on #xfs I came to the conclusion that we cannot -ever- have
+a logcount of more than 1 for an intent recovery of any sort.
 
-(there is no mention of such things in the mkfs.xfs(8) or xfs(5), for example)
+That's because the transaction may have rolled enough times to
+exhaust the initial grant of unit * logcount, so the only
+reservation that the runtime kernel has when it crashs is a single
+transaction unit reservation (which gets re-reserved on every roll).
 
-admin-facing statements should probably reference CRC capability, not "V4/5"
+Hence recovery cannot assume that intent that was being processed has more
+than a single unit reservation of log space available to be used,
+and hence all intent recovery reservations must start with a log
+count of 1.
 
--Eric
+THere are other restrictions we need to deal with, too. multiple
+intents may pin the tail of the log, so we can't just process a
+single intent chain at a time as that will result in using all the
+log space for a single intent chain and reservation deadlocking on
+one of the intents we haven't yet started.
 
-> +	  This option will become default N in September 2025.  Support for the
-> +	  V4 format will be removed entirely in September 2030.  Distributors
-> +	  can say N here to withdraw support earlier.
-> +
-> +	  To continue supporting the old V4 format, say Y.
-> +	  To close off an attack surface, say N.
-> +
->  config XFS_QUOTA
->  	bool "XFS Quota support"
->  	depends on XFS_FS
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index ed69c4bfda71..48c0175b9457 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -315,6 +315,17 @@ xfs_readsb(
->  		goto release_buf;
->  	}
->  
-> +#ifndef CONFIG_XFS_SUPPORT_V4
-> +	/* V4 support is undergoing deprecation. */
-> +	if (!xfs_sb_version_hascrc(sbp)) {
-> +		if (loud)
-> +			xfs_warn(mp,
-> +	"Deprecated V4 format not supported by kernel.");
-> +		error = -EINVAL;
-> +		goto release_buf;
-> +	}
-> +#endif
-> +
->  	/*
->  	 * We must be able to do sector-sized and sector-aligned IO.
->  	 */
-> 
+Hence the first thing we have to do in recovering intents is take an
+active reservation for -all- intents in the log to match the
+reservation state at runtime. Only then can we guarantee that
+intents that pin the tail of the log will have the reservation space
+needed to be able to unpin the log tail.
+
+Further, because we now may have consumed all the available log
+reservation space to guarantee forwards progress, the first commit
+of the first intent may block trying to regrant space if another
+intent also pins the tail of the log. This means we cannot replay
+intents in a serial manner as we currently do. Each intent chain and it's
+transaction context needs to run in it's own process context so it
+can block waiting for other intents to make progress, just like
+happens at runtime when the system crashed. IOWs, intent replay
+needs to be done with a task context per intent chain (probably via
+a workqueue).
+
+AFAICT, this is the only way we can make intent recovery deadlock
+free - we have to recreate the complete log reservation state in
+memory before we start recovery of a single intent, we can only
+assume an intent had a single unit reservation of log space assigned
+to it, and intent chain execution needs to run concurrently so
+commits can block waiting for log space to become available as other
+intents commit and unpin the tail of the log...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
