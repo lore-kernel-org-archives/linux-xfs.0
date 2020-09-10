@@ -2,156 +2,145 @@ Return-Path: <SRS0=NqjT=CT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B879CC07548
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 13:21:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42D48C43461
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 18:27:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5EEDC2145D
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 13:21:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3D9A207EA
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 18:27:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FKXy8ldg"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uhWlTguy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730068AbgIJNVT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Sep 2020 09:21:19 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:24567 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726059AbgIJNVH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 09:21:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599744065;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=4uY8YmS8Kot3ewyasKE6CO9JxNZvXhJbikWnvBqu2aE=;
-        b=FKXy8ldgFOMYRnSDBm4sj6+Y2002L9xrNhXcqnT43PZbWeryLbeaBXdYmMFSN56R315a2q
-        dENviZ5kyces8obRbBcn5vK7aHdHV5s+qhzH8ml0ACbaFvsE34OgYa+wvT1U+p+yB15EIq
-        0RYW4jR94fAejxLjsYv7oNZjUoL8M8g=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-273-xwV8A4a5M9efDhIVc9Jfvg-1; Thu, 10 Sep 2020 09:21:02 -0400
-X-MC-Unique: xwV8A4a5M9efDhIVc9Jfvg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6A2761800D41;
-        Thu, 10 Sep 2020 13:21:01 +0000 (UTC)
-Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 172CE7E731;
-        Thu, 10 Sep 2020 13:21:01 +0000 (UTC)
-Date:   Thu, 10 Sep 2020 09:20:59 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: quotaoff, transaction quiesce, and dquot logging
-Message-ID: <20200910132059.GC1143857@bfoster>
-References: <20200904155949.GF529978@bfoster>
- <20200904222936.GH12131@dread.disaster.area>
- <20200908155602.GB721341@bfoster>
- <20200908210720.GP12131@dread.disaster.area>
- <20200909150035.GC765129@bfoster>
- <20200909225937.GS12131@dread.disaster.area>
+        id S1726901AbgIJS1v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Sep 2020 14:27:51 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:36940 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726287AbgIJS1S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 14:27:18 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AIEGwI067060
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2020 18:27:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=ixHVHkTu4uGLU4BG4pEa2RD+0HrQlGu+CYtNzJB51CE=;
+ b=uhWlTguy3f8FTWDsP84YV4tG/nswr/zJCgvu2TOXN9AsrzH1iTB2SWsIzgrpc3ljpYW2
+ CnpUPPBjKxem2OtNN63AB62neoiD3goxUnbQLZkE9PtpoQLFSytn7vRSlNcsK6Jh8uzf
+ +Q3LtLcuWeH87HESnY9CMBNhgtfBe+H1X1ibpAnp81Th2OJ/EVsQjEo1m7moyrjYMxv0
+ 52WK5xDfngjLh//RHDoB7mqp9sepFl4GjToyDLTOWon+UTu052uiq9H9P9SGyJt5BY9q
+ pqKbDYDQw+44Nnc+6j0Z3t0YqFujBYdhwSUD4/U6/KmkCkwFipUs5blsqOl8Xe8ZzBuC Pg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 33c3an9scf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2020 18:27:09 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AIF9Lc097876
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2020 18:27:08 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 33cmkae868-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2020 18:27:08 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08AIR73p016752
+        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2020 18:27:07 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 10 Sep 2020 11:27:07 -0700
+Date:   Thu, 10 Sep 2020 11:27:06 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs: deprecate the V4 format
+Message-ID: <20200910182706.GD7964@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200909225937.GS12131@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009100169
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
+ clxscore=1015 bulkscore=0 malwarescore=0 lowpriorityscore=0
+ mlxlogscore=999 suspectscore=1 adultscore=0 mlxscore=0 impostorscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009100169
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 10, 2020 at 08:59:37AM +1000, Dave Chinner wrote:
-> On Wed, Sep 09, 2020 at 11:00:35AM -0400, Brian Foster wrote:
-> > On Wed, Sep 09, 2020 at 07:07:20AM +1000, Dave Chinner wrote:
-> > > On Tue, Sep 08, 2020 at 11:56:02AM -0400, Brian Foster wrote:
-> > > > - xfs_trans_mod_dquot_byino() (via xfs_bmapi_write() -> ... -> xfs_bmap_btalloc() ->
-> > > >   xfs_bmap_btalloc_accounting()) skips accounting the allocated blocks
-> > > >   to the group dquot because it is not enabled
-> > > 
-> > > Right, the reservation functions need to do the same thing as
-> > > xfs_trans_mod_dquot_byino(). I simply missed that for the
-> > > reservation functions. i.e. Adding the same style of check like:
-> > > 
-> > > 	if (XFS_IS_UQUOTA_ON(mp) && udq)
-> > > 
-> > > before doing anything with user quota will avoid this problem as
-> > > we are already in transaction context and the UQUOTA on or off state
-> > > will not change until the transaction ends.
-> > > 
-> > > > concept itself. It seems like we should be able to head this issue off
-> > > > somewhere in this sequence (i.e., checking the appropriate flag before
-> > > > the dquot is attached), but it also seems like the quotaoff start/end
-> > > > plus various quota flags all fit together a certain way and I feel like
-> > > > some pieces of the puzzle are still missing from a design standpoint...
-> > > 
-> > > I can't think of anything that is missing - the quota off barrier
-> > > gives us an atomic quota state change w.r.t. running transactions,
-> > > so we just need to make sure we check the quota state before joining
-> > > anything quota related to a transaction rather than assume that the
-> > > presence of a dquot attached to an inode means that quotas are on.
-> > > 
-> > 
-> > This gets back to my earlier questions around the various quota flags.
-> > If I trace through the code of some operations, it seems like this
-> > approach should work (once this logging issue is addressed, and more
-> > testing required of course). However if I refer back to the runtime
-> > macro comment:
-> > 
-> > /*
-> >  * Checking XFS_IS_*QUOTA_ON() while holding any inode lock guarantees
-> >  * quota will be not be switched off as long as that inode lock is held.
-> >  */
-> > 
-> > This will technically no longer be the case because the updated quotaoff
-> > will clear all of the flags before cycling any ilocks and detaching
-> > dquots. I'm aware it will drain the transaction subsystem, but does
-> > anything else depend on not seeing such a state change with an inode
-> > lock held? I haven't seen anything so far that would conflict, but the
-> > comment here is rather vague on details.
-> 
-> Not that I know of. I would probably rewrite the above comment as:
-> 
-> /*
->  * Checking XFS_IS_*QUOTA_ON() while inside an active quota modifying
->  * transaction context guarantees quota will be not be switched until after the
->  * entire rolling transaction chain is completed.
->  */
-> 
-> To clarify the situation. Having the inode locked will now only
-> guarantee that the dquot will not go away while the inode is locked,
-> it doesn't guarantee that quota will not switch off any more.
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, that makes more sense.
+The V4 filesystem format contains known weaknesses in the on-disk format
+that make metadata verification diffiult.  In addition, the format will
+does not support dates past 2038 and will not be upgraded to do so.
+Therefore, we should start the process of retiring the old format to
+close off attack surfaces and to encourage users to migrate onto V5.
 
-> > Conversely, if not, I'm wondering whether there's a need for an ACTIVE
-> > flag at all if we'd clear it at the same time as the ACCT|ENFD flags
-> > during quotaoff anyways. It sounds like the answer to both those
-> > questions is no based on your previous responses, perhaps reason being
-> > that the transaction drain on the quotaoff side effectively replaces the
-> > need for this rule on the general transaction side. Hm? Note that I
-> > wouldn't remove the ACTIVE flag immediately anyways, but I want to make
-> > sure the concern is clear..
-> 
-> Yes, I think you are right - the ACTIVE flag could probably away as
-> it doesn't really play a part in the quota-off dance anymore. We'd
-> still need the IS_QUOTA_ON() checks, but they'd look at ACCT|ENFD
-> instead...
-> 
+Therefore, make XFS V4 support a configurable option.  For the first
+period it will be default Y in case some distributors want to withdraw
+support early; for the second period it will be default N so that anyone
+who wishes to continue support can do so; and after that, support will
+be removed from the kernel.
 
-Ack. Thanks for the sanity check.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/Kconfig     |   18 ++++++++++++++++++
+ fs/xfs/xfs_mount.c |   11 +++++++++++
+ 2 files changed, 29 insertions(+)
 
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index e685299eb3d2..db54ca9914c7 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -22,6 +22,24 @@ config XFS_FS
+ 	  system of your root partition is compiled as a module, you'll need
+ 	  to use an initial ramdisk (initrd) to boot.
+ 
++config XFS_SUPPORT_V4
++	bool "Support deprecated V4 format"
++	default y
++	help
++	  The V4 filesystem format lacks certain features that are supported
++	  by the V5 format, such as metadata checksumming, strengthened
++	  metadata verification, and the ability to store timestamps past the
++	  year 2038.  Because of this, the V4 format is deprecated.  All users
++	  should upgrade by backing up their files, reformatting, and restoring
++	  from the backup.
++
++	  This option will become default N in September 2025.  Support for the
++	  V4 format will be removed entirely in September 2030.  Distributors
++	  can say N here to withdraw support earlier.
++
++	  To continue supporting the old V4 format, say Y.
++	  To close off an attack surface, say N.
++
+ config XFS_QUOTA
+ 	bool "XFS Quota support"
+ 	depends on XFS_FS
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index ed69c4bfda71..48c0175b9457 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -315,6 +315,17 @@ xfs_readsb(
+ 		goto release_buf;
+ 	}
+ 
++#ifndef CONFIG_XFS_SUPPORT_V4
++	/* V4 support is undergoing deprecation. */
++	if (!xfs_sb_version_hascrc(sbp)) {
++		if (loud)
++			xfs_warn(mp,
++	"Deprecated V4 format not supported by kernel.");
++		error = -EINVAL;
++		goto release_buf;
++	}
++#endif
++
+ 	/*
+ 	 * We must be able to do sector-sized and sector-aligned IO.
+ 	 */
