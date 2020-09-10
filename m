@@ -2,193 +2,169 @@ Return-Path: <SRS0=NqjT=CT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC09FC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 22:48:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14186C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 23:47:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A029720882
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 22:48:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BCA1208E4
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 23:47:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qwmW176r"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ic7UgdZE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725298AbgIJWsv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Sep 2020 18:48:51 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:38108 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725283AbgIJWsu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 18:48:50 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AMmXvB006499;
-        Thu, 10 Sep 2020 22:48:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=7a+TcbBWYswSHzfXqSN6M7qJ999n+JtUuDhWkNAYmgw=;
- b=qwmW176rv4N9qm72zeyPQYufrfzUJHO+ZTCW3X16k7lEpCh9kn9C+yykp1Ye8lqWfDbP
- LtAJuPK5wO/evqMOMlqBMFOkQ5MXuUJ0kFxyNIMyrsuOvGcoECZPZOdbQZ55YCT5WWDG
- 43nMATyCLgvrnBjNYMDZsula7nbYP/Hlnjh8ZlPbhaGRjY9uOtBCSJvkCJpF/TcAa8Yl
- CIEgImH6JWdgOJO9VtgWBzJaKzilBfQenM0oaVekUxKMv2G5dAl4gVp4KNh8giQV7bvd
- pYbjEv4wuh5X0Bb/Nawvp7nsxjNA2Aio5PqSAfrO6EWJTTn/WBaLYmd612TI3RcTwZTg BQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 33c2mmb0ku-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 10 Sep 2020 22:48:47 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08AMkZAD002416;
-        Thu, 10 Sep 2020 22:48:46 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 33cmm1xt5c-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 10 Sep 2020 22:48:46 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08AMmir6015465;
-        Thu, 10 Sep 2020 22:48:44 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 10 Sep 2020 15:48:44 -0700
-Date:   Thu, 10 Sep 2020 15:48:42 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH v2] xfs: deprecate the V4 format
-Message-ID: <20200910224842.GR7955@magnolia>
+        id S1725554AbgIJXrO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Sep 2020 19:47:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58520 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725385AbgIJXrM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 19:47:12 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A165C061573;
+        Thu, 10 Sep 2020 16:47:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=TvHq+ozrS3RU346WhpVscGddUaMK0kivrdCStwjOLJM=; b=Ic7UgdZEoZWANOhKnQsQypu4GU
+        F5Fj25TLedAt5hLgJ9IaNdYv29nhquBxUg2fU744YZ3vPgLo92GV9EdtbY2GclLq8zb2qWNHSrtn+
+        bGApUEGYpD0W7B9HOHkBQfrOBm10tLON9reFJJ8DEqoOn8lv0VpKCA5Sc/k/oS0202W56TxrsPxEb
+        wAPTNdCC1h/aHFt1kPgx/BefBbBTknuw0AP4ezYYYVdiu7GAoeQliLixzHGodnU5CBnyvrIyW21o/
+        0/ia8rMFipeonO1oghaByVlz5sbXS2ts+nD5LxvBSjiNXcAClD/vcl6iAXwzPM3nUjzIZT/zShekR
+        4gfrispQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kGWHV-0001Rd-DS; Thu, 10 Sep 2020 23:47:09 +0000
+From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
+To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: [PATCH v2 2/9] fs: Introduce i_blocks_per_page
+Date:   Fri, 11 Sep 2020 00:47:00 +0100
+Message-Id: <20200910234707.5504-3-willy@infradead.org>
+X-Mailer: git-send-email 2.21.3
+In-Reply-To: <20200910234707.5504-1-willy@infradead.org>
+References: <20200910234707.5504-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 phishscore=0 suspectscore=1
- spamscore=0 mlxlogscore=999 adultscore=0 malwarescore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009100198
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=999
- malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009100199
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+This helper is useful for both THPs and for supporting block size larger
+than page size.  Convert all users that I could find (we have a few
+different ways of writing this idiom, and I may have missed some).
 
-The V4 filesystem format contains known weaknesses in the on-disk format
-that make metadata verification diffiult.  In addition, the format will
-does not support dates past 2038 and will not be upgraded to do so.
-Therefore, we should start the process of retiring the old format to
-close off attack surfaces and to encourage users to migrate onto V5.
-
-Therefore, make XFS V4 support a configurable option.  For the first
-period it will be default Y in case some distributors want to withdraw
-support early; for the second period it will be default N so that anyone
-who wishes to continue support can do so; and after that, support will
-be removed from the kernel.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: define what is a V4 filesystem, update the administrator guide
----
- Documentation/admin-guide/xfs.rst |   20 ++++++++++++++++++++
- fs/xfs/Kconfig                    |   23 +++++++++++++++++++++++
- fs/xfs/xfs_mount.c                |   11 +++++++++++
- 3 files changed, 54 insertions(+)
+ fs/iomap/buffered-io.c  |  8 ++++----
+ fs/jfs/jfs_metapage.c   |  2 +-
+ fs/xfs/xfs_aops.c       |  2 +-
+ include/linux/pagemap.h | 16 ++++++++++++++++
+ 4 files changed, 22 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
-index f461d6c33534..68d69733a1df 100644
---- a/Documentation/admin-guide/xfs.rst
-+++ b/Documentation/admin-guide/xfs.rst
-@@ -210,6 +210,25 @@ When mounting an XFS filesystem, the following options are accepted.
- 	inconsistent namespace presentation during or after a
- 	failover event.
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index d81a9a86c5aa..330f86b825d7 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -46,7 +46,7 @@ iomap_page_create(struct inode *inode, struct page *page)
+ {
+ 	struct iomap_page *iop = to_iomap_page(page);
  
-+Deprecation of V4 Format
-+========================
-+
-+The V4 filesystem format lacks certain features that are supported by
-+the V5 format, such as metadata checksumming, strengthened metadata
-+verification, and the ability to store timestamps past the year 2038.
-+Because of this, the V4 format is deprecated.  All users should upgrade
-+by backing up their files, reformatting, and restoring from the backup.
-+
-+Administrators and users can detect a V4 filesystem by running xfs_info
-+against a filesystem mountpoint and checking for a string beginning with
-+"crc=".  If the string "crc=0" is found, or no "crc=" string is found,
-+the filesystem is a V4 filesystem.
-+
-+The deprecation will take place in two parts.  Support for mounting V4
-+filesystems can now be disabled at kernel build time via Kconfig option.
-+The option will default to yes until September 2025, at which time it
-+will be changed to default to no.  In September 2030, support will be
-+removed from the codebase entirely.
+-	if (iop || i_blocksize(inode) == PAGE_SIZE)
++	if (iop || i_blocks_per_page(inode, page) <= 1)
+ 		return iop;
  
- Deprecated Mount Options
- ========================
-@@ -217,6 +236,7 @@ Deprecated Mount Options
- ===========================     ================
-   Name				Removal Schedule
- ===========================     ================
-+Mounting with V4 filesystem     September 2030
- ===========================     ================
+ 	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
+@@ -147,7 +147,7 @@ iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+ 	unsigned int i;
  
- 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index e685299eb3d2..5970d0f77db9 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -22,6 +22,29 @@ config XFS_FS
- 	  system of your root partition is compiled as a module, you'll need
- 	  to use an initial ramdisk (initrd) to boot.
- 
-+config XFS_SUPPORT_V4
-+	bool "Support deprecated V4 (crc=0) format"
-+	default y
-+	help
-+	  The V4 filesystem format lacks certain features that are supported
-+	  by the V5 format, such as metadata checksumming, strengthened
-+	  metadata verification, and the ability to store timestamps past the
-+	  year 2038.  Because of this, the V4 format is deprecated.  All users
-+	  should upgrade by backing up their files, reformatting, and restoring
-+	  from the backup.
-+
-+	  Administrators and users can detect a V4 filesystem by running
-+	  xfs_info against a filesystem mountpoint and checking for a string
-+	  beginning with "crc=".  If the string "crc=0" is found, or no "crc="
-+	  string is found, the filesystem is a V4 filesystem.
-+
-+	  This option will become default N in September 2025.  Support for the
-+	  V4 format will be removed entirely in September 2030.  Distributors
-+	  can say N here to withdraw support earlier.
-+
-+	  To continue supporting the old V4 format (crc=0), say Y.
-+	  To close off an attack surface, say N.
-+
- config XFS_QUOTA
- 	bool "XFS Quota support"
- 	depends on XFS_FS
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index ed69c4bfda71..3678dfeecd64 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -315,6 +315,17 @@ xfs_readsb(
- 		goto release_buf;
+ 	spin_lock_irqsave(&iop->uptodate_lock, flags);
+-	for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
++	for (i = 0; i < i_blocks_per_page(inode, page); i++) {
+ 		if (i >= first && i <= last)
+ 			set_bit(i, iop->uptodate);
+ 		else if (!test_bit(i, iop->uptodate))
+@@ -1077,7 +1077,7 @@ iomap_finish_page_writeback(struct inode *inode, struct page *page,
+ 		mapping_set_error(inode->i_mapping, -EIO);
  	}
  
-+#ifndef CONFIG_XFS_SUPPORT_V4
-+	/* V4 support is undergoing deprecation. */
-+	if (!xfs_sb_version_hascrc(sbp)) {
-+		if (loud)
-+			xfs_warn(mp,
-+	"Deprecated V4 format (crc=0) not supported by kernel.");
-+		error = -EINVAL;
-+		goto release_buf;
-+	}
-+#endif
-+
+-	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE && !iop);
++	WARN_ON_ONCE(i_blocks_per_page(inode, page) > 1 && !iop);
+ 	WARN_ON_ONCE(iop && atomic_read(&iop->write_count) <= 0);
+ 
+ 	if (!iop || atomic_dec_and_test(&iop->write_count))
+@@ -1373,7 +1373,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 	int error = 0, count = 0, i;
+ 	LIST_HEAD(submit_list);
+ 
+-	WARN_ON_ONCE(i_blocksize(inode) < PAGE_SIZE && !iop);
++	WARN_ON_ONCE(i_blocks_per_page(inode, page) > 1 && !iop);
+ 	WARN_ON_ONCE(iop && atomic_read(&iop->write_count) != 0);
+ 
  	/*
- 	 * We must be able to do sector-sized and sector-aligned IO.
- 	 */
+diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
+index a2f5338a5ea1..176580f54af9 100644
+--- a/fs/jfs/jfs_metapage.c
++++ b/fs/jfs/jfs_metapage.c
+@@ -473,7 +473,7 @@ static int metapage_readpage(struct file *fp, struct page *page)
+ 	struct inode *inode = page->mapping->host;
+ 	struct bio *bio = NULL;
+ 	int block_offset;
+-	int blocks_per_page = PAGE_SIZE >> inode->i_blkbits;
++	int blocks_per_page = i_blocks_per_page(inode, page);
+ 	sector_t page_start;	/* address of page in fs blocks */
+ 	sector_t pblock;
+ 	int xlen;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index b35611882ff9..55d126d4e096 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -544,7 +544,7 @@ xfs_discard_page(
+ 			page, ip->i_ino, offset);
+ 
+ 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+-			PAGE_SIZE / i_blocksize(inode));
++			i_blocks_per_page(inode, page));
+ 	if (error && !XFS_FORCED_SHUTDOWN(mp))
+ 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+ out_invalidate:
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 50d2c39b47ab..f7f602040913 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -975,4 +975,20 @@ static inline int page_mkwrite_check_truncate(struct page *page,
+ 	return offset;
+ }
+ 
++/**
++ * i_blocks_per_page - How many blocks fit in this page.
++ * @inode: The inode which contains the blocks.
++ * @page: The page (head page if the page is a THP).
++ *
++ * If the block size is larger than the size of this page, return zero.
++ *
++ * Context: The caller should hold a refcount on the page to prevent it
++ * from being split.
++ * Return: The number of filesystem blocks covered by this page.
++ */
++static inline
++unsigned int i_blocks_per_page(struct inode *inode, struct page *page)
++{
++	return thp_size(page) >> inode->i_blkbits;
++}
+ #endif /* _LINUX_PAGEMAP_H */
+-- 
+2.28.0
+
