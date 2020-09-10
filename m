@@ -1,80 +1,223 @@
 Return-Path: <SRS0=NqjT=CT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: **
-X-Spam-Status: No, score=2.0 required=3.0 tests=BAYES_40,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 622E6C433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 02:39:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8744C43461
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 05:37:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3527721941
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 02:39:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7FDDE20731
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 05:37:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="n7EYS0TL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730093AbgIJCis convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Sep 2020 22:38:48 -0400
-Received: from kanlli.eu ([146.255.98.105]:52862 "EHLO mail.foescocursos.es"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730871AbgIJCg1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Sep 2020 22:36:27 -0400
-X-Greylist: delayed 14186 seconds by postgrey-1.27 at vger.kernel.org; Wed, 09 Sep 2020 22:36:26 EDT
-Received: from 131.red-95-120-15.dynamicip.rima-tde.net (131.red-95-120-15.dynamicip.rima-tde.net [95.120.15.131])
-        by mail.foescocursos.es (Postfix) with ESMTPSA id 02BB9B1A4C
-        for <linux-xfs@vger.kernel.org>; Thu, 10 Sep 2020 00:37:24 +0200 (CEST)
-Authentication-Results: mail.foescocursos.es;
-        spf=pass (sender IP is 95.120.15.131) smtp.mailfrom=info21@foescoformaciones.es smtp.helo=131.red-95-120-15.dynamicip.rima-tde.net
-Received-SPF: pass (mail.foescocursos.es: connection is authenticated)
+        id S1726494AbgIJFhD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Sep 2020 01:37:03 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37024 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726300AbgIJFg4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 01:36:56 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08A5YWQn027692;
+        Thu, 10 Sep 2020 05:36:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=bmza3onwzUp0UzGmTEwUkAF99JXzTh2Iu0/xA13Weqs=;
+ b=n7EYS0TLiPDY4JaFLtfH6Azh1FOa/X/CvtjPCsfDzlc3UgPGbhADztv0+pl+CqsJQmuq
+ LCe3/op99FjQWVH+FFrG64ZPwcn4PteiQEozNXkPO6UyRdU7zY2cPGfrf90YZDsqlajW
+ J1yE4DgmvBp6DQEc1R0KX95QN/f4UoAXGhZKiL+xrdyU8Euv0aoYN1xxGVDRKWmsKQHj
+ TLcayFaCpN26K6aJTOCapkmvMdTCBLyNXovw5qr8kRuQZXa0T9d1Qw8ArrfhQXFHyHI7
+ bP8OYqLxkT4HgPdfbJEfFpYNaLfxJufqymgENnnqzyv5Ys6hS0VIvANzKouaa2WmXswa QA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 33c2mm5qk1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 10 Sep 2020 05:36:53 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08A5Ze9w094703;
+        Thu, 10 Sep 2020 05:36:53 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 33dacmmpeq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 10 Sep 2020 05:36:53 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08A5aq7T021411;
+        Thu, 10 Sep 2020 05:36:52 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 09 Sep 2020 22:36:51 -0700
+Subject: [PATCH 1/2] xfs: refactor inode flags propagation code
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, hch@infradead.org
+Date:   Wed, 09 Sep 2020 22:36:50 -0700
+Message-ID: <159971621055.1311472.9677034380244876371.stgit@magnolia>
+In-Reply-To: <159971620202.1311472.11867327944494045509.stgit@magnolia>
+References: <159971620202.1311472.11867327944494045509.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-From:   "FOESCO" <info21@foescoformaciones.es>
-Reply-To: info21@foescoformaciones.es
-To:     linux-xfs@vger.kernel.org
-Subject: FOESCO Informa
-Content-Type: text/plain
-Content-Transfer-Encoding: 8BIT
-X-Mailer: Smart_Send_4_3_3
-Date:   Thu, 10 Sep 2020 00:37:25 +0200
-Message-ID: <734449557381648184610@DESKTOP-TILJS7C>
-X-PPP-Message-ID: <20200909223725.26409.71619@mail.foescocursos.es>
-X-PPP-Vhost: foescoformaciones.es
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ bulkscore=0 phishscore=0 adultscore=0 suspectscore=1 spamscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009100053
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9739 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
+ phishscore=0 adultscore=0 bulkscore=0 clxscore=1015 mlxlogscore=999
+ malwarescore=0 suspectscore=1 lowpriorityscore=0 spamscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009100053
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Buenos días
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Hoist the code that propagates di_flags and di_flags2 from a parent to a
+new child into separate functions.  No functional changes.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_inode.c |  113 ++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 65 insertions(+), 48 deletions(-)
 
 
-Soy Alex Pons, director de FOESCO (Formación Estatal Continua).
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index c06129cffba9..4c520cc10191 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -714,6 +714,67 @@ xfs_lookup(
+ 	return error;
+ }
+ 
++/* Propagate di_flags from a parent inode to a child inode. */
++static void
++xfs_inode_propagate_flags(
++	struct xfs_inode	*ip,
++	const struct xfs_inode	*pip)
++{
++	unsigned int		di_flags = 0;
++	umode_t			mode = VFS_I(ip)->i_mode;
++
++	if (S_ISDIR(mode)) {
++		if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
++			di_flags |= XFS_DIFLAG_RTINHERIT;
++		if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
++			di_flags |= XFS_DIFLAG_EXTSZINHERIT;
++			ip->i_d.di_extsize = pip->i_d.di_extsize;
++		}
++		if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
++			di_flags |= XFS_DIFLAG_PROJINHERIT;
++	} else if (S_ISREG(mode)) {
++		if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
++			di_flags |= XFS_DIFLAG_REALTIME;
++		if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
++			di_flags |= XFS_DIFLAG_EXTSIZE;
++			ip->i_d.di_extsize = pip->i_d.di_extsize;
++		}
++	}
++	if ((pip->i_d.di_flags & XFS_DIFLAG_NOATIME) &&
++	    xfs_inherit_noatime)
++		di_flags |= XFS_DIFLAG_NOATIME;
++	if ((pip->i_d.di_flags & XFS_DIFLAG_NODUMP) &&
++	    xfs_inherit_nodump)
++		di_flags |= XFS_DIFLAG_NODUMP;
++	if ((pip->i_d.di_flags & XFS_DIFLAG_SYNC) &&
++	    xfs_inherit_sync)
++		di_flags |= XFS_DIFLAG_SYNC;
++	if ((pip->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) &&
++	    xfs_inherit_nosymlinks)
++		di_flags |= XFS_DIFLAG_NOSYMLINKS;
++	if ((pip->i_d.di_flags & XFS_DIFLAG_NODEFRAG) &&
++	    xfs_inherit_nodefrag)
++		di_flags |= XFS_DIFLAG_NODEFRAG;
++	if (pip->i_d.di_flags & XFS_DIFLAG_FILESTREAM)
++		di_flags |= XFS_DIFLAG_FILESTREAM;
++
++	ip->i_d.di_flags |= di_flags;
++}
++
++/* Propagate di_flags2 from a parent inode to a child inode. */
++static void
++xfs_inode_propagate_flags2(
++	struct xfs_inode	*ip,
++	const struct xfs_inode	*pip)
++{
++	if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
++		ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
++		ip->i_d.di_cowextsize = pip->i_d.di_cowextsize;
++	}
++	if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
++		ip->i_d.di_flags2 |= XFS_DIFLAG2_DAX;
++}
++
+ /*
+  * Allocate an inode on disk and return a copy of its in-core version.
+  * The in-core inode is locked exclusively.  Set mode, nlink, and rdev
+@@ -857,54 +918,10 @@ xfs_ialloc(
+ 		break;
+ 	case S_IFREG:
+ 	case S_IFDIR:
+-		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY)) {
+-			uint		di_flags = 0;
+-
+-			if (S_ISDIR(mode)) {
+-				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
+-					di_flags |= XFS_DIFLAG_RTINHERIT;
+-				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
+-					di_flags |= XFS_DIFLAG_EXTSZINHERIT;
+-					ip->i_d.di_extsize = pip->i_d.di_extsize;
+-				}
+-				if (pip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+-					di_flags |= XFS_DIFLAG_PROJINHERIT;
+-			} else if (S_ISREG(mode)) {
+-				if (pip->i_d.di_flags & XFS_DIFLAG_RTINHERIT)
+-					di_flags |= XFS_DIFLAG_REALTIME;
+-				if (pip->i_d.di_flags & XFS_DIFLAG_EXTSZINHERIT) {
+-					di_flags |= XFS_DIFLAG_EXTSIZE;
+-					ip->i_d.di_extsize = pip->i_d.di_extsize;
+-				}
+-			}
+-			if ((pip->i_d.di_flags & XFS_DIFLAG_NOATIME) &&
+-			    xfs_inherit_noatime)
+-				di_flags |= XFS_DIFLAG_NOATIME;
+-			if ((pip->i_d.di_flags & XFS_DIFLAG_NODUMP) &&
+-			    xfs_inherit_nodump)
+-				di_flags |= XFS_DIFLAG_NODUMP;
+-			if ((pip->i_d.di_flags & XFS_DIFLAG_SYNC) &&
+-			    xfs_inherit_sync)
+-				di_flags |= XFS_DIFLAG_SYNC;
+-			if ((pip->i_d.di_flags & XFS_DIFLAG_NOSYMLINKS) &&
+-			    xfs_inherit_nosymlinks)
+-				di_flags |= XFS_DIFLAG_NOSYMLINKS;
+-			if ((pip->i_d.di_flags & XFS_DIFLAG_NODEFRAG) &&
+-			    xfs_inherit_nodefrag)
+-				di_flags |= XFS_DIFLAG_NODEFRAG;
+-			if (pip->i_d.di_flags & XFS_DIFLAG_FILESTREAM)
+-				di_flags |= XFS_DIFLAG_FILESTREAM;
+-
+-			ip->i_d.di_flags |= di_flags;
+-		}
+-		if (pip && (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY)) {
+-			if (pip->i_d.di_flags2 & XFS_DIFLAG2_COWEXTSIZE) {
+-				ip->i_d.di_flags2 |= XFS_DIFLAG2_COWEXTSIZE;
+-				ip->i_d.di_cowextsize = pip->i_d.di_cowextsize;
+-			}
+-			if (pip->i_d.di_flags2 & XFS_DIFLAG2_DAX)
+-				ip->i_d.di_flags2 |= XFS_DIFLAG2_DAX;
+-		}
++		if (pip && (pip->i_d.di_flags & XFS_DIFLAG_ANY))
++			xfs_inode_propagate_flags(ip, pip);
++		if (pip && (pip->i_d.di_flags2 & XFS_DIFLAG2_ANY))
++			xfs_inode_propagate_flags2(ip, pip);
+ 		/* FALLTHROUGH */
+ 	case S_IFLNK:
+ 		ip->i_df.if_format = XFS_DINODE_FMT_EXTENTS;
 
-Llegadas estas fechas y como cada año, recordamos a todas las empresas Españolas su derecho a consumir el Crédito de Formación del que disponen para la formación de sus empleados, antes de su caducidad a final de año.
-
-
-Actualmente se encuentra abierto el plazo de inscripción para la Convocatoria SEPTIEMBRE 2020 de Cursos Bonificables con cargo al Crédito de Formación 2020.
-
-
-Deseáis que os mandemos la información?
-
-
-Quedamos a la espera de vuestra respuesta.
-
-
-Saludos cordiales.
-
-
-Alex Pons
-Director FOESCO.
-
-FOESCO Formación Estatal Continua.
-Entidad Organizadora: B200592AA
-www.foesco.com
-e-mail:     cursos@foesco.net
-Tel:     910 323 794
-(Horario de 9h a 15h y de 17h a 20h de Lunes a Viernes)
-
-FOESCO ofrece formación a empresas y trabajadores en activo a través de cursos bonificados por la Fundación Estatal para la Formación en el Empleo (antiguo FORCEM) que gestiona las acciones formativas de FORMACIÓN CONTINUA para trabajadores y se rige por la ley 30/2015 de 9 de Septiembre.
-
-Antes de imprimir este e-mail piense bien si es necesario hacerlo. Before printing this e-mail please think twice if you really need it. FOESCO Tfno: 910 382 880 Email: cursos@foesco.com. La información transmitida en este mensaje está dirigida solamente a las personas o entidades que figuran en el encabezamiento y contiene información confidencial, por lo que, si usted lo recibiera por error, por favor destrúyalo sin copiarlo, usarlo ni distribuirlo, comunicándolo inmediatamente al emisor del mensaje. De conformidad con lo dispuesto en el Reglamento Europeo del 2016/679, del 27 de Abril de 2016, FOESCO le informa que los datos por usted suministrados serán tratados con las medidas de seguridad conformes a la normativa vigente que se requiere. Dichos datos serán empleados con fines de gestión. Para el ejercicio de sus derechos de transparencia, información, acceso, rectificación, supresión o derecho al olvido, limitación del tratamiento , portabilidad de datos y oposición de sus dato
- s de carácter personal deberá dirigirse a la dirección del Responsable del tratamiento a C/ LAGUNA DEL MARQUESADO Nº10, 28021, MADRID, "PULSANDO AQUI" <mailto:bajas@foesco.com?Subject=BAJA%20CORREOS> y "ENVIAR" o a traves de la dirección de correo electrónico: bajas@foesco.com <mailto:bajas@foesco.com?Subject=BAJA%20CORREOS>
