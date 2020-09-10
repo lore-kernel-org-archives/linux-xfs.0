@@ -5,37 +5,37 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D89D9C433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 23:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2FF3C43461
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 23:47:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92F89221E3
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 23:47:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8809A208CA
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 23:47:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="U05Aqtga"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ucCJyhUZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725786AbgIJXr1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Sep 2020 19:47:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58532 "EHLO
+        id S1725801AbgIJXrm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Sep 2020 19:47:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725777AbgIJXrS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 19:47:18 -0400
+        with ESMTP id S1725648AbgIJXrP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 19:47:15 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 021DBC061757;
-        Thu, 10 Sep 2020 16:47:18 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ADE4C061756;
+        Thu, 10 Sep 2020 16:47:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=vqqJRR6FGWwEroRGJxb8U5uLILmsH4BqITcpCA5DevA=; b=U05AqtgaCYnJ76YXpy5uvatIUO
-        4gsJez3Lmv2YIHzqVvkH55hL0T9ou3I8kpp/oXTKy6kU1LlqgfWtHRftn7h0ITzie7TKczKs6kbWQ
-        YP0Ujt1BCeF7KJJYHCKP29QBx8qH9MCaMOf2Na/DsB4Uz4hqDdRr0fC03NbJKrHuLy09HQgm++d9P
-        uj6bkjm7lAJLFlIl/0HwAO0ZAKXaMbsVmts0U2ukubGjV00JVuq5yaV12E/6TLK3TRb/gkeN0VXUK
-        Ynfmlt15Gc/vj++h8kBVnQvlbnr/B1w4L+ZZsfluR9264QpjbfAzdI6f1BFlfY+8XiJfjJqDdf/hF
-        4CPSdwHQ==;
+        bh=WP2cPvRQ2Iyrw0S8nzMEBDANY5cJE6s8OG42laM1g3Q=; b=ucCJyhUZc4UdOxtdfOh3F4QKlR
+        9wU+/1rqSAIT5Y2i+inbPju4AHXD4BaUjHQk7pQQV83FGlzTAv/3PGaan7Z2A8+4AVhqgunyin2kD
+        r7G8gSO+kB+0uL4lrljEZv6dFpXfvnC2Ql2vJmiUf5WDjpRdm7VjvTZg3SnU9wHaBCgAVlJQZqiiA
+        xWNp2Vsiyu5nauMCoAe0XGWRL8d4HvN5+TmeC3jqnFn7ViNZ7R16wvHCj2MyZ6q0HXU1pYwXB5BW7
+        sbYiNNAXSkjypI9M2QjHzIgdlP/y4Y1a54lx4WMbjlxLzsS+jFV/M6vepPgNMVdKi81h1cLfqQ8Ne
+        q/L6symw==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kGWHV-0001Rh-Pn; Thu, 10 Sep 2020 23:47:10 +0000
+        id 1kGWHY-0001T3-K0; Thu, 10 Sep 2020 23:47:12 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
@@ -43,12 +43,10 @@ Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
         Christoph Hellwig <hch@infradead.org>,
         linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
         Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH v2 3/9] iomap: Use kzalloc to allocate iomap_page
-Date:   Fri, 11 Sep 2020 00:47:01 +0100
-Message-Id: <20200910234707.5504-4-willy@infradead.org>
+        jfs-discussion@lists.sourceforge.net
+Subject: [PATCH v2 9/9] iomap: Change calling convention for zeroing
+Date:   Fri, 11 Sep 2020 00:47:07 +0100
+Message-Id: <20200910234707.5504-10-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20200910234707.5504-1-willy@infradead.org>
 References: <20200910234707.5504-1-willy@infradead.org>
@@ -59,41 +57,148 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We can skip most of the initialisation, although spinlocks still
-need explicit initialisation as architectures may use a non-zero
-value to indicate unlocked.  The comment is no longer useful as
-attach_page_private() handles the refcount now.
+Pass the full length to iomap_zero() and dax_iomap_zero(), and have
+them return how many bytes they actually handled.  This is preparatory
+work for handling THP, although it looks like DAX could actually take
+advantage of it if there's a larger contiguous area.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap/buffered-io.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+ fs/dax.c               | 13 ++++++-------
+ fs/iomap/buffered-io.c | 33 +++++++++++++++------------------
+ include/linux/dax.h    |  3 +--
+ 3 files changed, 22 insertions(+), 27 deletions(-)
 
+diff --git a/fs/dax.c b/fs/dax.c
+index 994ab66a9907..6ad346352a8c 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -1037,18 +1037,18 @@ static vm_fault_t dax_load_hole(struct xa_state *xas,
+ 	return ret;
+ }
+ 
+-int dax_iomap_zero(loff_t pos, unsigned offset, unsigned size,
+-		   struct iomap *iomap)
++s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap)
+ {
+ 	sector_t sector = iomap_sector(iomap, pos & PAGE_MASK);
+ 	pgoff_t pgoff;
+ 	long rc, id;
+ 	void *kaddr;
+ 	bool page_aligned = false;
+-
++	unsigned offset = offset_in_page(pos);
++	unsigned size = min_t(u64, PAGE_SIZE - offset, length);
+ 
+ 	if (IS_ALIGNED(sector << SECTOR_SHIFT, PAGE_SIZE) &&
+-	    IS_ALIGNED(size, PAGE_SIZE))
++	    (size == PAGE_SIZE))
+ 		page_aligned = true;
+ 
+ 	rc = bdev_dax_pgoff(iomap->bdev, sector, PAGE_SIZE, &pgoff);
+@@ -1058,8 +1058,7 @@ int dax_iomap_zero(loff_t pos, unsigned offset, unsigned size,
+ 	id = dax_read_lock();
+ 
+ 	if (page_aligned)
+-		rc = dax_zero_page_range(iomap->dax_dev, pgoff,
+-					 size >> PAGE_SHIFT);
++		rc = dax_zero_page_range(iomap->dax_dev, pgoff, 1);
+ 	else
+ 		rc = dax_direct_access(iomap->dax_dev, pgoff, 1, &kaddr, NULL);
+ 	if (rc < 0) {
+@@ -1072,7 +1071,7 @@ int dax_iomap_zero(loff_t pos, unsigned offset, unsigned size,
+ 		dax_flush(iomap->dax_dev, kaddr + offset, size);
+ 	}
+ 	dax_read_unlock(id);
+-	return 0;
++	return size;
+ }
+ 
+ static loff_t
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 330f86b825d7..58a1fd83f2a4 100644
+index cb25a7b70401..3e1eb40a73fd 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -49,16 +49,8 @@ iomap_page_create(struct inode *inode, struct page *page)
- 	if (iop || i_blocks_per_page(inode, page) <= 1)
- 		return iop;
- 
--	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
--	atomic_set(&iop->read_count, 0);
--	atomic_set(&iop->write_count, 0);
-+	iop = kzalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
- 	spin_lock_init(&iop->uptodate_lock);
--	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
--
--	/*
--	 * migrate_page_move_mapping() assumes that pages with private data have
--	 * their count elevated by 1.
--	 */
- 	attach_page_private(page, iop);
- 	return iop;
+@@ -898,11 +898,13 @@ iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
  }
+ EXPORT_SYMBOL_GPL(iomap_file_unshare);
+ 
+-static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+-		unsigned bytes, struct iomap *iomap, struct iomap *srcmap)
++static s64 iomap_zero(struct inode *inode, loff_t pos, u64 length,
++		struct iomap *iomap, struct iomap *srcmap)
+ {
+ 	struct page *page;
+ 	int status;
++	unsigned offset = offset_in_page(pos);
++	unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
+ 
+ 	status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap, srcmap);
+ 	if (status)
+@@ -914,38 +916,33 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ 	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
+ }
+ 
+-static loff_t
+-iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+-		void *data, struct iomap *iomap, struct iomap *srcmap)
++static loff_t iomap_zero_range_actor(struct inode *inode, loff_t pos,
++		loff_t length, void *data, struct iomap *iomap,
++		struct iomap *srcmap)
+ {
+ 	bool *did_zero = data;
+ 	loff_t written = 0;
+-	int status;
+ 
+ 	/* already zeroed?  we're done. */
+ 	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+-		return count;
++		return length;
+ 
+ 	do {
+-		unsigned offset, bytes;
+-
+-		offset = offset_in_page(pos);
+-		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
++		s64 bytes;
+ 
+ 		if (IS_DAX(inode))
+-			status = dax_iomap_zero(pos, offset, bytes, iomap);
++			bytes = dax_iomap_zero(pos, length, iomap);
+ 		else
+-			status = iomap_zero(inode, pos, offset, bytes, iomap,
+-					srcmap);
+-		if (status < 0)
+-			return status;
++			bytes = iomap_zero(inode, pos, length, iomap, srcmap);
++		if (bytes < 0)
++			return bytes;
+ 
+ 		pos += bytes;
+-		count -= bytes;
++		length -= bytes;
+ 		written += bytes;
+ 		if (did_zero)
+ 			*did_zero = true;
+-	} while (count > 0);
++	} while (length > 0);
+ 
+ 	return written;
+ }
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 6904d4e0b2e0..951a851a0481 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -214,8 +214,7 @@ vm_fault_t dax_finish_sync_fault(struct vm_fault *vmf,
+ int dax_delete_mapping_entry(struct address_space *mapping, pgoff_t index);
+ int dax_invalidate_mapping_entry_sync(struct address_space *mapping,
+ 				      pgoff_t index);
+-int dax_iomap_zero(loff_t pos, unsigned offset, unsigned size,
+-			struct iomap *iomap);
++s64 dax_iomap_zero(loff_t pos, u64 length, struct iomap *iomap);
+ static inline bool dax_mapping(struct address_space *mapping)
+ {
+ 	return mapping->host && IS_DAX(mapping->host);
 -- 
 2.28.0
 
