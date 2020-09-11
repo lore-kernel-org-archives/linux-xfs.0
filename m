@@ -2,266 +2,202 @@ Return-Path: <SRS0=CRyL=CU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EBC5C2BC11
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 16:42:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82F89C433E2
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 16:43:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7881221E7
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 16:42:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2AAE9221ED
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 16:43:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V/IC86mn"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uOqAwMeO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725891AbgIKQmt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Sep 2020 12:42:49 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:30291 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725778AbgIKQl4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Sep 2020 12:41:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1599842513;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=dCCYRHJfCs9q7+pn8+1DMUQvWPREwMeHDgZW4MhyNFI=;
-        b=V/IC86mnOLGlZwU5kMU/3SREBfQH0Ok33F44lUx69ygF/A1Qwjm6Pdimu33R7BfMoruORI
-        Y9/LcT65T+pqDwXRKWDHSe/AZaLalcS5UF7RXpVI3f+K1WstKZ0kXp3MmUB8YQ6YYHJ3LI
-        i5E2vIF7dxJdWWtd91wUX227TeNRhH0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-202-ioDUguKaNDO_8rEqEDUcWA-1; Fri, 11 Sep 2020 12:41:51 -0400
-X-MC-Unique: ioDUguKaNDO_8rEqEDUcWA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0AB601084CA4;
-        Fri, 11 Sep 2020 16:41:48 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 68F247B7D2;
-        Fri, 11 Sep 2020 16:41:28 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 08BGfRwA030406;
-        Fri, 11 Sep 2020 12:41:27 -0400
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 08BGfQ8M030402;
-        Fri, 11 Sep 2020 12:41:26 -0400
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Fri, 11 Sep 2020 12:41:26 -0400 (EDT)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Jan Kara <jack@suse.cz>, Dave Chinner <dchinner@redhat.com>,
-        Jann Horn <jannh@google.com>, Christoph Hellwig <hch@lst.de>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Kirill Shutemov <kirill@shutemov.name>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Andrea Arcangeli <aarcange@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH 2/2] xfs: don't update mtime on COW faults
-In-Reply-To: <20200910060626.GA7964@magnolia>
-Message-ID: <alpine.LRH.2.02.2009111232210.29958@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.2009031328040.6929@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.2009041200570.27312@file01.intranet.prod.int.rdu2.redhat.com> <alpine.LRH.2.02.2009050805250.12419@file01.intranet.prod.int.rdu2.redhat.com>
- <alpine.LRH.2.02.2009050812060.12419@file01.intranet.prod.int.rdu2.redhat.com> <20200905153652.GA7955@magnolia> <alpine.LRH.2.02.2009051229180.542@file01.intranet.prod.int.rdu2.redhat.com> <20200910060626.GA7964@magnolia>
-User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
+        id S1725904AbgIKQno (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Sep 2020 12:43:44 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:35826 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726386AbgIKQnU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Sep 2020 12:43:20 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08BGdalb161235;
+        Fri, 11 Sep 2020 16:43:15 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=YB3Q2v7IZ+OJSNXFVX99LhsJy8Y4hQSuoM7Nzl/SDIk=;
+ b=uOqAwMeO/TOk7m+68DPL9R2z10z06Z+B3TwnyIQGveo3KJ3nt/UAStBi7d7THZuEiSxk
+ 7YTOKOymbFJP0ck6SRVC6D1G/Y8pGtVZTcd1n3VAV8tVzgh5iRuZJKOy3mVeolYXO+OA
+ tVbIPPDDTG3QxGhED1p/d1pMBev76xyXOm6Y9kfvLIbodHw9ot045ep7sHk3vngfgxI6
+ sUx/2ehSpCdsNu1/uC3b+f1P8XfIpGMxeQjZNyoBJOFkgYPDHNBeBM9coC2jpZATjtm2
+ 9KA8VWFA4S+8JoslKnWf+grG5r65D8qq+84rDiadxsdnJda1JUZ4/kfQBU7xMi1XmoYx sA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 33c23rfc5e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 11 Sep 2020 16:43:15 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08BGfRYC070012;
+        Fri, 11 Sep 2020 16:43:15 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 33cmkdf2r3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 11 Sep 2020 16:43:14 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08BGhC0H026241;
+        Fri, 11 Sep 2020 16:43:12 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 11 Sep 2020 09:43:12 -0700
+Date:   Fri, 11 Sep 2020 09:43:11 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3] xfs: deprecate the V4 format
+Message-ID: <20200911164311.GU7955@magnolia>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9741 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=5
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009110135
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9741 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 priorityscore=1501
+ mlxlogscore=999 mlxscore=0 bulkscore=0 suspectscore=5 spamscore=0
+ malwarescore=0 phishscore=0 lowpriorityscore=0 clxscore=1015
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009110135
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
+The V4 filesystem format contains known weaknesses in the on-disk format
+that make metadata verification diffiult.  In addition, the format will
+does not support dates past 2038 and will not be upgraded to do so.
+Therefore, we should start the process of retiring the old format to
+close off attack surfaces and to encourage users to migrate onto V5.
 
-On Wed, 9 Sep 2020, Darrick J. Wong wrote:
+Therefore, make XFS V4 support a configurable option.  For the first
+period it will be default Y in case some distributors want to withdraw
+support early; for the second period it will be default N so that anyone
+who wishes to continue support can do so; and after that, support will
+be removed from the kernel.
 
-> On Sat, Sep 05, 2020 at 01:02:33PM -0400, Mikulas Patocka wrote:
-> > > > 
-> > 
-> > I've written this program that tests it - you can integrate it into your 
-> > testsuite.
-> 
-> I don't get it.  You're a filesystem maintainer too, which means you're
-> a regular contributor.  Do you:
-> 
-> (a) not use fstests?  If you don't, I really hope you use something else
-> to QA hpfs.
-
-I don't use xfstests on HPFS. I was testing it just by using it. Now I use 
-it just a little, but I don't modify it much.
-
-> (b) really think that it's my problem to integrate and submit your
-> regression tests for you?
-> 
-> and (c) what do you want me to do with a piece of code that has no 
-> signoff tag, no copyright, and no license?  This is your patch, and 
-> therefore your responsibility to develop enough of an appropriate 
-> regression test in a proper form that the rest of us can easily 
-> determine we have the rights to contribute to it.
-
-
-If you want a full patch (I copied the script from test 313), I send it 
-here.
-
-Mikulas
-
-
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH] check ctime and mtime vs mmap
-
-Check ctime and mtime are not updated on COW faults
-and that they are updated on shared faults
-
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- src/Makefile          |    3 +-
- src/mmap-timestamp.c  |   53 ++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/609     |   40 +++++++++++++++++++++++++++++++++++++
- tests/generic/609.out |    2 +
- tests/generic/group   |    1 
- 5 files changed, 98 insertions(+), 1 deletion(-)
+v3: be a little more helpful about old xfsprogs and warn more loudly
+about deprecation
+v2: define what is a V4 filesystem, update the administrator guide
+---
+ Documentation/admin-guide/xfs.rst |   23 +++++++++++++++++++++++
+ fs/xfs/Kconfig                    |   24 ++++++++++++++++++++++++
+ fs/xfs/xfs_super.c                |   13 +++++++++++++
+ 3 files changed, 60 insertions(+)
 
-Index: xfstests-dev/src/Makefile
-===================================================================
---- xfstests-dev.orig/src/Makefile	2020-09-06 12:38:40.000000000 +0200
-+++ xfstests-dev/src/Makefile	2020-09-11 17:39:04.000000000 +0200
-@@ -17,7 +17,8 @@ TARGETS = dirstress fill fill2 getpagesi
- 	t_mmap_cow_race t_mmap_fallocate fsync-err t_mmap_write_ro \
- 	t_ext4_dax_journal_corruption t_ext4_dax_inline_corruption \
- 	t_ofd_locks t_mmap_collision mmap-write-concurrent \
--	t_get_file_time t_create_short_dirs t_create_long_dirs
-+	t_get_file_time t_create_short_dirs t_create_long_dirs \
-+	mmap-timestamp
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index f461d6c33534..b6deea9ec073 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -210,6 +210,28 @@ When mounting an XFS filesystem, the following options are accepted.
+ 	inconsistent namespace presentation during or after a
+ 	failover event.
  
- LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
- 	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
-Index: xfstests-dev/src/mmap-timestamp.c
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/src/mmap-timestamp.c	2020-09-11 18:21:40.000000000 +0200
-@@ -0,0 +1,53 @@
-+// SPDX-License-Identifier: GPL-2.0
-+// Copyright (C) 2020 Red Hat, Inc. All Rights reserved.
++Deprecation of V4 Format
++========================
 +
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <unistd.h>
-+#include <fcntl.h>
-+#include <string.h>
-+#include <sys/mman.h>
-+#include <sys/stat.h>
++The V4 filesystem format lacks certain features that are supported by
++the V5 format, such as metadata checksumming, strengthened metadata
++verification, and the ability to store timestamps past the year 2038.
++Because of this, the V4 format is deprecated.  All users should upgrade
++by backing up their files, reformatting, and restoring from the backup.
 +
-+#define FILE_NAME	argv[1]
++Administrators and users can detect a V4 filesystem by running xfs_info
++against a filesystem mountpoint and checking for a string beginning with
++"crc=".  If no such string is found, please upgrade xfsprogs to the
++latest version and try again.
 +
-+static struct stat st1, st2;
++The deprecation will take place in two parts.  Support for mounting V4
++filesystems can now be disabled at kernel build time via Kconfig option.
++The option will default to yes until September 2025, at which time it
++will be changed to default to no.  In September 2030, support will be
++removed from the codebase entirely.
 +
-+int main(int argc, char *argv[])
-+{
-+	int h, r;
-+	char *map;
-+	unlink(FILE_NAME);
-+	h = creat(FILE_NAME, 0600);
-+	if (h == -1) perror("creat"), exit(1);
-+	r = write(h, "x", 1);
-+	if (r != 1) perror("write"), exit(1);
-+	if (close(h)) perror("close"), exit(1);
-+	h = open(FILE_NAME, O_RDWR);
-+	if (h == -1) perror("open"), exit(1);
++Note: Distributors may choose to withdraw V4 format support earlier than
++the dates listed above.
+ 
+ Deprecated Mount Options
+ ========================
+@@ -217,6 +239,7 @@ Deprecated Mount Options
+ ===========================     ================
+   Name				Removal Schedule
+ ===========================     ================
++Mounting with V4 filesystem     September 2030
+ ===========================     ================
+ 
+ 
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index e685299eb3d2..5422227e9e93 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -22,6 +22,30 @@ config XFS_FS
+ 	  system of your root partition is compiled as a module, you'll need
+ 	  to use an initial ramdisk (initrd) to boot.
+ 
++config XFS_SUPPORT_V4
++	bool "Support deprecated V4 (crc=0) format"
++	default y
++	help
++	  The V4 filesystem format lacks certain features that are supported
++	  by the V5 format, such as metadata checksumming, strengthened
++	  metadata verification, and the ability to store timestamps past the
++	  year 2038.  Because of this, the V4 format is deprecated.  All users
++	  should upgrade by backing up their files, reformatting, and restoring
++	  from the backup.
 +
-+	map = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_PRIVATE, h, 0);
-+	if (map == MAP_FAILED) perror("mmap"), exit(1);
-+	if (fstat(h, &st1)) perror("fstat"), exit(1);
-+	sleep(2);
-+	*map = 'y';
-+	if (fstat(h, &st2)) perror("fstat"), exit(1);
-+	if (st1.st_mtime != st2.st_mtime) fprintf(stderr, "BUG: COW fault changed mtime!\n"), exit(1);
-+	if (st1.st_ctime != st2.st_ctime) fprintf(stderr, "BUG: COW fault changed ctime!\n"), exit(1);
-+	if (munmap(map, 4096)) perror("munmap"), exit(1);
++	  Administrators and users can detect a V4 filesystem by running
++	  xfs_info against a filesystem mountpoint and checking for a string
++	  beginning with "crc=".  If the string "crc=0" is found, the
++	  filesystem is a V4 filesystem.  If no such string is found, please
++	  upgrade xfsprogs to the latest version and try again.
 +
-+	map = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, h, 0);
-+	if (map == MAP_FAILED) perror("mmap"), exit(1);
-+	if (fstat(h, &st1)) perror("fstat"), exit(1);
-+	sleep(2);
-+	*map = 'z';
-+	if (msync(map, 4096, MS_SYNC)) perror("msync"), exit(1);
-+	if (fstat(h, &st2)) perror("fstat"), exit(1);
-+	if (st1.st_mtime == st2.st_mtime) fprintf(stderr, "BUG: Shared fault did not change mtime!\n"), exit(1);
-+	if (st1.st_ctime == st2.st_ctime) fprintf(stderr, "BUG: Shared fault did not change ctime!\n"), exit(1);
-+	if (munmap(map, 4096)) perror("munmap"), exit(1);
++	  This option will become default N in September 2025.  Support for the
++	  V4 format will be removed entirely in September 2030.  Distributors
++	  can say N here to withdraw support earlier.
 +
-+	if (close(h)) perror("close"), exit(1);
-+	if (unlink(FILE_NAME)) perror("unlink"), exit(1);
-+	return 0;
-+}
-Index: xfstests-dev/tests/generic/609
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/tests/generic/609	2020-09-11 18:30:30.000000000 +0200
-@@ -0,0 +1,40 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2020 Red Hat, Inc. All Rights Reserved.
-+#
-+# FS QA Test No. 609
-+#
-+# Check ctime and mtime are not updated on COW faults
-+# and that they are updated on shared faults
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++	  To continue supporting the old V4 format (crc=0), say Y.
++	  To close off an attack surface, say N.
 +
-+here=`pwd`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
+ config XFS_QUOTA
+ 	bool "XFS Quota support"
+ 	depends on XFS_FS
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index febd61ba071d..e2250c6d7251 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1451,6 +1451,19 @@ xfs_fc_fill_super(
+ 	if (error)
+ 		goto out_free_sb;
+ 
++	/* V4 support is undergoing deprecation. */
++	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
++#ifdef CONFIG_XFS_SUPPORT_V4
++		xfs_warn_once(mp,
++	"Deprecated V4 format (crc=0) will not be supported after September 2030.");
++#else
++		xfs_warn(mp,
++	"Deprecated V4 format (crc=0) not supported by kernel.");
++		error = -EINVAL;
++		goto out_free_sb;
++#endif
++	}
 +
-+_cleanup()
-+{
-+    cd /
-+    rm -f $testfile
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_test
-+
-+testfile=$TEST_DIR/testfile.$seq
-+
-+echo "Silence is golden"
-+
-+$here/src/mmap-timestamp $testfile 2>&1
-+
-+status=0
-+exit
-Index: xfstests-dev/tests/generic/609.out
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ xfstests-dev/tests/generic/609.out	2020-09-11 18:24:24.000000000 +0200
-@@ -0,0 +1,2 @@
-+QA output created by 609
-+Silence is golden
-Index: xfstests-dev/tests/generic/group
-===================================================================
---- xfstests-dev.orig/tests/generic/group	2020-09-06 12:38:40.000000000 +0200
-+++ xfstests-dev/tests/generic/group	2020-09-11 18:25:09.000000000 +0200
-@@ -611,3 +611,4 @@
- 606 auto attr quick dax
- 607 auto attr quick dax
- 608 auto attr quick dax
-+609 auto quick
-
+ 	/*
+ 	 * XFS block mappings use 54 bits to store the logical block offset.
+ 	 * This should suffice to handle the maximum file size that the VFS
