@@ -1,101 +1,118 @@
-Return-Path: <SRS0=NqjT=CT=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=CRyL=CU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1966DC2D0A7
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 23:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C44BC433E2
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 02:57:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1931208E4
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Sep 2020 23:48:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45D3220829
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 02:57:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VV3H4J1N"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HRG3vCyq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725849AbgIJXsk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Sep 2020 19:48:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58524 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725446AbgIJXrN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 19:47:13 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6ED9C061757;
-        Thu, 10 Sep 2020 16:47:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=HcWQtDNuseBKEWHIB6Uw1jNXoqcHNymiL5aD/zPafZk=; b=VV3H4J1NcWISSb8Gj9bpB7KZ6x
-        jROScpbYWM8FBiBkHpnbuW6RnoNokwGNMKvy8nG602I4Y/OSTEn+fVAF9EBYKK5wysZUkwIb1uRO/
-        w76Z1rEakOIjhRdyqHNLU3YrZPkgolm2QJYu+/DWWSF15DggGjDBYEYFoT3gjAxIfWq0nxPwDuXJd
-        ZWQym3yLmzApbBmpEXi8bRxJEvJbnPseeLZMtjGeuQZyaIWXCIk8SaT+JQvzBYf1e9xs4uTemj3qw
-        ntOYk5pnUGkaQgqW0Pz7agmge0QrN9xiMF4N7l3inJewKsVac6aN7lKma0B2xHtNooOGy4RCv5IVC
-        vezUor+g==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kGWHW-0001Rm-E4; Thu, 10 Sep 2020 23:47:10 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
-        Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Christoph Hellwig <hch@lst.de>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: [PATCH v2 4/9] iomap: Use bitmap ops to set uptodate bits
-Date:   Fri, 11 Sep 2020 00:47:02 +0100
-Message-Id: <20200910234707.5504-5-willy@infradead.org>
-X-Mailer: git-send-email 2.21.3
-In-Reply-To: <20200910234707.5504-1-willy@infradead.org>
-References: <20200910234707.5504-1-willy@infradead.org>
+        id S1725497AbgIKC5z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Sep 2020 22:57:55 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:42210 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725440AbgIKC5x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Sep 2020 22:57:53 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08B2sJ1L191869;
+        Fri, 11 Sep 2020 02:57:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=QW/f2UFYM0BuQ8VD7RxIIZ+Z4zkyhCyVe9x52WYLppk=;
+ b=HRG3vCyqyDdRX0++D5D0v+W+sd7IpBjPdwdTagjUNLpwsTtVwONmTG4lO2aB0ifxhKnm
+ lP0pl51BMkMzaLjzPYmpCkpcjC86X100KbVq1B8+XENS9tciTWbcQsAVjO/CgF3TaCZh
+ tsgMFmDr5062J2/jvqFR9kSNLdqthBzi9ZCo/xncjBysolEjAxrYV92IYEOc8PHvwA18
+ reH4JW5lKusHtihP93g1B+3VBLSeQtT7Ry0onCcETAW3TWcoa6rY9t/7G9ootZ+plGM7
+ zJP5HQEt8l74hWNNUeNjLEYo6W9EMVreoIt+CYC9jdyBayrQrCLZ4BbcmL5jtRMp3OVh qg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 33c3anbfxs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 11 Sep 2020 02:57:50 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08B2tA3C115926;
+        Fri, 11 Sep 2020 02:57:49 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 33cmkbh3pa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 11 Sep 2020 02:57:49 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08B2vmxc025488;
+        Fri, 11 Sep 2020 02:57:49 GMT
+Received: from [192.168.1.223] (/67.1.244.254)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 10 Sep 2020 19:57:48 -0700
+Subject: Re: [PATCH 2/4] mkfs.xfs: tweak wording of external log device size
+ complaint
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
+Cc:     linux-xfs@vger.kernel.org
+References: <159950108982.567664.1544351129609122663.stgit@magnolia>
+ <159950110270.567664.7772913999736955021.stgit@magnolia>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <ef05e7f2-840e-9dbb-8325-7f434bc91e7e@oracle.com>
+Date:   Thu, 10 Sep 2020 19:57:47 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <159950110270.567664.7772913999736955021.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009110022
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9740 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
+ clxscore=1015 bulkscore=0 malwarescore=0 lowpriorityscore=0
+ mlxlogscore=999 suspectscore=0 adultscore=0 mlxscore=0 impostorscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009110022
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Now that the bitmap is protected by a spinlock, we can use the
-more efficient bitmap ops instead of individual test/set bit ops.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/iomap/buffered-io.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 58a1fd83f2a4..7fc0e02d27b0 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -134,19 +134,11 @@ iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
- 	struct inode *inode = page->mapping->host;
- 	unsigned first = off >> inode->i_blkbits;
- 	unsigned last = (off + len - 1) >> inode->i_blkbits;
--	bool uptodate = true;
- 	unsigned long flags;
--	unsigned int i;
- 
- 	spin_lock_irqsave(&iop->uptodate_lock, flags);
--	for (i = 0; i < i_blocks_per_page(inode, page); i++) {
--		if (i >= first && i <= last)
--			set_bit(i, iop->uptodate);
--		else if (!test_bit(i, iop->uptodate))
--			uptodate = false;
--	}
--
--	if (uptodate)
-+	bitmap_set(iop->uptodate, first, last - first + 1);
-+	if (bitmap_full(iop->uptodate, i_blocks_per_page(inode, page)))
- 		SetPageUptodate(page);
- 	spin_unlock_irqrestore(&iop->uptodate_lock, flags);
- }
--- 
-2.28.0
-
+On 9/7/20 10:51 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> If the external log device is too small to satisfy minimum requirements,
+> mkfs will complain about "external log device 512 too small...".  That
+> doesn't make any sense, so add a few missing words to clarify what we're
+> talking about:
+> 
+> "external log device size 512 blocks too small..."
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Looks ok
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>   mkfs/xfs_mkfs.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index a687f385a9c1..39fad9576088 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3095,7 +3095,7 @@ calculate_log_size(
+>   	if (!cfg->loginternal) {
+>   		if (min_logblocks > cfg->logblocks) {
+>   			fprintf(stderr,
+> -_("external log device %lld too small, must be at least %lld blocks\n"),
+> +_("external log device size %lld blocks too small, must be at least %lld blocks\n"),
+>   				(long long)cfg->logblocks,
+>   				(long long)min_logblocks);
+>   			usage();
+> 
