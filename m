@@ -2,68 +2,316 @@ Return-Path: <SRS0=CRyL=CU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A16CC2BC11
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 06:43:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C83EC2BC11
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 08:27:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D94AB221F0
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 06:43:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iOa8WVA0"
+	by mail.kernel.org (Postfix) with ESMTP id 4DCAA206F4
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Sep 2020 08:27:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725776AbgIKGnG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Sep 2020 02:43:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37416 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725550AbgIKGm6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Sep 2020 02:42:58 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17176C061756;
-        Thu, 10 Sep 2020 23:42:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=aIvY0q20GUY/DyC1n3nmNDnvd2ld2xPPMKNm8jNNfkM=; b=iOa8WVA07pDrSye4+Sgz/bCdG7
-        rG9Wvg4hwkJeg9OyR+jG6wGqjzEWeTJPBPRlulGaPOS8UQZBVL3v+KPzz0WfLKwmrsxExuJ5t5xC5
-        g3J0StagGG7heOkmNejJ2RO5a5Kvk0eL9K7O7byeRuioMbN3ZBxYUCJm8k9q6vSg+oLVpkaeIS9T+
-        fZf53xjd66KreZwQg9XqEGbThYuwm+YofNf/i+KbJjLceEwM1rLoD+dVeahBKNYDwpYu/LwqinWqA
-        hQy5DfAYGwoUs4wZuoGCRTDTlsjSnnTSPgon+3SyLB+AkkNy0/stPaoD3NvES6scv3l3F42l2mz3W
-        VscFLl6Q==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kGclq-0007pp-Lt; Fri, 11 Sep 2020 06:42:54 +0000
-Date:   Fri, 11 Sep 2020 07:42:54 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
-        Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net
-Subject: Re: [PATCH v2 9/9] iomap: Change calling convention for zeroing
-Message-ID: <20200911064254.GA24511@infradead.org>
-References: <20200910234707.5504-1-willy@infradead.org>
- <20200910234707.5504-10-willy@infradead.org>
+        id S1725468AbgIKI12 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Sep 2020 04:27:28 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:12233 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725768AbgIKI1U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Sep 2020 04:27:20 -0400
+Received: from DGGEMS404-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 5448876F5274B33334EF;
+        Fri, 11 Sep 2020 16:27:16 +0800 (CST)
+Received: from [127.0.0.1] (10.174.179.103) by DGGEMS404-HUB.china.huawei.com
+ (10.3.19.204) with Microsoft SMTP Server id 14.3.487.0; Fri, 11 Sep 2020
+ 16:27:09 +0800
+Subject: Re: [RFC PATCH V4] iomap: add support to track dirty state of sub
+ pages
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     <hch@infradead.org>, <darrick.wong@oracle.com>,
+        <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <yi.zhang@huawei.com>
+References: <20200821123306.1658495-1-yukuai3@huawei.com>
+ <20200821124424.GQ17456@casper.infradead.org>
+From:   "yukuai (C)" <yukuai3@huawei.com>
+Message-ID: <7fb4bb5a-adc7-5914-3aae-179dd8f3adb1@huawei.com>
+Date:   Fri, 11 Sep 2020 16:27:08 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200910234707.5504-10-willy@infradead.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200821124424.GQ17456@casper.infradead.org>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.179.103]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 11, 2020 at 12:47:07AM +0100, Matthew Wilcox (Oracle) wrote:
-> Pass the full length to iomap_zero() and dax_iomap_zero(), and have
-> them return how many bytes they actually handled.  This is preparatory
-> work for handling THP, although it looks like DAX could actually take
-> advantage of it if there's a larger contiguous area.
+On 2020/08/21 20:44, Matthew Wilcox wrote:
+> On Fri, Aug 21, 2020 at 08:33:06PM +0800, Yu Kuai wrote:
+>> changes from v3: - add IOMAP_STATE_ARRAY_SIZE - replace set_bit / 
+>> clear_bit with bitmap_set / bitmap_clear - move 
+>> iomap_set_page_dirty() out of 'iop->state_lock' - merge 
+>> iomap_set/clear_range_dirty() and 
+>> iomap_iop_clear/clear_range_dirty()
+> 
+> I'm still working on the iomap parts of the THP series (fixing up 
+> invalidatepage right now), but here are some of the relevant bits 
+> (patch series to follow)
+> 
 
-Looks good,
+Hi, Matthew
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Since your THP iomap patches were reviewed, I made some modifications
+based on these patches.
+
+Best regards,
+Yu Kuai
+
+---
+  fs/iomap/buffered-io.c | 92 +++++++++++++++++++++++++++++++++---------
+  1 file changed, 74 insertions(+), 18 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index edf5eea56cf5..bc7f57748be8 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -23,13 +23,17 @@
+
+  /*
+   * Structure allocated for each page or THP when block size < page size
+- * to track sub-page uptodate status and I/O completions.
++ * to track sub-page status and I/O completions.
+   */
+  struct iomap_page {
+  	atomic_t		read_bytes_pending;
+  	atomic_t		write_bytes_pending;
+-	spinlock_t		uptodate_lock;
+-	unsigned long		uptodate[];
++	spinlock_t		state_lock;
++	/*
++	 * The first half bits are used to track sub-page uptodate status,
++	 * the second half bits are for dirty status.
++	 */
++	unsigned long		state[];
+  };
+
+  static inline struct iomap_page *to_iomap_page(struct page *page)
+@@ -57,9 +61,9 @@ iomap_page_create(struct inode *inode, struct page *page)
+  	if (iop || nr_blocks <= 1)
+  		return iop;
+
+-	iop = kzalloc(struct_size(iop, uptodate, BITS_TO_LONGS(nr_blocks)),
++	iop = kzalloc(struct_size(iop, state, BITS_TO_LONGS(2 * nr_blocks)),
+  			GFP_NOFS | __GFP_NOFAIL);
+-	spin_lock_init(&iop->uptodate_lock);
++	spin_lock_init(&iop->state_lock);
+  	attach_page_private(page, iop);
+  	return iop;
+  }
+@@ -74,7 +78,7 @@ iomap_page_release(struct page *page)
+  		return;
+  	WARN_ON_ONCE(atomic_read(&iop->read_bytes_pending));
+  	WARN_ON_ONCE(atomic_read(&iop->write_bytes_pending));
+-	WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
++	WARN_ON_ONCE(bitmap_full(iop->state, nr_blocks) !=
+  			PageUptodate(page));
+  	kfree(iop);
+  }
+@@ -105,7 +109,7 @@ iomap_adjust_read_range(struct inode *inode, struct 
+iomap_page *iop,
+
+  		/* move forward for each leading block marked uptodate */
+  		for (i = first; i <= last; i++) {
+-			if (!test_bit(i, iop->uptodate))
++			if (!test_bit(i, iop->state))
+  				break;
+  			*pos += block_size;
+  			poff += block_size;
+@@ -115,7 +119,7 @@ iomap_adjust_read_range(struct inode *inode, struct 
+iomap_page *iop,
+
+  		/* truncate len if we find any trailing uptodate block(s) */
+  		for ( ; i <= last; i++) {
+-			if (test_bit(i, iop->uptodate)) {
++			if (test_bit(i, iop->state)) {
+  				plen -= (last - i + 1) * block_size;
+  				last = i - 1;
+  				break;
+@@ -139,6 +143,55 @@ iomap_adjust_read_range(struct inode *inode, struct 
+iomap_page *iop,
+  	*lenp = plen;
+  }
+
++static void
++iomap_set_range_dirty(struct page *page, unsigned int off,
++		unsigned int len)
++{
++	struct inode *inode = page->mapping->host;
++	unsigned int blocks_per_page = i_blocks_per_page(inode, page);
++	unsigned int first = (off >> inode->i_blkbits) + blocks_per_page;
++	unsigned int last = ((off + len - 1) >> inode->i_blkbits) + 
+blocks_per_page;
++	unsigned long flags;
++	struct iomap_page *iop;
++
++	if (PageError(page))
++		return;
++
++	if (len)
++		iomap_set_page_dirty(page);
++
++	if (!page_has_private(page))
++		return;
++
++	iop = to_iomap_page(page);
++	spin_lock_irqsave(&iop->state_lock, flags);
++	bitmap_set(iop->state, first, last - first + 1);
++	spin_unlock_irqrestore(&iop->state_lock, flags);
++}
++
++static void
++iomap_clear_range_dirty(struct page *page, unsigned int off,
++		unsigned int len)
++{
++	struct inode *inode = page->mapping->host;
++	unsigned int blocks_per_page = i_blocks_per_page(inode, page);
++	unsigned int first = (off >> inode->i_blkbits) + blocks_per_page;
++	unsigned int last = ((off + len - 1) >> inode->i_blkbits) + 
+blocks_per_page;
++	unsigned long flags;
++	struct iomap_page *iop;
++
++	if (PageError(page))
++		return;
++
++	if (!page_has_private(page))
++		return;
++
++	iop = to_iomap_page(page);
++	spin_lock_irqsave(&iop->state_lock, flags);
++	bitmap_clear(iop->state, first, last - first + 1);
++	spin_unlock_irqrestore(&iop->state_lock, flags);
++}
++
+  static void
+  iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned 
+len)
+  {
+@@ -148,11 +201,11 @@ iomap_iop_set_range_uptodate(struct page *page, 
+unsigned off, unsigned len)
+  	unsigned last = (off + len - 1) >> inode->i_blkbits;
+  	unsigned long flags;
+
+-	spin_lock_irqsave(&iop->uptodate_lock, flags);
+-	bitmap_set(iop->uptodate, first, last - first + 1);
+-	if (bitmap_full(iop->uptodate, i_blocks_per_page(inode, page)))
++	spin_lock_irqsave(&iop->state_lock, flags);
++	bitmap_set(iop->state, first, last - first + 1);
++	if (bitmap_full(iop->state, i_blocks_per_page(inode, page)))
+  		SetPageUptodate(page);
+-	spin_unlock_irqrestore(&iop->uptodate_lock, flags);
++	spin_unlock_irqrestore(&iop->state_lock, flags);
+  }
+
+  static void
+@@ -445,7 +498,7 @@ iomap_is_partially_uptodate(struct page *page, 
+unsigned long from,
+
+  	if (iop) {
+  		for (i = first; i <= last; i++)
+-			if (!test_bit(i, iop->uptodate))
++			if (!test_bit(i, iop->state))
+  				return 0;
+  		return 1;
+  	}
+@@ -683,7 +736,7 @@ static size_t __iomap_write_end(struct inode *inode, 
+loff_t pos, size_t len,
+  	if (unlikely(copied < len && !PageUptodate(page)))
+  		return 0;
+  	iomap_set_range_uptodate(page, offset_in_page(pos), len);
+-	iomap_set_page_dirty(page);
++	iomap_set_range_dirty(page, offset_in_page(pos), len);
+  	return copied;
+  }
+
+@@ -997,7 +1050,6 @@ iomap_page_mkwrite_actor(struct inode *inode, 
+loff_t pos, loff_t length,
+  	} else {
+  		WARN_ON_ONCE(!PageUptodate(page));
+  		iomap_page_create(inode, page);
+-		set_page_dirty(page);
+  	}
+
+  	return length;
+@@ -1007,7 +1059,7 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault 
+*vmf, const struct iomap_ops *ops)
+  {
+  	struct page *page = vmf->page;
+  	struct inode *inode = file_inode(vmf->vma->vm_file);
+-	unsigned long length;
++	unsigned int length, dirty_bits;
+  	loff_t offset;
+  	ssize_t ret;
+
+@@ -1016,6 +1068,7 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault 
+*vmf, const struct iomap_ops *ops)
+  	if (ret < 0)
+  		goto out_unlock;
+  	length = ret;
++	dirty_bits = ret;
+
+  	offset = page_offset(page);
+  	while (length > 0) {
+@@ -1028,6 +1081,7 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault 
+*vmf, const struct iomap_ops *ops)
+  		length -= ret;
+  	}
+
++	iomap_set_range_dirty(page, 0, dirty_bits);
+  	wait_for_stable_page(page);
+  	return VM_FAULT_LOCKED;
+  out_unlock:
+@@ -1340,11 +1394,12 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+  	struct iomap_page *iop = to_iomap_page(page);
+  	struct iomap_ioend *ioend, *next;
+  	unsigned len = i_blocksize(inode);
++	unsigned int blocks_per_page = i_blocks_per_page(inode, page);
+  	u64 file_offset; /* file offset of page */
+  	int error = 0, count = 0, i;
+  	LIST_HEAD(submit_list);
+
+-	WARN_ON_ONCE(i_blocks_per_page(inode, page) > 1 && !iop);
++	WARN_ON_ONCE(blocks_per_page > 1 && !iop);
+  	WARN_ON_ONCE(iop && atomic_read(&iop->write_bytes_pending) != 0);
+
+  	/*
+@@ -1355,7 +1410,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+  	for (i = 0, file_offset = page_offset(page);
+  	     i < (PAGE_SIZE >> inode->i_blkbits) && file_offset < end_offset;
+  	     i++, file_offset += len) {
+-		if (iop && !test_bit(i, iop->uptodate))
++		if (iop && !test_bit(i, iop->state + blocks_per_page))
+  			continue;
+
+  		error = wpc->ops->map_blocks(wpc, inode, file_offset);
+@@ -1404,6 +1459,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+  		 */
+  		set_page_writeback_keepwrite(page);
+  	} else {
++		iomap_clear_range_dirty(page, 0, PAGE_SIZE);
+  		clear_page_dirty_for_io(page);
+  		set_page_writeback(page);
+  	}
+-- 
+2.25.4
+
+
+.
+
+
+
+
