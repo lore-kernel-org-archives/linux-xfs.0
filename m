@@ -2,179 +2,143 @@ Return-Path: <SRS0=ZFeo=CV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E993C433E2
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Sep 2020 06:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72109C433E2
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Sep 2020 13:00:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA2A1208FE
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Sep 2020 06:19:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 313FA208E4
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Sep 2020 13:00:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="oeRCKcxX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aBhk6iSR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725817AbgILGT0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 12 Sep 2020 02:19:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58836 "EHLO
+        id S1725859AbgILNAv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 12 Sep 2020 09:00:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35790 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725808AbgILGTZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Sep 2020 02:19:25 -0400
-Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77D41C061573;
-        Fri, 11 Sep 2020 23:19:25 -0700 (PDT)
-Received: by mail-io1-xd43.google.com with SMTP id b6so13344051iof.6;
-        Fri, 11 Sep 2020 23:19:25 -0700 (PDT)
+        with ESMTP id S1725847AbgILNAr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Sep 2020 09:00:47 -0400
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D2FCC061573
+        for <linux-xfs@vger.kernel.org>; Sat, 12 Sep 2020 06:00:45 -0700 (PDT)
+Received: by mail-pl1-x644.google.com with SMTP id e4so2232622pln.10
+        for <linux-xfs@vger.kernel.org>; Sat, 12 Sep 2020 06:00:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=RWUUdByFvtqb1glreh6Bs2mDpnkxfWc+Wt1JUPVGjnk=;
-        b=oeRCKcxXBk+ojLrRlwIdT3VESa294A5UXZF4bv+munDBcqKQw8iEd1t+/7K8ouFph0
-         rQyy8ekphcTE3vjeYDn7BG5mWubXgm4IT4aNf3a4x9s5EVh9BStZPNw1DBTgFRKAgVTj
-         vCedXQa5w8KuAnyx6OSAjFDtfDfYEWhdpPhx923FHm29ohE1utAiJAZQ/1nZ9b917Vem
-         wqIoU3oP7v7MinNN50b0n0FNseDccrMs1IM8p70+mOkKsJ3/pRWsfbUDp4HQqoSoCKDo
-         bvQeDXU5Q4Ls5jDabFolMZQG+2pOFLqQ1IdB1bl/mBMRHOFJPfF4aSycwsSSody+CKp/
-         wdew==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=5Rc3vxwkzaAhbaoo4wZyLa7jwwbOkSSP7gwJahMZwlg=;
+        b=aBhk6iSRBbKTldBrq+bx2OjxZbb8SvWAlRXplkhDxAizYFU591cxBS2EnjDJtrDCg4
+         2XDMkEddkHcfre8QZRT3kiZjrWCfryzL4dZZobF5o6Okmoy61JnnVNloYOE/KaKqsuwv
+         hI0LKSTAK7YHseloNXQK3ZG9rblrkdt1fOAWc1XsjwZ3v0cSRFG/FjRjMIv0xCEvII5m
+         5NT/6uK0Qg6ZHGxhhNMWe0sTDVAA0BDsvyn5hYj5e/AeQd/nwiRGoJ/Ywsg5wwnPsZtC
+         ELVZYVO41zZv1FL8T9zg6CFL61/+yuLmvpyswJDJOwdCRAIicLBr49NeVwLxyZR0v+jU
+         foUg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=RWUUdByFvtqb1glreh6Bs2mDpnkxfWc+Wt1JUPVGjnk=;
-        b=EWwvhLZ8AVJVxiDYUsYMyq1F+genR91EcWPAs56l6jN1hU0k32VjfT00VRePUAJE6Q
-         2xvW1T3birg1iVKhUSXFgvpgpckwuIz0JQ1KC/3HgTPpswG1TOQwIo0whwqmXTAkcIa5
-         UYVP+Z60KZ66K9y1xrGt42bL+1HIW8cEMGyh4ylnChopo1bmq+lffK2THdXKSq1gkkYF
-         lpKTiGYlHUvIP+866+10XrCyDH7kTakbx620f0sdhGTzrLrOvnZGGF951TPzome9BczK
-         EXAWR/dzJ9Vt9IC1KuTfx1rgx51D/+LkxpQJnp+wC3+wTMiql8m6Nafapp7fFmuN6UlP
-         c+tw==
-X-Gm-Message-State: AOAM530dm69ShM5ShCUUMN8k+Lu9AZ9sXcaFTaK9JJrLxvQOYMuFwRNX
-        JbW0tu6+6AJ0blqQITipNmcdJMkdrVuIm54V260=
-X-Google-Smtp-Source: ABdhPJwJ++P1wFa8xAYXha0p/f9NmOdh5QtDmdi2cIbl3aMXW1zuAUNjHk5PNBxI8lAoW3lZaC9GGWhxDbVOKw7wuEk=
-X-Received: by 2002:a05:6602:2e81:: with SMTP id m1mr4459738iow.64.1599891562643;
- Fri, 11 Sep 2020 23:19:22 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=5Rc3vxwkzaAhbaoo4wZyLa7jwwbOkSSP7gwJahMZwlg=;
+        b=fhVSbQZrLqZb6a5dBYglBnNlDT+IZoqOefo/OIPoARsCZHQG/5xYproMY2sXzmBGeU
+         4BsgBfcLmTzLK9pW0utHjUqV2+Gtuqex91J91qMEjyRsnIU/n4B39/zsicsyUa4wMg3F
+         RnSfKlv8knZX8XRrQCfGL6MSwKJP1fzUDxIszjjlo5n59VUjyLaQCSwg2YxoiiMu9gjv
+         THpldXdf4emNSQX/ibx3H9PlOq723jQBBH15NivJTTlfL2nbdSEsjE7Idr6meyu5VdZu
+         ykUrKr2y7AkjGbszL06NjhssUD469aqM4AtjQu90UjPR2TJnG3MKC1ehJM0hfhsCLu8d
+         BXgg==
+X-Gm-Message-State: AOAM530uh1A500lUHQy9V8ac0ey3Af/mSGoP64Gme4dskH046xr5Dhrf
+        Mjsstrmanso9O8dpyFNfqJEbSg4QHY0=
+X-Google-Smtp-Source: ABdhPJx+marJ3U1ruQtNDvsA2jNWqV+GVd06bKiNzHWzntvuOMtEzyoujDvg/4A1AqAevS+EJmUk9Q==
+X-Received: by 2002:a17:902:8f98:b029:d1:870b:469e with SMTP id z24-20020a1709028f98b02900d1870b469emr6895114plo.3.1599915644503;
+        Sat, 12 Sep 2020 06:00:44 -0700 (PDT)
+Received: from localhost.localdomain ([122.182.232.233])
+        by smtp.gmail.com with ESMTPSA id u4sm5473187pfk.166.2020.09.12.06.00.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 12 Sep 2020 06:00:43 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com
+Subject: [PATCH] xfs: Set xfs_buf type flag when growing summary/bitmap files
+Date:   Sat, 12 Sep 2020 18:30:15 +0530
+Message-Id: <20200912130015.11473-1-chandanrlinux@gmail.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-References: <20200623052059.1893966-1-david@fromorbit.com>
-In-Reply-To: <20200623052059.1893966-1-david@fromorbit.com>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Sat, 12 Sep 2020 09:19:11 +0300
-Message-ID: <CAOQ4uxh0dnVXJ9g+5jb3q72RQYYqTLPW_uBqHPKn6AJZ2DNPOQ@mail.gmail.com>
-Subject: More filesystem need this fix (xfs: use MMAPLOCK around filemap_map_pages())
-To:     Andreas Gruenbacher <agruenba@redhat.com>, Jan Kara <jack@suse.cz>,
-        Theodore Tso <tytso@mit.edu>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Qiuyang Sun <sunqiuyang@huawei.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "Kirill A. Shutemov" <kirill@shutemov.name>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Al Viro <viro@zeniv.linux.org.uk>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Jun 23, 2020 at 8:21 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> From: Dave Chinner <dchinner@redhat.com>
->
-> The page faultround path ->map_pages is implemented in XFS via
-> filemap_map_pages(). This function checks that pages found in page
-> cache lookups have not raced with truncate based invalidation by
-> checking page->mapping is correct and page->index is within EOF.
->
-> However, we've known for a long time that this is not sufficient to
-> protect against races with invalidations done by operations that do
-> not change EOF. e.g. hole punching and other fallocate() based
-> direct extent manipulations. The way we protect against these
-> races is we wrap the page fault operations in a XFS_MMAPLOCK_SHARED
-> lock so they serialise against fallocate and truncate before calling
-> into the filemap function that processes the fault.
->
-> Do the same for XFS's ->map_pages implementation to close this
-> potential data corruption issue.
->
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_file.c | 15 ++++++++++++++-
->  1 file changed, 14 insertions(+), 1 deletion(-)
->
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7b05f8fd7b3d..4b185a907432 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1266,10 +1266,23 @@ xfs_filemap_pfn_mkwrite(
->         return __xfs_filemap_fault(vmf, PE_SIZE_PTE, true);
->  }
->
-> +static void
-> +xfs_filemap_map_pages(
-> +       struct vm_fault         *vmf,
-> +       pgoff_t                 start_pgoff,
-> +       pgoff_t                 end_pgoff)
-> +{
-> +       struct inode            *inode = file_inode(vmf->vma->vm_file);
-> +
-> +       xfs_ilock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> +       filemap_map_pages(vmf, start_pgoff, end_pgoff);
-> +       xfs_iunlock(XFS_I(inode), XFS_MMAPLOCK_SHARED);
-> +}
-> +
->  static const struct vm_operations_struct xfs_file_vm_ops = {
->         .fault          = xfs_filemap_fault,
->         .huge_fault     = xfs_filemap_huge_fault,
-> -       .map_pages      = filemap_map_pages,
-> +       .map_pages      = xfs_filemap_map_pages,
->         .page_mkwrite   = xfs_filemap_page_mkwrite,
->         .pfn_mkwrite    = xfs_filemap_pfn_mkwrite,
->  };
-> --
-> 2.26.2.761.g0e0b3e54be
->
+The following sequence of commands,
 
-It appears that ext4, f2fs, gfs2, orangefs, zonefs also need this fix
+  mkfs.xfs -f -m reflink=0 -r rtdev=/dev/loop1,size=10M /dev/loop0
+  mount -o rtdev=/dev/loop1 /dev/loop0 /mnt
+  xfs_growfs  /mnt
 
-zonefs does not support hole punching, so it may not need to use
-mmap_sem at all.
+... causes the following call trace to be printed on the console,
 
-It is interesting to look at how this bug came to be duplicated in so
-many filesystems, because there are lessons to be learned.
+XFS: Assertion failed: (bip->bli_flags & XFS_BLI_STALE) || (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF), file: fs/xfs/xfs_buf_item.c, line: 331
+Call Trace:
+ xfs_buf_item_format+0x632/0x680
+ ? kmem_alloc_large+0x29/0x90
+ ? kmem_alloc+0x70/0x120
+ ? xfs_log_commit_cil+0x132/0x940
+ xfs_log_commit_cil+0x26f/0x940
+ ? xfs_buf_item_init+0x1ad/0x240
+ ? xfs_growfs_rt_alloc+0x1fc/0x280
+ __xfs_trans_commit+0xac/0x370
+ xfs_growfs_rt_alloc+0x1fc/0x280
+ xfs_growfs_rt+0x1a0/0x5e0
+ xfs_file_ioctl+0x3fd/0xc70
+ ? selinux_file_ioctl+0x174/0x220
+ ksys_ioctl+0x87/0xc0
+ __x64_sys_ioctl+0x16/0x20
+ do_syscall_64+0x3e/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
 
-Commit f1820361f83d ("mm: implement ->map_pages for page cache")
-added to ->map_pages() operation and its commit message said:
+This occurs because the buffer being formatted has the value of
+XFS_BLFT_UNKNOWN_BUF assigned to the 'type' subfield of
+bip->bli_formats->blf_flags.
 
-"...It should be safe to use filemap_map_pages() for ->map_pages() if
-    filesystem use filemap_fault() for ->fault()."
+This commit fixes the issue by assigning one of XFS_BLFT_RTSUMMARY_BUF
+and XFS_BLFT_RTBITMAP_BUF to the 'type' subfield of
+bip->bli_formats->blf_flags before committing the corresponding
+transaction.
 
-At the time, all of the aforementioned filesystems used filemap_fault()
-for ->fault().
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+ fs/xfs/xfs_rtalloc.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-But since then, ext4, xfs, f2fs and just recently gfs2 have added a filesystem
-->fault() operation.
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 6209e7b6b895..192a69f307d7 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -767,8 +767,12 @@ xfs_growfs_rt_alloc(
+ 	struct xfs_bmbt_irec	map;		/* block map output */
+ 	int			nmap;		/* number of block maps */
+ 	int			resblks;	/* space reservation */
++	enum xfs_blft		buf_type;
+ 	struct xfs_trans	*tp;
+ 
++	buf_type = (ip == mp->m_rsumip) ?
++		XFS_BLFT_RTSUMMARY_BUF : XFS_BLFT_RTBITMAP_BUF;
++
+ 	/*
+ 	 * Allocate space to the file, as necessary.
+ 	 */
+@@ -830,6 +834,8 @@ xfs_growfs_rt_alloc(
+ 					mp->m_bsize, 0, &bp);
+ 			if (error)
+ 				goto out_trans_cancel;
++
++			xfs_trans_buf_set_type(tp, bp, buf_type);
+ 			memset(bp->b_addr, 0, mp->m_sb.sb_blocksize);
+ 			xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
+ 			/*
+-- 
+2.28.0
 
-orangefs has added vm_operations since and zonefs was added since,
-probably copying the mmap_sem handling from ext4. Both have a filesystem
-->fault() operation.
-
-It was surprising for me to see that some of the filesystem developers
-signed on the added ->fault() operations are not strangers to mm. The
-recent gfs2 change was even reviewed by an established mm developer
-[1].
-
-So what can we learn from this case study? How could we fix the interface to
-avoid repeating the same mistake in the future?
-
-Thanks,
-Amir.
-
-[1] https://lore.kernel.org/linux-fsdevel/20200703113801.GD25523@casper.infradead.org/
