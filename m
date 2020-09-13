@@ -5,23 +5,23 @@ X-Spam-Level:
 X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7BEDC433E2
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Sep 2020 07:59:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CBCC433E2
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Sep 2020 15:00:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8907C208FE
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Sep 2020 07:59:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AD912151B
+	for <linux-xfs@archiver.kernel.org>; Sun, 13 Sep 2020 15:00:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725913AbgIMH7Z convert rfc822-to-8bit (ORCPT
+        id S1725933AbgIMPAk convert rfc822-to-8bit (ORCPT
         <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 13 Sep 2020 03:59:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48488 "EHLO mail.kernel.org"
+        Sun, 13 Sep 2020 11:00:40 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35272 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725912AbgIMH7Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 13 Sep 2020 03:59:24 -0400
+        id S1725932AbgIMPAj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 13 Sep 2020 11:00:39 -0400
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-xfs@vger.kernel.org
 Subject: [Bug 209243] fsx IO_URING reading get BAD DATA
-Date:   Sun, 13 Sep 2020 07:59:21 +0000
+Date:   Sun, 13 Sep 2020 15:00:39 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
@@ -37,7 +37,7 @@ X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-209243-201763-mCQxdkk3g0@https.bugzilla.kernel.org/>
+Message-ID: <bug-209243-201763-NJWWoCnIrI@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-209243-201763@https.bugzilla.kernel.org/>
 References: <bug-209243-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -52,10 +52,9 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=209243
 
---- Comment #2 from Zorro Lang (zlang@redhat.com) ---
-This failure can't be reproduced on older kernel, likes 5.8-rc4 (I have a
-ready-made one, so just tested on it). It looks like a regression, need more
-test.
+--- Comment #3 from Zorro Lang (zlang@redhat.com) ---
+FYI, looks like LVM is needed, at least I haven't reproduced it on general disk
+partition or loop device.
 
 -- 
 You are receiving this mail because:
