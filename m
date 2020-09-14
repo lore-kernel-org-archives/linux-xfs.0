@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CC7FC433E2
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Sep 2020 09:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01E43C43461
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Sep 2020 09:01:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EDB5207C3
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Sep 2020 09:00:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABA4021741
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Sep 2020 09:01:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mdlmvEim"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tc4u0XLi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726112AbgINJAN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Sep 2020 05:00:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43210 "EHLO
+        id S1726172AbgINJBq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Sep 2020 05:01:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43446 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726244AbgINJAL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Sep 2020 05:00:11 -0400
+        with ESMTP id S1726123AbgINJBo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Sep 2020 05:01:44 -0400
 Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01499C061788
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2020 02:00:10 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id o20so12039647pfp.11
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Sep 2020 02:00:10 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16A7DC06174A;
+        Mon, 14 Sep 2020 02:01:44 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id d9so12073304pfd.3;
+        Mon, 14 Sep 2020 02:01:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=FjgeZB202I/h1vNHogL3wYy2FuQQGeSHFKuxvRcQH+w=;
-        b=mdlmvEimRfhHrlzrqsMsLsBXIl7o7urtNwsCFu6vcruj6+uSEWuZLdVO9RhuMUukCY
-         i+TsvJOgvwiY3zPYzdp0NArYtjlvQeRyDx2GFR6SScIe+QB3WahgKQd4a6nbPETDCO8S
-         YF0bFPQKLCR/xU+17Z002k6qYXNLi2kL6zsKmbtGttRTWmaCQxUshydZk0H6v00Bl6Zu
-         vLTI9N8cTCEwZMARkwO/4cu+PuJuQMOII3zKZLsLYmXR4r0SmrwGQGkiKCSlYolQaObN
-         GwXQyl7RkDTD0ZsRIbObXwz4XrxJ54pG9BGWRB7o48jtfSmLtksade9uls6YtoXq57dI
-         0C6A==
+        bh=J+24N/EyLiqfwOkczTQJ75qiO/VbQgLG0qcqPZDYvsU=;
+        b=tc4u0XLi6dDJxLgK/riPzCILi1zcAG4GupY/n9cq46rd2oq12mA5ZKF/50xDHf1Bbo
+         3racpJKzZSiTCeJRxZV3uipSaDvDBVbEmM4f5emVwzR2yzUCT2ctiZWZlpoSwomW5iLp
+         +2msU/iwyUL76uWzDyzI91QZYiSa9l8FvibSCMtnyURXCKi/Il7xZ0KdQGvFk2sPukgQ
+         VrsiaPidrVUZtus+3IydmnFIXULzizfwY+AxRIsLQSmm3O2rHqXYIUD3azsoLQmnLbqU
+         BJnonUWZoW23yA7oNLRyRbT3jhYOs6za2+YUGuk3S9LP56cp2XGJBK9y5fBFIhCjXUoX
+         NKbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=FjgeZB202I/h1vNHogL3wYy2FuQQGeSHFKuxvRcQH+w=;
-        b=FR2uHnos7+A8rglFXs8Cj7Bn6y8ZioXG9gO60q4GnS0kmAfuHKrEkV3vH7Qg+odtSj
-         QRIsdrD39F/o2OA3vhlhFzsXwSC8Ty10Jh7L8ZJ8paWnkM6QsIsNmSxrPjAjkJUcI/fj
-         eZbTPU9UjkIEkn4OTwHUt34buCu+I/kuCCdm7gK/CWZmOMw3amhQsVhxHjf5rl3aYUZS
-         eKul3Lt2BNppBd4N9j/mTCz02CSEpklp5WjD/uXUsh5K4ASiT3ycnAPIUez3+2CZLve/
-         62s2+6DBSatdS5+O3GHppKtdEzlVW54wqBNKf+0+FPQ1gS/q9SBGlzcGxMfgW+cx3ID5
-         d1jg==
-X-Gm-Message-State: AOAM530Em3xy15T9nOvSsDzqYuwuX9SNf7edg3ohvlvpOtonjz8xu4wH
-        48kMNFNU/8Pid17CtLDWfFhZQRr9Oc8=
-X-Google-Smtp-Source: ABdhPJxFEL5jSNEkZUmP+Pvu1+ekdDw4Mi76pmMgMT/2xYL9tltBSwx1C+NmITEAqrpl6Jtx3hG3lQ==
-X-Received: by 2002:a17:902:6bc1:: with SMTP id m1mr12727824plt.75.1600074009984;
-        Mon, 14 Sep 2020 02:00:09 -0700 (PDT)
+        bh=J+24N/EyLiqfwOkczTQJ75qiO/VbQgLG0qcqPZDYvsU=;
+        b=C21wwmmvRSHbomdB+5EfKM1dN82WKIj2OQAg1+LnY10vMsMgn/wjxkeSkGFmjm8Ul4
+         jU+0xAS055+rZSj0kdWSkoVRhZozuGnphCy8ALC3mtvsZtaG371sy6oyLcazT6nE5Xl+
+         eb8az49WP3+ayBnYDiVcRYIpB7bksBTnBys21gOj4qDFtWs+P7yxYq3gozQU5tZZui5k
+         i6qdIlwdy/822CAgxeBqkcGIXnoXQhmHEizPNvNSAu35QqTWZ5UBD49pt1ArhmIPREV8
+         lZ3WcCBrQcBvvZJHX029uqw6cZ3Y5LZvayh71w/P6wwcX4g+BDGmuZfwbuoAUzoBVdb8
+         cJxA==
+X-Gm-Message-State: AOAM531FhHLV1NJaBfsIb/vy8KypHhvHbO2vHDUblD42ItwOF7bLxkq7
+        GPGQH05cDvtFqeaEB+GHrNkxIeGq/RY=
+X-Google-Smtp-Source: ABdhPJyIq5WyxybyylT0VdqRX2fIrmd/mc5WKHXb+ariYLC4BZMcWerFKf35ptzMAersXBHAkBaIRA==
+X-Received: by 2002:a63:471b:: with SMTP id u27mr10164130pga.139.1600074103271;
+        Mon, 14 Sep 2020 02:01:43 -0700 (PDT)
 Received: from localhost.localdomain ([122.182.251.12])
-        by smtp.gmail.com with ESMTPSA id a18sm7797271pgw.50.2020.09.14.02.00.07
+        by smtp.gmail.com with ESMTPSA id z129sm7918182pgb.84.2020.09.14.02.01.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2020 02:00:09 -0700 (PDT)
+        Mon, 14 Sep 2020 02:01:42 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH V2] xfs: Set xfs_buf type flag when growing summary/bitmap files
-Date:   Mon, 14 Sep 2020 14:29:44 +0530
-Message-Id: <20200914085944.7167-1-chandanrlinux@gmail.com>
+To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>, guaneryu@gmail.com,
+        darrick.wong@oracle.com
+Subject: [PATCH] xfs: Check if rt summary/bitmap buffers are logged with correct xfs_buf type
+Date:   Mon, 14 Sep 2020 14:30:53 +0530
+Message-Id: <20200914090053.7220-1-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -73,13 +73,10 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The following sequence of commands,
-
-  mkfs.xfs -f -m reflink=0 -r rtdev=/dev/loop1,size=10M /dev/loop0
-  mount -o rtdev=/dev/loop1 /dev/loop0 /mnt
-  xfs_growfs  /mnt
-
-... causes the following call trace to be printed on the console,
+This commit adds a test to check if growing a real-time device can end
+up logging an xfs_buf with the "type" subfield of
+bip->bli_formats->blf_flags set to XFS_BLFT_UNKNOWN_BUF. When this
+occurs the following call trace is printed on the console,
 
 XFS: Assertion failed: (bip->bli_flags & XFS_BLI_STALE) || (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF), file: fs/xfs/xfs_buf_item.c, line: 331
 Call Trace:
@@ -100,54 +97,96 @@ Call Trace:
  do_syscall_64+0x3e/0x70
  entry_SYSCALL_64_after_hwframe+0x44/0xa9
 
-This occurs because the buffer being formatted has the value of
-XFS_BLFT_UNKNOWN_BUF assigned to the 'type' subfield of
-bip->bli_formats->blf_flags.
+The kernel patch "xfs: Set xfs_buf type flag when growing summary/bitmap
+files" is required to fix this issue.
 
-This commit fixes the issue by assigning one of XFS_BLFT_RTSUMMARY_BUF
-and XFS_BLFT_RTBITMAP_BUF to the 'type' subfield of
-bip->bli_formats->blf_flags before committing the corresponding
-transaction.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
+ tests/xfs/260     | 52 +++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/260.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 55 insertions(+)
+ create mode 100755 tests/xfs/260
+ create mode 100644 tests/xfs/260.out
 
-Changelog:
-  V1 -> V2: Convert ternary statement into a regular if/else statement.
-  
- fs/xfs/xfs_rtalloc.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 6209e7b6b895..04b953c3ffa7 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -767,8 +767,14 @@ xfs_growfs_rt_alloc(
- 	struct xfs_bmbt_irec	map;		/* block map output */
- 	int			nmap;		/* number of block maps */
- 	int			resblks;	/* space reservation */
-+	enum xfs_blft		buf_type;
- 	struct xfs_trans	*tp;
- 
-+	if (ip == mp->m_rsumip)
-+		buf_type = XFS_BLFT_RTSUMMARY_BUF;
-+	else
-+		buf_type = XFS_BLFT_RTBITMAP_BUF;
+diff --git a/tests/xfs/260 b/tests/xfs/260
+new file mode 100755
+index 00000000..5fc1a5fc
+--- /dev/null
++++ b/tests/xfs/260
+@@ -0,0 +1,52 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
++#
++# FS QA Test 260
++#
++# Test to check if growing a real-time device can end up logging an
++# xfs_buf with the "type" subfield of bip->bli_formats->blf_flags set
++# to XFS_BLFT_UNKNOWN_BUF.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
- 	/*
- 	 * Allocate space to the file, as necessary.
- 	 */
-@@ -830,6 +836,8 @@ xfs_growfs_rt_alloc(
- 					mp->m_bsize, 0, &bp);
- 			if (error)
- 				goto out_trans_cancel;
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+			xfs_trans_buf_set_type(tp, bp, buf_type);
- 			memset(bp->b_addr, 0, mp->m_sb.sb_blocksize);
- 			xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
- 			/*
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
++_require_realtime
++
++MKFS_OPTIONS="-f -m reflink=0,rmapbt=0 -r rtdev=${SCRATCH_RTDEV},size=10M" \
++ 	    _mkfs_dev $SCRATCH_DEV >> $seqres.full
++_scratch_mount -o rtdev=$SCRATCH_RTDEV
++
++$XFS_GROWFS_PROG $SCRATCH_MNT >> $seqres.full
++
++_scratch_unmount
++
++echo "Silence is golden"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/260.out b/tests/xfs/260.out
+new file mode 100644
+index 00000000..18ca517c
+--- /dev/null
++++ b/tests/xfs/260.out
+@@ -0,0 +1,2 @@
++QA output created by 260
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index ed0d389e..6f30a2e7 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -257,6 +257,7 @@
+ 257 auto quick clone
+ 258 auto quick clone
+ 259 auto quick
++260 auto
+ 261 auto quick quota
+ 262 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 263 auto quick quota
 -- 
 2.28.0
 
