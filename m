@@ -1,62 +1,96 @@
-Return-Path: <SRS0=CJP2=CW=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=9PeN=CX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B659C43461
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Sep 2020 18:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD80C433E2
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Sep 2020 05:22:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1786F204FD
-	for <linux-xfs@archiver.kernel.org>; Sun, 13 Sep 2020 18:05:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 034BD21974
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Sep 2020 05:22:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725876AbgIMSFa convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 13 Sep 2020 14:05:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45684 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725938AbgIMSF3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 13 Sep 2020 14:05:29 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 209243] fsx IO_URING reading get BAD DATA
-Date:   Sun, 13 Sep 2020 18:05:28 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: zlang@redhat.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-209243-201763-5iXjPvcJfw@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-209243-201763@https.bugzilla.kernel.org/>
-References: <bug-209243-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1726027AbgINFW2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Sep 2020 01:22:28 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:6058 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726026AbgINFW2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Sep 2020 01:22:28 -0400
+X-IronPort-AV: E=Sophos;i="5.76,424,1592841600"; 
+   d="scan'208";a="99192375"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 14 Sep 2020 13:22:23 +0800
+Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
+        by cn.fujitsu.com (Postfix) with ESMTP id E07F948990EE;
+        Mon, 14 Sep 2020 13:22:22 +0800 (CST)
+Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
+ G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Mon, 14 Sep 2020 13:22:23 +0800
+Received: from Fedora-30.g08.fujitsu.local (10.167.220.106) by
+ G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ id 15.0.1497.2 via Frontend Transport; Mon, 14 Sep 2020 13:22:23 +0800
+From:   Xiao Yang <yangx.jy@cn.fujitsu.com>
+To:     <fstests@vger.kernel.org>
+CC:     <darrick.wong@oracle.com>, <david@fromorbit.com>,
+        <ira.weiny@intel.com>, <linux-xfs@vger.kernel.org>, <guan@eryu.me>,
+        Xiao Yang <yangx.jy@cn.fujitsu.com>
+Subject: [PATCH v2 1/2] common/rc: Check 'tPnE' flags on a directory instead of a regilar file
+Date:   Mon, 14 Sep 2020 13:13:59 +0800
+Message-ID: <20200914051400.32057-1-yangx.jy@cn.fujitsu.com>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-yoursite-MailScanner-ID: E07F948990EE.A9F67
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: yangx.jy@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=209243
+'tPnE' flags are only valid for a directory so check them on a directory.
 
---- Comment #4 from Zorro Lang (zlang@redhat.com) ---
-FYI, This mainline linux v5.8 can't reproduce this bug, but v5.9-rc1 can... The
-v5.9-rc1 contains lots of changes of xfs and io_uring, I'm still not sure if
-it's a xfs issue or io_uring issue for now.
+Signed-off-by: Xiao Yang <yangx.jy@cn.fujitsu.com>
+---
+ common/rc | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
+diff --git a/common/rc b/common/rc
+index aa5a7409..6487b9f2 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2163,14 +2163,23 @@ _require_xfs_io_command()
+ 	local testio
+ 	case $command in
+ 	"chattr")
++		local testdir=$TEST_DIR/$$.attr_dir
++		mkdir $TEST_DIR/$$.attr_dir
+ 		if [ -z "$param" ]; then
+ 			param=s
+ 		fi
+ 		# Test xfs_io chattr support AND
+ 		# filesystem FS_IOC_FSSETXATTR support
+-		testio=`$XFS_IO_PROG -F -f -c "chattr +$param" $testfile 2>&1`
+-		$XFS_IO_PROG -F -f -r -c "chattr -$param" $testfile 2>&1
++		# 'tPnE' flags are only valid for a directory so check them on a directory.
++		if echo "$param" | egrep -q 't|P|n|E'; then
++			testio=`$XFS_IO_PROG -F -c "chattr +$param" $testdir 2>&1`
++			$XFS_IO_PROG -F -r -c "chattr -$param" $testdir 2>&1
++		else
++			testio=`$XFS_IO_PROG -F -f -c "chattr +$param" $testfile 2>&1`
++			$XFS_IO_PROG -F -r -c "chattr -$param" $testfile 2>&1
++		fi
+ 		param_checked="+$param"
++		rm -rf $testdir 2>&1 > /dev/null
+ 		;;
+ 	"chproj")
+ 		testio=`$XFS_IO_PROG -F -f -c "chproj 0" $testfile 2>&1`
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.21.0
+
+
+
