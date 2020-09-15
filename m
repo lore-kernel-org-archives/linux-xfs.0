@@ -5,202 +5,262 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 874ACC43461
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 19:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8345FC43461
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 22:31:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C71620770
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 19:21:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45F8A20809
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 22:31:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U5rRpS8P"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rxNuxNpv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727591AbgIOTVp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Sep 2020 15:21:45 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:45606 "EHLO
+        id S1727680AbgIOWbE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Sep 2020 18:31:04 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:47006 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727579AbgIOTVk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 15:21:40 -0400
+        with ESMTP id S1727619AbgIOQRU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 12:17:20 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FG3ZHe133880;
-        Tue, 15 Sep 2020 16:05:34 GMT
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FGFZfu160482;
+        Tue, 15 Sep 2020 16:16:10 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=lyvU4v7amMXQTFyOYZMnZH3TZTiX7S3hG+kfb9JFSgU=;
- b=U5rRpS8PE1TuN6+blvddhUbrJs7HQpdBy815o/B+snlYUHiqiIxFmC5YZ1JjV9p2h26f
- fKOjcwPtCQ1h7VW+l0H3kV2fthFvyVMdMQjWnTcLmtl/zAlIeOLVRgm7EBVq6T+Qa3N8
- 6aL2X0yO5gMlVuZ/XRFjlzZBk+xqmpueuv8AORRL+3QERGvDnOE2JFv207aptNMEpEYO
- /Dv8ZtZewmoiZ8GleTF8Y5D+0zVxGoee88ofFOxX8KnCRbkqawOTYXpaNQ2aygdedfb9
- tlZBaLdt5I8iACaFEJWbURZeJlpE//1Dja4SKOLKvjfjM52oZuj3BW631XE6qlAFQQUP ZA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 33gnrqx37m-1
+ bh=XT+yvQZiRbm8/UYbzOSiuWASepQF3mZn7H7wTZi/Cp8=;
+ b=rxNuxNpvSiBY67BhGaZVFf7Lzy7cDpj39QD3Ggz4KUPcJyxFvis7DrTYpvOssCP0yvWF
+ 9EdMCxKq1JlSDAFQ7oe4or98/K6AJRz5DRgXq5G9fU7veW4664CvF3gi8dC3izjSrXV3
+ No8w0pUT72uyfbb2gXyN0shy1DofMElXb0wjf1GPVGw08H74Yn69Gnj+EbX/RtCOoouK
+ v2RdLJBW0DYxkM+lTzqt0h8GUn8qdWWxUEAACbvNVBCGidHu3Yw8NbYkp5mGBd8JpQ89
+ CjBjuAybJnE5wvNwlFlVCX6VvEd80FbdLoVfOWo7eYTkNG7FaTFP+tXAlWw2kBVLd11R pQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 33gnrqx52n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Sep 2020 16:05:34 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FFjpvX091003;
-        Tue, 15 Sep 2020 16:05:34 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 33hm30tdbd-1
+        Tue, 15 Sep 2020 16:16:10 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FGBQQe094538;
+        Tue, 15 Sep 2020 16:16:09 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 33h885bn7b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Sep 2020 16:05:34 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08FG5X3p029431;
-        Tue, 15 Sep 2020 16:05:33 GMT
+        Tue, 15 Sep 2020 16:16:09 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08FGG7HT015423;
+        Tue, 15 Sep 2020 16:16:07 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 15 Sep 2020 16:05:33 +0000
-Date:   Tue, 15 Sep 2020 09:05:32 -0700
+        with ESMTP ; Tue, 15 Sep 2020 16:16:07 +0000
+Date:   Tue, 15 Sep 2020 09:16:06 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        guaneryu@gmail.com, zlang@redhat.com
-Subject: Re: [PATCH V2] xfs: Check if rt summary/bitmap buffers are logged
- with correct xfs_buf type
-Message-ID: <20200915160532.GC7955@magnolia>
-References: <20200915054748.1765-1-chandanrlinux@gmail.com>
+To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
+        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de,
+        qi.fuli@fujitsu.com, y-goto@fujitsu.com
+Subject: Re: [RFC PATCH 1/4] fs: introduce ->storage_lost() for memory-failure
+Message-ID: <20200915161606.GD7955@magnolia>
+References: <20200915101311.144269-1-ruansy.fnst@cn.fujitsu.com>
+ <20200915101311.144269-2-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200915054748.1765-1-chandanrlinux@gmail.com>
+In-Reply-To: <20200915101311.144269-2-ruansy.fnst@cn.fujitsu.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
- malwarescore=0 mlxscore=0 phishscore=0 adultscore=0 suspectscore=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
+ suspectscore=5 phishscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009150129
+ definitions=main-2009150131
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0
- lowpriorityscore=0 malwarescore=0 mlxscore=0 bulkscore=0 suspectscore=1
+ lowpriorityscore=0 malwarescore=0 mlxscore=0 bulkscore=0 suspectscore=5
  clxscore=1011 mlxlogscore=999 adultscore=0 priorityscore=1501
  impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009150130
+ engine=8.12.0-2006250000 definitions=main-2009150131
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 15, 2020 at 11:17:48AM +0530, Chandan Babu R wrote:
-> This commit adds a test to check if growing a real-time device can end
-> up logging an xfs_buf with the "type" subfield of
-> bip->bli_formats->blf_flags set to XFS_BLFT_UNKNOWN_BUF. When this
-> occurs the following call trace is printed on the console,
+On Tue, Sep 15, 2020 at 06:13:08PM +0800, Shiyang Ruan wrote:
+> This function is used to handle errors which may cause data lost in
+> filesystem.  Such as memory-failure in fsdax mode.
 > 
-> XFS: Assertion failed: (bip->bli_flags & XFS_BLI_STALE) || (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF), file: fs/xfs/xfs_buf_item.c, line: 331
-> Call Trace:
->  xfs_buf_item_format+0x632/0x680
->  ? kmem_alloc_large+0x29/0x90
->  ? kmem_alloc+0x70/0x120
->  ? xfs_log_commit_cil+0x132/0x940
->  xfs_log_commit_cil+0x26f/0x940
->  ? xfs_buf_item_init+0x1ad/0x240
->  ? xfs_growfs_rt_alloc+0x1fc/0x280
->  __xfs_trans_commit+0xac/0x370
->  xfs_growfs_rt_alloc+0x1fc/0x280
->  xfs_growfs_rt+0x1a0/0x5e0
->  xfs_file_ioctl+0x3fd/0xc70
->  ? selinux_file_ioctl+0x174/0x220
->  ksys_ioctl+0x87/0xc0
->  __x64_sys_ioctl+0x16/0x20
->  do_syscall_64+0x3e/0x70
->  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> In XFS, it requires "rmapbt" feature in order to query for files or
+> metadata which associated to the error block.  Then we could call fs
+> recover functions to try to repair the damaged data.(did not implemented
+> in this patch)
 > 
-> The kernel patch "xfs: Set xfs_buf type flag when growing summary/bitmap
-> files" is required to fix this issue.
+> After that, the memory-failure also needs to kill processes who are
+> using those files.  The struct mf_recover_controller is created to store
+> necessary parameters.
 > 
-> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+> ---
+>  fs/xfs/xfs_super.c | 80 ++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/fs.h |  1 +
+>  include/linux/mm.h |  6 ++++
+>  3 files changed, 87 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 71ac6c1cdc36..118d9c5d9e1e 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -35,6 +35,10 @@
+>  #include "xfs_refcount_item.h"
+>  #include "xfs_bmap_item.h"
+>  #include "xfs_reflink.h"
+> +#include "xfs_alloc.h"
+> +#include "xfs_rmap.h"
+> +#include "xfs_rmap_btree.h"
+> +#include "xfs_bit.h"
+>  
+>  #include <linux/magic.h>
+>  #include <linux/fs_context.h>
+> @@ -1104,6 +1108,81 @@ xfs_fs_free_cached_objects(
+>  	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
+>  }
+>  
+> +static int
+> +xfs_storage_lost_helper(
+> +	struct xfs_btree_cur		*cur,
+> +	struct xfs_rmap_irec		*rec,
+> +	void				*priv)
+> +{
+> +	struct xfs_inode		*ip;
+> +	struct mf_recover_controller	*mfrc = priv;
+> +	int				rc = 0;
+> +
+> +	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner)) {
+> +		// TODO check and try to fix metadata
+> +	} else {
+> +		/*
+> +		 * Get files that incore, filter out others that are not in use.
+> +		 */
+> +		xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner, XFS_IGET_INCORE,
+> +			 0, &ip);
 
-Looks good to me
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Missing return value check here.
+
+> +		if (!ip)
+> +			return 0;
+> +		if (!VFS_I(ip)->i_mapping)
+> +			goto out;
+> +
+> +		rc = mfrc->recover_fn(mfrc->pfn, mfrc->flags,
+> +				      VFS_I(ip)->i_mapping, rec->rm_offset);
+> +
+> +		// TODO try to fix data
+> +out:
+> +		xfs_irele(ip);
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+> +static int
+> +xfs_fs_storage_lost(
+> +	struct super_block	*sb,
+> +	loff_t			offset,
+
+offset into which device?  XFS supports three...
+
+I'm also a little surprised you don't pass in a length.
+
+I guess that means this function will get called repeatedly for every
+byte in the poisoned range?
+
+> +	void			*priv)
+> +{
+> +	struct xfs_mount	*mp = XFS_M(sb);
+> +	struct xfs_trans	*tp = NULL;
+> +	struct xfs_btree_cur	*cur = NULL;
+> +	struct xfs_rmap_irec	rmap_low, rmap_high;
+> +	struct xfs_buf		*agf_bp = NULL;
+> +	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
+> +	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
+> +	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
+> +	int			error = 0;
+> +
+> +	error = xfs_trans_alloc_empty(mp, &tp);
+> +	if (error)
+> +		return error;
+> +
+> +	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
+> +	if (error)
+> +		return error;
+> +
+> +	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
+
+...and this is definitely the wrong call sequence if the malfunctioning
+device is the realtime device.  If a dax rt device dies, you'll be
+shooting down files on the data device, which will cause all sorts of
+problems.
+
+Question: Should all this poison recovery stuff go into a new file?
+xfs_poison.c?  There's already a lot of code in xfs_super.c.
 
 --D
 
-> ---
->  tests/xfs/260     | 53 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/260.out |  2 ++
->  tests/xfs/group   |  1 +
->  3 files changed, 56 insertions(+)
->  create mode 100755 tests/xfs/260
->  create mode 100644 tests/xfs/260.out
-> 
-> diff --git a/tests/xfs/260 b/tests/xfs/260
-> new file mode 100755
-> index 00000000..078d4a11
-> --- /dev/null
-> +++ b/tests/xfs/260
-> @@ -0,0 +1,53 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
-> +#
-> +# FS QA Test 260
-> +#
-> +# Test to check if growing a real-time device can end up logging an xfs_buf with
-> +# the "type" subfield of bip->bli_formats->blf_flags set to
-> +# XFS_BLFT_UNKNOWN_BUF.
-> +#
-> +# This is a regression test for the kernel patch "xfs: Set xfs_buf type flag
-> +# when growing summary/bitmap files".
 > +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
+> +	/* Construct a range for rmap query */
+> +	memset(&rmap_low, 0, sizeof(rmap_low));
+> +	memset(&rmap_high, 0xFF, sizeof(rmap_high));
+> +	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
 > +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high,
+> +				     xfs_storage_lost_helper, priv);
+> +	if (error == -ECANCELED)
+> +		error = 0;
 > +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
+> +	xfs_btree_del_cursor(cur, error);
+> +	xfs_trans_brelse(tp, agf_bp);
+> +	return error;
 > +}
 > +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_realtime
-> +
-> +_scratch_mkfs -r size=10M  >> $seqres.full
-> +
-> +_scratch_mount >> $seqres.full
-> +
-> +$XFS_GROWFS_PROG $SCRATCH_MNT >> $seqres.full
-> +
-> +_scratch_unmount
-> +
-> +echo "Silence is golden"
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/260.out b/tests/xfs/260.out
-> new file mode 100644
-> index 00000000..18ca517c
-> --- /dev/null
-> +++ b/tests/xfs/260.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 260
-> +Silence is golden
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index ed0d389e..68676064 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -257,6 +257,7 @@
->  257 auto quick clone
->  258 auto quick clone
->  259 auto quick
-> +260 auto quick growfs realtime
->  261 auto quick quota
->  262 dangerous_fuzzers dangerous_scrub dangerous_online_repair
->  263 auto quick quota
+>  static const struct super_operations xfs_super_operations = {
+>  	.alloc_inode		= xfs_fs_alloc_inode,
+>  	.destroy_inode		= xfs_fs_destroy_inode,
+> @@ -1117,6 +1196,7 @@ static const struct super_operations xfs_super_operations = {
+>  	.show_options		= xfs_fs_show_options,
+>  	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+>  	.free_cached_objects	= xfs_fs_free_cached_objects,
+> +	.storage_lost		= xfs_fs_storage_lost,
+>  };
+>  
+>  static int
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index e019ea2f1347..bd90485cfdc9 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -1951,6 +1951,7 @@ struct super_operations {
+>  				  struct shrink_control *);
+>  	long (*free_cached_objects)(struct super_block *,
+>  				    struct shrink_control *);
+> +	int (*storage_lost)(struct super_block *sb, loff_t offset, void *priv);
+>  };
+>  
+>  /*
+> diff --git a/include/linux/mm.h b/include/linux/mm.h
+> index 1983e08f5906..3f0c36e1bf3d 100644
+> --- a/include/linux/mm.h
+> +++ b/include/linux/mm.h
+> @@ -3002,6 +3002,12 @@ extern void shake_page(struct page *p, int access);
+>  extern atomic_long_t num_poisoned_pages __read_mostly;
+>  extern int soft_offline_page(unsigned long pfn, int flags);
+>  
+> +struct mf_recover_controller {
+> +	int (*recover_fn)(unsigned long pfn, int flags,
+> +		struct address_space *mapping, pgoff_t index);
+> +	unsigned long pfn;
+> +	int flags;
+> +};
+>  
+>  /*
+>   * Error handlers for various types of pages.
 > -- 
 > 2.28.0
+> 
+> 
 > 
