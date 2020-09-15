@@ -5,228 +5,230 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CAADC43461
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 16:34:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A838DC433E2
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 16:45:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACCC0206BE
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 16:34:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 626E020809
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 16:45:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="p5iQS7y1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="f39i3x1S"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727708AbgIOQed (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Sep 2020 12:34:33 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:51368 "EHLO
+        id S1727785AbgIOQor (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Sep 2020 12:44:47 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:59688 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727580AbgIOQdm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 12:33:42 -0400
+        with ESMTP id S1727731AbgIOQnD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 12:43:03 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FGUxkp137274;
-        Tue, 15 Sep 2020 16:33:08 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FG4cEA080508;
+        Tue, 15 Sep 2020 16:07:00 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=EySSFs/mkWAdsBkj1u/J5ie8Sv/9oH6sVII8xbItpCw=;
- b=p5iQS7y18Ip+5cIDhWFg1wnPX0miaN9TSUk18AqKYQnOWi9sblfvEOreraAEaPnPs9Gi
- GJpmffca68bOdAGLz7c6GDNVE1LSAZHyExlQEWpkSsiDQ+padABKXNo/rkQ5RyklpaB6
- xv8bwcdCYXMLX//tElU1CFQqEqvjaME4Gwvie+mfI4hVcMIAdCJlsodG6cKH+qLo+EPJ
- fbjPDMktxCS2JUDcuKNWlyFF/xQK69MkjQW9l649+ZEVCDfRa1c0j3qraTdJdBb8ugWX
- GXlEbtCJUJAHs3z/sF62QySDF2awj7iFUNqB3I4s/Y2MOHkbODYmjDDkZC/RhCmgHoTY TA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 33j91dfu6u-1
+ bh=zWzVSSeKnRNECwrg4Jmzy5DljoWnEjk1lOAJbginv+E=;
+ b=f39i3x1SCJuEW2ypmcYuY0+RQDzFO7AgyhakpJlMP7FeW+0SiXBHVvfMaF5b5/vjsqJF
+ PsVslVEifgI6GfYrDZWa3SZhioP2ar+tZgfMmf+Z5MRe0RFDnZA+PCtJg0tTveA2S8Qm
+ E8tIvTrMgHqpiqeb5zrNgohW2LDsFRY8EkxGZm3EVpCJmq+HP4woq5qwlmXBz5C7+DCD
+ 0bM030BYiEsJHMvC5MHYplUWZbKqsRF53xKhmncdtXWtt2MINasjW3L92PI2uTyAkngT
+ 93wkNnvWevIXLRBlJNgQAi9fAvlJf/Uwr9uKMRt28rcpgK4i3OjbkpEWsTVdQ3fJ3QuN 2w== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 33j91dfppx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 15 Sep 2020 16:33:07 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FGTwFn120010;
-        Tue, 15 Sep 2020 16:31:07 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 33h7wpd5gb-1
+        Tue, 15 Sep 2020 16:07:00 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08FFjq4b091119;
+        Tue, 15 Sep 2020 16:05:00 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 33hm30tb7n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Sep 2020 16:31:07 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08FGV4nB012357;
-        Tue, 15 Sep 2020 16:31:05 GMT
+        Tue, 15 Sep 2020 16:05:00 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08FG4x0p029097;
+        Tue, 15 Sep 2020 16:04:59 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 15 Sep 2020 16:31:04 +0000
-Date:   Tue, 15 Sep 2020 09:31:04 -0700
+        with ESMTP ; Tue, 15 Sep 2020 16:04:58 +0000
+Date:   Tue, 15 Sep 2020 09:04:58 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, dan.j.williams@intel.com,
-        david@fromorbit.com, hch@lst.de, rgoldwyn@suse.de,
-        qi.fuli@fujitsu.com, y-goto@fujitsu.com
-Subject: Re: [RFC PATCH 2/4] pagemap: introduce ->memory_failure()
-Message-ID: <20200915163104.GG7964@magnolia>
-References: <20200915101311.144269-1-ruansy.fnst@cn.fujitsu.com>
- <20200915101311.144269-3-ruansy.fnst@cn.fujitsu.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org, guaneryu@gmail.com
+Subject: Re: [PATCH V2] xfs: Check if rt summary/bitmap buffers are logged
+ with correct xfs_buf type
+Message-ID: <20200915160458.GB7955@magnolia>
+References: <20200915054748.1765-1-chandanrlinux@gmail.com>
+ <20200915071922.GO2937@dhcp-12-102.nay.redhat.com>
+ <2327937.js4hDJpFsT@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200915101311.144269-3-ruansy.fnst@cn.fujitsu.com>
+In-Reply-To: <2327937.js4hDJpFsT@garuda>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- adultscore=0 bulkscore=0 phishscore=0 mlxlogscore=999 mlxscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009150134
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
+ malwarescore=0 mlxscore=0 phishscore=0 adultscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009150129
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
  priorityscore=1501 malwarescore=0 suspectscore=1 mlxlogscore=999
  clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0 mlxscore=0
  bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009150134
+ engine=8.12.0-2006250000 definitions=main-2009150130
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 15, 2020 at 06:13:09PM +0800, Shiyang Ruan wrote:
-> When memory-failure occurs, we call this function which is implemented
-> by each devices.  For fsdax, pmem device implements it.  Pmem device
-> will find out the block device where the error page located in, gets the
-> filesystem on this block device, and finally call ->storage_lost() to
-> handle the error in filesystem layer.
+On Tue, Sep 15, 2020 at 12:53:22PM +0530, Chandan Babu R wrote:
+> On Tuesday 15 September 2020 12:49:22 PM IST Zorro Lang wrote:
+> > On Tue, Sep 15, 2020 at 11:17:48AM +0530, Chandan Babu R wrote:
+> > > This commit adds a test to check if growing a real-time device can end
+> > > up logging an xfs_buf with the "type" subfield of
+> > > bip->bli_formats->blf_flags set to XFS_BLFT_UNKNOWN_BUF. When this
+> > > occurs the following call trace is printed on the console,
+> > > 
+> > > XFS: Assertion failed: (bip->bli_flags & XFS_BLI_STALE) || (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF), file: fs/xfs/xfs_buf_item.c, line: 331
+> > > Call Trace:
+> > >  xfs_buf_item_format+0x632/0x680
+> > >  ? kmem_alloc_large+0x29/0x90
+> > >  ? kmem_alloc+0x70/0x120
+> > >  ? xfs_log_commit_cil+0x132/0x940
+> > >  xfs_log_commit_cil+0x26f/0x940
+> > >  ? xfs_buf_item_init+0x1ad/0x240
+> > >  ? xfs_growfs_rt_alloc+0x1fc/0x280
+> > >  __xfs_trans_commit+0xac/0x370
+> > >  xfs_growfs_rt_alloc+0x1fc/0x280
+> > >  xfs_growfs_rt+0x1a0/0x5e0
+> > >  xfs_file_ioctl+0x3fd/0xc70
+> > >  ? selinux_file_ioctl+0x174/0x220
+> > >  ksys_ioctl+0x87/0xc0
+> > >  __x64_sys_ioctl+0x16/0x20
+> > >  do_syscall_64+0x3e/0x70
+> > >  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+> > > 
+> > > The kernel patch "xfs: Set xfs_buf type flag when growing summary/bitmap
+> > > files" is required to fix this issue.
+> > > 
+> > > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> > > ---
+> > >  tests/xfs/260     | 53 +++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/260.out |  2 ++
+> > >  tests/xfs/group   |  1 +
+> > >  3 files changed, 56 insertions(+)
+> > >  create mode 100755 tests/xfs/260
+> > >  create mode 100644 tests/xfs/260.out
+> > > 
+> > > diff --git a/tests/xfs/260 b/tests/xfs/260
+> > > new file mode 100755
+> > > index 00000000..078d4a11
+> > > --- /dev/null
+> > > +++ b/tests/xfs/260
+> > > @@ -0,0 +1,53 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test 260
+> > > +#
+> > > +# Test to check if growing a real-time device can end up logging an xfs_buf with
+> > > +# the "type" subfield of bip->bli_formats->blf_flags set to
+> > > +# XFS_BLFT_UNKNOWN_BUF.
+> > > +#
+> > > +# This is a regression test for the kernel patch "xfs: Set xfs_buf type flag
+> > > +# when growing summary/bitmap files".
+> > > +
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +here=`pwd`
+> > > +tmp=/tmp/$$
+> > > +status=1	# failure is the default!
+> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	cd /
+> > > +	rm -f $tmp.*
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +. ./common/filter
+> > > +
+> > > +# remove previous $seqres.full before test
+> > > +rm -f $seqres.full
+> > > +
+> > > +# real QA test starts here
+> > > +_supported_fs xfs
+> > > +_supported_os Linux
+> > > +_require_realtime
+> > > +
+> > > +_scratch_mkfs -r size=10M  >> $seqres.full
+> > > +
+> > > +_scratch_mount >> $seqres.full
+> > > +
+> > > +$XFS_GROWFS_PROG $SCRATCH_MNT >> $seqres.full
+> > > +
+> > > +_scratch_unmount
+> > > +
+> > > +echo "Silence is golden"
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/260.out b/tests/xfs/260.out
+> > > new file mode 100644
+> > > index 00000000..18ca517c
+> > > --- /dev/null
+> > > +++ b/tests/xfs/260.out
+> > > @@ -0,0 +1,2 @@
+> > > +QA output created by 260
+> > > +Silence is golden
+> > > diff --git a/tests/xfs/group b/tests/xfs/group
+> > > index ed0d389e..68676064 100644
+> > > --- a/tests/xfs/group
+> > > +++ b/tests/xfs/group
+> > > @@ -257,6 +257,7 @@
+> > >  257 auto quick clone
+> > >  258 auto quick clone
+> > >  259 auto quick
+> > > +260 auto quick growfs realtime
+> > 
+> > There's not 'realtime' group before. Although I don't have a objection to add
+> > this group, if you'd like to add this one, my personal opinion is using another
+> > patch to add all 'rt' related cases into this group, or don't use this group
+> > name alone.
 > 
-> Normally, a pmem device may contain one or more partitions, each
-> partition contains a block device, each block device contains a
-> filesystem.  So we are able to find out the filesystem by one offset on
-> this pmem device.  However, in other cases, such as mapped device, I
-> didn't find a way to obtain the filesystem laying on it.  It is a
-> problem need to be fixed.
-> 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-> ---
->  block/genhd.c            | 12 ++++++++++++
->  drivers/nvdimm/pmem.c    | 31 +++++++++++++++++++++++++++++++
->  include/linux/genhd.h    |  2 ++
->  include/linux/memremap.h |  3 +++
->  4 files changed, 48 insertions(+)
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 99c64641c314..e7442b60683e 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -1063,6 +1063,18 @@ struct block_device *bdget_disk(struct gendisk *disk, int partno)
->  }
->  EXPORT_SYMBOL(bdget_disk);
->  
-> +struct block_device *bdget_disk_sector(struct gendisk *disk, sector_t sector)
-> +{
-> +	struct block_device *bdev = NULL;
-> +	struct hd_struct *part = disk_map_sector_rcu(disk, sector);
-> +
-> +	if (part)
-> +		bdev = bdget(part_devt(part));
-> +
-> +	return bdev;
-> +}
-> +EXPORT_SYMBOL(bdget_disk_sector);
-> +
->  /*
->   * print a full list of all partitions - intended for places where the root
->   * filesystem can't be mounted and thus to give the victim some idea of what
-> diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-> index fab29b514372..3ed96486c883 100644
-> --- a/drivers/nvdimm/pmem.c
-> +++ b/drivers/nvdimm/pmem.c
-> @@ -364,9 +364,40 @@ static void pmem_release_disk(void *__pmem)
->  	put_disk(pmem->disk);
->  }
->  
-> +static int pmem_pagemap_memory_failure(struct dev_pagemap *pgmap,
-> +		struct mf_recover_controller *mfrc)
-> +{
-> +	struct pmem_device *pdev;
-> +	struct block_device *bdev;
-> +	sector_t disk_sector;
-> +	loff_t bdev_offset;
-> +
-> +	pdev = container_of(pgmap, struct pmem_device, pgmap);
-> +	if (!pdev->disk)
-> +		return -ENXIO;
-> +
-> +	disk_sector = (PFN_PHYS(mfrc->pfn) - pdev->phys_addr) >> SECTOR_SHIFT;
+> Ok. I will write another patch to collect all realtime tests in one group. I
+> will base the current patch on top of that. 
 
-Ah, I see, looking at the current x86 MCE code, the MCE handler gets a
-physical address, which is then rounded down to a PFN, which is then
-blown back up into a byte address(?) and then rounded down to sectors.
-That is then blown back up into a byte address and passed on to XFS,
-which rounds it down to fs blocksize.
+Thank you. :)
 
-/me wishes that wasn't so convoluted, but reforming the whole mm poison
-system to have smaller blast radii isn't the purpose of this patch. :)
-
-> +	bdev = bdget_disk_sector(pdev->disk, disk_sector);
-> +	if (!bdev)
-> +		return -ENXIO;
-> +
-> +	// TODO what if block device contains a mapped device
-
-Find its dev_pagemap_ops and invoke its memory_failure function? ;)
-
-> +	if (!bdev->bd_super)
-> +		goto out;
-> +
-> +	bdev_offset = ((disk_sector - get_start_sect(bdev)) << SECTOR_SHIFT) -
-> +			pdev->data_offset;
-> +	bdev->bd_super->s_op->storage_lost(bdev->bd_super, bdev_offset, mfrc);
-
-->storage_lost is required for all filesystems?
+I've started using the 'realtime' tag for a bunch of rt regression tests
+that I've started collecting in my dev tree, which is why I suggested it
+here.
 
 --D
 
-> +
-> +out:
-> +	bdput(bdev);
-> +	return 0;
-> +}
-> +
->  static const struct dev_pagemap_ops fsdax_pagemap_ops = {
->  	.kill			= pmem_pagemap_kill,
->  	.cleanup		= pmem_pagemap_cleanup,
-> +	.memory_failure		= pmem_pagemap_memory_failure,
->  };
->  
->  static int pmem_attach_disk(struct device *dev,
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 4ab853461dff..16e9e13e0841 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -303,6 +303,8 @@ static inline void add_disk_no_queue_reg(struct gendisk *disk)
->  extern void del_gendisk(struct gendisk *gp);
->  extern struct gendisk *get_gendisk(dev_t dev, int *partno);
->  extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
-> +extern struct block_device *bdget_disk_sector(struct gendisk *disk,
-> +			sector_t sector);
->  
->  extern void set_device_ro(struct block_device *bdev, int flag);
->  extern void set_disk_ro(struct gendisk *disk, int flag);
-> diff --git a/include/linux/memremap.h b/include/linux/memremap.h
-> index 5f5b2df06e61..efebefa70d00 100644
-> --- a/include/linux/memremap.h
-> +++ b/include/linux/memremap.h
-> @@ -6,6 +6,7 @@
->  
->  struct resource;
->  struct device;
-> +struct mf_recover_controller;
->  
->  /**
->   * struct vmem_altmap - pre-allocated storage for vmemmap_populate
-> @@ -87,6 +88,8 @@ struct dev_pagemap_ops {
->  	 * the page back to a CPU accessible page.
->  	 */
->  	vm_fault_t (*migrate_to_ram)(struct vm_fault *vmf);
-> +	int (*memory_failure)(struct dev_pagemap *pgmap,
-> +			      struct mf_recover_controller *mfrc);
->  };
->  
->  #define PGMAP_ALTMAP_VALID	(1 << 0)
+> > 
+> > Besides this nitpicking, others looks good to me.
+> > 
+> > Reviewed-by: Zorro Lang <zlang@redhat.com>
+> > 
+> > Thanks,
+> > Zorro
+> > 
+> > >  261 auto quick quota
+> > >  262 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+> > >  263 auto quick quota
+> > 
+> > 
+> 
 > -- 
-> 2.28.0
+> chandan
 > 
 > 
 > 
