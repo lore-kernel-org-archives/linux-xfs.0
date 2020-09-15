@@ -2,192 +2,78 @@ Return-Path: <SRS0=4rV+=CY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD34AC43461
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 22:33:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29A74C433E2
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 22:42:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8156D20872
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 22:33:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5B6320936
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 22:42:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Ld8EqgoT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727670AbgIOWdx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Sep 2020 18:33:53 -0400
-Received: from sandeen.net ([63.231.237.45]:45356 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727047AbgIOWdv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Sep 2020 18:33:51 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 644BF504E17;
-        Tue, 15 Sep 2020 17:33:03 -0500 (CDT)
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Brian Foster <bfoster@redhat.com>
-References: <20200911164311.GU7955@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v3] xfs: deprecate the V4 format
-Message-ID: <08bc8f6d-edb8-740f-1804-9f2c63344ea4@sandeen.net>
-Date:   Tue, 15 Sep 2020 17:33:46 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.2.2
+        id S1727649AbgIOWlW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Sep 2020 18:41:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48066 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727396AbgIOP5x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 11:57:53 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2BC9EC061351;
+        Tue, 15 Sep 2020 08:49:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=9hpqrM0yq5Ww64iJO3HcA4+NwEdTQm35KV/P4mwZVJ8=; b=Ld8EqgoTHdhtpXDolfkH6H8955
+        WruBG1aYD6Yzgd0KGMn5LG/XdiTjqpJayTXIZJPGsHoO2OlPUygq7PKR6gJflJxy6AAhgs+gwnrD4
+        gwA4p82nbFgJxHk51dAZBJ3pomaao852oedeL5oJlv/N8ObKdMjc2T3MOu7eyjYQdjWU0Yrnkx9qB
+        CGP7Kj91TJbLimXQ0puCBDNC0OxZGlIVJEvC9EFoIfiMMjlFX7gMOjBw+lO5Y20877/EWw4k2hgG6
+        Asf3XkrMLaNfUI7U8J0+RAyqsP2J62ZETQcXEChi6hharp4fYKPNuqrKvVqCItl38spq9NmXSuOV1
+        H2ZJ6fRw==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kIDDB-0002uB-5c; Tue, 15 Sep 2020 15:49:41 +0000
+Date:   Tue, 15 Sep 2020 16:49:41 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     David Laight <David.Laight@aculab.com>
+Cc:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        "jfs-discussion@lists.sourceforge.net" 
+        <jfs-discussion@lists.sourceforge.net>,
+        Christoph Hellwig <hch@lst.de>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v2 2/9] fs: Introduce i_blocks_per_page
+Message-ID: <20200915154941.GJ5449@casper.infradead.org>
+References: <20200910234707.5504-1-willy@infradead.org>
+ <20200910234707.5504-3-willy@infradead.org>
+ <0c874f14499c4d819f3e8e09f5086d77@AcuMS.aculab.com>
 MIME-Version: 1.0
-In-Reply-To: <20200911164311.GU7955@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0c874f14499c4d819f3e8e09f5086d77@AcuMS.aculab.com>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/11/20 11:43 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Sep 15, 2020 at 03:40:52PM +0000, David Laight wrote:
+> > @@ -147,7 +147,7 @@ iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+> >  	unsigned int i;
+> > 
+> >  	spin_lock_irqsave(&iop->uptodate_lock, flags);
+> > -	for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
+> > +	for (i = 0; i < i_blocks_per_page(inode, page); i++) {
 > 
-> The V4 filesystem format contains known weaknesses in the on-disk format
-> that make metadata verification diffiult.  In addition, the format will
+> You probably don't want to call the helper every time
+> around the loop.
 
-Editorial nitpicks you are free to take or leave:
-
-drop "will" 
-
-> does not support dates past 2038 and will not be upgraded to do so.
-> Therefore, we should start the process of retiring the old format to
-> close off attack surfaces and to encourage users to migrate onto V5.
-> 
-> Therefore, make XFS V4 support a configurable option.  For the first
-
-Too many "Therefores":
-
-"This patch makes XFS V4 support a ..."
-
-> period it will be default Y in case some distributors want to withdraw
-> support early; for the second period it will be default N so that anyone
-> who wishes to continue support can do so; and after that, support will
-> be removed from the kernel.
-
-Maybe something like:
-
-"Dates for these events are added to the XFS documentation in the kernel."
-
-In any case,
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v3: be a little more helpful about old xfsprogs and warn more loudly
-> about deprecation
-> v2: define what is a V4 filesystem, update the administrator guide
-> ---
->  Documentation/admin-guide/xfs.rst |   23 +++++++++++++++++++++++
->  fs/xfs/Kconfig                    |   24 ++++++++++++++++++++++++
->  fs/xfs/xfs_super.c                |   13 +++++++++++++
->  3 files changed, 60 insertions(+)
-> 
-> diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
-> index f461d6c33534..b6deea9ec073 100644
-> --- a/Documentation/admin-guide/xfs.rst
-> +++ b/Documentation/admin-guide/xfs.rst
-> @@ -210,6 +210,28 @@ When mounting an XFS filesystem, the following options are accepted.
->  	inconsistent namespace presentation during or after a
->  	failover event.
->  
-> +Deprecation of V4 Format
-> +========================
-> +
-> +The V4 filesystem format lacks certain features that are supported by
-> +the V5 format, such as metadata checksumming, strengthened metadata
-> +verification, and the ability to store timestamps past the year 2038.
-> +Because of this, the V4 format is deprecated.  All users should upgrade
-> +by backing up their files, reformatting, and restoring from the backup.
-> +
-> +Administrators and users can detect a V4 filesystem by running xfs_info
-> +against a filesystem mountpoint and checking for a string beginning with
-> +"crc=".  If no such string is found, please upgrade xfsprogs to the
-> +latest version and try again.
-> +
-> +The deprecation will take place in two parts.  Support for mounting V4
-> +filesystems can now be disabled at kernel build time via Kconfig option.
-> +The option will default to yes until September 2025, at which time it
-> +will be changed to default to no.  In September 2030, support will be
-> +removed from the codebase entirely.
-> +
-> +Note: Distributors may choose to withdraw V4 format support earlier than
-> +the dates listed above.
->  
->  Deprecated Mount Options
->  ========================
-> @@ -217,6 +239,7 @@ Deprecated Mount Options
->  ===========================     ================
->    Name				Removal Schedule
->  ===========================     ================
-> +Mounting with V4 filesystem     September 2030
->  ===========================     ================
->  
->  
-> diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-> index e685299eb3d2..5422227e9e93 100644
-> --- a/fs/xfs/Kconfig
-> +++ b/fs/xfs/Kconfig
-> @@ -22,6 +22,30 @@ config XFS_FS
->  	  system of your root partition is compiled as a module, you'll need
->  	  to use an initial ramdisk (initrd) to boot.
->  
-> +config XFS_SUPPORT_V4
-> +	bool "Support deprecated V4 (crc=0) format"
-> +	default y
-> +	help
-> +	  The V4 filesystem format lacks certain features that are supported
-> +	  by the V5 format, such as metadata checksumming, strengthened
-> +	  metadata verification, and the ability to store timestamps past the
-> +	  year 2038.  Because of this, the V4 format is deprecated.  All users
-> +	  should upgrade by backing up their files, reformatting, and restoring
-> +	  from the backup.
-> +
-> +	  Administrators and users can detect a V4 filesystem by running
-> +	  xfs_info against a filesystem mountpoint and checking for a string
-> +	  beginning with "crc=".  If the string "crc=0" is found, the
-> +	  filesystem is a V4 filesystem.  If no such string is found, please
-> +	  upgrade xfsprogs to the latest version and try again.
-> +
-> +	  This option will become default N in September 2025.  Support for the
-> +	  V4 format will be removed entirely in September 2030.  Distributors
-> +	  can say N here to withdraw support earlier.
-> +
-> +	  To continue supporting the old V4 format (crc=0), say Y.
-> +	  To close off an attack surface, say N.
-> +
->  config XFS_QUOTA
->  	bool "XFS Quota support"
->  	depends on XFS_FS
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index febd61ba071d..e2250c6d7251 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1451,6 +1451,19 @@ xfs_fc_fill_super(
->  	if (error)
->  		goto out_free_sb;
->  
-> +	/* V4 support is undergoing deprecation. */
-> +	if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-> +#ifdef CONFIG_XFS_SUPPORT_V4
-> +		xfs_warn_once(mp,
-> +	"Deprecated V4 format (crc=0) will not be supported after September 2030.");
-> +#else
-> +		xfs_warn(mp,
-> +	"Deprecated V4 format (crc=0) not supported by kernel.");
-> +		error = -EINVAL;
-> +		goto out_free_sb;
-> +#endif
-> +	}
-> +
->  	/*
->  	 * XFS block mappings use 54 bits to store the logical block offset.
->  	 * This should suffice to handle the maximum file size that the VFS
-> 
+This is a classic example of focusing on the details and missing the
+larger picture.  We don't want the loop at all, and if you'd kept reading
+the patch series, you'd see it disappear later.
