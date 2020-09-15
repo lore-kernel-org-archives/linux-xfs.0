@@ -7,212 +7,114 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1F36C43461
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 07:23:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D79FEC43461
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 08:42:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8978E2080C
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 07:23:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 930482080C
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 08:42:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="USV0f2jw"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GlrCqRB3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726087AbgIOHXj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Sep 2020 03:23:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52970 "EHLO
+        id S1726146AbgIOImt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Sep 2020 04:42:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726129AbgIOHXi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 03:23:38 -0400
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A6F7C06174A;
-        Tue, 15 Sep 2020 00:23:27 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id t7so1306791pjd.3;
-        Tue, 15 Sep 2020 00:23:27 -0700 (PDT)
+        with ESMTP id S1726122AbgIOImr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 04:42:47 -0400
+Received: from mail-io1-xd43.google.com (mail-io1-xd43.google.com [IPv6:2607:f8b0:4864:20::d43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94152C06174A;
+        Tue, 15 Sep 2020 01:42:46 -0700 (PDT)
+Received: by mail-io1-xd43.google.com with SMTP id y74so3114835iof.12;
+        Tue, 15 Sep 2020 01:42:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=pqWu8xCLO5AybUadyWmMrev0JOISEe+kDQz4bZfO0ZU=;
-        b=USV0f2jwSerK6ofoTh33JswAdqrvvGazki+xYAbFMP9KI7FZg0i+SFqmTJN+ZNbQCZ
-         Oy4uvMnalj4K8qR0OYwA/Z54KTxIIT9bgIM8EBX0djee2lnYacoCTJxpSp35neaR+D9o
-         2hl3HvbWb7nE6I+oAp/UJ+xYpmiRwz/C1ZKsB71cp04NrNYQcRTxWwJ9W5UroJ0KlngX
-         YvM6XzL+RE0qDyQcdGWIZ2+G4F7gCOtGOPXqvQOw7A2dgU9ivWAjSQh49vA8h7lpUDbD
-         1SmrSFQ+LT9knGO17oyxQujDzFFe4/37oiYnVmZ4EQcEE4bmrKuAuzL62i6GgQdgRmPr
-         MHhw==
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=TxvELiQQCpKIQ2PIcU5w8yXvAo5J5ryBhw8d6VbDApk=;
+        b=GlrCqRB38IO7haHUudurnYdqmZEA9qYt2tvbmWqPpY1DDHYG86lEUZ72sB30Zs0AL+
+         fBZ/TO8Z+oqd9FCVUkntfhWTZnF79TiLP5ngIuv6FCSBpUJK9N2yR67Md3szTGM3C0l3
+         uSuvfspKFy+qzN+iCF6x1QaXP22DqtrjJhIdeHFbYpDo847RB+6wRbtHvmGKG3TXe5hi
+         D+WjS0pm08xRI3QA0slDQ6kS6vpL0c5QZaFh2nLnnJZlitITx2TEDV/YIw0MecCHlNHV
+         yU/24rGPw2NicphR3CXC1ouMXkwgsiZRcuhN+xIqS/WeuOHfB/Nn1J7xYSUQFB1AJdhz
+         9wYQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=pqWu8xCLO5AybUadyWmMrev0JOISEe+kDQz4bZfO0ZU=;
-        b=P1lVeWwZTMO7aoLrgZbPuro9IcSVt86qM/+BbSCowQ0j2KOsniH5Aa7YpXtArvrsZK
-         tjrhb0HxW/BDbfH2oQ5oGYr3+Wj6aHMDOYXKQRnLzMF9f5nzKLDsMYoCT4rts18b8kAV
-         1eVXjYD1zIOMkuqF/Oie2jvWQ9dgnp0wFLz5OJWa7YNEYsAl2KB+pxhN7opYoWlkao1c
-         C1iFfQtPm9aEs1bmGJpdkRwlnNIbiHMTBZR9poE5v8wiMUtCTLTe65g5t9BZAdD4flkl
-         na8iGFF5P2UBzGMib7nKFH9AYl1/jU4X6H2fizR6+EKadEcB1L6cQe1NfulZUxvOzMRR
-         Y10w==
-X-Gm-Message-State: AOAM533qRempfXBWqzuvLAdRNRK3cz2mJBMZFONiAEmgOFrmVhCRHv9i
-        GbH5FVFKAD4qmPaLZ+an5lCj9InNziw=
-X-Google-Smtp-Source: ABdhPJzdO1arlSKGsLwM+l9KJtBhEvH35Zmv5EaoBCAwRl0F41lX45mLeiS6/p+1oo4WaV/HobVkcQ==
-X-Received: by 2002:a17:90a:bf92:: with SMTP id d18mr2904633pjs.210.1600154607050;
-        Tue, 15 Sep 2020 00:23:27 -0700 (PDT)
-Received: from garuda.localnet ([122.179.36.63])
-        by smtp.gmail.com with ESMTPSA id k62sm5511958pge.36.2020.09.15.00.23.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2020 00:23:26 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Zorro Lang <zlang@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        guaneryu@gmail.com, darrick.wong@oracle.com
-Subject: Re: [PATCH V2] xfs: Check if rt summary/bitmap buffers are logged with correct xfs_buf type
-Date:   Tue, 15 Sep 2020 12:53:22 +0530
-Message-ID: <2327937.js4hDJpFsT@garuda>
-In-Reply-To: <20200915071922.GO2937@dhcp-12-102.nay.redhat.com>
-References: <20200915054748.1765-1-chandanrlinux@gmail.com> <20200915071922.GO2937@dhcp-12-102.nay.redhat.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=TxvELiQQCpKIQ2PIcU5w8yXvAo5J5ryBhw8d6VbDApk=;
+        b=YKlh200eSQdgbJRqlYwcU7WRMbDhDvgPodcP75vrhhpcad/WvGbbuROwT/tS5Kgqjd
+         mQTrOaLYKVh++sbXc03KA+xUnNGvQL9blJipO6VRDgg6FfCTWN53e7kv8ZFw1eqliOEM
+         91eWGOWMoTYNriDZXFHWtM9TiLsRVrz8WBuwQRk/aTYQWMLgKJaTHfi/cPyx4OAMzH6I
+         2+y8I6EUJSXt++zGEeGZAK+PiFyfL9QDrfytuZCTz/QJPRAIWKGSyXyzh236KL0VW5Fn
+         kr+qNvf/V5sNXuhuv3uJ2PbOZ4S5q7r0pNTcidd2+vVh3M+vzieNSzy1bLSrakcwh5Bf
+         5fSw==
+X-Gm-Message-State: AOAM533DYQSyvoV2pNPcb89+vJkJBsGMsLLYGCt13BLqWvdFW6KVp4p9
+        vG/sHhwS5NC6WXaZqCHOH7mldq6h/1Aacz+sAHk=
+X-Google-Smtp-Source: ABdhPJxSjeTjY1SGv3i6KhNFpfXdtI3pD6lVRUlgDktQYmnmdQ9igapEHeW2o1E/Gj8uD3DZTXWA5UEO8J5XKoT5HHg=
+X-Received: by 2002:a6b:5a0d:: with SMTP id o13mr14397683iob.186.1600159366000;
+ Tue, 15 Sep 2020 01:42:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+References: <160013417420.2923511.6825722200699287884.stgit@magnolia> <160013432812.2923511.2856221820399528798.stgit@magnolia>
+In-Reply-To: <160013432812.2923511.2856221820399528798.stgit@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Tue, 15 Sep 2020 11:42:35 +0300
+Message-ID: <CAOQ4uxjcg8ydFb4=y0rfC1HKUuQZhTSKxasBSZF-_XV_XFJ3Cg@mail.gmail.com>
+Subject: Re: [PATCH 24/24] check: try reloading modules
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tuesday 15 September 2020 12:49:22 PM IST Zorro Lang wrote:
-> On Tue, Sep 15, 2020 at 11:17:48AM +0530, Chandan Babu R wrote:
-> > This commit adds a test to check if growing a real-time device can end
-> > up logging an xfs_buf with the "type" subfield of
-> > bip->bli_formats->blf_flags set to XFS_BLFT_UNKNOWN_BUF. When this
-> > occurs the following call trace is printed on the console,
-> > 
-> > XFS: Assertion failed: (bip->bli_flags & XFS_BLI_STALE) || (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF), file: fs/xfs/xfs_buf_item.c, line: 331
-> > Call Trace:
-> >  xfs_buf_item_format+0x632/0x680
-> >  ? kmem_alloc_large+0x29/0x90
-> >  ? kmem_alloc+0x70/0x120
-> >  ? xfs_log_commit_cil+0x132/0x940
-> >  xfs_log_commit_cil+0x26f/0x940
-> >  ? xfs_buf_item_init+0x1ad/0x240
-> >  ? xfs_growfs_rt_alloc+0x1fc/0x280
-> >  __xfs_trans_commit+0xac/0x370
-> >  xfs_growfs_rt_alloc+0x1fc/0x280
-> >  xfs_growfs_rt+0x1a0/0x5e0
-> >  xfs_file_ioctl+0x3fd/0xc70
-> >  ? selinux_file_ioctl+0x174/0x220
-> >  ksys_ioctl+0x87/0xc0
-> >  __x64_sys_ioctl+0x16/0x20
-> >  do_syscall_64+0x3e/0x70
-> >  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> > 
-> > The kernel patch "xfs: Set xfs_buf type flag when growing summary/bitmap
-> > files" is required to fix this issue.
-> > 
-> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> > ---
-> >  tests/xfs/260     | 53 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/260.out |  2 ++
-> >  tests/xfs/group   |  1 +
-> >  3 files changed, 56 insertions(+)
-> >  create mode 100755 tests/xfs/260
-> >  create mode 100644 tests/xfs/260.out
-> > 
-> > diff --git a/tests/xfs/260 b/tests/xfs/260
-> > new file mode 100755
-> > index 00000000..078d4a11
-> > --- /dev/null
-> > +++ b/tests/xfs/260
-> > @@ -0,0 +1,53 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
-> > +#
-> > +# FS QA Test 260
-> > +#
-> > +# Test to check if growing a real-time device can end up logging an xfs_buf with
-> > +# the "type" subfield of bip->bli_formats->blf_flags set to
-> > +# XFS_BLFT_UNKNOWN_BUF.
-> > +#
-> > +# This is a regression test for the kernel patch "xfs: Set xfs_buf type flag
-> > +# when growing summary/bitmap files".
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +_supported_fs xfs
-> > +_supported_os Linux
-> > +_require_realtime
-> > +
-> > +_scratch_mkfs -r size=10M  >> $seqres.full
-> > +
-> > +_scratch_mount >> $seqres.full
-> > +
-> > +$XFS_GROWFS_PROG $SCRATCH_MNT >> $seqres.full
-> > +
-> > +_scratch_unmount
-> > +
-> > +echo "Silence is golden"
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/260.out b/tests/xfs/260.out
-> > new file mode 100644
-> > index 00000000..18ca517c
-> > --- /dev/null
-> > +++ b/tests/xfs/260.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 260
-> > +Silence is golden
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index ed0d389e..68676064 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -257,6 +257,7 @@
-> >  257 auto quick clone
-> >  258 auto quick clone
-> >  259 auto quick
-> > +260 auto quick growfs realtime
-> 
-> There's not 'realtime' group before. Although I don't have a objection to add
-> this group, if you'd like to add this one, my personal opinion is using another
-> patch to add all 'rt' related cases into this group, or don't use this group
-> name alone.
+On Tue, Sep 15, 2020 at 4:47 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> Optionally reload the module between each test to try to pinpoint slab
+> cache errors and whatnot.
+>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  README |    3 +++
+>  check  |    9 +++++++++
+>  2 files changed, 12 insertions(+)
+>
+>
+> diff --git a/README b/README
+> index d0e23fcd..4af331b4 100644
+> --- a/README
+> +++ b/README
+> @@ -106,6 +106,9 @@ Preparing system for tests:
+>               - set USE_KMEMLEAK=yes to scan for memory leaks in the kernel
+>                 after every test, if the kernel supports kmemleak.
+>               - set KEEP_DMESG=yes to keep dmesg log after test
+> +             - Set TEST_FS_MODULE_RELOAD=1 to unload the module and reload
+> +               it between test invocations.  This assumes that the name of
+> +               the module is the same as FSTYP.
+>
+>          - or add a case to the switch in common/config assigning
+>            these variables based on the hostname of your test
+> diff --git a/check b/check
+> index 5ffa8777..29306262 100755
+> --- a/check
+> +++ b/check
+> @@ -810,6 +810,15 @@ function run_section()
+>                         _check_dmesg || err=true
+>                 fi
+>
+> +               # Reload the module after each test to check for leaks or
+> +               # other problems.
+> +               if [ -n "${TEST_FS_MODULE_RELOAD}" ]; then
+> +                       _test_unmount 2> /dev/null
+> +                       _scratch_unmount 2> /dev/null
+> +                       modprobe -r $FSTYP
+> +                       modprobe $FSTYP
 
-Ok. I will write another patch to collect all realtime tests in one group. I
-will base the current patch on top of that. 
+It is safer to use fs-$FSTYP namespaced module alias.
 
-> 
-> Besides this nitpicking, others looks good to me.
-> 
-> Reviewed-by: Zorro Lang <zlang@redhat.com>
-> 
-> Thanks,
-> Zorro
-> 
-> >  261 auto quick quota
-> >  262 dangerous_fuzzers dangerous_scrub dangerous_online_repair
-> >  263 auto quick quota
-> 
-> 
-
--- 
-chandan
-
-
-
+Thanks,
+Amir.
