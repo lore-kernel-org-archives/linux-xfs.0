@@ -2,236 +2,198 @@ Return-Path: <SRS0=KYGq=CZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A143C43461
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 00:13:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE3F7C43461
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 00:52:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1ECB720756
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 00:13:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABF0020770
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 00:52:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Yn1NsFHf"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WKlgi8o/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727419AbgIPANG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Sep 2020 20:13:06 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:34374 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727464AbgIPAM7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 20:12:59 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G0AYZN024263;
-        Wed, 16 Sep 2020 00:12:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=e1CZMmxxOxk5Somji13MpI0sJgU05tCxqG++5ZRhyYw=;
- b=Yn1NsFHf6rmXXCSR80ZGl6Gqn5PvrQRR2HeGCODn2wcXZoOYiGzfuiZKhH5CET9Y8NWa
- wAUo+txVYpgOsC4zZmtsy4WSu4IFs2TmSy1o8KvjM+oNUMq3nunAIJpHRgXIAwJIyGvv
- DmU8dClLBcqVxmL7upk0v8xKGj9eTXTBk3WMdZok0sFx/1qCO5QcIggD+opOHBQA9Stm
- 0w9kmagAg6kEgh1GmBZohMatgdXqk9X7RqWUObGrUdsy/xiDpb+6jjVzQjLhIxxVG0Uu
- QgvEDeo5bBTJ0+ld5TXFoea5GGBgKX/GnytHdc8wXplHSNwld2eLb+Jum+ispnLkApLI 3A== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 33j91dhrk5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 16 Sep 2020 00:12:45 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G0BRPt074325;
-        Wed, 16 Sep 2020 00:12:45 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 33h886ep2p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 16 Sep 2020 00:12:45 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08G0ChVr015693;
-        Wed, 16 Sep 2020 00:12:43 GMT
-Received: from localhost (/10.159.137.169)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 16 Sep 2020 00:12:43 +0000
-Date:   Tue, 15 Sep 2020 17:12:42 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, willy@infradead.org,
-        minlei@redhat.com
-Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
-Message-ID: <20200916001242.GE7955@magnolia>
-References: <20200819102841.481461-1-anju@linux.vnet.ibm.com>
- <20200820231140.GE7941@dread.disaster.area>
- <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
- <20200821215358.GG7941@dread.disaster.area>
- <20200822131312.GA17997@infradead.org>
- <20200824142823.GA295033@bfoster>
- <20200824150417.GA12258@infradead.org>
- <20200824154841.GB295033@bfoster>
- <20200825004203.GJ12131@dread.disaster.area>
- <20200825144917.GA321765@bfoster>
+        id S1726236AbgIPAwG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Sep 2020 20:52:06 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36366 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726305AbgIOLeN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 07:34:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600169612;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
+        bh=RuEX6eKSln/Fuc02ponkRWkctzlf/5z7LIY29CjUZlw=;
+        b=WKlgi8o/PNrhmOE/rvtwFwlp0VOLUJfYyqiV1sEFti7zObYoimqexHEofsRLOiH+1uil6y
+        a5/XhHWowdcJW83fjKyP5v0xR+JuuEVQcpMPkbUeHlCbendv3a5UJlvpd56uqZt5RROq/5
+        zxQ+dEWHByUuzaQcZ15R5BRpkt5UfN0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-585-IAoQPLVMOtKd2J1eV859hA-1; Tue, 15 Sep 2020 07:33:30 -0400
+X-MC-Unique: IAoQPLVMOtKd2J1eV859hA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2E975188C131;
+        Tue, 15 Sep 2020 11:33:29 +0000 (UTC)
+Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AFB101002D46;
+        Tue, 15 Sep 2020 11:33:28 +0000 (UTC)
+Date:   Tue, 15 Sep 2020 07:33:27 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     io-uring@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+Subject: occasional metadata I/O errors (-EOPNOTSUPP) on XFS + io_uring
+Message-ID: <20200915113327.GA1554921@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200825144917.GA321765@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
- suspectscore=1 phishscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009160000
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
- priorityscore=1501 malwarescore=0 suspectscore=1 mlxlogscore=999
- clxscore=1011 adultscore=0 lowpriorityscore=0 spamscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009150192
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 10:49:17AM -0400, Brian Foster wrote:
-> cc Ming
-> 
-> On Tue, Aug 25, 2020 at 10:42:03AM +1000, Dave Chinner wrote:
-> > On Mon, Aug 24, 2020 at 11:48:41AM -0400, Brian Foster wrote:
-> > > On Mon, Aug 24, 2020 at 04:04:17PM +0100, Christoph Hellwig wrote:
-> > > > On Mon, Aug 24, 2020 at 10:28:23AM -0400, Brian Foster wrote:
-> > > > > Do I understand the current code (__bio_try_merge_page() ->
-> > > > > page_is_mergeable()) correctly in that we're checking for physical page
-> > > > > contiguity and not necessarily requiring a new bio_vec per physical
-> > > > > page?
-> > > > 
-> > > > 
-> > > > Yes.
-> > > > 
-> > > 
-> > > Ok. I also realize now that this occurs on a kernel without commit
-> > > 07173c3ec276 ("block: enable multipage bvecs"). That is probably a
-> > > contributing factor, but it's not clear to me whether it's feasible to
-> > > backport whatever supporting infrastructure is required for that
-> > > mechanism to work (I suspect not).
-> > > 
-> > > > > With regard to Dave's earlier point around seeing excessively sized bio
-> > > > > chains.. If I set up a large memory box with high dirty mem ratios and
-> > > > > do contiguous buffered overwrites over a 32GB range followed by fsync, I
-> > > > > can see upwards of 1GB per bio and thus chains on the order of 32+ bios
-> > > > > for the entire write. If I play games with how the buffered overwrite is
-> > > > > submitted (i.e., in reverse) however, then I can occasionally reproduce
-> > > > > a ~32GB chain of ~32k bios, which I think is what leads to problems in
-> > > > > I/O completion on some systems. Granted, I don't reproduce soft lockup
-> > > > > issues on my system with that behavior, so perhaps there's more to that
-> > > > > particular issue.
-> > > > > 
-> > > > > Regardless, it seems reasonable to me to at least have a conservative
-> > > > > limit on the length of an ioend bio chain. Would anybody object to
-> > > > > iomap_ioend growing a chain counter and perhaps forcing into a new ioend
-> > > > > if we chain something like more than 1k bios at once?
-> > > > 
-> > > > So what exactly is the problem of processing a long chain in the
-> > > > workqueue vs multiple small chains?  Maybe we need a cond_resched()
-> > > > here and there, but I don't see how we'd substantially change behavior.
-> > > > 
-> > > 
-> > > The immediate problem is a watchdog lockup detection in bio completion:
-> > > 
-> > >   NMI watchdog: Watchdog detected hard LOCKUP on cpu 25
-> > > 
-> > > This effectively lands at the following segment of iomap_finish_ioend():
-> > > 
-> > > 		...
-> > >                /* walk each page on bio, ending page IO on them */
-> > >                 bio_for_each_segment_all(bv, bio, iter_all)
-> > >                         iomap_finish_page_writeback(inode, bv->bv_page, error);
-> > > 
-> > > I suppose we could add a cond_resched(), but is that safe directly
-> > > inside of a ->bi_end_io() handler? Another option could be to dump large
-> > > chains into the completion workqueue, but we may still need to track the
-> > > length to do that. Thoughts?
-> > 
-> > We have ioend completion merging that will run the compeltion once
-> > for all the pending ioend completions on that inode. IOWs, we do not
-> > need to build huge chains at submission time to batch up completions
-> > efficiently. However, huge bio chains at submission time do cause
-> > issues with writeback fairness, pinning GBs of ram as unreclaimable
-> > for seconds because they are queued for completion while we are
-> > still submitting the bio chain and submission is being throttled by
-> > the block layer writeback throttle, etc. Not to mention the latency
-> > of stable pages in a situation like this - a mmap() write fault
-> > could stall for many seconds waiting for a huge bio chain to finish
-> > submission and run completion processing even when the IO for the
-> > given page we faulted on was completed before the page fault
-> > occurred...
-> > 
-> > Hence I think we really do need to cap the length of the bio
-> > chains here so that we start completing and ending page writeback on
-> > large writeback ranges long before the writeback code finishes
-> > submitting the range it was asked to write back.
-> > 
-> 
-> Ming pointed out separately that limiting the bio chain itself might not
-> be enough because with multipage bvecs, we can effectively capture the
-> same number of pages in much fewer bios. Given that, what do you think
-> about something like the patch below to limit ioend size? This
-> effectively limits the number of pages per ioend regardless of whether
-> in-core state results in a small chain of dense bios or a large chain of
-> smaller bios, without requiring any new explicit page count tracking.
-> 
-> Brian
+Hi Jens,
 
-Dave was asking on IRC if I was going to pull this patch in.  I'm unsure
-of its status (other than it hasn't been sent as a proper [PATCH]) so I
-wonder, is this necessary, and if so, can it be cleaned up and
-submitted?
+I'm seeing an occasional metadata (read) I/O error (EOPNOTSUPP) when
+running Zorro's recent io_uring enabled fsstress on XFS (fsstress -d
+<mnt> -n 99999999 -p 8). The storage is a 50GB dm-linear device on a
+virtio disk (within a KVM guest). The full callstack of the I/O
+submission path is appended below [2], acquired via inserting a
+WARN_ON() in my local tree.
 
---D
+From tracing around a bit, it looks like what happens is that fsstress
+calls into io_uring, the latter starts a plug and sets plug.nowait =
+true (via io_submit_sqes() -> io_submit_state_start()) and eventually
+XFS needs to read an inode cluster buffer in the context of this task.
+That buffer read ultimately fails due to submit_bio_checks() setting
+REQ_NOWAIT on the bio and the following logic in the same function
+causing a BLK_STS_NOTSUPP status:
 
-> --- 8< ---
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 6ae98d3cb157..4aa96705ffd7 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -1301,7 +1301,7 @@ iomap_chain_bio(struct bio *prev)
->  
->  static bool
->  iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
-> -		sector_t sector)
-> +		unsigned len, sector_t sector)
->  {
->  	if ((wpc->iomap.flags & IOMAP_F_SHARED) !=
->  	    (wpc->ioend->io_flags & IOMAP_F_SHARED))
-> @@ -1312,6 +1312,8 @@ iomap_can_add_to_ioend(struct iomap_writepage_ctx *wpc, loff_t offset,
->  		return false;
->  	if (sector != bio_end_sector(wpc->ioend->io_bio))
->  		return false;
-> +	if (wpc->ioend->io_size + len > IOEND_MAX_IOSIZE)
-> +		return false;
->  	return true;
->  }
->  
-> @@ -1329,7 +1331,7 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
->  	unsigned poff = offset & (PAGE_SIZE - 1);
->  	bool merged, same_page = false;
->  
-> -	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, sector)) {
-> +	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, len, sector)) {
->  		if (wpc->ioend)
->  			list_add(&wpc->ioend->io_list, iolist);
->  		wpc->ioend = iomap_alloc_ioend(inode, wpc, offset, sector, wbc);
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 4d1d3c3469e9..5d1b1a08ec96 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -200,6 +200,8 @@ struct iomap_ioend {
->  	struct bio		io_inline_bio;	/* MUST BE LAST! */
->  };
->  
-> +#define IOEND_MAX_IOSIZE	(262144 << PAGE_SHIFT)
-> +
->  struct iomap_writeback_ops {
->  	/*
->  	 * Required, maps the blocks so that writeback can be performed on
-> 
+	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_mq(q))
+		goto not_supported;
+
+In turn, this leads to the following behavior in XFS:
+
+[ 3839.273519] XFS (dm-2): metadata I/O error in "xfs_imap_to_bp+0x116/0x2c0 [xfs]" at daddr 0x323a5a0 len 32 error 95
+[ 3839.303283] XFS (dm-2): log I/O error -95
+[ 3839.321437] XFS (dm-2): xfs_do_force_shutdown(0x2) called from line 1196 of file fs/xfs/xfs_log.c. Return address = ffffffffc12dea8a
+[ 3839.323554] XFS (dm-2): Log I/O Error Detected. Shutting down filesystem
+[ 3839.324773] XFS (dm-2): Please unmount the filesystem and rectify the problem(s)
+
+I suppose it's possible fsstress is making an invalid request based on
+my setup, but I find it a little strange that this state appears to leak
+into filesystem I/O requests. What's more concerning is that this also
+seems to impact an immediately subsequent log write submission, which is
+a fatal error and causes the filesystem to shutdown.
+
+Finally, note that I've seen your patch associated with Zorro's recent
+bug report [1] and that does seem to prevent the problem. I'm still
+sending this report because the connection between the plug and that
+change is not obvious to me, so I wanted to 1.) confirm this is intended
+to fix this problem and 2.) try to understand whether this plugging
+behavior introduces any constraints on the fs when invoked in io_uring
+context. Thoughts? Thanks.
+
+Brian
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=209243#c8
+
+[2] fsstress callchain that exhibits I/O error:
+
+[ 3839.327329] ------------[ cut here ]------------
+[ 3839.328309] WARNING: CPU: 1 PID: 4160 at fs/xfs/libxfs/xfs_inode_buf.c:149 xfs_imap_to_bp+0x1ec/0x2c0 [xfs]
+[ 3839.330605] Modules linked in: xfs(O) libcrc32c tun bridge stp llc ebtable_nat ebtable_broute ip6table_nat ip6table_mangle ip6table_raw ip6table_security iptable_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 iptable_mangle iptable_raw iptable_security snd_hda_codec_generic ip_set nfnetlink ebtable_filter ebtables ip6table_filter ip6_tables sunrpc snd_hda_intel snd_intel_dspcfg snd_hda_codec snd_hwdep snd_hda_core snd_seq snd_seq_device snd_pcm snd_timer virtio_net snd net_failover virtio_balloon failover soundcore i2c_piix4 virtio_console virtio_blk qxl drm_ttm_helper ttm drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops drm virtio_pci virtio_ring ata_generic serio_raw virtio pata_acpi [last unloaded: xfs]
+[ 3839.344011] CPU: 1 PID: 4160 Comm: fsstress Tainted: G           O      5.9.0-rc4+ #164
+[ 3839.345550] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS ?-20190727_073836-buildvm-ppc64le-16.ppc.fedoraproject.org-3.fc31 04/01/2014
+[ 3839.348430] RIP: 0010:xfs_imap_to_bp+0x1ec/0x2c0 [xfs]
+[ 3839.349547] Code: 84 24 98 00 00 00 65 48 33 04 25 28 00 00 00 0f 85 c0 00 00 00 48 81 c4 a0 00 00 00 44 89 e0 5b 5d 41 5c 41 5d 41 5e 41 5f c3 <0f> 0b 41 83 fc f5 75 b1 41 81 e6 00 00 00 40 75 a8 b9 96 00 00 00
+[ 3839.353756] RSP: 0018:ffff8881f15d72c0 EFLAGS: 00010282
+[ 3839.354782] RAX: ffff8881f15d7300 RBX: 1ffff1103e2bae5c RCX: ffffffffad2fa134
+[ 3839.356230] RDX: ffffffffc13d26e0 RSI: 1ffff1103e2bae1e RDI: ffff8881e76161a0
+[ 3839.357601] RBP: ffff88815c2fda28 R08: 0000000000000001 R09: ffffed103cec2c35
+[ 3839.359041] R10: ffff8881e76161a3 R11: ffffed103cec2c34 R12: 00000000ffffffa1
+[ 3839.360332] R13: 0000000000000000 R14: 0000000000000000 R15: ffff8881f15d73e0
+[ 3839.361627] FS:  00007fe5b98f2040(0000) GS:ffff8881f7280000(0000) knlGS:0000000000000000
+[ 3839.363288] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 3839.364844] CR2: 00007fe5b98ef000 CR3: 00000001defd8000 CR4: 00000000000006e0
+[ 3839.366409] Call Trace:
+[ 3839.367065]  ? xfs_inode_buf_readahead_verify+0x10/0x10 [xfs]
+[ 3839.368208]  ? do_raw_spin_lock+0x126/0x290
+[ 3839.369092]  ? rwlock_bug.part.0+0x90/0x90
+[ 3839.369992]  ? xfs_trans_ijoin+0xf9/0x200 [xfs]
+[ 3839.370961]  xfs_trans_log_inode+0x3ef/0x930 [xfs]
+[ 3839.371919]  ? rcu_read_lock_sched_held+0xa0/0xd0
+[ 3839.372890]  ? xfs_trans_ichgtime+0x190/0x190 [xfs]
+[ 3839.373812]  ? do_raw_spin_unlock+0x54/0x250
+[ 3839.374911]  xfs_vn_update_time+0x301/0x590 [xfs]
+[ 3839.375898]  ? xfs_setattr_mode.isra.0+0x80/0x80 [xfs]
+[ 3839.376895]  touch_atime+0x18f/0x1e0
+[ 3839.377588]  ? atime_needs_update+0x570/0x570
+[ 3839.378377]  ? copy_page_to_iter+0x1e1/0xc60
+[ 3839.379216]  generic_file_buffered_read+0x14ed/0x2010
+[ 3839.380185]  ? do_syscall_64+0x2d/0x40
+[ 3839.380912]  ? native_usergs_sysret64+0x1/0x10
+[ 3839.381767]  ? fs_reclaim_release+0xf/0x30
+[ 3839.382557]  ? pagecache_get_page+0x6d0/0x6d0
+[ 3839.383403]  ? down_read_trylock+0x19a/0x360
+[ 3839.384285]  ? xfs_ilock_nowait+0xd5/0x4e0 [xfs]
+[ 3839.385175]  ? rwsem_spin_on_owner+0x2b0/0x2b0
+[ 3839.386026]  ? rcu_read_lock_bh_held+0xb0/0xb0
+[ 3839.386959]  ? xfs_file_buffered_aio_read+0xcf/0x340 [xfs]
+[ 3839.388134]  xfs_file_buffered_aio_read+0xe2/0x340 [xfs]
+[ 3839.389221]  xfs_file_read_iter+0x257/0x550 [xfs]
+[ 3839.390139]  io_iter_do_read+0x82/0x190
+[ 3839.390951]  io_read+0x80e/0xbd0
+[ 3839.391594]  ? is_bpf_text_address+0x80/0xe0
+[ 3839.392382]  ? kiocb_done+0x2e0/0x2e0
+[ 3839.393089]  ? profile_setup.cold+0xa1/0xa1
+[ 3839.393894]  ? arch_stack_walk+0x9c/0xf0
+[ 3839.394684]  ? io_read_prep+0x71/0x2f0
+[ 3839.395377]  ? io_prep_rw+0xd90/0xd90
+[ 3839.396084]  ? __lock_acquire+0xbd7/0x66b0
+[ 3839.397036]  io_issue_sqe+0x4e9/0x5000
+[ 3839.397768]  ? lockdep_hardirqs_on_prepare+0x4f0/0x4f0
+[ 3839.398753]  ? __fget_files+0x19f/0x2d0
+[ 3839.399555]  ? __ia32_sys_io_uring_setup+0x70/0x70
+[ 3839.400415]  ? rcu_read_lock_bh_held+0xb0/0xb0
+[ 3839.401252]  ? lock_acquire+0x191/0x7d0
+[ 3839.401998]  ? __fget_files+0x5/0x2d0
+[ 3839.402694]  ? find_held_lock+0x2c/0x110
+[ 3839.403417]  ? __fget_files+0x19f/0x2d0
+[ 3839.404243]  ? __io_queue_sqe+0x266/0xc30
+[ 3839.405004]  __io_queue_sqe+0x266/0xc30
+[ 3839.405765]  ? io_wq_submit_work+0x270/0x270
+[ 3839.406606]  ? rcu_read_lock_sched_held+0xa1/0xd0
+[ 3839.407559]  ? rcu_read_lock_bh_held+0xb0/0xb0
+[ 3839.408368]  ? io_file_get+0x415/0x870
+[ 3839.409118]  io_submit_sqes+0x1130/0x1d60
+[ 3839.409926]  ? __mutex_lock+0x44f/0x11c0
+[ 3839.410683]  ? io_queue_sqe+0xf70/0xf70
+[ 3839.411387]  ? __x64_sys_io_uring_enter+0x50c/0x7e0
+[ 3839.412327]  ? mutex_trylock+0x2b0/0x2b0
+[ 3839.413086]  ? __x64_sys_io_uring_enter+0x202/0x7e0
+[ 3839.414008]  ? find_held_lock+0x2c/0x110
+[ 3839.414763]  ? __x64_sys_io_uring_enter+0x28e/0x7e0
+[ 3839.415773]  ? syscall_enter_from_user_mode+0x22/0x80
+[ 3839.416737]  __x64_sys_io_uring_enter+0x51d/0x7e0
+[ 3839.417655]  do_syscall_64+0x2d/0x40
+[ 3839.418315]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
+[ 3839.419262] RIP: 0033:0x7fe5b99ef37d
+[ 3839.419966] Code: 00 c3 66 2e 0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 48 89 f8 48 89 f7 48 89 d6 48 89 ca 4d 89 c2 4d 89 c8 4c 8b 4c 24 08 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d eb 6a 0c 00 f7 d8 64 89 01 48
+[ 3839.423393] RSP: 002b:00007ffcc0d57838 EFLAGS: 00000216 ORIG_RAX: 00000000000001aa
+[ 3839.424975] RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007fe5b99ef37d
+[ 3839.426374] RDX: 0000000000000001 RSI: 0000000000000001 RDI: 0000000000000003
+[ 3839.427672] RBP: 0000000000000004 R08: 0000000000000000 R09: 0000000000000008
+[ 3839.428975] R10: 0000000000000001 R11: 0000000000000216 R12: 000000000000f8b8
+[ 3839.430379] R13: 00007fe5b9aff000 R14: 000000000001b991 R15: 0000000000a4f440
+[ 3839.431782] irq event stamp: 54797391
+[ 3839.432456] hardirqs last  enabled at (54797399): [<ffffffffad3130db>] console_unlock+0x6eb/0x9b0
+[ 3839.434248] hardirqs last disabled at (54797408): [<ffffffffad312fad>] console_unlock+0x5bd/0x9b0
+[ 3839.435915] softirqs last  enabled at (54797422): [<ffffffffaf2005b9>] __do_softirq+0x5b9/0x8a0
+[ 3839.437463] softirqs last disabled at (54797417): [<ffffffffaf000faf>] asm_call_on_stack+0xf/0x20
+[ 3839.439061] ---[ end trace cbd4c49b2879030e ]---
+
