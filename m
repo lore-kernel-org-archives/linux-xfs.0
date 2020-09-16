@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13201C43461
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:23:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A8FAC43461
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:23:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABDD421973
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:23:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FB0A21941
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:23:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xmck3jhO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P+dJGFNO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727093AbgIPUXc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Sep 2020 16:23:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60746 "EHLO
+        id S1727075AbgIPUXk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Sep 2020 16:23:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727029AbgIPR2i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 13:28:38 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90E94C061D7C
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:22 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id 7so3686956pgm.11
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:22 -0700 (PDT)
+        with ESMTP id S1727092AbgIPR2X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 13:28:23 -0400
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9BB3CC0698C2
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:29 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id o20so3754483pfp.11
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=qFUDpBU26Mp2CZ1pN86YJ8N41WIECKRcFl6Y6ElKLLU=;
-        b=Xmck3jhO7rt8LgnTjHMsYTsjWmEhXZqFFXEZKdpkg5cvyHjJ79pYgC8DP+AzSiJCPZ
-         sypbXTa2/c++MfjEJ18VIHHCP0DJtCAMxHRCg3nTXuJb4S+qyTAG92us0C2WF7z15zJd
-         geolwD8u4bpIPidmG/7r29hVuY74DtuMEVguvkmGSGEN086/UEcDxQMt0EemeNBgG/N/
-         Gsawh5xFNMwV+ypRnRto8ak7B/D76b7maOgdbUFIFu1xxNeMTSBzCzFNCELYoTEswlyb
-         aerSrk91+XFTEV7Vp0Ihbm3INsEBgRPT2bm4ny7Hia2JhZSBK3Ypm630bOVUH4YYP1e0
-         yz9w==
+        bh=S3Epjv9w0LHvPlkba7DGhBp1VxXvar4r/UAB1crOeW0=;
+        b=P+dJGFNOC7PpIOlNRQp9Cip0JztcqdSoOYHfypjeOmrJO6foTc9dfd99jBlGoZs7iq
+         n81ZiEe+Gjx1Zt9Q2UrXto6OJb2OkEWQfh8tN4+wvffZb2DUZA1VQutI3q4ijJC1/M1h
+         +6x3MherKsflb5ccqbS0cEpBdCBYizXExKAEHYc7e8zeU3ewI3A9NRdH1E7XsHjBz5u1
+         sMFEifmBBBqEuBNdWz9d5I6ln2ntBmSOXejfxVbyrA0MD7gqazezXSKlTjvMa3UzyfyB
+         Su1HumMXEVG/7e8McOY4GYkl0/P3dxWlfQDC8Apq/vkHJK8x79MKHcvH5QHr6bbUrEp5
+         GiYw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=qFUDpBU26Mp2CZ1pN86YJ8N41WIECKRcFl6Y6ElKLLU=;
-        b=C+iVAd11wa9LGp+7kbiwiJ/VRDOdKsika1l251dp7adETd4CKtBRMF9ea1ofaV3arg
-         I2zWCYnZmUWY4fi+g/pNLWdwBYVgLSotLmYSqZ5QVQr8Qe0YO+9kwtBe0VhlMWt/gF2V
-         1y7GVFy59/hGdtbMM+YCLJgGlNm/c1KoMr/cIhwp+uiRyHcKXTuv/s5cKoJ5n4/cX6q7
-         1vbEQ08XqnC+FhnrRedq/iygyXCD5gK17C2I0wLhoXofj6+h/Q1w9T44o9B2MBzYC2IH
-         q0rq5Lctn9WIJrNNrq7+bPscR0FmUCRL5RRk18gOuyz9Q6wRyzv7KLDE/zYtSM5LjYOb
-         u9sQ==
-X-Gm-Message-State: AOAM530HXhGHljmiEgOE/XYY7QAlt4WaZCE1tROHTVv9tYhf25ULnrHO
-        zAFGpNTK3MwGHJA2Wqde4V+hz6hFXQ==
-X-Google-Smtp-Source: ABdhPJxI5DKJBPYkgYuYbx5YfPKdNvJqSeI9/BAjnFxlrZDq6YB2KPVFAjhhu/IEh/8Fr2csInkdGA==
-X-Received: by 2002:a63:4656:: with SMTP id v22mr2107958pgk.116.1600255161759;
-        Wed, 16 Sep 2020 04:19:21 -0700 (PDT)
+        bh=S3Epjv9w0LHvPlkba7DGhBp1VxXvar4r/UAB1crOeW0=;
+        b=C1wJSsPA2e1f/8vBVe5wylVx8W13ymBOsN4HT9WkAdxRkwUYtREUGSh4yJrEvXTzci
+         hIQMIQ5EKQcitjgSQlt2KvUyZ0SxDjnEdrWVPujpBWQUnpOvqGHYXgPWqCA6XMkEBeAL
+         Q+atvvWJ072pgrcT3LCQH94E+M7frRQ0NLfHHuW5X5IuYb8r/VyWsXq9z31dlWNZ7fWw
+         4XIzpFbTwT5ystbAIff16vqFf+usI4TGhloYEHW7TFpHrpSclbrSYaQh/niJMph2YrZa
+         F1C0huejDSAhVmDCxAkh8nd9X78rsx6PLL6ia8Rn4kO66fgmXSKggMg37y3iHNOMom4q
+         PMmw==
+X-Gm-Message-State: AOAM532jKgG/8r9iZA7NKCSYeLxAeAPCsRMvg6VNZ/2wwPWStqQkfGfs
+        1xUhgJC65pK/UwN67TAL0x1IzpeC2rN4
+X-Google-Smtp-Source: ABdhPJwQcIopbXHIdWDu7196yFJQB5JAFiszeqLQ9+wxN3HLfX6xzbDIBVZW2bZANWX9hBQgkOGI3g==
+X-Received: by 2002:a62:2985:0:b029:142:2501:34d6 with SMTP id p127-20020a6229850000b0290142250134d6mr5906951pfp.47.1600255168793;
+        Wed, 16 Sep 2020 04:19:28 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id v204sm3492195pfc.10.2020.09.16.04.19.20
+        by smtp.gmail.com with ESMTPSA id v204sm3492195pfc.10.2020.09.16.04.19.27
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 16 Sep 2020 04:19:21 -0700 (PDT)
+        Wed, 16 Sep 2020 04:19:28 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH] xfs: remove the unnecessary xfs_dqid_t type cast
-Date:   Wed, 16 Sep 2020 19:19:06 +0800
-Message-Id: <1600255152-16086-4-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH] xfs: fix some comments
+Date:   Wed, 16 Sep 2020 19:19:12 +0800
+Message-Id: <1600255152-16086-10-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
 References: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
@@ -74,27 +74,44 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-Since the type prid_t and xfs_dqid_t both are uint32_t, seems the
-type cast is unnecessary, so remove it.
+Fix the comments to help people understand the code.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 ---
- fs/xfs/xfs_qm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_da_format.h | 4 ++--
+ fs/xfs/xfs_dquot.c            | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 3f82e0c92c2d..41a459ffd1f2 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1715,7 +1715,7 @@ xfs_qm_vop_dqalloc(
- 	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
- 		if (ip->i_d.di_projid != prid) {
- 			xfs_iunlock(ip, lockflags);
--			error = xfs_qm_dqget(mp, (xfs_dqid_t)prid,
-+			error = xfs_qm_dqget(mp, prid,
- 					XFS_DQTYPE_PROJ, true, &pq);
- 			if (error) {
- 				ASSERT(error != -ENOENT);
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index 4fe974773d85..b58943f2eb41 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -35,8 +35,8 @@ typedef struct xfs_da_blkinfo {
+  */
+ #define XFS_DA3_NODE_MAGIC	0x3ebe	/* magic number: non-leaf blocks */
+ #define XFS_ATTR3_LEAF_MAGIC	0x3bee	/* magic number: attribute leaf blks */
+-#define	XFS_DIR3_LEAF1_MAGIC	0x3df1	/* magic number: v2 dirlf single blks */
+-#define	XFS_DIR3_LEAFN_MAGIC	0x3dff	/* magic number: v2 dirlf multi blks */
++#define	XFS_DIR3_LEAF1_MAGIC	0x3df1	/* magic number: v3 dirlf single blks */
++#define	XFS_DIR3_LEAFN_MAGIC	0x3dff	/* magic number: v3 dirlf multi blks */
+ 
+ struct xfs_da3_blkinfo {
+ 	/*
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 3072814e407d..1d95ed387d66 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -831,8 +831,8 @@ xfs_qm_dqget_checks(
+ }
+ 
+ /*
+- * Given the file system, id, and type (UDQUOT/GDQUOT), return a locked
+- * dquot, doing an allocation (if requested) as needed.
++ * Given the file system, id, and type (UDQUOT/GDQUOT/PDQUOT), return a
++ * locked dquot, doing an allocation (if requested) as needed.
+  */
+ int
+ xfs_qm_dqget(
 -- 
 2.20.0
 
