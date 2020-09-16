@@ -2,196 +2,122 @@ Return-Path: <SRS0=KYGq=CZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A0E0C433E2
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 05:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF106C35256
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 06:32:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2918421D7D
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 05:34:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9422B221EB
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 06:32:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="t7V+c0tL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vBL8lq6t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726132AbgIPFee (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Sep 2020 01:34:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34030 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726068AbgIPFec (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 01:34:32 -0400
-Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39EE3C06174A;
-        Tue, 15 Sep 2020 22:34:32 -0700 (PDT)
-Received: by mail-pg1-x542.google.com with SMTP id k14so3241394pgi.9;
-        Tue, 15 Sep 2020 22:34:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=6RsnjIO1DITRqua+x80n86fE2hzcHz/fptYOyPQKYpA=;
-        b=t7V+c0tLnXs1Frm6fxwhzAXtQf8ZempT5ILAAOPyJWfnOlzUIn8vHX58Ao04ZB5zF0
-         Xdm9fYW209BJ0Kxc7PQF8ku0UqaHZlq2E8LexaUaufAo595tqxYelzPPV8AVv9BWhr30
-         b3SiSAdWyZd1MZHhCsTP8LnkR1hNlVfRjOAqpJ2IA41s7DKna4Hefx1d/8YAhbtObe1E
-         DCTlxZgpUHworAMmFZllr+eIeJ0OnkdaoZG3is/lxrMxuRrGE+BqBOjOfNfXYv66VcGV
-         xp0i4z01JOS+S3qT7pTulsFdwEXRAzFh22t/zMr9ja65RYgJE07VXEaynfj/VHt6k2PR
-         d8jA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=6RsnjIO1DITRqua+x80n86fE2hzcHz/fptYOyPQKYpA=;
-        b=epVY+kQ3zM/xiDFzLWMythObgcPN/vesVkcQ699UrXbj+GNzBCvd9Da7aGUwpgwNmX
-         M2eAp5Jbo53v9ZAUl2LZT+NQM8cUiIQptY29wPYDfQiB9v76I8mdBPvjvna69RpW6RX1
-         mGbGAat0px1J7cJn/Z4O3xsGGsaFb6D0/V5t7BLDBEygS7zyseCEZGgZ1xFcChFpjnEd
-         Hwh66CYTVqWuaXj4o6NZ3lOOdaL8Rao53XmS2oOcYebEsczpscMXyB2cb0EuZBtFoaWP
-         kuZf8su38o4kY7hS1TWmZYLqsVfbOxV1xSexmr7pvwLJa2zQdgOxBqaex0xG/wHuMRYc
-         EzGQ==
-X-Gm-Message-State: AOAM531quuwikS/iPws5jgaKvi4X8RQGLB46Y01//hh2mPK+5a14W8r3
-        7GyDpl1Z9QvtAfSFt4bvnY1eeuNCNX0=
-X-Google-Smtp-Source: ABdhPJxiHb6wsS8EPau45GZ+ZNbDXTNKylw3eFro75e/XbMB2vup3Ci8peY1qnpQaF+HDAQ1izI5GQ==
-X-Received: by 2002:a63:1f0f:: with SMTP id f15mr498770pgf.312.1600234471469;
-        Tue, 15 Sep 2020 22:34:31 -0700 (PDT)
-Received: from localhost.localdomain ([171.48.17.146])
-        by smtp.gmail.com with ESMTPSA id m25sm14901701pfa.32.2020.09.15.22.34.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Sep 2020 22:34:30 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     fstests@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, guaneryu@gmail.com,
-        darrick.wong@oracle.com, zlang@redhat.com
-Subject: [PATCH V2 2/2] xfs: Check if rt summary/bitmap buffers are logged with correct xfs_buf type
-Date:   Wed, 16 Sep 2020 11:04:07 +0530
-Message-Id: <20200916053407.2036-2-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200916053407.2036-1-chandanrlinux@gmail.com>
-References: <20200916053407.2036-1-chandanrlinux@gmail.com>
+        id S1726269AbgIPGcW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Sep 2020 02:32:22 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:46996 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726161AbgIPGcV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 02:32:21 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G3eVBQ179527;
+        Wed, 16 Sep 2020 03:42:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=4K2q3HEVLZlgcxDncK5+AWn8OSgFujLQUjz/mYPrKFY=;
+ b=vBL8lq6tPhSWbX6hmkT1zPNUd7MznZlZOPGeFc0z2MscHdSuu66ndSMhMMqaJgFamiqH
+ eBvSgG1BkpQubS8kyB/LOJ4CgbWUUtM+52rWqOfPm+wGbFZUCYNl0uUzrMDgCnFcGG95
+ Y8rJB0RO/40N2Ff6hrhLET3HLxGc2vMZrgnvZ8WT9ljXwxvEcFlJfQ6RlUwDm7jub2gr
+ xDKsXhdCsYUwn7kb4RTUYKHSkgBgs08/1i8JB2wQiE2FD3Pxy4scK0I6uR0+PbZqW2HD
+ x3u61gnn5w8LKQTkH71i1g+8RXEbZi3hzGcudxLhTcFOZpRhz21gtVLc2pfmdHMLVxWD 2A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 33j91dj6t0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 16 Sep 2020 03:42:03 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G3ei4K061687;
+        Wed, 16 Sep 2020 03:42:03 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 33h890kba5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 16 Sep 2020 03:42:02 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08G3g2A8006084;
+        Wed, 16 Sep 2020 03:42:02 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 16 Sep 2020 03:42:02 +0000
+Date:   Tue, 15 Sep 2020 20:42:01 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 09/24] xfs/070: add scratch log device options to direct
+ repair invocation
+Message-ID: <20200916034201.GC7954@magnolia>
+References: <160013417420.2923511.6825722200699287884.stgit@magnolia>
+ <160013423329.2923511.3252823001209034556.stgit@magnolia>
+ <20200916024247.GA2937@dhcp-12-102.nay.redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200916024247.GA2937@dhcp-12-102.nay.redhat.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
+ suspectscore=2 mlxscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009160024
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=2 mlxlogscore=999
+ clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009160024
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit adds a test to check if growing a real-time device can end
-up logging an xfs_buf with the "type" subfield of
-bip->bli_formats->blf_flags set to XFS_BLFT_UNKNOWN_BUF. When this
-occurs the following call trace is printed on the console,
+On Wed, Sep 16, 2020 at 10:42:47AM +0800, Zorro Lang wrote:
+> On Mon, Sep 14, 2020 at 06:43:53PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  tests/xfs/070 |    4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/tests/xfs/070 b/tests/xfs/070
+> > index 5d52a830..313864b7 100755
+> > --- a/tests/xfs/070
+> > +++ b/tests/xfs/070
+> > @@ -41,9 +41,11 @@ _cleanup()
+> >  _xfs_repair_noscan()
+> >  {
+> >  	# invoke repair directly so we can kill the process if need be
+> > +	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
+> > +		log_repair_opts="-l $SCRATCH_LOGDEV"
+> >  	[ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ] && \
+> >  		rt_repair_opts="-r $SCRATCH_RTDEV"
+> > -	$XFS_REPAIR_PROG $rt_repair_opts $SCRATCH_DEV 2>&1 |
+> > +	$XFS_REPAIR_PROG $log_repair_opts $rt_repair_opts $SCRATCH_DEV 2>&1 |
+> >  		tee -a $seqres.full > $tmp.repair &
+> 
+> Why not use _scratch_xfs_repair at here?
+> 
+> Thanks,
+> Zorro
+> 
+> >  	repair_pid=$!
 
-XFS: Assertion failed: (bip->bli_flags & XFS_BLI_STALE) || (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF), file: fs/xfs/xfs_buf_item.c, line: 331
-Call Trace:
- xfs_buf_item_format+0x632/0x680
- ? kmem_alloc_large+0x29/0x90
- ? kmem_alloc+0x70/0x120
- ? xfs_log_commit_cil+0x132/0x940
- xfs_log_commit_cil+0x26f/0x940
- ? xfs_buf_item_init+0x1ad/0x240
- ? xfs_growfs_rt_alloc+0x1fc/0x280
- __xfs_trans_commit+0xac/0x370
- xfs_growfs_rt_alloc+0x1fc/0x280
- xfs_growfs_rt+0x1a0/0x5e0
- xfs_file_ioctl+0x3fd/0xc70
- ? selinux_file_ioctl+0x174/0x220
- ksys_ioctl+0x87/0xc0
- __x64_sys_ioctl+0x16/0x20
- do_syscall_64+0x3e/0x70
- entry_SYSCALL_64_after_hwframe+0x44/0xa9
+        ^^^^^^^^^^^^^
+Because this test needs to hang on to the pid of the repair process in
+order to kill it, which you can't do if do if you use the wrapper.
 
-The kernel patch "xfs: Set xfs_buf type flag when growing summary/bitmap
-files" is required to fix this issue.
+--D
 
-Reviewed-by: Zorro Lang <zlang@redhat.com>
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
----
- tests/xfs/260     | 53 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/260.out |  2 ++
- tests/xfs/group   |  1 +
- 3 files changed, 56 insertions(+)
- create mode 100755 tests/xfs/260
- create mode 100644 tests/xfs/260.out
-
-diff --git a/tests/xfs/260 b/tests/xfs/260
-new file mode 100755
-index 00000000..078d4a11
---- /dev/null
-+++ b/tests/xfs/260
-@@ -0,0 +1,53 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
-+#
-+# FS QA Test 260
-+#
-+# Test to check if growing a real-time device can end up logging an xfs_buf with
-+# the "type" subfield of bip->bli_formats->blf_flags set to
-+# XFS_BLFT_UNKNOWN_BUF.
-+#
-+# This is a regression test for the kernel patch "xfs: Set xfs_buf type flag
-+# when growing summary/bitmap files".
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_realtime
-+
-+_scratch_mkfs -r size=10M  >> $seqres.full
-+
-+_scratch_mount >> $seqres.full
-+
-+$XFS_GROWFS_PROG $SCRATCH_MNT >> $seqres.full
-+
-+_scratch_unmount
-+
-+echo "Silence is golden"
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/260.out b/tests/xfs/260.out
-new file mode 100644
-index 00000000..18ca517c
---- /dev/null
-+++ b/tests/xfs/260.out
-@@ -0,0 +1,2 @@
-+QA output created by 260
-+Silence is golden
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 3bb0f674..a3f5c81a 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -257,6 +257,7 @@
- 257 auto quick clone
- 258 auto quick clone
- 259 auto quick
-+260 auto quick growfs realtime
- 261 auto quick quota
- 262 dangerous_fuzzers dangerous_scrub dangerous_online_repair
- 263 auto quick quota
--- 
-2.28.0
-
+> >  
+> > 
+> 
