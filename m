@@ -1,106 +1,83 @@
-Return-Path: <SRS0=4rV+=CY=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=KYGq=CZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60A58C43461
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 22:53:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20BFBC433E2
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 00:07:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2721720770
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Sep 2020 22:53:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E980A21D7F
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 00:07:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727406AbgIOWxE convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Sep 2020 18:53:04 -0400
-Received: from eu-smtp-delivery-151.mimecast.com ([185.58.86.151]:59525 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727414AbgIOPk5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 11:40:57 -0400
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-53-W38LQ2b8OBS5NKJlBcK7FA-1; Tue, 15 Sep 2020 16:40:53 +0100
-X-MC-Unique: W38LQ2b8OBS5NKJlBcK7FA-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
- Server (TLS) id 15.0.1347.2; Tue, 15 Sep 2020 16:40:52 +0100
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Tue, 15 Sep 2020 16:40:52 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     "'Matthew Wilcox (Oracle)'" <willy@infradead.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
-CC:     "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        "jfs-discussion@lists.sourceforge.net" 
-        <jfs-discussion@lists.sourceforge.net>,
-        Christoph Hellwig <hch@lst.de>,
-        "Dave Chinner" <dchinner@redhat.com>
-Subject: RE: [PATCH v2 2/9] fs: Introduce i_blocks_per_page
-Thread-Topic: [PATCH v2 2/9] fs: Introduce i_blocks_per_page
-Thread-Index: AQHWh8zSUX5EB+iAm0+PkXaO9U0VzKlp3UwQ
-Date:   Tue, 15 Sep 2020 15:40:52 +0000
-Message-ID: <0c874f14499c4d819f3e8e09f5086d77@AcuMS.aculab.com>
-References: <20200910234707.5504-1-willy@infradead.org>
- <20200910234707.5504-3-willy@infradead.org>
-In-Reply-To: <20200910234707.5504-3-willy@infradead.org>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        id S1727297AbgIPAHf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Sep 2020 20:07:35 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:57485 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727345AbgIPAHX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Sep 2020 20:07:23 -0400
+Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D5E9F826956;
+        Wed, 16 Sep 2020 10:07:18 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kIKyj-0005cM-7I; Wed, 16 Sep 2020 10:07:17 +1000
+Date:   Wed, 16 Sep 2020 10:07:17 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>,
+        Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v3] xfs: deprecate the V4 format
+Message-ID: <20200916000717.GY12131@dread.disaster.area>
+References: <20200911164311.GU7955@magnolia>
 MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0.002
-X-Mimecast-Originator: aculab.com
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200911164311.GU7955@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=XJ9OtjpE c=1 sm=1 tr=0 cx=a_idp_d
+        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
+        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=eXebqsI1vn0drh84A-wA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Matthew Wilcox (Oracle)
-> Sent: 11 September 2020 00:47
-> This helper is useful for both THPs and for supporting block size larger
-> than page size.  Convert all users that I could find (we have a few
-> different ways of writing this idiom, and I may have missed some).
+On Fri, Sep 11, 2020 at 09:43:11AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-...
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d81a9a86c5aa..330f86b825d7 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -46,7 +46,7 @@ iomap_page_create(struct inode *inode, struct page *page)
->  {
->  	struct iomap_page *iop = to_iomap_page(page);
+> The V4 filesystem format contains known weaknesses in the on-disk format
+> that make metadata verification diffiult.  In addition, the format will
+> does not support dates past 2038 and will not be upgraded to do so.
+> Therefore, we should start the process of retiring the old format to
+> close off attack surfaces and to encourage users to migrate onto V5.
 > 
-> -	if (iop || i_blocksize(inode) == PAGE_SIZE)
-> +	if (iop || i_blocks_per_page(inode, page) <= 1)
->  		return iop;
+> Therefore, make XFS V4 support a configurable option.  For the first
+> period it will be default Y in case some distributors want to withdraw
+> support early; for the second period it will be default N so that anyone
+> who wishes to continue support can do so; and after that, support will
+> be removed from the kernel.
 > 
->  	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
-> @@ -147,7 +147,7 @@ iomap_iop_set_range_uptodate(struct page *page, unsigned off, unsigned len)
->  	unsigned int i;
-> 
->  	spin_lock_irqsave(&iop->uptodate_lock, flags);
-> -	for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
-> +	for (i = 0; i < i_blocks_per_page(inode, page); i++) {
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v3: be a little more helpful about old xfsprogs and warn more loudly
+> about deprecation
+> v2: define what is a V4 filesystem, update the administrator guide
+> ---
+>  Documentation/admin-guide/xfs.rst |   23 +++++++++++++++++++++++
+>  fs/xfs/Kconfig                    |   24 ++++++++++++++++++++++++
+>  fs/xfs/xfs_super.c                |   13 +++++++++++++
+>  3 files changed, 60 insertions(+)
 
-You probably don't want to call the helper every time
-around the loop.
+I agree with the overall policy direction and that we should be
+warning v4 filesystem users as early as possible.
 
-	David
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+-- 
+Dave Chinner
+david@fromorbit.com
