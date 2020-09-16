@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1842EC433E2
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:58:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 827A7C43461
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 21:00:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB35221D7D
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:58:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2719020731
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 21:00:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sY2/6I85"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tdOJbkUD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726891AbgIPU63 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Sep 2020 16:58:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51220 "EHLO
+        id S1726393AbgIPVAs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Sep 2020 17:00:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726326AbgIPQdO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 12:33:14 -0400
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3322CC061BD1
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:20 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id jw11so1379076pjb.0
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:20 -0700 (PDT)
+        with ESMTP id S1726411AbgIPQaY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 12:30:24 -0400
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB50EC061D7D
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:23 -0700 (PDT)
+Received: by mail-pl1-x643.google.com with SMTP id u9so3010601plk.4
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=cDkNG7qGEFEdGfIX86bLfEQSrd/OICaC75I6vXNRaN8=;
-        b=sY2/6I85jaAKkWq7JtlRlnmjvgOI+XDC8Kz6OZrzFzIjqC5i2a1MRs2QlV4u0SdkbE
-         0RGYYStNmxQpqbm7sMSVZn+Qx0eOC6m1TsuYci2HVTQdQTppSrlFRQJzhl6oOUtp9GFL
-         YJw5mUmU68yhnDflCewrKWHkKkjprJViN6TFIrPFdEkWWMXmzEozR8IpcZKJJnfUHV+6
-         ua8zFUjQzwXuSF4hFVAjr1L0rUhJInT/D0fqCNAlAD2QO41lgzOxuLzVnZNqFz+LZOhX
-         a7MPpadubfBoQ5a+zVR8Q/gjudWNry0UKNOO7NuyFgwK77C93WAexPt2v/07iiIYUXqx
-         wVMA==
+        bh=RwtKAe+FGeUhXF1OHlO+nvfWrMOhVBKfylbTs13kDUE=;
+        b=tdOJbkUDkoYfbI5V3ijGRoJW076n5wVa1jJAHAd85EuxMfCVubg2g08EUZIysSw5au
+         X33M6+Mqp9PM0Bl0loYvTiIhh7itetmNqObUUuQKP34MOkhiV6oYR0sNIbUqAz5dLLzc
+         aDVEbUPc+F2u0g4h8t5/RiOihDE16gdgOt+8cMbafEM6e9T4ogxoMUJYCUbYkCGlGKmN
+         RjE/KkdmPI+s5CadP7tpyY00R3iLP4LtCYUbU31IUPUTbLE9iQdNCW1e/HhOrunGZESZ
+         82PFV6/PblJWFTZRzoqL3ootuYk3mHqXpxPgrDH+FIbk/td7QoeSk97l+qhYI5y7LME7
+         L8yA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=cDkNG7qGEFEdGfIX86bLfEQSrd/OICaC75I6vXNRaN8=;
-        b=K+GjnFjSiKObNBA+wOOtTn4D91Qp0WfkyT3mpDW42BdcB1HRGK/J+ZZkFwTLLbIiAa
-         uE5+hz2pLs4gySvAMiMmR552TVz95FSUGpsNbmVYcJ5DrohUcpEmn8PqJlHkcbc7+ch4
-         nl2AGPjB9jlkB7Gu07lAcIcB43kF8Usw+FQzhY8ZDVc5A6caHxc2o4HjB8j0yR2tlTAg
-         iq39FX4fKKsKq8MRVo9j5dX8OqnAOe4jKCTZqWweG3q5i8xHk7BxBFTq3VeF0gFsQXAd
-         lnxxPXFM2Xu1DoD33L18B3i0ogYlO1IEQ0c6XssGfFUE4ioWXXMngVb0eCnLB8SV2zpD
-         VgTQ==
-X-Gm-Message-State: AOAM530D+wUojmCdAfDH9k6UHGksbD3PN45KuEw8Yox9iJLfS/dnA0hP
-        hBCbBgCNkDAPiJBeYTjMabxuH8LQFQ==
-X-Google-Smtp-Source: ABdhPJxCDy/38KD2UbScMR4Ww4uvQJizkv3DJz4mCr9Is4wSza1J8KyuwDVirzuYKMBYl5hJRDYvBA==
-X-Received: by 2002:a17:902:c1d5:b029:d1:f2ab:cf6e with SMTP id c21-20020a170902c1d5b02900d1f2abcf6emr1214960plc.67.1600255159388;
-        Wed, 16 Sep 2020 04:19:19 -0700 (PDT)
+        bh=RwtKAe+FGeUhXF1OHlO+nvfWrMOhVBKfylbTs13kDUE=;
+        b=p/kkLIcL3zPanSQpCc01i4LLruIxhZ9OJLhqPVCytWj6Q7yMk7yT4KeAi0H6C2YWwQ
+         UOmNMb875kBhzfVd0ot8Cizpd+frn2MpC1ZWODERpmDgjSKlZ3L8U0sQ5oxLZaskWzqk
+         FmXFSxHjpsfBX1EwzCdBHgGJ4wPFqv2wTfkvVuoiKYjOAO68eYt7ljnYKFccwlMO19nx
+         5JzDY2JZeT+wo5fNBs7uggCxMN2HlSD4+z1Zw7961Y5Lqc45HTGauq8qzd2YRciBaP20
+         3YdN7RsuMu6FbNIn0lqnLhNtmFmkKJIBifq4T0KoZ8SNYzF+zi8pvc1t3n5QjwUGgp20
+         aD3Q==
+X-Gm-Message-State: AOAM530KPnl8yMhAeYKIn9PJ6dnE1+u/GYF4iJLOkB1GPLQ1Y2ZjZL2o
+        XszJH2QfP+/IWnNTSAMESRw8xrzwfA==
+X-Google-Smtp-Source: ABdhPJy7sUM2Ted7YIiKEAetNAdnt0Z7fdgRuQkwfF+utAxf6GiPG4qNgjPSUPKFgBytmf0vSiPXDA==
+X-Received: by 2002:a17:90a:e02:: with SMTP id v2mr3481007pje.6.1600255163040;
+        Wed, 16 Sep 2020 04:19:23 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id v204sm3492195pfc.10.2020.09.16.04.19.18
+        by smtp.gmail.com with ESMTPSA id v204sm3492195pfc.10.2020.09.16.04.19.21
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 16 Sep 2020 04:19:18 -0700 (PDT)
+        Wed, 16 Sep 2020 04:19:22 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH] xfs: remove the unused SYNCHRONIZE macro
-Date:   Wed, 16 Sep 2020 19:19:04 +0800
-Message-Id: <1600255152-16086-2-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH] xfs: do the assert for all the log done items in xfs_trans_cancel
+Date:   Wed, 16 Sep 2020 19:19:07 +0800
+Message-Id: <1600255152-16086-5-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
 References: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
@@ -74,25 +74,100 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-There are no callers of the SYNCHRONIZE() macro, so remove it.
+We should do the assert for all the log done items if they appear
+here. This patch also add the XFS_ITEM_LOG_DONE flag to check if
+the item is a log done item.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 ---
- fs/xfs/xfs_linux.h | 1 -
- 1 file changed, 1 deletion(-)
+ fs/xfs/xfs_bmap_item.c     | 2 +-
+ fs/xfs/xfs_extfree_item.c  | 2 +-
+ fs/xfs/xfs_refcount_item.c | 2 +-
+ fs/xfs/xfs_rmap_item.c     | 2 +-
+ fs/xfs/xfs_trans.c         | 2 +-
+ fs/xfs/xfs_trans.h         | 4 ++++
+ 6 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index ab737fed7b12..ad1009778d33 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -123,7 +123,6 @@ typedef __u32			xfs_nlink_t;
- #define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
- #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index ec3691372e7c..2e49f48666f1 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -202,7 +202,7 @@ xfs_bud_item_release(
+ }
  
--#define SYNCHRONIZE()	barrier()
- #define __return_address __builtin_return_address(0)
+ static const struct xfs_item_ops xfs_bud_item_ops = {
+-	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
++	.flags		= XFS_ITEM_LOG_DONE_FLAG,
+ 	.iop_size	= xfs_bud_item_size,
+ 	.iop_format	= xfs_bud_item_format,
+ 	.iop_release	= xfs_bud_item_release,
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 6cb8cd11072a..f2c6cb67262e 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -307,7 +307,7 @@ xfs_efd_item_release(
+ }
  
- /*
+ static const struct xfs_item_ops xfs_efd_item_ops = {
+-	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
++	.flags		= XFS_ITEM_LOG_DONE_FLAG,
+ 	.iop_size	= xfs_efd_item_size,
+ 	.iop_format	= xfs_efd_item_format,
+ 	.iop_release	= xfs_efd_item_release,
+diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+index ca93b6488377..551bcc93acdd 100644
+--- a/fs/xfs/xfs_refcount_item.c
++++ b/fs/xfs/xfs_refcount_item.c
+@@ -208,7 +208,7 @@ xfs_cud_item_release(
+ }
+ 
+ static const struct xfs_item_ops xfs_cud_item_ops = {
+-	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
++	.flags		= XFS_ITEM_LOG_DONE_FLAG,
+ 	.iop_size	= xfs_cud_item_size,
+ 	.iop_format	= xfs_cud_item_format,
+ 	.iop_release	= xfs_cud_item_release,
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index dc5b0753cd51..427f90ef4509 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -231,7 +231,7 @@ xfs_rud_item_release(
+ }
+ 
+ static const struct xfs_item_ops xfs_rud_item_ops = {
+-	.flags		= XFS_ITEM_RELEASE_WHEN_COMMITTED,
++	.flags		= XFS_ITEM_LOG_DONE_FLAG,
+ 	.iop_size	= xfs_rud_item_size,
+ 	.iop_format	= xfs_rud_item_format,
+ 	.iop_release	= xfs_rud_item_release,
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 4257fdb03778..d33d0ba6f3bd 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1050,7 +1050,7 @@ xfs_trans_cancel(
+ 		struct xfs_log_item *lip;
+ 
+ 		list_for_each_entry(lip, &tp->t_items, li_trans)
+-			ASSERT(!(lip->li_type == XFS_LI_EFD));
++			ASSERT(!(lip->li_ops->flags & XFS_ITEM_LOG_DONE));
+ 	}
+ #endif
+ 	xfs_trans_unreserve_and_mod_sb(tp);
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 7fb82eb92e65..b92138b13c40 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -85,6 +85,10 @@ struct xfs_item_ops {
+  * intents that never need to be written back in place.
+  */
+ #define XFS_ITEM_RELEASE_WHEN_COMMITTED	(1 << 0)
++#define XFS_ITEM_LOG_DONE		(1 << 1)	/* log done item */
++
++#define XFS_ITEM_LOG_DONE_FLAG	(XFS_ITEM_RELEASE_WHEN_COMMITTED | \
++				 XFS_ITEM_LOG_DONE)
+ 
+ void	xfs_log_item_init(struct xfs_mount *mp, struct xfs_log_item *item,
+ 			  int type, const struct xfs_item_ops *ops);
 -- 
 2.20.0
 
