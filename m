@@ -2,145 +2,99 @@ Return-Path: <SRS0=KYGq=CZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CF0FC433E2
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:38:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBFCBC433E2
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:40:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E80F2087D
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:38:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E13421D90
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 20:40:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="OqoBjfs8"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EPPtWrG6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728476AbgIPUh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Sep 2020 16:37:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57462 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726780AbgIPRJW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 13:09:22 -0400
-Received: from mail-oi1-x230.google.com (mail-oi1-x230.google.com [IPv6:2607:f8b0:4864:20::230])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F845C02C2B1
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 09:55:13 -0700 (PDT)
-Received: by mail-oi1-x230.google.com with SMTP id w16so8920650oia.2
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 09:55:13 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=qziD80+3yMPY6N3ieS9kUVQGUHrCR+TyhU1kuZRn8ug=;
-        b=OqoBjfs8rO7Af3t0ecA1nZZHf2+27mXKGfPMRthnBvIndRIA93qknLOob6r2PMsEph
-         EZl8grJlukA7b5bNpmLXTFTgMnAnVSsX6rE/Vm8h2/vZM1uAr5azOuxLVB/ERCrpEZEC
-         hHcakEIjSRWDy+2N9GTxiZsqK6cw2pFM9XGhh2n37/gxq37MEOahl1mj45geboHujWun
-         5DNdH9fDNeIDPDYBpn7+nmlHaZkc89ljoS+DEWHlQTCyLr0DODUrxm3FlewOEmDBqXdg
-         FP3GNLv90EBOt6QjXNNXH28RNo6uHpf8H5c81J584mRkk2bbd/hLUuSMYz7sZbRQGj2E
-         R0ag==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=qziD80+3yMPY6N3ieS9kUVQGUHrCR+TyhU1kuZRn8ug=;
-        b=ClMbdy0QxZwxHXOzGP61QTD1UiURgEZLTzs+xcRpTe7xWg4DARbdHTV7jHXRMMu5ok
-         7KGAMRuYAXMH7DfFSv62v4lALC3Ghcl+tUhTWeWGxTO6A2DExOesoOC6DQC2BqG+NFuW
-         uy/s2xXJKRjd1w8UfUI1KpFSYF/CnsqEWoZGu/CEijicnO5BISRqw7PrD/y1dW7Yp0py
-         fkTBWnMEKQveGlfOCpEFOmhSEq/1dI5l95UFeyXG5U7Azp7LFv8tvS8MKzQWpVbQquP/
-         Yvv5tYN1ZFUkgk19HbVVe1FQ8U0jDuuxE7AbTaI4uVpyQ10eOYxRq5qbqh81pXQJTbQJ
-         Wxkg==
-X-Gm-Message-State: AOAM533iIfLL4TvQ8Sunm1kuBTmqUSDVh+K8h54a2w9Kta58iJ25g/Hz
-        FqD9lywEdojf2Y4ClXdNQjimCA==
-X-Google-Smtp-Source: ABdhPJwyy8X3oyKHbBasQ4BP9MBdAvvi77/SkAShqpXrzWESE810ovpS6kxTF4EhgRtRK6aGiaiZFQ==
-X-Received: by 2002:aca:48cc:: with SMTP id v195mr3941331oia.57.1600275310152;
-        Wed, 16 Sep 2020 09:55:10 -0700 (PDT)
-Received: from [192.168.1.10] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id r21sm9489292oie.15.2020.09.16.09.55.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Sep 2020 09:55:09 -0700 (PDT)
-Subject: Re: occasional metadata I/O errors (-EOPNOTSUPP) on XFS + io_uring
-To:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Cc:     io-uring@vger.kernel.org
-References: <20200915113327.GA1554921@bfoster>
- <20200916131957.GB1681377@bfoster>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <0b6da658-54b1-32ea-b172-981c67aaf29e@kernel.dk>
-Date:   Wed, 16 Sep 2020 10:55:08 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726741AbgIPUkF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Sep 2020 16:40:05 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:54314 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726803AbgIPRGN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 13:06:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600275962;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=sxawlgz87adndHvu34+9iWnaxmw0uAi2OWjOyCN0ATg=;
+        b=EPPtWrG63SHMLi76DlelLOtz7NluBM0mwOPXQzyhV9w+siV18Eyui2LcTT2Mkd/+PMWE1s
+        EPV7qGWDtsD9R0Ul9z7aU2RXX30Ccnq/39vdKkSKSyEctm7pXziJVT6+F5X9xc0ry3Z15q
+        mDdFH5oRzmyYp/gedzL7ngaOqBNEtnk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-244-swFOcsk0P1KrfmtfgL4amw-1; Wed, 16 Sep 2020 07:27:43 -0400
+X-MC-Unique: swFOcsk0P1KrfmtfgL4amw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BFF158030BD;
+        Wed, 16 Sep 2020 11:27:42 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 38C975FC36;
+        Wed, 16 Sep 2020 11:27:41 +0000 (UTC)
+Date:   Wed, 16 Sep 2020 19:41:41 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 18/24] xfs/291: fix open-coded repair call to mdrestore'd
+ fs image
+Message-ID: <20200916114141.GI2937@dhcp-12-102.nay.redhat.com>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+        guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+References: <160013417420.2923511.6825722200699287884.stgit@magnolia>
+ <160013429012.2923511.7187414322832672163.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200916131957.GB1681377@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160013429012.2923511.7187414322832672163.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/16/20 7:19 AM, Brian Foster wrote:
-> On Tue, Sep 15, 2020 at 07:33:27AM -0400, Brian Foster wrote:
->> Hi Jens,
->>
->> I'm seeing an occasional metadata (read) I/O error (EOPNOTSUPP) when
->> running Zorro's recent io_uring enabled fsstress on XFS (fsstress -d
->> <mnt> -n 99999999 -p 8). The storage is a 50GB dm-linear device on a
->> virtio disk (within a KVM guest). The full callstack of the I/O
->> submission path is appended below [2], acquired via inserting a
->> WARN_ON() in my local tree.
->>
->> From tracing around a bit, it looks like what happens is that fsstress
->> calls into io_uring, the latter starts a plug and sets plug.nowait =
->> true (via io_submit_sqes() -> io_submit_state_start()) and eventually
->> XFS needs to read an inode cluster buffer in the context of this task.
->> That buffer read ultimately fails due to submit_bio_checks() setting
->> REQ_NOWAIT on the bio and the following logic in the same function
->> causing a BLK_STS_NOTSUPP status:
->>
->> 	if ((bio->bi_opf & REQ_NOWAIT) && !queue_is_mq(q))
->> 		goto not_supported;
->>
->> In turn, this leads to the following behavior in XFS:
->>
->> [ 3839.273519] XFS (dm-2): metadata I/O error in "xfs_imap_to_bp+0x116/0x2c0 [xfs]" at daddr 0x323a5a0 len 32 error 95
->> [ 3839.303283] XFS (dm-2): log I/O error -95
->> [ 3839.321437] XFS (dm-2): xfs_do_force_shutdown(0x2) called from line 1196 of file fs/xfs/xfs_log.c. Return address = ffffffffc12dea8a
->> [ 3839.323554] XFS (dm-2): Log I/O Error Detected. Shutting down filesystem
->> [ 3839.324773] XFS (dm-2): Please unmount the filesystem and rectify the problem(s)
->>
->> I suppose it's possible fsstress is making an invalid request based on
->> my setup, but I find it a little strange that this state appears to leak
->> into filesystem I/O requests. What's more concerning is that this also
->> seems to impact an immediately subsequent log write submission, which is
->> a fatal error and causes the filesystem to shutdown.
->>
->> Finally, note that I've seen your patch associated with Zorro's recent
->> bug report [1] and that does seem to prevent the problem. I'm still
->> sending this report because the connection between the plug and that
->> change is not obvious to me, so I wanted to 1.) confirm this is intended
->> to fix this problem and 2.) try to understand whether this plugging
->> behavior introduces any constraints on the fs when invoked in io_uring
->> context. Thoughts? Thanks.
->>
+On Mon, Sep 14, 2020 at 06:44:50PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> To expand on this a bit, I was playing more with the aforementioned fix
-> yesterday while waiting for this email's several hour trip to the
-> mailing list to complete and eventually realized that I don't think the
-> plug.nowait thing properly accommodates XFS' use of multiple devices. A
-> simple example is XFS on a data device with mq support and an external
-> log device without mq support. Presumably io_uring requests could thus
-> enter XFS with plug.nowait set to true, and then any log bio submission
-> that happens to occur in that context is doomed to fail and shutdown the
-> fs.
+> Attach any external log devices to the open-coded repair call.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-Do we ever read from the logdev? It'll only be a concern on the read
-side. And even from there, you'd need nested reads from the log device.
+Good to me,
+Reviewed-by: Zorro Lang <zlang@redhat.com>
 
-In general, the 'can async' check should be advisory, the -EAGAIN
-or -EOPNOTSUPP should be caught and reissued. The failure path was
-just related to this happening off the retry path on arming for the
-async buffered callback.
-
--- 
-Jens Axboe
+>  tests/xfs/291 |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/tests/xfs/291 b/tests/xfs/291
+> index adef2536..5d4f1ac4 100755
+> --- a/tests/xfs/291
+> +++ b/tests/xfs/291
+> @@ -110,7 +110,9 @@ _scratch_metadump $tmp.metadump || _fail "xfs_metadump failed"
+>  xfs_mdrestore $tmp.metadump $tmp.img || _fail "xfs_mdrestore failed"
+>  [ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ] && \
+>  	rt_repair_opts="-r $SCRATCH_RTDEV"
+> -$XFS_REPAIR_PROG $rt_repair_opts -f $tmp.img >> $seqres.full 2>&1 || \
+> +[ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_LOGDEV" ] && \
+> +	log_repair_opts="-l $SCRATCH_LOGDEV"
+> +$XFS_REPAIR_PROG $rt_repair_opts $log_repair_opts -f $tmp.img >> $seqres.full 2>&1 || \
+>  	_fail "xfs_repair of metadump failed"
+>  
+>  # Yes it can; success, all done
+> 
 
