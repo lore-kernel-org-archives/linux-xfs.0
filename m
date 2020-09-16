@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 545C7C43461
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 17:29:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C184EC43461
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 17:49:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECBB8222E7
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 17:29:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F5AB2083B
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 17:49:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VMYvdX+4"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uxZ9BJMQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727117AbgIPR2m (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Sep 2020 13:28:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60710 "EHLO
+        id S1727443AbgIPRs6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Sep 2020 13:48:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35786 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727022AbgIPR2i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 13:28:38 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28C99C0698C1
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:28 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id w7so3794791pfi.4
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:28 -0700 (PDT)
+        with ESMTP id S1727489AbgIPRsf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 13:48:35 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13AF3C0698C0
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:27 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id g29so3735708pgl.2
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 04:19:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=e6zzA9XFxzYlVVxGx9Ti25fw4M1XCAzFK3ndwI1eYwE=;
-        b=VMYvdX+4uSyMZxhSWLLzWNwzketOLdVx6+kKgCdsmycy8x70Tzdt2CnXYw9NbxnTge
-         JMFpOYRF4DaQKgSgtCDkpqrDaaL4J371MD3jfZvfwoNpj48V3s7ovfq0wpN2ZLrPsn9s
-         XSDo9yTLkqjCvlXR86XgwpKh5pkvytTCKg8Aww+3tlmhCOjw4uU5sT1hpEuv7lwzbKNx
-         YNaRP7V2r/ZH/PbMLG9F67NLwT2HS24NcAL7EOkgi4P5MkZJjK/m+LySDMRqRbxI8ERN
-         cnGD+Al6irUoU4oFCbdmcjIoXqgpmzUjHALOmOGpS+NDXemFYzWC7MzZK2HQktMDhPr+
-         SmcQ==
+        bh=ZXfbdp9yyNT7t7bavNdq0KImIkV0lMJlaTmszOv75io=;
+        b=uxZ9BJMQwNGupGzlfkNLQCcBf5VndK4bwtPTAaLK24yLsOsNqdv6GV5bfA6yv2/a7g
+         E2cTtREZ+DQGttrcaW2s4i4fVW/iOkwI0VMk40HRcwyzTM2vzsHAmnetG/c0Smi3w1tk
+         J9ZkmKWEcEexPEiAF/dB2w7RAlQYLidwNYVb18ikJkWcKCfyQ0YCT4/NYPuOnm9rl2Qe
+         +J67N1quZe8zv10+IeGJhihPAf9K93FzaMbL5qCW2Has10uORhqYXeFuPWo53oY5hzKd
+         +62BRXItkOAIou9Ds2+RNiHtmTeD6xBFKlBOcWhUI1veziVtktg78ZeZ6BxA4THIxQYG
+         P7lQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=e6zzA9XFxzYlVVxGx9Ti25fw4M1XCAzFK3ndwI1eYwE=;
-        b=QE+tq8lHLT2mOuKOMkAOveLEC/oBWFSOCxCe7vqG03mCwGC+RxlTeuIm4UhOeqPHGk
-         +gSuTqO49aCqaam4qpKwhRyUNWFGXY5JtIYX0Lw2EmuZYlPrxoZYfXj+CdoUaWQv2Byx
-         VJ23mNqyCREEK2IY7TQ8GtbUtgTRCwfUudYtucVhid0Fj/P+leDg/71n0h9GEIeK4lyJ
-         LPR56V0AWjJCqZ/6YT8BK0016us23enfrAfFEW3BsFgLV5Blvh/vTPg9IwESCEHg9WAE
-         ZldbBeK6Uym4ovjp55NHnlKCpagKzEl4zgpWmVVoCu3SMZX/M4pEDAxQ7w2gLbYlsPaw
-         z6gA==
-X-Gm-Message-State: AOAM531YTTUDNqvMuvY9RL8tXeZfoQ4pFcO1odN72UrBUYX9ws9FKbDL
-        6pPX8KVNFfavBSSofQPv2vvYPNPrbE0Q
-X-Google-Smtp-Source: ABdhPJwpKi8m8WHi0RdOBepNDN1X4MkYtOeiZOZyfCsGC/5ClZs2tjg0nl6IE4x412ZyiNKwy+G1uw==
-X-Received: by 2002:a63:4f17:: with SMTP id d23mr88755pgb.319.1600255167573;
-        Wed, 16 Sep 2020 04:19:27 -0700 (PDT)
-Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id v204sm3492195pfc.10.2020.09.16.04.19.26
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        bh=ZXfbdp9yyNT7t7bavNdq0KImIkV0lMJlaTmszOv75io=;
+        b=jx1AMFNQLffcW5XbbiM0KhviiKeOQaf7nmLZknHbHM9vwPNwH4tcaJtJFQ6zERaB+U
+         z/kdzyrpbXnMYM9ifFscq4HsOHunR6Vxo62JjuwS45dqSAM55G3ocb+WyMHICo3sFO+C
+         za8mgl7F7n6FhDvSoY6AU/SIXVY0LPhPC/xFrclLK4N+reXB5sIF6NEkgeZ/t5dLA5Lc
+         eLNJPb8rbo8MXL6acyK+Pxh8hKLVxLAvd+NILlr8gRCELkVRfB2HsWXqQMz0Hly2b10U
+         QVVnyJNtVPf5a59I8v+PpEaRlfed3qG9qsZO57u3S+3o2CZ4caFzpNOz/XuRJVK26ONX
+         4ZmQ==
+X-Gm-Message-State: AOAM5327U2TUEVRVrWcmeFF2g1aGeO+nQVHzKju6U8nUSdC/zTk2Nt6h
+        JUTM653uzL6ffrK4KLcFSd1iUn7Vt1SV
+X-Google-Smtp-Source: ABdhPJzIGK0h+PF19F98zDU9NlfYCkByvgTWB8iIyctVxSPjOGHfrtMohXQQNSSeBcKqq+HtKDLU6w==
+X-Received: by 2002:a63:d43:: with SMTP id 3mr17905607pgn.170.1600255166239;
         Wed, 16 Sep 2020 04:19:26 -0700 (PDT)
+Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id v204sm3492195pfc.10.2020.09.16.04.19.25
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 16 Sep 2020 04:19:25 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH] xfs: cleanup the useless backslash in xfs_attr_leaf_entsize_remote
-Date:   Wed, 16 Sep 2020 19:19:11 +0800
-Message-Id: <1600255152-16086-9-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH] xfs: remove the repeated crc verification in xfs_attr3_rmt_verify
+Date:   Wed, 16 Sep 2020 19:19:10 +0800
+Message-Id: <1600255152-16086-8-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
 References: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
@@ -74,26 +74,28 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-The backslash is useless and remove it.
+We already do the crc verification before calling the xfs_attr3_rmt_verify()
+function, and just return directly for non-crc buffers, so don't need
+to do the repeated crc verification in xfs_attr3_rmt_verify().
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 ---
- fs/xfs/libxfs/xfs_da_format.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_attr_remote.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index b40a4e80f5ee..4fe974773d85 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -746,7 +746,7 @@ xfs_attr3_leaf_name_local(xfs_attr_leafblock_t *leafp, int idx)
-  */
- static inline int xfs_attr_leaf_entsize_remote(int nlen)
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 3f80cede7406..48d8e9caf86f 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -96,8 +96,6 @@ xfs_attr3_rmt_verify(
  {
--	return ((uint)sizeof(xfs_attr_leaf_name_remote_t) - 1 + (nlen) + \
-+	return ((uint)sizeof(xfs_attr_leaf_name_remote_t) - 1 + (nlen) +
- 		XFS_ATTR_LEAF_NAME_ALIGN - 1) & ~(XFS_ATTR_LEAF_NAME_ALIGN - 1);
- }
+ 	struct xfs_attr3_rmt_hdr *rmt = ptr;
  
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return __this_address;
+ 	if (!xfs_verify_magic(bp, rmt->rm_magic))
+ 		return __this_address;
+ 	if (!uuid_equal(&rmt->rm_uuid, &mp->m_sb.sb_meta_uuid))
 -- 
 2.20.0
 
