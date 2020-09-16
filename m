@@ -2,122 +2,166 @@ Return-Path: <SRS0=KYGq=CZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF106C35256
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 06:32:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BA22C433E2
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 08:45:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9422B221EB
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 06:32:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F28E0206B5
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Sep 2020 08:45:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vBL8lq6t"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iJxcOZA4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726269AbgIPGcW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Sep 2020 02:32:22 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:46996 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726161AbgIPGcV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 02:32:21 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G3eVBQ179527;
-        Wed, 16 Sep 2020 03:42:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=4K2q3HEVLZlgcxDncK5+AWn8OSgFujLQUjz/mYPrKFY=;
- b=vBL8lq6tPhSWbX6hmkT1zPNUd7MznZlZOPGeFc0z2MscHdSuu66ndSMhMMqaJgFamiqH
- eBvSgG1BkpQubS8kyB/LOJ4CgbWUUtM+52rWqOfPm+wGbFZUCYNl0uUzrMDgCnFcGG95
- Y8rJB0RO/40N2Ff6hrhLET3HLxGc2vMZrgnvZ8WT9ljXwxvEcFlJfQ6RlUwDm7jub2gr
- xDKsXhdCsYUwn7kb4RTUYKHSkgBgs08/1i8JB2wQiE2FD3Pxy4scK0I6uR0+PbZqW2HD
- x3u61gnn5w8LKQTkH71i1g+8RXEbZi3hzGcudxLhTcFOZpRhz21gtVLc2pfmdHMLVxWD 2A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 33j91dj6t0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 16 Sep 2020 03:42:03 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08G3ei4K061687;
-        Wed, 16 Sep 2020 03:42:03 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 33h890kba5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 16 Sep 2020 03:42:02 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08G3g2A8006084;
-        Wed, 16 Sep 2020 03:42:02 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 16 Sep 2020 03:42:02 +0000
-Date:   Tue, 15 Sep 2020 20:42:01 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 09/24] xfs/070: add scratch log device options to direct
- repair invocation
-Message-ID: <20200916034201.GC7954@magnolia>
-References: <160013417420.2923511.6825722200699287884.stgit@magnolia>
- <160013423329.2923511.3252823001209034556.stgit@magnolia>
- <20200916024247.GA2937@dhcp-12-102.nay.redhat.com>
+        id S1726472AbgIPIp2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Sep 2020 04:45:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35210 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726149AbgIPIp0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 04:45:26 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8ABD7C06174A;
+        Wed, 16 Sep 2020 01:45:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=RwS3rW8B+ViP4YJxJK0d4LsKrqUL+lbB0Q2Eor68chU=; b=iJxcOZA45Nc6D2m+4Ydi8g6iJE
+        EIzSywwIr1olZ0MonhuBswR4j28Emdvcj3jqhxn4trt4bZiPuz6hRsxDQp+fF7u4Vad9mYlIrmHUy
+        9C/pTn05QR6nzpYSwGfgoXkM7jKEaxnMo7nTmVAqT1m+8uiBBgURlasPg0kQvKSJZC7F9NAmZ7+xC
+        ZRw7rcabO84VdXXNwGH8BS+iwALMldc9Bviz0KNZe146/g6y81I3eldK7E1C9Rwr9CeozfvuEh1We
+        mIYRhjxWmfLoboJQrS7XaqwDFCpHSVjEqo4e34iVo4XUVW+KAwXAtewUPHgnak02iqj3iRtJgU0Nu
+        rqrQfD3A==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kIT3u-000883-2t; Wed, 16 Sep 2020 08:45:10 +0000
+Date:   Wed, 16 Sep 2020 09:45:10 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Ritesh Harjani <riteshh@linux.ibm.com>,
+        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, willy@infradead.org,
+        minlei@redhat.com
+Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
+Message-ID: <20200916084510.GA30815@infradead.org>
+References: <20200820231140.GE7941@dread.disaster.area>
+ <20200821044533.BBFD1A405F@d06av23.portsmouth.uk.ibm.com>
+ <20200821215358.GG7941@dread.disaster.area>
+ <20200822131312.GA17997@infradead.org>
+ <20200824142823.GA295033@bfoster>
+ <20200824150417.GA12258@infradead.org>
+ <20200824154841.GB295033@bfoster>
+ <20200825004203.GJ12131@dread.disaster.area>
+ <20200825144917.GA321765@bfoster>
+ <20200916001242.GE7955@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200916024247.GA2937@dhcp-12-102.nay.redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- suspectscore=2 mlxscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009160024
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9745 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
- priorityscore=1501 malwarescore=0 suspectscore=2 mlxlogscore=999
- clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009160024
+In-Reply-To: <20200916001242.GE7955@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 10:42:47AM +0800, Zorro Lang wrote:
-> On Mon, Sep 14, 2020 at 06:43:53PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Sep 15, 2020 at 05:12:42PM -0700, Darrick J. Wong wrote:
+> On Tue, Aug 25, 2020 at 10:49:17AM -0400, Brian Foster wrote:
+> > cc Ming
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/xfs/070 |    4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > On Tue, Aug 25, 2020 at 10:42:03AM +1000, Dave Chinner wrote:
+> > > On Mon, Aug 24, 2020 at 11:48:41AM -0400, Brian Foster wrote:
+> > > > On Mon, Aug 24, 2020 at 04:04:17PM +0100, Christoph Hellwig wrote:
+> > > > > On Mon, Aug 24, 2020 at 10:28:23AM -0400, Brian Foster wrote:
+> > > > > > Do I understand the current code (__bio_try_merge_page() ->
+> > > > > > page_is_mergeable()) correctly in that we're checking for physical page
+> > > > > > contiguity and not necessarily requiring a new bio_vec per physical
+> > > > > > page?
+> > > > > 
+> > > > > 
+> > > > > Yes.
+> > > > > 
+> > > > 
+> > > > Ok. I also realize now that this occurs on a kernel without commit
+> > > > 07173c3ec276 ("block: enable multipage bvecs"). That is probably a
+> > > > contributing factor, but it's not clear to me whether it's feasible to
+> > > > backport whatever supporting infrastructure is required for that
+> > > > mechanism to work (I suspect not).
+> > > > 
+> > > > > > With regard to Dave's earlier point around seeing excessively sized bio
+> > > > > > chains.. If I set up a large memory box with high dirty mem ratios and
+> > > > > > do contiguous buffered overwrites over a 32GB range followed by fsync, I
+> > > > > > can see upwards of 1GB per bio and thus chains on the order of 32+ bios
+> > > > > > for the entire write. If I play games with how the buffered overwrite is
+> > > > > > submitted (i.e., in reverse) however, then I can occasionally reproduce
+> > > > > > a ~32GB chain of ~32k bios, which I think is what leads to problems in
+> > > > > > I/O completion on some systems. Granted, I don't reproduce soft lockup
+> > > > > > issues on my system with that behavior, so perhaps there's more to that
+> > > > > > particular issue.
+> > > > > > 
+> > > > > > Regardless, it seems reasonable to me to at least have a conservative
+> > > > > > limit on the length of an ioend bio chain. Would anybody object to
+> > > > > > iomap_ioend growing a chain counter and perhaps forcing into a new ioend
+> > > > > > if we chain something like more than 1k bios at once?
+> > > > > 
+> > > > > So what exactly is the problem of processing a long chain in the
+> > > > > workqueue vs multiple small chains?  Maybe we need a cond_resched()
+> > > > > here and there, but I don't see how we'd substantially change behavior.
+> > > > > 
+> > > > 
+> > > > The immediate problem is a watchdog lockup detection in bio completion:
+> > > > 
+> > > >   NMI watchdog: Watchdog detected hard LOCKUP on cpu 25
+> > > > 
+> > > > This effectively lands at the following segment of iomap_finish_ioend():
+> > > > 
+> > > > 		...
+> > > >                /* walk each page on bio, ending page IO on them */
+> > > >                 bio_for_each_segment_all(bv, bio, iter_all)
+> > > >                         iomap_finish_page_writeback(inode, bv->bv_page, error);
+> > > > 
+> > > > I suppose we could add a cond_resched(), but is that safe directly
+> > > > inside of a ->bi_end_io() handler? Another option could be to dump large
+> > > > chains into the completion workqueue, but we may still need to track the
+> > > > length to do that. Thoughts?
+> > > 
+> > > We have ioend completion merging that will run the compeltion once
+> > > for all the pending ioend completions on that inode. IOWs, we do not
+> > > need to build huge chains at submission time to batch up completions
+> > > efficiently. However, huge bio chains at submission time do cause
+> > > issues with writeback fairness, pinning GBs of ram as unreclaimable
+> > > for seconds because they are queued for completion while we are
+> > > still submitting the bio chain and submission is being throttled by
+> > > the block layer writeback throttle, etc. Not to mention the latency
+> > > of stable pages in a situation like this - a mmap() write fault
+> > > could stall for many seconds waiting for a huge bio chain to finish
+> > > submission and run completion processing even when the IO for the
+> > > given page we faulted on was completed before the page fault
+> > > occurred...
+> > > 
+> > > Hence I think we really do need to cap the length of the bio
+> > > chains here so that we start completing and ending page writeback on
+> > > large writeback ranges long before the writeback code finishes
+> > > submitting the range it was asked to write back.
+> > > 
 > > 
+> > Ming pointed out separately that limiting the bio chain itself might not
+> > be enough because with multipage bvecs, we can effectively capture the
+> > same number of pages in much fewer bios. Given that, what do you think
+> > about something like the patch below to limit ioend size? This
+> > effectively limits the number of pages per ioend regardless of whether
+> > in-core state results in a small chain of dense bios or a large chain of
+> > smaller bios, without requiring any new explicit page count tracking.
 > > 
-> > diff --git a/tests/xfs/070 b/tests/xfs/070
-> > index 5d52a830..313864b7 100755
-> > --- a/tests/xfs/070
-> > +++ b/tests/xfs/070
-> > @@ -41,9 +41,11 @@ _cleanup()
-> >  _xfs_repair_noscan()
-> >  {
-> >  	# invoke repair directly so we can kill the process if need be
-> > +	[ "$USE_EXTERNAL" = yes -a ! -z "$SCRATCH_LOGDEV" ] && \
-> > +		log_repair_opts="-l $SCRATCH_LOGDEV"
-> >  	[ "$USE_EXTERNAL" = yes ] && [ -n "$SCRATCH_RTDEV" ] && \
-> >  		rt_repair_opts="-r $SCRATCH_RTDEV"
-> > -	$XFS_REPAIR_PROG $rt_repair_opts $SCRATCH_DEV 2>&1 |
-> > +	$XFS_REPAIR_PROG $log_repair_opts $rt_repair_opts $SCRATCH_DEV 2>&1 |
-> >  		tee -a $seqres.full > $tmp.repair &
+> > Brian
 > 
-> Why not use _scratch_xfs_repair at here?
-> 
-> Thanks,
-> Zorro
-> 
-> >  	repair_pid=$!
+> Dave was asking on IRC if I was going to pull this patch in.  I'm unsure
+> of its status (other than it hasn't been sent as a proper [PATCH]) so I
+> wonder, is this necessary, and if so, can it be cleaned up and
+> submitted?
 
-        ^^^^^^^^^^^^^
-Because this test needs to hang on to the pid of the repair process in
-order to kill it, which you can't do if do if you use the wrapper.
-
---D
-
-> >  
-> > 
-> 
+Maybe it is lost somewhere, but what is the point of this patch?
+What does the magic number try to represent?
