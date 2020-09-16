@@ -2,192 +2,111 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B2FEC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:22:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56FFCC433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:28:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A455208E4
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:22:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14F072078D
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:28:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dPS35JsG"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YNVqNBug"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726139AbgIQFWE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 01:22:04 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43690 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726129AbgIQFWE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 01:22:04 -0400
-X-Greylist: delayed 454 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 01:22:02 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600320122;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=NLFMkHZx5n33AbXWV/APjBNFG0kStV2CEUxDMV3rff4=;
-        b=dPS35JsGEDYNjucgSSQ1surVncbVrd56eYzQYP+jO6tyUCDw6J3V5WVy0Iu9MyJ7UAG9KA
-        +laBgmW1535DkUBa2g1f9+dWZwmzfj6rIoxGUMhOq6IJVP19saUTTp6j0KN4SGTnqmInyA
-        zjYZUnyRQtUGEn2vLttiKySDLOfVnhM=
-Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
- [209.85.215.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-579-RdBPc46bP228v52mVGNT5Q-1; Thu, 17 Sep 2020 01:14:40 -0400
-X-MC-Unique: RdBPc46bP228v52mVGNT5Q-1
-Received: by mail-pg1-f198.google.com with SMTP id y26so699012pga.22
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 22:14:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=NLFMkHZx5n33AbXWV/APjBNFG0kStV2CEUxDMV3rff4=;
-        b=PZ3Y2GDGvoQ9AOQC9c2MozlO2A2RSXr6jsgJtGMHyJfA+KnYu/uzvU8vXdQ/xvXhsx
-         r2ctth/6YaxFtZ9SvFO4PpFzP9DCVKFZGk6NjLY/J9npfsto5PazLH6+MVTBi1vbm1dt
-         PtdAFPsqAg13aht8W3COYxFlCR2Ptk7VTcUA0agO2FvFQ+MiBNCyHJDAP8YVD63DEf+k
-         Ce/isAvQoouU0KCLNYURutV3Q8tSPVFhygzh4qR/a/FmhWqfHjs/DGZPZZ4U975WdUT5
-         7PtluYgFs5z2CkpwuELbQTHIP85CmQNDEUkH7jRSfybkxUFizqVnHa+O9nHmyhX+Q9GF
-         fjcQ==
-X-Gm-Message-State: AOAM531WxIMDk808zaFw/2xub9iSJnf3/UxTNhKZC+Boeu+umwk6SXYl
-        hDEFfFWMZeBdHrgXkg41D4CeoFDJFYwUR3S436iP3QAqkoVKVX7mubb6pU0g/QT0lmMlCpEM+vt
-        RDN85xg+Y5HDIGoA4fbmH
-X-Received: by 2002:a62:4ed6:0:b029:142:2501:35ec with SMTP id c205-20020a624ed60000b0290142250135ecmr9969178pfb.76.1600319678827;
-        Wed, 16 Sep 2020 22:14:38 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxhTOCoTWHqPk/t6gCcCr+78Ocx5MDbmXnOIaNWKoLT+tkgDq16OmvXoNwIniuOU7RERoNtKg==
-X-Received: by 2002:a62:4ed6:0:b029:142:2501:35ec with SMTP id c205-20020a624ed60000b0290142250135ecmr9969163pfb.76.1600319678592;
-        Wed, 16 Sep 2020 22:14:38 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id w2sm4269921pgb.43.2020.09.16.22.14.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Sep 2020 22:14:38 -0700 (PDT)
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v3 2/2] xfs: clean up calculation of LR header blocks
-Date:   Thu, 17 Sep 2020 13:13:41 +0800
-Message-Id: <20200917051341.9811-3-hsiangkao@redhat.com>
-X-Mailer: git-send-email 2.18.1
-In-Reply-To: <20200917051341.9811-1-hsiangkao@redhat.com>
-References: <20200917051341.9811-1-hsiangkao@redhat.com>
+        id S1726135AbgIQF25 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 01:28:57 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:53090 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbgIQF25 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 01:28:57 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08GLP5pa189918;
+        Wed, 16 Sep 2020 21:30:14 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=vkeP0fpc6pnjp5/dkneZcYB+ekM+SUTJyvdjjsUzTaA=;
+ b=YNVqNBugnauPHB77Eem8/wvwhSZXDzv6QuLFYe+WrOj5GKCX32Sl4V7Hn1yI3ZKU4wUl
+ yJNVcQMMLuAV84g+m2GKPXX00we/FKMcrR346+xyxQ5KzW5zstmhwZBajcU+Ccqne21Q
+ Ocfdl2TNL2Rhw2MfLJz6tv8PoFKnhgRTqTBYc/bZjr2zS8GYgXU5NMDaWVQHJIgrT2na
+ b/R7S1Zp/PbzOWQYtd0WHYIWruJC7Pc4REs7wW8Kf6Ic6Xer1RGN/B8t/yC+njFMot/l
+ ZFtrNnKngOCSgReXt1kU6SpxOv5KdGm9JpS/XGqlpZrJrU9tKPyZiVUvM4Z0yeqmfxmL Lw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 33gp9mdkut-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 16 Sep 2020 21:30:14 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08GLPWmU037249;
+        Wed, 16 Sep 2020 21:30:13 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 33h889bpg1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 16 Sep 2020 21:30:13 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08GLUDsl003264;
+        Wed, 16 Sep 2020 21:30:13 GMT
+Received: from localhost (/10.159.158.133)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 16 Sep 2020 21:30:12 +0000
+Date:   Wed, 16 Sep 2020 14:30:11 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xiakaixu1987@gmail.com
+Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH] xfs: remove the unnecessary xfs_dqid_t type cast
+Message-ID: <20200916213011.GM7955@magnolia>
+References: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
+ <1600255152-16086-4-git-send-email-kaixuxia@tencent.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1600255152-16086-4-git-send-email-kaixuxia@tencent.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
+ suspectscore=3 phishscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009160156
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ adultscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=0 phishscore=0
+ spamscore=0 priorityscore=1501 suspectscore=3 impostorscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009160156
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Let's use DIV_ROUND_UP() to calculate log record header
-blocks as what did in xlog_get_iclog_buffer_size() and
-wrap up a common helper for log recovery.
+n Wed, Sep 16, 2020 at 07:19:06PM +0800, xiakaixu1987@gmail.com wrote:
+> From: Kaixu Xia <kaixuxia@tencent.com>
+> 
+> Since the type prid_t and xfs_dqid_t both are uint32_t, seems the
+> type cast is unnecessary, so remove it.
+> 
+> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 
-Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
----
-v2: https://lore.kernel.org/r/20200904082516.31205-3-hsiangkao@redhat.com
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-changes since v2:
- - get rid of xlog_logrecv2_hblks() and use xlog_logrec_hblks()
-   entirely (Brian).
+--D
 
- fs/xfs/xfs_log.c         |  4 +---
- fs/xfs/xfs_log_recover.c | 48 ++++++++++++++--------------------------
- 2 files changed, 17 insertions(+), 35 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index ad0c69ee8947..7a4ba408a3a2 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1604,9 +1604,7 @@ xlog_cksum(
- 		int		i;
- 		int		xheads;
- 
--		xheads = size / XLOG_HEADER_CYCLE_SIZE;
--		if (size % XLOG_HEADER_CYCLE_SIZE)
--			xheads++;
-+		xheads = DIV_ROUND_UP(size, XLOG_HEADER_CYCLE_SIZE);
- 
- 		for (i = 1; i < xheads; i++) {
- 			crc = crc32c(crc, &xhdr[i].hic_xheader,
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 782ec3eeab4d..28dd98b5a703 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -371,6 +371,18 @@ xlog_find_verify_cycle(
- 	return error;
- }
- 
-+static inline int xlog_logrec_hblks(struct xlog *log, xlog_rec_header_t *rh)
-+{
-+	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-+		int	h_size = be32_to_cpu(rh->h_size);
-+
-+		if ((be32_to_cpu(rh->h_version) & XLOG_VERSION_2) &&
-+		    h_size > XLOG_HEADER_CYCLE_SIZE)
-+			return DIV_ROUND_UP(h_size, XLOG_HEADER_CYCLE_SIZE);
-+	}
-+	return 1;
-+}
-+
- /*
-  * Potentially backup over partial log record write.
-  *
-@@ -463,15 +475,7 @@ xlog_find_verify_log_record(
- 	 * reset last_blk.  Only when last_blk points in the middle of a log
- 	 * record do we update last_blk.
- 	 */
--	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
--		uint	h_size = be32_to_cpu(head->h_size);
--
--		xhdrs = h_size / XLOG_HEADER_CYCLE_SIZE;
--		if (h_size % XLOG_HEADER_CYCLE_SIZE)
--			xhdrs++;
--	} else {
--		xhdrs = 1;
--	}
-+	xhdrs = xlog_logrec_hblks(log, head);
- 
- 	if (*last_blk - i + extra_bblks !=
- 	    BTOBB(be32_to_cpu(head->h_len)) + xhdrs)
-@@ -1158,22 +1162,7 @@ xlog_check_unmount_rec(
- 	 * below. We won't want to clear the unmount record if there is one, so
- 	 * we pass the lsn of the unmount record rather than the block after it.
- 	 */
--	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
--		int	h_size = be32_to_cpu(rhead->h_size);
--		int	h_version = be32_to_cpu(rhead->h_version);
--
--		if ((h_version & XLOG_VERSION_2) &&
--		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
--			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
--			if (h_size % XLOG_HEADER_CYCLE_SIZE)
--				hblks++;
--		} else {
--			hblks = 1;
--		}
--	} else {
--		hblks = 1;
--	}
--
-+	hblks = xlog_logrec_hblks(log, rhead);
- 	after_umount_blk = xlog_wrap_logbno(log,
- 			rhead_blk + hblks + BTOBB(be32_to_cpu(rhead->h_len)));
- 
-@@ -2989,15 +2978,10 @@ xlog_do_recovery_pass(
- 		if (error)
- 			goto bread_err1;
- 
--		if ((be32_to_cpu(rhead->h_version) & XLOG_VERSION_2) &&
--		    (h_size > XLOG_HEADER_CYCLE_SIZE)) {
--			hblks = h_size / XLOG_HEADER_CYCLE_SIZE;
--			if (h_size % XLOG_HEADER_CYCLE_SIZE)
--				hblks++;
-+		hblks = xlog_logrec_hblks(log, rhead);
-+		if (hblks != 1) {
- 			kmem_free(hbp);
- 			hbp = xlog_alloc_buffer(log, hblks);
--		} else {
--			hblks = 1;
- 		}
- 	} else {
- 		ASSERT(log->l_sectBBsize == 1);
--- 
-2.18.1
-
+> ---
+>  fs/xfs/xfs_qm.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 3f82e0c92c2d..41a459ffd1f2 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1715,7 +1715,7 @@ xfs_qm_vop_dqalloc(
+>  	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+>  		if (ip->i_d.di_projid != prid) {
+>  			xfs_iunlock(ip, lockflags);
+> -			error = xfs_qm_dqget(mp, (xfs_dqid_t)prid,
+> +			error = xfs_qm_dqget(mp, prid,
+>  					XFS_DQTYPE_PROJ, true, &pq);
+>  			if (error) {
+>  				ASSERT(error != -ENOENT);
+> -- 
+> 2.20.0
+> 
