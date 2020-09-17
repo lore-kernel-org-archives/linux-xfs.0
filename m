@@ -2,111 +2,97 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B489C433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24CE5C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:20:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF26A2078D
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:13:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8168208E4
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:20:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Dw6Jm/8C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726055AbgIQFNl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 01:13:41 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48708 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725267AbgIQFNk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 01:13:40 -0400
-Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A3C503AA138;
-        Thu, 17 Sep 2020 15:13:34 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kImEf-0001TI-Mu; Thu, 17 Sep 2020 15:13:33 +1000
-Date:   Thu, 17 Sep 2020 15:13:33 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: clean up xfs_bui_item_recover
- iget/trans_alloc/ilock ordering
-Message-ID: <20200917051333.GF12131@dread.disaster.area>
-References: <160031336397.3624582.9639363323333392474.stgit@magnolia>
- <160031337657.3624582.4680281255744277782.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <160031337657.3624582.4680281255744277782.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=KcmsTjQD c=1 sm=1 tr=0 cx=a_idp_d
-        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
-        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=LXLwniMm7ynPcUaRaIwA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1725844AbgIQFUk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 01:20:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60066 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725267AbgIQFUk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 01:20:40 -0400
+X-Greylist: delayed 360 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 01:20:39 EDT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600320038;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=JV6HYaL48gAOZrh2ZlwzMF3jTx5tcdI3QomukudpFCE=;
+        b=Dw6Jm/8C/qvb/hbWcMw9AGMaFe7pDxPLN8+139U1B8lfCvioljdC6FHLBJSLEvcA5Brmmy
+        I9QC8XK4BrkZRHvOhdoaQIoHsOatvv/2TW9krw5TUQi2ampSokMV/t09V0BOlUUuaZQyeA
+        Q95gBhpxEdgfSArd35fmYM2XtguyRt8=
+Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
+ [209.85.210.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-272-qTfCIGnYP_2VpJSKKi_o9Q-1; Thu, 17 Sep 2020 01:14:26 -0400
+X-MC-Unique: qTfCIGnYP_2VpJSKKi_o9Q-1
+Received: by mail-pf1-f200.google.com with SMTP id a16so698918pfk.2
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 22:14:26 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=JV6HYaL48gAOZrh2ZlwzMF3jTx5tcdI3QomukudpFCE=;
+        b=Oaupnd9VnvGe5LacqnsBE+tUlyURhzPAQP8WCK07wLH+23j59THfFcpZCtM787Bh4Z
+         kIyOQTrjgIKnNaxRLeA47BsQ1DGR9tWoClZmV/rBmpR/+RjxppinTCePMDc+IRz7fKNn
+         GekGOtcpLx0ScvkFeJF9rDtHOMSXdQoZDcUWJr3Snc4A9o5D/l06D4tyUC8y7A2M17cA
+         yhjPutPwksLGYx2jLx+fGOsSR72Zx1540Q0364RpfYo+IzHSwA2N2tfx9QLetG/CnX17
+         7/F67rUx8Y8GhLlT7H+aEc6WxYHzs6ljuRdQ1GyN7mOMKSuKbu82wf/wPiOXmDEmi+jV
+         Nvog==
+X-Gm-Message-State: AOAM533pgy+V8m4rz0QqNUSY2KAquUKE1/CQtl4/Qsg399xe0X3xiO4g
+        9uVi/WxGf9cHpc3f7+fNxO/F3IIgd+a/baRu/d63nttY4I6r6D1KtksKEkBTV+2ae7Tf/8ykpNu
+        seteKTIafo0kcr/eW3SvK
+X-Received: by 2002:a05:6a00:1481:b029:142:2501:35d7 with SMTP id v1-20020a056a001481b0290142250135d7mr9686431pfu.55.1600319665173;
+        Wed, 16 Sep 2020 22:14:25 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyLu/uCSXSRloFAyJ+JwbnkJAibTRsyMjWvCCUfLxqn8COZXguHH/BjDcqgrDodbSTE7TZBgg==
+X-Received: by 2002:a05:6a00:1481:b029:142:2501:35d7 with SMTP id v1-20020a056a001481b0290142250135d7mr9686414pfu.55.1600319664966;
+        Wed, 16 Sep 2020 22:14:24 -0700 (PDT)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id w2sm4269921pgb.43.2020.09.16.22.14.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Sep 2020 22:14:24 -0700 (PDT)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Brian Foster <bfoster@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH v2 0/2] xfs: random patches on log recovery
+Date:   Thu, 17 Sep 2020 13:13:39 +0800
+Message-Id: <20200917051341.9811-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 08:29:36PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> In most places in XFS, we have a specific order in which we gather
-> resources: grab the inode, allocate a transaction, then lock the inode.
-> xfs_bui_item_recover doesn't do it in that order, so fix it to be more
-> consistent.  This also makes the error bailout code a bit less weird.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_bmap_item.c |   40 +++++++++++++++++++++-------------------
->  1 file changed, 21 insertions(+), 19 deletions(-)
+Hi folks,
 
-This probably needs to go before the xfs_qm_dqattach() fix, or
-the dqattach fix need to come after this....
+Here are some patches after I read recovery code days ago.
+Due to code coupling, I send them as a patchset.
 
-> 
-> 
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index 877afe76d76a..6f589f04f358 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -475,25 +475,26 @@ xfs_bui_item_recover(
->  	    (bmap->me_flags & ~XFS_BMAP_EXTENT_FLAGS))
->  		goto garbage;
->  
-> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-> -			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
-> -	if (error)
-> -		return error;
-> -
-> -	budp = xfs_trans_get_bud(tp, buip);
-> -
->  	/* Grab the inode. */
-> -	error = xfs_iget(mp, tp, bmap->me_owner, 0, XFS_ILOCK_EXCL, &ip);
-> +	error = xfs_iget(mp, NULL, bmap->me_owner, 0, 0, &ip);
->  	if (error)
-> -		goto err_inode;
-> +		return error;
->  
->  	error = xfs_qm_dqattach(ip);
->  	if (error)
-> -		goto err_inode;
-> +		goto err_rele;
->  
->  	if (VFS_I(ip)->i_nlink == 0)
->  		xfs_iflags_set(ip, XFS_IRECOVERY);
->  
-> +	/* Allocate transaction and do the work. */
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-> +			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
-> +	if (error)
-> +		goto err_rele;
+This version mainly addresses previous review from Brian,
+sorry for taking some time due to another work.
 
-Hmmmm - don't all the error cased before we call xfs_trans_get_bud()
-need to release the bui?
+I already ran fstests and no strange out on my side and
+detail changelog is in each individual patch.
 
-Cheers,
+Thanks,
+Gao Xiang
 
-Dave.
+Gao Xiang (2):
+  xfs: avoid LR buffer overrun due to crafted h_len
+  xfs: clean up calculation of LR header blocks
+
+ fs/xfs/xfs_log.c         |  4 +-
+ fs/xfs/xfs_log_recover.c | 87 ++++++++++++++++------------------------
+ 2 files changed, 36 insertions(+), 55 deletions(-)
+
 -- 
-Dave Chinner
-david@fromorbit.com
+2.18.1
+
