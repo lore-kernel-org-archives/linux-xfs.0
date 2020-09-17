@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65F90C43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:40:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01837C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2027221734
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:40:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD94821D7F
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:40:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GcTM9a6X"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="qkx0NZMC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726883AbgIQLjQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 07:39:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60594 "EHLO
+        id S1726923AbgIQLkj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 07:40:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726380AbgIQLjJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 07:39:09 -0400
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B0E6C06178A
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:39:03 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id gf14so1087580pjb.5
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:39:03 -0700 (PDT)
+        with ESMTP id S1726884AbgIQLjI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 07:39:08 -0400
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3F6DC061788
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:39:00 -0700 (PDT)
+Received: by mail-pl1-x644.google.com with SMTP id x18so979744pll.6
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:39:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=OVf5a3IB2ZzBSVtvS513pC6i+oFF+t79O5LiUwvxX2A=;
-        b=GcTM9a6XYkmubrvTHqRbelNANNRmKiDjCfUlXbjt9Clnv626nm3m6RpnaGbMynXax4
-         HlhUCvjWY+hfBJP5SBgwfmxCr+7rwqntQi7WKOklyO0pO84BrEohZm6tjrXaE36cFgo5
-         VR9eX2k329ssiRPSujecGESsJE7Kr1hRaWESSuUNk38owP7xt4HrDzi2/7ab+zVdY75U
-         Tup6IujEBAH9KtRl1jII0iOPMg6hG0FxRw0jVgXtwuhd4Xg2ceKd70vJQTToaLsm7+gb
-         QFqsrpN62Ap2tAAm4599QE4MYUvC41/DxOCF5fmYy5xSUtcW0JvHquE99dcUWzTybfqL
-         N0Ng==
+        bh=hUZcP0BN3wlO1l1Z3N6N1aWVC8ZS2qzKnuR+Tup5krQ=;
+        b=qkx0NZMCvD7zDOg0/StWvRcF/BYjzjwCio7A+eH900nrQC5UsrpNZNu1KWZ6zZNJQV
+         iwMmHr201zj+aQStWicxJyWcuvRPj0XUUiuZzIKxMLqHLeJJ6SMOAf1YwIgFMDIcF6qs
+         n8a8mdv34e6ZY34AxqhSEPagq3cHf3qlWuSvJGF0rV5J6xuxNI6JLr90s1p7T+WuX5Ve
+         PlPP8aGORVbo7gKSiebSNeARDF9x1WvmnF0HonCw5U8fa0tY5tjKKJxd9ZQfvep+Jrko
+         LGXSioSLBGMrJ3LpAt2iQdvKHBLSq0ysFGak+IfKygAmSy5KkcIQsq5BYSda5yHae14T
+         BmYA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=OVf5a3IB2ZzBSVtvS513pC6i+oFF+t79O5LiUwvxX2A=;
-        b=q/umJX1Y4PfR1EB4lb9+9FbF1C6elSdgJDNjJRHi7EPXfaougun5EDP2bbuF1I8bXt
-         /beU5nWlAZqcZUbadClPqmnoLyeAsHMc6X9U7JSZAFVFB8LkuClRZW6qvCHuHArsdww3
-         LdIM0NT1hzjr8gYEo3LFE4l5MdwVL4zhLYj9FSM0v8dIzxux6en1E5O5jkYiZDM6YCO6
-         PeRSKQ01SkWXLS+zA3se0Mf7zp2QHvavZMZp89JGmgYSDCZyVXZUakANXzuaGjE7T53C
-         eWqrnnx/WciQUSmRPGCO9Vcg+ppVq/GyxzW+kL7kehLIeuW+dtaK/bxabqSzVXp851Xu
-         OgUQ==
-X-Gm-Message-State: AOAM5338drGa/2j7EFRopEdeEAFCdTBfCJ94wwhqv6tJQgwrzoivMxqK
-        o8iKdd+AVjEYtX8QOTZYkM6YHwbBjnsb
-X-Google-Smtp-Source: ABdhPJxy1WKwdV1duwG/xDZY/tYe+Om1uC01inLhj84Zu21ZAyoI2bHHAJ1YB/6aQKNQYkYR5ELk8g==
-X-Received: by 2002:a17:90b:4b82:: with SMTP id lr2mr8056716pjb.184.1600342742335;
-        Thu, 17 Sep 2020 04:39:02 -0700 (PDT)
+        bh=hUZcP0BN3wlO1l1Z3N6N1aWVC8ZS2qzKnuR+Tup5krQ=;
+        b=Gepr8pasRhp3ORVy5GKO43C/o9wEslLbMKyoM0cXYL0fk88WPvxQkdlYZ0EEDFLLrt
+         c19NQ0gO4karsDZyoPXT2yUR3c0Sp6mp2LFzj8OhJ7kkVHG5PjubgB9hGhP5QgDx9Nfr
+         MmkeWYVQ2ywjskt3biYL8ryfy8/tYcGU+X5sKYGpS/fM2Ts7+k63qGGnxKPcUJI2/yba
+         1+1t/JqarsBvONBvR+QNxfn0oGb6xpdboE6uiciU81x+ghWRtr8Zn73oyZM404QG6MVC
+         XZXcwqhEXzDgIT6rU8mHpQ7uvojQnE7tkESvvycN6FGIKOH75SWb4XzlWSVrZWju4y3N
+         eo2w==
+X-Gm-Message-State: AOAM532gwnsjCQs9czrqTIBXEbox9pvcIjpI60Hu+fVjq9p36FldHu2K
+        91io15WNL8nWtH9MH++g5C5E3RDk3g==
+X-Google-Smtp-Source: ABdhPJzT48scEmsXus5LJ4oEEX6CwhB53t0ARzdQ2tjlgX9UBDi3Ohoz8O4w8WgBiMcu8njDTsWSnQ==
+X-Received: by 2002:a17:90b:50e:: with SMTP id r14mr7924025pjz.230.1600342739966;
+        Thu, 17 Sep 2020 04:38:59 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id 64sm18761147pgi.90.2020.09.17.04.39.01
+        by smtp.gmail.com with ESMTPSA id 64sm18761147pgi.90.2020.09.17.04.38.58
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Sep 2020 04:39:01 -0700 (PDT)
+        Thu, 17 Sep 2020 04:38:59 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2 7/7] xfs: fix some comments
-Date:   Thu, 17 Sep 2020 19:38:48 +0800
-Message-Id: <1600342728-21149-8-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH v2 5/7] xfs: remove the redundant crc feature check in xfs_attr3_rmt_verify
+Date:   Thu, 17 Sep 2020 19:38:46 +0800
+Message-Id: <1600342728-21149-6-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
 References: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
@@ -73,45 +73,28 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-Fix the comments to help people understand the code.
+We already check whether the crc feature is enabled before calling
+xfs_attr3_rmt_verify(), so remove the redundant feature check in that
+function.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_da_format.h | 4 ++--
- fs/xfs/xfs_dquot.c            | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_attr_remote.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index 09f0f5d42728..2a72f1760169 100644
---- a/fs/xfs/libxfs/xfs_da_format.h
-+++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -35,8 +35,8 @@ typedef struct xfs_da_blkinfo {
-  */
- #define XFS_DA3_NODE_MAGIC	0x3ebe	/* magic number: non-leaf blocks */
- #define XFS_ATTR3_LEAF_MAGIC	0x3bee	/* magic number: attribute leaf blks */
--#define	XFS_DIR3_LEAF1_MAGIC	0x3df1	/* magic number: v2 dirlf single blks */
--#define	XFS_DIR3_LEAFN_MAGIC	0x3dff	/* magic number: v2 dirlf multi blks */
-+#define	XFS_DIR3_LEAF1_MAGIC	0x3df1	/* magic number: v3 dirlf single blks */
-+#define	XFS_DIR3_LEAFN_MAGIC	0x3dff	/* magic number: v3 dirlf multi blks */
+diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+index 3f80cede7406..48d8e9caf86f 100644
+--- a/fs/xfs/libxfs/xfs_attr_remote.c
++++ b/fs/xfs/libxfs/xfs_attr_remote.c
+@@ -96,8 +96,6 @@ xfs_attr3_rmt_verify(
+ {
+ 	struct xfs_attr3_rmt_hdr *rmt = ptr;
  
- struct xfs_da3_blkinfo {
- 	/*
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index 3072814e407d..1d95ed387d66 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -831,8 +831,8 @@ xfs_qm_dqget_checks(
- }
- 
- /*
-- * Given the file system, id, and type (UDQUOT/GDQUOT), return a locked
-- * dquot, doing an allocation (if requested) as needed.
-+ * Given the file system, id, and type (UDQUOT/GDQUOT/PDQUOT), return a
-+ * locked dquot, doing an allocation (if requested) as needed.
-  */
- int
- xfs_qm_dqget(
+-	if (!xfs_sb_version_hascrc(&mp->m_sb))
+-		return __this_address;
+ 	if (!xfs_verify_magic(bp, rmt->rm_magic))
+ 		return __this_address;
+ 	if (!uuid_equal(&rmt->rm_uuid, &mp->m_sb.sb_meta_uuid))
 -- 
 2.20.0
 
