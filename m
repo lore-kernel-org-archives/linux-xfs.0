@@ -2,174 +2,105 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA36C43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC819C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:58:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1366A20936
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:53:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=suse.com header.i=@suse.com header.b="qPN53akc"
+	by mail.kernel.org (Postfix) with ESMTP id 6781E2078D
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 05:58:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726156AbgIQFxp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 01:53:45 -0400
-Received: from mx2.suse.de ([195.135.220.15]:42622 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726112AbgIQFxp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Sep 2020 01:53:45 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=cantorsusede;
-        t=1600321040;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-        bh=i/IF3vBhE0MNfDnpI+LKOtHPaAvDj1Zmh8eIZNNXgtE=;
-        b=qPN53akcCr37rpzIs5hg1+JmyVKf1Ol1vCTG2BvmW1dz7f7njSTwLFw4YKQ9gAt8ikBTkX
-        RXUs6tMfkMRD8RSgqKiLzw6Q2Y8oTnO+sgSYzt7g08sZWBo1Vi1nnQqXMIBiYVfV4gjinq
-        RgPILzW4OT5zdCKJhTxJP+/Rl+MvyRsDVwl7R6OV+dUH6dM/37yuX1MuKzoy9lNEEzYMKi
-        5Rh56KV0HrB7iWKSxPOkpFpZzBjLfLWdUDB1bVSvO2q8RGZU4/UxWFP+p8/R29J4qUteKX
-        8RPCr/2bIicziWa3Rjaj4PauiddI3Z7CbOG9Fz/5k7rWHUni6BghXhmCD/BJxw==
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 60E33AD12;
-        Thu, 17 Sep 2020 05:37:35 +0000 (UTC)
-Subject: Re: More filesystem need this fix (xfs: use MMAPLOCK around
- filemap_map_pages())
-To:     Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Theodore Tso <tytso@mit.edu>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Qiuyang Sun <sunqiuyang@huawei.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "Kirill A. Shutemov" <kirill@shutemov.name>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Al Viro <viro@zeniv.linux.org.uk>, nborisov@suse.de
-References: <20200623052059.1893966-1-david@fromorbit.com>
- <CAOQ4uxh0dnVXJ9g+5jb3q72RQYYqTLPW_uBqHPKn6AJZ2DNPOQ@mail.gmail.com>
- <20200916155851.GA1572@quack2.suse.cz>
- <20200917014454.GZ12131@dread.disaster.area>
-From:   Nikolay Borisov <nborisov@suse.com>
-Autocrypt: addr=nborisov@suse.com; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <df9eb392-8b86-591a-b1be-535a13b874d9@suse.com>
-Date:   Thu, 17 Sep 2020 08:37:17 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1726129AbgIQF6E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 01:58:04 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54573 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726112AbgIQF6C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 01:58:02 -0400
+Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1F0543AA6ED;
+        Thu, 17 Sep 2020 15:58:00 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kImvd-0001aE-TN; Thu, 17 Sep 2020 15:57:57 +1000
+Date:   Thu, 17 Sep 2020 15:57:57 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH 1/3] xfs: change the order in which child and parent
+ defer ops are finished
+Message-ID: <20200917055757.GG12131@dread.disaster.area>
+References: <160031338724.3624707.1335084348340671147.stgit@magnolia>
+ <160031339354.3624707.1985288778723932783.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200917014454.GZ12131@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160031339354.3624707.1985288778723932783.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=IuRgj43g c=1 sm=1 tr=0 cx=a_idp_d
+        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
+        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8
+        a=7-415B0cAAAA:8 a=6eIcgRVxR0gWDYNPFMcA:9 a=3eyV5OuFkhsaRZgu:21
+        a=02ERAi5UB9sB4zkP:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 17.09.20 г. 4:44 ч., Dave Chinner wrote:
-> On Wed, Sep 16, 2020 at 05:58:51PM +0200, Jan Kara wrote:
->> On Sat 12-09-20 09:19:11, Amir Goldstein wrote:
->>> On Tue, Jun 23, 2020 at 8:21 AM Dave Chinner <david@fromorbit.com> wrote:
-
-<snip>
-
+On Wed, Sep 16, 2020 at 08:29:53PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> So....
-> 
-> P0					p1
-> 
-> hole punch starts
->   takes XFS_MMAPLOCK_EXCL
->   truncate_pagecache_range()
->     unmap_mapping_range(start, end)
->       <clears ptes>
-> 					<read fault>
-> 					do_fault_around()
-> 					  ->map_pages
-> 					    filemap_map_pages()
-> 					      page mapping valid,
-> 					      page is up to date
-> 					      maps PTEs
-> 					<fault done>
->     truncate_inode_pages_range()
->       truncate_cleanup_page(page)
->         invalidates page
->       delete_from_page_cache_batch(page)
->         frees page
-> 					<pte now points to a freed page>
-> 
-> That doesn't seem good to me.
-> 
-> Sure, maybe the page hasn't been freed back to the free lists
-> because of elevated refcounts. But it's been released by the
-> filesystem and not longer in the page cache so nothing good can come
-> of this situation...
-> 
-> AFAICT, this race condition exists for the truncate case as well
-> as filemap_map_pages() doesn't have a "page beyond inode size" check
-> in it. 
+> The defer ops code has been finishing items in the wrong order -- if a
 
-(It's not relevant to the discussion at hand but for the sake of
-completeness):
+<snip long explanation>
 
-It does have a check:
+Yeah, I'd kinda come to the same conclusion while reviewing the
+recovery process. The analogy I made in my mind was the difference
+in overhead of tracking a breadth-first tree walk vs a depth-first
+tree walk...
 
- max_idx = DIV_ROUND_UP(i_size_read(mapping->host), PAGE_SIZE);
- if (page->index >= max_idx)
-      goto unlock;
+> As originally written, the code used list_splice_tail_init instead of
+> list_splice_init, so change that, and leave a short comment explaining
+> our actions.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_defer.c |   11 ++++++++++-
+>  1 file changed, 10 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 97523b394932..84a70edd0da1 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -431,8 +431,17 @@ xfs_defer_finish_noroll(
+>  
+>  	/* Until we run out of pending work to finish... */
+>  	while (!list_empty(&dop_pending) || !list_empty(&(*tp)->t_dfops)) {
+> +		/*
+> +		 * Deferred items that are created in the process of finishing
+> +		 * other deferred work items should be queued at the head of
+> +		 * the pending list, which puts them ahead of the deferred work
+> +		 * that was created by the caller.  This keeps the number of
+> +		 * pending work items to a minimum, which decreases the amount
+> +		 * of time that any one intent item can stick around in memory,
+> +		 * pinning the log tail.
+> +		 */
+>  		xfs_defer_create_intents(*tp);
+> -		list_splice_tail_init(&(*tp)->t_dfops, &dop_pending);
+> +		list_splice_init(&(*tp)->t_dfops, &dop_pending);
 
+*nod*.
 
-<snip>
+My favourite sort of fix - a couple of hundred lines of explanation
+for a one-liner :)
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
