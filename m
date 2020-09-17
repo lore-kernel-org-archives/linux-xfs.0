@@ -2,102 +2,261 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 259FBC43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7B64C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 13:27:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E41A4206BE
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:43:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C2212072E
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 13:27:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Gx5fu8Ml"
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="Ol8zdtYK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726715AbgIQLnI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 07:43:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60562 "EHLO
+        id S1726766AbgIQN0h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 09:26:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726855AbgIQLi4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 07:38:56 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0221C061756
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:54 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id d9so1051624pfd.3
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:54 -0700 (PDT)
+        with ESMTP id S1726827AbgIQNTt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 09:19:49 -0400
+Received: from mail-wr1-x441.google.com (mail-wr1-x441.google.com [IPv6:2a00:1450:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5F5DC061756
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 06:19:46 -0700 (PDT)
+Received: by mail-wr1-x441.google.com with SMTP id t10so2063402wrv.1
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 06:19:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=4ufCmlG0OIXvg8AR4mi/CXQ658A7yveBgWXLRlBhbX8=;
-        b=Gx5fu8MlnxF77OcIvnzzimJOhBjqISZiCctVzVyZaH7uCnjcJtway0uS7z1sAHDIMG
-         AH9+hyrEFXCg5g3pexf11S7EQ0iikLJ++IW14PLuuz0lzAr2HDGCnNTbAxcZ/usSN/8N
-         9hPssjJacDmJ6ilT3NPNoVi/MhUW9M/q12UcSysR3VDyesc6b+1AudcgW5uat/L0Eou2
-         02LvWd+fgNkJYi9Ust3/YNFt8sclyclQRBD7uPHnJQ3wLcciC4H6NuBn2sCjfI/HWqlr
-         8st6nTD8zxh02pxkEnNuGvgIAAgrrEbojNDCUopN6wh525LvpzUj9rr+iik9cSk7Ht7L
-         mngg==
+        d=ffwll.ch; s=google;
+        h=date:from:to:cc:subject:message-id:mail-followup-to:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=OJz3dROXwZ4H9FjplYiHUh7ta1dm2pPiZx++Qm+gMOk=;
+        b=Ol8zdtYKra8OqwKcXQZPTIzAIAjrxl7EnGA/qptW05V0voGayUZTJ1UOmlJx84mWcm
+         0r1ALbQGydxydvFM37pyuB+FPcNQJYGFXrs30Uy4uBKXsTI9vDopq0psqSt8WIVbv/3m
+         SL42by4B46k89IfXDFWI+V95drUdRSPKiXLkY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=4ufCmlG0OIXvg8AR4mi/CXQ658A7yveBgWXLRlBhbX8=;
-        b=rw034KBda5SoRLEmd3kLRWYJhPlw0cMgb3OxUVO3QesAtoRQQUXtXlUAbStCC/N1gZ
-         GXK9BSc/U7HT5qWHlyj8duNyYnbvpRb6UJSOyNSkqxX0FjNz7/DkQeTE+f8LcSsTlaqT
-         lJW1rw14RrshYleRQbjTQSKQMXmtyJTx8GFPOgIk7VOqWgEutVZ6GV2Hog/jxLbYN8/w
-         Mu9fmE2kOuHtnxsUxZ2R+mV2iVhkMWsqtvx2NgUlfhl6hZcGtOuTsc0dGU9N8ZLsVZZE
-         ExO9suSw2rcPhtz6b3a1n07h0xA1HKo3PtDba5aQzTub5TtnBPkX0go/HZXLwkdKmtjO
-         JRgg==
-X-Gm-Message-State: AOAM533lLi+4Gbwg8cMJefiUuhXk/NDC5mwmq8EAZJ6uNKrvG5ZNJtVp
-        +DLiPUcHLuo3No40fV7F0NxpPg4+8A==
-X-Google-Smtp-Source: ABdhPJzcTaCN8X5x3R9Xvkn40swRYtBc8E8AIMLqLihNvjAurXDwPXnNSJeqMJDnu+I+mLaNYhnI+g==
-X-Received: by 2002:a62:301:0:b029:13c:1611:6528 with SMTP id 1-20020a6203010000b029013c16116528mr26543881pfd.8.1600342733709;
-        Thu, 17 Sep 2020 04:38:53 -0700 (PDT)
-Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id 64sm18761147pgi.90.2020.09.17.04.38.52
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Sep 2020 04:38:52 -0700 (PDT)
-From:   xiakaixu1987@gmail.com
-X-Google-Original-From: kaixuxia@tencent.com
-To:     linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2 0/7] xfs: random fixes and code cleanup
-Date:   Thu, 17 Sep 2020 19:38:41 +0800
-Message-Id: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
-X-Mailer: git-send-email 1.8.3.1
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :content-transfer-encoding:in-reply-to;
+        bh=OJz3dROXwZ4H9FjplYiHUh7ta1dm2pPiZx++Qm+gMOk=;
+        b=uJjgRPLdP+LOSqMbD93Hix6l4wkfQ6cca/pbtjJqhzIh+hMjwaRDJ9CrylW4mUIi83
+         M0j8mUNPWyvsXhPtXKvzsQWZfWfPzhGlU3pEQXk+Km3x7X5hpIy4aIN0eEvTbD6L3pwU
+         +tkaimdoaZNdBsgi0PqdsDXk8oJLqvLUKDpEEtgLal82sv5gao+DgK7HQxQLWQVzN+F1
+         YtG1QnDonMU6jWFGCyIqBJhj8PP56conGGWzPEKcke+nwuTS4NiFod1PLvYCtkuBOWMC
+         jjpQaJSt6cqOf7pjuicQdWM3TxMP55XMTYv64k/cWCK8J5R+cKP8aIwo8JIqRtHp9ss6
+         LsMA==
+X-Gm-Message-State: AOAM532WMLtJG3Ut2v/+jQkeKj5saN4BEYNRgm+Lr4NskhjlxhccklW0
+        xMOjHaZf1RWx1By7qJUY2plKFg==
+X-Google-Smtp-Source: ABdhPJwWrq6ZejmimL/ybiemi2sN/GPynbFDqZKwAC87Lkhqkhgx8buF3bHZlQuU+GRDRVJVnJpavA==
+X-Received: by 2002:a5d:6b84:: with SMTP id n4mr34531077wrx.55.1600348785370;
+        Thu, 17 Sep 2020 06:19:45 -0700 (PDT)
+Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
+        by smtp.gmail.com with ESMTPSA id d2sm39644798wro.34.2020.09.17.06.19.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Sep 2020 06:19:44 -0700 (PDT)
+Date:   Thu, 17 Sep 2020 15:19:42 +0200
+From:   Daniel Vetter <daniel@ffwll.ch>
+To:     Thomas =?iso-8859-1?Q?Hellstr=F6m_=28Intel=29?= 
+        <thomas_os@shipmail.org>
+Cc:     Daniel Vetter <daniel.vetter@ffwll.ch>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        "open list:DMA BUFFER SHARING FRAMEWORK" 
+        <linux-media@vger.kernel.org>,
+        "moderated list:DMA BUFFER SHARING FRAMEWORK" 
+        <linaro-mm-sig@lists.linaro.org>,
+        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Subject: Re: [PATCH] dma-resv: lockdep-prime address_space->i_mmap_rwsem for
+ dma-resv
+Message-ID: <20200917131942.GX438822@phenom.ffwll.local>
+Mail-Followup-To: Thomas =?iso-8859-1?Q?Hellstr=F6m_=28Intel=29?= <thomas_os@shipmail.org>,
+        DRI Development <dri-devel@lists.freedesktop.org>,
+        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+        "open list:DMA BUFFER SHARING FRAMEWORK" <linux-media@vger.kernel.org>,
+        "moderated list:DMA BUFFER SHARING FRAMEWORK" <linaro-mm-sig@lists.linaro.org>,
+        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>, Linux MM <linux-mm@kvack.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+References: <20200728135839.1035515-1-daniel.vetter@ffwll.ch>
+ <38cbc4fb-3a88-47c4-2d6c-4d90f9be42e7@shipmail.org>
+ <CAKMK7uFe-70DE5qOBJ6FwD8d_A0yZt+h5bCqA=e9QtYE1qwASQ@mail.gmail.com>
+ <60f2b14f-8cef-f515-9cf5-bdbc02d9c63c@shipmail.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <60f2b14f-8cef-f515-9cf5-bdbc02d9c63c@shipmail.org>
+X-Operating-System: Linux phenom 5.7.0-1-amd64 
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kaixu Xia <kaixuxia@tencent.com>
+On Thu, Jul 30, 2020 at 06:45:14PM +0200, Thomas Hellström (Intel) wrote:
+> 
+> On 7/30/20 3:17 PM, Daniel Vetter wrote:
+> > On Thu, Jul 30, 2020 at 2:17 PM Thomas Hellström (Intel)
+> > <thomas_os@shipmail.org> wrote:
+> > > 
+> > > On 7/28/20 3:58 PM, Daniel Vetter wrote:
+> > > > GPU drivers need this in their shrinkers, to be able to throw out
+> > > > mmap'ed buffers. Note that we also need dma_resv_lock in shrinkers,
+> > > > but that loop is resolved by trylocking in shrinkers.
+> > > > 
+> > > > So full hierarchy is now (ignore some of the other branches we already
+> > > > have primed):
+> > > > 
+> > > > mmap_read_lock -> dma_resv -> shrinkers -> i_mmap_lock_write
+> > > > 
+> > > > I hope that's not inconsistent with anything mm or fs does, adding
+> > > > relevant people.
+> > > > 
+> > > Looks OK to me. The mapping_dirty_helpers run under the i_mmap_lock, but
+> > > don't allocate any memory AFAICT.
+> > > 
+> > > Since huge page-table-entry splitting may happen under the i_mmap_lock
+> > > from unmap_mapping_range() it might be worth figuring out how new page
+> > > directory pages are allocated, though.
+> > ofc I'm not an mm expert at all, but I did try to scroll through all
+> > i_mmap_lock_write/read callers. Found the following:
+> > 
+> > - kernel/events/uprobes.c in build_map_info:
+> > 
+> >              /*
+> >               * Needs GFP_NOWAIT to avoid i_mmap_rwsem recursion through
+> >               * reclaim. This is optimistic, no harm done if it fails.
+> >               */
+> > 
+> > - I got lost in the hugetlb.c code and couldn't convince myself it's
+> > not allocating page directories at various levels with something else
+> > than GFP_KERNEL.
+> > 
+> > So looks like the recursion is clearly there and known, but the
+> > hugepage code is too complex and flying over my head.
+> > -Daniel
+> 
+> OK, so I inverted your annotation and ran a memory hog, and got the below
+> splat. So clearly your proposed reclaim->i_mmap_lock locking order is an
+> already established one.
+> 
+> So
+> 
+> Reviewed-by: Thomas Hellström <thomas.hellstrom@intel.com>
 
-Hi all,
+No one complaining that this is a terrible idea and two reviews from
+people who know stuff, so I went ahead and pushed this to drm-misc-next.
 
-This patchset include random fixes and code cleanups, and there are no
-connections among these patches. In order to make it easier to track,
-I bundle them up and put all the scattered patches into a single patchset.
+Thanks for taking a look at this.
+-Daniel
 
-Changes for v2: 
- -detect intent-done items by their item ops.
- -update the commit messages.
- -code cleanup for xfs_attr_leaf_entsize_{remote,local}.
-
-Kaixu Xia (7):
-  xfs: remove the unused SYNCHRONIZE macro
-  xfs: use the existing type definition for di_projid
-  xfs: remove the unnecessary xfs_dqid_t type cast
-  xfs: do the assert for all the log done items in xfs_trans_cancel
-  xfs: remove the redundant crc feature check in xfs_attr3_rmt_verify
-  xfs: code cleanup in xfs_attr_leaf_entsize_{remote,local}
-  xfs: fix some comments
-
- fs/xfs/libxfs/xfs_attr_remote.c |  2 --
- fs/xfs/libxfs/xfs_da_format.h   | 12 ++++++------
- fs/xfs/libxfs/xfs_inode_buf.h   |  2 +-
- fs/xfs/xfs_dquot.c              |  4 ++--
- fs/xfs/xfs_linux.h              |  1 -
- fs/xfs/xfs_qm.c                 |  2 +-
- fs/xfs/xfs_trans.c              |  9 ++++++++-
- 7 files changed, 18 insertions(+), 14 deletions(-)
+> 
+> 8<---------------------------------------------------------------------------------------------
+> 
+> [  308.324654] WARNING: possible circular locking dependency detected
+> [  308.324655] 5.8.0-rc2+ #16 Not tainted
+> [  308.324656] ------------------------------------------------------
+> [  308.324657] kswapd0/98 is trying to acquire lock:
+> [  308.324658] ffff92a16f758428 (&mapping->i_mmap_rwsem){++++}-{3:3}, at:
+> rmap_walk_file+0x1c0/0x2f0
+> [  308.324663]
+>                but task is already holding lock:
+> [  308.324664] ffffffffb0960240 (fs_reclaim){+.+.}-{0:0}, at:
+> __fs_reclaim_acquire+0x5/0x30
+> [  308.324666]
+>                which lock already depends on the new lock.
+> 
+> [  308.324667]
+>                the existing dependency chain (in reverse order) is:
+> [  308.324667]
+>                -> #1 (fs_reclaim){+.+.}-{0:0}:
+> [  308.324670]        fs_reclaim_acquire+0x34/0x40
+> [  308.324672]        dma_resv_lockdep+0x186/0x224
+> [  308.324675]        do_one_initcall+0x5d/0x2c0
+> [  308.324676]        kernel_init_freeable+0x222/0x288
+> [  308.324678]        kernel_init+0xa/0x107
+> [  308.324679]        ret_from_fork+0x1f/0x30
+> [  308.324680]
+>                -> #0 (&mapping->i_mmap_rwsem){++++}-{3:3}:
+> [  308.324682]        __lock_acquire+0x119f/0x1fc0
+> [  308.324683]        lock_acquire+0xa4/0x3b0
+> [  308.324685]        down_read+0x2d/0x110
+> [  308.324686]        rmap_walk_file+0x1c0/0x2f0
+> [  308.324687]        page_referenced+0x133/0x150
+> [  308.324689]        shrink_active_list+0x142/0x610
+> [  308.324690]        balance_pgdat+0x229/0x620
+> [  308.324691]        kswapd+0x200/0x470
+> [  308.324693]        kthread+0x11f/0x140
+> [  308.324694]        ret_from_fork+0x1f/0x30
+> [  308.324694]
+>                other info that might help us debug this:
+> 
+> [  308.324695]  Possible unsafe locking scenario:
+> 
+> [  308.324695]        CPU0                    CPU1
+> [  308.324696]        ----                    ----
+> [  308.324696]   lock(fs_reclaim);
+> [  308.324697] lock(&mapping->i_mmap_rwsem);
+> [  308.324698]                                lock(fs_reclaim);
+> [  308.324699]   lock(&mapping->i_mmap_rwsem);
+> [  308.324699]
+>                 *** DEADLOCK ***
+> 
+> [  308.324700] 1 lock held by kswapd0/98:
+> [  308.324701]  #0: ffffffffb0960240 (fs_reclaim){+.+.}-{0:0}, at:
+> __fs_reclaim_acquire+0x5/0x30
+> [  308.324702]
+>                stack backtrace:
+> [  308.324704] CPU: 1 PID: 98 Comm: kswapd0 Not tainted 5.8.0-rc2+ #16
+> [  308.324705] Hardware name: VMware, Inc. VMware Virtual Platform/440BX
+> Desktop Reference Platform, BIOS 6.00 07/29/2019
+> [  308.324706] Call Trace:
+> [  308.324710]  dump_stack+0x92/0xc8
+> [  308.324711]  check_noncircular+0x12d/0x150
+> [  308.324713]  __lock_acquire+0x119f/0x1fc0
+> [  308.324715]  lock_acquire+0xa4/0x3b0
+> [  308.324716]  ? rmap_walk_file+0x1c0/0x2f0
+> [  308.324717]  ? __lock_acquire+0x394/0x1fc0
+> [  308.324719]  down_read+0x2d/0x110
+> [  308.324720]  ? rmap_walk_file+0x1c0/0x2f0
+> [  308.324721]  rmap_walk_file+0x1c0/0x2f0
+> [  308.324722]  page_referenced+0x133/0x150
+> [  308.324724]  ? __page_set_anon_rmap+0x70/0x70
+> [  308.324725]  ? page_get_anon_vma+0x190/0x190
+> [  308.324726]  shrink_active_list+0x142/0x610
+> [  308.324728]  balance_pgdat+0x229/0x620
+> [  308.324730]  kswapd+0x200/0x470
+> [  308.324731]  ? lockdep_hardirqs_on_prepare+0xf5/0x170
+> [  308.324733]  ? finish_wait+0x80/0x80
+> [  308.324734]  ? balance_pgdat+0x620/0x620
+> [  308.324736]  kthread+0x11f/0x140
+> [  308.324737]  ? kthread_create_worker_on_cpu+0x40/0x40
+> [  308.324739]  ret_from_fork+0x1f/0x30
+> 
+> 
+> 
+> > > /Thomas
+> > > 
+> > > 
+> > > 
+> > 
 
 -- 
-2.20.0
-
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
