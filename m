@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B502C2BBD1
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F032C43461
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8443221E8
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1394422205
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aiGi27LA"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="edDklxcg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726876AbgIQLjH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 07:39:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60578 "EHLO
+        id S1726882AbgIQLjJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 07:39:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726882AbgIQLi6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 07:38:58 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29B5BC06174A
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:58 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id f18so1030599pfa.10
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:58 -0700 (PDT)
+        with ESMTP id S1726790AbgIQLjH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 07:39:07 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9EE08C061756
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:59 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id v14so1090185pjd.4
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:59 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=z9Z6ZLCA0t50O/FUHRry5+oFSnlJ3mf6I4oqL/odMzs=;
-        b=aiGi27LABfn8zl995QHdquf3jPGudFKyOoRZvHglYCrgC4nf4oar7g7FfRRBSL4kfS
-         bVRzICcoqxQHcVEtDA+Yy+ENyEZoZpo4cTc5EjWDwW6JYHCjTsKlhpr5RZb3kb20tlGC
-         hqg7HtBI8eVprHJ9q9Rmp/pqFo4w/ad4LVk+8gv0FgP2czhLtiovLyKnC/vk5yUBi4TV
-         A+sAU2pIpR9dyo6OdgMnA8Nx9ShkVx3o7F896mWGm2Y69gM+pi8PBIpRU07sAxSIR2iF
-         6zcf613xLE6pjkXiec1tUqIb+QUcwD48hb/TyjFm8c+hsd8cNdsum5RnAKEYz5VxUjjb
-         NBGg==
+        bh=c6MxJDM8pM6i7ZYjZG1xA71VPqPP0Eg2AIP/5f8k0yc=;
+        b=edDklxcg49PNl62QJl6cMS4QAcEs5YZBdNpDrwfUKsQi51dvVTPUN3YgQ+o1yCNPG8
+         MllBhDT8/pLLB9CTi7K0mgEmmgEwXQaoC1xo95Da/52RINMXEpry3v3wpHn2Sqccyddl
+         KQJdm5A9JZ3JjieAenaobnMBOAJJNmuBdFj6jwR7bbZiCQs14li91vf4Q503jD4bR9+T
+         0LxbOU2hwzITcznacjaegFCh1XvgCgVBeHzje9XlSntJlNm4vRnh7veGiRjXx07o0cze
+         A2Vfn8H6mguF20pqne6V7l28jXIwHc8Cugo2/9enmQt80Jim+tGjjuHPmlAuBxJHpLG3
+         btbA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=z9Z6ZLCA0t50O/FUHRry5+oFSnlJ3mf6I4oqL/odMzs=;
-        b=UV4IjwdlC/vurBlxlptbB380G80uvU0RUgrLonBtSftvyNtr6fw5P84rMQrLOeKXD8
-         OVuiX1BeFkoeOFgUxqwMhARyHRN4Tj7y6GxD1a6hNSqFIA/ltr12WFdG6sjqMm3UPNBI
-         piMu2ATQj/fUhfJywSRU+WVGmU0SRS0p5esntZj46RkLMWq+6ZT5jTWGmvDUeEr9zEei
-         mRN8E2w6ThoyqosaCMGbRbwvH6Kwffw+dTeDVJhqKobqP3wvdc5gRfw+39z97ckuDwZy
-         Oywq3scQEc6ig555nyTJyxK1ZOKeeH+3tq66T6eNaVVkg1tw7wr2FLSl3DagPwjgJ/fV
-         uWuA==
-X-Gm-Message-State: AOAM530f8aajQOsyZ/0eaQT3kHBeGgeOVETTcnCWKku1ARUpu4Z1HsE4
-        x4v+8gl9qddswEj2N6dQCvWqgyFcmQ==
-X-Google-Smtp-Source: ABdhPJxqeV85ElwToRBtEa5h6fF2eBES6iasfypQLR+wqzCPQvogEYJZvS2d4ogKB9hOanad9fROJA==
-X-Received: by 2002:a63:1a66:: with SMTP id a38mr21779415pgm.253.1600342737422;
-        Thu, 17 Sep 2020 04:38:57 -0700 (PDT)
+        bh=c6MxJDM8pM6i7ZYjZG1xA71VPqPP0Eg2AIP/5f8k0yc=;
+        b=qcNEognlwa+4VpQttg1efbU0011/YbjGIoiOuPVU3iD/3tGgM5XT0MVFI4BW0NgB7W
+         QGOqpr90sFUX99HY0LOdday6tkO0NVfYWmDqV116bBMAmWmsBusYHQ2E/4NmtVyy3MCy
+         ibmXA9A0JqcrgOfa6vXNea/PtJp7AjRbNnyppVXD4TN1fdhEmC42zXSf8znN9XTZdfoP
+         hOpMhY9uafedHI/2yk0PiLaGFNq1NzPALhhWUEbDwAx0j7xzxFSb7us+0SJN8UP8p7qb
+         rzosUKKRKCsK/+rBv+ExZOynbyKYGfAjAgFcHKV2IpBCM6NJq6YGC3QrPowcuLNseSz7
+         KFPg==
+X-Gm-Message-State: AOAM530nVVwwAgz0nuttskSKX4CMu5EsaFawbWTnIMxz053oyKMTh5zK
+        FgUh9qHol/xwnmB1HBN1atw85TIeTg==
+X-Google-Smtp-Source: ABdhPJy2C2XjDJszkgaYAq/htt88eWggQNpcxHmFaw/SWa5VdKC2p6oYlKS7yjdEp82sbOaX6VY4IQ==
+X-Received: by 2002:a17:90a:bc8d:: with SMTP id x13mr8339476pjr.229.1600342738862;
+        Thu, 17 Sep 2020 04:38:58 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id 64sm18761147pgi.90.2020.09.17.04.38.56
+        by smtp.gmail.com with ESMTPSA id 64sm18761147pgi.90.2020.09.17.04.38.57
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Sep 2020 04:38:56 -0700 (PDT)
+        Thu, 17 Sep 2020 04:38:58 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2 3/7] xfs: remove the unnecessary xfs_dqid_t type cast
-Date:   Thu, 17 Sep 2020 19:38:44 +0800
-Message-Id: <1600342728-21149-4-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH v2 4/7] xfs: do the assert for all the log done items in xfs_trans_cancel
+Date:   Thu, 17 Sep 2020 19:38:45 +0800
+Message-Id: <1600342728-21149-5-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
 References: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
@@ -73,29 +73,42 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-Since the type prid_t and xfs_dqid_t both are uint32_t, seems the
-type cast is unnecessary, so remove it.
+We should do the assert for all the log intent-done items if they appear
+here. This patch detect intent-done items by the fact that their item ops
+don't have iop_unpin and iop_push methods.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_qm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_trans.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 3f82e0c92c2d..41a459ffd1f2 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1715,7 +1715,7 @@ xfs_qm_vop_dqalloc(
- 	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
- 		if (ip->i_d.di_projid != prid) {
- 			xfs_iunlock(ip, lockflags);
--			error = xfs_qm_dqget(mp, (xfs_dqid_t)prid,
-+			error = xfs_qm_dqget(mp, prid,
- 					XFS_DQTYPE_PROJ, true, &pq);
- 			if (error) {
- 				ASSERT(error != -ENOENT);
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index ca18a040336a..0d5d5a53fa5a 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -925,6 +925,13 @@ xfs_trans_commit(
+ 	return __xfs_trans_commit(tp, false);
+ }
+ 
++/* Is this a log intent-done item? */
++static inline bool xlog_item_is_intent_done(struct xfs_log_item *lip)
++{
++	return lip->li_ops->iop_unpin == NULL &&
++	       lip->li_ops->iop_push == NULL;
++}
++
+ /*
+  * Unlock all of the transaction's items and free the transaction.
+  * The transaction must not have modified any of its items, because
+@@ -959,7 +966,7 @@ xfs_trans_cancel(
+ 		struct xfs_log_item *lip;
+ 
+ 		list_for_each_entry(lip, &tp->t_items, li_trans)
+-			ASSERT(!(lip->li_type == XFS_LI_EFD));
++			ASSERT(!xlog_item_is_intent_done(lip));
+ 	}
+ #endif
+ 	xfs_trans_unreserve_and_mod_sb(tp);
 -- 
 2.20.0
 
