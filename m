@@ -2,73 +2,73 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5DBCC43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 17:46:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA0A5C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 17:46:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53F01214D8
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 17:46:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EF1B20872
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 17:46:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FLQ+Vyrr"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xl0x5AiJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726606AbgIQRpu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 13:45:50 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:32818 "EHLO
+        id S1726171AbgIQRp5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 13:45:57 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:59812 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726637AbgIQRpn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 13:45:43 -0400
+        with ESMTP id S1726444AbgIQRoR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 13:44:17 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08HHecab076012;
-        Thu, 17 Sep 2020 17:45:28 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08HHf8vx076313;
+        Thu, 17 Sep 2020 17:44:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=YUHeO5giUwKREHkYFkFvVeQxmE3zhNJyPmXrCPMPDB8=;
- b=FLQ+VyrrjMwf/nrzyFsTyn1titb81xI2pJ/P46Uw4tt6ONT2s2oTHmerLeQ5ESNv4Yn+
- HHjezYux7dfolIERvwonx6WRJ9QqdPn1Ww7q/QZ5yYw6rYhcimxJSeJm/1raWuRz4jC+
- mxAM4Wi+skEb4eOa9EbRQLPSpExjgOlxnaBszfbIf5HKCY6DQX5yhaoAPedhC0i4WpqO
- vI2L9jfCZFDrJey6FD8TWq55FAhoSRzbsfJ0FPdmjtpf8zh88DrP8NOfqOo6zDXh4PB3
- eHiD8WZR279tELay5LRIc6aRwVXmcW6mVGDyIi8ZbHT4M2ENWYFLYZYN+6JF47rJRxYP HA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 33j91dvfdp-1
+ bh=Nfp6bGWsm7n7xpaGE+VpRYK3Xm6YnVp1/p0AbC9Hq6w=;
+ b=xl0x5AiJQlpaoZIROTjXDbhs94pRFkZCEGklS65RZMrYxjCFOWmVojmpMuvP9iAbc32c
+ +BSKfYMgKuzfND7lBGzvFTIZpIZZ3ypfmNUbhvxlHM1zxF8Whb5AUz51EMKP2KJGKRb5
+ 7wtZlAFDwRu/z1+Nq5QBcYoBcrNn6SMIgv1s0ihQdw1Ndx+QrdSfFotU+9jDsHDej2oR
+ iMKiKHvn9RBNw8buifjRkyuRyZCII/PMvrEnADoyANeR0XV5cDeapwmiB3SyAOcmgZX3
+ fVmsfvLAZeqHW5fO6MMjdTpS0KW8h2UNuYB7up53wYF8/+rwXkLpm2MIJseC8W4f+XPV 4A== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 33j91dvf6u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 17 Sep 2020 17:45:28 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08HHeLQH145884;
-        Thu, 17 Sep 2020 17:45:27 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 33khpndhey-1
+        Thu, 17 Sep 2020 17:44:07 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08HHeE84135781;
+        Thu, 17 Sep 2020 17:42:07 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 33hm358s0r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Sep 2020 17:45:27 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08HHjPDu026314;
-        Thu, 17 Sep 2020 17:45:26 GMT
+        Thu, 17 Sep 2020 17:42:07 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08HHg6xI010906;
+        Thu, 17 Sep 2020 17:42:06 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 17 Sep 2020 17:45:25 +0000
-Date:   Thu, 17 Sep 2020 10:45:24 -0700
+        with ESMTP ; Thu, 17 Sep 2020 17:42:06 +0000
+Date:   Thu, 17 Sep 2020 10:42:04 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH 1/2] xfs: log new intent items created as part of
- finishing recovered intent items
-Message-ID: <20200917174524.GJ7955@magnolia>
-References: <160031332353.3624373.16349101558356065522.stgit@magnolia>
- <160031332982.3624373.6230830770363563010.stgit@magnolia>
- <20200917090742.GC13366@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: don't free rt blocks when we're doing a REMAP
+ bunmapi call
+Message-ID: <20200917174204.GI7955@magnolia>
+References: <160031330694.3624286.7407913899137083972.stgit@magnolia>
+ <160031331319.3624286.3971628628820322437.stgit@magnolia>
+ <20200917081134.GD26262@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200917090742.GC13366@infradead.org>
+In-Reply-To: <20200917081134.GD26262@infradead.org>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9747 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=1
- mlxlogscore=999 phishscore=0 mlxscore=0 adultscore=0 spamscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009170131
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
+ malwarescore=0 mlxscore=0 phishscore=0 adultscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009170131
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9747 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
  priorityscore=1501 malwarescore=0 suspectscore=1 mlxlogscore=999
@@ -79,40 +79,45 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 17, 2020 at 10:07:42AM +0100, Christoph Hellwig wrote:
-> On Wed, Sep 16, 2020 at 08:28:49PM -0700, Darrick J. Wong wrote:
+On Thu, Sep 17, 2020 at 09:11:34AM +0100, Christoph Hellwig wrote:
+> On Wed, Sep 16, 2020 at 08:28:33PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > During a code inspection, I found a serious bug in the log intent item
-> > recovery code when an intent item cannot complete all the work and
-> > decides to requeue itself to get that done.  When this happens, the
-> > item recovery creates a new incore deferred op representing the
-> > remaining work and attaches it to the transaction that it allocated.  At
-> > the end of _item_recover, it moves the entire chain of deferred ops to
-> > the dummy parent_tp that xlog_recover_process_intents passed to it, but
-> > fail to log a new intent item for the remaining work before committing
-> > the transaction for the single unit of work.
+> > When callers pass XFS_BMAPI_REMAP into xfs_bunmapi, they want the extent
+> > to be unmapped from the given file fork without the extent being freed.
+> > We do this for non-rt files, but we forgot to do this for realtime
+> > files.  So far this isn't a big deal since nobody makes a bunmapi call
+> > to a rt file with the REMAP flag set, but don't leave a logic bomb.
 > > 
-> > xlog_finish_defer_ops logs those new intent items once recovery has
-> > finished dealing with the intent items that it recovered, but this isn't
-> > sufficient.  If the log is forced to disk after a recovered log item
-> > decides to requeue itself and the system goes down before we call
-> > xlog_finish_defer_ops, the second log recovery will never see the new
-> > intent item and therefore has no idea that there was more work to do.
-> > It will finish recovery leaving the filesystem in a corrupted state.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c |    9 ++++++---
+> >  1 file changed, 6 insertions(+), 3 deletions(-)
 > > 
-> > The same logic applies to /any/ deferred ops added during intent item
-> > recovery, not just the one handling the remaining work.
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 1b0a01b06a05..e8cd0012a017 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -5057,9 +5057,12 @@ xfs_bmap_del_extent_real(
+> >  				  &mod);
+> >  		ASSERT(mod == 0);
+> >  
+> > -		error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
+> > -		if (error)
+> > -			goto done;
+> > +		if (!(bflags & XFS_BMAPI_REMAP)) {
+> > +			error = xfs_rtfree_extent(tp, bno, (xfs_extlen_t)len);
+> > +			if (error)
+> > +				goto done;
+> > +		}
+> > +
+> >  		do_fx = 0;
+> >  		nblks = len * mp->m_sb.sb_rextsize;
+> >  		qfield = XFS_TRANS_DQ_RTBCOUNT;
 > 
-> Looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> I wonder how we could come up with a reliable reproducer for this,
-> though..
+> We also don't need to calculate bno for this case.
 
-Yeah, I've never actually seen this trip in practice.  I suppose we
-could add an error injection point to force the log and bail out midway
-through recovery, but that won't help much on unfixed kernels.
+Fixed.
 
 --D
