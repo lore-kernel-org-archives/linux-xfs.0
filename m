@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 310F0C43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B502C2BBD1
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFA1F21D7F
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8443221E8
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IfV4PQwP"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aiGi27LA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726885AbgIQLjB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 07:39:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60570 "EHLO
+        id S1726876AbgIQLjH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 07:39:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60578 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726876AbgIQLi5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 07:38:57 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E002EC06178A
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:56 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id 34so1188162pgo.13
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:56 -0700 (PDT)
+        with ESMTP id S1726882AbgIQLi6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 07:38:58 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29B5BC06174A
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:58 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id f18so1030599pfa.10
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=1xjEftt6BoWBnurJ2cfbr79NM6CiAL0+326aCaRrEN4=;
-        b=IfV4PQwPzMgvq+npmRqE8AfYxxcSGb9NL15aw7InSwiTPDfvT25cKcnuKyxGSf1igG
-         cwdK/dm9I/y9lBka8V5aIfEkdKljIeKOj/mNRXzsz2HI3KyqrwXhEgjjY73uzkTD3gjq
-         2/bkVc24aV6Y2REu+/8CIG1kwBKuM4yuwz3qOwinx1L2DanluukNEXjal6sJvWwcU2Kd
-         aTrjqJAmSHONHE7C9pm4e+WCFkXYsw/+cZe01yPvuTn5+smn6oA1B2zfGlf406h7SYjo
-         6bpZx7oG2jM2t47nRSXG1Nclcc+5A2UoCuX1sb6K83ZRBrDK1GOxrLQPAHElSmHEBquW
-         ABNg==
+        bh=z9Z6ZLCA0t50O/FUHRry5+oFSnlJ3mf6I4oqL/odMzs=;
+        b=aiGi27LABfn8zl995QHdquf3jPGudFKyOoRZvHglYCrgC4nf4oar7g7FfRRBSL4kfS
+         bVRzICcoqxQHcVEtDA+Yy+ENyEZoZpo4cTc5EjWDwW6JYHCjTsKlhpr5RZb3kb20tlGC
+         hqg7HtBI8eVprHJ9q9Rmp/pqFo4w/ad4LVk+8gv0FgP2czhLtiovLyKnC/vk5yUBi4TV
+         A+sAU2pIpR9dyo6OdgMnA8Nx9ShkVx3o7F896mWGm2Y69gM+pi8PBIpRU07sAxSIR2iF
+         6zcf613xLE6pjkXiec1tUqIb+QUcwD48hb/TyjFm8c+hsd8cNdsum5RnAKEYz5VxUjjb
+         NBGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=1xjEftt6BoWBnurJ2cfbr79NM6CiAL0+326aCaRrEN4=;
-        b=F/463Be1MPIu0Ls5IIRVOWUMCm9JqGwtO604JZItcRcL/QF/Vdqz5OPMH+YBcLdM65
-         0CbSbK+dn3DDWZ2O0PIlhrIaNJPM5h3z7/8OusMhnNJGl3NfHS5o9OprY/tPTnrMZUpU
-         BtwzxvHdVvTj1K3+nQRe0kfaEajCndeucfS3MIZjtzjT6KCEeyjiSgNp9FMEd4fArkhZ
-         xT8fTtKgMdR5TJ0K+ThV0lOEyW5S9rOmMHuHK4S12iYXXVF/yNBBNH95T+ptXzAZlisQ
-         XgDiI+Cf+PbUX39EQcseRpqhGiEse2YhJAs8ZXZdzInwPpsPnU0ak9Yld4V2l3zHfoYx
-         Gkog==
-X-Gm-Message-State: AOAM531BQQ1ruJ+X+ChC3GSEkS2e3zzCkOEyP14anMxmlrGN3Nbabxxr
-        z169rXkC50Q94i2TDBxFArkSEgZ1qw==
-X-Google-Smtp-Source: ABdhPJxhl/KOdSK95vm8VPqgr2MUBHgzTVdh2Pp4nedmDrXPrxdCdFowc2yhyur9oZa7DtxD5oFR2g==
-X-Received: by 2002:a63:5656:: with SMTP id g22mr21314643pgm.44.1600342736183;
-        Thu, 17 Sep 2020 04:38:56 -0700 (PDT)
+        bh=z9Z6ZLCA0t50O/FUHRry5+oFSnlJ3mf6I4oqL/odMzs=;
+        b=UV4IjwdlC/vurBlxlptbB380G80uvU0RUgrLonBtSftvyNtr6fw5P84rMQrLOeKXD8
+         OVuiX1BeFkoeOFgUxqwMhARyHRN4Tj7y6GxD1a6hNSqFIA/ltr12WFdG6sjqMm3UPNBI
+         piMu2ATQj/fUhfJywSRU+WVGmU0SRS0p5esntZj46RkLMWq+6ZT5jTWGmvDUeEr9zEei
+         mRN8E2w6ThoyqosaCMGbRbwvH6Kwffw+dTeDVJhqKobqP3wvdc5gRfw+39z97ckuDwZy
+         Oywq3scQEc6ig555nyTJyxK1ZOKeeH+3tq66T6eNaVVkg1tw7wr2FLSl3DagPwjgJ/fV
+         uWuA==
+X-Gm-Message-State: AOAM530f8aajQOsyZ/0eaQT3kHBeGgeOVETTcnCWKku1ARUpu4Z1HsE4
+        x4v+8gl9qddswEj2N6dQCvWqgyFcmQ==
+X-Google-Smtp-Source: ABdhPJxqeV85ElwToRBtEa5h6fF2eBES6iasfypQLR+wqzCPQvogEYJZvS2d4ogKB9hOanad9fROJA==
+X-Received: by 2002:a63:1a66:: with SMTP id a38mr21779415pgm.253.1600342737422;
+        Thu, 17 Sep 2020 04:38:57 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id 64sm18761147pgi.90.2020.09.17.04.38.54
+        by smtp.gmail.com with ESMTPSA id 64sm18761147pgi.90.2020.09.17.04.38.56
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Sep 2020 04:38:55 -0700 (PDT)
+        Thu, 17 Sep 2020 04:38:56 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2 2/7] xfs: use the existing type definition for di_projid
-Date:   Thu, 17 Sep 2020 19:38:43 +0800
-Message-Id: <1600342728-21149-3-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH v2 3/7] xfs: remove the unnecessary xfs_dqid_t type cast
+Date:   Thu, 17 Sep 2020 19:38:44 +0800
+Message-Id: <1600342728-21149-4-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
 References: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
@@ -73,29 +73,29 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-We have already defined the project ID type prid_t, so maybe should
-use it here.
+Since the type prid_t and xfs_dqid_t both are uint32_t, seems the
+type cast is unnecessary, so remove it.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_inode_buf.h | 2 +-
+ fs/xfs/xfs_qm.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
-index 536666143fe7..ef5eaf33d146 100644
---- a/fs/xfs/libxfs/xfs_inode_buf.h
-+++ b/fs/xfs/libxfs/xfs_inode_buf.h
-@@ -17,7 +17,7 @@ struct xfs_dinode;
-  */
- struct xfs_icdinode {
- 	uint16_t	di_flushiter;	/* incremented on flush */
--	uint32_t	di_projid;	/* owner's project id */
-+	prid_t		di_projid;	/* owner's project id */
- 	xfs_fsize_t	di_size;	/* number of bytes in file */
- 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
- 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 3f82e0c92c2d..41a459ffd1f2 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1715,7 +1715,7 @@ xfs_qm_vop_dqalloc(
+ 	if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
+ 		if (ip->i_d.di_projid != prid) {
+ 			xfs_iunlock(ip, lockflags);
+-			error = xfs_qm_dqget(mp, (xfs_dqid_t)prid,
++			error = xfs_qm_dqget(mp, prid,
+ 					XFS_DQTYPE_PROJ, true, &pq);
+ 			if (error) {
+ 				ASSERT(error != -ENOENT);
 -- 
 2.20.0
 
