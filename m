@@ -2,136 +2,114 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03AB4C433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 06:47:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 82B6EC433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 07:01:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB25B21973
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 06:47:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4492D21D1B
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 07:01:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fuwen1kv"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="crGpoKlq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726267AbgIQGrw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 02:47:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43562 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726142AbgIQGrw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 02:47:52 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C56ABC06174A
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 23:47:51 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id y1so784493pgk.8
-        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 23:47:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=vxH9fQGFQQ//o2Xfl62qe2J+RDkk3E20dPbsrDReiLc=;
-        b=Fuwen1kvXZDif4LAnb7GMLDY2ji3PF7DTmoRpmhZZO6N0oOJ6txpdLkCHOVArJ6Jcg
-         8k7mR+3kaxac3BYeZigIGjvOok3MSmhorHczfspW/b9XV0QfQiUBkhPj5ddPAsSLTev0
-         3e4zr81dsXgOwd//98AGGY2FflcOtMdYy2rluJZZo04IdJjtvbjm7kPtJCJ9guvPEzwv
-         /6hgkesRWF/cTOCHReaMCE9t0yzeTrzPc0GsrEiogzH6hdK+6HVlMcKsnkQxAJj/rkG6
-         hYhhUd2KNg8pxcEYlK0s0v8ajXbPkY0HpdmTE9UCCCR/DYbBh0I9Lx2EHVdJC95LdMOk
-         TK5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=vxH9fQGFQQ//o2Xfl62qe2J+RDkk3E20dPbsrDReiLc=;
-        b=Zj+QXm2fTFeDvxK6PfBh/+3Ch1vBKRwJk6ioemOZtXvJfXTBynLopnbE2E2cFVLTNQ
-         /agi+okWNe/C+anIDt0UKqv/4tHNMqZLARXMblR3Eqz8QBi9v9Src0yCbx5U9l1Qh88M
-         BkbKABa18413ai982yGO7OxaZMOngkSAilaKoyl83AVYC0wv6eYMN4r9vXAeX/Arg7sz
-         N1cN9j9ZFaiOOUio4z/7fal3N1uzrha8O3fUXciyVl0yZUc0+/C9ReTVkU2nyaV/pJHf
-         7y16NgQ+pLztrT9EnXgnGqqg69VX33LjvzW8MRWcWGKFctly56QmCqGAptMqO5bMXEyp
-         LBbQ==
-X-Gm-Message-State: AOAM530DTw3/DhBdOkIYMYJlrpR3vQrU0xD3jfoRBoEwrNegyLYgAu33
-        P6v/UyOnXvjYwSKQJQs7bg==
-X-Google-Smtp-Source: ABdhPJy1PJPVjUrA8Z0f1OObHHpzh3yGrYX1McZpCxkmXOVyQHr4cK5Sp7SU0ka0D3cboGMEOnF4bA==
-X-Received: by 2002:a63:4e5e:: with SMTP id o30mr21192453pgl.254.1600325271360;
-        Wed, 16 Sep 2020 23:47:51 -0700 (PDT)
-Received: from [10.76.92.41] ([103.7.29.7])
-        by smtp.gmail.com with ESMTPSA id y5sm18925891pge.62.2020.09.16.23.47.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Sep 2020 23:47:50 -0700 (PDT)
-Subject: Re: [PATCH] xfs: remove the unnecessary variable error in
- xfs_trans_unreserve_and_mod_sb
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
-References: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
- <1600255152-16086-7-git-send-email-kaixuxia@tencent.com>
- <20200916164522.GH7955@magnolia>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <f3544c97-bda9-cb4f-0a2b-eb2fab9fb9a4@gmail.com>
-Date:   Thu, 17 Sep 2020 14:47:43 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.0
+        id S1726222AbgIQHBU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 03:01:20 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47590 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726269AbgIQHBL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 03:01:11 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08H6wrfr042903;
+        Thu, 17 Sep 2020 07:01:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=WO5AHQDIpbrjQyg7EIVCKPGkBGlMLKYJAv95yohBB50=;
+ b=crGpoKlqOnTYEzmZXtGCqsYwVqdl+VFiPeZAyuvhEJp024qJOOsedE1nYxVdE+o5W7+t
+ wx4s94oD8SiJ1Qz3Dc7z5QrGYYtLbeSPPdq91E5yvaDUyju+evYcp0fbTN9J5x9U93+8
+ bcz68mmKDL5Wp1s2NYGwAfZip4Qru7NMfTm6b+vxrCdyNdjO0a78TMYL1L+2GS7QGSdp
+ WnryYJBAgLoUJHQXk352K3uAUdd691fEYI3rsQramcT4cAr7374O+KPVYF0KdaIZQ51u
+ YCjmwkQb1nPD6Eiq8imGk7TaUdJ99BVqs5A8Q5OpqwG9hWOdzkEz72RQuRlcHiyK4lkl lw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 33gp9mf7cw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 17 Sep 2020 07:01:06 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08H70nGB096474;
+        Thu, 17 Sep 2020 07:01:05 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 33h8936vtr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 17 Sep 2020 07:01:05 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08H7143r007274;
+        Thu, 17 Sep 2020 07:01:04 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 17 Sep 2020 07:01:04 +0000
+Date:   Thu, 17 Sep 2020 00:01:03 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: [PATCH v2 2/2] xfs: attach inode to dquot in xfs_bui_item_recover
+Message-ID: <20200917070103.GU7955@magnolia>
+References: <160031332353.3624373.16349101558356065522.stgit@magnolia>
+ <160031333615.3624373.7775190767495604737.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20200916164522.GH7955@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160031333615.3624373.7775190767495604737.stgit@magnolia>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
+ suspectscore=1 mlxscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009170051
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ adultscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=0 phishscore=0
+ spamscore=0 priorityscore=1501 suspectscore=1 impostorscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009170051
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-On 2020/9/17 0:45, Darrick J. Wong wrote:
-> On Wed, Sep 16, 2020 at 07:19:09PM +0800, xiakaixu1987@gmail.com wrote:
->> From: Kaixu Xia <kaixuxia@tencent.com>
->>
->> We can do the assert directly for the return value of xfs_mod_fdblocks()
->> function, and the variable error is unnecessary, so remove it.
->>
->> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
->> ---
->>  fs/xfs/xfs_trans.c | 7 ++-----
->>  1 file changed, 2 insertions(+), 5 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
->> index d33d0ba6f3bd..caa207220e2c 100644
->> --- a/fs/xfs/xfs_trans.c
->> +++ b/fs/xfs/xfs_trans.c
->> @@ -573,7 +573,6 @@ xfs_trans_unreserve_and_mod_sb(
->>  	int64_t			rtxdelta = 0;
->>  	int64_t			idelta = 0;
->>  	int64_t			ifreedelta = 0;
->> -	int			error;
->>  
->>  	/* calculate deltas */
->>  	if (tp->t_blk_res > 0)
->> @@ -596,10 +595,8 @@ xfs_trans_unreserve_and_mod_sb(
->>  	}
->>  
->>  	/* apply the per-cpu counters */
->> -	if (blkdelta) {
->> -		error = xfs_mod_fdblocks(mp, blkdelta, rsvd);
->> -		ASSERT(!error);
->> -	}
->> +	if (blkdelta)
->> +		ASSERT(!xfs_mod_fdblocks(mp, blkdelta, rsvd));
-> 
-> Um.... did you test this with ASSERTs disabled?  Because this compiles
-> the free block counter update out of the function on non-debug kernels,
-> which (AFAICT) will cause fs corruption...
+In the bmap intent item recovery code, we must be careful to attach the
+inode to its dquots (if quotas are enabled) so that a change in the
+shape of the bmap btree doesn't cause the quota counters to be
+incorrect.
 
-Yes,thanks for pointing out... My fault...
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: use dqattach_locked
+---
+ fs/xfs/xfs_bmap_item.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-> 
-> --D
-> 
->>  
->>  	if (idelta) {
->>  		percpu_counter_add_batch(&mp->m_icount, idelta,
->> -- 
->> 2.20.0
->>
-
--- 
-kaixuxia
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 815a0563288f..2b1cf3ed8172 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -24,6 +24,7 @@
+ #include "xfs_error.h"
+ #include "xfs_log_priv.h"
+ #include "xfs_log_recover.h"
++#include "xfs_quota.h"
+ 
+ kmem_zone_t	*xfs_bui_zone;
+ kmem_zone_t	*xfs_bud_zone;
+@@ -498,6 +499,10 @@ xfs_bui_item_recover(
+ 	if (error)
+ 		goto err_inode;
+ 
++	error = xfs_qm_dqattach_locked(ip, false);
++	if (error)
++		goto err_inode;
++
+ 	if (VFS_I(ip)->i_nlink == 0)
+ 		xfs_iflags_set(ip, XFS_IRECOVERY);
+ 
