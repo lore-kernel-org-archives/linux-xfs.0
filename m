@@ -2,200 +2,212 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6346AC43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 04:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D91CC35266
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 04:29:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1956F2074B
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 04:10:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAEDB2078D
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 04:29:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pUpx2+3r"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="a+/2XzTs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725987AbgIQEKO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 00:10:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47524 "EHLO
+        id S1726002AbgIQE3C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 00:29:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725886AbgIQEKO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 00:10:14 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5DA1C06178A;
-        Wed, 16 Sep 2020 21:10:13 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id c3so423443plz.5;
-        Wed, 16 Sep 2020 21:10:13 -0700 (PDT)
+        with ESMTP id S1725267AbgIQE3B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 00:29:01 -0400
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1504C06174A;
+        Wed, 16 Sep 2020 21:29:00 -0700 (PDT)
+Received: by mail-pg1-x542.google.com with SMTP id 7so591119pgm.11;
+        Wed, 16 Sep 2020 21:29:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=C0/mwsFxka30LQmyOb9S4ddGG+Qgynpnk45mvu0dvsE=;
-        b=pUpx2+3rDdhhECu7HVCVWtZ8af1jhQCdOklQATzHshwL7um6POqFdwdMlYXrp3hqj0
-         gOrbv41y3YOYTijCCjlLlENIeMYkEb3OCfRlZsfdaBSb5j6L5KiKXacPrbE0+JC3kyry
-         LQDpXMk2pvvW38oQZMMMZSyrqiygJsDjGiS+HNguXA1gCzDpdG32/mVbhfEzfYmLK9DP
-         b+Jz/5ufKNTLDh45MUMreK+mYhFx+YA6cwbC8QITd9srOtm7ZLBH85SBMns8j1+dnMoI
-         3N5o2feFvBuEUrV9sn17TEtJ7MDi2lRhAE9Qwa2tfrFifG8gyzFMODuHwj0zxGeUwvE3
-         6RyA==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=u9DWVWkszMPKfRkULRly7P6KDkkzxbhQNqxsXCnDa3Q=;
+        b=a+/2XzTsFii166iqcEbXCmmMLxa+cbpoGYboBGexCY/0RQV0KAcx2j49iesL11YoTf
+         RZJrP86z/CAiKHDjEKynOvh57ECDzDLYwWjgr2QbldtVHEf0VN6MQBvfYZF701IhK76e
+         DqGNSEPM5j+xqT2OMEjw1N7ElG4CFQtABbydugiDNcGKlthrZaBiy9l9n7DSZANO0+/L
+         S6ilWEequg2tQyFu19EBrmwA3mDL42vSSCnDgV3RFOlHuuPASeVLLmNwRFX91bnT9Klj
+         vv5i9YdkQwn8OHuvS1nKln4ze90mVLc9yfU+w8Xo3Tf6G/FAc8VkQhLu+snXiHsZEghW
+         SKWQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=C0/mwsFxka30LQmyOb9S4ddGG+Qgynpnk45mvu0dvsE=;
-        b=O22wvxyMbOIbCICOVTDmfHnOMRFMMaYQBzFmdtcpI/PSFShCHOQe34E/6LO1pF6mlR
-         u/dyZPPiqWZ0qLbQRRrhjjGjWCJy/AjZBBrDirJZbtlO3r7/sywHfIGOnqRPRuW2Y8JG
-         jaIHXc4MLcYxNddv8PLRxdXMYhnrxzLznYAJT30UBqP1hsxOO4Sqaw9tybGOE0PllCnt
-         ohQKcCIs3WcnHlzpFhCUm6xS7SIAIViAkwQMEXJ9yfBgPABN4OFdFpz3/Qs7a1jr3ULn
-         AiPbeXvWRetw94OibEkc79Bb1qIHU1U15nXtiR6c4aGP4of/lt5+M01RZCB0PGaXenqC
-         uClA==
-X-Gm-Message-State: AOAM533gmpbVkVPBimlJsCDNPzgGee8dRvygwS7g49DR4ZLuh7tH0STb
-        8OPcf4tAe/r3Cz12TVzzoUZqng58zbY=
-X-Google-Smtp-Source: ABdhPJwlx+JaRWMvCJB1Ye/KYzS9Y/2YrjzwcC24CUyYrZifuLok1Rp166pqnHjJFrauz+vImQszRw==
-X-Received: by 2002:a17:90b:1741:: with SMTP id jf1mr6600275pjb.164.1600315811165;
-        Wed, 16 Sep 2020 21:10:11 -0700 (PDT)
-Received: from garuda.localnet ([122.179.62.198])
-        by smtp.gmail.com with ESMTPSA id 194sm17525412pfy.44.2020.09.16.21.10.08
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=u9DWVWkszMPKfRkULRly7P6KDkkzxbhQNqxsXCnDa3Q=;
+        b=jSpT/Nlh947szLWQZ1F2P7e97eX7M3N3nCphWVLTwB7/ItYDSENpPRyAtm70AhaANN
+         CS5WA0abI2r/ZEg5siJakehZ3vxsT7U3mJFvmmn0dr21MsIc2o5jJbh1iZig9HgkqJuy
+         Zm4ZHTS/YEL7Au+ruiND8FYS7TjVA5RdXAwLgI6hCUDbV8oRqq6wtLD5bFW5yT/AKvfy
+         jLg3Fx6humRF28WaebbldqJ1+z9MvL1TRTP/L4WLzV7VMhh0Haj1pMkgBzsC9pwd8fDB
+         1x4uwnh6YiPcP7CRPNpijFEtHZxqPcxPAlF0aU3fD07uEJKSZkUof+UrpjFuJcdYGqS2
+         jqeg==
+X-Gm-Message-State: AOAM532rfxeAj9sthdSgWXH8lRJP/IY14ZCakfsxGYOWqu10cj90CtUF
+        dFxyVTqlX4ol/UVuTVUsnVX3fW3ovtE=
+X-Google-Smtp-Source: ABdhPJwWVwa8LljcG7yjG3Z59u/+wE/f93Ie+/7cUVLa+7MAGD+pTZJa/tqKe5rn014cK2w6Vts7VA==
+X-Received: by 2002:aa7:84c5:0:b029:13f:ed60:b20b with SMTP id x5-20020aa784c50000b029013fed60b20bmr15672039pfn.26.1600316940070;
+        Wed, 16 Sep 2020 21:29:00 -0700 (PDT)
+Received: from localhost.localdomain ([122.179.62.198])
+        by smtp.gmail.com with ESMTPSA id 31sm15955885pgs.59.2020.09.16.21.28.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 16 Sep 2020 21:10:10 -0700 (PDT)
+        Wed, 16 Sep 2020 21:28:59 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        guaneryu@gmail.com, zlang@redhat.com
-Subject: Re: [PATCH 1/2] xfs: Add realtime group
-Date:   Thu, 17 Sep 2020 09:40:02 +0530
-Message-ID: <1900695.duUiiUEepb@garuda>
-In-Reply-To: <20200916165142.GD7954@magnolia>
-References: <20200916053407.2036-1-chandanrlinux@gmail.com> <20200916165142.GD7954@magnolia>
+To:     fstests@vger.kernel.org
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, guaneryu@gmail.com,
+        darrick.wong@oracle.com, zlang@redhat.com
+Subject: [PATCH 1/2] xfs: Add realtime group
+Date:   Thu, 17 Sep 2020 09:58:43 +0530
+Message-Id: <20200917042844.6063-1-chandanrlinux@gmail.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wednesday 16 September 2020 10:21:42 PM IST Darrick J. Wong wrote:
-> On Wed, Sep 16, 2020 at 11:04:06AM +0530, Chandan Babu R wrote:
-> > This commit adds a new group to classify tests that can work with
-> > realtime devices.
-> > 
-> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> > ---
-> >  tests/xfs/group | 52 ++++++++++++++++++++++++-------------------------
-> >  1 file changed, 26 insertions(+), 26 deletions(-)
-> > 
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index ed0d389e..3bb0f674 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -67,7 +67,7 @@
-> >  067 acl attr auto quick
-> >  068 auto stress dump
-> >  069 ioctl auto quick
-> > -070 auto quick repair
-> > +070 auto quick repair realtime
-> 
-> This test has an open-coded call to repair + rt volume, but is not
-> itself a test of rt functionality.
+This commit adds a new group to classify tests that can work with
+realtime devices.
 
-That is true. I had decided to include this since it executed xfs_repair if
-the scratch fs had a realtime device associated with it. I will remove it.
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+---
+ tests/xfs/group | 50 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 25 insertions(+), 25 deletions(-)
 
-> 
-> >  071 rw auto
-> >  072 rw auto prealloc quick
-> >  073 copy auto
-> > @@ -87,11 +87,11 @@
-> >  087 fuzzers
-> >  088 fuzzers
-> >  089 fuzzers
-> > -090 rw auto
-> > +090 rw auto realtime
-> >  091 fuzzers
-> >  092 other auto quick
-> >  093 fuzzers
-> > -094 metadata dir ioctl auto
-> > +094 metadata dir ioctl auto realtime
-> >  095 log v2log auto
-> >  096 mkfs v2log auto quick
-> >  097 fuzzers
-> > @@ -119,7 +119,7 @@
-> >  119 log v2log auto freeze
-> >  120 fuzzers
-> >  121 shutdown log auto quick
-> > -122 other auto quick clone
-> > +122 other auto quick clone realtime
-> 
-> This is an ondisk structure size check.  It doesn't test rt
-> functionality, but I guess it doesn't really harm things to throw it on
-> the 'realtime' pile.  I'm not objecting to this; it's just a funny
-> thought I had while reading this patch.
-
-I had decided to add this test to "realtime" group since it was checking sizes
-of structures associated with realtime functionality. For
-e.g. tests/xfs/122.out has,
-
-sizeof(struct xfs_rtrmap_key) = 24                                                                       
-sizeof(struct xfs_rtrmap_rec) = 32                                                                       
-sizeof(struct xfs_rtrmap_root) = 4 
-
-However, I think these structures are associated with a Btree that hasn't been
-merged into the mainline kernel yet since I couldn't find them in the source
-code. I was of the opinion that adding this test will be useful when the
-corresponding patches get merged into mainline and test suite is invoked for
-"realtime" group only.
-
-> 
-> (Not sure why it's in 'clone' either...)
-> 
-> >  123 fuzzers
-> >  124 fuzzers
-> >  125 fuzzers
-> > @@ -128,7 +128,7 @@
-> >  128 auto quick clone fsr
-> >  129 auto quick clone
-> >  130 fuzzers clone
-> > -131 auto quick clone
-> > +131 auto quick clone realtime
-> >  132 auto quick
-> >  133 dangerous_fuzzers
-> >  134 dangerous_fuzzers
-> > @@ -188,7 +188,7 @@
-> >  188 ci dir auto
-> >  189 mount auto quick
-> >  190 rw auto quick
-> > -191-input-validation auto quick mkfs
-> > +191-input-validation auto quick mkfs realtime
-> >  192 auto quick clone
-> >  193 auto quick clone
-> >  194 rw auto
-> > @@ -272,7 +272,7 @@
-> >  273 auto rmap fsmap
-> >  274 auto quick rmap fsmap
-> >  275 auto quick rmap fsmap
-> > -276 auto quick rmap fsmap
-> > +276 auto quick rmap fsmap realtime
-> >  277 auto quick rmap fsmap
-> >  278 repair auto
-> >  279 auto mkfs
-> > @@ -287,7 +287,7 @@
-> >  288 auto quick repair fuzzers
-> >  289 growfs auto quick
-> >  290 auto rw prealloc quick ioctl zero
-> > -291 auto repair
-> > +291 auto repair realtime
-> 
-> This is a directory repair test, which doesn't exercise any rt volume
-> functionality.
-> 
-> ...
-> 
-> FWIW I checked all the other tests that you added to the realtime group,
-> and the changes I don't have any comments about all look ok to me.
-
-Thanks for going through the list of tests.
-
+diff --git a/tests/xfs/group b/tests/xfs/group
+index ed0d389e..b99ca082 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -87,11 +87,11 @@
+ 087 fuzzers
+ 088 fuzzers
+ 089 fuzzers
+-090 rw auto
++090 rw auto realtime
+ 091 fuzzers
+ 092 other auto quick
+ 093 fuzzers
+-094 metadata dir ioctl auto
++094 metadata dir ioctl auto realtime
+ 095 log v2log auto
+ 096 mkfs v2log auto quick
+ 097 fuzzers
+@@ -119,7 +119,7 @@
+ 119 log v2log auto freeze
+ 120 fuzzers
+ 121 shutdown log auto quick
+-122 other auto quick clone
++122 other auto quick clone realtime
+ 123 fuzzers
+ 124 fuzzers
+ 125 fuzzers
+@@ -128,7 +128,7 @@
+ 128 auto quick clone fsr
+ 129 auto quick clone
+ 130 fuzzers clone
+-131 auto quick clone
++131 auto quick clone realtime
+ 132 auto quick
+ 133 dangerous_fuzzers
+ 134 dangerous_fuzzers
+@@ -188,7 +188,7 @@
+ 188 ci dir auto
+ 189 mount auto quick
+ 190 rw auto quick
+-191-input-validation auto quick mkfs
++191-input-validation auto quick mkfs realtime
+ 192 auto quick clone
+ 193 auto quick clone
+ 194 rw auto
+@@ -272,7 +272,7 @@
+ 273 auto rmap fsmap
+ 274 auto quick rmap fsmap
+ 275 auto quick rmap fsmap
+-276 auto quick rmap fsmap
++276 auto quick rmap fsmap realtime
+ 277 auto quick rmap fsmap
+ 278 repair auto
+ 279 auto mkfs
+@@ -287,7 +287,7 @@
+ 288 auto quick repair fuzzers
+ 289 growfs auto quick
+ 290 auto rw prealloc quick ioctl zero
+-291 auto repair
++291 auto repair realtime
+ 292 auto mkfs quick
+ 293 auto quick
+ 294 auto dir metadata
+@@ -329,17 +329,17 @@
+ 330 auto quick clone fsr quota
+ 331 auto quick rmap clone
+ 332 auto quick rmap clone collapse punch insert zero
+-333 auto quick rmap
+-334 auto quick rmap
+-335 auto rmap
+-336 auto rmap
+-337 fuzzers rmap
+-338 auto quick rmap
+-339 auto quick rmap
+-340 auto quick rmap
+-341 auto quick rmap
+-342 auto quick rmap
+-343 auto quick rmap collapse punch insert zero
++333 auto quick rmap realtime
++334 auto quick rmap realtime
++335 auto rmap realtime
++336 auto rmap realtime
++337 fuzzers rmap realtime
++338 auto quick rmap realtime
++339 auto quick rmap realtime
++340 auto quick rmap realtime
++341 auto quick rmap realtime
++342 auto quick rmap realtime
++343 auto quick rmap collapse punch insert zero realtime
+ 344 auto quick clone
+ 345 auto quick clone
+ 346 auto quick clone
+@@ -402,10 +402,10 @@
+ 403 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 404 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 405 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+-406 dangerous_fuzzers dangerous_scrub dangerous_repair
+-407 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+-408 dangerous_fuzzers dangerous_scrub dangerous_repair
+-409 dangerous_fuzzers dangerous_scrub dangerous_online_repair
++406 dangerous_fuzzers dangerous_scrub dangerous_repair realtime
++407 dangerous_fuzzers dangerous_scrub dangerous_online_repair realtime
++408 dangerous_fuzzers dangerous_scrub dangerous_repair realtime
++409 dangerous_fuzzers dangerous_scrub dangerous_online_repair realtime
+ 410 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 411 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 412 dangerous_fuzzers dangerous_scrub dangerous_repair
+@@ -415,7 +415,7 @@
+ 416 dangerous_fuzzers dangerous_scrub dangerous_repair
+ 417 dangerous_fuzzers dangerous_scrub dangerous_online_repair
+ 418 dangerous_fuzzers dangerous_scrub dangerous_repair
+-419 auto quick swap
++419 auto quick swap realtime
+ 420 auto quick clone punch seek
+ 421 auto quick clone punch seek
+ 422 dangerous_scrub dangerous_online_repair
+@@ -477,8 +477,8 @@
+ 478 dangerous_fuzzers dangerous_norepair
+ 479 dangerous_fuzzers dangerous_norepair
+ 480 dangerous_fuzzers dangerous_norepair
+-481 dangerous_fuzzers dangerous_norepair
+-482 dangerous_fuzzers dangerous_norepair
++481 dangerous_fuzzers dangerous_norepair realtime
++482 dangerous_fuzzers dangerous_norepair realtime
+ 483 dangerous_fuzzers dangerous_norepair
+ 484 dangerous_fuzzers dangerous_norepair
+ 485 dangerous_fuzzers dangerous_norepair
 -- 
-chandan
-
-
+2.28.0
 
