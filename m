@@ -2,140 +2,166 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B25AC43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 03:08:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7788C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 03:27:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6A232080C
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 03:08:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 50740206C9
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 03:27:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tsk5XKZM"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bcIGZGBB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726117AbgIQDIQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Sep 2020 23:08:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37884 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726047AbgIQDIL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 23:08:11 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3599EC061354;
-        Wed, 16 Sep 2020 20:01:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=uMnEgq9vaCRYsRSBlvAbbXAo3XKw/rA3rHucz8CqYPs=; b=tsk5XKZMdogbEKddhS+kYKFpSD
-        tILj0/PIxWt27O5LKM5LnkW0dVmd2e+wSOuIwwD/69G1QTC0K9EZq/JtTGUiu5IJQdbq8E5/9vX/5
-        Z4nAYPlyd3jGV/ixISlEA7eQg04hLVeQo8y8AyhP2/sQczxD/DKca/SQK0h1Xz+cidtDCb3TKeHWI
-        NcAVLTA5afy+MX63+apM1DVpm5l3NmZAKe8s8l+9gymmzr2KzdJ5+DL8szLk64FlPa77tf4peRqyT
-        mFvJ+NQZGfSNvdy7S+pd84wgCtbEXDVhZpnujB3NB666Vc8G8mRJzth09++ywm/yC2Qk8joI2zn7U
-        G9IawJkw==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kIkAY-0006Co-3p; Thu, 17 Sep 2020 03:01:10 +0000
-Date:   Thu, 17 Sep 2020 04:01:10 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Theodore Tso <tytso@mit.edu>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Qiuyang Sun <sunqiuyang@huawei.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        "Kirill A. Shutemov" <kirill@shutemov.name>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Al Viro <viro@zeniv.linux.org.uk>, nborisov@suse.de
-Subject: Re: More filesystem need this fix (xfs: use MMAPLOCK around
- filemap_map_pages())
-Message-ID: <20200917030110.GP5449@casper.infradead.org>
-References: <20200623052059.1893966-1-david@fromorbit.com>
- <CAOQ4uxh0dnVXJ9g+5jb3q72RQYYqTLPW_uBqHPKn6AJZ2DNPOQ@mail.gmail.com>
- <20200916155851.GA1572@quack2.suse.cz>
- <20200917014454.GZ12131@dread.disaster.area>
+        id S1726093AbgIQD1l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Sep 2020 23:27:41 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:48804 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725858AbgIQD1k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Sep 2020 23:27:40 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08H3PM2v116517;
+        Thu, 17 Sep 2020 03:27:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=BUHeygEK1VkDNbEWvd8OctttQpDmsqi5MOtneHVg2wA=;
+ b=bcIGZGBBJP0jH+GVun1NwEZJmzlPIXEKfKskGMSyotQkJXsAoxpobJTcHGvh1pdrrcL0
+ zXZHSGFc6sV5RIUfbKazhy7iqgSGYSiTqmc4THjXFmBpYbd8snWQfNQ2p1E3KD2jl9gd
+ Jt9z2Uu95hBaG2UWuobc+8b4+wW3VrmuyXnN7nTYwkBngXdwpdlDTnWTj7JzfpbFXFeM
+ LHOY0o9phtD79jeg9g8WPOCx+v9ulUq23qVCzCBVZ/Ai1of8cTYFkeW1jru2lb9nGRHf
+ BDe+0YWpUToqp6momGJAlz86Yx2MCsJ88E9Zp0G3zZxVxCG1ojNXt8E0L7NbjzIcckgM bw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 33j91dr5ct-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 17 Sep 2020 03:27:33 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08H3PV4g080022;
+        Thu, 17 Sep 2020 03:27:32 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 33h88a22wm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 17 Sep 2020 03:27:32 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08H3RWYG030995;
+        Thu, 17 Sep 2020 03:27:32 GMT
+Received: from localhost (/10.159.158.133)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 17 Sep 2020 03:27:31 +0000
+Date:   Wed, 16 Sep 2020 20:27:30 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Xiao Yang <yangx.jy@cn.fujitsu.com>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 03/24] generic/607: don't break on filesystems that don't
+ support FSGETXATTR on dirs
+Message-ID: <20200917032730.GQ7955@magnolia>
+References: <160013417420.2923511.6825722200699287884.stgit@magnolia>
+ <160013419510.2923511.4577521065964693699.stgit@magnolia>
+ <5F62BEAD.3090602@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200917014454.GZ12131@dread.disaster.area>
+In-Reply-To: <5F62BEAD.3090602@cn.fujitsu.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
+ suspectscore=1 phishscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009170023
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 impostorscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=1 mlxlogscore=999
+ clxscore=1015 adultscore=0 lowpriorityscore=0 spamscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009170023
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 17, 2020 at 11:44:54AM +1000, Dave Chinner wrote:
-> So....
+On Thu, Sep 17, 2020 at 09:41:01AM +0800, Xiao Yang wrote:
+> On 2020/9/15 9:43, Darrick J. Wong wrote:
+> > From: Darrick J. Wong<darrick.wong@oracle.com>
+> > 
+> > This test requires that the filesystem support calling FSGETXATTR on
+> > regular files and directories to make sure the FS_XFLAG_DAX flag works.
+> > The _require_xfs_io_command tests a regular file but doesn't check
+> > directories, so generic/607 should do that itself.  Also fix some typos.
+> > 
+> > Signed-off-by: Darrick J. Wong<darrick.wong@oracle.com>
+> > ---
+> >   common/rc         |   10 ++++++++--
+> >   tests/generic/607 |    5 +++++
+> >   2 files changed, 13 insertions(+), 2 deletions(-)
+> > 
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index aa5a7409..f78b1cfc 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -2162,6 +2162,12 @@ _require_xfs_io_command()
+> >   	local testfile=$TEST_DIR/$$.xfs_io
+> >   	local testio
+> >   	case $command in
+> > +	"lsattr")
+> > +		# Test xfs_io lsattr support and filesystem FS_IOC_FSSETXATTR
+> > +		# support.
+> > +		testio=`$XFS_IO_PROG -F -f -c "lsattr $param" $testfile 2>&1`
+> > +		param_checked="$param"
+> > +		;;
+> >   	"chattr")
+> >   		if [ -z "$param" ]; then
+> >   			param=s
+> > @@ -3205,7 +3211,7 @@ _check_s_dax()
+> >   	if [ $exp_s_dax -eq 0 ]; then
+> >   		(( attributes&  0x2000 ))&&  echo "$target has unexpected S_DAX flag"
+> >   	else
+> > -		(( attributes&  0x2000 )) || echo "$target doen't have expected S_DAX flag"
+> > +		(( attributes&  0x2000 )) || echo "$target doesn't have expected S_DAX flag"
+> >   	fi
+> >   }
+> > 
+> > @@ -3217,7 +3223,7 @@ _check_xflag()
+> >   	if [ $exp_xflag -eq 0 ]; then
+> >   		_test_inode_flag dax $target&&  echo "$target has unexpected FS_XFLAG_DAX flag"
+> >   	else
+> > -		_test_inode_flag dax $target || echo "$target doen't have expected FS_XFLAG_DAX flag"
+> > +		_test_inode_flag dax $target || echo "$target doesn't have expected FS_XFLAG_DAX flag"
+> >   	fi
+> >   }
+> > 
+> > diff --git a/tests/generic/607 b/tests/generic/607
+> > index b15085ea..14d2c05f 100755
+> > --- a/tests/generic/607
+> > +++ b/tests/generic/607
+> > @@ -38,6 +38,11 @@ _require_scratch
+> >   _require_dax_iflag
+> >   _require_xfs_io_command "lsattr" "-v"
+> > 
+> > +# Make sure we can call FSGETXATTR on a directory...
+> > +output="$($XFS_IO_PROG -c "lsattr -v" $TEST_DIR 2>&1)"
+> > +echo "$output" | grep -q "Inappropriate ioctl for device"&&  \
+> > +	_notrun "$FSTYP: FSGETXATTR not supported on directories."
+> Hi Darrick,
 > 
-> P0					p1
-> 
-> hole punch starts
->   takes XFS_MMAPLOCK_EXCL
->   truncate_pagecache_range()
+> Could you tell me which kernel version gets the issue? :-)
 
-... locks page ...
+ext4.
 
->     unmap_mapping_range(start, end)
->       <clears ptes>
-> 					<read fault>
-> 					do_fault_around()
-> 					  ->map_pages
-> 					    filemap_map_pages()
+--D
 
-... trylock page fails ...
-
-> 					      page mapping valid,
-> 					      page is up to date
-> 					      maps PTEs
-> 					<fault done>
->     truncate_inode_pages_range()
->       truncate_cleanup_page(page)
->         invalidates page
->       delete_from_page_cache_batch(page)
->         frees page
-> 					<pte now points to a freed page>
+> Best Regards,
+> Xiao Yang
+> > +
+> >   # If a/ is +x, check that a's new children
+> >   # inherit +x from a/.
+> >   test_xflag_inheritance1()
+> > 
+> > 
+> > 
+> > .
+> > 
 > 
-> That doesn't seem good to me.
 > 
-> Sure, maybe the page hasn't been freed back to the free lists
-> because of elevated refcounts. But it's been released by the
-> filesystem and not longer in the page cache so nothing good can come
-> of this situation...
-> 
-> AFAICT, this race condition exists for the truncate case as well
-> as filemap_map_pages() doesn't have a "page beyond inode size" check
-> in it. However, exposure here is very limited in the truncate case
-> because truncate_setsize()->truncate_pagecache() zaps the PTEs
-> again after invalidating the page cache.
-> 
-> Either way, adding the XFS_MMAPLOCK_SHARED around
-> filemap_map_pages() avoids the race condition for fallocate and
-> truncate operations for XFS...
-> 
-> > As such it is a rather
-> > different beast compared to the fault handler from fs POV and does not need
-> > protection from hole punching (current serialization on page lock and
-> > checking of page->mapping is enough).
-> > That being said I agree this is subtle and the moment someone adds e.g. a
-> > readahead call into filemap_map_pages() we have a real problem. I'm not
-> > sure how to prevent this risk...
-> 
-> Subtle, yes. So subtle, in fact, I fail to see any reason why the
-> above race cannot occur as there's no obvious serialisation in the
-> page cache between PTE zapping and page invalidation to prevent a
-> fault from coming in an re-establishing the PTEs before invalidation
-> occurs.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
 > 
