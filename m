@@ -2,66 +2,91 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56819C43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 04:43:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94E68C43461
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 04:48:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0AC802075E
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 04:43:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53B42208E4
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 04:48:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725858AbgIQEnZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 00:43:25 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44106 "EHLO
+        id S1726064AbgIQEs0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 00:48:26 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:42887 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725267AbgIQEnY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 00:43:24 -0400
+        by vger.kernel.org with ESMTP id S1725267AbgIQEsZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 00:48:25 -0400
 Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 0117D826E16;
-        Thu, 17 Sep 2020 14:43:21 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E2B65826DE3;
+        Thu, 17 Sep 2020 14:48:22 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kIllQ-0001OI-Mx; Thu, 17 Sep 2020 14:43:20 +1000
-Date:   Thu, 17 Sep 2020 14:43:20 +1000
+        id 1kIlqH-0001P8-U8; Thu, 17 Sep 2020 14:48:21 +1000
+Date:   Thu, 17 Sep 2020 14:48:21 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: don't free rt blocks when we're doing a REMAP
- bunmapi call
-Message-ID: <20200917044320.GA12131@dread.disaster.area>
+Subject: Re: [PATCH 2/2] xfs: check dabtree node hash values when loading
+ child blocks
+Message-ID: <20200917044821.GB12131@dread.disaster.area>
 References: <160031330694.3624286.7407913899137083972.stgit@magnolia>
- <160031331319.3624286.3971628628820322437.stgit@magnolia>
+ <160031331944.3624286.5979437788459484830.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160031331319.3624286.3971628628820322437.stgit@magnolia>
+In-Reply-To: <160031331944.3624286.5979437788459484830.stgit@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=XJ9OtjpE c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=IuRgj43g c=1 sm=1 tr=0 cx=a_idp_d
         a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
         a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8
-        a=7-415B0cAAAA:8 a=IWh0dPxg8JJWtP1apAwA:9 a=CjuIK1q_8ugA:10
+        a=7-415B0cAAAA:8 a=OzY0H6R7Nf9-9y8Rf9sA:9 a=CjuIK1q_8ugA:10
         a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 08:28:33PM -0700, Darrick J. Wong wrote:
+On Wed, Sep 16, 2020 at 08:28:39PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When callers pass XFS_BMAPI_REMAP into xfs_bunmapi, they want the extent
-> to be unmapped from the given file fork without the extent being freed.
-> We do this for non-rt files, but we forgot to do this for realtime
-> files.  So far this isn't a big deal since nobody makes a bunmapi call
-> to a rt file with the REMAP flag set, but don't leave a logic bomb.
+> When xchk_da_btree_block is loading a non-root dabtree block, we know
+> that the parent block had to have a (hashval, address) pointer to the
+> block that we just loaded.  Check that the hashval in the parent matches
+> the block we just loaded.
+> 
+> This was found by fuzzing nbtree[3].hashval = ones in xfs/394.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c |    9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
+>  fs/xfs/scrub/dabtree.c |   14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+> index e56786f0a13c..653f3280e1c1 100644
+> --- a/fs/xfs/scrub/dabtree.c
+> +++ b/fs/xfs/scrub/dabtree.c
+> @@ -441,6 +441,20 @@ xchk_da_btree_block(
+>  		goto out_freebp;
+>  	}
+>  
+> +	/*
+> +	 * If we've been handed a block that is below the dabtree root, does
+> +	 * its hashval match what the parent block expected to see?
+> +	 */
+> +	if (level > 0) {
+> +		struct xfs_da_node_entry	*key;
+> +
+> +		key = xchk_da_btree_node_entry(ds, level - 1);
+> +		if (be32_to_cpu(key->hashval) != blk->hashval) {
+> +			xchk_da_set_corrupt(ds, level);
+> +			goto out_freebp;
+> +		}
+> +	}
 
-Reasonable.
+Looks ok.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
