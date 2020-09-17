@@ -2,151 +2,136 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 130EEC433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 06:47:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03AB4C433E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 06:47:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C578C21D24
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 06:47:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB25B21973
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 06:47:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Mj8OpmNg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Fuwen1kv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726149AbgIQGre (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 02:47:34 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:37554 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726142AbgIQGrd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 02:47:33 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08H6he2J140230;
-        Thu, 17 Sep 2020 06:47:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=JonsM66/l0vghOYlRM8KFoBv4WqptNigkMQVJux58Cw=;
- b=Mj8OpmNgwkHOstxDhRScCRVsBYw7iVssbKwx9YhesktUH3+RATOTKbNkiq4PrJDHcGD6
- GN7/saW1WNP4eGa1FZR1jL1MMDWxi6qDjMcSK8W5dr+Ba0JTVfRIrt5jC5K9U+SR/cDi
- 26th+6b3vXntbl88qq3erajtlCkO8o1Ti6zOoRjxctHa03SZIRLefRSF2yE/nYSmpMUb
- EzluUhYUtAZzEO834eCP98Hfw9HgKXBpheQen6hPn6/nIRVn8PJ6jGfMRh2f5UbVANaA
- gthrbkyCK0gJnAZNk1rKb2iQAqonPjl7TT+yI2auOu4Hq37r/avQQ7wXI0zjZpUnEs5i zw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 33gnrr77xk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 17 Sep 2020 06:47:29 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08H6dX0O026222;
-        Thu, 17 Sep 2020 06:47:29 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 33h88aev1f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Sep 2020 06:47:29 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08H6lSm2031104;
-        Thu, 17 Sep 2020 06:47:28 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 17 Sep 2020 06:47:28 +0000
-Date:   Wed, 16 Sep 2020 23:47:27 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: clean up xfs_bui_item_recover
- iget/trans_alloc/ilock ordering
-Message-ID: <20200917064727.GT7955@magnolia>
-References: <160031336397.3624582.9639363323333392474.stgit@magnolia>
- <160031337657.3624582.4680281255744277782.stgit@magnolia>
- <20200917051333.GF12131@dread.disaster.area>
+        id S1726267AbgIQGrw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 02:47:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43562 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726142AbgIQGrw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 02:47:52 -0400
+Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C56ABC06174A
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 23:47:51 -0700 (PDT)
+Received: by mail-pg1-x543.google.com with SMTP id y1so784493pgk.8
+        for <linux-xfs@vger.kernel.org>; Wed, 16 Sep 2020 23:47:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=vxH9fQGFQQ//o2Xfl62qe2J+RDkk3E20dPbsrDReiLc=;
+        b=Fuwen1kvXZDif4LAnb7GMLDY2ji3PF7DTmoRpmhZZO6N0oOJ6txpdLkCHOVArJ6Jcg
+         8k7mR+3kaxac3BYeZigIGjvOok3MSmhorHczfspW/b9XV0QfQiUBkhPj5ddPAsSLTev0
+         3e4zr81dsXgOwd//98AGGY2FflcOtMdYy2rluJZZo04IdJjtvbjm7kPtJCJ9guvPEzwv
+         /6hgkesRWF/cTOCHReaMCE9t0yzeTrzPc0GsrEiogzH6hdK+6HVlMcKsnkQxAJj/rkG6
+         hYhhUd2KNg8pxcEYlK0s0v8ajXbPkY0HpdmTE9UCCCR/DYbBh0I9Lx2EHVdJC95LdMOk
+         TK5A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=vxH9fQGFQQ//o2Xfl62qe2J+RDkk3E20dPbsrDReiLc=;
+        b=Zj+QXm2fTFeDvxK6PfBh/+3Ch1vBKRwJk6ioemOZtXvJfXTBynLopnbE2E2cFVLTNQ
+         /agi+okWNe/C+anIDt0UKqv/4tHNMqZLARXMblR3Eqz8QBi9v9Src0yCbx5U9l1Qh88M
+         BkbKABa18413ai982yGO7OxaZMOngkSAilaKoyl83AVYC0wv6eYMN4r9vXAeX/Arg7sz
+         N1cN9j9ZFaiOOUio4z/7fal3N1uzrha8O3fUXciyVl0yZUc0+/C9ReTVkU2nyaV/pJHf
+         7y16NgQ+pLztrT9EnXgnGqqg69VX33LjvzW8MRWcWGKFctly56QmCqGAptMqO5bMXEyp
+         LBbQ==
+X-Gm-Message-State: AOAM530DTw3/DhBdOkIYMYJlrpR3vQrU0xD3jfoRBoEwrNegyLYgAu33
+        P6v/UyOnXvjYwSKQJQs7bg==
+X-Google-Smtp-Source: ABdhPJy1PJPVjUrA8Z0f1OObHHpzh3yGrYX1McZpCxkmXOVyQHr4cK5Sp7SU0ka0D3cboGMEOnF4bA==
+X-Received: by 2002:a63:4e5e:: with SMTP id o30mr21192453pgl.254.1600325271360;
+        Wed, 16 Sep 2020 23:47:51 -0700 (PDT)
+Received: from [10.76.92.41] ([103.7.29.7])
+        by smtp.gmail.com with ESMTPSA id y5sm18925891pge.62.2020.09.16.23.47.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 16 Sep 2020 23:47:50 -0700 (PDT)
+Subject: Re: [PATCH] xfs: remove the unnecessary variable error in
+ xfs_trans_unreserve_and_mod_sb
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
+References: <1600255152-16086-1-git-send-email-kaixuxia@tencent.com>
+ <1600255152-16086-7-git-send-email-kaixuxia@tencent.com>
+ <20200916164522.GH7955@magnolia>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <f3544c97-bda9-cb4f-0a2b-eb2fab9fb9a4@gmail.com>
+Date:   Thu, 17 Sep 2020 14:47:43 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200917051333.GF12131@dread.disaster.area>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
- suspectscore=1 phishscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009170050
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9746 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0
- lowpriorityscore=0 malwarescore=0 mlxscore=0 bulkscore=0 suspectscore=1
- clxscore=1015 mlxlogscore=999 adultscore=0 priorityscore=1501
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009170050
+In-Reply-To: <20200916164522.GH7955@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 17, 2020 at 03:13:33PM +1000, Dave Chinner wrote:
-> On Wed, Sep 16, 2020 at 08:29:36PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > In most places in XFS, we have a specific order in which we gather
-> > resources: grab the inode, allocate a transaction, then lock the inode.
-> > xfs_bui_item_recover doesn't do it in that order, so fix it to be more
-> > consistent.  This also makes the error bailout code a bit less weird.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_bmap_item.c |   40 +++++++++++++++++++++-------------------
-> >  1 file changed, 21 insertions(+), 19 deletions(-)
+Hi Darrick,
+
+On 2020/9/17 0:45, Darrick J. Wong wrote:
+> On Wed, Sep 16, 2020 at 07:19:09PM +0800, xiakaixu1987@gmail.com wrote:
+>> From: Kaixu Xia <kaixuxia@tencent.com>
+>>
+>> We can do the assert directly for the return value of xfs_mod_fdblocks()
+>> function, and the variable error is unnecessary, so remove it.
+>>
+>> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+>> ---
+>>  fs/xfs/xfs_trans.c | 7 ++-----
+>>  1 file changed, 2 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+>> index d33d0ba6f3bd..caa207220e2c 100644
+>> --- a/fs/xfs/xfs_trans.c
+>> +++ b/fs/xfs/xfs_trans.c
+>> @@ -573,7 +573,6 @@ xfs_trans_unreserve_and_mod_sb(
+>>  	int64_t			rtxdelta = 0;
+>>  	int64_t			idelta = 0;
+>>  	int64_t			ifreedelta = 0;
+>> -	int			error;
+>>  
+>>  	/* calculate deltas */
+>>  	if (tp->t_blk_res > 0)
+>> @@ -596,10 +595,8 @@ xfs_trans_unreserve_and_mod_sb(
+>>  	}
+>>  
+>>  	/* apply the per-cpu counters */
+>> -	if (blkdelta) {
+>> -		error = xfs_mod_fdblocks(mp, blkdelta, rsvd);
+>> -		ASSERT(!error);
+>> -	}
+>> +	if (blkdelta)
+>> +		ASSERT(!xfs_mod_fdblocks(mp, blkdelta, rsvd));
 > 
-> This probably needs to go before the xfs_qm_dqattach() fix, or
-> the dqattach fix need to come after this....
+> Um.... did you test this with ASSERTs disabled?  Because this compiles
+> the free block counter update out of the function on non-debug kernels,
+> which (AFAICT) will cause fs corruption...
 
-<nod> I'll fix the previous patch.
-
-> > 
-> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> > index 877afe76d76a..6f589f04f358 100644
-> > --- a/fs/xfs/xfs_bmap_item.c
-> > +++ b/fs/xfs/xfs_bmap_item.c
-> > @@ -475,25 +475,26 @@ xfs_bui_item_recover(
-> >  	    (bmap->me_flags & ~XFS_BMAP_EXTENT_FLAGS))
-> >  		goto garbage;
-> >  
-> > -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-> > -			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
-> > -	if (error)
-> > -		return error;
-> > -
-> > -	budp = xfs_trans_get_bud(tp, buip);
-> > -
-> >  	/* Grab the inode. */
-> > -	error = xfs_iget(mp, tp, bmap->me_owner, 0, XFS_ILOCK_EXCL, &ip);
-> > +	error = xfs_iget(mp, NULL, bmap->me_owner, 0, 0, &ip);
-> >  	if (error)
-> > -		goto err_inode;
-> > +		return error;
-> >  
-> >  	error = xfs_qm_dqattach(ip);
-> >  	if (error)
-> > -		goto err_inode;
-> > +		goto err_rele;
-> >  
-> >  	if (VFS_I(ip)->i_nlink == 0)
-> >  		xfs_iflags_set(ip, XFS_IRECOVERY);
-> >  
-> > +	/* Allocate transaction and do the work. */
-> > +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-> > +			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
-> > +	if (error)
-> > +		goto err_rele;
-> 
-> Hmmmm - don't all the error cased before we call xfs_trans_get_bud()
-> need to release the bui?
-
-Yes, I think so.  Come to think of it, the other intent items seem like
-they have the same bug.
-
---D
+Yes,thanks for pointing out... My fault...
 
 > 
-> Cheers,
+> --D
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+>>  
+>>  	if (idelta) {
+>>  		percpu_counter_add_batch(&mp->m_icount, idelta,
+>> -- 
+>> 2.20.0
+>>
+
+-- 
+kaixuxia
