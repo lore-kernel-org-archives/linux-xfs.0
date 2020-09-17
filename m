@@ -2,107 +2,100 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AD85C433E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 10:58:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 310F0C43461
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A19421655
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 10:58:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFA1F21D7F
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 11:39:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="T1Sz4kTt"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IfV4PQwP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726285AbgIQK6L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 06:58:11 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:48455 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726185AbgIQK6J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 06:58:09 -0400
-X-Greylist: delayed 546 seconds by postgrey-1.27 at vger.kernel.org; Thu, 17 Sep 2020 06:58:08 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600340287;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1AILeBfCeAXslU5j6k+yENWo8hu+Ro9QzlEjIRtqFLo=;
-        b=T1Sz4kTtgRZZVxLh57JTs3o/Fh/T84s6ZywDEaxTZjkhdjME6Nv2exwQ1pX2H72LqVNy2E
-        KLNQ/E1FbiWykAi44MhyThVyYIZCjxayQz03PZYVwL6QMGN28RpamQCNZo+uuosjCGeMaa
-        ZPkhWpsC1x7wgpRa2hf9/v6QO/KJ8TE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-366-m_IOLND_OrKpG5ScXjMk3w-1; Thu, 17 Sep 2020 06:42:24 -0400
-X-MC-Unique: m_IOLND_OrKpG5ScXjMk3w-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5A9BD1007472;
-        Thu, 17 Sep 2020 10:42:22 +0000 (UTC)
-Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 24BC619646;
-        Thu, 17 Sep 2020 10:42:21 +0000 (UTC)
-Date:   Thu, 17 Sep 2020 06:42:19 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Ritesh Harjani <riteshh@linux.ibm.com>,
-        Anju T Sudhakar <anju@linux.vnet.ibm.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, willy@infradead.org,
-        minlei@redhat.com
-Subject: Re: [PATCH] iomap: Fix the write_count in iomap_add_to_ioend().
-Message-ID: <20200917104219.GA1811187@bfoster>
-References: <20200822131312.GA17997@infradead.org>
- <20200824142823.GA295033@bfoster>
- <20200824150417.GA12258@infradead.org>
- <20200824154841.GB295033@bfoster>
- <20200825004203.GJ12131@dread.disaster.area>
- <20200825144917.GA321765@bfoster>
- <20200916001242.GE7955@magnolia>
- <20200916084510.GA30815@infradead.org>
- <20200916130714.GA1681377@bfoster>
- <20200917080455.GY26262@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200917080455.GY26262@infradead.org>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+        id S1726885AbgIQLjB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 07:39:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60570 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726876AbgIQLi5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 07:38:57 -0400
+Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E002EC06178A
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:56 -0700 (PDT)
+Received: by mail-pg1-x529.google.com with SMTP id 34so1188162pgo.13
+        for <linux-xfs@vger.kernel.org>; Thu, 17 Sep 2020 04:38:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=1xjEftt6BoWBnurJ2cfbr79NM6CiAL0+326aCaRrEN4=;
+        b=IfV4PQwPzMgvq+npmRqE8AfYxxcSGb9NL15aw7InSwiTPDfvT25cKcnuKyxGSf1igG
+         cwdK/dm9I/y9lBka8V5aIfEkdKljIeKOj/mNRXzsz2HI3KyqrwXhEgjjY73uzkTD3gjq
+         2/bkVc24aV6Y2REu+/8CIG1kwBKuM4yuwz3qOwinx1L2DanluukNEXjal6sJvWwcU2Kd
+         aTrjqJAmSHONHE7C9pm4e+WCFkXYsw/+cZe01yPvuTn5+smn6oA1B2zfGlf406h7SYjo
+         6bpZx7oG2jM2t47nRSXG1Nclcc+5A2UoCuX1sb6K83ZRBrDK1GOxrLQPAHElSmHEBquW
+         ABNg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=1xjEftt6BoWBnurJ2cfbr79NM6CiAL0+326aCaRrEN4=;
+        b=F/463Be1MPIu0Ls5IIRVOWUMCm9JqGwtO604JZItcRcL/QF/Vdqz5OPMH+YBcLdM65
+         0CbSbK+dn3DDWZ2O0PIlhrIaNJPM5h3z7/8OusMhnNJGl3NfHS5o9OprY/tPTnrMZUpU
+         BtwzxvHdVvTj1K3+nQRe0kfaEajCndeucfS3MIZjtzjT6KCEeyjiSgNp9FMEd4fArkhZ
+         xT8fTtKgMdR5TJ0K+ThV0lOEyW5S9rOmMHuHK4S12iYXXVF/yNBBNH95T+ptXzAZlisQ
+         XgDiI+Cf+PbUX39EQcseRpqhGiEse2YhJAs8ZXZdzInwPpsPnU0ak9Yld4V2l3zHfoYx
+         Gkog==
+X-Gm-Message-State: AOAM531BQQ1ruJ+X+ChC3GSEkS2e3zzCkOEyP14anMxmlrGN3Nbabxxr
+        z169rXkC50Q94i2TDBxFArkSEgZ1qw==
+X-Google-Smtp-Source: ABdhPJxhl/KOdSK95vm8VPqgr2MUBHgzTVdh2Pp4nedmDrXPrxdCdFowc2yhyur9oZa7DtxD5oFR2g==
+X-Received: by 2002:a63:5656:: with SMTP id g22mr21314643pgm.44.1600342736183;
+        Thu, 17 Sep 2020 04:38:56 -0700 (PDT)
+Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id 64sm18761147pgi.90.2020.09.17.04.38.54
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 17 Sep 2020 04:38:55 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [PATCH v2 2/7] xfs: use the existing type definition for di_projid
+Date:   Thu, 17 Sep 2020 19:38:43 +0800
+Message-Id: <1600342728-21149-3-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
+In-Reply-To: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
+References: <1600342728-21149-1-git-send-email-kaixuxia@tencent.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 17, 2020 at 09:04:55AM +0100, Christoph Hellwig wrote:
-> On Wed, Sep 16, 2020 at 09:07:14AM -0400, Brian Foster wrote:
-> > Dave described the main purpose earlier in this thread [1]. The initial
-> > motivation is that we've had downstream reports of soft lockup problems
-> > in writeback bio completion down in the bio -> bvec loop of
-> > iomap_finish_ioend() that has to finish writeback on each individual
-> > page of insanely large bios and/or chains. We've also had an upstream
-> > reports of a similar problem on linux-xfs [2].
-> > 
-> > The magic number itself was just pulled out of a hat. I picked it
-> > because it seemed conservative enough to still allow large contiguous
-> > bios (1GB w/ 4k pages) while hopefully preventing I/O completion
-> > problems, but was hoping for some feedback on that bit if the general
-> > approach was acceptable. I was also waiting for some feedback on either
-> > of the two users who reported the problem but I don't think I've heard
-> > back on that yet...
-> 
-> I think the saner answer is to always run large completions in the
-> workqueue, and add a bunch of cond_resched() calls, rather than
-> arbitrarily breaking up the I/O size.
-> 
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-That wouldn't address the latency concern Dave brought up. That said, I
-have no issue with this as a targeted solution for the softlockup issue.
-iomap_finish_ioend[s]() is common code for both the workqueue and
-->bi_end_io() contexts so that would require either some kind of context
-detection (and my understanding is in_atomic() is unreliable/frowned
-upon) or a new "atomic" parameter through iomap_finish_ioend[s]() to
-indicate whether it's safe to reschedule. Preference?
+We have already defined the project ID type prid_t, so maybe should
+use it here.
 
-Brian
+Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/libxfs/xfs_inode_buf.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_inode_buf.h b/fs/xfs/libxfs/xfs_inode_buf.h
+index 536666143fe7..ef5eaf33d146 100644
+--- a/fs/xfs/libxfs/xfs_inode_buf.h
++++ b/fs/xfs/libxfs/xfs_inode_buf.h
+@@ -17,7 +17,7 @@ struct xfs_dinode;
+  */
+ struct xfs_icdinode {
+ 	uint16_t	di_flushiter;	/* incremented on flush */
+-	uint32_t	di_projid;	/* owner's project id */
++	prid_t		di_projid;	/* owner's project id */
+ 	xfs_fsize_t	di_size;	/* number of bytes in file */
+ 	xfs_rfsblock_t	di_nblocks;	/* # of direct & btree blocks used */
+ 	xfs_extlen_t	di_extsize;	/* basic/minimum extent size for file */
+-- 
+2.20.0
 
