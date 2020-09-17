@@ -2,86 +2,102 @@ Return-Path: <SRS0=EbdE=C2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7149FC43461
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 16:08:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50A09C43461
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 16:23:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1427E22AAA
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 16:08:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2638206E6
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Sep 2020 16:22:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="qCkZaJPq"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pcbPbRwP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728061AbgIQQCU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Sep 2020 12:02:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45196 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728125AbgIQQB6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 12:01:58 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 47DB5C06121C;
-        Thu, 17 Sep 2020 09:01:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=t0nM0m+bM0MRfHdfpORsHcwjO5S8B+i5jhUC7fK6/pI=; b=qCkZaJPq8o1w69Twb4di8pYFfj
-        8kQaLBPYlWmvDh+6M8Tr0AqZjuuxLWU7vjXixU5N6UWUrcI+HrOTluUOMYAUesdIc4trTVVKI4Mdc
-        nZSMU1H2hQjuALDrMTFznZzN9druC5CGTo/9c1AOCRwOkN198JC5rjnekSe39YA5zuKTIBYWE69+j
-        tx8himdeDk8w8jlUeC7C4yqzpKTGDzDDT7PwABf78DxvxEDv4OTOCr2zMeivqFtg2oJzPourW3zTx
-        UR6ffkvU5IiVdqpKvJTgvqYhRqAl2FvCcSsby6CXhG9jqRItx5YBOKM6H1ZvxTvqBo/V5fW105o4p
-        iNfpT45w==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kIwLm-0004dm-3g; Thu, 17 Sep 2020 16:01:34 +0000
-Date:   Thu, 17 Sep 2020 17:01:34 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, guaneryu@gmail.com,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH 05/24] xfs/031: make sure we don't set rtinherit=1 on mkfs
-Message-ID: <20200917160134.GA17092@infradead.org>
-References: <160013417420.2923511.6825722200699287884.stgit@magnolia>
- <160013420779.2923511.9462939883966946313.stgit@magnolia>
- <20200917075351.GE26262@infradead.org>
- <20200917155747.GZ7955@magnolia>
+        id S1728312AbgIQQWz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Sep 2020 12:22:55 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:34596 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728467AbgIQQWn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Sep 2020 12:22:43 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08HGL4oD182969;
+        Thu, 17 Sep 2020 16:22:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=/4p8Y+V/OF0vC8M6mf7vaIZY9CytJzXe614kpGVId9A=;
+ b=pcbPbRwPiLKoLNz9c5S+sgG7/pGEWXr/m+E9nQ3EouB4qCQrtdJSDISMCcpDG+pmC8ju
+ QPFh+smO9+imzs+b2OGWTJs9m+uh80KquIOMyopBcLtsRxor8ckuYyaJ8Lyaa6TFHpI5
+ jXCvQolxHdH2/kn6IISwF33TLR3iJMRqgh08WRZjWkvMVNW0iTlWaom34wDg9IhExXyt
+ k9A+C2PYzB5HOc5xkZJLu6pTlpPBDgm5V09zUV6QKiuqf4PFkJTt2vTiEQk7QReBLuQI
+ UkiFAdUmsiwZzdYmQgV8wyVG7NLg+2DjFv7dKvaJn8k3Wi603mFhc7H9I74FxgZdxrfF DA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 33gp9mjawv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 17 Sep 2020 16:22:33 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08HGFwfk187384;
+        Thu, 17 Sep 2020 16:22:32 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 33hm354rgy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 17 Sep 2020 16:22:32 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08HGMVJ0030809;
+        Thu, 17 Sep 2020 16:22:31 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 17 Sep 2020 16:22:31 +0000
+Date:   Thu, 17 Sep 2020 09:22:30 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] libxfs: refactor inode flags propagation code
+Message-ID: <20200917162230.GD7955@magnolia>
+References: <160013466518.2932378.9536364695832878473.stgit@magnolia>
+ <160013467138.2932378.13730720108241920821.stgit@magnolia>
+ <20200917080159.GT26262@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200917155747.GZ7955@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200917080159.GT26262@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9747 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxlogscore=999
+ malwarescore=0 mlxscore=0 phishscore=0 adultscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009170123
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9747 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999
+ adultscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=0 phishscore=0
+ spamscore=0 priorityscore=1501 suspectscore=0 impostorscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009170123
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 17, 2020 at 08:57:47AM -0700, Darrick J. Wong wrote:
-> On Thu, Sep 17, 2020 at 08:53:51AM +0100, Christoph Hellwig wrote:
-> > On Mon, Sep 14, 2020 at 06:43:27PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > mkfs.xfs does not support setting rtinherit on the root directory /and/
-> > > pre-populating the filesystem with protofiles, so don't run this test if
-> > > rtinherit is in the mkfs options.
+On Thu, Sep 17, 2020 at 09:01:59AM +0100, Christoph Hellwig wrote:
+> On Mon, Sep 14, 2020 at 06:51:11PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > That is a bit of a weird limitation.  Any reason we can't fix this in
-> > mkfs instead?
+> > Hoist the code that propagates di_flags from a parent to a new child
+> > into a separate function.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Userspace doesn't implement the rt allocator at all, and the last few
-> times I've tried to do any serious surgery in the protofile code, Dave
-> grumbled that we should just kill it off instead.
+> Looks good (except for the fact that this is duplicated and not shared
+> with the kernel..)
 
-Maybe killing it off is indeed the better option.  And in that case this
-patch to disable it for RT devices would be a good start.
+Yeah, I'm working towards that:
 
-> 
-> Do people actually /use/ protofile support?  Do they like it?  Or would
-> they rather have an option like mke2fs -D, where you point it at a
-> directory and it uses ftw to copy-in all the files in that directory
-> tree, attributes and all?
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=inode-refactor
 
-I always found the protofile stuff really weird and not actually useful.
+and
 
-mke2fs -D actually does seem useful if you want to generate an xfs
-file systems and fill it without having admin privileges.  I think that
-is what the mke2fs feature is used for.
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=inode-refactor
+
+--D
+
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
