@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96783C43464
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Sep 2020 09:48:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DC74C43463
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Sep 2020 09:48:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 571B121D43
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Sep 2020 09:48:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13F4321D43
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Sep 2020 09:48:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c2R1YCTU"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QL9n+QAV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726298AbgIRJsp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Sep 2020 05:48:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40768 "EHLO
+        id S1726126AbgIRJss (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Sep 2020 05:48:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726121AbgIRJso (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Sep 2020 05:48:44 -0400
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4ED1FC06174A
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2020 02:48:44 -0700 (PDT)
-Received: by mail-pf1-x443.google.com with SMTP id k15so3090266pfc.12
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2020 02:48:44 -0700 (PDT)
+        with ESMTP id S1726121AbgIRJss (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Sep 2020 05:48:48 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E3FB8C06174A
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2020 02:48:47 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id g29so3173849pgl.2
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2020 02:48:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=+Qi7/wmzxM6qqkn9YV3YieHUEp2D+o+n5U3RwxtM9Ws=;
-        b=c2R1YCTU6gfPopcfwnlXsH9gExRMxNayiWCX/x3Lp5aCBQ+DUlhCyEECedCtQ0Zk1n
-         eAIqibnw+/JAPe0RrWzHx21ctP2Jyo8nktBeK0c5p4zKWgq1l2SIV8wSK22FdUgYERgf
-         wAQqg/JfmlxMPksRshJP1eYDjNnDXd/LrIA0mVlxFCyF4oWrFOsZU4U1rMvdCorZeG3Y
-         MQ3DZsihAI+YEPDrrkhNwuLEAfrYct2pLRtaDcSdMaYYVzw3z76YZWB7WlvKRW+J3Lcp
-         opnGfaUcx1MQTVK3xv7bF7DnN3HLJhMSIfoAU8Xl6VMVRqAtqIhQRPSi5MoWlwrxJt1U
-         w4rQ==
+        bh=VX63uv7POSnrcDddgcRKLVv71UU0uzfi3cgBN/u3dbU=;
+        b=QL9n+QAVExmeV9WVPd+DVixL3Xr9DvQpS7DsxJ/R2oj2CtppNsDUDUrgpjghv+JwjO
+         juCEnaKkMZ5ebRJB595VN1NTygwWAVL9dMMnC/KLNnc7IRCgrUlb8tJB2GoeGzwrm91z
+         0fr+788IFrGtFwPztcz2lTK2eBS4RAYDqpNDPRhV5zY3awz5/AEFZlWZcr5Devm37JGh
+         WYbSE4444CYc61QvP2m/x2I1upij6u8sEhZ8+vKvImNteh3V8HNhMQ3HIyvC//Il6pbq
+         ftKxaTFuJg6iKlmdTJwd+Bt0YpZvbLANAluWu64VDnniOTVdK2iGoJD2NiUTIuL3gRHf
+         cwBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=+Qi7/wmzxM6qqkn9YV3YieHUEp2D+o+n5U3RwxtM9Ws=;
-        b=I7GoQv5sCx9RHue3US+QnKck0EyIxvmlGmBqyd1VyXaMHkAqiqy2KTdwIkVQgRvd7C
-         CeUtUJEnAR0985AyZY+3zMRbMc7ne3XHYfENfocGAIH/gBAF5F+2RDR/LR6tM6Gt1k1Z
-         a5YO2/MdhAp8IxYiu+z/IsBDXguXmDuAt/nrq7zYgLT4Yy7uNUba2GGUPxX6xIRznBrQ
-         brf+7hzpUJaguNlLA4BB0uSB49GNjTAba4UYucbD+x+9AEe1h36TkyCWxvKhk84zVZGb
-         jn1VnIANH5YdABbu52Cr8in1ORFz+R2/6i60AMGOUV3s1WtBcokSoljg5eLH8VZZxzcz
-         iU4g==
-X-Gm-Message-State: AOAM530pHE+3BpLcB0hC1J4ja8eQRZInLiL3Dau4AhFdbUCFarV6AH7Y
-        O164yiNK4KbgM/tv6jToEn2t9KGt4NY=
-X-Google-Smtp-Source: ABdhPJzZr2SvJtcFbJXcZbmSlXn68ElkC3SpPq4JMy7+wuSOGxyBghmfIwpqhrmUR9pek0WlXFEk8g==
-X-Received: by 2002:a05:6a00:888:b029:13f:f7eb:578c with SMTP id q8-20020a056a000888b029013ff7eb578cmr20143936pfj.10.1600422523534;
-        Fri, 18 Sep 2020 02:48:43 -0700 (PDT)
+        bh=VX63uv7POSnrcDddgcRKLVv71UU0uzfi3cgBN/u3dbU=;
+        b=gvo6udGv1op9SrmHQDfsgJCFdfJhg2KsTXX/OuDHB99hCB1+hcsbgIzRfEjRmwa1pj
+         S9sS25+saq13oMkfXRkJ80RY/7AfbVn3y5lDBeBiHzDkrq/BS5XogLSYnCMMHhoFcfVu
+         Ws3OXmkpGHdLpCG+IQvykyJUHwOSKPgtdonFVWd+Ui9xd+6zNZ17k2h9wEfs05st1F3r
+         DZFxVqQWSsvprIToywPb8tscpmVcUu6vUuDh7sHthiDmjTdiN0t7qbXHcJ3f3tFyMvO0
+         4qlPfpp5vSzpPqqwbflNnRf4YT/IZSPeepnmCv2t/XTPwAoWgPfgaQtDdtU3kkE+acrM
+         GUlw==
+X-Gm-Message-State: AOAM532M0Pc4xp4OsmRF2DA/ytzPZXjRZFy1qCC9U8h7emI/fUprGyWi
+        qJxZT1VQhhaFB/nn61olMVbGFe0RlIo=
+X-Google-Smtp-Source: ABdhPJz1uZuz7wtbY2NCIS3mIGudR35j3yaZfEZtOmjWptregPlb1IbpJnUhq7o/RZ9G7zOkInh36w==
+X-Received: by 2002:a63:1257:: with SMTP id 23mr24285432pgs.401.1600422527077;
+        Fri, 18 Sep 2020 02:48:47 -0700 (PDT)
 Received: from localhost.localdomain ([122.179.62.164])
-        by smtp.gmail.com with ESMTPSA id s24sm2227194pjp.53.2020.09.18.02.48.40
+        by smtp.gmail.com with ESMTPSA id s24sm2227194pjp.53.2020.09.18.02.48.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Sep 2020 02:48:42 -0700 (PDT)
+        Fri, 18 Sep 2020 02:48:46 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
         david@fromorbit.com
-Subject: [PATCH V4 09/10] xfs: Check for extent overflow when swapping extents
-Date:   Fri, 18 Sep 2020 15:17:58 +0530
-Message-Id: <20200918094759.2727564-10-chandanrlinux@gmail.com>
+Subject: [PATCH V4 10/10] xfs: Introduce error injection to reduce maximum inode fork extent count
+Date:   Fri, 18 Sep 2020 15:17:59 +0530
+Message-Id: <20200918094759.2727564-11-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200918094759.2727564-1-chandanrlinux@gmail.com>
 References: <20200918094759.2727564-1-chandanrlinux@gmail.com>
@@ -74,119 +74,209 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Removing an initial range of source/donor file's extent and adding a new
-extent (from donor/source file) in its place will cause extent count to
-increase by 1.
+This commit adds XFS_ERRTAG_REDUCE_MAX_IEXTENTS error tag which enables
+userspace programs to test "Inode fork extent count overflow detection"
+by reducing maximum possible inode fork extent count to
+10 (i.e. MAXERRTAGEXTNUM).
+
+This commit makes the following additional changes to enable writing
+deterministic userspace tests for checking inode extent count overflow,
+1. xfs_bmap_add_extent_hole_real()
+   File & disk offsets at which extents are allocated by Directory,
+   Xattr and Realtime code cannot be controlled explicitly from
+   userspace. When XFS_ERRTAG_REDUCE_MAX_IEXTENTS error tag is enabled,
+   xfs_bmap_add_extent_hole_real() prevents extents from being merged
+   even though the new extent might be contiguous and have the same
+   state as its neighbours.
+2. xfs_growfs_rt_alloc()
+   This function allocates as large an extent as possible to fit in the
+   additional bitmap/summary blocks. We now force allocation of block
+   sized extents when XFS_ERRTAG_REDUCE_MAX_IEXTENTS error tag is
+   enabled.
 
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c       | 18 +++++++++---------
- fs/xfs/libxfs/xfs_bmap.h       |  1 +
- fs/xfs/libxfs/xfs_inode_fork.h |  7 +++++++
- fs/xfs/xfs_bmap_util.c         | 17 +++++++++++++++++
- 4 files changed, 34 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c       |  9 +++++++--
+ fs/xfs/libxfs/xfs_errortag.h   |  4 +++-
+ fs/xfs/libxfs/xfs_inode_fork.c |  4 ++++
+ fs/xfs/libxfs/xfs_types.h      |  1 +
+ fs/xfs/xfs_error.c             |  3 +++
+ fs/xfs/xfs_rtalloc.c           | 16 ++++++++++++++--
+ 6 files changed, 32 insertions(+), 5 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 51c2d2690f05..9c665e379dfc 100644
+index 9c665e379dfc..287f0c4f6d33 100644
 --- a/fs/xfs/libxfs/xfs_bmap.c
 +++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -6104,15 +6104,6 @@ xfs_bmap_split_extent(
- 	return error;
- }
+@@ -2729,11 +2729,14 @@ xfs_bmap_add_extent_hole_real(
+ 	int			rval=0;	/* return value (logging flags) */
+ 	int			state = xfs_bmap_fork_to_state(whichfork);
+ 	struct xfs_bmbt_irec	old;
++	int			test_iext_overflow;
  
--/* Deferred mapping is only for real extents in the data fork. */
--static bool
--xfs_bmap_is_update_needed(
--	struct xfs_bmbt_irec	*bmap)
--{
--	return  bmap->br_startblock != HOLESTARTBLOCK &&
--		bmap->br_startblock != DELAYSTARTBLOCK;
--}
--
- /* Record a bmap intent. */
- static int
- __xfs_bmap_add(
-@@ -6144,6 +6135,15 @@ __xfs_bmap_add(
- 	return 0;
- }
+ 	ASSERT(!isnullstartblock(new->br_startblock));
+ 	ASSERT(!cur || !(cur->bc_ino.flags & XFS_BTCUR_BMBT_WASDEL));
  
-+/* Deferred mapping is only for real extents in the data fork. */
-+bool
-+xfs_bmap_is_update_needed(
-+	struct xfs_bmbt_irec	*bmap)
-+{
-+	return  bmap->br_startblock != HOLESTARTBLOCK &&
-+		bmap->br_startblock != DELAYSTARTBLOCK;
-+}
+ 	XFS_STATS_INC(mp, xs_add_exlist);
++	test_iext_overflow = XFS_TEST_ERROR(false, ip->i_mount,
++				XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
+ 
+ 	/*
+ 	 * Check and set flags if this segment has a left neighbor.
+@@ -2762,7 +2765,8 @@ xfs_bmap_add_extent_hole_real(
+ 	    left.br_startoff + left.br_blockcount == new->br_startoff &&
+ 	    left.br_startblock + left.br_blockcount == new->br_startblock &&
+ 	    left.br_state == new->br_state &&
+-	    left.br_blockcount + new->br_blockcount <= MAXEXTLEN)
++	    left.br_blockcount + new->br_blockcount <= MAXEXTLEN &&
++	    !test_iext_overflow)
+ 		state |= BMAP_LEFT_CONTIG;
+ 
+ 	if ((state & BMAP_RIGHT_VALID) && !(state & BMAP_RIGHT_DELAY) &&
+@@ -2772,7 +2776,8 @@ xfs_bmap_add_extent_hole_real(
+ 	    new->br_blockcount + right.br_blockcount <= MAXEXTLEN &&
+ 	    (!(state & BMAP_LEFT_CONTIG) ||
+ 	     left.br_blockcount + new->br_blockcount +
+-	     right.br_blockcount <= MAXEXTLEN))
++	     right.br_blockcount <= MAXEXTLEN) &&
++	    !test_iext_overflow)
+ 		state |= BMAP_RIGHT_CONTIG;
+ 
+ 	error = 0;
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index 53b305dea381..1c56fcceeea6 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -56,7 +56,8 @@
+ #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
+ #define XFS_ERRTAG_IUNLINK_FALLBACK			34
+ #define XFS_ERRTAG_BUF_IOERROR				35
+-#define XFS_ERRTAG_MAX					36
++#define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
++#define XFS_ERRTAG_MAX					37
+ 
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -97,5 +98,6 @@
+ #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
+ #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
+ #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
++#define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
+ 
+ #endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index 8d48716547e5..14389d10c597 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -24,6 +24,7 @@
+ #include "xfs_dir2_priv.h"
+ #include "xfs_attr_leaf.h"
+ #include "xfs_types.h"
++#include "xfs_errortag.h"
+ 
+ kmem_zone_t *xfs_ifork_zone;
+ 
+@@ -745,6 +746,9 @@ xfs_iext_count_may_overflow(
+ 
+ 	max_exts = (whichfork == XFS_ATTR_FORK) ? MAXAEXTNUM : MAXEXTNUM;
+ 
++	if (XFS_TEST_ERROR(false, ip->i_mount, XFS_ERRTAG_REDUCE_MAX_IEXTENTS))
++		max_exts = MAXERRTAGEXTNUM;
 +
- /* Map an extent into a file. */
- void
- xfs_bmap_map_extent(
-diff --git a/fs/xfs/libxfs/xfs_bmap.h b/fs/xfs/libxfs/xfs_bmap.h
-index e1bd484e5548..60fbe184d5f4 100644
---- a/fs/xfs/libxfs/xfs_bmap.h
-+++ b/fs/xfs/libxfs/xfs_bmap.h
-@@ -263,6 +263,7 @@ struct xfs_bmap_intent {
- 	struct xfs_bmbt_irec			bi_bmap;
+ 	nr_exts = ifp->if_nextents + nr_to_add;
+ 	if (nr_exts < ifp->if_nextents || nr_exts > max_exts)
+ 		return -EFBIG;
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 397d94775440..f2d6736b72e0 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -61,6 +61,7 @@ typedef void *		xfs_failaddr_t;
+ #define	MAXEXTLEN	((xfs_extlen_t)0x001fffff)	/* 21 bits */
+ #define	MAXEXTNUM	((xfs_extnum_t)0x7fffffff)	/* signed int */
+ #define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
++#define	MAXERRTAGEXTNUM	((xfs_extnum_t)0xa)
+ 
+ /*
+  * Minimum and maximum blocksize and sectorsize.
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 7f6e20899473..3780b118cc47 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -54,6 +54,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_FORCE_SUMMARY_RECALC,
+ 	XFS_RANDOM_IUNLINK_FALLBACK,
+ 	XFS_RANDOM_BUF_IOERROR,
++	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
  };
  
-+bool	xfs_bmap_is_update_needed(struct xfs_bmbt_irec *bmap);
- int	xfs_bmap_finish_one(struct xfs_trans *tp, struct xfs_inode *ip,
- 		enum xfs_bmap_intent_type type, int whichfork,
- 		xfs_fileoff_t startoff, xfs_fsblock_t startblock,
-diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index ded3c1b56c94..837c01595439 100644
---- a/fs/xfs/libxfs/xfs_inode_fork.h
-+++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -102,6 +102,13 @@ struct xfs_ifork {
- #define XFS_IEXT_REFLINK_REMAP_CNT(smap_real, dmap_written) \
- 	(((smap_real) ? 1 : 0) + ((dmap_written) ? 1 : 0))
+ struct xfs_errortag_attr {
+@@ -164,6 +165,7 @@ XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+ XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
+ XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
+ XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
++XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
  
-+/*
-+ * Removing an initial range of source/donor file's extent and adding a new
-+ * extent (from donor/source file) in its place will cause extent count to
-+ * increase by 1.
-+ */
-+#define XFS_IEXT_SWAP_RMAP_CNT		(1)
-+
- /*
-  * Fork handling.
-  */
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 0776abd0103c..542f990247c4 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -28,6 +28,7 @@
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -202,6 +204,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(bad_summary),
+ 	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
+ 	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
++	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
+ 	NULL,
+ };
+ 
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 3e841a75f272..29a519fc30fb 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -18,6 +18,8 @@
+ #include "xfs_trans_space.h"
  #include "xfs_icache.h"
- #include "xfs_iomap.h"
- #include "xfs_reflink.h"
-+#include "xfs_bmap.h"
+ #include "xfs_rtalloc.h"
++#include "xfs_error.h"
++#include "xfs_errortag.h"
  
- /* Kernel only BMAP related definitions and functions */
  
-@@ -1407,6 +1408,22 @@ xfs_swap_extent_rmap(
- 					irec.br_blockcount);
- 			trace_xfs_swap_extent_rmap_remap_piece(tip, &uirec);
+ /*
+@@ -780,17 +782,27 @@ xfs_growfs_rt_alloc(
+ 	int			resblks;	/* space reservation */
+ 	enum xfs_blft		buf_type;
+ 	struct xfs_trans	*tp;
++	xfs_extlen_t		nr_blks_alloc;
++	int			test_iext_overflow;
  
-+			if (xfs_bmap_is_update_needed(&uirec)) {
-+				error = xfs_iext_count_may_overflow(ip,
-+						XFS_DATA_FORK,
-+						XFS_IEXT_SWAP_RMAP_CNT);
-+				if (error)
-+					goto out;
-+			}
+ 	if (ip == mp->m_rsumip)
+ 		buf_type = XFS_BLFT_RTSUMMARY_BUF;
+ 	else
+ 		buf_type = XFS_BLFT_RTBITMAP_BUF;
+ 
++	test_iext_overflow = XFS_TEST_ERROR(false, ip->i_mount,
++				XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
 +
-+			if (xfs_bmap_is_update_needed(&irec)) {
-+				error = xfs_iext_count_may_overflow(tip,
-+						XFS_DATA_FORK,
-+						XFS_IEXT_SWAP_RMAP_CNT);
-+				if (error)
-+					goto out;
-+			}
+ 	/*
+ 	 * Allocate space to the file, as necessary.
+ 	 */
+ 	while (oblocks < nblocks) {
+-		resblks = XFS_GROWFSRT_SPACE_RES(mp, nblocks - oblocks);
++		if (likely(!test_iext_overflow))
++			nr_blks_alloc = nblocks - oblocks;
++		else
++			nr_blks_alloc = 1;
 +
- 			/* Remove the mapping from the donor file. */
- 			xfs_bmap_unmap_extent(tp, tip, &uirec);
- 
++		resblks = XFS_GROWFSRT_SPACE_RES(mp, nr_blks_alloc);
+ 		/*
+ 		 * Reserve space & log for one extent added to the file.
+ 		 */
+@@ -813,7 +825,7 @@ xfs_growfs_rt_alloc(
+ 		 * Allocate blocks to the bitmap file.
+ 		 */
+ 		nmap = 1;
+-		error = xfs_bmapi_write(tp, ip, oblocks, nblocks - oblocks,
++		error = xfs_bmapi_write(tp, ip, oblocks, nr_blks_alloc,
+ 					XFS_BMAPI_METADATA, 0, &map, &nmap);
+ 		if (!error && nmap < 1)
+ 			error = -ENOSPC;
 -- 
 2.28.0
 
