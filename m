@@ -7,66 +7,71 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32E2AC43463
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Sep 2020 05:14:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30614C43464
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Sep 2020 05:49:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBFD421D43
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Sep 2020 05:14:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E91F620866
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Sep 2020 05:49:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fwIYW8OP"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LVOYwrK6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726097AbgISFOE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 19 Sep 2020 01:14:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51116 "EHLO
+        id S1726279AbgISFtc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Sep 2020 01:49:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726054AbgISFOE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Sep 2020 01:14:04 -0400
+        with ESMTP id S1726054AbgISFtc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Sep 2020 01:49:32 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29174C0613CE
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2020 22:14:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03124C0613CE
+        for <linux-xfs@vger.kernel.org>; Fri, 18 Sep 2020 22:49:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=8d1lssh9RRXGrxC1HYSLgBxMLF+x17GN4Nzrl/OpZa4=; b=fwIYW8OPj8UFLuutdRnsOVQXRB
-        uzca7H7D2vdKpSdfTGACqQGZVat1wlviI4OimFWl81NGPWWWEfEKFqw2Jat1SHXk6CUjJLycOY4NJ
-        DA9w19SinsuId97x358ni0lTGA2PCPqWfIbE5XTGzORtlwvIfWiFKSPxKG4vpbgnT195367SsyeUl
-        FgcXdAE5HmMYa/IQmRGoAMENdInd+IchpVD7ZKazSN18JtyKK2qtDt5L94xtAMfVgQXairlgPItGK
-        xM+B3Rz/szcAZ5Vj+sEZd6vrtSDDI4p4I0Tedrx3D2kyqHsWf8tgNRVkHEqnXdPAd27LHHijr9Jx9
-        OzAQts5w==;
+        bh=PU2pmD8nndFOoi4LEG4aci5reFEJkA46r2JOEyugwdc=; b=LVOYwrK68xKbjySfWIw0WW9vpE
+        nbpRiEHcyx0dPWVsIJn+B1zOMVry6+d/EY0moDJ4H53MOQPF4k+5HkoWULF3R55iPwrOku3QNrMG3
+        m/QjgmpDq8qqE4CBwgK6WSbbXKUVvFNZwG92D6FSiSlmcQbEY7v60XIeqb3ELlKyrFQ5pc1aid2g2
+        faVmZmKMvqCjSiB0XOZ2aBjDAZpRQwK9Ayo5cZPu34cYfGenJz2Ht8c1ocr0Vz0fh/bwz7iIxQo/S
+        Mp0SljnRzUtn2YNWKWrRIeQUc+SUhmWGqwClo4H0YnH+qLrDr59niJfQWQa5six8QHEtOfS5qolJu
+        uD6O+8gA==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kJVCE-00082v-C7; Sat, 19 Sep 2020 05:14:02 +0000
-Date:   Sat, 19 Sep 2020 06:14:02 +0100
+        id 1kJVkY-0001Zm-9j; Sat, 19 Sep 2020 05:49:30 +0000
+Date:   Sat, 19 Sep 2020 06:49:30 +0100
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2 1/2] xfs: don't free rt blocks when we're doing a
- REMAP bunmapi call
-Message-ID: <20200919051402.GC30063@infradead.org>
-References: <160031330694.3624286.7407913899137083972.stgit@magnolia>
- <160031331319.3624286.3971628628820322437.stgit@magnolia>
- <20200918021450.GU7955@magnolia>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 3/2] xfs: don't release log intent items when recovery
+ fails
+Message-ID: <20200919054930.GO30063@infradead.org>
+References: <160031332353.3624373.16349101558356065522.stgit@magnolia>
+ <20200918021702.GV7955@magnolia>
+ <20200918021940.GW7955@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200918021450.GU7955@magnolia>
+In-Reply-To: <20200918021940.GW7955@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 17, 2020 at 07:14:50PM -0700, Darrick J. Wong wrote:
+On Thu, Sep 17, 2020 at 07:19:40PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When callers pass XFS_BMAPI_REMAP into xfs_bunmapi, they want the extent
-> to be unmapped from the given file fork without the extent being freed.
-> We do this for non-rt files, but we forgot to do this for realtime
-> files.  So far this isn't a big deal since nobody makes a bunmapi call
-> to a rt file with the REMAP flag set, but don't leave a logic bomb.
+> Nowadays, log recovery will call ->release on the recovered intent items
+> if recovery fails.  Therefore, it's redundant to release them from
+> inside the ->recover functions when they're about to return an error.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v3: fix subject line
+> v2: log recovery frees unfinished intent items on failure, so remove
+> release calls
 
-Looks good,
+Looks good:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+I'm actually pretty sure I have the same patch lingering in one my
+unfinished branches somewhere..
