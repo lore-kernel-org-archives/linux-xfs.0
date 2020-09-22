@@ -2,117 +2,88 @@ Return-Path: <SRS0=chL6=C7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71688C2D0E2
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 07:54:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F041C2D0E2
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 09:04:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C42623A61
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 07:54:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D43F4208A9
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 09:04:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y/BwjGfV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726476AbgIVHy2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Sep 2020 03:54:28 -0400
-Received: from mx2.suse.de ([195.135.220.15]:59102 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726442AbgIVHy2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 22 Sep 2020 03:54:28 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 8E840ACC2;
-        Tue, 22 Sep 2020 07:55:03 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 7D0771E12E3; Tue, 22 Sep 2020 09:54:26 +0200 (CEST)
-Date:   Tue, 22 Sep 2020 09:54:26 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>,
-        Hugh Dickins <hughd@google.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Theodore Tso <tytso@mit.edu>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Qiuyang Sun <sunqiuyang@huawei.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "Kirill A. Shutemov" <kirill@shutemov.name>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Al Viro <viro@zeniv.linux.org.uk>, nborisov@suse.de
-Subject: Re: More filesystem need this fix (xfs: use MMAPLOCK around
- filemap_map_pages())
-Message-ID: <20200922075426.GA15112@quack2.suse.cz>
-References: <CAOQ4uxh0dnVXJ9g+5jb3q72RQYYqTLPW_uBqHPKn6AJZ2DNPOQ@mail.gmail.com>
- <20200916155851.GA1572@quack2.suse.cz>
- <20200917014454.GZ12131@dread.disaster.area>
- <alpine.LSU.2.11.2009161853220.2087@eggly.anvils>
- <20200917064532.GI12131@dread.disaster.area>
- <alpine.LSU.2.11.2009170017590.8077@eggly.anvils>
- <20200921082600.GO12131@dread.disaster.area>
- <20200921091143.GB5862@quack2.suse.cz>
- <CAHk-=wir89LPH6A4H2hkxVXT20+dpcw2qQq0GtQJvy87ARga-g@mail.gmail.com>
- <20200921175943.GW32101@casper.infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200921175943.GW32101@casper.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1726430AbgIVJEJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Sep 2020 05:04:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43954 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726419AbgIVJEJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Sep 2020 05:04:09 -0400
+Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8356C061755
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 02:04:08 -0700 (PDT)
+Received: by mail-pf1-x443.google.com with SMTP id x22so7022547pfo.12
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 02:04:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=ORXri5H5xpQfyB5dEM2S1kdLdfNN+GDXS+hTBGFeb3o=;
+        b=Y/BwjGfVrOx1o+9hR8hhJ2432u5Dmjm7mylVum/XMxeg9kcAXtMea1ptfkOX17uWWp
+         Yo5bRglGP0/0LnMKwLdiTBv36j66LV1Fk23Iyg+ejjACvRKkTBtzGzKzuyLIsr6P1IuN
+         Q3zSdDnjv2+S8NpBaJAKE3cNndZ3JxO2GEQsc7HQ2wzvt8G6Jsu3jtIeF8eptwooTcUu
+         FaDeayxikbhiOsYr5OJmotRXjli1NH1Ey3ChoE+QDzbOsWaaOqbAGF60WOw+1ujVdXzK
+         bWsz/aHFuKqbdOZjMkREeGc7dcp2uJRP636m/XcSZsW/nOLpuX9RYeDppOBU9lTUhviD
+         vjBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=ORXri5H5xpQfyB5dEM2S1kdLdfNN+GDXS+hTBGFeb3o=;
+        b=m07KLbBpi0uVC+133ZHQzBF8i8VKB7ER27M5Px0FD47B6PQNcrHCsFkfTqvLwStzHn
+         Q1t+JcYN+GsHwFHeCbuH8lNaYI5akUdn0q3rZaufhpxMzdRflj265Y+3ERkhRCD2pDSW
+         BuBxkHGmNoKZ9UbLH4Ckqx/lbr7Vc9N4niQ98n0VM1qVTDsvH4L3ehNagKP6s7FNEEBn
+         ql6wgzgrojKVMeGyBW4dVlbpNKCaLZfk05LPs5hftUcrOXEexrqk4VktPOHYEAHCFx5F
+         kwDPU1VJ4x+2BjUjb8SuFRA1OzvFZtcLUUn3C4HkOvAXxQSYkcJrKbMTMwoae6T45b/w
+         +X8w==
+X-Gm-Message-State: AOAM533xbsR/0mTJ9Toa8XyhVdKzIX24udJ8zl1X9RHH7vJmlvoiroyY
+        jldejmQIBuMXKhcevyjX+3sLcvS/8A==
+X-Google-Smtp-Source: ABdhPJzQNgYXIHeE4KwGD4l05TQLftaCsT9bsEzqr0k0DzVAHzo2VrBqFFTfOSLjBbzHjDwYzfOhCg==
+X-Received: by 2002:a17:902:b586:b029:d1:bb0f:2644 with SMTP id a6-20020a170902b586b02900d1bb0f2644mr3757404pls.34.1600765448126;
+        Tue, 22 Sep 2020 02:04:08 -0700 (PDT)
+Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id h8sm13815653pfk.19.2020.09.22.02.04.07
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 22 Sep 2020 02:04:07 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [RFC PATCH 0/3]xfs: random fixes for disk quota
+Date:   Tue, 22 Sep 2020 17:03:59 +0800
+Message-Id: <1600765442-12146-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 21-09-20 18:59:43, Matthew Wilcox wrote:
-> On Mon, Sep 21, 2020 at 09:20:25AM -0700, Linus Torvalds wrote:
-> > On Mon, Sep 21, 2020 at 2:11 AM Jan Kara <jack@suse.cz> wrote:
-> > >
-> > > Except that on truncate, we have to unmap these
-> > > anonymous pages in private file mappings as well...
-> > 
-> > I'm actually not 100% sure we strictly would need to care.
-> > 
-> > Once we've faulted in a private file mapping page, that page is
-> > "ours". That's kind of what MAP_PRIVATE means.
-> > 
-> > If we haven't written to it, we do keep things coherent with the file,
-> > but that's actually not required by POSIX afaik - it's a QoI issue,
-> > and a lot of (bad) Unixes didn't do it at all.
-> > So as long as truncate _clears_ the pages it truncates, I think we'd
-> > actually be ok.
-> 
-> We don't even need to do that ...
-> 
-> "If the size of the mapped file changes after the call to mmap()
-> as a result of some other operation on the mapped file, the effect of
-> references to portions of the mapped region that correspond to added or
-> removed portions of the file is unspecified."
-> 
-> https://pubs.opengroup.org/onlinepubs/9699919799/functions/mmap.html
-> 
-> As you say, there's a QoI here, and POSIX permits some shockingly
-> bad and useless implementations.
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-Something from ftruncate(2) POSIX definition [1] for comparison:
+Hi all,
 
-If the effect of ftruncate() is to decrease the size of a memory mapped
-file or a shared memory object and whole pages beyond the new end were
-previously mapped, then the whole pages beyond the new end shall be
-discarded.
+This patchset include random fixes and code cleanups for disk quota.
+In order to make it easier to track, I bundle them up and put all
+the scattered patches into a single patchset.
 
-References to discarded pages shall result in the generation of a SIGBUS
-signal.
+Kaixu Xia (3):
+  xfs: directly return if the delta equal to zero
+  xfs: remove the unused parameter id from xfs_qm_dqattach_one
+  xfs: only do dqget or dqhold for the specified dquots
 
-[1] https://pubs.opengroup.org/onlinepubs/9699919799/functions/ftruncate.html
-
-Now pick... ;)
-
-								Honza
+ fs/xfs/xfs_qm.c          | 24 +++++++++---------------
+ fs/xfs/xfs_trans_dquot.c | 12 ++++++------
+ 2 files changed, 15 insertions(+), 21 deletions(-)
 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.20.0
+
