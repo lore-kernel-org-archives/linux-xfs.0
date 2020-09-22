@@ -1,107 +1,104 @@
-Return-Path: <SRS0=3Xx9=C6=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=chL6=C7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 753F7C4363C
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Sep 2020 18:00:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85261C4346E
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 02:29:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06C712193E
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Sep 2020 18:00:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cn1Zppxw"
+	by mail.kernel.org (Postfix) with ESMTP id 3D4FA23A74
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 02:29:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727297AbgIUSAA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Sep 2020 14:00:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45836 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726436AbgIUSAA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Sep 2020 14:00:00 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04CE5C061755;
-        Mon, 21 Sep 2020 10:59:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=EYalxu71FXkhieQDqm3YOx3Lopqwd5EDbAcvH4qgOhs=; b=cn1ZppxwRY81oXiNm0vRnLyCFs
-        Xl5xURoMhBnqr2NAEHsKV+Yt0xLaL5tT+bhVHEInqaezHoHp5ln5P0NE4NbQUyQ/JA7hTmee5MQSv
-        Gx4g48bXYVJSDGVL4YSAf+VQIzMvlFAv+o8q5hLXRp9CBiHnAy1AqXzqyUH3ZR65gj3A2LQVw0lqH
-        Qz1GsKVlFrTrf5GNRFnMVYe2c2MMzmOpjxQ4I5XffgCWR2Hb9GG0Zo+JWhEMO7d11kCVug0WBiHsk
-        uzjFDYrt1qxk0nMox3iIjPWlwC0J4P5ST6FeF54rmXxKGGMdxudBsLGdsbKrQKVjihsLADUoJVGzn
-        QR0vNZKg==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kKQ6J-0007Cd-IL; Mon, 21 Sep 2020 17:59:43 +0000
-Date:   Mon, 21 Sep 2020 18:59:43 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>,
-        Hugh Dickins <hughd@google.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Theodore Tso <tytso@mit.edu>,
-        Martin Brandenburg <martin@omnibond.com>,
-        Mike Marshall <hubcap@omnibond.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Qiuyang Sun <sunqiuyang@huawei.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "Kirill A. Shutemov" <kirill@shutemov.name>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Al Viro <viro@zeniv.linux.org.uk>, nborisov@suse.de
-Subject: Re: More filesystem need this fix (xfs: use MMAPLOCK around
- filemap_map_pages())
-Message-ID: <20200921175943.GW32101@casper.infradead.org>
-References: <20200623052059.1893966-1-david@fromorbit.com>
- <CAOQ4uxh0dnVXJ9g+5jb3q72RQYYqTLPW_uBqHPKn6AJZ2DNPOQ@mail.gmail.com>
- <20200916155851.GA1572@quack2.suse.cz>
- <20200917014454.GZ12131@dread.disaster.area>
- <alpine.LSU.2.11.2009161853220.2087@eggly.anvils>
- <20200917064532.GI12131@dread.disaster.area>
- <alpine.LSU.2.11.2009170017590.8077@eggly.anvils>
- <20200921082600.GO12131@dread.disaster.area>
- <20200921091143.GB5862@quack2.suse.cz>
- <CAHk-=wir89LPH6A4H2hkxVXT20+dpcw2qQq0GtQJvy87ARga-g@mail.gmail.com>
+        id S1729630AbgIVC3q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Sep 2020 22:29:46 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:21398 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1729617AbgIVC3q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Sep 2020 22:29:46 -0400
+X-Greylist: delayed 605 seconds by postgrey-1.27 at vger.kernel.org; Mon, 21 Sep 2020 22:29:45 EDT
+X-IronPort-AV: E=Sophos;i="5.77,288,1596470400"; 
+   d="scan'208";a="99488774"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 22 Sep 2020 10:19:38 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 2C55948990E9;
+        Tue, 22 Sep 2020 10:19:38 +0800 (CST)
+Received: from G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Tue, 22 Sep 2020 10:19:36 +0800
+Received: from localhost.localdomain (10.167.225.206) by
+ G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2 via Frontend Transport; Tue, 22 Sep 2020 10:19:35 +0800
+Date:   Tue, 22 Sep 2020 10:19:35 +0800
+From:   Hao Li <lihao2018.fnst@cn.fujitsu.com>
+To:     Dave Chinner <david@fromorbit.com>
+CC:     <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>, <y-goto@fujitsu.com>
+Subject: Re: [PATCH v2] fs: Handle I_DONTCACHE in iput_final() instead of
+ generic_drop_inode()
+Message-ID: <20200922021935.GA56122@localhost.localdomain>
+References: <20200904075939.176366-1-lihao2018.fnst@cn.fujitsu.com>
+ <20200906214002.GI12131@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Disposition: inline
-In-Reply-To: <CAHk-=wir89LPH6A4H2hkxVXT20+dpcw2qQq0GtQJvy87ARga-g@mail.gmail.com>
+In-Reply-To: <20200906214002.GI12131@dread.disaster.area>
+X-yoursite-MailScanner-ID: 2C55948990E9.AC9F3
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 21, 2020 at 09:20:25AM -0700, Linus Torvalds wrote:
-> On Mon, Sep 21, 2020 at 2:11 AM Jan Kara <jack@suse.cz> wrote:
-> >
-> > Except that on truncate, we have to unmap these
-> > anonymous pages in private file mappings as well...
+On Mon, Sep 07, 2020 at 07:40:02AM +1000, Dave Chinner wrote:
+> On Fri, Sep 04, 2020 at 03:59:39PM +0800, Hao Li wrote:
+> > If generic_drop_inode() returns true, it means iput_final() can evict
+> > this inode regardless of whether it is dirty or not. If we check
+> > I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
+> > evicted unconditionally. This is not the desired behavior because
+> > I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
+> > As for whether we need to evict this inode, this is what
+> > generic_drop_inode() should do. This patch corrects the usage of
+> > I_DONTCACHE.
+> > 
+> > This patch was proposed in [1].
+> > 
+> > [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
+> > 
+> > Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
+> > Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
+> > ---
+> > Changes in v2:
+> >  - Adjust code format
+> >  - Add Fixes tag in commit message
+> > 
+> >  fs/inode.c         | 4 +++-
+> >  include/linux/fs.h | 3 +--
+> >  2 files changed, 4 insertions(+), 3 deletions(-)
 > 
-> I'm actually not 100% sure we strictly would need to care.
+> Looks good.
 > 
-> Once we've faulted in a private file mapping page, that page is
-> "ours". That's kind of what MAP_PRIVATE means.
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
-> If we haven't written to it, we do keep things coherent with the file,
-> but that's actually not required by POSIX afaik - it's a QoI issue,
-> and a lot of (bad) Unixes didn't do it at all.
-> So as long as truncate _clears_ the pages it truncates, I think we'd
-> actually be ok.
 
-We don't even need to do that ...
+Hi,
 
-"If the size of the mapped file changes after the call to mmap()
-as a result of some other operation on the mapped file, the effect of
-references to portions of the mapped region that correspond to added or
-removed portions of the file is unspecified."
+As discussed in [1], this patch is the basis of another one. Could I
+submit the second patch now to change the DCACHE_DONTCACHE behavior or I
+have to wait for this patch to be merged.
 
-https://pubs.opengroup.org/onlinepubs/9699919799/functions/mmap.html
+[1]: https://lkml.org/lkml/2020/8/30/360
 
-As you say, there's a QoI here, and POSIX permits some shockingly
-bad and useless implementations.
+Thanks,
+Hao Li
+
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> 
+
+
