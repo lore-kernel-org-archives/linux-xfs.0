@@ -2,154 +2,112 @@ Return-Path: <SRS0=chL6=C7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E71C4363D
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 16:42:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97934C4727C
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 17:05:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B18C4205CB
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 16:42:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28E5C207C3
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 17:05:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rQzkegp+"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XEoWL0Et"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726589AbgIVQmW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Sep 2020 12:42:22 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:59780 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726578AbgIVQmW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Sep 2020 12:42:22 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08MGdFOT092375;
-        Tue, 22 Sep 2020 16:42:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=RWXckNgSGK5YoxeMmJEHvGgb68wKDl8qPkkYro8lFgM=;
- b=rQzkegp+baavaPaUSuT68ha4P/PusEln8doWr+8h7DV+LUSqdxv9YbsqgSx/qj4bMSIx
- AJ8FCeTgBr0bEiWc/wZ3ZKLqDoGtSzfs2vBeA9xEPFvQc0FX9NMIYagWScdURyYaGYPR
- 3h+9qlQMuDnZ02rCq+3/7oHhWh8G7OjIVVHBRHcNaZLjUggog6ycySklYb2HUe/9gxfx
- zNv6wzkgLWSe8X82jFN2uiM//F2ZvD8ILN+GQqD4JUXKze7L+EQPvAm1GjwN4Rryhf2A
- MbsJaJe+0RbuoRgxB3gS8WCHngvObJuC5c+1yCrDH5a6wJls3Wb9slaEGL2X14YSAqD5 7w== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 33q5rgc90k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 22 Sep 2020 16:42:18 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08MGZNoN016430;
-        Tue, 22 Sep 2020 16:40:17 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 33nuwynksq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Sep 2020 16:40:17 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08MGeGqS016384;
-        Tue, 22 Sep 2020 16:40:16 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Sep 2020 09:40:15 -0700
-Date:   Tue, 22 Sep 2020 09:40:14 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: drop the obsolete comment on filestream locking
-Message-ID: <20200922164014.GK7955@magnolia>
-References: <20200922034249.20549-1-hsiangkao.ref@aol.com>
- <20200922034249.20549-1-hsiangkao@aol.com>
- <20200922044428.GA4284@xiangao.remote.csb>
- <20200922160328.GG7955@magnolia>
- <20200922162328.GA1077@xiangao.remote.csb>
+        id S1726721AbgIVRFa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Sep 2020 13:05:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33594 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726583AbgIVRFa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Sep 2020 13:05:30 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FAFEC061755;
+        Tue, 22 Sep 2020 10:05:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=ofr4ycOkQnFAciMKQaMH/OLH5o4G6m4xVeFOeH1Pf8k=; b=XEoWL0EtfRYmAwbOKKCLbqyj3d
+        aad4hP2RYYM35/Qd3cvIrLQjfc4bFUJ40ZYOCm36Y6MPZbQlM10p98SR2XAm0SC2oy65LLGSRgOhs
+        e/iB335z/XX20W6Ju5qOm0WNQ3qRY9ba6/lrjphBDsd9+xJpkXgTGygfFM6l3AStrXFnQh5EMLRvC
+        U4m+HyXSumF8/K5QlgI080CHAa4pBfYrvU4WWR+yEAtWyqDmzOOmlCVIGgwrVyXyFgyXcU9Ca2uOA
+        i7lBTg4mLyjU2cA7xKE+3bIQCBBXhOUzFNTozSiySeeCZJTTdIakYj0tCW9GKj0ZXSo9CFg+/WNZN
+        vR6PNQDA==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kKljK-0002Na-Gp; Tue, 22 Sep 2020 17:05:26 +0000
+Date:   Tue, 22 Sep 2020 18:05:26 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Qian Cai <cai@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Dave Chinner <dchinner@redhat.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-next@vger.kernel.org
+Subject: Re: [PATCH v2 5/9] iomap: Support arbitrarily many blocks per page
+Message-ID: <20200922170526.GK32101@casper.infradead.org>
+References: <20200910234707.5504-1-willy@infradead.org>
+ <20200910234707.5504-6-willy@infradead.org>
+ <163f852ba12fd9de5dec7c4a2d6b6c7cdb379ebc.camel@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200922162328.GA1077@xiangao.remote.csb>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9752 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 adultscore=0
- bulkscore=0 mlxlogscore=999 phishscore=0 suspectscore=1 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009220127
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9752 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 impostorscore=0
- clxscore=1015 suspectscore=1 phishscore=0 malwarescore=0
- priorityscore=1501 mlxlogscore=999 adultscore=0 bulkscore=0 mlxscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009220128
+In-Reply-To: <163f852ba12fd9de5dec7c4a2d6b6c7cdb379ebc.camel@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 23, 2020 at 12:23:28AM +0800, Gao Xiang wrote:
-> Hi Darrick,
-> 
-> On Tue, Sep 22, 2020 at 09:03:28AM -0700, Darrick J. Wong wrote:
-> > On Tue, Sep 22, 2020 at 12:44:28PM +0800, Gao Xiang wrote:
-> > > On Tue, Sep 22, 2020 at 11:42:49AM +0800, Gao Xiang wrote:
-> > > > From: Gao Xiang <hsiangkao@redhat.com>
-> > > > 
-> > > > Since commit 1c1c6ebcf52 ("xfs: Replace per-ag array with a radix
-> > > > tree"), there is no m_peraglock anymore, so it's hard to understand
-> > > > the described situation since per-ag is no longer an array and no
-> > > > need to reallocate, call xfs_filestream_flush() in growfs.
-> > > > 
-> > > > In addition, the race condition for shrink feature is quite confusing
-> > > > to me currently as well. Get rid of it instead.
-> > > > 
-> > > 
-> > > (Add some words) I think I understand what the race condition could mean
-> > > after shrink fs is landed then, but the main point for now is inconsistent
-> > > between code and comment, and there is no infrastructure on shrinkfs so
-> > > when shrink fs is landed, the locking rule on filestream should be refined
-> > > or redesigned and xfs_filestream_flush() for shrinkfs which was once
-> > > deleted by 1c1c6ebcf52 might be restored to drain out in-flight
-> > > xfs_fstrm_item for these shrink AGs then.
-> > > 
-> > > From the current code logic, the comment has no use and has been outdated
-> > > for years. Keep up with the code would be better IMO to save time.
+On Tue, Sep 22, 2020 at 12:23:45PM -0400, Qian Cai wrote:
+> On Fri, 2020-09-11 at 00:47 +0100, Matthew Wilcox (Oracle) wrote:
+> > Size the uptodate array dynamically to support larger pages in the
+> > page cache.  With a 64kB page, we're only saving 8 bytes per page today,
+> > but with a 2MB maximum page size, we'd have to allocate more than 4kB
+> > per page.  Add a few debugging assertions.
 > > 
-> > Not being familiar with the filestream code at all, I wonder, what
-> > replaced all that stuff?  Does that need a comment?  I can't really tell
-> > at a quick glance what coordinates growfs with filestreams.
+> > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > 
-> (try to cc Dave...)
+> Some syscall fuzzing will trigger this on powerpc:
 > 
-> I'm not quite familiar with filestream as well. After several days random
-> glance about the constraint of shrink feature in XFS, I found such comment
-> and try to understand such constraint.
+> .config: https://gitlab.com/cailca/linux-mm/-/blob/master/powerpc.config
 > 
-> Finally, I think it was useful only when perag was once an array and need
-> to be reallocated (before 1c1c6ebcf52). So need to close the race by the
-> m_peraglock (which is now deleted) and drain out in-flight AG filestream
-> by xfs_filestream_flush() in growfs code (I think due to pag array
-> reallocation). 
-> 
-> For now, m_peraglock and xfs_filestream_flush() in xfs_growfs_data_private()
-> no longer exist... and we don't need to reallocate perag array but rather
-> to use radix tree instead.
+> [ 8805.895344][T445431] WARNING: CPU: 61 PID: 445431 at fs/iomap/buffered-io.c:78 iomap_page_release+0x250/0x270
 
-Yeah.  I guess you could shrink the comment to warn that any code
-wanting to /remove/ an AG would need to be careful of the racy sequence
-outlined in the three bullet points.  OTOH others have argued against
-leaving comments that describe features we don't support.
+Well, I'm glad it triggered.  That warning is:
+        WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
+                        PageUptodate(page));
+so there was definitely a problem of some kind.
 
-But maybe it's better just to kill the whole comment like you proposed?
+truncate_cleanup_page() calls
+do_invalidatepage() calls
+iomap_invalidatepage() calls
+iomap_page_release()
 
-> but IMO, shrink an AG might need to restore to drain in-flight filestream,
-> I couldn't tell much more of it... Overall, the current comment is quite
-> confusing. I'd suggest it'd be better with some more reasonable comment
-> about this at least...
+Is this the first warning?  I'm wondering if maybe there was an I/O error
+earlier which caused PageUptodate to get cleared again.  If it's easy to
+reproduce, perhaps you could try something like this?
 
-Yes, you have to drain /all/ the incore state that pertains to an AG if
-you're going to remove the AG.
++void dump_iomap_page(struct page *page, const char *reason)
++{
++       struct iomap_page *iop = to_iomap_page(page);
++       unsigned int nr_blocks = i_blocks_per_page(page->mapping->host, page);
++
++       dump_page(page, reason);
++       if (iop)
++               printk("iop:reads %d writes %d uptodate %*pb\n",
++                               atomic_read(&iop->read_bytes_pending),
++                               atomic_read(&iop->write_bytes_pending),
++                               nr_blocks, iop->uptodate);
++       else
++               printk("iop:none\n");
++}
 
---D
+and then do something like:
 
-> 
-> Thanks,
-> Gao Xiang
-> 
-> > 
-> > --D
-> > 
-> 
+	if (bitmap_full(iop->uptodate, nr_blocks) != PageUptodate(page))
+		dump_iomap_page(page, NULL);
+
