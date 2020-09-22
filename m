@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16B80C4727E
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 09:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C21AC2D0E2
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 09:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7EB82399A
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 09:04:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E75D1208A9
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Sep 2020 09:04:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="np7G+7HS"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Kt3uwQHH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbgIVJEK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Sep 2020 05:04:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43958 "EHLO
+        id S1726550AbgIVJEL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Sep 2020 05:04:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43964 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726419AbgIVJEK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Sep 2020 05:04:10 -0400
+        with ESMTP id S1726419AbgIVJEL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Sep 2020 05:04:11 -0400
 Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFBBDC061755
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 02:04:09 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id n14so11831058pff.6
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 02:04:09 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4C095C061755
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 02:04:11 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id x22so7022639pfo.12
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 02:04:11 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=FYKn1wb5Rdr878OjtibLJ6tDsyGCAsfjF8Yre3B8Cgk=;
-        b=np7G+7HSDRQVLgDOjpG7/lsipwVOcUz9AMBNd7dje5HHbqJGLT+UvZxd+a5Isjcup5
-         ZISathE4YPvSdR/zXl8SvsPgKIIcLFLUm7kEIV1vbVu7Bkpg7dTr2kFlZ/deUuZRp68Q
-         hzoGAYUSfh1EgWcaKyJ4JGGnRk6g9Ic/oHO8N2hFLQNTdXcgjF7grGe7J58UssqMKWjY
-         mGX6yTSmqFDs2oVwi99iN/b+TlyAMVwP6glteUusMG3CAb+qaTPKy9gnfBftNEMGuYZq
-         2h7HlmQBKAJih336AbN+0QyGlnuIQOca2QFPTM08bQ/CgAO1usInKsfEgMTsbMJjDBiS
-         Y43g==
+        bh=y18WvJEOlPyfpfV/6wUNCzQGVi+rt2nPZiBys+U4QAg=;
+        b=Kt3uwQHHXfjGUzMN7H1z4VR1EIZvUQrII5QuTRWCdU6VnlWHrBQzHmmT+45VmPC5JP
+         8Me2gL66IdmY/4+aQ7rwBb4pGXQ0jzz3qeN6/i5VctAo0GNI+HZXgy2fSIOURYWpMg1k
+         J1d/+/l6rhcdicDnJ1Ri37WqLMyhdGbz+dyF1KqMHwp/1Gv6LVy5g1hXgp6Vmwrcggu6
+         IieO9vy6TLz89Adlri+ATT1IajaX4R/1+DaozKirvcWJTxx6ngPKDacW9Puj+jAkomEF
+         Ggh0UZw44ZF4Gce6W/fr4oOE/2lUtj4+L19YbApmqcKRf8JXEy424Sf8HGl3MfKYAwcH
+         s0Mw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=FYKn1wb5Rdr878OjtibLJ6tDsyGCAsfjF8Yre3B8Cgk=;
-        b=fJmMUL2d8Sc6Im8GX+zr64FBs4II2dLuz2w2fGR1XN8OEzPaMpZs/0F+oEYlhn1uco
-         hf2RQQsqunNnURdEqikyhM8IRy+NLY4QSc2FVJnTeGtnOu8pSoHJL2j56hi0Ii/ddNRV
-         CRsCBGUXBmwsB56isR6BGm60UGII6WiOLkO6tDNtKP+lbNiN1/o5DLsA6SpWfclesPbl
-         LQjIcqbIWZhxpIX2rsS8WAwgM5p40nNCtwe/USbbai0XmKyeYFxQYjYi0Rfvms8U6ra/
-         5sUJcvSWHk2zfjdc+68DbBTXpe1jwtdDC4B6XapTugMPsgWuK3jD8fCpFt45Z8yrz2fl
-         bDcw==
-X-Gm-Message-State: AOAM530REB9bqDUTnfgF7so3GZTSXCHh4YrovQAvTE0rUTJPdoM+RK4w
-        RYXzl4wKsPXzg6VVG0suaOu6UpP9Bg==
-X-Google-Smtp-Source: ABdhPJzpenrNr2DQjSWEGBMCgO5wuzYBu8KkO+VxSzCoyQkzUnYdoPb84fP1wqCISHAwVHUzHatmtQ==
-X-Received: by 2002:a17:902:7281:b029:d2:2a0b:f050 with SMTP id d1-20020a1709027281b02900d22a0bf050mr3776802pll.42.1600765449219;
-        Tue, 22 Sep 2020 02:04:09 -0700 (PDT)
+        bh=y18WvJEOlPyfpfV/6wUNCzQGVi+rt2nPZiBys+U4QAg=;
+        b=Se0eBh0ZM6dM/5WSnNQRsMEfa+RBZ9/JaoYaHsB6Cz0Z+eWld3T4gJ4S+83a2+Cp74
+         MJqsUeWMWksI+ZV8WDmWY0xhKj0jLdpXUae1NkYuq06ypi+MOIdZXU7XSS9dczRA6ffs
+         fiPFWbXacgDjp42DTVFZsFjgriHvElb/R70lBum7r68fgU9j40Z+0KR7ZtsPXJfo22d3
+         VaSWTXShqRRO5/hWFWNVd9A2b1mhteQvb4IhmTKGQnXVB14nKIEOlh8M65eBnIUNbETl
+         tvVJPp7gH/3BkS3BsHFCM6sJQkf2PlXT/VOvUztD2ObDIX9OL4Eoq5JdVU2UAHK3WVui
+         e1xQ==
+X-Gm-Message-State: AOAM533MKwFJNiZFNMcc0rYzMHtTvoqmYqEsYC5wbR5bl9Z4mx+ASg6t
+        43iars889q7r2uZvS8kXYJdgvPTzAg==
+X-Google-Smtp-Source: ABdhPJw8NvdjiQyxT+o8lqRIfM0TiyJl0WR963AbPyoyr6KO6OsdXpgmhzk0SuEofy8YfAZ7xhOv8w==
+X-Received: by 2002:a17:902:e9d1:b029:d2:221f:9970 with SMTP id 17-20020a170902e9d1b02900d2221f9970mr3711881plk.5.1600765450541;
+        Tue, 22 Sep 2020 02:04:10 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id h8sm13815653pfk.19.2020.09.22.02.04.08
+        by smtp.gmail.com with ESMTPSA id h8sm13815653pfk.19.2020.09.22.02.04.09
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 22 Sep 2020 02:04:08 -0700 (PDT)
+        Tue, 22 Sep 2020 02:04:09 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH 1/3] xfs: directly return if the delta equal to zero
-Date:   Tue, 22 Sep 2020 17:04:00 +0800
-Message-Id: <1600765442-12146-2-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH 2/3] xfs: remove the unused parameter id from xfs_qm_dqattach_one
+Date:   Tue, 22 Sep 2020 17:04:01 +0800
+Message-Id: <1600765442-12146-3-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1600765442-12146-1-git-send-email-kaixuxia@tencent.com>
 References: <1600765442-12146-1-git-send-email-kaixuxia@tencent.com>
@@ -73,44 +73,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-It is useless to go on when the variable delta equal to zero in
-xfs_trans_mod_dquot(), so just return if the value equal to zero.
+Since we never use the second parameter id, so remove it from
+xfs_qm_dqattach_one() function.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 ---
- fs/xfs/xfs_trans_dquot.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_qm.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 133fc6fc3edd..23c34af71825 100644
---- a/fs/xfs/xfs_trans_dquot.c
-+++ b/fs/xfs/xfs_trans_dquot.c
-@@ -215,10 +215,11 @@ xfs_trans_mod_dquot(
- 	if (qtrx->qt_dquot == NULL)
- 		qtrx->qt_dquot = dqp;
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 41a459ffd1f2..44509decb4cd 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -249,7 +249,6 @@ xfs_qm_unmount_quotas(
+ STATIC int
+ xfs_qm_dqattach_one(
+ 	struct xfs_inode	*ip,
+-	xfs_dqid_t		id,
+ 	xfs_dqtype_t		type,
+ 	bool			doalloc,
+ 	struct xfs_dquot	**IO_idqpp)
+@@ -330,23 +329,23 @@ xfs_qm_dqattach_locked(
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
  
--	if (delta) {
--		trace_xfs_trans_mod_dquot_before(qtrx);
--		trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
--	}
-+	if (!delta)
-+		return;
-+
-+	trace_xfs_trans_mod_dquot_before(qtrx);
-+	trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
- 
- 	switch (field) {
- 
-@@ -284,8 +285,7 @@ xfs_trans_mod_dquot(
- 		ASSERT(0);
+ 	if (XFS_IS_UQUOTA_ON(mp) && !ip->i_udquot) {
+-		error = xfs_qm_dqattach_one(ip, i_uid_read(VFS_I(ip)),
+-				XFS_DQTYPE_USER, doalloc, &ip->i_udquot);
++		error = xfs_qm_dqattach_one(ip, XFS_DQTYPE_USER,
++				doalloc, &ip->i_udquot);
+ 		if (error)
+ 			goto done;
+ 		ASSERT(ip->i_udquot);
  	}
  
--	if (delta)
--		trace_xfs_trans_mod_dquot_after(qtrx);
-+	trace_xfs_trans_mod_dquot_after(qtrx);
+ 	if (XFS_IS_GQUOTA_ON(mp) && !ip->i_gdquot) {
+-		error = xfs_qm_dqattach_one(ip, i_gid_read(VFS_I(ip)),
+-				XFS_DQTYPE_GROUP, doalloc, &ip->i_gdquot);
++		error = xfs_qm_dqattach_one(ip, XFS_DQTYPE_GROUP,
++				doalloc, &ip->i_gdquot);
+ 		if (error)
+ 			goto done;
+ 		ASSERT(ip->i_gdquot);
+ 	}
  
- 	tp->t_flags |= XFS_TRANS_DQ_DIRTY;
- }
+ 	if (XFS_IS_PQUOTA_ON(mp) && !ip->i_pdquot) {
+-		error = xfs_qm_dqattach_one(ip, ip->i_d.di_projid, XFS_DQTYPE_PROJ,
++		error = xfs_qm_dqattach_one(ip, XFS_DQTYPE_PROJ,
+ 				doalloc, &ip->i_pdquot);
+ 		if (error)
+ 			goto done;
 -- 
 2.20.0
 
