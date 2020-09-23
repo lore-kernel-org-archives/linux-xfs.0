@@ -5,161 +5,123 @@ X-Spam-Level:
 X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 958CBC2D0A8
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 13:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B22C4727E
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 15:22:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27EA8206A5
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 13:27:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F9462311E
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 15:22:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LQe0BEtu"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Bq+Kt9yV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726504AbgIWN14 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Sep 2020 09:27:56 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60530 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726130AbgIWN14 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 09:27:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600867674;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cfJO7QBfHNb2p/zdp9MumFFuLHDaH4p9Bg1Gpz3pHG0=;
-        b=LQe0BEtu6+lVBciaWrsOGMdtstlTIzjcWFHVV8aNrAbVJtwskymrumqr5SNXpU9dCSe3C1
-        n4oxAvsvWqPzxVEHdUE806SUTrgaPbi8p0ucThnKMmvEoMq+VORTVby5y0zZSWFIn6yWZP
-        fGFBqRT2CUeFDjLvtrpo0Vji+IDnIcg=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-98-s0x8wxDeOY25Bnen_sAVnQ-1; Wed, 23 Sep 2020 09:27:50 -0400
-X-MC-Unique: s0x8wxDeOY25Bnen_sAVnQ-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A2B3918B9F4F;
-        Wed, 23 Sep 2020 13:27:48 +0000 (UTC)
-Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E0F8B73682;
-        Wed, 23 Sep 2020 13:27:46 +0000 (UTC)
-Date:   Wed, 23 Sep 2020 09:27:45 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     kaixuxia <xiakaixu1987@gmail.com>
-Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        Kaixu Xia <kaixuxia@tencent.com>
-Subject: Re: [PATCH 1/3] xfs: directly return if the delta equal to zero
-Message-ID: <20200923132745.GA2228661@bfoster>
-References: <1600765442-12146-1-git-send-email-kaixuxia@tencent.com>
- <1600765442-12146-2-git-send-email-kaixuxia@tencent.com>
- <20200922174347.GG2175303@bfoster>
- <2818363e-a860-99e4-5b55-9721abb5058a@gmail.com>
+        id S1726613AbgIWPWP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Sep 2020 11:22:15 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:52378 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726156AbgIWPWP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 11:22:15 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08NF9YBl045538;
+        Wed, 23 Sep 2020 15:22:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=MXtcF3791Qw1VCXrTO6dgvWjxaDevmtB2HplVFV7sL4=;
+ b=Bq+Kt9yVobZU/nSYVTekXH9WA+kzE1+zXhfsQleBRM78mdXIq+ro9tsnFjFvxx4Slois
+ gS8KNBpHvTX75gWW5qotFFfEAUm8m3r+/NYMGKnpnfGFIEPAXGNdyp2Lcltve0s7xdGo
+ ZtuLXYZDIktK3ji1lJDlp+Hh/G2Tzp5LVXLeJeBlc79WUsayJ9UZQ4386IGxMqCtYEP8
+ 2kP9OJZ3R/HRGQVKJAlNdZzdvdhA2+uCGvVF7CGjsZPArH3d3IEXtM66UCxiHHXDGzBQ
+ w2wIRp76JULWrjCsojcNNST+/NhpUtA7LDzxMCdvxUPdVUkgBGCc0/XYJtsiPpwNAP4j Fw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 33qcpu0227-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 23 Sep 2020 15:22:11 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08NF5QIZ118421;
+        Wed, 23 Sep 2020 15:22:10 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 33nux1ac4y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 23 Sep 2020 15:22:10 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08NFM7WU017549;
+        Wed, 23 Sep 2020 15:22:08 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 23 Sep 2020 08:22:07 -0700
+Date:   Wed, 23 Sep 2020 08:22:06 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 1/3] xfs: clean up bmap intent item recovery checking
+Message-ID: <20200923152206.GL7955@magnolia>
+References: <160031336397.3624582.9639363323333392474.stgit@magnolia>
+ <160031337029.3624582.3821482653073391016.stgit@magnolia>
+ <20200923071614.GA29203@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <2818363e-a860-99e4-5b55-9721abb5058a@gmail.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <20200923071614.GA29203@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 adultscore=0
+ bulkscore=0 mlxlogscore=999 phishscore=0 suspectscore=1 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009230123
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxlogscore=999
+ adultscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0 priorityscore=1501
+ phishscore=0 spamscore=0 malwarescore=0 clxscore=1015 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009230123
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 23, 2020 at 10:42:10AM +0800, kaixuxia wrote:
-> 
-> 
-> On 2020/9/23 1:43, Brian Foster wrote:
-> > On Tue, Sep 22, 2020 at 05:04:00PM +0800, xiakaixu1987@gmail.com wrote:
-> >> From: Kaixu Xia <kaixuxia@tencent.com>
-> >>
-> >> It is useless to go on when the variable delta equal to zero in
-> >> xfs_trans_mod_dquot(), so just return if the value equal to zero.
-> >>
-> >> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
-> >> ---
-> >>  fs/xfs/xfs_trans_dquot.c | 12 ++++++------
-> >>  1 file changed, 6 insertions(+), 6 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> >> index 133fc6fc3edd..23c34af71825 100644
-> >> --- a/fs/xfs/xfs_trans_dquot.c
-> >> +++ b/fs/xfs/xfs_trans_dquot.c
-> >> @@ -215,10 +215,11 @@ xfs_trans_mod_dquot(
-> >>  	if (qtrx->qt_dquot == NULL)
-> >>  		qtrx->qt_dquot = dqp;
-> >>  
-> >> -	if (delta) {
-> >> -		trace_xfs_trans_mod_dquot_before(qtrx);
-> >> -		trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
-> >> -	}
-> >> +	if (!delta)
-> >> +		return;
-> >> +
+On Wed, Sep 23, 2020 at 08:16:14AM +0100, Christoph Hellwig wrote:
+> On Wed, Sep 16, 2020 at 08:29:30PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > The bmap intent item checking code in xfs_bui_item_recover is spread all
+> > over the function.  We should check the recovered log item at the top
+> > before we allocate any resources or do anything else, so do that.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_bmap_item.c |   57 ++++++++++++++++--------------------------------
+> >  1 file changed, 19 insertions(+), 38 deletions(-)
 > > 
 > > 
-> > This does slightly change behavior in that this function currently
-> > unconditionally results in logging the associated dquot in the
-> > transaction. I'm not sure anything really depends on that with a delta
-> > == 0, but it might be worth documenting in the commit log.
-> >> Also, it does seem a little odd to bail out after we've potentially
-> > allocated ->t_dqinfo as well as assigned the current dquot a slot in the
-> > transaction. I think that means the effect of this change is lost if
-> > another dquot happens to be modified (with delta != 0) in the same
-> > transaction (which might also be an odd thing to do).
-> >
-> Since the dquot value doesn't changes if the delta == 0, we shouldn't
-> set the XFS_TRANS_DQ_DIRTY flag to current transaction. Maybe we should
-> do the judgement at the beginning of the function, we will do nothing if
-> the delta == 0. Just like this,
+> > diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> > index 0a0904a7650a..877afe76d76a 100644
+> > --- a/fs/xfs/xfs_bmap_item.c
+> > +++ b/fs/xfs/xfs_bmap_item.c
+> > @@ -437,17 +437,13 @@ xfs_bui_item_recover(
+> >  	xfs_fsblock_t			inode_fsb;
+> >  	xfs_filblks_t			count;
+> >  	xfs_exntst_t			state;
+> > -	enum xfs_bmap_intent_type	type;
+> > -	bool				op_ok;
+> >  	unsigned int			bui_type;
+> >  	int				whichfork;
+> >  	int				error = 0;
+> >  
+> >  	/* Only one mapping operation per BUI... */
+> > -	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS) {
+> > -		xfs_bui_release(buip);
+> > -		return -EFSCORRUPTED;
+> > -	}
+> > +	if (buip->bui_format.bui_nextents != XFS_BUI_MAX_FAST_EXTENTS)
+> > +		goto garbage;
 > 
->  xfs_trans_mod_dquot(
->  {
->    ...
->    if (!delta)
->      return;
->    if (tp->t_dqinfo == NULL)
->      xfs_trans_alloc_dqinfo(tp);
->    ...
->  }
-> 
-> I'm not sure...What's your opinion about that?
-> 
+> We don't really need the xfs_bui_release any more, and can stick to
+> plain "return -EFSCORRUPTED" instead of the goto, but I suspect the
+> previous patch has taken care of that and you've rebased already?
 
-Yes, I think that makes more sense than bailing out after at least.
-Otherwise if some other path sets XFS_TRANS_DQ_DIRTY, then this dquot is
-still associated with the transaction. I'm not sure that's currently
-possible, but it's an odd wart where the current code is at least
-readable/predictable. That said, note again that this changes behavior,
-so it's not quite sufficient for the commit log description to just say
-bail out early since delta is zero. That much is obvious from the code
-change. We need to audit the behavior change and provide a few sentences
-in the commit log description to explain why it is safe.
+Yep.
 
-Brian
+--D
 
-> Thanks,
-> Kaixu
+> Otherwise looks good:
 > 
-> > Brian
-> > 
-> >> +	trace_xfs_trans_mod_dquot_before(qtrx);
-> >> +	trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
-> >>  
-> >>  	switch (field) {
-> >>  
-> >> @@ -284,8 +285,7 @@ xfs_trans_mod_dquot(
-> >>  		ASSERT(0);
-> >>  	}
-> >>  
-> >> -	if (delta)
-> >> -		trace_xfs_trans_mod_dquot_after(qtrx);
-> >> +	trace_xfs_trans_mod_dquot_after(qtrx);
-> >>  
-> >>  	tp->t_flags |= XFS_TRANS_DQ_DIRTY;
-> >>  }
-> >> -- 
-> >> 2.20.0
-> >>
-> > 
-> 
-> -- 
-> kaixuxia
-> 
-
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
