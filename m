@@ -2,202 +2,115 @@ Return-Path: <SRS0=WPjR=DA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E10EFC2D0A8
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 18:59:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D9D7C4727E
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 22:35:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56749208B6
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 18:59:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 377EC214F1
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 22:35:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cl5OSFuY"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hcRVGW27"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726498AbgIWS7t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Sep 2020 14:59:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47064 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726460AbgIWS7t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 14:59:49 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E523C0613CE;
-        Wed, 23 Sep 2020 11:59:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=b12w9z8RoIzPGMOQMxwodI4Kd4EF2wwwEX9LyxbU+y4=; b=cl5OSFuYx3vieMBKbrWE/ACaAE
-        CBUeAT6PAykw9YYgMc5EI3LD/veQ7+97jrdN3dUfffrQwgBTnJMyg93d/S/QkOqn0VWhNJnyn5XLz
-        6LuISIjyFdzgpJ6Y5fzL+fGIcofF29n/0SLI89FOsPmp1YVMVH1yb8yRB90yvzctdfCEMlaMwrPST
-        8rSvKGxuuZqNcN065x5TQL0b5oyELV9bAM7JQXRFdoMQc9wlSOj1Tl5OWJfr0gi6yR4ojkNZKqQV7
-        tq35ZEsC4/bsabwdyIjIUhSJeCwL0cbLDkrNp7NRHqwr5xVWamY8DJ31/Pz3F4JsOwSUV6O4msNBn
-        6pdz+R/Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kL9zU-00052r-Kb; Wed, 23 Sep 2020 18:59:44 +0000
-Date:   Wed, 23 Sep 2020 19:59:44 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
-        Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Dave Chinner <dchinner@redhat.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        linux-next@vger.kernel.org
-Subject: Re: [PATCH v2 5/9] iomap: Support arbitrarily many blocks per page
-Message-ID: <20200923185944.GQ32101@casper.infradead.org>
-References: <20200910234707.5504-1-willy@infradead.org>
- <20200910234707.5504-6-willy@infradead.org>
- <163f852ba12fd9de5dec7c4a2d6b6c7cdb379ebc.camel@redhat.com>
- <20200922170526.GK32101@casper.infradead.org>
- <95bd1230f2fcf01f690770eb77696862b8fb607b.camel@redhat.com>
- <20200923024859.GM32101@casper.infradead.org>
- <20200923050001.GE7949@magnolia>
+        id S1726460AbgIWWfu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Sep 2020 18:35:50 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:55275 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726265AbgIWWfu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 18:35:50 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600900548;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=9kI0qB1hfh6tsiKhjRK0SM2DkDO7brKW16bjChfU0AQ=;
+        b=hcRVGW273VQnR+T9V2wzf5HJpDo3eL8u7YXOiiYBIaiJBdUK+wxEAzXzdL2uh887JYIuqA
+        C1kcrW6WEQ+cHiHURSh5v8Kc7BANvwgKCz3fmsEh2Fsr9VgpOHaHqczh8CncNXWv0eKhop
+        OrYkb738PiIp8DEsfcMFVcYLOARoWBc=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-150-k5B2v6ekMraZ4A_FfY76mg-1; Wed, 23 Sep 2020 18:35:46 -0400
+X-MC-Unique: k5B2v6ekMraZ4A_FfY76mg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 198F0800135;
+        Wed, 23 Sep 2020 22:35:45 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C0E2119D7C;
+        Wed, 23 Sep 2020 22:35:44 +0000 (UTC)
+From:   Eric Sandeen <sandeen@redhat.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH STABLE] xfs: trim IO to found COW exent limit
+Message-ID: <e7fe7225-4f2b-d13e-bb4b-c7db68f63124@redhat.com>
+Date:   Wed, 23 Sep 2020 17:35:44 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200923050001.GE7949@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 22, 2020 at 10:00:01PM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 23, 2020 at 03:48:59AM +0100, Matthew Wilcox wrote:
-> > On Tue, Sep 22, 2020 at 09:06:03PM -0400, Qian Cai wrote:
-> > > On Tue, 2020-09-22 at 18:05 +0100, Matthew Wilcox wrote:
-> > > > On Tue, Sep 22, 2020 at 12:23:45PM -0400, Qian Cai wrote:
-> > > > > On Fri, 2020-09-11 at 00:47 +0100, Matthew Wilcox (Oracle) wrote:
-> > > > > > Size the uptodate array dynamically to support larger pages in the
-> > > > > > page cache.  With a 64kB page, we're only saving 8 bytes per page today,
-> > > > > > but with a 2MB maximum page size, we'd have to allocate more than 4kB
-> > > > > > per page.  Add a few debugging assertions.
-> > > > > > 
-> > > > > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > > > > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > > > > 
-> > > > > Some syscall fuzzing will trigger this on powerpc:
-> > > > > 
-> > > > > .config: https://gitlab.com/cailca/linux-mm/-/blob/master/powerpc.config
-> > > > > 
-> > > > > [ 8805.895344][T445431] WARNING: CPU: 61 PID: 445431 at fs/iomap/buffered-
-> > > > > io.c:78 iomap_page_release+0x250/0x270
-> > > > 
-> > > > Well, I'm glad it triggered.  That warning is:
-> > > >         WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
-> > > >                         PageUptodate(page));
-> > > > so there was definitely a problem of some kind.
-> > > > 
-> > > > truncate_cleanup_page() calls
-> > > > do_invalidatepage() calls
-> > > > iomap_invalidatepage() calls
-> > > > iomap_page_release()
-> > > > 
-> > > > Is this the first warning?  I'm wondering if maybe there was an I/O error
-> > > > earlier which caused PageUptodate to get cleared again.  If it's easy to
-> > > > reproduce, perhaps you could try something like this?
-> > > > 
-> > > > +void dump_iomap_page(struct page *page, const char *reason)
-> > > > +{
-> > > > +       struct iomap_page *iop = to_iomap_page(page);
-> > > > +       unsigned int nr_blocks = i_blocks_per_page(page->mapping->host, page);
-> > > > +
-> > > > +       dump_page(page, reason);
-> > > > +       if (iop)
-> > > > +               printk("iop:reads %d writes %d uptodate %*pb\n",
-> > > > +                               atomic_read(&iop->read_bytes_pending),
-> > > > +                               atomic_read(&iop->write_bytes_pending),
-> > > > +                               nr_blocks, iop->uptodate);
-> > > > +       else
-> > > > +               printk("iop:none\n");
-> > > > +}
-> > > > 
-> > > > and then do something like:
-> > > > 
-> > > > 	if (bitmap_full(iop->uptodate, nr_blocks) != PageUptodate(page))
-> > > > 		dump_iomap_page(page, NULL);
-> > > 
-> > > This:
-> > > 
-> > > [ 1683.158254][T164965] page:000000004a6c16cd refcount:2 mapcount:0 mapping:00000000ea017dc5 index:0x2 pfn:0xc365c
-> > > [ 1683.158311][T164965] aops:xfs_address_space_operations ino:417b7e7 dentry name:"trinity-testfile2"
-> > > [ 1683.158354][T164965] flags: 0x7fff8000000015(locked|uptodate|lru)
-> > > [ 1683.158392][T164965] raw: 007fff8000000015 c00c0000019c4b08 c00c0000019a53c8 c000201c8362c1e8
-> > > [ 1683.158430][T164965] raw: 0000000000000002 0000000000000000 00000002ffffffff c000201c54db4000
-> > > [ 1683.158470][T164965] page->mem_cgroup:c000201c54db4000
-> > > [ 1683.158506][T164965] iop:none
-> > 
-> > Oh, I'm a fool.  This is after the call to detach_page_private() so
-> > page->private is NULL and we don't get the iop dumped.
-> > 
-> > Nevertheless, this is interesting.  Somehow, the page is marked Uptodate,
-> > but the bitmap is deemed not full.  There are three places where we set
-> > an iomap page Uptodate:
-> > 
-> > 1.      if (bitmap_full(iop->uptodate, i_blocks_per_page(inode, page)))
-> >                 SetPageUptodate(page);
-> > 
-> > 2.      if (page_has_private(page))
-> >                 iomap_iop_set_range_uptodate(page, off, len);
-> >         else
-> >                 SetPageUptodate(page);
-> > 
-> > 3.      BUG_ON(page->index);
-> > ...
-> >         SetPageUptodate(page);
-> > 
-> > It can't be #2 because the page has an iop.  It can't be #3 because the
-> > page->index is not 0.  So at some point in the past, the bitmap was full.
-> > 
-> > I don't think it's possible for inode->i_blksize to change, and you
-> > aren't running with THPs, so it's definitely not possible for thp_size()
-> > to change.  So i_blocks_per_page() isn't going to change.
-> > 
-> > We seem to have allocated enough memory for ->iop because that's also
-> > based on i_blocks_per_page().
-> > 
-> > I'm out of ideas.  Maybe I'll wake up with a better idea in the morning.
-> > I've been trying to reproduce this on x86 with a 1kB block size
-> > filesystem, and haven't been able to yet.  Maybe I'll try to setup a
-> > powerpc cross-compilation environment tomorrow.
-> 
-> FWIW I managed to reproduce it with the following fstests configuration
-> on a 1k block size fs on a x86 machinE:
-> 
-> SECTION      -- -no-sections-
-> FSTYP        -- xfs
-> MKFS_OPTIONS --  -m reflink=1,rmapbt=1 -i sparse=1 -b size=1024
-> MOUNT_OPTIONS --  -o usrquota,grpquota,prjquota
-> HOST_OPTIONS -- local.config
-> CHECK_OPTIONS -- -g auto
-> XFS_MKFS_OPTIONS -- -bsize=4096
-> TIME_FACTOR  -- 1
-> LOAD_FACTOR  -- 1
-> TEST_DIR     -- /mnt
-> TEST_DEV     -- /dev/sde
-> SCRATCH_DEV  -- /dev/sdd
-> SCRATCH_MNT  -- /opt
-> OVL_UPPER    -- ovl-upper
-> OVL_LOWER    -- ovl-lower
-> OVL_WORK     -- ovl-work
-> KERNEL       -- 5.9.0-rc4-djw
+A bug existed in the XFS reflink code between v5.1 and v5.5 in which
+the mapping for a COW IO was not trimmed to the mapping of the COW
+extent that was found.  This resulted in a too-short copy, and
+corruption of other files which shared the original extent.
 
-It just survived another 3-hour run for me:
+(This happened only when extent size hints were set, which bypasses
+delalloc and led to this code path.)
 
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 bobo-kvm 5.9.0-rc4 #40 SMP Tue Sep 22 14:18:21 EDT 2020
-MKFS_OPTIONS  -- -f -m reflink=1,rmapbt=1 -i sparse=1 -b size=1024 /dev/sdc
-MOUNT_OPTIONS -- /dev/sdc /mnt/scratch
+This was (inadvertently) fixed upstream with
 
-The only warning I hit was in generic/019:
+36adcbace24e "xfs: fill out the srcmap in iomap_begin"
 
-0172 WARNING: CPU: 1 PID: 6933 at fs/iomap/buffered-io.c:997 iomap_page_mkwrite_actor+0x72/0x80
+and related patches which moved lots of this functionality to
+the iomap subsystem.
 
-which is the:
-                WARN_ON_ONCE(!PageUptodate(page));
-that happens as a result of the ClearPageUptodate() in iomap_writepage_map()
-which has been happening approximately forever.
+Hence, this is a -stable only patch, targeted to fix this
+corruption vector without other major code changes.
+
+Fixes: 78f0cc9d55cb ("xfs: don't use delalloc extents for COW on files with extsize hints")
+Cc: <stable@vger.kernel.org> # 5.4.x
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+I've tested this with a targeted reproducer (in next email) as well as
+with xfstests.
+
+Stable folk, not sure how to send a "stable only" patch, or if that's even
+valid.  Assuming you're willing to accept it, I would still like to have
+some formal Reviewed-by's from the xfs developer community before it gets
+merged.
+
+Big thanks to Darrick & Dave for letting me whine about this bug and
+offering suggestions for testing and ultimately, a patch to test.
+
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 06b9e0aacf54..3289d0f4bb03 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -1002,9 +1002,15 @@ xfs_file_iomap_begin(
+ 		 * I/O, which must be block aligned, we need to report the
+ 		 * newly allocated address.  If the data fork has a hole, copy
+ 		 * the COW fork mapping to avoid allocating to the data fork.
++		 *
++		 * Otherwise, ensure that the imap range does not extend past
++		 * the range allocated/found in cmap.
+ 		 */
+ 		if (directio || imap.br_startblock == HOLESTARTBLOCK)
+ 			imap = cmap;
++		else
++			xfs_trim_extent(&imap, cmap.br_startoff,
++					cmap.br_blockcount);
+ 
+ 		end_fsb = imap.br_startoff + imap.br_blockcount;
+ 		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
 
