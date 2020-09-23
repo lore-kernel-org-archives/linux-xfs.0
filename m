@@ -2,117 +2,139 @@ Return-Path: <SRS0=WPjR=DA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2704C2D0A8
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 16:53:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F097DC4727D
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 16:55:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B94720C56
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 16:53:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5448212CC
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 16:55:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KiQ5/SAK"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="DjxgbddP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726360AbgIWQxP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Sep 2020 12:53:15 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:54041 "EHLO
+        id S1726515AbgIWQzK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Sep 2020 12:55:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:28609 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726381AbgIWQxP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 12:53:15 -0400
+        by vger.kernel.org with ESMTP id S1726537AbgIWQzJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 12:55:09 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600879993;
+        s=mimecast20190719; t=1600880108;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=INcCXn1RK0xhAfzdbfajWJAFEX8WqvW2GFvP792doxY=;
-        b=KiQ5/SAKMunyC1ZFItxUsDMBZCNekD20I50PKAK0HkPgRVGJ4dsp7rPUshPbV/qwk2OsPT
-        VQypUHdQO7PGfH6shcxaTAC4vhB9JNoiQzze4vKu8TRAzDlFa7Yz1UNrU8+AiCtByMQ4zv
-        p38+gBWhNaZd7fMW6CRr5tUVEFO+06M=
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com
- [209.85.210.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-221-So1XyVwxPJCS6Mdp-c5Cng-1; Wed, 23 Sep 2020 12:53:10 -0400
-X-MC-Unique: So1XyVwxPJCS6Mdp-c5Cng-1
-Received: by mail-pf1-f200.google.com with SMTP id 8so62260pfx.6
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2020 09:53:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=INcCXn1RK0xhAfzdbfajWJAFEX8WqvW2GFvP792doxY=;
-        b=Y8GN0jRokc6siZwnt/p4WiVgs9T1BylXLPzzmMIvoqN3I5CXPDeRDcUVkgkJ3VPO3h
-         qPLM0BbIjBWsehIHThietMpEWWmdqUhbpbLmWQME12EbX746pjVr/jkDwgwA7d3GxIWK
-         542fpApx+aJb0mwEcpJ8oxCC1/Xw2fAFMMRqJ8QGwgLgAeJmQstO5veSkpCM3XuhjHrV
-         RIqYR1QWhpd/YYyyLYR/+IMnEbmR+BKFFTajOgAfjm5kiD8RNNaTzkdHpO/tIxQF+tBL
-         kfaOYZUcOPX6xSCVSWfay85FkCQkLpYDOwS4BvzkFk2zCAEz9YBN0jcbqTtBTU9iCbV4
-         QOmw==
-X-Gm-Message-State: AOAM5308C8fFYPmbWaeNRvxCPpCHdKXA+5+y4T7uY4s0bar5lfZIg1KR
-        AA2bJnnIbZDR90zuK6Gs8oFksAm/Us1N6DVQPzndybCs250MtAYJNXVs5Zon1rBFdmZVCieADWK
-        HOvNF27+KKAa2cw37gUcR
-X-Received: by 2002:a17:90a:ad8b:: with SMTP id s11mr312947pjq.40.1600879989132;
-        Wed, 23 Sep 2020 09:53:09 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJypZKf8+IQ5aexlsd/TWaOfPjzOmv8/b/pN56qlVrSZsgBK1Nvdz9H0+h0Sh/5Fua5uJVclBA==
-X-Received: by 2002:a17:90a:ad8b:: with SMTP id s11mr312933pjq.40.1600879988886;
-        Wed, 23 Sep 2020 09:53:08 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id e2sm391656pgl.38.2020.09.23.09.53.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Sep 2020 09:53:08 -0700 (PDT)
-Date:   Thu, 24 Sep 2020 00:52:58 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 1/2] xfs: avoid LR buffer overrun due to crafted h_len
-Message-ID: <20200923165258.GA28205@xiangao.remote.csb>
-References: <20200917051341.9811-1-hsiangkao@redhat.com>
- <20200917051341.9811-2-hsiangkao@redhat.com>
- <20200923163540.GU7955@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200923163540.GU7955@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        bh=FUSm6Jd9kppSRElqFCFSMQvc3MYe1vIAEmLYr4crmdc=;
+        b=DjxgbddPS0RBdM9Yc348T6zErZD9Mwn7P9ugIhPvvTrMYGsreSaVMP81nOfIaQtnzgh4uv
+        8jYiD0NctjbPOZ1Hzmd7TKWFHuKlJdvqi5dnHyN890YH40yJ8BTlltZ+NZ9ELJ59zkUWRw
+        fjP0TMUAOejsNY6UvaQ5QbnZEalITrM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-136-F9xQiLQkO7iC0xbWG9znvg-1; Wed, 23 Sep 2020 12:55:05 -0400
+X-MC-Unique: F9xQiLQkO7iC0xbWG9znvg-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 003F4801F9A;
+        Wed, 23 Sep 2020 16:55:03 +0000 (UTC)
+Received: from ovpn-66-35.rdu2.redhat.com (unknown [10.10.67.35])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A380E1002C04;
+        Wed, 23 Sep 2020 16:55:00 +0000 (UTC)
+Message-ID: <ff8f882fe320e53f5f429fc9a9d4ed85410d7972.camel@redhat.com>
+Subject: Re: [PATCH v2 5/9] iomap: Support arbitrarily many blocks per page
+From:   Qian Cai <cai@redhat.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Dave Chinner <dchinner@redhat.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-next@vger.kernel.org
+Date:   Wed, 23 Sep 2020 12:55:00 -0400
+In-Reply-To: <20200923024859.GM32101@casper.infradead.org>
+References: <20200910234707.5504-1-willy@infradead.org>
+         <20200910234707.5504-6-willy@infradead.org>
+         <163f852ba12fd9de5dec7c4a2d6b6c7cdb379ebc.camel@redhat.com>
+         <20200922170526.GK32101@casper.infradead.org>
+         <95bd1230f2fcf01f690770eb77696862b8fb607b.camel@redhat.com>
+         <20200923024859.GM32101@casper.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 23, 2020 at 09:35:40AM -0700, Darrick J. Wong wrote:
-> On Thu, Sep 17, 2020 at 01:13:40PM +0800, Gao Xiang wrote:
-> > Currently, crafted h_len has been blocked for the log
-> > header of the tail block in commit a70f9fe52daa ("xfs:
-> > detect and handle invalid iclog size set by mkfs").
-> > 
-> > However, each log record could still have crafted h_len
-> > and cause log record buffer overrun. So let's check
-> > h_len vs buffer size for each log record as well.
-> > 
-> > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> 
-> /me squints real hard and thinks he understands what this patch does.
-> 
-> Tighten up xlog_valid_rec_header, and add a new callsite in the middle
-> of xlog_do_recovery_pass instead of the insufficient length checking.
-> Assuming that's right,
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, 2020-09-23 at 03:48 +0100, Matthew Wilcox wrote:
+> I'm out of ideas.  Maybe I'll wake up with a better idea in the morning.
+> I've been trying to reproduce this on x86 with a 1kB block size
+> filesystem, and haven't been able to yet.  Maybe I'll try to setup a
+> powerpc cross-compilation environment tomorrow.
 
-Thanks for the review!
+Another data point is that this can be reproduced on both arm64 and powerpc
+(both have 64k-size pages) by running this LTP test case:
 
-The main point is to check each individual LR h_len against LR buffer
-size allocated first in xlog_do_recovery_pass() to avoid buffer
-overflow triggered by CRC calc or follow-up steps (details in
-https://lore.kernel.org/linux-xfs/20200902224726.GB4671@xiangao.remote.csb/ ).
+https://github.com/linux-test-project/ltp/blob/master/testcases/kernel/syscalls/preadv2/preadv203.c
 
-no new callsite (just move the callsite after original workaround
-code). Anyway, that is just a buffer overflow issue can be triggered
-by corrupted log. Just a minor stuff but security guyes could also
-keep eyes on such thing. I think that is right. :)
+[ 2397.723289] preadv203 (80525): drop_caches: 3
+[ 2400.796402] XFS (loop0): Unmounting Filesystem
+[ 2401.431293] ------------[ cut here ]------------
+[ 2401.431411] WARNING: CPU: 0 PID: 80501 at fs/iomap/buffered-io.c:78 iomap_page_release+0x250/0x270
+[ 2401.431435] Modules linked in: vfio_pci vfio_virqfd vfio_iommu_spapr_tce vfio vfio_spapr_eeh loop kvm_hv kvm ip_tables x_tables sd_mod bnx2x mdio ahci libahci tg3 libphy libata firmware_class dm_mirror dm_reg
+ion_hash dm_log dm_mod
+[ 2401.431534] CPU: 0 PID: 80501 Comm: preadv203 Not tainted 5.9.0-rc6-next-20200923+ #4
+[ 2401.431567] NIP:  c000000000473b30 LR: c0000000004739ec CTR: c000000000473e80
+[ 2401.431590] REGS: c0000011a7bbf7a0 TRAP: 0700   Not tainted  (5.9.0-rc6-next-20200923+)
+[ 2401.431613] MSR:  9000000000029033 <SF,HV,EE,ME,IR,DR,RI,LE>  CR: 44000244  XER: 20040000
+[ 2401.431655] CFAR: c000000000473a24 IRQMASK: 0 
+               GPR00: c00000000029b6a8 c0000011a7bbfa30 c000000007e87e00 0000000000000005 
+               GPR04: 0000000000000000 0000000000000005 0000000000000005 0000000000000000 
+               GPR08: c00c000806f1f587 087fff8000000037 0000000000000001 c00000000875e028 
+               GPR12: c000000000473e80 c00000000c180000 0000000000000000 0000000000000000 
+               GPR16: 0000000000000000 c0000011a7bbfbb0 c0000011a7bbfbc0 0000000000000000 
+               GPR20: c000000000a4aad8 0000000000000000 0000000000000000 000000000000000f 
+               GPR24: ffffffffffffffff c0000011a7bbfb38 c0000011a7bbfac0 0000000000000000 
+               GPR28: 0000000000000001 c000000ea4fe0a28 0000000000000000 c00c0008071b46c0 
+[ 2401.431856] NIP [c000000000473b30] iomap_page_release+0x250/0x270
+[ 2401.431878] LR [c0000000004739ec] iomap_page_release+0x10c/0x270
+[ 2401.431899] Call Trace:
+[ 2401.431926] [c0000011a7bbfa30] [c0000011a7bbfac0] 0xc0000011a7bbfac0 (unreliable)
+[ 2401.431962] [c0000011a7bbfa70] [c00000000029b6a8] truncate_cleanup_page+0x188/0x2e0
+[ 2401.431987] [c0000011a7bbfaa0] [c00000000029c62c] truncate_inode_pages_range+0x23c/0x9f0
+[ 2401.432023] [c0000011a7bbfcc0] [c0000000003d9588] evict+0x1e8/0x200
+[ 2401.432055] [c0000011a7bbfd00] [c0000000003c64b0] do_unlinkat+0x2d0/0x3a0
+[ 2401.432081] [c0000011a7bbfdc0] [c00000000002a458] system_call_exception+0xf8/0x1d0
+[ 2401.432097] [c0000011a7bbfe20] [c00000000000d0a8] system_call_common+0xe8/0x218
+[ 2401.432120] Instruction dump:
+[ 2401.432140] 3c82f8ba 388490b8 4be655b1 60000000 0fe00000 60000000 60000000 60000000 
+[ 2401.432176] 0fe00000 4bfffea8 60000000 60000000 <0fe00000> 4bfffef4 60000000 60000000 
+[ 2401.432213] CPU: 0 PID: 80501 Comm: preadv203 Not tainted 5.9.0-rc6-next-20200923+ #4
+[ 2401.432245] Call Trace:
+[ 2401.432255] [c0000011a7bbf590] [c000000000644778] dump_stack+0xec/0x144 (unreliable)
+[ 2401.432284] [c0000011a7bbf5d0] [c0000000000b0a24] __warn+0xc4/0x144
+[ 2401.432298] [c0000011a7bbf660] [c000000000643388] report_bug+0x108/0x1f0
+[ 2401.432331] [c0000011a7bbf700] [c000000000021714] program_check_exception+0x104/0x2e0
+[ 2401.432359] [c0000011a7bbf730] [c000000000009664] program_check_common_virt+0x2c4/0x310
+[ 2401.432385] --- interrupt: 700 at iomap_page_release+0x250/0x270
+                   LR = iomap_page_release+0x10c/0x270
+[ 2401.432420] [c0000011a7bbfa30] [c0000011a7bbfac0] 0xc0000011a7bbfac0 (unreliable)
+[ 2401.432446] [c0000011a7bbfa70] [c00000000029b6a8] truncate_cleanup_page+0x188/0x2e0
+[ 2401.432470] [c0000011a7bbfaa0] [c00000000029c62c] truncate_inode_pages_range+0x23c/0x9f0
+[ 2401.432505] [c0000011a7bbfcc0] [c0000000003d9588] evict+0x1e8/0x200
+[ 2401.432528] [c0000011a7bbfd00] [c0000000003c64b0] do_unlinkat+0x2d0/0x3a0
+[ 2401.432552] [c0000011a7bbfdc0] [c00000000002a458] system_call_exception+0xf8/0x1d0
+[ 2401.432576] [c0000011a7bbfe20] [c00000000000d0a8] system_call_common+0xe8/0x218
+[ 2401.432599] irq event stamp: 210662
+[ 2401.432619] hardirqs last  enabled at (210661): [<c0000000008d32bc>] _raw_spin_unlock_irq+0x3c/0x70
+[ 2401.432652] hardirqs last disabled at (210662): [<c00000000000965c>] program_check_common_virt+0x2bc/0x310
+[ 2401.432688] softirqs last  enabled at (210280): [<c000000000547de4>] xfs_buf_find.isra.31+0xb54/0x1060
+[ 2401.432722] softirqs last disabled at (210278): [<c0000000005476fc>] xfs_buf_find.isra.31+0x46c/0x1060
 
-Thanks,
-Gao Xiang
-
-> 
-> --D
 
