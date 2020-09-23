@@ -2,213 +2,132 @@ Return-Path: <SRS0=WPjR=DA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AD11C4727D
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 05:00:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E0ADC4363D
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 05:33:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 29AA42311E
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 05:00:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A07521D43
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 05:33:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ovwcldhH"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aq+m8qr2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726934AbgIWFAx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Sep 2020 01:00:53 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:52380 "EHLO
+        id S1726921AbgIWFdG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Sep 2020 01:33:06 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:39806 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726817AbgIWFAx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 01:00:53 -0400
+        with ESMTP id S1726883AbgIWFdG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 01:33:06 -0400
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08N50B5Y102299;
-        Wed, 23 Sep 2020 05:00:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=y7KcEv0cH2wcXQfqZi8DVT/Kis2ijpSFtePEekaqdn0=;
- b=ovwcldhHfVKucVYCJd2vN1Fbfe6WoW53QXU879Cu1Rgu573PEqJgipAl/U7jJpVFGrQ4
- MEng3+DWWWBWvC7BzRxicAFVBzkV6EWjcc/F/GMfskogXQHOLLdAK/6rOSoah3m1GfEB
- mWrigoUD0c6eVmMJeqWXfIxmJihpPkWKcijjv+aOuBKTC3PmWNmn2KAmzuKmBF/0AzFU
- Mq9Y4P7GyJlKppJ0Yvd92IzepZ0DQN0ZVRRwmUKYirYJx4+/6jxgWFlNXBL8paqf6qo3
- f+DRI5KpvnxyngyBTg91o3TXO4OVDGN8TvzWkTYkrNyvj0lZhgL04TT+kFaRRrrfiR8u HQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 33qcptw4yj-1
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08N5TiWv139983;
+        Wed, 23 Sep 2020 05:33:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=Rn9FfcC0FBvkIm8vbGe/zQYwrYpsFK1d7kQI/kI4XSs=;
+ b=aq+m8qr2jzHD6pJUrmRwZ4KtP5Ub+Tp66G0saXYWclK/666V09szwEZhVo4siwy/GVfX
+ FziBUfbvQk++xSpffzoPiA2Sen/mX3xX2Qh1EMTSvF2tSsL4dFrjZi/ibbZC6NMlcvRG
+ 9d80/A//Yno3JvTNE+RYM0SPRAwxGqHYmv9Jt9vdTsd9Q0LXdl+TTBz27/64piLwPOLI
+ JcCoWuFq3a/ka6L/084K+q4upTZRqXJsgFjMUcMleeoAxaSp5CERmAEox+h4vvWdZnRi
+ KuzungFQ+d98DaFRzrnYFhI+gE+0XrpQdA5nVnWnAqS5+lvwlsK3pF1S11ZWlMVDF9fx /A== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 33qcptw7kj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 23 Sep 2020 05:00:11 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08N4uOxi070114;
-        Wed, 23 Sep 2020 05:00:10 GMT
+        Wed, 23 Sep 2020 05:33:03 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08N5URak163818;
+        Wed, 23 Sep 2020 05:33:02 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 33nuru241f-1
+        by aserp3030.oracle.com with ESMTP id 33nujp56bb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 23 Sep 2020 05:00:10 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08N503p5025876;
-        Wed, 23 Sep 2020 05:00:03 GMT
-Received: from localhost (/10.159.235.171)
+        Wed, 23 Sep 2020 05:33:02 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08N5X1PD007262;
+        Wed, 23 Sep 2020 05:33:01 GMT
+Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Sep 2020 22:00:03 -0700
-Date:   Tue, 22 Sep 2020 22:00:01 -0700
+        with ESMTP ; Tue, 22 Sep 2020 22:33:01 -0700
+Subject: [PATCH v3 0/3] xfs: fix some log stalling problems in defer ops
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
-        Dave Kleikamp <shaggy@kernel.org>,
-        jfs-discussion@lists.sourceforge.net,
-        Dave Chinner <dchinner@redhat.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        linux-next@vger.kernel.org
-Subject: Re: [PATCH v2 5/9] iomap: Support arbitrarily many blocks per page
-Message-ID: <20200923050001.GE7949@magnolia>
-References: <20200910234707.5504-1-willy@infradead.org>
- <20200910234707.5504-6-willy@infradead.org>
- <163f852ba12fd9de5dec7c4a2d6b6c7cdb379ebc.camel@redhat.com>
- <20200922170526.GK32101@casper.infradead.org>
- <95bd1230f2fcf01f690770eb77696862b8fb607b.camel@redhat.com>
- <20200923024859.GM32101@casper.infradead.org>
+To:     darrick.wong@oracle.com
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, bfoster@redhat.com
+Date:   Tue, 22 Sep 2020 22:32:59 -0700
+Message-ID: <160083917978.1401135.9502772939838940679.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200923024859.GM32101@casper.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9752 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0 suspectscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009230037
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 malwarescore=0
+ mlxlogscore=999 phishscore=0 adultscore=0 spamscore=0 suspectscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009230043
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9752 signatures=668679
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=999
  adultscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0 priorityscore=1501
- phishscore=0 spamscore=0 malwarescore=0 clxscore=1011 impostorscore=0
+ phishscore=0 spamscore=0 malwarescore=0 clxscore=1015 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009230038
+ definitions=main-2009230043
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 23, 2020 at 03:48:59AM +0100, Matthew Wilcox wrote:
-> On Tue, Sep 22, 2020 at 09:06:03PM -0400, Qian Cai wrote:
-> > On Tue, 2020-09-22 at 18:05 +0100, Matthew Wilcox wrote:
-> > > On Tue, Sep 22, 2020 at 12:23:45PM -0400, Qian Cai wrote:
-> > > > On Fri, 2020-09-11 at 00:47 +0100, Matthew Wilcox (Oracle) wrote:
-> > > > > Size the uptodate array dynamically to support larger pages in the
-> > > > > page cache.  With a 64kB page, we're only saving 8 bytes per page today,
-> > > > > but with a 2MB maximum page size, we'd have to allocate more than 4kB
-> > > > > per page.  Add a few debugging assertions.
-> > > > > 
-> > > > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> > > > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Some syscall fuzzing will trigger this on powerpc:
-> > > > 
-> > > > .config: https://gitlab.com/cailca/linux-mm/-/blob/master/powerpc.config
-> > > > 
-> > > > [ 8805.895344][T445431] WARNING: CPU: 61 PID: 445431 at fs/iomap/buffered-
-> > > > io.c:78 iomap_page_release+0x250/0x270
-> > > 
-> > > Well, I'm glad it triggered.  That warning is:
-> > >         WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
-> > >                         PageUptodate(page));
-> > > so there was definitely a problem of some kind.
-> > > 
-> > > truncate_cleanup_page() calls
-> > > do_invalidatepage() calls
-> > > iomap_invalidatepage() calls
-> > > iomap_page_release()
-> > > 
-> > > Is this the first warning?  I'm wondering if maybe there was an I/O error
-> > > earlier which caused PageUptodate to get cleared again.  If it's easy to
-> > > reproduce, perhaps you could try something like this?
-> > > 
-> > > +void dump_iomap_page(struct page *page, const char *reason)
-> > > +{
-> > > +       struct iomap_page *iop = to_iomap_page(page);
-> > > +       unsigned int nr_blocks = i_blocks_per_page(page->mapping->host, page);
-> > > +
-> > > +       dump_page(page, reason);
-> > > +       if (iop)
-> > > +               printk("iop:reads %d writes %d uptodate %*pb\n",
-> > > +                               atomic_read(&iop->read_bytes_pending),
-> > > +                               atomic_read(&iop->write_bytes_pending),
-> > > +                               nr_blocks, iop->uptodate);
-> > > +       else
-> > > +               printk("iop:none\n");
-> > > +}
-> > > 
-> > > and then do something like:
-> > > 
-> > > 	if (bitmap_full(iop->uptodate, nr_blocks) != PageUptodate(page))
-> > > 		dump_iomap_page(page, NULL);
-> > 
-> > This:
-> > 
-> > [ 1683.158254][T164965] page:000000004a6c16cd refcount:2 mapcount:0 mapping:00000000ea017dc5 index:0x2 pfn:0xc365c
-> > [ 1683.158311][T164965] aops:xfs_address_space_operations ino:417b7e7 dentry name:"trinity-testfile2"
-> > [ 1683.158354][T164965] flags: 0x7fff8000000015(locked|uptodate|lru)
-> > [ 1683.158392][T164965] raw: 007fff8000000015 c00c0000019c4b08 c00c0000019a53c8 c000201c8362c1e8
-> > [ 1683.158430][T164965] raw: 0000000000000002 0000000000000000 00000002ffffffff c000201c54db4000
-> > [ 1683.158470][T164965] page->mem_cgroup:c000201c54db4000
-> > [ 1683.158506][T164965] iop:none
-> 
-> Oh, I'm a fool.  This is after the call to detach_page_private() so
-> page->private is NULL and we don't get the iop dumped.
-> 
-> Nevertheless, this is interesting.  Somehow, the page is marked Uptodate,
-> but the bitmap is deemed not full.  There are three places where we set
-> an iomap page Uptodate:
-> 
-> 1.      if (bitmap_full(iop->uptodate, i_blocks_per_page(inode, page)))
->                 SetPageUptodate(page);
-> 
-> 2.      if (page_has_private(page))
->                 iomap_iop_set_range_uptodate(page, off, len);
->         else
->                 SetPageUptodate(page);
-> 
-> 3.      BUG_ON(page->index);
-> ...
->         SetPageUptodate(page);
-> 
-> It can't be #2 because the page has an iop.  It can't be #3 because the
-> page->index is not 0.  So at some point in the past, the bitmap was full.
-> 
-> I don't think it's possible for inode->i_blksize to change, and you
-> aren't running with THPs, so it's definitely not possible for thp_size()
-> to change.  So i_blocks_per_page() isn't going to change.
-> 
-> We seem to have allocated enough memory for ->iop because that's also
-> based on i_blocks_per_page().
-> 
-> I'm out of ideas.  Maybe I'll wake up with a better idea in the morning.
-> I've been trying to reproduce this on x86 with a 1kB block size
-> filesystem, and haven't been able to yet.  Maybe I'll try to setup a
-> powerpc cross-compilation environment tomorrow.
+Hi all,
 
-FWIW I managed to reproduce it with the following fstests configuration
-on a 1k block size fs on a x86 machinE:
+This series tries to fix some structural problems in the defer ops code.
+The defer ops code has been finishing items in the wrong order -- if a
+top level defer op creates items A and B, and finishing item A creates
+more defer ops A1 and A2, we'll put the new items on the end of the chain
+and process them in the order A B A1 A2.  This is kind of weird, since
+it's convenient for programmers to be able to think of A and B as an
+ordered sequence where all the work for A must finish before we move on
+to B, e.g. A A1 A2 D.
 
-SECTION      -- -no-sections-
-FSTYP        -- xfs
-MKFS_OPTIONS --  -m reflink=1,rmapbt=1 -i sparse=1 -b size=1024
-MOUNT_OPTIONS --  -o usrquota,grpquota,prjquota
-HOST_OPTIONS -- local.config
-CHECK_OPTIONS -- -g auto
-XFS_MKFS_OPTIONS -- -bsize=4096
-TIME_FACTOR  -- 1
-LOAD_FACTOR  -- 1
-TEST_DIR     -- /mnt
-TEST_DEV     -- /dev/sde
-SCRATCH_DEV  -- /dev/sdd
-SCRATCH_MNT  -- /opt
-OVL_UPPER    -- ovl-upper
-OVL_LOWER    -- ovl-lower
-OVL_WORK     -- ovl-work
-KERNEL       -- 5.9.0-rc4-djw
+That isn't how the defer ops actually works, but so far we've been lucky
+that this hasn't ever caused serious problems.  This /will/, however,
+when we get to the atomic extent swap code, where for refcounting
+purposes it actually /does/ matter that unmap and map child intents
+execute in that order, and complete before we move on to the next extent
+in the files.  This also causes a very long chain of intent items to
+build up, which can exhaust memory.
 
-The kernel is more or less iomap-for-next.
+We need to teach defer ops to finish all the sub-work associated with
+each defer op that the caller gave us, to minimize the length of the
+defer ops chains; and then we need to teach it to relog items
+periodically to avoid pinning the log tail.
+
+v2: combine all the relog patches into one, and base the decision to
+relog an iten dependent on whether or not it's in an old checkpoint
+v3: fix backwards logic, don't relog items in the same checkpoint,
+and split up the changes
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=defer-ops-stalls
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=defer-ops-stalls
+---
+ fs/xfs/libxfs/xfs_defer.c  |   63 +++++++++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_bmap_item.c     |   27 +++++++++++++++++++
+ fs/xfs/xfs_extfree_item.c  |   29 ++++++++++++++++++++
+ fs/xfs/xfs_log.c           |   41 ++++++++++++++++++++++-------
+ fs/xfs/xfs_log.h           |    2 +
+ fs/xfs/xfs_refcount_item.c |   27 +++++++++++++++++++
+ fs/xfs/xfs_rmap_item.c     |   27 +++++++++++++++++++
+ fs/xfs/xfs_trace.h         |    1 +
+ fs/xfs/xfs_trans.h         |   10 +++++++
+ 9 files changed, 216 insertions(+), 11 deletions(-)
+
