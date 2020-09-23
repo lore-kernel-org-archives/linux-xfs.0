@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F14C4363D
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 06:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD6CEC2D0A8
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 06:59:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52529221F0
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 06:59:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BDEE221F0
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 06:59:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FcrIzaJx"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uuGmAQk8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726685AbgIWG7e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Sep 2020 02:59:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48942 "EHLO
+        id S1726703AbgIWG7f (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Sep 2020 02:59:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726652AbgIWG7d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 02:59:33 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE8EFC061755
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 23:59:33 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id d13so13803761pgl.6
-        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 23:59:33 -0700 (PDT)
+        with ESMTP id S1726652AbgIWG7e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 02:59:34 -0400
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF3D9C061755
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 23:59:34 -0700 (PDT)
+Received: by mail-pl1-x644.google.com with SMTP id d19so6348827pld.0
+        for <linux-xfs@vger.kernel.org>; Tue, 22 Sep 2020 23:59:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Uzrcqek5YpHotqjw8QpiA/JofXip5yx4HlGgtaw1CZY=;
-        b=FcrIzaJx3wtzWeMaGtL474QpR9N1kOisp5z6/EYvMVKhmtXxfTP5EsDGq63VuLeW8y
-         HjlpVzLUGxWb4PauPRstcwM6JykadFD4fve1dAF5meurXYdd7j1K+0xMfyYrHXVzEB8x
-         JwJZlo7MrQH1JjRtpw2aiEHb/8QQzU07nqbRG2kUvsmIRFGYoM2u4/FWUKZj9SBhTG1h
-         Im1bUAnv+YCb6DWaUtDeBD/wZUDY8fwrcuICAxNyyUudlBzaSPb11AlYN4623DM4i6x9
-         0FOuD9pelq4utL04ekH0vXoW8wtm1V2HpsuykcyeQ4cgypedT/O+V2tB//H77Clqw5Oy
-         uyHg==
+        bh=bgj/YZjhrsYxUdODnTUVN8FzNBeqdxMgw3D4BR0tbjg=;
+        b=uuGmAQk8dvW/SA2/GMc/j+gU+AASuzVpODDznLF9aRF9s/+9XqKOeYJWyRI1iowfbH
+         680h/srU9/GnOYvFD4xSZJag02cWNO+khHBXfouFLIHTd/DYWk5TdwU/ggSzhi9eg/6Z
+         ya9GeoatEzFby6vnwJyP2tt1eIi16eUFT85uut8sY12vrXaP9vM1uv1cbN1ECPC2t5YH
+         ZI4Tbyo/0vo+1NWPAiuaK6ED+WoX7l0fRyI07rCDinX2JOhhnqxz6Xoz62mdKBcKbGLv
+         XD5OIRlGGum6oprq4yKrhIUxJr13dF1aR8uhFwVNiu5ukhn66N9FM+hGWQbs+AqnKp3n
+         b2IA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=Uzrcqek5YpHotqjw8QpiA/JofXip5yx4HlGgtaw1CZY=;
-        b=ObxajvJ6orBxROe7bCdd9RyjYw87/XiG2ws2uBWovn7SvW/den1rfobwEyfa7a+qWS
-         xj8zLAtxbbvIrrv61GoC3YmxTaqDgW4SEKiHzaq08MttYoz0zL9Z8dsUoZ6j4dOWwdgo
-         aTD7U35GUiiQ22Ar9GPH/6rN94fKi0oWj3V0mQNmix97H1hy8FkU/42zJmuq3fXAX1Wa
-         Ha8X2T8GAMyK+jSNSLUyXQGNu+ogmS4Ij5VJR0BzxpRS8kzZatVSKw+CpLB6qGbWfb+i
-         DFp00OVE79FJg8InIDPk2Q5EDPyLeB+BefGRA7cjA89P8yQs5buXTBb0j0ze58S0U88D
-         WHbA==
-X-Gm-Message-State: AOAM53374ekNvGwCW3LNjbRV3ByCdCxYx2LRcDcfKoh+k40R5w8BP3mw
-        Ut6r8Ls/erDi0bSORXIxzI9WRhPA2Xyr
-X-Google-Smtp-Source: ABdhPJzk9Z8gnGCJNvYHa7AOkoxD4kNeXPjzd2uVLZGqkS15DW6nPjz5WBQBIhzuufCMHKvLrbftjQ==
-X-Received: by 2002:a62:1902:0:b029:13e:d13d:a12e with SMTP id 2-20020a6219020000b029013ed13da12emr7603740pfz.22.1600844372890;
-        Tue, 22 Sep 2020 23:59:32 -0700 (PDT)
+        bh=bgj/YZjhrsYxUdODnTUVN8FzNBeqdxMgw3D4BR0tbjg=;
+        b=pSEnBFfTFd8l9TuuI25PWkqkJ6b+qGL4G5YW05E+THlvr43y+G/YAHo4zl56mnElSC
+         Ka5+gX4MDZt0CZcfneXnqOSB3lesEtxXI5m6nK+eQ+9HreKNz4AWTC9zEbDj7jkK/ncN
+         y/+QBFeknDHB4CrbMEeu+K+1nsMtTs7gsIUV+sJ6DosX6/PlIDeWrCJiTWw+W0p04jjR
+         gsFrBdojv+KGdiSTmkqF4GonRKqdxh3NMmp9fZg5fE62fO+AFHi7HjzeS1GfLKjBHGjD
+         Q2T24mOP82+mU2CHXBWAJWo1FySPtT5gCkMA0QQjQw3FfUgcPyyoDa67XQ0lTdnZicsO
+         Fw6A==
+X-Gm-Message-State: AOAM533TqCtlA3wRCvBSIualFwNXpMX1/2uOJvV3rznhp0gZXuzRS210
+        dOS70zF0Vzdqr3KTlgRzaT4yGaXITqr2
+X-Google-Smtp-Source: ABdhPJwjnGLNjwuUtIGBoSheqVVF+9r79uQNHuWxr+E/wTaC+2wErlzYSt7xfMVIVVWfAyYDMoGpBw==
+X-Received: by 2002:a17:902:8489:b029:d2:4363:d47c with SMTP id c9-20020a1709028489b02900d24363d47cmr5315457plo.74.1600844374090;
+        Tue, 22 Sep 2020 23:59:34 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id c68sm10685745pfc.31.2020.09.22.23.59.31
+        by smtp.gmail.com with ESMTPSA id c68sm10685745pfc.31.2020.09.22.23.59.33
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 22 Sep 2020 23:59:32 -0700 (PDT)
+        Tue, 22 Sep 2020 23:59:33 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v3 6/7] xfs: code cleanup in xfs_attr_leaf_entsize_{remote,local}
-Date:   Wed, 23 Sep 2020 14:59:17 +0800
-Message-Id: <1600844358-16601-7-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH v3 7/7] xfs: fix some comments
+Date:   Wed, 23 Sep 2020 14:59:18 +0800
+Message-Id: <1600844358-16601-8-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1600844358-16601-1-git-send-email-kaixuxia@tencent.com>
 References: <1600844358-16601-1-git-send-email-kaixuxia@tencent.com>
@@ -73,39 +73,46 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-Cleanup the typedef usage, the unnecessary parentheses, the unnecessary
-backslash and use the open-coded round_up call in
-xfs_attr_leaf_entsize_{remote,local}.
+Fix the comments to help people understand the code.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_da_format.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ fs/xfs/libxfs/xfs_da_format.h | 4 ++--
+ fs/xfs/xfs_dquot.c            | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
-index b40a4e80f5ee..78225cc959d6 100644
+index 78225cc959d6..f13ee8939e78 100644
 --- a/fs/xfs/libxfs/xfs_da_format.h
 +++ b/fs/xfs/libxfs/xfs_da_format.h
-@@ -746,14 +746,14 @@ xfs_attr3_leaf_name_local(xfs_attr_leafblock_t *leafp, int idx)
+@@ -35,8 +35,8 @@ typedef struct xfs_da_blkinfo {
   */
- static inline int xfs_attr_leaf_entsize_remote(int nlen)
- {
--	return ((uint)sizeof(xfs_attr_leaf_name_remote_t) - 1 + (nlen) + \
--		XFS_ATTR_LEAF_NAME_ALIGN - 1) & ~(XFS_ATTR_LEAF_NAME_ALIGN - 1);
-+	return round_up(sizeof(struct xfs_attr_leaf_name_remote) - 1 +
-+			nlen, XFS_ATTR_LEAF_NAME_ALIGN);
+ #define XFS_DA3_NODE_MAGIC	0x3ebe	/* magic number: non-leaf blocks */
+ #define XFS_ATTR3_LEAF_MAGIC	0x3bee	/* magic number: attribute leaf blks */
+-#define	XFS_DIR3_LEAF1_MAGIC	0x3df1	/* magic number: v2 dirlf single blks */
+-#define	XFS_DIR3_LEAFN_MAGIC	0x3dff	/* magic number: v2 dirlf multi blks */
++#define	XFS_DIR3_LEAF1_MAGIC	0x3df1	/* magic number: v3 dirlf single blks */
++#define	XFS_DIR3_LEAFN_MAGIC	0x3dff	/* magic number: v3 dirlf multi blks */
+ 
+ struct xfs_da3_blkinfo {
+ 	/*
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 3072814e407d..1d95ed387d66 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -831,8 +831,8 @@ xfs_qm_dqget_checks(
  }
  
- static inline int xfs_attr_leaf_entsize_local(int nlen, int vlen)
- {
--	return ((uint)sizeof(xfs_attr_leaf_name_local_t) - 1 + (nlen) + (vlen) +
--		XFS_ATTR_LEAF_NAME_ALIGN - 1) & ~(XFS_ATTR_LEAF_NAME_ALIGN - 1);
-+	return round_up(sizeof(struct xfs_attr_leaf_name_local) - 1 +
-+			nlen + vlen, XFS_ATTR_LEAF_NAME_ALIGN);
- }
- 
- static inline int xfs_attr_leaf_entsize_local_max(int bsize)
+ /*
+- * Given the file system, id, and type (UDQUOT/GDQUOT), return a locked
+- * dquot, doing an allocation (if requested) as needed.
++ * Given the file system, id, and type (UDQUOT/GDQUOT/PDQUOT), return a
++ * locked dquot, doing an allocation (if requested) as needed.
+  */
+ int
+ xfs_qm_dqget(
 -- 
 2.20.0
 
