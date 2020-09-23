@@ -2,110 +2,142 @@ Return-Path: <SRS0=WPjR=DA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 694ECC2D0A8
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 22:37:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F390C2D0A8
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 22:59:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 047BD23600
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 22:37:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A890A2311E
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 22:58:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Bm7e49tw"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xc5x0Tco"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726634AbgIWWho (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Sep 2020 18:37:44 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:44305 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726199AbgIWWho (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 18:37:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600900663;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=RSv82tAKb98m5gBauyU9NGj+xfHb2xJ09JEh4qiIRwk=;
-        b=Bm7e49twPCxUuqYraPmFHvpTpIeQ7ljofj1rYZW4Gijc1wdk8U1uezEQTuNeCATcWB6WgD
-        OxvjmvPKjwSc2rIq32UTLH1Qlgjxz+X6CA03aBCAhYrf2hf2kMXPfmPJJRyBApRlRZs7vG
-        8yTUZUyNsy/ClHmitnWvcYzdhgYODPw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-592-lt-1VtjwMcu7nXyxidsP_Q-1; Wed, 23 Sep 2020 18:37:41 -0400
-X-MC-Unique: lt-1VtjwMcu7nXyxidsP_Q-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 32566186DD2C;
-        Wed, 23 Sep 2020 22:37:40 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B4E9B73682;
-        Wed, 23 Sep 2020 22:37:39 +0000 (UTC)
+        id S1726613AbgIWW67 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Sep 2020 18:58:59 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:37498 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726419AbgIWW66 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 18:58:58 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08NMuhDb047784;
+        Wed, 23 Sep 2020 22:58:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=de/CRfCpEfLcXmk13jmhnbVHV0BFNqAnIyk5IZFQbLo=;
+ b=xc5x0TcoLL2jC97e2xy8bgvoig6ZFPQ6iS7++gZO+4dqYdg9M9+N0mhD+AGMhzegOPcw
+ WwkSnzGPCOqDQ/gIqKU2QVCC6lj2FyKAu5OskOZEXIp7MxrSyaqQYlRgbjw4HmmhsfZS
+ lv2Woy5y/tRTsQ9J8JLhxVFImxRomf//MGAiXnv5OE70h7X5E8VEtOyEtjY3lNP9LOJE
+ 1/Wo3wUbub3X4bt+oX8fO5sW0Ot1jhBuw3x3h1fAsauWUXRCbhRi/rwgjos7VyEnAt/Y
+ PArvpPoi2CYzLHsSoznZb4y2H+PIV5NDxAvBOwKgmjcKNVDIR8L0z5pkN6qwXOlIsxrm 9A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 33qcpu25af-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 23 Sep 2020 22:58:51 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08NMu6ZF118281;
+        Wed, 23 Sep 2020 22:58:51 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 33r28w85aa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 23 Sep 2020 22:58:50 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08NMwnP0028404;
+        Wed, 23 Sep 2020 22:58:49 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 23 Sep 2020 15:58:49 -0700
+Date:   Wed, 23 Sep 2020 15:58:48 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>, stable@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
 Subject: Re: [PATCH STABLE] xfs: trim IO to found COW exent limit
-From:   Eric Sandeen <sandeen@redhat.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Message-ID: <20200923225848.GX7955@magnolia>
 References: <e7fe7225-4f2b-d13e-bb4b-c7db68f63124@redhat.com>
-Message-ID: <34c164fb-d616-1467-c96a-77c99e436421@redhat.com>
-Date:   Wed, 23 Sep 2020 17:37:39 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.2.2
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <e7fe7225-4f2b-d13e-bb4b-c7db68f63124@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999
+ suspectscore=1 adultscore=0 bulkscore=0 malwarescore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009230174
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxlogscore=999
+ adultscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0 priorityscore=1501
+ phishscore=0 spamscore=0 malwarescore=0 clxscore=1015 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009230174
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Here's a reproducer for the bug.
+On Wed, Sep 23, 2020 at 05:35:44PM -0500, Eric Sandeen wrote:
+> A bug existed in the XFS reflink code between v5.1 and v5.5 in which
+> the mapping for a COW IO was not trimmed to the mapping of the COW
+> extent that was found.  This resulted in a too-short copy, and
+> corruption of other files which shared the original extent.
+> 
+> (This happened only when extent size hints were set, which bypasses
+> delalloc and led to this code path.)
+> 
+> This was (inadvertently) fixed upstream with
+> 
+> 36adcbace24e "xfs: fill out the srcmap in iomap_begin"
+> 
+> and related patches which moved lots of this functionality to
+> the iomap subsystem.
+> 
+> Hence, this is a -stable only patch, targeted to fix this
+> corruption vector without other major code changes.
+> 
+> Fixes: 78f0cc9d55cb ("xfs: don't use delalloc extents for COW on files with extsize hints")
+> Cc: <stable@vger.kernel.org> # 5.4.x
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Requires sufficient privs to mount a loopback fs.
+Looks good to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-======
+(Note: Someone please fix the typo "exent" in the subject line.)
 
-#!/bin/bash
+--D
 
-mkdir -p mnt
-umount mnt &>/dev/null
-
-# Create 8g fs image
-mkfs.xfs -f -dfile,name=fsfile.img,size=8g &>/dev/null
-mount -o loop fsfile.img mnt
-
-# Make all files w/ 1m hints; create original 2m file
-xfs_io -c "extsize 1048576" mnt
-xfs_io -c "cowextsize 1048576" mnt
-
-echo "Create file mnt/b"
-xfs_io -f -c "pwrite -S 0x0 0 2m" -c fsync mnt/b &>/dev/null
-
-# Make a reflinked copy
-echo "Reflink copy from mnt/b to mnt/a"
-cp --reflink=always mnt/b mnt/a
-
-echo "Contents of mnt/b"
-hexdump -C mnt/b
-
-# Cycle mount to get stuff out of cache
-umount mnt
-mount -o loop fsfile.img mnt
-
-# Create a 1m-hinted IO at offset 0, then
-# do another IO that overlaps but extends past the 1m hint
-echo "Write to mnt/a"
-xfs_io -c "pwrite -S 0xa 0k -b 4k 4k" \
-       -c "pwrite -S 0xa 4k -b 1m 1m" \
-       mnt/a &>/dev/null
-
-xfs_io -c fsync mnt/a
-
-echo "Contents of mnt/b now:"
-hexdump -C mnt/b
-
-umount mnt
-
+> ---
+> 
+> I've tested this with a targeted reproducer (in next email) as well as
+> with xfstests.
+> 
+> Stable folk, not sure how to send a "stable only" patch, or if that's even
+> valid.  Assuming you're willing to accept it, I would still like to have
+> some formal Reviewed-by's from the xfs developer community before it gets
+> merged.
+> 
+> Big thanks to Darrick & Dave for letting me whine about this bug and
+> offering suggestions for testing and ultimately, a patch to test.
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 06b9e0aacf54..3289d0f4bb03 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -1002,9 +1002,15 @@ xfs_file_iomap_begin(
+>  		 * I/O, which must be block aligned, we need to report the
+>  		 * newly allocated address.  If the data fork has a hole, copy
+>  		 * the COW fork mapping to avoid allocating to the data fork.
+> +		 *
+> +		 * Otherwise, ensure that the imap range does not extend past
+> +		 * the range allocated/found in cmap.
+>  		 */
+>  		if (directio || imap.br_startblock == HOLESTARTBLOCK)
+>  			imap = cmap;
+> +		else
+> +			xfs_trim_extent(&imap, cmap.br_startoff,
+> +					cmap.br_blockcount);
+>  
+>  		end_fsb = imap.br_startoff + imap.br_blockcount;
+>  		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+> 
