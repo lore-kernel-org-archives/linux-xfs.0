@@ -4,159 +4,162 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82EA2C4363D
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 07:53:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 958CBC2D0A8
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 13:27:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 420472371F
-	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 07:53:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27EA8206A5
+	for <linux-xfs@archiver.kernel.org>; Wed, 23 Sep 2020 13:27:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RxrCqnju"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LQe0BEtu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726193AbgIWHxJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Sep 2020 03:53:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43491 "EHLO
+        id S1726504AbgIWN14 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Sep 2020 09:27:56 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:60530 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726151AbgIWHxJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 03:53:09 -0400
+        by vger.kernel.org with ESMTP id S1726130AbgIWN14 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 09:27:56 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600847587;
+        s=mimecast20190719; t=1600867674;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=z4Pc0SW1EFetSfyVj8B59FKepVEB+MWX0b+AbTXh7z8=;
-        b=RxrCqnjud9PXanPy2iU+ap5k/iA+soE+0kVuCIGPAZgAa4ScA4m0OD2qmFCJIKnSc/kEGo
-        TFRrYvHnVOux1tG+etNm/uhgaQJySRbtjVXOqaLdaIGK4516Xs/wo94xlXW4eJK+cdGYKE
-        W1vWD3q2xRwG299GrhgQvQD6i93KIAo=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-390-KgI3ZhuvNaeNLZPNbHiZeg-1; Wed, 23 Sep 2020 03:53:05 -0400
-X-MC-Unique: KgI3ZhuvNaeNLZPNbHiZeg-1
-Received: by mail-wm1-f72.google.com with SMTP id c200so1885498wmd.5
-        for <linux-xfs@vger.kernel.org>; Wed, 23 Sep 2020 00:53:05 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to;
-        bh=z4Pc0SW1EFetSfyVj8B59FKepVEB+MWX0b+AbTXh7z8=;
-        b=T5OvD3xZEGsYplZWD0ZF0qFIuoTrSGGVvtpXxNgIxVBceVW1Er+UVh1kEFneIvlKlP
-         4EuEn1RRW8xbIs8nJmS1nKSy0xQLP98Qm8NSzlQCDG/d7+KuQZgKYphDiNwKQ3jKc//I
-         YX0YvfspvdZMujx+fzs7mcn0JwVSAziyti04zNzzKa+PgsX2Ac8/KTT64Xg3g6Opx9bV
-         tR4TraO1AJVglz6XTFdQQY6838efTeoDNrRXbGJqAIzgF3ItvNgsBo9IeEtMefknmPCD
-         DzXCbY3R0DDJb8+Qa7wpc/pWaodrdxkKcGMa7NQKCzGJq3/YLayQVAU8+BuBavuosYwJ
-         ga6Q==
-X-Gm-Message-State: AOAM530VjfOgxhGuzn1j4MOWQm3uunU06GAX/Rnd03QccoIJBXhzbK1e
-        VsSyzBCf/+jDdhwgymtLIr8d7bLYRJprZiriPVt4wCMkxqmNTRI9X0Xa4zy3FWNMOVwEEdnqRml
-        c4wSPh2tc34CWIVMhm10s
-X-Received: by 2002:adf:e481:: with SMTP id i1mr9529113wrm.391.1600847584591;
-        Wed, 23 Sep 2020 00:53:04 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwnpXuZCdGWS0XO547uloKzUjNS+W0+njlVeITL6Tkd2s0r9XQ+9kKEA31ON2n1iW5Hb0ppww==
-X-Received: by 2002:adf:e481:: with SMTP id i1mr9529092wrm.391.1600847584402;
-        Wed, 23 Sep 2020 00:53:04 -0700 (PDT)
-Received: from eorzea (ip-89-102-9-109.net.upcbroadband.cz. [89.102.9.109])
-        by smtp.gmail.com with ESMTPSA id n4sm6936177wmc.48.2020.09.23.00.53.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Sep 2020 00:53:03 -0700 (PDT)
-Date:   Wed, 23 Sep 2020 09:53:01 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] mkfs.xfs: fix ASSERT on too-small device with stripe
- geometry
-Message-ID: <20200923075301.kriakz7ivnwhejje@eorzea>
-Mail-Followup-To: Pavel Reichl <preichl@redhat.com>,
-        linux-xfs@vger.kernel.org
-References: <20200916204056.29247-1-preichl@redhat.com>
+        bh=cfJO7QBfHNb2p/zdp9MumFFuLHDaH4p9Bg1Gpz3pHG0=;
+        b=LQe0BEtu6+lVBciaWrsOGMdtstlTIzjcWFHVV8aNrAbVJtwskymrumqr5SNXpU9dCSe3C1
+        n4oxAvsvWqPzxVEHdUE806SUTrgaPbi8p0ucThnKMmvEoMq+VORTVby5y0zZSWFIn6yWZP
+        fGFBqRT2CUeFDjLvtrpo0Vji+IDnIcg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-98-s0x8wxDeOY25Bnen_sAVnQ-1; Wed, 23 Sep 2020 09:27:50 -0400
+X-MC-Unique: s0x8wxDeOY25Bnen_sAVnQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A2B3918B9F4F;
+        Wed, 23 Sep 2020 13:27:48 +0000 (UTC)
+Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E0F8B73682;
+        Wed, 23 Sep 2020 13:27:46 +0000 (UTC)
+Date:   Wed, 23 Sep 2020 09:27:45 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     kaixuxia <xiakaixu1987@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
+        Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH 1/3] xfs: directly return if the delta equal to zero
+Message-ID: <20200923132745.GA2228661@bfoster>
+References: <1600765442-12146-1-git-send-email-kaixuxia@tencent.com>
+ <1600765442-12146-2-git-send-email-kaixuxia@tencent.com>
+ <20200922174347.GG2175303@bfoster>
+ <2818363e-a860-99e4-5b55-9721abb5058a@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200916204056.29247-1-preichl@redhat.com>
+In-Reply-To: <2818363e-a860-99e4-5b55-9721abb5058a@gmail.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 16, 2020 at 10:40:56PM +0200, Pavel Reichl wrote:
-> When a too-small device is created with stripe geometry, we hit an
-> assert in align_ag_geometry():
+On Wed, Sep 23, 2020 at 10:42:10AM +0800, kaixuxia wrote:
 > 
-> mkfs.xfs: xfs_mkfs.c:2834: align_ag_geometry: Assertion `cfg->agcount != 0' failed.
 > 
-> This is because align_ag_geometry() finds that the size of the last
-> (only) AG is too small, and attempts to trim it off.  Obviously 0
-> AGs is invalid, and we hit the ASSERT.
+> On 2020/9/23 1:43, Brian Foster wrote:
+> > On Tue, Sep 22, 2020 at 05:04:00PM +0800, xiakaixu1987@gmail.com wrote:
+> >> From: Kaixu Xia <kaixuxia@tencent.com>
+> >>
+> >> It is useless to go on when the variable delta equal to zero in
+> >> xfs_trans_mod_dquot(), so just return if the value equal to zero.
+> >>
+> >> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+> >> ---
+> >>  fs/xfs/xfs_trans_dquot.c | 12 ++++++------
+> >>  1 file changed, 6 insertions(+), 6 deletions(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> >> index 133fc6fc3edd..23c34af71825 100644
+> >> --- a/fs/xfs/xfs_trans_dquot.c
+> >> +++ b/fs/xfs/xfs_trans_dquot.c
+> >> @@ -215,10 +215,11 @@ xfs_trans_mod_dquot(
+> >>  	if (qtrx->qt_dquot == NULL)
+> >>  		qtrx->qt_dquot = dqp;
+> >>  
+> >> -	if (delta) {
+> >> -		trace_xfs_trans_mod_dquot_before(qtrx);
+> >> -		trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
+> >> -	}
+> >> +	if (!delta)
+> >> +		return;
+> >> +
+> > 
+> > 
+> > This does slightly change behavior in that this function currently
+> > unconditionally results in logging the associated dquot in the
+> > transaction. I'm not sure anything really depends on that with a delta
+> > == 0, but it might be worth documenting in the commit log.
+> >> Also, it does seem a little odd to bail out after we've potentially
+> > allocated ->t_dqinfo as well as assigned the current dquot a slot in the
+> > transaction. I think that means the effect of this change is lost if
+> > another dquot happens to be modified (with delta != 0) in the same
+> > transaction (which might also be an odd thing to do).
+> >
+> Since the dquot value doesn't changes if the delta == 0, we shouldn't
+> set the XFS_TRANS_DQ_DIRTY flag to current transaction. Maybe we should
+> do the judgement at the beginning of the function, we will do nothing if
+> the delta == 0. Just like this,
+> 
+>  xfs_trans_mod_dquot(
+>  {
+>    ...
+>    if (!delta)
+>      return;
+>    if (tp->t_dqinfo == NULL)
+>      xfs_trans_alloc_dqinfo(tp);
+>    ...
+>  }
+> 
+> I'm not sure...What's your opinion about that?
 > 
 
-Patch looks good, next time please keep the Changelog :)
-Cheers.
+Yes, I think that makes more sense than bailing out after at least.
+Otherwise if some other path sets XFS_TRANS_DQ_DIRTY, then this dquot is
+still associated with the transaction. I'm not sure that's currently
+possible, but it's an odd wart where the current code is at least
+readable/predictable. That said, note again that this changes behavior,
+so it's not quite sufficient for the commit log description to just say
+bail out early since delta is zero. That much is obvious from the code
+change. We need to audit the behavior change and provide a few sentences
+in the commit log description to explain why it is safe.
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Brian
 
-> Reported-by: Zdenek Kabelac <zkabelac@redhat.com>
-> Suggested-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> ---
->  include/xfs_multidisk.h | 14 +++++++-------
->  mkfs/xfs_mkfs.c         |  6 +++---
->  2 files changed, 10 insertions(+), 10 deletions(-)
+> Thanks,
+> Kaixu
 > 
-> diff --git a/include/xfs_multidisk.h b/include/xfs_multidisk.h
-> index 1b9936ec..abfb50ce 100644
-> --- a/include/xfs_multidisk.h
-> +++ b/include/xfs_multidisk.h
-> @@ -14,7 +14,6 @@
->  #define	XFS_DFL_BLOCKSIZE_LOG	12		/* 4096 byte blocks */
->  #define	XFS_DINODE_DFL_LOG	8		/* 256 byte inodes */
->  #define	XFS_DINODE_DFL_CRC_LOG	9		/* 512 byte inodes for CRCs */
-> -#define	XFS_MIN_DATA_BLOCKS	100
->  #define	XFS_MIN_INODE_PERBLOCK	2		/* min inodes per block */
->  #define	XFS_DFL_IMAXIMUM_PCT	25		/* max % of space for inodes */
->  #define	XFS_MIN_REC_DIRSIZE	12		/* 4096 byte dirblocks (V2) */
-> @@ -25,13 +24,14 @@
->  						 * accept w/o warnings
->  						 */
->  
-> -#define XFS_AG_BYTES(bblog)	((long long)BBSIZE << (bblog))
-> -#define	XFS_AG_MIN_BYTES	((XFS_AG_BYTES(15)))	/* 16 MB */
-> -#define	XFS_AG_MAX_BYTES	((XFS_AG_BYTES(31)))	/* 1 TB */
-> -#define XFS_AG_MIN_BLOCKS(blog)	(XFS_AG_MIN_BYTES >> (blog))
-> -#define XFS_AG_MAX_BLOCKS(blog)	((XFS_AG_MAX_BYTES - 1) >> (blog))
-> +#define XFS_AG_BYTES(bblog)		((long long)BBSIZE << (bblog))
-> +#define	XFS_MIN_DATA_BLOCKS(cfg)	(XFS_AG_MIN_BLOCKS((cfg)->blocklog))
-> +#define	XFS_AG_MIN_BYTES		((XFS_AG_BYTES(15)))	/* 16 MB */
-> +#define	XFS_AG_MAX_BYTES		((XFS_AG_BYTES(31)))	/* 1 TB */
-> +#define XFS_AG_MIN_BLOCKS(blog)		(XFS_AG_MIN_BYTES >> (blog))
-> +#define XFS_AG_MAX_BLOCKS(blog)		((XFS_AG_MAX_BYTES - 1) >> (blog))
->  
-> -#define XFS_MAX_AGNUMBER	((xfs_agnumber_t)(NULLAGNUMBER - 1))
-> +#define XFS_MAX_AGNUMBER		((xfs_agnumber_t)(NULLAGNUMBER - 1))
->  
->  /*
->   * These values define what we consider a "multi-disk" filesystem. That is, a
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index a687f385..204dfff1 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2530,10 +2530,10 @@ _("size %s specified for data subvolume is too large, maximum is %lld blocks\n")
->  		cfg->dblocks = DTOBT(xi->dsize, cfg->blocklog);
->  	}
->  
-> -	if (cfg->dblocks < XFS_MIN_DATA_BLOCKS) {
-> +	if (cfg->dblocks < XFS_MIN_DATA_BLOCKS(cfg)) {
->  		fprintf(stderr,
-> -_("size %lld of data subvolume is too small, minimum %d blocks\n"),
-> -			(long long)cfg->dblocks, XFS_MIN_DATA_BLOCKS);
-> +_("size %lld of data subvolume is too small, minimum %lld blocks\n"),
-> +			(long long)cfg->dblocks, XFS_MIN_DATA_BLOCKS(cfg));
->  		usage();
->  	}
->  
+> > Brian
+> > 
+> >> +	trace_xfs_trans_mod_dquot_before(qtrx);
+> >> +	trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
+> >>  
+> >>  	switch (field) {
+> >>  
+> >> @@ -284,8 +285,7 @@ xfs_trans_mod_dquot(
+> >>  		ASSERT(0);
+> >>  	}
+> >>  
+> >> -	if (delta)
+> >> -		trace_xfs_trans_mod_dquot_after(qtrx);
+> >> +	trace_xfs_trans_mod_dquot_after(qtrx);
+> >>  
+> >>  	tp->t_flags |= XFS_TRANS_DQ_DIRTY;
+> >>  }
+> >> -- 
+> >> 2.20.0
+> >>
+> > 
+> 
 > -- 
-> 2.26.2
+> kaixuxia
 > 
-
--- 
-Carlos
 
