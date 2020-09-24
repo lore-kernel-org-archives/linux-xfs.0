@@ -2,87 +2,93 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41CAFC4363D
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 00:39:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D854C4363D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 01:07:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBEDB2176B
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 00:39:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7903020702
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 01:07:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZExYSVTO"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wC6+TkHq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726762AbgIXAjM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Sep 2020 20:39:12 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:52887 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726731AbgIXAjM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 20:39:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600907951;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=J6+erL0jIdE2OxF7ECOGrLfJbMDSWN2tZHISgxX8eZM=;
-        b=ZExYSVTOj9Eij4xjuMtiQdPzviDCu7jB6cRf2jZzIs9xPOct0TnKquvpOmIzn2QjYWzK4p
-        +8OSAmsnObOjhx4XRL0bVT38Sn1hSnS0zc/bJ07r50b08+/FFNy5o7Iu2GGk5BSsPD6Eon
-        s3Gu8CBYg0iqIFflwaOrwdVnrVRPRPI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-45-QM0LIqC6OvCjDORJMAKj-g-1; Wed, 23 Sep 2020 20:39:09 -0400
-X-MC-Unique: QM0LIqC6OvCjDORJMAKj-g-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A0D718027E2;
-        Thu, 24 Sep 2020 00:39:07 +0000 (UTC)
-Received: from localhost (unknown [10.18.25.174])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1E6C45576A;
-        Thu, 24 Sep 2020 00:39:03 +0000 (UTC)
-Date:   Wed, 23 Sep 2020 20:39:02 -0400
-From:   Mike Snitzer <snitzer@redhat.com>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
-Cc:     linux-kernel@vger.kernel.org, linux-mm@kvack.org,
-        Jens Axboe <axboe@kernel.dk>, linux-xfs@vger.kernel.org,
-        dm-devel@redhat.com, Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH 6/6] mm: Add memalloc_nowait
-Message-ID: <20200924003902.GA10500@redhat.com>
-References: <20200625113122.7540-1-willy@infradead.org>
- <20200625113122.7540-7-willy@infradead.org>
+        id S1726840AbgIXBHd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Sep 2020 21:07:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47174 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726466AbgIXBHc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Sep 2020 21:07:32 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3D02C0613CE;
+        Wed, 23 Sep 2020 18:07:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=CpRt9L3oSpo9XB/wJ4tlJ8BLy+Ga6XgFjsS66dr9R/g=; b=wC6+TkHqrGD3haqlkJx8wiylpt
+        OieNI52BAZTw2567ZzFYTGBthskGEQQUw+uqPH+4AqIqB6vJ79XAuZhXWhZeCTeeAKqgMTM8XSn85
+        HYyTGODlwKP8hCgVqZgicVfUJ3VkLIFimHr1Dih+ycnp3HzkwcxJWqhw/vxFrmc+9rlDcfz5rnvgW
+        5W7vt7CczMfqoovNsSSXln0UzWYqaitlwBC/WvhjD1QJZ93mMwQwzs1tS0KO5u5VHqTxw3bbIKo7h
+        PQ57lVkX8p4vRfaHvUjf9seoE7o6023/TX0nSweYVUHOiA+PA3WB9xLdwEZhT92DgVKGKR2xKE9kZ
+        y0oraI7Q==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kLFjN-0000zh-0A; Thu, 24 Sep 2020 01:07:29 +0000
+Date:   Thu, 24 Sep 2020 02:07:28 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Qian Cai <cai@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Dave Kleikamp <shaggy@kernel.org>,
+        jfs-discussion@lists.sourceforge.net,
+        Dave Chinner <dchinner@redhat.com>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        linux-next@vger.kernel.org
+Subject: Re: [PATCH v2 5/9] iomap: Support arbitrarily many blocks per page
+Message-ID: <20200924010728.GS32101@casper.infradead.org>
+References: <20200910234707.5504-1-willy@infradead.org>
+ <20200910234707.5504-6-willy@infradead.org>
+ <163f852ba12fd9de5dec7c4a2d6b6c7cdb379ebc.camel@redhat.com>
+ <20200922170526.GK32101@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200625113122.7540-7-willy@infradead.org>
-User-Agent: Mutt/1.5.21 (2010-09-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20200922170526.GK32101@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Jun 25 2020 at  7:31am -0400,
-Matthew Wilcox (Oracle) <willy@infradead.org> wrote:
-
-> Similar to memalloc_noio() and memalloc_nofs(), memalloc_nowait()
-> guarantees we will not sleep to reclaim memory.  Use it to simplify
-> dm-bufio's allocations.
+On Tue, Sep 22, 2020 at 06:05:26PM +0100, Matthew Wilcox wrote:
+> On Tue, Sep 22, 2020 at 12:23:45PM -0400, Qian Cai wrote:
+> > On Fri, 2020-09-11 at 00:47 +0100, Matthew Wilcox (Oracle) wrote:
+> > > Size the uptodate array dynamically to support larger pages in the
+> > > page cache.  With a 64kB page, we're only saving 8 bytes per page today,
+> > > but with a 2MB maximum page size, we'd have to allocate more than 4kB
+> > > per page.  Add a few debugging assertions.
+> > > 
+> > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Some syscall fuzzing will trigger this on powerpc:
+> > 
+> > .config: https://gitlab.com/cailca/linux-mm/-/blob/master/powerpc.config
+> > 
+> > [ 8805.895344][T445431] WARNING: CPU: 61 PID: 445431 at fs/iomap/buffered-io.c:78 iomap_page_release+0x250/0x270
 > 
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> ---
->  drivers/md/dm-bufio.c    | 30 ++++++++----------------------
->  include/linux/sched.h    |  1 +
->  include/linux/sched/mm.h | 12 ++++++++----
->  3 files changed, 17 insertions(+), 26 deletions(-)
+> Well, I'm glad it triggered.  That warning is:
+>         WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
+>                         PageUptodate(page));
+> so there was definitely a problem of some kind.
 
+OK, I'm pretty sure the problem predated this commit, and it's simply
+that I added a warning (looking for something else) that caught this.
 
-Hi,
-
-Curious on the state of this patchset?  Not seeing it in next-20200923
-
-The dm-bufio cleanup looks desirable.
-
-Thanks,
-Mike
-
+I have a tree completly gunked up with debugging code now to try to
+understand the problem better, but my guess is that if you put this
+warning into a previous version, you'd see the same problem occurring
+(and it is a real problem, because we skip writeback of parts of the
+page which are !uptodate).
