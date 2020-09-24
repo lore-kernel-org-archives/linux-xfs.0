@@ -2,120 +2,116 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53946C4741F
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 14:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7950C4363D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 15:08:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 206E92311B
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 14:59:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AF2E2388A
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 15:08:16 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FOOGXA1x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728443AbgIXO66 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 10:58:58 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52322 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728478AbgIXO65 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Sep 2020 10:58:57 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 5A17EB052;
-        Thu, 24 Sep 2020 14:58:56 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 071071E12DD; Thu, 24 Sep 2020 16:58:56 +0200 (CEST)
-Date:   Thu, 24 Sep 2020 16:58:56 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Hao Li <lihao2018.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, ira.weiny@intel.com,
-        linux-xfs@vger.kernel.org, viro@zeniv.linux.org.uk,
-        y-goto@fujitsu.com
-Subject: Re: [PATCH v2] fs: Kill DCACHE_DONTCACHE dentry even if
- DCACHE_REFERENCED is set
-Message-ID: <20200924145856.GB3361@quack2.suse.cz>
-References: <20200924055958.825515-1-lihao2018.fnst@cn.fujitsu.com>
+        id S1728285AbgIXPIQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 11:08:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35724 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728164AbgIXPIP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 11:08:15 -0400
+Received: from mail-ot1-x341.google.com (mail-ot1-x341.google.com [IPv6:2607:f8b0:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FFFBC0613CE;
+        Thu, 24 Sep 2020 08:08:15 -0700 (PDT)
+Received: by mail-ot1-x341.google.com with SMTP id a2so3410933otr.11;
+        Thu, 24 Sep 2020 08:08:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=J3AIUMq4VQ+nwppYrdB2uB5enD/t3MqDWc2lKAgmFJY=;
+        b=FOOGXA1xGrIlcQpeEhKQnl5tfp1dHUGTLwLfaIkcmViSdovs5w8iGLA4FO8aADYQpO
+         +tGJ0dfXHn++twEaQLENhlku2xY7mXfwOVIL8cx0mAdxknyRsICZ69XsTsQ9X29dJZbr
+         Ig2yBrTL3tU5YdLBOBflQ9QjG6kfl5l+QIFUhYMMxWaJeDKd26i2Eh8A3qg+t2OTgAoW
+         mbSPYsq7auZnc5lDjmKAXaZE5hN4YLXHKVZRQ+eV0cQXAHFNi6WJBI8sGpSqZA2KHcOq
+         +/5HWZRjRXxwdrYTHv3/l9mHT0WXAFlstEsf+OMw6bAz1LXkR60a6PW1Ics0wVrxMsw8
+         GdXw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=J3AIUMq4VQ+nwppYrdB2uB5enD/t3MqDWc2lKAgmFJY=;
+        b=HV1dF90TWSO0kD3DMjI6wF+iKdiohym95xlN9wR1ZOXIV2AYurdV6H60OD+ba1/4J3
+         a12m8ymijV6ha11wzbyO4hsQn5DR0wUxj9BbV61sADLs9wY8HklSl3HktrEh64kXQ4FN
+         UX0ysjS6O5gVsoySNqXF1StKktDX7GvIigY23X7Swih/Bn5KrXiceMDhKxMQwcKFiiHX
+         DR+F9s4BK0R8bZqmAfliJ8To49GIHEm+JipNTfRqbVgx3IzL5y1NOsxPLOh1RoSz44WY
+         B8ugzSrdIRiKoXbDXW273b5RvlU26JnK84I8ksfpTuEjno/BVbCiAo63zc2UUy+vsTKD
+         8JCQ==
+X-Gm-Message-State: AOAM530OzHLBkaAHRtvTSzeGaff0+4AGjEVEMIzScg+8hYRc2cD4Xnqg
+        dmGi3l7ponZAg+/hhzlPvLaOkbaxmtkQPzZBPQE=
+X-Google-Smtp-Source: ABdhPJxqFhKvbqhXlcRJkEiOD+2fdLca+JkjGwGiGHlXfP0JYNeHoti4pUHwNODViwZ7ySnPgZrhF/DwZlULPIHF7eY=
+X-Received: by 2002:a05:6830:13da:: with SMTP id e26mr102413otq.28.1600960094920;
+ Thu, 24 Sep 2020 08:08:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200924055958.825515-1-lihao2018.fnst@cn.fujitsu.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20200924125608.31231-1-willy@infradead.org>
+In-Reply-To: <20200924125608.31231-1-willy@infradead.org>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Thu, 24 Sep 2020 17:08:03 +0200
+Message-ID: <CA+icZUUQGmd3juNPv1sHTWdhzXwZzRv=p1i+Q=20z_WGcZOzbg@mail.gmail.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Qian Cai <cai@redhat.com>, Brian Foster <bfoster@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 24-09-20 13:59:58, Hao Li wrote:
-> If DCACHE_REFERENCED is set, fast_dput() will return true, and then
-> retain_dentry() have no chance to check DCACHE_DONTCACHE. As a result,
-> the dentry won't be killed and the corresponding inode can't be evicted.
-> In the following example, the DAX policy can't take effects unless we
-> do a drop_caches manually.
-> 
->   # DCACHE_LRU_LIST will be set
->   echo abcdefg > test.txt
-> 
->   # DCACHE_REFERENCED will be set and DCACHE_DONTCACHE can't do anything
->   xfs_io -c 'chattr +x' test.txt
-> 
->   # Drop caches to make DAX changing take effects
->   echo 2 > /proc/sys/vm/drop_caches
-> 
-> What this patch does is preventing fast_dput() from returning true if
-> DCACHE_DONTCACHE is set. Then retain_dentry() will detect the
-> DCACHE_DONTCACHE and will return false. As a result, the dentry will be
-> killed and the inode will be evicted. In this way, if we change per-file
-> DAX policy, it will take effects automatically after this file is closed
-> by all processes.
-> 
-> I also add some comments to make the code more clear.
-> 
-> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
+On Thu, Sep 24, 2020 at 2:58 PM Matthew Wilcox (Oracle)
+<willy@infradead.org> wrote:
+>
+> For filesystems with block size < page size, we need to set all the
+> per-block uptodate bits if the page was already uptodate at the time
+> we create the per-block metadata.  This can happen if the page is
+> invalidated (eg by a write to drop_caches) but ultimately not removed
+> from the page cache.
+>
+> This is a data corruption issue as page writeback skips blocks which
+> are marked !uptodate.
+>
+> Fixes: 9dc55f1389f9 ("iomap: add support for sub-pagesize buffered I/O without buffer heads")
 
-The patch looks good to me. You can add:
+This commit is also in Linux v5.9-rc6+ but does not cleanly apply.
+Against which Git tree is this patch?
+When Linux v5.9-rc6+ is affected, do you have a backport?
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+- Sedat -
 
-								Honza
-
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Reported-by: Qian Cai <cai@redhat.com>
+> Cc: Brian Foster <bfoster@redhat.com>
 > ---
-> v1 is split into two standalone patch as discussed in [1], and the first
-> patch has been reviewed in [2]. This is the second patch.
-> 
-> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
-> [2]: https://lore.kernel.org/linux-fsdevel/20200906214002.GI12131@dread.disaster.area/
-> 
->  fs/dcache.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/dcache.c b/fs/dcache.c
-> index ea0485861d93..97e81a844a96 100644
-> --- a/fs/dcache.c
-> +++ b/fs/dcache.c
-> @@ -793,10 +793,17 @@ static inline bool fast_dput(struct dentry *dentry)
->  	 * a reference to the dentry and change that, but
->  	 * our work is done - we can leave the dentry
->  	 * around with a zero refcount.
-> +	 *
-> +	 * Nevertheless, there are two cases that we should kill
-> +	 * the dentry anyway.
-> +	 * 1. free disconnected dentries as soon as their refcount
-> +	 *    reached zero.
-> +	 * 2. free dentries if they should not be cached.
->  	 */
->  	smp_rmb();
->  	d_flags = READ_ONCE(dentry->d_flags);
-> -	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST | DCACHE_DISCONNECTED;
-> +	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST |
-> +			DCACHE_DISCONNECTED | DCACHE_DONTCACHE;
->  
->  	/* Nothing to do? Dropping the reference was all we needed? */
->  	if (d_flags == (DCACHE_REFERENCED | DCACHE_LRU_LIST) && !d_unhashed(dentry))
-> -- 
+>  fs/iomap/buffered-io.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 8b6cca7e34e4..8180061b9e16 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -60,6 +60,8 @@ iomap_page_create(struct inode *inode, struct page *page)
+>         iop = kzalloc(struct_size(iop, uptodate, BITS_TO_LONGS(nr_blocks)),
+>                         GFP_NOFS | __GFP_NOFAIL);
+>         spin_lock_init(&iop->uptodate_lock);
+> +       if (PageUptodate(page))
+> +               bitmap_fill(iop->uptodate, nr_blocks);
+>         attach_page_private(page, iop);
+>         return iop;
+>  }
+> --
 > 2.28.0
-> 
-> 
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+>
