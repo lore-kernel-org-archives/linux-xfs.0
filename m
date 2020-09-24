@@ -2,111 +2,96 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74EE4C2D0E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 13:12:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 672E5C4363D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 13:59:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 136D22311B
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 13:12:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1352B20B1F
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 13:59:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ilZrTZqh"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AI34F+Xb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727923AbgIXNMr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 09:12:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60887 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727704AbgIXNMr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 09:12:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1600953166;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9EQR2I1NMFT5nFyNTeWXnehjcHK4LcH2sOKMD1jaXa0=;
-        b=ilZrTZqhi/lK5uqR5vh9R4JZIR+yp6PL3ABHwSRJ1JL+IPPiZVJX9nDNKDIQFoo/ChH5Fl
-        DBgaERMcJz3/ESihUj9k+8JmbcPU/XMJyp4kgREWnQdVIO0EKIngLeZvyPKqoFSfKujfM3
-        e6Efv8offxrpq2rC4Jbf654xSFbHmeI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-287-jaL_vyGwOSutEBeLMYF3lw-1; Thu, 24 Sep 2020 09:12:42 -0400
-X-MC-Unique: jaL_vyGwOSutEBeLMYF3lw-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DD405100747A;
-        Thu, 24 Sep 2020 13:12:40 +0000 (UTC)
-Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0AB8D5C1DC;
-        Thu, 24 Sep 2020 13:12:36 +0000 (UTC)
-Date:   Thu, 24 Sep 2020 09:12:35 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
+        id S1728091AbgIXN7D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 09:59:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53234 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727970AbgIXN7D (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 09:59:03 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B4ECC0613CE;
+        Thu, 24 Sep 2020 06:59:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=hug6s8+8lq9lwcdzlq9aErM3rYYYEQGQn5xx+p5VjoI=; b=AI34F+XbZgxnfiPgroDkfneKcW
+        s2GFVLoXhb/roI3d9dnsEH70J71FeLFYt9F6fVuUlpphyTpKaDQ3If84LY2oI9+AL+E8oY6CEhCWY
+        BPIFVaSjdYXGWoZWvrAiB5XOGEo9ITC6Bf3jfSIO6nf2FGfMM7La+jU58FjOJM1D+gzbUtfK7Ks/u
+        rS0GdYfYy6xL5gAV1oNblTedh+yxzSzpehbGmiihAzpUvNZM4EXSU/FScnDoqQoK6C2XmAYaDTBk9
+        eF2hgTrueXk5YLVDtUTiE00kF4tVVT8jP2ettssUE+5m73qbLYNYx64L1QP5GIigXFLR0XROBt7rV
+        ddJiaNfA==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kLRm0-0003vc-GP; Thu, 24 Sep 2020 13:59:01 +0000
+Date:   Thu, 24 Sep 2020 14:59:00 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
         Qian Cai <cai@redhat.com>
 Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
-Message-ID: <20200924131235.GA2603692@bfoster>
+Message-ID: <20200924135900.GV32101@casper.infradead.org>
 References: <20200924125608.31231-1-willy@infradead.org>
+ <20200924131235.GA2603692@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200924125608.31231-1-willy@infradead.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <20200924131235.GA2603692@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 24, 2020 at 01:56:08PM +0100, Matthew Wilcox (Oracle) wrote:
-> For filesystems with block size < page size, we need to set all the
-> per-block uptodate bits if the page was already uptodate at the time
-> we create the per-block metadata.  This can happen if the page is
-> invalidated (eg by a write to drop_caches) but ultimately not removed
-> from the page cache.
+On Thu, Sep 24, 2020 at 09:12:35AM -0400, Brian Foster wrote:
+> On Thu, Sep 24, 2020 at 01:56:08PM +0100, Matthew Wilcox (Oracle) wrote:
+> > For filesystems with block size < page size, we need to set all the
+> > per-block uptodate bits if the page was already uptodate at the time
+> > we create the per-block metadata.  This can happen if the page is
+> > invalidated (eg by a write to drop_caches) but ultimately not removed
+> > from the page cache.
+> > 
+> > This is a data corruption issue as page writeback skips blocks which
+> > are marked !uptodate.
 > 
-> This is a data corruption issue as page writeback skips blocks which
-> are marked !uptodate.
+> Thanks. Based on my testing of clearing PageUptodate here I suspect this
+> will similarly prevent the problem, but I'll give this a test
+> nonetheless. 
 > 
-> Fixes: 9dc55f1389f9 ("iomap: add support for sub-pagesize buffered I/O without buffer heads")
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Reported-by: Qian Cai <cai@redhat.com>
-> Cc: Brian Foster <bfoster@redhat.com>
-> ---
->  fs/iomap/buffered-io.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 8b6cca7e34e4..8180061b9e16 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -60,6 +60,8 @@ iomap_page_create(struct inode *inode, struct page *page)
->  	iop = kzalloc(struct_size(iop, uptodate, BITS_TO_LONGS(nr_blocks)),
->  			GFP_NOFS | __GFP_NOFAIL);
->  	spin_lock_init(&iop->uptodate_lock);
-> +	if (PageUptodate(page))
-> +		bitmap_fill(iop->uptodate, nr_blocks);
+> I am a little curious why we'd prefer to fill the iop here rather than
+> just clear the page state if the iop data has been released. If the page
+> is partially uptodate, then we end up having to re-read the page
+> anyways, right? OTOH, I guess this behavior is more consistent with page
+> size == block size filesystems where iop wouldn't exist and we just go
+> by page state, so perhaps that makes more sense.
 
-Thanks. Based on my testing of clearing PageUptodate here I suspect this
-will similarly prevent the problem, but I'll give this a test
-nonetheless. 
+Well, it's _true_ ... the PageUptodate bit means that every byte in this
+page is at least as new as every byte on storage.  There's no need to
+re-read it, which is what we'll do if we ClearPageUptodate.
 
-I am a little curious why we'd prefer to fill the iop here rather than
-just clear the page state if the iop data has been released. If the page
-is partially uptodate, then we end up having to re-read the page
-anyways, right? OTOH, I guess this behavior is more consistent with page
-size == block size filesystems where iop wouldn't exist and we just go
-by page state, so perhaps that makes more sense.
+My original motivation for this was splitting a THP.  In that case,
+we have, let's say, 16 * 4kB pages, and an iop for 64 blocks.  When we
+split that 64kB page into 16 4kB pages, we can't afford to allocate 16
+iops for them, so we just drop the iop and copy the uptodate state from
+the head page to all subpages.
 
-Brian
+So now we have 16 pages, all marked uptodate (and with valid data) but
+no iop.  So we need to create an iop for each page during the writeback
+path, and that has to be created with uptodate bits or we'll skip the
+entire page.  When I wrote the patch below, I had no idea we could
+already get an iop allocated for an uptodate page, or I would have
+submitted this patch months ago.
 
->  	attach_page_private(page, iop);
->  	return iop;
->  }
-> -- 
-> 2.28.0
-> 
-
+http://git.infradead.org/users/willy/pagecache.git/commitdiff/bc503912d4a9aad4496a4591e9992f0ada47a9c9
