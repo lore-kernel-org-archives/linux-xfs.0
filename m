@@ -2,208 +2,133 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90D74C4363D
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 17:49:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A49C4363D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 17:56:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B5B42311B
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 17:49:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C2172311B
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 17:56:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vYfqCj/+"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MykyBlX4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728448AbgIXRtW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 13:49:22 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:48402 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726477AbgIXRtW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 13:49:22 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08OHdYRt180047;
-        Thu, 24 Sep 2020 17:49:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=Fpg+BA0X/C6g8rTeT63NdAMxDcm5xCf1C+JfQ0OglhM=;
- b=vYfqCj/+lN7zUYFJRcH1WMQeqapECDqc7uUTjVinjBNh4t+YPy1lqF1KJ5PZjniga74M
- QKl9RxCbmYxzUK15r8iYrdIajjw3UkPcDKx6PqUwNfDl0GXQj9PXnVFsBIAYYQVx4dp0
- xKCQbsEH19NdRLBsNdP/PuN6RwyRrcrsJkR5y3PMkPRsqKjtm0MqXxProOda7aQlHfY1
- xtKY/DBCkWaCs0wAtT2Kqj+fuEvHr66OarHRvUbm0noiuMTRfpWqaWrqCDbhsMF37GaN
- JKmM7C+nRBpOQENdbjbz012L+Ogp4VlUJIXJRetbPHSejmrDGqQ4exum1pkzWP1i1vFv PA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 33q5rgr2pa-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 24 Sep 2020 17:49:18 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08OHeVFP087309;
-        Thu, 24 Sep 2020 17:49:17 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 33nurwgrwg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Sep 2020 17:49:17 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08OHnEm7014946;
-        Thu, 24 Sep 2020 17:49:17 GMT
-Received: from localhost (/10.159.232.188)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Sep 2020 10:49:14 -0700
-Date:   Thu, 24 Sep 2020 10:49:13 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Pavel Reichl <preichl@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: remove deprecated mount options
-Message-ID: <20200924174913.GI7955@magnolia>
-References: <20200924170747.65876-1-preichl@redhat.com>
- <20200924170747.65876-2-preichl@redhat.com>
- <20200924172600.GG7955@magnolia>
- <be017461-6ce9-1d64-51d6-7e85a3e45055@sandeen.net>
+        id S1728643AbgIXR4l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 13:56:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33492 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726915AbgIXR4l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 13:56:41 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 494B2C0613CE;
+        Thu, 24 Sep 2020 10:56:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=rXnTpPeLayDi5vbT9auZkwpsP9S5IsSrD7JgND0hZbE=; b=MykyBlX4OcmCmUSUItDZ9A3Zks
+        b33wQ4EGRF7pb3/K3B0a7S08HCttrNQLGPdUcqgqudDEqNVtgxaqrdUbt5MhRzo6xwocX1R4ViSBf
+        F8Xd+Jidpp+wYaxhkPDwX2VtIkX/4sYfSzvG1k96JCf/gjQ2hma6oAnN2wvn0OreXZLNcwHbO/XLj
+        JXJ8VEdMzWafodtejmAYjmwREA/+fO4YBgGbZ8/rgLC/GsHyqIHpkugb6MyjB4+4nQr5sU5E9OO0V
+        szA27MjmiHO1vE3ZEtyTntQrApwOXCcYvVsAvAUVCqdZz7MvtGJ7wuI7OvIvEp9yFBPU/uxAkMKwp
+        6d3YVF1Q==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kLVTy-0001cQ-JO; Thu, 24 Sep 2020 17:56:39 +0000
+Date:   Thu, 24 Sep 2020 18:56:38 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Qian Cai <cai@redhat.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+Message-ID: <20200924175638.GA32101@casper.infradead.org>
+References: <20200924125608.31231-1-willy@infradead.org>
+ <20200924131235.GA2603692@bfoster>
+ <20200924135900.GV32101@casper.infradead.org>
+ <20200924151259.GB2603692@bfoster>
+ <20200924152211.GX32101@casper.infradead.org>
+ <20200924172653.GC2603692@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <be017461-6ce9-1d64-51d6-7e85a3e45055@sandeen.net>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9754 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxlogscore=999 bulkscore=0 mlxscore=0 suspectscore=1
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009240131
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9754 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 impostorscore=0
- clxscore=1015 suspectscore=1 phishscore=0 malwarescore=0
- priorityscore=1501 mlxlogscore=999 adultscore=0 bulkscore=0 mlxscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009240131
+In-Reply-To: <20200924172653.GC2603692@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 24, 2020 at 12:39:07PM -0500, Eric Sandeen wrote:
-> On 9/24/20 12:26 PM, Darrick J. Wong wrote:
-> > On Thu, Sep 24, 2020 at 07:07:46PM +0200, Pavel Reichl wrote:
-> >> ikeep/noikeep was a workaround for old DMAPI code which is no longer
-> >> relevant.
-> >>
-> >> attr2/noattr2 - is for controlling upgrade behaviour from fixed attribute
-> >> fork sizes in the inode (attr1) and dynamic attribute fork sizes (attr2).
-> >> mkfs has defaulted to setting attr2 since 2007, hence just about every
-> >> XFS filesystem out there in production right now uses attr2.
-> >>
-> >> Signed-off-by: Pavel Reichl <preichl@redhat.com>
-> >> ---
-> >>  Documentation/admin-guide/xfs.rst |  2 ++
-> >>  fs/xfs/xfs_super.c                | 30 +++++++++++++++++-------------
-> >>  2 files changed, 19 insertions(+), 13 deletions(-)
-> >>
-> >> diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
-> >> index f461d6c33534..413f68efccc0 100644
-> >> --- a/Documentation/admin-guide/xfs.rst
-> >> +++ b/Documentation/admin-guide/xfs.rst
-> >> @@ -217,6 +217,8 @@ Deprecated Mount Options
-> >>  ===========================     ================
-> >>    Name				Removal Schedule
-> >>  ===========================     ================
-> >> +  ikeep/noikeep			TBD
-> >> +  attr2/noattr2			TBD
+On Thu, Sep 24, 2020 at 01:26:53PM -0400, Brian Foster wrote:
+> On Thu, Sep 24, 2020 at 04:22:11PM +0100, Matthew Wilcox wrote:
+> > On Thu, Sep 24, 2020 at 11:12:59AM -0400, Brian Foster wrote:
+> > > On Thu, Sep 24, 2020 at 02:59:00PM +0100, Matthew Wilcox wrote:
+> > > > On Thu, Sep 24, 2020 at 09:12:35AM -0400, Brian Foster wrote:
+> > > > > On Thu, Sep 24, 2020 at 01:56:08PM +0100, Matthew Wilcox (Oracle) wrote:
+> > > > > > For filesystems with block size < page size, we need to set all the
+> > > > > > per-block uptodate bits if the page was already uptodate at the time
+> > > > > > we create the per-block metadata.  This can happen if the page is
+> > > > > > invalidated (eg by a write to drop_caches) but ultimately not removed
+> > > > > > from the page cache.
+> > > > > > 
+> > > > > > This is a data corruption issue as page writeback skips blocks which
+> > > > > > are marked !uptodate.
+> > > > > 
+> > > > > Thanks. Based on my testing of clearing PageUptodate here I suspect this
+> > > > > will similarly prevent the problem, but I'll give this a test
+> > > > > nonetheless. 
+> > > > > 
+> > > > > I am a little curious why we'd prefer to fill the iop here rather than
+> > > > > just clear the page state if the iop data has been released. If the page
+> > > > > is partially uptodate, then we end up having to re-read the page
+> > > > > anyways, right? OTOH, I guess this behavior is more consistent with page
+> > > > > size == block size filesystems where iop wouldn't exist and we just go
+> > > > > by page state, so perhaps that makes more sense.
+> > > > 
+> > > > Well, it's _true_ ... the PageUptodate bit means that every byte in this
+> > > > page is at least as new as every byte on storage.  There's no need to
+> > > > re-read it, which is what we'll do if we ClearPageUptodate.
+> > > 
+> > > Yes, of course. I'm just noting the inconsistent behavior between a full
+> > > and partially uptodate page.
 > > 
-> > Er... what date did you have in mind?
-
-June 65th, 2089 it is, then. ;)
-
-> >>  ===========================     ================
-> >>  
-> >>  
-> >> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> >> index 71ac6c1cdc36..4c26b283b7d8 100644
-> >> --- a/fs/xfs/xfs_super.c
-> >> +++ b/fs/xfs/xfs_super.c
-> >> @@ -1234,25 +1234,12 @@ xfs_fc_parse_param(
-> >>  	case Opt_nouuid:
-> >>  		mp->m_flags |= XFS_MOUNT_NOUUID;
-> >>  		return 0;
-> >> -	case Opt_ikeep:
-> >> -		mp->m_flags |= XFS_MOUNT_IKEEP;
-> >> -		return 0;
-> >> -	case Opt_noikeep:
-> >> -		mp->m_flags &= ~XFS_MOUNT_IKEEP;
-> >> -		return 0;
-> >>  	case Opt_largeio:
-> >>  		mp->m_flags |= XFS_MOUNT_LARGEIO;
-> >>  		return 0;
-> >>  	case Opt_nolargeio:
-> >>  		mp->m_flags &= ~XFS_MOUNT_LARGEIO;
-> >>  		return 0;
-> >> -	case Opt_attr2:
-> >> -		mp->m_flags |= XFS_MOUNT_ATTR2;
-> >> -		return 0;
-> >> -	case Opt_noattr2:
-> >> -		mp->m_flags &= ~XFS_MOUNT_ATTR2;
-> >> -		mp->m_flags |= XFS_MOUNT_NOATTR2;
-> >> -		return 0;
-> >>  	case Opt_filestreams:
-> >>  		mp->m_flags |= XFS_MOUNT_FILESTREAMS;
-> >>  		return 0;
-> >> @@ -1304,6 +1291,23 @@ xfs_fc_parse_param(
-> >>  		xfs_mount_set_dax_mode(mp, result.uint_32);
-> >>  		return 0;
-> >>  #endif
-> >> +	case Opt_ikeep:
-> >> +		xfs_warn(mp, "%s mount option is deprecated.", param->key);
-> >> +		mp->m_flags |= XFS_MOUNT_IKEEP;
+> > Heh, well, we have no way of knowing.  We literally just threw away
+> > the information about which blocks are uptodate.  So the best we can
+> > do is work with the single bit we have.  We do know that there are no
+> > dirty blocks left on the page at this point (... maybe we should add a
+> > VM_BUG_ON(!PageUptodate && PageDirty)).
 > > 
-> > It's a little odd that you didn't then remove these XFS_MOUNT_ flags.
-> > It's strange to declare a mount option deprecated but still have it
-> > change behavior.
 > 
-> but ... this doesn't change behavior, right?  The flag is still set.
+> Right..
 > 
-> I think it makes sense to announce deprecation, with a date set for future
-> removal, but keep all other behavior the same.  That gives people who still
-> need it (if any exist) time to complain, right?
-
-Ok.  I'm fine with these knobs continuing to affect xfs behavior right
-up to the deprecation date.
-
-> > In this case, I guess we should keep ikeep/noikeep in the mount options
-> > table so that scripts won't fail, but then we remove XFS_MOUNT_IKEEP and
-> > change the codebase to always take the IKEEP behavior and delete the
-> > code that handled the !IKEEP behavior.
+> > Something we could do is summarise the block uptodate information in
+> > the 32/64 bits of page_private without setting PagePrivate.  That would
+> > cause us to still allocate an iop so we can track reads/writes, but we
+> > might be able to avoid a few reads.
 > > 
-> >> +		return 0;
-> >> +	case Opt_noikeep:
-> >> +		xfs_warn(mp, "%s mount option is deprecated.", param->key);
-> >> +		mp->m_flags &= ~XFS_MOUNT_IKEEP;
-> >> +		return 0;
-> >> +	case Opt_attr2:
-> >> +		xfs_warn(mp, "%s mount option is deprecated.", param->key);
-> >> +		mp->m_flags |= XFS_MOUNT_ATTR2;
-
-Side note: shouldn't this clause be clearing XFS_MOUNT_NOATTR2?
-
+> > But I don't think it's worth it.  Partially uptodate pages are not what
+> > we should be optimising for; we should try to get & keep pages uptodate.
+> > After all, it's a page cache ;-)
 > > 
-> > If the kernel /does/ encounter an attr1 filesystem, what will it do now?
 > 
-> The same as it did yesterday; the flag is still set for now.
-> 
-> > IIRC the default (if there is no attr2/noattr2 mount option) is to
-> > auto-upgrade the fs, right?  So will we stop doing that, or are we
-> > making the upgrade mandatory now?
-> > 
-> >> +		return 0;
-> >> +	case Opt_noattr2:
-> >> +		xfs_warn(mp, "%s mount option is deprecated.", param->key);
-> >> +		mp->m_flags &= ~XFS_MOUNT_ATTR2;
-> >> +		mp->m_flags |= XFS_MOUNT_NOATTR2;
-> > 
-> > Also, uh, why move these code hunks?
-> 
-> That's my fault, I had suggested moving all the deprecated options to the end.
-> 
-> Maybe with a comment, /* REMOVE ME 2089 */ or whatever we pick?
+> Fair enough. I was thinking about whether we could ensure the page is
+> released if releasepage() effectively invalidated the page content (or
+> avoid the release if we know the mapping won't be removed), but that
+> appears to be nontrivial given the refcount interdependencies between
+> page private and removing the mapping. I.e., the private data can hold a
+> reference on the page and remove_mapping() wants to assume that the
+> caller and page cache hold the last references on the page.
 
-Ah.
+We could fix that -- remove_mapping() could take into account
+page_has_private() in its call to page_ref_freeze() -- ie:
 
---D
+-       refcount = 1 + compound_nr(page);
++	retcount = 1 + compound_nr(page) + page_has_private(page);
 
-> -Eric
+like some other parts of the VM do.  And then the filesystem could
+detach_page_private() in its aops->freepage() (which XFS aops don't
+currently use).
+
+That change might be a little larger than would be appreciated for a
+data corruption fix going back two years.  And there's already other
+reasons for wanting to be able to create an iop for an Uptodate page
+(ie the THP patchset).
