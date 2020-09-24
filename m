@@ -2,133 +2,110 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,TVD_SUBJ_ACC_NUM,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61A49C4363D
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 17:56:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEB6FC4363D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 18:19:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C2172311B
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 17:56:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MykyBlX4"
+	by mail.kernel.org (Postfix) with ESMTP id 83C902311B
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 18:19:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728643AbgIXR4l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 13:56:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33492 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726915AbgIXR4l (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 13:56:41 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 494B2C0613CE;
-        Thu, 24 Sep 2020 10:56:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=rXnTpPeLayDi5vbT9auZkwpsP9S5IsSrD7JgND0hZbE=; b=MykyBlX4OcmCmUSUItDZ9A3Zks
-        b33wQ4EGRF7pb3/K3B0a7S08HCttrNQLGPdUcqgqudDEqNVtgxaqrdUbt5MhRzo6xwocX1R4ViSBf
-        F8Xd+Jidpp+wYaxhkPDwX2VtIkX/4sYfSzvG1k96JCf/gjQ2hma6oAnN2wvn0OreXZLNcwHbO/XLj
-        JXJ8VEdMzWafodtejmAYjmwREA/+fO4YBgGbZ8/rgLC/GsHyqIHpkugb6MyjB4+4nQr5sU5E9OO0V
-        szA27MjmiHO1vE3ZEtyTntQrApwOXCcYvVsAvAUVCqdZz7MvtGJ7wuI7OvIvEp9yFBPU/uxAkMKwp
-        6d3YVF1Q==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kLVTy-0001cQ-JO; Thu, 24 Sep 2020 17:56:39 +0000
-Date:   Thu, 24 Sep 2020 18:56:38 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Qian Cai <cai@redhat.com>
-Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
-Message-ID: <20200924175638.GA32101@casper.infradead.org>
-References: <20200924125608.31231-1-willy@infradead.org>
- <20200924131235.GA2603692@bfoster>
- <20200924135900.GV32101@casper.infradead.org>
- <20200924151259.GB2603692@bfoster>
- <20200924152211.GX32101@casper.infradead.org>
- <20200924172653.GC2603692@bfoster>
+        id S1728605AbgIXST1 convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 14:19:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40622 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727753AbgIXST0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 24 Sep 2020 14:19:26 -0400
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 202127] cannot mount or create xfs on a  597T device
+Date:   Thu, 24 Sep 2020 18:19:25 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: daimh@umich.edu
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: PATCH_ALREADY_AVAILABLE
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_status resolution
+Message-ID: <bug-202127-201763-VBabxAHYN6@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-202127-201763@https.bugzilla.kernel.org/>
+References: <bug-202127-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200924172653.GC2603692@bfoster>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 24, 2020 at 01:26:53PM -0400, Brian Foster wrote:
-> On Thu, Sep 24, 2020 at 04:22:11PM +0100, Matthew Wilcox wrote:
-> > On Thu, Sep 24, 2020 at 11:12:59AM -0400, Brian Foster wrote:
-> > > On Thu, Sep 24, 2020 at 02:59:00PM +0100, Matthew Wilcox wrote:
-> > > > On Thu, Sep 24, 2020 at 09:12:35AM -0400, Brian Foster wrote:
-> > > > > On Thu, Sep 24, 2020 at 01:56:08PM +0100, Matthew Wilcox (Oracle) wrote:
-> > > > > > For filesystems with block size < page size, we need to set all the
-> > > > > > per-block uptodate bits if the page was already uptodate at the time
-> > > > > > we create the per-block metadata.  This can happen if the page is
-> > > > > > invalidated (eg by a write to drop_caches) but ultimately not removed
-> > > > > > from the page cache.
-> > > > > > 
-> > > > > > This is a data corruption issue as page writeback skips blocks which
-> > > > > > are marked !uptodate.
-> > > > > 
-> > > > > Thanks. Based on my testing of clearing PageUptodate here I suspect this
-> > > > > will similarly prevent the problem, but I'll give this a test
-> > > > > nonetheless. 
-> > > > > 
-> > > > > I am a little curious why we'd prefer to fill the iop here rather than
-> > > > > just clear the page state if the iop data has been released. If the page
-> > > > > is partially uptodate, then we end up having to re-read the page
-> > > > > anyways, right? OTOH, I guess this behavior is more consistent with page
-> > > > > size == block size filesystems where iop wouldn't exist and we just go
-> > > > > by page state, so perhaps that makes more sense.
-> > > > 
-> > > > Well, it's _true_ ... the PageUptodate bit means that every byte in this
-> > > > page is at least as new as every byte on storage.  There's no need to
-> > > > re-read it, which is what we'll do if we ClearPageUptodate.
-> > > 
-> > > Yes, of course. I'm just noting the inconsistent behavior between a full
-> > > and partially uptodate page.
-> > 
-> > Heh, well, we have no way of knowing.  We literally just threw away
-> > the information about which blocks are uptodate.  So the best we can
-> > do is work with the single bit we have.  We do know that there are no
-> > dirty blocks left on the page at this point (... maybe we should add a
-> > VM_BUG_ON(!PageUptodate && PageDirty)).
-> > 
-> 
-> Right..
-> 
-> > Something we could do is summarise the block uptodate information in
-> > the 32/64 bits of page_private without setting PagePrivate.  That would
-> > cause us to still allocate an iop so we can track reads/writes, but we
-> > might be able to avoid a few reads.
-> > 
-> > But I don't think it's worth it.  Partially uptodate pages are not what
-> > we should be optimising for; we should try to get & keep pages uptodate.
-> > After all, it's a page cache ;-)
-> > 
-> 
-> Fair enough. I was thinking about whether we could ensure the page is
-> released if releasepage() effectively invalidated the page content (or
-> avoid the release if we know the mapping won't be removed), but that
-> appears to be nontrivial given the refcount interdependencies between
-> page private and removing the mapping. I.e., the private data can hold a
-> reference on the page and remove_mapping() wants to assume that the
-> caller and page cache hold the last references on the page.
+https://bugzilla.kernel.org/show_bug.cgi?id=202127
 
-We could fix that -- remove_mapping() could take into account
-page_has_private() in its call to page_ref_freeze() -- ie:
+daimh@umich.edu changed:
 
--       refcount = 1 + compound_nr(page);
-+	retcount = 1 + compound_nr(page) + page_has_private(page);
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |PATCH_ALREADY_AVAILABLE
 
-like some other parts of the VM do.  And then the filesystem could
-detach_page_private() in its aops->freepage() (which XFS aops don't
-currently use).
+--- Comment #37 from daimh@umich.edu ---
+Today another new machine had the same problem. I fixed it by upgrading the
+firmware.
 
-That change might be a little larger than would be appreciated for a
-data corruption fix going back two years.  And there's already other
-reasons for wanting to be able to create an iop for an Uptodate page
-(ie the THP patchset).
+
+####Here is the info before the update
+# /opt/MegaRAID/storcli/storcli  /c0 show all |grep ^Firmware
+Firmware Package Build = 24.19.0-0049
+Firmware Version = 4.720.00-8220
+# blockdev --getiomin   --getioopt /dev/sdc
+1048576
+262144
+# mkfs -t xfs /dev/sdc 
+meta-data=/dev/sdc               isize=512    agcount=262, agsize=268434944
+blks
+         =                       sectsz=4096  attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=0
+         =                       reflink=1
+data     =                       bsize=4096   blocks=70314098688, imaxpct=1
+         =                       sunit=256    swidth=64 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=521728, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+SB stripe unit sanity check failed
+Metadata corruption detected at 0x56324656db89, xfs_sb block 0x0/0x1000
+libxfs_bwrite: write verifier failed on xfs_sb bno 0x0/0x1000
+mkfs.xfs: Releasing dirty buffer to free list!
+found dirty buffer (bulk) on free list!
+SB stripe unit sanity check failed
+Metadata corruption detected at 0x56324656db89, xfs_sb block 0x0/0x1000
+libxfs_bwrite: write verifier failed on xfs_sb bno 0x0/0x1000
+mkfs.xfs: writing AG headers failed, err=117
+
+
+#####Then I upgraded with the command below and rebooted it
+# /opt/MegaRAID/storcli/storcli  /c0 download file=mr3316fw.rom 
+
+#####Here the info after the update
+# /opt/MegaRAID/storcli/storcli  /c0 show all |grep -i firmware
+Firmware Package Build = 24.22.0-0071
+Firmware Version = 4.740.00-8452
+# blockdev --getiomin   --getioopt /dev/sdc
+262144
+262144
+#
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
