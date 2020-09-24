@@ -2,121 +2,94 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1013DC4727D
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 15:28:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39F02C4363D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 16:19:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE6692311A
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 15:28:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D92852388A
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 16:19:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KgXwBeE8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728436AbgIXP2B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 11:28:01 -0400
-Received: from mga07.intel.com ([134.134.136.100]:58165 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728285AbgIXP2B (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Sep 2020 11:28:01 -0400
-IronPort-SDR: LgHY0KrwQPGYD8SVZHo9lC2CB9hS6VurKlP5T24v6rn3lPQtiPzUQ+fIP3LGZEhGydGACpNRA8
- DUicohK0+Cow==
-X-IronPort-AV: E=McAfee;i="6000,8403,9753"; a="225381798"
-X-IronPort-AV: E=Sophos;i="5.77,298,1596524400"; 
-   d="scan'208";a="225381798"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2020 08:28:00 -0700
-IronPort-SDR: LA1eFb5xMaqYkH1ryN0Tb0/RIqDte/AgdxwEvMOTpof540OpjqnWCwyWoZf1UHzvpvcAWIRBBU
- sPiUZx0xqZ9Q==
-X-IronPort-AV: E=Sophos;i="5.77,298,1596524400"; 
-   d="scan'208";a="486940874"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2020 08:28:00 -0700
-Date:   Thu, 24 Sep 2020 08:27:59 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Hao Li <lihao2018.fnst@cn.fujitsu.com>
-Cc:     linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        david@fromorbit.com, linux-xfs@vger.kernel.org,
-        viro@zeniv.linux.org.uk, y-goto@fujitsu.com
-Subject: Re: [PATCH v2] fs: Kill DCACHE_DONTCACHE dentry even if
- DCACHE_REFERENCED is set
-Message-ID: <20200924152759.GJ2540965@iweiny-DESK2.sc.intel.com>
-References: <20200924055958.825515-1-lihao2018.fnst@cn.fujitsu.com>
+        id S1726497AbgIXQTP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 12:19:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46716 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726477AbgIXQTP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 12:19:15 -0400
+Received: from mail-ot1-x343.google.com (mail-ot1-x343.google.com [IPv6:2607:f8b0:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22ECEC0613CE;
+        Thu, 24 Sep 2020 09:19:15 -0700 (PDT)
+Received: by mail-ot1-x343.google.com with SMTP id c2so1663441otp.7;
+        Thu, 24 Sep 2020 09:19:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=EDrVEIgRKX7DJHruxvfWiEIEjp75G6MffjRUfIzRobk=;
+        b=KgXwBeE8eBvm9xJKsCWdNtbXpSuC/6StTGu0Q5164xy7XkeG8qJDADIfxv4VWmpNuq
+         8Gss+VlXw3LfHQkceCMfeLIjNTv9PFs5iEdeOEbbNUWbSYlvaskZ2p48E5Gv5Cg8aDCg
+         lc5QBukmSTYDy0UiGAxEcHUDjPe+m4P3jsnGbbhsIA/7VMbsnxRb9FPS2Dw+mgsQcaIz
+         xleqLdgDvjqjXTu08RO4X1O3umFIuoBW/Y1lDvLGenEs2TNTq6OZuC3mTGjGcDmrmeNr
+         2RlytAA/oVr/MoDgqUyP9RFrr5S9saMtbRmxI7rSjxVqBHXWQJlbpNkr8sTAelbYdWwJ
+         l0hg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=EDrVEIgRKX7DJHruxvfWiEIEjp75G6MffjRUfIzRobk=;
+        b=XSmig/bBSf3LKdUlZi8AsaCmRR7DOcpIyzwD11dfHLa/iPwwOcFZJHiwjKj0BSw+bm
+         dLO3XsyDIQikq/Dl1QjUIYQIIllOaofCvquxLr7gcNlMYm/wxIAsmDPM7aj/UZbh8Wqp
+         uSKbC205ti2rvdl6r0FNkeYtYfijIWDLZABI+FIQ5Q8+v27f6s7fbs4U3Hf2TUIwxN+V
+         HBaF2Unv4VuSO7YMgniWqSl3RTJZzbr0Q/ZryKCUxxijVc9Wzz0h0F1Pt0Lg8ln/Xsn4
+         4e/yEf1zJBWvAQ7SggQegwx5o0nhOaFeBZV1NEQOXqSmCwWI2I3yJC9yDiIrKnvYZrnA
+         euqg==
+X-Gm-Message-State: AOAM530w11m85RQ3GMSbCzkaxunD+FEZxKtsdp7iAXqvkngAWPMDGQox
+        MSfq46KAsT8wCCjjtRALoonhwZGstz37kvX9Wmu+d81OflI=
+X-Google-Smtp-Source: ABdhPJyqVHCc8Cnz+bPH4+z4HNo3jgU6hfL+HkJ6shnN/Y4Fc6DBtW1IZ/2ZePgbFEzrsqIeDEXsehjG8uBU1VHwraQ=
+X-Received: by 2002:a05:6830:110b:: with SMTP id w11mr285499otq.109.1600964354539;
+ Thu, 24 Sep 2020 09:19:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200924055958.825515-1-lihao2018.fnst@cn.fujitsu.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+References: <20200924125608.31231-1-willy@infradead.org> <CA+icZUUQGmd3juNPv1sHTWdhzXwZzRv=p1i+Q=20z_WGcZOzbg@mail.gmail.com>
+ <20200924151538.GW32101@casper.infradead.org> <CA+icZUX4bQf+pYsnOR0gHZLsX3NriL=617=RU0usDfx=idgZmA@mail.gmail.com>
+ <20200924152755.GY32101@casper.infradead.org>
+In-Reply-To: <20200924152755.GY32101@casper.infradead.org>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Thu, 24 Sep 2020 18:19:03 +0200
+Message-ID: <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Qian Cai <cai@redhat.com>, Brian Foster <bfoster@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 24, 2020 at 01:59:58PM +0800, Hao Li wrote:
-> If DCACHE_REFERENCED is set, fast_dput() will return true, and then
-> retain_dentry() have no chance to check DCACHE_DONTCACHE. As a result,
-> the dentry won't be killed and the corresponding inode can't be evicted.
-> In the following example, the DAX policy can't take effects unless we
-> do a drop_caches manually.
-> 
->   # DCACHE_LRU_LIST will be set
->   echo abcdefg > test.txt
-> 
->   # DCACHE_REFERENCED will be set and DCACHE_DONTCACHE can't do anything
->   xfs_io -c 'chattr +x' test.txt
-> 
->   # Drop caches to make DAX changing take effects
->   echo 2 > /proc/sys/vm/drop_caches
-> 
-> What this patch does is preventing fast_dput() from returning true if
-> DCACHE_DONTCACHE is set. Then retain_dentry() will detect the
-> DCACHE_DONTCACHE and will return false. As a result, the dentry will be
-> killed and the inode will be evicted. In this way, if we change per-file
-> DAX policy, it will take effects automatically after this file is closed
-> by all processes.
-> 
-> I also add some comments to make the code more clear.
-> 
-> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
+On Thu, Sep 24, 2020 at 5:27 PM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Thu, Sep 24, 2020 at 05:21:00PM +0200, Sedat Dilek wrote:
+> > Great and thanks.
+> >
+> > Can you send out a seperate patch and label it with "PATCH v5.9"?
+> > I run:
+> > $ git format-patch -1 --subject-prefix="PATCH v5.9" --signoff
+> >
+> > Normally, I catch patches from any patchwork URL in mbox format.
+>
+> Maybe wait a few hours for people to decide if they like the approach
+> taken to fix the bug before diving into producing backports?
 
-Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+That make sense.
 
-> ---
-> v1 is split into two standalone patch as discussed in [1], and the first
-> patch has been reviewed in [2]. This is the second patch.
-> 
-> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
-> [2]: https://lore.kernel.org/linux-fsdevel/20200906214002.GI12131@dread.disaster.area/
-> 
->  fs/dcache.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/dcache.c b/fs/dcache.c
-> index ea0485861d93..97e81a844a96 100644
-> --- a/fs/dcache.c
-> +++ b/fs/dcache.c
-> @@ -793,10 +793,17 @@ static inline bool fast_dput(struct dentry *dentry)
->  	 * a reference to the dentry and change that, but
->  	 * our work is done - we can leave the dentry
->  	 * around with a zero refcount.
-> +	 *
-> +	 * Nevertheless, there are two cases that we should kill
-> +	 * the dentry anyway.
-> +	 * 1. free disconnected dentries as soon as their refcount
-> +	 *    reached zero.
-> +	 * 2. free dentries if they should not be cached.
->  	 */
->  	smp_rmb();
->  	d_flags = READ_ONCE(dentry->d_flags);
-> -	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST | DCACHE_DISCONNECTED;
-> +	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST |
-> +			DCACHE_DISCONNECTED | DCACHE_DONTCACHE;
->  
->  	/* Nothing to do? Dropping the reference was all we needed? */
->  	if (d_flags == (DCACHE_REFERENCED | DCACHE_LRU_LIST) && !d_unhashed(dentry))
-> -- 
-> 2.28.0
-> 
-> 
-> 
+You have a test-case for me?
+I have here Linux-Test-Project and FIO available.
+
+- Sedat -
