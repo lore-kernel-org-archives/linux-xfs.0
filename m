@@ -2,121 +2,113 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0606C4363D
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 15:11:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B2CFC4363D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 15:13:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 875E32344C
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 15:11:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9ED920888
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 15:13:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vyKg0Rz8"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="f8L2i5rq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728215AbgIXPLj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 11:11:39 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:40796 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728328AbgIXPLi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 11:11:38 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08OF3ZE8126845;
-        Thu, 24 Sep 2020 15:10:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=bPreJNRnfbvJexSejqPqxrVO7p8ZoAhF4nqOL6tsKT0=;
- b=vyKg0Rz8MVddrRtqQOuEvKEUkVBNHJrgC9URc2KLTKJwX2JJq6MimBi3HCopPTI57ej6
- nDwVinjRrjYzslpz+Rk5s5eEBdf94M+IMDoYZ3ujywmBcS9lE9FZ7nm4kzrp4wDB1jA5
- 9GZ3hmXmcakg3Tudhn+hnf0jZKLIbt4XJH+odmhsWuW1CAChONEKpbkrLB8ZT/AbYk9y
- lIXUYxeaxfFAAc3QeTtOgzam2fgQEAaqMJ/rOdetI6TvMfMGcKosb7aoKYXDYbsVs7Iw
- a0fdovrhe5tT9kqNtKVQJFaPqSAyG0Cs1c8uEGzYuiYYDaWuOGY0oSjKZy1wndWxBVcr qA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 33qcpu5snb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 24 Sep 2020 15:10:31 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08OF5URh192342;
-        Thu, 24 Sep 2020 15:08:30 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 33nux2wej4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Sep 2020 15:08:30 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08OF8RBM022087;
-        Thu, 24 Sep 2020 15:08:27 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Sep 2020 08:08:27 -0700
-Date:   Thu, 24 Sep 2020 08:08:27 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xiakaixu1987@gmail.com
-Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
-Subject: Re: [RFC PATCH] xfs: directly call xfs_generic_create() for
- ->create() and ->mkdir()
-Message-ID: <20200924150827.GF7955@magnolia>
-References: <1600957817-22969-1-git-send-email-kaixuxia@tencent.com>
+        id S1728284AbgIXPNN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 11:13:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:40690 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728164AbgIXPNN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 11:13:13 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1600960391;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Pyo3BqJobdw3Fesdiv8uTEeEmfJGGPZU40sRlf0Yk88=;
+        b=f8L2i5rqUchNR5gj3hZPxDAkECnwva1gSChWjeh/X7bO9gaSW6cQ4Xby61kXDcz6Bd2QAi
+        JAxY/CO24U7+qDiKEMO8XFpwON63Q1k09KmJjQy4fzuwJUAmvpiteS8CcQ/ZFfCV1u+f9b
+        +Yat4czxxtCBBkrz0JCV5pR8xtzo1uE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-100-bcNwtBvIMKK6Y_js6K0wRA-1; Thu, 24 Sep 2020 11:13:06 -0400
+X-MC-Unique: bcNwtBvIMKK6Y_js6K0wRA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6976681F02E;
+        Thu, 24 Sep 2020 15:13:05 +0000 (UTC)
+Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C83255C1D7;
+        Thu, 24 Sep 2020 15:13:01 +0000 (UTC)
+Date:   Thu, 24 Sep 2020 11:12:59 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Qian Cai <cai@redhat.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+Message-ID: <20200924151259.GB2603692@bfoster>
+References: <20200924125608.31231-1-willy@infradead.org>
+ <20200924131235.GA2603692@bfoster>
+ <20200924135900.GV32101@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1600957817-22969-1-git-send-email-kaixuxia@tencent.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 adultscore=0
- bulkscore=0 mlxlogscore=699 phishscore=0 suspectscore=3 spamscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009240116
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9753 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 mlxlogscore=681
- adultscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0 priorityscore=1501
- phishscore=0 spamscore=0 malwarescore=0 clxscore=1015 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009240116
+In-Reply-To: <20200924135900.GV32101@casper.infradead.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 24, 2020 at 10:30:17PM +0800, xiakaixu1987@gmail.com wrote:
-> From: Kaixu Xia <kaixuxia@tencent.com>
+On Thu, Sep 24, 2020 at 02:59:00PM +0100, Matthew Wilcox wrote:
+> On Thu, Sep 24, 2020 at 09:12:35AM -0400, Brian Foster wrote:
+> > On Thu, Sep 24, 2020 at 01:56:08PM +0100, Matthew Wilcox (Oracle) wrote:
+> > > For filesystems with block size < page size, we need to set all the
+> > > per-block uptodate bits if the page was already uptodate at the time
+> > > we create the per-block metadata.  This can happen if the page is
+> > > invalidated (eg by a write to drop_caches) but ultimately not removed
+> > > from the page cache.
+> > > 
+> > > This is a data corruption issue as page writeback skips blocks which
+> > > are marked !uptodate.
+> > 
+> > Thanks. Based on my testing of clearing PageUptodate here I suspect this
+> > will similarly prevent the problem, but I'll give this a test
+> > nonetheless. 
+> > 
+> > I am a little curious why we'd prefer to fill the iop here rather than
+> > just clear the page state if the iop data has been released. If the page
+> > is partially uptodate, then we end up having to re-read the page
+> > anyways, right? OTOH, I guess this behavior is more consistent with page
+> > size == block size filesystems where iop wouldn't exist and we just go
+> > by page state, so perhaps that makes more sense.
 > 
-> The current create and mkdir handlers both call the xfs_vn_mknod()
-> which is a wrapper routine around xfs_generic_create() function.
-> Actually the create and mkdir handlers can directly call
-> xfs_generic_create() function and reduce the call chain.
+> Well, it's _true_ ... the PageUptodate bit means that every byte in this
+> page is at least as new as every byte on storage.  There's no need to
+> re-read it, which is what we'll do if we ClearPageUptodate.
 > 
-> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
-> ---
->  fs/xfs/xfs_iops.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 80a13c8561d8..b29d5b25634c 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -237,7 +237,7 @@ xfs_vn_create(
->  	umode_t		mode,
->  	bool		flags)
->  {
-> -	return xfs_vn_mknod(dir, dentry, mode, 0);
-> +	return xfs_generic_create(dir, dentry, mode, 0, false);
->  }
->  
->  STATIC int
-> @@ -246,7 +246,7 @@ xfs_vn_mkdir(
->  	struct dentry	*dentry,
->  	umode_t		mode)
->  {
-> -	return xfs_vn_mknod(dir, dentry, mode|S_IFDIR, 0);
-> +	return xfs_generic_create(dir, dentry, mode|S_IFDIR, 0, false);
 
-Might as well separate mode, the pipe, and S_IFDIR with a space...
+Yes, of course. I'm just noting the inconsistent behavior between a full
+and partially uptodate page.
 
---D
+Brian
 
->  }
->  
->  STATIC struct dentry *
-> -- 
-> 2.20.0
+> My original motivation for this was splitting a THP.  In that case,
+> we have, let's say, 16 * 4kB pages, and an iop for 64 blocks.  When we
+> split that 64kB page into 16 4kB pages, we can't afford to allocate 16
+> iops for them, so we just drop the iop and copy the uptodate state from
+> the head page to all subpages.
 > 
+> So now we have 16 pages, all marked uptodate (and with valid data) but
+> no iop.  So we need to create an iop for each page during the writeback
+> path, and that has to be created with uptodate bits or we'll skip the
+> entire page.  When I wrote the patch below, I had no idea we could
+> already get an iop allocated for an uptodate page, or I would have
+> submitted this patch months ago.
+> 
+> http://git.infradead.org/users/willy/pagecache.git/commitdiff/bc503912d4a9aad4496a4591e9992f0ada47a9c9
+> 
+
