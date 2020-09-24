@@ -2,96 +2,106 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 672E5C4363D
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 13:59:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06B35C4363D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 14:30:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1352B20B1F
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 13:59:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F6932311A
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 14:30:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="AI34F+Xb"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nx+S+hcf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728091AbgIXN7D (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 09:59:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53234 "EHLO
+        id S1728129AbgIXOaY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 10:30:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58086 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727970AbgIXN7D (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 09:59:03 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0B4ECC0613CE;
-        Thu, 24 Sep 2020 06:59:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=hug6s8+8lq9lwcdzlq9aErM3rYYYEQGQn5xx+p5VjoI=; b=AI34F+XbZgxnfiPgroDkfneKcW
-        s2GFVLoXhb/roI3d9dnsEH70J71FeLFYt9F6fVuUlpphyTpKaDQ3If84LY2oI9+AL+E8oY6CEhCWY
-        BPIFVaSjdYXGWoZWvrAiB5XOGEo9ITC6Bf3jfSIO6nf2FGfMM7La+jU58FjOJM1D+gzbUtfK7Ks/u
-        rS0GdYfYy6xL5gAV1oNblTedh+yxzSzpehbGmiihAzpUvNZM4EXSU/FScnDoqQoK6C2XmAYaDTBk9
-        eF2hgTrueXk5YLVDtUTiE00kF4tVVT8jP2ettssUE+5m73qbLYNYx64L1QP5GIigXFLR0XROBt7rV
-        ddJiaNfA==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kLRm0-0003vc-GP; Thu, 24 Sep 2020 13:59:01 +0000
-Date:   Thu, 24 Sep 2020 14:59:00 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Qian Cai <cai@redhat.com>
-Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
-Message-ID: <20200924135900.GV32101@casper.infradead.org>
-References: <20200924125608.31231-1-willy@infradead.org>
- <20200924131235.GA2603692@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200924131235.GA2603692@bfoster>
+        with ESMTP id S1728182AbgIXOaY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 10:30:24 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03C1CC0613CE
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2020 07:30:24 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id d19so1791076pld.0
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2020 07:30:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=i5k3a/8VhkZ2yM5Xi3vg718tPLh7mrMVH9TZsdEHrQk=;
+        b=nx+S+hcfpK2IJeoTk5Ovb+yU2DFL4PrItpLz0Fj34NFxgXXUJ/w5YCK6TSK9xv+o9l
+         oj0WSbZKyHbyn7cc33Gnnzqt8x/3N6EMAcPER2AZklAaV2m+TFbYUhjnsodd86h0TZ56
+         0K3xLJpEuzK+3zmZUrFxqweyDyyrhvotOPy5iMv9nvhc7MZ5w0B2Gb0qodhimrpUAEzb
+         HBsTIdWvkR+gluZiIrs9IEqaQdiPmWazF8SbxO+8CdPINbmPu1jMORJLOOQWmUIG7f2u
+         ugZaqXM7RB/psnqZmKl12+cmkoUx3+dyNkXI6Xh/KlWSg29j674fvNaw/OlQiowr2aXl
+         vtLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=i5k3a/8VhkZ2yM5Xi3vg718tPLh7mrMVH9TZsdEHrQk=;
+        b=uRg/Qjg7fJa+JctBFzaO5XeUtPEpkz/hsTOgTzS/Dob6kO5SrgiVSn50+KruVoUJLl
+         PiMmNUzJMAoPxX4dV6aZ9FIAN6A6s9rDwAojJcLBjB9Gshj2F8M4OzGRkf8TqVMuB6Kc
+         803L6I2KmK2CaMeUZNgH15HATZfggq55LWKqDzzIKzUyWF+OGdPrAgY9Uns/wmtGjOrr
+         rLlf7tIAGqMV4Yvs/7P9s0Df4+C48F6BFNlJvtxW3Gpp/oj9j+Mq3Q0YPexoQnH1TWo4
+         aJAJjLzziiNXi7q/NOZgXpjMVsd/0U58g8wXFVNGveLY95LczRbMRQ/g13O3SoHU3xEU
+         jKGg==
+X-Gm-Message-State: AOAM5319u3Eb48qMtaGP4Hh9BulwTF0h97OSTtp/B94RI1bazaGiuX/I
+        jfkEYxmoqnCOF7kE/nWXhx4bkBzVlA==
+X-Google-Smtp-Source: ABdhPJxBisJv67msFC+smxT8SD/2RvZ/FhqDxlV7ariFfzw4u8Qis0CKUs2yrJa79/PoJsgYXScbfQ==
+X-Received: by 2002:a17:902:8bca:b029:d2:42fe:21da with SMTP id r10-20020a1709028bcab02900d242fe21damr4700987plo.31.1600957823216;
+        Thu, 24 Sep 2020 07:30:23 -0700 (PDT)
+Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id f9sm2539051pjq.26.2020.09.24.07.30.22
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 24 Sep 2020 07:30:22 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [RFC PATCH] xfs: directly call xfs_generic_create() for ->create() and ->mkdir()
+Date:   Thu, 24 Sep 2020 22:30:17 +0800
+Message-Id: <1600957817-22969-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 24, 2020 at 09:12:35AM -0400, Brian Foster wrote:
-> On Thu, Sep 24, 2020 at 01:56:08PM +0100, Matthew Wilcox (Oracle) wrote:
-> > For filesystems with block size < page size, we need to set all the
-> > per-block uptodate bits if the page was already uptodate at the time
-> > we create the per-block metadata.  This can happen if the page is
-> > invalidated (eg by a write to drop_caches) but ultimately not removed
-> > from the page cache.
-> > 
-> > This is a data corruption issue as page writeback skips blocks which
-> > are marked !uptodate.
-> 
-> Thanks. Based on my testing of clearing PageUptodate here I suspect this
-> will similarly prevent the problem, but I'll give this a test
-> nonetheless. 
-> 
-> I am a little curious why we'd prefer to fill the iop here rather than
-> just clear the page state if the iop data has been released. If the page
-> is partially uptodate, then we end up having to re-read the page
-> anyways, right? OTOH, I guess this behavior is more consistent with page
-> size == block size filesystems where iop wouldn't exist and we just go
-> by page state, so perhaps that makes more sense.
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-Well, it's _true_ ... the PageUptodate bit means that every byte in this
-page is at least as new as every byte on storage.  There's no need to
-re-read it, which is what we'll do if we ClearPageUptodate.
+The current create and mkdir handlers both call the xfs_vn_mknod()
+which is a wrapper routine around xfs_generic_create() function.
+Actually the create and mkdir handlers can directly call
+xfs_generic_create() function and reduce the call chain.
 
-My original motivation for this was splitting a THP.  In that case,
-we have, let's say, 16 * 4kB pages, and an iop for 64 blocks.  When we
-split that 64kB page into 16 4kB pages, we can't afford to allocate 16
-iops for them, so we just drop the iop and copy the uptodate state from
-the head page to all subpages.
+Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+---
+ fs/xfs/xfs_iops.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-So now we have 16 pages, all marked uptodate (and with valid data) but
-no iop.  So we need to create an iop for each page during the writeback
-path, and that has to be created with uptodate bits or we'll skip the
-entire page.  When I wrote the patch below, I had no idea we could
-already get an iop allocated for an uptodate page, or I would have
-submitted this patch months ago.
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 80a13c8561d8..b29d5b25634c 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -237,7 +237,7 @@ xfs_vn_create(
+ 	umode_t		mode,
+ 	bool		flags)
+ {
+-	return xfs_vn_mknod(dir, dentry, mode, 0);
++	return xfs_generic_create(dir, dentry, mode, 0, false);
+ }
+ 
+ STATIC int
+@@ -246,7 +246,7 @@ xfs_vn_mkdir(
+ 	struct dentry	*dentry,
+ 	umode_t		mode)
+ {
+-	return xfs_vn_mknod(dir, dentry, mode|S_IFDIR, 0);
++	return xfs_generic_create(dir, dentry, mode|S_IFDIR, 0, false);
+ }
+ 
+ STATIC struct dentry *
+-- 
+2.20.0
 
-http://git.infradead.org/users/willy/pagecache.git/commitdiff/bc503912d4a9aad4496a4591e9992f0ada47a9c9
