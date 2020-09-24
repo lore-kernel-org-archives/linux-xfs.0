@@ -2,88 +2,102 @@ Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2F73C4363D
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 20:42:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 501B0C4346E
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 23:58:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B5792399A
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 20:42:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E42C221E2
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 23:58:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eIcNbl1H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726183AbgIXUmF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 16:42:05 -0400
-Received: from sandeen.net ([63.231.237.45]:37172 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725208AbgIXUmF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 24 Sep 2020 16:42:05 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B79CEEF1;
-        Thu, 24 Sep 2020 15:41:27 -0500 (CDT)
-Subject: Re: [PATCH] generic: test reflinked file corruption after short COW
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-References: <b63354c6-795d-78e2-4002-83c08a373171@redhat.com>
- <20200924201739.GJ7955@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <2eac728e-99a0-bd64-ca6f-a62b4297708a@sandeen.net>
-Date:   Thu, 24 Sep 2020 15:42:03 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.2.2
+        id S1726631AbgIXX6A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 19:58:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60818 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726448AbgIXX6A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 19:58:00 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D531CC0613CE;
+        Thu, 24 Sep 2020 16:57:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=J/tuyLxu5cq1kPHap7w/ykYlaZ9fPtuLFMVuedHctq0=; b=eIcNbl1HriAwt/NIhyhYCjCa6k
+        tsuUYxO+iD6Ip6B9mLD1nN1N+Zy8AyJjn9cNKUeduLZAI7W2/7jL1wbHALAtVsDDUXl+3wMA8i1JI
+        IWsYuPyiKy5pRfd861FDZojdkO7ZWPG+qyU99OPUYKJ7vipdR9IvRaSObHGqp5dfVnT31wp5bxwV+
+        UDjlkh8aexyAH1M3ipZEOE9O73+WsC6eSaJ5eMErlAyV6Yw10CXEynBMn12M01NdkUjk4qRD9PxK5
+        zVBWo4IRa2+cpy5IHrEdyaShMmDiuInJBx4kMYjitpjNVNe7TTuK/7S+ASM8mXIx8vvHkBcWDUz3p
+        37/rngkw==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kLb7c-0005p0-LS; Thu, 24 Sep 2020 23:57:56 +0000
+Date:   Fri, 25 Sep 2020 00:57:56 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Sedat Dilek <sedat.dilek@gmail.com>
+Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+Message-ID: <20200924235756.GD32101@casper.infradead.org>
+References: <20200924151538.GW32101@casper.infradead.org>
+ <CA+icZUX4bQf+pYsnOR0gHZLsX3NriL=617=RU0usDfx=idgZmA@mail.gmail.com>
+ <20200924152755.GY32101@casper.infradead.org>
+ <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
+ <20200924163635.GZ32101@casper.infradead.org>
+ <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
+ <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
+ <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
+ <20200924200225.GC32101@casper.infradead.org>
+ <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20200924201739.GJ7955@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/24/20 3:17 PM, Darrick J. Wong wrote:
-> On Thu, Sep 24, 2020 at 01:19:49PM -0500, Eric Sandeen wrote:
->> This test essentially creates an existing COW extent which
->> covers the first 1M, and then does another IO that overlaps it,
->> but extends beyond it.  The bug was that we did not trim the
->> new IO to the end of the existing COW extent, and so the IO
->> extended past the COW blocks and corrupted the reflinked files(s).
->>
->> The bug came and went upstream; it will be hopefully fixed in the
->> 5.4.y stable series via:
->>
->> https://lore.kernel.org/stable/e7fe7225-4f2b-d13e-bb4b-c7db68f63124@redhat.com/
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/tests/generic/612 b/tests/generic/612
->> new file mode 100755
->> index 00000000..5a765a0c
->> --- /dev/null
->> +++ b/tests/generic/612
->> @@ -0,0 +1,83 @@
->> +#! /bin/bash
->> +# SPDX-License-Identifier: GPL-2.0
->> +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
->> +#
->> +# FS QA Test 612
->> +#
->> +# Regression test for reflink corruption present as of:
->> +# 78f0cc9d55cb "xfs: don't use delalloc extents for COW on files with extsize hints"
->> +# and (inadvertently) fixed as of:
->> +# 36adcbace24e "xfs: fill out the srcmap in iomap_begin"
+On Thu, Sep 24, 2020 at 10:04:40PM +0200, Sedat Dilek wrote:
+> On Thu, Sep 24, 2020 at 10:02 PM Matthew Wilcox <willy@infradead.org> wrote:
+> >
+> > On Thu, Sep 24, 2020 at 09:54:36PM +0200, Sedat Dilek wrote:
+> > > You are named in "mm: fix misplaced unlock_page in do_wp_page()".
+> > > Is this here a different issue?
+> >
+> > Yes, completely different.  That bug is one Linus introduced in this
+> > cycle; the bug that this patch fixes was introduced a couple of years
+> > ago, and we only noticed now because I added an assertion to -next.
+> > Maybe I should add the assertion for 5.9 too.
 > 
-> This probably should list the name of the patch that fixes it for 5.4.
-> 
-> With that added,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Can you point me to this "assertion"?
+> Thanks.
 
-Will have to wait for a merge for that, I guess.
+Here's the version against 5.8
 
-Especially with the typo fixed (or not)
-
--Eric
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 810f7dae11d9..b421e4efc4bd 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -70,11 +70,15 @@ static void
+ iomap_page_release(struct page *page)
+ {
+ 	struct iomap_page *iop = detach_page_private(page);
++	unsigned int nr_blocks = PAGE_SIZE / i_blocksize(page->mapping->host);
+ 
+ 	if (!iop)
+ 		return;
+ 	WARN_ON_ONCE(atomic_read(&iop->read_count));
+ 	WARN_ON_ONCE(atomic_read(&iop->write_count));
++	WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
++			PageUptodate(page));
++
+ 	kfree(iop);
+ }
+ 
