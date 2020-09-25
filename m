@@ -1,103 +1,124 @@
-Return-Path: <SRS0=cWrc=DB=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=2WGG=DC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 501B0C4346E
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 23:58:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F10DBC4346E
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 02:13:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E42C221E2
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Sep 2020 23:58:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 952B920EDD
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 02:13:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eIcNbl1H"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HYuYIT60"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726631AbgIXX6A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 19:58:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60818 "EHLO
+        id S1726694AbgIYCNx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Sep 2020 22:13:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726448AbgIXX6A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 19:58:00 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D531CC0613CE;
-        Thu, 24 Sep 2020 16:57:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=J/tuyLxu5cq1kPHap7w/ykYlaZ9fPtuLFMVuedHctq0=; b=eIcNbl1HriAwt/NIhyhYCjCa6k
-        tsuUYxO+iD6Ip6B9mLD1nN1N+Zy8AyJjn9cNKUeduLZAI7W2/7jL1wbHALAtVsDDUXl+3wMA8i1JI
-        IWsYuPyiKy5pRfd861FDZojdkO7ZWPG+qyU99OPUYKJ7vipdR9IvRaSObHGqp5dfVnT31wp5bxwV+
-        UDjlkh8aexyAH1M3ipZEOE9O73+WsC6eSaJ5eMErlAyV6Yw10CXEynBMn12M01NdkUjk4qRD9PxK5
-        zVBWo4IRa2+cpy5IHrEdyaShMmDiuInJBx4kMYjitpjNVNe7TTuK/7S+ASM8mXIx8vvHkBcWDUz3p
-        37/rngkw==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kLb7c-0005p0-LS; Thu, 24 Sep 2020 23:57:56 +0000
-Date:   Fri, 25 Sep 2020 00:57:56 +0100
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Sedat Dilek <sedat.dilek@gmail.com>
+        with ESMTP id S1726448AbgIYCNw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 22:13:52 -0400
+Received: from mail-ot1-x344.google.com (mail-ot1-x344.google.com [IPv6:2607:f8b0:4864:20::344])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3716C0613CE;
+        Thu, 24 Sep 2020 19:13:52 -0700 (PDT)
+Received: by mail-ot1-x344.google.com with SMTP id m12so915656otr.0;
+        Thu, 24 Sep 2020 19:13:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=fXz74Mau6+KuvvTKWE0vkW9nC6evQbwsekCfblHroN0=;
+        b=HYuYIT60YzlqDFTZWa3k+7jb6ulZ+XLGFU+E6AWf/m66bkNKT+Aap7lsIOZsuVwmOF
+         XyduNh1qm+SnNE61wVHhcWkPySDfsgpUfkGHPJk3q8l3P90kvuVkAikkSNfUKHNnT+a6
+         L/obpPfURnxJ72amJZv15zp1ASqCqD+8LPGEiAJSl3bImTGWTMMuNCfIkzpBIcPLxcR5
+         jyqCqgQ0WDnglI1I1e4riG8f59LBvErznrpUOvO88cszmT/DkU33itbjT9K1ngURU1vi
+         C6ynlb+18JXc0WcMQ9TZdkMbd3Y1qllHaRiqdO5XrTjmZY0m76sfZxa62WV17D6uSq1J
+         gQXA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=fXz74Mau6+KuvvTKWE0vkW9nC6evQbwsekCfblHroN0=;
+        b=m1UtBmAr9rf6jb3C6pCADdPYdi9JaqFgXdFtT7/UlubGkIKhUjEtJDb6yro5FcZiVS
+         ZS+Gr5prgLbeJ54jmYiwGs0Vn967AeCtl6dFjf1/qfbShZavEmpNw7ucHvQPYhraHlIW
+         FOoq+bbyx+MVSlkQxomxDqsqoVIFKMr9tBnai3X5iLBJ6yVx8cZt5SQK6A1MZLK1AkGx
+         jeXRvnJJQiq3Gbt5cq0SP/kvdM0RI2OkCNZydlIRRh/9faOmchd1J5VkIBhZIY5kyJvu
+         mQeDZVmjvAM3ogVmiHbj0Tnbhrj1PDCu7XNHPb2aikNmryVirctxjqR3E2OITJG8oCOw
+         EdcQ==
+X-Gm-Message-State: AOAM532idXOmxxuw2BOzUjE9L3+6UMljiE4H7V9MG4GeEK67UOZ4MkfS
+        gX9ax4e5IMRHGkNyiPoKb390OFPIKpyuEAwfOh4=
+X-Google-Smtp-Source: ABdhPJyokqsw/NObjWiHgqegLZAB6a6883WfP3iqFCj+k3B/5iIjG/fcqIl87XOKSldFWWXjDRHqymK1pmC+j8wplw4=
+X-Received: by 2002:a9d:67c3:: with SMTP id c3mr1486453otn.9.1601000032038;
+ Thu, 24 Sep 2020 19:13:52 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200924151538.GW32101@casper.infradead.org> <CA+icZUX4bQf+pYsnOR0gHZLsX3NriL=617=RU0usDfx=idgZmA@mail.gmail.com>
+ <20200924152755.GY32101@casper.infradead.org> <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
+ <20200924163635.GZ32101@casper.infradead.org> <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
+ <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
+ <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
+ <20200924200225.GC32101@casper.infradead.org> <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
+ <20200924235756.GD32101@casper.infradead.org>
+In-Reply-To: <20200924235756.GD32101@casper.infradead.org>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Fri, 25 Sep 2020 04:13:40 +0200
+Message-ID: <CA+icZUUZvjfSqY_F=pdwDVK2jBF_vZ+pw-PtiAuRKfRppOiF+w@mail.gmail.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+To:     Matthew Wilcox <willy@infradead.org>
 Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
         Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
-Message-ID: <20200924235756.GD32101@casper.infradead.org>
-References: <20200924151538.GW32101@casper.infradead.org>
- <CA+icZUX4bQf+pYsnOR0gHZLsX3NriL=617=RU0usDfx=idgZmA@mail.gmail.com>
- <20200924152755.GY32101@casper.infradead.org>
- <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
- <20200924163635.GZ32101@casper.infradead.org>
- <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
- <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
- <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
- <20200924200225.GC32101@casper.infradead.org>
- <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 24, 2020 at 10:04:40PM +0200, Sedat Dilek wrote:
-> On Thu, Sep 24, 2020 at 10:02 PM Matthew Wilcox <willy@infradead.org> wrote:
+On Fri, Sep 25, 2020 at 1:57 AM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Thu, Sep 24, 2020 at 10:04:40PM +0200, Sedat Dilek wrote:
+> > On Thu, Sep 24, 2020 at 10:02 PM Matthew Wilcox <willy@infradead.org> wrote:
+> > >
+> > > On Thu, Sep 24, 2020 at 09:54:36PM +0200, Sedat Dilek wrote:
+> > > > You are named in "mm: fix misplaced unlock_page in do_wp_page()".
+> > > > Is this here a different issue?
+> > >
+> > > Yes, completely different.  That bug is one Linus introduced in this
+> > > cycle; the bug that this patch fixes was introduced a couple of years
+> > > ago, and we only noticed now because I added an assertion to -next.
+> > > Maybe I should add the assertion for 5.9 too.
 > >
-> > On Thu, Sep 24, 2020 at 09:54:36PM +0200, Sedat Dilek wrote:
-> > > You are named in "mm: fix misplaced unlock_page in do_wp_page()".
-> > > Is this here a different issue?
-> >
-> > Yes, completely different.  That bug is one Linus introduced in this
-> > cycle; the bug that this patch fixes was introduced a couple of years
-> > ago, and we only noticed now because I added an assertion to -next.
-> > Maybe I should add the assertion for 5.9 too.
-> 
-> Can you point me to this "assertion"?
-> Thanks.
+> > Can you point me to this "assertion"?
+> > Thanks.
+>
+> Here's the version against 5.8
+>
 
-Here's the version against 5.8
+5.8? I am here on 5.9.
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 810f7dae11d9..b421e4efc4bd 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -70,11 +70,15 @@ static void
- iomap_page_release(struct page *page)
- {
- 	struct iomap_page *iop = detach_page_private(page);
-+	unsigned int nr_blocks = PAGE_SIZE / i_blocksize(page->mapping->host);
- 
- 	if (!iop)
- 		return;
- 	WARN_ON_ONCE(atomic_read(&iop->read_count));
- 	WARN_ON_ONCE(atomic_read(&iop->write_count));
-+	WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
-+			PageUptodate(page));
-+
- 	kfree(iop);
- }
- 
+- Sedat -
+
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 810f7dae11d9..b421e4efc4bd 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -70,11 +70,15 @@ static void
+>  iomap_page_release(struct page *page)
+>  {
+>         struct iomap_page *iop = detach_page_private(page);
+> +       unsigned int nr_blocks = PAGE_SIZE / i_blocksize(page->mapping->host);
+>
+>         if (!iop)
+>                 return;
+>         WARN_ON_ONCE(atomic_read(&iop->read_count));
+>         WARN_ON_ONCE(atomic_read(&iop->write_count));
+> +       WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
+> +                       PageUptodate(page));
+> +
+>         kfree(iop);
+>  }
+>
