@@ -2,121 +2,54 @@ Return-Path: <SRS0=2WGG=DC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D74F0C4363D
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 14:01:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CB99C4363D
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 14:50:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A6FD20BED
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 14:01:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CxjJg7IT"
+	by mail.kernel.org (Postfix) with ESMTP id 04C6D2076D
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 14:50:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728487AbgIYOBP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Sep 2020 10:01:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49330 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728365AbgIYOBO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Sep 2020 10:01:14 -0400
-Received: from mail-oi1-x243.google.com (mail-oi1-x243.google.com [IPv6:2607:f8b0:4864:20::243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AD61FC0613CE;
-        Fri, 25 Sep 2020 07:01:14 -0700 (PDT)
-Received: by mail-oi1-x243.google.com with SMTP id x14so2862101oic.9;
-        Fri, 25 Sep 2020 07:01:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=gwKAD82cAi9ifIdOh2K2TtI0GczDqHfjnVkzQYsupRk=;
-        b=CxjJg7ITauNmQYCwDH1y1UzbWZVEHuUOimRzldyd43wJA39wGbTFPu0xabz/BI1vmb
-         mXuAiis82gUs0Oz75tySKZc+4aqW6qTvSY2BBDRwZKLbokdpAqSo0jBQSM4bob6apUB9
-         WbkD0HZd8Wa9DSbc1yR3eaQQMtHYyzXNqrDForeWrIieZZf+d0dIIF9EBCJkZWUmDXiq
-         IR0zvSbQIqpDuXn+f+36X77tqX3i2lRtvJeTgYXSOa1kXDUg8YLZ0JMhbUEYCUKLO7iB
-         jNNxhswaQgHVQokM6USHeW3AofT0/t2N9uozwIZHBRQruYQyWghYxJA2TTXtf4rNkeyQ
-         5shw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=gwKAD82cAi9ifIdOh2K2TtI0GczDqHfjnVkzQYsupRk=;
-        b=aKDbUP3NBQoCsMcfyCEYq1xyNtYvrXMQ6nrqbl+Wh+EJfdaM0McwfCo6kdtF/R6m/Z
-         WE/CafOI9JRB3qIDBSgFfovuJ7e6pqiFevApDE2KWXQmMdgiiTy/M0VNqtm9N/2QUldR
-         2SeInBCpqJyBQnJ2JEB68vk0YbCH/ChW3Py+N+dg5aLn2wU4djAoXsCEQXQUeXwkP+uB
-         znzYA9sBgE45VUh9TIZIPAB5PW4omimmZQlJbml3je1T6d5A7Kj5kViZf/8lX7iPm4nD
-         B0+axZTtNNCGKI+DJbyxv5FLbi9QJGfJh/fa/ecBGGvui2mTbkXbjGvSGN9fD40AjDnC
-         X56g==
-X-Gm-Message-State: AOAM532x3f8ms9wLC6zCr3A1fO8agAh2M1hi4R2+LYtMiYHihKPcUZ8z
-        FnUlO+G/ITQjv6nsP0gXU4uJ1rA3ePbGQKjqQrQ=
-X-Google-Smtp-Source: ABdhPJwJsu0EERw15KoAH6q+6XWiMNDnJQeK8TeUbf0cS9a/pGgyZOuyRazKbu818sAhEmrKNw+pRuisCsHy+Gm59cY=
-X-Received: by 2002:aca:ec50:: with SMTP id k77mr319704oih.35.1601042474087;
- Fri, 25 Sep 2020 07:01:14 -0700 (PDT)
+        id S1729046AbgIYOur (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Sep 2020 10:50:47 -0400
+Received: from sandeen.net ([63.231.237.45]:35284 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728489AbgIYOur (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Sep 2020 10:50:47 -0400
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 77E14EDD;
+        Fri, 25 Sep 2020 09:50:08 -0500 (CDT)
+To:     Pavel Reichl <preichl@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20200924170747.65876-1-preichl@redhat.com>
+ <20200924170747.65876-2-preichl@redhat.com> <20200924172600.GG7955@magnolia>
+ <be017461-6ce9-1d64-51d6-7e85a3e45055@sandeen.net>
+ <20200924174913.GI7955@magnolia>
+ <bebb2448-2b0e-6a39-79b2-18b6fb8811ee@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH 1/2] xfs: remove deprecated mount options
+Message-ID: <f5dddb95-100d-2497-40d5-8ff1e8ae2617@sandeen.net>
+Date:   Fri, 25 Sep 2020 09:50:45 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.2.2
 MIME-Version: 1.0
-References: <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
- <20200924163635.GZ32101@casper.infradead.org> <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
- <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
- <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
- <20200924200225.GC32101@casper.infradead.org> <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
- <20200924235756.GD32101@casper.infradead.org> <CA+icZUWcx5hBjU35tfY=7KXin7cA5AAY8AMKx-pjYnLCsQywGw@mail.gmail.com>
- <CA+icZUWMs5Xz5vMP370uUBCqzgjq6Aqpy+krZMNg-5JRLxaALA@mail.gmail.com> <20200925134608.GE32101@casper.infradead.org>
-In-Reply-To: <20200925134608.GE32101@casper.infradead.org>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Fri, 25 Sep 2020 16:01:02 +0200
-Message-ID: <CA+icZUV9tNMbTC+=MoKp3rGmhDeO9ScW7HC+WUTCCvSMpih7DA@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <bebb2448-2b0e-6a39-79b2-18b6fb8811ee@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 25, 2020 at 3:46 PM Matthew Wilcox <willy@infradead.org> wrote:
->
-> On Fri, Sep 25, 2020 at 03:36:01PM +0200, Sedat Dilek wrote:
-> > > I have applied your diff on top of Linux v5.9-rc6+ together with
-> > > "iomap: Set all uptodate bits for an Uptodate page".
-> > >
-> > > Run LTP tests:
-> > >
-> > > #1: syscalls (all)
-> > > #2: syscalls/preadv203
-> > > #3: syscalls/dirtyc0w
-> > >
-> > > With #1 I see some failures with madvise0x tests.
->
-> Why do you think these failures are related to my patches?
->
+On 9/25/20 8:40 AM, Pavel Reichl wrote:
+> Thanks for discussion, if I get it right, the only thing to change is to add the date when mount options will me removed (September 2025)?
 
-Oh sorry, I was not saying it is related to your patches and I am not
-familiar with all syscalls LTP tests.
+Please also add a comment above the moved mount options indicating that
+all options below the comment are slated for deprecation.
 
-You said:
-> Qian reported preadv203.c could reproduce it easily on POWER and ARM.
-> They have 64kB pages, so it's easier to hit.  You need to have a
-> filesystem with block size < page size to hit the problem.
-
-Here on my x86-64 Debian host I use Ext4-FS.
-I can setup a new partition with a different filesystem if this helps.
-Any recommendations?
-
-How does the assertion look like in the logs?
-You have an example.
-
-Here on Debian I switched over to a newer kernel-libc and
-kernel-headers - I guess it's good to recompile a recent LTP from Git
-against this new stuff.
-In my install-logs I have seen some packages where re-built against
-new kernel-libc (capabilities etc.).
-
-- Sedat -
-
-
-- Sedat -
+Not sure if Darrick had anything else.  Are we happy w/ the kernel logging?
