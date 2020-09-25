@@ -2,109 +2,125 @@ Return-Path: <SRS0=2WGG=DC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22193C4346E
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 02:43:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B4B8C4363D
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 10:44:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CC79E20888
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 02:43:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E9EF21D91
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 10:44:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ui+idQl+"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EXuMI9FM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726738AbgIYCn2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Sep 2020 22:43:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57902 "EHLO
+        id S1726990AbgIYKo4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Sep 2020 06:44:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726718AbgIYCn2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Sep 2020 22:43:28 -0400
-Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43FCEC0613CE
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2020 19:43:28 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id l126so1762470pfd.5
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Sep 2020 19:43:28 -0700 (PDT)
+        with ESMTP id S1726255AbgIYKo4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Sep 2020 06:44:56 -0400
+Received: from mail-oi1-x241.google.com (mail-oi1-x241.google.com [IPv6:2607:f8b0:4864:20::241])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2429CC0613CE;
+        Fri, 25 Sep 2020 03:44:56 -0700 (PDT)
+Received: by mail-oi1-x241.google.com with SMTP id u126so2273598oif.13;
+        Fri, 25 Sep 2020 03:44:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=PQ6vzBYJpDyQAloIihibI2K7q7lRpVVfaSwL+x8mY0c=;
-        b=ui+idQl+dZSU5xmNFORuB3+g5CYNj9v3XhpEkZ9OMGLuns2VVbB+vELsdpMWmhST7I
-         Npu5JsX7i4dIbjAd07UI/BY+9mjdoG3NgNDGiUkElGvYg+12VfBpwBRazKzZ5LIMDsPb
-         vw4FgW7qdfvpbcut1zC2pLL5A/c8cmfebIdlaFUaS4rrk3eed2vahMLKM59yHYjY9ZdB
-         ZxxSqMvNSIOiSg2QZCbBoSZM6Y27084LBfkt3TuQS+3MLzsgPBDWYo/0QOFqAj19C/2A
-         hGGlLJQe5i1Ac43+Nh+aLy04WhIeCOTvbipWfECg0cvR05YE2YsRGLCJ6K4jO71RRjw+
-         /sIw==
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=E9cSV5CE+MHJw1tuBMNdGwIhk859xENBsrzkUuMudZg=;
+        b=EXuMI9FMTtqmLXffR4V4ar32H3o7ampleIRJ1mnTOa+RvEDZjGUxQ5/nILr/fBZ1mG
+         zRqOw45thhUf6h1ixpWOZ3dnV96syaScynoD1Tj4JrH7ZO5f9iV0gfirvKnYsplUi1GG
+         B9wF1MLuCLmxFMO6lL/NJfMDFFNYDdFeTnJftxFmu51iA2J6aAA7SrlJDz3ssWGWmUsN
+         TdFbaf9exXTjFmcOkIOKOmweovQmYzGcvfYB9zY0sf9rlFL02bnGS7CLgqE6Hcefl6F/
+         FzdjYDsBfhDsP/yAOdOdIcJBQ0lQwNb62uqHRzugpmtA8ET8sphcIeCZV6qU8jDmG/MA
+         Sz1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=PQ6vzBYJpDyQAloIihibI2K7q7lRpVVfaSwL+x8mY0c=;
-        b=PXEs+lnY7z0s0RG24mH217jxrhZj1ozIpmUVBp5vjQk3uwbtxVbG/T8PZZE+6nDCBh
-         fWuWSiWstVa6l05AbCQTC5wdKMgqnPWwITm0vXq6xmeDzn53RCWzTCG19m7yCw6fuw+N
-         Scjitr8B//7f07G27LIOTgxD3tq4o0bUwsBalpVCielBsxKu/lgTmwRbSOr3j86H8cr3
-         p+R08AuGlX9+WUeghmzFO5Hhk5xt1ZTj+du6FFLEyk8B1GybNei9Y2jRtoWCMnayvHIi
-         qTP2NwRY0FbWn65f9K628xdt8GLw6B8VFTfDR5istge/F59at+WXhbVJynNLLLoiVxKx
-         KT3Q==
-X-Gm-Message-State: AOAM532Adgul9LT4mZYDbTwE7n04lVkiXVIjW2I9vnRzgO/ek6bw42JJ
-        rnYsw0EYI8TP3NXeeL/rwBo+7gqbJVS3
-X-Google-Smtp-Source: ABdhPJyYctKU/ou5MchNK4ks/yW3MDmRk5Vg6FhoeiDIvvditkxcf2Of9aJvXNp8Nr4LpgQPjUDEug==
-X-Received: by 2002:a05:6a00:15c8:b029:142:2501:35ca with SMTP id o8-20020a056a0015c8b0290142250135camr2078027pfu.42.1601001807438;
-        Thu, 24 Sep 2020 19:43:27 -0700 (PDT)
-Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id u15sm523360pjx.50.2020.09.24.19.43.26
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 24 Sep 2020 19:43:26 -0700 (PDT)
-From:   xiakaixu1987@gmail.com
-X-Google-Original-From: kaixuxia@tencent.com
-To:     linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v2] xfs: directly call xfs_generic_create() for ->create() and ->mkdir()
-Date:   Fri, 25 Sep 2020 10:43:21 +0800
-Message-Id: <1601001801-25508-1-git-send-email-kaixuxia@tencent.com>
-X-Mailer: git-send-email 1.8.3.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=E9cSV5CE+MHJw1tuBMNdGwIhk859xENBsrzkUuMudZg=;
+        b=VA+goyIeaH2vUzbdnhEnmt4bjUiScq07o28KoZ085Wpmh/zgNdGB2j+0XjSygFmj5X
+         4n4fmdfj5gHi5QqkIgY5CC4fygCcvTTK5jh6e/yEOgaBBnPNMxNfieTVw3CfM2/6+hzz
+         5ISkbRG5nldmu+Ka7Lpv4kQg2HKJW9wn3Ab6ZWoGl6K3p5rJ3LFDuJP+miWr36jUbpha
+         LJrRMDtkdlrSpgBCoNPXMPlLR5KHIeS0Y3+EwwPaS6m9GDd1txgFYAblA4xeSqiRivAe
+         PR8Sjeh7M0WvstTwKmrZvdMlcFLeZeZSp4FTAW5UbF++UBs8K8nufL56XcE2yHppXUFC
+         0zsA==
+X-Gm-Message-State: AOAM532tYwCBiNtt38qksBx7TlWsRC0tuBHHKHwS15RTpKAsaftCmx7o
+        uGzGY0YZoSbnkAIaQR84+lzB1W8kkmTwSTriY7i1BroA1D2eig==
+X-Google-Smtp-Source: ABdhPJyXmmW5Dk2fR5llT2dunbY3CDhMLvgSKpwBKpJHS23hyTb47Kbk3u8QhUzD1//fzlQ4TJQ5/WRlSBCgEapvuzM=
+X-Received: by 2002:aca:4754:: with SMTP id u81mr1186591oia.72.1601030695513;
+ Fri, 25 Sep 2020 03:44:55 -0700 (PDT)
+MIME-Version: 1.0
+References: <20200924151538.GW32101@casper.infradead.org> <CA+icZUX4bQf+pYsnOR0gHZLsX3NriL=617=RU0usDfx=idgZmA@mail.gmail.com>
+ <20200924152755.GY32101@casper.infradead.org> <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
+ <20200924163635.GZ32101@casper.infradead.org> <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
+ <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
+ <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
+ <20200924200225.GC32101@casper.infradead.org> <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
+ <20200924235756.GD32101@casper.infradead.org>
+In-Reply-To: <20200924235756.GD32101@casper.infradead.org>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Fri, 25 Sep 2020 12:44:44 +0200
+Message-ID: <CA+icZUXesz8SrB65qsVevEVC1iTV7heTWQyZYOZ21mem4kTZ3g@mail.gmail.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Brian Foster <bfoster@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Kaixu Xia <kaixuxia@tencent.com>
+On Fri, Sep 25, 2020 at 1:57 AM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Thu, Sep 24, 2020 at 10:04:40PM +0200, Sedat Dilek wrote:
+> > On Thu, Sep 24, 2020 at 10:02 PM Matthew Wilcox <willy@infradead.org> wrote:
+> > >
+> > > On Thu, Sep 24, 2020 at 09:54:36PM +0200, Sedat Dilek wrote:
+> > > > You are named in "mm: fix misplaced unlock_page in do_wp_page()".
+> > > > Is this here a different issue?
+> > >
+> > > Yes, completely different.  That bug is one Linus introduced in this
+> > > cycle; the bug that this patch fixes was introduced a couple of years
+> > > ago, and we only noticed now because I added an assertion to -next.
+> > > Maybe I should add the assertion for 5.9 too.
+> >
+> > Can you point me to this "assertion"?
+> > Thanks.
+>
+> Here's the version against 5.8
+>
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 810f7dae11d9..b421e4efc4bd 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -70,11 +70,15 @@ static void
+>  iomap_page_release(struct page *page)
+>  {
+>         struct iomap_page *iop = detach_page_private(page);
+> +       unsigned int nr_blocks = PAGE_SIZE / i_blocksize(page->mapping->host);
+>
+>         if (!iop)
+>                 return;
+>         WARN_ON_ONCE(atomic_read(&iop->read_count));
+>         WARN_ON_ONCE(atomic_read(&iop->write_count));
+> +       WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
+> +                       PageUptodate(page));
+> +
 
-The current create and mkdir handlers both call the xfs_vn_mknod()
-which is a wrapper routine around xfs_generic_create() function.
-Actually the create and mkdir handlers can directly call
-xfs_generic_create() function and reduce the call chain.
+Are you sure this is "bitmap_full()" or should it be "bitmap_f*i*ll()"?
 
-Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
----
-v2:
- -add the necessary space.
+Both are available in include/linux/bitmap.h.
 
- fs/xfs/xfs_iops.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+- Sedat -
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 80a13c8561d8..5e165456da68 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -237,7 +237,7 @@ xfs_vn_create(
- 	umode_t		mode,
- 	bool		flags)
- {
--	return xfs_vn_mknod(dir, dentry, mode, 0);
-+	return xfs_generic_create(dir, dentry, mode, 0, false);
- }
- 
- STATIC int
-@@ -246,7 +246,7 @@ xfs_vn_mkdir(
- 	struct dentry	*dentry,
- 	umode_t		mode)
- {
--	return xfs_vn_mknod(dir, dentry, mode|S_IFDIR, 0);
-+	return xfs_generic_create(dir, dentry, mode | S_IFDIR, 0, false);
- }
- 
- STATIC struct dentry *
--- 
-2.20.0
-
+>         kfree(iop);
+>  }
+>
