@@ -2,86 +2,98 @@ Return-Path: <SRS0=2WGG=DC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 987CBC4363D
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 13:41:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E08D7C4363D
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 13:46:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 487032087D
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 13:41:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 852032086A
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 13:46:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OmDU5HB8"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QJ2dJwXH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728589AbgIYNlA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Sep 2020 09:41:00 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:41525 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727982AbgIYNlA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Sep 2020 09:41:00 -0400
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601041259;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3XNPRAL+Wod2pMq4gPFxXH27xhCoWxapCyujrBtI33w=;
-        b=OmDU5HB8keV5+FG0hK6x5kp3lh+r+Kh1u26WZBgeOh7L1oBTL86crWvOZ6ZXnXdRUECb3Z
-        rXyfdI0Um4kFS/wCbVsLDr8b7aPeyQ4TIlwmP4T4PIjXLsVnBN/jlRTNMb3aYZB8b4CFHV
-        ECaY0wgpFfsnqxarbgVcI96wp5bJjLE=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-194-JM0JbGZ7MyytJNV_pbI0bg-1; Fri, 25 Sep 2020 09:40:57 -0400
-X-MC-Unique: JM0JbGZ7MyytJNV_pbI0bg-1
-Received: by mail-wr1-f69.google.com with SMTP id j7so1089416wro.14
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Sep 2020 06:40:57 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=3XNPRAL+Wod2pMq4gPFxXH27xhCoWxapCyujrBtI33w=;
-        b=TnRe+vkD8R7DZymUNTZ2QVF4tTUJvWZxASV2tp/w8MiQYt4cs69h2A4SpOHixmUZ5S
-         HmPwWU/MP1hQM6GD3QUKDcmPzUg2tad3fpqP6r4YtABijF6Zk88SHGdfCuWMhAJ4TWgg
-         S5u8kzQrlST0DqFN9I82nTzPUkXErYN1fI324NafvhpmM910dA8nCpwonRULOyUfeRJS
-         FB0dDekg71CbghX9pL5OYC2XOXKeoxjuwyZcR83SkYhvL1U+4XcrJcV2QUiqVXKucY8T
-         0zxNM+Qp76BikQCu8NevU5ITr9S7pN1oBf+nYHi7Vlh/gEPcAMgrRiMoS5SfbU1HVEuD
-         eGcg==
-X-Gm-Message-State: AOAM530S6BL1kcaDSkVGbXX6ICXlsQWFsDvcfrzjw8VWIV5bj83sljaf
-        Z64W3DGtiIGKycXfspr9GlFDC7UuYLuus+9qpvxH8hpee0dfIGIWeHE8i/L1ZSwb8WGa80dCiX5
-        hWSXwRWsPCqw4iweAtLC2
-X-Received: by 2002:adf:ce01:: with SMTP id p1mr4688228wrn.61.1601041256064;
-        Fri, 25 Sep 2020 06:40:56 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwXDhxJHLv6w+CNnFY6HWQ65khEr3xW+nPBpgOL8TuH4oLB4DpZwbCx0bqj5+QYW44qKpseqg==
-X-Received: by 2002:adf:ce01:: with SMTP id p1mr4688214wrn.61.1601041255920;
-        Fri, 25 Sep 2020 06:40:55 -0700 (PDT)
-Received: from localhost.localdomain ([84.19.91.81])
-        by smtp.gmail.com with ESMTPSA id n4sm2869621wrp.61.2020.09.25.06.40.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 25 Sep 2020 06:40:55 -0700 (PDT)
-Subject: Re: [PATCH 1/2] xfs: remove deprecated mount options
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org
-References: <20200924170747.65876-1-preichl@redhat.com>
- <20200924170747.65876-2-preichl@redhat.com> <20200924172600.GG7955@magnolia>
- <be017461-6ce9-1d64-51d6-7e85a3e45055@sandeen.net>
- <20200924174913.GI7955@magnolia>
-From:   Pavel Reichl <preichl@redhat.com>
-Message-ID: <bebb2448-2b0e-6a39-79b2-18b6fb8811ee@redhat.com>
-Date:   Fri, 25 Sep 2020 15:40:54 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1728551AbgIYNqM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Sep 2020 09:46:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46980 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728523AbgIYNqM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Sep 2020 09:46:12 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E5EFC0613CE;
+        Fri, 25 Sep 2020 06:46:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=gxYQEqxQVKFciJ6yJktcdqQMmFwlDZtQg21Tebq6OO8=; b=QJ2dJwXHdqKR0VRC2/LuNQtmzG
+        0UqfgLjogisPQzkvFGvlND1mTmAVehVwums51Xinw0J/H4SHhUNfQqkeKnhzm9vXQHZdIT+gYMej7
+        pkcjNbn7iTJJwFARLGqXdz8bRPItYHCLgtO0u9J8yeqyWStRhjxSpkooLkszUZ5m3roTXRzoQKFP8
+        csVHGAgCx+kMKWtG3KBLgxGvlx1N/rDkNmkEOkM0qY3B/IlcNH3JDv3cao8hhGAJ9cbimXCml6zYb
+        nX1xQ7WOZrzKTNyZezUoRmDVHjLjwbywGapDpw+oYNY2wMejKKscNfpioyrlq5YwapK2xoP+W5Qk4
+        htTRShUw==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kLo36-00023d-Ke; Fri, 25 Sep 2020 13:46:08 +0000
+Date:   Fri, 25 Sep 2020 14:46:08 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Sedat Dilek <sedat.dilek@gmail.com>
+Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+Message-ID: <20200925134608.GE32101@casper.infradead.org>
+References: <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
+ <20200924163635.GZ32101@casper.infradead.org>
+ <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
+ <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
+ <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
+ <20200924200225.GC32101@casper.infradead.org>
+ <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
+ <20200924235756.GD32101@casper.infradead.org>
+ <CA+icZUWcx5hBjU35tfY=7KXin7cA5AAY8AMKx-pjYnLCsQywGw@mail.gmail.com>
+ <CA+icZUWMs5Xz5vMP370uUBCqzgjq6Aqpy+krZMNg-5JRLxaALA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20200924174913.GI7955@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+icZUWMs5Xz5vMP370uUBCqzgjq6Aqpy+krZMNg-5JRLxaALA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Thanks for discussion, if I get it right, the only thing to change is to add the date when mount options will me removed (September 2025)?
+On Fri, Sep 25, 2020 at 03:36:01PM +0200, Sedat Dilek wrote:
+> > I have applied your diff on top of Linux v5.9-rc6+ together with
+> > "iomap: Set all uptodate bits for an Uptodate page".
+> >
+> > Run LTP tests:
+> >
+> > #1: syscalls (all)
+> > #2: syscalls/preadv203
+> > #3: syscalls/dirtyc0w
+> >
+> > With #1 I see some failures with madvise0x tests.
+
+Why do you think these failures are related to my patches?
+
+> [Fri Sep 25 15:29:46 2020] LTP: starting madvise09
+> [Fri Sep 25 15:29:47 2020] madvise09 invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=0
+> [Fri Sep 25 15:29:47 2020] CPU: 1 PID: 539680 Comm: madvise09 Tainted: G            E     5.9.0-rc6-5-amd64-clang-cfi #5~bullseye+dileks1
+> [Fri Sep 25 15:29:47 2020] Hardware name: SAMSUNG ELECTRONICS CO., LTD. 530U3BI/530U4BI/530U4BH/530U3BI/530U4BI/530U4BH, BIOS 13XK 03/28/2013
+> [Fri Sep 25 15:29:47 2020] Call Trace:
+> [Fri Sep 25 15:29:47 2020]  dump_stack+0x64/0x9b
+> [Fri Sep 25 15:29:47 2020]  dump_header+0x50/0x230
+> [Fri Sep 25 15:29:47 2020]  oom_kill_process+0xa1/0x170
+> [Fri Sep 25 15:29:47 2020]  out_of_memory+0x265/0x330
+> [Fri Sep 25 15:29:47 2020]  mem_cgroup_oom+0x313/0x360
+> [Fri Sep 25 15:29:47 2020]  try_charge+0x51f/0x730
+> [Fri Sep 25 15:29:47 2020]  mem_cgroup_charge+0x100/0x300
+> [Fri Sep 25 15:29:47 2020]  do_anonymous_page+0x229/0x690
+
+... madvise09 took a page fault and was killed by mem_cgroup_oom
+
+> [Fri Sep 25 15:29:47 2020] memory: usage 8192kB, limit 8192kB, failcnt 485
+
+because it had used up all the memory it was allowed to
 
