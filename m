@@ -2,148 +2,170 @@ Return-Path: <SRS0=2WGG=DC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DDF1C4363D
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 11:12:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36468C4363D
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 11:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D0CC9221E5
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 11:12:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C8B7F221E5
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Sep 2020 11:15:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sCvLWofW"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G4bIB2x2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727733AbgIYLM1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Sep 2020 07:12:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51568 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727679AbgIYLM1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Sep 2020 07:12:27 -0400
-Received: from mail-ot1-x341.google.com (mail-ot1-x341.google.com [IPv6:2607:f8b0:4864:20::341])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9152CC0613CE;
-        Fri, 25 Sep 2020 04:12:27 -0700 (PDT)
-Received: by mail-ot1-x341.google.com with SMTP id s66so1926817otb.2;
-        Fri, 25 Sep 2020 04:12:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=S9Sl6VItY96kd9/3DY+iJ5f+rTXm9h/Q4R5nq5D4Wnc=;
-        b=sCvLWofWJDNrienFM2uR/nqSTwGTi+Wh0YmtODR4NxFYbtwc99bBrrFE4PtlDB7W6M
-         pPrIObf/cGi1rhjni6dgSLycVN8jf23hF6kq21ByyIairK1Hfhdc0EuHoT5CiVpKdWYc
-         NGRUVuZI4aJ+3+sCL6jEdgs9rkzbZcdTHB4FEX4GXX4oiwLJufNjSYsXJm3GdL8UdXLy
-         iGrNBUQE4QFNp6AqQrr4trjbL54L4Bq7fNrr+rA/PxlrNAuaEVXURIVuJIdpOoBkBIIa
-         RBXru8845OiAo69Vow6U+tbeG9FDalCv8rh5r2RVaxNrY7jDBok3dAJzNQ60eO1Cod0o
-         fabg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=S9Sl6VItY96kd9/3DY+iJ5f+rTXm9h/Q4R5nq5D4Wnc=;
-        b=orBenlABC1/6mL4MFeaXWNVenwIbI4QQUeO3dAd1p3qFvVK7Z6iG26m6bqkz8uwnVF
-         KLkZv7DgIcqUTQycvvDCxregfPlioyCD1bi+7FRsiqKh0mGM+Im/sob/gHEPf2iMa8YZ
-         p3Cy0aOw0/2fpXm5/vZSPUqMzKzoOjctHb99ejqCBHzjH16O43s/DYJxH5+mCKJAjUQO
-         H/bnPlW6Xdphvi2i42teIv4vZ7qmDHj3VjA4rBxBJ9CeOhJ2ddffUn5S/dwR5C3w5Fme
-         5q80CZsro4ZjK4ydNTD7jOwJ1NhqupdAXLAh8Ci4YVMUNsYrGcuQPl0qiL+ADSFDIafj
-         GwoQ==
-X-Gm-Message-State: AOAM530n/idxgTCiXzut9ERISPc23eOoh8ZcL0JhloNdXa2QlU+kZs5r
-        ShYDjydoEVUaL7ifLxpPA+pCmQmqPgi6ppmasls=
-X-Google-Smtp-Source: ABdhPJypgtiI4B2wxYncVlJj4+2bl1fNwFv3Z6WKbrj3AtUQTcZqU2sMfbd3+aDvTgp0ZBtTs6qrytsjSrm8PWWG2ak=
-X-Received: by 2002:a05:6830:110b:: with SMTP id w11mr2321427otq.109.1601032346947;
- Fri, 25 Sep 2020 04:12:26 -0700 (PDT)
+        id S1727970AbgIYLPU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Sep 2020 07:15:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:55718 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727132AbgIYLPU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Sep 2020 07:15:20 -0400
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601032519;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=KwQifF0EEbGBnq2JcV+2TZVNKkBIjg5mcHkf0NJR6Rg=;
+        b=G4bIB2x2bwnCL7zRdH1n4fHfKWBNaJXKQXYxai8zK1mH16v6/zE+omlp3AxU9W0EqjsKGs
+        KW/VPD62Q5h51S2+aewVf+ySKdGrd2NAqAHh3NBdwtDPUi3UTSPP32GWWqLSdwLDdn7T9h
+        otqTI3wNTDgGGKFYpOM/rjy0SQ+iUcw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-583-OacAWxMeOyK3jEggnEcndw-1; Fri, 25 Sep 2020 07:15:15 -0400
+X-MC-Unique: OacAWxMeOyK3jEggnEcndw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 092EE1007474;
+        Fri, 25 Sep 2020 11:15:14 +0000 (UTC)
+Received: from bfoster (ovpn-113-130.rdu2.redhat.com [10.10.113.130])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 86BE55C1C7;
+        Fri, 25 Sep 2020 11:15:13 +0000 (UTC)
+Date:   Fri, 25 Sep 2020 07:15:11 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 2/3] xfs: expose the log push threshold
+Message-ID: <20200925111511.GA2646051@bfoster>
+References: <160083917978.1401135.9502772939838940679.stgit@magnolia>
+ <160083919333.1401135.1467785318303966214.stgit@magnolia>
 MIME-Version: 1.0
-References: <20200924151538.GW32101@casper.infradead.org> <CA+icZUX4bQf+pYsnOR0gHZLsX3NriL=617=RU0usDfx=idgZmA@mail.gmail.com>
- <20200924152755.GY32101@casper.infradead.org> <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
- <20200924163635.GZ32101@casper.infradead.org> <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
- <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
- <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
- <20200924200225.GC32101@casper.infradead.org> <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
- <20200924235756.GD32101@casper.infradead.org> <CA+icZUXesz8SrB65qsVevEVC1iTV7heTWQyZYOZ21mem4kTZ3g@mail.gmail.com>
-In-Reply-To: <CA+icZUXesz8SrB65qsVevEVC1iTV7heTWQyZYOZ21mem4kTZ3g@mail.gmail.com>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Fri, 25 Sep 2020 13:12:15 +0200
-Message-ID: <CA+icZUWxMEfwn_oApGTG2EvXcpya-r7HrDTZSd3vZgOmbp76ew@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160083919333.1401135.1467785318303966214.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 25, 2020 at 12:44 PM Sedat Dilek <sedat.dilek@gmail.com> wrote:
->
-> On Fri, Sep 25, 2020 at 1:57 AM Matthew Wilcox <willy@infradead.org> wrote:
-> >
-> > On Thu, Sep 24, 2020 at 10:04:40PM +0200, Sedat Dilek wrote:
-> > > On Thu, Sep 24, 2020 at 10:02 PM Matthew Wilcox <willy@infradead.org> wrote:
-> > > >
-> > > > On Thu, Sep 24, 2020 at 09:54:36PM +0200, Sedat Dilek wrote:
-> > > > > You are named in "mm: fix misplaced unlock_page in do_wp_page()".
-> > > > > Is this here a different issue?
-> > > >
-> > > > Yes, completely different.  That bug is one Linus introduced in this
-> > > > cycle; the bug that this patch fixes was introduced a couple of years
-> > > > ago, and we only noticed now because I added an assertion to -next.
-> > > > Maybe I should add the assertion for 5.9 too.
-> > >
-> > > Can you point me to this "assertion"?
-> > > Thanks.
-> >
-> > Here's the version against 5.8
-> >
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index 810f7dae11d9..b421e4efc4bd 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -70,11 +70,15 @@ static void
-> >  iomap_page_release(struct page *page)
-> >  {
-> >         struct iomap_page *iop = detach_page_private(page);
-> > +       unsigned int nr_blocks = PAGE_SIZE / i_blocksize(page->mapping->host);
-> >
-> >         if (!iop)
-> >                 return;
-> >         WARN_ON_ONCE(atomic_read(&iop->read_count));
-> >         WARN_ON_ONCE(atomic_read(&iop->write_count));
-> > +       WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
-> > +                       PageUptodate(page));
-> > +
->
-> Are you sure this is "bitmap_full()" or should it be "bitmap_f*i*ll()"?
->
-> Both are available in include/linux/bitmap.h.
->
+On Tue, Sep 22, 2020 at 10:33:13PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Separate the computation of the log push threshold and the push logic in
+> xlog_grant_push_ail.  This enables higher level code to determine (for
+> example) that it is holding on to a logged intent item and the log is so
+> busy that it is more than 75% full.  In that case, it would be desirable
+> to move the log item towards the head to release the tail, which we will
+> cover in the next patch.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_log.c |   41 +++++++++++++++++++++++++++++++----------
+>  fs/xfs/xfs_log.h |    2 ++
+>  2 files changed, 33 insertions(+), 10 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index ad0c69ee8947..62c9e0aaa7df 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1475,14 +1475,15 @@ xlog_commit_record(
+>  }
+>  
+>  /*
+> - * Push on the buffer cache code if we ever use more than 75% of the on-disk
+> - * log space.  This code pushes on the lsn which would supposedly free up
+> - * the 25% which we want to leave free.  We may need to adopt a policy which
+> - * pushes on an lsn which is further along in the log once we reach the high
+> - * water mark.  In this manner, we would be creating a low water mark.
+> + * Compute the LSN push target needed to push on the buffer cache code if we
+> + * ever use more than 75% of the on-disk log space.  This code pushes on the
+> + * lsn which would supposedly free up the 25% which we want to leave free.  We
+> + * may need to adopt a policy which pushes on an lsn which is further along in
+> + * the log once we reach the high water mark.  In this manner, we would be
+> + * creating a low water mark.
+>   */
 
-OK, I checked linux-next (next-20200925) and iomap_page_release() (see
-[1] and [2]).
-Cut-N-Paste is malformatting here in Gmail, so I add the links below.
+Probably no need to duplicate so much of the original comment between
+the two functions. I'd just put something like "calculate the AIL push
+target based on the provided log reservation requirement ..." or
+otherwise just remove it. That aside, LGTM:
 
-I also looked into __gfs2_readpage() in fs/gfs2/aops.c:
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-if (i_blocksize(page->mapping->host) == PAGE_SIZE &&
-    !page_has_buffers(page)) {
-           error = iomap_readpage(page, &gfs2_iomap_ops);
+> -STATIC void
+> -xlog_grant_push_ail(
+> +xfs_lsn_t
+> +xlog_grant_push_threshold(
+>  	struct xlog	*log,
+>  	int		need_bytes)
+>  {
+> @@ -1508,7 +1509,7 @@ xlog_grant_push_ail(
+>  	free_threshold = max(free_threshold, (log->l_logBBsize >> 2));
+>  	free_threshold = max(free_threshold, 256);
+>  	if (free_blocks >= free_threshold)
+> -		return;
+> +		return NULLCOMMITLSN;
+>  
+>  	xlog_crack_atomic_lsn(&log->l_tail_lsn, &threshold_cycle,
+>  						&threshold_block);
+> @@ -1528,13 +1529,33 @@ xlog_grant_push_ail(
+>  	if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
+>  		threshold_lsn = last_sync_lsn;
+>  
+> +	return threshold_lsn;
+> +}
+> +
+> +/*
+> + * Push on the buffer cache code if we ever use more than 75% of the on-disk
+> + * log space.  This code pushes on the lsn which would supposedly free up
+> + * the 25% which we want to leave free.  We may need to adopt a policy which
+> + * pushes on an lsn which is further along in the log once we reach the high
+> + * water mark.  In this manner, we would be creating a low water mark.
+> + */
+> +STATIC void
+> +xlog_grant_push_ail(
+> +	struct xlog	*log,
+> +	int		need_bytes)
+> +{
+> +	xfs_lsn_t	threshold_lsn;
+> +
+> +	threshold_lsn = xlog_grant_push_threshold(log, need_bytes);
+> +	if (threshold_lsn == NULLCOMMITLSN || XLOG_FORCED_SHUTDOWN(log))
+> +		return;
+> +
+>  	/*
+>  	 * Get the transaction layer to kick the dirty buffers out to
+>  	 * disk asynchronously. No point in trying to do this if
+>  	 * the filesystem is shutting down.
+>  	 */
+> -	if (!XLOG_FORCED_SHUTDOWN(log))
+> -		xfs_ail_push(log->l_ailp, threshold_lsn);
+> +	xfs_ail_push(log->l_ailp, threshold_lsn);
+>  }
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index 1412d6993f1e..58c3fcbec94a 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -141,4 +141,6 @@ void	xfs_log_quiesce(struct xfs_mount *mp);
+>  bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
+>  bool	xfs_log_in_recovery(struct xfs_mount *);
+>  
+> +xfs_lsn_t xlog_grant_push_threshold(struct xlog *log, int need_bytes);
+> +
+>  #endif	/* __XFS_LOG_H__ */
+> 
 
-Thanks.
-
-- Sedat -
-
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/fs/iomap/buffered-io.c?h=next-20200925#n67
-[2] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/fs/iomap/buffered-io.c?h=next-20200925#n77
-[3] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/tree/fs/gfs2/aops.c?h=next-20200925#n471
-
-
-
->
-> >         kfree(iop);
-> >  }
-> >
