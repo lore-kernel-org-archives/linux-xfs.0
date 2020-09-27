@@ -5,60 +5,61 @@ X-Spam-Level:
 X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CE14C4346E
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 23:42:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28D66C4346E
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 23:43:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6582523A33
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 23:42:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9A8F23A33
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 23:43:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="J0hJ5sQ6"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HJ2Ic0AV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726461AbgI0Xmb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Sep 2020 19:42:31 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54826 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726392AbgI0Xma (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Sep 2020 19:42:30 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08RNfdF5144068;
-        Sun, 27 Sep 2020 23:42:27 GMT
+        id S1726393AbgI0Xne (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Sep 2020 19:43:34 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:47590 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726392AbgI0Xne (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Sep 2020 19:43:34 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08RNeUEk081303;
+        Sun, 27 Sep 2020 23:43:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=Ub6douGDfii24Sm74FDwX00R5ZseK+kkkbopo01XtHQ=;
- b=J0hJ5sQ6lkazrZAekyNc6DKwIUPCiHwJtHgf62SLndET0C9iLzGC11oPWFlmtUoBIuxO
- UPL2xEjKQg2r5WzlmsRUVAXsexWk4uTtrT1W1RSL8nEYIFumhiGLBMYd/kEepHCAyVap
- 2s3c3P5kXUMql4M3/HhgXYGgXkQ6qMwZ4Oc//Nm/go/XANpRcDuO4xVvopQscT4w5ZoL
- 9tM5QsetC8Jvgqb8GcH1JZhQdoWnuoZaER63PfupNXmEE0GMWkQqmGoAsrHIjL6nlReV
- 5RfOTB5HJvf13o9yiEXr46rAozhCCABKPdk+GhkvHWubXDMYQm7RUOS6JG54tV9pHTyx cQ== 
+ bh=K/G0eRkm8ZyMUmGsVKjDNhUE37AhpKPWRkAHognZVkE=;
+ b=HJ2Ic0AVb2+YZOcmEgXld8vUiTEk0otjjlEjQC4HCozf+weGTQrJQ+mz1jNLQOV95UYN
+ 2rGPJV+gxm97T7xq2Vdt00osKjjKQwJ1RhlI0lugGiwW52011KHTtegR6R1FaiZlv5bz
+ ZKpqv3y/dr3EqNEyLedT7rrfUn4z1z4GUid2pwQ0ChrI6wKTfdpPveCF9V8jHYSuYRlo
+ No1lm3Kqqe2ZtGkFbxbcbEktHhgW7MXRVtWvYLAUcPw+djwcoqeornH+BhEqf3ExawNu
+ BkPgmonfMu+fNyJPc4Wlzp8qdJ1+qMogvaqPuI3MgLrfec0zOCkaa5thztEHB4PiWcqV WA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 33swkkjh65-1
+        by aserp2130.oracle.com with ESMTP id 33su5ajmg7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 27 Sep 2020 23:42:27 +0000
+        Sun, 27 Sep 2020 23:43:29 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08RNeoWX187032;
-        Sun, 27 Sep 2020 23:42:27 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 33tf7jnphe-1
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08RNf4Mf187166;
+        Sun, 27 Sep 2020 23:41:29 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 33tf7jnp7c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 27 Sep 2020 23:42:27 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08RNgQrf002610;
-        Sun, 27 Sep 2020 23:42:26 GMT
+        Sun, 27 Sep 2020 23:41:29 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08RNfSNE009869;
+        Sun, 27 Sep 2020 23:41:28 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 27 Sep 2020 16:42:25 -0700
-Subject: [PATCH 4/4] xfs: only relog deferred intent items if free space in
- the log gets low
+        with ESMTP ; Sun, 27 Sep 2020 16:41:28 -0700
+Subject: [PATCH 3/4] xfs: xfs_defer_capture should absorb remaining block
+ reservation
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, bfoster@redhat.com
-Date:   Sun, 27 Sep 2020 16:42:24 -0700
-Message-ID: <160125014477.174867.15070395010887462680.stgit@magnolia>
-In-Reply-To: <160125011935.174867.2604597189723452984.stgit@magnolia>
-References: <160125011935.174867.2604597189723452984.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, hch@lst.de, bfoster@redhat.com
+Date:   Sun, 27 Sep 2020 16:41:27 -0700
+Message-ID: <160125008731.174438.2552492068404088327.stgit@magnolia>
+In-Reply-To: <160125006793.174438.10683462598722457550.stgit@magnolia>
+References: <160125006793.174438.10683462598722457550.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -69,9 +70,9 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlo
  mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2006250000 definitions=main-2009270227
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9757 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
- suspectscore=3 mlxlogscore=999 clxscore=1015 priorityscore=1501
- impostorscore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=3
+ lowpriorityscore=0 spamscore=0 clxscore=1015 mlxscore=0 impostorscore=0
+ malwarescore=0 phishscore=0 adultscore=0 bulkscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2009270227
 Precedence: bulk
@@ -80,52 +81,90 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we have the ability to ask the log how far the tail needs to be
-pushed to maintain its free space targets, augment the decision to relog
-an intent item so that we only do it if the log has hit the 75% full
-threshold.  There's no point in relogging an intent into the same
-checkpoint, and there's no need to relog if there's plenty of free space
-in the log.
+When xfs_defer_capture extracts the deferred ops and transaction state
+from a transaction, it should absorb the remaining block reservation so
+that when we continue the dfops chain, we still have those blocks to
+use.
+
+This adds the requirement that every log intent item recovery function
+must be careful to reserve enough blocks to handle both itself and all
+defer ops that it can queue.  On the other hand, this enables us to do
+away with the handwaving block estimation nonsense that was going on in
+xlog_finish_defer_ops.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_defer.c |   12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ fs/xfs/libxfs/xfs_defer.c |    4 ++++
+ fs/xfs/libxfs/xfs_defer.h |    1 +
+ fs/xfs/xfs_log_recover.c  |   18 +-----------------
+ 3 files changed, 6 insertions(+), 17 deletions(-)
 
 
 diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index dfa301bddf6f..30627f524b8c 100644
+index 0de7672fe63d..85d70f1edc1c 100644
 --- a/fs/xfs/libxfs/xfs_defer.c
 +++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -356,11 +356,14 @@ xfs_defer_relog(
- 	struct xfs_trans		**tpp,
- 	struct list_head		*dfops)
+@@ -574,6 +574,8 @@ xfs_defer_capture(
+ 	list_splice_init(&tp->t_dfops, &dfc->dfc_dfops);
+ 	dfc->dfc_tpflags = tp->t_flags & XFS_TRANS_LOWMODE;
+ 	tp->t_flags &= ~XFS_TRANS_LOWMODE;
++	dfc->dfc_blkres = tp->t_blk_res - tp->t_blk_res_used;
++	tp->t_blk_res = tp->t_blk_res_used;
+ 
+ 	return dfc;
+ }
+@@ -591,6 +593,8 @@ xfs_defer_continue(
+ 	list_splice_init(&dfc->dfc_dfops, &tp->t_dfops);
+ 	tp->t_flags |= dfc->dfc_tpflags;
+ 	dfc->dfc_tpflags = 0;
++	tp->t_blk_res += dfc->dfc_blkres;
++	dfc->dfc_blkres = 0;
+ }
+ 
+ /* Release all resources that we used to capture deferred ops. */
+diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+index bc7493bf4542..999adbb8c449 100644
+--- a/fs/xfs/libxfs/xfs_defer.h
++++ b/fs/xfs/libxfs/xfs_defer.h
+@@ -76,6 +76,7 @@ struct xfs_defer_capture {
+ 	/* Deferred ops state saved from the transaction. */
+ 	struct list_head	dfc_dfops;
+ 	unsigned int		dfc_tpflags;
++	unsigned int		dfc_blkres;
+ };
+ 
+ /*
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 107965acc57e..60670ac4e5ae 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2484,26 +2484,10 @@ xlog_finish_defer_ops(
  {
-+	struct xlog			*log = (*tpp)->t_mountp->m_log;
- 	struct xfs_defer_pending	*dfp;
+ 	struct xfs_defer_capture *dfc, *next;
+ 	struct xfs_trans	*tp;
+-	int64_t			freeblks;
+-	uint64_t		resblks;
+ 	int			error = 0;
  
- 	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 
- 	list_for_each_entry(dfp, dfops, dfp_list) {
-+		xfs_lsn_t		threshold_lsn;
-+
- 		/*
- 		 * If the log intent item for this deferred op is not a part of
- 		 * the current log checkpoint, relog the intent item to keep
-@@ -372,6 +375,15 @@ xfs_defer_relog(
- 		    xfs_log_item_in_current_chkpt(dfp->dfp_intent))
- 			continue;
- 
-+		/*
-+		 * Figure out where we need the tail to be in order to maintain
-+		 * the minimum required free space in the log.
-+		 */
-+		threshold_lsn = xlog_grant_push_threshold(log, 0);
-+		if (threshold_lsn == NULLCOMMITLSN ||
-+		    XFS_LSN_CMP(dfp->dfp_intent->li_lsn, threshold_lsn) >= 0)
-+			continue;
-+
- 		trace_xfs_defer_relog_intent((*tpp)->t_mountp, dfp);
- 		dfp->dfp_intent = xfs_trans_item_relog(dfp->dfp_intent, *tpp);
- 	}
+ 	list_for_each_entry_safe(dfc, next, capture_list, dfc_list) {
+-		/*
+-		 * We're finishing the defer_ops that accumulated as a result
+-		 * of recovering unfinished intent items during log recovery.
+-		 * We reserve an itruncate transaction because it is the
+-		 * largest permanent transaction type.  Since we're the only
+-		 * user of the fs right now, take 93% (15/16) of the available
+-		 * free blocks.  Use weird math to avoid a 64-bit division.
+-		 */
+-		freeblks = percpu_counter_sum(&mp->m_fdblocks);
+-		if (freeblks <= 0)
+-			return -ENOSPC;
+-
+-		resblks = min_t(uint64_t, UINT_MAX, freeblks);
+-		resblks = (resblks * 15) >> 4;
+-		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
++		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0,
+ 				0, XFS_TRANS_RESERVE, &tp);
+ 		if (error)
+ 			return error;
 
