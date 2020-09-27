@@ -2,383 +2,200 @@ Return-Path: <SRS0=IMq7=DE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ED49C4346E
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 06:26:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 580DCC4346E
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 11:31:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0087423A04
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 06:26:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D693023899
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 11:31:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WdCZY6ln"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729712AbgI0G0X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Sep 2020 02:26:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55232 "EHLO
+        id S1726255AbgI0Lb2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Sep 2020 07:31:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729125AbgI0G0X (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Sep 2020 02:26:23 -0400
-X-Greylist: delayed 1003 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sat, 26 Sep 2020 23:26:23 PDT
-Received: from buxtehude.debian.org (buxtehude.debian.org [IPv6:2607:f8f0:614:1::1274:39])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02153C0613CE
-        for <linux-xfs@vger.kernel.org>; Sat, 26 Sep 2020 23:26:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=bugs.debian.org; s=smtpauto.buxtehude; h=Date:References:Message-ID:Subject
-        :CC:To:From:Content-Type:MIME-Version:Content-Transfer-Encoding:Reply-To:
-        Content-ID:Content-Description:In-Reply-To;
-        bh=Yehaic510LTYiHAULbOqn/GLitvRoad5JgUrOi2yOFQ=; b=aKU+gxLg5S6o4riXDQzOpQk7lB
-        IDAnZZhkFp4Fv9J77GzqE2+ooc8S7ti7M2z9Ng54POkdQxc5WvtR5whAaB2BFT7KOy4nWjAuuZ8B2
-        /t7clId2pHOersNH7KAn/4/K8xbXttu7+ScZSFAR6ZLbOZTXCDIqkpYETKXbuzHzw+6Gdw8ldXtvY
-        Cv8RFXLSLBXAdBfZw16ekcLk5BKFc7a7HHFTecGum4shD8449+d3si0nl9zcGEE4u6Wh2bnGTmNMZ
-        fc7tKh2Fcohv3kmrD2+y+iD5Y5z2/lvOtvb/juM3HftkBxaK9lKpeE7KbfF0XlrHM0syW7EIy+i3D
-        dM43lcGw==;
-Received: from debbugs by buxtehude.debian.org with local (Exim 4.92)
-        (envelope-from <debbugs@buxtehude.debian.org>)
-        id 1kMPsC-0001D0-7P; Sun, 27 Sep 2020 06:09:24 +0000
-X-Loop: owner@bugs.debian.org
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S1726244AbgI0Lb2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Sep 2020 07:31:28 -0400
+Received: from mail-oo1-xc43.google.com (mail-oo1-xc43.google.com [IPv6:2607:f8b0:4864:20::c43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33E5FC0613CE;
+        Sun, 27 Sep 2020 04:31:28 -0700 (PDT)
+Received: by mail-oo1-xc43.google.com with SMTP id t3so1891012ook.8;
+        Sun, 27 Sep 2020 04:31:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
+         :subject:to:cc;
+        bh=EvNYJ68tDLRwoC65KusTy0iig3L17Xrs7ri6XgMlgQY=;
+        b=WdCZY6lnpjJIuupcKdSYDk3IKOeD3IqAyXNu5TzRg8rc9f16XwGQq9HZQeUZOgQpqF
+         g4R59pXxkNnkaJ/KtLgr3eFDpNdIOK3cTtVNTuqq/L56YJ6JMOq3q63rj+SFmmbIckMh
+         XH4EbU8+jpGs/K64bSmIk19ROTb4SOniDf836Ri2N5xl64ou+s38RnODpNeFPqTZ07p6
+         ca3QOBpExz71HKwuMvg0lyYpB91Ojwn/al5rBX52ypWSUhTzjS4HXQIlbz7jWwbLE4r8
+         RFYRlOBVkB5abJTjOR7+TfPnDs9QYsCSjyypQdX3zLsuqPrzv6PUJEJs97IQfHKUhbUz
+         eX4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
+         :from:date:message-id:subject:to:cc;
+        bh=EvNYJ68tDLRwoC65KusTy0iig3L17Xrs7ri6XgMlgQY=;
+        b=AobqqPIbPDPAtGdLwtuQnytCQvBwvBW2TPbZrZ/se4nkjR2hqBqaOMGNovkgSc6oE4
+         et4kdUl2o0QC7HLYSUlvjm65lbc2iuee9FPbiA9KbvkqL3eliglfSsMwlhbLC96mdaiN
+         0d38ovX3VEtkoSxsba0UyzIxC21hQl6vjCmbdXV19cqWTmgm/odMfN8Hssm3NX7AyekJ
+         3v66dSBXPRt1T4ditwzqEZL2NCxGaDRDwHDFyNntM6vOxwxS3KmKMniGHWGKJr8M7UFA
+         skDHy4+0JFv/m+7KTj9bnlBYX88r23U4yTqQaSstHfib9AahoSDWkv5e9Dse4lRJBpMS
+         TZ4Q==
+X-Gm-Message-State: AOAM533vSgs6SucP1MPVrzLi9afk7RM18NlRTEOomGD0AubssRvLV5FO
+        I3lfHPk62gSJSKCcvvctOEP2nKp99QlgIJ1QLjw=
+X-Google-Smtp-Source: ABdhPJzV+Mf7vpgligjwcFTSmK53v/F8zJ6OVuaDz0kQmB8PyqfX2HhMV8FZuWiWeH9ruFGBLrFRV2Gtx3fZ0XuOq9s=
+X-Received: by 2002:a4a:2c02:: with SMTP id o2mr6360089ooo.24.1601206286897;
+ Sun, 27 Sep 2020 04:31:26 -0700 (PDT)
 MIME-Version: 1.0
-X-Mailer: MIME-tools 5.509 (Entity 5.509)
-Content-Type: text/plain; charset=utf-8
-From:   "Debian Bug Tracking System" <owner@bugs.debian.org>
-To:     Helmut Grohne <helmut@subdivi.de>
-CC:     stender@debian.org, debian-ocaml-maint@lists.debian.org,
-        bernat@debian.org, costela@debian.org,
-        pkg-ruby-extras-maintainers@lists.alioth.debian.org,
-        debian-efi@lists.debian.org,
-        debian-science-maintainers@lists.alioth.debian.org,
-        debian-gcc@lists.debian.org,
-        python-modules-team@lists.alioth.debian.org,
-        pkg-haskell-maintainers@lists.alioth.debian.org,
-        pkg-go-maintainers@lists.alioth.debian.org,
-        pkg-vdr-dvb-devel@lists.alioth.debian.org, showard@debian.org,
-        ubuntu-dev-team@lists.alioth.debian.org, vasek.gello@gmail.com,
-        debian-multimedia@lists.debian.org, giuliopaci@gmail.com,
-        federico@debian.org, sunweaver@debian.org,
-        pkg-raspi-maintainers@lists.alioth.debian.org, nicolas@debian.org,
-        zufus@debian.org, pkg-libvirt-maintainers@lists.alioth.debian.org,
-        gcs@debian.org, jari.aalto@cante.net,
-        python-apps-team@lists.alioth.debian.org, terpstra@debian.org,
-        pkg-java-maintainers@lists.alioth.debian.org,
-        debichem-devel@lists.alioth.debian.org,
-        debian-astro-maintainers@lists.alioth.debian.org,
-        debichem-devel@lists.alioth.debian.org, unit193@debian.org,
-        pkg-php-pear@lists.alioth.debian.org,
-        pkg-xen-devel@lists.alioth.debian.org, jose@calhariz.com,
-        debian-med-packaging@lists.alioth.debian.org, helmut@subdivi.de,
-        taffit@debian.org,
-        debian-science-maintainers@lists.alioth.debian.org,
-        linux-xfs@vger.kernel.org, team@neuro.debian.net,
-        jrnieder@gmail.com, pkg-clamav-devel@lists.alioth.debian.org
-Subject: Processed: tag ftbfs bugs
-Message-ID: <handler.s.C.16011866472690.transcript@bugs.debian.org>
-References: <20200927060346.GA19492@alf.mars>
-X-Debian-PR-Package: src:ants src:msxpertsuite src:gnokii src:puma
- src:kodi src:python-biom-format src:gcc-4.9 src:xfsprogs src:gdebi
- src:openhft-chronicle-bytes src:weresync src:yi src:didjvu src:openhft-chronicle-network
- src:mlton src:phonetisaurus src:doc-linux-fr src:vdr-plugin-xineliboutput
- src:yamcha src:libgnatcoll-db src:socat src:openhft-chronicle-wire src:edb
- src:consul src:xorp src:barrier src:xen src:python-django-push-notifications
- src:fftw3 src:clamav src:datanommer.consumer src:mingw-ocaml
- src:vdirsyncer src:rpi.gpio src:coq-float src:symfony src:libvirt-sandbox
- src:critterding src:golang-github-golang-geo src:ruby-graffiti
- src:ssh-askpass-fullscreen src:mpqc src:aac-tactics src:davs2
- src:pluto-find-orb src:gcc-cross-support src:arduino src:openhft-chronicle-threads
- src:jinja2-time src:pesign src:tootle src:xz-utils src:zypper
-X-Debian-PR-Source: aac-tactics ants arduino barrier clamav consul
- coq-float critterding datanommer.consumer davs2 didjvu doc-linux-fr edb
- fftw3 gcc-4.9 gcc-cross-support gdebi gnokii golang-github-golang-geo
- jinja2-time kodi libgnatcoll-db libvirt-sandbox mingw-ocaml mlton mpqc
- msxpertsuite openhft-chronicle-bytes openhft-chronicle-network
- openhft-chronicle-threads openhft-chronicle-wire pesign phonetisaurus
- pluto-find-orb puma python-biom-format python-django-push-notifications
- rpi.gpio ruby-graffiti socat ssh-askpass-fullscreen symfony tootle
- vdirsyncer vdr-plugin-xineliboutput weresync xen xfsprogs xorp xz-utils
- yamcha yi zypper
-X-Debian-PR-Message: transcript
-X-Loop: owner@bugs.debian.org
-Date:   Sun, 27 Sep 2020 06:09:24 +0000
+References: <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
+ <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
+ <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
+ <20200924200225.GC32101@casper.infradead.org> <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
+ <20200924235756.GD32101@casper.infradead.org> <CA+icZUWcx5hBjU35tfY=7KXin7cA5AAY8AMKx-pjYnLCsQywGw@mail.gmail.com>
+ <CA+icZUWMs5Xz5vMP370uUBCqzgjq6Aqpy+krZMNg-5JRLxaALA@mail.gmail.com>
+ <20200925134608.GE32101@casper.infradead.org> <CA+icZUV9tNMbTC+=MoKp3rGmhDeO9ScW7HC+WUTCCvSMpih7DA@mail.gmail.com>
+ <20200925155340.GG32101@casper.infradead.org>
+In-Reply-To: <20200925155340.GG32101@casper.infradead.org>
+Reply-To: sedat.dilek@gmail.com
+From:   Sedat Dilek <sedat.dilek@gmail.com>
+Date:   Sun, 27 Sep 2020 13:31:15 +0200
+Message-ID: <CA+icZUWmF_7P7r-qmxzR7oz36u_Wy5HA6fh5zFFZd1D-aZiwkQ@mail.gmail.com>
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Brian Foster <bfoster@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Processing commands for control@bugs.debian.org:
+On Fri, Sep 25, 2020 at 5:53 PM Matthew Wilcox <willy@infradead.org> wrote:
+>
+> On Fri, Sep 25, 2020 at 04:01:02PM +0200, Sedat Dilek wrote:
+> > On Fri, Sep 25, 2020 at 3:46 PM Matthew Wilcox <willy@infradead.org> wrote:
 
-> tags 769218 + ftbfs
-Bug #769218 [src:gcc-4.9] gcc-4.9: FTBFS in jessie: Error! CRCs do not matc=
-h! Got 264aca47, expected 95962ba4
-Added tag(s) ftbfs.
-> tags 828550 + ftbfs
-Bug #828550 [src:socat] socat: FTBFS with openssl 1.1.0
-Added tag(s) ftbfs.
-> tags 832330 + ftbfs
-Bug #832330 [src:gnokii] gnokii: FTBFS in experimental: undefined reference=
-s to GUI_HideAbout, CloseLogosWindow
-Added tag(s) ftbfs.
-> tags 838137 + ftbfs
-Bug #838137 [src:critterding] critterding: FTBFS in experimental: be_comman=
-d_system.cpp:13:94: error: '_1' was not declared in this scope
-Added tag(s) ftbfs.
-> tags 844795 + ftbfs
-Bug #844795 [src:datanommer.consumer] datanommer.consumer: FTBFS: build-dep=
-endency not installable: python-datanommer.models
-Added tag(s) ftbfs.
-> tags 875386 + ftbfs
-Bug #875386 [src:phonetisaurus] phonetisaurus: FTBFS: error: 'EncodeTable' =
-does not name a type
-Added tag(s) ftbfs.
-> tags 876230 + ftbfs
-Bug #876230 [src:ssh-askpass-fullscreen] ssh-askpass-fullscreen: FTBFS: und=
-efined reference to symbol 'XUngrabServer'
-Added tag(s) ftbfs.
-> tags 876238 + ftbfs
-Bug #876238 [src:gcc-cross-support] gcc-cross-support: FTBFS, wants to rege=
-nerate debian/control with more and renamed packages
-Added tag(s) ftbfs.
-> tags 876495 + ftbfs
-Bug #876495 [src:arduino] arduino: FTBFS  error: <anonymous processing.app.=
-zeroconf.jmdns.ArduinoDNSTaskStarter$1> is not abstract and does not overri=
-de abstract method startResponder(DNSIncoming,InetAddress,int) in DNSTaskSt=
-arter
-Added tag(s) ftbfs.
-> tags 877319 + ftbfs
-Bug #877319 [src:golang-github-golang-geo] golang-github-golang-geo: FTBFS =
-on i386
-Added tag(s) ftbfs.
-> tags 884018 + ftbfs
-Bug #884018 [src:yamcha] yamcha: FTBFS with debhelper >=3D 10.9.2: dh_syste=
-md_enable is no longer used in compat >=3D 11, please use dh_installsystemd=
- instead
-Added tag(s) ftbfs.
-> tags 884710 + ftbfs
-Bug #884710 [src:ants] ants: FTBFS: URL using bad/illegal format or missing=
- URL
-Added tag(s) ftbfs.
-> tags 890716 + ftbfs
-Bug #890716 [src:xfsprogs] xfsprogs: FTBFS with glibc 2.27: error: conflict=
-ing types for 'copy_file_range'
-Added tag(s) ftbfs.
-> tags 904010 + ftbfs
-Bug #904010 [src:edb] edb: FTBFS in sid (build-depends on emacs24)
-Added tag(s) ftbfs.
-> tags 910813 + ftbfs
-Bug #910813 [src:doc-linux-fr] doc-linux-fr: FTBFS, latex error "Package in=
-putenc Error: Invalid UTF-8 byte sequence"
-Added tag(s) ftbfs.
-> tags 917677 + ftbfs
-Bug #917677 [src:python-django-push-notifications] python-django-push-notif=
-ications: FTBFS: dh_auto_test: pybuild --test -i python{version} -p 3.7 --s=
-ystem=3Dcustom "--test-args=3D{interpreter} tests/runtests.py" returned exi=
-t code 13
-Added tag(s) ftbfs.
-> tags 917699 + ftbfs
-Bug #917699 [src:mlton] urweb: FTBFS: build-dependency not installable: mlt=
-on
-Bug #904475 [src:mlton] mlton: build-depends on the version of itself that =
-is going to be built
-Added tag(s) ftbfs.
-Added tag(s) ftbfs.
-> tags 917729 + ftbfs
-Bug #917729 [src:weresync] weresync: FTBFS: dpkg-buildpackage: error: dpkg-=
-source -b . subprocess returned exit status 2
-Added tag(s) ftbfs.
-> tags 919084 + ftbfs
-Bug #919084 [src:davs2] davs2: FTBFS everywhere
-Added tag(s) ftbfs.
-> tags 920481 + ftbfs
-Bug #920481 [src:openhft-chronicle-wire] openhft-chronicle-wire: FTBFS: use=
-s deprecated classes/methods
-Added tag(s) ftbfs.
-> tags 921218 + ftbfs
-Bug #921218 [src:pluto-find-orb] pluto-find-orb: FTBFS with mpc_func.h:55:5=
-: error: conflicting declaration of 'int create_mpc_packed_desig(char*, con=
-st char*)' with 'C' linkage
-Added tag(s) ftbfs.
-> tags 924774 + ftbfs
-Bug #924774 [src:openhft-chronicle-network] openhft-chronicle-network: FTBF=
-S: cannot find symbol
-Added tag(s) ftbfs.
-> tags 924816 + ftbfs
-Bug #924816 [src:mingw-ocaml] mingw-ocaml: FTBFS: hasgot.c:(.text+0x13): un=
-defined reference to `tgetent'
-Added tag(s) ftbfs.
-> tags 924843 + ftbfs
-Bug #924843 [src:msxpertsuite] msxpertsuite: FTBFS: MassSpectrum.cpp:50:10:=
- fatal error: pwiz/data/msdata/MSDataFile.hpp: No such file or directory
-Added tag(s) ftbfs.
-> tags 924970 + ftbfs
-Bug #924970 [src:openhft-chronicle-threads] openhft-chronicle-threads: FTBF=
-S: package net.openhft.chronicle.core.threads does not exist
-Added tag(s) ftbfs.
-> tags 925523 + ftbfs
-Bug #925523 [src:openhft-chronicle-bytes] openhft-chronicle-bytes: FTBFS pa=
-ckage net.openhft.chronicle.core.cleaner does not exist
-Added tag(s) ftbfs.
-> tags 929713 + ftbfs
-Bug #929713 [src:openhft-chronicle-bytes] openhft-chronicle-bytes: FTBFS: [=
-ERROR] /<<PKGBUILDDIR>>/src/main/java/net/openhft/chronicle/bytes/NativeByt=
-esStore.java:[78,48] cannot find symbol
-Added tag(s) ftbfs.
-> tags 939940 + ftbfs
-Bug #939940 [src:libvirt-sandbox] libvirt-sandbox: missing python build-dep=
-endency causes FTBFS with gtk-doc-tools 1.32
-Added tag(s) ftbfs.
-> tags 943396 + ftbfs
-Bug #943396 [src:fftw3] FTBFS on armhf: testsuite segfault
-Added tag(s) ftbfs.
-> tags 943695 + ftbfs
-Bug #943695 [src:didjvu] didjvu: FTBFS: ERROR: tests.test_timestamp.test_ti=
-mezones
-Added tag(s) ftbfs.
-> tags 944030 + ftbfs
-Bug #944030 [src:jinja2-time] jinja2-time: FTBFS in unstable
-Added tag(s) ftbfs.
-> tags 945961 + ftbfs
-Bug #945961 [src:xz-utils] xz-utils: FTBFS: cannot stat 'debian/tmp/usr/lib=
-/x86_64-linux-gnu/liblzma.so.*'
-Added tag(s) ftbfs.
-> tags 947586 + ftbfs
-Bug #947586 [src:xorp] FTBFS with scons 3.1.2-1
-Added tag(s) ftbfs.
-> tags 948645 + ftbfs
-Bug #948645 [src:pesign] pesign FTBFS: nss-induced error: unsigned conversi=
-on from =E2=80=98int=E2=80=99 to =E2=80=98unsigned char=E2=80=99 changes va=
-lue from =E2=80=98496=E2=80=99 to =E2=80=98240=E2=80=99 [-Werror=3Doverflow]
-Added tag(s) ftbfs.
-> tags 950929 + ftbfs
-Bug #950929 [src:python-biom-format] python-biom-format: FTBFS with pandas =
-1.0: test failures
-Added tag(s) ftbfs.
-> tags 951921 + ftbfs
-Bug #951921 [src:vdr-plugin-xineliboutput] vdr-plugin-xineliboutput: FTBFS:=
- xine_sxfe_frontend.c:1873: undefined reference to `glXQueryExtensionsStrin=
-g'
-Added tag(s) ftbfs.
-> tags 951923 + ftbfs
-Bug #951923 [src:gdebi] gdebi: FTBFS: test failures
-Added tag(s) ftbfs.
-> tags 951948 + ftbfs
-Bug #951948 [src:vdirsyncer] vdirsyncer: FTBFS: LookupError: setuptools-scm=
- was unable to detect version for '/<<PKGBUILDDIR>>'.
-Added tag(s) ftbfs.
-> tags 951999 + ftbfs
-Bug #951999 [src:mpqc] mpqc: FTBFS: messmpi.cc:203:21: error: call to 'MPI_=
-Errhandler_set' declared with attribute error: MPI_Errhandler_set was remov=
-ed in MPI-3.0. Use MPI_Comm_set_errhandler instead.
-Added tag(s) ftbfs.
-> tags 952016 + ftbfs
-Bug #952016 [src:ruby-graffiti] ruby-graffiti: FTBFS: ERROR: Test "ruby2.7"=
- failed.
-Added tag(s) ftbfs.
-> tags 952099 + ftbfs
-Bug #952099 [src:tootle] tootle: FTBFS: ../../src/Views/AbstractView.vala:2=
-4.5-24.23: error: Creation method of abstract class cannot be public.
-Added tag(s) ftbfs.
-> tags 952431 + ftbfs
-Bug #952431 [src:symfony] symfony: FTBFS: test failures with PHP 7.4
-Added tag(s) ftbfs.
-> tags 952741 + ftbfs
-Bug #952741 [src:puma] [RFH] FTBFS: Tests sometimes get stuck and the build=
- gets forcefully terminated
-Added tag(s) ftbfs.
-> tags 960427 + ftbfs
-Bug #960427 [src:zypper] zypper: FTBFS with boost 1.71
-Added tag(s) ftbfs.
-> tags 963853 + ftbfs
-Bug #963853 [src:clamav] clamav: FTBFS on IPv6-only environments
-Added tag(s) ftbfs.
-> tags 964873 + ftbfs
-Bug #964873 [src:consul] consul: FTBFS: src/github.com/hashicorp/consul/age=
-nt/consul/server.go:467:29: cannot use s.logger (type *log.Logger) as type =
-hclog.Logger in assignment
-Added tag(s) ftbfs.
-> tags 968276 + ftbfs
-Bug #968276 [src:yi] yi: FTBFS in sid (missing deps)
-Added tag(s) ftbfs.
-> tags 968339 + ftbfs
-Bug #968339 [src:kodi] kodi: FTBFS in sid (test failures)
-Added tag(s) ftbfs.
-> tags 968965 + ftbfs
-Bug #968965 [src:xen] xen: FTBFS in sid
-Added tag(s) ftbfs.
-> tags 970453 + ftbfs
-Bug #970453 [src:coq-float] coq-float: FTBFS in sid
-Added tag(s) ftbfs.
-> tags 970454 + ftbfs
-Bug #970454 [src:aac-tactics] aac-tactics: FTBFS in sid
-Added tag(s) ftbfs.
-> tags 970611 + ftbfs
-Bug #970611 [src:barrier] src:barrier: fails to migrate to testing for too =
-long: FTBFS on mips*el
-Added tag(s) ftbfs.
-> tags 970726 + ftbfs
-Bug #970726 [src:rpi.gpio] rpi.gpio: FTBFS in sid (gcc-10)
-Added tag(s) ftbfs.
-> tags 971018 + ftbfs
-Bug #971018 [src:libgnatcoll-db] libgnatcoll-db: FTBFS on mips(64)el with a=
-ssembler message: branch out of range
-Added tag(s) ftbfs.
-> thanks
-Stopping processing here.
+[...]
 
-Please contact me if you need assistance.
---=20
-769218: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D769218
-828550: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D828550
-832330: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D832330
-838137: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D838137
-844795: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D844795
-875386: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D875386
-876230: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D876230
-876238: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D876238
-876495: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D876495
-877319: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D877319
-884018: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D884018
-884710: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D884710
-890716: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D890716
-904010: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D904010
-904475: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D904475
-910813: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D910813
-917677: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D917677
-917699: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D917699
-917729: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D917729
-919084: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D919084
-920481: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D920481
-921218: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D921218
-924774: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D924774
-924816: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D924816
-924843: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D924843
-924970: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D924970
-925523: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D925523
-929713: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D929713
-939940: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D939940
-943396: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D943396
-943695: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D943695
-944030: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D944030
-945961: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D945961
-947586: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D947586
-948645: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D948645
-950929: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D950929
-951921: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D951921
-951923: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D951923
-951948: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D951948
-951999: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D951999
-952016: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D952016
-952099: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D952099
-952431: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D952431
-952741: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D952741
-960427: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D960427
-963853: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D963853
-964873: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D964873
-968276: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D968276
-968339: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D968339
-968965: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D968965
-970453: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D970453
-970454: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D970454
-970611: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D970611
-970726: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D970726
-971018: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D971018
-Debian Bug Tracking System
-Contact owner@bugs.debian.org with problems
+> > How does the assertion look like in the logs?
+> > You have an example.
+>
+> I happen to have one from my testing last night:
+>
+> 0006 ------------[ cut here ]------------
+> 0006 WARNING: CPU: 5 PID: 1417 at fs/iomap/buffered-io.c:80 iomap_page_release+0xb1/0xc0
+> 0006 bam!
+> 0006 Modules linked in:
+> 0006 CPU: 5 PID: 1417 Comm: fio Kdump: loaded Not tainted 5.8.0-00001-g51f85a97ccdd-dirty #54
+> 0006 Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-1 04/01/2014
+> 0006 RIP: 0010:iomap_page_release+0xb1/0xc0
+> 0006 Code: 45 d9 48 8b 03 48 c1 e8 02 83 e0 01 75 13 38 d0 75 18 4c 89 ef e8 1f 6a f8 ff 5b 41 5c 41 5d 5d c3 eb eb e8 e1 07 f4 ff eb 8c <0f> 0b eb e4 0f 0b eb a8 0f 0b eb ac 0f 1f 00 55 48 89 e5 41 56 41
+> 0006 RSP: 0018:ffffc90001ed3a40 EFLAGS: 00010202
+> 0006 RAX: 0000000000000001 RBX: ffffea0001458ec0 RCX: ffffffff81cf75a7
+> 0006 RDX: 0000000000000000 RSI: 0000000000000004 RDI: ffff8880727d1f90
+> 0006 RBP: ffffc90001ed3a58 R08: 0000000000000000 R09: ffff888051ddd6e8
+> 0006 R10: 0000000000000005 R11: 0000000000000230 R12: 0000000000000004
+> 0006 R13: ffff8880727d1f80 R14: 0000000000000005 R15: ffffea0001458ec0
+> 0006 FS:  00007fe4bdd9df00(0000) GS:ffff88807f540000(0000) knlGS:0000000000000000
+> 0006 CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> 0006 CR2: 00007fe4bdd50000 CR3: 000000006f7e6005 CR4: 0000000000360ea0
+> 0006 Call Trace:
+> 0006  iomap_releasepage+0x58/0xc0
+> 0006  try_to_release_page+0x4b/0x60
+> 0006  invalidate_inode_pages2_range+0x38b/0x3f0
+>
+> I would suggest that you try applying just the assertion to Linus'
+> kernel, then try to make it fire.  Then apply the fix and see if you
+> can still make the assertion fire.
+>
+> FWIW, I got it to fire with generic/095 from the xfstests test suite.
+
+With...
+
+Linux v5.9-rc6+ up to commit a1bf fa48 745a ("Merge tag 'scsi-fixes'
+of git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi")
+...and...
+
+ xfstests-dev up to commit 75bd80f900ea ("src/t_mmap_dio: do not build
+if !HAVE_AIO")
+
+...I have seen in my first run of...
+
+[ generic/095 ]
+
+dileks@iniza:~/src/xfstests-dev/git$ sudo ./check generic/095
+FSTYP         -- ext4
+PLATFORM      -- Linux/x86_64 iniza 5.9.0-rc6-7-amd64-clang-cfi
+#7~bullseye+dileks1 SMP 2020-
+09-27
+MKFS_OPTIONS  -- /dev/sdb1
+MOUNT_OPTIONS -- -o acl,user_xattr /dev/sdb1 /mnt/scratch
+
+generic/095      24s
+Ran: generic/095
+Passed all 1 tests
+
+[ LC_ALL=C dmesg -T ]
+
+[Sun Sep 27 13:05:17 2020] run fstests generic/095 at 2020-09-27 13:05:17
+[Sun Sep 27 13:05:28 2020] EXT4-fs (sdb1): mounted filesystem with
+ordered data mode. Opts: acl,user_xattr
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 21389 Comm: kworker/3:1
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file2 PID: 21389 Comm: kworker/3:1
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 22228 Comm: kworker/3:2
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 22228 Comm: kworker/3:2
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 22578 Comm: kworker/3:3
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 22579 Comm: kworker/3:4
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 21389 Comm: kworker/3:1
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 22578 Comm: kworker/3:3
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 22558 Comm: fio
+[Sun Sep 27 13:05:29 2020] Page cache invalidation failure on direct
+I/O.  Possible data corruption due to collision with buffered I/O!
+[Sun Sep 27 13:05:29 2020] File: /mnt/scratch/file1 PID: 22527 Comm: fio
+
+In the next 5 runs I have not seen similar in my logs.
+
+- Sedat -
+
+P.S.: My local.config
+
+# Ideally define at least these 4 to match your environment
+# The first 2 are required.
+# See README for other variables which can be set.
+#
+# Note: SCRATCH_DEV >will< get overwritten!
+
+export TEST_DEV=/dev/sdc5
+export TEST_DIR=/mnt/test
+export SCRATCH_DEV=/dev/sdb1
+export SCRATCH_MNT=/mnt/scratch
+
+- EOT -
