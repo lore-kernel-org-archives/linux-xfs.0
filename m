@@ -2,151 +2,173 @@ Return-Path: <SRS0=IMq7=DE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABBB4C4346E
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 15:19:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D89C7C4346E
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 23:08:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53C1123899
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 15:19:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R3aWreYf"
+	by mail.kernel.org (Postfix) with ESMTP id 98A44239EB
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 23:08:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726210AbgI0PTu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Sep 2020 11:19:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52348 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726149AbgI0PTu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Sep 2020 11:19:50 -0400
-Received: from mail-ot1-x344.google.com (mail-ot1-x344.google.com [IPv6:2607:f8b0:4864:20::344])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 44F00C0613CE;
-        Sun, 27 Sep 2020 08:19:50 -0700 (PDT)
-Received: by mail-ot1-x344.google.com with SMTP id 60so7145152otw.3;
-        Sun, 27 Sep 2020 08:19:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=bVyHJ1WqJaco64wTAhvSr/X/1cmhmFXEMUJwpriFCpM=;
-        b=R3aWreYfqBW6rUh5eXN2DL21YoiTrOqx5PDRWHvEnxiAG9u6PghdH13MEPoiZ+xzkr
-         IQbszGD2P3wFktMs97uZ5L1Fw/SYcG1SW4ZmeNy9eONViaG72Jl4xqws/Dm5FF5VAoTL
-         +MOgwMjOrY4cLGGeyLHenHr0+UPoFb9Pviva+oa1cnsLyjSGBzV79GD731kvsfwk4xtu
-         phALG547Ky3NYSVP8AfUzJVY1uCAhFdPPwkgQbhqjdr4RT2q2KTrShAp4XPGmjbYdGrG
-         bbp6kLC3ddoqDrBNcR0UvZmtp3U3VTBoKjz60wAytEhhCbg458Epfryn0z5zEAZSIxLX
-         4AiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=bVyHJ1WqJaco64wTAhvSr/X/1cmhmFXEMUJwpriFCpM=;
-        b=RH6QVA1dP/Mghoxx29VZn4yeaa98dgKesq6b3xwwctwh+B1Bef1CZyIM6grMfQ99Kt
-         v1Q/x/XJg6kClf3G1tK6nWydAHEZ5eRbO/ZKRScN4y36FF/w6tNbDvW2DqR5PcN1C4x1
-         0eKG9oYCX4IqCSjSS2kGz2J7eN2tJ7i6yGbcjA7CCXZGEn1pQhBJdvdTb3h6z5neTyrt
-         32T4MFodtwklAVr2qsNeBU+jiBoODG1IsOEr5p/uPpeMTpbxCNTYFLc4SJN7au5xhyV/
-         pecedDnC9SKXWwM8T5aSo5hHtyNfBgjBdkDJDuogNbNPx3NBcJdPCY82lj27ZAdCDTFA
-         7l6A==
-X-Gm-Message-State: AOAM532ooF1cRjaBDKn/ndSEnoIh+GgBAcIdRsc9H3kXkGft/RLLAwiO
-        7JrXrjaWoH9o8QCwjEGEB3VskQKYDprCbPiwbRkiIJqVB3Q=
-X-Google-Smtp-Source: ABdhPJwojeeQHjzJ9jC3tJdoiSwLrTCf6KpPWyqyxj2CITdfSgOS0+KbKQBua4PPcEb+wufhbxJ5BWNP5ZudOJe4OTI=
-X-Received: by 2002:a05:6830:13da:: with SMTP id e26mr6597714otq.28.1601219989545;
- Sun, 27 Sep 2020 08:19:49 -0700 (PDT)
+        id S1726369AbgI0XI2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Sep 2020 19:08:28 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:35439 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726316AbgI0XI1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Sep 2020 19:08:27 -0400
+Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 93461825F0F;
+        Mon, 28 Sep 2020 09:08:24 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kMfmJ-0003q8-Aq; Mon, 28 Sep 2020 09:08:23 +1000
+Date:   Mon, 28 Sep 2020 09:08:23 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH 3/3] xfs: periodically relog deferred intent items
+Message-ID: <20200927230823.GA14422@dread.disaster.area>
+References: <160083917978.1401135.9502772939838940679.stgit@magnolia>
+ <160083919968.1401135.1020138085396332868.stgit@magnolia>
 MIME-Version: 1.0
-References: <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
- <20200924235756.GD32101@casper.infradead.org> <CA+icZUWcx5hBjU35tfY=7KXin7cA5AAY8AMKx-pjYnLCsQywGw@mail.gmail.com>
- <CA+icZUWMs5Xz5vMP370uUBCqzgjq6Aqpy+krZMNg-5JRLxaALA@mail.gmail.com>
- <20200925134608.GE32101@casper.infradead.org> <CA+icZUV9tNMbTC+=MoKp3rGmhDeO9ScW7HC+WUTCCvSMpih7DA@mail.gmail.com>
- <20200925155340.GG32101@casper.infradead.org> <CA+icZUWmF_7P7r-qmxzR7oz36u_Wy5HA6fh5zFFZd1D-aZiwkQ@mail.gmail.com>
- <20200927120435.GC7714@casper.infradead.org> <CA+icZUWSHf9YbkuEYeG4azSrPt=GYu-MmHxj3+uGvxPW-HHjjQ@mail.gmail.com>
- <20200927135421.GD7714@casper.infradead.org> <CA+icZUVnZ2KoG28G2Lw+gr5-Hg4keFHtzzJ2oyb1mYqEgp3M2Q@mail.gmail.com>
-In-Reply-To: <CA+icZUVnZ2KoG28G2Lw+gr5-Hg4keFHtzzJ2oyb1mYqEgp3M2Q@mail.gmail.com>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Sun, 27 Sep 2020 17:19:37 +0200
-Message-ID: <CA+icZUVrvvneFi+3ihL0+UBs9NjTHXaVWDDJwgwnYy=JE7NQ1w@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160083919968.1401135.1020138085396332868.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
+        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
+        a=mP9b5-8OECr-va5RstUA:9 a=zvfFNVJwTFR9YhDh:21 a=c5Hm-UcGQGQaY0H3:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 27, 2020 at 4:02 PM Sedat Dilek <sedat.dilek@gmail.com> wrote:
->
-> On Sun, Sep 27, 2020 at 3:54 PM Matthew Wilcox <willy@infradead.org> wrote:
-> >
-> > On Sun, Sep 27, 2020 at 03:48:39PM +0200, Sedat Dilek wrote:
-> > > With your patch and assertion diff I hit the same issue like with Ext4-FS...
-> > >
-> > > [So Sep 27 15:40:18 2020] run fstests generic/095 at 2020-09-27 15:40:19
-> > > [So Sep 27 15:40:26 2020] XFS (sdb1): Mounting V5 Filesystem
-> > > [So Sep 27 15:40:26 2020] XFS (sdb1): Ending clean mount
-> > > [So Sep 27 15:40:26 2020] xfs filesystem being mounted at /mnt/scratch
-> > > supports timestamps until 2038 (0x7fffffff)
-> > > [So Sep 27 15:40:28 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:28 2020] File: /mnt/scratch/file1 PID: 12 Comm: kworker/0:1
-> > > [So Sep 27 15:40:29 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:29 2020] File: /mnt/scratch/file1 PID: 73 Comm: kworker/0:2
-> > > [So Sep 27 15:40:30 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:30 2020] File: /mnt/scratch/file2 PID: 12 Comm: kworker/0:1
-> > > [So Sep 27 15:40:30 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:30 2020] File: /mnt/scratch/file2 PID: 3271 Comm: fio
-> > > [So Sep 27 15:40:30 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:30 2020] File: /mnt/scratch/file2 PID: 3273 Comm: fio
-> > > [So Sep 27 15:40:31 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:31 2020] File: /mnt/scratch/file1 PID: 3308 Comm: fio
-> > > [So Sep 27 15:40:36 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:36 2020] File: /mnt/scratch/file1 PID: 73 Comm: kworker/0:2
-> > > [So Sep 27 15:40:43 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:43 2020] File: /mnt/scratch/file1 PID: 73 Comm: kworker/0:2
-> > > [So Sep 27 15:40:52 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:52 2020] File: /mnt/scratch/file2 PID: 73 Comm: kworker/0:2
-> > > [So Sep 27 15:40:56 2020] Page cache invalidation failure on direct
-> > > I/O.  Possible data corruption due to collision with buffered I/O!
-> > > [So Sep 27 15:40:56 2020] File: /mnt/scratch/file2 PID: 12 Comm: kworker/0:1
-> > >
-> > > Is that a different issue?
-> >
-> > The test is expected to emit those messages; userspace has done something
-> > so utterly bonkers (direct I/O to an mmaped, mlocked page) that we can't
-> > provide the normal guarantees of data integrity.
->
-> Thanks for the explanations.
->
-> Will run 25 iterations with your iomap patch and assertion-diff using
-> XFS and your MKFS_OPTIONS="-m reflink=1,rmapbt=1 -i sparse=1 -b
-> size=1024"...
->
-> $ sudo ./check -i 25 generic/095
->
-> ...and report later.
->
+On Tue, Sep 22, 2020 at 10:33:19PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> There's a subtle design flaw in the deferred log item code that can lead
+> to pinning the log tail.  Taking up the defer ops chain examples from
+> the previous commit, we can get trapped in sequences like this:
+> 
+> Caller hands us a transaction t0 with D0-D3 attached.  The defer ops
+> chain will look like the following if the transaction rolls succeed:
+> 
+> t1: D0(t0), D1(t0), D2(t0), D3(t0)
+> t2: d4(t1), d5(t1), D1(t0), D2(t0), D3(t0)
+> t3: d5(t1), D1(t0), D2(t0), D3(t0)
+> ...
+> t9: d9(t7), D3(t0)
+> t10: D3(t0)
+> t11: d10(t10), d11(t10)
+> t12: d11(t10)
+> 
+> In transaction 9, we finish d9 and try to roll to t10 while holding onto
+> an intent item for D3 that we logged in t0.
+> 
+> The previous commit changed the order in which we place new defer ops in
+> the defer ops processing chain to reduce the maximum chain length.  Now
+> make xfs_defer_finish_noroll capable of relogging the entire chain
+> periodically so that we can always move the log tail forward.  Most
+> chains will never get relogged, except for operations that generate very
+> long chains (large extents containing many blocks with different sharing
+> levels) or are on filesystems with small logs and a lot of ongoing
+> metadata updates.
+> 
+> Callers are now required to ensure that the transaction reservation is
+> large enough to handle logging done items and new intent items for the
+> maximum possible chain length.  Most callers are careful to keep the
+> chain lengths low, so the overhead should be minimal.
+> 
+> The decision to relog an intent item is made based on whether or not the
+> intent was added to the current checkpoint.  If so, the checkpoint is
+> still open and there's no point in relogging.  Otherwise, the old
+> checkpoint is closed and we relog the intent to add it to the current
+> one.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_defer.c  |   52 ++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/xfs_bmap_item.c     |   27 +++++++++++++++++++++++
+>  fs/xfs/xfs_extfree_item.c  |   29 +++++++++++++++++++++++++
+>  fs/xfs/xfs_refcount_item.c |   27 +++++++++++++++++++++++
+>  fs/xfs/xfs_rmap_item.c     |   27 +++++++++++++++++++++++
+>  fs/xfs/xfs_trace.h         |    1 +
+>  fs/xfs/xfs_trans.h         |   10 ++++++++
+>  7 files changed, 173 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 84a70edd0da1..c601cc2af254 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -17,6 +17,7 @@
+>  #include "xfs_inode_item.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_icache.h"
+> +#include "xfs_log.h"
+>  
+>  /*
+>   * Deferred Operations in XFS
+> @@ -361,6 +362,52 @@ xfs_defer_cancel_list(
+>  	}
+>  }
+>  
+> +/*
+> + * Prevent a log intent item from pinning the tail of the log by logging a
+> + * done item to release the intent item; and then log a new intent item.
+> + * The caller should provide a fresh transaction and roll it after we're done.
+> + */
+> +static int
+> +xfs_defer_relog(
+> +	struct xfs_trans		**tpp,
+> +	struct list_head		*dfops)
+> +{
+> +	struct xfs_defer_pending	*dfp;
+> +	xfs_lsn_t			threshold_lsn;
+> +
+> +	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+> +
+> +	/*
+> +	 * Figure out where we need the tail to be in order to maintain the
+> +	 * minimum required free space in the log.
+> +	 */
+> +	threshold_lsn = xlog_grant_push_threshold((*tpp)->t_mountp->m_log, 0);
+> +	if (threshold_lsn == NULLCOMMITLSN)
+> +		return 0;
 
-Hi Matthew,
+This smells of premature optimisation.
 
-After one hour all 25 iterations passed fine - no issues.
+When we are in a tail-pushing scenario (i.e. any sort of
+sustained metadata workload) this will always return true, and so we
+will relog every intent that isn't in the current checkpoint every
+time this is called.  Under light load, we don't care if we add a
+little bit of relogging overhead as the CIL slowly flushes/pushes -
+it will have neglible impact on performance because there is little
+load on the journal.
 
-If you send a patch for Linux v5.9 feel free to add my...
+However, when we are under heavy load the code will now be reading
+the grant head and log position accounting variables during every
+commit, hence greatly increasing the number and temporal
+distribution of accesses to the hotest cachelines in the log. We
+currently never access these cache lines during commit unless the
+unit reservation has run out and we have to regrant physical log
+space for the transaction to continue (i.e. we are into slow path
+commit code). IOWs, this is like causing far more than double the
+number of accesses to the grant head, the log tail, the
+last_sync_lsn, etc, all of which is unnecessary exactly when we care
+about minimising contention on the log space accounting variables...
 
-     Tested-by: Sedat Dilek <sedat.dilek@gmail.com>
+Given that it is a redundant check under heavy load journal load
+when access to the log grant/head/tail are already contended,
+I think we should just be checking the "in current checkpoint" logic
+and not making it conditional on the log being near full.
 
-Thanks for your patience and all the background information.
+Cheers,
 
-Regards,
-- Sedat -
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
