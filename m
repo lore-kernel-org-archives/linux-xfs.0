@@ -1,180 +1,145 @@
-Return-Path: <SRS0=IMq7=DE=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=Pbt4=DF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 657F1C4346E
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 23:44:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C0AEC4346E
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Sep 2020 01:00:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E1BF23A32
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Sep 2020 23:44:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="l6/QsdFd"
+	by mail.kernel.org (Postfix) with ESMTP id B1A0522207
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Sep 2020 01:00:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726406AbgI0XoY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Sep 2020 19:44:24 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:55900 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726392AbgI0XoY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Sep 2020 19:44:24 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08RNiLQK160022;
-        Sun, 27 Sep 2020 23:44:21 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=lsGamF5ke4Awjtcr8ODqDIu7Xtg+ug9k+620wENOo6M=;
- b=l6/QsdFdgCi8CiHPshFBqnf0hmA131kOvFLX1qcX7Tvm21zmfq3MdOVcD/vA9v+JVRqw
- +TdMvu+XmIoQq2ilGEkx47VkZ8Dt8AlXjPp0EtVxZARNvBRd15P3eBa9959X5yF30OpP
- mz0SRFQ+GR84x7AOvaslz5G23tHZNASBRdqy/eshB+UPD80ak/yVvcLsPrLA1kJu5a/1
- Sn11DmdPph7bpPUyC945O7HGCiz9wSR+8JownK4Tn77qTml909UOuN9ZFhC0M5lNge4q
- XxogIj9tsfG1UDoPVePTSeE7kGEMZk1lYPapJNXTkt4434S/xxpOyNH6L6LtriZfXeGp DA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 33swkkjh81-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 27 Sep 2020 23:44:21 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08RNecZu094368;
-        Sun, 27 Sep 2020 23:42:20 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 33tfdp5bxy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 27 Sep 2020 23:42:20 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08RNgJ0R021099;
-        Sun, 27 Sep 2020 23:42:20 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 27 Sep 2020 16:42:19 -0700
-Subject: [PATCH 3/4] xfs: expose the log push threshold
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, bfoster@redhat.com
-Date:   Sun, 27 Sep 2020 16:42:18 -0700
-Message-ID: <160125013840.174867.9106541878541713554.stgit@magnolia>
-In-Reply-To: <160125011935.174867.2604597189723452984.stgit@magnolia>
-References: <160125011935.174867.2604597189723452984.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S1726393AbgI1BAz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Sep 2020 21:00:55 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43964 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726328AbgI1BAz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Sep 2020 21:00:55 -0400
+Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B4AFF3A8EFE;
+        Mon, 28 Sep 2020 11:00:52 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kMhX8-00046R-PG; Mon, 28 Sep 2020 11:00:50 +1000
+Date:   Mon, 28 Sep 2020 11:00:50 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com
+Subject: Re: [PATCH 3/3] xfs: periodically relog deferred intent items
+Message-ID: <20200928010050.GB14422@dread.disaster.area>
+References: <160083917978.1401135.9502772939838940679.stgit@magnolia>
+ <160083919968.1401135.1020138085396332868.stgit@magnolia>
+ <20200927230823.GA14422@dread.disaster.area>
+ <20200927233025.GA49547@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9757 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
- adultscore=0 malwarescore=0 spamscore=0 mlxscore=0 bulkscore=0
- suspectscore=3 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009270227
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9757 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
- suspectscore=3 mlxlogscore=999 clxscore=1015 priorityscore=1501
- impostorscore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009270228
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200927233025.GA49547@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
+        a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=7-415B0cAAAA:8
+        a=6KAZ8-jqxNW8Us3cnhEA:9 a=ydbhe3W64PlrQZi7:21 a=1InOH1LAZnnC56dc:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Sep 27, 2020 at 04:30:25PM -0700, Darrick J. Wong wrote:
+> On Mon, Sep 28, 2020 at 09:08:23AM +1000, Dave Chinner wrote:
+> > On Tue, Sep 22, 2020 at 10:33:19PM -0700, Darrick J. Wong wrote:
+> > > @@ -361,6 +362,52 @@ xfs_defer_cancel_list(
+> > >  	}
+> > >  }
+> > >  
+> > > +/*
+> > > + * Prevent a log intent item from pinning the tail of the log by logging a
+> > > + * done item to release the intent item; and then log a new intent item.
+> > > + * The caller should provide a fresh transaction and roll it after we're done.
+> > > + */
+> > > +static int
+> > > +xfs_defer_relog(
+> > > +	struct xfs_trans		**tpp,
+> > > +	struct list_head		*dfops)
+> > > +{
+> > > +	struct xfs_defer_pending	*dfp;
+> > > +	xfs_lsn_t			threshold_lsn;
+> > > +
+> > > +	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+> > > +
+> > > +	/*
+> > > +	 * Figure out where we need the tail to be in order to maintain the
+> > > +	 * minimum required free space in the log.
+> > > +	 */
+> > > +	threshold_lsn = xlog_grant_push_threshold((*tpp)->t_mountp->m_log, 0);
+> > > +	if (threshold_lsn == NULLCOMMITLSN)
+> > > +		return 0;
+> > 
+> > This smells of premature optimisation.
+> > 
+> > When we are in a tail-pushing scenario (i.e. any sort of
+> > sustained metadata workload) this will always return true, and so we
+> > will relog every intent that isn't in the current checkpoint every
+> > time this is called.  Under light load, we don't care if we add a
+> > little bit of relogging overhead as the CIL slowly flushes/pushes -
+> > it will have neglible impact on performance because there is little
+> > load on the journal.
+> > 
+> > However, when we are under heavy load the code will now be reading
+> > the grant head and log position accounting variables during every
+> > commit, hence greatly increasing the number and temporal
+> > distribution of accesses to the hotest cachelines in the log. We
+> > currently never access these cache lines during commit unless the
+> > unit reservation has run out and we have to regrant physical log
+> > space for the transaction to continue (i.e. we are into slow path
+> > commit code). IOWs, this is like causing far more than double the
+> > number of accesses to the grant head, the log tail, the
+> > last_sync_lsn, etc, all of which is unnecessary exactly when we care
+> > about minimising contention on the log space accounting variables...
+> > 
+> > Given that it is a redundant check under heavy load journal load
+> > when access to the log grant/head/tail are already contended,
+> > I think we should just be checking the "in current checkpoint" logic
+> > and not making it conditional on the log being near full.
+> 
+> <nod> FWIW I broke this patch up again into the first part that
+> only does relogging if the checkpoints don't match, and a second part
+> that does the LSN push target check to see if I could observe any
+> difference.
+> 
+> Across a ~4h fstests run I noticed that there was about ~20% fewer
+> relogs, but OTOH the total runtime didn't change noticeably.  I kind of
+> wondered if the increased cacheline contention would at least slow down
+> the frontend a bit to give the log a chance to push things out, but
+> haven't had time to dig any further than "ran fstests, recorded runtimes
+> and grep | wc -l'd the ftrace log".
 
-Separate the computation of the log push threshold and the push logic in
-xlog_grant_push_ail.  This enables higher level code to determine (for
-example) that it is holding on to a logged intent item and the log is so
-busy that it is more than 75% full.  In that case, it would be desirable
-to move the log item towards the head to release the tail, which we will
-cover in the next patch.
+fstests doesn't generate anywhere near the load necessary to measure
+log space accounting cacheline contention. That's one of the things
+I use fsmark workloads for.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_log.c |   40 ++++++++++++++++++++++++++++++----------
- fs/xfs/xfs_log.h |    2 ++
- 2 files changed, 32 insertions(+), 10 deletions(-)
+One of the things that "20% reduction" tells me, though, is that 80%
+of the time that relogging is happening with this patch we are in a
+tail pushing situation. i.e. the log is more often full than it is
+empty when we are relogging.
 
+That tends to support my statements that this is optimising the
+wrong case.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 7a4ba408a3a2..fa2d05e65ff1 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1475,14 +1475,14 @@ xlog_commit_record(
- }
- 
- /*
-- * Push on the buffer cache code if we ever use more than 75% of the on-disk
-- * log space.  This code pushes on the lsn which would supposedly free up
-- * the 25% which we want to leave free.  We may need to adopt a policy which
-- * pushes on an lsn which is further along in the log once we reach the high
-- * water mark.  In this manner, we would be creating a low water mark.
-+ * Compute the LSN that we'd need to push the log tail towards in order to have
-+ * (a) enough on-disk log space to log the number of bytes specified, (b) at
-+ * least 25% of the log space free, and (c) at least 256 blocks free.  If the
-+ * log free space already meets all three thresholds, this function returns
-+ * NULLCOMMITLSN.
-  */
--STATIC void
--xlog_grant_push_ail(
-+xfs_lsn_t
-+xlog_grant_push_threshold(
- 	struct xlog	*log,
- 	int		need_bytes)
- {
-@@ -1508,7 +1508,7 @@ xlog_grant_push_ail(
- 	free_threshold = max(free_threshold, (log->l_logBBsize >> 2));
- 	free_threshold = max(free_threshold, 256);
- 	if (free_blocks >= free_threshold)
--		return;
-+		return NULLCOMMITLSN;
- 
- 	xlog_crack_atomic_lsn(&log->l_tail_lsn, &threshold_cycle,
- 						&threshold_block);
-@@ -1528,13 +1528,33 @@ xlog_grant_push_ail(
- 	if (XFS_LSN_CMP(threshold_lsn, last_sync_lsn) > 0)
- 		threshold_lsn = last_sync_lsn;
- 
-+	return threshold_lsn;
-+}
-+
-+/*
-+ * Push the tail of the log if we need to do so to maintain the free log space
-+ * thresholds set out by xlog_grant_push_threshold.  We may need to adopt a
-+ * policy which pushes on an lsn which is further along in the log once we
-+ * reach the high water mark.  In this manner, we would be creating a low water
-+ * mark.
-+ */
-+STATIC void
-+xlog_grant_push_ail(
-+	struct xlog	*log,
-+	int		need_bytes)
-+{
-+	xfs_lsn_t	threshold_lsn;
-+
-+	threshold_lsn = xlog_grant_push_threshold(log, need_bytes);
-+	if (threshold_lsn == NULLCOMMITLSN || XLOG_FORCED_SHUTDOWN(log))
-+		return;
-+
- 	/*
- 	 * Get the transaction layer to kick the dirty buffers out to
- 	 * disk asynchronously. No point in trying to do this if
- 	 * the filesystem is shutting down.
- 	 */
--	if (!XLOG_FORCED_SHUTDOWN(log))
--		xfs_ail_push(log->l_ailp, threshold_lsn);
-+	xfs_ail_push(log->l_ailp, threshold_lsn);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 1412d6993f1e..58c3fcbec94a 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -141,4 +141,6 @@ void	xfs_log_quiesce(struct xfs_mount *mp);
- bool	xfs_log_check_lsn(struct xfs_mount *, xfs_lsn_t);
- bool	xfs_log_in_recovery(struct xfs_mount *);
- 
-+xfs_lsn_t xlog_grant_push_threshold(struct xlog *log, int need_bytes);
-+
- #endif	/* __XFS_LOG_H__ */
+FWIW, it seems to me that we need real stats for the deferops (i.e.
+exposed in /proc/fs/xfs/stat) so we can monitor in realtime the
+breakdown of work that is being done. Being able to see things like
+how many defer rolls a transaction takes under a given workload is
+very interesting information, and would give us insight into things
+like whether the log count for transaction reservations is
+reasonable or not....
 
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
