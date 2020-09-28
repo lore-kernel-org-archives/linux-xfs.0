@@ -2,117 +2,192 @@ Return-Path: <SRS0=Pbt4=DF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C981C2D0A8
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Sep 2020 05:52:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10BACC2D0A8
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Sep 2020 06:10:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8DED20809
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Sep 2020 05:52:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3D072076D
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Sep 2020 06:10:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725294AbgI1Fwe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Sep 2020 01:52:34 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46247 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725287AbgI1Fwe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Sep 2020 01:52:34 -0400
+        id S1725294AbgI1GKy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Sep 2020 02:10:54 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:34135 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725287AbgI1GKy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Sep 2020 02:10:54 -0400
 Received: from dread.disaster.area (pa49-195-191-192.pa.nsw.optusnet.com.au [49.195.191.192])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7B8D382831A;
-        Mon, 28 Sep 2020 15:52:31 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 643333A75C3;
+        Mon, 28 Sep 2020 16:10:51 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kMm5O-0004mP-Tg; Mon, 28 Sep 2020 15:52:30 +1000
-Date:   Mon, 28 Sep 2020 15:52:30 +1000
+        id 1kMmN4-0004ox-Vy; Mon, 28 Sep 2020 16:10:46 +1000
+Date:   Mon, 28 Sep 2020 16:10:46 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, hch@lst.de, bfoster@redhat.com
-Subject: Re: [PATCH 4/4] xfs: xfs_defer_capture should absorb remaining
- transaction reservation
-Message-ID: <20200928055230.GF14422@dread.disaster.area>
-References: <160125006793.174438.10683462598722457550.stgit@magnolia>
- <160125009361.174438.2579393022515355249.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 3/3] xfs: fix an incore inode UAF in xfs_bui_recover
+Message-ID: <20200928061046.GG14422@dread.disaster.area>
+References: <160125009588.174612.13196702491335373645.stgit@magnolia>
+ <160125011691.174612.13255814016601281607.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160125009361.174438.2579393022515355249.stgit@magnolia>
+In-Reply-To: <160125011691.174612.13255814016601281607.stgit@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=vvDRHhr1aDYKXl+H6jx2TA==:117 a=vvDRHhr1aDYKXl+H6jx2TA==:17
         a=kj9zAlcOel0A:10 a=reM5J-MqmosA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=36XEzLai2Xpi57uKWTMA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=H4XyqQWFdXiamJ3JR5QA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 27, 2020 at 04:41:33PM -0700, Darrick J. Wong wrote:
+On Sun, Sep 27, 2020 at 04:41:56PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When xfs_defer_capture extracts the deferred ops and transaction state
-> from a transaction, it should record the transaction reservation type
-> from the old transaction so that when we continue the dfops chain, we
-> still use the same reservation parameters.
+> In xfs_bui_item_recover, there exists a use-after-free bug with regards
+> to the inode that is involved in the bmap replay operation.  If the
+> mapping operation does not complete, we call xfs_bmap_unmap_extent to
+> create a deferred op to finish the unmapping work, and we retain a
+> pointer to the incore inode.
 > 
-> This avoids a potential failure vector by ensuring that we never ask for
-> more log reservation space than we would have asked for had the system
-> not gone down.
+> Unfortunately, the very next thing we do is commit the transaction and
+> drop the inode.  If reclaim tears down the inode before we try to finish
+> the defer ops, we dereference garbage and blow up.  Therefore, create a
+> way to join inodes to the defer ops freezer so that we can maintain the
+> xfs_inode reference until we're done with the inode.
 
-Nope, it does not do that.
+Honest first reaction now I understand what the capture stuff is
+doing: Ewww! Gross!
 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_defer.c |    5 +++++
->  fs/xfs/libxfs/xfs_defer.h |    1 +
->  fs/xfs/xfs_log_recover.c  |    4 ++--
->  3 files changed, 8 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 85d70f1edc1c..c53443252389 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -577,6 +577,11 @@ xfs_defer_capture(
->  	dfc->dfc_blkres = tp->t_blk_res - tp->t_blk_res_used;
->  	tp->t_blk_res = tp->t_blk_res_used;
+We only need to store a single inode, so the whole "2 inodes for
+symmetry with defer_ops" greatly overcomplicates the code. This
+could be *much* simpler.
+
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index deb99300d171..c7f65e16534f 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -12,6 +12,7 @@
+>  #include "xfs_sb.h"
+>  #include "xfs_mount.h"
+>  #include "xfs_inode.h"
+> +#include "xfs_defer.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_trans_priv.h"
+>  #include "xfs_inode_item.h"
+> @@ -1689,3 +1690,43 @@ xfs_start_block_reaping(
+>  	xfs_queue_eofblocks(mp);
+>  	xfs_queue_cowblocks(mp);
+>  }
+> +
+> +/*
+> + * Prepare the inodes to participate in further log intent item recovery.
+> + * For now, that means attaching dquots and locking them, since libxfs doesn't
+> + * know how to do that.
+> + */
+> +void
+> +xfs_defer_continue_inodes(
+> +	struct xfs_defer_capture	*dfc,
+> +	struct xfs_trans		*tp)
+> +{
+> +	int				i;
+> +	int				error;
+> +
+> +	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dfc->dfc_inodes[i]; i++) {
+> +		error = xfs_qm_dqattach(dfc->dfc_inodes[i]);
+> +		if (error)
+> +			tp->t_mountp->m_qflags &= ~XFS_ALL_QUOTA_CHKD;
+> +	}
+> +
+> +	if (dfc->dfc_inodes[1])
+> +		xfs_lock_two_inodes(dfc->dfc_inodes[0], XFS_ILOCK_EXCL,
+> +				    dfc->dfc_inodes[1], XFS_ILOCK_EXCL);
+> +	else if (dfc->dfc_inodes[0])
+> +		xfs_ilock(dfc->dfc_inodes[0], XFS_ILOCK_EXCL);
+> +	dfc->dfc_ilocked = true;
+> +}
+> +
+> +/* Release all the inodes attached to this dfops capture device. */
+> +void
+> +xfs_defer_capture_irele(
+> +	struct xfs_defer_capture	*dfc)
+> +{
+> +	unsigned int			i;
+> +
+> +	for (i = 0; i < XFS_DEFER_OPS_NR_INODES && dfc->dfc_inodes[i]; i++) {
+> +		xfs_irele(dfc->dfc_inodes[i]);
+> +		dfc->dfc_inodes[i] = NULL;
+> +	}
+> +}
+
+None of this belongs in xfs_icache.c. The function namespace tells
+me where it should be...
+
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 0d899ab7df2e..1463c3097240 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -1755,23 +1755,43 @@ xlog_recover_release_intent(
+>  	spin_unlock(&ailp->ail_lock);
+>  }
 >  
-> +	/* Preserve the transaction reservation type. */
-> +	dfc->dfc_tres.tr_logres = tp->t_log_res;
-> +	dfc->dfc_tres.tr_logcount = tp->t_log_count;
-> +	dfc->dfc_tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+> +static inline void
+> +xlog_recover_irele(
+> +	struct xfs_inode	*ip)
+> +{
+> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +	xfs_irele(ip);
+> +}
 
-This means every child deferop takes a full tp->t_log_count
-reservation, whilst in memory the child reservation would ahve been
-handled by the parent via the log ticket unit count being
-decremented by one. Hence child deferops -never- run with the same
-maximal reservation that their parents held.
+Just open code it, please.
 
-The difference is that at runtime we are rolling transaction which
-regrant space from the initial reservation of (tp->t_log_count *
-tp->t_log_res) made a run time. i.e. the first child deferop that
-runs has a total log space grant of ((tp->t_log_count - 1)
-* tp->t_log_res), the second it is "- 2", and so on right down to
-when the log ticket runs out of initial reservation and so it goes
-to reserving a single unit (tp->t_log_res) at a time.
+>  int
+> -xlog_recover_trans_commit(
+> +xlog_recover_trans_commit_inodes(
+>  	struct xfs_trans		*tp,
+> -	struct list_head		*capture_list)
+> +	struct list_head		*capture_list,
+> +	struct xfs_inode		*ip1,
+> +	struct xfs_inode		*ip2)
 
-Hence both the intents being recovered and all their children are
-over-reserving log space by using the default log count for the
-&M_RES(mp)->tr_itruncate reservation. Even if we ignore the initial
-reservation being incorrect, the child reservations of the same size
-as the parent are definitely incorrect. They really should be
-allowed only a single unit reservation, and if the transaction rolls
-to process defer ops, it needs to regrant new log space during the
-commit process.
+So are these inodes supposed to be locked, referenced and/or ???
 
-Hence I think this can only be correct as:
+>  {
+>  	struct xfs_mount		*mp = tp->t_mountp;
+> -	struct xfs_defer_capture	*dfc = xfs_defer_capture(tp);
+> +	struct xfs_defer_capture	*dfc = xfs_defer_capture(tp, ip1, ip2);
+>  	int				error;
 
-	dfc->dfc_tres.tr_log_count = 1;
+That's the second time putting this logic up in the declaration list
+has made me wonder where something in this function is initilaised.
+Please move it into the code so that it is obvious.
 
-Regardless of how many units the parent recovery reservation
-obtained. (Which I also think can only be correct as 1 because we
-don't know how many units of reservation space the parent had
-consumed when it was logged.)
+>  
+>  	/* If we don't capture anything, commit tp and exit. */
+> -	if (!dfc)
+> -		return xfs_trans_commit(tp);
+> +	if (!dfc) {
+
+i.e. before this line.
+
+	dfc = xfs_defer_capture(tp, ip1, ip2);
+	if (!dfc) {
+
+> +		error = xfs_trans_commit(tp);
+> +
+> +		/* We still own the inodes, so unlock and release them. */
+> +		if (ip2 && ip2 != ip1)
+> +			xlog_recover_irele(ip2);
+> +		if (ip1)
+> +			xlog_recover_irele(ip1);
+> +		return error;
+> +	}
+
+Not a fan of the unnecessary complexity of this.
 
 Cheers,
 
