@@ -7,70 +7,71 @@ X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEB35C4727C
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Sep 2020 17:45:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97364C4727C
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Sep 2020 17:45:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74171208B8
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Sep 2020 17:45:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A1C4208B8
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Sep 2020 17:45:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="G1FehZvJ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CMa69exd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725776AbgI2RpY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Sep 2020 13:45:24 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:41146 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728525AbgI2RpX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Sep 2020 13:45:23 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08THdXOW026447;
-        Tue, 29 Sep 2020 17:45:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
- message-id : date : from : to : cc : subject : references : in-reply-to :
+        id S1728525AbgI2Rpf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Sep 2020 13:45:35 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39306 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728386AbgI2Rpe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Sep 2020 13:45:34 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08THd3BY189278;
+        Tue, 29 Sep 2020 17:45:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=ckKzoEIBcuKukMDBFmIM0IyVQPuTkoxL6cM4LafmELM=;
- b=G1FehZvJvRY8M7V2GUc0z7x0k5omMVWnPgbNtRKFjj46wz+v1IpbtNvoqLVTfSfOuQiD
- tEkOrE1uZS6OSpdm99R5i3VAe/g0DYl34wcv6cwnpJ2nIyA8pDUgr86nUvzLBl60T+9b
- sl7+VPtIsvUJ349SzPWbV6b783HLXKYNgmWzuPeFZ37M/YKVUyBGk4w9ns2n4o0n3rgM
- IqfWGIgmTMULZxGwdy8no2YSSjS5PjnDOyWo7gDBRanCpKjriGhfb0QC2VX30ph+IN0x
- fNKayG5dRuP5t+fz8j35DTpSWxdLhQh5XWQz8mFUIicl1FDlBaoqi2lMIGMdz/X6SynV zg== 
+ bh=6pQ34UlvcfmgtXdQFd4C5pf8fimecJUPKJnQJEjQlAU=;
+ b=CMa69exdz/QePNI3ok2gKfWo008I5PiI+OkTbaoR2+NR4EkBNokbuY8yqi69LAtOBMQy
+ Fg6kBU0BrbSDpA0bbG5gBLjPp1ic/qCEeWHSAWlczKWy8Y7jsLTbb/cMLwEcKT178G1N
+ DGHod3aM3jqBKrCYL2Cunr7K9E5Mhi6ehwEoJcUEWftqBf0B0UwvteiWa7b/gpElsr/m
+ L+xVeUuQdBRF1x6sGW/OnBBgd0J+Jvhxiuj7O9r1r4nPS/S+1P6Se4voNxAFOUdTcXE4
+ QmSfC7a1oJHNK/OhZ5tbJUZYrP3TNqPHqgFkIv2YWtjRGqXmrYPkqBa161jcU0ypOctM Sg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 33swkkvadj-1
+        by userp2120.oracle.com with ESMTP id 33sx9n481d-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 29 Sep 2020 17:45:20 +0000
+        Tue, 29 Sep 2020 17:45:28 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08THeRKX167345;
-        Tue, 29 Sep 2020 17:45:20 GMT
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08THeQdJ167285;
+        Tue, 29 Sep 2020 17:43:28 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 33tfhxyyu1-1
+        by aserp3020.oracle.com with ESMTP id 33tfhxywfy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Sep 2020 17:45:20 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08THjJiI007084;
-        Tue, 29 Sep 2020 17:45:19 GMT
-Received: from localhost (/67.169.218.210) by default (Oracle Beehive Gateway
- v4.0) with ESMTP ; Tue, 29 Sep 2020 10:44:35 -0700
-USER-AGENT: StGit/0.19
-MIME-Version: 1.0
-Message-ID: <160140147498.831337.5344692693382121188.stgit@magnolia>
-Date:   Tue, 29 Sep 2020 10:44:35 -0700 (PDT)
+        Tue, 29 Sep 2020 17:43:27 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08THhQPJ006196;
+        Tue, 29 Sep 2020 17:43:26 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 29 Sep 2020 10:43:26 -0700
+Subject: [PATCH 2/5] xfs: remove XFS_LI_RECOVERED
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, bfoster@redhat.com
-Subject: [PATCH 4/4] xfs: only relog deferred intent items if free space in
- the log gets low
-References: <160140144925.831337.14031530940286104610.stgit@magnolia>
-In-Reply-To: <160140144925.831337.14031530940286104610.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de,
+        bfoster@redhat.com
+Date:   Tue, 29 Sep 2020 10:43:25 -0700
+Message-ID: <160140140527.830233.8494766872686671838.stgit@magnolia>
+In-Reply-To: <160140139198.830233.3093053332257853111.stgit@magnolia>
+References: <160140139198.830233.3093053332257853111.stgit@magnolia>
+User-Agent: StGit/0.19
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9759 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999 bulkscore=0
- phishscore=0 malwarescore=0 adultscore=0 suspectscore=3 mlxscore=0
+ phishscore=0 malwarescore=0 adultscore=0 suspectscore=1 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2009290149
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9759 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
- suspectscore=3 mlxlogscore=999 clxscore=1015 priorityscore=1501
- impostorscore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=1
+ phishscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0 clxscore=1015
+ spamscore=0 impostorscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2009290149
 Precedence: bulk
@@ -79,52 +80,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we have the ability to ask the log how far the tail needs to be
-pushed to maintain its free space targets, augment the decision to relog
-an intent item so that we only do it if the log has hit the 75% full
-threshold.  There's no point in relogging an intent into the same
-checkpoint, and there's no need to relog if there's plenty of free space
-in the log.
+The ->iop_recover method of a log intent item removes the recovered
+intent item from the AIL by logging an intent done item and committing
+the transaction, so it's superfluous to have this flag check.  Nothing
+else uses it, so get rid of the flag entirely.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_defer.c |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ fs/xfs/xfs_log_recover.c |    8 +++-----
+ fs/xfs/xfs_trans.h       |    4 +---
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 554777d1069c..2ba02f2e59a1 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -356,7 +356,10 @@ xfs_defer_relog(
- 	struct xfs_trans		**tpp,
- 	struct list_head		*dfops)
- {
-+	struct xlog			*log = (*tpp)->t_mountp->m_log;
- 	struct xfs_defer_pending	*dfp;
-+	xfs_lsn_t			threshold_lsn = NULLCOMMITLSN;
-+
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index e0675071b39e..84f876c6d498 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2539,11 +2539,9 @@ xlog_recover_process_intents(
+ 		 * this routine or else those subsequent intents will get
+ 		 * replayed in the wrong order!
+ 		 */
+-		if (!test_and_set_bit(XFS_LI_RECOVERED, &lip->li_flags)) {
+-			spin_unlock(&ailp->ail_lock);
+-			error = lip->li_ops->iop_recover(lip, parent_tp);
+-			spin_lock(&ailp->ail_lock);
+-		}
++		spin_unlock(&ailp->ail_lock);
++		error = lip->li_ops->iop_recover(lip, parent_tp);
++		spin_lock(&ailp->ail_lock);
+ 		if (error)
+ 			goto out;
+ 		lip = xfs_trans_ail_cursor_next(ailp, &cur);
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index a71b4f443e39..ced62a35a62b 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -55,14 +55,12 @@ struct xfs_log_item {
+ #define	XFS_LI_ABORTED	1
+ #define	XFS_LI_FAILED	2
+ #define	XFS_LI_DIRTY	3	/* log item dirty in transaction */
+-#define	XFS_LI_RECOVERED 4	/* log intent item has been recovered */
  
- 	ASSERT((*tpp)->t_flags & XFS_TRANS_PERM_LOG_RES);
+ #define XFS_LI_FLAGS \
+ 	{ (1 << XFS_LI_IN_AIL),		"IN_AIL" }, \
+ 	{ (1 << XFS_LI_ABORTED),	"ABORTED" }, \
+ 	{ (1 << XFS_LI_FAILED),		"FAILED" }, \
+-	{ (1 << XFS_LI_DIRTY),		"DIRTY" }, \
+-	{ (1 << XFS_LI_RECOVERED),	"RECOVERED" }
++	{ (1 << XFS_LI_DIRTY),		"DIRTY" }
  
-@@ -372,6 +375,19 @@ xfs_defer_relog(
- 		    xfs_log_item_in_current_chkpt(dfp->dfp_intent))
- 			continue;
- 
-+		/*
-+		 * Figure out where we need the tail to be in order to maintain
-+		 * the minimum required free space in the log.  Only sample
-+		 * the log threshold once per call.
-+		 */
-+		if (threshold_lsn == NULLCOMMITLSN) {
-+			threshold_lsn = xlog_grant_push_threshold(log, 0);
-+			if (threshold_lsn == NULLCOMMITLSN)
-+				break;
-+		}
-+		if (XFS_LSN_CMP(dfp->dfp_intent->li_lsn, threshold_lsn) >= 0)
-+			continue;
-+
- 		trace_xfs_defer_relog_intent((*tpp)->t_mountp, dfp);
- 		XFS_STATS_INC((*tpp)->t_mountp, defer_relog);
- 		dfp->dfp_intent = xfs_trans_item_relog(dfp->dfp_intent, *tpp);
+ struct xfs_item_ops {
+ 	unsigned flags;
 
