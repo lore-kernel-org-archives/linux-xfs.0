@@ -4,101 +4,111 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B5CC4727C
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 14:51:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02BB2C4727E
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 14:58:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDB4C207C3
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 14:51:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF8762076B
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 14:58:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vd5+GRz1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TWVFS1X2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730577AbgI3Ovp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Sep 2020 10:51:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:46609 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730107AbgI3Ovp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Sep 2020 10:51:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601477504;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=Y29aqLvBuaBdQnAQ/f7xEfFTBpfbmU09H6uOxMi9E9Q=;
-        b=Vd5+GRz10O7R8FeR6u+E1vpBHrk3sXuU5EmSxyJIfzJ+FvZGfFJIFrQYORg0JEwjXJrsX6
-        5yRvRr0jgXN1mS9pBE7ZEL5QTspj9xHdU0nQ+jixNSvwcubNDFWgxyhioIi3YlroKFPxwW
-        c2sSeGjEyYikZrk9jQWtTZ0O95iLEGM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-121-IlDw7ZQgP1azhDQ_Ntzcdw-1; Wed, 30 Sep 2020 10:51:42 -0400
-X-MC-Unique: IlDw7ZQgP1azhDQ_Ntzcdw-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 24BD41007464;
-        Wed, 30 Sep 2020 14:51:41 +0000 (UTC)
-Received: from bfoster (ovpn-116-218.rdu2.redhat.com [10.10.116.218])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9BDBB100239A;
-        Wed, 30 Sep 2020 14:51:40 +0000 (UTC)
-Date:   Wed, 30 Sep 2020 10:51:38 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, nathans@redhat.com
-Subject: Re: [PATCH 2/2] xfs: fix finobt btree block recovery ordering
-Message-ID: <20200930145138.GA3882@bfoster>
-References: <20200930063532.142256-1-david@fromorbit.com>
- <20200930063532.142256-3-david@fromorbit.com>
+        id S1728346AbgI3O6q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Sep 2020 10:58:46 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:44450 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728329AbgI3O6q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Sep 2020 10:58:46 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08UErpc5052593;
+        Wed, 30 Sep 2020 14:58:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=LVpXOeGodyUxpUMR1gjVhWajW0zJJncvGTDcApmxONU=;
+ b=TWVFS1X2B4Q7o195PgtsV2YGyENNuNJ2A8hmfVtMR2fBVoh4JUru8+R+yp/qnOG8Iwey
+ +9H8FarTx7kHEllSxjkSGLGVM5R/FbLGXM93oAPno1P4X9Ka7OCA9+f+2WFdHj3cZr7f
+ RawQa7LIgdihhy8E7KrOEpnJp6D6tgpUjMbM1oT+7R19SvG4YKHcpXjow48FdG0l6iHa
+ qC69j4lVwycZcK5BKwzL19jefOh5/EHqNEPfD/SlYMvhhB/Ls7mrb4XyV8TmgJgADh8A
+ 1Yuu70EjNFPVwssE0TchLkUDq+ePntl6dA7hcTmmCKvZ+CLrZ3SNjtQr912cbS8MCOU9 Hw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2130.oracle.com with ESMTP id 33su5b131f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 30 Sep 2020 14:58:43 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08UEsmJ0155420;
+        Wed, 30 Sep 2020 14:58:42 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 33tfdu2mf2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 30 Sep 2020 14:58:42 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08UEwfPG012906;
+        Wed, 30 Sep 2020 14:58:41 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 30 Sep 2020 07:58:41 -0700
+Date:   Wed, 30 Sep 2020 07:58:40 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] libxfs: disallow filesystems with reverse mapping and
+ reflink and realtime
+Message-ID: <20200930145840.GL49547@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200930063532.142256-3-david@fromorbit.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9759 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ adultscore=0 malwarescore=0 spamscore=0 mlxscore=0 bulkscore=0
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009300120
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9759 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=1
+ lowpriorityscore=0 spamscore=0 clxscore=1015 mlxscore=0 impostorscore=0
+ malwarescore=0 phishscore=0 adultscore=0 bulkscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009300120
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 30, 2020 at 04:35:32PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Nathan popped up on #xfs and pointed out that we fail to handle
-> finobt btree blocks in xlog_recover_get_buf_lsn(). This means they
-> always fall through the entire magic number matching code to "recover
-> immediately". Whilst most of the time this is the correct behaviour,
-> occasionally it will be incorrect and could potentially overwrite
-> more recent metadata because we don't check the LSN in the on disk
-> metadata at all.
-> 
-> This bug has been present since the finobt was first introduced, and
-> is a potential cause of the occasional xfs_iget_check_free_state()
-> failures we see that indicate that the inode btree state does not
-> match the on disk inode state.
-> 
-> Fixes: aafc3c246529 ("xfs: support the XFS_BTNUM_FINOBT free inode btree type")
-> Reported-by: Nathan Scott <nathans@redhat.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Neither the kernel nor the code in xfsprogs support filesystems that
+have (either reverse mapping btrees or reflink) enabled and a realtime
+volume configured.  The kernel rejects such combinations and mkfs
+refuses to format such a config, but xfsprogs doesn't check and can do
+Bad Things, so port those checks before someone shreds their filesystem.
 
->  fs/xfs/xfs_buf_item_recover.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
-> index 24c7a8d11e1a..d44e8b4a3391 100644
-> --- a/fs/xfs/xfs_buf_item_recover.c
-> +++ b/fs/xfs/xfs_buf_item_recover.c
-> @@ -719,6 +719,8 @@ xlog_recover_get_buf_lsn(
->  	case XFS_ABTC_MAGIC:
->  	case XFS_RMAP_CRC_MAGIC:
->  	case XFS_REFC_CRC_MAGIC:
-> +	case XFS_FIBT_CRC_MAGIC:
-> +	case XFS_FIBT_MAGIC:
->  	case XFS_IBT_CRC_MAGIC:
->  	case XFS_IBT_MAGIC: {
->  		struct xfs_btree_block *btb = blk;
-> -- 
-> 2.28.0
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ libxfs/init.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
+diff --git a/libxfs/init.c b/libxfs/init.c
+index cb8967bc77d4..1a966084ffea 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -724,6 +724,20 @@ libxfs_mount(
+ 		exit(1);
+ 	}
+ 
++	if (xfs_sb_version_hasreflink(sbp) && sbp->sb_rblocks) {
++		fprintf(stderr,
++	_("%s: Reflink not compatible with realtime device. Please try a newer xfsprogs.\n"),
++				progname);
++		exit(1);
++	}
++
++	if (xfs_sb_version_hasrmapbt(sbp) && sbp->sb_rblocks) {
++		fprintf(stderr,
++	_("%s: Reverse mapping btree not compatible with realtime device. Please try a newer xfsprogs.\n"),
++				progname);
++		exit(1);
++	}
++
+ 	xfs_da_mount(mp);
+ 
+ 	if (xfs_sb_version_hasattr2(&mp->m_sb))
