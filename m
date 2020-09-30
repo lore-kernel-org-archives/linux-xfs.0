@@ -2,162 +2,94 @@ Return-Path: <SRS0=giQg=DH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 184ABC4727C
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 15:52:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A9B2C4727E
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 15:55:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A824A20759
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 15:52:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D04F4207C3
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 15:55:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eVA1Gj0h"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KNkFRNCe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725837AbgI3PwR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Sep 2020 11:52:17 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55414 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725799AbgI3PwQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Sep 2020 11:52:16 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08UFnJl5161826;
-        Wed, 30 Sep 2020 15:52:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=dUZVtzQDJNueS+gMM+ZQ0911LwkB7bG6fkV4cQIAETM=;
- b=eVA1Gj0hVjxLuhbiKjYgcBg4C8dMbnUQ2boTR4kn5pHQoBhDo9q2J6grGkbzNl1zybBN
- c6G5CtdTpph51LxI90vm04jDWbHfA+JF8kELB1Tc/oya24L3THjRlsZB8dp4D4Osajb4
- BAayQssaxrW36Tas8a2i8Dz2ZAjb14w4TKSGPzie92WjHxOZRQ5UsElH0xBGBp/yfdJN
- RQyiJBF9+tum0JwUF5KdIapXXDZkL2gJBWK5GSnyR3fBEjeAoNQtsWg/pLwmsJwmmcoG
- t8joP/ps8aUmaJ7xtuy9s0WuWXI+FPDa2fz1kHvp3qm3i4Db8O/mgkZh03TnSkqGBsGl 0w== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 33sx9n988u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 30 Sep 2020 15:52:12 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08UFpBNW111680;
-        Wed, 30 Sep 2020 15:52:11 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 33uv2fj9m9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 30 Sep 2020 15:52:11 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08UFqAYD013543;
-        Wed, 30 Sep 2020 15:52:10 GMT
-Received: from localhost (/10.159.225.72)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 30 Sep 2020 08:52:09 -0700
-Date:   Wed, 30 Sep 2020 08:52:08 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] libxfs: disallow filesystems with reverse mapping and
- reflink and realtime
-Message-ID: <20200930155208.GF49559@magnolia>
-References: <20200930145840.GL49547@magnolia>
- <bf8fbe05-fea9-9571-0584-04be70c2d3dd@sandeen.net>
+        id S1725892AbgI3Pyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Sep 2020 11:54:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:48941 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725893AbgI3Pyw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Sep 2020 11:54:52 -0400
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601481291;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=WtFgOCy/sZNNNei6JJQcjI7xAMinWaSkLXR57hxrJi4=;
+        b=KNkFRNCeo6349jbCAtqbYq8d3t/BKQRNTkjnAU+ZNLzHw2Ie1O9+hUygU0PeQyQDNMpGCr
+        GLs3yIhFP009luh7r6dXFSifXtekzwpr4oVaaaXXk9h/qW/PuX0Qd9IwW6jlJWuzUEQxG4
+        pLWJBbUd5AmZ8Znik96U/vQEIEa4wgQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-226-dTj_egOlOGOgxf6SwevBmw-1; Wed, 30 Sep 2020 11:54:44 -0400
+X-MC-Unique: dTj_egOlOGOgxf6SwevBmw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 37AB3188C12A
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2020 15:54:43 +0000 (UTC)
+Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0B7995C1C4
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Sep 2020 15:54:42 +0000 (UTC)
+To:     xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: be more helpful if rtdev is not specified for rt
+ subvol
+Message-ID: <ee05a000-4c9d-ad5d-66d0-48655cb69e95@redhat.com>
+Date:   Wed, 30 Sep 2020 10:54:42 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bf8fbe05-fea9-9571-0584-04be70c2d3dd@sandeen.net>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9760 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- suspectscore=1 malwarescore=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009300125
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9760 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=1
- phishscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0 clxscore=1015
- spamscore=0 impostorscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009300125
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 30, 2020 at 10:31:21AM -0500, Eric Sandeen wrote:
-> On 9/30/20 9:58 AM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Neither the kernel nor the code in xfsprogs support filesystems that
-> > have (either reverse mapping btrees or reflink) enabled and a realtime
-> > volume configured.  The kernel rejects such combinations and mkfs
-> > refuses to format such a config, but xfsprogs doesn't check and can do
-> > Bad Things, so port those checks before someone shreds their filesystem.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> seems fine in general but a couple thoughts...
-> 
-> > ---
-> >  libxfs/init.c |   14 ++++++++++++++
-> >  1 file changed, 14 insertions(+)
-> > 
-> > diff --git a/libxfs/init.c b/libxfs/init.c
-> > index cb8967bc77d4..1a966084ffea 100644
-> > --- a/libxfs/init.c
-> > +++ b/libxfs/init.c
-> > @@ -724,6 +724,20 @@ libxfs_mount(
-> >  		exit(1);
-> >  	}
-> >  
-> > +	if (xfs_sb_version_hasreflink(sbp) && sbp->sb_rblocks) {
-> 
-> Hm, we really don't use xfs_sb_version_hasrealtime() very
-> consistently, but it might be worth doing here?
+Today, if one tries to repair a filesystem with a realtime subvol but
+forgets to specify the rtdev on the command line, the result sounds dire:
 
-Nah, I'll move it to rtmount_init.
+Phase 1 - find and verify superblock...
+xfs_repair: filesystem has a realtime subvolume
+xfs_repair: realtime device init failed
+xfs_repair: cannot repair this filesystem.  Sorry.
 
-> I wish we had a feature flag to cross-ref against, a corruption in
-> sb_rblocks will lead to an untouchable filesystem, but I guess there's
-> nothing we can do about that.
+We can be a bit more helpful, following the log device example:
 
-I guess xfs_repair could add a -E killrt=1 flag that would read the sb,
-zero out sb_rblocks, and pass that to libxfs_mount.
+Phase 1 - find and verify superblock...
+This filesystem has a realtime subvolume.  Specify rt device with the -r option.
 
-> Actually, would it help to cross-check against the rtdev arg as well?
-> Should we do anything different if the user actually specified a
-> realtime device on the commandline?
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-I doubt it?  I mean, the fs allege it has an rt volume and some
-unsupported feature; it doesn't matter if the user did or didn't pass an
-rtdev.
+diff --git a/libxfs/init.c b/libxfs/init.c
+index cb8967bc..65cc3d4c 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -429,9 +429,9 @@ rtmount_init(
+ 	if (sbp->sb_rblocks == 0)
+ 		return 0;
+ 	if (mp->m_rtdev_targp->dev == 0 && !(flags & LIBXFS_MOUNT_DEBUGGER)) {
+-		fprintf(stderr, _("%s: filesystem has a realtime subvolume\n"),
+-			progname);
+-		return -1;
++		fprintf(stderr, _("This filesystem has a realtime subvolume.  "
++			   "Specify rt device with the -r option.\n"));
++		exit(1);
+ 	}
+ 	mp->m_rsumlevels = sbp->sb_rextslog + 1;
+ 	mp->m_rsumsize =
 
-> I mean, I suppose 
-
-you suppose...?
-
-> 
-> > +		fprintf(stderr,
-> > +	_("%s: Reflink not compatible with realtime device. Please try a newer xfsprogs.\n"),
-> 
-> I like this optimism.  ;)
-
-Optimism?
-
-/me now has an xfsprogs that /does/ support rt rmap and reflink, though
-at current patch review rates it won't hit the list until 2024, and
-that's assuming I can keep ahead of all the bitrot in rtrmap...
-
---D
-
-> 
-> 
-> > +				progname);
-> > +		exit(1);
-> > +	}
-> > +
-> > +	if (xfs_sb_version_hasrmapbt(sbp) && sbp->sb_rblocks) {
-> > +		fprintf(stderr,
-> > +	_("%s: Reverse mapping btree not compatible with realtime device. Please try a newer xfsprogs.\n"),
-> > +				progname);
-> > +		exit(1);
-> > +	}
-> > +
-> >  	xfs_da_mount(mp);
-> >  
-> >  	if (xfs_sb_version_hasattr2(&mp->m_sb))
-> > 
