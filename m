@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8114DC4727F
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 14:25:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7309C4727E
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 14:28:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4A5DE20739
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 14:25:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7150A207C3
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 14:28:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rZrCB20k"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EZStrT+6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730405AbgI3OZj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Sep 2020 10:25:39 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:33750 "EHLO
+        id S1730196AbgI3O2h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Sep 2020 10:28:37 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:36380 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729903AbgI3OZj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Sep 2020 10:25:39 -0400
+        with ESMTP id S1726680AbgI3O2g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Sep 2020 10:28:36 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08UEPYuL065292;
-        Wed, 30 Sep 2020 14:25:35 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08UEPrx3065569;
+        Wed, 30 Sep 2020 14:28:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=7aqU1ljgmZuHRiPkH/kMl6wl8X9iWJThQSmfhvUcLqU=;
- b=rZrCB20kiD/0/CyoKV2cJ1TtD+lxDm9CvNMw69PC1PQOWs9gGr300fmndXk8HDXuBrZA
- K+VcSnjYkaGGaezsK74/jNAKz9xRiu2/YTSyVb4XO1+2cs93CyBG1ZyyfuFsmg/p2FQ7
- vT7u2/8O/8tElnZjp4kBM8BSkSHz0dY9iKVfM4XmBU1dzByb0Fsr2T/JX30l7LnL3S7+
- RC0TjhaL9fw+VGdu7UodGMWDGU99A6Q8I5TRgUe5VqguQKm3a0QtL8QGngZrmpkedGkJ
- wuPXICR23fVLQB9OiFD43IV5epp8LMXgn3Zt2TvNs+o0CiXQLvLW1gWujSs/ToATB6qb 5A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 33swkm0t9b-1
+ bh=3n+7RG5hfYUL+dtANgFGIjjyT6Vxv6o9MW60Sy9OSCw=;
+ b=EZStrT+6advay4kEac6oR1iTUDimnmoyYrAiKZeorD7C1C429sp301mMrTS/RAtAMOCC
+ 0dpVYFB1YSZWSwjt2SITWxej1w/7Kqn3u2B8Cz+MfkNv1NXAt9DntmQBiCMt3qirPTQ4
+ Ug5ewdAG8zIU7lZtjeJn8Ju32AzeDRD0R6RlJjk+rsPYFcT+9DAtfGZiKh8v0zcKyF1X
+ 3ypEJpmgxEa5JukuUPhYhScXmEe+cLcE34vc4h01Hx1U5bDWwmSLFKF37bPfeH+ifyOD
+ alsPBqi1Auu5/nhFRGlmxW0xNyCo5szhaaPqIp7sN+D+SB05G6TTXq2gbwr9BvbnSzze 6A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 33swkm0twp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 30 Sep 2020 14:25:34 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08UEJnQ6179705;
-        Wed, 30 Sep 2020 14:25:30 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 33tfjyrv0e-1
+        Wed, 30 Sep 2020 14:28:31 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 08UEQU7p033840;
+        Wed, 30 Sep 2020 14:28:31 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 33tfj06tmx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 30 Sep 2020 14:25:29 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 08UEPSTv028280;
-        Wed, 30 Sep 2020 14:25:28 GMT
+        Wed, 30 Sep 2020 14:28:31 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08UESTv6000988;
+        Wed, 30 Sep 2020 14:28:30 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 30 Sep 2020 07:25:28 -0700
-Date:   Wed, 30 Sep 2020 07:25:27 -0700
+        with ESMTP ; Wed, 30 Sep 2020 07:28:29 -0700
+Date:   Wed, 30 Sep 2020 07:28:28 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org, nathans@redhat.com
-Subject: Re: [PATCH 1/2] xfs: stats expose padding value at end of qm line
-Message-ID: <20200930142527.GJ49547@magnolia>
+Subject: Re: [PATCH 2/2] xfs: fix finobt btree block recovery ordering
+Message-ID: <20200930142828.GK49547@magnolia>
 References: <20200930063532.142256-1-david@fromorbit.com>
- <20200930063532.142256-2-david@fromorbit.com>
+ <20200930063532.142256-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200930063532.142256-2-david@fromorbit.com>
+In-Reply-To: <20200930063532.142256-3-david@fromorbit.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9759 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 mlxscore=0
- phishscore=0 adultscore=0 bulkscore=0 mlxlogscore=999 suspectscore=1
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999 bulkscore=0
+ phishscore=0 malwarescore=0 adultscore=0 suspectscore=5 mlxscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009300114
+ definitions=main-2009300115
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9759 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
- suspectscore=1 mlxlogscore=999 clxscore=1011 priorityscore=1501
+ suspectscore=5 mlxlogscore=999 clxscore=1015 priorityscore=1501
  impostorscore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2009300115
@@ -77,110 +77,52 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 30, 2020 at 04:35:31PM +1000, Dave Chinner wrote:
+On Wed, Sep 30, 2020 at 04:35:32PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> There are 8 quota stats exposed, but:
+> Nathan popped up on #xfs and pointed out that we fail to handle
+> finobt btree blocks in xlog_recover_get_buf_lsn(). This means they
+> always fall through the entire magic number matching code to "recover
+> immediately". Whilst most of the time this is the correct behaviour,
+> occasionally it will be incorrect and could potentially overwrite
+> more recent metadata because we don't check the LSN in the on disk
+> metadata at all.
 > 
-> $ grep qm /proc/fs/xfs/stat
-> qm 0 0 0 1889 308893 0 0 0 0
-> $
+> This bug has been present since the finobt was first introduced, and
+> is a potential cause of the occasional xfs_iget_check_free_state()
+> failures we see that indicate that the inode btree state does not
+> match the on disk inode state.
 > 
-> There are 9 values exposed. Code inspection reveals that the struct
-> xfsstats has a hole in the structure where the values change from 32
-> bit counters to 64 bit counters. pahole output:
-> 
-> ....
-> uint32_t                   xs_qm_dquot;          /*   748     4 */
-> uint32_t                   xs_qm_dquot_unused;   /*   752     4 */
-> 
-> /* XXX 4 bytes hole, try to pack */
-> 
-> uint64_t                   xs_xstrat_bytes;      /*   760     8 */
+> Fixes: aafc3c246529 ("xfs: support the XFS_BTNUM_FINOBT free inode btree type")
+> Reported-by: Nathan Scott <nathans@redhat.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Any chance we could use BUILD_BUG_ON(offsetof(xs_xstrat_bytes) % 8 == 0)
-to catch this kind of thing on 64-bit machines in the future?  Or maybe
-we shift the u64 values to the start of the structure to avoid padding
-holes?
+Aha, I saw that once...
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Also, does 32-bit XFS have this 9th value?
+Hmmm, zooming out a bit, what kinds of buffers get logged that don't
+have magics?  Realtime bitmap and summary?  Can anyone else think of
+something? ;)
 
 --D
 
-> ....
-> 
-> Fix this by defining an "end of 32 bit variables" variable that
-> we then use to define the end of the quota line. This will then
-> ensure that we print the correct number of values regardless of
-> structure layout.
-> 
-> However, ABI requirements for userspace parsers mean we cannot
-> remove the output that results from this hole, so we also need to
-> explicitly define this unused value until such time that we actually
-> add a new stat that makes the output meaningful.
-> 
-> And now we have a defined end of 32bit variables, update the  stats
-> union to be sized to match all the 32 bit variables correctly.
-> 
-> Output with this patch:
-> 
-> $ grep qm /proc/fs/xfs/stat
-> qm 0 0 0 326 1802 0 6 3 0
-> $
-> 
-> Reported-by: Nathan Scott <nathans@redhat.com>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_stats.c |  2 +-
->  fs/xfs/xfs_stats.h | 15 +++++++++++++--
->  2 files changed, 14 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_buf_item_recover.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/fs/xfs/xfs_stats.c b/fs/xfs/xfs_stats.c
-> index f70f1255220b..3409b273f00a 100644
-> --- a/fs/xfs/xfs_stats.c
-> +++ b/fs/xfs/xfs_stats.c
-> @@ -51,7 +51,7 @@ int xfs_stats_format(struct xfsstats __percpu *stats, char *buf)
->  		{ "rmapbt",		xfsstats_offset(xs_refcbt_2)	},
->  		{ "refcntbt",		xfsstats_offset(xs_qm_dqreclaims)},
->  		/* we print both series of quota information together */
-> -		{ "qm",			xfsstats_offset(xs_xstrat_bytes)},
-> +		{ "qm",			xfsstats_offset(xs_end_of_32bit_counts)},
->  	};
->  
->  	/* Loop over all stats groups */
-> diff --git a/fs/xfs/xfs_stats.h b/fs/xfs/xfs_stats.h
-> index 34d704f703d2..861acf84cb3c 100644
-> --- a/fs/xfs/xfs_stats.h
-> +++ b/fs/xfs/xfs_stats.h
-> @@ -133,6 +133,17 @@ struct __xfsstats {
->  	uint32_t		xs_qm_dqwants;
->  	uint32_t		xs_qm_dquot;
->  	uint32_t		xs_qm_dquot_unused;
-> +	uint32_t		xs_qm_zero_until_next_stat_is_added;
-> +
-> +/*
-> + * Define the end of 32 bit counters as a 32 bit variable so that we don't
-> + * end up exposing an implicit structure padding hole due to the next counters
-> + * being 64bit values. If the number of coutners is odd, this fills the hole. If
-> + * the number of coutners is even the hole is after this variable and the stats
-> + * line will terminate printing at this offset and not print the hole.
-> + */
-> +	uint32_t		xs_end_of_32bit_counts;
-> +
->  /* Extra precision counters */
->  	uint64_t		xs_xstrat_bytes;
->  	uint64_t		xs_write_bytes;
-> @@ -143,8 +154,8 @@ struct __xfsstats {
->  
->  struct xfsstats {
->  	union {
-> -		struct __xfsstats	s;
-> -		uint32_t		a[xfsstats_offset(xs_qm_dquot)];
-> +		struct __xfsstats s;
-> +		uint32_t	a[xfsstats_offset(xs_end_of_32bit_counts)];
->  	};
->  };
->  
+> diff --git a/fs/xfs/xfs_buf_item_recover.c b/fs/xfs/xfs_buf_item_recover.c
+> index 24c7a8d11e1a..d44e8b4a3391 100644
+> --- a/fs/xfs/xfs_buf_item_recover.c
+> +++ b/fs/xfs/xfs_buf_item_recover.c
+> @@ -719,6 +719,8 @@ xlog_recover_get_buf_lsn(
+>  	case XFS_ABTC_MAGIC:
+>  	case XFS_RMAP_CRC_MAGIC:
+>  	case XFS_REFC_CRC_MAGIC:
+> +	case XFS_FIBT_CRC_MAGIC:
+> +	case XFS_FIBT_MAGIC:
+>  	case XFS_IBT_CRC_MAGIC:
+>  	case XFS_IBT_MAGIC: {
+>  		struct xfs_btree_block *btb = blk;
 > -- 
 > 2.28.0
 > 
