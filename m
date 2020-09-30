@@ -7,23 +7,23 @@ X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A32C4727C
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 16:10:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F734C47428
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 16:21:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2ED4E2085B
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 16:10:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B73020759
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Sep 2020 16:21:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727438AbgI3QKD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Sep 2020 12:10:03 -0400
-Received: from sandeen.net ([63.231.237.45]:54322 "EHLO sandeen.net"
+        id S1728292AbgI3QVc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Sep 2020 12:21:32 -0400
+Received: from sandeen.net ([63.231.237.45]:54984 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730627AbgI3QJa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 30 Sep 2020 12:09:30 -0400
+        id S1726335AbgI3QVc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 30 Sep 2020 12:21:32 -0400
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 493341913D;
-        Wed, 30 Sep 2020 11:08:43 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id 9D56714A11;
+        Wed, 30 Sep 2020 11:20:44 -0500 (CDT)
 Subject: Re: [PATCH v2] libxfs: disallow filesystems with reverse mapping and
  reflink and realtime
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
@@ -31,8 +31,8 @@ To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
 Cc:     xfs <linux-xfs@vger.kernel.org>
 References: <20200930160112.GN49547@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5806de04-b899-c6df-f387-6468c975cfd1@sandeen.net>
-Date:   Wed, 30 Sep 2020 11:09:29 -0500
+Message-ID: <f51fa326-a460-15f9-b821-b929594e4d85@sandeen.net>
+Date:   Wed, 30 Sep 2020 11:21:31 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
  Gecko/20100101 Thunderbird/78.3.1
 MIME-Version: 1.0
@@ -55,15 +55,10 @@ On 9/30/20 11:01 AM, Darrick J. Wong wrote:
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
+Ok, we already reject any other incompatibilities elsewehre, for any user
+of the libxfs_mount callchain, so this is consistent.
 
-so now xfs_db won't even touch it, I'm not sure that's desirable.
-
-# db/xfs_db fsfile
-xfs_db: Reflink not compatible with realtime device. Please try a newer xfsprogs.
-xfs_db: realtime device init failed
-xfs_db: device fsfile unusable (not an XFS filesystem?)
-
--Eric
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
 > v2: move code to rtmount_init where it belongs
