@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3C84C4727C
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 15:03:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AF13C47425
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 15:03:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5F852145D
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 15:03:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18C2220780
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 15:03:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PhCIcl8/"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CWV+QnRJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732513AbgJAPD3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1732096AbgJAPD3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 1 Oct 2020 11:03:29 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:23786 "EHLO
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49477 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732096AbgJAPD1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Oct 2020 11:03:27 -0400
+        by vger.kernel.org with ESMTP id S1732299AbgJAPDW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Oct 2020 11:03:22 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601564605;
+        s=mimecast20190719; t=1601564601;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ZqRIYOvUZ8Aecixy3koxFjGZsX4WqLNYeS9RnsOjnck=;
-        b=PhCIcl8/VGrpnwW4bgFcRLzP4woYtouA7eQxe0VejzS9kOEyXEdj/fVgAa1DACp6mHbGfn
-        Pn1YnEqP7KOsILLJJkQZueCsKn20TM/Jk1OJYEZXM6N8CUyIVDvxqLzwCRW1AFYPv4Y3Ts
-        dPLlY2Jler/Yqb36olTZ5/D7ww3wbCM=
+        bh=BjGhBz0B+WwBkRgRGbq33Dp5snPCFkpiwdw6DrSTnDU=;
+        b=CWV+QnRJtCCHzLvHqLx98nZ0yC8mvo0SU1COk6Yb/ucoGDtzuCNsV4D9XnEKkUP3xo3zEK
+        RjSBdDpadwIUngSH3yHgTATnVPi+gSIGwDzIPEzmTKC5d/96OGmIrdsj7UxC8kDJ32rSrg
+        A26KmbmxkmK/dt3rChXH+J6bvBM0OU4=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-26-m3v0pFOiOtmOK8Hbf-wgUw-1; Thu, 01 Oct 2020 11:03:23 -0400
-X-MC-Unique: m3v0pFOiOtmOK8Hbf-wgUw-1
+ us-mta-143-T4p1ja8hOg65WRiO8Yr6gw-1; Thu, 01 Oct 2020 11:03:19 -0400
+X-MC-Unique: T4p1ja8hOg65WRiO8Yr6gw-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 70DDD640AD
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0482418BFEF5
         for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2020 15:03:12 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-116-218.rdu2.redhat.com [10.10.116.218])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2C78E10013BD
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2020 15:03:12 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B334610013BD
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2020 15:03:11 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/3] xfs: transaction subsystem quiesce mechanism
-Date:   Thu,  1 Oct 2020 11:03:09 -0400
-Message-Id: <20201001150310.141467-3-bfoster@redhat.com>
+Subject: [PATCH 1/3] xfs: skip dquot reservations if quota is inactive
+Date:   Thu,  1 Oct 2020 11:03:08 -0400
+Message-Id: <20201001150310.141467-2-bfoster@redhat.com>
 In-Reply-To: <20201001150310.141467-1-bfoster@redhat.com>
 References: <20201001150310.141467-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -57,137 +57,89 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The updated quotaoff logging algorithm depends on a runtime quiesce
-of the transaction subsystem to guarantee all transactions after a
-certain point detect quota subsystem changes. Implement this
-mechanism using an internal lock, similar to the external filesystem
-freeze mechanism. This is also somewhat analogous to the old percpu
-transaction counter mechanism, but we don't actually need a counter.
+The dquot reservation helper currently performs the associated
+reservation for any provided dquots. The dquots could have been
+acquired from inode references or explicit dquot allocation
+requests. Some reservation callers may have already checked that the
+associated quota subsystem is active (xfs_qm_dqget() returns an
+error otherwise), while others might not have checked at all
+(xfs_trans_reserve_quota_nblks() passes the inode references).
+Further, subsequent dquot modifications do actually check that the
+associated quota is active before making transactional changes
+(xfs_trans_mod_dquot_byino()).
+
+Given all of that, the behavior to unconditionally perform
+reservation on any provided dquots is somewhat ad hoc. While it is
+currently harmless, it is not without side effect. If the quota is
+inactive by the time a transaction attempts a quota reservation, the
+dquot will be attached to the transaction and subsequently logged,
+even though no dquot modifications are ultimately made.
+
+This is a problem for upcoming quotaoff changes that intend to
+implement a strict transactional barrier for logging dquots during a
+quotaoff operation. If a dquot is logged after the subsystem
+deactivated and the barrier released, a subsequent log recovery can
+incorrectly replay dquot changes into the filesystem.
+
+Therefore, update the dquot reservation path to also check that a
+particular quota mode is active before associating a dquot with a
+transaction. This should have no noticeable impact on the current
+code that already accommodates checking active quota state at points
+before and after quota reservations are made.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_aops.c  |  2 ++
- fs/xfs/xfs_mount.h |  3 +++
- fs/xfs/xfs_super.c |  8 ++++++++
- fs/xfs/xfs_trans.c |  4 ++--
- fs/xfs/xfs_trans.h | 20 ++++++++++++++++++++
- 5 files changed, 35 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_trans_dquot.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index b35611882ff9..214310c94de5 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -58,6 +58,7 @@ xfs_setfilesize_trans_alloc(
- 	 * we released it.
- 	 */
- 	__sb_writers_release(ioend->io_inode->i_sb, SB_FREEZE_FS);
-+	percpu_rwsem_release(&mp->m_trans_rwsem, true, _THIS_IP_);
- 	/*
- 	 * We hand off the transaction to the completion thread now, so
- 	 * clear the flag here.
-@@ -127,6 +128,7 @@ xfs_setfilesize_ioend(
- 	 */
- 	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
- 	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
-+	percpu_rwsem_acquire(&ip->i_mount->m_trans_rwsem, true, _THIS_IP_);
- 
- 	/* we abort the update if there was an IO error */
- 	if (error) {
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dfa429b77ee2..f1083a9ce1f8 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -171,6 +171,9 @@ typedef struct xfs_mount {
- 	 */
- 	struct percpu_counter	m_delalloc_blks;
- 
-+	/* lock for transaction quiesce (used by quotaoff) */
-+	struct percpu_rw_semaphore	m_trans_rwsem;
-+
- 	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
- 	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
- 	uint64_t		m_resblks;	/* total reserved blocks */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index baf5de30eebb..ff3ad5392e21 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1029,8 +1029,15 @@ xfs_init_percpu_counters(
- 	if (error)
- 		goto free_fdblocks;
- 
-+	/* not a counter, but close enough... */
-+	error = percpu_init_rwsem(&mp->m_trans_rwsem);
-+	if (error)
-+		goto free_delalloc;
-+
- 	return 0;
- 
-+free_delalloc:
-+	percpu_counter_destroy(&mp->m_delalloc_blks);
- free_fdblocks:
- 	percpu_counter_destroy(&mp->m_fdblocks);
- free_ifree:
-@@ -1053,6 +1060,7 @@ static void
- xfs_destroy_percpu_counters(
- 	struct xfs_mount	*mp)
- {
-+	percpu_free_rwsem(&mp->m_trans_rwsem);
- 	percpu_counter_destroy(&mp->m_icount);
- 	percpu_counter_destroy(&mp->m_ifree);
- 	percpu_counter_destroy(&mp->m_fdblocks);
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index ca18a040336a..c07fa036549a 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -69,7 +69,7 @@ xfs_trans_free(
- 
- 	trace_xfs_trans_free(tp, _RET_IP_);
- 	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
--		sb_end_intwrite(tp->t_mountp->m_super);
-+		xfs_trans_end(tp->t_mountp);
- 	xfs_trans_free_dqinfo(tp);
- 	kmem_cache_free(xfs_trans_zone, tp);
- }
-@@ -265,7 +265,7 @@ xfs_trans_alloc(
- 	 */
- 	tp = kmem_cache_zalloc(xfs_trans_zone, GFP_KERNEL | __GFP_NOFAIL);
- 	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
--		sb_start_intwrite(mp->m_super);
-+		xfs_trans_start(mp);
- 
- 	/*
- 	 * Zero-reservation ("empty") transactions can't modify anything, so
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index f46534b75236..af54c17a22c0 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -209,6 +209,26 @@ xfs_trans_read_buf(
- 				      flags, bpp, ops);
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 133fc6fc3edd..547ba824542e 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -39,14 +39,12 @@ xfs_trans_dqjoin(
  }
  
-+/*
-+ * Context tracking helpers for external (i.e. fs freeze) and internal
-+ * transaction quiesce.
-+ */
-+static inline void
-+xfs_trans_start(
-+	struct xfs_mount	*mp)
-+{
-+	sb_start_intwrite(mp->m_super);
-+	percpu_down_read(&mp->m_trans_rwsem);
-+}
-+
-+static inline void
-+xfs_trans_end(
-+	struct xfs_mount	*mp)
-+{
-+	percpu_up_read(&mp->m_trans_rwsem);
-+	sb_end_intwrite(mp->m_super);
-+}
-+
- struct xfs_buf	*xfs_trans_getsb(struct xfs_trans *);
+ /*
+- * This is called to mark the dquot as needing
+- * to be logged when the transaction is committed.  The dquot must
+- * already be associated with the given transaction.
+- * Note that it marks the entire transaction as dirty. In the ordinary
+- * case, this gets called via xfs_trans_commit, after the transaction
+- * is already dirty. However, there's nothing stop this from getting
+- * called directly, as done by xfs_qm_scall_setqlim. Hence, the TRANS_DIRTY
+- * flag.
++ * This is called to mark the dquot as needing to be logged when the transaction
++ * is committed. The dquot must already be associated with the given
++ * transaction. Note that it marks the entire transaction as dirty. In the
++ * ordinary case, this gets called via xfs_trans_commit, after the transaction
++ * is already dirty. However, there's nothing stop this from getting called
++ * directly, as done by xfs_qm_scall_setqlim. Hence, the TRANS_DIRTY flag.
+  */
+ void
+ xfs_trans_log_dquot(
+@@ -770,19 +768,19 @@ xfs_trans_reserve_quota_bydquots(
  
- void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
+ 	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
+ 
+-	if (udqp) {
++	if (XFS_IS_UQUOTA_ON(mp) && udqp) {
+ 		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos, flags);
+ 		if (error)
+ 			return error;
+ 	}
+ 
+-	if (gdqp) {
++	if (XFS_IS_GQUOTA_ON(mp) && gdqp) {
+ 		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags);
+ 		if (error)
+ 			goto unwind_usr;
+ 	}
+ 
+-	if (pdqp) {
++	if (XFS_IS_PQUOTA_ON(mp) && pdqp) {
+ 		error = xfs_trans_dqresv(tp, mp, pdqp, nblks, ninos, flags);
+ 		if (error)
+ 			goto unwind_grp;
 -- 
 2.25.4
 
