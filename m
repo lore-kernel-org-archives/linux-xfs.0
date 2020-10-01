@@ -2,52 +2,52 @@ Return-Path: <SRS0=mWNF=DI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AF13C47425
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7371BC47420
 	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 15:03:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18C2220780
+	by mail.kernel.org (Postfix) with ESMTP id 3A49521707
 	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 15:03:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CWV+QnRJ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HHqDm19Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732096AbgJAPD3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Oct 2020 11:03:29 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49477 "EHLO
+        id S1732299AbgJAPDa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Oct 2020 11:03:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45533 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732299AbgJAPDW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Oct 2020 11:03:22 -0400
+        by vger.kernel.org with ESMTP id S1732577AbgJAPD3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Oct 2020 11:03:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601564601;
+        s=mimecast20190719; t=1601564607;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=BjGhBz0B+WwBkRgRGbq33Dp5snPCFkpiwdw6DrSTnDU=;
-        b=CWV+QnRJtCCHzLvHqLx98nZ0yC8mvo0SU1COk6Yb/ucoGDtzuCNsV4D9XnEKkUP3xo3zEK
-        RjSBdDpadwIUngSH3yHgTATnVPi+gSIGwDzIPEzmTKC5d/96OGmIrdsj7UxC8kDJ32rSrg
-        A26KmbmxkmK/dt3rChXH+J6bvBM0OU4=
+        bh=EuknqddEuoEfPdcF0kMmy7HoN+iLkk3ro/G1txlVRIk=;
+        b=HHqDm19Qg6tPKjlt2IPwSap+TZNEGq7b0/JJchgsWqMlx2bx6Fj+g1IsRwfqLaa7XVMlAb
+        YTdRMmal3pr0mClc6fEIsshQ69GFz2PznNldA1HRFddbLdmesdhXGSpiTP1SBwcstJQ1JD
+        bJNVs+D67NC4vcbYiDa/yX/LQfFmgDY=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-143-T4p1ja8hOg65WRiO8Yr6gw-1; Thu, 01 Oct 2020 11:03:19 -0400
-X-MC-Unique: T4p1ja8hOg65WRiO8Yr6gw-1
+ us-mta-439-L0bnjvJmN7iUFYdqpr8Iqw-1; Thu, 01 Oct 2020 11:03:19 -0400
+X-MC-Unique: L0bnjvJmN7iUFYdqpr8Iqw-1
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0482418BFEF5
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DC51218C5204
         for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2020 15:03:12 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-116-218.rdu2.redhat.com [10.10.116.218])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B334610013BD
-        for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2020 15:03:11 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 977C710013BD
+        for <linux-xfs@vger.kernel.org>; Thu,  1 Oct 2020 15:03:12 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/3] xfs: skip dquot reservations if quota is inactive
-Date:   Thu,  1 Oct 2020 11:03:08 -0400
-Message-Id: <20201001150310.141467-2-bfoster@redhat.com>
+Subject: [PATCH 3/3] xfs: rework quotaoff logging to avoid log deadlock on active fs
+Date:   Thu,  1 Oct 2020 11:03:10 -0400
+Message-Id: <20201001150310.141467-4-bfoster@redhat.com>
 In-Reply-To: <20201001150310.141467-1-bfoster@redhat.com>
 References: <20201001150310.141467-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -57,89 +57,279 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The dquot reservation helper currently performs the associated
-reservation for any provided dquots. The dquots could have been
-acquired from inode references or explicit dquot allocation
-requests. Some reservation callers may have already checked that the
-associated quota subsystem is active (xfs_qm_dqget() returns an
-error otherwise), while others might not have checked at all
-(xfs_trans_reserve_quota_nblks() passes the inode references).
-Further, subsequent dquot modifications do actually check that the
-associated quota is active before making transactional changes
-(xfs_trans_mod_dquot_byino()).
+The quotaoff operation logs two log items. The start item is
+committed first, followed by the bulk of the in-core quotaoff
+processing, and then the quotaoff end item is committed to release
+the start item from the log. The problem with this mechanism is that
+quite a bit of processing can be required to release dquots from all
+in-core inodes and subsequently flush/purge all dquots in the
+system. This processing work doesn't generally generate much log
+traffic itself, but the start item pins the tail of the log. If an
+external workload consumes the remaining log space before the
+transaction for the end item is allocated, a log deadlock can occur.
 
-Given all of that, the behavior to unconditionally perform
-reservation on any provided dquots is somewhat ad hoc. While it is
-currently harmless, it is not without side effect. If the quota is
-inactive by the time a transaction attempts a quota reservation, the
-dquot will be attached to the transaction and subsequently logged,
-even though no dquot modifications are ultimately made.
+The purpose of the separate start and end log items is primarily to
+ensure that log recovery does not incorrectly recover dquot data
+after an fs crash where a quotaoff was in progress. If we only
+logged a single quotaoff item, for example, it could fall behind the
+tail of the log before the last dquot modification was made and
+incorrectly replay dquot changes that might have occurred after the
+start item committed but before quotaoff deactivated the quota.
 
-This is a problem for upcoming quotaoff changes that intend to
-implement a strict transactional barrier for logging dquots during a
-quotaoff operation. If a dquot is logged after the subsystem
-deactivated and the barrier released, a subsequent log recovery can
-incorrectly replay dquot changes into the filesystem.
+With that context, we can make some small changes to the quotaoff
+algorithm to provide the same general log ordering guarantee without
+such a large window to create a log deadlock vector. Rather than
+place a start item in the log for the duration of quotaoff
+processing, we can quiesce the transaction subsystem up front to
+guarantee that no further dquots are logged from that point forward.
+IOW, we pause the transaction subsystem, commit the quotaoff start
+and end items, deactivate the associated quota such that subsequent
+transactions no longer modify associated dquots, and resume the
+transaction subsystem. The transaction pause is somewhat of a heavy
+weight operation, but quotaoff is already a rare, slow and
+performance disruptive operation and the quiesce is only required
+for two small transactions.
 
-Therefore, update the dquot reservation path to also check that a
-particular quota mode is active before associating a dquot with a
-transaction. This should have no noticeable impact on the current
-code that already accommodates checking active quota state at points
-before and after quota reservations are made.
+Altogether, this means that the dquot rele/purge sequence occurs
+after the quotaoff end item has committed and thus can technically
+fall off the end of the log. This is safe because the remaining
+processing is in-core work that doesn't involve logging dquots and
+we've guaranteed that no further dquots are modified by external
+transactions. This allows quotaoff to complete without risking log
+deadlock regardless of how much dquot processing is required.
 
+Suggested-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_trans_dquot.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_qm_syscalls.c | 133 +++++++++++++++++++--------------------
+ fs/xfs/xfs_trans_dquot.c |   2 +
+ 2 files changed, 67 insertions(+), 68 deletions(-)
 
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index ca1b57d291dc..b8e55f4947bd 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -29,7 +29,8 @@ xfs_qm_log_quotaoff(
+ 	int			error;
+ 	struct xfs_qoff_logitem	*qoffi;
+ 
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0, 0, &tp);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_quotaoff, 0, 0,
++				XFS_TRANS_NO_WRITECOUNT, &tp);
+ 	if (error)
+ 		goto out;
+ 
+@@ -67,7 +68,8 @@ xfs_qm_log_quotaoff_end(
+ 	int			error;
+ 	struct xfs_qoff_logitem	*qoffi;
+ 
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0, 0, &tp);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_qm_equotaoff, 0, 0,
++				XFS_TRANS_NO_WRITECOUNT, &tp);
+ 	if (error)
+ 		return error;
+ 
+@@ -106,8 +108,8 @@ xfs_qm_scall_quotaoff(
+ 
+ 	/*
+ 	 * No file system can have quotas enabled on disk but not in core.
+-	 * Note that quota utilities (like quotaoff) _expect_
+-	 * errno == -EEXIST here.
++	 * Note that quota utilities (like quotaoff) _expect_ errno == -EEXIST
++	 * here.
+ 	 */
+ 	if ((mp->m_qflags & flags) == 0)
+ 		return -EEXIST;
+@@ -116,17 +118,14 @@ xfs_qm_scall_quotaoff(
+ 	flags &= (XFS_ALL_QUOTA_ACCT | XFS_ALL_QUOTA_ENFD);
+ 
+ 	/*
+-	 * We don't want to deal with two quotaoffs messing up each other,
+-	 * so we're going to serialize it. quotaoff isn't exactly a performance
++	 * We don't want to deal with two quotaoffs messing up each other, so
++	 * we're going to serialize it. quotaoff isn't exactly a performance
+ 	 * critical thing.
+-	 * If quotaoff, then we must be dealing with the root filesystem.
+ 	 */
+ 	ASSERT(q);
+ 	mutex_lock(&q->qi_quotaofflock);
+ 
+-	/*
+-	 * If we're just turning off quota enforcement, change mp and go.
+-	 */
++	/* if we're just turning off quota enforcement, change mp and go */
+ 	if ((flags & XFS_ALL_QUOTA_ACCT) == 0) {
+ 		mp->m_qflags &= ~(flags);
+ 
+@@ -142,9 +141,9 @@ xfs_qm_scall_quotaoff(
+ 	dqtype = 0;
+ 	inactivate_flags = 0;
+ 	/*
+-	 * If accounting is off, we must turn enforcement off, clear the
+-	 * quota 'CHKD' certificate to make it known that we have to
+-	 * do a quotacheck the next time this quota is turned on.
++	 * If accounting is off, we must turn enforcement off, clear the quota
++	 * 'CHKD' certificate to make it known that we have to do a quotacheck
++	 * the next time this quota is turned on.
+ 	 */
+ 	if (flags & XFS_UQUOTA_ACCT) {
+ 		dqtype |= XFS_QMOPT_UQUOTA;
+@@ -163,89 +162,87 @@ xfs_qm_scall_quotaoff(
+ 	}
+ 
+ 	/*
+-	 * Nothing to do?  Don't complain. This happens when we're just
+-	 * turning off quota enforcement.
++	 * Nothing to do? Don't complain. This happens when we're just turning
++	 * off quota enforcement.
+ 	 */
+ 	if ((mp->m_qflags & flags) == 0)
+ 		goto out_unlock;
+ 
+ 	/*
+-	 * Write the LI_QUOTAOFF log record, and do SB changes atomically,
+-	 * and synchronously. If we fail to write, we should abort the
+-	 * operation as it cannot be recovered safely if we crash.
++	 * Quotaoff must deactivate the associated quota mode(s), release dquots
++	 * from inodes and purge them from the system all while the filesystem
++	 * remains active. We have two quotaoff log records that traditionally
++	 * bound the start and end of this sequence. This guarantees that no
++	 * dquots are modified after the end item hits the log, but quotaoff can
++	 * be time consuming and thus prone to deadlock because the start item
++	 * pins the tail the of log in the meantime (and we can't hold the end
++	 * transaction open across the dqrele scan).
++	 *
++	 * The critical aspect of correctly logging quotaoff is that no dquots
++	 * are modified after the quotaoff end item hits the on-disk log.
++	 * Otherwise the quotaoff can fall off the tail and log recovery can
++	 * replay incorrect data. Instead of letting the start item sit in the
++	 * log while quotaoff completes, we can provide the same guarantee via a
++	 * runtime barrier for dquot modifications. Specifically, we pause all
++	 * transactions on the system via the transaction subsystem lock, log
++	 * both start and end items (via sync transactions, which drains the
++	 * CIL), deactivate the quota, and then resume the transaction subsystem
++	 * while quotaoff completes.
++	 *
++	 * This is safe because the remaining quotaoff work is in-core cleanup
++	 * and all subsequent transactions should see the updated quota state
++	 * due to memory ordering provided by the lock. We also avoid deadlock
++	 * by committing both items sequentially with near exclusive access to
++	 * the transaction subsystem.
+ 	 */
++	percpu_down_write(&mp->m_trans_rwsem);
++
+ 	error = xfs_qm_log_quotaoff(mp, &qoffstart, flags);
+-	if (error)
++	if (error) {
++		percpu_up_write(&mp->m_trans_rwsem);
+ 		goto out_unlock;
++	}
+ 
+-	/*
+-	 * Next we clear the XFS_MOUNT_*DQ_ACTIVE bit(s) in the mount struct
+-	 * to take care of the race between dqget and quotaoff. We don't take
+-	 * any special locks to reset these bits. All processes need to check
+-	 * these bits *after* taking inode lock(s) to see if the particular
+-	 * quota type is in the process of being turned off. If *ACTIVE, it is
+-	 * guaranteed that all dquot structures and all quotainode ptrs will all
+-	 * stay valid as long as that inode is kept locked.
+-	 *
+-	 * There is no turning back after this.
+-	 */
+ 	mp->m_qflags &= ~inactivate_flags;
+ 
++	error = xfs_qm_log_quotaoff_end(mp, &qoffstart, flags);
++	if (error) {
++		percpu_up_write(&mp->m_trans_rwsem);
++		/* We're screwed now. Shutdown is the only option. */
++		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++		goto out_unlock;
++	}
++
++	percpu_up_write(&mp->m_trans_rwsem);
++
+ 	/*
+-	 * Give back all the dquot reference(s) held by inodes.
+-	 * Here we go thru every single incore inode in this file system, and
+-	 * do a dqrele on the i_udquot/i_gdquot that it may have.
+-	 * Essentially, as long as somebody has an inode locked, this guarantees
+-	 * that quotas will not be turned off. This is handy because in a
+-	 * transaction once we lock the inode(s) and check for quotaon, we can
+-	 * depend on the quota inodes (and other things) being valid as long as
+-	 * we keep the lock(s).
++	 * Release dquot references held by inodes. Technically some contexts
++	 * might not pick up the quota state change until the inode lock is
++	 * cycled if there is no transaction. We don't care about that above
++	 * because a dquot can't be logged without a transaction and we can't
++	 * release/purge a dquot here until we've cycled the locks of all inodes
++	 * that reference it.
+ 	 */
+ 	xfs_qm_dqrele_all_inodes(mp, flags);
+ 
+ 	/*
+ 	 * Next we make the changes in the quota flag in the mount struct.
+-	 * This isn't protected by a particular lock directly, because we
+-	 * don't want to take a mrlock every time we depend on quotas being on.
++	 * This isn't protected by a particular lock directly, because we don't
++	 * want to take a mrlock every time we depend on quotas being on.
+ 	 */
+ 	mp->m_qflags &= ~flags;
+ 
+-	/*
+-	 * Go through all the dquots of this file system and purge them,
+-	 * according to what was turned off.
+-	 */
++	/* purge all deactivated dquots from the filesystem */
+ 	xfs_qm_dqpurge_all(mp, dqtype);
+ 
+-	/*
+-	 * Transactions that had started before ACTIVE state bit was cleared
+-	 * could have logged many dquots, so they'd have higher LSNs than
+-	 * the first QUOTAOFF log record does. If we happen to crash when
+-	 * the tail of the log has gone past the QUOTAOFF record, but
+-	 * before the last dquot modification, those dquots __will__
+-	 * recover, and that's not good.
+-	 *
+-	 * So, we have QUOTAOFF start and end logitems; the start
+-	 * logitem won't get overwritten until the end logitem appears...
+-	 */
+-	error = xfs_qm_log_quotaoff_end(mp, &qoffstart, flags);
+-	if (error) {
+-		/* We're screwed now. Shutdown is the only option. */
+-		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-		goto out_unlock;
+-	}
+-
+-	/*
+-	 * If all quotas are completely turned off, close shop.
+-	 */
++	/* if all quotas are completely turned off, close shop */
+ 	if (mp->m_qflags == 0) {
+ 		mutex_unlock(&q->qi_quotaofflock);
+ 		xfs_qm_destroy_quotainfo(mp);
+ 		return 0;
+ 	}
+ 
+-	/*
+-	 * Release our quotainode references if we don't need them anymore.
+-	 */
++	/* release our quotainode references if we don't need them anymore */
+ 	if ((dqtype & XFS_QMOPT_UQUOTA) && q->qi_uquotaip) {
+ 		xfs_irele(q->qi_uquotaip);
+ 		q->qi_uquotaip = NULL;
 diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 133fc6fc3edd..547ba824542e 100644
+index 547ba824542e..9839b83e732a 100644
 --- a/fs/xfs/xfs_trans_dquot.c
 +++ b/fs/xfs/xfs_trans_dquot.c
-@@ -39,14 +39,12 @@ xfs_trans_dqjoin(
- }
+@@ -52,6 +52,8 @@ xfs_trans_log_dquot(
+ 	struct xfs_dquot	*dqp)
+ {
+ 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
++	/* quotaoff expects no dquots logged after deactivation */
++	ASSERT(xfs_this_quota_on(tp->t_mountp, xfs_dquot_type(dqp)));
  
- /*
-- * This is called to mark the dquot as needing
-- * to be logged when the transaction is committed.  The dquot must
-- * already be associated with the given transaction.
-- * Note that it marks the entire transaction as dirty. In the ordinary
-- * case, this gets called via xfs_trans_commit, after the transaction
-- * is already dirty. However, there's nothing stop this from getting
-- * called directly, as done by xfs_qm_scall_setqlim. Hence, the TRANS_DIRTY
-- * flag.
-+ * This is called to mark the dquot as needing to be logged when the transaction
-+ * is committed. The dquot must already be associated with the given
-+ * transaction. Note that it marks the entire transaction as dirty. In the
-+ * ordinary case, this gets called via xfs_trans_commit, after the transaction
-+ * is already dirty. However, there's nothing stop this from getting called
-+ * directly, as done by xfs_qm_scall_setqlim. Hence, the TRANS_DIRTY flag.
-  */
- void
- xfs_trans_log_dquot(
-@@ -770,19 +768,19 @@ xfs_trans_reserve_quota_bydquots(
- 
- 	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
- 
--	if (udqp) {
-+	if (XFS_IS_UQUOTA_ON(mp) && udqp) {
- 		error = xfs_trans_dqresv(tp, mp, udqp, nblks, ninos, flags);
- 		if (error)
- 			return error;
- 	}
- 
--	if (gdqp) {
-+	if (XFS_IS_GQUOTA_ON(mp) && gdqp) {
- 		error = xfs_trans_dqresv(tp, mp, gdqp, nblks, ninos, flags);
- 		if (error)
- 			goto unwind_usr;
- 	}
- 
--	if (pdqp) {
-+	if (XFS_IS_PQUOTA_ON(mp) && pdqp) {
- 		error = xfs_trans_dqresv(tp, mp, pdqp, nblks, ninos, flags);
- 		if (error)
- 			goto unwind_grp;
+ 	/* Upgrade the dquot to bigtime format if possible. */
+ 	if (dqp->q_id != 0 &&
 -- 
 2.25.4
 
