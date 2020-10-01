@@ -2,167 +2,146 @@ Return-Path: <SRS0=mWNF=DI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A989C4727E
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 17:55:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D16C5C4727E
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 21:22:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E5A31221EF
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 17:55:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IikzpF0D"
+	by mail.kernel.org (Postfix) with ESMTP id 94E4420796
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Oct 2020 21:22:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732968AbgJARzK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Oct 2020 13:55:10 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:47568 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732795AbgJARzJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Oct 2020 13:55:09 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 091HdMW1074508;
-        Thu, 1 Oct 2020 17:55:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=uy0bALq2XnrV8CefdQ42QR+EwFdk7hMaRunfz5OBmJA=;
- b=IikzpF0DrzcF2yzOIlcUKy7xouGbK63a4b2rDVw5mRsd8hHV30pMNynDM0CVu5GQltxW
- GYP3gt2cd91Vpw0VNNQvw+uYxiTr9LHUx/VY13ifsioE5EDeVQIsZ9Ec9e67FJY7JHN/
- 3/xD3RymPCGBa5F+5K3YP1cS3qKVH2gvEnfwvxwpY7x/gNQcFtFzmE3hpH1ovQEsRps9
- H42LfO25ps9JmtGozGcRP+P3xP4H6COnz9WZs+1a7237kqKKDlxxKqtGKzYw8XFlhutc
- DnO2Yu3KtUvsLm8G64T84cQxF1czOLtg9RHz3heMh2oOS/CqfhrBiI33R9zWOIOxuScq sQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 33sx9nfcty-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 01 Oct 2020 17:55:02 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 091Hexpp031746;
-        Thu, 1 Oct 2020 17:53:01 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 33uv2h7y7s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 01 Oct 2020 17:53:01 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 091Hqxt2032342;
-        Thu, 1 Oct 2020 17:52:59 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 01 Oct 2020 10:52:58 -0700
-Date:   Thu, 1 Oct 2020 10:52:57 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de
-Subject: Re: [PATCH 5/5] xfs: xfs_defer_capture should absorb remaining
- transaction reservation
-Message-ID: <20201001175257.GS49547@magnolia>
-References: <160140139198.830233.3093053332257853111.stgit@magnolia>
- <160140142459.830233.7194402837807253154.stgit@magnolia>
- <20201001173256.GG112884@bfoster>
+        id S1726855AbgJAVW5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Oct 2020 17:22:57 -0400
+Received: from sandeen.net ([63.231.237.45]:48116 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726626AbgJAVW5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 1 Oct 2020 17:22:57 -0400
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 1C027483504;
+        Thu,  1 Oct 2020 16:22:07 -0500 (CDT)
+To:     Ian Kent <raven@themaw.net>, xfs <linux-xfs@vger.kernel.org>
+References: <160151439137.66595.8436234885474855194.stgit@mickey.themaw.net>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH] xfsprogs: ignore autofs mount table entries
+Message-ID: <974aaec3-17e4-ecc0-2220-f34ce19348c8@sandeen.net>
+Date:   Thu, 1 Oct 2020 16:22:55 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201001173256.GG112884@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9761 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 spamscore=0 adultscore=0
- suspectscore=1 malwarescore=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010010148
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9761 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=1
- phishscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0 clxscore=1015
- spamscore=0 impostorscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010010148
+In-Reply-To: <160151439137.66595.8436234885474855194.stgit@mickey.themaw.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 01, 2020 at 01:32:56PM -0400, Brian Foster wrote:
-> On Tue, Sep 29, 2020 at 10:43:44AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > When xfs_defer_capture extracts the deferred ops and transaction state
-> > from a transaction, it should record the transaction reservation type
-> > from the old transaction so that when we continue the dfops chain, we
-> > still use the same reservation parameters.
-> > 
-> > Doing this means that the log item recovery functions get to determine
-> > the transaction reservation instead of abusing tr_itruncate in yet
-> > another part of xfs.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
+On 9/30/20 8:06 PM, Ian Kent wrote:
+> Some of the xfsprogs utilities read the mount table via. getmntent(3).
 > 
-> Much nicer, and FWIW this is pretty much the approach I was wondering
-> about wrt to the block reservation in the previous patch..
+> The mount table may contain (almost always these days since /etc/mtab is
+> symlinked to /proc/self/mounts) autofs mount entries. During processing
+> of the mount table entries statfs(2) can be called on mount point paths
+> which will trigger an automount if those entries are direct or offset
+> autofs mount triggers (indirect autofs mounts aren't affected).
 > 
-> >  fs/xfs/libxfs/xfs_defer.c |    9 +++++++++
-> >  fs/xfs/libxfs/xfs_defer.h |    1 +
-> >  fs/xfs/xfs_log_recover.c  |    4 ++--
-> >  3 files changed, 12 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> > index 0cceebb390c4..4caaf5527403 100644
-> > --- a/fs/xfs/libxfs/xfs_defer.c
-> > +++ b/fs/xfs/libxfs/xfs_defer.c
-> > @@ -579,6 +579,15 @@ xfs_defer_ops_capture(
-> >  	dfc->dfc_blkres = tp->t_blk_res - tp->t_blk_res_used;
-> >  	tp->t_blk_res = tp->t_blk_res_used;
-> >  
-> > +	/*
-> > +	 * Preserve the transaction reservation type.  The logcount is
-> > +	 * hardwired to 1 to so that we can make forward progress in recovery
-> > +	 * no matter how full the log might be, at a cost of more regrants.
-> > +	 */
-> > +	dfc->dfc_tres.tr_logres = tp->t_log_res;
-> > +	dfc->dfc_tres.tr_logcount = 1;
-> > +	dfc->dfc_tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
+> This can be a problem when there are a lot of autofs direct or offset
+> mounts because real mounts will be triggered when statfs(2) is called.
+> This can be particularly bad if the triggered mounts are NFS mounts and
+> the server is unavailable leading to lengthy boot times or worse.
 > 
-> Any real need to allocate these last two fields in every captured chain
-> when they're basically hardcoded? If not, it might be a bit more
-> efficient to put an xfs_trans_res on the stack in
-> xlog_finish_defer_ops() and just save the logres value here.
+> Simply ignoring autofs mount entries during getmentent(3) traversals
+> avoids the statfs() call that triggers these mounts. If there are
+> automounted mounts (real mounts) at the time of reading the mount table
+> these will still be seen in the list so they will be included if that
+> actually matters to the reader.
+> 
+> Recent glibc getmntent(3) can ignore autofs mounts but that requires the
+> autofs user to configure autofs to use the "ignore" pseudo mount option
+> for autofs mounts. But this isn't yet the autofs default (to prevent
+> unexpected side effects) so that can't be used.
+> 
+> The autofs direct and offset automount triggers are pseudo file system
+> mounts and are more or less useless in terms on file system information
+> so excluding them doesn't sacrifice useful file system information
+> either.
+> 
+> Consequently excluding autofs mounts shouldn't have any adverse side
+> effects.
+> 
+> Signed-off-by: Ian Kent <raven@themaw.net>
+> ---
+>  fsr/xfs_fsr.c   |    3 +++
+>  libfrog/linux.c |    2 ++
+>  libfrog/paths.c |    2 ++
+>  3 files changed, 7 insertions(+)
+> 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 77a10a1d..466ad9e4 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -323,6 +323,9 @@ initallfs(char *mtab)
+>  	while ((mnt = platform_mntent_next(&cursor)) != NULL) {
+>  		int rw = 0;
+>  
+> +		if (!strcmp(mnt->mnt_type, "autofs"))
+> +			continue;
+> +
+>  		if (strcmp(mnt->mnt_type, MNTTYPE_XFS ) != 0 ||
+>  		    stat(mnt->mnt_fsname, &sb) == -1 ||
+>  		    !S_ISBLK(sb.st_mode))
+>			continue;
 
-Ok, will do.
+Forgive me if I'm missing something obvious but isn't this added check redundant?
 
---D
+If mnt_type == "autofs" then mnt_type != MNTTYPE_XFS and we're ignoring it
+already in this loop, no?  In this case, the loop is for xfs_fsr so we are really
+only ever going to be looking for xfs mounts, as opposed to fs_table_initialise_mounts
+which may accept "foreign" (non-xfs) filesystems.
 
+> diff --git a/libfrog/linux.c b/libfrog/linux.c
+> index 40a839d1..a45d99ab 100644
+> --- a/libfrog/linux.c
+> +++ b/libfrog/linux.c
+> @@ -73,6 +73,8 @@ platform_check_mount(char *name, char *block, struct stat *s, int flags)
+>  	 * servers.  So first, a simple check: does the "dev" start with "/" ?
+>  	 */
+>  	while ((mnt = getmntent(f)) != NULL) {
+> +		if (!strcmp(mnt->mnt_type, "autofs"))
+> +			continue;
+>  		if (mnt->mnt_fsname[0] != '/')
+>  			continue;
+
+Same sort of question here, but I don't know what these autofs entries look like.
+Can their "device" (mnt_fsname) begin with "/" ?
+
+Backing up a bit, which xfsprogs utility saw this behavior with autofs mounts?
+
+I'm mostly ok with just always and forever filtering out anything that matches
+"autofs" but if it's unnecessary (like the first case I think?) it may lead
+to confusion for future code readers.
+
+Thanks,
+-Eric
+
+>  		if (stat(mnt->mnt_dir, &mst) < 0)
+> diff --git a/libfrog/paths.c b/libfrog/paths.c
+> index 32737223..d6793764 100644
+> --- a/libfrog/paths.c
+> +++ b/libfrog/paths.c
+> @@ -389,6 +389,8 @@ fs_table_initialise_mounts(
+>  			return errno;
+>  
+>  	while ((mnt = getmntent(mtp)) != NULL) {
+> +		if (!strcmp(mnt->mnt_type, "autofs"))
+> +			continue;
+>  		if (!realpath(mnt->mnt_dir, rmnt_dir))
+>  			continue;
+>  		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
 > 
-> Brian
-> 
-> > +
-> >  	return dfc;
-> >  }
-> >  
-> > diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> > index b1c7b761afd5..c447c79bbe74 100644
-> > --- a/fs/xfs/libxfs/xfs_defer.h
-> > +++ b/fs/xfs/libxfs/xfs_defer.h
-> > @@ -76,6 +76,7 @@ struct xfs_defer_capture {
-> >  	struct list_head	dfc_dfops;
-> >  	unsigned int		dfc_tpflags;
-> >  	unsigned int		dfc_blkres;
-> > +	struct xfs_trans_res	dfc_tres;
-> >  };
-> >  
-> >  /*
-> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> > index b06c9881a13d..46e750279634 100644
-> > --- a/fs/xfs/xfs_log_recover.c
-> > +++ b/fs/xfs/xfs_log_recover.c
-> > @@ -2442,8 +2442,8 @@ xlog_finish_defer_ops(
-> >  	int			error = 0;
-> >  
-> >  	list_for_each_entry_safe(dfc, next, capture_list, dfc_list) {
-> > -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, 0,
-> > -				0, XFS_TRANS_RESERVE, &tp);
-> > +		error = xfs_trans_alloc(mp, &dfc->dfc_tres, 0, 0,
-> > +				XFS_TRANS_RESERVE, &tp);
-> >  		if (error)
-> >  			return error;
-> >  
-> > 
 > 
