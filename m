@@ -2,144 +2,99 @@ Return-Path: <SRS0=RTOF=DJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FB8DC4363D
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 10:39:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 347D9C4363D
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 13:07:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3670120708
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 10:39:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UiaBpoKr"
+	by mail.kernel.org (Postfix) with ESMTP id F0DC420719
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 13:07:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1601644064;
+	bh=w7Q98xWmgIId9na9TFgx9+vmYElcAY53KjeEwsE4RbQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=ezmzvDREBEYer8q+82STf7Mi7Qa5Z0U5c8MSiTN0uLkuz1lpz70VtANvfhDScfhuS
+	 MNAGjQkQsCSQ7WV7x4vNf+jJ1oP1Hye1tXY+NIO8InWKw5wf6Pr5cAPFaDD0mhmTxr
+	 ik9AuykBVZ9kKWkBV1IxVKThNjP3JRhj7mv8F4dE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726329AbgJBKjy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Oct 2020 06:39:54 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:49653 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725993AbgJBKjy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Oct 2020 06:39:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601635193;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=RMDWoXuhjmtvNLJSjMUAFDWElheLWoxMVXFqWIgqNPE=;
-        b=UiaBpoKrJM0rD+34s4v+D/b8nhKa6Ye85k8WcF+Z0BoomsSiXQlJ3DgsmMynWchY4g7dHO
-        Rd+/SGDnPlzSUDnpusPAATdlwYPl+3j3vp8uiZyu7yBLNU/C/AZ238IfvUK7+JfvICB/X+
-        HcVhmV/PTNIMx3cPB99ZTiQ8nqcGuxg=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-286-K5NLTWYwM_qU9PPw3PNsIA-1; Fri, 02 Oct 2020 06:39:49 -0400
-X-MC-Unique: K5NLTWYwM_qU9PPw3PNsIA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S2387878AbgJBNHn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Oct 2020 09:07:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59732 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726090AbgJBNHm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Oct 2020 09:07:42 -0400
+Received: from localhost (unknown [73.61.18.191])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6AEEF1019627;
-        Fri,  2 Oct 2020 10:39:48 +0000 (UTC)
-Received: from bfoster (ovpn-116-218.rdu2.redhat.com [10.10.116.218])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DB14973677;
-        Fri,  2 Oct 2020 10:39:47 +0000 (UTC)
-Date:   Fri, 2 Oct 2020 06:39:46 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de
-Subject: Re: [PATCH v4.2 5/5] xfs: xfs_defer_capture should absorb remaining
- transaction reservation
-Message-ID: <20201002103946.GB193265@bfoster>
-References: <160140139198.830233.3093053332257853111.stgit@magnolia>
- <160140142459.830233.7194402837807253154.stgit@magnolia>
- <20201002042103.GU49547@magnolia>
+        by mail.kernel.org (Postfix) with ESMTPSA id 2606D20708;
+        Fri,  2 Oct 2020 13:07:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1601644062;
+        bh=w7Q98xWmgIId9na9TFgx9+vmYElcAY53KjeEwsE4RbQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=kqDZFoN6mDjVMDUsQj+sbV8ZdesUG0EyIvW0x+SkNWQV4gnigP9wAMGQeEXoy8iuA
+         RZ2oftB2zlDwEek8kQIusdvhaZU2Yixz9jx+19Oggw1VANHSdH2TQAZtKYh3KwM7PJ
+         zLdoThrBMWoqYb6tdNFLrM4+G5u8d8mwbZkhA26A=
+Date:   Fri, 2 Oct 2020 09:07:40 -0400
+From:   Sasha Levin <sashal@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     xfs <linux-xfs@vger.kernel.org>, stable@vger.kernel.org,
+        gregkh@linuxfoundation.org
+Subject: Re: [PATCH STABLE V2] xfs: trim IO to found COW extent limit
+Message-ID: <20201002130740.GF2415204@sasha-vm>
+References: <5d2f4fc1-e498-c45e-3d57-9c2d7ac275e6@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Disposition: inline
-In-Reply-To: <20201002042103.GU49547@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <5d2f4fc1-e498-c45e-3d57-9c2d7ac275e6@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 01, 2020 at 09:21:03PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> When xfs_defer_capture extracts the deferred ops and transaction state
-> from a transaction, it should record the transaction reservation type
-> from the old transaction so that when we continue the dfops chain, we
-> still use the same reservation parameters.
-> 
-> Doing this means that the log item recovery functions get to determine
-> the transaction reservation instead of abusing tr_itruncate in yet
-> another part of xfs.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v4.2: save only the log reservation, and hardcode logcount and flags.
-> ---
+On Thu, Oct 01, 2020 at 08:34:48AM -0500, Eric Sandeen wrote:
+>A bug existed in the XFS reflink code between v5.1 and v5.5 in which
+>the mapping for a COW IO was not trimmed to the mapping of the COW
+>extent that was found.  This resulted in a too-short copy, and
+>corruption of other files which shared the original extent.
+>
+>(This happened only when extent size hints were set, which bypasses
+>delalloc and led to this code path.)
+>
+>This was (inadvertently) fixed upstream with
+>
+>36adcbace24e "xfs: fill out the srcmap in iomap_begin"
+>
+>and related patches which moved lots of this functionality to
+>the iomap subsystem.
+>
+>Hence, this is a -stable only patch, targeted to fix this
+>corruption vector without other major code changes.
+>
+>Fixes: 78f0cc9d55cb ("xfs: don't use delalloc extents for COW on files with extsize hints")
+>Cc: <stable@vger.kernel.org> # 5.4.x
+>Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>Reviewed-by: Christoph Hellwig <hch@lst.de>
+>---
+>
+>V2: Fix typo in subject, add reviewers
+>
+>I've tested this with a targeted reproducer (in next email) as well as
+>with xfstests.
+>
+>There is also now a testcase for xfstests submitted upstream
+>
+>Stable folk, not sure how to send a "stable only" patch, or if that's even
+>valid.  Assuming you're willing to accept it, I would still like to have
+>some formal Reviewed-by's from the xfs developer community before it gets
+>merged.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+This is perfect stable-process-wise :) Will wait for reviews/acks before
+merging.
 
->  fs/xfs/libxfs/xfs_defer.c |    3 +++
->  fs/xfs/libxfs/xfs_defer.h |    3 +++
->  fs/xfs/xfs_log_recover.c  |   17 ++++++++++++++---
->  3 files changed, 20 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-> index 10aeae7353ab..e19dc1ced7e6 100644
-> --- a/fs/xfs/libxfs/xfs_defer.c
-> +++ b/fs/xfs/libxfs/xfs_defer.c
-> @@ -579,6 +579,9 @@ xfs_defer_ops_capture(
->  	dfc->dfc_blkres = tp->t_blk_res - tp->t_blk_res_used;
->  	dfc->dfc_rtxres = tp->t_rtx_res - tp->t_rtx_res_used;
->  
-> +	/* Preserve the log reservation size. */
-> +	dfc->dfc_logres = tp->t_log_res;
-> +
->  	return dfc;
->  }
->  
-> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-> index 5c0e59b69ffa..6cde6f0713f7 100644
-> --- a/fs/xfs/libxfs/xfs_defer.h
-> +++ b/fs/xfs/libxfs/xfs_defer.h
-> @@ -79,6 +79,9 @@ struct xfs_defer_capture {
->  	/* Block reservations for the data and rt devices. */
->  	unsigned int		dfc_blkres;
->  	unsigned int		dfc_rtxres;
-> +
-> +	/* Log reservation saved from the transaction. */
-> +	unsigned int		dfc_logres;
->  };
->  
->  /*
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 1be5208e2a2f..001e1585ddc6 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -2442,9 +2442,20 @@ xlog_finish_defer_ops(
->  	int			error = 0;
->  
->  	list_for_each_entry_safe(dfc, next, capture_list, dfc_list) {
-> -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-> -				dfc->dfc_blkres, dfc->dfc_rtxres,
-> -				XFS_TRANS_RESERVE, &tp);
-> +		struct xfs_trans_res	resv;
-> +
-> +		/*
-> +		 * Create a new transaction reservation from the captured
-> +		 * information.  Set logcount to 1 to force the new transaction
-> +		 * to regrant every roll so that we can make forward progress
-> +		 * in recovery no matter how full the log might be.
-> +		 */
-> +		resv.tr_logres = dfc->dfc_logres;
-> +		resv.tr_logcount = 1;
-> +		resv.tr_logflags = XFS_TRANS_PERM_LOG_RES;
-> +
-> +		error = xfs_trans_alloc(mp, &resv, dfc->dfc_blkres,
-> +				dfc->dfc_rtxres, XFS_TRANS_RESERVE, &tp);
->  		if (error)
->  			return error;
->  
-> 
-
+-- 
+Thanks,
+Sasha
