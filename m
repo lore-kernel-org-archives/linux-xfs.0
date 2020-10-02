@@ -2,170 +2,109 @@ Return-Path: <SRS0=RTOF=DJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02111C4363D
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 20:18:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6153CC46466
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 23:17:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2E7520719
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 20:18:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HJFI7b4p"
+	by mail.kernel.org (Postfix) with ESMTP id 1164921707
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 23:17:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1601680641;
+	bh=e2EUihFcD8lfBqiDBnxeKrMwnbUKgBWFYDZLug6WDsg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=MuJRcyXocbFti8Oc0lE69MgfW9cCOVZrblIOxAapdlQcOfvYq11m/3Y24ZtgOSwWc
+	 Ym2Intla5fyP4pc46g8mpbKTJE+Vff94hIo5nENVWdb4qQOUlaN6l29LTUnqkyiXfF
+	 nYlgfjQY2rlZSVIYmRn1FPniQvPu00vnOe8ygN3s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725826AbgJBUSp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Oct 2020 16:18:45 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:59394 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725822AbgJBUSp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Oct 2020 16:18:45 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 092KDn9Y039134;
-        Fri, 2 Oct 2020 20:18:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=IEL5XIh4SiW3SMpgBncyZxukrFrLGz0cNvjny1W2xPA=;
- b=HJFI7b4puVU60KaKAdqMsNulZUARvVLICRlyfpLYA1tXoaCjbrIKLFmZsZnzgiaqOhBa
- /RlO8KzyRYi6JqTK5jU9eMAKxdZ3nLtyL8+SaPQaFvyfOEhsXFTK39BHkPTKJipf0bhP
- r7+ehgT00Cal3o6l9LBCqryalhAC5CC41vg8+DvBi5aCswSBetCclvwyNM4cn0xXIAc/
- A65ozZYIrRaqnfgKgWhg+62ojK98jStUkeGUio6N7ukUrxWGvpATCMJnNPkkJzZ/epkh
- NjADVfSL/MjoP37fW0oO5/cn6JDJPQKOZEey/TPXLDbldjdUG4C2YUMIkn6DWgi5GiHT Ag== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 33swkmcrug-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 02 Oct 2020 20:18:34 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 092KFtA5151563;
-        Fri, 2 Oct 2020 20:18:33 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 33tfk40aqb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 02 Oct 2020 20:18:33 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 092KIWZt002376;
-        Fri, 2 Oct 2020 20:18:32 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 02 Oct 2020 13:18:32 -0700
-Date:   Fri, 2 Oct 2020 13:18:31 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH v2] xfs_repair: coordinate parallel updates to the rt bitmap
-Message-ID: <20201002201831.GA49547@magnolia>
+        id S1725497AbgJBXRU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Oct 2020 19:17:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58646 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725379AbgJBXRU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Oct 2020 19:17:20 -0400
+Received: from localhost (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 79314206FA;
+        Fri,  2 Oct 2020 23:17:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1601680639;
+        bh=e2EUihFcD8lfBqiDBnxeKrMwnbUKgBWFYDZLug6WDsg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=2fSPOtKxiG+B/8ulFUodUjN7kvSSIhJGKKRH0XKScqoZxEjRoSokMhBDL2aK0iP77
+         tHn4p+M/R1676cimtCUnJa9CD4EPkVNvIrDk0BhF39pfBYBw8cNrZb8i+ppuTDE97S
+         wAUVPwhulQ0nTBa8/0X5/PaFQYZSneJWz82E+4Co=
+Date:   Fri, 2 Oct 2020 19:17:18 -0400
+From:   Sasha Levin <sashal@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     xfs <linux-xfs@vger.kernel.org>, stable@vger.kernel.org,
+        gregkh@linuxfoundation.org
+Subject: Re: [PATCH STABLE V2] xfs: trim IO to found COW extent limit
+Message-ID: <20201002231718.GH2415204@sasha-vm>
+References: <5d2f4fc1-e498-c45e-3d57-9c2d7ac275e6@sandeen.net>
+ <20201002130740.GF2415204@sasha-vm>
+ <300427ae-6135-29cd-6cbe-8fa2c4efb8d5@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9762 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 mlxscore=0
- phishscore=0 adultscore=0 bulkscore=0 mlxlogscore=999 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010020147
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9762 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
- suspectscore=1 mlxlogscore=999 clxscore=1015 priorityscore=1501
- impostorscore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010020147
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <300427ae-6135-29cd-6cbe-8fa2c4efb8d5@sandeen.net>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Oct 02, 2020 at 08:19:43AM -0500, Eric Sandeen wrote:
+>On 10/2/20 8:07 AM, Sasha Levin wrote:
+>> On Thu, Oct 01, 2020 at 08:34:48AM -0500, Eric Sandeen wrote:
+>>> A bug existed in the XFS reflink code between v5.1 and v5.5 in which
+>>> the mapping for a COW IO was not trimmed to the mapping of the COW
+>>> extent that was found.  This resulted in a too-short copy, and
+>>> corruption of other files which shared the original extent.
+>>>
+>>> (This happened only when extent size hints were set, which bypasses
+>>> delalloc and led to this code path.)
+>>>
+>>> This was (inadvertently) fixed upstream with
+>>>
+>>> 36adcbace24e "xfs: fill out the srcmap in iomap_begin"
+>>>
+>>> and related patches which moved lots of this functionality to
+>>> the iomap subsystem.
+>>>
+>>> Hence, this is a -stable only patch, targeted to fix this
+>>> corruption vector without other major code changes.
+>>>
+>>> Fixes: 78f0cc9d55cb ("xfs: don't use delalloc extents for COW on files with extsize hints")
+>>> Cc: <stable@vger.kernel.org> # 5.4.x
+>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>>> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>>> ---
+>>>
+>>> V2: Fix typo in subject, add reviewers
+>>>
+>>> I've tested this with a targeted reproducer (in next email) as well as
+>>> with xfstests.
+>>>
+>>> There is also now a testcase for xfstests submitted upstream
+>>>
+>>> Stable folk, not sure how to send a "stable only" patch, or if that's even
+>>> valid.  Assuming you're willing to accept it, I would still like to have
+>>> some formal Reviewed-by's from the xfs developer community before it gets
+>>> merged.
+>>
+>> This is perfect stable-process-wise :) Will wait for reviews/acks before
+>> merging.
+>
+>Thansk Sasha - the reviews/acks were given for V1 (hch & darrick), V2 adds them to the
+>commit log (see above) and fixes a typo in the subject.
 
-Actually take the rt lock before updating the bitmap from multiple
-threads.  This fixes an infrequent corruption problem when running
-generic/013 and rtinherit=1 is set on the root dir.
+Ah, I see. Queued up!
 
-Fixes: 2556c98bd9e6 ("Perform true sequential bulk read prefetching in xfs_repair Merge of master-melb:xfs-cmds:29147a by kenmcd.")
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix review comments per hch
----
- repair/dinode.c  |   16 ++++++++--------
- repair/globals.c |    1 +
- repair/globals.h |    1 +
- repair/incore.c  |    1 +
- 4 files changed, 11 insertions(+), 8 deletions(-)
-
-diff --git a/repair/dinode.c b/repair/dinode.c
-index f65a614702fd..c89f21e08373 100644
---- a/repair/dinode.c
-+++ b/repair/dinode.c
-@@ -323,6 +323,7 @@ process_bmbt_reclist_int(
- 	xfs_extlen_t		blen;
- 	xfs_agnumber_t		locked_agno = -1;
- 	int			error = 1;
-+	int			error2;
- 
- 	if (type == XR_INO_RTDATA)
- 		ftype = ftype_real_time;
-@@ -383,14 +384,14 @@ _("zero length extent (off = %" PRIu64 ", fsbno = %" PRIu64 ") in ino %" PRIu64
- 		}
- 
- 		if (type == XR_INO_RTDATA && whichfork == XFS_DATA_FORK) {
-+			pthread_mutex_lock(&rt_lock.lock);
-+			error2 = process_rt_rec(mp, &irec, ino, tot, check_dups);
-+			pthread_mutex_unlock(&rt_lock.lock);
-+			if (error2)
-+				return error2;
-+
- 			/*
--			 * realtime bitmaps don't use AG locks, so returning
--			 * immediately is fine for this code path.
--			 */
--			if (process_rt_rec(mp, &irec, ino, tot, check_dups))
--				return 1;
--			/*
--			 * skip rest of loop processing since that'irec.br_startblock
-+			 * skip rest of loop processing since the rest is
- 			 * all for regular file forks and attr forks
- 			 */
- 			continue;
-@@ -442,7 +443,6 @@ _("inode %" PRIu64 " - extent exceeds max offset - start %" PRIu64 ", "
- 		}
- 
- 		if (blkmapp && *blkmapp) {
--			int	error2;
- 			error2 = blkmap_set_ext(blkmapp, irec.br_startoff,
- 					irec.br_startblock, irec.br_blockcount);
- 			if (error2) {
-diff --git a/repair/globals.c b/repair/globals.c
-index 299bacd13132..110d98b6681e 100644
---- a/repair/globals.c
-+++ b/repair/globals.c
-@@ -110,6 +110,7 @@ uint32_t	sb_unit;
- uint32_t	sb_width;
- 
- struct aglock	*ag_locks;
-+struct aglock	rt_lock;
- 
- int		report_interval;
- uint64_t	*prog_rpt_done;
-diff --git a/repair/globals.h b/repair/globals.h
-index 953e3dfbb4f2..1d397b351276 100644
---- a/repair/globals.h
-+++ b/repair/globals.h
-@@ -154,6 +154,7 @@ struct aglock {
- 	pthread_mutex_t	lock __attribute__((__aligned__(64)));
- };
- extern struct aglock	*ag_locks;
-+extern struct aglock	rt_lock;
- 
- extern int		report_interval;
- extern uint64_t		*prog_rpt_done;
-diff --git a/repair/incore.c b/repair/incore.c
-index 1374ddefe06e..4ffe18aba839 100644
---- a/repair/incore.c
-+++ b/repair/incore.c
-@@ -290,6 +290,7 @@ init_bmaps(xfs_mount_t *mp)
- 		btree_init(&ag_bmap[i]);
- 		pthread_mutex_init(&ag_locks[i].lock, NULL);
- 	}
-+	pthread_mutex_init(&rt_lock.lock, NULL);
- 
- 	init_rt_bmap(mp);
- 	reset_bmaps(mp);
+-- 
+Thanks,
+Sasha
