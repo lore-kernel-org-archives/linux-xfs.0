@@ -2,116 +2,158 @@ Return-Path: <SRS0=RTOF=DJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCA24C4363D
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 08:53:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 559B9C4363D
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 10:39:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9492B206DC
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 08:53:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11D7F206CD
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 10:39:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kjt52rX2"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="P1FF9Je5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726090AbgJBIxZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Oct 2020 04:53:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59334 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725993AbgJBIxZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Oct 2020 04:53:25 -0400
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05F4DC0613D0
-        for <linux-xfs@vger.kernel.org>; Fri,  2 Oct 2020 01:53:25 -0700 (PDT)
-Received: by mail-pj1-x1044.google.com with SMTP id t23so428611pji.0
-        for <linux-xfs@vger.kernel.org>; Fri, 02 Oct 2020 01:53:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=XQF3jv1mnrYoDXvVuOir5WOLXN3C0c3UPYNpgx0sfbk=;
-        b=kjt52rX2aP/WC0rMb3XagTaFN2vDD5GrTl4yH0jEu5B+gzZaZp2X2FWgSxn9rv3ZSt
-         o4Tvcdyfe99UJWtHWLMKxX9tm9pjKMbXsxfAoKlhlDN8Ui30JePMiPYWGu6cPIMDTMnj
-         k49BQ3tlKm5hP6ZhkDdVMWiAFID0wtMbn4jTsdqdsJS8QkaxuyQz5/e7RPL2OxIRgUyK
-         pvuw0ng1lFMXifT7MUk0BpVTgRLCOCEpKJC5SuhmIMMV7J/uvN41em3P9YUppv/Is4hF
-         ULY9CajPnz/fPGB3m02KoI3R9clWTCf+SoFuLrvYxwbNudlRMU5hOeqHGgWYudZ9kMo1
-         GZ9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=XQF3jv1mnrYoDXvVuOir5WOLXN3C0c3UPYNpgx0sfbk=;
-        b=VPuXhPaiHju3VBH/kQowjIIXHHYaghPZ8MtUfkN6RT72XBsxRfykePZQbboOAFeZdp
-         fm7aG8nIl3eBtw4o/Pnd27Ojyvf5JoVVqBeOfG5vyqGimhKIfn+NKjPLtLbcbF6d51nF
-         6bUI72s1NAacAbxVK/4pt7Jivoz02J+mMW9Wa8d2tQ6j3GvssppkXeH4Pqv3t3+P81wn
-         dgj+wKpr/FgQsB/GYZu2wHRSLHQhe+7SYVB4Ak6iHD2zhT7O6IJIbSBVcfUE82Ci94s4
-         5WU3nvvuHpY2SO4mIKg5ID1pkxVW7uWF+ulCq52fCKZYXhfRwVLF+09eKMDXwFZxUVgK
-         X04g==
-X-Gm-Message-State: AOAM530boh1EaHuR3imgI1uUJSkZelS5jSbFavewVMUnPxCBX1HqNJQl
-        6KKK13sNkkvoO6Vzi1c621M=
-X-Google-Smtp-Source: ABdhPJxG6q1weCaf4mFQbmCL6RbSSGqPGUBBKEa+FoazG/R1Mes1gYj6BSJfY1zWLyAkdtJLIhAdGA==
-X-Received: by 2002:a17:90a:db49:: with SMTP id u9mr1676275pjx.119.1601628804629;
-        Fri, 02 Oct 2020 01:53:24 -0700 (PDT)
-Received: from garuda.localnet ([122.172.184.91])
-        by smtp.gmail.com with ESMTPSA id 84sm1127628pfw.14.2020.10.02.01.53.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Oct 2020 01:53:24 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
+        id S1726181AbgJBKjp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Oct 2020 06:39:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59324 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725993AbgJBKjp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Oct 2020 06:39:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601635183;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=JU8cecP5EBcaLsvpGH9pp7mjRBanLFXc5GwXdqfRNBk=;
+        b=P1FF9Je50HEZnfYz3ToBuAvEzi9GTedME4trnaxZkvooFRNG6B+rSgi7auSCRIsumT0lfX
+        9+ZH1eW2wQzlCrcBddVPpBs0tXb9vT7/6EdpIOp5Ro2n2F2Uqm0LrJmJoHUFIA9dCTFkda
+        OkORq+Dqq1D1dTMGMkzZoi8CleLtSH8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-464-4JEf6TFVPASmL80JCZ_pFQ-1; Fri, 02 Oct 2020 06:39:42 -0400
+X-MC-Unique: 4JEf6TFVPASmL80JCZ_pFQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D03441084C85;
+        Fri,  2 Oct 2020 10:39:40 +0000 (UTC)
+Received: from bfoster (ovpn-116-218.rdu2.redhat.com [10.10.116.218])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4666073683;
+        Fri,  2 Oct 2020 10:39:40 +0000 (UTC)
+Date:   Fri, 2 Oct 2020 06:39:38 -0400
+From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: limit entries returned when counting fsmap records
-Date:   Fri, 02 Oct 2020 14:21:10 +0530
-Message-ID: <4857521.XMzPl6tNdl@garuda>
-In-Reply-To: <160161416467.1967459.10753396346204946090.stgit@magnolia>
-References: <160161415855.1967459.13623226657245838117.stgit@magnolia> <160161416467.1967459.10753396346204946090.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>,
+        linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH v4.2 4/5] xfs: xfs_defer_capture should absorb remaining
+ block reservation
+Message-ID: <20201002103938.GA193265@bfoster>
+References: <160140139198.830233.3093053332257853111.stgit@magnolia>
+ <160140141814.830233.6669476190490393801.stgit@magnolia>
+ <20201002042015.GT49547@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201002042015.GT49547@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Friday 2 October 2020 10:19:24 AM IST Darrick J. Wong wrote:
+On Thu, Oct 01, 2020 at 09:20:15PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> If userspace asked fsmap to count the number of entries, we cannot
-> return more than UINT_MAX entries because fmh_entries is u32.
-> Therefore, stop counting if we hit this limit or else we will waste time
-> to return truncated results.
+> When xfs_defer_capture extracts the deferred ops and transaction state
+> from a transaction, it should record the remaining block reservations so
+> that when we continue the dfops chain, we can reserve the same number of
+> blocks to use.  We capture the reservations for both data and realtime
+> volumes.
 > 
-> Fixes: e89c041338ed ("xfs: implement the GETFSMAP ioctl")
+> This adds the requirement that every log intent item recovery function
+> must be careful to reserve enough blocks to handle both itself and all
+> defer ops that it can queue.  On the other hand, this enables us to do
+> away with the handwaving block estimation nonsense that was going on in
+> xlog_finish_defer_ops.
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-The upper bound check is correct.
-
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
-
 > ---
->  fs/xfs/xfs_fsmap.c |    3 +++
->  1 file changed, 3 insertions(+)
+> v4.2: don't fiddle with transaction internals, and save the rt
+> reservation too
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/libxfs/xfs_defer.c |    4 ++++
+>  fs/xfs/libxfs/xfs_defer.h |    4 ++++
+>  fs/xfs/xfs_log_recover.c  |   21 +++------------------
+>  3 files changed, 11 insertions(+), 18 deletions(-)
 > 
-> 
-> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
-> index 4eebcec4aae6..aa36e7daf82c 100644
-> --- a/fs/xfs/xfs_fsmap.c
-> +++ b/fs/xfs/xfs_fsmap.c
-> @@ -256,6 +256,9 @@ xfs_getfsmap_helper(
+> diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
+> index 85c371d29e8d..10aeae7353ab 100644
+> --- a/fs/xfs/libxfs/xfs_defer.c
+> +++ b/fs/xfs/libxfs/xfs_defer.c
+> @@ -575,6 +575,10 @@ xfs_defer_ops_capture(
+>  	dfc->dfc_tpflags = tp->t_flags & XFS_TRANS_LOWMODE;
+>  	tp->t_flags &= ~XFS_TRANS_LOWMODE;
 >  
->  	/* Are we just counting mappings? */
->  	if (info->head->fmh_count == 0) {
-> +		if (info->head->fmh_entries == UINT_MAX)
-> +			return -ECANCELED;
+> +	/* Capture the remaining block reservations along with the dfops. */
+> +	dfc->dfc_blkres = tp->t_blk_res - tp->t_blk_res_used;
+> +	dfc->dfc_rtxres = tp->t_rtx_res - tp->t_rtx_res_used;
 > +
->  		if (rec_daddr > info->next_daddr)
->  			info->head->fmh_entries++;
+>  	return dfc;
+>  }
+>  
+> diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
+> index 3af82ebc1249..5c0e59b69ffa 100644
+> --- a/fs/xfs/libxfs/xfs_defer.h
+> +++ b/fs/xfs/libxfs/xfs_defer.h
+> @@ -75,6 +75,10 @@ struct xfs_defer_capture {
+>  	/* Deferred ops state saved from the transaction. */
+>  	struct list_head	dfc_dfops;
+>  	unsigned int		dfc_tpflags;
+> +
+> +	/* Block reservations for the data and rt devices. */
+> +	unsigned int		dfc_blkres;
+> +	unsigned int		dfc_rtxres;
+>  };
+>  
+>  /*
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 7804906d145b..1be5208e2a2f 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2439,27 +2439,12 @@ xlog_finish_defer_ops(
+>  {
+>  	struct xfs_defer_capture *dfc, *next;
+>  	struct xfs_trans	*tp;
+> -	int64_t			freeblks;
+> -	uint64_t		resblks;
+>  	int			error = 0;
+>  
+>  	list_for_each_entry_safe(dfc, next, capture_list, dfc_list) {
+> -		/*
+> -		 * We're finishing the defer_ops that accumulated as a result
+> -		 * of recovering unfinished intent items during log recovery.
+> -		 * We reserve an itruncate transaction because it is the
+> -		 * largest permanent transaction type.  Since we're the only
+> -		 * user of the fs right now, take 93% (15/16) of the available
+> -		 * free blocks.  Use weird math to avoid a 64-bit division.
+> -		 */
+> -		freeblks = percpu_counter_sum(&mp->m_fdblocks);
+> -		if (freeblks <= 0)
+> -			return -ENOSPC;
+> -
+> -		resblks = min_t(uint64_t, UINT_MAX, freeblks);
+> -		resblks = (resblks * 15) >> 4;
+> -		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
+> -				0, XFS_TRANS_RESERVE, &tp);
+> +		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
+> +				dfc->dfc_blkres, dfc->dfc_rtxres,
+> +				XFS_TRANS_RESERVE, &tp);
+>  		if (error)
+>  			return error;
 >  
 > 
-> 
-
-
--- 
-chandan
-
-
 
