@@ -2,84 +2,138 @@ Return-Path: <SRS0=RTOF=DJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE6C7C4727F
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 15:34:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41C67C35257
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 15:58:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABB8F2074B
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 15:34:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1E7F208C7
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 15:58:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XQT2mQl0"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Zk3kZcHg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388279AbgJBPeH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Oct 2020 11:34:07 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:45592 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388115AbgJBPeG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Oct 2020 11:34:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601652845;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=QxfKPAyKMdfWuFWKZ0NG4toCJJfCMCwJHBKpGyYVAUY=;
-        b=XQT2mQl0QmwMtUruT6UHtineqsndqFoLwzH/ceGSZ3zj4fqKOriIDylZFqX0WfCjYqBVDg
-        QjL31E3OC+2GyQo07YCbnaMpcYh9UVceEOW/WiHPIDrpWIztph9Fm1SipqKgvsMgP4aYuo
-        +XeQiuybvHwMtPooKPSjtx5j8bPQMuk=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-332-Q0_PZqOJOr2rd8oMtFP9FA-1; Fri, 02 Oct 2020 11:34:03 -0400
-X-MC-Unique: Q0_PZqOJOr2rd8oMtFP9FA-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1DD491921FC7;
-        Fri,  2 Oct 2020 15:33:58 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-114-177.rdu2.redhat.com [10.10.114.177])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B907E78803;
-        Fri,  2 Oct 2020 15:33:57 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-fsdevel@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH 0/2] iomap: avoid soft lockup warnings on large ioends
-Date:   Fri,  2 Oct 2020 11:33:55 -0400
-Message-Id: <20201002153357.56409-1-bfoster@redhat.com>
+        id S1726090AbgJBP6s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Oct 2020 11:58:48 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:57780 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726017AbgJBP6s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Oct 2020 11:58:48 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 092FjE6k065785;
+        Fri, 2 Oct 2020 15:58:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
+ bh=BWDjDe4zoMLNH+jhuLzMN3K/jKAbI/nl40X0SJF4P+8=;
+ b=Zk3kZcHgLksZSz9wI1aA9TNlecIzfm6KZHOwTJ95EXLzmGtV5tDjvOIgQ4h6GcLuffCW
+ rwZbgJ6IFpy96u7wBlKMW2vyh8s8SuxbKuQFMKyvzKblan+cRfttZmaUEwbAWg+WibcV
+ aF6C5HnM53US4/HcS2VhcZH9qvC/MWrmYq9p/ocPLAPW/tImKzSQ8O20dIBN+cPqLBAB
+ 2LdyClBV1eCN1/irUmesHfARTi8hQ2tU5VP/Sb7XsPK4qy/UReqrVXPHR/Z2U7c2agda
+ Fwh6eL/2eP6LFDVaUpk4CwoGuzUUfd6JbDuQWSLbR/Ir3Z3CtC+XLkI7Nv4gZy+hs6LK 7Q== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 33sx9nkm46-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 02 Oct 2020 15:58:43 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 092FetZx100638;
+        Fri, 2 Oct 2020 15:58:43 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 33tfdxrnf2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 02 Oct 2020 15:58:43 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 092FwgVG027616;
+        Fri, 2 Oct 2020 15:58:42 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 02 Oct 2020 08:58:41 -0700
+Date:   Fri, 2 Oct 2020 08:58:41 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Sasha Levin <sashal@kernel.org>, xfs <linux-xfs@vger.kernel.org>,
+        stable@vger.kernel.org, gregkh@linuxfoundation.org
+Subject: Re: [PATCH STABLE V2] xfs: trim IO to found COW extent limit
+Message-ID: <20201002155841.GW49547@magnolia>
+References: <5d2f4fc1-e498-c45e-3d57-9c2d7ac275e6@sandeen.net>
+ <20201002130740.GF2415204@sasha-vm>
+ <300427ae-6135-29cd-6cbe-8fa2c4efb8d5@sandeen.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <300427ae-6135-29cd-6cbe-8fa2c4efb8d5@sandeen.net>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9762 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ adultscore=0 malwarescore=0 spamscore=0 mlxscore=0 bulkscore=0
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2010020121
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9762 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=1
+ phishscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0 clxscore=1015
+ spamscore=0 impostorscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010020121
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+On Fri, Oct 02, 2020 at 08:19:43AM -0500, Eric Sandeen wrote:
+> On 10/2/20 8:07 AM, Sasha Levin wrote:
+> > On Thu, Oct 01, 2020 at 08:34:48AM -0500, Eric Sandeen wrote:
+> >> A bug existed in the XFS reflink code between v5.1 and v5.5 in which
+> >> the mapping for a COW IO was not trimmed to the mapping of the COW
+> >> extent that was found.  This resulted in a too-short copy, and
+> >> corruption of other files which shared the original extent.
+> >>
+> >> (This happened only when extent size hints were set, which bypasses
+> >> delalloc and led to this code path.)
+> >>
+> >> This was (inadvertently) fixed upstream with
+> >>
+> >> 36adcbace24e "xfs: fill out the srcmap in iomap_begin"
+> >>
+> >> and related patches which moved lots of this functionality to
+> >> the iomap subsystem.
+> >>
+> >> Hence, this is a -stable only patch, targeted to fix this
+> >> corruption vector without other major code changes.
+> >>
+> >> Fixes: 78f0cc9d55cb ("xfs: don't use delalloc extents for COW on files with extsize hints")
+> >> Cc: <stable@vger.kernel.org> # 5.4.x
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> >> ---
+> >>
+> >> V2: Fix typo in subject, add reviewers
+> >>
+> >> I've tested this with a targeted reproducer (in next email) as well as
+> >> with xfstests.
+> >>
+> >> There is also now a testcase for xfstests submitted upstream
+> >>
+> >> Stable folk, not sure how to send a "stable only" patch, or if that's even
+> >> valid.  Assuming you're willing to accept it, I would still like to have
+> >> some formal Reviewed-by's from the xfs developer community before it gets
+> >> merged.
+> > 
+> > This is perfect stable-process-wise :) Will wait for reviews/acks before
+> > merging.
+> 
+> Thansk Sasha - the reviews/acks were given for V1 (hch & darrick), V2
+> adds them to the commit log (see above) and fixes a typo in the
+> subject.
 
-My understanding is that there's still no real agreement on the proper
-approach to address this problem. The RFC I floated [1] intended to cap
-the size of ioends to avoid any latency issues with holding so many
-pages in writeback for effectively a single completion instance of a GB+
-sized I/O. Instead, Christoph preferred to dump those large bios onto
-the completion workqueue and use cond_resched() rather than cap the
-ioend size. This series implements the latter (for XFS) since it seems
-like incremental progress and should at least address the warning.
-Thoughts, reviews, flames appreciated.
+Still looks ok ;)
 
-Brian
+Still-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-[1] https://lore.kernel.org/linux-fsdevel/20200825144917.GA321765@bfoster/
+--D
 
-Brian Foster (2):
-  iomap: resched ioend completion when in non-atomic context
-  xfs: kick extra large ioends to completion workqueue
-
- fs/iomap/buffered-io.c | 15 +++++++++------
- fs/xfs/xfs_aops.c      | 12 ++++++++++--
- include/linux/iomap.h  |  2 +-
- 3 files changed, 20 insertions(+), 9 deletions(-)
-
--- 
-2.25.4
-
+> 
+> Thanks,
+> -Eric
+> 
