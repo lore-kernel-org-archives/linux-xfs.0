@@ -2,121 +2,102 @@ Return-Path: <SRS0=RTOF=DJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64AA0C4363D
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 04:40:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73BB4C4363D
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 04:49:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FE6220796
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 04:40:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2436B20796
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Oct 2020 04:49:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eC8gGUV3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725948AbgJBEkM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 2 Oct 2020 00:40:12 -0400
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:48079 "EHLO
-        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725926AbgJBEkM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Oct 2020 00:40:12 -0400
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.nyi.internal (Postfix) with ESMTP id 1E7395C00D1;
-        Fri,  2 Oct 2020 00:40:11 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute4.internal (MEProxy); Fri, 02 Oct 2020 00:40:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
-        message-id:subject:from:to:date:in-reply-to:references
-        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        qh9lBoZexUn0xPP8qSNqjHLWPaJJm/9ZhH4XsITRRpg=; b=WdDYUTOmBVSRDHU4
-        Qv18L7/S/vVVhtRRjibA0RA2WecYgzSyAnOest0h0n2spmcCbb8Be4sB6vgMWvjS
-        n9eXGYpPwCZgK6wf6HQsUuIx8KRcJqkCx+T2U9oYtzSy3+g75pjonFgAviAgJuh1
-        SiCymE0Vk8IYqniwWCf0mJ1OWF6oesZAPNdzix8czv12K9ge81ieaD+u+582pHQB
-        Pm5TnnlH+NkmHqG94Auq31V+rivfPewp4W696Ahnvi/0+W4IiT1WFIYMQZ43mDHi
-        b5vUbHgBmmXwcOy3tjAs5vYhbHUPVsrTo5+OZdufNJt3eQDXMJ6ePfIians9p49B
-        nBU9vw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; bh=qh9lBoZexUn0xPP8qSNqjHLWPaJJm/9ZhH4XsITRR
-        pg=; b=bFbOnjiqUlxVsSM2uZfC7WEn0aN9ulYARkkqm08PXtBmeXEchacVkhCI6
-        xGcUScY6vui4AfVLMkxo2Es2+3IuoToh8bDL8tQmhJtM1zLPr35tmfHh6A8OBxE6
-        J0HsB4ctV3WagGkOrYQa7C1sXPtJhBC2+yA3jBu12zdeX0TljJXQ/ziTa9yzUksL
-        8f37Hnu0hxE1WRVVvkL2OVI3z5FTcu1IYltNr8XONtYUCXXRcKvLzj1gIA+43rxh
-        0xyoOGMJLHn4LFAy6MUB2OROxm0iqbsgOv6OQgKstmPoxaL5wKfcmGmZ41bv5TyN
-        gRDwjQk+mTcL+qgg2s7KDVRbfFo2g==
-X-ME-Sender: <xms:Kq92X2o0Kd7Nz6tR82eXs13eMKbHCEiisYbB1ld9xez4geZoPeCKIQ>
-    <xme:Kq92X0qpUCJeXhUmXAPcvqz7kyatnNZM1rkapETSZdFpIJW9G5hOfcbJvwqyRoTXQ
-    Ii9ReBeJGkR>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrfeehgdekudcutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
-    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecuggftrfgrthhtvghrnhepfe
-    efteetvdeguddvveefveeftedtffduudehueeihfeuvefgveehffeludeggfejnecukfhp
-    pedutdeirdeiledrvdefledrvdehfeenucevlhhushhtvghrufhiiigvpedtnecurfgrrh
-    grmhepmhgrihhlfhhrohhmpehrrghvvghnsehthhgvmhgrfidrnhgvth
-X-ME-Proxy: <xmx:Kq92X7PoCEhvTkjhQxMc5nHHAiW1-9e6vi8Zh7kB9-wNJXshez2rmg>
-    <xmx:Kq92X15Sw7CMZ4Cbh9OhBlg6U7YvJCv2GS0UdJZSA1fxdH4Xaf9nPQ>
-    <xmx:Kq92X15KFm6J6ER781tYrzmULVF3gSNuLBCf2Kvy1otQiPMJVbo8uw>
-    <xmx:K692X3ECgDBZ-8hCDsp-bcaGgPopu5kLlYbHvyGwcyretZ8DfLaROw>
-Received: from mickey.themaw.net (106-69-239-253.dyn.iinet.net.au [106.69.239.253])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 928093064683;
-        Fri,  2 Oct 2020 00:40:09 -0400 (EDT)
-Message-ID: <f2dbe235ba34db4568e93c87edcd529a606e20ce.camel@themaw.net>
-Subject: Re: [PATCH] xfsprogs: ignore autofs mount table entries
-From:   Ian Kent <raven@themaw.net>
-To:     Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>
-Date:   Fri, 02 Oct 2020 12:40:06 +0800
-In-Reply-To: <200b30f514e30ecaebb754efb8a8ea5cb4d38fd3.camel@themaw.net>
-References: <160151439137.66595.8436234885474855194.stgit@mickey.themaw.net>
-         <974aaec3-17e4-ecc0-2220-f34ce19348c8@sandeen.net>
-         <200b30f514e30ecaebb754efb8a8ea5cb4d38fd3.camel@themaw.net>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        id S1725985AbgJBEtW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Oct 2020 00:49:22 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:40640 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725983AbgJBEtW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Oct 2020 00:49:22 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0924mAi5092526
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Oct 2020 04:49:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=HU8HtXBpdiL8cp3pYCeHbpAyCt8dN71H2bua3PHdQUw=;
+ b=eC8gGUV3rVefdFTrowvhvDDTs525sH+JNesp6JS4vGJRHLtkk6LpYlzvI0ArynBCuDvX
+ SHIvofdkwhkHm9EjOVxqbjNuj32pWRtaOX+h+ohONOB2uuhUXlSjGWKCWcYkRtUBU7uo
+ yezgvrz51uQWR782E4T8uijMFAMUvSvYST3YXqHEGIi51ZdcFHvfGGXNlQsmjm/wNtRe
+ wpo9ylt7Dbi7JrU3yw+V8tlC+9EHeS/I9kgAiTBVmLHoLtUY0bEqkFLa+db9MDrXu4e7
+ A6ADauGFokqZVuHcthXZvT+txH8m13KxpLeL1zh5YDpLrbkkz+66iQmRhBLQCXePsKaV eA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2130.oracle.com with ESMTP id 33wupg064w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Oct 2020 04:49:21 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0924isad008449
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Oct 2020 04:49:20 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 33tfdx1r0s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Oct 2020 04:49:20 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0924nJQG026186
+        for <linux-xfs@vger.kernel.org>; Fri, 2 Oct 2020 04:49:19 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 01 Oct 2020 21:49:19 -0700
+Subject: [PATCH 0/2] xfs: a few fixes and cleanups to GETFSMAP
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Date:   Thu, 01 Oct 2020 21:49:18 -0700
+Message-ID: <160161415855.1967459.13623226657245838117.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9761 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=956 phishscore=0
+ adultscore=0 malwarescore=0 spamscore=0 mlxscore=0 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2010020035
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9761 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
+ lowpriorityscore=0 impostorscore=0 priorityscore=1501 clxscore=1015
+ phishscore=0 mlxscore=0 bulkscore=0 spamscore=0 mlxlogscore=965
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2010020035
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2020-10-02 at 10:27 +0800, Ian Kent wrote:
-> On Thu, 2020-10-01 at 16:22 -0500, Eric Sandeen wrote:
+Hi all,
 
-snip ...
+This quick series cleans up a few warts in the XFS GETFSMAP ioctl
+implementation.  The first patch prevents an integer overflow when
+counting the mappings.  The second patch improves performance of the
+ioctl by formatting reverse mappings to an in-kernel buffer and then
+copying the entire buffer to userspace (instead of copying the records
+one by one).  That eliminates an indirect call and a lot of overhead
+from copying things to userspace, which is a bit expensive.
 
-> > 
-> > Backing up a bit, which xfsprogs utility saw this behavior with
-> > autofs mounts?
-> 
-> IIRC the problem I saw ended up being with xfs_spaceman invoked
-> via udisksd on mount/umount activity. There may be other cases so
-> I'd rather not assume there won't be problems elsewhere but those
-> checks for an xfs fs that I didn't notice probably need to change.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Looking around further, there may be another assumption that's
-not right.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-It looks like xfs_info is being called via udisksd -> libblockdev
-and the xfd_open() triggers the mount not a statfs() call as thought.
+--D
 
-I can't see why I saw xfs_spaceman hanging around longer than I
-thought it should so I probably don't have the full story.
-
-It's a bit academic though because there are good reasons to ignore
-autofs mounts in the libfrog functions, platform_check_mount()
-and fs_table_initialise_mounts().
-
-If an autofs user has large direct mount maps there can be thousands
-of distinct mount table entries which, mostly, if not always, serve
-no useful purpose to utilities. They just add overhead so getting rid
-of them at the earliest opportunity is the sensible thing to do.
-
-In fact, before the mtab was symlinked to the proc mount table, I
-simply didn't update the mount table for autofs fs mounts so they
-never appeared and there were never any problem reports due to doing
-this.
-
-I could go on (and on) about this, but I'm starting to digress ...
-
-Ian
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=getfsmap-cleanups-5.10
+---
+ fs/xfs/xfs_fsmap.c |   38 +++++++++++++++++------------
+ fs/xfs/xfs_fsmap.h |    6 +----
+ fs/xfs/xfs_ioctl.c |   69 ++++++++++++++++++++++------------------------------
+ 3 files changed, 53 insertions(+), 60 deletions(-)
 
