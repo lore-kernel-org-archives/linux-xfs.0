@@ -1,126 +1,74 @@
-Return-Path: <SRS0=fxM9=DK=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=mrUW=DL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDDD0C4363D
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Oct 2020 18:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 393EEC4363C
+	for <linux-xfs@archiver.kernel.org>; Sun,  4 Oct 2020 04:13:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84C54206DD
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Oct 2020 18:53:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD5EC206DB
+	for <linux-xfs@archiver.kernel.org>; Sun,  4 Oct 2020 04:13:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B9qe28J6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="l8C07FyN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725820AbgJCSxH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 3 Oct 2020 14:53:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33922 "EHLO
+        id S1725820AbgJDENk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Oct 2020 00:13:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35012 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725818AbgJCSxH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Oct 2020 14:53:07 -0400
-Received: from mail-il1-x144.google.com (mail-il1-x144.google.com [IPv6:2607:f8b0:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58D93C0613D0;
-        Sat,  3 Oct 2020 11:53:07 -0700 (PDT)
-Received: by mail-il1-x144.google.com with SMTP id e5so4273028ils.10;
-        Sat, 03 Oct 2020 11:53:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=q1mMXEHnEE0w2MvuZ3k8r6mLC/axsWVlKrfeY6R5BHk=;
-        b=B9qe28J6HN56F4P7EIv18rQdvhstpSLQTBPkCDuX5hjlh9s/WRpNqAto5OXu0TCyRL
-         IDgpM8Fk2v1UmPR571E8zrxK96qaenIKYPkg8tHsdkc273yscUNXP6+olkokxRdBdYib
-         /wr80iXl75sT8GKPB5sjhWQ9BByqgWg95TNVqcLCp9CBmHqikprAX26f740nWn+toWaJ
-         DqvRu8pg7E/1ZO7y8G49AZh7NDYC50IxE+ZrcHJbwW95QKVzOJCkDi4xxThMyWwL06r/
-         a6/NxrFW3fgVuebdMRBfPm3PZMo2FJHdTt2SYY4nP1LjYxPtnepSUSYh/VyPo8NJ1aVX
-         piUg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=q1mMXEHnEE0w2MvuZ3k8r6mLC/axsWVlKrfeY6R5BHk=;
-        b=JpaTyTnbtrGwfppWmBvZ69c9/pPWDvwgb3LWNKDMFHuiMrWnrMiFX2/L8MQlZ+3W3I
-         rcOWWuaQyWQhid1gNQmyy3+pz3KMHYfHmme4zFqpzfF/A4LHulYklZliiqMTLNscc36M
-         G8eHspUubM+wB4MD6okxZGll4lbMs12gYnl4xy0NMvUKfJWdjpuiO/YOk8WskJ/JY2Pp
-         YeERV4uX4w0o36CZqayzMrX0jtke+lGRww8vIeD+O+2Q72xo49IkF/XJp7IC6an0gGNN
-         jReh7gek1FUBoGY3E1M/+SfKjinWEiqbd0pFKTeCP/2L6qK137OpYipkdo0xcmPExPip
-         rZ4w==
-X-Gm-Message-State: AOAM53027S7AfAFgRJRaxaKrZVg9QnSY7KVdycU17IPc6oVO//yQ86qj
-        6bosTi6UGK3w8RG3NHcWXYOnd29zSkqQ3vZO/igATIscilQ=
-X-Google-Smtp-Source: ABdhPJw1fBp2k3zfC+JQip5elR7eC1F7w0MKQOXi8FdVWPeVo5guiIEJYbgmvVMkRenKsjplhPzzmzwsfwc/QoL2d8k=
-X-Received: by 2002:a92:c80a:: with SMTP id v10mr6121699iln.10.1601751186641;
- Sat, 03 Oct 2020 11:53:06 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200924151538.GW32101@casper.infradead.org> <CA+icZUX4bQf+pYsnOR0gHZLsX3NriL=617=RU0usDfx=idgZmA@mail.gmail.com>
- <20200924152755.GY32101@casper.infradead.org> <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
- <20200924163635.GZ32101@casper.infradead.org> <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
- <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
- <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
- <20200924200225.GC32101@casper.infradead.org> <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
- <20200924235756.GD32101@casper.infradead.org>
-In-Reply-To: <20200924235756.GD32101@casper.infradead.org>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Sat, 3 Oct 2020 20:52:55 +0200
-Message-ID: <CA+icZUULTKouG4L-dFYbGUi=aLXTZ083tZ=kzw6P+pKcSj-6hQ@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
-To:     Matthew Wilcox <willy@infradead.org>
+        with ESMTP id S1725818AbgJDENk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Oct 2020 00:13:40 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3245C0613CE;
+        Sat,  3 Oct 2020 21:13:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=HtvH4OYsRI91H4kCX61ekxhCqm1/VG8Jy/sK/CHxDxc=; b=l8C07FyN9OFE16l02mRi190J5K
+        ssiM8cRWpYGSRPv7TOxmh/CpQCxz/v0GGTWQJtV5NMN9xsgHXXfeELDKKLSLiHYTW0eGovKB1h4Kh
+        k2T3lVthrbPRdxBA5nJI9jQDRasNqmm5ODsgzmfFwCqpBmlSe0ehfI8C3qQenFFubKAUbUNgNegDB
+        g0QX/NxEp6V8uWJe4fFV23M1WjFX/z5lppy6BiuQJ1Vz3RipvzkgvR/LiS0pwICDDmpCVCM4/Q0gx
+        8qXEGlgay4wBZCI0K1MTHpnW64Yft0lyBY3iB6S9mWPRvClL9fw0+0Hz8Ys+nGZd1dSZpa62G7C+P
+        WY8KIaUQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kOvOs-0000fR-5Z; Sun, 04 Oct 2020 04:13:34 +0000
+Date:   Sun, 4 Oct 2020 05:13:30 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Sedat Dilek <sedat.dilek@gmail.com>
 Cc:     Qian Cai <cai@redhat.com>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@infradead.org>,
         Brian Foster <bfoster@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH] iomap: Set all uptodate bits for an Uptodate page
+Message-ID: <20201004041330.GF20115@casper.infradead.org>
+References: <20200924152755.GY32101@casper.infradead.org>
+ <CA+icZUURRcCh1TYtLs=U_353bhv5_JhVFaGxVPL5Rydee0P1=Q@mail.gmail.com>
+ <20200924163635.GZ32101@casper.infradead.org>
+ <CA+icZUUgwcLP8O9oDdUMT0SzEQHjn+LkFFkPL3NsLCBhDRSyGw@mail.gmail.com>
+ <f623da731d7c2e96e3a37b091d0ec99095a6386b.camel@redhat.com>
+ <CA+icZUVO65ADxk5SZkZwV70ax5JCzPn8PPfZqScTTuvDRD1smQ@mail.gmail.com>
+ <20200924200225.GC32101@casper.infradead.org>
+ <CA+icZUV3aL_7MptHbradtnd8P6X9VO-=Pi2gBezWaZXgeZFMpg@mail.gmail.com>
+ <20200924235756.GD32101@casper.infradead.org>
+ <CA+icZUULTKouG4L-dFYbGUi=aLXTZ083tZ=kzw6P+pKcSj-6hQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+icZUULTKouG4L-dFYbGUi=aLXTZ083tZ=kzw6P+pKcSj-6hQ@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 25, 2020 at 1:57 AM Matthew Wilcox <willy@infradead.org> wrote:
->
-> On Thu, Sep 24, 2020 at 10:04:40PM +0200, Sedat Dilek wrote:
-> > On Thu, Sep 24, 2020 at 10:02 PM Matthew Wilcox <willy@infradead.org> wrote:
-> > >
-> > > On Thu, Sep 24, 2020 at 09:54:36PM +0200, Sedat Dilek wrote:
-> > > > You are named in "mm: fix misplaced unlock_page in do_wp_page()".
-> > > > Is this here a different issue?
-> > >
-> > > Yes, completely different.  That bug is one Linus introduced in this
-> > > cycle; the bug that this patch fixes was introduced a couple of years
-> > > ago, and we only noticed now because I added an assertion to -next.
-> > > Maybe I should add the assertion for 5.9 too.
-> >
-> > Can you point me to this "assertion"?
-> > Thanks.
->
-> Here's the version against 5.8
->
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 810f7dae11d9..b421e4efc4bd 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -70,11 +70,15 @@ static void
->  iomap_page_release(struct page *page)
->  {
->         struct iomap_page *iop = detach_page_private(page);
-> +       unsigned int nr_blocks = PAGE_SIZE / i_blocksize(page->mapping->host);
->
->         if (!iop)
->                 return;
->         WARN_ON_ONCE(atomic_read(&iop->read_count));
->         WARN_ON_ONCE(atomic_read(&iop->write_count));
-> +       WARN_ON_ONCE(bitmap_full(iop->uptodate, nr_blocks) !=
-> +                       PageUptodate(page));
-> +
->         kfree(iop);
->  }
->
+On Sat, Oct 03, 2020 at 08:52:55PM +0200, Sedat Dilek wrote:
+> Will you send this as a separate patch or fold into the original?
+> 
+> I have tested the original patch plus this (debug) assertion diff on
+> top of Linux v5.9-rc7.
 
-Will you send this as a separate patch or fold into the original?
-
-I have tested the original patch plus this (debug) assertion diff on
-top of Linux v5.9-rc7.
-
-- Sedat -
+I'm going to wait for the merge window to open, Darrick's tree to be
+merged, then send a backport of all the accumulated fixes to Greg for
+the 5.9-stable tree.  I'm also going to do a 5.4 backport.
