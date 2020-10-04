@@ -7,355 +7,409 @@ X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26F30C4363C
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Oct 2020 19:11:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22B3AC4363C
+	for <linux-xfs@archiver.kernel.org>; Sun,  4 Oct 2020 19:14:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6C942065D
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Oct 2020 19:11:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D017C2068E
+	for <linux-xfs@archiver.kernel.org>; Sun,  4 Oct 2020 19:14:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uxt6Muhe"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UxfTb/vC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726519AbgJDTLf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Oct 2020 15:11:35 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:49016 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726085AbgJDTLf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Oct 2020 15:11:35 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 094J9vcu090277;
-        Sun, 4 Oct 2020 19:11:29 GMT
+        id S1726085AbgJDTOy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 4 Oct 2020 15:14:54 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:58558 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726313AbgJDTOw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Oct 2020 15:14:52 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 094JEOpu194886;
+        Sun, 4 Oct 2020 19:14:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
  subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=TAKIgeJlHXrNMmGlIj1WIvTLasx7Sr+Iwwhl+jFvQz0=;
- b=uxt6MuheFrGLa64hqlDVKCRA1nVCiOFGxE7bJinZuO0yuG9W57pKoHPsIjZuN8HEmOX/
- dF4b06fqfIQMN9VroIi3CfOcNIozL9jl7Zv6adc1PeJHzpRnczNEmw9DbXtwP/IqsINI
- DSLJyhRNxHE5wcjjOyUAPLBt4wpFothX+gAmJS3hCiEauZyWsDJsjH+s+pw5jvHsqjfW
- ZZXFeXA3xUGUrj7KZR3rgOnCKxSq3QG1zQLdbhZUQNGn7l/IWSasiJNidpCWFfe7iCEY
- r8V0oWpeSy6BxscnfQXwV3na14kblBuJOqfA7hF/HUpiZe1asiS3q9PEff8GHBGhffA1 0Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 33xhxmjtxp-1
+ bh=JgP+N2mIAevDDGoc1RgFkX8+0iqKZEuUROz/SsL8GBw=;
+ b=UxfTb/vCl1W59eKHjMp23JcpHxAhtOtl2MeWzmIqDFk7pmdh3bIo+vZxwl8prL35kPlH
+ eP40zaBI3wKKwspQal+8kTMn3SuGaN/lpDwa5Qpqvak9yb4RfhFOWl8nLQi+H8kWdjr9
+ f+uW7k9im49UV9kmKDQRlw/HoarI3B+N9zqv55FoQflxVS/P806V1NNCdw16iTU9hA1e
+ aSvoe/TL3KF1/pHsOdg9t0A71Al7FiG75qoScY2PAM3ljNmjB31N3uwIAOXKrMllk39/
+ QJmXRmyihW5DYNyh52MwMoJ1DBBjXnyxeWqKenAhV+KRD1TfCKlV4JqM52JMWrQOrj0h Vw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 33ym3480hj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sun, 04 Oct 2020 19:11:29 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 094JAggd074096;
-        Sun, 4 Oct 2020 19:11:28 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 33y36vrdda-1
+        Sun, 04 Oct 2020 19:14:23 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 094JA2gR193061;
+        Sun, 4 Oct 2020 19:14:23 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 33y37u9c5j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 04 Oct 2020 19:11:28 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 094JBRDg025395;
-        Sun, 4 Oct 2020 19:11:27 GMT
+        Sun, 04 Oct 2020 19:14:23 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 094JEFlT008680;
+        Sun, 4 Oct 2020 19:14:15 GMT
 Received: from localhost (/10.159.155.224)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 04 Oct 2020 12:11:27 -0700
-Date:   Sun, 4 Oct 2020 12:11:27 -0700
+        with ESMTP ; Sun, 04 Oct 2020 12:14:14 -0700
+Date:   Sun, 4 Oct 2020 12:14:14 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de
-Subject: [PATCH v3.3 3/3] xfs: fix an incore inode UAF in xfs_bui_recover
-Message-ID: <20201004191127.GC49547@magnolia>
-References: <160140142711.830434.5161910313856677767.stgit@magnolia>
- <160140144660.830434.10498291551366134327.stgit@magnolia>
+To:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH v1.2 2/2] xfs: fix deadlock and streamline xfs_getfsmap
+ performance
+Message-ID: <20201004191414.GD49547@magnolia>
+References: <160161415855.1967459.13623226657245838117.stgit@magnolia>
+ <160161417069.1967459.11222290374186255598.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160140144660.830434.10498291551366134327.stgit@magnolia>
+In-Reply-To: <160161417069.1967459.11222290374186255598.stgit@magnolia>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9764 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 adultscore=0
- bulkscore=0 spamscore=0 malwarescore=0 suspectscore=5 phishscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2010040146
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9764 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
- impostorscore=0 lowpriorityscore=0 suspectscore=5 phishscore=0
- mlxlogscore=999 adultscore=0 clxscore=1015 spamscore=0 priorityscore=1501
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 spamscore=0
+ mlxscore=0 malwarescore=0 suspectscore=7 adultscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2010040146
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9764 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 priorityscore=1501
+ mlxscore=0 mlxlogscore=999 clxscore=1015 bulkscore=0 spamscore=0
+ malwarescore=0 phishscore=0 suspectscore=7 adultscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010040147
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In xfs_bui_item_recover, there exists a use-after-free bug with regards
-to the inode that is involved in the bmap replay operation.  If the
-mapping operation does not complete, we call xfs_bmap_unmap_extent to
-create a deferred op to finish the unmapping work, and we retain a
-pointer to the incore inode.
+Refactor xfs_getfsmap to improve its performance: instead of indirectly
+calling a function that copies one record to userspace at a time, create
+a shadow buffer in the kernel and copy the whole array once at the end.
+On the author's computer, this reduces the runtime on his /home by ~20%.
 
-Unfortunately, the very next thing we do is commit the transaction and
-drop the inode.  If reclaim tears down the inode before we try to finish
-the defer ops, we dereference garbage and blow up.  Therefore, create a
-way to join inodes to the defer ops freezer so that we can maintain the
-xfs_inode reference until we're done with the inode.
+This also eliminates a deadlock when running GETFSMAP against the
+realtime device.  The current code locks the rtbitmap to create
+fsmappings and copies them into userspace, having not released the
+rtbitmap lock.  If the userspace buffer is an mmap of a sparse file that
+itself resides on the realtime device, the write page fault will recurse
+into the fs for allocation, which will deadlock on the rtbitmap lock.
 
-Note: This imposes the requirement that there be enough memory to keep
-every incore inode in memory throughout recovery.
+While we're at it, constrain the kernel memory buffer size so that
+userspace can't whack the kernel with huge memory allocations.
 
+Fixes: 4c934c7dd60c ("xfs: report realtime space information via the rtbitmap")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v3.3: ihold the captured inode and let callers iunlock/irele their own
-reference
-v3.2: rebase on updated defer capture patches
+v2: constrain the internal buffer size and loop xfs_getfsmap calls
+until we fill the userspace buffer or run out of result rows
 ---
- fs/xfs/libxfs/xfs_defer.c  |   43 ++++++++++++++++++++++++++++++++++++++-----
- fs/xfs/libxfs/xfs_defer.h  |   11 +++++++++--
- fs/xfs/xfs_bmap_item.c     |    7 +++++--
- fs/xfs/xfs_extfree_item.c  |    2 +-
- fs/xfs/xfs_inode.c         |    8 ++++++++
- fs/xfs/xfs_inode.h         |    2 ++
- fs/xfs/xfs_log_recover.c   |    7 ++++++-
- fs/xfs/xfs_refcount_item.c |    2 +-
- fs/xfs/xfs_rmap_item.c     |    2 +-
- 9 files changed, 71 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_fsmap.c |   45 +++++++++-------
+ fs/xfs/xfs_fsmap.h |    6 --
+ fs/xfs/xfs_ioctl.c |  147 +++++++++++++++++++++++++++++++++++-----------------
+ 3 files changed, 126 insertions(+), 72 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index e19dc1ced7e6..00696c23670c 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -16,6 +16,7 @@
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
- #include "xfs_trace.h"
-+#include "xfs_icache.h"
+diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+index aa36e7daf82c..9ce5e7d5bf8f 100644
+--- a/fs/xfs/xfs_fsmap.c
++++ b/fs/xfs/xfs_fsmap.c
+@@ -26,7 +26,7 @@
+ #include "xfs_rtalloc.h"
  
- /*
-  * Deferred Operations in XFS
-@@ -553,10 +554,14 @@ xfs_defer_move(
-  * deferred ops state is transferred to the capture structure and the
-  * transaction is then ready for the caller to commit it.  If there are no
-  * intent items to capture, this function returns NULL.
-+ *
-+ * If capture_ip is not NULL, the capture structure will obtain an extra
-+ * reference to the inode.
-  */
- static struct xfs_defer_capture *
- xfs_defer_ops_capture(
--	struct xfs_trans		*tp)
-+	struct xfs_trans		*tp,
-+	struct xfs_inode		*capture_ip)
- {
- 	struct xfs_defer_capture	*dfc;
- 
-@@ -582,6 +587,15 @@ xfs_defer_ops_capture(
- 	/* Preserve the log reservation size. */
- 	dfc->dfc_logres = tp->t_log_res;
- 
-+	/*
-+	 * Grab an extra reference to this inode and attach it to the capture
-+	 * structure.
-+	 */
-+	if (capture_ip) {
-+		xfs_ihold(capture_ip);
-+		dfc->dfc_capture_ip = capture_ip;
-+	}
-+
- 	return dfc;
+ /* Convert an xfs_fsmap to an fsmap. */
+-void
++static void
+ xfs_fsmap_from_internal(
+ 	struct fsmap		*dest,
+ 	struct xfs_fsmap	*src)
+@@ -155,8 +155,7 @@ xfs_fsmap_owner_from_rmap(
+ /* getfsmap query state */
+ struct xfs_getfsmap_info {
+ 	struct xfs_fsmap_head	*head;
+-	xfs_fsmap_format_t	formatter;	/* formatting fn */
+-	void			*format_arg;	/* format buffer */
++	struct fsmap		*fsmap_recs;	/* mapping records */
+ 	struct xfs_buf		*agf_bp;	/* AGF, for refcount queries */
+ 	xfs_daddr_t		next_daddr;	/* next daddr we expect */
+ 	u64			missing_owner;	/* owner of holes */
+@@ -224,6 +223,20 @@ xfs_getfsmap_is_shared(
+ 	return 0;
  }
  
-@@ -592,24 +606,33 @@ xfs_defer_ops_release(
- 	struct xfs_defer_capture	*dfc)
- {
- 	xfs_defer_cancel_list(mp, &dfc->dfc_dfops);
-+	if (dfc->dfc_capture_ip)
-+		xfs_irele(dfc->dfc_capture_ip);
- 	kmem_free(dfc);
- }
++static inline void
++xfs_getfsmap_format(
++	struct xfs_mount		*mp,
++	struct xfs_fsmap		*xfm,
++	struct xfs_getfsmap_info	*info)
++{
++	struct fsmap			*rec;
++
++	trace_xfs_getfsmap_mapping(mp, xfm);
++
++	rec = &info->fsmap_recs[info->head->fmh_entries++];
++	xfs_fsmap_from_internal(rec, xfm);
++}
++
+ /*
+  * Format a reverse mapping for getfsmap, having translated rm_startblock
+  * into the appropriate daddr units.
+@@ -288,10 +301,7 @@ xfs_getfsmap_helper(
+ 		fmr.fmr_offset = 0;
+ 		fmr.fmr_length = rec_daddr - info->next_daddr;
+ 		fmr.fmr_flags = FMR_OF_SPECIAL_OWNER;
+-		error = info->formatter(&fmr, info->format_arg);
+-		if (error)
+-			return error;
+-		info->head->fmh_entries++;
++		xfs_getfsmap_format(mp, &fmr, info);
+ 	}
+ 
+ 	if (info->last)
+@@ -323,11 +333,8 @@ xfs_getfsmap_helper(
+ 		if (shared)
+ 			fmr.fmr_flags |= FMR_OF_SHARED;
+ 	}
+-	error = info->formatter(&fmr, info->format_arg);
+-	if (error)
+-		return error;
+-	info->head->fmh_entries++;
+ 
++	xfs_getfsmap_format(mp, &fmr, info);
+ out:
+ 	rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
+ 	if (info->next_daddr < rec_daddr)
+@@ -795,11 +802,11 @@ xfs_getfsmap_check_keys(
+ #endif /* CONFIG_XFS_RT */
  
  /*
-  * Capture any deferred ops and commit the transaction.  This is the last step
-- * needed to finish a log intent item that we recovered from the log.
-+ * needed to finish a log intent item that we recovered from the log.  If any
-+ * of the deferred ops operate on an inode, the caller must pass in that inode
-+ * so that the reference can be transferred to the capture structure.  The
-+ * caller must hold ILOCK_EXCL on the inode, and must unlock it before calling
-+ * xfs_defer_ops_continue.
-  */
- int
- xfs_defer_ops_capture_and_commit(
- 	struct xfs_trans		*tp,
-+	struct xfs_inode		*capture_ip,
- 	struct list_head		*capture_list)
+- * Get filesystem's extents as described in head, and format for
+- * output.  Calls formatter to fill the user's buffer until all
+- * extents are mapped, until the passed-in head->fmh_count slots have
+- * been filled, or until the formatter short-circuits the loop, if it
+- * is tracking filled-in extents on its own.
++ * Get filesystem's extents as described in head, and format for output. Fills
++ * in the supplied records array until there are no more reverse mappings to
++ * return or head.fmh_entries == head.fmh_count.  In the second case, this
++ * function returns -ECANCELED to indicate that more records would have been
++ * returned.
+  *
+  * Key to Confusion
+  * ----------------
+@@ -819,8 +826,7 @@ int
+ xfs_getfsmap(
+ 	struct xfs_mount		*mp,
+ 	struct xfs_fsmap_head		*head,
+-	xfs_fsmap_format_t		formatter,
+-	void				*arg)
++	struct fsmap			*fsmap_recs)
  {
- 	struct xfs_mount		*mp = tp->t_mountp;
- 	struct xfs_defer_capture	*dfc;
- 	int				error;
+ 	struct xfs_trans		*tp = NULL;
+ 	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
+@@ -895,8 +901,7 @@ xfs_getfsmap(
  
-+	ASSERT(!capture_ip || xfs_isilocked(capture_ip, XFS_ILOCK_EXCL));
-+
- 	/* If we don't capture anything, commit transaction and exit. */
--	dfc = xfs_defer_ops_capture(tp);
-+	dfc = xfs_defer_ops_capture(tp, capture_ip);
- 	if (!dfc)
- 		return xfs_trans_commit(tp);
+ 	info.next_daddr = head->fmh_keys[0].fmr_physical +
+ 			  head->fmh_keys[0].fmr_length;
+-	info.formatter = formatter;
+-	info.format_arg = arg;
++	info.fsmap_recs = fsmap_recs;
+ 	info.head = head;
  
-@@ -626,16 +649,26 @@ xfs_defer_ops_capture_and_commit(
- 
- /*
-  * Attach a chain of captured deferred ops to a new transaction and free the
-- * capture structure.
-+ * capture structure.  If an inode was captured, it will be passed back to the
-+ * caller with ILOCK_EXCL held and joined to the transaction with lockflags==0.
-+ * The caller now owns the inode reference.
-  */
- void
- xfs_defer_ops_continue(
- 	struct xfs_defer_capture	*dfc,
--	struct xfs_trans		*tp)
-+	struct xfs_trans		*tp,
-+	struct xfs_inode		**captured_ipp)
- {
- 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
- 
-+	/* Lock and join the captured inode to the new transaction. */
-+	if (dfc->dfc_capture_ip) {
-+		xfs_ilock(dfc->dfc_capture_ip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, dfc->dfc_capture_ip, 0);
-+	}
-+	*captured_ipp = dfc->dfc_capture_ip;
-+
- 	/* Move captured dfops chain and state to the transaction. */
- 	list_splice_init(&dfc->dfc_dfops, &tp->t_dfops);
- 	tp->t_flags |= dfc->dfc_tpflags;
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 6cde6f0713f7..05472f71fffe 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -82,6 +82,12 @@ struct xfs_defer_capture {
- 
- 	/* Log reservation saved from the transaction. */
- 	unsigned int		dfc_logres;
-+
-+	/*
-+	 * An inode reference that must be maintained to complete the deferred
-+	 * work.
-+	 */
-+	struct xfs_inode	*dfc_capture_ip;
+ 	/*
+diff --git a/fs/xfs/xfs_fsmap.h b/fs/xfs/xfs_fsmap.h
+index c6c57739b862..a0775788e7b1 100644
+--- a/fs/xfs/xfs_fsmap.h
++++ b/fs/xfs/xfs_fsmap.h
+@@ -27,13 +27,9 @@ struct xfs_fsmap_head {
+ 	struct xfs_fsmap fmh_keys[2];	/* low and high keys */
  };
  
- /*
-@@ -89,8 +95,9 @@ struct xfs_defer_capture {
-  * This doesn't normally happen except log recovery.
-  */
- int xfs_defer_ops_capture_and_commit(struct xfs_trans *tp,
--		struct list_head *capture_list);
--void xfs_defer_ops_continue(struct xfs_defer_capture *d, struct xfs_trans *tp);
-+		struct xfs_inode *capture_ip, struct list_head *capture_list);
-+void xfs_defer_ops_continue(struct xfs_defer_capture *d, struct xfs_trans *tp,
-+		struct xfs_inode **captured_ipp);
- void xfs_defer_ops_release(struct xfs_mount *mp, struct xfs_defer_capture *d);
+-void xfs_fsmap_from_internal(struct fsmap *dest, struct xfs_fsmap *src);
+ void xfs_fsmap_to_internal(struct xfs_fsmap *dest, struct fsmap *src);
  
- #endif /* __XFS_DEFER_H__ */
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 852411568d14..4570da07eb06 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -513,8 +513,11 @@ xfs_bui_item_recover(
- 		xfs_bmap_unmap_extent(tp, ip, &irec);
- 	}
+-/* fsmap to userspace formatter - copy to user & advance pointer */
+-typedef int (*xfs_fsmap_format_t)(struct xfs_fsmap *, void *);
+-
+ int xfs_getfsmap(struct xfs_mount *mp, struct xfs_fsmap_head *head,
+-		xfs_fsmap_format_t formatter, void *arg);
++		struct fsmap *out_recs);
  
--	/* Commit transaction, which frees the transaction. */
--	error = xfs_defer_ops_capture_and_commit(tp, capture_list);
-+	/*
-+	 * Commit transaction, which frees the transaction and saves the inode
-+	 * for later replay activities.
-+	 */
-+	error = xfs_defer_ops_capture_and_commit(tp, ip, capture_list);
- 	if (error)
- 		goto err_unlock;
- 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 17d36fe5cfd0..3920542f5736 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -627,7 +627,7 @@ xfs_efi_item_recover(
- 
- 	}
- 
--	return xfs_defer_ops_capture_and_commit(tp, capture_list);
-+	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list);
- 
- abort_error:
- 	xfs_trans_cancel(tp);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 2bfbcf28b1bd..24b1e2244905 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3813,3 +3813,11 @@ xfs_iunlock2_io_mmap(
- 	if (!same_inode)
- 		inode_unlock(VFS_I(ip1));
+ #endif /* __XFS_FSMAP_H__ */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index bca7659fb5c6..a08fc7eb3e93 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1716,39 +1716,17 @@ xfs_ioc_getbmap(
+ 	return error;
  }
-+
-+/* Grab an extra reference to the VFS inode. */
-+void
-+xfs_ihold(
-+	struct xfs_inode	*ip)
-+{
-+	ihold(VFS_I(ip));
-+}
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 751a3d1d7d84..e9b0186b594c 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -476,4 +476,6 @@ void xfs_end_io(struct work_struct *work);
- int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
- void xfs_iunlock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
  
-+void xfs_ihold(struct xfs_inode *ip);
-+
- #endif	/* __XFS_INODE_H__ */
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 001e1585ddc6..a8289adc1b29 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2439,6 +2439,7 @@ xlog_finish_defer_ops(
+-struct getfsmap_info {
+-	struct xfs_mount	*mp;
+-	struct fsmap_head __user *data;
+-	unsigned int		idx;
+-	__u32			last_flags;
+-};
+-
+-STATIC int
+-xfs_getfsmap_format(struct xfs_fsmap *xfm, void *priv)
+-{
+-	struct getfsmap_info	*info = priv;
+-	struct fsmap		fm;
+-
+-	trace_xfs_getfsmap_mapping(info->mp, xfm);
+-
+-	info->last_flags = xfm->fmr_flags;
+-	xfs_fsmap_from_internal(&fm, xfm);
+-	if (copy_to_user(&info->data->fmh_recs[info->idx++], &fm,
+-			sizeof(struct fsmap)))
+-		return -EFAULT;
+-
+-	return 0;
+-}
+-
+ STATIC int
+ xfs_ioc_getfsmap(
+ 	struct xfs_inode	*ip,
+ 	struct fsmap_head	__user *arg)
  {
- 	struct xfs_defer_capture *dfc, *next;
- 	struct xfs_trans	*tp;
-+	struct xfs_inode	*ip;
- 	int			error = 0;
+-	struct getfsmap_info	info = { NULL };
+ 	struct xfs_fsmap_head	xhead = {0};
+ 	struct fsmap_head	head;
+-	bool			aborted = false;
++	struct fsmap		*recs;
++	unsigned int		count;
++	__u32			last_flags = 0;
++	bool			done = false;
+ 	int			error;
  
- 	list_for_each_entry_safe(dfc, next, capture_list, dfc_list) {
-@@ -2464,9 +2465,13 @@ xlog_finish_defer_ops(
- 		 * from recovering a single intent item.
- 		 */
- 		list_del_init(&dfc->dfc_list);
--		xfs_defer_ops_continue(dfc, tp);
-+		xfs_defer_ops_continue(dfc, tp, &ip);
+ 	if (copy_from_user(&head, arg, sizeof(struct fsmap_head)))
+@@ -1760,38 +1738,113 @@ xfs_ioc_getfsmap(
+ 		       sizeof(head.fmh_keys[1].fmr_reserved)))
+ 		return -EINVAL;
  
- 		error = xfs_trans_commit(tp);
-+		if (ip) {
-+			xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+			xfs_irele(ip);
++	/*
++	 * Use an internal memory buffer so that we don't have to copy fsmap
++	 * data to userspace while holding locks.  Start by trying to allocate
++	 * up to 16 pages for the buffer, but fall back to a single page if we
++	 * have to.
++	 */
++	count = min_t(unsigned int, head.fmh_count,
++			(16 * PAGE_SIZE) / sizeof(struct fsmap));
++	recs = kvzalloc(count * sizeof(struct fsmap), GFP_KERNEL);
++	if (!recs) {
++		count = min_t(unsigned int, head.fmh_count,
++				PAGE_SIZE / sizeof(struct fsmap));
++		recs = kvzalloc(count * sizeof(struct fsmap), GFP_KERNEL);
++		if (!recs)
++			return -ENOMEM;
++	}
++
+ 	xhead.fmh_iflags = head.fmh_iflags;
+-	xhead.fmh_count = head.fmh_count;
+ 	xfs_fsmap_to_internal(&xhead.fmh_keys[0], &head.fmh_keys[0]);
+ 	xfs_fsmap_to_internal(&xhead.fmh_keys[1], &head.fmh_keys[1]);
+ 
+ 	trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
+ 	trace_xfs_getfsmap_high_key(ip->i_mount, &xhead.fmh_keys[1]);
+ 
+-	info.mp = ip->i_mount;
+-	info.data = arg;
+-	error = xfs_getfsmap(ip->i_mount, &xhead, xfs_getfsmap_format, &info);
+-	if (error == -ECANCELED) {
+-		error = 0;
+-		aborted = true;
+-	} else if (error)
+-		return error;
+-
+-	/* If we didn't abort, set the "last" flag in the last fmx */
+-	if (!aborted && info.idx) {
+-		info.last_flags |= FMR_OF_LAST;
+-		if (copy_to_user(&info.data->fmh_recs[info.idx - 1].fmr_flags,
+-				&info.last_flags, sizeof(info.last_flags)))
+-			return -EFAULT;
++	head.fmh_entries = 0;
++	do {
++		struct fsmap __user	*user_recs;
++		struct fsmap		*last_rec;
++
++		user_recs = &arg->fmh_recs[head.fmh_entries];
++		xhead.fmh_entries = 0;
++		xhead.fmh_count = min_t(unsigned int, count,
++					head.fmh_count - head.fmh_entries);
++
++		/* Run query, record how many entries we got. */
++		error = xfs_getfsmap(ip->i_mount, &xhead, recs);
++		switch (error) {
++		case 0:
++			/*
++			 * There are no more records in the result set.  Copy
++			 * whatever we got to userspace and break out.
++			 */
++			done = true;
++			break;
++		case -ECANCELED:
++			/*
++			 * The internal memory buffer is full.  Copy whatever
++			 * records we got to userspace and go again if we have
++			 * not yet filled the userspace buffer.
++			 */
++			error = 0;
++			break;
++		default:
++			goto out_free;
 +		}
- 		if (error)
- 			return error;
++		head.fmh_entries += xhead.fmh_entries;
++		head.fmh_oflags = xhead.fmh_oflags;
++
++		/*
++		 * If the caller wanted a record count or there aren't any
++		 * new records to return, we're done.
++		 */
++		if (head.fmh_count == 0 || xhead.fmh_entries == 0)
++			break;
++
++		/* Copy all the records we got out to userspace. */
++		if (copy_to_user(user_recs, recs,
++				 xhead.fmh_entries * sizeof(struct fsmap))) {
++			error = -EFAULT;
++			goto out_free;
++		}
++
++		/* Remember the last record flags we copied to userspace. */
++		last_rec = &recs[xhead.fmh_entries - 1];
++		last_flags = last_rec->fmr_flags;
++
++		/* Set up the low key for the next iteration. */
++		xfs_fsmap_to_internal(&xhead.fmh_keys[0], last_rec);
++		trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
++	} while (!done && head.fmh_entries < head.fmh_count);
++
++	/*
++	 * If there are no more records in the query result set and we're not
++	 * in counting mode, mark the last record returned with the LAST flag.
++	 */
++	if (done && head.fmh_count > 0 && head.fmh_entries > 0) {
++		struct fsmap __user	*user_rec;
++
++		last_flags |= FMR_OF_LAST;
++		user_rec = &arg->fmh_recs[head.fmh_entries - 1];
++
++		if (copy_to_user(&user_rec->fmr_flags, &last_flags,
++					sizeof(last_flags))) {
++			error = -EFAULT;
++			goto out_free;
++		}
  	}
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index 0478374add64..ad895b48f365 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -544,7 +544,7 @@ xfs_cui_item_recover(
- 	}
  
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
--	return xfs_defer_ops_capture_and_commit(tp, capture_list);
-+	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list);
+ 	/* copy back header */
+-	head.fmh_entries = xhead.fmh_entries;
+-	head.fmh_oflags = xhead.fmh_oflags;
+-	if (copy_to_user(arg, &head, sizeof(struct fsmap_head)))
+-		return -EFAULT;
++	if (copy_to_user(arg, &head, sizeof(struct fsmap_head))) {
++		error = -EFAULT;
++		goto out_free;
++	}
  
- abort_error:
- 	xfs_refcount_finish_one_cleanup(tp, rcur, error);
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index 0d8fa707f079..1163f32c3e62 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -567,7 +567,7 @@ xfs_rui_item_recover(
- 	}
+-	return 0;
++out_free:
++	kmem_free(recs);
++	return error;
+ }
  
- 	xfs_rmap_finish_one_cleanup(tp, rcur, error);
--	return xfs_defer_ops_capture_and_commit(tp, capture_list);
-+	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list);
- 
- abort_error:
- 	xfs_rmap_finish_one_cleanup(tp, rcur, error);
+ STATIC int
