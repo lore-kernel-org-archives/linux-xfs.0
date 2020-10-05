@@ -4,162 +4,186 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80FBCC4363A
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 16:19:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91D89C4363A
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 16:20:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41FF420756
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 16:19:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BD7C206DD
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 16:20:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PYvoYPLN"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ImTnBpe6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728952AbgJEQTk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Oct 2020 12:19:40 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:53061 "EHLO
+        id S1728083AbgJEQUX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Oct 2020 12:20:23 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:44290 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728950AbgJEQTg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 12:19:36 -0400
+        by vger.kernel.org with ESMTP id S1726638AbgJEQUX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 12:20:23 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601914774;
+        s=mimecast20190719; t=1601914822;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=GPqQNN/3Bnl1TExIliEelC2U+9nJ6S+bABKkRxsMgTU=;
-        b=PYvoYPLNJlUciok1WChtPnw2ARuNVBTushXuDV3tuK2bDlqyMHPfZP9E3VBX3wD1Sww9JN
-        DJq1CSzeDitbAgjy5Xq7frJ3s8HECuwOc28x0K/tVAmki1BmjzHGqiHGz1uLzLr5WAiixw
-        V+3sVjFBhxwWbvHSY2hHnkE7LiAoRV0=
+        bh=Vn9DDhR9ZJxZdK6AmbfK5dz8y2v2VRKuDv9AGOzscSI=;
+        b=ImTnBpe6KfsXSADaWvyCJ2zzRFgZgQjznqtq05NnyKCfz6g/JUZ/01DxNG6H8RTgm1OvVx
+        YTuAy5OAMrAC7EJOEHNKpDUsTXNj6/uLL1F2iOZfGaeQkA1Pmrk6LjWFR9aKwM+HDMyFdi
+        /sFCPk7/mGz1aUxW3Z2um2W6XKjY+vs=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-283--Y8wjlo9MWyIbG1Yf7l3tA-1; Mon, 05 Oct 2020 12:19:32 -0400
-X-MC-Unique: -Y8wjlo9MWyIbG1Yf7l3tA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-251-S7fqDtYsPHu7L2u9xBPZdQ-1; Mon, 05 Oct 2020 12:20:18 -0400
+X-MC-Unique: S7fqDtYsPHu7L2u9xBPZdQ-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 423D210BBEF4;
-        Mon,  5 Oct 2020 16:19:31 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2F1579CC05;
+        Mon,  5 Oct 2020 16:20:17 +0000 (UTC)
 Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A2C5019C4F;
-        Mon,  5 Oct 2020 16:19:30 +0000 (UTC)
-Date:   Mon, 5 Oct 2020 12:19:28 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 927F45C1BD;
+        Mon,  5 Oct 2020 16:20:16 +0000 (UTC)
+Date:   Mon, 5 Oct 2020 12:20:14 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH v3.2 2/3] xfs: clean up xfs_bui_item_recover
- iget/trans_alloc/ilock ordering
-Message-ID: <20201005161928.GA6539@bfoster>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de
+Subject: Re: [PATCH v3.3 3/3] xfs: fix an incore inode UAF in xfs_bui_recover
+Message-ID: <20201005162014.GB6539@bfoster>
 References: <160140142711.830434.5161910313856677767.stgit@magnolia>
- <160140144017.830434.9012644788797432565.stgit@magnolia>
- <20201004190939.GB49547@magnolia>
+ <160140144660.830434.10498291551366134327.stgit@magnolia>
+ <20201004191127.GC49547@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201004190939.GB49547@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <20201004191127.GC49547@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Oct 04, 2020 at 12:09:39PM -0700, Darrick J. Wong wrote:
+On Sun, Oct 04, 2020 at 12:11:27PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In most places in XFS, we have a specific order in which we gather
-> resources: grab the inode, allocate a transaction, then lock the inode.
-> xfs_bui_item_recover doesn't do it in that order, so fix it to be more
-> consistent.  This also makes the error bailout code a bit less weird.
+> In xfs_bui_item_recover, there exists a use-after-free bug with regards
+> to the inode that is involved in the bmap replay operation.  If the
+> mapping operation does not complete, we call xfs_bmap_unmap_extent to
+> create a deferred op to finish the unmapping work, and we retain a
+> pointer to the incore inode.
+> 
+> Unfortunately, the very next thing we do is commit the transaction and
+> drop the inode.  If reclaim tears down the inode before we try to finish
+> the defer ops, we dereference garbage and blow up.  Therefore, create a
+> way to join inodes to the defer ops freezer so that we can maintain the
+> xfs_inode reference until we're done with the inode.
+> 
+> Note: This imposes the requirement that there be enough memory to keep
+> every incore inode in memory throughout recovery.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
-> v3.2: don't remove the iunlock/irele if the defer commit succeeds
+> v3.3: ihold the captured inode and let callers iunlock/irele their own
+> reference
+> v3.2: rebase on updated defer capture patches
 > ---
+>  fs/xfs/libxfs/xfs_defer.c  |   43 ++++++++++++++++++++++++++++++++++++++-----
+>  fs/xfs/libxfs/xfs_defer.h  |   11 +++++++++--
+>  fs/xfs/xfs_bmap_item.c     |    7 +++++--
+>  fs/xfs/xfs_extfree_item.c  |    2 +-
+>  fs/xfs/xfs_inode.c         |    8 ++++++++
+>  fs/xfs/xfs_inode.h         |    2 ++
+>  fs/xfs/xfs_log_recover.c   |    7 ++++++-
+>  fs/xfs/xfs_refcount_item.c |    2 +-
+>  fs/xfs/xfs_rmap_item.c     |    2 +-
+>  9 files changed, 71 insertions(+), 13 deletions(-)
+> 
+...
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 2bfbcf28b1bd..24b1e2244905 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3813,3 +3813,11 @@ xfs_iunlock2_io_mmap(
+>  	if (!same_inode)
+>  		inode_unlock(VFS_I(ip1));
+>  }
+> +
+> +/* Grab an extra reference to the VFS inode. */
+> +void
+> +xfs_ihold(
+> +	struct xfs_inode	*ip)
+> +{
+> +	ihold(VFS_I(ip));
+> +}
+
+It looks to me that the only reason xfs_irele() exists is for a
+tracepoint. We don't have that here, so what's the purpose of the
+helper?
+
+Otherwise the patch looks good to me:
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_bmap_item.c |   41 +++++++++++++++++++++++------------------
->  1 file changed, 23 insertions(+), 18 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-> index c1f2cc3c42cb..852411568d14 100644
-> --- a/fs/xfs/xfs_bmap_item.c
-> +++ b/fs/xfs/xfs_bmap_item.c
-> @@ -475,25 +475,26 @@ xfs_bui_item_recover(
->  	    (bmap->me_flags & ~XFS_BMAP_EXTENT_FLAGS))
->  		return -EFSCORRUPTED;
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index 751a3d1d7d84..e9b0186b594c 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -476,4 +476,6 @@ void xfs_end_io(struct work_struct *work);
+>  int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
+>  void xfs_iunlock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
 >  
-> -	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-> -			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
-> -	if (error)
-> -		return error;
-> -
-> -	budp = xfs_trans_get_bud(tp, buip);
-> -
->  	/* Grab the inode. */
-> -	error = xfs_iget(mp, tp, bmap->me_owner, 0, XFS_ILOCK_EXCL, &ip);
-> +	error = xfs_iget(mp, NULL, bmap->me_owner, 0, 0, &ip);
->  	if (error)
-> -		goto err_inode;
-> +		return error;
->  
-> -	error = xfs_qm_dqattach_locked(ip, false);
-> +	error = xfs_qm_dqattach(ip);
->  	if (error)
-> -		goto err_inode;
-> +		goto err_rele;
->  
->  	if (VFS_I(ip)->i_nlink == 0)
->  		xfs_iflags_set(ip, XFS_IRECOVERY);
->  
-> +	/* Allocate transaction and do the work. */
-> +	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-> +			XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK), 0, 0, &tp);
-> +	if (error)
-> +		goto err_rele;
+> +void xfs_ihold(struct xfs_inode *ip);
 > +
-> +	budp = xfs_trans_get_bud(tp, buip);
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	xfs_trans_ijoin(tp, ip, 0);
+>  #endif	/* __XFS_INODE_H__ */
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 001e1585ddc6..a8289adc1b29 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -2439,6 +2439,7 @@ xlog_finish_defer_ops(
+>  {
+>  	struct xfs_defer_capture *dfc, *next;
+>  	struct xfs_trans	*tp;
+> +	struct xfs_inode	*ip;
+>  	int			error = 0;
 >  
->  	count = bmap->me_len;
-> @@ -501,7 +502,7 @@ xfs_bui_item_recover(
->  			whichfork, bmap->me_startoff, bmap->me_startblock,
->  			&count, state);
->  	if (error)
-> -		goto err_inode;
-> +		goto err_cancel;
+>  	list_for_each_entry_safe(dfc, next, capture_list, dfc_list) {
+> @@ -2464,9 +2465,13 @@ xlog_finish_defer_ops(
+>  		 * from recovering a single intent item.
+>  		 */
+>  		list_del_init(&dfc->dfc_list);
+> -		xfs_defer_ops_continue(dfc, tp);
+> +		xfs_defer_ops_continue(dfc, tp, &ip);
 >  
->  	if (count > 0) {
->  		ASSERT(bui_type == XFS_BMAP_UNMAP);
-> @@ -512,17 +513,21 @@ xfs_bui_item_recover(
->  		xfs_bmap_unmap_extent(tp, ip, &irec);
+>  		error = xfs_trans_commit(tp);
+> +		if (ip) {
+> +			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> +			xfs_irele(ip);
+> +		}
+>  		if (error)
+>  			return error;
+>  	}
+> diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
+> index 0478374add64..ad895b48f365 100644
+> --- a/fs/xfs/xfs_refcount_item.c
+> +++ b/fs/xfs/xfs_refcount_item.c
+> @@ -544,7 +544,7 @@ xfs_cui_item_recover(
 >  	}
 >  
-> +	/* Commit transaction, which frees the transaction. */
->  	error = xfs_defer_ops_capture_and_commit(tp, capture_list);
-> +	if (error)
-> +		goto err_unlock;
-> +
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	xfs_irele(ip);
-> -	return error;
-> +	return 0;
+>  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+> -	return xfs_defer_ops_capture_and_commit(tp, capture_list);
+> +	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list);
 >  
-> -err_inode:
-> +err_cancel:
->  	xfs_trans_cancel(tp);
-> -	if (ip) {
-> -		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -		xfs_irele(ip);
-> -	}
-> +err_unlock:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +err_rele:
-> +	xfs_irele(ip);
->  	return error;
->  }
+>  abort_error:
+>  	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+> diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+> index 0d8fa707f079..1163f32c3e62 100644
+> --- a/fs/xfs/xfs_rmap_item.c
+> +++ b/fs/xfs/xfs_rmap_item.c
+> @@ -567,7 +567,7 @@ xfs_rui_item_recover(
+>  	}
 >  
+>  	xfs_rmap_finish_one_cleanup(tp, rcur, error);
+> -	return xfs_defer_ops_capture_and_commit(tp, capture_list);
+> +	return xfs_defer_ops_capture_and_commit(tp, NULL, capture_list);
+>  
+>  abort_error:
+>  	xfs_rmap_finish_one_cleanup(tp, rcur, error);
 > 
 
