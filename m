@@ -2,133 +2,109 @@ Return-Path: <SRS0=eQWr=DM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C13EC4363A
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 18:25:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A8D5C4363A
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 21:38:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A830020B80
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 18:25:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AC1F2083B
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 21:38:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QeY7n+Nf"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OETLDuJW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727374AbgJESZB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Oct 2020 14:25:01 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:47164 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725960AbgJESZB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 14:25:01 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 095IADsI148617;
-        Mon, 5 Oct 2020 18:22:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=XztyanmUXP8e/FPi0h/yvZFZMEgiBxAIYf7blEVWLkk=;
- b=QeY7n+NfilVy8vUKo7slMbd8oP0K9PaQFI81yvyBfx3JQ8yrO6lk0z8dJXVDmAPPyzYH
- aNKBZETl4G+69O1uVZ4c8IOxHVTVflHn/4+A2hjvZ3wUnBa/L1JhkzDtI49YCxYSn+wR
- gjlBOMHgRNWJ1GRUCsXx8uyMVBMYTEA1Il4OclfVr7RrkBARg7hJZl/WM/Rb1+nLDcm1
- T65J32Zry83Px+oi5P1qY3+xtRI9r+WnEhFntzr87nReg7KPEpF1sC/JijN3Tndd9a89
- gB/EN/TweQvdFSvRFxqydno6SPiHJ8DoZCTVyeT2bfa7BFdzMz06Bi5ZBlqwY1db9cLc 3A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 33xetaq7d0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 05 Oct 2020 18:22:56 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 095IBRCS073703;
-        Mon, 5 Oct 2020 18:20:56 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 33y2vkug8e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 05 Oct 2020 18:20:56 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 095IKt20019015;
-        Mon, 5 Oct 2020 18:20:55 GMT
-Received: from localhost (/10.159.154.228)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 05 Oct 2020 11:20:55 -0700
-Subject: [PATCH v5 0/4] xfs: fix some log stalling problems in defer ops
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, bfoster@redhat.com, hch@lst.de
-Date:   Mon, 05 Oct 2020 11:20:54 -0700
-Message-ID: <160192205402.2569788.11403566753219528155.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S1726688AbgJEVi6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Oct 2020 17:38:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22149 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725616AbgJEVi6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 17:38:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601933937;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=/uKh6ABwi27qSOaqtppF+9iENKGQCpVsVBpROYvnfLE=;
+        b=OETLDuJWuRHxMhS0CCJKrevXwT9B5XR+Mt+edXxALaHSXQ+MPRMwnZcpGPkNrPTCg4d2cO
+        dy43unkGyDQDq421o6Aj5VvPVKT8YIawrNUgFdZAuQctTPwOiscOI6S8ZU0khK++GA5Mbx
+        n+PcPb6KQVHw5kuq0tmbRihry0KMjxs=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-443-g3lT7u5vOLmlDyOqn0yeGA-1; Mon, 05 Oct 2020 17:38:55 -0400
+X-MC-Unique: g3lT7u5vOLmlDyOqn0yeGA-1
+Received: by mail-wm1-f70.google.com with SMTP id g125so338430wme.1
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Oct 2020 14:38:55 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/uKh6ABwi27qSOaqtppF+9iENKGQCpVsVBpROYvnfLE=;
+        b=F7T+JbzXe1IiPcvdo+RJazsnH7sX+AK05fWmuRbqA9o8qbYl5dQLnZJS5DhTrSaHI7
+         CMfc3mSGg0fQ3DNMWyhsKFZIhDW+19reiqCJt5XmmGCM0wZRqFdKmxBmXKsPRIzUvsIM
+         tn2S3w6WOU0MXO8T/k04B6sy94qonSthyNK6DruOYccfnvAXUTtRPLSlnrRTSGwQGXzP
+         HfY+pu9Wb/OSYubtTjiYUKyz2fwrCXUMGa+ZE3m6LZijK1tWU5E9TOZY6RZXA8U+IeAp
+         /M7dUt3a7WRH+dauezhyXp/Lp2yc/i+9rG9lCn/kY83owmULIoggbKL16q9pTim1hJXK
+         /SRw==
+X-Gm-Message-State: AOAM5332jdoQNyAUWEBotH45N/M6jjvYKKHlJek9Nva9nHTaQSmUGwGc
+        qQZMZFbzMkqRZyQ71v4BCJoF8vMGBlS02zmIz2yt+eITpIurTGes39Cjwm21QgKu7QIqcpjXUc0
+        53d0GaqweGkW+SPsTOzWR
+X-Received: by 2002:adf:dcc7:: with SMTP id x7mr1354371wrm.203.1601933933881;
+        Mon, 05 Oct 2020 14:38:53 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJx78XmOCMzIsAp6024TuU7DYUqd4iLXSajPH/o4um6N79pyy3c7WvDky/8ITTU6RiUXMKXPrQ==
+X-Received: by 2002:adf:dcc7:: with SMTP id x7mr1354360wrm.203.1601933933704;
+        Mon, 05 Oct 2020 14:38:53 -0700 (PDT)
+Received: from localhost.localdomain.com ([84.19.91.81])
+        by smtp.gmail.com with ESMTPSA id r5sm1576499wrp.15.2020.10.05.14.38.52
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Oct 2020 14:38:53 -0700 (PDT)
+From:   Pavel Reichl <preichl@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v8 0/4] xfs: Remove wrappers for some semaphores
+Date:   Mon,  5 Oct 2020 23:38:48 +0200
+Message-Id: <20201005213852.233004-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9765 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- malwarescore=0 suspectscore=0 spamscore=0 phishscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2010050134
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9765 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
- clxscore=1015 priorityscore=1501 adultscore=0 mlxlogscore=999 phishscore=0
- impostorscore=0 malwarescore=0 suspectscore=0 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010050134
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+Remove some wrappers that we have in XFS around the read-write semaphore
+locks.
 
-This last series tries to fix some structural problems in the defer ops
-code.  The defer ops code has been finishing items in the wrong order --
-if a top level defer op creates items A and B, and finishing item A
-creates more defer ops A1 and A2, we'll put the new items on the end of
-the chain and process them in the order A B A1 A2.  This is kind of
-weird, since it's convenient for programmers to be able to think of A
-and B as an ordered sequence where all the work for A must finish before
-we move on to B, e.g. A A1 A2 D.
+The goal of this cleanup is to remove mrlock_t structure and its mr*()
+wrapper functions and replace it with native rw_semaphore type and its
+native calls.
 
-That isn't how the defer ops actually works, but so far we've been lucky
-that this hasn't ever caused serious problems.  This /will/, however,
-when we get to the atomic extent swap code, where for refcounting
-purposes it actually /does/ matter that unmap and map child intents
-execute in that order, and complete before we move on to the next extent
-in the files.  This also causes a very long chain of intent items to
-build up, which can exhaust memory.
+Changes in version 8:
+Patchset was rebased so it applies cleanly.
 
-We need to teach defer ops to finish all the sub-work associated with
-each defer op that the caller gave us, to minimize the length of the
-defer ops chains; and then we need to teach it to relog items
-periodically to avoid pinning the log tail.
+The patch 'xfs: replace mrlock_t with rw_semaphores' contains change in
+xfs_btree.c which transfers ownership of lock so lockdep won't assert
+(This was reported by Darrick and proposed change fixes this issue).
 
-v2: combine all the relog patches into one, and base the decision to
-relog an iten dependent on whether or not it's in an old checkpoint
-v3: fix backwards logic, don't relog items in the same checkpoint,
-and split up the changes
-v4: fix some comments, split the log changes into a separate patch
-v5: add a defer ops relog counter to the xfs stats file
+Pavel Reichl (4):
+  xfs: Refactor xfs_isilocked()
+  xfs: clean up whitespace in xfs_isilocked() calls
+  xfs: xfs_isilocked() can only check a single lock type
+  xfs: replace mrlock_t with rw_semaphores
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+ fs/xfs/libxfs/xfs_bmap.c  |   8 +--
+ fs/xfs/libxfs/xfs_btree.c |  10 ++++
+ fs/xfs/mrlock.h           |  78 -----------------------------
+ fs/xfs/xfs_file.c         |   3 +-
+ fs/xfs/xfs_inode.c        | 102 +++++++++++++++++++++++++-------------
+ fs/xfs/xfs_inode.h        |  25 ++++++----
+ fs/xfs/xfs_iops.c         |   4 +-
+ fs/xfs/xfs_linux.h        |   2 +-
+ fs/xfs/xfs_qm.c           |   2 +-
+ fs/xfs/xfs_super.c        |   6 +--
+ 10 files changed, 107 insertions(+), 133 deletions(-)
+ delete mode 100644 fs/xfs/mrlock.h
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=defer-ops-stalls-5.10
----
- fs/xfs/libxfs/xfs_defer.c  |   69 +++++++++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_bmap_item.c     |   27 +++++++++++++++++
- fs/xfs/xfs_extfree_item.c  |   29 ++++++++++++++++++
- fs/xfs/xfs_log.c           |   40 +++++++++++++++++++-------
- fs/xfs/xfs_log.h           |    2 +
- fs/xfs/xfs_refcount_item.c |   27 +++++++++++++++++
- fs/xfs/xfs_rmap_item.c     |   27 +++++++++++++++++
- fs/xfs/xfs_stats.c         |    4 +++
- fs/xfs/xfs_stats.h         |    1 +
- fs/xfs/xfs_trace.h         |    1 +
- fs/xfs/xfs_trans.h         |   10 ++++++
- 11 files changed, 226 insertions(+), 11 deletions(-)
+-- 
+2.26.2
 
