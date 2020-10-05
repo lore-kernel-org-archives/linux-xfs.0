@@ -7,73 +7,71 @@ X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22974C46466
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 18:20:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B63C4363A
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 18:20:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E15F920E65
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 18:20:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A96220B80
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 18:20:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="0BSEaN6L"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YCz7R/u+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727409AbgJESU3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Oct 2020 14:20:29 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:43244 "EHLO
+        id S1728007AbgJESUq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Oct 2020 14:20:46 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:43452 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725960AbgJESU3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 14:20:29 -0400
+        with ESMTP id S1726516AbgJESUq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 14:20:46 -0400
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 095IA7r6148431;
-        Mon, 5 Oct 2020 18:20:24 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 095IAEVM148664;
+        Mon, 5 Oct 2020 18:20:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=xZkUSFlkOYk7YWNWnDDEtG6vrbtb+Wzfp/eQUCrRaUk=;
- b=0BSEaN6LXzcquEbDEgQMy1qI7zHsC5+OvB+M9Suy/SqRcCQzVN5T/P9HKNSaaZWRZ7Cu
- E82e0vQQFBDJ7z4tjcz0/s3IpyeCPTOte1In02GFZCgkUQvPP4R3Kmmlff4d54Sy/pzF
- +WlkC7kyxGIMZDB6MpNnBicgD45hosFXeD6vpCEncSpcCNh7vQl0RSS0EQLRaqGLU2pJ
- fKLK5lhA7qeZXwvY6ZKs9mvRzQTHfo/xbE0RFsamcGxOhVsTyJdZVhvwtC0Gxj/BRq8b
- UTwfULSJ9Q6VDHkltQMR95IQW2qofuImHNQW4+WUbZ2fGEBF29ChCK5WeaSGve04tmWl JQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 33xetaq71m-1
+ bh=mAZikhXhPaOuZwHxX1b0xxaKKiPkttpGNFfMm3piz8A=;
+ b=YCz7R/u+kp+IEkVZI/+CGRjwBW8qqbGqtYseRBIym7PN4TQUy+ZyjB2yhwZ91l2bxfbY
+ mH4i9syC8FauJhFf0bmArKT5ENVoPQrxmKjVrwijia+1JVI3HjHkoZlANGllpXGJU6+Q
+ 7uhtTyQ+AaaWcfXzcgkueJqzftLdidQTLAOUU6ARqAEO13cKyAuc138NyAINMEQ4v/Pa
+ e0POqlVgqaratBWSU+ZZ60JnEglt9nKBAdprDwiK2VjT7m/pcBNP1mJ4XfbA2G5BFYE8
+ xhy4syPZsGqrf4kNVFMs9KgLqtp8+mJShLI1W+Ri/tdJXBW8RO4UUkBl86LY/E4d0+4+ kA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 33xetaq72j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 05 Oct 2020 18:20:23 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 095IB6S1109380;
-        Mon, 5 Oct 2020 18:20:23 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 33yyje7dmq-1
+        Mon, 05 Oct 2020 18:20:40 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 095IBSwt074119;
+        Mon, 5 Oct 2020 18:20:39 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 33y2vkufyt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 05 Oct 2020 18:20:23 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 095IKMhf016411;
-        Mon, 5 Oct 2020 18:20:22 GMT
+        Mon, 05 Oct 2020 18:20:39 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 095IKcKY015840;
+        Mon, 5 Oct 2020 18:20:38 GMT
 Received: from localhost (/10.159.154.228)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 05 Oct 2020 11:20:21 -0700
-Subject: [PATCH 4/5] xfs: xfs_defer_capture should absorb remaining block
- reservations
+        with ESMTP ; Mon, 05 Oct 2020 11:20:38 -0700
+Subject: [PATCH 1/3] xfs: clean up bmap intent item recovery checking
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
-Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
-        linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de,
-        bfoster@redhat.com
-Date:   Mon, 05 Oct 2020 11:20:20 -0700
-Message-ID: <160192202078.2568681.4629370960133664839.stgit@magnolia>
-In-Reply-To: <160192199449.2568681.679506644186725342.stgit@magnolia>
-References: <160192199449.2568681.679506644186725342.stgit@magnolia>
+Cc:     Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de
+Date:   Mon, 05 Oct 2020 11:20:37 -0700
+Message-ID: <160192203713.2569680.10453906219770429072.stgit@magnolia>
+In-Reply-To: <160192203063.2569680.11574287082065783377.stgit@magnolia>
+References: <160192203063.2569680.11574287082065783377.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9765 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 adultscore=0 bulkscore=0
- phishscore=0 mlxlogscore=999 mlxscore=0 spamscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010050134
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ malwarescore=0 suspectscore=1 spamscore=0 phishscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2010050134
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9765 signatures=668680
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
  clxscore=1015 priorityscore=1501 adultscore=0 mlxlogscore=999 phishscore=0
- impostorscore=0 malwarescore=0 suspectscore=3 lowpriorityscore=0
+ impostorscore=0 malwarescore=0 suspectscore=1 lowpriorityscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2010050134
 Precedence: bulk
@@ -82,91 +80,91 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When xfs_defer_capture extracts the deferred ops and transaction state
-from a transaction, it should record the remaining block reservations so
-that when we continue the dfops chain, we can reserve the same number of
-blocks to use.  We capture the reservations for both data and realtime
-volumes.
-
-This adds the requirement that every log intent item recovery function
-must be careful to reserve enough blocks to handle both itself and all
-defer ops that it can queue.  On the other hand, this enables us to do
-away with the handwaving block estimation nonsense that was going on in
-xlog_finish_defer_ops.
+The bmap intent item checking code in xfs_bui_item_recover is spread all
+over the function.  We should check the recovered log item at the top
+before we allocate any resources or do anything else, so do that.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_defer.c |    4 ++++
- fs/xfs/libxfs/xfs_defer.h |    4 ++++
- fs/xfs/xfs_log_recover.c  |   21 +++------------------
- 3 files changed, 11 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_bmap_item.c |   38 ++++++++++++--------------------------
+ 1 file changed, 12 insertions(+), 26 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_defer.c b/fs/xfs/libxfs/xfs_defer.c
-index 85c371d29e8d..10aeae7353ab 100644
---- a/fs/xfs/libxfs/xfs_defer.c
-+++ b/fs/xfs/libxfs/xfs_defer.c
-@@ -575,6 +575,10 @@ xfs_defer_ops_capture(
- 	dfc->dfc_tpflags = tp->t_flags & XFS_TRANS_LOWMODE;
- 	tp->t_flags &= ~XFS_TRANS_LOWMODE;
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index 126df48dae5f..c1f2cc3c42cb 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -437,8 +437,6 @@ xfs_bui_item_recover(
+ 	xfs_fsblock_t			inode_fsb;
+ 	xfs_filblks_t			count;
+ 	xfs_exntst_t			state;
+-	enum xfs_bmap_intent_type	type;
+-	bool				op_ok;
+ 	unsigned int			bui_type;
+ 	int				whichfork;
+ 	int				error = 0;
+@@ -456,16 +454,19 @@ xfs_bui_item_recover(
+ 			   XFS_FSB_TO_DADDR(mp, bmap->me_startblock));
+ 	inode_fsb = XFS_BB_TO_FSB(mp, XFS_FSB_TO_DADDR(mp,
+ 			XFS_INO_TO_FSB(mp, bmap->me_owner)));
+-	switch (bmap->me_flags & XFS_BMAP_EXTENT_TYPE_MASK) {
++	state = (bmap->me_flags & XFS_BMAP_EXTENT_UNWRITTEN) ?
++			XFS_EXT_UNWRITTEN : XFS_EXT_NORM;
++	whichfork = (bmap->me_flags & XFS_BMAP_EXTENT_ATTR_FORK) ?
++			XFS_ATTR_FORK : XFS_DATA_FORK;
++	bui_type = bmap->me_flags & XFS_BMAP_EXTENT_TYPE_MASK;
++	switch (bui_type) {
+ 	case XFS_BMAP_MAP:
+ 	case XFS_BMAP_UNMAP:
+-		op_ok = true;
+ 		break;
+ 	default:
+-		op_ok = false;
+-		break;
++		return -EFSCORRUPTED;
+ 	}
+-	if (!op_ok || startblock_fsb == 0 ||
++	if (startblock_fsb == 0 ||
+ 	    bmap->me_len == 0 ||
+ 	    inode_fsb == 0 ||
+ 	    startblock_fsb >= mp->m_sb.sb_dblocks ||
+@@ -493,32 +494,17 @@ xfs_bui_item_recover(
+ 	if (VFS_I(ip)->i_nlink == 0)
+ 		xfs_iflags_set(ip, XFS_IRECOVERY);
  
-+	/* Capture the remaining block reservations along with the dfops. */
-+	dfc->dfc_blkres = tp->t_blk_res - tp->t_blk_res_used;
-+	dfc->dfc_rtxres = tp->t_rtx_res - tp->t_rtx_res_used;
-+
- 	return dfc;
- }
+-	/* Process deferred bmap item. */
+-	state = (bmap->me_flags & XFS_BMAP_EXTENT_UNWRITTEN) ?
+-			XFS_EXT_UNWRITTEN : XFS_EXT_NORM;
+-	whichfork = (bmap->me_flags & XFS_BMAP_EXTENT_ATTR_FORK) ?
+-			XFS_ATTR_FORK : XFS_DATA_FORK;
+-	bui_type = bmap->me_flags & XFS_BMAP_EXTENT_TYPE_MASK;
+-	switch (bui_type) {
+-	case XFS_BMAP_MAP:
+-	case XFS_BMAP_UNMAP:
+-		type = bui_type;
+-		break;
+-	default:
+-		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+-		error = -EFSCORRUPTED;
+-		goto err_inode;
+-	}
+ 	xfs_trans_ijoin(tp, ip, 0);
  
-diff --git a/fs/xfs/libxfs/xfs_defer.h b/fs/xfs/libxfs/xfs_defer.h
-index 3af82ebc1249..5c0e59b69ffa 100644
---- a/fs/xfs/libxfs/xfs_defer.h
-+++ b/fs/xfs/libxfs/xfs_defer.h
-@@ -75,6 +75,10 @@ struct xfs_defer_capture {
- 	/* Deferred ops state saved from the transaction. */
- 	struct list_head	dfc_dfops;
- 	unsigned int		dfc_tpflags;
-+
-+	/* Block reservations for the data and rt devices. */
-+	unsigned int		dfc_blkres;
-+	unsigned int		dfc_rtxres;
- };
+ 	count = bmap->me_len;
+-	error = xfs_trans_log_finish_bmap_update(tp, budp, type, ip, whichfork,
+-			bmap->me_startoff, bmap->me_startblock, &count, state);
++	error = xfs_trans_log_finish_bmap_update(tp, budp, bui_type, ip,
++			whichfork, bmap->me_startoff, bmap->me_startblock,
++			&count, state);
+ 	if (error)
+ 		goto err_inode;
  
- /*
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 7804906d145b..1be5208e2a2f 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2439,27 +2439,12 @@ xlog_finish_defer_ops(
- {
- 	struct xfs_defer_capture *dfc, *next;
- 	struct xfs_trans	*tp;
--	int64_t			freeblks;
--	uint64_t		resblks;
- 	int			error = 0;
- 
- 	list_for_each_entry_safe(dfc, next, capture_list, dfc_list) {
--		/*
--		 * We're finishing the defer_ops that accumulated as a result
--		 * of recovering unfinished intent items during log recovery.
--		 * We reserve an itruncate transaction because it is the
--		 * largest permanent transaction type.  Since we're the only
--		 * user of the fs right now, take 93% (15/16) of the available
--		 * free blocks.  Use weird math to avoid a 64-bit division.
--		 */
--		freeblks = percpu_counter_sum(&mp->m_fdblocks);
--		if (freeblks <= 0)
--			return -ENOSPC;
--
--		resblks = min_t(uint64_t, UINT_MAX, freeblks);
--		resblks = (resblks * 15) >> 4;
--		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate, resblks,
--				0, XFS_TRANS_RESERVE, &tp);
-+		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_itruncate,
-+				dfc->dfc_blkres, dfc->dfc_rtxres,
-+				XFS_TRANS_RESERVE, &tp);
- 		if (error)
- 			return error;
- 
+ 	if (count > 0) {
+-		ASSERT(type == XFS_BMAP_UNMAP);
++		ASSERT(bui_type == XFS_BMAP_UNMAP);
+ 		irec.br_startblock = bmap->me_startblock;
+ 		irec.br_blockcount = count;
+ 		irec.br_startoff = bmap->me_startoff;
 
