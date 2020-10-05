@@ -1,90 +1,64 @@
-Return-Path: <SRS0=mrUW=DL=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=eQWr=DM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E23FC4363C
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Oct 2020 22:31:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ED04C4363A
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 06:15:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C7502064C
-	for <linux-xfs@archiver.kernel.org>; Sun,  4 Oct 2020 22:31:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5ACB2083B
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 06:15:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kDvjigQz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725831AbgJDWbz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 4 Oct 2020 18:31:55 -0400
-Received: from sandeen.net ([63.231.237.45]:44950 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725828AbgJDWbz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 4 Oct 2020 18:31:55 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8768F4872CE;
-        Sun,  4 Oct 2020 17:30:59 -0500 (CDT)
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-References: <20201002201834.GC49524@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] xfs_scrub: don't use statvfs to collect data volume block
- counts
-Message-ID: <b958b3f9-31b1-de2f-f73a-8ad6f4c15054@sandeen.net>
-Date:   Sun, 4 Oct 2020 17:31:53 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.3.1
+        id S1725853AbgJEGPz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Oct 2020 02:15:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47688 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbgJEGPz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 02:15:55 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2BC3C0613CE
+        for <linux-xfs@vger.kernel.org>; Sun,  4 Oct 2020 23:15:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=S2wxAjtcjS/fl1xvDzNC10ljuFzIX5sQyByzbF5P8Mg=; b=kDvjigQzsno/uq30Jb6kBokfrl
+        0xvLW4UDKEE5JePhrhdkNZyksXfm2IM++cidghdedKZTlFO7yQPznOBhiWnW56ENeixHnLpkRYkGQ
+        VGMTIs6MyNWncDnBkZr/7WziK4gFqkzzt5sNPqmQTx/TbbGa6fyiPHOm2O7ZnY0K5rZiO2qkO/Y6q
+        LBWGzpso0XHreUgCCu3Da+UbcP409cXFLqAQlv5hOMeC1/XN2MkKXdSbIyjIb42DsR4gYhtHnTVjC
+        T/IpBgIupQgn/PvJQPZZ59en3QzifON08YzAqSLTzpN1r7aSMdMJti4Nz0iiIPvjP2aG7qSAV9mOl
+        rYsrE8dw==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kPJmm-0000bI-0D; Mon, 05 Oct 2020 06:15:48 +0000
+Date:   Mon, 5 Oct 2020 07:15:47 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs_repair: coordinate parallel updates to the rt
+ bitmap
+Message-ID: <20201005061547.GA1856@infradead.org>
+References: <20201002201831.GA49547@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20201002201834.GC49524@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201002201831.GA49547@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Fri, Oct 02, 2020 at 01:18:31PM -0700, Darrick J. Wong wrote:
+> +			error2 = process_rt_rec(mp, &irec, ino, tot, check_dups);
 
+This adds a 81 char line.
 
-On 10/2/20 3:18 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The function scrub_scan_estimate_blocks naïvely uses the statvfs counts
-> to estimate the size and free blocks on the data volume.  Unfortunately,
-> it fails to account for the fact that statvfs can return the size and
-> free counts for the realtime volume if the root directory has the
-> rtinherit flag set, which leads to phase 7 reporting totally absurd
-> quantities.
-> 
-> The XFS_IOC_FSCOUNTS ioctl returns the size and free block count of both
-> volumes correctly, so use that instead.
-> 
-> Fixes: 604dd3345f35 ("xfs_scrub: filesystem counter collection functions")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  scrub/fscounters.c |    6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-> index f9d64f8c008f..a2ca0b3f018c 100644
-> --- a/scrub/fscounters.c
-> +++ b/scrub/fscounters.c
-> @@ -154,10 +154,8 @@ scrub_scan_estimate_blocks(
->  
->  	sfs.f_bfree += rb.resblks_avail;
->  
-> -	*d_blocks = sfs.f_blocks;
-> -	if (ctx->mnt.fsgeom.logstart > 0)
-> -		*d_blocks += ctx->mnt.fsgeom.logblocks;
-> -	*d_bfree = sfs.f_bfree;
-> +	*d_blocks = ctx->mnt.fsgeom.datablocks;
-> +	*d_bfree = fc.freedata;
->  	*r_blocks = ctx->mnt.fsgeom.rtblocks;
->  	*r_bfree = fc.freertx;
->  	*f_files = sfs.f_files;
-> 
+Except fo that:
 
-could this just use fc.freeino/fc.allocino too and drop statvfrsr altogether?
-(or did I lose track of differences between the counters on the 2 interfaces...)
-
--Eric 
+Reviewed-by: Christoph Hellwig <hch@lst.de>
