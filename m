@@ -2,60 +2,105 @@ Return-Path: <SRS0=eQWr=DM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 784D7C4363A
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 06:30:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AABA5C4363A
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 15:21:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22797207BC
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 06:30:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46F05207BC
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 15:21:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="u81TTUfE"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MpgbUFxA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725857AbgJEGaD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Oct 2020 02:30:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49872 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725267AbgJEGaD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 02:30:03 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50936C0613CE
-        for <linux-xfs@vger.kernel.org>; Sun,  4 Oct 2020 23:30:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=eFWltcAp+QaOXxYeHnIPP5/9ZSIWzVX7NYl4dP4MX8g=; b=u81TTUfEfykmh5Pz8IZPX4iC+y
-        hv976Uv4lRpVt7y9S2heCAbn87regMTUwVClGzGkjklAd16KKyy8faYILet21u7iZtD8H+Sb1Mcz2
-        qf1atLN/qsFck0H91LEU7Byp7nI7vyu2KxV/qMr0P0oCbMjJkrFNB8dDkGpfCUU8YBbFPX2O7BBjh
-        kJAwZrDTslLDRQZ9Y5Yxso0ByysoWujPN3ZFR4Uy4CgALtcBG0otk2zZtMYwg8SLfhsnIcjxGj4yB
-        +uu0iqv+ia1xtQcWDUxHmY5oGj6V+ZWk0I2QRXsCvXMBQso1cIPY2rQ8wAwhlJWOiS6Q+KXooPOb/
-        tPXvXIrA==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kPK0X-0001HI-O5; Mon, 05 Oct 2020 06:30:01 +0000
-Date:   Mon, 5 Oct 2020 07:30:01 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: streamline xfs_getfsmap performance
-Message-ID: <20201005063001.GA4302@infradead.org>
-References: <160161415855.1967459.13623226657245838117.stgit@magnolia>
- <160161417069.1967459.11222290374186255598.stgit@magnolia>
- <20201002071505.GB32516@infradead.org>
- <20201002175808.GZ49547@magnolia>
+        id S1726573AbgJEPVH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Oct 2020 11:21:07 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:51195 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725960AbgJEPVH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 11:21:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601911265;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=hnW4zQ5CZEz0tnuomz7d5q0aSypy1kjZEOXZe9vGNgo=;
+        b=MpgbUFxAWjoEfIEXIqS1oOIQg/ylyKsMsUO+lQHnLyuA54+7wvy2483bH4BeYoBtFYghoR
+        A/z/nECD67pHdvC885xMbDTSf2D+rGuQ0xQ6xq1iUt3sjn+Gi4Q5EvAlsaEhjL1s4Xf6ye
+        /nYFgJfCizl71woXZKlZyDiujNkS4H0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-507-8HSL-yvDOwSdMR8iD516nw-1; Mon, 05 Oct 2020 11:21:04 -0400
+X-MC-Unique: 8HSL-yvDOwSdMR8iD516nw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3F3CE1DDEF;
+        Mon,  5 Oct 2020 15:21:03 +0000 (UTC)
+Received: from bfoster.redhat.com (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D0A5310001B3;
+        Mon,  5 Oct 2020 15:21:02 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH v2 2/2] xfs: kick extra large ioends to completion workqueue
+Date:   Mon,  5 Oct 2020 11:21:02 -0400
+Message-Id: <20201005152102.15797-1-bfoster@redhat.com>
+In-Reply-To: <20201002153357.56409-3-bfoster@redhat.com>
+References: <20201002153357.56409-3-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201002175808.GZ49547@magnolia>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 02, 2020 at 10:58:08AM -0700, Darrick J. Wong wrote:
-> On my 2TB /home partition, the runtime to retrieve 6.4 million fsmap
-> records drops from 107s to 85s.
+We've had reports of soft lockup warnings in the iomap ioend
+completion path due to very large bios and/or bio chains. Divert any
+ioends with 256k or more pages to process to the workqueue so
+completion occurs in non-atomic context and can reschedule to avoid
+soft lockup warnings.
 
-Please add these sorts of numbers to the commit log..
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+v2:
+- Fix type in macro.
+
+ fs/xfs/xfs_aops.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 3e061ea99922..c00cc0624986 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -30,6 +30,13 @@ XFS_WPC(struct iomap_writepage_ctx *ctx)
+ 	return container_of(ctx, struct xfs_writepage_ctx, ctx);
+ }
+ 
++/*
++ * Kick extra large ioends off to the workqueue. Completion will process a lot
++ * of pages for a large bio or bio chain and a non-atomic context is required to
++ * reschedule and avoid soft lockup warnings.
++ */
++#define XFS_LARGE_IOEND	(262144ULL << PAGE_SHIFT)
++
+ /*
+  * Fast and loose check if this write could update the on-disk inode size.
+  */
+@@ -239,7 +246,8 @@ static inline bool xfs_ioend_needs_workqueue(struct iomap_ioend *ioend)
+ {
+ 	return ioend->io_private ||
+ 		ioend->io_type == IOMAP_UNWRITTEN ||
+-		(ioend->io_flags & IOMAP_F_SHARED);
++		(ioend->io_flags & IOMAP_F_SHARED) ||
++		(ioend->io_size >= XFS_LARGE_IOEND);
+ }
+ 
+ STATIC void
+-- 
+2.25.4
+
