@@ -2,53 +2,60 @@ Return-Path: <SRS0=eQWr=DM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E050C4363A
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 06:25:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 784D7C4363A
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 06:30:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3A88207BC
-	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 06:25:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22797207BC
+	for <linux-xfs@archiver.kernel.org>; Mon,  5 Oct 2020 06:30:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="u81TTUfE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725888AbgJEGZH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 5 Oct 2020 02:25:07 -0400
-Received: from verein.lst.de ([213.95.11.211]:57789 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725267AbgJEGZG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 5 Oct 2020 02:25:06 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 2095168B05; Mon,  5 Oct 2020 08:25:03 +0200 (CEST)
-Date:   Mon, 5 Oct 2020 08:25:02 +0200
-From:   Christoph Hellwig <hch@lst.de>
+        id S1725857AbgJEGaD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 5 Oct 2020 02:30:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49872 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbgJEGaD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Oct 2020 02:30:03 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50936C0613CE
+        for <linux-xfs@vger.kernel.org>; Sun,  4 Oct 2020 23:30:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=eFWltcAp+QaOXxYeHnIPP5/9ZSIWzVX7NYl4dP4MX8g=; b=u81TTUfEfykmh5Pz8IZPX4iC+y
+        hv976Uv4lRpVt7y9S2heCAbn87regMTUwVClGzGkjklAd16KKyy8faYILet21u7iZtD8H+Sb1Mcz2
+        qf1atLN/qsFck0H91LEU7Byp7nI7vyu2KxV/qMr0P0oCbMjJkrFNB8dDkGpfCUU8YBbFPX2O7BBjh
+        kJAwZrDTslLDRQZ9Y5Yxso0ByysoWujPN3ZFR4Uy4CgALtcBG0otk2zZtMYwg8SLfhsnIcjxGj4yB
+        +uu0iqv+ia1xtQcWDUxHmY5oGj6V+ZWk0I2QRXsCvXMBQso1cIPY2rQ8wAwhlJWOiS6Q+KXooPOb/
+        tPXvXIrA==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kPK0X-0001HI-O5; Mon, 05 Oct 2020 06:30:01 +0000
+Date:   Mon, 5 Oct 2020 07:30:01 +0100
+From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v5.2 3/3] xfs: fix an incore inode UAF in
- xfs_bui_recover
-Message-ID: <20201005062502.GA11883@lst.de>
-References: <160140142711.830434.5161910313856677767.stgit@magnolia> <160140144660.830434.10498291551366134327.stgit@magnolia> <20201002042236.GV49547@magnolia> <20201002073006.GE9900@lst.de> <20201002162958.GX49547@magnolia>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: streamline xfs_getfsmap performance
+Message-ID: <20201005063001.GA4302@infradead.org>
+References: <160161415855.1967459.13623226657245838117.stgit@magnolia>
+ <160161417069.1967459.11222290374186255598.stgit@magnolia>
+ <20201002071505.GB32516@infradead.org>
+ <20201002175808.GZ49547@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201002162958.GX49547@magnolia>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20201002175808.GZ49547@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 02, 2020 at 09:29:58AM -0700, Darrick J. Wong wrote:
-> > Instead of coming up with our own inode unlocking and release schemes,
-> > can't we just require that the inode is joinged by passing the lock
-> > flags to xfs_trans_ijoin, and piggy back on xfs_trans_commit unlocking
-> > it in that case?
-> 
-> Yes, and let's also xfs_iget(capture_ip->i_ino) to increase the incore
-> inode's refcount, which would make it so that the caller would still
-> unlock and rele the reference that they got.
+On Fri, Oct 02, 2020 at 10:58:08AM -0700, Darrick J. Wong wrote:
+> On my 2TB /home partition, the runtime to retrieve 6.4 million fsmap
+> records drops from 107s to 85s.
 
-Please use ihold(VFS_I(capture_ip)) as that is a lot more efficient.
-
-Can you resend the whole 2 series?  I'm lost with all the incremental
-updates for individual patches.
+Please add these sorts of numbers to the commit log..
