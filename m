@@ -2,252 +2,147 @@ Return-Path: <SRS0=guuR=DN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F588C4363D
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 11:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80005C4727D
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 12:44:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B1AA207EA
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 11:33:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 34E8620782
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 12:44:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UFDIBXbC"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MXOlvgBO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725977AbgJFLdh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Oct 2020 07:33:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36770 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725947AbgJFLdh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 07:33:37 -0400
-Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B80FC061755
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2020 04:33:37 -0700 (PDT)
-Received: by mail-pl1-x644.google.com with SMTP id x5so1076298plo.6
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Oct 2020 04:33:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Xueo/4Vgz54bn5rUf7hU35YehDk79zMtWhitXILn5d0=;
-        b=UFDIBXbCkRmDXwPVJArpE0fZK2h+j9nnyYsKHw7MAxg7/bnMkt6F8fhKnF0dX90VQk
-         Zdnmp9FMKd6qAbm/Pf/jY2q+6IePNBv5jGRxgQN/ABO0LyBsXTS5FnNRc6qbbJnDJ1ay
-         W/P0ZwsyUFpF7zrTJPzPAvprl/Uwwr8hrTYuWAiKacMcdO13az0tt3a0NZpH6DB5WX3T
-         3ZoIfpxisUiwdPUrIj2NDtnzmLmZA7saPs8sHXb5gmNTFxjjchnRBsC3VQmZ4AHr6hmB
-         rrIZ1bRJvWEN6rg9tWO/Oe9PIYmHG7/u3Q3nmjRI0BNbbVJ+qIiaWYtdtodkTs3u9gdq
-         qFuA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Xueo/4Vgz54bn5rUf7hU35YehDk79zMtWhitXILn5d0=;
-        b=O4Cs1LMXHkK+2R7anAbBasO61KF7ik79LtDKkBOEOjhIBp0ItUkhPto8DcDbCuzG/x
-         ywTifecrTtTwokIfNVm6awzfUfd5DIAxTdR4Dg0/gZHYgqX7q3aPltqlhRW82nO8upy9
-         Bc1JAIoXLzh1AlovihjiWbQml8CXpoPuaV6S4MUYuaBeaZ3HmbR85oeQKePErJeV616H
-         fEPxYXLH+hy6d/irYH26H/FWCv2K21FAfdN2RxsCbKHRbbyjlkQck7qrc5ZImTP4Ohl+
-         KoAp21icGtuwCVdC5aX4lIjkytMYNf61+zsD1GeePavMrZs0X3SvfUnP82CIsbrSxq8L
-         gwfg==
-X-Gm-Message-State: AOAM532y58Nyet95xtXXeDDrhc5foArJ3fhjuKn3fLojARUTg3iPkeGh
-        sXWG7kPFKS2eAQPOaOa4PzBMnrg4UkCT
-X-Google-Smtp-Source: ABdhPJyGNeBzgvPbwxjcAd+Z+r6aFBeiMu/e2d2z4YvaxyypX/1o3SaonyKl/SU7gIZWAk3kogVxhg==
-X-Received: by 2002:a17:90a:890f:: with SMTP id u15mr3874255pjn.147.1601984016973;
-        Tue, 06 Oct 2020 04:33:36 -0700 (PDT)
-Received: from [10.76.92.41] ([103.7.29.7])
-        by smtp.gmail.com with ESMTPSA id 131sm3412899pfy.5.2020.10.06.04.33.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 06 Oct 2020 04:33:36 -0700 (PDT)
-Subject: Re: [PATCH v2 3/4] xfs: check tp->t_dqinfo value instead of the
- XFS_TRANS_DQ_DIRTY flag
+        id S1726555AbgJFMor (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Oct 2020 08:44:47 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50716 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726362AbgJFMor (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 08:44:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601988285;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lioyiK8xjC0fOm4WWDInz8tqPP/NCfGvAyNyJiaFTe4=;
+        b=MXOlvgBOgkrkQ1u8zZlyqM3jNh6M/oYx3lwxlnfixib0oNSVgUzQwU7LNkO066pnU8akE7
+        CG1OX4VECfSF4XDaemcxe8oTEHLICytDKE0+wqUroVreKqlR7xHT8KC82q+6FCg9VE+fut
+        PAL1O2i5ihTobjMy1iqGlMiWg0uFzgs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-5-Dt7HI9lqN7extXnoOeL94A-1; Tue, 06 Oct 2020 08:44:43 -0400
+X-MC-Unique: Dt7HI9lqN7extXnoOeL94A-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9DF8A804001;
+        Tue,  6 Oct 2020 12:44:42 +0000 (UTC)
+Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2BC8F5D9CD;
+        Tue,  6 Oct 2020 12:44:42 +0000 (UTC)
+Date:   Tue, 6 Oct 2020 08:44:40 -0400
+From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
-References: <1601126073-32453-1-git-send-email-kaixuxia@tencent.com>
- <1601126073-32453-4-git-send-email-kaixuxia@tencent.com>
- <20201006044237.GV49547@magnolia>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <dc859a28-330d-e031-6a28-f0649ca27cb3@gmail.com>
-Date:   Tue, 6 Oct 2020 19:33:28 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] xfs: kick extra large ioends to completion
+ workqueue
+Message-ID: <20201006124440.GA50358@bfoster>
+References: <20201002153357.56409-3-bfoster@redhat.com>
+ <20201005152102.15797-1-bfoster@redhat.com>
+ <20201006035537.GD49524@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20201006044237.GV49547@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201006035537.GD49524@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2020/10/6 12:42, Darrick J. Wong wrote:
-> On Sat, Sep 26, 2020 at 09:14:32PM +0800, xiakaixu1987@gmail.com wrote:
->> From: Kaixu Xia <kaixuxia@tencent.com>
->>
->> Nowadays the only things that the XFS_TRANS_DQ_DIRTY flag seems to do
->> are indicates the tp->t_dqinfo->dqs[XFS_QM_TRANS_{USR,GRP,PRJ}] values
->> changed and check in xfs_trans_apply_dquot_deltas() and the unreserve
->> variant xfs_trans_unreserve_and_mod_dquots(). Actually, we also can
->> use the tp->t_dqinfo value instead of the XFS_TRANS_DQ_DIRTY flag, that
->> is to say, we allocate the new tp->t_dqinfo only when the qtrx values
->> changed, so the tp->t_dqinfo value isn't NULL equals the XFS_TRANS_DQ_DIRTY
->> flag is set, we only need to check if tp->t_dqinfo == NULL in
->> xfs_trans_apply_dquot_deltas() and its unreserve variant to determine
->> whether lock all of the dquots and join them to the transaction.
->>
->> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
->> ---
->>  fs/xfs/libxfs/xfs_shared.h |  1 -
->>  fs/xfs/xfs_inode.c         |  8 +-------
->>  fs/xfs/xfs_trans_dquot.c   | 20 ++------------------
->>  3 files changed, 3 insertions(+), 26 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
->> index c795ae47b3c9..8c61a461bf7b 100644
->> --- a/fs/xfs/libxfs/xfs_shared.h
->> +++ b/fs/xfs/libxfs/xfs_shared.h
->> @@ -62,7 +62,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
->>  #define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
->>  #define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
->>  #define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
->> -#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
->>  #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
->>  #define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
->>  #define XFS_TRANS_RES_FDBLKS	0x80	/* reserve newly freed blocks */
->> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->> index 49624973eecc..9108eed0ea45 100644
->> --- a/fs/xfs/xfs_inode.c
->> +++ b/fs/xfs/xfs_inode.c
->> @@ -941,7 +941,6 @@ xfs_dir_ialloc(
->>  	xfs_buf_t	*ialloc_context = NULL;
->>  	int		code;
->>  	void		*dqinfo;
->> -	uint		tflags;
->>  
->>  	tp = *tpp;
->>  	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
->> @@ -1000,12 +999,9 @@ xfs_dir_ialloc(
->>  		 * and attach it to the next transaction.
->>  		 */
->>  		dqinfo = NULL;
->> -		tflags = 0;
->>  		if (tp->t_dqinfo) {
->>  			dqinfo = (void *)tp->t_dqinfo;
->>  			tp->t_dqinfo = NULL;
->> -			tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
->> -			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
->>  		}
->>  
->>  		code = xfs_trans_roll(&tp);
->> @@ -1013,10 +1009,8 @@ xfs_dir_ialloc(
->>  		/*
->>  		 * Re-attach the quota info that we detached from prev trx.
->>  		 */
->> -		if (dqinfo) {
->> +		if (dqinfo)
->>  			tp->t_dqinfo = dqinfo;
->> -			tp->t_flags |= tflags;
->> -		}
->>  
->>  		if (code) {
->>  			xfs_buf_relse(ialloc_context);
->> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
->> index fe45b0c3970c..0ebfd7930382 100644
->> --- a/fs/xfs/xfs_trans_dquot.c
->> +++ b/fs/xfs/xfs_trans_dquot.c
->> @@ -84,13 +84,6 @@ xfs_trans_dup_dqinfo(
->>  
->>  	xfs_trans_alloc_dqinfo(ntp);
->>  
->> -	/*
->> -	 * Because the quota blk reservation is carried forward,
->> -	 * it is also necessary to carry forward the DQ_DIRTY flag.
->> -	 */
->> -	if (otp->t_flags & XFS_TRANS_DQ_DIRTY)
->> -		ntp->t_flags |= XFS_TRANS_DQ_DIRTY;
->> -
->>  	for (j = 0; j < XFS_QM_TRANS_DQTYPES; j++) {
->>  		oqa = otp->t_dqinfo->dqs[j];
->>  		nqa = ntp->t_dqinfo->dqs[j];
->> @@ -143,9 +136,6 @@ xfs_trans_mod_dquot_byino(
->>  	    xfs_is_quota_inode(&mp->m_sb, ip->i_ino))
->>  		return;
->>  
->> -	if (tp->t_dqinfo == NULL)
->> -		xfs_trans_alloc_dqinfo(tp);
+On Mon, Oct 05, 2020 at 08:55:37PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 05, 2020 at 11:21:02AM -0400, Brian Foster wrote:
+> > We've had reports of soft lockup warnings in the iomap ioend
+> > completion path due to very large bios and/or bio chains. Divert any
+> > ioends with 256k or more pages to process to the workqueue so
+> > completion occurs in non-atomic context and can reschedule to avoid
+> > soft lockup warnings.
 > 
-> This change ought to be a separate clean patch.
-
-Yeah, I'll do that in the next version.
+> Hmmmm... is there any way we can just make end_page_writeback faster?
 > 
->> -
->>  	if (XFS_IS_UQUOTA_ON(mp) && ip->i_udquot)
->>  		(void) xfs_trans_mod_dquot(tp, ip->i_udquot, field, delta);
->>  	if (XFS_IS_GQUOTA_ON(mp) && ip->i_gdquot)
->> @@ -273,8 +263,6 @@ xfs_trans_mod_dquot(
->>  
->>  	if (delta)
->>  		trace_xfs_trans_mod_dquot_after(qtrx);
->> -
->> -	tp->t_flags |= XFS_TRANS_DQ_DIRTY;
->>  }
->>  
->>  
->> @@ -351,7 +339,7 @@ xfs_trans_apply_dquot_deltas(
->>  	int64_t			totalbdelta;
->>  	int64_t			totalrtbdelta;
->>  
->> -	if (!(tp->t_flags & XFS_TRANS_DQ_DIRTY))
->> +	if (!tp->t_dqinfo)
->>  		return;
->>  
->>  	ASSERT(tp->t_dqinfo);
->> @@ -493,7 +481,7 @@ xfs_trans_unreserve_and_mod_dquots(
->>  	struct xfs_dqtrx	*qtrx, *qa;
->>  	bool			locked;
->>  
->> -	if (!tp->t_dqinfo || !(tp->t_flags & XFS_TRANS_DQ_DIRTY))
->> +	if (!tp->t_dqinfo)
->>  		return;
->>  
->>  	for (j = 0; j < XFS_QM_TRANS_DQTYPES; j++) {
->> @@ -698,7 +686,6 @@ xfs_trans_dqresv(
->>  	 * because we don't have the luxury of a transaction envelope then.
->>  	 */
->>  	if (tp) {
->> -		ASSERT(tp->t_dqinfo);
->>  		ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
->>  		if (nblks != 0)
->>  			xfs_trans_mod_dquot(tp, dqp,
->> @@ -752,9 +739,6 @@ xfs_trans_reserve_quota_bydquots(
->>  	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
->>  		return 0;
->>  
->> -	if (tp && tp->t_dqinfo == NULL)
->> -		xfs_trans_alloc_dqinfo(tp);
-> 
-> Um, who allocates the dqinfo in this case?
 
-The function call chain here is xfs_trans_reserve_quota_bydquots()->
-xfs_trans_dqresv()->xfs_trans_mod_dquot()(tp is non-null), thus the
-dqinfo will be allocated in xfs_trans_mod_dquot() function. Actually,
-now we do the allocation only in xfs_trans_mod_dquot() function when
-the tp->t_dqinfo->dqs[XFS_QM_TRANS_{USR,GRP,PRJ}] values changed.
+I'm not sure that would help us. It's not doing much work as it is. The
+issue is just that we effectively queue so many of them to a single bio
+completion due to either bio chaining or the physical page merging
+implemented by multipage bvecs.
 
-Thanks,
-Kaixu
+> TBH it still strikes me as odd that we'd cap ioends this way just to
+> cover for the fact that we have to poke each and every page.
 > 
+
+I suppose, but it's not like we don't already account for constructing
+bios that must be handed off to a workqueue for completion processing.
+Also FWIW this doesn't cap ioend size like my original patch does. It
+just updates XFS to send them to the completion workqueue.
+
+> (Also, those 'bool atomic' in the other patch make me kind of nervous --
+> how do we make sure (from a QA perspective) that nobody gets that wrong?)
+> 
+
+Yeah, that's a bit ugly. If somebody has a better idea on the factoring
+I'm interested in hearing about it. My understanding is that in_atomic()
+is not reliable and/or generally frowned upon, hence the explicit
+context parameter.
+
+Also, I don't have the error handy but my development kernel complains
+quite clearly if we make a call that can potentially sleep in atomic
+context. I believe this is the purpose of the __might_sleep()
+(CONFIG_DEBUG_ATOMIC_SLEEP) annotation.
+
+Brian
+
 > --D
 > 
->> -
->>  	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
->>  
->>  	if (udqp) {
->> -- 
->> 2.20.0
->>
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > v2:
+> > - Fix type in macro.
+> > 
+> >  fs/xfs/xfs_aops.c | 10 +++++++++-
+> >  1 file changed, 9 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > index 3e061ea99922..c00cc0624986 100644
+> > --- a/fs/xfs/xfs_aops.c
+> > +++ b/fs/xfs/xfs_aops.c
+> > @@ -30,6 +30,13 @@ XFS_WPC(struct iomap_writepage_ctx *ctx)
+> >  	return container_of(ctx, struct xfs_writepage_ctx, ctx);
+> >  }
+> >  
+> > +/*
+> > + * Kick extra large ioends off to the workqueue. Completion will process a lot
+> > + * of pages for a large bio or bio chain and a non-atomic context is required to
+> > + * reschedule and avoid soft lockup warnings.
+> > + */
+> > +#define XFS_LARGE_IOEND	(262144ULL << PAGE_SHIFT)
+> > +
+> >  /*
+> >   * Fast and loose check if this write could update the on-disk inode size.
+> >   */
+> > @@ -239,7 +246,8 @@ static inline bool xfs_ioend_needs_workqueue(struct iomap_ioend *ioend)
+> >  {
+> >  	return ioend->io_private ||
+> >  		ioend->io_type == IOMAP_UNWRITTEN ||
+> > -		(ioend->io_flags & IOMAP_F_SHARED);
+> > +		(ioend->io_flags & IOMAP_F_SHARED) ||
+> > +		(ioend->io_size >= XFS_LARGE_IOEND);
+> >  }
+> >  
+> >  STATIC void
+> > -- 
+> > 2.25.4
+> > 
+> 
 
--- 
-kaixuxia
