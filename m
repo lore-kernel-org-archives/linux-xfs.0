@@ -2,147 +2,116 @@ Return-Path: <SRS0=guuR=DN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80005C4727D
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 12:44:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB377C4363D
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 13:54:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34E8620782
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 12:44:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MXOlvgBO"
+	by mail.kernel.org (Postfix) with ESMTP id 97BC720789
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 13:54:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726555AbgJFMor (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Oct 2020 08:44:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50716 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726362AbgJFMor (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 08:44:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601988285;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=lioyiK8xjC0fOm4WWDInz8tqPP/NCfGvAyNyJiaFTe4=;
-        b=MXOlvgBOgkrkQ1u8zZlyqM3jNh6M/oYx3lwxlnfixib0oNSVgUzQwU7LNkO066pnU8akE7
-        CG1OX4VECfSF4XDaemcxe8oTEHLICytDKE0+wqUroVreKqlR7xHT8KC82q+6FCg9VE+fut
-        PAL1O2i5ihTobjMy1iqGlMiWg0uFzgs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-5-Dt7HI9lqN7extXnoOeL94A-1; Tue, 06 Oct 2020 08:44:43 -0400
-X-MC-Unique: Dt7HI9lqN7extXnoOeL94A-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1725942AbgJFNyc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Oct 2020 09:54:32 -0400
+Received: from sandeen.net ([63.231.237.45]:37064 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725906AbgJFNyc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 6 Oct 2020 09:54:32 -0400
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9DF8A804001;
-        Tue,  6 Oct 2020 12:44:42 +0000 (UTC)
-Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2BC8F5D9CD;
-        Tue,  6 Oct 2020 12:44:42 +0000 (UTC)
-Date:   Tue, 6 Oct 2020 08:44:40 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] xfs: kick extra large ioends to completion
- workqueue
-Message-ID: <20201006124440.GA50358@bfoster>
-References: <20201002153357.56409-3-bfoster@redhat.com>
- <20201005152102.15797-1-bfoster@redhat.com>
- <20201006035537.GD49524@magnolia>
+        by sandeen.net (Postfix) with ESMTPSA id B002848C697;
+        Tue,  6 Oct 2020 08:53:33 -0500 (CDT)
+To:     Pavel Reichl <preichl@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20201005213852.233004-1-preichl@redhat.com>
+ <20201005213852.233004-5-preichl@redhat.com>
+ <20201006041426.GH49547@magnolia>
+ <1796931d-fe5d-2d81-e5bc-2369f89a4688@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH v8 4/4] xfs: replace mrlock_t with rw_semaphores
+Message-ID: <6079f146-e4e9-2b6f-4a9f-b18f840f924b@sandeen.net>
+Date:   Tue, 6 Oct 2020 08:54:30 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201006035537.GD49524@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <1796931d-fe5d-2d81-e5bc-2369f89a4688@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 05, 2020 at 08:55:37PM -0700, Darrick J. Wong wrote:
-> On Mon, Oct 05, 2020 at 11:21:02AM -0400, Brian Foster wrote:
-> > We've had reports of soft lockup warnings in the iomap ioend
-> > completion path due to very large bios and/or bio chains. Divert any
-> > ioends with 256k or more pages to process to the workqueue so
-> > completion occurs in non-atomic context and can reschedule to avoid
-> > soft lockup warnings.
+On 10/6/20 5:50 AM, Pavel Reichl wrote:
 > 
-> Hmmmm... is there any way we can just make end_page_writeback faster?
 > 
-
-I'm not sure that would help us. It's not doing much work as it is. The
-issue is just that we effectively queue so many of them to a single bio
-completion due to either bio chaining or the physical page merging
-implemented by multipage bvecs.
-
-> TBH it still strikes me as odd that we'd cap ioends this way just to
-> cover for the fact that we have to poke each and every page.
+> On 10/6/20 6:14 AM, Darrick J. Wong wrote:
+>> On Mon, Oct 05, 2020 at 11:38:52PM +0200, Pavel Reichl wrote:
+>>> Remove mrlock_t as it does not provide any extra value over
+>>> rw_semaphores. Make i_lock and i_mmaplock native rw_semaphores and
+>>> replace mr*() functions with native rwsem calls.
+>>>
+>>> Release the lock in xfs_btree_split() just before the work-queue
+>>> executing xfs_btree_split_worker() is scheduled and make
+>>> xfs_btree_split_worker() to acquire the lock as a first thing and
+>>> release it just before returning from the function. This it done so the
+>>> ownership of the lock is transfered between kernel threads and thus
+>>> lockdep won't complain about lock being held by a different kernel
+>>> thread.
+>>>
+>>> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+>>> ---
+>>>  fs/xfs/libxfs/xfs_btree.c | 10 +++++
+>>>  fs/xfs/mrlock.h           | 78 ---------------------------------------
+>>>  fs/xfs/xfs_inode.c        | 36 ++++++++++--------
+>>>  fs/xfs/xfs_inode.h        |  4 +-
+>>>  fs/xfs/xfs_iops.c         |  4 +-
+>>>  fs/xfs/xfs_linux.h        |  2 +-
+>>>  fs/xfs/xfs_super.c        |  6 +--
+>>>  7 files changed, 37 insertions(+), 103 deletions(-)
+>>>  delete mode 100644 fs/xfs/mrlock.h
+>>>
+>>> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+>>> index 2d25bab68764..d798d288eed1 100644
+>>> --- a/fs/xfs/libxfs/xfs_btree.c
+>>> +++ b/fs/xfs/libxfs/xfs_btree.c
+>>> @@ -2816,6 +2816,7 @@ xfs_btree_split_worker(
+>>>  	unsigned long		pflags;
+>>>  	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
+>>>  
+>>> +	rwsem_acquire(&args->cur->bc_ino.ip->i_lock.dep_map, 0, 0, _RET_IP_);
+>>>  	/*
+>>>  	 * we are in a transaction context here, but may also be doing work
+>>>  	 * in kswapd context, and hence we may need to inherit that state
+>>> @@ -2832,6 +2833,7 @@ xfs_btree_split_worker(
+>>>  	complete(args->done);
+>>>  
+>>>  	current_restore_flags_nested(&pflags, new_pflags);
+>>> +	rwsem_release(&args->cur->bc_ino.ip->i_lock.dep_map, _THIS_IP_);
+>>>  }
+>>>  
+>>>  /*
+>>> @@ -2863,8 +2865,16 @@ xfs_btree_split(
+>>>  	args.done = &done;
+>>>  	args.kswapd = current_is_kswapd();
+>>>  	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
+>>> +
+>>> +	/* Release the lock so it can be acquired in the kernel thread which
+>>
+>> Strange comment style.
 > 
+> OK, I'll try to think about something better, but ideas are welcome :-).
 
-I suppose, but it's not like we don't already account for constructing
-bios that must be handed off to a workqueue for completion processing.
-Also FWIW this doesn't cap ioend size like my original patch does. It
-just updates XFS to send them to the completion workqueue.
 
-> (Also, those 'bool atomic' in the other patch make me kind of nervous --
-> how do we make sure (from a QA perspective) that nobody gets that wrong?)
-> 
+	/*
+	 * Typical multi-line XFS comments are like this, with no
+	 * comment text on the opening or closing lines
+	 */
 
-Yeah, that's a bit ugly. If somebody has a better idea on the factoring
-I'm interested in hearing about it. My understanding is that in_atomic()
-is not reliable and/or generally frowned upon, hence the explicit
-context parameter.
+	/* Single-line comments are fine like this though */
 
-Also, I don't have the error handy but my development kernel complains
-quite clearly if we make a call that can potentially sleep in atomic
-context. I believe this is the purpose of the __might_sleep()
-(CONFIG_DEBUG_ATOMIC_SLEEP) annotation.
-
-Brian
-
-> --D
-> 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> > 
-> > v2:
-> > - Fix type in macro.
-> > 
-> >  fs/xfs/xfs_aops.c | 10 +++++++++-
-> >  1 file changed, 9 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index 3e061ea99922..c00cc0624986 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -30,6 +30,13 @@ XFS_WPC(struct iomap_writepage_ctx *ctx)
-> >  	return container_of(ctx, struct xfs_writepage_ctx, ctx);
-> >  }
-> >  
-> > +/*
-> > + * Kick extra large ioends off to the workqueue. Completion will process a lot
-> > + * of pages for a large bio or bio chain and a non-atomic context is required to
-> > + * reschedule and avoid soft lockup warnings.
-> > + */
-> > +#define XFS_LARGE_IOEND	(262144ULL << PAGE_SHIFT)
-> > +
-> >  /*
-> >   * Fast and loose check if this write could update the on-disk inode size.
-> >   */
-> > @@ -239,7 +246,8 @@ static inline bool xfs_ioend_needs_workqueue(struct iomap_ioend *ioend)
-> >  {
-> >  	return ioend->io_private ||
-> >  		ioend->io_type == IOMAP_UNWRITTEN ||
-> > -		(ioend->io_flags & IOMAP_F_SHARED);
-> > +		(ioend->io_flags & IOMAP_F_SHARED) ||
-> > +		(ioend->io_size >= XFS_LARGE_IOEND);
-> >  }
-> >  
-> >  STATIC void
-> > -- 
-> > 2.25.4
-> > 
-> 
-
+-Eric
