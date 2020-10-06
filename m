@@ -2,91 +2,86 @@ Return-Path: <SRS0=guuR=DN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2820C4741F
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 14:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F808C41604
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 14:07:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A3E420760
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 14:05:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 164C420760
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 14:07:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VXRTSrS6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726792AbgJFOFK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Oct 2020 10:05:10 -0400
-Received: from sandeen.net ([63.231.237.45]:37530 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725939AbgJFOEU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Oct 2020 10:04:20 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A995248C696;
-        Tue,  6 Oct 2020 09:03:21 -0500 (CDT)
-To:     Pavel Reichl <preichl@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20201005213852.233004-1-preichl@redhat.com>
- <20201005213852.233004-5-preichl@redhat.com>
- <20201006041426.GH49547@magnolia>
- <1796931d-fe5d-2d81-e5bc-2369f89a4688@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v8 4/4] xfs: replace mrlock_t with rw_semaphores
-Message-ID: <c2349a06-8ad3-664c-9510-40394fb08288@sandeen.net>
-Date:   Tue, 6 Oct 2020 09:04:18 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.3.1
+        id S1726721AbgJFOHb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Oct 2020 10:07:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60462 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726356AbgJFOHZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 10:07:25 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2AD1C061755;
+        Tue,  6 Oct 2020 07:07:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=IleYZyF5Ir/ZDhCRg7zB0cdpd4ApTbAF/++Iy+fWTy4=; b=VXRTSrS6/tJHYjphWFj2B5dxiL
+        /OZ420EZNgmrV3oA+UijYNbjrgcbMfhxj/tH3uaiYjqN579z08MREzFtZZwjrwBXfxbHERs8eW7lW
+        uMs5FIFZaU3Oj6/g1JmgIe/Bye/iSXy7YQOUslvusr0/P0v9jfnfMdPPlVRzHW+HKDkeU0DZA2PTm
+        kxfg+WDiZidvXqLWgxkZ5SRstqZu3COnnzjFp527NNE29UKmIojoBQ0+S4WsPXu15KsEKok10vPHN
+        h7o3XX1d+4oJ+uSX4cb0mu4+78OK/hKthyehlMEaE/ajT7JXPRMFkySr/ICirmWeXIz5SlZhL83L6
+        cEfWqFRg==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kPncf-0004P7-2J; Tue, 06 Oct 2020 14:07:21 +0000
+Date:   Tue, 6 Oct 2020 15:07:20 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] xfs: kick extra large ioends to completion
+ workqueue
+Message-ID: <20201006140720.GQ20115@casper.infradead.org>
+References: <20201002153357.56409-3-bfoster@redhat.com>
+ <20201005152102.15797-1-bfoster@redhat.com>
+ <20201006035537.GD49524@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <1796931d-fe5d-2d81-e5bc-2369f89a4688@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201006035537.GD49524@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 10/6/20 5:50 AM, Pavel Reichl wrote:
->> Also, we're not really releasing the lock itself here, right?  We're
->> merely updating lockdep's bookkeepping so that the worker can make
->> itself look like the lock owner (to lockdep, anyway).
-> Hmm...I'm afraid I don't follow - yes we are doing this to satisfy lockdep's bookkeeping,
-> however we actually do this by releasing the lock in one kernel thread and acquiring it in another.
-
-it's the difference between actually releasing the lock itself, and
-telling lockdep that we're releasing the "ownership" of the lock for tracking
-purposes; I agree that "rwsem_release" is a bit confusingly named.
-
+On Mon, Oct 05, 2020 at 08:55:37PM -0700, Darrick J. Wong wrote:
+> On Mon, Oct 05, 2020 at 11:21:02AM -0400, Brian Foster wrote:
+> > We've had reports of soft lockup warnings in the iomap ioend
+> > completion path due to very large bios and/or bio chains. Divert any
+> > ioends with 256k or more pages to process to the workqueue so
+> > completion occurs in non-atomic context and can reschedule to avoid
+> > soft lockup warnings.
 > 
->> Does this exist as a helper anywhere in the kernel?  I don't really like
->> XFS poking into the rw_semaphore innards, though I concede that this
->> lock transferring dance is probably pretty rare.
-> I'll try to look for it.
-> 
+> Hmmmm... is there any way we can just make end_page_writeback faster?
 
-Other code I see just calls rwsem_release directly - ocfs2, jbd2, kernfs etc.
+There are ways to make it faster.  I don't know if they're a "just"
+solution ...
 
-I think a clearer comment might suffice, not sure what Darrick thinks, maybe something
-like this:
+1. We can use THPs.  That will reduce the number of pages being operated
+on.  I hear somebody might have a patch set for that.  Incidentally,
+this patch set will clash with the THP patchset, so one of us is going to
+have to rebase on the other's work.  Not a complaint, just acknowledging
+that some coordination will be needed for the 5.11 merge window.
 
-+	/*
-+	 * Let lockdep know that we won't own i_lock when we hand off
-+	 * to the worker thread
-+	 */
-+	rwsem_release(&cur->bc_ino.ip->i_lock.dep_map, _THIS_IP_);
- 	queue_work(xfs_alloc_wq, &args.work);
-+
- 	wait_for_completion(&done);
-+	/* We own the i_lock again */
-+	rwsem_acquire(&cur->bc_ino.ip->i_lock.dep_map, 0, 0, _RET_IP_);
+2. We could create end_writeback_pages(struct pagevec *pvec) which
+calls a new test_clear_writeback_pages(pvec).  That could amortise
+taking the memcg lock and finding the lruvec and taking the mapping
+lock -- assuming these pages are sufficiently virtually contiguous.
+It can definitely amortise all the statistics updates.
 
-and similar comments in the worker:
+3. We can make wake_up_page(page, PG_writeback); more efficient.  If
+you can produce this situation on demand, I had a patch for that which
+languished due to lack of interest.
 
-+	/* Let lockdep know that we own the i_lock for now */
-+	rwsem_acquire(&args->cur->bc_ino.ip->i_lock.dep_map, 0, 0, _RET_IP_);
-...
+https://lore.kernel.org/linux-fsdevel/20200416220130.13343-1-willy@infradead.org/
 
-etc
-
--Eric
