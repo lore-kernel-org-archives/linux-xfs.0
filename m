@@ -2,69 +2,69 @@ Return-Path: <SRS0=guuR=DN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-8.0 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 879A4C4727D
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 09:21:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75065C41604
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 09:21:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3694A2080A
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 09:21:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DB8120853
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 09:21:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tytYOb4n"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ffK+bx+k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725912AbgJFJV1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Oct 2020 05:21:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44682 "EHLO
+        id S1725934AbgJFJVa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Oct 2020 05:21:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725891AbgJFJV1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 05:21:27 -0400
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81C6AC061755
-        for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2020 02:21:27 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id n14so8668313pff.6
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Oct 2020 02:21:27 -0700 (PDT)
+        with ESMTP id S1725891AbgJFJVa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 05:21:30 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D148C061755
+        for <linux-xfs@vger.kernel.org>; Tue,  6 Oct 2020 02:21:30 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id bb1so924038plb.2
+        for <linux-xfs@vger.kernel.org>; Tue, 06 Oct 2020 02:21:30 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XqJAFEuF7naGL6sPzTG25w+VDo+6sgoAOk/M0nmeXNs=;
-        b=tytYOb4neQnsMfPGwGwCNBtC7ayB0ESIAvmzf837WWQU08p7oktWquccvipyPoq1VG
-         2wZh9MD+jDUng9LdpwANG2I7ZfAZHuHbiaKASyEiSXVyYfjaVLGnvapW4LBeHBTSZ9GH
-         29ukepjYo2HOBwqgG7bowsBTM4Q3/QIQrQ6F6iL68NZaO7rgrCHts1DnLD/p+U8fEE6D
-         Cz6b6O+RmkMQkZEEnBqlTRiAd343nbHQZWA42QqRjF+5nQ/bJXMXAUXGyaAs0MAy8vyy
-         dEL4FWdn+4e1nwPDwsxB/OnFVryF+jyYFi7doPTs9PdGkJfigC6Pn12hkMJmeEK/5NPZ
-         E4Pw==
+        bh=XTDO6CnEkPdKtZ6CGXgI79glzvT2m80ekw2sM7FY4ZA=;
+        b=ffK+bx+kCYIFDI2+SbuofnNfgcy/C7ViWXpe8Zoozl7OzSLWSWtY5rT11gAtA+b6Uk
+         S+wmDmk5F8C3svEypYZ/YFllfndc7G6U29sq1QeHESGR9lcMUIFxjkFVc8b2S283dGWf
+         I/wyHb8jSnT9M056PMM9K9GL0EWGeb7qlGm2+bF0hurs/uVbGkH8F1reZSO2f4pM7Go+
+         uHX+acRDO+dbpBtczqBxReHubL5VmcsDPHbp7b82BboR+RAuKPQbzdYsY+Cp5kTwkvjU
+         5osi68Ncx3SBMke0dvBPYx3mW9VrktUereQwBiLsDNzjoPPjnGsSVlzE/5UNIhV9WROQ
+         J/Wg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XqJAFEuF7naGL6sPzTG25w+VDo+6sgoAOk/M0nmeXNs=;
-        b=l6KWjncDzvy6WDH9KOtG3CD6iaWPt0YBi8789bRYOZZ47m5i1Q6DyWGZzeEF8masCg
-         Q4bkJhvWoHOeQxAjekZZ85E4+kTNOG/k8SDaKZeYLpRUuajugmaXS2aoJwy8dGs6Zj1C
-         Ze19wC2n1MhmMaoEJs6CnL5Le0HM3RLt+ci+JQxybssSAnGlmZpypHHh2LQzm/+T1EGF
-         BlKRmu/p09mBG8bUXsYbyTHWfsFdgi2Z/IQTR99J5V9JUWM4V82kePId0qMBHUxY2Smw
-         B4txKBthDWnzqaR6H+aGf2bkxl5WQJCGpyN7noaCGwnW6PYP6pdeJ2zrHWBvLaDrr7QG
-         PIjQ==
-X-Gm-Message-State: AOAM532PUxyOm1m5yeDxpQ4IxYU0X8DoQyZXo1EqZ1KBTWIr5eFLOrtb
-        AcTdwWq+R0ZGTwoP+eMCH2P3Qnyqg64=
-X-Google-Smtp-Source: ABdhPJxdSXFeWysPhi3pk3sgCX7aSrkSdvevvAwBCmi59v2O4cCQViYm/ZpGHAQ88Y2fSJe2S7Zgrw==
-X-Received: by 2002:a65:5802:: with SMTP id g2mr3154120pgr.261.1601976087036;
-        Tue, 06 Oct 2020 02:21:27 -0700 (PDT)
+        bh=XTDO6CnEkPdKtZ6CGXgI79glzvT2m80ekw2sM7FY4ZA=;
+        b=tyzyBjn89xMsKdVlAjUcDPMEhXgm4/2ZFE5DwCpHuoaltLrTMbmyK79eXqpR94iNla
+         prhZWdb4dDnCpUkZmcUkvgg41Up+uu6jk2VoBGaH/8VSbMfrGcY97iZk6YePcaH4SUuN
+         6CHsnUJXQQIUPa15DXo0nC6Z8gYmHzOemsJf1cZ7hPOUqj3wIzBMKzgoBNwGVXrnV98y
+         wn3jk5Ysj2ZGxljrWg6Zdm1zgkHm8zHaC4VSLj//BvahRNqdn0jGL5iFUy+GTkyjJLEa
+         ykeafCX5vHZ/LgJYGoUCuz3K2AA7gNlvE3hRS3HfSQaFemLSWBYWxVwaHJKMH3qJ2Mwl
+         fOKw==
+X-Gm-Message-State: AOAM532Ew2/Z2swHV2/tApTf9mMw22Gi0TXzRxyAEc7iRADYDyo5TwNF
+        O8ssw+13UlORgF5IXyqLITk6sET/zJM=
+X-Google-Smtp-Source: ABdhPJxh0ePdSpNG8MoCtlNRi2Yq875fho2Y8t0p/KBO728dVK2u/qRKvJnPGZIQiM0C6S3s8NiPgA==
+X-Received: by 2002:a17:902:424:b029:d2:8cdd:dc00 with SMTP id 33-20020a1709020424b02900d28cdddc00mr2477616ple.7.1601976089972;
+        Tue, 06 Oct 2020 02:21:29 -0700 (PDT)
 Received: from garuda.localnet ([122.167.153.52])
-        by smtp.gmail.com with ESMTPSA id o38sm2284354pgb.12.2020.10.06.02.21.24
+        by smtp.gmail.com with ESMTPSA id d145sm2978053pfd.136.2020.10.06.02.21.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Oct 2020 02:21:26 -0700 (PDT)
+        Tue, 06 Oct 2020 02:21:29 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH V5 04/12] xfs: Check for extent overflow when adding/removing xattrs
-Date:   Tue, 06 Oct 2020 14:51:15 +0530
-Message-ID: <3262882.2ycmhBttRE@garuda>
-In-Reply-To: <20201006042329.GN49547@magnolia>
-References: <20201003055633.9379-1-chandanrlinux@gmail.com> <20201003055633.9379-5-chandanrlinux@gmail.com> <20201006042329.GN49547@magnolia>
+Subject: Re: [PATCH V5 11/12] xfs: Set tp->t_firstblock only once during a transaction's lifetime
+Date:   Tue, 06 Oct 2020 10:47:44 +0530
+Message-ID: <10831280.vcUPTnr8uI@garuda>
+In-Reply-To: <20201006042629.GQ49547@magnolia>
+References: <20201003055633.9379-1-chandanrlinux@gmail.com> <20201003055633.9379-12-chandanrlinux@gmail.com> <20201006042629.GQ49547@magnolia>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -72,106 +72,71 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tuesday 6 October 2020 9:53:29 AM IST Darrick J. Wong wrote:
-> On Sat, Oct 03, 2020 at 11:26:25AM +0530, Chandan Babu R wrote:
-> > Adding/removing an xattr can cause XFS_DA_NODE_MAXDEPTH extents to be
-> > added. One extra extent for dabtree in case a local attr is large enough
-> > to cause a double split.  It can also cause extent count to increase
-> > proportional to the size of a remote xattr's value.
-> > 
-> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+On Tuesday 6 October 2020 9:56:29 AM IST Darrick J. Wong wrote:
+> On Sat, Oct 03, 2020 at 11:26:32AM +0530, Chandan Babu R wrote:
+> > tp->t_firstblock is supposed to hold the first fs block allocated by the
+> > transaction. There are two cases in the current code base where
+> > tp->t_firstblock is assigned a value unconditionally. This commit makes
+> > sure that we assign to tp->t_firstblock only if its current value is
+> > NULLFSBLOCK.
 > 
-> Didn't I already review this?  AFAICT it hasn't changed much, but did
-> something change enough to warrant dropping the old RVB tag?
+> Do we hit this currently?  This seems like a regression fix, since I'm
+> guessing you hit this fairly soon after adding the next patch and
+> twisting the "shatter everything" debug knob it establishes?  And if
+> you can hit it there, you could hit this on a severely fragmented fs?
 
-Yes, you had reviewed it earlier. Sorry, I missed out on adding the RVB before
-sending the patch.
+I came across this when I was trying to understand the code flow w.r.t
+xfs_bmap_btalloc() => xfs_alloc_vextent() => etc. I noticed that if a
+transaction does the following,
 
-> 
-> > ---
-> >  fs/xfs/libxfs/xfs_attr.c       | 13 +++++++++++++
-> >  fs/xfs/libxfs/xfs_inode_fork.h | 10 ++++++++++
-> >  2 files changed, 23 insertions(+)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index fd8e6418a0d3..be51e7068dcd 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -396,6 +396,7 @@ xfs_attr_set(
-> >  	struct xfs_trans_res	tres;
-> >  	bool			rsvd = (args->attr_filter & XFS_ATTR_ROOT);
-> >  	int			error, local;
-> > +	int			rmt_blks = 0;
-> >  	unsigned int		total;
-> >  
-> >  	if (XFS_FORCED_SHUTDOWN(dp->i_mount))
-> > @@ -442,11 +443,15 @@ xfs_attr_set(
-> >  		tres.tr_logcount = XFS_ATTRSET_LOG_COUNT;
-> >  		tres.tr_logflags = XFS_TRANS_PERM_LOG_RES;
-> >  		total = args->total;
-> > +
-> > +		if (!local)
-> > +			rmt_blks = xfs_attr3_rmt_blocks(mp, args->valuelen);
-> >  	} else {
-> >  		XFS_STATS_INC(mp, xs_attr_remove);
-> >  
-> >  		tres = M_RES(mp)->tr_attrrm;
-> >  		total = XFS_ATTRRM_SPACE_RES(mp);
-> > +		rmt_blks = xfs_attr3_rmt_blocks(mp, XFS_XATTR_SIZE_MAX);
-> >  	}
-> >  
-> >  	/*
-> > @@ -460,6 +465,14 @@ xfs_attr_set(
-> >  
-> >  	xfs_ilock(dp, XFS_ILOCK_EXCL);
-> >  	xfs_trans_ijoin(args->trans, dp, 0);
-> > +
-> > +	if (args->value || xfs_inode_hasattr(dp)) {
-> > +		error = xfs_iext_count_may_overflow(dp, XFS_ATTR_FORK,
-> > +				XFS_IEXT_ATTR_MANIP_CNT(rmt_blks));
-> > +		if (error)
-> > +			goto out_trans_cancel;
-> 
-> Hmm.  If you hit this while trying to remove an xattr, what then?
-> I suppose you really don't want to overflow naextents, but I suppose the
-> only other option is to delete the file.  Oh well, attr forks with 65533
-> extents should be vanishingly rare, right?  Right? :)
+1. Satisfy the first allocation request from AG X.
+2. Satisfy the second allocation request from AG X+1, since say the second
+   allocation request was for a larger minlen value.
 
-Yes, Deleting the corresponding file would be the only option. If we did allow
-this operation to succeed we would end up having a silent corruption of the
-attr extent counter.
+... A new space allocation request with minlen equal to what was issued in
+step 1 could fail (even though AG X could still have minlen free space)
+because step 2 ended up updating tp->t_firstblock to a block from AG X+1 and
+hence AG X could never be scanned for free blocks even though the transaction
+holds a lock on the corresponding AGF.
 
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+This behaviour is most likely true when the "alloc minlen" debug knob
+(introduced in the next patch) is enabled. However I didn't execute any
+workload on a severly fragmented fs to actually see this behaviour on a
+mounted filesystem.
+
 > 
 > --D
 > 
-> > +	}
-> > +
-> >  	if (args->value) {
-> >  		unsigned int	quota_flags = XFS_QMOPT_RES_REGBLKS;
-> >  
-> > diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-> > index bcac769a7df6..5de2f07d0dd5 100644
-> > --- a/fs/xfs/libxfs/xfs_inode_fork.h
-> > +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-> > @@ -47,6 +47,16 @@ struct xfs_ifork {
-> >   */
-> >  #define XFS_IEXT_PUNCH_HOLE_CNT		(1)
-> >  
-> > +/*
-> > + * Adding/removing an xattr can cause XFS_DA_NODE_MAXDEPTH extents to
-> > + * be added. One extra extent for dabtree in case a local attr is
-> > + * large enough to cause a double split.  It can also cause extent
-> > + * count to increase proportional to the size of a remote xattr's
-> > + * value.
-> > + */
-> > +#define XFS_IEXT_ATTR_MANIP_CNT(rmt_blks) \
-> > +	(XFS_DA_NODE_MAXDEPTH + max(1, rmt_blks))
-> > +
-> >  /*
-> >   * Fork handling.
-> >   */
+> > 
+> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 51c2d2690f05..5156cbd476f2 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -724,7 +724,8 @@ xfs_bmap_extents_to_btree(
+> >  	 */
+> >  	ASSERT(tp->t_firstblock == NULLFSBLOCK ||
+> >  	       args.agno >= XFS_FSB_TO_AGNO(mp, tp->t_firstblock));
+> > -	tp->t_firstblock = args.fsbno;
+> > +	if (tp->t_firstblock == NULLFSBLOCK)
+> > +		tp->t_firstblock = args.fsbno;
+> >  	cur->bc_ino.allocated++;
+> >  	ip->i_d.di_nblocks++;
+> >  	xfs_trans_mod_dquot_byino(tp, ip, XFS_TRANS_DQ_BCOUNT, 1L);
+> > @@ -875,7 +876,8 @@ xfs_bmap_local_to_extents(
+> >  	/* Can't fail, the space was reserved. */
+> >  	ASSERT(args.fsbno != NULLFSBLOCK);
+> >  	ASSERT(args.len == 1);
+> > -	tp->t_firstblock = args.fsbno;
+> > +	if (tp->t_firstblock == NULLFSBLOCK)
+> > +		tp->t_firstblock = args.fsbno;
+> >  	error = xfs_trans_get_buf(tp, args.mp->m_ddev_targp,
+> >  			XFS_FSB_TO_DADDR(args.mp, args.fsbno),
+> >  			args.mp->m_bsize, 0, &bp);
 > 
 
 
