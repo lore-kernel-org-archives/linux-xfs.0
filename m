@@ -2,165 +2,112 @@ Return-Path: <SRS0=guuR=DN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CC48C41604
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 15:34:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5106C41604
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 19:15:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD33B2075A
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 15:34:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C7EA206F4
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 19:15:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NGXhyiPY"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Bd0jEn2k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726058AbgJFPeS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Oct 2020 11:34:18 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:57510 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725972AbgJFPeS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 11:34:18 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 096FUCuH105652;
-        Tue, 6 Oct 2020 15:34:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=+SUrQh6AGjt6QcxlNB0FYELut79ZjXL+IhLpvtTqjM8=;
- b=NGXhyiPYQ+GcH9HAcFtWTapqdcpAe8yOtsVnUoXAhP0BDySvZhSehwevd77kAbfMvc1y
- mZkEU8zQPJhzCP85OJ7u/oe1qIYf1qa1Ro+lDTpYC/QdKXVtmlMURR/gREtqnQjWi5o2
- wY+YsODw/UjhTM02ntX/9Iig5V5rP9wjQkTnZ/4//wOs84ESLNisI8V7e66835v90RkA
- rFA4KC+WZ6Q64YqAZlmjYy6qAvlgPMk1zGlMRVg+oR1x+lkKEI2NK7lHcKD4g7XGk/eA
- IFwxkpGe3YWHESjD/Wg9L9AFazKh2xi4Wh7VXqjhyIynIbITFuWkRdfmCsot6Wffm6/G xQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 33xetavwfu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 06 Oct 2020 15:34:14 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 096FUAbn054997;
-        Tue, 6 Oct 2020 15:32:13 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 33y37x5eej-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 06 Oct 2020 15:32:13 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 096FWCZG004258;
-        Tue, 6 Oct 2020 15:32:12 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 06 Oct 2020 08:32:12 -0700
-Date:   Tue, 6 Oct 2020 08:32:11 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH V2] xfsprogs: fix ioctl_xfs_geometry manpage naming
-Message-ID: <20201006153211.GX49547@magnolia>
-References: <e0379d8e-ada3-0ca7-18f8-511114d6af52@redhat.com>
- <1f0cf92b-3dc6-a380-f86c-a3286ced102d@redhat.com>
+        id S1726935AbgJFTPs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Oct 2020 15:15:48 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45358 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726918AbgJFTPr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 15:15:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602011747;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=nreLv5OTgGPdulTJHi5a2IWQ7ukW91dYM5moEnhMiio=;
+        b=Bd0jEn2knCDP9TJ36RaIwbvcAQl2svUkDlRO5oKGAp4UKbEvXvOO8ZzchMoMzpDIWuviFJ
+        +xCE5+hx4BKuv1osE462bfZ9CjbomNCSys6L8gPi4YgvHREM87r+JKuJOA8S9mhzIQJ1F9
+        WTJzKwsAorDyr8WwaetQHgPwaVHYypo=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-41-M7O-72cbM5Ou1FB2qSIPWw-1; Tue, 06 Oct 2020 15:15:45 -0400
+X-MC-Unique: M7O-72cbM5Ou1FB2qSIPWw-1
+Received: by mail-wr1-f72.google.com with SMTP id 47so3448617wrc.19
+        for <linux-xfs@vger.kernel.org>; Tue, 06 Oct 2020 12:15:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=nreLv5OTgGPdulTJHi5a2IWQ7ukW91dYM5moEnhMiio=;
+        b=AIqkycv1cZwNuHVNq5XmJexoIOYNHqllkQw01k8ckHT3NDhfW2kdrMXp/Cad9FCci4
+         A73sJV9Te9lFk3Eu0mqQoiUPQ/lVitb2/1OjsW/MqJR+vepoCpBeB+7GvRs5tLxOhr5j
+         09zgxxE22qSbY45J+g9WetEbxZvuUxsXHyIirc9dmX4mG/hgTyBu1JnpjOszGDp8jZYr
+         er972Lo4L0XRDwMOvg9ueIYM13eQLA8uz6AC7gR2jR8R/QQ6VZvufBwlCapVrMZEuNjp
+         oCkYzjHbPqhhXMOtr6UHW6bqCXThWEOEAw5HnY7yWy7EZD5DfKVI2bK73snIkASZb5FX
+         NrZg==
+X-Gm-Message-State: AOAM533+cMCY7GXxEkBbqGN1u/MeI1T6QYq2oUV6kX/fW23B7RoG49dX
+        Xw+53Nv1GpuxHhsM5jnBjgUzW6FZEQGR9QKrwo7zT4kg42/1q2KazXEkJf68hgyKHCAMW8r6kmj
+        e3pLNXnlcizvVEXHA0ouV
+X-Received: by 2002:a1c:6a0a:: with SMTP id f10mr6456838wmc.86.1602011743824;
+        Tue, 06 Oct 2020 12:15:43 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJyrW4+CM5cSejCu/TE1V2nR6txJFhImMeKqOmU3+tusDIzBhbcFpE1/AiSRX08PBEhgA231ag==
+X-Received: by 2002:a1c:6a0a:: with SMTP id f10mr6456817wmc.86.1602011743568;
+        Tue, 06 Oct 2020 12:15:43 -0700 (PDT)
+Received: from localhost.localdomain.com ([84.19.91.81])
+        by smtp.gmail.com with ESMTPSA id v17sm5317074wrc.23.2020.10.06.12.15.42
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Oct 2020 12:15:42 -0700 (PDT)
+From:   Pavel Reichl <preichl@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v9 0/4] xfs: Remove wrappers for some semaphores
+Date:   Tue,  6 Oct 2020 21:15:37 +0200
+Message-Id: <20201006191541.115364-1-preichl@redhat.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1f0cf92b-3dc6-a380-f86c-a3286ced102d@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9765 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 spamscore=0
- mlxscore=0 malwarescore=0 suspectscore=1 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010060101
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9765 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
- clxscore=1015 priorityscore=1501 adultscore=0 mlxlogscore=999 phishscore=0
- impostorscore=0 malwarescore=0 suspectscore=1 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010060101
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> Subject: [PATCH V2] xfsprogs: fix ioctl_xfs_geometry manpage naming
+Remove some wrappers that we have in XFS around the read-write semaphore
+locks.
 
-The subject line should name the old manpage, right?
+The goal of this cleanup is to remove mrlock_t structure and its mr*()
+wrapper functions and replace it with native rw_semaphore type and its
+native calls.
 
-On Tue, Oct 06, 2020 at 10:25:42AM -0500, Eric Sandeen wrote:
-> Somehow "fsop_/FSOP_" snuck into this manpage's name, filename, and
-> ioctl name.  It's not XFS_IOC_FSOP_GEOMETRY, it's XFS_IOC_FSGEOMETRY
-> so change all references, including the man page name, filename, and
-> references from xfsctl(3).
-> 
-> (the structure and flags do have the fsop_ string, which certainly
-> makes this a bit confusing)
-> 
-> Fixes: b427c816847e ("man: create a separate GEOMETRY ioctl manpage")
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> V2: don't rename it to the wrong thing. o_O
-> (fsgeometry not geometry)
-> 
-> Note the file rename below
-> 
-> Do we need to install link from the old name or can we just wing this one
-> and let "apropos" et al find it ...
+Changes in version 8:
+* Patchset was rebased so it applies cleanly.
+* The patch 'xfs: replace mrlock_t with rw_semaphores' contains change in
+xfs_btree.c which transfers ownership of lock so lockdep won't assert
+(This was reported by Darrick and proposed change fixes this issue).
 
-Up to you; if you decide to leave a breadcrumb, see ioctl_xfs_getbmap.2
-for how you're (apparently?) supposed to do that in manpageland.
+Changes in version 9:
+*Fixed white space in patch 'xfs: Refactor xfs_isilocked()'
+*Updated code comments as suggested by djwong (thanks!) in patch: 'xfs: replace mrlock_t with rw_semaphores'
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Pavel Reichl (4):
+  xfs: Refactor xfs_isilocked()
+  xfs: clean up whitespace in xfs_isilocked() calls
+  xfs: xfs_isilocked() can only check a single lock type
+  xfs: replace mrlock_t with rw_semaphores
 
---D
+ fs/xfs/libxfs/xfs_bmap.c  |   8 +--
+ fs/xfs/libxfs/xfs_btree.c |  14 ++++++
+ fs/xfs/mrlock.h           |  78 -----------------------------
+ fs/xfs/xfs_file.c         |   3 +-
+ fs/xfs/xfs_inode.c        | 102 +++++++++++++++++++++++++-------------
+ fs/xfs/xfs_inode.h        |  25 ++++++----
+ fs/xfs/xfs_iops.c         |   4 +-
+ fs/xfs/xfs_linux.h        |   2 +-
+ fs/xfs/xfs_qm.c           |   2 +-
+ fs/xfs/xfs_super.c        |   6 +--
+ 10 files changed, 111 insertions(+), 133 deletions(-)
+ delete mode 100644 fs/xfs/mrlock.h
 
-> 
-> diff --git a/man/man2/ioctl_xfs_fsop_geometry.2 b/man/man2/ioctl_xfs_fsgeometry.2
-> similarity index 95%
-> rename from man/man2/ioctl_xfs_fsop_geometry.2
-> rename to man/man2/ioctl_xfs_fsgeometry.2
-> index a35bbaeb..6b7c83da 100644
-> --- a/man/man2/ioctl_xfs_fsop_geometry.2
-> +++ b/man/man2/ioctl_xfs_fsgeometry.2
-> @@ -3,18 +3,18 @@
->  .\" %%%LICENSE_START(GPLv2+_DOC_FULL)
->  .\" SPDX-License-Identifier: GPL-2.0+
->  .\" %%%LICENSE_END
-> -.TH IOCTL-XFS-FSOP-GEOMETRY 2 2019-06-17 "XFS"
-> +.TH IOCTL-XFS-FSGEOMETRY 2 2019-06-17 "XFS"
->  .SH NAME
-> -ioctl_xfs_fsop_geometry \- report XFS filesystem layout and features 
-> +ioctl_xfs_fsgeometry \- report XFS filesystem layout and features
->  .SH SYNOPSIS
->  .br
->  .B #include <xfs/xfs_fs.h>
->  .PP
-> -.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY, struct xfs_fsop_geom*" arg );
-> +.BI "int ioctl(int " fd ", XFS_IOC_FSGEOMETRY, struct xfs_fsop_geom *" arg );
->  .br
-> -.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V4, struct xfs_fsop_geom_v4 *" arg );
-> +.BI "int ioctl(int " fd ", XFS_IOC_FSGEOMETRY_V4, struct xfs_fsop_geom_v4 *" arg );
->  .br
-> -.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V1, struct xfs_fsop_geom_v1 *" arg );
-> +.BI "int ioctl(int " fd ", XFS_IOC_FSGEOMETRY_V1, struct xfs_fsop_geom_v1 *" arg );
->  .SH DESCRIPTION
->  Report the details of an XFS filesystem layout, features, and other descriptive items.
->  This information is conveyed in a structure of the following form:
-> diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-> index dfebd12d..43c2f4eb 100644
-> --- a/man/man3/xfsctl.3
-> +++ b/man/man3/xfsctl.3
-> @@ -333,7 +333,7 @@ for more information.
->  .TP
->  .B XFS_IOC_FSGEOMETRY
->  See
-> -.BR ioctl_xfs_fsop_geometry (2)
-> +.BR ioctl_xfs_fsgeometry (2)
->  for more information.
->  
->  .TP
-> @@ -393,7 +393,7 @@ as they are not of general use to applications.
->  
->  .SH SEE ALSO
->  .BR ioctl_xfs_fsgetxattr (2),
-> -.BR ioctl_xfs_fsop_geometry (2),
-> +.BR ioctl_xfs_fsgeometry (2),
->  .BR ioctl_xfs_fsbulkstat (2),
->  .BR ioctl_xfs_scrub_metadata (2),
->  .BR ioctl_xfs_fsinumbers (2),
-> 
+-- 
+2.26.2
+
