@@ -7,125 +7,174 @@ X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65EF2C4363D
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 04:18:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3FA7C4363D
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 04:19:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 277C1208C3
-	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 04:18:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66643208C7
+	for <linux-xfs@archiver.kernel.org>; Tue,  6 Oct 2020 04:19:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="J1RcSL0S"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RwySzKR6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726708AbgJFESv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Oct 2020 00:18:51 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:45034 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725874AbgJFESv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 00:18:51 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0964ES3I087740;
-        Tue, 6 Oct 2020 04:18:49 GMT
+        id S1726121AbgJFETC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 6 Oct 2020 00:19:02 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:50638 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725874AbgJFETB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Oct 2020 00:19:01 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0964Dwm9048628;
+        Tue, 6 Oct 2020 04:18:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=PuWc9UqEcM63wiMLKyIOLbY5hV/jQD9Sak5ucyvb+E8=;
- b=J1RcSL0SVjOB4orqitc/8nhMNogHoUdb7OmjDBfLcKzEcE4TQGuXrUepOTUlGj2i9YyL
- b5r13kOsiwxmeKiJ3aWPXnhSFszvb5JdwZ+9GeG2nasbwDYNWzPvST5HfR8/JJk1DeiK
- Prr2Dt/aD1hryt1cYg60tY688z5c6tBzihhqLX4r2AdpVNmtk3X0o/b02yasNKbYVOY3
- svs2n/EkS8Rjm/eeYF74MzVUaJZ24pkAw8uhDJ8sEEuwBlMgoOu1iPmuzTn+Lfa/PTNq
- /f1XjOnSKTSg2ek9/6Kc9GH2A2Tsm9lTfmoKvJlOgodjhXM7SkLi94Qmv2pAN+cDG4L7 CA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 33xetasxbw-1
+ bh=KHm2S0PHUDvgKVewvOIvHOzIjjfmN/zwK6otjVQnRkQ=;
+ b=RwySzKR6QVQz3gmYKz9DfkI0Aa6X3AGuEm+tr2On3hNH1XXU+fAALid6QxrQfr8nxrBY
+ 19rV/s+oToYK0DM5lwtbYUF4icgj8LzqQ5G7eiLSxECSVc9u6GkdEu3evpZPh6n7+ozv
+ TxfrMO5b7PqbQl4JIWrf9kyqiKAwOAp7SX/CkcXD8s2d/JgTJwlLfP0PNydMk8+vnzyE
+ xZMy74aetLkpwCnRIhJlcka9+prCVZ7b8XNIl08LZIRTPj6MCNBp6jD09ALq3JptIdDV
+ 73jGqkbn3ap1ahHmAAoNp/D82E0gqtwSUuskKPRA29XPAxpMAXwd5UdYA2d3fr4m48kf 8A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 33xhxmsppu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 06 Oct 2020 04:18:49 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0964BDx7072168;
-        Tue, 6 Oct 2020 04:16:48 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 33y2vmere8-1
+        Tue, 06 Oct 2020 04:18:58 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0964A7HQ041338;
+        Tue, 6 Oct 2020 04:18:58 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 33y37wahu0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 06 Oct 2020 04:16:48 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0964GmiU000410;
-        Tue, 6 Oct 2020 04:16:48 GMT
+        Tue, 06 Oct 2020 04:18:58 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0964IvcV004256;
+        Tue, 6 Oct 2020 04:18:58 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 05 Oct 2020 21:16:48 -0700
-Date:   Mon, 5 Oct 2020 21:16:47 -0700
+        with ESMTP ; Mon, 05 Oct 2020 21:18:57 -0700
+Date:   Mon, 5 Oct 2020 21:18:56 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v8 3/4] xfs: xfs_isilocked() can only check a single lock
- type
-Message-ID: <20201006041647.GK49547@magnolia>
-References: <20201005213852.233004-1-preichl@redhat.com>
- <20201005213852.233004-4-preichl@redhat.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH V5 03/12] xfs: Check for extent overflow when punching a
+ hole
+Message-ID: <20201006041856.GM49547@magnolia>
+References: <20201003055633.9379-1-chandanrlinux@gmail.com>
+ <20201003055633.9379-4-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201005213852.233004-4-preichl@redhat.com>
+In-Reply-To: <20201003055633.9379-4-chandanrlinux@gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9765 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
- malwarescore=0 suspectscore=1 spamscore=0 phishscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2010060023
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 spamscore=0
+ mlxscore=0 malwarescore=0 suspectscore=1 adultscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010060023
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9765 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spamscore=0 mlxscore=0
- clxscore=1015 priorityscore=1501 adultscore=0 mlxlogscore=999 phishscore=0
- impostorscore=0 malwarescore=0 suspectscore=1 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
+ impostorscore=0 lowpriorityscore=0 suspectscore=1 phishscore=0
+ mlxlogscore=999 adultscore=0 clxscore=1015 spamscore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
  definitions=main-2010060023
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 05, 2020 at 11:38:51PM +0200, Pavel Reichl wrote:
-> In its current form, xfs_isilocked() is only able to test one lock type
-> at a time - ilock, iolock, or mmap lock, but combinations are not
-> properly handled. The intent here is to check that both XFS_IOLOCK_EXCL
-> and XFS_ILOCK_EXCL are held, so test them each separately.
+On Sat, Oct 03, 2020 at 11:26:24AM +0530, Chandan Babu R wrote:
+> The extent mapping the file offset at which a hole has to be
+> inserted will be split into two extents causing extent count to
+> increase by 1.
 > 
-> The commit ecfea3f0c8c6 ("xfs: split xfs_bmap_shift_extents") ORed the
-> flags together which was an error, so this patch reverts that part of
-> the change and check the locks independently.
-> 
-> Fixes: ecfea3f0c8c6 ("xfs: split xfs_bmap_shift_extents")
-> 
-> Suggested-by: Dave Chinner <dchinner@redhat.com>
-> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-Looks good,
+Looks fine,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  fs/xfs/libxfs/xfs_inode_fork.h |  7 +++++++
+>  fs/xfs/xfs_bmap_item.c         | 15 +++++++++------
+>  fs/xfs/xfs_bmap_util.c         | 10 ++++++++++
+>  3 files changed, 26 insertions(+), 6 deletions(-)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index ced3b996cd8a..ff5cc8a5d476 100644
-> --- a/fs/xfs/libxfs/xfs_bmap.c
-> +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -5787,7 +5787,8 @@ xfs_bmap_collapse_extents(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 7fc2b129a2e7..bcac769a7df6 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -40,6 +40,13 @@ struct xfs_ifork {
+>   */
+>  #define XFS_IEXT_ADD_NOSPLIT_CNT	(1)
 >  
-> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
-> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> +/*
+> + * Punching out an extent from the middle of an existing extent can cause the
+> + * extent count to increase by 1.
+> + * i.e. | Old extent | Hole | Old extent |
+> + */
+> +#define XFS_IEXT_PUNCH_HOLE_CNT		(1)
+> +
+>  /*
+>   * Fork handling.
+>   */
+> diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+> index 6a7dcea4ad40..323cee00bd45 100644
+> --- a/fs/xfs/xfs_bmap_item.c
+> +++ b/fs/xfs/xfs_bmap_item.c
+> @@ -440,6 +440,7 @@ xfs_bui_item_recover(
+>  	bool				op_ok;
+>  	unsigned int			bui_type;
+>  	int				whichfork;
+> +	int				iext_delta;
+>  	int				error = 0;
 >  
->  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
->  		error = xfs_iread_extents(tp, ip, whichfork);
-> @@ -5904,7 +5905,8 @@ xfs_bmap_insert_extents(
->  	if (XFS_FORCED_SHUTDOWN(mp))
->  		return -EIO;
+>  	/* Only one mapping operation per BUI... */
+> @@ -519,12 +520,14 @@ xfs_bui_item_recover(
+>  	}
+>  	xfs_trans_ijoin(tp, ip, 0);
 >  
-> -	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL));
-> +	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
-> +	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+> -	if (bui_type == XFS_BMAP_MAP) {
+> -		error = xfs_iext_count_may_overflow(ip, whichfork,
+> -				XFS_IEXT_ADD_NOSPLIT_CNT);
+> -		if (error)
+> -			goto err_inode;
+> -	}
+> +	if (bui_type == XFS_BMAP_MAP)
+> +		iext_delta = XFS_IEXT_ADD_NOSPLIT_CNT;
+> +	else
+> +		iext_delta = XFS_IEXT_PUNCH_HOLE_CNT;
+> +
+> +	error = xfs_iext_count_may_overflow(ip, whichfork, iext_delta);
+> +	if (error)
+> +		goto err_inode;
 >  
->  	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
->  		error = xfs_iread_extents(tp, ip, whichfork);
+>  	count = bmap->me_len;
+>  	error = xfs_trans_log_finish_bmap_update(tp, budp, type, ip, whichfork,
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index dcd6e61df711..0776abd0103c 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -891,6 +891,11 @@ xfs_unmap_extent(
+>  
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> +	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> +			XFS_IEXT_PUNCH_HOLE_CNT);
+> +	if (error)
+> +		goto out_trans_cancel;
+> +
+>  	error = xfs_bunmapi(tp, ip, startoffset_fsb, len_fsb, 0, 2, done);
+>  	if (error)
+>  		goto out_trans_cancel;
+> @@ -1176,6 +1181,11 @@ xfs_insert_file_space(
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	xfs_trans_ijoin(tp, ip, 0);
+>  
+> +	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
+> +			XFS_IEXT_PUNCH_HOLE_CNT);
+> +	if (error)
+> +		goto out_trans_cancel;
+> +
+>  	/*
+>  	 * The extent shifting code works on extent granularity. So, if stop_fsb
+>  	 * is not the starting block of extent, we need to split the extent at
 > -- 
-> 2.26.2
+> 2.28.0
 > 
