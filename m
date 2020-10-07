@@ -2,191 +2,196 @@ Return-Path: <SRS0=AHt9=DO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A091FC4363C
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 21:15:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DBE4C4363D
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 21:49:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66D8120872
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 21:15:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC9F52137B
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 21:49:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="enJS9XPM"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="qVPPzYo5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728285AbgJGVPj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Oct 2020 17:15:39 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37277 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727821AbgJGVPi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 17:15:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602105337;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=pJAmEsObc3GBVmbzycGf7Hg/e/c/NZxFf/Al/ZlXJRs=;
-        b=enJS9XPMpAll45EVc6lhNk3Raxuv1W4TQR+kGIQ/hCfCko3DM+955aewuTbaaig8g1sXM2
-        gtiR1h1XVTisUUhAXHarGXkg3BR8JekhxZLvehMTw51VX39+116tdhfj9tStnjGdWpAnbU
-        epl7fqJ6MjhPa/TeR4RGd1W3g1EXyjE=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-211-Fl9FKX8hOGCtWD54p-7Llw-1; Wed, 07 Oct 2020 17:15:35 -0400
-X-MC-Unique: Fl9FKX8hOGCtWD54p-7Llw-1
-Received: by mail-wm1-f69.google.com with SMTP id o136so1580750wme.8
-        for <linux-xfs@vger.kernel.org>; Wed, 07 Oct 2020 14:15:35 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=pJAmEsObc3GBVmbzycGf7Hg/e/c/NZxFf/Al/ZlXJRs=;
-        b=cz89fdEdNqWAidq0ZXbXc55CNMBGSLokmF81UyMaRF2f4Nt31h+nOOVl8jwvO+7rdj
-         cbsyhFDmKUXIknV4fJvfDqOQCPccCATbEoY/Qiukvm1aOarV4LtJ1o3un7Gh2xbcPxIg
-         Q+4uiZuYJ/dHXl08pno7g9GL961sU9xFb/PVlK7qMLp95XSBMMJW2zB9cjdQrmfauDGb
-         MUyBu7OLJsVCclqicBGoxnely+xizJ0sW+unFD88s7KygX4VYa4LVpqMyKDanuSB9A7N
-         UnfIvyYtldgal6BSzl9IpPHGkri9QTPxBvHWcr3slvC9gu06frT2vWtFZzSep3ujOzbb
-         Xhjw==
-X-Gm-Message-State: AOAM531+KMYMgRbuocsEWuoyqskvCigUCRplrrJssRdG8O2rVT586VaX
-        yL4Lw/Wa4UfmeIktokqQ0KuzCQAhYgRKSILczsDuhkBu1LjA197n7xYm4hQwuQQo6ZvgDC+SA4B
-        GfUD7L592Hco+OB/TvP8B
-X-Received: by 2002:a7b:cbd1:: with SMTP id n17mr5126378wmi.120.1602105334174;
-        Wed, 07 Oct 2020 14:15:34 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwQFjcoZoLRZqpUsXJ3LOAMm5FGyq3rhQ92uPo9FTaZpcbZ9LZQFVTpzN6huYb+woE1dClgOA==
-X-Received: by 2002:a7b:cbd1:: with SMTP id n17mr5126367wmi.120.1602105333916;
-        Wed, 07 Oct 2020 14:15:33 -0700 (PDT)
-Received: from localhost.localdomain ([84.19.91.81])
-        by smtp.gmail.com with ESMTPSA id h1sm4020724wrx.33.2020.10.07.14.15.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Oct 2020 14:15:33 -0700 (PDT)
-Subject: Re: [PATCH v9 4/4] xfs: replace mrlock_t with rw_semaphores
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org
-References: <20201006191541.115364-1-preichl@redhat.com>
- <20201006191541.115364-5-preichl@redhat.com>
- <20201007012159.GA49547@magnolia>
- <066ebfa6-25a2-aee4-a01c-3803ef716361@sandeen.net>
- <20201007152554.GL49559@magnolia>
-From:   Pavel Reichl <preichl@redhat.com>
-Message-ID: <4cd57497-4670-f96f-01a0-0c587e77548d@redhat.com>
-Date:   Wed, 7 Oct 2020 23:15:32 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1728229AbgJGVth (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Oct 2020 17:49:37 -0400
+Received: from hqnvemgate26.nvidia.com ([216.228.121.65]:10433 "EHLO
+        hqnvemgate26.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726105AbgJGVth (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 17:49:37 -0400
+Received: from hqmail.nvidia.com (Not Verified[216.228.121.13]) by hqnvemgate26.nvidia.com (using TLS: TLSv1.2, AES256-SHA)
+        id <B5f7e37e40001>; Wed, 07 Oct 2020 14:49:24 -0700
+Received: from HQMAIL111.nvidia.com (172.20.187.18) by HQMAIL101.nvidia.com
+ (172.20.187.10) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 7 Oct
+ 2020 21:49:36 +0000
+Received: from rcampbell-dev.nvidia.com (10.124.1.5) by mail.nvidia.com
+ (172.20.187.18) with Microsoft SMTP Server id 15.0.1473.3 via Frontend
+ Transport; Wed, 7 Oct 2020 21:49:36 +0000
+From:   Ralph Campbell <rcampbell@nvidia.com>
+To:     <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
+        <linux-kernel@vger.kernel.org>, <linux-ext4@vger.kernel.org>
+CC:     Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Ralph Campbell" <rcampbell@nvidia.com>
+Subject: [PATCH v2] ext4/xfs: add page refcount helper
+Date:   Wed, 7 Oct 2020 14:49:25 -0700
+Message-ID: <20201007214925.11181-1-rcampbell@nvidia.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-In-Reply-To: <20201007152554.GL49559@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-NVConfidentiality: public
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1602107364; bh=REj8QP14NN2VWymC9pd1yxt9jHOscnBs9nwknQCUye0=;
+        h=From:To:CC:Subject:Date:Message-ID:X-Mailer:MIME-Version:
+         X-NVConfidentiality:Content-Transfer-Encoding:Content-Type;
+        b=qVPPzYo5AsUUHwus/S8Ekhyio/IAdtBrC6rBk43gpPR44t506lOgv7FACMlrPcebX
+         ZLxuBFBl+bbjpwzC5xKe3ZNDanoYq3hpP9YuWHoKAUFkpmQzwlZtKUjo5MMT4ltMyS
+         Wduyz1Xy7k+v+rJnc/V1Qw8MiHeuuhrppUxCc/wNr9+xtaawmxmlOPjQKfE8ulelhi
+         XdmOd/vMiAsj5HqRLP3zkooeipjGcmVtyFPw5s1SjWeUqiFWlZt3xkIK7oyDXa8xkr
+         QgaPDWkuP1DQJ2io/rptyAJIfDUGJDOKgktAodAK73J42JSasCWO5KuvnY52qevauN
+         hd7lr9rnqU5jg==
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+There are several places where ZONE_DEVICE struct pages assume a reference
+count =3D=3D 1 means the page is idle and free. Instead of open coding this=
+,
+add helper functions to hide this detail.
 
+Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+Acked-by: Theodore Ts'o <tytso@mit.edu> # for fs/ext4/inode.c
+---
 
-On 10/7/20 5:25 PM, Darrick J. Wong wrote:
-> On Wed, Oct 07, 2020 at 09:17:13AM -0500, Eric Sandeen wrote:
->> On 10/6/20 8:21 PM, Darrick J. Wong wrote:
->>> On Tue, Oct 06, 2020 at 09:15:41PM +0200, Pavel Reichl wrote:
->>>> Remove mrlock_t as it does not provide any extra value over
->>>> rw_semaphores. Make i_lock and i_mmaplock native rw_semaphores and
->>>> replace mr*() functions with native rwsem calls.
->>>>
->>>> Release the lock in xfs_btree_split() just before the work-queue
->>>> executing xfs_btree_split_worker() is scheduled and make
->>>> xfs_btree_split_worker() to acquire the lock as a first thing and
->>>> release it just before returning from the function. This it done so the
->>>> ownership of the lock is transfered between kernel threads and thus
->>>> lockdep won't complain about lock being held by a different kernel
->>>> thread.
->>>>
->>>> Signed-off-by: Pavel Reichl <preichl@redhat.com>
->>>> ---
->>>>  fs/xfs/libxfs/xfs_btree.c | 14 +++++++
->>>>  fs/xfs/mrlock.h           | 78 ---------------------------------------
->>>>  fs/xfs/xfs_inode.c        | 36 ++++++++++--------
->>>>  fs/xfs/xfs_inode.h        |  4 +-
->>>>  fs/xfs/xfs_iops.c         |  4 +-
->>>>  fs/xfs/xfs_linux.h        |  2 +-
->>>>  fs/xfs/xfs_super.c        |  6 +--
->>>>  7 files changed, 41 insertions(+), 103 deletions(-)
->>>>  delete mode 100644 fs/xfs/mrlock.h
->>>>
->>>> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
->>>> index 2d25bab68764..1d1bb8423688 100644
->>>> --- a/fs/xfs/libxfs/xfs_btree.c
->>>> +++ b/fs/xfs/libxfs/xfs_btree.c
->>>> @@ -2816,6 +2816,7 @@ xfs_btree_split_worker(
->>>>  	unsigned long		pflags;
->>>>  	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
->>>>  
->>>> +	rwsem_acquire(&args->cur->bc_ino.ip->i_lock.dep_map, 0, 0, _RET_IP_);
->>> These calls also need a comment explaining just what they're doing.
->>>
->>>>  	/*
->>>>  	 * we are in a transaction context here, but may also be doing work
->>>>  	 * in kswapd context, and hence we may need to inherit that state
->>>> @@ -2832,6 +2833,7 @@ xfs_btree_split_worker(
->>>>  	complete(args->done);
->>>>  
->>>>  	current_restore_flags_nested(&pflags, new_pflags);
->>>> +	rwsem_release(&args->cur->bc_ino.ip->i_lock.dep_map, _THIS_IP_);
->>> Note that as soon as you call complete(), xfs_btree_split can wake up
->>> and return, which means that *args could now point to reclaimed stack
->>> space.  This leads to crashes and memory corruption in generic/562 on
->>> a 1k block filesystem (though in principle this can happen anywhere):
->>
->>
->> What's the right way out of this; store *ip when we enter the function
->> and use that to get to the map, rather than args i guess?
-> 
-> Er, no, because the worker could also get preempted right after
-> complete() and take so long to get rescheduled that the the inode have
-> been reclaimed.  Think about it -- the original thread is waiting on the
-> completion that it passed to the worker through $args, and therefore the
-> worker cannot touch any of the resources it was accessing through $args
-> after calling complete()....
+Changes in v2:
+I strongly resisted the idea of extending this patch but after Jan
+Kara's comment about there being more places that could be cleaned
+up, I felt compelled to make this one tensy wensy change to add
+a dax_wakeup_page() to match the dax_wait_page().
+I kept the Reviewed/Acked-bys since I don't think this substantially
+changes the patch.
 
-Hi,
+ fs/dax.c            |  4 ++--
+ fs/ext4/inode.c     |  5 +----
+ fs/xfs/xfs_file.c   |  4 +---
+ include/linux/dax.h | 15 +++++++++++++++
+ mm/memremap.c       |  3 ++-
+ 5 files changed, 21 insertions(+), 10 deletions(-)
 
-thanks for the comments, however for some reason I cannot reproduce the same memory corruption you are getting.
-
-Do you think that moving the 'rwsem_release()' right before the 'complete()' should fix the problem?
-
-Something like:
-
-
-+       /*
-+        * Update lockdep's lock ownership information to point to
-+        * this thread as the thread that scheduled this worker is waiting
-+        * for it's completion.
-+        */
-        rwsem_acquire(&args->cur->bc_ino.ip->i_lock.dep_map, 0, 0, _RET_IP_);
-        /*
-         * we are in a transaction context here, but may also be doing work
-@@ -2830,10 +2835,15 @@ xfs_btree_split_worker(
- 
-        args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
-                                         args->key, args->curp, args->stat);
-+       /*
-+        * Update lockdep's lock ownership information to reflect that we will
-+        * be transferring the ilock from this worker back to the scheduling
-+        * thread.
-+        */
-+       rwsem_release(&args->cur->bc_ino.ip->i_lock.dep_map, _THIS_IP_);
-        complete(args->done);
- 
-        current_restore_flags_nested(&pflags, new_pflags);
--       rwsem_release(&args->cur->bc_ino.ip->i_lock.dep_map, _THIS_IP_);
-
-
-
-> 
-> --D
-> 
->> Thanks,
->> -Eric
-> 
+diff --git a/fs/dax.c b/fs/dax.c
+index 5b47834f2e1b..85c63f735909 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -358,7 +358,7 @@ static void dax_disassociate_entry(void *entry, struct =
+address_space *mapping,
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page =3D pfn_to_page(pfn);
+=20
+-		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
++		WARN_ON_ONCE(trunc && !dax_layout_is_idle_page(page));
+ 		WARN_ON_ONCE(page->mapping && page->mapping !=3D mapping);
+ 		page->mapping =3D NULL;
+ 		page->index =3D 0;
+@@ -372,7 +372,7 @@ static struct page *dax_busy_page(void *entry)
+ 	for_each_mapped_pfn(entry, pfn) {
+ 		struct page *page =3D pfn_to_page(pfn);
+=20
+-		if (page_ref_count(page) > 1)
++		if (!dax_layout_is_idle_page(page))
+ 			return page;
+ 	}
+ 	return NULL;
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index 771ed8b1fadb..132620cbfa13 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -3937,10 +3937,7 @@ int ext4_break_layouts(struct inode *inode)
+ 		if (!page)
+ 			return 0;
+=20
+-		error =3D ___wait_var_event(&page->_refcount,
+-				atomic_read(&page->_refcount) =3D=3D 1,
+-				TASK_INTERRUPTIBLE, 0, 0,
+-				ext4_wait_dax_page(ei));
++		error =3D dax_wait_page(ei, page, ext4_wait_dax_page);
+ 	} while (error =3D=3D 0);
+=20
+ 	return error;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 3d1b95124744..a5304aaeaa3a 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -749,9 +749,7 @@ xfs_break_dax_layouts(
+ 		return 0;
+=20
+ 	*retry =3D true;
+-	return ___wait_var_event(&page->_refcount,
+-			atomic_read(&page->_refcount) =3D=3D 1, TASK_INTERRUPTIBLE,
+-			0, 0, xfs_wait_dax_page(inode));
++	return dax_wait_page(inode, page, xfs_wait_dax_page);
+ }
+=20
+ int
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index b52f084aa643..e2da78e87338 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -243,6 +243,21 @@ static inline bool dax_mapping(struct address_space *m=
+apping)
+ 	return mapping->host && IS_DAX(mapping->host);
+ }
+=20
++static inline bool dax_layout_is_idle_page(struct page *page)
++{
++	return page_ref_count(page) =3D=3D 1;
++}
++
++static inline void dax_wakeup_page(struct page *page)
++{
++	wake_up_var(&page->_refcount);
++}
++
++#define dax_wait_page(_inode, _page, _wait_cb)				\
++	___wait_var_event(&(_page)->_refcount,				\
++		dax_layout_is_idle_page(_page),				\
++		TASK_INTERRUPTIBLE, 0, 0, _wait_cb(_inode))
++
+ #ifdef CONFIG_DEV_DAX_HMEM_DEVICES
+ void hmem_register_device(int target_nid, struct resource *r);
+ #else
+diff --git a/mm/memremap.c b/mm/memremap.c
+index 2bb276680837..504a10ff2edf 100644
+--- a/mm/memremap.c
++++ b/mm/memremap.c
+@@ -12,6 +12,7 @@
+ #include <linux/types.h>
+ #include <linux/wait_bit.h>
+ #include <linux/xarray.h>
++#include <linux/dax.h>
+=20
+ static DEFINE_XARRAY(pgmap_array);
+=20
+@@ -508,7 +509,7 @@ void free_devmap_managed_page(struct page *page)
+ {
+ 	/* notify page idle for dax */
+ 	if (!is_device_private_page(page)) {
+-		wake_up_var(&page->_refcount);
++		dax_wakeup_page(page);
+ 		return;
+ 	}
+=20
+--=20
+2.20.1
 
