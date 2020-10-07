@@ -2,83 +2,102 @@ Return-Path: <SRS0=AHt9=DO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04BC6C4363D
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:41:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5631DC4363D
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:51:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7E49212CC
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:41:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF31D208C7
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:51:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="utEloKxS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728676AbgJGOlt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Oct 2020 10:41:49 -0400
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:38855 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728535AbgJGOls (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 10:41:48 -0400
-Received: from callcc.thunk.org (pool-72-74-133-215.bstnma.fios.verizon.net [72.74.133.215])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 097EfEdZ005736
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 7 Oct 2020 10:41:15 -0400
-Received: by callcc.thunk.org (Postfix, from userid 15806)
-        id 3E8A6420107; Wed,  7 Oct 2020 10:41:14 -0400 (EDT)
-Date:   Wed, 7 Oct 2020 10:41:14 -0400
-From:   "Theodore Y. Ts'o" <tytso@mit.edu>
-To:     Dan Williams <dan.j.williams@intel.com>
-Cc:     Ralph Campbell <rcampbell@nvidia.com>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Christoph Hellwig <hch@lst.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] ext4/xfs: add page refcount helper
-Message-ID: <20201007144114.GB235506@mit.edu>
-References: <20201006230930.3908-1-rcampbell@nvidia.com>
- <CAPcyv4gYtCmzPOWErYOkCCfD0ZvLcrgfR8n2kG3QPMww9B0gyg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4gYtCmzPOWErYOkCCfD0ZvLcrgfR8n2kG3QPMww9B0gyg@mail.gmail.com>
+        id S1728662AbgJGOvV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Oct 2020 10:51:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35056 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728571AbgJGOvV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 10:51:21 -0400
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10D34C061755
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2020 07:51:21 -0700 (PDT)
+Received: by mail-pl1-x643.google.com with SMTP id p11so1123246pld.5
+        for <linux-xfs@vger.kernel.org>; Wed, 07 Oct 2020 07:51:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=G1VEGJN5kl0xdQPD+w+UcbuhtI9z1nGQhktbcM7/qKQ=;
+        b=utEloKxSsQT0D1gDro3XgEXfrDPxpyo+ExZSOU3CQDWHV0S6wBsBsB1QTkfp7K5G3U
+         QlULKr0GzEh2bC/PXAf4e7qU6MFF6RfPAVLfvqHkypfi9yu1rx/ENKPsmF9d67+kHRsx
+         +3UDvQH1T+6DTfKl/KCg0NO98dc99lVMsOW857vFT0KqETi1a+sZyrvFiQapGTYwfpJk
+         dJfHJq1NcoZyoX1i5ZgMJLt6U0SD3v58qXR8yhHrJZb2GPsPOv2ZBLfU5ctB2EMfVGbc
+         /xuN6Z6eS24uKaIThw6f0BzWtuuNLsbLp2r6LLz/cB3xZembEb68/fX+MbJlBWAJuf91
+         L3bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=G1VEGJN5kl0xdQPD+w+UcbuhtI9z1nGQhktbcM7/qKQ=;
+        b=LKE5eavdRvG6s+o+zc3mAsNR7HDqs02N5a80CvZRalasGoGiWQ39G2ahTiRQVl8FTz
+         cgjoxurkRwBGXhOpGM7f49qpv6QZubzIVMGxaQxYRGY6AsVYc8y2qY1+3oUcJfd+tAHw
+         rVmYGj9144StoPoaSpDscEQC415RFjFhku/t2+bMT68Ip9v4mMBfZbFuHRHUUcubuTr/
+         VB4EdAyZHcxYDZEO03XN+e79DjnU7Op3SnHOvOSKfCDu07HqIshXmavObqGxPLB4QSZZ
+         bFFirSRjSKgvJB37w61Bpp9RWKj1xQ9oE6R+gTdzqb5Y+Ij57sWdA5EuE88r2ZDx9OXF
+         c2Kg==
+X-Gm-Message-State: AOAM533EFDmJXEqPvPzGGHLWPIJwvCMWxKO+C89IEFqJ+KUZOuwJ9bdm
+        yDwDTKyB2JE5m7AS1nCD6d0ArL3MAg==
+X-Google-Smtp-Source: ABdhPJxBxO2AWOHHOgxkQWqIR4wvWvhvXq6J4XRjBFTNKUwBpXvHeDA5A+DwyYfaS0MOfcmrflE38Q==
+X-Received: by 2002:a17:90a:3846:: with SMTP id l6mr3163540pjf.189.1602082280183;
+        Wed, 07 Oct 2020 07:51:20 -0700 (PDT)
+Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id x22sm3443402pfp.181.2020.10.07.07.51.19
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 07 Oct 2020 07:51:19 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [PATCH v3 0/5] xfs: random fixes for disk quota
+Date:   Wed,  7 Oct 2020 22:51:07 +0800
+Message-Id: <1602082272-20242-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 06, 2020 at 07:40:05PM -0700, Dan Williams wrote:
-> On Tue, Oct 6, 2020 at 4:09 PM Ralph Campbell <rcampbell@nvidia.com> wrote:
-> >
-> > There are several places where ZONE_DEVICE struct pages assume a reference
-> > count == 1 means the page is idle and free. Instead of open coding this,
-> > add a helper function to hide this detail.
-> >
-> > Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >
-> > I'm resending this as a separate patch since I think it is ready to
-> > merge. Originally, this was part of an RFC and is unchanged from v3:
-> > https://lore.kernel.org/linux-mm/20201001181715.17416-1-rcampbell@nvidia.com
-> >
-> > It applies cleanly to linux-5.9.0-rc7-mm1 but doesn't really
-> > depend on anything, just simple merge conflicts when applied to
-> > other trees.
-> > I'll let the various maintainers decide which tree and when to merge.
-> > It isn't urgent since it is a clean up patch.
-> 
-> Thanks Ralph, it looks good to me. Jan, or Ted care to ack? I don't
-> have much else pending for dax at the moment as Andrew is carrying my
-> dax updates for this cycle. Andrew please take this into -mm if you
-> get a chance. Otherwise I'll cycle back to it when some other dax
-> updates arrive in my queue.
+From: Kaixu Xia <kaixuxia@tencent.com>
 
-Acked-by: Theodore Ts'o <tytso@mit.edu> # for fs/ext4/inode.c
+Hi all,
+
+This patchset include random fixes and code cleanups for disk quota.
+In order to make it easier to track, I bundle them up and put all
+the scattered patches into a single patchset.
+
+Changes for v3:
+ -add a separate patch to delete duplicated tp->t_dqinfo null check
+  and allocation.
+
+Changes for v2: 
+ -add the ASSERT for the arguments O_{u,g,p}dqpp.
+ -fix the strange indent.
+ -remove the XFS_TRANS_DQ_DIRTY flag.
+ -add more commit log description for delta judgement.
+
+Kaixu Xia (5):
+  xfs: do the ASSERT for the arguments O_{u,g,p}dqpp
+  xfs: fix the indent in xfs_trans_mod_dquot
+  xfs: delete duplicated tp->t_dqinfo null check and allocation
+  xfs: check tp->t_dqinfo value instead of the XFS_TRANS_DQ_DIRTY flag
+  xfs: directly return if the delta equal to zero
+
+ fs/xfs/libxfs/xfs_shared.h |  1 -
+ fs/xfs/xfs_inode.c         |  8 +---
+ fs/xfs/xfs_qm.c            |  3 ++
+ fs/xfs/xfs_trans_dquot.c   | 75 ++++++++++++--------------------------
+ 4 files changed, 27 insertions(+), 60 deletions(-)
+
+-- 
+2.20.0
+
