@@ -8,55 +8,54 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50B25C4363D
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:04:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4767C4363D
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:04:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFE1721531
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:04:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5ECA020870
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:04:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=aol.com header.i=@aol.com header.b="T3fFyD3w"
+	dkim=pass (2048-bit key) header.d=aol.com header.i=@aol.com header.b="B+o5Ouj6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728547AbgJGOEw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Oct 2020 10:04:52 -0400
-Received: from sonic304-24.consmr.mail.gq1.yahoo.com ([98.137.68.205]:39426
-        "EHLO sonic304-24.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728469AbgJGOEw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 10:04:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=aol.com; s=a2048; t=1602079491; bh=PF3NlLL686qoRHiEQmKC0PRCUmBeoYYPFEdU023sH6w=; h=From:To:Cc:Subject:Date:In-Reply-To:References:From:Subject; b=T3fFyD3wXzVA+nqjxN+8TD0AE6O6gaysfapRze6uIaU4aTJNfIysbqGHC+MWb7FYyqDPRxUXX9JZp4Y/bYxsVBGv1jEA5m0dzOmyGiq5vhn6qdABN6LPltt9N16KjfHDwXmCAe/milkL7/ALZeZ/9tVARgQu5TuxNg/yz0LZ5D2jay+byYJchlRdKDPYQd3STFIT0nrsf9kbkF8XjlCNXgSa3UHvO9QkJSPJyeSOnGlh1dk/omspofgTVn20L8lBNaSkqgViZ9PMn5hMQGQuYreCYk0Os8NDA5YEHfD73BaBg8d9N1B0CfYpkznxJgeNPCmASFyKMhTCU+tivgTEfA==
-X-YMail-OSG: 6AVkQGIVM1nWcsC7wlwewqxm5BH6VaHe4gIfdudwWoMuK31205BLVRBGNZYbyrK
- Es66ctryDZEThiqaS0zbr2m.FjApn2MOWzEfP4c_OxorB3sMx.u9ctdEDmLS4NVlFt_1bW_qfo6d
- ynBfTHQ_0t1LYndq8IwLmGW5mB_5qCt5nKTrOEWcl_LkadjEuQiXAvV4Qon7qDi8322YsuJMwFOc
- Tp7IGpimGWrbR_AZynhAl3aOidMnprcsiJT97R2EsZ0I3V5SfolUvNbXsGgB.kiJxJRiBvY_X0vi
- T.BrHR3LfERM12GugqsSVKE61JFw5Oawd4nSu7XpK_UaOi.LJrvamBRyc5Jm3bKDr07EsSHDjGtz
- gTLfc9c3YhGZassUdrrjsHTwlpCZrNh6PZCFzoHz.d8a93AgVx8bcZCNcIc_iueoPE8hOwx0f2JF
- YlbmP7CM7rq0kNLgY3B_S6h7RkLR9Lz3moIp2c18hZBdkAnThsqRWLTvjWGjXCbm38mrl02MyimA
- Oee55ocI09i7wIjupCRvRzBOZmuE_BkH28Jyjri.4yDbd9sxtvb.ElUmeUy04tSzMJmLvbz9Q.1R
- 7qCv9vImnU3J2hIz_VhqWsaFXS4oX7pftf3HdiBQqPO99ofMQB6R63ijXMvzUD0t4pjgN8o7zcls
- M8KVbDqSq_zEDH1TdE1PJ6liJiU2foYBaSuQNaGLnpF2sigmmR_X5xo4zySc6zYx2aL6_5r4tcVB
- fF9ryD4lPXDtmchk7hZlVWmpxCE7.YQutILpsXuYw49OsSDwlQ8aL8wWsonI96Pmbs_s3tMfTvRM
- lzGrP33fRMYJWqKFAnMYt95hd611xUh2vkAFWbtY_6uHLB0xU8dkDmUmJDUYpkA9xG9yJFVEMZJq
- kcaJo1THb9.JGTTqCb4TK16JN2Yz2gPwL8UcSODKH64LGbzkIBswwfF6VsBGqiLjBP3iAq2X6a1.
- nnl9kJqfinP3TzRZA3MTkDfkNyR1_LLxLQjxVVPOpVNKJ5uABfw4sPOPTK83YhZ6NIRx4Km4w5JE
- 3QiaK5UkACcTzJ_AqcnhCv9h8vdVX4WosCJlwRatncGW5VTpk6f5DG.tXGyF8UzDAOuQlT5UcHCY
- Val1S.WXCe3IdrGBd0trDWeogXsxcDlcH7QdUQhCXsVYMVExcKCq.MFU1tDKQN5OsHvJUI6gj8y8
- .SKqsm.jRcrPr4cAXiyWP8R9kkwkbs43tXvP6D3pBWi2jgTiWDiNirfc7YdeKub2wFkec5b..v2Q
- t.d5LJ0sHPSinL3wz20mpIQuuLLOsR4kK3b9peiIABYbyO1NJLlv108.v5AGFPwF5SDfFkdsvFB2
- 7kg6v.Rk4yIJ.tSAOhbJtVmEOcAJj5BV4eizIHFrpAt_05Rbz96anqdKdnZuXfnHJArCHniWABvV
- i3xgFiU30nxgYZ5Z02WZyqh3iM7PrcKvQvB7qXzNl.Xaz4vPmeWmhWcy.YJOfSJLg7X5VM8ok39V
- weZA00cPSvVU7.y1gNstGfjDKxQGWemKdCzZgQb.UrMNZeX3Oclm87I429xKU3lEO6FOtCm.fCul
- oFGh0lEQ-
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic304.consmr.mail.gq1.yahoo.com with HTTP; Wed, 7 Oct 2020 14:04:51 +0000
+        id S1728549AbgJGOE4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Oct 2020 10:04:56 -0400
+Received: from sonic305-20.consmr.mail.gq1.yahoo.com ([98.137.64.83]:45683
+        "EHLO sonic305-20.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728469AbgJGOEz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 10:04:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=aol.com; s=a2048; t=1602079495; bh=/bc3QL8qK6G9BCq69i20sSRTNqhb1LMZZCXRzQMgUnU=; h=From:To:Cc:Subject:Date:In-Reply-To:References:From:Subject; b=B+o5Ouj6ZgXQgOfDlr5Y66iMnqFZApvTW7kfZgrZcp5f3qZYkQ2OyOllP6RTB8XnvKRA4nAZf9VOuVl3kf2fOKBlG381RfgaWItvYceOVXpu9z+0Tnu758wZ1smBCUw1iIA4zu7no2Gt3nfTizKyv0rNCqswBG44UZkZG15Ezs9dkWDqzj9Wyx5lgNYLYuMaRwgTIsbs/hvko+uh6Hq5rjGesUeGy3/lb6/ShA3FuIMUbHQgusQdMBcFHug8woyZsTuoFhaYLsfGDXFZPgcVsNriMW43XFkqyI6fTErAjygzNmy83akwbAyrrkLk+QJwF535SbUWYuS6pkNbZPXVkw==
+X-YMail-OSG: iT8FFrgVM1k_g3pD6BfMQV_chaAbF117qF9TzLeG8Drm844D3kKRToJ9wg2N8dG
+ 8IdAwBr9Sm3daoMQsOb5ylAeOXmKBTBhhA.5GqnJ.4k2gEF7QB6EFNLr8cMFGT7UQAolByDi1Ha5
+ HzLH09hodff3GUYXiILf.HVW_E.xRMQdCBP4XNAELxpxPMATEsncJNXJ_ZqTLKM5qAF4JV3iTIbf
+ aisJwiZdbVhm6.gk8vpqe_G1dhlX69WhASwUqOiximU_.S583vGL0U3O22zXYcTClkpWalj2k.qb
+ KKjosq0Tk_in8A_fmxL.ak5YbcTWTJ5HdgB.G130xPW0tJ8Nf.FrLYs3dlwOLnQ17r2s.2o5sWt_
+ gXsea2f0Q5kf9yDOzzi7eCcC1jJZkl6ylxon.HrCfkNLCMCXcF.fRmE2sKZJ09l9Ub8rFSTxO7io
+ c2AoQMdNKM5LRNhNpvT4BrfPIDKMoSsbUDt2hlSlFjkumR4khmq6IYcoZuERaEAVoC69frBEgabn
+ F1A1hqHDr1mWp3QZpk_EzSmN89IvcN3An.HyGs7JZDQ2BeiuqLAgIVFPdAXYE6XdIpb8b2_yCjqH
+ q3GRe317MpfqTyOc567ypj0o7RqotxSJz5i0hhBccCMspEYiEtEfcsU5LxnuOP7bzGrek2k2dYey
+ M8WFa6XoNxObl8ZJNBaDoDtCH56QFHmHvLm.f1fbOhxUvTYLsMXozFTPv_LePUTf08I8xXWMMxR5
+ UA5I9Nu1tGzFS_zMbUWgdfR9l8dWkUitkvCFhnXO3kOZZspInWvfDUmR6hAI1o5rD.XSYH6H9p1E
+ VBpX4MqE9cqonRwx6JR9MZGpRlMcHoNsW8Wu8qGWkRGyCVB7Sf31rX8TfCq4BGRZRdeMpv8ncBrf
+ Pep0hWqfaSi1.Up636tnW3L9nWLksafHjP38vG9D0q.tYeQFwAQZIDV.N1FuCjBY4T.GxKmO2j4P
+ j3DK2KPstfgsWDszS5m6BoBr8T1nWZ7SKSYt.aw3Ss2VYFItH0_rjU6thnlpSWaw0.I_anuQMRRM
+ 1y7FLspZBXHj8nI2LHlXD9toncEcRtTa6A0EVxNGAfw8lIfX26h33kilS2AWS8lTHvp1UqX.imW_
+ pgatjGDkm7qSeJm_lmswGtvmaqYo3brKypyWW0ThbDi0Bn_FZTSldBvgkUxOc4xt2cS_ptbyjAfu
+ mlsyYkpz.sxvBc7xC1bnrI61fNoo1aIIziCGtHO.rpND7jdPe.puZ3rPOLOOB.a8dVV7lSbIXJcH
+ IfgrapTE8VeS3IS9R0Q2e6JXWxTKgrHLDzot17qtXjJkUURVszHjSAEx9M5.nAPZgvbpZqA6Qysu
+ iYVzucrP0o0J016n9ifX7_eRSGXd4Wb9luSNIcI7d7ZAWTyeCmhQjMwbGYuO_ESeh64g72_r.DJQ
+ wbxsl4R4AnI7XzsEiWWlfZRfTaC_7aQl6rZE08EdB8NI6.yiojIKi2LHYKAnNbmGaps8U6hoE9hA
+ QSAA8M9du5VewL6VvvNZMYFKoN8LZNhwW.HtibsRJl7zvK.0-
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic305.consmr.mail.gq1.yahoo.com with HTTP; Wed, 7 Oct 2020 14:04:55 +0000
 Received: by smtp404.mail.ir2.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID a1aacd19ca90341b10418ab97793d328;
-          Wed, 07 Oct 2020 14:04:46 +0000 (UTC)
+          Wed, 07 Oct 2020 14:04:53 +0000 (UTC)
 From:   Gao Xiang <hsiangkao@aol.com>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     Eric Sandeen <sandeen@redhat.com>,
         "Darrick J . Wong" <darrick.wong@oracle.com>,
         Dave Chinner <david@fromorbit.com>,
         Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH v4 2/3] xfs: introduce xfs_validate_stripe_factors()
-Date:   Wed,  7 Oct 2020 22:04:01 +0800
-Message-Id: <20201007140402.14295-3-hsiangkao@aol.com>
+Subject: [PATCH v4 3/3] xfsprogs: make use of xfs_validate_stripe_factors()
+Date:   Wed,  7 Oct 2020 22:04:02 +0800
+Message-Id: <20201007140402.14295-4-hsiangkao@aol.com>
 X-Mailer: git-send-email 2.24.0
 In-Reply-To: <20201007140402.14295-1-hsiangkao@aol.com>
 References: <20201007140402.14295-1-hsiangkao@aol.com>
@@ -68,101 +67,64 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Gao Xiang <hsiangkao@redhat.com>
 
-Introduce a common helper to consolidate
-stripe validation process. Also make kernel
-code xfs_validate_sb_common() use it first.
+Check stripe numbers in calc_stripe_factors() by
+using xfs_validate_stripe_factors().
 
 Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 ---
- libxfs/xfs_sb.c | 54 +++++++++++++++++++++++++++++++++++++++----------
- libxfs/xfs_sb.h |  3 +++
- 2 files changed, 46 insertions(+), 11 deletions(-)
+ mkfs/xfs_mkfs.c | 23 +++++++----------------
+ 1 file changed, 7 insertions(+), 16 deletions(-)
 
-diff --git a/libxfs/xfs_sb.c b/libxfs/xfs_sb.c
-index d37d60b39a52..bd65828c844e 100644
---- a/libxfs/xfs_sb.c
-+++ b/libxfs/xfs_sb.c
-@@ -357,21 +357,13 @@ xfs_validate_sb_common(
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 2e6cd280e388..b7f8f98147eb 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -2289,12 +2289,6 @@ _("both data su and data sw options must be specified\n"));
+ 			usage();
  		}
- 	}
  
--	if (sbp->sb_unit) {
--		if (!xfs_sb_version_hasdalign(sbp) ||
--		    sbp->sb_unit > sbp->sb_width ||
--		    (sbp->sb_width % sbp->sb_unit) != 0) {
--			xfs_notice(mp, "SB stripe unit sanity check failed");
--			return -EFSCORRUPTED;
+-		if (dsu % cfg->sectorsize) {
+-			fprintf(stderr,
+-_("data su must be a multiple of the sector size (%d)\n"), cfg->sectorsize);
+-			usage();
 -		}
--	} else if (xfs_sb_version_hasdalign(sbp)) {
-+	if (!sbp->sb_unit ^ !xfs_sb_version_hasdalign(sbp)) {
- 		xfs_notice(mp, "SB stripe alignment sanity check failed");
- 		return -EFSCORRUPTED;
--	} else if (sbp->sb_width) {
--		xfs_notice(mp, "SB stripe width sanity check failed");
--		return -EFSCORRUPTED;
+-
+ 		dsunit  = (int)BTOBBT(dsu);
+ 		big_dswidth = (long long int)dsunit * dsw;
+ 		if (big_dswidth > INT_MAX) {
+@@ -2306,13 +2300,9 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
+ 		dswidth = big_dswidth;
  	}
  
-+	if (!xfs_validate_stripe_factors(mp, sbp->sb_unit, sbp->sb_width, 0))
-+		return -EFSCORRUPTED;
+-	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
+-	    (dsunit && (dswidth % dsunit != 0))) {
+-		fprintf(stderr,
+-_("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+-			dswidth, dsunit);
++	if (!xfs_validate_stripe_factors(NULL, BBTOB(dsunit), BBTOB(dswidth),
++					 cfg->sectorsize))
+ 		usage();
+-	}
  
- 	if (xfs_sb_version_hascrc(&mp->m_sb) &&
- 	    sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE) {
-@@ -1208,3 +1200,43 @@ xfs_sb_get_secondary(
- 	*bpp = bp;
- 	return 0;
- }
-+
-+/*
-+ * If sectorsize is specified, sunit / swidth must be in bytes;
-+ * or both can be in any kind of units (e.g. 512B sector or blocksize).
-+ */
-+bool
-+xfs_validate_stripe_factors(
-+	struct xfs_mount	*mp,
-+	int			sunit,
-+	int			swidth,
-+	int			sectorsize)
-+{
-+	if (sectorsize && sunit % sectorsize) {
-+		xfs_notice(mp,
-+"stripe unit (%d) must be a multiple of the sector size (%d)",
-+			   sunit, sectorsize);
-+		return false;
-+	}
-+
-+	if ((sunit && !swidth) || (!sunit && swidth)) {
-+		xfs_notice(mp,
-+"stripe unit (%d) and width (%d) are partially valid", sunit, swidth);
-+		return false;
-+	}
-+
-+	if (sunit > swidth) {
-+		xfs_notice(mp,
-+"stripe unit (%d) is too large of the stripe width (%d)", sunit, swidth);
-+		return false;
-+	}
-+
-+	if (sunit && (swidth % sunit)) {
-+		xfs_notice(mp,
-+"stripe width (%d) must be a multiple of the stripe unit (%d)",
-+			   swidth, sunit);
-+		return false;
-+	}
-+	return true;
-+}
-+
-diff --git a/libxfs/xfs_sb.h b/libxfs/xfs_sb.h
-index 92465a9a5162..015b2605f587 100644
---- a/libxfs/xfs_sb.h
-+++ b/libxfs/xfs_sb.h
-@@ -42,4 +42,7 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
- 				struct xfs_trans *tp, xfs_agnumber_t agno,
- 				struct xfs_buf **bpp);
+ 	/* If sunit & swidth were manually specified as 0, same as noalign */
+ 	if ((cli_opt_set(&dopts, D_SUNIT) || cli_opt_set(&dopts, D_SU)) &&
+@@ -2328,11 +2318,12 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
  
-+extern bool	xfs_validate_stripe_factors(struct xfs_mount *mp,
-+				int sunit, int swidth, int sectorsize);
-+
- #endif	/* __XFS_SB_H__ */
+ 	/* if no stripe config set, use the device default */
+ 	if (!dsunit) {
+-		/* Ignore nonsense from device.  XXX add more validation */
+-		if (ft->dsunit && ft->dswidth == 0) {
++		/* Ignore nonsense from device report. */
++		if (!xfs_validate_stripe_factors(NULL, ft->dsunit,
++						 ft->dswidth, 0)) {
+ 			fprintf(stderr,
+-_("%s: Volume reports stripe unit of %d bytes and stripe width of 0, ignoring.\n"),
+-				progname, BBTOB(ft->dsunit));
++_("%s: Volume reports invalid stripe unit (%d) and stripe width (%d), ignoring.\n"),
++				progname, BBTOB(ft->dsunit), BBTOB(ft->dswidth));
+ 			ft->dsunit = 0;
+ 			ft->dswidth = 0;
+ 		} else {
 -- 
 2.24.0
 
