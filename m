@@ -2,102 +2,114 @@ Return-Path: <SRS0=AHt9=DO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8C2AC4363D
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 22:00:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6852EC4363D
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 22:03:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66BD6221F0
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 22:00:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BF4F20872
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 22:03:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="Ncyj5HRy"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kggbdBZE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728807AbgJGWAM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Oct 2020 18:00:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45476 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728575AbgJGWAM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 18:00:12 -0400
-Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12A90C061755
-        for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2020 15:00:12 -0700 (PDT)
-Received: by mail-ej1-x643.google.com with SMTP id ce10so5130204ejc.5
-        for <linux-xfs@vger.kernel.org>; Wed, 07 Oct 2020 15:00:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=lT3B2ypuGco/P409+8M6gpuF12PaIQWc3S2n+DY8zro=;
-        b=Ncyj5HRyOHiv/PCCXeiIOREYqhKi9W7Kz+qYVEQlXmRkJQFhr4mPMx/M7DMnm6YtOW
-         DUL/0irEJWJ1u3Tn9PvlSn9dTNsY5IVKDzbC9mmRlGyJusWXyE84FSrRMHnC7+4R/s2K
-         JlmM8UKi1+egfyf0npBB325upNgCiCd5lLpYz+Qt+xyrV5CQrPP3johyniRb8z+kgaE1
-         GT+P5nqT7wPGuzMyK7J2sXKrVtMSHN7U9uJt8nssAD4vXadYIDhLD2lwmqXOOlH+//Pq
-         Hz5f0mZ598OqpvKpcokOiVFhrrXoK3FDSB6Diw9PKUvJFn/Wdx3dxk6fca3QGoU6OwHC
-         HCLw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=lT3B2ypuGco/P409+8M6gpuF12PaIQWc3S2n+DY8zro=;
-        b=BIO3qkYCzGRD2ZQtTJO0OzhgVUHbW53oBOwMmskWMkQHfvAic3KpkT8nsFrALkQTzl
-         pATRsK1vfFsERMQEFIL9ZCXqvdCN4plxaumMMOTbDhfXF46CTkKUcoOFwsnG0YiG6lpv
-         VJ3Hsohe6uWNOMkBYwspzL12oZZfYn3W9xCjbkOkps5xaP7L4xp2Vu/Z/JVvU2mneX2U
-         IrX1hfGJumItbAOl3eWvD4YrWl8rr0WdROtGBTM4M4xhgY6JGgZZja96quKVev5wnEys
-         TxYUDjW+LXSbLYovbAEeqZx2gO1cq3gy/DkljILfqeH99fWMZxo5Mtcr6b42vhifblYQ
-         cusQ==
-X-Gm-Message-State: AOAM530v9wVq0iYYKA0ah0cOOdTD1wmBmj932c4TLKtGOCvsUv/CxZYC
-        14ISG4KjfK4PZyD/ylLxzXwee48kvhAlrxJmPDfjAA==
-X-Google-Smtp-Source: ABdhPJwku5mxYKwAyqqbDYZNawCeRw0Upn7X7sfFjzI/V4bf8n3ZT6QOAaXMTZWtxx4JzYTkY6EwLAJYedQOql+eTOc=
-X-Received: by 2002:a17:906:4701:: with SMTP id y1mr5413376ejq.341.1602108010723;
- Wed, 07 Oct 2020 15:00:10 -0700 (PDT)
+        id S1728743AbgJGWDK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Oct 2020 18:03:10 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:59774 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728649AbgJGWDK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 18:03:10 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 097LnxeD028432;
+        Wed, 7 Oct 2020 22:02:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=30VPA9wkzflEsFt9m0b5R5LM0QqP+9K7EhqzCJxo6DM=;
+ b=kggbdBZEb78BltCY3sSnVn8Ua5mMu+JSrW6G7VntVTROEA4Wa+KXqlZf+EkkUHhqM3QF
+ a4hmVxG4+v7FDhWiGuprtRGCu2Id0GPXse4VMgdcjPqzx+MX1egTPJNVh2opctJtbC0n
+ /lNJ2hpaDpBixVNbC87/Q22KC+VwQrzdkeWUbQLS19sTJR7BpglRsMe3MFXVaqyvkYl0
+ YGdC6T2/lSTwi3qyjLCELl6CdUs/WAv3adn6lH69zwA+yQ0vaIQtYnZGzrdsK0GuP0aW
+ PUJaV47Hi7jezijKLsPCG/MTVvL2TQ4SnzA1/BqAcMB8zMy5zgX1MolqjRmA/dSDhU8Q 0w== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 33ym34sq26-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 07 Oct 2020 22:02:02 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 097LpKRp146353;
+        Wed, 7 Oct 2020 22:02:02 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 33y2vq1yvy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 07 Oct 2020 22:02:02 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 097M1was016694;
+        Wed, 7 Oct 2020 22:01:58 GMT
+Received: from localhost (/10.159.134.247)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 07 Oct 2020 15:01:58 -0700
+Date:   Wed, 7 Oct 2020 15:01:57 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xiakaixu1987@gmail.com
+Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH v3 3/5] xfs: delete duplicated tp->t_dqinfo null check
+ and allocation
+Message-ID: <20201007220157.GB6540@magnolia>
+References: <1602082272-20242-1-git-send-email-kaixuxia@tencent.com>
+ <1602082272-20242-4-git-send-email-kaixuxia@tencent.com>
 MIME-Version: 1.0
-References: <20201006230930.3908-1-rcampbell@nvidia.com> <20201007082517.GC6984@quack2.suse.cz>
-In-Reply-To: <20201007082517.GC6984@quack2.suse.cz>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 7 Oct 2020 14:59:59 -0700
-Message-ID: <CAPcyv4j=q4n1PDW5vwOFpkeDEoDv2_xXBL+xoGsRwPn_ej=hnA@mail.gmail.com>
-Subject: Re: [PATCH] ext4/xfs: add page refcount helper
-To:     Jan Kara <jack@suse.cz>
-Cc:     Ralph Campbell <rcampbell@nvidia.com>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Theodore Ts'o" <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1602082272-20242-4-git-send-email-kaixuxia@tencent.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999
+ malwarescore=0 suspectscore=3 spamscore=0 phishscore=0 bulkscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2010070139
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 priorityscore=1501
+ mlxscore=0 mlxlogscore=999 clxscore=1015 bulkscore=0 spamscore=0
+ malwarescore=0 phishscore=0 suspectscore=3 adultscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010070139
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 7, 2020 at 1:25 AM Jan Kara <jack@suse.cz> wrote:
->
-> On Tue 06-10-20 16:09:30, Ralph Campbell wrote:
-> > There are several places where ZONE_DEVICE struct pages assume a reference
-> > count == 1 means the page is idle and free. Instead of open coding this,
-> > add a helper function to hide this detail.
-> >
-> > Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
->
-> Looks as sane direction but if we are going to abstract checks when
-> ZONE_DEVICE page is idle, we should also update e.g.
-> mm/swap.c:put_devmap_managed_page() or
-> mm/gup.c:__unpin_devmap_managed_user_page() (there may be more places like
-> this but I found at least these two...). Maybe Dan has more thoughts about
-> this.
+On Wed, Oct 07, 2020 at 10:51:10PM +0800, xiakaixu1987@gmail.com wrote:
+> From: Kaixu Xia <kaixuxia@tencent.com>
+> 
+> The function xfs_trans_mod_dquot_byino() wrap around xfs_trans_mod_dquot()
+> to account for quotas, both of them do the null check and allocation. Thus
+> we can delete the duplicated operation in xfs_trans_mod_dquot_byino().
+> 
+> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 
-Yes, but I think that cleanup comes once the idle page count is
-unified to be 0 across typical and ZONE_DEVICE pages. Then
-free_devmap_managed_page() can be moved internal to __put_page(). For
-this patch it's just hiding the "idle == 1" assumption from
-dax-filesystems.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_trans_dquot.c | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index fe45b0c3970c..1b56065c9ff1 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -143,9 +143,6 @@ xfs_trans_mod_dquot_byino(
+>  	    xfs_is_quota_inode(&mp->m_sb, ip->i_ino))
+>  		return;
+>  
+> -	if (tp->t_dqinfo == NULL)
+> -		xfs_trans_alloc_dqinfo(tp);
+> -
+>  	if (XFS_IS_UQUOTA_ON(mp) && ip->i_udquot)
+>  		(void) xfs_trans_mod_dquot(tp, ip->i_udquot, field, delta);
+>  	if (XFS_IS_GQUOTA_ON(mp) && ip->i_gdquot)
+> -- 
+> 2.20.0
+> 
