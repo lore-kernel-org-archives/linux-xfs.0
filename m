@@ -2,102 +2,136 @@ Return-Path: <SRS0=AHt9=DO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40EA7C4363D
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:17:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10F5CC4363D
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:36:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7365212CC
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:17:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 961B121548
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 14:36:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="by95mwme"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728265AbgJGORP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Oct 2020 10:17:15 -0400
-Received: from sandeen.net ([63.231.237.45]:46156 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728177AbgJGORP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Oct 2020 10:17:15 -0400
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1728569AbgJGOgJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Oct 2020 10:36:09 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:38098 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728535AbgJGOgJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 10:36:09 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602081368;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=il3YpmjtKhASkC/ZXwr1418et/cRzf+XfCkFjJHc+lU=;
+        b=by95mwme3QXFoAUWaggKuM7wgHVzcP8Bqokiboux/aIL6bIh0aQ3rTFZXOpAOMtiH5/ee7
+        zuc2gm04vW4Qbnf9/VZw1pWaq25LDChxbyiguXK9zuNHiseGhCpfDs/R4azgkYWAgNc3P9
+        jJHxNnKytzHYU+KliOoKRgKFQoyDCUQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-398-67SMbqtWOMKVh2DbQQ8LXw-1; Wed, 07 Oct 2020 10:36:06 -0400
+X-MC-Unique: 67SMbqtWOMKVh2DbQQ8LXw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 1E983325D;
-        Wed,  7 Oct 2020 09:16:15 -0500 (CDT)
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Pavel Reichl <preichl@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20201006191541.115364-1-preichl@redhat.com>
- <20201006191541.115364-5-preichl@redhat.com>
- <20201007012159.GA49547@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v9 4/4] xfs: replace mrlock_t with rw_semaphores
-Message-ID: <066ebfa6-25a2-aee4-a01c-3803ef716361@sandeen.net>
-Date:   Wed, 7 Oct 2020 09:17:13 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.3.1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5322F84E246;
+        Wed,  7 Oct 2020 14:35:10 +0000 (UTC)
+Received: from bfoster.redhat.com (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C21F25D9DD;
+        Wed,  7 Oct 2020 14:35:09 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: flush new eof page on truncate to avoid post-eof corruption
+Date:   Wed,  7 Oct 2020 10:35:09 -0400
+Message-Id: <20201007143509.669729-1-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20201007012159.GA49547@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/6/20 8:21 PM, Darrick J. Wong wrote:
-> On Tue, Oct 06, 2020 at 09:15:41PM +0200, Pavel Reichl wrote:
->> Remove mrlock_t as it does not provide any extra value over
->> rw_semaphores. Make i_lock and i_mmaplock native rw_semaphores and
->> replace mr*() functions with native rwsem calls.
->>
->> Release the lock in xfs_btree_split() just before the work-queue
->> executing xfs_btree_split_worker() is scheduled and make
->> xfs_btree_split_worker() to acquire the lock as a first thing and
->> release it just before returning from the function. This it done so the
->> ownership of the lock is transfered between kernel threads and thus
->> lockdep won't complain about lock being held by a different kernel
->> thread.
->>
->> Signed-off-by: Pavel Reichl <preichl@redhat.com>
->> ---
->>  fs/xfs/libxfs/xfs_btree.c | 14 +++++++
->>  fs/xfs/mrlock.h           | 78 ---------------------------------------
->>  fs/xfs/xfs_inode.c        | 36 ++++++++++--------
->>  fs/xfs/xfs_inode.h        |  4 +-
->>  fs/xfs/xfs_iops.c         |  4 +-
->>  fs/xfs/xfs_linux.h        |  2 +-
->>  fs/xfs/xfs_super.c        |  6 +--
->>  7 files changed, 41 insertions(+), 103 deletions(-)
->>  delete mode 100644 fs/xfs/mrlock.h
->>
->> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
->> index 2d25bab68764..1d1bb8423688 100644
->> --- a/fs/xfs/libxfs/xfs_btree.c
->> +++ b/fs/xfs/libxfs/xfs_btree.c
->> @@ -2816,6 +2816,7 @@ xfs_btree_split_worker(
->>  	unsigned long		pflags;
->>  	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
->>  
->> +	rwsem_acquire(&args->cur->bc_ino.ip->i_lock.dep_map, 0, 0, _RET_IP_);
-> These calls also need a comment explaining just what they're doing.
-> 
->>  	/*
->>  	 * we are in a transaction context here, but may also be doing work
->>  	 * in kswapd context, and hence we may need to inherit that state
->> @@ -2832,6 +2833,7 @@ xfs_btree_split_worker(
->>  	complete(args->done);
->>  
->>  	current_restore_flags_nested(&pflags, new_pflags);
->> +	rwsem_release(&args->cur->bc_ino.ip->i_lock.dep_map, _THIS_IP_);
-> Note that as soon as you call complete(), xfs_btree_split can wake up
-> and return, which means that *args could now point to reclaimed stack
-> space.  This leads to crashes and memory corruption in generic/562 on
-> a 1k block filesystem (though in principle this can happen anywhere):
+It is possible to expose non-zeroed post-EOF data in XFS if the new
+EOF page is dirty, backed by an unwritten block and the truncate
+happens to race with writeback. iomap_truncate_page() will not zero
+the post-EOF portion of the page if the underlying block is
+unwritten. The subsequent call to truncate_setsize() will, but
+doesn't dirty the page. Therefore, if writeback happens to complete
+after iomap_truncate_page() (so it still sees the unwritten block)
+but before truncate_setsize(), the cached page becomes inconsistent
+with the on-disk block. A mapped read after the associated page is
+reclaimed or invalidated exposes non-zero post-EOF data.
 
+For example, consider the following sequence when run on a kernel
+modified to explicitly flush the new EOF page within the race
+window:
 
-What's the right way out of this; store *ip when we enter the function
-and use that to get to the map, rather than args i guess?
+$ xfs_io -fc "falloc 0 4k" -c fsync /mnt/file
+$ xfs_io -c "pwrite 0 4k" -c "truncate 1k" /mnt/file
+  ...
+$ xfs_io -c "mmap 0 4k" -c "mread -v 1k 8" /mnt/file
+00000400:  00 00 00 00 00 00 00 00  ........
+$ umount /mnt/; mount <dev> /mnt/
+$ xfs_io -c "mmap 0 4k" -c "mread -v 1k 8" /mnt/file
+00000400:  cd cd cd cd cd cd cd cd  ........
 
-Thanks,
--Eric
+Update xfs_setattr_size() to explicitly flush the new EOF page prior
+to the page truncate to ensure iomap has the latest state of the
+underlying block.
+
+Fixes: 68a9f5e7007c ("xfs: implement iomap based buffered write path")
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+
+This patch is intentionally simplistic because I wanted to get some
+thoughts on a proper fix and at the same time consider something easily
+backportable. The iomap behavior seems rather odd to me in general,
+particularly if we consider the same kind of behavior can occur on
+file-extending writes. It's just not a user observable problem in that
+case because a sub-page write of a current EOF page (backed by an
+unwritten block) will zero fill the rest of the page at write time
+(before the zero range essentially skips it due to the unwritten block).
+It's not totally clear to me if that's an intentional design
+characteristic of iomap or something we should address.
+
+It _seems_ like the more appropriate fix is that iomap truncate page
+should at least accommodate a dirty page over an unwritten block and
+modify the page (or perhaps just unconditionally do a buffered write on
+a non-aligned truncate, similar to what block_truncate_page() does). For
+example, we could push the UNWRITTEN check from iomap_zero_range_actor()
+down into iomap_zero(), actually check for an existing page there, and
+then either zero it or skip out if none exists. Thoughts?
+
+Brian
+
+ fs/xfs/xfs_iops.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 80a13c8561d8..3ef2e77b454e 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -911,6 +911,16 @@ xfs_setattr_size(
+ 		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
+ 				&did_zeroing, &xfs_buffered_write_iomap_ops);
+ 	} else {
++		/*
++		 * iomap won't detect a dirty page over an unwritten block and
++		 * subsequently skips zeroing the newly post-eof portion of the
++		 * page. Flush the new EOF to convert the block before the
++		 * pagecache truncate.
++		 */
++		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
++						     newsize);
++		if (error)
++			return error;
+ 		error = iomap_truncate_page(inode, newsize, &did_zeroing,
+ 				&xfs_buffered_write_iomap_ops);
+ 	}
+-- 
+2.25.4
+
