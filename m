@@ -2,148 +2,418 @@ Return-Path: <SRS0=AHt9=DO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B3B2C4363C
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 08:25:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F204C4363C
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 08:40:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0781420B1F
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 08:25:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B8E42080A
+	for <linux-xfs@archiver.kernel.org>; Wed,  7 Oct 2020 08:40:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hnd4q1wf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726562AbgJGIZX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Oct 2020 04:25:23 -0400
-Received: from mx2.suse.de ([195.135.220.15]:52014 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725976AbgJGIZX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Oct 2020 04:25:23 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 96FFBABD1;
-        Wed,  7 Oct 2020 08:25:21 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id E96721E1305; Wed,  7 Oct 2020 10:25:17 +0200 (CEST)
-Date:   Wed, 7 Oct 2020 10:25:17 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Ralph Campbell <rcampbell@nvidia.com>
-Cc:     linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-kernel@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] ext4/xfs: add page refcount helper
-Message-ID: <20201007082517.GC6984@quack2.suse.cz>
-References: <20201006230930.3908-1-rcampbell@nvidia.com>
+        id S1727208AbgJGIkl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Oct 2020 04:40:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34178 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726041AbgJGIkk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 04:40:40 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF3BCC061755
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Oct 2020 01:40:40 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id 144so944162pfb.4
+        for <linux-xfs@vger.kernel.org>; Wed, 07 Oct 2020 01:40:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=8/0bmtW89RGCt3D8MMpPpww1FRFzeIZb6nBNYOb2b8w=;
+        b=Hnd4q1wfgaMqfoS+O1953LQ5AXSTp9h/wmA/Cx50znao1oFX6N6Ef2gaLRVjzY0bDl
+         w4wlaaDlnBDtpmalc4Dh3YRRnjBkTQtlc/x0CW6S/3YXIvfX6qFQz8e21nukkgmMJeEH
+         VZWtDjQSa+I2rnnIOofL496k9J5UUwzhb4+PaeXl1joZOn5B1FMhXqubFbRMH/u9/ghz
+         HiBzfGzp8AWJ/JU0jurmZYqZABw3te1oHtV2IHTmFkC2mWo0UqiAXgj0dN14qDZ7IFHH
+         AbXB9IkGV3efK0xojj6VhV7sHBne9U/Tfhoc+o+gctdDdzUAXfnLCe+Zw9VDOhi1c6jq
+         r7GQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=8/0bmtW89RGCt3D8MMpPpww1FRFzeIZb6nBNYOb2b8w=;
+        b=pc3tpjlvs3GWiC7N11iAd2pFtTp2JPmeiFF3hgYRobHmsSSHZyweraFU3Infs4h5Tk
+         34vLXcd/6iHNNBPusholn/RGA5FRqO82VHyYmTDtfHOA/cn5qwJVELX6l2cvPbegqqyL
+         Z+6qBk2y8yspYaA4mEcnre7eQpVziX8PZvftE3eUoz1jXrCNLftzFWGntq3Gsx8MW9Kb
+         OLP6iy2D9oMUfJmTQMDxrerz8IkuqpOXbuuMa0f/GHyNVGFWJBcbRh4BzKT1B9ztNvVl
+         vHGLzd4ScbGRDYr44MZ5Qn0CdGxdTeVKfeX/LH9Ga8PPPxaF8mn3NfESehDbQAzWMrnJ
+         PsaQ==
+X-Gm-Message-State: AOAM532kPt4Vy9jBkoda08XDqrDT1jXrmPhktsSya32/hKOwzuYFJ4nr
+        enCrcJwXTrhTip7veI7LssQ=
+X-Google-Smtp-Source: ABdhPJyWbRfwLfBtE5sTa3+hpjio/Q5wGIWfOfx3fPxCYB0jIVE7wJYHuMK02YMKE2+ggFOVs8+4SQ==
+X-Received: by 2002:a62:3001:0:b029:142:2501:39e3 with SMTP id w1-20020a6230010000b0290142250139e3mr1864513pfw.50.1602060040123;
+        Wed, 07 Oct 2020 01:40:40 -0700 (PDT)
+Received: from garuda.localnet ([171.61.78.55])
+        by smtp.gmail.com with ESMTPSA id e6sm2031628pgg.83.2020.10.07.01.40.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Oct 2020 01:40:39 -0700 (PDT)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH 2/2] xfs: fix deadlock and streamline xfs_getfsmap performance
+Date:   Wed, 07 Oct 2020 14:10:36 +0530
+Message-ID: <5181946.o3KTjg5V7k@garuda>
+In-Reply-To: <160192209677.2569942.16673759463630442919.stgit@magnolia>
+References: <160192208358.2569942.13189278742183856412.stgit@magnolia> <160192209677.2569942.16673759463630442919.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201006230930.3908-1-rcampbell@nvidia.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 06-10-20 16:09:30, Ralph Campbell wrote:
-> There are several places where ZONE_DEVICE struct pages assume a reference
-> count == 1 means the page is idle and free. Instead of open coding this,
-> add a helper function to hide this detail.
+On Monday 5 October 2020 11:51:36 PM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Ralph Campbell <rcampbell@nvidia.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Refactor xfs_getfsmap to improve its performance: instead of indirectly
+> calling a function that copies one record to userspace at a time, create
+> a shadow buffer in the kernel and copy the whole array once at the end.
+> On the author's computer, this reduces the runtime on his /home by ~20%.
+> 
+> This also eliminates a deadlock when running GETFSMAP against the
+> realtime device.  The current code locks the rtbitmap to create
+> fsmappings and copies them into userspace, having not released the
+> rtbitmap lock.  If the userspace buffer is an mmap of a sparse file that
+> itself resides on the realtime device, the write page fault will recurse
+> into the fs for allocation, which will deadlock on the rtbitmap lock.
+>
 
-Looks as sane direction but if we are going to abstract checks when
-ZONE_DEVICE page is idle, we should also update e.g.
-mm/swap.c:put_devmap_managed_page() or
-mm/gup.c:__unpin_devmap_managed_user_page() (there may be more places like
-this but I found at least these two...). Maybe Dan has more thoughts about
-this.
+The changes look good to me,
 
-								Honza
+Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-> diff --git a/fs/dax.c b/fs/dax.c
-> index 5b47834f2e1b..85c63f735909 100644
-> --- a/fs/dax.c
-> +++ b/fs/dax.c
-> @@ -358,7 +358,7 @@ static void dax_disassociate_entry(void *entry, struct address_space *mapping,
->  	for_each_mapped_pfn(entry, pfn) {
->  		struct page *page = pfn_to_page(pfn);
+> Fixes: 4c934c7dd60c ("xfs: report realtime space information via the rtbitmap")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/xfs_fsmap.c |   45 +++++++++-------
+>  fs/xfs/xfs_fsmap.h |    6 --
+>  fs/xfs/xfs_ioctl.c |  146 +++++++++++++++++++++++++++++++++++-----------------
+>  3 files changed, 125 insertions(+), 72 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_fsmap.c b/fs/xfs/xfs_fsmap.c
+> index aa36e7daf82c..9ce5e7d5bf8f 100644
+> --- a/fs/xfs/xfs_fsmap.c
+> +++ b/fs/xfs/xfs_fsmap.c
+> @@ -26,7 +26,7 @@
+>  #include "xfs_rtalloc.h"
 >  
-> -		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
-> +		WARN_ON_ONCE(trunc && !dax_layout_is_idle_page(page));
->  		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
->  		page->mapping = NULL;
->  		page->index = 0;
-> @@ -372,7 +372,7 @@ static struct page *dax_busy_page(void *entry)
->  	for_each_mapped_pfn(entry, pfn) {
->  		struct page *page = pfn_to_page(pfn);
->  
-> -		if (page_ref_count(page) > 1)
-> +		if (!dax_layout_is_idle_page(page))
->  			return page;
->  	}
->  	return NULL;
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 771ed8b1fadb..132620cbfa13 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3937,10 +3937,7 @@ int ext4_break_layouts(struct inode *inode)
->  		if (!page)
->  			return 0;
->  
-> -		error = ___wait_var_event(&page->_refcount,
-> -				atomic_read(&page->_refcount) == 1,
-> -				TASK_INTERRUPTIBLE, 0, 0,
-> -				ext4_wait_dax_page(ei));
-> +		error = dax_wait_page(ei, page, ext4_wait_dax_page);
->  	} while (error == 0);
->  
->  	return error;
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 3d1b95124744..a5304aaeaa3a 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -749,9 +749,7 @@ xfs_break_dax_layouts(
->  		return 0;
->  
->  	*retry = true;
-> -	return ___wait_var_event(&page->_refcount,
-> -			atomic_read(&page->_refcount) == 1, TASK_INTERRUPTIBLE,
-> -			0, 0, xfs_wait_dax_page(inode));
-> +	return dax_wait_page(inode, page, xfs_wait_dax_page);
+>  /* Convert an xfs_fsmap to an fsmap. */
+> -void
+> +static void
+>  xfs_fsmap_from_internal(
+>  	struct fsmap		*dest,
+>  	struct xfs_fsmap	*src)
+> @@ -155,8 +155,7 @@ xfs_fsmap_owner_from_rmap(
+>  /* getfsmap query state */
+>  struct xfs_getfsmap_info {
+>  	struct xfs_fsmap_head	*head;
+> -	xfs_fsmap_format_t	formatter;	/* formatting fn */
+> -	void			*format_arg;	/* format buffer */
+> +	struct fsmap		*fsmap_recs;	/* mapping records */
+>  	struct xfs_buf		*agf_bp;	/* AGF, for refcount queries */
+>  	xfs_daddr_t		next_daddr;	/* next daddr we expect */
+>  	u64			missing_owner;	/* owner of holes */
+> @@ -224,6 +223,20 @@ xfs_getfsmap_is_shared(
+>  	return 0;
 >  }
 >  
->  int
-> diff --git a/include/linux/dax.h b/include/linux/dax.h
-> index b52f084aa643..8909a91cd381 100644
-> --- a/include/linux/dax.h
-> +++ b/include/linux/dax.h
-> @@ -243,6 +243,16 @@ static inline bool dax_mapping(struct address_space *mapping)
->  	return mapping->host && IS_DAX(mapping->host);
->  }
->  
-> +static inline bool dax_layout_is_idle_page(struct page *page)
+> +static inline void
+> +xfs_getfsmap_format(
+> +	struct xfs_mount		*mp,
+> +	struct xfs_fsmap		*xfm,
+> +	struct xfs_getfsmap_info	*info)
 > +{
-> +	return page_ref_count(page) == 1;
+> +	struct fsmap			*rec;
+> +
+> +	trace_xfs_getfsmap_mapping(mp, xfm);
+> +
+> +	rec = &info->fsmap_recs[info->head->fmh_entries++];
+> +	xfs_fsmap_from_internal(rec, xfm);
 > +}
 > +
-> +#define dax_wait_page(_inode, _page, _wait_cb)				\
-> +	___wait_var_event(&(_page)->_refcount,				\
-> +		dax_layout_is_idle_page(_page),				\
-> +		TASK_INTERRUPTIBLE, 0, 0, _wait_cb(_inode))
+>  /*
+>   * Format a reverse mapping for getfsmap, having translated rm_startblock
+>   * into the appropriate daddr units.
+> @@ -288,10 +301,7 @@ xfs_getfsmap_helper(
+>  		fmr.fmr_offset = 0;
+>  		fmr.fmr_length = rec_daddr - info->next_daddr;
+>  		fmr.fmr_flags = FMR_OF_SPECIAL_OWNER;
+> -		error = info->formatter(&fmr, info->format_arg);
+> -		if (error)
+> -			return error;
+> -		info->head->fmh_entries++;
+> +		xfs_getfsmap_format(mp, &fmr, info);
+>  	}
+>  
+>  	if (info->last)
+> @@ -323,11 +333,8 @@ xfs_getfsmap_helper(
+>  		if (shared)
+>  			fmr.fmr_flags |= FMR_OF_SHARED;
+>  	}
+> -	error = info->formatter(&fmr, info->format_arg);
+> -	if (error)
+> -		return error;
+> -	info->head->fmh_entries++;
+>  
+> +	xfs_getfsmap_format(mp, &fmr, info);
+>  out:
+>  	rec_daddr += XFS_FSB_TO_BB(mp, rec->rm_blockcount);
+>  	if (info->next_daddr < rec_daddr)
+> @@ -795,11 +802,11 @@ xfs_getfsmap_check_keys(
+>  #endif /* CONFIG_XFS_RT */
+>  
+>  /*
+> - * Get filesystem's extents as described in head, and format for
+> - * output.  Calls formatter to fill the user's buffer until all
+> - * extents are mapped, until the passed-in head->fmh_count slots have
+> - * been filled, or until the formatter short-circuits the loop, if it
+> - * is tracking filled-in extents on its own.
+> + * Get filesystem's extents as described in head, and format for output. Fills
+> + * in the supplied records array until there are no more reverse mappings to
+> + * return or head.fmh_entries == head.fmh_count.  In the second case, this
+> + * function returns -ECANCELED to indicate that more records would have been
+> + * returned.
+>   *
+>   * Key to Confusion
+>   * ----------------
+> @@ -819,8 +826,7 @@ int
+>  xfs_getfsmap(
+>  	struct xfs_mount		*mp,
+>  	struct xfs_fsmap_head		*head,
+> -	xfs_fsmap_format_t		formatter,
+> -	void				*arg)
+> +	struct fsmap			*fsmap_recs)
+>  {
+>  	struct xfs_trans		*tp = NULL;
+>  	struct xfs_fsmap		dkeys[2];	/* per-dev keys */
+> @@ -895,8 +901,7 @@ xfs_getfsmap(
+>  
+>  	info.next_daddr = head->fmh_keys[0].fmr_physical +
+>  			  head->fmh_keys[0].fmr_length;
+> -	info.formatter = formatter;
+> -	info.format_arg = arg;
+> +	info.fsmap_recs = fsmap_recs;
+>  	info.head = head;
+>  
+>  	/*
+> diff --git a/fs/xfs/xfs_fsmap.h b/fs/xfs/xfs_fsmap.h
+> index c6c57739b862..a0775788e7b1 100644
+> --- a/fs/xfs/xfs_fsmap.h
+> +++ b/fs/xfs/xfs_fsmap.h
+> @@ -27,13 +27,9 @@ struct xfs_fsmap_head {
+>  	struct xfs_fsmap fmh_keys[2];	/* low and high keys */
+>  };
+>  
+> -void xfs_fsmap_from_internal(struct fsmap *dest, struct xfs_fsmap *src);
+>  void xfs_fsmap_to_internal(struct xfs_fsmap *dest, struct fsmap *src);
+>  
+> -/* fsmap to userspace formatter - copy to user & advance pointer */
+> -typedef int (*xfs_fsmap_format_t)(struct xfs_fsmap *, void *);
+> -
+>  int xfs_getfsmap(struct xfs_mount *mp, struct xfs_fsmap_head *head,
+> -		xfs_fsmap_format_t formatter, void *arg);
+> +		struct fsmap *out_recs);
+>  
+>  #endif /* __XFS_FSMAP_H__ */
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index bca7659fb5c6..3fbd98f61ea5 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1716,39 +1716,17 @@ xfs_ioc_getbmap(
+>  	return error;
+>  }
+>  
+> -struct getfsmap_info {
+> -	struct xfs_mount	*mp;
+> -	struct fsmap_head __user *data;
+> -	unsigned int		idx;
+> -	__u32			last_flags;
+> -};
+> -
+> -STATIC int
+> -xfs_getfsmap_format(struct xfs_fsmap *xfm, void *priv)
+> -{
+> -	struct getfsmap_info	*info = priv;
+> -	struct fsmap		fm;
+> -
+> -	trace_xfs_getfsmap_mapping(info->mp, xfm);
+> -
+> -	info->last_flags = xfm->fmr_flags;
+> -	xfs_fsmap_from_internal(&fm, xfm);
+> -	if (copy_to_user(&info->data->fmh_recs[info->idx++], &fm,
+> -			sizeof(struct fsmap)))
+> -		return -EFAULT;
+> -
+> -	return 0;
+> -}
+> -
+>  STATIC int
+>  xfs_ioc_getfsmap(
+>  	struct xfs_inode	*ip,
+>  	struct fsmap_head	__user *arg)
+>  {
+> -	struct getfsmap_info	info = { NULL };
+>  	struct xfs_fsmap_head	xhead = {0};
+>  	struct fsmap_head	head;
+> -	bool			aborted = false;
+> +	struct fsmap		*recs;
+> +	unsigned int		count;
+> +	__u32			last_flags = 0;
+> +	bool			done = false;
+>  	int			error;
+>  
+>  	if (copy_from_user(&head, arg, sizeof(struct fsmap_head)))
+> @@ -1760,38 +1738,112 @@ xfs_ioc_getfsmap(
+>  		       sizeof(head.fmh_keys[1].fmr_reserved)))
+>  		return -EINVAL;
+>  
+> +	/*
+> +	 * Use an internal memory buffer so that we don't have to copy fsmap
+> +	 * data to userspace while holding locks.  Start by trying to allocate
+> +	 * up to 128k for the buffer, but fall back to a single page if needed.
+> +	 */
+> +	count = min_t(unsigned int, head.fmh_count,
+> +			131072 / sizeof(struct fsmap));
+> +	recs = kvzalloc(count * sizeof(struct fsmap), GFP_KERNEL);
+> +	if (!recs) {
+> +		count = min_t(unsigned int, head.fmh_count,
+> +				PAGE_SIZE / sizeof(struct fsmap));
+> +		recs = kvzalloc(count * sizeof(struct fsmap), GFP_KERNEL);
+> +		if (!recs)
+> +			return -ENOMEM;
+> +	}
 > +
->  #ifdef CONFIG_DEV_DAX_HMEM_DEVICES
->  void hmem_register_device(int target_nid, struct resource *r);
->  #else
-> -- 
-> 2.20.1
+>  	xhead.fmh_iflags = head.fmh_iflags;
+> -	xhead.fmh_count = head.fmh_count;
+>  	xfs_fsmap_to_internal(&xhead.fmh_keys[0], &head.fmh_keys[0]);
+>  	xfs_fsmap_to_internal(&xhead.fmh_keys[1], &head.fmh_keys[1]);
+>  
+>  	trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
+>  	trace_xfs_getfsmap_high_key(ip->i_mount, &xhead.fmh_keys[1]);
+>  
+> -	info.mp = ip->i_mount;
+> -	info.data = arg;
+> -	error = xfs_getfsmap(ip->i_mount, &xhead, xfs_getfsmap_format, &info);
+> -	if (error == -ECANCELED) {
+> -		error = 0;
+> -		aborted = true;
+> -	} else if (error)
+> -		return error;
+> -
+> -	/* If we didn't abort, set the "last" flag in the last fmx */
+> -	if (!aborted && info.idx) {
+> -		info.last_flags |= FMR_OF_LAST;
+> -		if (copy_to_user(&info.data->fmh_recs[info.idx - 1].fmr_flags,
+> -				&info.last_flags, sizeof(info.last_flags)))
+> -			return -EFAULT;
+> +	head.fmh_entries = 0;
+> +	do {
+> +		struct fsmap __user	*user_recs;
+> +		struct fsmap		*last_rec;
+> +
+> +		user_recs = &arg->fmh_recs[head.fmh_entries];
+> +		xhead.fmh_entries = 0;
+> +		xhead.fmh_count = min_t(unsigned int, count,
+> +					head.fmh_count - head.fmh_entries);
+> +
+> +		/* Run query, record how many entries we got. */
+> +		error = xfs_getfsmap(ip->i_mount, &xhead, recs);
+> +		switch (error) {
+> +		case 0:
+> +			/*
+> +			 * There are no more records in the result set.  Copy
+> +			 * whatever we got to userspace and break out.
+> +			 */
+> +			done = true;
+> +			break;
+> +		case -ECANCELED:
+> +			/*
+> +			 * The internal memory buffer is full.  Copy whatever
+> +			 * records we got to userspace and go again if we have
+> +			 * not yet filled the userspace buffer.
+> +			 */
+> +			error = 0;
+> +			break;
+> +		default:
+> +			goto out_free;
+> +		}
+> +		head.fmh_entries += xhead.fmh_entries;
+> +		head.fmh_oflags = xhead.fmh_oflags;
+> +
+> +		/*
+> +		 * If the caller wanted a record count or there aren't any
+> +		 * new records to return, we're done.
+> +		 */
+> +		if (head.fmh_count == 0 || xhead.fmh_entries == 0)
+> +			break;
+> +
+> +		/* Copy all the records we got out to userspace. */
+> +		if (copy_to_user(user_recs, recs,
+> +				 xhead.fmh_entries * sizeof(struct fsmap))) {
+> +			error = -EFAULT;
+> +			goto out_free;
+> +		}
+> +
+> +		/* Remember the last record flags we copied to userspace. */
+> +		last_rec = &recs[xhead.fmh_entries - 1];
+> +		last_flags = last_rec->fmr_flags;
+> +
+> +		/* Set up the low key for the next iteration. */
+> +		xfs_fsmap_to_internal(&xhead.fmh_keys[0], last_rec);
+> +		trace_xfs_getfsmap_low_key(ip->i_mount, &xhead.fmh_keys[0]);
+> +	} while (!done && head.fmh_entries < head.fmh_count);
+> +
+> +	/*
+> +	 * If there are no more records in the query result set and we're not
+> +	 * in counting mode, mark the last record returned with the LAST flag.
+> +	 */
+> +	if (done && head.fmh_count > 0 && head.fmh_entries > 0) {
+> +		struct fsmap __user	*user_rec;
+> +
+> +		last_flags |= FMR_OF_LAST;
+> +		user_rec = &arg->fmh_recs[head.fmh_entries - 1];
+> +
+> +		if (copy_to_user(&user_rec->fmr_flags, &last_flags,
+> +					sizeof(last_flags))) {
+> +			error = -EFAULT;
+> +			goto out_free;
+> +		}
+>  	}
+>  
+>  	/* copy back header */
+> -	head.fmh_entries = xhead.fmh_entries;
+> -	head.fmh_oflags = xhead.fmh_oflags;
+> -	if (copy_to_user(arg, &head, sizeof(struct fsmap_head)))
+> -		return -EFAULT;
+> +	if (copy_to_user(arg, &head, sizeof(struct fsmap_head))) {
+> +		error = -EFAULT;
+> +		goto out_free;
+> +	}
+>  
+> -	return 0;
+> +out_free:
+> +	kmem_free(recs);
+> +	return error;
+>  }
+>  
+>  STATIC int
 > 
+> 
+
+
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+chandan
+
+
+
