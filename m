@@ -2,122 +2,136 @@ Return-Path: <SRS0=9l/N=DP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 882B3C4363A
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 13:55:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FAA2C04EBE
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 14:48:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30E2021897
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 13:55:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C05A621974
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 14:48:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M1I3BHDx"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ixND7iS4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730034AbgJHNzX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Oct 2020 09:55:23 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:52940 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729829AbgJHNzX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 09:55:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602165321;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ReFMu/5UqeavK/j3nd2j059NXy1ENG5bwiWePTWBtcs=;
-        b=M1I3BHDxqBDJPIUC67+UcQ+p2chfHmyh8/ydlpuxX43JU9xdLwS7phfKVCsVuYKfVI50gq
-        WiYkAEJiCc/Rh3XkkHlSi5pQm/Kv0DFUhnGKQuvJ78az9NMeVorafk1rCPOdYJrqEpy4Ky
-        fa1NrD2tdnZN5d8LSjBxsSa8lUpu4mE=
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
- [209.85.221.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-316-GIhlQ1YBPl6JRaWcaFhj9w-1; Thu, 08 Oct 2020 09:55:20 -0400
-X-MC-Unique: GIhlQ1YBPl6JRaWcaFhj9w-1
-Received: by mail-wr1-f69.google.com with SMTP id k14so3211643wrd.6
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2020 06:55:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ReFMu/5UqeavK/j3nd2j059NXy1ENG5bwiWePTWBtcs=;
-        b=p0xtvrhQAxWFoOYAntWKzK02jhuwWtnA98dxQIlWeqwDRcQaDijqSAEk9Hc5X5LRyf
-         nXDtMXzalX/IQDNvHcdXu8bUBq0XxLSm43+rHkJfEWL3HaN0k/UCX1fiYdImwpW/IvT+
-         erCpxuATpTXCckjyLDJ5L3jvlYoDSRgdtuooWjwdKta5jZ5I3pOOS9o/wlMq0MjcghQ4
-         zdXhQ2N2DWQuAgrTp11uhHL/qW6i88EOHpIOctQI5S3uDlvKC5mynaR9MnuYJk2B5BOJ
-         ExUO+z3qNniNmIUdVzUOXdELZp+dYiUYbqFHQ/l/tqyvWFNq5aKAIcRhi5mbPZo4Qjpd
-         +ZDA==
-X-Gm-Message-State: AOAM531Pugy1InCsDjXDWL4jdrLsf85B8kdN061pfaU5n8wqpy55tLoA
-        BuLf8HX3zA6o8eJ+RJnLjpPfzWcelzHCiMAwjW4jgUPMRPNPremLTqwiXEHeoUO+X9a2uZwWPHC
-        rzeRANmSnhZyXtcL/Tgun
-X-Received: by 2002:adf:a1d6:: with SMTP id v22mr9905520wrv.185.1602165318520;
-        Thu, 08 Oct 2020 06:55:18 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyhPf3hLShN3jZAy51xc6TwcXI1jjFGyPxBlYvnq1dUBiinqJK8zmrUfamUR/Uyw5rn9t4O/g==
-X-Received: by 2002:adf:a1d6:: with SMTP id v22mr9905502wrv.185.1602165318314;
-        Thu, 08 Oct 2020 06:55:18 -0700 (PDT)
-Received: from localhost.localdomain ([84.19.91.81])
-        by smtp.gmail.com with ESMTPSA id e18sm7388124wrx.50.2020.10.08.06.55.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 08 Oct 2020 06:55:17 -0700 (PDT)
-Subject: Re: [PATCH v9 4/4] xfs: replace mrlock_t with rw_semaphores
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-References: <20201006191541.115364-1-preichl@redhat.com>
- <20201006191541.115364-5-preichl@redhat.com>
- <20201007012159.GA49547@magnolia>
- <066ebfa6-25a2-aee4-a01c-3803ef716361@sandeen.net>
- <20201007152554.GL49559@magnolia>
- <4cd57497-4670-f96f-01a0-0c587e77548d@redhat.com>
- <20201007215545.GA6540@magnolia>
-From:   Pavel Reichl <preichl@redhat.com>
-Message-ID: <eebc3029-beb3-5b49-08d4-33ae63085411@redhat.com>
-Date:   Thu, 8 Oct 2020 15:55:16 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        id S1730719AbgJHOsF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Oct 2020 10:48:05 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:35966 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730717AbgJHOsE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 10:48:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 098Ee0Aq026496;
+        Thu, 8 Oct 2020 14:48:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=69WzQxWkjh+/MW/FrtcmF+6D7ugDOh7J1/UY46rNXSk=;
+ b=ixND7iS45W9D/vNHvekZmlyHJwXL4d2OPbAtbfgPW/efbcTTWgvLMg1y7JX1MUHrxpj9
+ B59Il+BMRewJzbX4rbtEo/L3SDFsY+06W1Y0GfDmMmEuWXpkcWdJvzfzXM/AApSivYDx
+ b6AWnr/BQFI8soLJbefzdP3IqjJ4OoKgo5QIdUgK+uc0lCB+HoqqXt7LfYs8IWYubqjO
+ tUYm2HuxjtkhCeUcXLDEAcju/g/jRwk6iC62xaOikd3bCO50EPxTcZd9J7XbREnk7ptr
+ nQIDZnKPZ8cPVoVht5rxFcjCerYAUpu3qqICR3r8pVY+UqFIJFr00GlaO9Rr6emg8gCP VA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 33ym34w7jq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 08 Oct 2020 14:48:00 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 098EfFQW148989;
+        Thu, 8 Oct 2020 14:48:00 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 341xnbsff4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 08 Oct 2020 14:47:59 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 098Elx5K002776;
+        Thu, 8 Oct 2020 14:47:59 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 08 Oct 2020 07:47:58 -0700
+Date:   Thu, 8 Oct 2020 07:47:58 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, sandeen@redhat.com
+Subject: Re: [PATCH 2/2] xfs: make xfs_growfs_rt update secondary superblocks
+Message-ID: <20201008144758.GK6540@magnolia>
+References: <160212936001.248573.7813264584242634489.stgit@magnolia>
+ <160212937238.248573.3832120826354421788.stgit@magnolia>
+ <4070961.BB4q84YiFQ@garuda>
 MIME-Version: 1.0
-In-Reply-To: <20201007215545.GA6540@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4070961.BB4q84YiFQ@garuda>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ malwarescore=0 adultscore=0 mlxscore=0 phishscore=0 bulkscore=0
+ suspectscore=5 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2010080112
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 priorityscore=1501
+ mlxscore=0 mlxlogscore=999 clxscore=1015 bulkscore=0 spamscore=0
+ malwarescore=0 phishscore=0 suspectscore=5 adultscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010080112
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
->> Hi,
->>
->> thanks for the comments, however for some reason I cannot reproduce
->> the same memory corruption you are getting.
+On Thu, Oct 08, 2020 at 01:01:59PM +0530, Chandan Babu R wrote:
+> On Thursday 8 October 2020 9:26:12 AM IST Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When we call growfs on the data device, we update the secondary
+> > superblocks to reflect the updated filesystem geometry.  We need to do
+> > this for growfs on the realtime volume too, because a future xfs_repair
+> > run could try to fix the filesystem using a backup superblock.
+> > 
+> > This was observed by the online superblock scrubbers while running
+> > xfs/233.  One can also trigger this by growing an rt volume, cycling the
+> > mount, and creating new rt files.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/xfs_rtalloc.c |    7 ++++++-
+> >  1 file changed, 6 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+> > index 1c3969807fb9..5b2e68d9face 100644
+> > --- a/fs/xfs/xfs_rtalloc.c
+> > +++ b/fs/xfs/xfs_rtalloc.c
+> > @@ -18,7 +18,7 @@
+> >  #include "xfs_trans_space.h"
+> >  #include "xfs_icache.h"
+> >  #include "xfs_rtalloc.h"
+> > -
+> > +#include "xfs_sb.h"
+> >  
+> >  /*
+> >   * Read and return the summary information for a given extent size,
+> > @@ -1108,6 +1108,11 @@ xfs_growfs_rt(
+> >  	 */
+> >  	kmem_free(nmp);
+> >  
+> > +	/* Update secondary superblocks now the physical grow has completed */
+> > +	error = xfs_update_secondary_sbs(mp);
+> > +	if (error)
+> > +		return error;
+> > +
 > 
-> <shrug> Do you have full preempt enabled?
+> If any of the operations in the previous "for" loop causes "error" to be set
+> and the loop to be exited, the call to xfs_update_secondary_sbs() would
+> overwrite this error value. In the worst case it might set error to 0 and
+> hence return a success status to the caller when the growfs operation
+> had actually failed.
 
-Hi, I'm not proud to admit that until now I tested w/o 'CONFIG_PREEMPT=y' :-/
-However at least now I can see the bug you hit and test that the proposed change in version #10 fixes that.
+Oops, good catch!
 
+--D
 
+> -- 
+> chandan
 > 
->> Do you think that moving the 'rwsem_release()' right before the
->> 'complete()' should fix the problem?
->>
->> Something like:
->>
->>
->> +       /*
->> +        * Update lockdep's lock ownership information to point to
->> +        * this thread as the thread that scheduled this worker is waiting
->> +        * for it's completion.
 > 
-> Nit: "it's" is always a contraction of "it is"; "its" is correct
-> (posessive) form here.
-
-Thanks for noticing. I know the difference...but still I did this mistake. I must focus more next time.
-
 > 
-> Otherwise, this looks fine to me.
-
-Thanks, version #10 is on list now.
-
-Bye.
-
