@@ -2,136 +2,239 @@ Return-Path: <SRS0=9l/N=DP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73C2DC433E7
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 16:16:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDBCC43457
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 18:27:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E38B221FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 16:16:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 723B4221FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 18:27:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BavNnjQV"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CuksiUN8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726099AbgJHQQr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Oct 2020 12:16:47 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:53680 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730244AbgJHQQr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 12:16:47 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 098G9aHk118435;
-        Thu, 8 Oct 2020 16:16:43 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=P/aXwAvj+Hf/1kViRPK9nIU/PaZ7pahLY6dOr4Yvuu4=;
- b=BavNnjQVUeyWxOg4moX1kPPsQADDM7o/b2DMjof4vL1+sTVcILBTyriPDFpHlToGNhXE
- n4D1YvxqxmXP7ak1AZoeqYjgjgqzs2mQ2wcNl31v0N1JKV3zo/6hbo108rzTw4HLwC+8
- QHTma2uAZya7jctiTLwkegBf+dcDSZB14P8LBpTqQ/Bl+McNKr0AFnW/bxLGl6n52E4+
- kdBxc/vXL8DfzoGfKgQNxqm0yf5fsEJ8uKZfLY9KAQDdcKXYfJGP0x7Pj/n2hzyIQFQh
- J8d9zVisW6P4sOh3xjFz8y3J9Vg79k3ou6BCSR7SW6sMFot9cOicl++oVWh3MNKV7jWu UA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 33xhxn8jm8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 08 Oct 2020 16:16:42 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 098GFGrD067347;
-        Thu, 8 Oct 2020 16:16:42 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 341xnbwg3h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 08 Oct 2020 16:16:42 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 098GGfki004242;
-        Thu, 8 Oct 2020 16:16:41 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 08 Oct 2020 09:16:40 -0700
-Date:   Thu, 8 Oct 2020 09:16:39 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Pavel Reichl <preichl@redhat.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v9 4/4] xfs: replace mrlock_t with rw_semaphores
-Message-ID: <20201008161639.GP6540@magnolia>
-References: <20201006191541.115364-1-preichl@redhat.com>
- <20201006191541.115364-5-preichl@redhat.com>
- <20201007012159.GA49547@magnolia>
- <066ebfa6-25a2-aee4-a01c-3803ef716361@sandeen.net>
- <20201007152554.GL49559@magnolia>
- <4cd57497-4670-f96f-01a0-0c587e77548d@redhat.com>
- <20201007215545.GA6540@magnolia>
- <eebc3029-beb3-5b49-08d4-33ae63085411@redhat.com>
+        id S1728947AbgJHS1y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Oct 2020 14:27:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:56608 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725874AbgJHS1y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 14:27:54 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602181672;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=tKfc65bJnwIQ+vwUVxQQLY1gB7yLhhcHJe9ad/PTp1s=;
+        b=CuksiUN8IFLN8Y4ZmpMTudGpV6z2NCw+53p3Zdsy1Lz1bhgWVUXmSFRNsI3/6fZDzTxGZs
+        hvw7i/S6BvlnVxD8xSX5ubVW+daxFE498oZ615AGmkRBruzFGSgwKMLJ7OQcyetVDQXVlv
+        apjHTNia15PSmRdKnxX+sQTjYvwYiXw=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-244-P4aa9pQLNriSHDTZpvl5aA-1; Thu, 08 Oct 2020 14:27:50 -0400
+X-MC-Unique: P4aa9pQLNriSHDTZpvl5aA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 75C43101FFA2;
+        Thu,  8 Oct 2020 18:27:49 +0000 (UTC)
+Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DB81955760;
+        Thu,  8 Oct 2020 18:27:48 +0000 (UTC)
+Date:   Thu, 8 Oct 2020 14:27:46 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: transaction subsystem quiesce mechanism
+Message-ID: <20201008182746.GC702156@bfoster>
+References: <20201001150310.141467-1-bfoster@redhat.com>
+ <20201001150310.141467-3-bfoster@redhat.com>
+ <20201007221310.GF6540@magnolia>
+ <20201008112626.GA702156@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <eebc3029-beb3-5b49-08d4-33ae63085411@redhat.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9768 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
- malwarescore=0 adultscore=0 mlxscore=0 phishscore=0 bulkscore=0
- suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2010080122
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9768 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 malwarescore=0 bulkscore=0
- impostorscore=0 lowpriorityscore=0 suspectscore=1 phishscore=0
- mlxlogscore=999 adultscore=0 clxscore=1015 spamscore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2010080121
+In-Reply-To: <20201008112626.GA702156@bfoster>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 08, 2020 at 03:55:16PM +0200, Pavel Reichl wrote:
-> 
-> >> Hi,
-> >>
-> >> thanks for the comments, however for some reason I cannot reproduce
-> >> the same memory corruption you are getting.
+On Thu, Oct 08, 2020 at 07:26:26AM -0400, Brian Foster wrote:
+> On Wed, Oct 07, 2020 at 03:13:10PM -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 01, 2020 at 11:03:09AM -0400, Brian Foster wrote:
+> > > The updated quotaoff logging algorithm depends on a runtime quiesce
+> > > of the transaction subsystem to guarantee all transactions after a
+> > > certain point detect quota subsystem changes. Implement this
+> > > mechanism using an internal lock, similar to the external filesystem
+> > > freeze mechanism. This is also somewhat analogous to the old percpu
+> > > transaction counter mechanism, but we don't actually need a counter.
+> > > 
+> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_aops.c  |  2 ++
+> > >  fs/xfs/xfs_mount.h |  3 +++
+> > >  fs/xfs/xfs_super.c |  8 ++++++++
+> > >  fs/xfs/xfs_trans.c |  4 ++--
+> > >  fs/xfs/xfs_trans.h | 20 ++++++++++++++++++++
+> > >  5 files changed, 35 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> > > index b35611882ff9..214310c94de5 100644
+> > > --- a/fs/xfs/xfs_aops.c
+> > > +++ b/fs/xfs/xfs_aops.c
+> > > @@ -58,6 +58,7 @@ xfs_setfilesize_trans_alloc(
+> > >  	 * we released it.
+> > >  	 */
+> > >  	__sb_writers_release(ioend->io_inode->i_sb, SB_FREEZE_FS);
+> > > +	percpu_rwsem_release(&mp->m_trans_rwsem, true, _THIS_IP_);
+> > >  	/*
+> > >  	 * We hand off the transaction to the completion thread now, so
+> > >  	 * clear the flag here.
+> > > @@ -127,6 +128,7 @@ xfs_setfilesize_ioend(
+> > >  	 */
+> > >  	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+> > >  	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
+> > > +	percpu_rwsem_acquire(&ip->i_mount->m_trans_rwsem, true, _THIS_IP_);
+> > >  
+> > >  	/* we abort the update if there was an IO error */
+> > >  	if (error) {
+> > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> > > index dfa429b77ee2..f1083a9ce1f8 100644
+> > > --- a/fs/xfs/xfs_mount.h
+> > > +++ b/fs/xfs/xfs_mount.h
+> > > @@ -171,6 +171,9 @@ typedef struct xfs_mount {
+> > >  	 */
+> > >  	struct percpu_counter	m_delalloc_blks;
+> > >  
+> > > +	/* lock for transaction quiesce (used by quotaoff) */
+> > > +	struct percpu_rw_semaphore	m_trans_rwsem;
+> > > +
+> > >  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
+> > >  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
+> > >  	uint64_t		m_resblks;	/* total reserved blocks */
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index baf5de30eebb..ff3ad5392e21 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -1029,8 +1029,15 @@ xfs_init_percpu_counters(
+> > >  	if (error)
+> > >  		goto free_fdblocks;
+> > >  
+> > > +	/* not a counter, but close enough... */
+> > > +	error = percpu_init_rwsem(&mp->m_trans_rwsem);
+> > > +	if (error)
+> > > +		goto free_delalloc;
+> > > +
+> > >  	return 0;
+> > >  
+> > > +free_delalloc:
+> > > +	percpu_counter_destroy(&mp->m_delalloc_blks);
+> > >  free_fdblocks:
+> > >  	percpu_counter_destroy(&mp->m_fdblocks);
+> > >  free_ifree:
+> > > @@ -1053,6 +1060,7 @@ static void
+> > >  xfs_destroy_percpu_counters(
+> > >  	struct xfs_mount	*mp)
+> > >  {
+> > > +	percpu_free_rwsem(&mp->m_trans_rwsem);
+> > >  	percpu_counter_destroy(&mp->m_icount);
+> > >  	percpu_counter_destroy(&mp->m_ifree);
+> > >  	percpu_counter_destroy(&mp->m_fdblocks);
+> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > index ca18a040336a..c07fa036549a 100644
+> > > --- a/fs/xfs/xfs_trans.c
+> > > +++ b/fs/xfs/xfs_trans.c
+> > > @@ -69,7 +69,7 @@ xfs_trans_free(
+> > >  
+> > >  	trace_xfs_trans_free(tp, _RET_IP_);
+> > >  	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
+> > > -		sb_end_intwrite(tp->t_mountp->m_super);
+> > > +		xfs_trans_end(tp->t_mountp);
+> > >  	xfs_trans_free_dqinfo(tp);
+> > >  	kmem_cache_free(xfs_trans_zone, tp);
+> > >  }
+> > > @@ -265,7 +265,7 @@ xfs_trans_alloc(
+> > >  	 */
+> > >  	tp = kmem_cache_zalloc(xfs_trans_zone, GFP_KERNEL | __GFP_NOFAIL);
+> > >  	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
+> > > -		sb_start_intwrite(mp->m_super);
+> > > +		xfs_trans_start(mp);
+> > >  
+> > >  	/*
+> > >  	 * Zero-reservation ("empty") transactions can't modify anything, so
+> > > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+> > > index f46534b75236..af54c17a22c0 100644
+> > > --- a/fs/xfs/xfs_trans.h
+> > > +++ b/fs/xfs/xfs_trans.h
+> > > @@ -209,6 +209,26 @@ xfs_trans_read_buf(
+> > >  				      flags, bpp, ops);
+> > >  }
+> > >  
+> > > +/*
+> > > + * Context tracking helpers for external (i.e. fs freeze) and internal
+> > > + * transaction quiesce.
+> > > + */
+> > > +static inline void
+> > > +xfs_trans_start(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	sb_start_intwrite(mp->m_super);
+> > > +	percpu_down_read(&mp->m_trans_rwsem);
 > > 
-> > <shrug> Do you have full preempt enabled?
-> 
-> Hi, I'm not proud to admit that until now I tested w/o 'CONFIG_PREEMPT=y' :-/
-> However at least now I can see the bug you hit and test that the
-> proposed change in version #10 fixes that.
-
-<shrug> That just means you get to hit all the stall warnings (which are
-fixable with cond_resched()) that I rarely see because preempt kernels
-can reschedule at will... :)
-
-> 
-> 
+> > /me wonders, have you noticed any extra cpu overhead with this?
 > > 
-> >> Do you think that moving the 'rwsem_release()' right before the
-> >> 'complete()' should fix the problem?
-> >>
-> >> Something like:
-> >>
-> >>
-> >> +       /*
-> >> +        * Update lockdep's lock ownership information to point to
-> >> +        * this thread as the thread that scheduled this worker is waiting
-> >> +        * for it's completion.
+> 
+> Not that I've noticed, but I haven't explicitly profiled it or anything.
+> My understanding is the percpu variant of the rwsem should make read
+> acquisition extremely cheap at the cost of more expensive write
+> acquisition (which pretty much fits use cases like freeze, quotaoff,
+> etc.). I can try a file create/remove workload or something on a high
+> cpu count box and see if there's a noticeable effect..
+> 
+
+Following up, I don't see a noticeable difference on a 64xcpu 200m empty
+file creation (fs_mark) workload. The numbers jump around a bit between
+iterations so it's hard to see fine details, but the tests land in the
+same general ranges and complete within 30s (out of ~28m) of eachother
+(with the test kernel actually completing before the baseline kernel).
+All in all it kind of looks like "in the noise" to me, but I'm happy to
+try any other tests people might want to see.
+
+Brian
+
+> > So far it looks ok to me, though I wonder if we could skip all this if
+> > CONFIG_XFS_QUOTA=n...
 > > 
-> > Nit: "it's" is always a contraction of "it is"; "its" is correct
-> > (posessive) form here.
 > 
-> Thanks for noticing. I know the difference...but still I did this
-> mistake. I must focus more next time.
-
-No worries, English is a weird language.
-
-"Inflammable means flammable?  What a country!"
-          -- Dr. Nick Riviera
-
---D
-
+> We could, though I'd probably prefer to use something like
+> XFS_IS_QUOTA_RUNNING() as a conditional rather than an ifdef. Of course,
+> that means we'd have to be careful that turning quotaoff doesn't
+> actually break the transaction tracking. Regardless, I'm not really sure
+> it's worth sprinkling that logic around to avoid a per-transaction
+> percpu read lock.
 > 
+> Brian
+> 
+> > --D
 > > 
-> > Otherwise, this looks fine to me.
+> > > +}
+> > > +
+> > > +static inline void
+> > > +xfs_trans_end(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	percpu_up_read(&mp->m_trans_rwsem);
+> > > +	sb_end_intwrite(mp->m_super);
+> > > +}
+> > > +
+> > >  struct xfs_buf	*xfs_trans_getsb(struct xfs_trans *);
+> > >  
+> > >  void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
+> > > -- 
+> > > 2.25.4
+> > > 
+> > 
 > 
-> Thanks, version #10 is on list now.
-> 
-> Bye.
-> 
+
