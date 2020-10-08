@@ -2,117 +2,152 @@ Return-Path: <SRS0=9l/N=DP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DA08C4363A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC4D3C04EBE
 	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 13:46:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6CB3520782
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 13:46:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7AD732083B
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 13:46:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UG0+u4JF"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NBgPBaM6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730395AbgJHNqM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Oct 2020 09:46:12 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:33412 "EHLO
+        id S1730397AbgJHNqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Oct 2020 09:46:14 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27738 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730361AbgJHNqM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 09:46:12 -0400
+        by vger.kernel.org with ESMTP id S1730361AbgJHNqN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 09:46:13 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602164771;
+        s=mimecast20190719; t=1602164772;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=+oz8yC6XAkSZi5rPXraOFXHTFfDgzi0mPy32WS2Lzss=;
-        b=UG0+u4JF5g5+8fVm6ZcNOMgYxhFuCO2tuuXVx86KL3Ov3GGaToNc8QjASBaTuGjAt/ULRT
-        6I9r/GKG17qL6jWCCVAemDFxwlsR6WeVE/i7bRSWxqwK2BggbzC4bgFR3BsS4G3Q08Ydxo
-        9q5DSFWlLTIKqToSftyufUFzIqRUhnk=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-344-0WOgmKZTMXWB3hWvFG0Zfw-1; Thu, 08 Oct 2020 09:46:09 -0400
-X-MC-Unique: 0WOgmKZTMXWB3hWvFG0Zfw-1
-Received: by mail-wr1-f70.google.com with SMTP id l15so3918875wro.10
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2020 06:46:09 -0700 (PDT)
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SDzBo1Hl39aW7kmMO7v5qnWfvx6c+eKzu7Cp3K2CdFg=;
+        b=NBgPBaM6UPdbnsHjkBs+wyoASnmE+AWrv7YBcmQlhQYOjDe5lioNzwpYBHHTBwBZwxLaub
+        5yKFifDa8L0lwPbaPAg7elYia0U8XlsWM3h/M19dSX4du2bWQHEtvZkkHhvZ3YMGjvJ2tG
+        sLOrFBuuDKRN428rOib+xYklYt/QmjA=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-183--qa10oBtM3GlZOpICxnuhQ-1; Thu, 08 Oct 2020 09:46:11 -0400
+X-MC-Unique: -qa10oBtM3GlZOpICxnuhQ-1
+Received: by mail-wm1-f70.google.com with SMTP id u207so3080251wmu.4
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2020 06:46:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=+oz8yC6XAkSZi5rPXraOFXHTFfDgzi0mPy32WS2Lzss=;
-        b=mmrciXdRpg6k+qIhro0KEo6G4WsRgNbTyeCr6N1fS6499SoXIHr0kGkBXS01ZR/06G
-         0vbvdm7/f6PgWVCKPN1liUdO/3/Y+0a1KkFG8X3v6oF0wRJVBdd7LlsdiNPILSBzAyDV
-         Xz6vQ6YSQRAbSqU86AFY068IndO1dE6xKOy/W+xz4YvFBFmjegs4b9IWPyFeb8R1gFYh
-         LEicebkTP8I7d54xF+2aqhpM0Zf/cTkWy159r3ovV41L3834/3ikwEvVPJt2Nxl4qO8l
-         I6Hqk55Gq42l2ykRS6bRJQ9OCzfProFcvvNKALgUMQkQDihnEFtS2m+yZpGiQDaGWIWf
-         BF7g==
-X-Gm-Message-State: AOAM5318+2Fs+uRu7HNUS7OoVrfT0UjfJoEZ6US70ukYfQLzK/HWPf1A
-        UiLAZWrEQ/xXYaOncNyHE/vADF6e6yAnSYYCcCV07BT+EHgRGjGsmExsmiqPLblxG0wmmWtyqR5
-        HCGvemybUYhBmN3ykoI47
-X-Received: by 2002:adf:f50d:: with SMTP id q13mr9218135wro.215.1602164767865;
-        Thu, 08 Oct 2020 06:46:07 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwYC5ksA5k26lTH5KHfd7rcbOvZqqky8AFAr3NqSDgFxzTC8WGlUW0j7jhNSUn3JZhjzqNu4Q==
-X-Received: by 2002:adf:f50d:: with SMTP id q13mr9218122wro.215.1602164767687;
-        Thu, 08 Oct 2020 06:46:07 -0700 (PDT)
+        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=SDzBo1Hl39aW7kmMO7v5qnWfvx6c+eKzu7Cp3K2CdFg=;
+        b=jHrltQ4p0Tt985Yu9znFl7RUPZr/SWXIKZABmx5S773Y3DavwaR51GeQBdHKjYSk5c
+         xIMEHstatZiFZCKRiDkOqXxAEYbnlvDXlhgKKofYlvR8yLuW35jgn0XMbnv6Ryn9VCAF
+         1seId5z/Sg9uLlYpbvB4XPkI/9a2DIIf/Y9vMkUyFHK4E5fwcSYP18y9I0Z4sDMfxlkE
+         /Y9rXGy8j6d5nYJK0P8qJYeGiLpX5mngv9HgWsCVzLlp19L2b12nVkXhYVzD/URQ1wuS
+         r31Cj85lDy/yZeg+Txuec7Czjz3Nl/jIWPAJq/1mwZIZdLg7Ce549ki6jbRIyEaThNFa
+         Y90Q==
+X-Gm-Message-State: AOAM532DFT4KW5dxEAXTOhM+fHFUdlNQnZTnMp97SC3tIgPLBNVU1WdZ
+        TnERQysmCqwB/ZpG+Iy42nr+NMLY8Qr++TkYW2gVgwbPHLao3TMu6k2j5idb0Yy6stfY/kDgiSn
+        8IIxkM7/9mdJ2DiZrBQMa
+X-Received: by 2002:a05:600c:410c:: with SMTP id j12mr8758506wmi.179.1602164769685;
+        Thu, 08 Oct 2020 06:46:09 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxnU9fbjBVTDva5rYnM/EsjQVsbhebL5DpwTZk3qJ8WD63E8KmKrZ8XY0z2BMfmfOB2W5sc0g==
+X-Received: by 2002:a05:600c:410c:: with SMTP id j12mr8758490wmi.179.1602164769502;
+        Thu, 08 Oct 2020 06:46:09 -0700 (PDT)
 Received: from localhost.localdomain.com ([84.19.91.81])
-        by smtp.gmail.com with ESMTPSA id s19sm7069465wmc.41.2020.10.08.06.46.06
+        by smtp.gmail.com with ESMTPSA id s19sm7069465wmc.41.2020.10.08.06.46.08
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 06:46:07 -0700 (PDT)
+        Thu, 08 Oct 2020 06:46:08 -0700 (PDT)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v10 0/4] xfs: Remove wrappers for some semaphores
-Date:   Thu,  8 Oct 2020 15:46:01 +0200
-Message-Id: <20201008134605.863269-1-preichl@redhat.com>
+Subject: [PATCH v10 2/4] xfs: clean up whitespace in xfs_isilocked() calls
+Date:   Thu,  8 Oct 2020 15:46:03 +0200
+Message-Id: <20201008134605.863269-3-preichl@redhat.com>
 X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20201008134605.863269-1-preichl@redhat.com>
+References: <20201008134605.863269-1-preichl@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove some wrappers that we have in XFS around the read-write semaphore
-locks.
+Make whitespace follow the same pattern in all xfs_isilocked() calls.
 
-The goal of this cleanup is to remove mrlock_t structure and its mr*()
-wrapper functions and replace it with native rw_semaphore type and its
-native calls.
+Signed-off-by: Pavel Reichl <preichl@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 2 +-
+ fs/xfs/xfs_file.c        | 3 ++-
+ fs/xfs/xfs_inode.c       | 4 ++--
+ fs/xfs/xfs_qm.c          | 2 +-
+ 4 files changed, 6 insertions(+), 5 deletions(-)
 
-Changes in version 8:
-* Patchset was rebased so it applies cleanly.
-* The patch 'xfs: replace mrlock_t with rw_semaphores' contains change in
-xfs_btree.c which transfers ownership of lock so lockdep won't assert
-(This was reported by Darrick and proposed change fixes this issue).
-
-Changes in version 9:
-*Fixed white space in patch 'xfs: Refactor xfs_isilocked()'
-*Updated code comments as suggested by djwong (thanks!) in patch: 'xfs: replace mrlock_t with rw_semaphores'
-
-Changes in version 10:
-* Fixed use-after-free in 'xfs: replace mrlock_t with rw_semaphores' (thanks Darrick)
-* Moved part of refactor of xfs_isilocked() from patch 'xfs: Refactor xfs_isilocked()' to patch 'xfs: replace mrlock_t with rw_semaphores' - to fix compilation error
-* Typo in comment in 'xfs: replace mrlock_t with rw_semaphores'
-
-Pavel Reichl (4):
-  xfs: Refactor xfs_isilocked()
-  xfs: clean up whitespace in xfs_isilocked() calls
-  xfs: xfs_isilocked() can only check a single lock type
-  xfs: replace mrlock_t with rw_semaphores
-
- fs/xfs/libxfs/xfs_bmap.c  |   8 +--
- fs/xfs/libxfs/xfs_btree.c |  24 +++++++++
- fs/xfs/mrlock.h           |  78 -----------------------------
- fs/xfs/xfs_file.c         |   3 +-
- fs/xfs/xfs_inode.c        | 102 +++++++++++++++++++++++++-------------
- fs/xfs/xfs_inode.h        |  25 ++++++----
- fs/xfs/xfs_iops.c         |   4 +-
- fs/xfs/xfs_linux.h        |   2 +-
- fs/xfs/xfs_qm.c           |   2 +-
- fs/xfs/xfs_super.c        |   6 +--
- 10 files changed, 121 insertions(+), 133 deletions(-)
- delete mode 100644 fs/xfs/mrlock.h
-
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 1b0a01b06a05..ced3b996cd8a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -3883,7 +3883,7 @@ xfs_bmapi_read(
+ 
+ 	ASSERT(*nmap >= 1);
+ 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_ENTIRE)));
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+ 
+ 	if (WARN_ON_ONCE(!ifp))
+ 		return -EFSCORRUPTED;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index a29f78a663ca..c8b1d4e4199a 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -763,7 +763,8 @@ xfs_break_layouts(
+ 	bool			retry;
+ 	int			error;
+ 
+-	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
++	ASSERT(xfs_isilocked(XFS_I(inode),
++			XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
+ 
+ 	do {
+ 		retry = false;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 7c1ceb4df4ec..a3baec1c5bcf 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2781,7 +2781,7 @@ static void
+ xfs_iunpin(
+ 	struct xfs_inode	*ip)
+ {
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+ 
+ 	trace_xfs_inode_unpin_nowait(ip, _RET_IP_);
+ 
+@@ -3474,7 +3474,7 @@ xfs_iflush(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	int			error;
+ 
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+ 	ASSERT(xfs_isiflocked(ip));
+ 	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_BTREE ||
+ 	       ip->i_df.if_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index be67570badf8..57bfa5266c47 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1803,7 +1803,7 @@ xfs_qm_vop_chown_reserve(
+ 	int			error;
+ 
+ 
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+ 
+ 	delblks = ip->i_delayed_blks;
 -- 
 2.26.2
 
