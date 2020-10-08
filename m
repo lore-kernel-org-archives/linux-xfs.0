@@ -2,167 +2,99 @@ Return-Path: <SRS0=9l/N=DP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC213C433E7
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 01:54:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABA2C4363A
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 03:55:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 740772085B
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 01:54:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6AB52173E
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 03:55:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XK5zWDWM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726671AbgJHByt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 7 Oct 2020 21:54:49 -0400
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:36735 "EHLO
-        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726323AbgJHByt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 21:54:49 -0400
-Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
-        by mailout.nyi.internal (Postfix) with ESMTP id 87FF65C0062;
-        Wed,  7 Oct 2020 21:54:48 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute4.internal (MEProxy); Wed, 07 Oct 2020 21:54:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
-        message-id:subject:from:to:date:in-reply-to:references
-        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        km3qdFcRJYPdJKQDg+loghRSy27t64TYjdhRxiYpoMs=; b=Pjwr2HMD+1pAgCQy
-        V6E5DFVxl5V/Qo1HXAnoH5hc2/hcfoOM+Q4oFoG+guFOpmtspDUwIBMK/IhKxFik
-        jiUL7bVF8AHFOBOGPbi24GSw/V7LNSg+V6TShSZdz3VWvt6LpkQtTuHNx/R/h6/B
-        Oqnp7tBzfA1X7rBm+YiV8hv70UwToE9CUwWesK3b+LJAOSOroqzBqg8XojdP/PS6
-        z8q/Ls0C0Uz7ky6c2MYu0gTjM3ZeX7gEda1AolNh8Tq4rs4t3mKAfIw06tzMI6ne
-        2J7UJFBiatSQM6KMzE/3hmJRE17sCFR+Wm2bXREEeEUocPK5x0E92stFWpGJj1Y1
-        06r7GQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; bh=km3qdFcRJYPdJKQDg+loghRSy27t64TYjdhRxiYpo
-        Ms=; b=IXGfEqxlRzHRqaaUu2TNAQvxn/nPYwDle4coph9x3JmzB89lSzNRLHH0X
-        kzrvad+BCVZtr/2dJC17d8vnTm0DsUkfgS2+/Kg7uryfqCk31TM/WbV+WoiHLGkr
-        PtiHV96oRSBshroW327tdeVWG94PpVFJif3m4Qtuz3BoVl2BTDPFpNrdTLpT1RZs
-        lQGeVrXBxYoiC08jjtEYXCKCw3VCEPDDkXpbLxIe9bKDIe8aBdn6pX3Pmxwp/RGq
-        nnu/rFI3pExkYLqKoXGoITl1IXSa/239kAtIPNw+wDG5+AISR7O2z39swlv7K9OV
-        xlfsCs6qAE6EMEzvY4YuTVt2k7vaA==
-X-ME-Sender: <xms:aHF-X-TD9auHflcbjcUvdsyjBEviFOh-UBUWPer54HRGeh7gDuORhA>
-    <xme:aHF-XzxcyZtWx1l41zY5kJGqhpYQbli6FrwGxWjcS8_9IxpdCLEUYJbWt73HHNUkU
-    JstgiZ2LxvS>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedujedrgeejgdehudcutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
-    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecuggftrfgrthhtvghrnhepfe
-    efteetvdeguddvveefveeftedtffduudehueeihfeuvefgveehffeludeggfejnecukfhp
-    pedutdeirdeiledrvddvhedrudefkeenucevlhhushhtvghrufhiiigvpedtnecurfgrrh
-    grmhepmhgrihhlfhhrohhmpehrrghvvghnsehthhgvmhgrfidrnhgvth
-X-ME-Proxy: <xmx:aHF-X72FSkTXQ_syoNctD7cL8wdCTEnHqNTPk94F8wjxL1ZLRCybIw>
-    <xmx:aHF-X6ArAn1SZtTK77tqSCZbfLZQ7s_uD_Smzh8ZyNxwIYi3BqHRAQ>
-    <xmx:aHF-X3gX4mAe0aRwI3auuX8f5DrOqp7CSmxUfuNxpqglXizjJgumrQ>
-    <xmx:aHF-XytHnUcfCzwMreB5FY_G-QzgNpCpw88I1-k4FrPseNS5Sr3s0w>
-Received: from mickey.themaw.net (106-69-225-138.dyn.iinet.net.au [106.69.225.138])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 17351328005A;
-        Wed,  7 Oct 2020 21:54:46 -0400 (EDT)
-Message-ID: <f7bf474dd31f10ddda77ca6cb076a9f888ed5d37.camel@themaw.net>
-Subject: Re: [PATCH] xfsprogs: ignore autofs mount table entries
-From:   Ian Kent <raven@themaw.net>
-To:     xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>
-Date:   Thu, 08 Oct 2020 09:54:43 +0800
-In-Reply-To: <160212194125.16851.17467120219710843339.stgit@mickey.themaw.net>
-References: <160212194125.16851.17467120219710843339.stgit@mickey.themaw.net>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5 (3.36.5-1.fc32) 
+        id S1728282AbgJHDzx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Oct 2020 23:55:53 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:54896 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726469AbgJHDzx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Oct 2020 23:55:53 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0983nw1w021133;
+        Thu, 8 Oct 2020 03:55:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=PhvpBYECYdlIwGdCKRpY5n4PUlnFDUS/6sJI01IqrM8=;
+ b=XK5zWDWMLDTSHYmxtjFS8iI2AjlkgW2pccJQLw7tdU7tIC5Sjlpx8hgY4qRtf7IFhmSv
+ hV7w8AnaRhd5us+iYkgNQmeB8tj1Wuhs0iGN+LzoVygjsaiStj+ihQR+gtEeQ+w2JQu1
+ 2MEOjQUvx83gegpxHrKLcUwWk7FHOyabZZfI0CrgWebY99DQhn4hohrT/H3sx9qBzBSw
+ CXyTjhUXsFDsfwUbib5T+vOnqkwjDIch/nAI+ch7k5B6EsLGs9S3UuEB/5xEwqzDp7Fa
+ ED8JbBzDDuCqFai57USAkny4zdWlbN8NdieUPwA5dGUnYWyaLaUDJCLP9vBydIN89cE1 Dw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 33ym34teau-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 08 Oct 2020 03:55:51 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0983isu2142488;
+        Thu, 8 Oct 2020 03:53:51 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 3410k0fdqf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 08 Oct 2020 03:53:50 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0983rnMT013853;
+        Thu, 8 Oct 2020 03:53:49 GMT
+Received: from localhost (/10.159.134.247)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 07 Oct 2020 20:53:49 -0700
+Date:   Wed, 7 Oct 2020 20:53:48 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eryu Guan <guaneryu@gmail.com>
+Cc:     fstests <fstests@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] xfs/194: actually check if we got the desired block size
+ before proceeding
+Message-ID: <20201008035348.GA6539@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 spamscore=0
+ adultscore=0 bulkscore=0 malwarescore=0 suspectscore=1 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010080030
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9767 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 priorityscore=1501
+ mlxscore=0 mlxlogscore=999 clxscore=1015 bulkscore=0 spamscore=0
+ malwarescore=0 phishscore=0 suspectscore=1 adultscore=0 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2010080030
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Oops!
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Didn't add v2 to [PATCH] in the title, sorry about that.
+This test has specific fs block size requirements, so make sure that's
+what we got before we proceed with the test.
 
-On Thu, 2020-10-08 at 09:52 +0800, Ian Kent wrote:
-> Some of the xfsprogs utilities read the mount table via.
-> getmntent(3).
-> 
-> The mount table may contain (almost always these days since /etc/mtab
-> is
-> symlinked to /proc/self/mounts) autofs mount entries. During
-> processing
-> of the mount table entries statfs(2) can be called on mount point
-> paths
-> which will trigger an automount if those entries are direct or offset
-> autofs mount triggers (indirect autofs mounts aren't affected).
-> 
-> This can be a problem when there are a lot of autofs direct or offset
-> mounts because real mounts will be triggered when statfs(2) is
-> called.
-> This can be particularly bad if the triggered mounts are NFS mounts
-> and
-> the server is unavailable leading to lengthy boot times or worse.
-> 
-> Simply ignoring autofs mount entries during getmentent(3) traversals
-> avoids the statfs() call that triggers these mounts. If there are
-> automounted mounts (real mounts) at the time of reading the mount
-> table
-> these will still be seen in the list so they will be included if that
-> actually matters to the reader.
-> 
-> Recent glibc getmntent(3) can ignore autofs mounts but that requires
-> the
-> autofs user to configure autofs to use the "ignore" pseudo mount
-> option
-> for autofs mounts. But this isn't yet the autofs default (to prevent
-> unexpected side effects) so that can't be used.
-> 
-> The autofs direct and offset automount triggers are pseudo file
-> system
-> mounts and are more or less useless in terms on file system
-> information
-> so excluding them doesn't sacrifice useful file system information
-> either.
-> 
-> Consequently excluding autofs mounts shouldn't have any adverse side
-> effects.
-> 
-> Changes since v1:
-> - drop hunk from fsr/xfs_fsr.c.
-> 
-> Signed-off-by: Ian Kent <raven@themaw.net>
-> ---
->  libfrog/linux.c |    2 ++
->  libfrog/paths.c |    2 ++
->  2 files changed, 4 insertions(+)
-> 
-> diff --git a/libfrog/linux.c b/libfrog/linux.c
-> index 40a839d1..a45d99ab 100644
-> --- a/libfrog/linux.c
-> +++ b/libfrog/linux.c
-> @@ -73,6 +73,8 @@ platform_check_mount(char *name, char *block,
-> struct stat *s, int flags)
->  	 * servers.  So first, a simple check: does the "dev" start
-> with "/" ?
->  	 */
->  	while ((mnt = getmntent(f)) != NULL) {
-> +		if (!strcmp(mnt->mnt_type, "autofs"))
-> +			continue;
->  		if (mnt->mnt_fsname[0] != '/')
->  			continue;
->  		if (stat(mnt->mnt_dir, &mst) < 0)
-> diff --git a/libfrog/paths.c b/libfrog/paths.c
-> index 32737223..d6793764 100644
-> --- a/libfrog/paths.c
-> +++ b/libfrog/paths.c
-> @@ -389,6 +389,8 @@ fs_table_initialise_mounts(
->  			return errno;
->  
->  	while ((mnt = getmntent(mtp)) != NULL) {
-> +		if (!strcmp(mnt->mnt_type, "autofs"))
-> +			continue;
->  		if (!realpath(mnt->mnt_dir, rmnt_dir))
->  			continue;
->  		if (!realpath(mnt->mnt_fsname, rmnt_fsname))
-> 
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/194 |    3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/tests/xfs/194 b/tests/xfs/194
+index c36499c2..238db5c3 100755
+--- a/tests/xfs/194
++++ b/tests/xfs/194
+@@ -83,6 +83,9 @@ unset XFS_MKFS_OPTIONS
+ # we need 512 byte block size, so crc's are turned off
+ _scratch_mkfs_xfs -m crc=0 -b size=$blksize >/dev/null 2>&1
+ _scratch_mount
++test "$(_get_block_size $SCRATCH_MNT)" = $blksize || \
++	_notrun "Could not get $blksize-byte blocks"
++
+ 
+ # 512b block / 4k page example:
+ #
