@@ -7,19 +7,19 @@ X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC4D3C04EBE
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 13:46:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14E03C4363C
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 13:46:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7AD732083B
+	by mail.kernel.org (Postfix) with ESMTP id B48582184D
 	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 13:46:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="NBgPBaM6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UtQB3/V6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730397AbgJHNqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1730361AbgJHNqO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 8 Oct 2020 09:46:14 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27738 "EHLO
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:21653 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730361AbgJHNqN (ORCPT
+        by vger.kernel.org with ESMTP id S1730387AbgJHNqN (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 09:46:13 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1602164772;
@@ -27,45 +27,45 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=SDzBo1Hl39aW7kmMO7v5qnWfvx6c+eKzu7Cp3K2CdFg=;
-        b=NBgPBaM6UPdbnsHjkBs+wyoASnmE+AWrv7YBcmQlhQYOjDe5lioNzwpYBHHTBwBZwxLaub
-        5yKFifDa8L0lwPbaPAg7elYia0U8XlsWM3h/M19dSX4du2bWQHEtvZkkHhvZ3YMGjvJ2tG
-        sLOrFBuuDKRN428rOib+xYklYt/QmjA=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-183--qa10oBtM3GlZOpICxnuhQ-1; Thu, 08 Oct 2020 09:46:11 -0400
-X-MC-Unique: -qa10oBtM3GlZOpICxnuhQ-1
-Received: by mail-wm1-f70.google.com with SMTP id u207so3080251wmu.4
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2020 06:46:11 -0700 (PDT)
+        bh=cFGfkrRBjPPb/whN2KYzusQD8yRyWLH03wTWdOhqzfw=;
+        b=UtQB3/V6sIMI3oMQNkAM46S06qsffegaFi9qzolLkv8IyTyvXL7AQwVm+BiHO7YZAI4QRM
+        i+8kXUpYkYBP8/AgItV1D/Mu5/05JUPepvJCTlFxn4j1zx7gOwSFKNsszTnbs3fjH4m/Qb
+        OCaJaddlaLRDtLByuW0wNkwoHYZRdfA=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-202-NXkh1bRLNYOqNgXXtPfeMA-1; Thu, 08 Oct 2020 09:46:10 -0400
+X-MC-Unique: NXkh1bRLNYOqNgXXtPfeMA-1
+Received: by mail-wr1-f72.google.com with SMTP id n14so424999wrp.1
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2020 06:46:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=SDzBo1Hl39aW7kmMO7v5qnWfvx6c+eKzu7Cp3K2CdFg=;
-        b=jHrltQ4p0Tt985Yu9znFl7RUPZr/SWXIKZABmx5S773Y3DavwaR51GeQBdHKjYSk5c
-         xIMEHstatZiFZCKRiDkOqXxAEYbnlvDXlhgKKofYlvR8yLuW35jgn0XMbnv6Ryn9VCAF
-         1seId5z/Sg9uLlYpbvB4XPkI/9a2DIIf/Y9vMkUyFHK4E5fwcSYP18y9I0Z4sDMfxlkE
-         /Y9rXGy8j6d5nYJK0P8qJYeGiLpX5mngv9HgWsCVzLlp19L2b12nVkXhYVzD/URQ1wuS
-         r31Cj85lDy/yZeg+Txuec7Czjz3Nl/jIWPAJq/1mwZIZdLg7Ce549ki6jbRIyEaThNFa
-         Y90Q==
-X-Gm-Message-State: AOAM532DFT4KW5dxEAXTOhM+fHFUdlNQnZTnMp97SC3tIgPLBNVU1WdZ
-        TnERQysmCqwB/ZpG+Iy42nr+NMLY8Qr++TkYW2gVgwbPHLao3TMu6k2j5idb0Yy6stfY/kDgiSn
-        8IIxkM7/9mdJ2DiZrBQMa
-X-Received: by 2002:a05:600c:410c:: with SMTP id j12mr8758506wmi.179.1602164769685;
-        Thu, 08 Oct 2020 06:46:09 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxnU9fbjBVTDva5rYnM/EsjQVsbhebL5DpwTZk3qJ8WD63E8KmKrZ8XY0z2BMfmfOB2W5sc0g==
-X-Received: by 2002:a05:600c:410c:: with SMTP id j12mr8758490wmi.179.1602164769502;
-        Thu, 08 Oct 2020 06:46:09 -0700 (PDT)
+        bh=cFGfkrRBjPPb/whN2KYzusQD8yRyWLH03wTWdOhqzfw=;
+        b=P2B0SkE/ABAMjuwJ8VchvF69/i/RHbAjPm2RbYcH6zdSdh1rgjklGVKfLZyozeLy7W
+         VUsF/50tooXhSkxZGw/WztS+sCdAg+eGy6VhWFKoGsgwP9dtHow6fwr33SWUjP8cyjv+
+         CR47zTvXrG54Va89M0o64ElkW15uFCqh4VE5uJUW4KmkkEiwyk37uG7/DuqtY4tdt2zh
+         9TjXibJXKyajsN0nD4wTKamX/Ba4+/h2UsHTfD1pb+xdEmAz0SRNK1l2aQxuhCJ6RDho
+         tQMdq6JJ44pJRi/fhx3SrXBtn4V9OAOvq06jKCROx0UbRo8KJ5vhcsfM9AArjsXqTYYg
+         BSNA==
+X-Gm-Message-State: AOAM532q2kNPO5CsFhXLKH2sJ3ErcFGc98yIBhlSVv7DUOrbCPW+evPk
+        T4vj5mWMpsEYAb6EG5DdsfGHkhdXR0Nu3DfFbSBeXhdP/w2hL9FIOdpC8/w1bySYniVmSvXX/p0
+        NEmOpSHkwMG1sxHofxsv/
+X-Received: by 2002:adf:f548:: with SMTP id j8mr9837182wrp.114.1602164768791;
+        Thu, 08 Oct 2020 06:46:08 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxu6oWpj6AvVHJzubXqt/JtR/aErHpzjPLnKn9aQIbGQeHQjhsQNmKtGFEKMulF3/cDmX/kKg==
+X-Received: by 2002:adf:f548:: with SMTP id j8mr9837166wrp.114.1602164768590;
+        Thu, 08 Oct 2020 06:46:08 -0700 (PDT)
 Received: from localhost.localdomain.com ([84.19.91.81])
-        by smtp.gmail.com with ESMTPSA id s19sm7069465wmc.41.2020.10.08.06.46.08
+        by smtp.gmail.com with ESMTPSA id s19sm7069465wmc.41.2020.10.08.06.46.07
         for <linux-xfs@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 06:46:08 -0700 (PDT)
+        Thu, 08 Oct 2020 06:46:07 -0700 (PDT)
 From:   Pavel Reichl <preichl@redhat.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v10 2/4] xfs: clean up whitespace in xfs_isilocked() calls
-Date:   Thu,  8 Oct 2020 15:46:03 +0200
-Message-Id: <20201008134605.863269-3-preichl@redhat.com>
+Subject: [PATCH v10 1/4] xfs: Refactor xfs_isilocked()
+Date:   Thu,  8 Oct 2020 15:46:02 +0200
+Message-Id: <20201008134605.863269-2-preichl@redhat.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20201008134605.863269-1-preichl@redhat.com>
 References: <20201008134605.863269-1-preichl@redhat.com>
@@ -75,79 +75,128 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Make whitespace follow the same pattern in all xfs_isilocked() calls.
+Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
+__xfs_rwsem_islocked() is a helper function which encapsulates checking
+state of rw_semaphores hold by inode.
 
 Signed-off-by: Pavel Reichl <preichl@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Suggested-by: Dave Chinner <dchinner@redhat.com>
+Suggested-by: Eric Sandeen <sandeen@redhat.com>
+Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 2 +-
- fs/xfs/xfs_file.c        | 3 ++-
- fs/xfs/xfs_inode.c       | 4 ++--
- fs/xfs/xfs_qm.c          | 2 +-
- 4 files changed, 6 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_inode.c | 48 ++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_inode.h | 21 +++++++++++++-------
+ 2 files changed, 54 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 1b0a01b06a05..ced3b996cd8a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3883,7 +3883,7 @@ xfs_bmapi_read(
- 
- 	ASSERT(*nmap >= 1);
- 	ASSERT(!(flags & ~(XFS_BMAPI_ATTRFORK | XFS_BMAPI_ENTIRE)));
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED|XFS_ILOCK_EXCL));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
- 
- 	if (WARN_ON_ONCE(!ifp))
- 		return -EFSCORRUPTED;
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index a29f78a663ca..c8b1d4e4199a 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -763,7 +763,8 @@ xfs_break_layouts(
- 	bool			retry;
- 	int			error;
- 
--	ASSERT(xfs_isilocked(XFS_I(inode), XFS_IOLOCK_SHARED|XFS_IOLOCK_EXCL));
-+	ASSERT(xfs_isilocked(XFS_I(inode),
-+			XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
- 
- 	do {
- 		retry = false;
 diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 7c1ceb4df4ec..a3baec1c5bcf 100644
+index c06129cffba9..7c1ceb4df4ec 100644
 --- a/fs/xfs/xfs_inode.c
 +++ b/fs/xfs/xfs_inode.c
-@@ -2781,7 +2781,7 @@ static void
- xfs_iunpin(
- 	struct xfs_inode	*ip)
+@@ -345,9 +345,43 @@ xfs_ilock_demote(
+ }
+ 
+ #if defined(DEBUG) || defined(XFS_WARN)
+-int
++static inline bool
++__xfs_rwsem_islocked(
++	struct rw_semaphore	*rwsem,
++	int			lock_flags)
++{
++	int			arg;
++
++	if (!debug_locks)
++		return rwsem_is_locked(rwsem);
++
++	if (lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
++		/*
++		 * The caller could be asking if we have (shared | excl)
++		 * access to the lock. Ask lockdep if the rwsem is
++		 * locked either for read or write access.
++		 *
++		 * The caller could also be asking if we have only
++		 * shared access to the lock. Holding a rwsem
++		 * write-locked implies read access as well, so the
++		 * request to lockdep is the same for this case.
++		 */
++		arg = -1;
++	} else {
++		/*
++		 * The caller is asking if we have only exclusive access
++		 * to the lock. Ask lockdep if the rwsem is locked for
++		 * write access.
++		 */
++		arg = 0;
++	}
++
++	return lockdep_is_held_type(rwsem, arg);
++}
++
++bool
+ xfs_isilocked(
+-	xfs_inode_t		*ip,
++	struct xfs_inode	*ip,
+ 	uint			lock_flags)
  {
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+ 	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+@@ -362,15 +396,13 @@ xfs_isilocked(
+ 		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
+ 	}
  
- 	trace_xfs_inode_unpin_nowait(ip, _RET_IP_);
+-	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+-		if (!(lock_flags & XFS_IOLOCK_SHARED))
+-			return !debug_locks ||
+-				lockdep_is_held_type(&VFS_I(ip)->i_rwsem, 0);
+-		return rwsem_is_locked(&VFS_I(ip)->i_rwsem);
++	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
++		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
++				(lock_flags >> XFS_IOLOCK_FLAG_SHIFT));
+ 	}
  
-@@ -3474,7 +3474,7 @@ xfs_iflush(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	int			error;
+ 	ASSERT(0);
+-	return 0;
++	return false;
+ }
+ #endif
  
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 	ASSERT(xfs_isiflocked(ip));
- 	ASSERT(ip->i_df.if_format != XFS_DINODE_FMT_BTREE ||
- 	       ip->i_df.if_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index be67570badf8..57bfa5266c47 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1803,7 +1803,7 @@ xfs_qm_vop_chown_reserve(
- 	int			error;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index e9a8bb184d1f..77d5655191ab 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -268,12 +268,19 @@ static inline void xfs_ifunlock(struct xfs_inode *ip)
+  * Bit ranges:	1<<1  - 1<<16-1 -- iolock/ilock modes (bitfield)
+  *		1<<16 - 1<<32-1 -- lockdep annotation (integers)
+  */
+-#define	XFS_IOLOCK_EXCL		(1<<0)
+-#define	XFS_IOLOCK_SHARED	(1<<1)
+-#define	XFS_ILOCK_EXCL		(1<<2)
+-#define	XFS_ILOCK_SHARED	(1<<3)
+-#define	XFS_MMAPLOCK_EXCL	(1<<4)
+-#define	XFS_MMAPLOCK_SHARED	(1<<5)
++
++#define XFS_IOLOCK_FLAG_SHIFT	0
++#define XFS_ILOCK_FLAG_SHIFT	2
++#define XFS_MMAPLOCK_FLAG_SHIFT	4
++
++#define XFS_SHARED_LOCK_SHIFT	1
++
++#define XFS_IOLOCK_EXCL		(1 << (XFS_IOLOCK_FLAG_SHIFT))
++#define XFS_IOLOCK_SHARED	(XFS_IOLOCK_EXCL << (XFS_SHARED_LOCK_SHIFT))
++#define XFS_ILOCK_EXCL		(1 << (XFS_ILOCK_FLAG_SHIFT))
++#define XFS_ILOCK_SHARED	(XFS_ILOCK_EXCL << (XFS_SHARED_LOCK_SHIFT))
++#define XFS_MMAPLOCK_EXCL	(1 << (XFS_MMAPLOCK_FLAG_SHIFT))
++#define XFS_MMAPLOCK_SHARED	(XFS_MMAPLOCK_EXCL << (XFS_SHARED_LOCK_SHIFT))
  
+ #define XFS_LOCK_MASK		(XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED \
+ 				| XFS_ILOCK_EXCL | XFS_ILOCK_SHARED \
+@@ -412,7 +419,7 @@ void		xfs_ilock(xfs_inode_t *, uint);
+ int		xfs_ilock_nowait(xfs_inode_t *, uint);
+ void		xfs_iunlock(xfs_inode_t *, uint);
+ void		xfs_ilock_demote(xfs_inode_t *, uint);
+-int		xfs_isilocked(xfs_inode_t *, uint);
++bool		xfs_isilocked(xfs_inode_t *, uint);
+ uint		xfs_ilock_data_map_shared(struct xfs_inode *);
+ uint		xfs_ilock_attr_map_shared(struct xfs_inode *);
  
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
- 
- 	delblks = ip->i_delayed_blks;
 -- 
 2.26.2
 
