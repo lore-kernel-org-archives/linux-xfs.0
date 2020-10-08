@@ -5,236 +5,206 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCDBCC43457
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 18:27:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 307E2C433E7
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 19:12:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 723B4221FE
-	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 18:27:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB48A221FE
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Oct 2020 19:12:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CuksiUN8"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZLppUVYe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728947AbgJHS1y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Oct 2020 14:27:54 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:56608 "EHLO
+        id S1727109AbgJHTMD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 8 Oct 2020 15:12:03 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:41090 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725874AbgJHS1y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 14:27:54 -0400
+        by vger.kernel.org with ESMTP id S1726979AbgJHTMD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 15:12:03 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602181672;
+        s=mimecast20190719; t=1602184322;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=tKfc65bJnwIQ+vwUVxQQLY1gB7yLhhcHJe9ad/PTp1s=;
-        b=CuksiUN8IFLN8Y4ZmpMTudGpV6z2NCw+53p3Zdsy1Lz1bhgWVUXmSFRNsI3/6fZDzTxGZs
-        hvw7i/S6BvlnVxD8xSX5ubVW+daxFE498oZ615AGmkRBruzFGSgwKMLJ7OQcyetVDQXVlv
-        apjHTNia15PSmRdKnxX+sQTjYvwYiXw=
+        bh=QbdDebepqcegjZq6ZjaMiCH83nW5pPyZ79jW0+d2E5o=;
+        b=ZLppUVYeT8doAxEFAKZxIMy0iZ7L3PanfSzhuErMy9tbrKvmcD6OApklfei4hgqBtDeXpY
+        iBKQoYL/wJvlXJtQUNQNuDRlqcoJzOqWWvPxyOj7zsW0OAMHna4kqSY81NhnZiHFTvfSW3
+        pyYcqxPMgC+iz10nBhPIH4e1+o4Yiy8=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-244-P4aa9pQLNriSHDTZpvl5aA-1; Thu, 08 Oct 2020 14:27:50 -0400
-X-MC-Unique: P4aa9pQLNriSHDTZpvl5aA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-575-gSyoyZyTO1ikvJiB0e_aPA-1; Thu, 08 Oct 2020 15:12:00 -0400
+X-MC-Unique: gSyoyZyTO1ikvJiB0e_aPA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 75C43101FFA2;
-        Thu,  8 Oct 2020 18:27:49 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E26131084D70;
+        Thu,  8 Oct 2020 19:11:58 +0000 (UTC)
 Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DB81955760;
-        Thu,  8 Oct 2020 18:27:48 +0000 (UTC)
-Date:   Thu, 8 Oct 2020 14:27:46 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5D5775C1D0;
+        Thu,  8 Oct 2020 19:11:57 +0000 (UTC)
+Date:   Thu, 8 Oct 2020 15:11:55 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: transaction subsystem quiesce mechanism
-Message-ID: <20201008182746.GC702156@bfoster>
-References: <20201001150310.141467-1-bfoster@redhat.com>
- <20201001150310.141467-3-bfoster@redhat.com>
- <20201007221310.GF6540@magnolia>
- <20201008112626.GA702156@bfoster>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] xfs: flush new eof page on truncate to avoid post-eof
+ corruption
+Message-ID: <20201008191155.GD702156@bfoster>
+References: <20201007143509.669729-1-bfoster@redhat.com>
+ <20201007153359.GC49547@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201008112626.GA702156@bfoster>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20201007153359.GC49547@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 08, 2020 at 07:26:26AM -0400, Brian Foster wrote:
-> On Wed, Oct 07, 2020 at 03:13:10PM -0700, Darrick J. Wong wrote:
-> > On Thu, Oct 01, 2020 at 11:03:09AM -0400, Brian Foster wrote:
-> > > The updated quotaoff logging algorithm depends on a runtime quiesce
-> > > of the transaction subsystem to guarantee all transactions after a
-> > > certain point detect quota subsystem changes. Implement this
-> > > mechanism using an internal lock, similar to the external filesystem
-> > > freeze mechanism. This is also somewhat analogous to the old percpu
-> > > transaction counter mechanism, but we don't actually need a counter.
-> > > 
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_aops.c  |  2 ++
-> > >  fs/xfs/xfs_mount.h |  3 +++
-> > >  fs/xfs/xfs_super.c |  8 ++++++++
-> > >  fs/xfs/xfs_trans.c |  4 ++--
-> > >  fs/xfs/xfs_trans.h | 20 ++++++++++++++++++++
-> > >  5 files changed, 35 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > > index b35611882ff9..214310c94de5 100644
-> > > --- a/fs/xfs/xfs_aops.c
-> > > +++ b/fs/xfs/xfs_aops.c
-> > > @@ -58,6 +58,7 @@ xfs_setfilesize_trans_alloc(
-> > >  	 * we released it.
-> > >  	 */
-> > >  	__sb_writers_release(ioend->io_inode->i_sb, SB_FREEZE_FS);
-> > > +	percpu_rwsem_release(&mp->m_trans_rwsem, true, _THIS_IP_);
-> > >  	/*
-> > >  	 * We hand off the transaction to the completion thread now, so
-> > >  	 * clear the flag here.
-> > > @@ -127,6 +128,7 @@ xfs_setfilesize_ioend(
-> > >  	 */
-> > >  	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
-> > >  	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
-> > > +	percpu_rwsem_acquire(&ip->i_mount->m_trans_rwsem, true, _THIS_IP_);
-> > >  
-> > >  	/* we abort the update if there was an IO error */
-> > >  	if (error) {
-> > > diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-> > > index dfa429b77ee2..f1083a9ce1f8 100644
-> > > --- a/fs/xfs/xfs_mount.h
-> > > +++ b/fs/xfs/xfs_mount.h
-> > > @@ -171,6 +171,9 @@ typedef struct xfs_mount {
-> > >  	 */
-> > >  	struct percpu_counter	m_delalloc_blks;
-> > >  
-> > > +	/* lock for transaction quiesce (used by quotaoff) */
-> > > +	struct percpu_rw_semaphore	m_trans_rwsem;
-> > > +
-> > >  	struct radix_tree_root	m_perag_tree;	/* per-ag accounting info */
-> > >  	spinlock_t		m_perag_lock;	/* lock for m_perag_tree */
-> > >  	uint64_t		m_resblks;	/* total reserved blocks */
-> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > index baf5de30eebb..ff3ad5392e21 100644
-> > > --- a/fs/xfs/xfs_super.c
-> > > +++ b/fs/xfs/xfs_super.c
-> > > @@ -1029,8 +1029,15 @@ xfs_init_percpu_counters(
-> > >  	if (error)
-> > >  		goto free_fdblocks;
-> > >  
-> > > +	/* not a counter, but close enough... */
-> > > +	error = percpu_init_rwsem(&mp->m_trans_rwsem);
-> > > +	if (error)
-> > > +		goto free_delalloc;
-> > > +
-> > >  	return 0;
-> > >  
-> > > +free_delalloc:
-> > > +	percpu_counter_destroy(&mp->m_delalloc_blks);
-> > >  free_fdblocks:
-> > >  	percpu_counter_destroy(&mp->m_fdblocks);
-> > >  free_ifree:
-> > > @@ -1053,6 +1060,7 @@ static void
-> > >  xfs_destroy_percpu_counters(
-> > >  	struct xfs_mount	*mp)
-> > >  {
-> > > +	percpu_free_rwsem(&mp->m_trans_rwsem);
-> > >  	percpu_counter_destroy(&mp->m_icount);
-> > >  	percpu_counter_destroy(&mp->m_ifree);
-> > >  	percpu_counter_destroy(&mp->m_fdblocks);
-> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > > index ca18a040336a..c07fa036549a 100644
-> > > --- a/fs/xfs/xfs_trans.c
-> > > +++ b/fs/xfs/xfs_trans.c
-> > > @@ -69,7 +69,7 @@ xfs_trans_free(
-> > >  
-> > >  	trace_xfs_trans_free(tp, _RET_IP_);
-> > >  	if (!(tp->t_flags & XFS_TRANS_NO_WRITECOUNT))
-> > > -		sb_end_intwrite(tp->t_mountp->m_super);
-> > > +		xfs_trans_end(tp->t_mountp);
-> > >  	xfs_trans_free_dqinfo(tp);
-> > >  	kmem_cache_free(xfs_trans_zone, tp);
-> > >  }
-> > > @@ -265,7 +265,7 @@ xfs_trans_alloc(
-> > >  	 */
-> > >  	tp = kmem_cache_zalloc(xfs_trans_zone, GFP_KERNEL | __GFP_NOFAIL);
-> > >  	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
-> > > -		sb_start_intwrite(mp->m_super);
-> > > +		xfs_trans_start(mp);
-> > >  
-> > >  	/*
-> > >  	 * Zero-reservation ("empty") transactions can't modify anything, so
-> > > diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-> > > index f46534b75236..af54c17a22c0 100644
-> > > --- a/fs/xfs/xfs_trans.h
-> > > +++ b/fs/xfs/xfs_trans.h
-> > > @@ -209,6 +209,26 @@ xfs_trans_read_buf(
-> > >  				      flags, bpp, ops);
-> > >  }
-> > >  
-> > > +/*
-> > > + * Context tracking helpers for external (i.e. fs freeze) and internal
-> > > + * transaction quiesce.
-> > > + */
-> > > +static inline void
-> > > +xfs_trans_start(
-> > > +	struct xfs_mount	*mp)
-> > > +{
-> > > +	sb_start_intwrite(mp->m_super);
-> > > +	percpu_down_read(&mp->m_trans_rwsem);
+On Wed, Oct 07, 2020 at 08:33:59AM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 07, 2020 at 10:35:09AM -0400, Brian Foster wrote:
+> > It is possible to expose non-zeroed post-EOF data in XFS if the new
+> > EOF page is dirty, backed by an unwritten block and the truncate
+> > happens to race with writeback. iomap_truncate_page() will not zero
+> > the post-EOF portion of the page if the underlying block is
+> > unwritten. The subsequent call to truncate_setsize() will, but
+> > doesn't dirty the page. Therefore, if writeback happens to complete
+> > after iomap_truncate_page() (so it still sees the unwritten block)
+> > but before truncate_setsize(), the cached page becomes inconsistent
+> > with the on-disk block. A mapped read after the associated page is
+> > reclaimed or invalidated exposes non-zero post-EOF data.
 > > 
-> > /me wonders, have you noticed any extra cpu overhead with this?
+> > For example, consider the following sequence when run on a kernel
+> > modified to explicitly flush the new EOF page within the race
+> > window:
 > > 
+> > $ xfs_io -fc "falloc 0 4k" -c fsync /mnt/file
+> > $ xfs_io -c "pwrite 0 4k" -c "truncate 1k" /mnt/file
+> >   ...
+> > $ xfs_io -c "mmap 0 4k" -c "mread -v 1k 8" /mnt/file
+> > 00000400:  00 00 00 00 00 00 00 00  ........
+> > $ umount /mnt/; mount <dev> /mnt/
+> > $ xfs_io -c "mmap 0 4k" -c "mread -v 1k 8" /mnt/file
+> > 00000400:  cd cd cd cd cd cd cd cd  ........
+> > 
+> > Update xfs_setattr_size() to explicitly flush the new EOF page prior
+> > to the page truncate to ensure iomap has the latest state of the
+> > underlying block.
+> > 
+> > Fixes: 68a9f5e7007c ("xfs: implement iomap based buffered write path")
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> > 
+> > This patch is intentionally simplistic because I wanted to get some
+> > thoughts on a proper fix and at the same time consider something easily
+> > backportable. The iomap behavior seems rather odd to me in general,
+> > particularly if we consider the same kind of behavior can occur on
+> > file-extending writes. It's just not a user observable problem in that
+> > case because a sub-page write of a current EOF page (backed by an
+> > unwritten block) will zero fill the rest of the page at write time
+> > (before the zero range essentially skips it due to the unwritten block).
+> > It's not totally clear to me if that's an intentional design
+> > characteristic of iomap or something we should address.
+> > 
+> > It _seems_ like the more appropriate fix is that iomap truncate page
+> > should at least accommodate a dirty page over an unwritten block and
+> > modify the page (or perhaps just unconditionally do a buffered write on
+> > a non-aligned truncate, similar to what block_truncate_page() does). For
+> > example, we could push the UNWRITTEN check from iomap_zero_range_actor()
+> > down into iomap_zero(), actually check for an existing page there, and
+> > then either zero it or skip out if none exists. Thoughts?
 > 
-> Not that I've noticed, but I haven't explicitly profiled it or anything.
-> My understanding is the percpu variant of the rwsem should make read
-> acquisition extremely cheap at the cost of more expensive write
-> acquisition (which pretty much fits use cases like freeze, quotaoff,
-> etc.). I can try a file create/remove workload or something on a high
-> cpu count box and see if there's a noticeable effect..
+> I haven't looked at this in much depth yet, but I agree with the
+> principle that iomap ought to handle the case of unwritten extents
+> fronted by dirty pagecache.
 > 
 
-Following up, I don't see a noticeable difference on a 64xcpu 200m empty
-file creation (fs_mark) workload. The numbers jump around a bit between
-iterations so it's hard to see fine details, but the tests land in the
-same general ranges and complete within 30s (out of ~28m) of eachother
-(with the test kernel actually completing before the baseline kernel).
-All in all it kind of looks like "in the noise" to me, but I'm happy to
-try any other tests people might want to see.
+Ok. What I was originally thinking above turned out to be too
+inefficient. However, it occurred to me that we already have an
+efficient cache scanning mechanism in seek data/hole, so I think
+something like the appended might be doable. Thoughts?
 
 Brian
 
-> > So far it looks ok to me, though I wonder if we could skip all this if
-> > CONFIG_XFS_QUOTA=n...
-> > 
-> 
-> We could, though I'd probably prefer to use something like
-> XFS_IS_QUOTA_RUNNING() as a conditional rather than an ifdef. Of course,
-> that means we'd have to be careful that turning quotaoff doesn't
-> actually break the transaction tracking. Regardless, I'm not really sure
-> it's worth sprinkling that logic around to avoid a per-transaction
-> percpu read lock.
-> 
-> Brian
-> 
-> > --D
-> > 
-> > > +}
-> > > +
-> > > +static inline void
-> > > +xfs_trans_end(
-> > > +	struct xfs_mount	*mp)
-> > > +{
-> > > +	percpu_up_read(&mp->m_trans_rwsem);
-> > > +	sb_end_intwrite(mp->m_super);
-> > > +}
-> > > +
-> > >  struct xfs_buf	*xfs_trans_getsb(struct xfs_trans *);
-> > >  
-> > >  void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
-> > > -- 
-> > > 2.25.4
-> > > 
-> > 
-> 
+--- 8< ---
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index bcfc288dba3f..676d8d2ae7c7 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -944,6 +944,26 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ 	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
+ }
+ 
++static void
++iomap_zero_range_skip_uncached(struct inode *inode, loff_t *pos,
++		loff_t *count, loff_t *written)
++{
++	unsigned dirty_offset, bytes = 0;
++
++	dirty_offset = page_cache_seek_hole_data(inode, *pos, *count,
++				SEEK_DATA);
++	if (dirty_offset == -ENOENT)
++		bytes = *count;
++	else if (dirty_offset > *pos)
++		bytes = dirty_offset - *pos;
++
++	if (bytes) {
++		*pos += bytes;
++		*count -= bytes;
++		*written += bytes;
++	}
++}
++
+ static loff_t
+ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+ 		void *data, struct iomap *iomap, struct iomap *srcmap)
+@@ -953,12 +973,19 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+ 	int status;
+ 
+ 	/* already zeroed?  we're done. */
+-	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
++	if (srcmap->type == IOMAP_HOLE)
+ 		return count;
+ 
+ 	do {
+ 		unsigned offset, bytes;
+ 
++		if (srcmap->type == IOMAP_UNWRITTEN) {
++			iomap_zero_range_skip_uncached(inode, &pos, &count,
++				&written);
++			if (!count)
++				break;
++		}
++
+ 		offset = offset_in_page(pos);
+ 		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
+ 
+diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+index 107ee80c3568..4f5e4eca9906 100644
+--- a/fs/iomap/seek.c
++++ b/fs/iomap/seek.c
+@@ -70,7 +70,7 @@ page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
+  *
+  * Returns the resulting offset on successs, and -ENOENT otherwise.
+  */
+-static loff_t
++loff_t
+ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
+ 		int whence)
+ {
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 4d1d3c3469e9..437ae0d708d6 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -184,6 +184,9 @@ loff_t iomap_seek_data(struct inode *inode, loff_t offset,
+ 		const struct iomap_ops *ops);
+ sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
+ 		const struct iomap_ops *ops);
++loff_t page_cache_seek_hole_data(struct inode *inode, loff_t offset,
++		loff_t length, int whence);
++
+ 
+ /*
+  * Structure for writeback I/O completions.
 
