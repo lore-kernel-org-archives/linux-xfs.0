@@ -2,89 +2,67 @@ Return-Path: <SRS0=Vfs/=DQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA64C433E7
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 13:02:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59695C433E7
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 13:36:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1C47222E8
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 13:02:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E78E62184D
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 13:36:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VivilYUo"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="e0ZExvcW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732699AbgJINCQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Oct 2020 09:02:16 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:54214 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732468AbgJINCO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 09:02:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602248534;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=fXfZH6Xax8QBeX4SQG02qebjBEW6p+Tf3I4hPgZk+pA=;
-        b=VivilYUoxdv44FFrSc3TU47T6/dUdMYay4K1nJwpXOldktSsfrAaisWs+A1VgGMbbvy6EZ
-        PUYAxPc6vupfvQ6jpz/WLvcjQds8mMkYum+4JetYO7+OJRJ4w/Qucfi4FWbrpM6qzbQSg5
-        fxeorsWktBqdB/WiWnURsawhJP97MF0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-262-3tIS51YDPUyzPUJToguFww-1; Fri, 09 Oct 2020 09:02:11 -0400
-X-MC-Unique: 3tIS51YDPUyzPUJToguFww-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 376E4801FAE;
-        Fri,  9 Oct 2020 13:02:10 +0000 (UTC)
-Received: from liberator.sandeen.net (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id BF5D05DA6B;
-        Fri,  9 Oct 2020 13:02:02 +0000 (UTC)
-Subject: Re: [PATCH v4 3/3] xfsprogs: make use of
- xfs_validate_stripe_factors()
-To:     Gao Xiang <hsiangkao@redhat.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Gao Xiang <hsiangkao@aol.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>
-References: <20201007140402.14295-1-hsiangkao@aol.com>
- <20201007140402.14295-4-hsiangkao@aol.com> <20201007223044.GI6540@magnolia>
- <20201009005847.GB10631@xiangao.remote.csb>
-From:   Eric Sandeen <sandeen@redhat.com>
-Message-ID: <b00455fd-a017-8daf-2b15-d3062f0d6bef@redhat.com>
-Date:   Fri, 9 Oct 2020 08:02:02 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.3.1
+        id S1727737AbgJINgF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Oct 2020 09:36:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45100 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726357AbgJINgF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 09:36:05 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2648CC0613D2;
+        Fri,  9 Oct 2020 06:36:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=4zcQLlvX1W3uQckN8sC5yZKmOZfSHdP1zxo1/ieXfYI=; b=e0ZExvcWDCTTDKroRSJi2pyYbV
+        aGIhraqXzk3rhWNFeLzu3lbatZ0I9lyPnOjUuPuPnEyvB1r2Gu9o/8T2YQGkpP4cJLVuKEQvHiSvz
+        15PIRSHfe3AO+Q7Lpo0Rl4bWzU9HtIJFp2MSL/eLHupMOj8R9NMIqDy74chMk3q6R7Trc5Wv3azK+
+        l17DFsiZnnC0sYNExKFsS8ddMIOJ7csZKwP4wGq+fhyqIvtl/RVLwZTn2LaEwR1OMu5lOwtRbcGsq
+        DdvKeY9gX/tcWNmVHktSo2z5yqsA4uHA10dZTXDvXLK1S7xkfSJHyJReuGjQyGpW55HeP87yT6HPF
+        5JE7eQPQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kQsYu-0002eg-9k; Fri, 09 Oct 2020 13:35:56 +0000
+Date:   Fri, 9 Oct 2020 14:35:56 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Yafang Shao <laoar.shao@gmail.com>
+Cc:     david@fromorbit.com, hch@infradead.org, darrick.wong@oracle.com,
+        mhocko@kernel.org, akpm@linux-foundation.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org
+Subject: Re: [PATCH v8 2/2] xfs: avoid transaction reservation recursion
+Message-ID: <20201009133556.GT20115@casper.infradead.org>
+References: <20201009125127.37435-1-laoar.shao@gmail.com>
+ <20201009125127.37435-3-laoar.shao@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20201009005847.GB10631@xiangao.remote.csb>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201009125127.37435-3-laoar.shao@gmail.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/8/20 7:58 PM, Gao Xiang wrote:
->> Unless we get rid of the weird libxfs macro thing, you're supposed to
->> use prefixes in userspace.
-> I vaguely remembered Christoph sent out a patch intending to get
-> rid of xfsprogs libxfs_ prefix months ago, so I assumed there was
-> no need to introduce any new libxfs_ userspace API wrappers anymore.
+On Fri, Oct 09, 2020 at 08:51:27PM +0800, Yafang Shao wrote:
+> PF_FSTRANS which is used to avoid transaction reservation recursion, is
+> dropped since commit 9070733b4efa ("xfs: abstract PF_FSTRANS to
+> PF_MEMALLOC_NOFS") and commit 7dea19f9ee63 ("mm: introduce
+> memalloc_nofs_{save,restore} API") and replaced by PF_MEMALLOC_NOFS which
+> means to avoid filesystem reclaim recursion. That change is subtle.
+> Let's take the exmple of the check of WARN_ON_ONCE(current->flags &
+> PF_MEMALLOC_NOFS)) to explain why this abstraction from PF_FSTRANS to
+> PF_MEMALLOC_NOFS is not proper.
 
-He did, and it's on my (perpetual) TODO list to get that finally reviewed,
-sorry.
-
-For now we still have libxfs*
-
--Eric
-
-> But yeah, will add such libxfs_ marco wrapper in the next version.
-> 
-> Thanks,
-> Gao Xiang
-> 
-
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
