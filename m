@@ -7,111 +7,218 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE7C4C433DF
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 15:48:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27555C43457
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 15:54:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71C25222E7
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 15:48:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE87D22261
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 15:54:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sRQPqcV/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IBztltLh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389434AbgJIPsX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Oct 2020 11:48:23 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:49086 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389144AbgJIPsX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 11:48:23 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 099FiTuS154681;
-        Fri, 9 Oct 2020 15:47:08 GMT
+        id S2389444AbgJIPyA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Oct 2020 11:54:00 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41660 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388745AbgJIPx7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 11:53:59 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 099FneKe041555;
+        Fri, 9 Oct 2020 15:53:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=HQsRcCttbyIiXm4hqGdtwne1sw4vSxHGN9/U5UbLh5E=;
- b=sRQPqcV/Yi1qiM38/xmNRMKStHnbR/Pkh/DvXd3hgvd7A3FW4ORrFB3gWf60e4hlf1My
- I/du3mYGK7Mv65g6Dvz/uu4rXQp9mOD276jW5khCmuHIK0Z+RXrsBoaY8o+feeH9bExG
- gI7XCx/zC09PIiH96DKeOP0O2hpvRmzvldyEcI7V7MlUYVTCMVgnuvqwb/GLg3k0RmqA
- Lw7V/VKragvyOs+Xs7FM9hwV7fsa2rt/JV5O7/79qQSsrGMltrT0p5xXP8MCcAdi0LEs
- tHIH9zVN2yhxkYq2IsIvKPQUDdcjgxGZLw22xaMCklTLpVk/60bDLZs74K7NaMFJf5yW EQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 3429juv96w-1
+ bh=XuWnsL5lgcta7pemx636Wy4SNS7IjVArBRC42Pl8f6M=;
+ b=IBztltLheJCYsvy1I4q74Fp2nbdAG0UR3Ze0Kv9+k9Dva/kx3aQB9xSUFwScehDLc1JL
+ CEfuZUWdhaRFgqALhIofg6NgPypkSlUrZoS2YBwGwhQ5QRR4V6e3ANwi6CYlT5rjI6wx
+ FLkEmlXK9mwZroCLnaxiDT8qj0n4w12E2+P913JYC4zTDYbjrJ7aJVmWHMqw+CLVRcve
+ kpr7BUv3u4G+vyJ7SI2Z4Vy3Hzqbnul228hitJFDbI8Ku40Cr5qTnqrMco9ElcE1Y0RI
+ d/xFKlOr6Y5owJV8DONr0dRPC7gaZxZgF0Aa4okI2ieDOxmONCkjFnikN4FFewwCFbB4 EQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 3429jmmant-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 09 Oct 2020 15:47:07 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 099FfIrc096653;
-        Fri, 9 Oct 2020 15:45:07 GMT
+        Fri, 09 Oct 2020 15:53:43 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 099FnQQa069144;
+        Fri, 9 Oct 2020 15:53:42 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 3429kjha6d-1
+        by aserp3030.oracle.com with ESMTP id 342gurm4mu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 09 Oct 2020 15:45:06 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 099Fj3b0030090;
-        Fri, 9 Oct 2020 15:45:03 GMT
+        Fri, 09 Oct 2020 15:53:42 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 099FrdIX003764;
+        Fri, 9 Oct 2020 15:53:40 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 09 Oct 2020 08:45:02 -0700
-Date:   Fri, 9 Oct 2020 08:45:01 -0700
+        with ESMTP ; Fri, 09 Oct 2020 08:53:39 -0700
+Date:   Fri, 9 Oct 2020 08:53:38 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xiakaixu1987@gmail.com
-Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
-Subject: Re: [RFC PATCH] xfs: remove unnecessary null check in
- xfs_generic_create
-Message-ID: <20201009154501.GU6540@magnolia>
-References: <1602232150-28805-1-git-send-email-kaixuxia@tencent.com>
+To:     Yafang Shao <laoar.shao@gmail.com>
+Cc:     david@fromorbit.com, hch@infradead.org, willy@infradead.org,
+        mhocko@kernel.org, akpm@linux-foundation.org,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org
+Subject: Re: [PATCH v8 1/2] mm: Add become_kswapd and restore_kswapd
+Message-ID: <20201009155338.GV6540@magnolia>
+References: <20201009125127.37435-1-laoar.shao@gmail.com>
+ <20201009125127.37435-2-laoar.shao@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1602232150-28805-1-git-send-email-kaixuxia@tencent.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9768 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- mlxlogscore=999 suspectscore=10 mlxscore=0 adultscore=0 bulkscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010090117
+In-Reply-To: <20201009125127.37435-2-laoar.shao@gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9769 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
- phishscore=0 bulkscore=0 suspectscore=10 lowpriorityscore=0 spamscore=0
- clxscore=1015 malwarescore=0 priorityscore=1501 impostorscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ bulkscore=0 malwarescore=0 mlxscore=0 spamscore=0 adultscore=0
+ suspectscore=5 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010090118
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9769 signatures=668681
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 suspectscore=5
+ clxscore=1011 phishscore=0 lowpriorityscore=0 impostorscore=0
+ malwarescore=0 mlxlogscore=999 priorityscore=1501 mlxscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010090117
+ definitions=main-2010090118
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 09, 2020 at 04:29:10PM +0800, xiakaixu1987@gmail.com wrote:
-> From: Kaixu Xia <kaixuxia@tencent.com>
+On Fri, Oct 09, 2020 at 08:51:26PM +0800, Yafang Shao wrote:
+> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 > 
-> The function posix_acl_release() test the passed-in argument and
-> move on only when it is non-null, so maybe the null check in
-> xfs_generic_create is unnecessary.
+> Since XFS needs to pretend to be kswapd in some of its worker threads,
+> create methods to save & restore kswapd state.  Don't bother restoring
+> kswapd state in kswapd -- the only time we reach this code is when we're
+> exiting and the task_struct is about to be destroyed anyway.
 > 
-> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Darrick J. Wong <darrick.wong@oracle.com>
+> Cc: Matthew Wilcox <willy@infradead.org>
+> Acked-by: Michal Hocko <mhocko@suse.com>
+> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> ---
+>  fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
+>  include/linux/sched/mm.h  | 23 +++++++++++++++++++++++
+>  mm/vmscan.c               | 16 +---------------
+>  3 files changed, 32 insertions(+), 21 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> index 2d25bab68764..a04a44238aab 100644
+> --- a/fs/xfs/libxfs/xfs_btree.c
+> +++ b/fs/xfs/libxfs/xfs_btree.c
+> @@ -2813,8 +2813,9 @@ xfs_btree_split_worker(
+>  {
+>  	struct xfs_btree_split_args	*args = container_of(work,
+>  						struct xfs_btree_split_args, work);
+> +	bool			is_kswapd = args->kswapd;
+>  	unsigned long		pflags;
+> -	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
+> +	int			memalloc_nofs;
+>  
+>  	/*
+>  	 * we are in a transaction context here, but may also be doing work
+> @@ -2822,16 +2823,17 @@ xfs_btree_split_worker(
+>  	 * temporarily to ensure that we don't block waiting for memory reclaim
+>  	 * in any way.
+>  	 */
+> -	if (args->kswapd)
+> -		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+> -
+> -	current_set_flags_nested(&pflags, new_pflags);
+> +	if (is_kswapd)
+> +		pflags = become_kswapd();
+> +	memalloc_nofs = memalloc_nofs_save();
+>  
+>  	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
+>  					 args->key, args->curp, args->stat);
+>  	complete(args->done);
+>  
+> -	current_restore_flags_nested(&pflags, new_pflags);
+> +	memalloc_nofs_restore(memalloc_nofs);
+> +	if (is_kswapd)
+> +		restore_kswapd(pflags);
 
-Heh, yep.  Nice cleanup.
+It's kind of a pity that these two APIs both touch current->flags but
+there isn't a clean way to only use one flags variable to pop all of
+these things at the end. :/
+
+Oh well, at least the end result is more compact but still communicates
+what we're doing with all these PF_ mods.
+
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> ---
->  fs/xfs/xfs_iops.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 5e165456da68..5907e999642c 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -206,10 +206,8 @@ xfs_generic_create(
->  	xfs_finish_inode_setup(ip);
+>  }
 >  
->   out_free_acl:
-> -	if (default_acl)
-> -		posix_acl_release(default_acl);
-> -	if (acl)
-> -		posix_acl_release(acl);
-> +	posix_acl_release(default_acl);
-> +	posix_acl_release(acl);
->  	return error;
+>  /*
+> diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
+> index f889e332912f..b38fdcb977a4 100644
+> --- a/include/linux/sched/mm.h
+> +++ b/include/linux/sched/mm.h
+> @@ -303,6 +303,29 @@ static inline void memalloc_nocma_restore(unsigned int flags)
+>  }
+>  #endif
 >  
->   out_cleanup_inode:
+> +/*
+> + * Tell the memory management code that this thread is working on behalf
+> + * of background memory reclaim (like kswapd).  That means that it will
+> + * get access to memory reserves should it need to allocate memory in
+> + * order to make forward progress.  With this great power comes great
+> + * responsibility to not exhaust those reserves.
+> + */
+> +#define KSWAPD_PF_FLAGS		(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
+> +
+> +static inline unsigned long become_kswapd(void)
+> +{
+> +	unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
+> +
+> +	current->flags |= KSWAPD_PF_FLAGS;
+> +
+> +	return flags;
+> +}
+> +
+> +static inline void restore_kswapd(unsigned long flags)
+> +{
+> +	current->flags &= ~(flags ^ KSWAPD_PF_FLAGS);
+> +}
+> +
+>  #ifdef CONFIG_MEMCG
+>  /**
+>   * memalloc_use_memcg - Starts the remote memcg charging scope.
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 466fc3144fff..eb6f6e8103c1 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -3867,19 +3867,7 @@ static int kswapd(void *p)
+>  	if (!cpumask_empty(cpumask))
+>  		set_cpus_allowed_ptr(tsk, cpumask);
+>  
+> -	/*
+> -	 * Tell the memory management that we're a "memory allocator",
+> -	 * and that if we need more memory we should get access to it
+> -	 * regardless (see "__alloc_pages()"). "kswapd" should
+> -	 * never get caught in the normal page freeing logic.
+> -	 *
+> -	 * (Kswapd normally doesn't need memory anyway, but sometimes
+> -	 * you need a small amount of memory in order to be able to
+> -	 * page out something else, and this flag essentially protects
+> -	 * us from recursively trying to free more memory as we're
+> -	 * trying to free the first piece of memory in the first place).
+> -	 */
+> -	tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+> +	become_kswapd();
+>  	set_freezable();
+>  
+>  	WRITE_ONCE(pgdat->kswapd_order, 0);
+> @@ -3929,8 +3917,6 @@ static int kswapd(void *p)
+>  			goto kswapd_try_sleep;
+>  	}
+>  
+> -	tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
+> -
+>  	return 0;
+>  }
+>  
 > -- 
-> 2.20.0
+> 2.17.1
 > 
