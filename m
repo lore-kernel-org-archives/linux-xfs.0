@@ -5,187 +5,113 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE567C433E7
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 15:39:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE7C4C433DF
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 15:48:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A54AA22261
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 15:39:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71C25222E7
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 15:48:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="tux0GpaY"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sRQPqcV/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389224AbgJIPjr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Oct 2020 11:39:47 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:56738 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389165AbgJIPjr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 11:39:47 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 099Fdi9U015671;
-        Fri, 9 Oct 2020 15:39:44 GMT
+        id S2389434AbgJIPsX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Oct 2020 11:48:23 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:49086 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389144AbgJIPsX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 11:48:23 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 099FiTuS154681;
+        Fri, 9 Oct 2020 15:47:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
- bh=RWvShas9CDcX0ny4kauU1Q9IUOWYNqJCpI7Bif0YlDE=;
- b=tux0GpaYRYvlvBTjn//8Pyl3KXLdPI96sjyuNj6EEuaoRs465THlxpod6jst7OgPZ/S+
- 8oyA8tnmQtHbeklx0UNSrXBCL7/9qdG+TuU+8i5O8S6EVlRB0pfo8D/iqdkEt5gbea2f
- b1r/cgNkk86KhZptuL3NsFbWvlkr2q4r6qXrbwIKPWjlHqWH8ASEQIUr8cJRH2eLNwQZ
- Z3/VxgCLTuFebEmatHuvwELB5tUXPEor+KvfnL+CUEdtFvWA/pGo4d87bNcbiNXykdJl
- ylCuYTQbFPAnP6OqWMnwCTtJT2YEGAGY/oS9x14GM9MPeOFxR90EIasLIJmN2/vusdMu Zw== 
+ in-reply-to; s=corp-2020-01-29;
+ bh=HQsRcCttbyIiXm4hqGdtwne1sw4vSxHGN9/U5UbLh5E=;
+ b=sRQPqcV/Yi1qiM38/xmNRMKStHnbR/Pkh/DvXd3hgvd7A3FW4ORrFB3gWf60e4hlf1My
+ I/du3mYGK7Mv65g6Dvz/uu4rXQp9mOD276jW5khCmuHIK0Z+RXrsBoaY8o+feeH9bExG
+ gI7XCx/zC09PIiH96DKeOP0O2hpvRmzvldyEcI7V7MlUYVTCMVgnuvqwb/GLg3k0RmqA
+ Lw7V/VKragvyOs+Xs7FM9hwV7fsa2rt/JV5O7/79qQSsrGMltrT0p5xXP8MCcAdi0LEs
+ tHIH9zVN2yhxkYq2IsIvKPQUDdcjgxGZLw22xaMCklTLpVk/60bDLZs74K7NaMFJf5yW EQ== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 3429jmm8du-1
+        by aserp2120.oracle.com with ESMTP id 3429juv96w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 09 Oct 2020 15:39:43 +0000
+        Fri, 09 Oct 2020 15:47:07 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 099FZJD9076999;
-        Fri, 9 Oct 2020 15:37:43 GMT
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 099FfIrc096653;
+        Fri, 9 Oct 2020 15:45:07 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 3429kjh439-1
+        by userp3020.oracle.com with ESMTP id 3429kjha6d-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 09 Oct 2020 15:37:43 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 099FbgIq024618;
-        Fri, 9 Oct 2020 15:37:42 GMT
+        Fri, 09 Oct 2020 15:45:06 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 099Fj3b0030090;
+        Fri, 9 Oct 2020 15:45:03 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 09 Oct 2020 08:37:42 -0700
-Date:   Fri, 9 Oct 2020 08:37:41 -0700
+        with ESMTP ; Fri, 09 Oct 2020 08:45:02 -0700
+Date:   Fri, 9 Oct 2020 08:45:01 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Eric Sandeen <sandeen@redhat.com>, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v2] xfs_scrub: don't use statvfs to collect filesystem
- summary counts
-Message-ID: <20201009153741.GT6540@magnolia>
-References: <20201005163737.GE49547@magnolia>
- <20201009111812.GA769470@bfoster>
- <20201009113225.GB769470@bfoster>
+To:     xiakaixu1987@gmail.com
+Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [RFC PATCH] xfs: remove unnecessary null check in
+ xfs_generic_create
+Message-ID: <20201009154501.GU6540@magnolia>
+References: <1602232150-28805-1-git-send-email-kaixuxia@tencent.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201009113225.GB769470@bfoster>
+In-Reply-To: <1602232150-28805-1-git-send-email-kaixuxia@tencent.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9768 signatures=668681
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- mlxlogscore=999 suspectscore=5 mlxscore=0 adultscore=0 bulkscore=0
+ mlxlogscore=999 suspectscore=10 mlxscore=0 adultscore=0 bulkscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010090116
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9768 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 suspectscore=5
- clxscore=1015 phishscore=0 lowpriorityscore=0 impostorscore=0
- malwarescore=0 mlxlogscore=999 priorityscore=1501 mlxscore=0 bulkscore=0
+ engine=8.12.0-2009150000 definitions=main-2010090117
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9769 signatures=668681
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ phishscore=0 bulkscore=0 suspectscore=10 lowpriorityscore=0 spamscore=0
+ clxscore=1015 malwarescore=0 priorityscore=1501 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010090117
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 09, 2020 at 07:32:25AM -0400, Brian Foster wrote:
-> On Fri, Oct 09, 2020 at 07:18:12AM -0400, Brian Foster wrote:
-> > On Mon, Oct 05, 2020 at 09:37:37AM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > The function scrub_scan_estimate_blocks naÃ¯vely uses the statvfs counts
-> > > to estimate the size and free blocks on the data volume.  Unfortunately,
-> > > it fails to account for the fact that statvfs can return the size and
-> > > free counts for the realtime volume if the root directory has the
-> > > rtinherit flag set, which leads to phase 7 reporting totally absurd
-> > > quantities.
-> > > 
-> > > Eric pointed out a further problem with statvfs, which is that the file
-> > > counts are clamped to the current user's project quota inode limits.
-> > > Therefore, we must not use statvfs for querying the filesystem summary
-> > > counts.
-> > > 
-> > > The XFS_IOC_FSCOUNTS ioctl returns all the data we need, so use that
-> > > instead.
-> > > 
-> > > Fixes: 604dd3345f35 ("xfs_scrub: filesystem counter collection functions")
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > > v2: drop statvfs entirely
-> > > ---
-> > 
-> > This doesn't seem to apply to for-next..?
-> > 
+On Fri, Oct 09, 2020 at 04:29:10PM +0800, xiakaixu1987@gmail.com wrote:
+> From: Kaixu Xia <kaixuxia@tencent.com>
 > 
-> Oops, never mind. Wrong tree...
+> The function posix_acl_release() test the passed-in argument and
+> move on only when it is non-null, so maybe the null check in
+> xfs_generic_create is unnecessary.
 > 
-> 
-> > Brian
-> > 
-> > >  scrub/fscounters.c |   27 ++++-----------------------
-> > >  1 file changed, 4 insertions(+), 23 deletions(-)
-> > > 
-> > > diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-> > > index f9d64f8c008f..e9901fcdf6df 100644
-> > > --- a/scrub/fscounters.c
-> > > +++ b/scrub/fscounters.c
-> > > @@ -130,38 +130,19 @@ scrub_scan_estimate_blocks(
-> > >  	unsigned long long		*f_free)
-> > >  {
-> > >  	struct xfs_fsop_counts		fc;
-> > > -	struct xfs_fsop_resblks		rb;
-> > > -	struct statvfs			sfs;
-> > >  	int				error;
-> > >  
-> > > -	/* Grab the fstatvfs counters, since it has to report accurately. */
-> > > -	error = fstatvfs(ctx->mnt.fd, &sfs);
-> > > -	if (error)
-> > > -		return errno;
-> > > -
-> > >  	/* Fetch the filesystem counters. */
-> > >  	error = ioctl(ctx->mnt.fd, XFS_IOC_FSCOUNTS, &fc);
-> > >  	if (error)
-> > >  		return errno;
-> > >  
-> > > -	/*
-> > > -	 * XFS reserves some blocks to prevent hard ENOSPC, so add those
-> > > -	 * blocks back to the free data counts.
-> > > -	 */
-> > > -	error = ioctl(ctx->mnt.fd, XFS_IOC_GET_RESBLKS, &rb);
-> > > -	if (error)
-> > > -		return errno;
-> > > -
-> > > -	sfs.f_bfree += rb.resblks_avail;
-> > > -
-> > > -	*d_blocks = sfs.f_blocks;
-> > > -	if (ctx->mnt.fsgeom.logstart > 0)
-> > > -		*d_blocks += ctx->mnt.fsgeom.logblocks;
-> > > -	*d_bfree = sfs.f_bfree;
-> > > +	*d_blocks = ctx->mnt.fsgeom.datablocks;
-> > > +	*d_bfree = fc.freedata;
-> > >  	*r_blocks = ctx->mnt.fsgeom.rtblocks;
-> > >  	*r_bfree = fc.freertx;
-> > > -	*f_files = sfs.f_files;
-> > > -	*f_free = sfs.f_ffree;
-> > > +	*f_files = fc.allocino;
-> > > +	*f_free = fc.freeino;
-> > >  
-> 
-> Aren't the free inode counters semantically different between statvfs
-> and this ioctl? I thought stat had some logic to effectively show free
-> data blocks as free inodes,
+> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 
-It does.
-
-> whereas the ioctl looks like it just reads
-> our internal counter (which IIRC is a subset of physically allocated
-> inode chunks). Do we care about that semantic here either way?
-
-Nope.  The one caller that cares (scrub/phase7.c) only wants to know the
-number of inodes in use (f_free - f_files), which is unaffected by the
-logic in xfs_fs_statfs.
-
-I suppose I could trim the parameter list even further to return only
-the file count...
+Heh, yep.  Nice cleanup.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Brian
+> ---
+>  fs/xfs/xfs_iops.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> > >  	return 0;
-> > >  }
-> > > 
-> > 
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 5e165456da68..5907e999642c 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -206,10 +206,8 @@ xfs_generic_create(
+>  	xfs_finish_inode_setup(ip);
+>  
+>   out_free_acl:
+> -	if (default_acl)
+> -		posix_acl_release(default_acl);
+> -	if (acl)
+> -		posix_acl_release(acl);
+> +	posix_acl_release(default_acl);
+> +	posix_acl_release(acl);
+>  	return error;
+>  
+>   out_cleanup_inode:
+> -- 
+> 2.20.0
 > 
