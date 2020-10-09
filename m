@@ -2,131 +2,194 @@ Return-Path: <SRS0=Vfs/=DQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECF42C433E7
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 01:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64DE5C433E7
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 05:06:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AAE422257
-	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 01:01:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03B9221D6C
+	for <linux-xfs@archiver.kernel.org>; Fri,  9 Oct 2020 05:06:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IPHGBNKy"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LFUlTw2q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728605AbgJIBB6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 8 Oct 2020 21:01:58 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:45199 "EHLO
+        id S1725923AbgJIFGl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Oct 2020 01:06:41 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45722 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728579AbgJIBB6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Oct 2020 21:01:58 -0400
+        by vger.kernel.org with ESMTP id S1725917AbgJIFGl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 01:06:41 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602205316;
+        s=mimecast20190719; t=1602219999;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=UWVGueE1ewfYhB1q7+ns2tEdz1obR+iAVyeQK6rww7g=;
-        b=IPHGBNKyrxGDEwtFK/pxpUO5qsRQvdGusfcghxxHS9KfkCL3u/wqlMnZjUk4gZQH9rxG2e
-        GgqTYheOC0RvkZKGndTjeqwCcXstbPvO11SDMY32haeFsun7tk3ha/moln5y1bWtV2loqQ
-        jP9Zo1Ra3ohG5wd5GSw6O/PlJEvX35Q=
-Received: from mail-pg1-f200.google.com (mail-pg1-f200.google.com
- [209.85.215.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-286-r1sMNR0iOL6VwPGxGnRBDg-1; Thu, 08 Oct 2020 21:01:54 -0400
-X-MC-Unique: r1sMNR0iOL6VwPGxGnRBDg-1
-Received: by mail-pg1-f200.google.com with SMTP id j16so4280757pgi.3
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2020 18:01:54 -0700 (PDT)
+         to:to:cc:cc; bh=2lpvlfS1kU3fLfausn+2ajVbetB7HLcHMAo5tDRf7l4=;
+        b=LFUlTw2qMASU7TjqnVBBFTNzCihgkCooI7IdsGniktzxbnRCfcgyChSgQQVOYJX9APjItb
+        eTHQyhZqB8fObXLG4jJ9tx2XPihLKTodfw2jvO5IB+WnBul32p8URAIu+uvD9EgIZVcmur
+        U3S1bLJ3b+agDEb3Otg5fbzzK2IamEE=
+Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
+ [209.85.215.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-243-jx6gQJxQMsy-kyI9EtQjig-1; Fri, 09 Oct 2020 01:06:38 -0400
+X-MC-Unique: jx6gQJxQMsy-kyI9EtQjig-1
+Received: by mail-pg1-f199.google.com with SMTP id g5so5709370pgn.1
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Oct 2020 22:06:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=UWVGueE1ewfYhB1q7+ns2tEdz1obR+iAVyeQK6rww7g=;
-        b=kwWGa3rZwltlbSblBtZg4RnrKuFkEVedPPYYuKK5FNlATPpQDy2OB7olMp194tPZ24
-         S2VZKWzfhisODAtSXhFrINkhfqr+I8oyyhVJrYn4AypCgzVZbCBcrawHsqflXxXLYvSu
-         fVFYOhh8xjXuETx1n5He1g/k0qlzxrjfZvD0UPq5xjBTRuiJNyu2tZtQw55nkuMS6mNQ
-         lqwZ02i6aIdp8UyQ3R5pzWVY1bEzYjTI4FjMcv5+pvMQKZf38sKMB/m6z1coAXfUPvl4
-         Tx6IiKsl+vefjGx270KgJ6UE1PRPrrfZ0VFiF29PQA0tCcuVY9OVVFMwKRN3QrW9l57u
-         hUaQ==
-X-Gm-Message-State: AOAM5327JIcOyZAx5amKsWW/1DmeNo8mIVcOP2gnPCa4oOAOWgsHm9Db
-        wRTmwHAegphWHaRGZHr45RJygqCd6vqwSGccC0Ei2xZBeWlQo3v0r1dzDUrVCsVIMukh0gnhFeQ
-        4/1r3MsR/9Ua24GPSHVZU
-X-Received: by 2002:a62:1b02:0:b029:154:fdbe:4d2a with SMTP id b2-20020a621b020000b0290154fdbe4d2amr9911022pfb.27.1602205313734;
-        Thu, 08 Oct 2020 18:01:53 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJz2zfp/qCJeVaLJIGJXNoGRygv1HvWLFr8BTDLRVvCl+PCJdHFfUGMN3nZnVWtySqfdcTdOYQ==
-X-Received: by 2002:a62:1b02:0:b029:154:fdbe:4d2a with SMTP id b2-20020a621b020000b0290154fdbe4d2amr9911006pfb.27.1602205313517;
-        Thu, 08 Oct 2020 18:01:53 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=2lpvlfS1kU3fLfausn+2ajVbetB7HLcHMAo5tDRf7l4=;
+        b=jJqLAiqnghTaNAdoibQgzSJReBNKbvNF0QF51MSyBxkJ2QAv2+7H31xoPN9GjkAWif
+         /W7yOcL/GR8dfvvJdefpgfbu8V7to1tHvScxvoKVeKJ8zludC/0raUx9P9KdbjA8iyhq
+         4fk0LHMHDL/YZ/MyOCsNcEUzjFcLuwnVUO6n/NVjkLNPP4hb28beT1aF+hxRlx0NUniM
+         1ZUY9ow7j4EwHeVg8+GE5Gtkr7rThU8RkCZpuABEiDxUzg4Voi2iOAbnaN2Kk5ypH1zp
+         nmUOC+gOOALnJF/uSUz/JBI8B1ADm4xcS71X4aX4zD4WaQA3ccHdqIvit+zQbkZZQJsx
+         blJQ==
+X-Gm-Message-State: AOAM530HQIgPRTw8tP0F9F0zGPBZt0wlM2U+eagpoiBIKcXrkdHEoHr7
+        OTtz2/B6y7UGTSXMpQ+6nRwEafx3R+W2lXAgVxKS4jvwKYO+sEhUxUBUqr7SGa0YJYxEiSNpjLF
+        PQr0Ulco55mlVvfC+7mJK
+X-Received: by 2002:a62:e104:0:b029:152:4f37:99da with SMTP id q4-20020a62e1040000b02901524f3799damr10605776pfh.17.1602219996836;
+        Thu, 08 Oct 2020 22:06:36 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxLaGCYEEzF8EjZeMg4PyvF9sOYLY6s9+0u1lExSkb7by7sLc0hwfYK0n/FJvBwUmXXsJjRJA==
+X-Received: by 2002:a62:e104:0:b029:152:4f37:99da with SMTP id q4-20020a62e1040000b02901524f3799damr10605761pfh.17.1602219996533;
+        Thu, 08 Oct 2020 22:06:36 -0700 (PDT)
 Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id 189sm8512971pfw.123.2020.10.08.18.01.50
+        by smtp.gmail.com with ESMTPSA id b3sm956348pjz.57.2020.10.08.22.06.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 Oct 2020 18:01:53 -0700 (PDT)
-Date:   Fri, 9 Oct 2020 09:01:42 +0800
+        Thu, 08 Oct 2020 22:06:35 -0700 (PDT)
 From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Gao Xiang <hsiangkao@aol.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
+To:     linux-xfs@vger.kernel.org
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Eric Sandeen <sandeen@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH v4 1/3] xfsprogs: allow i18n to xfs printk
-Message-ID: <20201009010142.GC10631@xiangao.remote.csb>
-References: <20201007140402.14295-1-hsiangkao@aol.com>
- <20201007140402.14295-2-hsiangkao@aol.com>
- <20201007152800.GB49547@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201007152800.GB49547@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH] xfs: introduce xfs_validate_stripe_factors()
+Date:   Fri,  9 Oct 2020 13:05:46 +0800
+Message-Id: <20201009050546.32174-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 07, 2020 at 08:28:00AM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 07, 2020 at 10:04:00PM +0800, Gao Xiang wrote:
-> > From: Gao Xiang <hsiangkao@redhat.com>
-> > 
-> > In preparation to a common stripe validation helper,
-> > allow i18n to xfs_{notice,warn,err,alert} so that
-> > xfsprogs can share code with kernel.
-> > 
-> > Suggested-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> > ---
-> >  libxfs/libxfs_priv.h | 8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> > index 5688284deb4e..545a66dec9b8 100644
-> > --- a/libxfs/libxfs_priv.h
-> > +++ b/libxfs/libxfs_priv.h
-> > @@ -121,10 +121,10 @@ extern char    *progname;
-> >  extern void cmn_err(int, char *, ...);
-> >  enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
-> >  
-> > -#define xfs_notice(mp,fmt,args...)		cmn_err(CE_NOTE,fmt, ## args)
-> > -#define xfs_warn(mp,fmt,args...)		cmn_err(CE_WARN,fmt, ## args)
-> > -#define xfs_err(mp,fmt,args...)			cmn_err(CE_ALERT,fmt, ## args)
-> > -#define xfs_alert(mp,fmt,args...)		cmn_err(CE_ALERT,fmt, ## args)
-> > +#define xfs_notice(mp,fmt,args...)	cmn_err(CE_NOTE, _(fmt), ## args)
-> > +#define xfs_warn(mp,fmt,args...)	cmn_err(CE_WARN, _(fmt), ## args)
-> > +#define xfs_err(mp,fmt,args...)		cmn_err(CE_ALERT, _(fmt), ## args)
-> > +#define xfs_alert(mp,fmt,args...)	cmn_err(CE_ALERT, _(fmt), ## args)
-> 
-> AFAICT there isn't anything that passes a _() string to
-> xfs_{alert,notice,warn,err} so this looks ok to me.  It'll be nice to
-> add the libxfs strings to the message catalogue at last...
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Introduce a common helper to consolidate stripe validation process.
+Also make kernel code xfs_validate_sb_common() use it first.
 
-Ok, assume that I don't have to update this patch
-if my reading is correct. will resend this with
-this RVB tag.
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+---
 
-Thanks,
-Gao Xiang
+kernel side of:
+https://lore.kernel.org/r/20201007140402.14295-3-hsiangkao@aol.com
+with update suggested by Darrick:
+ - stretch columns for commit message;
+ - add comments to hasdalign check;
+ - break old sunit / swidth != 0 check into two seperate checks;
+ - update an error message description.
 
-> 
-> --D
->
+also use bytes for sunit / swidth representation, so users can
+see values in the unique unit.
+
+see
+https://lore.kernel.org/r/20201007140402.14295-1-hsiangkao@aol.com
+for the background.
+
+ fs/xfs/libxfs/xfs_sb.c | 65 +++++++++++++++++++++++++++++++++++-------
+ fs/xfs/libxfs/xfs_sb.h |  3 ++
+ 2 files changed, 57 insertions(+), 11 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+index 5aeafa59ed27..cb2a7aa0ad51 100644
+--- a/fs/xfs/libxfs/xfs_sb.c
++++ b/fs/xfs/libxfs/xfs_sb.c
+@@ -360,21 +360,18 @@ xfs_validate_sb_common(
+ 		}
+ 	}
  
+-	if (sbp->sb_unit) {
+-		if (!xfs_sb_version_hasdalign(sbp) ||
+-		    sbp->sb_unit > sbp->sb_width ||
+-		    (sbp->sb_width % sbp->sb_unit) != 0) {
+-			xfs_notice(mp, "SB stripe unit sanity check failed");
+-			return -EFSCORRUPTED;
+-		}
+-	} else if (xfs_sb_version_hasdalign(sbp)) {
++	/*
++	 * Either (sb_unit and !hasdalign) or (!sb_unit and hasdalign)
++	 * would imply the image is corrupted.
++	 */
++	if (!sbp->sb_unit ^ !xfs_sb_version_hasdalign(sbp)) {
+ 		xfs_notice(mp, "SB stripe alignment sanity check failed");
+ 		return -EFSCORRUPTED;
+-	} else if (sbp->sb_width) {
+-		xfs_notice(mp, "SB stripe width sanity check failed");
+-		return -EFSCORRUPTED;
+ 	}
+ 
++	if (!xfs_validate_stripe_factors(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
++					 XFS_FSB_TO_B(mp, sbp->sb_width), 0))
++		return -EFSCORRUPTED;
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+ 	    sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE) {
+@@ -1233,3 +1230,49 @@ xfs_sb_get_secondary(
+ 	*bpp = bp;
+ 	return 0;
+ }
++
++/*
++ * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
++ * so users won't be confused by values in error messages.
++ */
++bool
++xfs_validate_stripe_factors(
++	struct xfs_mount	*mp,
++	__s64			sunit,
++	__s64			swidth,
++	int			sectorsize)
++{
++	if (sectorsize && sunit % sectorsize) {
++		xfs_notice(mp,
++"stripe unit (%lld) must be a multiple of the sector size (%d)",
++			   sunit, sectorsize);
++		return false;
++	}
++
++	if (sunit && !swidth) {
++		xfs_notice(mp,
++"invalid stripe unit (%lld) and stripe width of 0", sunit);
++		return false;
++	}
++
++	if (!sunit && swidth) {
++		xfs_notice(mp,
++"invalid stripe width (%lld) and stripe unit of 0", swidth);
++		return false;
++	}
++
++	if (sunit > swidth) {
++		xfs_notice(mp,
++"stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
++		return false;
++	}
++
++	if (sunit && (swidth % sunit)) {
++		xfs_notice(mp,
++"stripe width (%lld) must be a multiple of the stripe unit (%lld)",
++			   swidth, sunit);
++		return false;
++	}
++	return true;
++}
++
+diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+index 92465a9a5162..2d3504eb9886 100644
+--- a/fs/xfs/libxfs/xfs_sb.h
++++ b/fs/xfs/libxfs/xfs_sb.h
+@@ -42,4 +42,7 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+ 				struct xfs_trans *tp, xfs_agnumber_t agno,
+ 				struct xfs_buf **bpp);
+ 
++extern bool	xfs_validate_stripe_factors(struct xfs_mount *mp,
++				__s64 sunit, __s64 swidth, int sectorsize);
++
+ #endif	/* __XFS_SB_H__ */
+-- 
+2.18.1
 
