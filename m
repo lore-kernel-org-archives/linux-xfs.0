@@ -2,155 +2,107 @@ Return-Path: <SRS0=54mU=DR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61ECBC433E7
-	for <linux-xfs@archiver.kernel.org>; Sat, 10 Oct 2020 02:09:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B26FCC433E7
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Oct 2020 03:09:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CF542225D
-	for <linux-xfs@archiver.kernel.org>; Sat, 10 Oct 2020 02:09:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D43E2076B
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Oct 2020 03:09:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="h8Lzs64y"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HhX6Sea1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729873AbgJJCJJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 9 Oct 2020 22:09:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45902 "EHLO
+        id S1730269AbgJJDId (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 9 Oct 2020 23:08:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729959AbgJJBvU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 21:51:20 -0400
+        with ESMTP id S1730273AbgJJCy2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Oct 2020 22:54:28 -0400
 Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B3BCC0613D0
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2020 18:50:59 -0700 (PDT)
-Received: by mail-pf1-x441.google.com with SMTP id w21so8356710pfc.7
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Oct 2020 18:50:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3582EC0613CF
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Oct 2020 19:54:28 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id g10so8437680pfc.8
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Oct 2020 19:54:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=CuR7oEI1ZgFc/+WuMvCET5vfHyYsPZ3xqCbyxP69uvk=;
-        b=h8Lzs64yBWjGDQFMcUQqJeGx2K0oNBcpJ1emynlmLXypp5iO/ZcMmUlICk5leegEUV
-         QwWsy84ftP8CK/hMiTSV/3wPT5xWhgS9NzQ0EqMlDq+y2i9ZtM/gJSsqizCX56JYKGmu
-         Xu1Le9IJvnlZh5zmwNn4SkOvWfMAmPrkz7i8q79I8PERz+GAUH9EJfpDHF35D47o27eF
-         hYL40L3cAc776/e51yuRQ+G/jvavFpdrYdpAUHr1mifnPmrTEWqiBtgO7KbomXTi+fTb
-         zNsuFbFxl/wE+N0E3lSSnlQ0jtcnrFbwnGUqz68adfGLP5QGGliG6Gx17h0dtIoRK5TU
-         HNcQ==
+        h=from:to:cc:subject:date:message-id;
+        bh=qqATmTFahsP8t600YGQZybxUpkfXGnZKkoYLa00v09s=;
+        b=HhX6Sea1WTLJviivP/pYu8NDTlLMl2DKO4rdtQQYhUyfQYPEw1SPTjFaT7zCwTWZuN
+         a5DafoLJZMg3BQyIDqKXFtwyTPSaeVt7Hm/Uq+jh2rOFiyyEiRg2edjTeOW2jA2nXRF5
+         YfHWYCHc5y6daVIshStqH7jZiaiKsbBVtya+YGF7WW28ihSMjq8LiKsVwNjZGwidUWJ/
+         IyvaoCrJKTabPpdgOYHZPXJ3c/5NBsU3WgIg4ngGEjKCXbV/7Qg99DoxmgO3heC6Zn3C
+         cD2ABgEjMGSPDHXAU9uIflMiryoJLV4rM0Tpnwc2r4nD7s3xFy9X4ULKcna1BtoI8aR0
+         sEUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=CuR7oEI1ZgFc/+WuMvCET5vfHyYsPZ3xqCbyxP69uvk=;
-        b=tkRE32qSrmHFG8pxb/7jYw/MG1NphF7KCddx/Tk4wOV9leFGH7RukUNiqx4uuLKvj6
-         tzYUWuwXMQxtdimN02Hu+InR0FCJGw57Fh8l7z78YYnsGWFLftWGnvXexjcAtOk6taJ+
-         46/akzPERrDtSiPJhRVvQ+s1aTsnlEmXIjISh2+rEAi5TEp0yCsBtEJZbrw+LasH8bSM
-         2BIwZRW9wdsTkfwGw+q2DPXhs9rJDdCt6IvuKVCOFmqpcycIs8vv8gc/vS0gYxNGvqi/
-         mMxmtixLJshAkEzdVXcc0HzRjXdakSKk/cfXdAJ+6LBm0j2Nzwn0g0uF9HWFX8px6/K8
-         5y5g==
-X-Gm-Message-State: AOAM5333xRJE7thrnf2ZvrTcMwVCcLheiC9vW1gNaUvFR98aKf9ZauDj
-        p4k51UadJxISykQ+SSSJuQ==
-X-Google-Smtp-Source: ABdhPJw3EPN8rj8VWnV1EFu32loA4YzFyKhYTYSta8OLayRc0vlwLFaVB++Ihse+pEzH4wdz64360A==
-X-Received: by 2002:a17:90a:e553:: with SMTP id ei19mr7750325pjb.136.1602294659104;
-        Fri, 09 Oct 2020 18:50:59 -0700 (PDT)
-Received: from [10.76.92.41] ([103.7.29.9])
-        by smtp.gmail.com with ESMTPSA id f12sm5001774pju.18.2020.10.09.18.50.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 09 Oct 2020 18:50:58 -0700 (PDT)
-Subject: Re: [PATCH v4 3/3] xfs: directly return if the delta equal to zero
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        Kaixu Xia <kaixuxia@tencent.com>
-References: <1602130749-23093-1-git-send-email-kaixuxia@tencent.com>
- <1602130749-23093-4-git-send-email-kaixuxia@tencent.com>
- <20201009113257.GE769470@bfoster>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <0251951d-0829-ac7e-b629-f5c4a0ad4b22@gmail.com>
-Date:   Sat, 10 Oct 2020 09:50:50 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
-MIME-Version: 1.0
-In-Reply-To: <20201009113257.GE769470@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=qqATmTFahsP8t600YGQZybxUpkfXGnZKkoYLa00v09s=;
+        b=HFr6tDJk2jON4SL8r87JbfASptZbNq9NQBkdZzY7B7MnrHJv0hTokUaKIYvDGezBr/
+         WwtVDUkjCRzMgXJa9Dcs9RUPKAtZvBvfUmSCgdGgJwFaItBKhcTQHOpHmo4S1lJTKmJM
+         HXgW5aYxjHzzxB3e5dZ5yAHvhkEVmxouzyVH9F//KIrmdCtLqDXIHX9M3hblrLOFeprT
+         U3wTIwSpFiOP9Qm0Gsyu2EHfMFRxmXnVlTM5WbJ7slVUlZmafFAT05DwDKGSb6p6DuuV
+         nx2Sq4rLvFrFu2WcaHLURBzJpr996ERE94iRUmUbp6A8aejM9C3vKynR8k6WIhuwVyru
+         5ykg==
+X-Gm-Message-State: AOAM531zjX4OAAh1OG1/28/vaODoK3MH5s3ZmMOvqt+DPaSY4/P5WrwL
+        Z/lskCpxKKyZz7moHbDt9j39lOfZ6sgH
+X-Google-Smtp-Source: ABdhPJxcD480HzTXa7+kavAIh4kO6ycMbdlVRMvEHJl1WgGNFFVpp9YfMviEcr/xU5idlnpXDAC4pg==
+X-Received: by 2002:aa7:8249:0:b029:142:2501:34db with SMTP id e9-20020aa782490000b0290142250134dbmr15199953pfn.52.1602298467255;
+        Fri, 09 Oct 2020 19:54:27 -0700 (PDT)
+Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id kc21sm4800826pjb.36.2020.10.09.19.54.25
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 09 Oct 2020 19:54:26 -0700 (PDT)
+From:   xiakaixu1987@gmail.com
+X-Google-Original-From: kaixuxia@tencent.com
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
+Subject: [PATCH v5 0/3] xfs: random fixes for disk quota
+Date:   Sat, 10 Oct 2020 10:54:18 +0800
+Message-Id: <1602298461-32576-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+From: Kaixu Xia <kaixuxia@tencent.com>
 
+Hi all,
 
-On 2020/10/9 19:32, Brian Foster wrote:
-> On Thu, Oct 08, 2020 at 12:19:09PM +0800, xiakaixu1987@gmail.com wrote:
->> From: Kaixu Xia <kaixuxia@tencent.com>
->>
->> The xfs_trans_mod_dquot() function will allocate new tp->t_dqinfo if it is
->> NULL and make the changes in the tp->t_dqinfo->dqs[XFS_QM_TRANS_{USR,GRP,PRJ}].
->> Nowadays seems none of the callers want to join the dquots to the
->> transaction and push them to device when the delta is zero. Actually,
->> most of time the caller would check the delta and go on only when the
->> delta value is not zero, so we should bail out when it is zero.
->>
->> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
->> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
->> ---
->>  fs/xfs/xfs_trans_dquot.c | 12 ++++++------
->>  1 file changed, 6 insertions(+), 6 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
->> index 0ebfd7930382..3e37501791bf 100644
->> --- a/fs/xfs/xfs_trans_dquot.c
->> +++ b/fs/xfs/xfs_trans_dquot.c
->> @@ -194,6 +194,9 @@ xfs_trans_mod_dquot(
->>  	ASSERT(XFS_IS_QUOTA_RUNNING(tp->t_mountp));
->>  	qtrx = NULL;
->>  
->> +	if (!delta)
->> +		return;
->> +
-> 
-> Note that the calls in xfs_trans_dqresv() also check for delta != 0, so
-> that could be removed with this patch. That aside:
+This patchset include random fixes and code cleanups for disk quota.
+In order to make it easier to track, I bundle them up and put all
+the scattered patches into a single patchset.
 
-Yeah, I'll do that in the next version.
+Changes for v5:
+ -drop the check for delta != 0 in xfs_trans_dqresv().
 
-Thanks,
-Kaixu
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
->>  	if (tp->t_dqinfo == NULL)
->>  		xfs_trans_alloc_dqinfo(tp);
->>  	/*
->> @@ -205,10 +208,8 @@ xfs_trans_mod_dquot(
->>  	if (qtrx->qt_dquot == NULL)
->>  		qtrx->qt_dquot = dqp;
->>  
->> -	if (delta) {
->> -		trace_xfs_trans_mod_dquot_before(qtrx);
->> -		trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
->> -	}
->> +	trace_xfs_trans_mod_dquot_before(qtrx);
->> +	trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
->>  
->>  	switch (field) {
->>  	/* regular disk blk reservation */
->> @@ -261,8 +262,7 @@ xfs_trans_mod_dquot(
->>  		ASSERT(0);
->>  	}
->>  
->> -	if (delta)
->> -		trace_xfs_trans_mod_dquot_after(qtrx);
->> +	trace_xfs_trans_mod_dquot_after(qtrx);
->>  }
->>  
->>  
->> -- 
->> 2.20.0
->>
-> 
+Changes for v4:
+ -delete duplicated tp->t_dqinfo null check and allocation in one
+  patch.
+ -drop the first two patches that have been applied.
+
+Changes for v3:
+ -add a separate patch to delete duplicated tp->t_dqinfo null check
+  and allocation.
+
+Changes for v2: 
+ -add the ASSERT for the arguments O_{u,g,p}dqpp.
+ -fix the strange indent.
+ -remove the XFS_TRANS_DQ_DIRTY flag.
+ -add more commit log description for delta judgement.
+
+Kaixu Xia (3):
+  xfs: delete duplicated tp->t_dqinfo null check and allocation
+  xfs: check tp->t_dqinfo value instead of the XFS_TRANS_DQ_DIRTY flag
+  xfs: directly return if the delta equal to zero
+
+ fs/xfs/libxfs/xfs_shared.h |  1 -
+ fs/xfs/xfs_inode.c         |  8 +------
+ fs/xfs/xfs_trans_dquot.c   | 46 ++++++++++++--------------------------
+ 3 files changed, 15 insertions(+), 40 deletions(-)
 
 -- 
-kaixuxia
+2.20.0
+
