@@ -7,213 +7,303 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B009C433E7
-	for <linux-xfs@archiver.kernel.org>; Sat, 10 Oct 2020 23:07:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E5C6C433DF
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Oct 2020 23:12:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A0C42067C
-	for <linux-xfs@archiver.kernel.org>; Sat, 10 Oct 2020 23:07:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47AD32075E
+	for <linux-xfs@archiver.kernel.org>; Sat, 10 Oct 2020 23:12:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="y4wFrR7e"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GnvDcm/q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731449AbgJJW5X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 10 Oct 2020 18:57:23 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:33318 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387557AbgJJU0r (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Oct 2020 16:26:47 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09AHYavA168407;
-        Sat, 10 Oct 2020 17:34:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=govASsblsAlwTiC46jNKZJC2Uixv+2cOJlvPP46bmbU=;
- b=y4wFrR7es9I7uSZssSp1lhyL72yKHQq+q+En1T5nM2r6dC/FiJIferaZ7BVgcuPX0gly
- pqzLzzHH4/KdLKHkD/aCy2xraLslyI68bxjjKvnYVuFYzEDHQqieytRAwm6x2TJPOubK
- oSgF3af8V2sO4mgmHlMLW0/kV5wDGhbz9ha0L9P+74vejYndcGWdECEJTBkQq5omYN5x
- gzv8viDzC0ygfNNfRp5uOnM6VqPXj7+OtIb36onSS8lx7yGurWGkHuFDPjPHTjt8bAmh
- V1fpdYfiDaEOJFXewqT5aWE+6LplJ+c6UVReRGMm+KwvLKG9r3uZHOZTNaLzlWdc+gBM zA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 3432fa96me-1
+        id S1729343AbgJJXME (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 10 Oct 2020 19:12:04 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38328 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728600AbgJJXLb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Oct 2020 19:11:31 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09AHoZpL098371;
+        Sat, 10 Oct 2020 17:50:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=GENJoDHb0Eu3+ZVPaj/F6nBBXAaV9WIawfmZiis9W24=;
+ b=GnvDcm/qgvHy+lo5S83uAR1gVTvpYMMoeFBtHJSi4Fs22LaiWtNLqe1IiUDbYwlNdM1M
+ 8N7urdVqZ2PJ/2bzPXOmt046TefyjRXMnAVlpuAXT0ZgVf4QTZBj6t3uDDNLQLSlsZSu
+ bx4BH/Em69qd3Pv6ytBcIeYgZM3TNLs74x8prfMAquO+oumPuexPoON+MJuhKHqNEihp
+ HafgeRHJGwO91fytH88svrhEdXt7p9DhoRA/9IdipRwlgROVnNLI20kH6GvdfF9p9EMC
+ OQ2NghzeV2WVgYGzU+ZOS3wWPkXcPTltL+3uRHKjMdxj0RUMJOlddLideMmQg5cIz8Zw Hg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 3435km90nv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 10 Oct 2020 17:34:36 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09AHVdhU019009;
-        Sat, 10 Oct 2020 17:34:35 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 343309q4a8-1
+        Sat, 10 Oct 2020 17:50:35 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09AHj26H020935;
+        Sat, 10 Oct 2020 17:50:34 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 3434rxwuf6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 10 Oct 2020 17:34:35 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09AHYZDa003445;
-        Sat, 10 Oct 2020 17:34:35 GMT
+        Sat, 10 Oct 2020 17:50:34 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09AHoXGQ012056;
+        Sat, 10 Oct 2020 17:50:33 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 10 Oct 2020 10:34:35 -0700
-Subject: [PATCH 2/2] xfs: fix fallocate functions when rtextsize is larger
- than 1
+        with ESMTP ; Sat, 10 Oct 2020 10:50:33 -0700
+Date:   Sat, 10 Oct 2020 10:50:32 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, chandanrlinux@gmail.com, hch@lst.de
-Date:   Sat, 10 Oct 2020 10:34:34 -0700
-Message-ID: <160235127396.1384192.5095447151831725417.stgit@magnolia>
-In-Reply-To: <160235126125.1384192.1096112127332769120.stgit@magnolia>
+To:     linux-xfs@vger.kernel.org, chandanrlinux@gmail.com, hch@lst.de
+Subject: [PATCH 3/2] xfs: test rtalloc alignment and math errors
+Message-ID: <20201010175032.GB6559@magnolia>
 References: <160235126125.1384192.1096112127332769120.stgit@magnolia>
-User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160235126125.1384192.1096112127332769120.stgit@magnolia>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9770 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
- bulkscore=0 mlxlogscore=999 suspectscore=3 malwarescore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
+ mlxlogscore=999 adultscore=0 suspectscore=1 malwarescore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010100165
+ definitions=main-2010100167
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9770 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 impostorscore=0
- priorityscore=1501 bulkscore=0 phishscore=0 clxscore=1015 malwarescore=0
- spamscore=0 adultscore=0 mlxscore=0 mlxlogscore=999 lowpriorityscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 priorityscore=1501
+ adultscore=0 malwarescore=0 mlxscore=0 phishscore=0 impostorscore=0
+ lowpriorityscore=0 suspectscore=1 bulkscore=0 spamscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010100165
+ definitions=main-2010100168
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In commit fe341eb151ec, I forgot that xfs_free_file_space isn't strictly
-a "remove mapped blocks" function.  It is actually a function to zero
-file space by punching out the middle and writing zeroes to the
-unaligned ends of the specified range.  Therefore, putting a rtextsize
-alignment check in that function is wrong because that breaks unaligned
-ZERO_RANGE on the realtime volume.
+Add a couple of regression tests for "xfs: make sure the rt allocator
+doesn't run off the end" and "xfs: ensure that fpunch, fcollapse, and
+finsert operations are aligned to rt extent size".
 
-Furthermore, xfs_file_fallocate already has alignment checks for the
-functions require the file range to be aligned to the size of a
-fundamental allocation unit (which is 1 FSB on the data volume and 1 rt
-extent on the realtime volume).  Create a new helper to return the
-desired allocation unit size, fix the fallocate frontend to use it,
-fix free_file_space to delete the correct range, and remove a now
-redundant check from insert_file_space.
-
-Fixes: fe341eb151ec ("xfs: ensure that fpunch, fcollapse, and finsert operations are aligned to rt extent size")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |   17 ++++-------------
- fs/xfs/xfs_file.c      |   10 ++++------
- fs/xfs/xfs_inode.c     |   13 +++++++++++++
- fs/xfs/xfs_inode.h     |    1 +
- 4 files changed, 22 insertions(+), 19 deletions(-)
+ tests/xfs/759     |   99 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/759.out |    2 +
+ tests/xfs/760     |   66 +++++++++++++++++++++++++++++++++++
+ tests/xfs/760.out |    9 +++++
+ tests/xfs/group   |    2 +
+ 5 files changed, 178 insertions(+)
+ create mode 100755 tests/xfs/759
+ create mode 100644 tests/xfs/759.out
+ create mode 100755 tests/xfs/760
+ create mode 100644 tests/xfs/760.out
 
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index f2a8a0e75e1f..52cddcfee8a1 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -947,11 +947,10 @@ xfs_free_file_space(
- 	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
- 
- 	/* We can only free complete realtime extents. */
--	if (XFS_IS_REALTIME_INODE(ip)) {
--		xfs_extlen_t	extsz = xfs_get_extsz_hint(ip);
--
--		if ((startoffset_fsb | endoffset_fsb) & (extsz - 1))
--			return -EINVAL;
-+	if (XFS_IS_REALTIME_INODE(ip) && mp->m_sb.sb_rextsize > 0) {
-+		startoffset_fsb = round_up(startoffset_fsb,
-+					   mp->m_sb.sb_rextsize);
-+		endoffset_fsb = round_down(endoffset_fsb, mp->m_sb.sb_rextsize);
- 	}
- 
- 	/*
-@@ -1147,14 +1146,6 @@ xfs_insert_file_space(
- 
- 	trace_xfs_insert_file_space(ip);
- 
--	/* We can only insert complete realtime extents. */
--	if (XFS_IS_REALTIME_INODE(ip)) {
--		xfs_extlen_t	extsz = xfs_get_extsz_hint(ip);
--
--		if ((stop_fsb | shift_fsb) & (extsz - 1))
--			return -EINVAL;
--	}
--
- 	error = xfs_bmap_can_insert_extents(ip, stop_fsb, shift_fsb);
- 	if (error)
- 		return error;
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 3d1b95124744..e9b4b1dada75 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -803,6 +803,8 @@ xfs_file_fallocate(
- 	enum xfs_prealloc_flags	flags = 0;
- 	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	loff_t			new_size = 0;
-+	unsigned int		blksize = xfs_inode_alloc_blocksize(ip);
-+	unsigned int		blkmask = blksize - 1;
- 	bool			do_file_insert = false;
- 
- 	if (!S_ISREG(inode->i_mode))
-@@ -850,9 +852,7 @@ xfs_file_fallocate(
- 		if (error)
- 			goto out_unlock;
- 	} else if (mode & FALLOC_FL_COLLAPSE_RANGE) {
--		unsigned int blksize_mask = i_blocksize(inode) - 1;
--
--		if (offset & blksize_mask || len & blksize_mask) {
-+		if ((offset | len) & blkmask) {
- 			error = -EINVAL;
- 			goto out_unlock;
- 		}
-@@ -872,10 +872,9 @@ xfs_file_fallocate(
- 		if (error)
- 			goto out_unlock;
- 	} else if (mode & FALLOC_FL_INSERT_RANGE) {
--		unsigned int	blksize_mask = i_blocksize(inode) - 1;
- 		loff_t		isize = i_size_read(inode);
- 
--		if (offset & blksize_mask || len & blksize_mask) {
-+		if ((offset | len) & blkmask) {
- 			error = -EINVAL;
- 			goto out_unlock;
- 		}
-@@ -917,7 +916,6 @@ xfs_file_fallocate(
- 			 *   2.) If prealloc returns ENOSPC, the file range is
- 			 *       still zero-valued by virtue of the hole punch.
- 			 */
--			unsigned int blksize = i_blocksize(inode);
- 
- 			trace_xfs_zero_file_space(ip);
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 2bfbcf28b1bd..20bb5fae0d00 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3813,3 +3813,16 @@ xfs_iunlock2_io_mmap(
- 	if (!same_inode)
- 		inode_unlock(VFS_I(ip1));
- }
+diff --git a/tests/xfs/759 b/tests/xfs/759
+new file mode 100755
+index 00000000..00573786
+--- /dev/null
++++ b/tests/xfs/759
+@@ -0,0 +1,99 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2020, Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 759
++#
++# This is a regression test for an overflow error in the _near realtime
++# allocator.  If the rt bitmap ends exactly at the end of a block and the
++# number of rt extents is large enough to allow an allocation request larger
++# than the maximum extent size, it's possible that during a large allocation
++# request, the allocator will fail to constrain maxlen on the second run
++# through the loop, and the rt bitmap range check will run right off the end of
++# the rtbitmap file.  When this happens, xfs triggers a verifier error and
++# returns EFSCORRUPTED.
 +
-+/* Returns the size of fundamental allocation unit for a file, in bytes. */
-+unsigned int
-+xfs_inode_alloc_blocksize(
-+	struct xfs_inode	*ip)
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	unsigned int		blocks = 1;
-+
-+	if (XFS_IS_REALTIME_INODE(ip))
-+		blocks = ip->i_mount->m_sb.sb_rextsize;
-+
-+	return XFS_FSB_TO_B(ip->i_mount, blocks);
++	cd /
++	rm -f $tmp.*
 +}
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 751a3d1d7d84..270b35d9dcb0 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -475,5 +475,6 @@ void xfs_end_io(struct work_struct *work);
- 
- int xfs_ilock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
- void xfs_iunlock2_io_mmap(struct xfs_inode *ip1, struct xfs_inode *ip2);
-+unsigned int xfs_inode_alloc_blocksize(struct xfs_inode *ip);
- 
- #endif	/* __XFS_INODE_H__ */
-
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_realtime
++_require_test_program "punch-alternating"
++
++rm -f $seqres.full
++
++# Format filesystem to get the block size
++_scratch_mkfs > $seqres.full
++_scratch_mount >> $seqres.full
++
++blksz=$(_get_block_size $SCRATCH_MNT)
++rextsize=$($XFS_INFO_PROG $SCRATCH_MNT | grep realtime.*extsz | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g')
++rextblks=$((rextsize / blksz))
++
++echo "blksz $blksz rextsize $rextsize rextblks $rextblks" >> $seqres.full
++
++_scratch_unmount
++
++# Format filesystem with a realtime volume whose size fits the following:
++# 1. Longer than (XFS MAXEXTLEN * blocksize) bytes.
++# 2. Exactly a multiple of (NBBY * blksz * rextsize) bytes.
++
++rtsize1=$((2097151 * blksz))
++rtsize2=$((8 * blksz * rextsize))
++rtsize=$(( $(blockdev --getsz $SCRATCH_RTDEV) * 512 ))
++
++echo "rtsize1 $rtsize1 rtsize2 $rtsize2 rtsize $rtsize" >> $seqres.full
++
++test $rtsize -gt $rtsize1 || \
++	_notrun "scratch rt device too small, need $rtsize1 bytes"
++test $rtsize -gt $rtsize2 || \
++	_notrun "scratch rt device too small, need $rtsize2 bytes"
++
++rtsize=$((rtsize - (rtsize % rtsize2)))
++
++echo "rt size will be $rtsize" >> $seqres.full
++
++_scratch_mkfs -r size=$rtsize >> $seqres.full
++_scratch_mount >> $seqres.full
++
++# Make sure the root directory has rtinherit set so our test file will too
++$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
++
++# Allocate some stuff at the start, to force the first falloc of the ouch file
++# to happen somewhere in the middle of the rt volume
++$XFS_IO_PROG -f -c 'falloc 0 64m' "$SCRATCH_MNT/b"
++$here/src/punch-alternating -i $((rextblks * 2)) -s $((rextblks)) "$SCRATCH_MNT/b"
++
++avail="$(df -P "$SCRATCH_MNT" | awk 'END {print $4}')"1
++toobig="$((avail * 2))"
++
++# falloc the ouch file in the middle of the rt extent to exercise the near
++# allocator in the last step.
++$XFS_IO_PROG -f -c 'falloc 0 1g' "$SCRATCH_MNT/ouch"
++
++# Try to get the near allocator to overflow on an allocation that matches
++# exactly one of the rtsummary size levels.  This should return ENOSPC and
++# not EFSCORRUPTED.
++$XFS_IO_PROG -f -c "falloc 0 ${toobig}k" "$SCRATCH_MNT/ouch"
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/759.out b/tests/xfs/759.out
+new file mode 100644
+index 00000000..df693d50
+--- /dev/null
++++ b/tests/xfs/759.out
+@@ -0,0 +1,2 @@
++QA output created by 759
++fallocate: No space left on device
+diff --git a/tests/xfs/760 b/tests/xfs/760
+new file mode 100755
+index 00000000..7baa346c
+--- /dev/null
++++ b/tests/xfs/760
+@@ -0,0 +1,66 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2020, Oracle.  All Rights Reserved.
++#
++# FS QA Test No. 760
++#
++# Make sure we validate realtime extent size alignment for fallocate modes.
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_realtime
++_require_xfs_io_command "fcollapse"
++_require_xfs_io_command "finsert"
++_require_xfs_io_command "funshare"
++_require_xfs_io_command "fzero"
++_require_xfs_io_command "falloc"
++
++rm -f $seqres.full
++
++# Format filesystem with a 256k realtime extent size
++_scratch_mkfs -r extsize=256k > $seqres.full
++_scratch_mount >> $seqres.full
++
++blksz=$(_get_block_size $SCRATCH_MNT)
++rextsize=$($XFS_INFO_PROG $SCRATCH_MNT | grep realtime.*extsz | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g')
++rextblks=$((rextsize / blksz))
++
++echo "blksz $blksz rextsize $rextsize rextblks $rextblks" >> $seqres.full
++
++# Make sure the root directory has rtinherit set so our test file will too
++$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
++
++sz=$((rextsize * 100))
++range="$((blksz * 3)) $blksz"
++
++for verb in fpunch finsert fcollapse fzero funshare falloc; do
++	echo "test $verb"
++	$XFS_IO_PROG -f -c "falloc 0 $sz" "$SCRATCH_MNT/b"
++	$XFS_IO_PROG -f -c "$verb $range" "$SCRATCH_MNT/b"
++	rm -f "$SCRATCH_MNT/b"
++	_scratch_cycle_mount
++done
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/760.out b/tests/xfs/760.out
+new file mode 100644
+index 00000000..3d73c6fa
+--- /dev/null
++++ b/tests/xfs/760.out
+@@ -0,0 +1,9 @@
++QA output created by 760
++test fpunch
++test finsert
++fallocate: Invalid argument
++test fcollapse
++fallocate: Invalid argument
++test fzero
++test funshare
++test falloc
+diff --git a/tests/xfs/group b/tests/xfs/group
+index c3c33b64..302f5157 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -520,6 +520,8 @@
+ 520 auto quick reflink
+ 747 auto quick scrub
+ 758 auto quick rw attr realtime
++759 auto quick rw realtime
++760 auto quick rw collapse punch insert zero prealloc
+ 908 auto quick bigtime
+ 909 auto quick bigtime quota
+ 910 auto quick inobtcount
