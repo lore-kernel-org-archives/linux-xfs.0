@@ -2,197 +2,89 @@ Return-Path: <SRS0=HmrU=DS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,
+	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3DBCC433E7
-	for <linux-xfs@archiver.kernel.org>; Sun, 11 Oct 2020 05:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED4BCC433DF
+	for <linux-xfs@archiver.kernel.org>; Sun, 11 Oct 2020 19:38:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B47DA207E8
-	for <linux-xfs@archiver.kernel.org>; Sun, 11 Oct 2020 05:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B59BC2145D
+	for <linux-xfs@archiver.kernel.org>; Sun, 11 Oct 2020 19:38:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726198AbgJKFB2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 11 Oct 2020 01:01:28 -0400
-Received: from out20-50.mail.aliyun.com ([115.124.20.50]:37425 "EHLO
-        out20-50.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbgJKFB1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Oct 2020 01:01:27 -0400
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07454672|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.00752524-0.000230344-0.992244;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047187;MF=guan@eryu.me;NM=1;PH=DS;RN=3;RT=3;SR=0;TI=SMTPD_---.Ihgkprc_1602392482;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.Ihgkprc_1602392482)
-          by smtp.aliyun-inc.com(10.147.44.145);
-          Sun, 11 Oct 2020 13:01:22 +0800
-Date:   Sun, 11 Oct 2020 13:01:22 +0800
-From:   Eryu Guan <guan@eryu.me>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     fstests@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH V2] generic: test reflinked file corruption after short
- COW
-Message-ID: <20201011050122.GU3853@desktop>
-References: <b63354c6-795d-78e2-4002-83c08a373171@redhat.com>
- <72427003-febc-cc31-743d-41e25b314874@redhat.com>
+        id S1726179AbgJKTiH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 11 Oct 2020 15:38:07 -0400
+Received: from relayout04-q02.e.movistar.es ([86.109.101.172]:63441 "EHLO
+        relayout04-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726087AbgJKTiH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Oct 2020 15:38:07 -0400
+X-Greylist: delayed 413 seconds by postgrey-1.27 at vger.kernel.org; Sun, 11 Oct 2020 15:38:06 EDT
+Received: from relayout04-redir.e.movistar.es (unknown [86.109.101.204])
+        by relayout04-out.e.movistar.es (Postfix) with ESMTP id 4C8X3d6MGGz1yFD
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Oct 2020 21:31:09 +0200 (CEST)
+Received: from Telcontar.valinor (103.red-79-158-162.dynamicip.rima-tde.net [79.158.162.103])
+        (using TLSv1.2 with cipher ADH-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: robin.listas2@telefonica.net)
+        by relayout04.e.movistar.es (Postfix) with ESMTPSA id 4C8X3d4VRjz10GV
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Oct 2020 21:31:09 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 28A193208EB
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Oct 2020 21:31:09 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at valinor
+Received: from Telcontar.valinor ([127.0.0.1])
+        by localhost (telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+        with LMTP id dSUCmHwh1k6j for <linux-xfs@vger.kernel.org>;
+        Sun, 11 Oct 2020 21:31:09 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id EE6083207EB
+        for <linux-xfs@vger.kernel.org>; Sun, 11 Oct 2020 21:31:08 +0200 (CEST)
+Date:   Sun, 11 Oct 2020 21:31:08 +0200 (CEST)
+From:   "Carlos E. R." <robin.listas@telefonica.net>
+X-X-Sender: cer@Telcontar.valinor
+To:     Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+Subject: Feature question
+Message-ID: <alpine.LSU.2.23.453.2010112123360.21996@Telcontar.valinor>
+User-Agent: Alpine 2.23 (LSU 453 2020-06-18)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <72427003-febc-cc31-743d-41e25b314874@redhat.com>
+Content-Type: text/plain; format=flowed; charset=US-ASCII
+X-TnetOut-Country: IP: 79.158.162.103 | Country: ES
+X-VADETOUT-SPAMSTATE: clean
+X-VADETOUT-SPAMSCORE: -100
+X-TnetOut-Information: AntiSPAM and AntiVIRUS on relayout04
+X-TnetOut-MsgID: 4C8X3d4VRjz10GV.AA546
+X-TnetOut-SpamCheck: no es spam (whitelisted), clean
+X-TnetOut-From: robin.listas@telefonica.net
+X-TnetOut-Watermark: 1603049469.74996@KKmTjXVDLekfXNiKf+QhRQ
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 08, 2020 at 04:22:13PM -0500, Eric Sandeen wrote:
-> This test essentially creates an existing COW extent which
-> covers the first 1M, and then does another IO that overlaps it,
-> but extends beyond it.  The bug was that we did not trim the
-> new IO to the end of the existing COW extent, and so the IO
-> extended past the COW blocks and corrupted the reflinked files(s).
-> 
-> The bug came and went upstream.  It was introduced by:
-> 
-> 78f0cc9d55cb "xfs: don't use delalloc extents for COW on files with extsize hints"
-> and (inadvertently) fixed as of:
-> 36adcbace24e "xfs: fill out the srcmap in iomap_begin"
-> upstream, and in the 5.4 stable tree with:
-> aee38af574a1 "xfs: trim IO to found COW extent limit"
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> 
-> V2: Add stable tree fix commit in test description & commit log
-> 
-> diff --git a/tests/generic/612 b/tests/generic/612
-> new file mode 100755
-> index 00000000..5a765a0c
-> --- /dev/null
-> +++ b/tests/generic/612
-> @@ -0,0 +1,85 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2020 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 612
-> +#
-> +# Regression test for reflink corruption present as of:
-> +# 78f0cc9d55cb "xfs: don't use delalloc extents for COW on files with extsize hints"
-> +# and (inadvertently) fixed as of:
-> +# 36adcbace24e "xfs: fill out the srcmap in iomap_begin"
-> +# upstream, and in the 5.4 stable tree with:
-> +# aee38af574a1 "xfs: trim IO to found COW extent limit"
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/reflink
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_require_test
-> +_require_test_reflink
-> +
-> +DIR=$TEST_DIR/dir.$seq
-> +mkdir -p $DIR
-> +rm -f $DIR/a $DIR/b
-> +
-> +# This test essentially creates an existing COW extent which
-> +# covers the first 1M, and then does another IO that overlaps it,
-> +# but extends beyond it.  The bug was that we did not trim the
-> +# new IO to the end of the existing COW extent, and so the IO
-> +# extended past the COW blocks and corrupted the reflinked files(s).
-> +
-> +# Make all files w/ 1m hints; create original 2m file
-> +$XFS_IO_PROG -c "extsize 1048576" $DIR | _filter_xfs_io
-> +$XFS_IO_PROG -c "cowextsize 1048576" $DIR | _filter_xfs_io
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-This only works on xfs, and prints extra message on btrfs like
 
-+foreign file active, extsize command is for XFS filesystems only                                     
-+foreign file active, cowextsize command is for XFS filesystems only
+Hi,
 
-So I discard outputs of above xfs_io commands.
+I wonder if there are thoughts about adding compression to XFS?
 
-Thanks,
-Eryu
+I am using external disks with encryption (LUKS), btrfs (no snapshots) and 
+compression for backup purposes, made with rsync, or dd images. Works 
+nicely, but I wonder if there are ideas about having compression with XFS, 
+knowing that some developers work on both projects ;-)
 
-> +
-> +echo "Create file b"
-> +$XFS_IO_PROG -f -c "pwrite -S 0x0 0 2m" -c fsync $DIR/b | _filter_xfs_io
-> +
-> +# Make a reflinked copy
-> +echo "Reflink copy from b to a"
-> +cp --reflink=always $DIR/b $DIR/a
-> +
-> +echo "Contents of b"
-> +hexdump -C $DIR/b
-> +
-> +# Cycle mount to get stuff out of cache
-> +_test_cycle_mount
-> +
-> +# Create a 1m-hinted IO at offset 0, then
-> +# do another IO that overlaps but extends past the 1m hint
-> +echo "Write to a"
-> +$XFS_IO_PROG -c "pwrite -S 0xa 0k -b 4k 4k" \
-> +       -c "pwrite -S 0xa 4k -b 1m 1m" \
-> +       $DIR/a | _filter_xfs_io
-> +
-> +$XFS_IO_PROG -c fsync $DIR/a
-> +
-> +echo "Contents of b now:"
-> +hexdump -C $DIR/b
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/612.out b/tests/generic/612.out
-> new file mode 100644
-> index 00000000..237a9638
-> --- /dev/null
-> +++ b/tests/generic/612.out
-> @@ -0,0 +1,18 @@
-> +QA output created by 612
-> +Create file b
-> +wrote 2097152/2097152 bytes at offset 0
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +Reflink copy from b to a
-> +Contents of b
-> +00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> +*
-> +00200000
-> +Write to a
-> +wrote 4096/4096 bytes at offset 0
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +wrote 1048576/1048576 bytes at offset 4096
-> +XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
-> +Contents of b now:
-> +00000000  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
-> +*
-> +00200000
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 4af4b494..bc115f21 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -614,3 +614,4 @@
->  609 auto quick rw
->  610 auto quick prealloc zero
->  611 auto quick attr
-> +612 auto quick clone
+ext3/4 mentions compression in the manual, but it never got implemented. 
+ntfs has it since long. Yes, they say that hard disk storage is cheap, but 
+it is even cheaper with _some_ compression ;-)
+
+- -- 
+Cheers
+       Carlos E. R, using openSUSE Leap.
+-----BEGIN PGP SIGNATURE-----
+
+iHoEARECADoWIQQZEb51mJKK1KpcU/W1MxgcbY1H1QUCX4NdfBwccm9iaW4ubGlz
+dGFzQHRlbGVmb25pY2EubmV0AAoJELUzGBxtjUfVRusAnRoQghWMnLgo/KY/QASv
+fF9bWPElAJ4pPjHAn9GRZ8Wk4VVSHhpf0Zi8qw==
+=W2XB
+-----END PGP SIGNATURE-----
