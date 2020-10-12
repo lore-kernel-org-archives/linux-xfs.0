@@ -7,68 +7,68 @@ X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 291D0C43457
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Oct 2020 20:45:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29016C433DF
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Oct 2020 21:02:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5319208D5
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Oct 2020 20:45:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4D7D2076E
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Oct 2020 21:02:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bAh1deqe"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="igPfg7yB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730741AbgJLUo5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Oct 2020 16:44:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:48416 "EHLO
+        id S1731690AbgJLVC6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Oct 2020 17:02:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:21627 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728944AbgJLUo4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Oct 2020 16:44:56 -0400
+        by vger.kernel.org with ESMTP id S1730845AbgJLVC6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Oct 2020 17:02:58 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602535495;
+        s=mimecast20190719; t=1602536577;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=1HjyVvdRwN+ecS97SL5UTDwfoc0Uw9c+6U07agPU6ss=;
-        b=bAh1deqelBtiSrME9EQH37TrOpVbyp43Sddag9n6VjNpOphdmWf3fcz24Z/YQf/+IW93dN
-        iL1ua6fVoB5bV/2mxstRxaFXOGAd+nOGnHJ2L8zJp+9et/kJGtjeHHeDuk1eT1L6deDqQj
-        wgaj3JXqi3sH5RxvnSwyzs8KKIRYz2E=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-240-0kN-P3FxOMSEvNh2S34o4A-1; Mon, 12 Oct 2020 16:44:41 -0400
-X-MC-Unique: 0kN-P3FxOMSEvNh2S34o4A-1
-Received: by mail-wr1-f71.google.com with SMTP id 47so9794248wrc.19
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2020 13:44:41 -0700 (PDT)
+        bh=NqopduvVUZr01m2juIKmSfhXQezsvdNTDBDCsLwSNXY=;
+        b=igPfg7yBPMiikva5INJZRBmCQgSQwzJ6rzHxQ7QhmkL8k+T09DFniIgSn/eiYSRjMtTQql
+        MPQqubfXX/qdz9nalC56oh9x0l+8BH/qJwX7hiSIcNCu8yyAbw6WD+6zk2x1YBFIOTer1O
+        xpba3vzhw31z39vmMzsi9kC7D12xUfY=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-99-e8SOSo2rNOec3zNk5ORnAQ-1; Mon, 12 Oct 2020 17:02:55 -0400
+X-MC-Unique: e8SOSo2rNOec3zNk5ORnAQ-1
+Received: by mail-wr1-f72.google.com with SMTP id r8so2497505wrp.5
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Oct 2020 14:02:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=1HjyVvdRwN+ecS97SL5UTDwfoc0Uw9c+6U07agPU6ss=;
-        b=AFjlH4pOxOpHtCy+fxceRxAw7K2ywxB7cAReqDDF8Mxo6tSN6pBgF6Ld89dzzdvA0r
-         /uPGIeWSOAktDrVwDzekpj6DYPUoQBb4Z4jZVuFvFeYjjRGvWojYVFkbylCoveVpkwD/
-         WLQplJN1BsKuiPOz5patSKmyAh1SYseHjkdMIXv5HbZfEENysHXfQPOclWzcjq9iTe7O
-         Y3Pj+aFMQO1IRELCb4dj/wIesgxlkOVDnMnyiGgo5EdqXTwELvipK8yJ17dpl/BBRWCg
-         8a7FCcss00PO5Bjvuvgceg9ekzksAhaDys6yKaURCOfLzUyyBoQiet568S3ehU40WluG
-         wsUw==
-X-Gm-Message-State: AOAM533nUnfK1YdkBFYMyby3YFgEdrag/UqBkfQM4CAxVBTeckFBxJH8
-        SMNkDS8nzaevHIeuvFbfGDNLI15UhYdymN8xca5bxz4g/60oMLWwQR8/equmiJ91pMCq2rP44HX
-        kfxk30+sQfc7s9ISCHVY9
-X-Received: by 2002:a1c:6488:: with SMTP id y130mr12070706wmb.94.1602535480355;
-        Mon, 12 Oct 2020 13:44:40 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwmohSxwUn+w6JbYNFEyTRhJxTlWmi3bAJhY1fwlQTZvKcNoN1vNDEhKcZyazDXN6IyWY1phA==
-X-Received: by 2002:a1c:6488:: with SMTP id y130mr12070700wmb.94.1602535480103;
-        Mon, 12 Oct 2020 13:44:40 -0700 (PDT)
+        bh=NqopduvVUZr01m2juIKmSfhXQezsvdNTDBDCsLwSNXY=;
+        b=nMGkjMVL6SgqkKMIzmZD3r0wUsPln0pjNJH7xxfw082tInDhmDv+5gkF+zeBmC99mg
+         sLO2BroX91MAFlEt0rMiJbOwTRPPMG3zQrGMCjGn4jlefZJB+o/Gd2VKLxIW0pmlYt85
+         coKsLD7E5C21SocUWiSj6CF+yREzv+YIpiKOTN8jXp2X1A4Vn9c0QlsFfYWF6fP7a312
+         unTlSkmVx1ftYuGzPY/qN7n69lKPs1LJm2OAzCDgzi5qdwtOVk/SI7O7F+vqdBzqcrAO
+         nmlfzwc3MaHnD6KgwZPXRQ2jRHhNB7VJnLoKQ9X2bxz53CcbK8d43iDdFLqUpeHCN0aZ
+         4ojQ==
+X-Gm-Message-State: AOAM5330sbcT+Zq8QOoqvJgaFmo2E62P5Byby+hiPHfKSCgYuHICMGta
+        pAOv5WyCnG83wOjwIaUvw52uZYm90Ceb5LqdKN2RTTZM4SE5uVgaJ2N7GKe4iwBRnv0AGAmJ7PQ
+        7o2lJYPBhmQxixXH3vWoW
+X-Received: by 2002:a1c:2b05:: with SMTP id r5mr12387813wmr.179.1602536573675;
+        Mon, 12 Oct 2020 14:02:53 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzsLRoPPxhJyHC7ujUV+9qqoTSakR3jAnaA4ZsVb8+J5E6kvkugsqJq7/zknBPz/gV9bCDDoA==
+X-Received: by 2002:a1c:2b05:: with SMTP id r5mr12387806wmr.179.1602536573482;
+        Mon, 12 Oct 2020 14:02:53 -0700 (PDT)
 Received: from localhost.localdomain ([84.19.91.81])
-        by smtp.gmail.com with ESMTPSA id d20sm12427238wra.38.2020.10.12.13.44.39
+        by smtp.gmail.com with ESMTPSA id j5sm20657244wrx.88.2020.10.12.14.02.52
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Oct 2020 13:44:39 -0700 (PDT)
+        Mon, 12 Oct 2020 14:02:52 -0700 (PDT)
 Subject: Re: [PATCH v11 4/4] xfs: replace mrlock_t with rw_semaphores
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <20201009195515.82889-1-preichl@redhat.com>
  <20201009195515.82889-5-preichl@redhat.com> <20201012160412.GK917726@bfoster>
 From:   Pavel Reichl <preichl@redhat.com>
-Message-ID: <ffc87f66-759d-ac3c-5749-0972aa41924f@redhat.com>
-Date:   Mon, 12 Oct 2020 22:44:38 +0200
+Message-ID: <a6afba10-64a2-a30c-94de-e99a324a6114@redhat.com>
+Date:   Mon, 12 Oct 2020 23:02:51 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.3.1
 MIME-Version: 1.0
@@ -81,33 +81,40 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 
-
-On 10/12/20 6:04 PM, Brian Foster wrote:
 > ...
->> @@ -2863,8 +2875,20 @@ xfs_btree_split(
->>  	args.done = &done;
->>  	args.kswapd = current_is_kswapd();
->>  	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
->> +	/*
->> +	 * Update lockdep's ownership information to reflect that we
->> +	 * will be transferring the ilock from this thread to the
->> +	 * worker.
->> +	 */
+>> @@ -384,16 +385,17 @@ xfs_isilocked(
+>>  	struct xfs_inode	*ip,
+>>  	uint			lock_flags)
+>>  {
+>> -	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+>> -		if (!(lock_flags & XFS_ILOCK_SHARED))
+>> -			return !!ip->i_lock.mr_writer;
+>> -		return rwsem_is_locked(&ip->i_lock.mr_lock);
+>> +	if (lock_flags & (XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)) {
+>> +		ASSERT(!(lock_flags & ~(XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)));
+>> +		return __xfs_rwsem_islocked(&ip->i_lock,
+>> +				(lock_flags >> XFS_ILOCK_FLAG_SHIFT));
+>>  	}
+>>  
+>> -	if (lock_flags & (XFS_MMAPLOCK_EXCL|XFS_MMAPLOCK_SHARED)) {
+>> -		if (!(lock_flags & XFS_MMAPLOCK_SHARED))
+>> -			return !!ip->i_mmaplock.mr_writer;
+>> -		return rwsem_is_locked(&ip->i_mmaplock.mr_lock);
+>> +	if (lock_flags & (XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)) {
+>> +		ASSERT(!(lock_flags &
+>> +			~(XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)));
+>> +		return __xfs_rwsem_islocked(&ip->i_mmaplock,
+>> +				(lock_flags >> XFS_MMAPLOCK_FLAG_SHIFT));
+>>  	}
+>>  
+>>  	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
 > 
-> Can we update this comment to explain why we need to do this? E.g., I'm
-> assuming there's a lockdep splat somewhere down in the split worker
-> without it, but it's not immediately clear where and so it might not be
-> obvious if we're ever able to remove this.
+> Can we add a similar assert for this case as we have for the others?
+> Otherwise the rest looks fairly straightforward to me.
+> 
 
-Hi, would something like this work for you?
+Sure we can! But do we want to?
 
-	/*
-+	 * Update lockdep's ownership information to reflect that we
-+	 * will be transferring the ilock from this thread to the
-+	 * worker (xfs_btree_split_worker() run via queue_work()).
-+	 * If the ownership transfer would not happen lockdep would
-+	 * assert in the worker thread because the ilock would be owned
-+	 * by the original thread.
-+	 */
-
+I think that these asserts are supposed to make sure that only flags for one of the inode's locks are used eg. ILOCK, MMAPLOCK or IOLOCK but no combination! So if we reach this 3rd condition we already know that the flags for ILOCK and MMAPLOCK were not set. However if there's possibility for more locks to be added in the future or just for the 'code symmetry' purposes - I have no problem to update the code.
+ 
 
