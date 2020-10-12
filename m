@@ -2,55 +2,52 @@ Return-Path: <SRS0=uuBg=DT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B07BC43467
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Oct 2020 14:04:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84113C4363D
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Oct 2020 14:04:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A4732074D
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Oct 2020 14:04:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46F262074D
+	for <linux-xfs@archiver.kernel.org>; Mon, 12 Oct 2020 14:04:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iWkC6Gmx"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eGbshoKq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390825AbgJLOEV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Oct 2020 10:04:21 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:48146 "EHLO
+        id S2390917AbgJLOEW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 12 Oct 2020 10:04:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:28084 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2403779AbgJLOD4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Oct 2020 10:03:56 -0400
+        by vger.kernel.org with ESMTP id S2403773AbgJLODy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Oct 2020 10:03:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602511435;
+        s=mimecast20190719; t=1602511433;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=nsP7bJ5xE859gYh7hZQPmIA2QTkwd3outq7h66tL/c4=;
-        b=iWkC6GmxLDM8DE89HTw+XUC3QjbCF3oqjsdpE8w4j+F4KjgpKu5KgF/K3uBOH6ATkzOReJ
-        8OGdj4iGQTysan83zPnxd2csl6Ojx0dPRjaHp0By6KjqV8ZfmG9y1qeUUSmRpznyuT36th
-        oLWkTQ/BsMNpMSV56CpbcLPcchwVivM=
+         content-transfer-encoding:content-transfer-encoding;
+        bh=jtT8YVgg8rW+zJBwTtvzYMDWf/69tJh2n5OKKDjNoQw=;
+        b=eGbshoKqLnZIXHcJSuoZj00igvQlFg0MSM4bXuqFp6Wx0HLzaB5ViKVK9S+Qnqx1OeQW28
+        87Rvfy8MiruX6zZ1dplTLlvVm1BWOQQaj2pQ7S0lfVqhy7ayVl9EK+TnWl2uNxM+I7rLWc
+        9E6Jy32KjTjHB+sUDALzYyc6p/1hhqo=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-481-F4G7htSwPtiZsJL8CfHXZw-1; Mon, 12 Oct 2020 10:03:53 -0400
-X-MC-Unique: F4G7htSwPtiZsJL8CfHXZw-1
+ us-mta-448-KwfY8z8jMyGFvAwAMnuJbA-1; Mon, 12 Oct 2020 10:03:52 -0400
+X-MC-Unique: KwfY8z8jMyGFvAwAMnuJbA-1
 Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1C60910054FF;
-        Mon, 12 Oct 2020 14:03:52 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B66F360C07;
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 10E7064085;
         Mon, 12 Oct 2020 14:03:51 +0000 (UTC)
+Received: from bfoster.redhat.com (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A7A4260C07;
+        Mon, 12 Oct 2020 14:03:50 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] iomap: zero cached pages over unwritten extents on zero range
-Date:   Mon, 12 Oct 2020 10:03:50 -0400
-Message-Id: <20201012140350.950064-3-bfoster@redhat.com>
-In-Reply-To: <20201012140350.950064-1-bfoster@redhat.com>
-References: <20201012140350.950064-1-bfoster@redhat.com>
+Subject: [PATCH 0/2] iomap: zero dirty pages over unwritten extents
+Date:   Mon, 12 Oct 2020 10:03:48 -0400
+Message-Id: <20201012140350.950064-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
@@ -58,124 +55,39 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The iomap zero range mechanism currently skips unwritten mappings.
-This is normally not a problem as most users synchronize in-core
-state to the underlying block mapping by flushing pagecache prior to
-calling into iomap. This is not always the case, however. For
-example, XFS calls iomap_truncate_page() on truncate down before
-flushing the new EOF page of the file. This means that if the new
-EOF block is unwritten but covered by a dirty page (i.e. awaiting
-unwritten conversion after writeback), iomap fails to zero that
-page. The subsequent truncate_setsize() call does perform page
-zeroing, but doesn't dirty the page. Therefore if the new EOF page
-is written back after calling into iomap and before the pagecache
-truncate, the post-EOF zeroing is lost on page reclaim. This exposes
-stale post-EOF data on mapped reads.
+Hi all,
 
-To address this problem, update the iomap zero range mechanism to
-explicitly zero ranges over unwritten extents where pagecache
-happens to exist. This is similar to how iomap seek data works for
-unwritten extents with cached data. In fact, we can reuse the same
-mechanism to scan for pagecache over large unwritten mappings to
-retain the same level of efficiency when zeroing large unwritten
-(and non-dirty) ranges.
+This is an alternate/iomap based variant of the XFS fix posted here:
 
-Fixes: 68a9f5e7007c ("xfs: implement iomap based buffered write path")
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+https://lore.kernel.org/linux-xfs/20201007143509.669729-1-bfoster@redhat.com/
+
+This addresses a post-eof stale data exposure problem that can occur
+when truncate down races with writeback of the new EOF page and the new
+EOF block happens to be unwritten. Instead of explicitly flushing the
+new EOF page in XFS, however, this variant updates iomap zero range to
+check for and zero preexisting dirty pages over unwritten extents. This
+reuses the dirty page checking that seek data/hole already implements
+for unwritten extents. Patch 1 is technically not required, but fixes an
+odd behavior I noticed when playing around with zero range. Without it,
+a zero range (with patch 2) over a large, cached (but clean), unwritten
+mapping would unnecessarily zero pages that aren't otherwise dirty. I
+don't think this is actually a problem in practice today as most large
+zero range requests are truncates over post-eof space (which shouldn't
+have page cache), but it seemed odd regardless.
+
+Thoughts, reviews, flames appreciated.
+
+Brian
+
+Brian Foster (2):
+  iomap: use page dirty state to seek data over unwritten extents
+  iomap: zero cached pages over unwritten extents on zero range
+
  fs/iomap/buffered-io.c | 39 +++++++++++++++++++++++++++++++++++++--
- fs/iomap/seek.c        |  2 +-
+ fs/iomap/seek.c        |  7 ++++---
  include/linux/iomap.h  |  2 ++
- 3 files changed, 40 insertions(+), 3 deletions(-)
+ 3 files changed, 43 insertions(+), 5 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index bcfc288dba3f..a07703d686da 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -944,6 +944,30 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- 	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
- }
- 
-+/*
-+ * Seek data over an unwritten mapping and update the counters for the caller to
-+ * perform zeroing, if necessary.
-+ */
-+static void
-+iomap_zero_range_skip_uncached(struct inode *inode, loff_t *pos,
-+		loff_t *count, loff_t *written)
-+{
-+	unsigned dirty_offset, bytes = 0;
-+
-+	dirty_offset = page_cache_seek_hole_data(inode, *pos, *count,
-+				SEEK_DATA);
-+	if (dirty_offset == -ENOENT)
-+		bytes = *count;
-+	else if (dirty_offset > *pos)
-+		bytes = dirty_offset - *pos;
-+
-+	if (bytes) {
-+		*pos += bytes;
-+		*count -= bytes;
-+		*written += bytes;
-+	}
-+}
-+
- static loff_t
- iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
- 		void *data, struct iomap *iomap, struct iomap *srcmap)
-@@ -952,13 +976,24 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
- 	loff_t written = 0;
- 	int status;
- 
--	/* already zeroed?  we're done. */
--	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
-+	/* holes are already zeroed, we're done */
-+	if (srcmap->type == IOMAP_HOLE)
- 		return count;
- 
- 	do {
- 		unsigned offset, bytes;
- 
-+		/*
-+		 * Unwritten mappings are effectively zeroed on disk, but we
-+		 * must zero any preexisting data pages over the range.
-+		 */
-+		if (srcmap->type == IOMAP_UNWRITTEN) {
-+			iomap_zero_range_skip_uncached(inode, &pos, &count,
-+				&written);
-+			if (!count)
-+				break;
-+		}
-+
- 		offset = offset_in_page(pos);
- 		bytes = min_t(loff_t, PAGE_SIZE - offset, count);
- 
-diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
-index 981a74c8d60f..6804c1d5808e 100644
---- a/fs/iomap/seek.c
-+++ b/fs/iomap/seek.c
-@@ -71,7 +71,7 @@ page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
-  *
-  * Returns the resulting offset on successs, and -ENOENT otherwise.
-  */
--static loff_t
-+loff_t
- page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
- 		int whence)
- {
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 4d1d3c3469e9..898c012f4f33 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -184,6 +184,8 @@ loff_t iomap_seek_data(struct inode *inode, loff_t offset,
- 		const struct iomap_ops *ops);
- sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
- 		const struct iomap_ops *ops);
-+loff_t page_cache_seek_hole_data(struct inode *inode, loff_t offset,
-+		loff_t length, int whence);
- 
- /*
-  * Structure for writeback I/O completions.
 -- 
 2.25.4
 
