@@ -2,289 +2,257 @@ Return-Path: <SRS0=8N9+=DU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3EC1C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 16:22:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A869C433E7
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 16:35:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 75AD22528A
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 16:22:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nF/wMlzg"
+	by mail.kernel.org (Postfix) with ESMTP id 00013252AB
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 16:35:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389654AbgJMQWR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Oct 2020 12:22:17 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47780 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389406AbgJMQWR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Oct 2020 12:22:17 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09DGKHlu149002
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2020 16:22:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=bb35xLZQZangFEUHHsyytUd/NwzSSi9AJQmvEF4F0c0=;
- b=nF/wMlzgOY3tCEltZZCzl3u9HmUaXeitXhAC6gb3Ot7P2bofY5McOnVs2g0nDmmy0qTj
- rHksHOa/nMf8vR3743E3mMApFxUDRhS3zenyrQfLghSfIv/W41Ro4rjTYgoON3p7sIkR
- yZ9bdBl87tmkIJFVVA2+MAwWcujYSIjylOYmGrISPlChGfaq7ZFuXGojdVyZ73LGOrW1
- jW9DgOliSsirhqc9C8ifghK86c6K6EWNHMzqfYBAS2UzaPUbf1PU0KcKuqDQNzHDui7s
- jO17I9mS2Fei6/kug1MuR7FluLZYU5bWAkOfhoZzukMHmrVbANBVTjjzrZBJEpTN00Y0 LA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 3434wkk3y5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2020 16:22:15 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09DGGcLL175243
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2020 16:22:14 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 343pvwm504-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2020 16:22:14 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09DGMD0D026501
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2020 16:22:13 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 13 Oct 2020 09:22:13 -0700
-Date:   Tue, 13 Oct 2020 09:22:12 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1727416AbgJMQfV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Oct 2020 12:35:21 -0400
+Received: from sandeen.net ([63.231.237.45]:40508 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727415AbgJMQfU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Oct 2020 12:35:20 -0400
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 200AD11662
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2020 11:34:10 -0500 (CDT)
 To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 7e75d8faa7e6
-Message-ID: <20201013162212.GA9832@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 4aaeedc4 / v5.9.0-rc1
+Message-ID: <e4d9a624-7199-7d27-9c8d-7f66f27fbd2d@sandeen.net>
+Date:   Tue, 13 Oct 2020 11:35:19 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9773 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
- bulkscore=0 mlxlogscore=999 suspectscore=7 malwarescore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010130120
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9773 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 mlxscore=0
- malwarescore=0 phishscore=0 suspectscore=7 impostorscore=0 clxscore=1015
- spamscore=0 priorityscore=1501 bulkscore=0 adultscore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010130120
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="U5KZRNRH3vdGUK3zjHAucS5da4zGRE8ca"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--U5KZRNRH3vdGUK3zjHAucS5da4zGRE8ca
+Content-Type: multipart/mixed; boundary="MsE7KBB7cE95adnL295oaeLP88tAChL5X";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: xfs <linux-xfs@vger.kernel.org>
+Message-ID: <e4d9a624-7199-7d27-9c8d-7f66f27fbd2d@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 4aaeedc4 / v5.9.0-rc1
+
+--MsE7KBB7cE95adnL295oaeLP88tAChL5X
+Content-Type: multipart/mixed;
+ boundary="------------84EDE1D8045E0154C283DC48"
+Content-Language: en-US
+
+This is a multi-part message in MIME format.
+--------------84EDE1D8045E0154C283DC48
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
 Hi folks,
 
-The for-next branch of the xfs-linux repository at:
+The for-next branch of the xfsprogs repository at:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-has just been updated.
+has just been updated and tagged with v5.9.0-rc1.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  Today's push to the branch incorporates all the rt
-growfs fixes, fixes for Kconfig problems, and a fix for rtextsize > 1
-fallocate parameter validation that wasn't done right.
+Barring important missed patches or regressions, this will be the content=
+
+for v5.9.0 GA.
 
 The new head of the for-next branch is commit:
 
-7e75d8faa7e6 xfs: fix Kconfig asking about XFS_SUPPORT_V4 when XFS_FS=n
+b2fa3ec1 (HEAD -> for-next, korg/for-next, refs/patches/for-next/5.9.0-rc=
+1.patch) xfsprogs: Release v5.9.0-rc1
 
 New Commits:
 
-Brian Foster (1):
-      [6dd379c7fa81] xfs: drop extra transaction roll from inode extent truncate
+Darrick J. Wong (4):
+      [0779e54d] libfrog: fix a potential null pointer dereference
+      [f4d02645] libhandle: fix potential unterminated string problem
+      [2b9857cd] xfs_scrub: don't use statvfs to collect filesystem summa=
+ry counts
+      [86b8934d] xfs_repair: coordinate parallel updates to the rt bitmap=
 
-Carlos Maiolino (6):
-      [771915c4f688] xfs: remove kmem_realloc()
-      [8ca79df85b7f] xfs: Remove kmem_zalloc_large()
-      [6337c84466c2] xfs: remove typedef xfs_attr_sf_entry_t
-      [47e6cc100054] xfs: Remove typedef xfs_attr_shortform_t
-      [c418dbc9805d] xfs: Use variable-size array for nameval in xfs_attr_sf_entry
-      [e01b7eed5d0a] xfs: Convert xfs_attr_sf macros to inline functions
 
-Chandan Babu R (2):
-      [72cc95132a93] xfs: Set xfs_buf type flag when growing summary/bitmap files
-      [c54e14d155f5] xfs: Set xfs_buf's b_ops member when zeroing bitmap/summary files
+Eric Sandeen (2):
+      [b285432b] xfsprogs: fix ioctl_xfs_geometry manpage naming
+      [b2fa3ec1] xfsprogs: Release v5.9.0-rc1
 
-Christoph Hellwig (15):
-      [12e164aa1f9d] xfs: refactor the buf ioend disposition code
-      [76b2d3234611] xfs: mark xfs_buf_ioend static
-      [23fb5a93c21f] xfs: refactor xfs_buf_ioend
-      [664ffb8a429a] xfs: move the buffer retry logic to xfs_buf.c
-      [6a7584b1d82b] xfs: fold xfs_buf_ioend_finish into xfs_ioend
-      [f58d0ea95611] xfs: refactor xfs_buf_ioerror_fail_without_retry
-      [3cc498845a0c] xfs: remove xfs_buf_ioerror_retry
-      [844c9358dfda] xfs: lift the XBF_IOEND_FAIL handling into xfs_buf_ioend_disposition
-      [70796c6b74c2] xfs: simplify the xfs_buf_ioend_disposition calling convention
-      [b840e2ada8af] xfs: use xfs_buf_item_relse in xfs_buf_item_done
-      [55b7d7115fcd] xfs: clear the read/write flags later in xfs_buf_ioend
-      [22c10589a10b] xfs: remove xlog_recover_iodone
-      [cead0b10f557] xfs: simplify xfs_trans_getsb
-      [b3f8e08ca815] xfs: remove xfs_getsb
-      [26e328759b9b] xfs: reuse _xfs_buf_read for re-reading the superblock
+Gao Xiang (1):
+      [8faa41b4] xfsprogs: allow i18n to xfs printk
 
-Darrick J. Wong (47):
-      [2a39946c9844] xfs: store inode btree block counts in AGI header
-      [1ac35f061af0] xfs: use the finobt block counts to speed up mount times
-      [1dbbff029f93] xfs: support inode btree blockcounts in online scrub
-      [11f744234f05] xfs: support inode btree blockcounts in online repair
-      [b896a39faa5a] xfs: enable new inode btree counters feature
-      [876fdc7c4f36] xfs: explicitly define inode timestamp range
-      [11d8a9190275] xfs: refactor quota expiration timer modification
-      [ccc8e771aa7a] xfs: refactor default quota grace period setting code
-      [9f99c8fe551a] xfs: refactor quota timestamp coding
-      [88947ea0ba71] xfs: move xfs_log_dinode_to_disk to the log recovery code
-      [5a0bb066f60f] xfs: redefine xfs_timestamp_t
-      [30e05599219f] xfs: redefine xfs_ictimestamp_t
-      [f93e5436f0ee] xfs: widen ondisk inode timestamps to deal with y2038+
-      [4ea1ff3b4968] xfs: widen ondisk quota expiration timestamps to handle y2038+
-      [06dbf82b044c] xfs: trace timestamp limits
-      [29887a227131] xfs: enable big timestamps
-      [5ffce3cc22a0] xfs: force the log after remapping a synchronous-writes file
-      [2a6ca4baed62] xfs: make sure the rt allocator doesn't run off the end
-      [fe341eb151ec] xfs: ensure that fpunch, fcollapse, and finsert operations are aligned to rt extent size
-      [8a569d717ed0] xfs: refactor inode flags propagation code
-      [d4f2c14cc979] xfs: don't propagate RTINHERIT -> REALTIME when there is no rtdev
-      [b96cb835e37c] xfs: deprecate the V4 format
-      [8df0fa39bdd8] xfs: don't free rt blocks when we're doing a REMAP bunmapi call
-      [e581c9397a25] xfs: check dabtree node hash values when loading child blocks
-      [93293bcbde93] xfs: log new intent items created as part of finishing recovered intent items
-      [2dbf872c042e] xfs: attach inode to dquot in xfs_bui_item_recover
-      [384ff09ba2e5] xfs: don't release log intent items when recovery fails
-      [d7884e6e90da] xfs: avoid shared rmap operations for attr fork extents
-      [b80b29d602a8] xfs: remove xfs_defer_reset
-      [901219bb2507] xfs: remove XFS_LI_RECOVERED
-      [e6fff81e4870] xfs: proper replay of deferred ops queued during log recovery
-      [4f9a60c48078] xfs: xfs_defer_capture should absorb remaining block reservations
-      [929b92f64048] xfs: xfs_defer_capture should absorb remaining transaction reservation
-      [919522e89f8e] xfs: clean up bmap intent item recovery checking
-      [64a3f3315bc6] xfs: clean up xfs_bui_item_recover iget/trans_alloc/ilock ordering
-      [ff4ab5e02a04] xfs: fix an incore inode UAF in xfs_bui_recover
-      [27dada070d59] xfs: change the order in which child and parent defer ops are finished
-      [4e919af7827a] xfs: periodically relog deferred intent items
-      [ed1575daf71e] xfs: expose the log push threshold
-      [74f4d6a1e065] xfs: only relog deferred intent items if free space in the log gets low
-      [acd1ac3aa22f] xfs: limit entries returned when counting fsmap records
-      [8ffa90e1145c] xfs: fix deadlock and streamline xfs_getfsmap performance
-      [f4c32e87de7d] xfs: fix realtime bitmap/summary file truncation when growing rt volume
-      [7249c95a3fd7] xfs: make xfs_growfs_rt update secondary superblocks
-      [ace74e797a82] xfs: annotate grabbing the realtime bitmap/summary locks in growfs
-      [b0de008012fd] xfs: fix fallocate functions when rtextsize is larger than 1
-      [7e75d8faa7e6] xfs: fix Kconfig asking about XFS_SUPPORT_V4 when XFS_FS=n
-
-Dave Chinner (2):
-      [718ecc50359e] xfs: xfs_iflock is no longer a completion
-      [671459676ab0] xfs: fix finobt btree block recovery ordering
-
-Gao Xiang (3):
-      [f692d09e9c8f] xfs: avoid LR buffer overrun due to crafted h_len
-      [0c771b99d6c9] xfs: clean up calculation of LR header blocks
-      [b38e07401ec7] xfs: drop the obsolete comment on filestream locking
-
-Kaixu Xia (11):
-      [c63290e300c4] xfs: remove the unused SYNCHRONIZE macro
-      [9c0fce4c16fc] xfs: use the existing type definition for di_projid
-      [5aff6750d56d] xfs: remove the unnecessary xfs_dqid_t type cast
-      [a647d109e08a] xfs: fix some comments
-      [3feb4ffbf693] xfs: remove the redundant crc feature check in xfs_attr3_rmt_verify
-      [74af4c1770f9] xfs: remove the unused parameter id from xfs_qm_dqattach_one
-      [d6b8fc6c7afa] xfs: do the assert for all the log done items in xfs_trans_cancel
-      [61ef5230518a] xfs: code cleanup in xfs_attr_leaf_entsize_{remote,local}
-      [c9c626b354dc] xfs: directly call xfs_generic_create() for ->create() and ->mkdir()
-      [97611f936674] xfs: do the ASSERT for the arguments O_{u,g,p}dqpp
-      [e5b23740db9b] xfs: fix the indent in xfs_trans_mod_dquot
-
-Pavel Reichl (2):
-      [c23c393eaab5] xfs: remove deprecated mount options
-      [3442de9cc322] xfs: remove deprecated sysctl options
-
-Zheng Bin (1):
-      [0f4ec0f15746] xfs: Remove unneeded semicolon
+Ian Kent (1):
+      [5ca4d781] xfsprogs: ignore autofs mount table entries
 
 
 Code Diffstat:
 
- Documentation/admin-guide/xfs.rst |  32 ++++-
- fs/xfs/Kconfig                    |  25 ++++
- fs/xfs/kmem.c                     |  22 ---
- fs/xfs/kmem.h                     |   7 -
- fs/xfs/libxfs/xfs_ag.c            |   5 +
- fs/xfs/libxfs/xfs_attr.c          |  14 +-
- fs/xfs/libxfs/xfs_attr_leaf.c     |  43 +++---
- fs/xfs/libxfs/xfs_attr_remote.c   |   2 -
- fs/xfs/libxfs/xfs_attr_sf.h       |  29 ++--
- fs/xfs/libxfs/xfs_bmap.c          |  19 ++-
- fs/xfs/libxfs/xfs_da_format.h     |  24 ++--
- fs/xfs/libxfs/xfs_defer.c         | 232 ++++++++++++++++++++++++++++---
- fs/xfs/libxfs/xfs_defer.h         |  37 +++++
- fs/xfs/libxfs/xfs_dquot_buf.c     |  35 +++++
- fs/xfs/libxfs/xfs_format.h        | 211 +++++++++++++++++++++++++++-
- fs/xfs/libxfs/xfs_fs.h            |   1 +
- fs/xfs/libxfs/xfs_ialloc.c        |   5 +
- fs/xfs/libxfs/xfs_ialloc_btree.c  |  65 ++++++++-
- fs/xfs/libxfs/xfs_iext_tree.c     |   2 +-
- fs/xfs/libxfs/xfs_inode_buf.c     | 130 +++++++++---------
- fs/xfs/libxfs/xfs_inode_buf.h     |  17 ++-
- fs/xfs/libxfs/xfs_inode_fork.c    |   8 +-
- fs/xfs/libxfs/xfs_log_format.h    |   7 +-
- fs/xfs/libxfs/xfs_log_recover.h   |   1 -
- fs/xfs/libxfs/xfs_quota_defs.h    |   8 +-
- fs/xfs/libxfs/xfs_rmap.c          |  27 ++--
- fs/xfs/libxfs/xfs_sb.c            |   6 +-
- fs/xfs/libxfs/xfs_shared.h        |   3 +
- fs/xfs/libxfs/xfs_trans_inode.c   |  17 ++-
- fs/xfs/scrub/agheader.c           |  30 ++++
- fs/xfs/scrub/agheader_repair.c    |  24 ++++
- fs/xfs/scrub/dabtree.c            |  14 ++
- fs/xfs/scrub/inode.c              |  31 +++--
- fs/xfs/scrub/symlink.c            |   2 +-
- fs/xfs/xfs_acl.c                  |   2 +-
- fs/xfs/xfs_attr_list.c            |   6 +-
- fs/xfs/xfs_bmap_item.c            | 136 +++++++++---------
- fs/xfs/xfs_bmap_util.c            |   7 +
- fs/xfs/xfs_buf.c                  | 208 +++++++++++++++++++++++-----
- fs/xfs/xfs_buf.h                  |  17 +--
- fs/xfs/xfs_buf_item.c             | 264 ++---------------------------------
- fs/xfs/xfs_buf_item.h             |  12 ++
- fs/xfs/xfs_buf_item_recover.c     |   4 +-
- fs/xfs/xfs_dquot.c                |  70 ++++++++--
- fs/xfs/xfs_dquot.h                |   3 +
- fs/xfs/xfs_extfree_item.c         |  44 ++++--
- fs/xfs/xfs_file.c                 |  27 +++-
- fs/xfs/xfs_filestream.c           |  34 +----
- fs/xfs/xfs_fsmap.c                |  48 ++++---
- fs/xfs/xfs_fsmap.h                |   6 +-
- fs/xfs/xfs_icache.c               |  19 ++-
- fs/xfs/xfs_inode.c                | 219 ++++++++++++++---------------
- fs/xfs/xfs_inode.h                |  39 +-----
- fs/xfs/xfs_inode_item.c           |  61 ++++++---
- fs/xfs/xfs_inode_item.h           |   5 +-
- fs/xfs/xfs_inode_item_recover.c   |  76 +++++++++++
- fs/xfs/xfs_ioctl.c                | 153 ++++++++++++++-------
- fs/xfs/xfs_iops.c                 |   4 +-
- fs/xfs/xfs_linux.h                |   1 -
- fs/xfs/xfs_log.c                  |  44 ++++--
- fs/xfs/xfs_log.h                  |   2 +
- fs/xfs/xfs_log_recover.c          | 281 +++++++++++++++++---------------------
- fs/xfs/xfs_mount.c                |  32 ++---
- fs/xfs/xfs_mount.h                |   1 -
- fs/xfs/xfs_ondisk.h               |  38 ++++--
- fs/xfs/xfs_qm.c                   |  29 +++-
- fs/xfs/xfs_qm.h                   |   4 +
- fs/xfs/xfs_qm_syscalls.c          |  18 ++-
- fs/xfs/xfs_quota.h                |   8 --
- fs/xfs/xfs_refcount_item.c        |  51 ++++---
- fs/xfs/xfs_rmap_item.c            |  42 ++++--
- fs/xfs/xfs_rtalloc.c              |  44 +++++-
- fs/xfs/xfs_stats.c                |   4 +
- fs/xfs/xfs_stats.h                |   1 +
- fs/xfs/xfs_super.c                |  72 +++++++---
- fs/xfs/xfs_sysctl.c               |  36 ++++-
- fs/xfs/xfs_trace.h                |  30 +++-
- fs/xfs/xfs_trans.c                |   4 +-
- fs/xfs/xfs_trans.h                |  35 ++++-
- fs/xfs/xfs_trans_buf.c            |  46 ++-----
- fs/xfs/xfs_trans_dquot.c          |  49 +++----
- 81 files changed, 2214 insertions(+), 1257 deletions(-)
+ VERSION                                            |  2 +-
+ configure.ac                                       |  2 +-
+ debian/changelog                                   |  6 +++++
+ doc/CHANGES                                        | 11 +++++++++
+ libfrog/bulkstat.c                                 |  2 +-
+ libfrog/linux.c                                    |  2 ++
+ libfrog/paths.c                                    |  2 ++
+ libhandle/handle.c                                 |  3 ++-
+ libxfs/libxfs_priv.h                               |  8 +++----
+ ..._xfs_fsop_geometry.2 =3D> ioctl_xfs_fsgeometry.2} | 10 ++++----
+ man/man3/xfsctl.3                                  |  4 ++--
+ repair/dinode.c                                    | 16 ++++++-------
+ repair/globals.c                                   |  1 +
+ repair/globals.h                                   |  1 +
+ repair/incore.c                                    |  1 +
+ scrub/fscounters.c                                 | 27 ++++------------=
+------
+ 16 files changed, 52 insertions(+), 46 deletions(-)
+ rename man/man2/{ioctl_xfs_fsop_geometry.2 =3D> ioctl_xfs_fsgeometry.2} =
+(95%)
+
+--------------84EDE1D8045E0154C283DC48
+Content-Type: application/pgp-keys;
+ name="OpenPGP_0x20AE1692E13DDEE0.asc"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+ filename="OpenPGP_0x20AE1692E13DDEE0.asc"
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+xsFNBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCsn=
+QZV
+32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+WL05O=
+DFQ
+2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQvj5BEeAx7=
+xKk
+yBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtWZiYO7jsg/qIpp=
+R1C
+6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGCsEEHj2khs7GfVv4pm=
+UUH
+f1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2BS6Rg851ay7AypbCPx2w4=
+d8j
+IkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2jgJBs57loTWAGe2Ve3cMy3VoQ4=
+0Wt
+3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftKLKhPj4c7uqjnBjrgOVaVBupGUmvLi=
+ePl
+nW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+XdmYtjDhjf3NAcoBWJuj8euxMB6TcQN2Mr=
+SXy
+5wSKaw40evooGwARAQABzSVFcmljIFIuIFNhbmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+w=
+sF4
+BBMBAgAiBQJOsffUAhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRAgrhaS4T3e4K8WD=
+/9R
+xynMYm+vXF1lc1ldA4miH1Mcw2y+3RSU4QZA5SrRBz4NX1atqz3OEUpu7qAAZUW9vp3MWEXeK=
+rVR
+/yg0NZTOPe+2a7ZN0J+s7AF6xVjdEsjW4bOo5cmGMcpciyfr9WwZbOOUEWWZ08UkEFa6B+p4E=
+KJ9
+eCOFeHITCkR3AA8uxtGBBAbFzm6wMmDegsvld9bXv5RdfUptyElzqlIukPJRz3/p3bUSCT6mk=
+W7r
+rvBUMwvGnaI2YVabJSLpd2xiVs7+gnslOk35TAMLrJ0uo3Nt2bx3sFlDIr9E2RgKYpbNE39O3=
+5l8
+t+A3asqD8DlqDg+VgTuOKBny/bVeKFuKAJ0Bvy2EU+/GPj/rnNgWh0gCPiaKqRRkPriGwdAXQ=
+2zk
+2oQUq0cfpOQm6oIKKgXEt+W/r0cxuWLAdxMsLYdzrARstfiMYLMnw6z6mGpptgTSSnemw1tOD=
+qe9
++++Z6yM8JA1RIyCVRlGx4dBh+vtQsFzCJfgIZxmF0rWKgW2aAOHbzNHG+UUODLK0IpOhUYTcg=
+yjl
+vFM3tFwVjy0z/wF8ebmHkzeTMKJ64nPClwwfRfHz6KlgGlzEefNtZoHN7iR7uh282CpQ24NUC=
+hS2
+ORSd85Jt5TwxOfgSrEO9cC7rOeh18fNShCRrTG6WBdxXmxBn/e49nI2KHhMSVxut37YoWtqIu=
+80k
+RXJpYyBSLiBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+wsF4BBMBAgAiBQJOsq5eAhsDB=
+gsJ
+CAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRAgrhaS4T3e4IdpD/wOgkZiBdjErbXm8gZPuj6ce=
+O3L
+finJqWKJMHyPYmoUj4kPi5pgWRPjzGHrBPvPpbEogL88+mBF7H1jJRsx4qohO+ndsUjmFTztq=
+1+8
+ZeE9iffMmZWK4zA5kOoKRXtGQaVZeOQhVGJAWnrpRDLKc2mCx+sxrD44H1ScmJ1veGVy1nK0k=
+4sQ
+TyXA7ZOI+o622NyvHlRYpivkUqugqmYFGfrmgwP8CeJB62LrzN0D27B0K/22EjZFQBcYJRumu=
+Aki
+eMO9P3U/RRW+48499J5mgZgxXLgvsc3nKXH5Wi77hWsrgSbJTKeHm2i/H4Jb57VrEGTPN+tQp=
+I7f
+NrqaNiUWIk65RPV4khBrMVtxKXRU971JiJYGNP16OTxr98ksHBbnEVJNUPY/mV+IAml+bB6UD=
+NN1
+E2g8eIxXRqji5009YX6zEGdxIs1W50FvRzdLJ5vZQ+T+jtXccim2aXr31gX8HUN+UVwWyCg5p=
+mZ8
+CRiYGJeQc4eQ5U9Ce6DFTs3RFWIqVsfNsAah1VuCNbT7p8oK2DvozZ/gS8EQjmESZuQQDcGMd=
+DL1
+pZtzLdzpJFtqW1/gtz+aAHMa35WsNx3hAYvymJMoMaL1pfdyC07FtN0dGjXCOm0nWEf+vKS+B=
+C3c
+exv0i22h39vBc81BY0bzeeZwaDHjzhaNTuirZF10OBm11Xm3b87BTQROsffUARAA0DrUifTrX=
+Qzq
+xO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJX4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2I=
+ZTE
+ajUY0Up+b3ErOpLpZwhvgWatjifpj6bBSKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/o=
+xst
+IViBhMhDwI6XsRlnVBoLLYcEilxA2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBG=
+JQd
+Py94nnlAVn3lH3+N7pXvNUuCGV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ=
+5vV
+XjPxTlkFdT0S0/uerCG51u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avF=
+aNW
+1kKBs0T5M1cnlWZUUtl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LG=
+ff3
+xRQHngeN5fPxze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3j=
+AQn
+sWTru4RVTZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5=
+eth
+eLMOgRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAcLBX=
+wQY
+AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0kiY=
+Pve
+GoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWNmcQT7=
+8hB
+eGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/LKjxnTedX=
+0ay
+gXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPoolLOrU43oqFnD8Q=
+wcN
+56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0MP9JGfj6x+bj/9JMB=
+tCW
+1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+JEexGxczWwN4mrOQWhMT5=
+Jyb
++18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBOPk6ah10C4+R1Jc7dyUsKksMfv=
+vhR
+X1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/m1F3vYvdlE4p2ts1mmixMF7KajN9/=
+E5R
+QtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlffWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/Y=
+udB
+vz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLXpA=3D=3D
+=3DpESb
+-----END PGP PUBLIC KEY BLOCK-----
+
+--------------84EDE1D8045E0154C283DC48--
+
+--MsE7KBB7cE95adnL295oaeLP88tAChL5X--
+
+--U5KZRNRH3vdGUK3zjHAucS5da4zGRE8ca
+Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="OpenPGP_signature"
+
+-----BEGIN PGP SIGNATURE-----
+
+wsF5BAABCAAjFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl+F10cFAwAAAAAACgkQIK4WkuE93uBF
+sA/+JhWs1yOeNChjeGMwDnK7aw12zQR5qwqQ+xNFyZADdPCAvrLzrmIaDJtaN+RqLeFTTrO81U98
+794A+hkl01DNkAoUoq2OSCakXpKBqu5mX54Uxwzj/aWLsuYbb1ykYL6GMA2L4J/TYvfw0zSo2sd7
+v0Qs9AG63PeZUIowS5jLXei6ef36loQnfS+7//0KD0kEQ4PhJeElUSWGwDrgSJ8jLPcymhIx2Qxk
+JIVY8on+H7wuPWToTwfVKNYIj+C4HqeI4+jfHym3o443K7yqryiDGlUbbJKJXmakPZxGCexLd2Jn
+Uj2McL/T8fpOKsKHSyoRdCz3pGzSvMjWCD2dPFyEJwKUqBWXSRd8HnSytKIFPMfqUXCRe3s6NuDA
+GD7SfDexG/+dch59ipRN+G11HuMwovewIquNp3bUTc1hlFxt0aS/WXEKug5A8Q2SlHYrvDdgClbN
+1RPwq2m2pkF/m38QxB2Hjo/FlmBeEVVyOef9/nHlBhsZw2HHynCVxPkGjSqhoAoyRn1nQY4GuJTl
+hN90OUDZTV1SBvro3VP1MPwU4jWepaAEhVxhX5Nu4MZUsj/4xbfvkhUZkScFvtzKRjZ/f1/sVWAN
+PByWTQtLQPiYB3jzpnaOA+jP8lvKYh+bFOYCUNH4xJonMzbbOY4d2wQZtyet17PiNZx/UM2TItG+
+xU4=
+=x/FG
+-----END PGP SIGNATURE-----
+
+--U5KZRNRH3vdGUK3zjHAucS5da4zGRE8ca--
