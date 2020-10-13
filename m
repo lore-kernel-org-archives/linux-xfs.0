@@ -6,81 +6,53 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADCFCC433E7
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 22:54:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B8337C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 23:05:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 871DB2080A
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 22:54:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77CF422202
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 23:05:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727036AbgJMWxu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Oct 2020 18:53:50 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44087 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726894AbgJMWxt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Oct 2020 18:53:49 -0400
+        id S1727559AbgJMXFZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Oct 2020 19:05:25 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:38968 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726894AbgJMXFY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Oct 2020 19:05:24 -0400
 Received: from dread.disaster.area (pa49-195-69-88.pa.nsw.optusnet.com.au [49.195.69.88])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 2EC8058C18F;
-        Wed, 14 Oct 2020 09:53:45 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CDDC23A96A8;
+        Wed, 14 Oct 2020 10:05:22 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kSTAu-000F8P-Uh; Wed, 14 Oct 2020 09:53:44 +1100
-Date:   Wed, 14 Oct 2020 09:53:44 +1100
+        id 1kSTM9-000FOb-Mu; Wed, 14 Oct 2020 10:05:21 +1100
+Date:   Wed, 14 Oct 2020 10:05:21 +1100
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] iomap: use page dirty state to seek data over
- unwritten extents
-Message-ID: <20201013225344.GA7391@dread.disaster.area>
-References: <20201012140350.950064-1-bfoster@redhat.com>
- <20201012140350.950064-2-bfoster@redhat.com>
+To:     Wang Yugui <wangyugui@e16-tech.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: dbench throughput on xfs over hardware limit(6Gb/s)
+Message-ID: <20201013230521.GB7391@dread.disaster.area>
+References: <20201013221113.F0A0.409509F4@e16-tech.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201012140350.950064-2-bfoster@redhat.com>
+In-Reply-To: <20201013221113.F0A0.409509F4@e16-tech.com>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=5g0Hk5519kQvxAqikqd8LA==:117 a=5g0Hk5519kQvxAqikqd8LA==:17
         a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=7-415B0cAAAA:8
-        a=a9yReRmkddMy0O4uLK4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=eGh88k_iIXcGbF3jgwUA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 12, 2020 at 10:03:49AM -0400, Brian Foster wrote:
-> iomap seek hole/data currently uses page Uptodate state to track
-> data over unwritten extents. This is odd and unpredictable in that
-> the existence of clean pages changes behavior. For example:
+On Tue, Oct 13, 2020 at 10:11:13PM +0800, Wang Yugui wrote:
+> Hi,
 > 
->   $ xfs_io -fc "falloc 0 32k" -c "seek -d 0" \
-> 	    -c "pread 16k 4k" -c "seek -d 0" /mnt/file
->   Whence  Result
->   DATA    EOF
->   ...
->   Whence  Result
->   DATA    16384
+> dbench throughput on xfs over hardware limit(6Gb/s=750MB/s).
+> 
+> Is this a bug or some feature of performance optimization?
 
-I don't think there is any way around this, because the page cache
-lookup done by the seek hole/data code is an
-unlocked operation and can race with other IO and operations. That
-is, seek does not take IO serialisation locks at all so
-read/write/page faults/fallocate/etc all run concurrently with it...
-
-i.e. we get an iomap that is current at the time the iomap_begin()
-call is made, but we don't hold any locks to stabilise that extent
-range while we do a page cache traversal looking for cached data.
-That means any region of the unwritten iomap can change state while
-we are running the page cache seek.
-
-We cannot determine what the data contents without major overhead,
-and if we are seeking over a large unwritten extent covered by clean
-pages that then gets partially written synchronously by another
-concurrent write IO then we might trip across clean uptodate pages
-with real data in them by the time the page cache scan gets to it.
-
-Hence the only thing we are looking at here is whether there is data
-present in the cache or not. As such, I think assuming that only
-dirty/writeback pages contain actual user data in a seek data/hole
-operation is a fundametnally incorrect premise.
+dbench measures page cache throughput, not physical IO throughput.
+This sort of results is expected.
 
 Cheers,
 
