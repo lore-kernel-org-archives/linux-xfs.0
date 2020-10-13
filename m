@@ -2,142 +2,125 @@ Return-Path: <SRS0=8N9+=DU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27045C433E7
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 13:44:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C084C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 13:50:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D028C2475D
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 13:44:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C832C24766
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 13:50:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZK81TMof"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HORQKTAD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387785AbgJMNon (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Oct 2020 09:44:43 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56493 "EHLO
+        id S2387996AbgJMNuE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Oct 2020 09:50:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37347 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387783AbgJMNon (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Oct 2020 09:44:43 -0400
+        by vger.kernel.org with ESMTP id S2387949AbgJMNuE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Oct 2020 09:50:04 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602596681;
+        s=mimecast20190719; t=1602597002;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=xFw8ue9qI3thqC46pUre7vs+WjmFQHR/WsXP5NLlvFs=;
-        b=ZK81TMofkNRW6lgwYaU4edyGMiNtZPGS8EAFVdAfD9Q293l7gmZv+QNB9dE3TgAhoQTbFZ
-        8elRXnjkDJzfQAkEDDgnIVfagp1R17LY+ngTsZDhPT/GmwcH5hKPucF/n5eoWsRDIVIccZ
-        UG3I1ZaSoFiamuw6ufcr3j9let44zJo=
+        bh=u0D25lrydV5pgCL2UW7ClhL4B2jVhF1wW2P69JAD3nQ=;
+        b=HORQKTADQxv6awAXGltrcf++UOJZUAO6LmrQxE/3Bt68rXUcyi4zPI9mmNm37aEMMzi98m
+        YbWi5wnYYzhxIb/gbyMF8mG22uG5NLax6iaAMJfB5ZyAhD4O2dd0fLUj2rfhO5torHi1+K
+        rVldtLB9uUrKr4TURx0kcHiipJfCqyo=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-165-u-l-WUE8NduLFZsvKrrV_g-1; Tue, 13 Oct 2020 09:44:39 -0400
-X-MC-Unique: u-l-WUE8NduLFZsvKrrV_g-1
+ us-mta-285-5Okw04gxPbKY6v_nUW0L1A-1; Tue, 13 Oct 2020 09:50:01 -0400
+X-MC-Unique: 5Okw04gxPbKY6v_nUW0L1A-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8C874188C120;
-        Tue, 13 Oct 2020 13:44:38 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 23B13ADC27
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2020 13:50:00 +0000 (UTC)
 Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 793F15D9CD;
-        Tue, 13 Oct 2020 13:44:31 +0000 (UTC)
-Date:   Tue, 13 Oct 2020 09:44:29 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B72455D9CD;
+        Tue, 13 Oct 2020 13:49:59 +0000 (UTC)
+Date:   Tue, 13 Oct 2020 09:49:57 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v6 3/3] mkfs: make use of xfs_validate_stripe_geometry()
-Message-ID: <20201013134429.GF966478@bfoster>
-References: <20201013040627.13932-1-hsiangkao@redhat.com>
- <20201013040627.13932-4-hsiangkao@redhat.com>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v11 4/4] xfs: replace mrlock_t with rw_semaphores
+Message-ID: <20201013134957.GG966478@bfoster>
+References: <20201009195515.82889-1-preichl@redhat.com>
+ <20201009195515.82889-5-preichl@redhat.com>
+ <20201012160412.GK917726@bfoster>
+ <ffc87f66-759d-ac3c-5749-0972aa41924f@redhat.com>
+ <20201013110427.GB966478@bfoster>
+ <d780c465-a305-c3d2-e583-82d70a1f964e@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201013040627.13932-4-hsiangkao@redhat.com>
+In-Reply-To: <d780c465-a305-c3d2-e583-82d70a1f964e@redhat.com>
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 13, 2020 at 12:06:27PM +0800, Gao Xiang wrote:
-> Check stripe numbers in calc_stripe_factors() by using
-> xfs_validate_stripe_geometry().
+On Tue, Oct 13, 2020 at 03:39:03PM +0200, Pavel Reichl wrote:
 > 
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  libxfs/libxfs_api_defs.h |  1 +
->  mkfs/xfs_mkfs.c          | 23 +++++++----------------
->  2 files changed, 8 insertions(+), 16 deletions(-)
 > 
-> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-> index e7e42e93..306d0deb 100644
-> --- a/libxfs/libxfs_api_defs.h
-> +++ b/libxfs/libxfs_api_defs.h
-> @@ -188,6 +188,7 @@
->  #define xfs_trans_roll_inode		libxfs_trans_roll_inode
->  #define xfs_trans_roll			libxfs_trans_roll
->  
-> +#define xfs_validate_stripe_geometry	libxfs_validate_stripe_geometry
->  #define xfs_verify_agbno		libxfs_verify_agbno
->  #define xfs_verify_agino		libxfs_verify_agino
->  #define xfs_verify_cksum		libxfs_verify_cksum
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 8fe149d7..aec40c1f 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -2305,12 +2305,6 @@ _("both data su and data sw options must be specified\n"));
->  			usage();
->  		}
->  
-> -		if (dsu % cfg->sectorsize) {
-> -			fprintf(stderr,
-> -_("data su must be a multiple of the sector size (%d)\n"), cfg->sectorsize);
-> -			usage();
-> -		}
-> -
->  		dsunit  = (int)BTOBBT(dsu);
->  		big_dswidth = (long long int)dsunit * dsw;
->  		if (big_dswidth > INT_MAX) {
-> @@ -2322,13 +2316,9 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
->  		dswidth = big_dswidth;
->  	}
->  
-> -	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
-> -	    (dsunit && (dswidth % dsunit != 0))) {
-> -		fprintf(stderr,
-> -_("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
-> -			dswidth, dsunit);
-> +	if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit), BBTOB(dswidth),
-> +					     cfg->sectorsize, false))
->  		usage();
-> -	}
->  
->  	/* If sunit & swidth were manually specified as 0, same as noalign */
->  	if ((cli_opt_set(&dopts, D_SUNIT) || cli_opt_set(&dopts, D_SU)) &&
-> @@ -2344,11 +2334,12 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
->  
->  	/* if no stripe config set, use the device default */
->  	if (!dsunit) {
-> -		/* Ignore nonsense from device.  XXX add more validation */
-> -		if (ft->dsunit && ft->dswidth == 0) {
-> +		/* Ignore nonsense from device report. */
-> +		if (!libxfs_validate_stripe_geometry(NULL, BBTOB(ft->dsunit),
-> +				BBTOB(ft->dswidth), 0, true)) {
->  			fprintf(stderr,
-> -_("%s: Volume reports stripe unit of %d bytes and stripe width of 0, ignoring.\n"),
-> -				progname, BBTOB(ft->dsunit));
-> +_("%s: Volume reports invalid stripe unit (%d) and stripe width (%d), ignoring.\n"),
-> +				progname, BBTOB(ft->dsunit), BBTOB(ft->dswidth));
->  			ft->dsunit = 0;
->  			ft->dswidth = 0;
->  		} else {
-> -- 
-> 2.18.1
+> On 10/13/20 1:04 PM, Brian Foster wrote:
+> > On Mon, Oct 12, 2020 at 10:44:38PM +0200, Pavel Reichl wrote:
+> >>
+> >>
+> >> On 10/12/20 6:04 PM, Brian Foster wrote:
+> >>> ...
+> >>>> @@ -2863,8 +2875,20 @@ xfs_btree_split(
+> >>>>  	args.done = &done;
+> >>>>  	args.kswapd = current_is_kswapd();
+> >>>>  	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
+> >>>> +	/*
+> >>>> +	 * Update lockdep's ownership information to reflect that we
+> >>>> +	 * will be transferring the ilock from this thread to the
+> >>>> +	 * worker.
+> >>>> +	 */
+> >>>
+> >>> Can we update this comment to explain why we need to do this? E.g., I'm
+> >>> assuming there's a lockdep splat somewhere down in the split worker
+> >>> without it, but it's not immediately clear where and so it might not be
+> >>> obvious if we're ever able to remove this.
+> >>
+> >> Hi, would something like this work for you?
+> >>
+> >> 	/*
+> >> +	 * Update lockdep's ownership information to reflect that we
+> >> +	 * will be transferring the ilock from this thread to the
+> >> +	 * worker (xfs_btree_split_worker() run via queue_work()).
+> >> +	 * If the ownership transfer would not happen lockdep would
+> >> +	 * assert in the worker thread because the ilock would be owned
+> >> +	 * by the original thread.
+> >> +	 */
+> >>
+> > 
+> > That doesn't really answer the question. Do you have a record of the
+> > lockdep error message that occurs without this state transfer, by
+> > chance?
+> > 
+> > Brian
+> 
+> Hi, please see this mail from Darrick - he hit the issue first - http://mail.spinics.net/lists/linux-xfs/msg38967.html
+> 
+
+Ah, I see.. thanks. I was thinking there was some kind of lock imbalance
+warning or something, but in reality I think something like the
+following is sufficient:
+
+"Update lockdep's ownership information to reflect transfer of the ilock
+from the current task to the worker. Otherwise assertions that the lock
+is held (such as when logging the inode) might fail due to incorrect
+task owner state."
+
+Brian
+
+> > 
+> >>
+> > 
 > 
 
