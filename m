@@ -2,130 +2,196 @@ Return-Path: <SRS0=8N9+=DU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 647A2C433DF
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 13:39:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18A07C433E7
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 13:44:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1606023A55
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 13:39:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FAA624758
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Oct 2020 13:44:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hczToDis"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JjENBZMW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728751AbgJMNjN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Oct 2020 09:39:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:41331 "EHLO
+        id S2387694AbgJMNo2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Oct 2020 09:44:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:53364 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727245AbgJMNjN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Oct 2020 09:39:13 -0400
+        by vger.kernel.org with ESMTP id S2387620AbgJMNo2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Oct 2020 09:44:28 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602596351;
+        s=mimecast20190719; t=1602596667;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=HAKLqqauqS4zwdKijA+w7JOzEroZGMBbaHkwkcgcNbI=;
-        b=hczToDis4JxVChjZfE3rcUrR6ddCyBEbdUKKseHgEL9mArUk/zgRQJqqHc9feQoX9HLgUL
-        P+jMWA43S/FKgpatpaOWrEscXxoQlZTo2s0vpe2Z1hJ0aUrqrfDXUgtzyO48W3XGFreQBE
-        Q7n0hsG9QNY8A/jk8Ebt95Hrx7Ty7ds=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-561-idps9ECSOmyWrWZBv_sX-A-1; Tue, 13 Oct 2020 09:39:09 -0400
-X-MC-Unique: idps9ECSOmyWrWZBv_sX-A-1
-Received: by mail-wm1-f69.google.com with SMTP id z7so2232611wme.8
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Oct 2020 06:39:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=HAKLqqauqS4zwdKijA+w7JOzEroZGMBbaHkwkcgcNbI=;
-        b=YB9MqZHLdrAT9K/Fql2qvLBh/hInvFRI3N7hFB5PfZf4+shT8Y+/O+OJJXDYRF27Io
-         M4kRSIEwiX5hBWA7a0Hhxla3Xoi+yxq/zEayqLNC3QsgcntzqbtrA5ZcQ3RinxNbKjfd
-         tFJJ6LwrWamnZqAY0LD9J396zy82jIflYWPAWfXdeGRZ8BgeY6+IqWuusdMz77f5Qhu9
-         nEvdXK2NHilfm5IKp/FwC62uEGMSftDU9WV/f6/lbf//ajCwocYl24kz0GBSNp97VUj+
-         Q6uZ1UD7+l59dLYkQz76laNFK5n5JlpilPvGRDyIGXdVL/sqJN6+gu62xV463fVYIICg
-         Ai5Q==
-X-Gm-Message-State: AOAM533Fk7/r6bSAVGKFsswGCf5raFlzC373VlSA6vufq9PREwMfluO3
-        Y0h/awRXhRpTn0d1yQ1sleOhnYOsdC5xVdFtePgnAcZO1VoWkWLai8VGcaDGk9B6lzkMM20bzDa
-        7fkvmloBz0Q3Sq8vZFCVZ
-X-Received: by 2002:a1c:2905:: with SMTP id p5mr16229983wmp.187.1602596347268;
-        Tue, 13 Oct 2020 06:39:07 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyzSOocnvQ34Mmlo7bCdJCXHUOntHiINgwQ8JQXh0WzHrt58krXXsfbv5i/CDJr4AZdZfZXoA==
-X-Received: by 2002:a1c:2905:: with SMTP id p5mr16229889wmp.187.1602596346051;
-        Tue, 13 Oct 2020 06:39:06 -0700 (PDT)
-Received: from localhost.localdomain ([84.19.91.81])
-        by smtp.gmail.com with ESMTPSA id 13sm26418050wmk.20.2020.10.13.06.39.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 13 Oct 2020 06:39:04 -0700 (PDT)
-Subject: Re: [PATCH v11 4/4] xfs: replace mrlock_t with rw_semaphores
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20201009195515.82889-1-preichl@redhat.com>
- <20201009195515.82889-5-preichl@redhat.com> <20201012160412.GK917726@bfoster>
- <ffc87f66-759d-ac3c-5749-0972aa41924f@redhat.com>
- <20201013110427.GB966478@bfoster>
-From:   Pavel Reichl <preichl@redhat.com>
-Message-ID: <d780c465-a305-c3d2-e583-82d70a1f964e@redhat.com>
-Date:   Tue, 13 Oct 2020 15:39:03 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.1
+        bh=o6u45f194HLj0LglCkbehExUEI4TfmIU4dOq8rG3VVA=;
+        b=JjENBZMWKxB3V6Hc8z62a1s8ueGk3AN+eCZ5ApP9LoYzW8gXFxcMBFXvWBIqDFF8JMdMTN
+        497mXYH9HO3sDhIULm1kTlaVWu9iRvVCFSZjQWTSkC3pTXMycDsMuR6teC6JBCrBrXhmQ2
+        ywconHOTMiBD8+tirIOufu6FOTDgZ7E=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-503-NadZeOszPXG1NFszE4OpOA-1; Tue, 13 Oct 2020 09:44:25 -0400
+X-MC-Unique: NadZeOszPXG1NFszE4OpOA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E1BC0803F4D;
+        Tue, 13 Oct 2020 13:44:23 +0000 (UTC)
+Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id AB15D5C1C2;
+        Tue, 13 Oct 2020 13:44:13 +0000 (UTC)
+Date:   Tue, 13 Oct 2020 09:44:11 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs: introduce xfs_validate_stripe_geometry()
+Message-ID: <20201013134411.GE966478@bfoster>
+References: <20201013034853.28236-1-hsiangkao@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20201013110427.GB966478@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201013034853.28236-1-hsiangkao@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 10/13/20 1:04 PM, Brian Foster wrote:
-> On Mon, Oct 12, 2020 at 10:44:38PM +0200, Pavel Reichl wrote:
->>
->>
->> On 10/12/20 6:04 PM, Brian Foster wrote:
->>> ...
->>>> @@ -2863,8 +2875,20 @@ xfs_btree_split(
->>>>  	args.done = &done;
->>>>  	args.kswapd = current_is_kswapd();
->>>>  	INIT_WORK_ONSTACK(&args.work, xfs_btree_split_worker);
->>>> +	/*
->>>> +	 * Update lockdep's ownership information to reflect that we
->>>> +	 * will be transferring the ilock from this thread to the
->>>> +	 * worker.
->>>> +	 */
->>>
->>> Can we update this comment to explain why we need to do this? E.g., I'm
->>> assuming there's a lockdep splat somewhere down in the split worker
->>> without it, but it's not immediately clear where and so it might not be
->>> obvious if we're ever able to remove this.
->>
->> Hi, would something like this work for you?
->>
->> 	/*
->> +	 * Update lockdep's ownership information to reflect that we
->> +	 * will be transferring the ilock from this thread to the
->> +	 * worker (xfs_btree_split_worker() run via queue_work()).
->> +	 * If the ownership transfer would not happen lockdep would
->> +	 * assert in the worker thread because the ilock would be owned
->> +	 * by the original thread.
->> +	 */
->>
+On Tue, Oct 13, 2020 at 11:48:53AM +0800, Gao Xiang wrote:
+> Introduce a common helper to consolidate stripe validation process.
+> Also make kernel code xfs_validate_sb_common() use it first.
 > 
-> That doesn't really answer the question. Do you have a record of the
-> lockdep error message that occurs without this state transfer, by
-> chance?
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+> v1: https://lore.kernel.org/r/20201009050546.32174-1-hsiangkao@redhat.com
 > 
-> Brian
-
-Hi, please see this mail from Darrick - he hit the issue first - http://mail.spinics.net/lists/linux-xfs/msg38967.html
-
+> changes since v1:
+>  - rename the helper to xfs_validate_stripe_geometry() (Brian);
+>  - drop a new added trailing newline in xfs_sb.c (Brian);
+>  - add a "bool silent" argument to avoid too many error messages (Brian).
 > 
->>
+>  fs/xfs/libxfs/xfs_sb.c | 70 +++++++++++++++++++++++++++++++++++-------
+>  fs/xfs/libxfs/xfs_sb.h |  3 ++
+>  2 files changed, 62 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 5aeafa59ed27..9178715ded45 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -360,21 +360,18 @@ xfs_validate_sb_common(
+>  		}
+>  	}
+>  
+> -	if (sbp->sb_unit) {
+> -		if (!xfs_sb_version_hasdalign(sbp) ||
+> -		    sbp->sb_unit > sbp->sb_width ||
+> -		    (sbp->sb_width % sbp->sb_unit) != 0) {
+> -			xfs_notice(mp, "SB stripe unit sanity check failed");
+> -			return -EFSCORRUPTED;
+> -		}
+> -	} else if (xfs_sb_version_hasdalign(sbp)) {
+> +	/*
+> +	 * Either (sb_unit and !hasdalign) or (!sb_unit and hasdalign)
+> +	 * would imply the image is corrupted.
+> +	 */
+> +	if (!sbp->sb_unit ^ !xfs_sb_version_hasdalign(sbp)) {
+
+This can be simplified to drop the negations (!), right?
+
+>  		xfs_notice(mp, "SB stripe alignment sanity check failed");
+>  		return -EFSCORRUPTED;
+> -	} else if (sbp->sb_width) {
+> -		xfs_notice(mp, "SB stripe width sanity check failed");
+> -		return -EFSCORRUPTED;
+>  	}
+>  
+> +	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
+> +			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
+> +		return -EFSCORRUPTED;
+>  
+>  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+>  	    sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE) {
+> @@ -1233,3 +1230,54 @@ xfs_sb_get_secondary(
+>  	*bpp = bp;
+>  	return 0;
+>  }
+> +
+> +/*
+> + * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
+> + * so users won't be confused by values in error messages.
+> + */
+> +bool
+> +xfs_validate_stripe_geometry(
+> +	struct xfs_mount	*mp,
+> +	__s64			sunit,
+> +	__s64			swidth,
+> +	int			sectorsize,
+> +	bool			silent)
+> +{
+> +	if (sectorsize && sunit % sectorsize) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"stripe unit (%lld) must be a multiple of the sector size (%d)",
+> +				   sunit, sectorsize);
+> +		return false;
+> +	}
+> +
+> +	if (sunit && !swidth) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"invalid stripe unit (%lld) and stripe width of 0", sunit);
+> +		return false;
+> +	}
+> +
+> +	if (!sunit && swidth) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"invalid stripe width (%lld) and stripe unit of 0", swidth);
+> +		return false;
+> +	}
+> +
+> +	if (sunit > swidth) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
+> +		return false;
+> +	}
+> +
+> +	if (sunit && (swidth % sunit)) {
+
+It might be good to use (or not) params consistently. I.e., the
+sectorsize check earlier in the function has similar logic structure but
+drops the params.
+
+Those nits aside:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"stripe width (%lld) must be a multiple of the stripe unit (%lld)",
+> +				   swidth, sunit);
+> +		return false;
+> +	}
+> +	return true;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index 92465a9a5162..f79f9dc632b6 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -42,4 +42,7 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+>  				struct xfs_trans *tp, xfs_agnumber_t agno,
+>  				struct xfs_buf **bpp);
+>  
+> +extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
+> +		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
+> +
+>  #endif	/* __XFS_SB_H__ */
+> -- 
+> 2.18.1
 > 
 
