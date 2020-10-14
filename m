@@ -5,43 +5,43 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FF36C43467
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:21:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F25F7C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:22:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 102C620878
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:21:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9654F206E5
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:22:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="h2D+PCR8"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HPvt8zMz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730071AbgJNJVr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 05:21:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39944 "EHLO
+        id S1728697AbgJNJWS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 05:22:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730978AbgJNJUj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:20:39 -0400
+        with ESMTP id S1731148AbgJNJVw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:21:52 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF3F2C0F26E7;
-        Tue, 13 Oct 2020 20:04:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63EE4C0F26F7;
+        Tue, 13 Oct 2020 20:04:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=j56S9O9WrvJwFfp3jWhAG41igcUKnP5ChYtNlOLmqVw=; b=h2D+PCR8Gha6OcbuOB2GBMzhS0
-        gRUjdmkK723DckDKVFPqjMcduPz3oe6xBGPe5GSehH75/txbO92mgjSmEse+8HPoa2Yq379BRn+hZ
-        pTGxv+R0ZsvJe6iqLMcrvzPfj30EaZi7NAk9yJqHDDHsJW2C1HFyOFN5z4lXPAdxU+et8/LLMvC6b
-        /Mcy8Ya+xrko0fZggbRRzFLko98VDFJ5rvW3WBoyCPnCBSLvGbxKNWi6UOaopBgHMIYUCwZPjFE/E
-        OTp/mwMIFyH6YptVXd+l1UgFZZeH/fgsHWihD/tk74FyBPkxdDeHXUbstUHmpZ28aisEklqjgGMLy
-        4oG3MciA==;
+        bh=ucyxaJpq5naE3hSGBf22G2ayK5tvBlA2NbkHxseQKlE=; b=HPvt8zMzCQyt5wKS2Ww7Ob+sZW
+        E7D7PyVYARCgeOSDe8CmkA7OBFwi/FMzoqlYtKRbh/1CfzcOdjDdK7RXr3AomhCJZMmeejOGvTNv9
+        p3pKYIvE4cIRHLlZPBL6QxwI68394yopB3GtKEqoaITAe6ftDW+ZJJ1MhHF2w/AUPZzWgnytTZQdX
+        xC7H1Yw0zewTn/Xh+FG4Q23u5D6FKuhZrhjjLxs67dRwieGwRgCHco1O8HalCHuniPZGN0ifrgMas
+        KDOMUWhK8h8YGF3+OGu4+zZImILQte7C7e/SKoFD1YXLYd+Go30sw/2aikKIvkNdGfJSz5gJXrp+d
+        pCF1P8nw==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kSX55-0005i3-Ff; Wed, 14 Oct 2020 03:03:59 +0000
+        id 1kSX58-0005jc-Ry; Wed, 14 Oct 2020 03:04:02 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-mm@kvack.org
-Subject: [PATCH 01/14] fs: Support THPs in vfs_dedupe_file_range
-Date:   Wed, 14 Oct 2020 04:03:44 +0100
-Message-Id: <20201014030357.21898-2-willy@infradead.org>
+Subject: [PATCH 14/14] xfs: Support THPs
+Date:   Wed, 14 Oct 2020 04:03:57 +0100
+Message-Id: <20201014030357.21898-15-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20201014030357.21898-1-willy@infradead.org>
 References: <20201014030357.21898-1-willy@infradead.org>
@@ -51,49 +51,40 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-We may get tail pages returned from vfs_dedupe_get_page().  If we do,
-we have to call page_mapping() instead of dereferencing page->mapping
-directly.  We may also deadlock trying to lock the page twice if they're
-subpages of the same THP, so compare the head pages instead.
+There is one place which assumes the size of a page; fix it.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/read_write.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c  | 2 +-
+ fs/xfs/xfs_super.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/read_write.c b/fs/read_write.c
-index 19f5c4bf75aa..ead675fef582 100644
---- a/fs/read_write.c
-+++ b/fs/read_write.c
-@@ -1604,6 +1604,8 @@ static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
-  */
- static void vfs_lock_two_pages(struct page *page1, struct page *page2)
- {
-+	page1 = thp_head(page1);
-+	page2 = thp_head(page2);
- 	/* Always lock in order of increasing index. */
- 	if (page1->index > page2->index)
- 		swap(page1, page2);
-@@ -1616,6 +1618,8 @@ static void vfs_lock_two_pages(struct page *page1, struct page *page2)
- /* Unlock two pages, being careful not to unlock the same page twice. */
- static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
- {
-+	page1 = thp_head(page1);
-+	page2 = thp_head(page2);
- 	unlock_page(page1);
- 	if (page1 != page2)
- 		unlock_page(page2);
-@@ -1670,8 +1674,8 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
- 		 * someone is invalidating pages on us and we lose.
- 		 */
- 		if (!PageUptodate(src_page) || !PageUptodate(dest_page) ||
--		    src_page->mapping != src->i_mapping ||
--		    dest_page->mapping != dest->i_mapping) {
-+		    page_mapping(src_page) != src->i_mapping ||
-+		    page_mapping(dest_page) != dest->i_mapping) {
- 			same = false;
- 			goto unlock;
- 		}
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 55d126d4e096..20968842b2f0 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -548,7 +548,7 @@ xfs_discard_page(
+ 	if (error && !XFS_FORCED_SHUTDOWN(mp))
+ 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+ out_invalidate:
+-	iomap_invalidatepage(page, 0, PAGE_SIZE);
++	iomap_invalidatepage(page, 0, thp_size(page));
+ }
+ 
+ static const struct iomap_writeback_ops xfs_writeback_ops = {
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 71ac6c1cdc36..4b6e1cfc57a8 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1840,7 +1840,7 @@ static struct file_system_type xfs_fs_type = {
+ 	.init_fs_context	= xfs_init_fs_context,
+ 	.parameters		= xfs_fs_parameters,
+ 	.kill_sb		= kill_block_super,
+-	.fs_flags		= FS_REQUIRES_DEV,
++	.fs_flags		= FS_REQUIRES_DEV | FS_THP_SUPPORT,
+ };
+ MODULE_ALIAS_FS("xfs");
+ 
 -- 
 2.28.0
 
