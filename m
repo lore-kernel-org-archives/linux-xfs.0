@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F25F7C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:22:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6B2EC4363D
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:22:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9654F206E5
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:22:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BD8E206FB
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:22:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="HPvt8zMz"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JtDbuy8/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728697AbgJNJWS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 05:22:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39938 "EHLO
+        id S1728922AbgJNJW1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 05:22:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731148AbgJNJVw (ORCPT
+        with ESMTP id S1731143AbgJNJVw (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:21:52 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63EE4C0F26F7;
-        Tue, 13 Oct 2020 20:04:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69B6FC0F26EA;
+        Tue, 13 Oct 2020 20:04:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=ucyxaJpq5naE3hSGBf22G2ayK5tvBlA2NbkHxseQKlE=; b=HPvt8zMzCQyt5wKS2Ww7Ob+sZW
-        E7D7PyVYARCgeOSDe8CmkA7OBFwi/FMzoqlYtKRbh/1CfzcOdjDdK7RXr3AomhCJZMmeejOGvTNv9
-        p3pKYIvE4cIRHLlZPBL6QxwI68394yopB3GtKEqoaITAe6ftDW+ZJJ1MhHF2w/AUPZzWgnytTZQdX
-        xC7H1Yw0zewTn/Xh+FG4Q23u5D6FKuhZrhjjLxs67dRwieGwRgCHco1O8HalCHuniPZGN0ifrgMas
-        KDOMUWhK8h8YGF3+OGu4+zZImILQte7C7e/SKoFD1YXLYd+Go30sw/2aikKIvkNdGfJSz5gJXrp+d
-        pCF1P8nw==;
+        bh=zaip0vMsJG7AN9Csr/40q0m3O27lGYg2jcMuOG9Osec=; b=JtDbuy8/xiVmCy2QAhqgDwxUr0
+        sT6664qzppcyCFLAJGVc8Y89wkgGRTAZZJ2mEPQXExHsHocwSSx6IfyfF2FhdvBGgXd1qJwS3z11D
+        iEKYLKzhw5utaoblG7UL0HyJCVJMvr8raUUZNCeH8XC5l3hN6milMSz0eiWA+aWQCAriDAyFvegJs
+        ew8oZA8iWrcX3TveFeERKgYVZ+l6HJe0xkNrrKeFXzKqO7KncNwHIHbNjJHIvQ1CAcOFEzgQTkqq1
+        SGgkgyWqmfL2uHtkPa9rYRaLyUDUdsw9B9HlydFXqNTzTlvG8YuMUgnhYYbOi3Xm3WwuhB80ePWa8
+        3GPIRuFw==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kSX58-0005jc-Ry; Wed, 14 Oct 2020 03:04:02 +0000
+        id 1kSX55-0005iI-Th; Wed, 14 Oct 2020 03:03:59 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-mm@kvack.org
-Subject: [PATCH 14/14] xfs: Support THPs
-Date:   Wed, 14 Oct 2020 04:03:57 +0100
-Message-Id: <20201014030357.21898-15-willy@infradead.org>
+Subject: [PATCH 03/14] iomap: Support THPs in BIO completion path
+Date:   Wed, 14 Oct 2020 04:03:46 +0100
+Message-Id: <20201014030357.21898-4-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20201014030357.21898-1-willy@infradead.org>
 References: <20201014030357.21898-1-willy@infradead.org>
@@ -51,40 +51,131 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is one place which assumes the size of a page; fix it.
+bio_for_each_segment_all() iterates once per regular sized page.
+Use bio_for_each_bvec_all() to iterate once per bvec and handle
+merged THPs ourselves, instead of teaching the block layer about THPs.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/xfs/xfs_aops.c  | 2 +-
- fs/xfs/xfs_super.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ fs/iomap/buffered-io.c | 62 ++++++++++++++++++++++++++++++------------
+ 1 file changed, 44 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 55d126d4e096..20968842b2f0 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -548,7 +548,7 @@ xfs_discard_page(
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
--	iomap_invalidatepage(page, 0, PAGE_SIZE);
-+	iomap_invalidatepage(page, 0, thp_size(page));
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 3e1eb40a73fd..935468d79d9d 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -167,32 +167,45 @@ iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+ 		SetPageUptodate(page);
  }
  
- static const struct iomap_writeback_ops xfs_writeback_ops = {
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 71ac6c1cdc36..4b6e1cfc57a8 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1840,7 +1840,7 @@ static struct file_system_type xfs_fs_type = {
- 	.init_fs_context	= xfs_init_fs_context,
- 	.parameters		= xfs_fs_parameters,
- 	.kill_sb		= kill_block_super,
--	.fs_flags		= FS_REQUIRES_DEV,
-+	.fs_flags		= FS_REQUIRES_DEV | FS_THP_SUPPORT,
- };
- MODULE_ALIAS_FS("xfs");
+-static void
+-iomap_read_page_end_io(struct bio_vec *bvec, int error)
++static void iomap_finish_page_read(struct page *page, size_t offset,
++		size_t length, int error)
+ {
+-	struct page *page = bvec->bv_page;
+ 	struct iomap_page *iop = to_iomap_page(page);
  
+ 	if (unlikely(error)) {
+ 		ClearPageUptodate(page);
+ 		SetPageError(page);
+ 	} else {
+-		iomap_set_range_uptodate(page, bvec->bv_offset, bvec->bv_len);
++		iomap_set_range_uptodate(page, offset, length);
+ 	}
+ 
+-	if (!iop || atomic_sub_and_test(bvec->bv_len, &iop->read_bytes_pending))
++	if (!iop || atomic_sub_and_test(length, &iop->read_bytes_pending))
+ 		unlock_page(page);
+ }
+ 
+-static void
+-iomap_read_end_io(struct bio *bio)
++static void iomap_finish_bvec_read(struct page *page, size_t offset,
++		size_t length, int error)
++{
++	while (length > 0) {
++		size_t count = min(thp_size(page) - offset, length);
++
++		iomap_finish_page_read(page, offset, count, error);
++
++		page += (offset + count) / PAGE_SIZE;
++		offset = 0;
++		length -= count;
++	}
++}
++
++static void iomap_read_end_io(struct bio *bio)
+ {
+-	int error = blk_status_to_errno(bio->bi_status);
++	int i, error = blk_status_to_errno(bio->bi_status);
+ 	struct bio_vec *bvec;
+-	struct bvec_iter_all iter_all;
+ 
+-	bio_for_each_segment_all(bvec, bio, iter_all)
+-		iomap_read_page_end_io(bvec, error);
++	bio_for_each_bvec_all(bvec, bio, i)
++		iomap_finish_bvec_read(bvec->bv_page, bvec->bv_offset,
++				bvec->bv_len, error);
++
+ 	bio_put(bio);
+ }
+ 
+@@ -1035,9 +1048,8 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
+ }
+ EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
+ 
+-static void
+-iomap_finish_page_writeback(struct inode *inode, struct page *page,
+-		int error, unsigned int len)
++static void iomap_finish_page_write(struct inode *inode, struct page *page,
++		unsigned int len, int error)
+ {
+ 	struct iomap_page *iop = to_iomap_page(page);
+ 
+@@ -1053,6 +1065,20 @@ iomap_finish_page_writeback(struct inode *inode, struct page *page,
+ 		end_page_writeback(page);
+ }
+ 
++static void iomap_finish_bvec_write(struct inode *inode, struct page *page,
++		size_t offset, size_t length, int error)
++{
++	while (length > 0) {
++		size_t count = min(thp_size(page) - offset, length);
++
++		iomap_finish_page_write(inode, page, count, error);
++
++		page += (offset + count) / PAGE_SIZE;
++		offset = 0;
++		length -= count;
++	}
++}
++
+ /*
+  * We're now finished for good with this ioend structure.  Update the page
+  * state, release holds on bios, and finally free up memory.  Do not use the
+@@ -1070,7 +1096,7 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+ 
+ 	for (bio = &ioend->io_inline_bio; bio; bio = next) {
+ 		struct bio_vec *bv;
+-		struct bvec_iter_all iter_all;
++		int i;
+ 
+ 		/*
+ 		 * For the last bio, bi_private points to the ioend, so we
+@@ -1082,9 +1108,9 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+ 			next = bio->bi_private;
+ 
+ 		/* walk each page on bio, ending page IO on them */
+-		bio_for_each_segment_all(bv, bio, iter_all)
+-			iomap_finish_page_writeback(inode, bv->bv_page, error,
+-					bv->bv_len);
++		bio_for_each_bvec_all(bv, bio, i)
++			iomap_finish_bvec_write(inode, bv->bv_page,
++					bv->bv_offset, bv->bv_len, error);
+ 		bio_put(bio);
+ 	}
+ 	/* The ioend has been freed by bio_put() */
 -- 
 2.28.0
 
