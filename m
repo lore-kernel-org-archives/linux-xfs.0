@@ -7,148 +7,156 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2F0AC433E7
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 16:35:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B242EC433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 16:39:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E7B822200
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 16:35:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 423B920B1F
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 16:39:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wvB6xYwb"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lAUdkzmq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728420AbgJNQfy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 12:35:54 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:44978 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727020AbgJNQfy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 12:35:54 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09EGUK9h088193;
-        Wed, 14 Oct 2020 16:35:50 GMT
+        id S1727717AbgJNQjl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 12:39:41 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:45524 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726908AbgJNQjl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 12:39:41 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09EGTrZf134375;
+        Wed, 14 Oct 2020 16:39:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=80XHxqPbf1mTULW9cTZ44rDWhSCJ9qRVBLotqhPfHuw=;
- b=wvB6xYwbbSqwVnYr9TDYAtQw77RWPaKNN0QHBGKlrl5JxQksIGCYmKRC2rWAL4haLhpY
- +iAt901UE7MUocO5OdtT8cC1KOQCQmTpNXGbDw7F7Ck6o0xIhPPsL7VsWHJQ9EkQ7Ntx
- cup1mQ23wl7AGNAHANQFJQUS3PjoQI18sZIiTiLoVuvTiWwC7VUICZekOd13wM4+ftRx
- 5S82yJbhUAfPC5MJ4jB5fj130LG7k91W/Ts+sLDzj3r4Fnn6TSKyWA3Av/qc+0Cn/a5x
- am5e2eAE93tTipeutRUIjdp9awBOPg0AJ45iPzHUEYkDdlr5iiAccVv/mduA/WKwdbVQ Bw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 3434wkrjg0-1
+ bh=F4ZHy4aIkQEGNRieBuhfYbck9acmzjU5jbeOyjxyfZw=;
+ b=lAUdkzmqshPurUFMdyHh5A60OVYfn8lz/BaWUs1NoUgpDDu/Sz7CrEQRX/eTymg14+Kj
+ 3rrdaeoZ+sJQU3HxicYLrhr1COENdWM/CkVo1U82EmGkFhIz6MI8aNyRlGZhpBWdgSai
+ 0cixfEjVuE8BSgNhlP2UKotZozX57jg9HJF119n0HR+/F0wd2gSUbWhLe8bCkp2q1nZj
+ UIDY2uz9rLjFd8GI/F/XFzUjKvh2VdfBhbxyK5yJ5QMBZl6ze1n6aXZiQg2MFRkYuMde
+ a601AhnF98038M1HsdUTp8DPpD9lPIvX1HbxpGKlnmzyO/H56Z1ZK9TbSONfnV2XNNd1 tQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 343vaeewet-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 14 Oct 2020 16:35:50 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09EGVERk179032;
-        Wed, 14 Oct 2020 16:33:50 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 343pv0k44g-1
+        Wed, 14 Oct 2020 16:39:38 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09EGZYc8035504;
+        Wed, 14 Oct 2020 16:39:38 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 344by3wfes-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 14 Oct 2020 16:33:50 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09EGXnU3032612;
-        Wed, 14 Oct 2020 16:33:49 GMT
+        Wed, 14 Oct 2020 16:39:38 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09EGdb5S029949;
+        Wed, 14 Oct 2020 16:39:37 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 14 Oct 2020 09:33:48 -0700
-Date:   Wed, 14 Oct 2020 09:33:47 -0700
+        with ESMTP ; Wed, 14 Oct 2020 09:39:37 -0700
+Date:   Wed, 14 Oct 2020 09:39:36 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     "Matthew Wilcox (Oracle)" <willy@infradead.org>
 Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         linux-mm@kvack.org
-Subject: Re: [PATCH 05/14] iomap: Support THPs in invalidatepage
-Message-ID: <20201014163347.GI9832@magnolia>
+Subject: Re: [PATCH 07/14] iomap: Support THPs in readpage
+Message-ID: <20201014163936.GJ9832@magnolia>
 References: <20201014030357.21898-1-willy@infradead.org>
- <20201014030357.21898-6-willy@infradead.org>
+ <20201014030357.21898-8-willy@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201014030357.21898-6-willy@infradead.org>
+In-Reply-To: <20201014030357.21898-8-willy@infradead.org>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9773 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=904 mlxscore=0 spamscore=0
- adultscore=0 suspectscore=1 phishscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010140117
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
+ suspectscore=1 mlxscore=0 malwarescore=0 adultscore=0 bulkscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010140118
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9773 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 mlxscore=0
- malwarescore=0 phishscore=0 suspectscore=1 impostorscore=0 clxscore=1015
- spamscore=0 priorityscore=1501 bulkscore=0 adultscore=0 mlxlogscore=921
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 clxscore=1015
+ impostorscore=0 phishscore=0 malwarescore=0 bulkscore=0 priorityscore=1501
+ mlxscore=0 suspectscore=1 spamscore=0 adultscore=0 lowpriorityscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010140117
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 14, 2020 at 04:03:48AM +0100, Matthew Wilcox (Oracle) wrote:
-> If we're punching a hole in a THP, we need to remove the per-page
-> iomap data as the THP is about to be split and each page will need
-> its own.  This means that writepage can now come across a page with
-> no iop allocated, so remove the assertion that there is already one,
-> and just create one (with the uptodate bits set) if there isn't one.
+On Wed, Oct 14, 2020 at 04:03:50AM +0100, Matthew Wilcox (Oracle) wrote:
+> The VFS only calls readpage if readahead has encountered an error.
+> Assume that any error requires the page to be split, and attempt to
+> do so.
 > 
 > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 > ---
->  fs/iomap/buffered-io.c | 12 ++++++++----
->  1 file changed, 8 insertions(+), 4 deletions(-)
+>  fs/iomap/buffered-io.c | 39 +++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 37 insertions(+), 2 deletions(-)
 > 
 > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index 95ac66731297..4633ebd03a3f 100644
+> index 4ea6c601a183..ca305fbaf811 100644
 > --- a/fs/iomap/buffered-io.c
 > +++ b/fs/iomap/buffered-io.c
-> @@ -60,6 +60,8 @@ iomap_page_create(struct inode *inode, struct page *page)
->  	iop = kzalloc(struct_size(iop, uptodate, BITS_TO_LONGS(nr_blocks)),
->  			GFP_NOFS | __GFP_NOFAIL);
->  	spin_lock_init(&iop->uptodate_lock);
-> +	if (PageUptodate(page))
-> +		bitmap_fill(iop->uptodate, nr_blocks);
->  	attach_page_private(page, iop);
->  	return iop;
+> @@ -343,15 +343,50 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  	return pos - orig_pos + plen;
 >  }
-> @@ -494,10 +496,14 @@ iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
->  	 * If we are invalidating the entire page, clear the dirty state from it
->  	 * and release it to avoid unnecessary buildup of the LRU.
->  	 */
-> -	if (offset == 0 && len == PAGE_SIZE) {
-> +	if (offset == 0 && len == thp_size(page)) {
->  		WARN_ON_ONCE(PageWriteback(page));
->  		cancel_dirty_page(page);
->  		iomap_page_release(page);
-> +	} else if (PageTransHuge(page)) {
-> +		/* Punching a hole in a THP requires releasing the iop */
-> +		WARN_ON_ONCE(!PageUptodate(page) && PageDirty(page));
-> +		iomap_page_release(page);
->  	}
->  }
->  EXPORT_SYMBOL_GPL(iomap_invalidatepage);
-> @@ -1363,14 +1369,13 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  		struct writeback_control *wbc, struct inode *inode,
->  		struct page *page, u64 end_offset)
->  {
-> -	struct iomap_page *iop = to_iomap_page(page);
-> +	struct iomap_page *iop = iomap_page_create(inode, page);
->  	struct iomap_ioend *ioend, *next;
->  	unsigned len = i_blocksize(inode);
->  	u64 file_offset; /* file offset of page */
->  	int error = 0, count = 0, i;
->  	LIST_HEAD(submit_list);
 >  
-> -	WARN_ON_ONCE(i_blocks_per_page(inode, page) > 1 && !iop);
->  	WARN_ON_ONCE(iop && atomic_read(&iop->write_bytes_pending) != 0);
->  
->  	/*
-> @@ -1415,7 +1420,6 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
->  			 */
->  			if (wpc->ops->discard_page)
->  				wpc->ops->discard_page(page);
-> -			ClearPageUptodate(page);
+> +/*
+> + * The page that was passed in has become Uptodate.  This may be due to
+> + * the storage being synchronous or due to a page split finding the page
+> + * is actually uptodate.  The page is still locked.
+> + * Lift this into the VFS at some point.
+> + */
+> +#define AOP_UPDATED_PAGE       (AOP_TRUNCATED_PAGE + 1)
 
-Er, I don't get it -- why do we now leave the page up to date after
-writeback fails?
+Er... why not lift it now?
+
+"Because touching fs.h causes the whole kernel to be rebuilt and that's
+annoying"? :D
 
 --D
 
->  			unlock_page(page);
->  			goto done;
->  		}
+> +static int iomap_split_page(struct inode *inode, struct page *page)
+> +{
+> +	struct page *head = thp_head(page);
+> +	bool uptodate = iomap_range_uptodate(inode, head,
+> +				(page - head) * PAGE_SIZE, PAGE_SIZE);
+> +
+> +	iomap_page_release(head);
+> +	if (split_huge_page(page) < 0) {
+> +		unlock_page(page);
+> +		return AOP_TRUNCATED_PAGE;
+> +	}
+> +	if (!uptodate)
+> +		return 0;
+> +	SetPageUptodate(page);
+> +	return AOP_UPDATED_PAGE;
+> +}
+> +
+>  int
+>  iomap_readpage(struct page *page, const struct iomap_ops *ops)
+>  {
+>  	struct iomap_readpage_ctx ctx = { .cur_page = page };
+> -	struct inode *inode = page->mapping->host;
+> +	struct inode *inode = thp_head(page)->mapping->host;
+>  	unsigned poff;
+>  	loff_t ret;
+>  
+> -	trace_iomap_readpage(page->mapping->host, 1);
+> +	trace_iomap_readpage(inode, 1);
+> +
+> +	if (PageTransCompound(page)) {
+> +		int status = iomap_split_page(inode, page);
+> +		if (status == AOP_UPDATED_PAGE) {
+> +			unlock_page(page);
+
+/me wonders why not do the unlock in iomap_split_page?
+
+--D
+
+> +			return 0;
+> +		}
+> +		if (status)
+> +			return status;
+> +	}
+>  
+>  	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
+>  		ret = iomap_apply(inode, page_offset(page) + poff,
 > -- 
 > 2.28.0
 > 
