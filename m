@@ -2,85 +2,141 @@ Return-Path: <SRS0=c4da=DV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DDBEC43457
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:30:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69EE8C433E7
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 13:00:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C131A206F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:30:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DE7720878
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 13:00:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="DS/5QqP2"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Giam7r/f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728211AbgJNJap (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 05:30:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39936 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729452AbgJNJTh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:19:37 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAED8C0F26E8;
-        Tue, 13 Oct 2020 20:04:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=JQvYb8jJr+MgXpV2DsLI4lPmkqQj4myz+oW6Z2HPnPY=; b=DS/5QqP2xlNHHOB0YjQa7JsRg5
-        T9p86exNHJEnsbNVDku2A/JVqG858e+rDx8zX7Fp+9dSxVbdcXHoyg5Q9GAD4Kd7C/H9pHPZE3fyk
-        9Tzs6UQOyGzU79rfcfGQ4QFs9KdvMJ7n4u2/E8bzXa7qWv46yHUKCRw7DZQ+4l26YW7b1q4gvb8Vi
-        Gss5X/7GIICn7Q84dy+s9aBwc94foz5Vscmy7M4C+e4AgoP8FPXGOis22SoO0EOQTX6HUuxyh6gRc
-        um00ulVxxKwgHs2MctRkTu5vDHt4yZF7G4Y3TkvyzzvmLXfXJeUzyRIohA0VV7KZThIS42/fExuxK
-        zbM4pCcw==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kSX55-0005i0-AC; Wed, 14 Oct 2020 03:03:59 +0000
-From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
-To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-mm@kvack.org
-Subject: [PATCH 00/14] Transparent Huge Page support for XFS
-Date:   Wed, 14 Oct 2020 04:03:43 +0100
-Message-Id: <20201014030357.21898-1-willy@infradead.org>
-X-Mailer: git-send-email 2.21.3
+        id S1730787AbgJNNAE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 09:00:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22801 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727187AbgJNNAE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 09:00:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602680402;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=5Fws2CJAKKqpnH//6QG5i7oTf+CdCwxvrk1+FjGnC3w=;
+        b=Giam7r/f7lDSTsLY2mwtPUVi9q7xUca7vvry/dyKdv/jASRWo6qKpT2iwV8sBYgGn0YiVN
+        BxYtQOOyCWMiXpXh0prQBFUd3vk/XmmadJ4gD/I0gkVjRQ19SSFelP1ZyAj9N0CqgLPtRG
+        bO3KYUk/bFd/1pqfvTzC/PzdUyu4N74=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-293-BAEt4dj-M3KgnMqF-8eO7Q-1; Wed, 14 Oct 2020 08:59:58 -0400
+X-MC-Unique: BAEt4dj-M3KgnMqF-8eO7Q-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D3477802B4B;
+        Wed, 14 Oct 2020 12:59:57 +0000 (UTC)
+Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6CC4C75138;
+        Wed, 14 Oct 2020 12:59:57 +0000 (UTC)
+Date:   Wed, 14 Oct 2020 08:59:55 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] iomap: use page dirty state to seek data over
+ unwritten extents
+Message-ID: <20201014125955.GA1109375@bfoster>
+References: <20201012140350.950064-1-bfoster@redhat.com>
+ <20201012140350.950064-2-bfoster@redhat.com>
+ <20201013225344.GA7391@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201013225344.GA7391@dread.disaster.area>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patchset includes all the filesystem and iomap changes needed to
-support transparent huge pages.  A separate patchset will enable the MM
-side of things.  I'm hoping Darrick agrees to take the first two patches
-through the iomap tree,
+On Wed, Oct 14, 2020 at 09:53:44AM +1100, Dave Chinner wrote:
+> On Mon, Oct 12, 2020 at 10:03:49AM -0400, Brian Foster wrote:
+> > iomap seek hole/data currently uses page Uptodate state to track
+> > data over unwritten extents. This is odd and unpredictable in that
+> > the existence of clean pages changes behavior. For example:
+> > 
+> >   $ xfs_io -fc "falloc 0 32k" -c "seek -d 0" \
+> > 	    -c "pread 16k 4k" -c "seek -d 0" /mnt/file
+> >   Whence  Result
+> >   DATA    EOF
+> >   ...
+> >   Whence  Result
+> >   DATA    16384
+> 
+> I don't think there is any way around this, because the page cache
+> lookup done by the seek hole/data code is an
+> unlocked operation and can race with other IO and operations. That
+> is, seek does not take IO serialisation locks at all so
+> read/write/page faults/fallocate/etc all run concurrently with it...
+> 
+> i.e. we get an iomap that is current at the time the iomap_begin()
+> call is made, but we don't hold any locks to stabilise that extent
+> range while we do a page cache traversal looking for cached data.
+> That means any region of the unwritten iomap can change state while
+> we are running the page cache seek.
+> 
 
-These patches are for review.  They don't currently apply to the iomap
-tree due to some conflicting patches.  I'll rebase on top of -rc1 once
-it's out (they do apply to 5.9).  
+Hm, Ok.. that makes sense..
 
-Matthew Wilcox (Oracle) (14):
-  fs: Support THPs in vfs_dedupe_file_range
-  fs: Make page_mkwrite_check_truncate thp-aware
-  iomap: Support THPs in BIO completion path
-  iomap: Support THPs in iomap_adjust_read_range
-  iomap: Support THPs in invalidatepage
-  iomap: Support THPs in iomap_is_partially_uptodate
-  iomap: Support THPs in readpage
-  iomap: Support THPs in readahead
-  iomap: Change iomap_write_begin calling convention
-  iomap: Handle THPs when writing to pages
-  iomap: Support THP writeback
-  iomap: Inline data shouldn't see THPs
-  iomap: Handle tail pages in iomap_page_mkwrite
-  xfs: Support THPs
+> We cannot determine what the data contents without major overhead,
+> and if we are seeking over a large unwritten extent covered by clean
+> pages that then gets partially written synchronously by another
+> concurrent write IO then we might trip across clean uptodate pages
+> with real data in them by the time the page cache scan gets to it.
+> 
+> Hence the only thing we are looking at here is whether there is data
+> present in the cache or not. As such, I think assuming that only
+> dirty/writeback pages contain actual user data in a seek data/hole
+> operation is a fundametnally incorrect premise.
+> 
 
- fs/iomap/buffered-io.c  | 307 +++++++++++++++++++++++++++-------------
- fs/read_write.c         |   8 +-
- fs/xfs/xfs_aops.c       |   2 +-
- fs/xfs/xfs_super.c      |   2 +-
- include/linux/pagemap.h |  10 +-
- 5 files changed, 219 insertions(+), 110 deletions(-)
+... but afaict this kind of thing is already possible because nothing
+stops a subsequently cleaned page (i.e., dirtied and written back) from
+also being dropped from cache before the scan finds it. IOW, I don't
+really see how this justifies using one page state check over another as
+opposed to pointing out the whole page scanning thing itself seems to be
+racy. Perhaps the reasoning wrt to seek is simply that we should either
+see one state (hole) or the next (data) and we don't terribly care much
+about seek being racy..?
 
--- 
-2.28.0
+My concern is more the issue described by patch 2. Note that patch 2
+doesn't necessarily depend on this one. The tradeoff without patch 1 is
+just that we'd explicitly zero and dirty any uptodate new EOF page as
+opposed to a page that was already dirty (or writeback).
+
+Truncate does hold iolock/mmaplock, but ISTM that is still not
+sufficient because of the same page reclaim issue mentioned above. E.g.,
+a truncate down lands on a dirty page over an unwritten block,
+iomap_truncate_page() receives the unwritten mapping, page is flushed
+and reclaimed (changing block state), iomap_truncate_page() (still using
+the unwritten mapping) has nothing to do without a page and thus stale
+data is exposed.
+
+ISTM that either the filesystem needs to be more involved with the
+stabilization of unwritten mappings in general or truncate page needs to
+do something along the lines of block_truncate_page() (which we used
+pre-iomap) and just explicitly zero/dirty the new page if the block is
+otherwise mapped. Thoughts? Other ideas?
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
 
