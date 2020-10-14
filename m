@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15F28C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:23:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8514C43457
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:24:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4393206E5
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:23:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FC13206E5
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:24:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ntibXZzm"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WykgJeVC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730080AbgJNJXQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 05:23:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39960 "EHLO
+        id S1730071AbgJNJYF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 05:24:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39936 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726694AbgJNJXN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:23:13 -0400
+        with ESMTP id S1731165AbgJNJV4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:21:56 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0C69C0F26F3;
-        Tue, 13 Oct 2020 20:04:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7154CC0F26EE;
+        Tue, 13 Oct 2020 20:04:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=1e91Asfpb/o4Ps9/wGE3CU5stqf4CIBV6Nn0nrPVRoM=; b=ntibXZzmDHAR1Q5xYvRs9f6j8q
-        V+UK0m3POBUBnFvAU5t3JdQqb6a8qPlC7Coi20lYHYuuo3HKxAgOu/mNQDLA3RuIiUfqNprN8Q9/f
-        ZjFzbOyVtUYuSjaHtT9I8X3K3/BEeTeXFGD97TWytMlkWRr0X09+5inotIdVRbXP/f2vC9qTVjM4s
-        XL8uQYGcqPRul2J8XcjOMhyWg50MZpzcj9hfl6kOEiZAyMXwP1B21DUOBvBHfRu2YPoOCTbPQgHU+
-        SaIszX8Kxy9TnAE12CDHCW2s9cEiu0obb5NP9Y5isBt0J8iAkAOLnfg8rqf6rakDtlPPXoxeCTO7R
-        tBbbxhwA==;
+        bh=0MPgJlidjQUsAxPbCUuZp6ht/vrWL0vbWyhDYWDy180=; b=WykgJeVCo2jBQUR9e914mBBRiL
+        t/lZ2mFkZxghyBxhOoN0gFG4v4rBCu0O8s+jjng4FgaJdj2EsMcCkCSkh+dr9VEj2ml19Jd+E4hC0
+        k0ZdVqKhuOx51oPCzYDDFk42yzL1+JCDjJv9Q2WG0rrLDeKgs66dLxPxhbn2kr1msHppQ+OYTROqV
+        ZlMhXD/1ztzOIQpwfCmWcMTEGtVLWtatHUrKfNq9lh46GEbr7tO2hR4IhKm0BJNbZtLvPE9JsqQ/K
+        eODQ+8dzCnkWwPNVForkhUZEQyL2kCn6wX5tSY96UCkylBbkGgdWExB+OkxMhemfbWANj/RQGCtOF
+        ix1iQOyw==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kSX58-0005jO-9K; Wed, 14 Oct 2020 03:04:02 +0000
+        id 1kSX56-0005ip-Uo; Wed, 14 Oct 2020 03:04:00 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/14] iomap: Inline data shouldn't see THPs
-Date:   Wed, 14 Oct 2020 04:03:55 +0100
-Message-Id: <20201014030357.21898-13-willy@infradead.org>
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-mm@kvack.org
+Subject: [PATCH 07/14] iomap: Support THPs in readpage
+Date:   Wed, 14 Oct 2020 04:03:50 +0100
+Message-Id: <20201014030357.21898-8-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20201014030357.21898-1-willy@infradead.org>
 References: <20201014030357.21898-1-willy@infradead.org>
@@ -52,35 +51,72 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Assert that we're not seeing THPs in functions that read/write
-inline data, rather than zeroing out the tail.
+The VFS only calls readpage if readahead has encountered an error.
+Assume that any error requires the page to be split, and attempt to
+do so.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 2 ++
- 1 file changed, 2 insertions(+)
+ fs/iomap/buffered-io.c | 39 +++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 37 insertions(+), 2 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 38fd69ebd4cc..38b6b75e7639 100644
+index 4ea6c601a183..ca305fbaf811 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -247,6 +247,7 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
- 		return;
+@@ -343,15 +343,50 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	return pos - orig_pos + plen;
+ }
  
- 	BUG_ON(page->index);
-+	BUG_ON(PageCompound(page));
- 	BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
++/*
++ * The page that was passed in has become Uptodate.  This may be due to
++ * the storage being synchronous or due to a page split finding the page
++ * is actually uptodate.  The page is still locked.
++ * Lift this into the VFS at some point.
++ */
++#define AOP_UPDATED_PAGE       (AOP_TRUNCATED_PAGE + 1)
++
++static int iomap_split_page(struct inode *inode, struct page *page)
++{
++	struct page *head = thp_head(page);
++	bool uptodate = iomap_range_uptodate(inode, head,
++				(page - head) * PAGE_SIZE, PAGE_SIZE);
++
++	iomap_page_release(head);
++	if (split_huge_page(page) < 0) {
++		unlock_page(page);
++		return AOP_TRUNCATED_PAGE;
++	}
++	if (!uptodate)
++		return 0;
++	SetPageUptodate(page);
++	return AOP_UPDATED_PAGE;
++}
++
+ int
+ iomap_readpage(struct page *page, const struct iomap_ops *ops)
+ {
+ 	struct iomap_readpage_ctx ctx = { .cur_page = page };
+-	struct inode *inode = page->mapping->host;
++	struct inode *inode = thp_head(page)->mapping->host;
+ 	unsigned poff;
+ 	loff_t ret;
  
- 	addr = kmap_atomic(page);
-@@ -782,6 +783,7 @@ static size_t iomap_write_end_inline(struct inode *inode, struct page *page,
- 	void *addr;
+-	trace_iomap_readpage(page->mapping->host, 1);
++	trace_iomap_readpage(inode, 1);
++
++	if (PageTransCompound(page)) {
++		int status = iomap_split_page(inode, page);
++		if (status == AOP_UPDATED_PAGE) {
++			unlock_page(page);
++			return 0;
++		}
++		if (status)
++			return status;
++	}
  
- 	WARN_ON_ONCE(!PageUptodate(page));
-+	BUG_ON(PageCompound(page));
- 	BUG_ON(pos + copied > PAGE_SIZE - offset_in_page(iomap->inline_data));
- 
- 	flush_dcache_page(page);
+ 	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
+ 		ret = iomap_apply(inode, page_offset(page) + poff,
 -- 
 2.28.0
 
