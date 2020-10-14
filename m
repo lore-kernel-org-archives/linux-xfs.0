@@ -5,43 +5,43 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67E1AC43457
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:21:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FF36C43467
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:21:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E0BF20878
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:21:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 102C620878
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:21:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="gFatcmt4"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="h2D+PCR8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731096AbgJNJU5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 05:20:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39960 "EHLO
+        id S1730071AbgJNJVr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 05:21:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731051AbgJNJUn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:20:43 -0400
+        with ESMTP id S1730978AbgJNJUj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:20:39 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 484ACC0F26F1;
-        Tue, 13 Oct 2020 20:04:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF3F2C0F26E7;
+        Tue, 13 Oct 2020 20:04:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Bpmz/m3iXeUk23W+8MMxf9WSox2EZIuxPCrXIX5P4lY=; b=gFatcmt45Yz9HQXA6+8PQzqSET
-        4Gz04kVe8F6sUR6iuXkTL46htFS73/cIwxf531hY/wkhpI+vGMIhhrSXen6fh41NGOKIY/tul7HQk
-        lzVgf1FzIQnX+aAVlXuqPM5MpzBC4ZHCsROAI2kDldXwRy7Ijvx0nGMlqehv6E0oTKAaH+KAKjAxx
-        kITWsrJuvbtX4TqD61FJLyzYzr3tmPngIGxy/oWTl7tZt37YKAa6GP19wEYyZp4LPlbxZPXch+nTx
-        XvouAM8dl8+qnqjfa80i4r5g/g6bt8tdjlI5HBio5tJGImaRAkDzX1EXltww0gBwP1WLYLjvrfdkd
-        vTMLibqw==;
+        bh=j56S9O9WrvJwFfp3jWhAG41igcUKnP5ChYtNlOLmqVw=; b=h2D+PCR8Gha6OcbuOB2GBMzhS0
+        gRUjdmkK723DckDKVFPqjMcduPz3oe6xBGPe5GSehH75/txbO92mgjSmEse+8HPoa2Yq379BRn+hZ
+        pTGxv+R0ZsvJe6iqLMcrvzPfj30EaZi7NAk9yJqHDDHsJW2C1HFyOFN5z4lXPAdxU+et8/LLMvC6b
+        /Mcy8Ya+xrko0fZggbRRzFLko98VDFJ5rvW3WBoyCPnCBSLvGbxKNWi6UOaopBgHMIYUCwZPjFE/E
+        OTp/mwMIFyH6YptVXd+l1UgFZZeH/fgsHWihD/tk74FyBPkxdDeHXUbstUHmpZ28aisEklqjgGMLy
+        4oG3MciA==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kSX57-0005jA-Py; Wed, 14 Oct 2020 03:04:01 +0000
+        id 1kSX55-0005i3-Ff; Wed, 14 Oct 2020 03:03:59 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-mm@kvack.org
-Subject: [PATCH 10/14] iomap: Handle THPs when writing to pages
-Date:   Wed, 14 Oct 2020 04:03:53 +0100
-Message-Id: <20201014030357.21898-11-willy@infradead.org>
+Subject: [PATCH 01/14] fs: Support THPs in vfs_dedupe_file_range
+Date:   Wed, 14 Oct 2020 04:03:44 +0100
+Message-Id: <20201014030357.21898-2-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20201014030357.21898-1-willy@infradead.org>
 References: <20201014030357.21898-1-willy@infradead.org>
@@ -51,89 +51,49 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If we come across a THP that is not uptodate when writing to the page
-cache, this must be due to a readahead error, so behave the same way as
-readpage and split it.  Make sure to flush the right page after completing
-the write.  We still only copy up to a page boundary, so there's no need
-to flush multiple pages at this time.
+We may get tail pages returned from vfs_dedupe_get_page().  If we do,
+we have to call page_mapping() instead of dereferencing page->mapping
+directly.  We may also deadlock trying to lock the page twice if they're
+subpages of the same THP, so compare the head pages instead.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/iomap/buffered-io.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ fs/read_write.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 397795db3ce5..0a1fe7d1a27c 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -682,12 +682,19 @@ static ssize_t iomap_write_begin(struct inode *inode, loff_t pos, loff_t len,
- 			return status;
- 	}
- 
-+retry:
- 	page = grab_cache_page_write_begin(inode->i_mapping, pos >> PAGE_SHIFT,
- 			AOP_FLAG_NOFS);
- 	if (!page) {
- 		status = -ENOMEM;
- 		goto out_no_page;
- 	}
-+	if (PageTransCompound(page) && !PageUptodate(page)) {
-+		if (iomap_split_page(inode, page) == AOP_TRUNCATED_PAGE) {
-+			put_page(page);
-+			goto retry;
-+		}
-+	}
- 	page = thp_head(page);
- 	offset = offset_in_thp(page, pos);
- 	if (len > thp_size(page) - offset)
-@@ -724,6 +731,7 @@ iomap_set_page_dirty(struct page *page)
- 	struct address_space *mapping = page_mapping(page);
- 	int newly_dirty;
- 
-+	VM_BUG_ON_PGFLAGS(PageTail(page), page);
- 	if (unlikely(!mapping))
- 		return !TestSetPageDirty(page);
- 
-@@ -746,7 +754,9 @@ EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
- static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 		size_t copied, struct page *page)
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 19f5c4bf75aa..ead675fef582 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1604,6 +1604,8 @@ static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+  */
+ static void vfs_lock_two_pages(struct page *page1, struct page *page2)
  {
--	flush_dcache_page(page);
-+	size_t offset = offset_in_thp(page, pos);
-+
-+	flush_dcache_page(page + offset / PAGE_SIZE);
- 
- 	/*
- 	 * The blocks that were entirely written will now be uptodate, so we
-@@ -761,7 +771,7 @@ static size_t __iomap_write_end(struct inode *inode, loff_t pos, size_t len,
- 	 */
- 	if (unlikely(copied < len && !PageUptodate(page)))
- 		return 0;
--	iomap_set_range_uptodate(page, offset_in_page(pos), len);
-+	iomap_set_range_uptodate(page, offset, len);
- 	iomap_set_page_dirty(page);
- 	return copied;
- }
-@@ -837,6 +847,10 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		unsigned long bytes;	/* Bytes to write to page */
- 		size_t copied;		/* Bytes copied from user */
- 
-+		/*
-+		 * XXX: We don't know what size page we'll find in the
-+		 * page cache, so only copy up to a regular page boundary.
-+		 */
- 		offset = offset_in_page(pos);
- 		bytes = min_t(unsigned long, PAGE_SIZE - offset,
- 						iov_iter_count(i));
-@@ -867,7 +881,7 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		offset = offset_in_thp(page, pos);
- 
- 		if (mapping_writably_mapped(inode->i_mapping))
--			flush_dcache_page(page);
-+			flush_dcache_page(page + offset / PAGE_SIZE);
- 
- 		copied = iov_iter_copy_from_user_atomic(page, i, offset, bytes);
- 
++	page1 = thp_head(page1);
++	page2 = thp_head(page2);
+ 	/* Always lock in order of increasing index. */
+ 	if (page1->index > page2->index)
+ 		swap(page1, page2);
+@@ -1616,6 +1618,8 @@ static void vfs_lock_two_pages(struct page *page1, struct page *page2)
+ /* Unlock two pages, being careful not to unlock the same page twice. */
+ static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
+ {
++	page1 = thp_head(page1);
++	page2 = thp_head(page2);
+ 	unlock_page(page1);
+ 	if (page1 != page2)
+ 		unlock_page(page2);
+@@ -1670,8 +1674,8 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+ 		 * someone is invalidating pages on us and we lose.
+ 		 */
+ 		if (!PageUptodate(src_page) || !PageUptodate(dest_page) ||
+-		    src_page->mapping != src->i_mapping ||
+-		    dest_page->mapping != dest->i_mapping) {
++		    page_mapping(src_page) != src->i_mapping ||
++		    page_mapping(dest_page) != dest->i_mapping) {
+ 			same = false;
+ 			goto unlock;
+ 		}
 -- 
 2.28.0
 
