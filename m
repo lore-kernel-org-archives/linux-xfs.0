@@ -7,70 +7,70 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 107CAC433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 16:19:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19E0DC433E7
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 16:22:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5009214D8
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 16:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C894206D9
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 16:22:35 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fNVNpdGk"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z/MxtnHl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727886AbgJNQTk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 12:19:40 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:60242 "EHLO
+        id S1728367AbgJNQWf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 12:22:35 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:34548 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727172AbgJNQTj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 12:19:39 -0400
+        with ESMTP id S1727071AbgJNQWf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 12:22:35 -0400
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09EGEdO1161282;
-        Wed, 14 Oct 2020 16:19:36 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09EGEWgF161213;
+        Wed, 14 Oct 2020 16:22:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=dxy7TWFSlF+Zw9+PEVgiUMD1RDwdJn3y8HmadbGLpNY=;
- b=fNVNpdGkJZo0dzmcDY9CnGZJy6ZgZq1EdOZR42S8mg7bXsO2K5c9eU/K59ktcdtFLwQi
- L1JeoZyLnlm7IrtVSPSf94jeSmjT34w1pD+HnQxzPV9Dj8oi1u+3Biz+NiTugdgkigy2
- IKy740AcibO2e+5Uwnwnb9naWcAJrZtlkN6HY2KG775Pxoymksc7ArDtepDGCvCO1Ku6
- a4k5sWLh0rTGimjaj5ghZBA46wSKLaVtimc2xYVbU5MBZQ3gtG8GT2vNNSPqY7W4zjCY
- 5T2NJjWNZsJOew8oJEUowwZ9hgG7O6xN19CRPT7vbBgg3L3qZHHUltbNt73wPYARzPJE Bg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 343pajy4j4-1
+ bh=+9CMLrDFXUMlxvhxdWhwvZNCoIxBDp5BN8YnC9VZlIM=;
+ b=Z/MxtnHlvNEQHWESx93vw2jJrjVUrIhTmmRvvXwPL/EjV2DL4JpWMCrwKrqfRnDjPWDP
+ GaH6TW9akHQap3USabQaxFFDnCTCOZc/6Pnx/wo6eodcLoLL04lgMmahwMZopUtAYFu1
+ ns1mre8aPZfHYMVfY947glTsaSKk/5zYkIvlbAlAlBxoCQBlmp09F6fniCi+3exKW19l
+ wSCoy6U2vOIJSjb1BKScc/kw85cPr+qdvUs/yJmerBEKM749cwUeEui205C70ofEi59h
+ ukx2KTRqH1VeAxrOldZPmcpM7pHQmpSPN0Mo5VGMoUefzFqxr+LrbI3YFb4kKmzj0+41 xA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 343pajy50h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 14 Oct 2020 16:19:35 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09EGJYwM181217;
-        Wed, 14 Oct 2020 16:19:35 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 344by3vpj3-1
+        Wed, 14 Oct 2020 16:22:31 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09EGFG8h130943;
+        Wed, 14 Oct 2020 16:20:31 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 343pv0jm5p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 14 Oct 2020 16:19:34 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09EGJNv5031275;
-        Wed, 14 Oct 2020 16:19:23 GMT
+        Wed, 14 Oct 2020 16:20:31 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09EGKUCL020952;
+        Wed, 14 Oct 2020 16:20:30 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 14 Oct 2020 09:19:23 -0700
-Date:   Wed, 14 Oct 2020 09:19:22 -0700
+        with ESMTP ; Wed, 14 Oct 2020 09:20:30 -0700
+Date:   Wed, 14 Oct 2020 09:20:29 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Gao Xiang <hsiangkao@redhat.com>
 Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
         Eric Sandeen <sandeen@redhat.com>,
         Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 RESEND] xfs: introduce xfs_validate_stripe_geometry()
-Message-ID: <20201014161922.GG9832@magnolia>
-References: <20201013231359.12860-1-hsiangkao@redhat.com>
- <20201014074550.20552-1-hsiangkao@redhat.com>
+Subject: Re: [PATCH v6 3/3] mkfs: make use of xfs_validate_stripe_geometry()
+Message-ID: <20201014162029.GH9832@magnolia>
+References: <20201013040627.13932-1-hsiangkao@redhat.com>
+ <20201013040627.13932-4-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201014074550.20552-1-hsiangkao@redhat.com>
+In-Reply-To: <20201013040627.13932-4-hsiangkao@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9773 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
- suspectscore=0 mlxscore=0 malwarescore=0 adultscore=0 bulkscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010140116
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 spamscore=0
+ adultscore=0 suspectscore=1 phishscore=0 bulkscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010140115
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9773 signatures=668681
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=1
  impostorscore=0 priorityscore=1501 clxscore=1015 malwarescore=0
  adultscore=0 lowpriorityscore=0 spamscore=0 phishscore=0 mlxscore=0
  mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
@@ -79,150 +79,84 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 14, 2020 at 03:45:50PM +0800, Gao Xiang wrote:
-> Introduce a common helper to consolidate stripe validation process.
-> Also make kernel code xfs_validate_sb_common() use it first.
+On Tue, Oct 13, 2020 at 12:06:27PM +0800, Gao Xiang wrote:
+> Check stripe numbers in calc_stripe_factors() by using
+> xfs_validate_stripe_geometry().
 > 
 > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 
-Looks ok,
+Looks good to me,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
-> [v3 RESEND]:
->  sorry forget to drop a pair of unnecessary brace brackets.
+>  libxfs/libxfs_api_defs.h |  1 +
+>  mkfs/xfs_mkfs.c          | 23 +++++++----------------
+>  2 files changed, 8 insertions(+), 16 deletions(-)
 > 
-> v2: https://lore.kernel.org/r/20201013034853.28236-1-hsiangkao@redhat.com
-> 
-> Changes since v2:
->  - update the expression on sb_unit and hasdalign check (Brian);
->  - drop parentheses since modulus operation is a basic
->    math operation (Brian);
->  - (I missed earlier..) avoid div_s64_rem on modulus operation
->    by checking swidth, sunit range first and casting to 32-bit
->    integer. since sunit/swidth in the callers are in FSB or BB,
->    so need to check the overflow first...
-> 
-> Anyway, since logic change is made due to div_s64_rem() issue,
-> please kindly help review again...
-> 
-> Thanks,
-> Gao Xiang
-> 
->  fs/xfs/libxfs/xfs_sb.c | 77 ++++++++++++++++++++++++++++++++++++------
->  fs/xfs/libxfs/xfs_sb.h |  3 ++
->  2 files changed, 69 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> index 5aeafa59ed27..2078f4fe93b2 100644
-> --- a/fs/xfs/libxfs/xfs_sb.c
-> +++ b/fs/xfs/libxfs/xfs_sb.c
-> @@ -360,21 +360,18 @@ xfs_validate_sb_common(
+> diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+> index e7e42e93..306d0deb 100644
+> --- a/libxfs/libxfs_api_defs.h
+> +++ b/libxfs/libxfs_api_defs.h
+> @@ -188,6 +188,7 @@
+>  #define xfs_trans_roll_inode		libxfs_trans_roll_inode
+>  #define xfs_trans_roll			libxfs_trans_roll
+>  
+> +#define xfs_validate_stripe_geometry	libxfs_validate_stripe_geometry
+>  #define xfs_verify_agbno		libxfs_verify_agbno
+>  #define xfs_verify_agino		libxfs_verify_agino
+>  #define xfs_verify_cksum		libxfs_verify_cksum
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 8fe149d7..aec40c1f 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -2305,12 +2305,6 @@ _("both data su and data sw options must be specified\n"));
+>  			usage();
 >  		}
->  	}
 >  
-> -	if (sbp->sb_unit) {
-> -		if (!xfs_sb_version_hasdalign(sbp) ||
-> -		    sbp->sb_unit > sbp->sb_width ||
-> -		    (sbp->sb_width % sbp->sb_unit) != 0) {
-> -			xfs_notice(mp, "SB stripe unit sanity check failed");
-> -			return -EFSCORRUPTED;
+> -		if (dsu % cfg->sectorsize) {
+> -			fprintf(stderr,
+> -_("data su must be a multiple of the sector size (%d)\n"), cfg->sectorsize);
+> -			usage();
 > -		}
-> -	} else if (xfs_sb_version_hasdalign(sbp)) {
-> +	/*
-> +	 * Either (sb_unit and !hasdalign) or (!sb_unit and hasdalign)
-> +	 * would imply the image is corrupted.
-> +	 */
-> +	if (!!sbp->sb_unit ^ xfs_sb_version_hasdalign(sbp)) {
->  		xfs_notice(mp, "SB stripe alignment sanity check failed");
->  		return -EFSCORRUPTED;
-> -	} else if (sbp->sb_width) {
-> -		xfs_notice(mp, "SB stripe width sanity check failed");
-> -		return -EFSCORRUPTED;
+> -
+>  		dsunit  = (int)BTOBBT(dsu);
+>  		big_dswidth = (long long int)dsunit * dsw;
+>  		if (big_dswidth > INT_MAX) {
+> @@ -2322,13 +2316,9 @@ _("data stripe width (%lld) is too large of a multiple of the data stripe unit (
+>  		dswidth = big_dswidth;
 >  	}
 >  
-> +	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
-> +			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
-> +		return -EFSCORRUPTED;
+> -	if ((dsunit && !dswidth) || (!dsunit && dswidth) ||
+> -	    (dsunit && (dswidth % dsunit != 0))) {
+> -		fprintf(stderr,
+> -_("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
+> -			dswidth, dsunit);
+> +	if (!libxfs_validate_stripe_geometry(NULL, BBTOB(dsunit), BBTOB(dswidth),
+> +					     cfg->sectorsize, false))
+>  		usage();
+> -	}
 >  
->  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
->  	    sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE) {
-> @@ -1233,3 +1230,61 @@ xfs_sb_get_secondary(
->  	*bpp = bp;
->  	return 0;
->  }
-> +
-> +/*
-> + * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
-> + * so users won't be confused by values in error messages.
-> + */
-> +bool
-> +xfs_validate_stripe_geometry(
-> +	struct xfs_mount	*mp,
-> +	__s64			sunit,
-> +	__s64			swidth,
-> +	int			sectorsize,
-> +	bool			silent)
-> +{
-> +	if (swidth > INT_MAX) {
-> +		if (!silent)
-> +			xfs_notice(mp,
-> +"stripe width (%lld) is too large", swidth);
-> +		return false;
-> +	}
-> +
-> +	if (sunit > swidth) {
-> +		if (!silent)
-> +			xfs_notice(mp,
-> +"stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
-> +		return false;
-> +	}
-> +
-> +	if (sectorsize && (int)sunit % sectorsize) {
-> +		if (!silent)
-> +			xfs_notice(mp,
-> +"stripe unit (%lld) must be a multiple of the sector size (%d)",
-> +				   sunit, sectorsize);
-> +		return false;
-> +	}
-> +
-> +	if (sunit && !swidth) {
-> +		if (!silent)
-> +			xfs_notice(mp,
-> +"invalid stripe unit (%lld) and stripe width of 0", sunit);
-> +		return false;
-> +	}
-> +
-> +	if (!sunit && swidth) {
-> +		if (!silent)
-> +			xfs_notice(mp,
-> +"invalid stripe width (%lld) and stripe unit of 0", swidth);
-> +		return false;
-> +	}
-> +
-> +	if (sunit && (int)swidth % (int)sunit) {
-> +		if (!silent)
-> +			xfs_notice(mp,
-> +"stripe width (%lld) must be a multiple of the stripe unit (%lld)",
-> +				   swidth, sunit);
-> +		return false;
-> +	}
-> +	return true;
-> +}
-> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
-> index 92465a9a5162..f79f9dc632b6 100644
-> --- a/fs/xfs/libxfs/xfs_sb.h
-> +++ b/fs/xfs/libxfs/xfs_sb.h
-> @@ -42,4 +42,7 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
->  				struct xfs_trans *tp, xfs_agnumber_t agno,
->  				struct xfs_buf **bpp);
+>  	/* If sunit & swidth were manually specified as 0, same as noalign */
+>  	if ((cli_opt_set(&dopts, D_SUNIT) || cli_opt_set(&dopts, D_SU)) &&
+> @@ -2344,11 +2334,12 @@ _("data stripe width (%d) must be a multiple of the data stripe unit (%d)\n"),
 >  
-> +extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
-> +		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
-> +
->  #endif	/* __XFS_SB_H__ */
+>  	/* if no stripe config set, use the device default */
+>  	if (!dsunit) {
+> -		/* Ignore nonsense from device.  XXX add more validation */
+> -		if (ft->dsunit && ft->dswidth == 0) {
+> +		/* Ignore nonsense from device report. */
+> +		if (!libxfs_validate_stripe_geometry(NULL, BBTOB(ft->dsunit),
+> +				BBTOB(ft->dswidth), 0, true)) {
+>  			fprintf(stderr,
+> -_("%s: Volume reports stripe unit of %d bytes and stripe width of 0, ignoring.\n"),
+> -				progname, BBTOB(ft->dsunit));
+> +_("%s: Volume reports invalid stripe unit (%d) and stripe width (%d), ignoring.\n"),
+> +				progname, BBTOB(ft->dsunit), BBTOB(ft->dswidth));
+>  			ft->dsunit = 0;
+>  			ft->dswidth = 0;
+>  		} else {
 > -- 
 > 2.18.1
 > 
