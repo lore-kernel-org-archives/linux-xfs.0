@@ -2,141 +2,208 @@ Return-Path: <SRS0=c4da=DV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69EE8C433E7
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 13:00:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 408A0C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 13:24:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DE7720878
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 13:00:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD98E22202
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 13:24:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Giam7r/f"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hq8eU0bO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730787AbgJNNAE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 09:00:04 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22801 "EHLO
+        id S1727309AbgJNNY3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 09:24:29 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32373 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727187AbgJNNAE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 09:00:04 -0400
+        by vger.kernel.org with ESMTP id S1725944AbgJNNY3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 09:24:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1602680402;
+        s=mimecast20190719; t=1602681867;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=5Fws2CJAKKqpnH//6QG5i7oTf+CdCwxvrk1+FjGnC3w=;
-        b=Giam7r/f7lDSTsLY2mwtPUVi9q7xUca7vvry/dyKdv/jASRWo6qKpT2iwV8sBYgGn0YiVN
-        BxYtQOOyCWMiXpXh0prQBFUd3vk/XmmadJ4gD/I0gkVjRQ19SSFelP1ZyAj9N0CqgLPtRG
-        bO3KYUk/bFd/1pqfvTzC/PzdUyu4N74=
+        bh=i61pPzlOaxTYHsxwvO0oPo8rq2LFIug8bibcHO71oDw=;
+        b=hq8eU0bORllehxmvz2GwFP57SUcdB3L4m0m3GMy/YclgFHkW5+8sjP77g5RmrDVeH/jWV8
+        51hDYKdQaa29OAN4vcSbnX3n+RZRRloRFWw82mjD7dw06+yI3aksbpFE6VSAhk9qgrNVEs
+        J7wr6roXuQwL8YdPYyiUgVHGMDmBed8=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-293-BAEt4dj-M3KgnMqF-8eO7Q-1; Wed, 14 Oct 2020 08:59:58 -0400
-X-MC-Unique: BAEt4dj-M3KgnMqF-8eO7Q-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-139-qk4CvyEaMtWRPoVEb6rK5Q-1; Wed, 14 Oct 2020 09:24:23 -0400
+X-MC-Unique: qk4CvyEaMtWRPoVEb6rK5Q-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D3477802B4B;
-        Wed, 14 Oct 2020 12:59:57 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6F8B7835B58;
+        Wed, 14 Oct 2020 13:24:22 +0000 (UTC)
 Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6CC4C75138;
-        Wed, 14 Oct 2020 12:59:57 +0000 (UTC)
-Date:   Wed, 14 Oct 2020 08:59:55 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id BCC046EF68;
+        Wed, 14 Oct 2020 13:24:15 +0000 (UTC)
+Date:   Wed, 14 Oct 2020 09:24:13 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] iomap: use page dirty state to seek data over
- unwritten extents
-Message-ID: <20201014125955.GA1109375@bfoster>
-References: <20201012140350.950064-1-bfoster@redhat.com>
- <20201012140350.950064-2-bfoster@redhat.com>
- <20201013225344.GA7391@dread.disaster.area>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>,
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3 RESEND] xfs: introduce xfs_validate_stripe_geometry()
+Message-ID: <20201014132413.GB1109375@bfoster>
+References: <20201013231359.12860-1-hsiangkao@redhat.com>
+ <20201014074550.20552-1-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201013225344.GA7391@dread.disaster.area>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20201014074550.20552-1-hsiangkao@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 14, 2020 at 09:53:44AM +1100, Dave Chinner wrote:
-> On Mon, Oct 12, 2020 at 10:03:49AM -0400, Brian Foster wrote:
-> > iomap seek hole/data currently uses page Uptodate state to track
-> > data over unwritten extents. This is odd and unpredictable in that
-> > the existence of clean pages changes behavior. For example:
-> > 
-> >   $ xfs_io -fc "falloc 0 32k" -c "seek -d 0" \
-> > 	    -c "pread 16k 4k" -c "seek -d 0" /mnt/file
-> >   Whence  Result
-> >   DATA    EOF
-> >   ...
-> >   Whence  Result
-> >   DATA    16384
+On Wed, Oct 14, 2020 at 03:45:50PM +0800, Gao Xiang wrote:
+> Introduce a common helper to consolidate stripe validation process.
+> Also make kernel code xfs_validate_sb_common() use it first.
 > 
-> I don't think there is any way around this, because the page cache
-> lookup done by the seek hole/data code is an
-> unlocked operation and can race with other IO and operations. That
-> is, seek does not take IO serialisation locks at all so
-> read/write/page faults/fallocate/etc all run concurrently with it...
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> [v3 RESEND]:
+>  sorry forget to drop a pair of unnecessary brace brackets.
 > 
-> i.e. we get an iomap that is current at the time the iomap_begin()
-> call is made, but we don't hold any locks to stabilise that extent
-> range while we do a page cache traversal looking for cached data.
-> That means any region of the unwritten iomap can change state while
-> we are running the page cache seek.
+> v2: https://lore.kernel.org/r/20201013034853.28236-1-hsiangkao@redhat.com
 > 
-
-Hm, Ok.. that makes sense..
-
-> We cannot determine what the data contents without major overhead,
-> and if we are seeking over a large unwritten extent covered by clean
-> pages that then gets partially written synchronously by another
-> concurrent write IO then we might trip across clean uptodate pages
-> with real data in them by the time the page cache scan gets to it.
+> Changes since v2:
+>  - update the expression on sb_unit and hasdalign check (Brian);
+>  - drop parentheses since modulus operation is a basic
+>    math operation (Brian);
+>  - (I missed earlier..) avoid div_s64_rem on modulus operation
+>    by checking swidth, sunit range first and casting to 32-bit
+>    integer. since sunit/swidth in the callers are in FSB or BB,
+>    so need to check the overflow first...
 > 
-> Hence the only thing we are looking at here is whether there is data
-> present in the cache or not. As such, I think assuming that only
-> dirty/writeback pages contain actual user data in a seek data/hole
-> operation is a fundametnally incorrect premise.
+> Anyway, since logic change is made due to div_s64_rem() issue,
+> please kindly help review again...
 > 
-
-... but afaict this kind of thing is already possible because nothing
-stops a subsequently cleaned page (i.e., dirtied and written back) from
-also being dropped from cache before the scan finds it. IOW, I don't
-really see how this justifies using one page state check over another as
-opposed to pointing out the whole page scanning thing itself seems to be
-racy. Perhaps the reasoning wrt to seek is simply that we should either
-see one state (hole) or the next (data) and we don't terribly care much
-about seek being racy..?
-
-My concern is more the issue described by patch 2. Note that patch 2
-doesn't necessarily depend on this one. The tradeoff without patch 1 is
-just that we'd explicitly zero and dirty any uptodate new EOF page as
-opposed to a page that was already dirty (or writeback).
-
-Truncate does hold iolock/mmaplock, but ISTM that is still not
-sufficient because of the same page reclaim issue mentioned above. E.g.,
-a truncate down lands on a dirty page over an unwritten block,
-iomap_truncate_page() receives the unwritten mapping, page is flushed
-and reclaimed (changing block state), iomap_truncate_page() (still using
-the unwritten mapping) has nothing to do without a page and thus stale
-data is exposed.
-
-ISTM that either the filesystem needs to be more involved with the
-stabilization of unwritten mappings in general or truncate page needs to
-do something along the lines of block_truncate_page() (which we used
-pre-iomap) and just explicitly zero/dirty the new page if the block is
-otherwise mapped. Thoughts? Other ideas?
-
-Brian
-
-> Cheers,
+> Thanks,
+> Gao Xiang
 > 
-> Dave.
+>  fs/xfs/libxfs/xfs_sb.c | 77 ++++++++++++++++++++++++++++++++++++------
+>  fs/xfs/libxfs/xfs_sb.h |  3 ++
+>  2 files changed, 69 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index 5aeafa59ed27..2078f4fe93b2 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -360,21 +360,18 @@ xfs_validate_sb_common(
+>  		}
+>  	}
+>  
+> -	if (sbp->sb_unit) {
+> -		if (!xfs_sb_version_hasdalign(sbp) ||
+> -		    sbp->sb_unit > sbp->sb_width ||
+> -		    (sbp->sb_width % sbp->sb_unit) != 0) {
+> -			xfs_notice(mp, "SB stripe unit sanity check failed");
+> -			return -EFSCORRUPTED;
+> -		}
+> -	} else if (xfs_sb_version_hasdalign(sbp)) {
+> +	/*
+> +	 * Either (sb_unit and !hasdalign) or (!sb_unit and hasdalign)
+> +	 * would imply the image is corrupted.
+> +	 */
+> +	if (!!sbp->sb_unit ^ xfs_sb_version_hasdalign(sbp)) {
+>  		xfs_notice(mp, "SB stripe alignment sanity check failed");
+>  		return -EFSCORRUPTED;
+> -	} else if (sbp->sb_width) {
+> -		xfs_notice(mp, "SB stripe width sanity check failed");
+> -		return -EFSCORRUPTED;
+>  	}
+>  
+> +	if (!xfs_validate_stripe_geometry(mp, XFS_FSB_TO_B(mp, sbp->sb_unit),
+> +			XFS_FSB_TO_B(mp, sbp->sb_width), 0, false))
+> +		return -EFSCORRUPTED;
+>  
+>  	if (xfs_sb_version_hascrc(&mp->m_sb) &&
+>  	    sbp->sb_blocksize < XFS_MIN_CRC_BLOCKSIZE) {
+> @@ -1233,3 +1230,61 @@ xfs_sb_get_secondary(
+>  	*bpp = bp;
+>  	return 0;
+>  }
+> +
+> +/*
+> + * sunit, swidth, sectorsize(optional with 0) should be all in bytes,
+> + * so users won't be confused by values in error messages.
+> + */
+> +bool
+> +xfs_validate_stripe_geometry(
+> +	struct xfs_mount	*mp,
+> +	__s64			sunit,
+> +	__s64			swidth,
+> +	int			sectorsize,
+> +	bool			silent)
+> +{
+> +	if (swidth > INT_MAX) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"stripe width (%lld) is too large", swidth);
+> +		return false;
+> +	}
+> +
+> +	if (sunit > swidth) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"stripe unit (%lld) is larger than the stripe width (%lld)", sunit, swidth);
+> +		return false;
+> +	}
+> +
+> +	if (sectorsize && (int)sunit % sectorsize) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"stripe unit (%lld) must be a multiple of the sector size (%d)",
+> +				   sunit, sectorsize);
+> +		return false;
+> +	}
+> +
+> +	if (sunit && !swidth) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"invalid stripe unit (%lld) and stripe width of 0", sunit);
+> +		return false;
+> +	}
+> +
+> +	if (!sunit && swidth) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"invalid stripe width (%lld) and stripe unit of 0", swidth);
+> +		return false;
+> +	}
+> +
+> +	if (sunit && (int)swidth % (int)sunit) {
+> +		if (!silent)
+> +			xfs_notice(mp,
+> +"stripe width (%lld) must be a multiple of the stripe unit (%lld)",
+> +				   swidth, sunit);
+> +		return false;
+> +	}
+> +	return true;
+> +}
+> diff --git a/fs/xfs/libxfs/xfs_sb.h b/fs/xfs/libxfs/xfs_sb.h
+> index 92465a9a5162..f79f9dc632b6 100644
+> --- a/fs/xfs/libxfs/xfs_sb.h
+> +++ b/fs/xfs/libxfs/xfs_sb.h
+> @@ -42,4 +42,7 @@ extern int	xfs_sb_get_secondary(struct xfs_mount *mp,
+>  				struct xfs_trans *tp, xfs_agnumber_t agno,
+>  				struct xfs_buf **bpp);
+>  
+> +extern bool	xfs_validate_stripe_geometry(struct xfs_mount *mp,
+> +		__s64 sunit, __s64 swidth, int sectorsize, bool silent);
+> +
+>  #endif	/* __XFS_SB_H__ */
 > -- 
-> Dave Chinner
-> david@fromorbit.com
+> 2.18.1
 > 
 
