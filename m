@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D1DEC433E7
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:30:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D006BC433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:30:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE617206DD
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:30:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CEF120BED
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:30:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="vj5QlohI"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="abukv0v1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725984AbgJNJaY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 05:30:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39946 "EHLO
+        id S1727826AbgJNJan (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 05:30:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39966 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730103AbgJNJTj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:19:39 -0400
+        with ESMTP id S1729574AbgJNJTh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:19:37 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 85117C0F26F2;
-        Tue, 13 Oct 2020 20:04:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECDCDC0F26F0;
+        Tue, 13 Oct 2020 20:04:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=4CizuPWSROnWzpNyUK4VUnX0ZFhzuX47JJGzIGersuE=; b=vj5QlohI/1Ko5rtIubd+FWW2Ud
-        Y75jzewv2TNpOe0TCvDblxbt2bnQLFPAZuwheWl+QEvi8MNl3qPD3/Q0pDcvQ9LJzWqBnOwNmcVjA
-        NmhHMZe7gGracSc7SgU1GumvEP0xT7VLtQ/GaGRmCjHLQfBCJbpQzka4p+SRrqYU0cs5nxnWe8ZhR
-        7TBes0NRdTe1L47Vz/sKIPGoD39z0TgNHf4AQoIjCjDSsMuoXlL6Sk2w0COX0zbT9nWAx4IcqFmOv
-        nhGJOVByRL71PxP/HcOiIy46v3geKyhSy+tB1jLXdyKFTW9ZIs/+UtLvJtOzqMx4PwdlbkMbGKVro
-        rq6GaoLw==;
+        bh=78jQva7SN0URAIlYak97f7/G/y+lO4R9hQAD5LqWZfM=; b=abukv0v1g/Y5sNHv1T8SRp7RLT
+        2S5W1gZUZIfNydJ4TCWEIlrzKkaM/3O3UM23uKmiN2gir7ANyxX1ey2ra2cmfmfZgzkoiK/aNfLp+
+        icIlf5blq+ln6nx68CNgDpx/WHFyJ4HYIjaWn/H+V3SKzU/uO3cX0y6PqSi9S7wdlahpPmDfufqSl
+        brOCMrF/BB2pNmj3zPHnqgxi4W+UX55+Pux6nJ1dDDV1RtWeS9vbxQG96lB9iim18PVZYVN09Om+d
+        VFGJqwolfbxukF80XjIg8zUZRHnxz+/tzMFGTffHBFsW5HQAJCodJYccYZymlCQ3//N6FuIZntpV+
+        p8bkrL9Q==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kSX58-0005jH-21; Wed, 14 Oct 2020 03:04:02 +0000
+        id 1kSX57-0005j3-G0; Wed, 14 Oct 2020 03:04:01 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-mm@kvack.org
-Subject: [PATCH 11/14] iomap: Support THP writeback
-Date:   Wed, 14 Oct 2020 04:03:54 +0100
-Message-Id: <20201014030357.21898-12-willy@infradead.org>
+Subject: [PATCH 09/14] iomap: Change iomap_write_begin calling convention
+Date:   Wed, 14 Oct 2020 04:03:52 +0100
+Message-Id: <20201014030357.21898-10-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20201014030357.21898-1-willy@infradead.org>
 References: <20201014030357.21898-1-willy@infradead.org>
@@ -51,111 +51,168 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use offset_in_thp() and similar helpers to submit THPs for writeback.
-This simplifies the logic in iomap_do_writepage() around handling the
-end of the file.
+Pass (up to) the remaining length of the extent to iomap_write_begin()
+and have it return the number of bytes that will fit in the page.
+That lets us copy more bytes per call to iomap_write_begin() if the page
+cache has already allocated a THP (and will in future allow us to pass
+a hint to the page cache that it should try to allocate a larger page
+if there are none in the cache).
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- fs/iomap/buffered-io.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ fs/iomap/buffered-io.c | 61 +++++++++++++++++++++++-------------------
+ 1 file changed, 33 insertions(+), 28 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 0a1fe7d1a27c..38fd69ebd4cc 100644
+index 4ef02afaedc5..397795db3ce5 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -1394,7 +1394,7 @@ iomap_add_to_ioend(struct inode *inode, loff_t offset, struct page *page,
+@@ -616,14 +616,14 @@ iomap_read_page_sync(loff_t block_start, struct page *page, unsigned poff,
+ 	return submit_bio_wait(&bio);
+ }
+ 
+-static int
+-__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+-		struct page *page, struct iomap *srcmap)
++static ssize_t __iomap_write_begin(struct inode *inode, loff_t pos,
++		size_t len, int flags, struct page *page, struct iomap *srcmap)
  {
- 	sector_t sector = iomap_sector(&wpc->iomap, offset);
- 	unsigned len = i_blocksize(inode);
--	unsigned poff = offset & (PAGE_SIZE - 1);
-+	unsigned poff = offset_in_thp(page, offset);
- 	bool merged, same_page = false;
+ 	loff_t block_size = i_blocksize(inode);
+ 	loff_t block_start = pos & ~(block_size - 1);
+ 	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
+-	unsigned from = offset_in_page(pos), to = from + len;
++	size_t from = offset_in_thp(page, pos);
++	size_t to = from + len;
+ 	size_t poff, plen;
  
- 	if (!wpc->ioend || !iomap_can_add_to_ioend(wpc, offset, sector)) {
-@@ -1444,8 +1444,9 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	struct iomap_page *iop = iomap_page_create(inode, page);
- 	struct iomap_ioend *ioend, *next;
- 	unsigned len = i_blocksize(inode);
--	u64 file_offset; /* file offset of page */
-+	loff_t pos;
- 	int error = 0, count = 0, i;
-+	int nr_blocks = i_blocks_per_page(inode, page);
- 	LIST_HEAD(submit_list);
+ 	if (PageUptodate(page))
+@@ -658,12 +658,13 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+ 	return 0;
+ }
  
- 	WARN_ON_ONCE(iop && atomic_read(&iop->write_bytes_pending) != 0);
-@@ -1455,20 +1456,20 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	 * end of the current map or find the current map invalid, grab a new
- 	 * one.
- 	 */
--	for (i = 0, file_offset = page_offset(page);
--	     i < (PAGE_SIZE >> inode->i_blkbits) && file_offset < end_offset;
--	     i++, file_offset += len) {
-+	for (i = 0, pos = page_offset(page);
-+	     i < nr_blocks && pos < end_offset;
-+	     i++, pos += len) {
- 		if (iop && !test_bit(i, iop->uptodate))
- 			continue;
+-static int
+-iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+-		struct page **pagep, struct iomap *iomap, struct iomap *srcmap)
++static ssize_t iomap_write_begin(struct inode *inode, loff_t pos, loff_t len,
++		unsigned flags, struct page **pagep, struct iomap *iomap,
++		struct iomap *srcmap)
+ {
+ 	const struct iomap_page_ops *page_ops = iomap->page_ops;
+ 	struct page *page;
++	size_t offset;
+ 	int status = 0;
  
--		error = wpc->ops->map_blocks(wpc, inode, file_offset);
-+		error = wpc->ops->map_blocks(wpc, inode, pos);
- 		if (error)
- 			break;
- 		if (WARN_ON_ONCE(wpc->iomap.type == IOMAP_INLINE))
- 			continue;
- 		if (wpc->iomap.type == IOMAP_HOLE)
- 			continue;
--		iomap_add_to_ioend(inode, file_offset, page, iop, wpc, wbc,
-+		iomap_add_to_ioend(inode, pos, page, iop, wpc, wbc,
- 				 &submit_list);
- 		count++;
+ 	BUG_ON(pos + len > iomap->offset + iomap->length);
+@@ -674,6 +675,8 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 		return -EINTR;
+ 
+ 	if (page_ops && page_ops->page_prepare) {
++		if (len > UINT_MAX)
++			len = UINT_MAX;
+ 		status = page_ops->page_prepare(inode, pos, len, iomap);
+ 		if (status)
+ 			return status;
+@@ -685,6 +688,10 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 		status = -ENOMEM;
+ 		goto out_no_page;
  	}
-@@ -1549,11 +1550,11 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
++	page = thp_head(page);
++	offset = offset_in_thp(page, pos);
++	if (len > thp_size(page) - offset)
++		len = thp_size(page) - offset;
+ 
+ 	if (srcmap->type == IOMAP_INLINE)
+ 		iomap_read_inline_data(inode, page, srcmap);
+@@ -694,11 +701,11 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+ 		status = __iomap_write_begin(inode, pos, len, flags, page,
+ 				srcmap);
+ 
+-	if (unlikely(status))
++	if (status < 0)
+ 		goto out_unlock;
+ 
+ 	*pagep = page;
+-	return 0;
++	return len;
+ 
+ out_unlock:
+ 	unlock_page(page);
+@@ -854,8 +861,10 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 		status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap,
+ 				srcmap);
+-		if (unlikely(status))
++		if (status < 0)
+ 			break;
++		/* We may be partway through a THP */
++		offset = offset_in_thp(page, pos);
+ 
+ 		if (mapping_writably_mapped(inode->i_mapping))
+ 			flush_dcache_page(page);
+@@ -915,7 +924,6 @@ static loff_t
+ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		struct iomap *iomap, struct iomap *srcmap)
  {
- 	struct iomap_writepage_ctx *wpc = data;
- 	struct inode *inode = page->mapping->host;
--	pgoff_t end_index;
- 	u64 end_offset;
- 	loff_t offset;
+-	long status = 0;
+ 	loff_t written = 0;
  
--	trace_iomap_writepage(inode, page_offset(page), PAGE_SIZE);
-+	VM_BUG_ON_PGFLAGS(PageTail(page), page);
-+	trace_iomap_writepage(inode, page_offset(page), thp_size(page));
+ 	/* don't bother with blocks that are not shared to start with */
+@@ -926,25 +934,24 @@ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		return length;
  
- 	/*
- 	 * Refuse to write the page out if we are called from reclaim context.
-@@ -1590,10 +1591,8 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
- 	 * ---------------------------------^------------------|
- 	 */
- 	offset = i_size_read(inode);
--	end_index = offset >> PAGE_SHIFT;
--	if (page->index < end_index)
--		end_offset = (loff_t)(page->index + 1) << PAGE_SHIFT;
--	else {
-+	end_offset = page_offset(page) + thp_size(page);
-+	if (end_offset > offset) {
- 		/*
- 		 * Check whether the page to write out is beyond or straddles
- 		 * i_size or not.
-@@ -1605,7 +1604,8 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
- 		 * |				    |      Straddles     |
- 		 * ---------------------------------^-----------|--------|
- 		 */
--		unsigned offset_into_page = offset & (PAGE_SIZE - 1);
-+		unsigned offset_into_page = offset_in_thp(page, offset);
-+		pgoff_t end_index = offset >> PAGE_SHIFT;
+ 	do {
+-		unsigned long offset = offset_in_page(pos);
+-		unsigned long bytes = min_t(loff_t, PAGE_SIZE - offset, length);
+ 		struct page *page;
++		ssize_t bytes;
  
- 		/*
- 		 * Skip the page if it is fully outside i_size, e.g. due to a
-@@ -1636,7 +1636,7 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
- 		 * memory is zeroed when mapped, and writes to that region are
- 		 * not written out to the file."
- 		 */
--		zero_user_segment(page, offset_into_page, PAGE_SIZE);
-+		zero_user_segment(page, offset_into_page, thp_size(page));
+-		status = iomap_write_begin(inode, pos, bytes,
++		bytes = iomap_write_begin(inode, pos, length,
+ 				IOMAP_WRITE_F_UNSHARE, &page, iomap, srcmap);
+-		if (unlikely(status))
+-			return status;
++		if (bytes < 0)
++			return bytes;
  
- 		/* Adjust the end_offset to the end of file */
- 		end_offset = offset;
+-		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap,
++		bytes = iomap_write_end(inode, pos, bytes, bytes, page, iomap,
+ 				srcmap);
+-		if (WARN_ON_ONCE(status == 0))
++		if (WARN_ON_ONCE(bytes == 0))
+ 			return -EIO;
+ 
+ 		cond_resched();
+ 
+-		pos += status;
+-		written += status;
+-		length -= status;
++		pos += bytes;
++		written += bytes;
++		length -= bytes;
+ 
+ 		balance_dirty_pages_ratelimited(inode->i_mapping);
+ 	} while (length);
+@@ -975,15 +982,13 @@ static s64 iomap_zero(struct inode *inode, loff_t pos, u64 length,
+ 		struct iomap *iomap, struct iomap *srcmap)
+ {
+ 	struct page *page;
+-	int status;
+-	unsigned offset = offset_in_page(pos);
+-	unsigned bytes = min_t(u64, PAGE_SIZE - offset, length);
++	ssize_t bytes;
+ 
+-	status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap, srcmap);
+-	if (status)
+-		return status;
++	bytes = iomap_write_begin(inode, pos, length, 0, &page, iomap, srcmap);
++	if (bytes < 0)
++		return bytes;
+ 
+-	zero_user(page, offset, bytes);
++	zero_user(page, offset_in_thp(page, pos), bytes);
+ 	mark_page_accessed(page);
+ 
+ 	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
 -- 
 2.28.0
 
