@@ -2,216 +2,197 @@ Return-Path: <SRS0=c4da=DV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB058C43457
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 20:51:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB4E6C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 21:04:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A60122255
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 20:51:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1602708665;
-	bh=gIJuVn5VLk23rh14WsqZJraDhWixLPkJxKD/i75CdQw=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=LbbUaCzOirNjPszNxErjN0Izoo+3TJ7V1yn2o43N95vndTNXjAlbDTtsyGuptOrKk
-	 Dn6/BvUYc/kLG30kI7n5mE+rYYv5Zr2aR+YYvLUCvr57NWC8BT/JUASPxMX3AMCP6Z
-	 9RaHojrEyG9TxCtfP47xygUhOoLqm6Nd+8UZlt/w=
+	by mail.kernel.org (Postfix) with ESMTP id 5F4A822258
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 21:04:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i+6+yGrZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728334AbgJNUvC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 16:51:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45068 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725985AbgJNUvB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Oct 2020 16:51:01 -0400
-Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A98822224E;
-        Wed, 14 Oct 2020 20:51:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1602708660;
-        bh=gIJuVn5VLk23rh14WsqZJraDhWixLPkJxKD/i75CdQw=;
-        h=Date:From:To:Cc:Subject:From;
-        b=K4cm4DLnpVJ0loJDg1Fu9/xk8Za3+5kkHXqNXarpU/WvJ9tCHrqE+wvv27NWd8QFs
-         pqtFq6MZn/+r4TXfKZ0RFDd4Czv7EI8/KbmLIOJbQayoBfZ/7e3sIyLnnIP+xb9zAb
-         t3a8bYUvpL0eaBjXjAM+OyF7ynGihQ6YRzlu8Gno=
-Date:   Wed, 14 Oct 2020 13:50:59 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: new code for 5.10, part 1
-Message-ID: <20201014205059.GD9837@magnolia>
+        id S1730664AbgJNVEi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 17:04:38 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:28974 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728427AbgJNVEh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 17:04:37 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602709475;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=YkZfcXKoB9SLJKFx+SJf9XQRHCtH/J9OSnIr7afmbgM=;
+        b=i+6+yGrZVC1XE6J2UPUuQvN6z05htVffwncliw33Jf04gCEC88kCcoy0cM7KfMfWVUgHHp
+        gmtYhrfzszm1iSTSJPwaLt3A5LephmmFr6nbjyVdfuQAhbqLRCyH1VnSrz/SsW0mzLneLe
+        x6jWBHD/KumYFRZOCNc5B6FGBrky3DE=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-570-gdQ8UV3UPDWiWcs4sIzjiQ-1; Wed, 14 Oct 2020 17:04:34 -0400
+X-MC-Unique: gdQ8UV3UPDWiWcs4sIzjiQ-1
+Received: by mail-wr1-f72.google.com with SMTP id a15so282367wrx.9
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Oct 2020 14:04:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=YkZfcXKoB9SLJKFx+SJf9XQRHCtH/J9OSnIr7afmbgM=;
+        b=GQL2EIOPbHCYWfVOtAh6vm7ulXl51iRR/aOX7O9gCpjELBPV326vt/Y9Lg0Dhdsz7H
+         VezkFUnDb+bMEnFVswC8RROnHYYLVqSR+XqjvEs/IKeeMAFe89Phd3cc4VK8QOaB9mYY
+         oYuTaHnsv87p9iDehya/H++y0kXWgloBrv0V8ceERRHnwC7/OmVkRGAdk6pzCvqeTScT
+         0jkZotOcKXU67Ffl4LuCFqIYQkaRKZ/b3sjrb1HPsOdeqHfLMvd7nzWRRDtN+pDnxUWK
+         R9Vc1/az+M1TS02uPjNam29rjuy6P7z8oMd4II2GaxT5utlQtHav6gpetZlGmU/S3Dks
+         GF9A==
+X-Gm-Message-State: AOAM531xAw/wzT8+5pVMFPwunEwpeNjP0toXVDjec7paHDlTzgCbm6x7
+        Jycv7cwMGzhyF2VOoktokLeNF0aMtFe2pZ2cI7omDvsKR9lRsPciF9MlpfIAXoFVUXfa7QjO5ql
+        FvcA58aH2TShX26yewy8y
+X-Received: by 2002:adf:a553:: with SMTP id j19mr586159wrb.349.1602709472605;
+        Wed, 14 Oct 2020 14:04:32 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxNOt2CyFf1oepGXqsqonc42eOJ+B1koyev1RwN0dx1UBe56NfHN4q+eCozBF+WGpgG8rA4Cw==
+X-Received: by 2002:adf:a553:: with SMTP id j19mr586146wrb.349.1602709472333;
+        Wed, 14 Oct 2020 14:04:32 -0700 (PDT)
+Received: from localhost.localdomain ([84.19.91.81])
+        by smtp.gmail.com with ESMTPSA id j9sm816481wrp.59.2020.10.14.14.04.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Oct 2020 14:04:31 -0700 (PDT)
+Subject: Re: [PATCH v11 1/4] xfs: Refactor xfs_isilocked()
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20201009195515.82889-1-preichl@redhat.com>
+ <20201009195515.82889-2-preichl@redhat.com> <20201012160308.GH917726@bfoster>
+From:   Pavel Reichl <preichl@redhat.com>
+Message-ID: <fbbead0a-c691-f870-a33d-b80a6177ce4f@redhat.com>
+Date:   Wed, 14 Oct 2020 23:04:31 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20201012160308.GH917726@bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
 
-Please pull this first large pile of new stuff for 5.10.  The biggest
-changes are two new features for the ondisk metadata: one to record the
-sizes of the inode btrees in the AG to increase redundancy checks and to
-improve mount times; and a second new feature to support timestamps
-until the year 2486.  We also fixed a problem where reflinking into a
-file that requires synchronous writes wouldn't actually flush the
-updates to disk; clean up a fair amount of cruft; and started fixing
-some bugs in the realtime volume code.
 
-I anticipate sending a second pull request in a few days to add some
-scalability improvements, to schedule deprecation of old features, and
-to add fixes for the realtime code.
+On 10/12/20 6:03 PM, Brian Foster wrote:
+> On Fri, Oct 09, 2020 at 09:55:12PM +0200, Pavel Reichl wrote:
+>> Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
+>> __xfs_rwsem_islocked() is a helper function which encapsulates checking
+>> state of rw_semaphores hold by inode.
+>>
+>> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+>> Suggested-by: Dave Chinner <dchinner@redhat.com>
+>> Suggested-by: Eric Sandeen <sandeen@redhat.com>
+>> Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+>> ---
+>>  fs/xfs/xfs_inode.c | 48 ++++++++++++++++++++++++++++++++++++++--------
+>>  fs/xfs/xfs_inode.h | 21 +++++++++++++-------
+>>  2 files changed, 54 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index c06129cffba9..7c1ceb4df4ec 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -345,9 +345,43 @@ xfs_ilock_demote(
+>>  }
+>>  
+>>  #if defined(DEBUG) || defined(XFS_WARN)
+>> -int
+>> +static inline bool
+>> +__xfs_rwsem_islocked(
+>> +	struct rw_semaphore	*rwsem,
+>> +	int			lock_flags)
+>> +{
+>> +	int			arg;
+>> +
+>> +	if (!debug_locks)
+>> +		return rwsem_is_locked(rwsem);
+>> +
+>> +	if (lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
+>> +		/*
+>> +		 * The caller could be asking if we have (shared | excl)
+>> +		 * access to the lock. Ask lockdep if the rwsem is
+>> +		 * locked either for read or write access.
+>> +		 *
+>> +		 * The caller could also be asking if we have only
+>> +		 * shared access to the lock. Holding a rwsem
+>> +		 * write-locked implies read access as well, so the
+>> +		 * request to lockdep is the same for this case.
+>> +		 */
+>> +		arg = -1;
+>> +	} else {
+>> +		/*
+>> +		 * The caller is asking if we have only exclusive access
+>> +		 * to the lock. Ask lockdep if the rwsem is locked for
+>> +		 * write access.
+>> +		 */
+>> +		arg = 0;
+>> +	}
+...
+> 
+> Also, I find the pattern of shifting in the caller slightly confusing,
+> particularly with the 'lock_flags' name being passed down through the
+> caller. Any reason we couldn't pass the shift value as a parameter and
+> do the shift at the top of the function so the logic is clear and in one
+> place?
+> 
 
-The branch merges cleanly with upstream as of a few minutes ago, so
-please let me know if anything strange happens.
+Hi Brian, is following change what you had in mind? Thanks!
 
---D
 
-The following changes since commit f4d51dffc6c01a9e94650d95ce0104964f8ae822:
+>> @@ -349,14 +349,16 @@ xfs_ilock_demote(
+ static inline bool
+ __xfs_rwsem_islocked(
+ 	struct rw_semaphore	*rwsem,
+-	int			lock_flags)
++	int			lock_flags,
++	int			shift)
+ {
+ 	int			arg;
++	const int		shifted_lock_flags = lock_flags >> shift;
+ 
+ 	if (!debug_locks)
+ 		return rwsem_is_locked(rwsem);
+ 
+-	if (lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
++	if (shifted_lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
+ 		/*
+ 		 * The caller could be asking if we have (shared | excl)
+ 		 * access to the lock. Ask lockdep if the rwsem is
+@@ -387,20 +389,20 @@ xfs_isilocked(
+ {
+ 	if (lock_flags & (XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)) {
+ 		ASSERT(!(lock_flags & ~(XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)));
+-		return __xfs_rwsem_islocked(&ip->i_lock,
+-				(lock_flags >> XFS_ILOCK_FLAG_SHIFT));
++		return __xfs_rwsem_islocked(&ip->i_lock, lock_flags,
++				XFS_ILOCK_FLAG_SHIFT);
+ 	}
+ 
+ 	if (lock_flags & (XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)) {
+ 		ASSERT(!(lock_flags &
+ 			~(XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)));
+-		return __xfs_rwsem_islocked(&ip->i_mmaplock,
+-				(lock_flags >> XFS_MMAPLOCK_FLAG_SHIFT));
++		return __xfs_rwsem_islocked(&ip->i_mmaplock, lock_flags,
++				XFS_MMAPLOCK_FLAG_SHIFT);
+ 	}
+ 
+ 	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
+-		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
+-				(lock_flags >> XFS_IOLOCK_FLAG_SHIFT));
++		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem, lock_flags,
++				XFS_IOLOCK_FLAG_SHIFT);
+ 	}
+ 
+ 	ASSERT(0);
 
-  Linux 5.9-rc4 (2020-09-06 17:11:40 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.10-merge-2
-
-for you to fetch changes up to fe341eb151ec0ba80fb74edd6201fc78e5232b6b:
-
-  xfs: ensure that fpunch, fcollapse, and finsert operations are aligned to rt extent size (2020-09-15 20:52:42 -0700)
-
-----------------------------------------------------------------
-New code for 5.10:
-- Clean up the buffer ioend calling path so that the retry strategy
-  isn't quite so scattered everywhere.
-- Clean up m_sb_bp handling.
-- New feature: storing inode btree counts in the AGI to speed up certain
-  mount time per-AG block reservation operatoins and add a little more
-  metadata redundancy.
-- New feature: Widen inode timestamps and quota grace expiration
-  timestamps to support dates through the year 2486.
-- Get rid of more of our custom buffer allocation API wrappers.
-- Use a proper VLA for shortform xattr structure namevals.
-- Force the log after reflinking or deduping into a file that is opened
-  with O_SYNC or O_DSYNC.
-- Fix some math errors in the realtime allocator.
-
-----------------------------------------------------------------
-Carlos Maiolino (6):
-      xfs: remove kmem_realloc()
-      xfs: Remove kmem_zalloc_large()
-      xfs: remove typedef xfs_attr_sf_entry_t
-      xfs: Remove typedef xfs_attr_shortform_t
-      xfs: Use variable-size array for nameval in xfs_attr_sf_entry
-      xfs: Convert xfs_attr_sf macros to inline functions
-
-Christoph Hellwig (15):
-      xfs: refactor the buf ioend disposition code
-      xfs: mark xfs_buf_ioend static
-      xfs: refactor xfs_buf_ioend
-      xfs: move the buffer retry logic to xfs_buf.c
-      xfs: fold xfs_buf_ioend_finish into xfs_ioend
-      xfs: refactor xfs_buf_ioerror_fail_without_retry
-      xfs: remove xfs_buf_ioerror_retry
-      xfs: lift the XBF_IOEND_FAIL handling into xfs_buf_ioend_disposition
-      xfs: simplify the xfs_buf_ioend_disposition calling convention
-      xfs: use xfs_buf_item_relse in xfs_buf_item_done
-      xfs: clear the read/write flags later in xfs_buf_ioend
-      xfs: remove xlog_recover_iodone
-      xfs: simplify xfs_trans_getsb
-      xfs: remove xfs_getsb
-      xfs: reuse _xfs_buf_read for re-reading the superblock
-
-Darrick J. Wong (19):
-      xfs: store inode btree block counts in AGI header
-      xfs: use the finobt block counts to speed up mount times
-      xfs: support inode btree blockcounts in online scrub
-      xfs: support inode btree blockcounts in online repair
-      xfs: enable new inode btree counters feature
-      xfs: explicitly define inode timestamp range
-      xfs: refactor quota expiration timer modification
-      xfs: refactor default quota grace period setting code
-      xfs: refactor quota timestamp coding
-      xfs: move xfs_log_dinode_to_disk to the log recovery code
-      xfs: redefine xfs_timestamp_t
-      xfs: redefine xfs_ictimestamp_t
-      xfs: widen ondisk inode timestamps to deal with y2038+
-      xfs: widen ondisk quota expiration timestamps to handle y2038+
-      xfs: trace timestamp limits
-      xfs: enable big timestamps
-      xfs: force the log after remapping a synchronous-writes file
-      xfs: make sure the rt allocator doesn't run off the end
-      xfs: ensure that fpunch, fcollapse, and finsert operations are aligned to rt extent size
-
-Dave Chinner (1):
-      xfs: xfs_iflock is no longer a completion
-
-Zheng Bin (1):
-      xfs: Remove unneeded semicolon
-
- fs/xfs/kmem.c                    |  22 ----
- fs/xfs/kmem.h                    |   7 --
- fs/xfs/libxfs/xfs_ag.c           |   5 +
- fs/xfs/libxfs/xfs_attr.c         |  14 ++-
- fs/xfs/libxfs/xfs_attr_leaf.c    |  43 ++++---
- fs/xfs/libxfs/xfs_attr_sf.h      |  29 +++--
- fs/xfs/libxfs/xfs_da_format.h    |   6 +-
- fs/xfs/libxfs/xfs_dquot_buf.c    |  35 ++++++
- fs/xfs/libxfs/xfs_format.h       | 211 +++++++++++++++++++++++++++++--
- fs/xfs/libxfs/xfs_fs.h           |   1 +
- fs/xfs/libxfs/xfs_ialloc.c       |   5 +
- fs/xfs/libxfs/xfs_ialloc_btree.c |  65 +++++++++-
- fs/xfs/libxfs/xfs_iext_tree.c    |   2 +-
- fs/xfs/libxfs/xfs_inode_buf.c    | 130 +++++++++----------
- fs/xfs/libxfs/xfs_inode_buf.h    |  15 ++-
- fs/xfs/libxfs/xfs_inode_fork.c   |   8 +-
- fs/xfs/libxfs/xfs_log_format.h   |   7 +-
- fs/xfs/libxfs/xfs_log_recover.h  |   1 -
- fs/xfs/libxfs/xfs_quota_defs.h   |   8 +-
- fs/xfs/libxfs/xfs_sb.c           |   6 +-
- fs/xfs/libxfs/xfs_shared.h       |   3 +
- fs/xfs/libxfs/xfs_trans_inode.c  |  17 ++-
- fs/xfs/scrub/agheader.c          |  30 +++++
- fs/xfs/scrub/agheader_repair.c   |  24 ++++
- fs/xfs/scrub/inode.c             |  31 +++--
- fs/xfs/scrub/symlink.c           |   2 +-
- fs/xfs/xfs_acl.c                 |   2 +-
- fs/xfs/xfs_attr_list.c           |   6 +-
- fs/xfs/xfs_bmap_util.c           |  16 +++
- fs/xfs/xfs_buf.c                 | 208 +++++++++++++++++++++++++-----
- fs/xfs/xfs_buf.h                 |  17 +--
- fs/xfs/xfs_buf_item.c            | 264 ++-------------------------------------
- fs/xfs/xfs_buf_item.h            |  12 ++
- fs/xfs/xfs_buf_item_recover.c    |   2 +-
- fs/xfs/xfs_dquot.c               |  66 ++++++++--
- fs/xfs/xfs_dquot.h               |   3 +
- fs/xfs/xfs_file.c                |  17 ++-
- fs/xfs/xfs_icache.c              |  19 ++-
- fs/xfs/xfs_inode.c               |  83 +++++-------
- fs/xfs/xfs_inode.h               |  38 +-----
- fs/xfs/xfs_inode_item.c          |  61 ++++++---
- fs/xfs/xfs_inode_item.h          |   5 +-
- fs/xfs/xfs_inode_item_recover.c  |  76 +++++++++++
- fs/xfs/xfs_ioctl.c               |   7 +-
- fs/xfs/xfs_log_recover.c         |  60 +++------
- fs/xfs/xfs_mount.c               |  32 ++---
- fs/xfs/xfs_mount.h               |   1 -
- fs/xfs/xfs_ondisk.h              |  38 ++++--
- fs/xfs/xfs_qm.c                  |  13 ++
- fs/xfs/xfs_qm.h                  |   4 +
- fs/xfs/xfs_qm_syscalls.c         |  18 ++-
- fs/xfs/xfs_quota.h               |   8 --
- fs/xfs/xfs_rtalloc.c             |  13 +-
- fs/xfs/xfs_super.c               |  28 +++--
- fs/xfs/xfs_trace.h               |  29 ++++-
- fs/xfs/xfs_trans.c               |   2 +-
- fs/xfs/xfs_trans.h               |   2 +-
- fs/xfs/xfs_trans_buf.c           |  46 +++----
- fs/xfs/xfs_trans_dquot.c         |   6 +
- 59 files changed, 1183 insertions(+), 746 deletions(-)
