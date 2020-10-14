@@ -2,72 +2,68 @@ Return-Path: <SRS0=c4da=DV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CFC6C433DF
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 21:25:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E85FC433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 21:45:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 46EAB221FF
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 21:25:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF5FD2225F
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 21:45:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602711914;
+	bh=mg0nndmHsuAtPlyKC/6MabvcsffqXZrJO74ybIKJrWM=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=at9f0XHQ+qNw9KIO9LYVPcXW2TJCb1UZWq3pU+oF/bxD6zL1C0vYih6CPVNeCDn07
+	 xmu1QCdVRD4wzOkSQw23j/gTis8/ilTYhMUfHwynHVzRuU6UE0boXTw+NXTcboJNIE
+	 GKO5ZKJarSdY9Ju2IDmbcuifP+REywTz6YxihfaE=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727878AbgJNVZD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 17:25:03 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:54423 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726484AbgJNVZD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 17:25:03 -0400
-Received: from dread.disaster.area (pa49-195-69-88.pa.nsw.optusnet.com.au [49.195.69.88])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4CE5E58C1E4;
-        Thu, 15 Oct 2020 08:24:59 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kSoGY-000YyK-Mh; Thu, 15 Oct 2020 08:24:58 +1100
-Date:   Thu, 15 Oct 2020 08:24:58 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Wang Yugui <wangyugui@e16-tech.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: dbench throughput on xfs over hardware limit(6Gb/s)
-Message-ID: <20201014212458.GC7391@dread.disaster.area>
-References: <20201013221113.F0A0.409509F4@e16-tech.com>
- <20201013230521.GB7391@dread.disaster.area>
- <20201014113211.2372.409509F4@e16-tech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201014113211.2372.409509F4@e16-tech.com>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=5g0Hk5519kQvxAqikqd8LA==:117 a=5g0Hk5519kQvxAqikqd8LA==:17
-        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=7-415B0cAAAA:8
-        a=83GoWlhbdbGG2EoRCkMA:9 a=mtGRwOJSVpvi1bqE:21 a=oaFyXoszcu-ZlxHt:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1727276AbgJNVpL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 17:45:11 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55282 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731059AbgJNVpK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Oct 2020 17:45:10 -0400
+Subject: Re: [GIT PULL] xfs: new code for 5.10, part 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602711909;
+        bh=mg0nndmHsuAtPlyKC/6MabvcsffqXZrJO74ybIKJrWM=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=x6zLF/qc/SC2k+WLrL9zQIRKI0O4QMJPQgOVn8BLGDnmfvLddyJW0GzgdUot2wvAg
+         pIvQGTix4nr1oAyjutLCg9mwkv8dar/fhPn3vEBBXb3UczDjvoq4sHLVug8I+GIgvj
+         zNC6fvSKmA+O+IdkeS1fnFYF2DzKl/7JTvdLRG0k=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20201014205059.GD9837@magnolia>
+References: <20201014205059.GD9837@magnolia>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20201014205059.GD9837@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.10-merge-2
+X-PR-Tracked-Commit-Id: fe341eb151ec0ba80fb74edd6201fc78e5232b6b
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 2fc61f25fb296827387a5f01129dbc00cbe3ca58
+Message-Id: <160271190940.18491.17668718527744721482.pr-tracker-bot@kernel.org>
+Date:   Wed, 14 Oct 2020 21:45:09 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 14, 2020 at 11:32:11AM +0800, Wang Yugui wrote:
-> 
-> > On Tue, Oct 13, 2020 at 10:11:13PM +0800, Wang Yugui wrote:
-> > > Hi,
-> > > 
-> > > dbench throughput on xfs over hardware limit(6Gb/s=750MB/s).
-> > > 
-> > > Is this a bug or some feature of performance optimization?
-> > 
-> > dbench measures page cache throughput, not physical IO throughput.
-> > This sort of results is expected.
-> 
-> We use 'dbench -s', so it should be physical IO.
->    -s     Use synchronous file IO on all file operations.
+The pull request you sent on Wed, 14 Oct 2020 13:50:59 -0700:
 
-Reads can still be served from the page cache without doing physical
-IO.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.10-merge-2
 
-Cheers,
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/2fc61f25fb296827387a5f01129dbc00cbe3ca58
 
-Dave.
+Thank you!
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
