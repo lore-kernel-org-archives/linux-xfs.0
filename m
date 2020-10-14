@@ -7,41 +7,42 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FDB3C43467
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:23:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15F28C433DF
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:23:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4CDE206E5
-	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:23:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4393206E5
+	for <linux-xfs@archiver.kernel.org>; Wed, 14 Oct 2020 09:23:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Hqnk7nD/"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ntibXZzm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731173AbgJNJXO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 05:23:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39942 "EHLO
+        id S1730080AbgJNJXQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 05:23:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730736AbgJNJWw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:22:52 -0400
+        with ESMTP id S1726694AbgJNJXN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 05:23:13 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 14B00C0F26F4;
-        Tue, 13 Oct 2020 20:04:04 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0C69C0F26F3;
+        Tue, 13 Oct 2020 20:04:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=sU/fZV47iwWzgioCKRXJ5YfzflXRPUbnphxuAtGKKLU=; b=Hqnk7nD/NpsmPqpAxpI/NTmhdZ
-        okkum/QWQxjmat6HRVOilaBBz+DBF43Mm3+Mz99+kL3C9NzzVr5YwWzl8ld9twDHVYXd6fWOefBsD
-        9t4NoSgsIW09ZHFMrlNbPP2beVE04RB/2P4201oEzGtwFCN0XHIv5MknHziksLxJto/R6dYXAINtD
-        nA+eVJLMJUJ4pIjfUPjz2EIyojC4B8lHtiCkQ1PZjfT1zVpF5qSipBBCNgBbqcr7MIM6wbLK8uTt4
-        CPGIuBXGY1YND6XlfNGzBjluBLCwrDJvG5l+YrE5n0Dih0YXWdFErsc/Kkr4uPZ1prbmRIrJA3l0+
-        kjGk8B7g==;
+        bh=1e91Asfpb/o4Ps9/wGE3CU5stqf4CIBV6Nn0nrPVRoM=; b=ntibXZzmDHAR1Q5xYvRs9f6j8q
+        V+UK0m3POBUBnFvAU5t3JdQqb6a8qPlC7Coi20lYHYuuo3HKxAgOu/mNQDLA3RuIiUfqNprN8Q9/f
+        ZjFzbOyVtUYuSjaHtT9I8X3K3/BEeTeXFGD97TWytMlkWRr0X09+5inotIdVRbXP/f2vC9qTVjM4s
+        XL8uQYGcqPRul2J8XcjOMhyWg50MZpzcj9hfl6kOEiZAyMXwP1B21DUOBvBHfRu2YPoOCTbPQgHU+
+        SaIszX8Kxy9TnAE12CDHCW2s9cEiu0obb5NP9Y5isBt0J8iAkAOLnfg8rqf6rakDtlPPXoxeCTO7R
+        tBbbxhwA==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kSX58-0005jV-Ht; Wed, 14 Oct 2020 03:04:02 +0000
+        id 1kSX58-0005jO-9K; Wed, 14 Oct 2020 03:04:02 +0000
 From:   "Matthew Wilcox (Oracle)" <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-mm@kvack.org
-Subject: [PATCH 13/14] iomap: Handle tail pages in iomap_page_mkwrite
-Date:   Wed, 14 Oct 2020 04:03:56 +0100
-Message-Id: <20201014030357.21898-14-willy@infradead.org>
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        linux-mm@kvack.org, Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 12/14] iomap: Inline data shouldn't see THPs
+Date:   Wed, 14 Oct 2020 04:03:55 +0100
+Message-Id: <20201014030357.21898-13-willy@infradead.org>
 X-Mailer: git-send-email 2.21.3
 In-Reply-To: <20201014030357.21898-1-willy@infradead.org>
 References: <20201014030357.21898-1-willy@infradead.org>
@@ -51,28 +52,35 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-iomap_page_mkwrite() can be called with a tail page.  If we are,
-operate on the head page, since we're treating the entire thing as a
-single unit and the whole page is dirtied at the same time.
+Assert that we're not seeing THPs in functions that read/write
+inline data, rather than zeroing out the tail.
 
 Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/iomap/buffered-io.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 38b6b75e7639..c2540c85f629 100644
+index 38fd69ebd4cc..38b6b75e7639 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -1098,7 +1098,7 @@ iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+@@ -247,6 +247,7 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
+ 		return;
  
- vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
- {
--	struct page *page = vmf->page;
-+	struct page *page = thp_head(vmf->page);
- 	struct inode *inode = file_inode(vmf->vma->vm_file);
- 	unsigned long length;
- 	loff_t offset;
+ 	BUG_ON(page->index);
++	BUG_ON(PageCompound(page));
+ 	BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
+ 
+ 	addr = kmap_atomic(page);
+@@ -782,6 +783,7 @@ static size_t iomap_write_end_inline(struct inode *inode, struct page *page,
+ 	void *addr;
+ 
+ 	WARN_ON_ONCE(!PageUptodate(page));
++	BUG_ON(PageCompound(page));
+ 	BUG_ON(pos + copied > PAGE_SIZE - offset_in_page(iomap->inline_data));
+ 
+ 	flush_dcache_page(page);
 -- 
 2.28.0
 
