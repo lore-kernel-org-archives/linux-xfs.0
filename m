@@ -2,145 +2,228 @@ Return-Path: <SRS0=m1l6=DW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF7E2C433E7
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 21:42:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC30C433E7
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 22:35:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A35B2076A
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 21:42:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E47F320776
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 22:35:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726426AbgJOVmE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Oct 2020 17:42:04 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:34108 "EHLO
+        id S1731792AbgJOWfv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Oct 2020 18:35:51 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38176 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726392AbgJOVmD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 17:42:03 -0400
+        by vger.kernel.org with ESMTP id S1731745AbgJOWfv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 18:35:51 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 02CB058C7B6;
-        Fri, 16 Oct 2020 08:42:00 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6466558C8B5;
+        Fri, 16 Oct 2020 09:35:49 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kTB0a-000vDe-4j; Fri, 16 Oct 2020 08:42:00 +1100
-Date:   Fri, 16 Oct 2020 08:42:00 +1100
+        id 1kTBqe-000w2N-Nf; Fri, 16 Oct 2020 09:35:48 +1100
+Date:   Fri, 16 Oct 2020 09:35:48 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 27/27] libxfs: convert sync IO buftarg engine to AIO
-Message-ID: <20201015214200.GK7391@dread.disaster.area>
+Subject: Re: [PATCH 00/27] [RFC, WIP] xfsprogs: xfs_buf unification and AIO
+Message-ID: <20201015223548.GL7391@dread.disaster.area>
 References: <20201015072155.1631135-1-david@fromorbit.com>
- <20201015072155.1631135-28-david@fromorbit.com>
- <20201015182607.GA9832@magnolia>
+ <20201015183756.GE9837@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201015182607.GA9832@magnolia>
+In-Reply-To: <20201015183756.GE9837@magnolia>
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=dqtIDHtTHPJqPkzQoY4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=7-415B0cAAAA:8
+        a=z1m98DuUVFg4FMCVZDYA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 15, 2020 at 11:26:07AM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 15, 2020 at 06:21:55PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Thu, Oct 15, 2020 at 11:37:56AM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 15, 2020 at 06:21:28PM +1100, Dave Chinner wrote:
+> > - AIO engine does not support discontiguous buffers.
 > > 
-> > Simple per-ag thread based completion engine. Will have issues with
-> > large AG counts.
+> > - work out best way to handle IOCBs for AIO - is embedding them in
+> >   the xfs_buf the only way to do this efficiently?
 > 
-> Hm, I missed how any of this is per-AG... all I saw was an aio control
-> context that's attached to the buftarg.
+> The only other way I can think of is to embed MAX_AIO_EVENTS iocbs in
+> the buftarg and (I guess) track which ones are free with a bitmap.
 
-Stale - I got rid of the per-ag AIO structures because having 500
-completion threads in gdb is a PITA and it provided no better
-performance. i.e. it had problems with large AG counts.
+I originally had an array embedded in the buftarg, and when I
+realised that I had to rtack exactly which ones were still in use I
+trashed it and moved the iocb to the struct xfs_buf so no tracking
+is necessary. All I need to do is change the buffer allocation code
+to allocate an iocb array when it allocates the map array so we have
+a direct b_maps -> b_iocbs relationship at all times.
 
-> > XXX: should this be combined with the struct btcache?
+> That
+> would cut down the iocb memory overhead to the IOs that we're actually
+> running at a cost of more bookkeepping and potential starvation issues
+> for the yuuuge buffer that takes a long time to collect all NR iocbs.
+
+We've already got a huge amount of per-buffer state, so adding iocbs
+to that isn't a huge deal...
+
+> > - rationalise the xfs_buf/xfs_buftarg split. Work out where to define
+> >   the stuff that is different between kernel and userspace (e.g. the
+> >   struct xfs_buf) vs the stuff that remains the same (e.g. the XBF
+> >   buffer flags)
+> 
+> Ow my brain.
+
+Yeah. :(
+
+> > - lots of code cleanup
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  include/atomic.h           |   7 +-
-> >  include/builddefs.in       |   2 +-
-> >  include/platform_defs.h.in |   1 +
-> >  libxfs/buftarg.c           | 202 +++++++++++++++++++++++++++++++------
-> >  libxfs/xfs_buf.h           |   6 ++
-> >  libxfs/xfs_buftarg.h       |   7 ++
-> >  6 files changed, 191 insertions(+), 34 deletions(-)
+> > - xfs_repair does not cache between phases right now - it
+> >   unconditionally purges the AG cache at the end of AG processing.
+> >   This keeps memory usage way down, and for filesystems that have
+> >   too much metadata to cache entirely in RAM, it's *much* faster
+> 
+> Why is it faster to blow out the cache?  Is it the internal overhead of
+> digging through a huge buftarg hash table to find the buffer that the
+> caller wants and/or whacking enough of the other stale buffers to free
+> up memory to avoid the buffer cache limits?
+
+Lots of reasons. The size of the hash table/chain length is largely
+irrelevant. The biggest issue seems to be memory allocation for the
+buffers - when we allocate the buffer, malloc does a mprotect() call
+on the new heap space for some reason and that takes the mmap_sem in
+write mode. Which serialises all the page faults being done while
+reading those buffers as they take the mmap_sem shared. Hence while
+we are allocating new heap space, there's massive numbers of context
+switches on the mmap_sem contention. COntext switch profile while
+running at ~150,000 context switches a second:
+
+   64.45%    64.45%  xfs_repair       [kernel.kallsyms]         [k] schedule
+            |          
+            |--41.02%--__memmove_sse2_unaligned_erms
+            |          |          
+            |           --40.95%--asm_exc_page_fault
+            |                     exc_page_fault
+            |                     |          
+            |                      --40.95%--down_read
+            |                                rwsem_down_read_slowpath
+            |                                schedule
+            |                                schedule
+            |          
+            |--7.88%--sysmalloc
+            |          |          
+            |           --7.87%--asm_exc_page_fault
+            |                     exc_page_fault
+            |                     |          
+            |                      --7.86%--down_read
+            |                                rwsem_down_read_slowpath
+            |                                schedule
+            |                                schedule
+....
+            |          
+             --1.68%--__mprotect
+                       |          
+                        --1.68%--entry_SYSCALL_64_after_hwframe
+                                  do_syscall_64
+                                  |          
+                                   --1.68%--__x64_sys_mprotect
+                                             do_mprotect_pkey
+                                             |          
+                                              --1.68%--down_write_killable
+                                                        rwsem_down_write_slowpath
+                                                        schedule
+                                                        schedule
+
+The __memmove_sse2_unaligned_erms() function is from the memcpy()
+loop in repair/prefetch.c where it is copying metadata from the
+large IO buffer into the individual xfs_bufs (i.e. read TLB faults)
+and AFAICT the mprotect() syscalls are coming from malloc heap
+expansion. About 7% of the context switches are from pthread_mutex
+locks, and only 2.5% of the context switches are from the pread() IO
+that is being done.
+
+IOWs, while memory footprint is growing/changing, repair performance
+is largely limited by mmap_sem concurrency issues.
+
+So my reading of this is that by bounding the memory footprint of
+repair by freeing the buffers back to the heap regularly, we largely
+stay out of the heap grow mprotect path and avoid this mmap_sem
+contention. That allows the CPU intensive parts of prefetch and
+metadata verification to run more efficiently....
+
+> >   than xfs_repair v5.6.0. On smaller filesystems, however, hitting
+> >   RAM caches is much more desirable. Hence there is work to be done
+> >   here determining how to manage the caches effectively.
 > > 
-> > diff --git a/include/atomic.h b/include/atomic.h
-> > index 5860d7897ae5..8727fc4ddae9 100644
-> > --- a/include/atomic.h
-> > +++ b/include/atomic.h
-> > @@ -27,8 +27,11 @@ typedef	int64_t	atomic64_t;
-> >  #define atomic_inc_return(a)	uatomic_add_return(a, 1)
-> >  #define atomic_dec_return(a)	uatomic_sub_return(a, 1)
-> >  
-> > -#define atomic_inc(a)		atomic_inc_return(a)
-> > -#define atomic_dec(a)		atomic_inc_return(a)
-> > +#define atomic_add(a, v)	uatomic_add(a, v)
-> > +#define atomic_sub(a, v)	uatomic_sub(a, v)
-> > +
-> > +#define atomic_inc(a)		uatomic_inc(a)
-> > +#define atomic_dec(a)		uatomic_dec(a)
+> > - async buffer readahead works in userspace now, but unless you have
+> >   a very high IOP device (think in multiples of 100kiops) the
+> >   xfs_repair prefetch mechanism that trades off bandwidth for iops is
+> >   still faster. More investigative work is needed here.
 > 
-> Does this belong in the liburcu patch?
+> (No idea what this means.)
 
-Probably.
+The SSD I've been testing on peaks at about 70,000kiops for reads.
+If I drive prefetch by xfs_buf_readahead() only (got patches that do
+that) then, compared to 5.6.0, prefetch bandwidth drops to ~400MB/s
+but the device is iops bound and so prefetch is slower than when
+5.6.0 uses 2MB IOs, does ~5-10kiops and consumes 900MB/s of bandwidth.
 
+This patchset runs the existing prefetch code at 15-20kiops and
+1.8-2.1GB/s using 2MB IOs - we still get better throughput on these
+SSDs by trading off iops for bandwidth.
+
+The original patchset I wrote (but never published) had similar
+performance on the above hardware, but I also ran it on faster SSDs.
+On those, repair could push them to around 200-250kiops with
+prefetch by xfs_buf_readahead() and that was much faster than the
+2-2.5GB/s that the existing prefetch could get before being limited
+by the pcie 3.0 4x bus the SSD is on. I'll have some numbers from
+this patchset on my faster hardware next week, but I don't expect
+them to be much different...
+
+So, essentially, if you've got more small read IOPS capacity than
+you have "sparse metadata population optimised" large IO bandwidth
+(or metadata too sparse to trigger the large IO optimisations) then
+using xfs_buf_readahead() appears to more efficient than using the
+existing prefetch code.
+
+That said, there's a lot of testing, observation and analysis needed
+to determine what will be the best general approach here. Signs
+are pointing towards "existing prefetch for rotational storage and
+low iops ssds" and miminal caching and on-demand prefetch for high
+end SSDs, but we'll see how that stands up...
+
+> > - xfs_db could likely use readahead for btree traversals and other
+> >   things.
+> > 
+> > - More memory pressure trigger testing needs to be done to determine
+> >   if the trigger settings are sufficient to prevent OOM kills on
+> >   different hardware and filesystem configurations.
+> > 
+> > - Replace AIO engine with io_uring engine?
 > 
-> >  
-> >  #define atomic_dec_and_test(a)	(atomic_dec_return(a) == 0)
-> >  
-> > diff --git a/include/builddefs.in b/include/builddefs.in
-> > index 78eddf4a9852..c20a48f6258c 100644
-> > --- a/include/builddefs.in
-> > +++ b/include/builddefs.in
-> > @@ -29,7 +29,7 @@ LIBEDITLINE = @libeditline@
-> >  LIBBLKID = @libblkid@
-> >  LIBDEVMAPPER = @libdevmapper@
-> >  LIBINIH = @libinih@
-> > -LIBXFS = $(TOPDIR)/libxfs/libxfs.la
-> > +LIBXFS = $(TOPDIR)/libxfs/libxfs.la -laio
+> Hm, is Al actually going to review io_uring as he's been threatening to
+> do?  I'd hold off until that happens, or one of us goes and tests it in
+> anger to watch all the smoke leak out, etc...
+
+Yeah, I'm in no hurry to do this. Just making sure people understand
+that it's a potential future direction.
+
+> > - start working on splitting the kernel xfs_buf.[ch] code the same
+> >   way as the userspace code and moving xfs_buf.[ch] to fs/xfs/libxfs
+> >   so that they can be updated in sync.
 > 
-> This needs all the autoconf magic to complain if libaio isn't installed,
-> right?
+> Aha, so yes that answers my question in ... whichever patch that was
+> somewhere around #17.
 
-Yes.
-
-> >  	/*
-> > -	 * This is a bit of a hack until we get AIO that runs completions.
-> > -	 * Success is treated as a completion here, but IO errors are handled as
-> > -	 * a submission error and are handled by the caller. AIO will clean this
-> > -	 * up.
-> > +	 * don't overwrite existing errors - otherwise we can lose errors on
-> > +	 * buffers that require multiple bios to complete.
-> > +	 *
-> > +	 * We check that the returned length was the same as specified for this
-> > +	 * IO. Note that this onyl works for read and write - if we start
-> > +	 * using readv/writev for discontiguous buffers then this needs more
-> > +	 * work.
-> 
-> Interesting RFC, though I gather discontig buffers don't work yet?
-
-Right they don't work yet. I mention that in a couple of places.
-
-> Or hmm maybe there's something funny going on with
-> xfs_buftarg_submit_io_map?  You didn't post a git branch link, so it's
-> hard(er) to just rummage around on my own. :/
-> 
-> This seems like a reasonable restructuring to allow asynchronous io.
-> It's sort of a pity that this isn't modular enough to allow multiple IO
-> engines (synchronous system calls and io_uring come to mine) but that
-> can come later.
-
-Making it modular is easy enough, but that can be done independently
-of this buffer cache enabling patchset.
+Right. I had to start somewhere, and given that userspace
+requirements largely define how the split needs to occur, I decided
+to start by making userspace work and then, once that is done,
+change the kernel to match the same structure that userspace
+needed....
 
 Cheers,
 
