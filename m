@@ -2,108 +2,189 @@ Return-Path: <SRS0=m1l6=DW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FACBC433E7
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 10:03:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B07C6C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 10:32:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01D4322249
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 10:02:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53D3B2224A
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 10:32:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZYXVFqVq"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jM7BTIsr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727552AbgJOKC7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Oct 2020 06:02:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44036 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727378AbgJOKC7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 06:02:59 -0400
-Received: from mail-pj1-x1041.google.com (mail-pj1-x1041.google.com [IPv6:2607:f8b0:4864:20::1041])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35015C061755
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 03:02:59 -0700 (PDT)
-Received: by mail-pj1-x1041.google.com with SMTP id hk7so1710735pjb.2
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 03:02:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=mHNXNcZithUU19UPRc8tBQp1VvScADPWbV0N6a0VbRw=;
-        b=ZYXVFqVqUOtIDNRcwS5CAYl0+afgyMLysccZ8w7i7L02k3B9B+UD6SemtfqodcFPmA
-         GHHhzEh9kp6PGTvdYE3GFLAIPK+nkIHkcmQInBaLLgyMFCF5vjaOrYvY3PwSyk0wzGN0
-         DWspDLbmSs1H4JW04dHboU2aY+eWd88I9DK7Zq4Hcavx/fRRyFvODj3F6hzClfN0S2zp
-         BZGphviUzbJRjVzKNO4r0q1vfvYBwrN5WyNPFO2mLrBK+V6PHgYQxp1O3Vt5X45mTYjC
-         VDbhancbJBfYzmLoeyVjsfHeuFcV8SNNwjHrKQCjOsv1chQs1sEgsi94bPitxiWNO7WW
-         XhRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=mHNXNcZithUU19UPRc8tBQp1VvScADPWbV0N6a0VbRw=;
-        b=KL3Q49/MidBWPVgVnrVd2BAUjwG8hQ1EM8BAZuJARPOBBLopeoQQ0CNk9seoNXkDFl
-         aP/Dr7d7FsuI4crC+cBYLfNEUI7WMJLkmPZKDlkN8VRXhh93ODT5iZPM0j5uKsM4kGKJ
-         KxrKrEaDmjcRekq1okT+3CzJZ7lIeszpJ6Brd/Mk3WbZBF/MM5Mx0+rixGIhAbSlysGJ
-         NkNqCPd7cURGHb+6rvox2+8E5423aBGY4ydvKSKJn87ncF1JiPM3tznsfSop4W7F6eUW
-         BdwIellojDvWCrjFNCSDisdSrCThaXuQI5BKEZT8rdxtWkxS4PNmY//jVsCl4KVfvtvP
-         4skA==
-X-Gm-Message-State: AOAM531+wbmoRqOpo2jS1bknd8TjUwQTHs/spU//Nghwu6WWeHl12Yyu
-        gyijFhESFaFbuTa/THf1AAg=
-X-Google-Smtp-Source: ABdhPJwhP5jHrZU8fWEor6gHa+YwT12GQ1sFcg4qBt2EDnUmbdHh6ouycBX1Src5ljFEVokH2A06mA==
-X-Received: by 2002:a17:90b:4d0d:: with SMTP id mw13mr3543327pjb.36.1602756178708;
-        Thu, 15 Oct 2020 03:02:58 -0700 (PDT)
-Received: from garuda.localnet ([122.167.224.49])
-        by smtp.gmail.com with ESMTPSA id t17sm2762196pjs.39.2020.10.15.03.02.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 15 Oct 2020 03:02:58 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        david@fromorbit.com
-Subject: Re: [PATCH V6 11/11] xfs: Introduce error injection to allocate only minlen size extents for files
-Date:   Thu, 15 Oct 2020 15:32:54 +0530
-Message-ID: <3688628.2sUYEX9xRT@garuda>
-In-Reply-To: <20201015084110.GJ5902@infradead.org>
-References: <20201012092938.50946-1-chandanrlinux@gmail.com> <20201012092938.50946-12-chandanrlinux@gmail.com> <20201015084110.GJ5902@infradead.org>
+        id S1731211AbgJOKcq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Oct 2020 06:32:46 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:41215 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726280AbgJOKcq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 06:32:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602757964;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=xy0Y/gxifH+cu47LjIy5jlL78Oa1eetTzmqQwIkIqSA=;
+        b=jM7BTIsrNULvbxPlHiljVT+fZo98sJfD0aic0uGOg5jHncN5Mv6Z6wD3XowOTNhzXBnpSa
+        HN6nXQUIKQq8R+wy7a8otPV7oqdS0RTiTBOdBYoHb+B9mcwpyyTB9atE1qU7W8s0+F9UZT
+        y7z6N3gBTwmD0vLjh29AJMg+9UuIcqs=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-559-KIwsMLPQP7K3sb7R-H5cIw-1; Thu, 15 Oct 2020 06:32:42 -0400
+X-MC-Unique: KIwsMLPQP7K3sb7R-H5cIw-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 01F971084C94
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 10:32:42 +0000 (UTC)
+Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A3FC810027AB;
+        Thu, 15 Oct 2020 10:32:41 +0000 (UTC)
+Date:   Thu, 15 Oct 2020 06:32:39 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Pavel Reichl <preichl@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v11 1/4] xfs: Refactor xfs_isilocked()
+Message-ID: <20201015103239.GA1123529@bfoster>
+References: <20201009195515.82889-1-preichl@redhat.com>
+ <20201009195515.82889-2-preichl@redhat.com>
+ <20201012160308.GH917726@bfoster>
+ <fbbead0a-c691-f870-a33d-b80a6177ce4f@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fbbead0a-c691-f870-a33d-b80a6177ce4f@redhat.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thursday 15 October 2020 2:11:10 PM IST Christoph Hellwig wrote:
-> On Mon, Oct 12, 2020 at 02:59:38PM +0530, Chandan Babu R wrote:
-> > This commit adds XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT error tag which
-> > helps userspace test programs to get xfs_bmap_btalloc() to always
-> > allocate minlen sized extents.
-> > 
-> > This is required for test programs which need a guarantee that minlen
-> > extents allocated for a file do not get merged with their existing
-> > neighbours in the inode's BMBT. "Inode fork extent overflow check" for
-> > Directories, Xattrs and extension of realtime inodes need this since the
-> > file offset at which the extents are being allocated cannot be
-> > explicitly controlled from userspace.
-> > 
-> > One way to use this error tag is to,
-> > 1. Consume all of the free space by sequentially writing to a file.
-> > 2. Punch alternate blocks of the file. This causes CNTBT to contain
-> >    sufficient number of one block sized extent records.
-> > 3. Inject XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT error tag.
-> > After step 3, xfs_bmap_btalloc() will issue space allocation
-> > requests for minlen sized extents only.
-> > 
-> > ENOSPC error code is returned to userspace when there aren't any "one
-> > block sized" extents left in any of the AGs.
+On Wed, Oct 14, 2020 at 11:04:31PM +0200, Pavel Reichl wrote:
 > 
-> Can we figure out a way to only build the extra code for debug kernels?
+> 
+> On 10/12/20 6:03 PM, Brian Foster wrote:
+> > On Fri, Oct 09, 2020 at 09:55:12PM +0200, Pavel Reichl wrote:
+> >> Refactor xfs_isilocked() to use newly introduced __xfs_rwsem_islocked().
+> >> __xfs_rwsem_islocked() is a helper function which encapsulates checking
+> >> state of rw_semaphores hold by inode.
+> >>
+> >> Signed-off-by: Pavel Reichl <preichl@redhat.com>
+> >> Suggested-by: Dave Chinner <dchinner@redhat.com>
+> >> Suggested-by: Eric Sandeen <sandeen@redhat.com>
+> >> Suggested-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >> ---
+> >>  fs/xfs/xfs_inode.c | 48 ++++++++++++++++++++++++++++++++++++++--------
+> >>  fs/xfs/xfs_inode.h | 21 +++++++++++++-------
+> >>  2 files changed, 54 insertions(+), 15 deletions(-)
+> >>
+> >> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> >> index c06129cffba9..7c1ceb4df4ec 100644
+> >> --- a/fs/xfs/xfs_inode.c
+> >> +++ b/fs/xfs/xfs_inode.c
+> >> @@ -345,9 +345,43 @@ xfs_ilock_demote(
+> >>  }
+> >>  
+> >>  #if defined(DEBUG) || defined(XFS_WARN)
+> >> -int
+> >> +static inline bool
+> >> +__xfs_rwsem_islocked(
+> >> +	struct rw_semaphore	*rwsem,
+> >> +	int			lock_flags)
+> >> +{
+> >> +	int			arg;
+> >> +
+> >> +	if (!debug_locks)
+> >> +		return rwsem_is_locked(rwsem);
+> >> +
+> >> +	if (lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
+> >> +		/*
+> >> +		 * The caller could be asking if we have (shared | excl)
+> >> +		 * access to the lock. Ask lockdep if the rwsem is
+> >> +		 * locked either for read or write access.
+> >> +		 *
+> >> +		 * The caller could also be asking if we have only
+> >> +		 * shared access to the lock. Holding a rwsem
+> >> +		 * write-locked implies read access as well, so the
+> >> +		 * request to lockdep is the same for this case.
+> >> +		 */
+> >> +		arg = -1;
+> >> +	} else {
+> >> +		/*
+> >> +		 * The caller is asking if we have only exclusive access
+> >> +		 * to the lock. Ask lockdep if the rwsem is locked for
+> >> +		 * write access.
+> >> +		 */
+> >> +		arg = 0;
+> >> +	}
+> ...
+> > 
+> > Also, I find the pattern of shifting in the caller slightly confusing,
+> > particularly with the 'lock_flags' name being passed down through the
+> > caller. Any reason we couldn't pass the shift value as a parameter and
+> > do the shift at the top of the function so the logic is clear and in one
+> > place?
+> > 
+> 
+> Hi Brian, is following change what you had in mind? Thanks!
 > 
 
-Ok. I will try to get this implemented.
+Yep, pretty much. I find shifted_lock_flags to be a little verbose as a
+name. I'd be fine with just doing something like 'lock_flags >>= shift'
+near the top of the function, but that's more of a personal nit. I also
+like Christoph's suggestion to avoid the arg variable (along with the
+comment update suggested in the discussion with Darrick).
 
--- 
-chandan
+Brian
 
-
+> 
+> >> @@ -349,14 +349,16 @@ xfs_ilock_demote(
+>  static inline bool
+>  __xfs_rwsem_islocked(
+>  	struct rw_semaphore	*rwsem,
+> -	int			lock_flags)
+> +	int			lock_flags,
+> +	int			shift)
+>  {
+>  	int			arg;
+> +	const int		shifted_lock_flags = lock_flags >> shift;
+>  
+>  	if (!debug_locks)
+>  		return rwsem_is_locked(rwsem);
+>  
+> -	if (lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
+> +	if (shifted_lock_flags & (1 << XFS_SHARED_LOCK_SHIFT)) {
+>  		/*
+>  		 * The caller could be asking if we have (shared | excl)
+>  		 * access to the lock. Ask lockdep if the rwsem is
+> @@ -387,20 +389,20 @@ xfs_isilocked(
+>  {
+>  	if (lock_flags & (XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)) {
+>  		ASSERT(!(lock_flags & ~(XFS_ILOCK_EXCL | XFS_ILOCK_SHARED)));
+> -		return __xfs_rwsem_islocked(&ip->i_lock,
+> -				(lock_flags >> XFS_ILOCK_FLAG_SHIFT));
+> +		return __xfs_rwsem_islocked(&ip->i_lock, lock_flags,
+> +				XFS_ILOCK_FLAG_SHIFT);
+>  	}
+>  
+>  	if (lock_flags & (XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)) {
+>  		ASSERT(!(lock_flags &
+>  			~(XFS_MMAPLOCK_EXCL | XFS_MMAPLOCK_SHARED)));
+> -		return __xfs_rwsem_islocked(&ip->i_mmaplock,
+> -				(lock_flags >> XFS_MMAPLOCK_FLAG_SHIFT));
+> +		return __xfs_rwsem_islocked(&ip->i_mmaplock, lock_flags,
+> +				XFS_MMAPLOCK_FLAG_SHIFT);
+>  	}
+>  
+>  	if (lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) {
+> -		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem,
+> -				(lock_flags >> XFS_IOLOCK_FLAG_SHIFT));
+> +		return __xfs_rwsem_islocked(&VFS_I(ip)->i_rwsem, lock_flags,
+> +				XFS_IOLOCK_FLAG_SHIFT);
+>  	}
+>  
+>  	ASSERT(0);
+> 
 
