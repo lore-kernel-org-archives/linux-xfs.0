@@ -4,497 +4,518 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83ED7C4363A
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67074C2D0A4
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E5BF2225F
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25E9C22249
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728885AbgJOHWK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Oct 2020 03:22:10 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60707 "EHLO
+        id S1729232AbgJOHWP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Oct 2020 03:22:15 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33628 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726462AbgJOHWJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 03:22:09 -0400
+        by vger.kernel.org with ESMTP id S1726462AbgJOHWO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 03:22:14 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 15F233AB123
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 61B243AB0F6
         for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 18:21:57 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kSxaG-000hvQ-Iw
+        id 1kSxaG-000hvo-Sx
         for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:56 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kSxaG-006qLg-B8
+        id 1kSxaG-006qM4-Ki
         for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:56 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 07/27] xfsprogs: introduce liburcu support
-Date:   Thu, 15 Oct 2020 18:21:35 +1100
-Message-Id: <20201015072155.1631135-8-david@fromorbit.com>
+Subject: [PATCH 15/27] libxfs: introduce userspace buftarg infrastructure
+Date:   Thu, 15 Oct 2020 18:21:43 +1100
+Message-Id: <20201015072155.1631135-16-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201015072155.1631135-1-david@fromorbit.com>
 References: <20201015072155.1631135-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=xNf9USuDAAAA:8
-        a=HJXtOWahcpWd6xppAhgA:9 a=AjGcO6oz07-iQ99wixmX:22
-        a=SEwjQc04WA-l_NiBhQ7s:22
+        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=RuT7t5_qQKmFAriIQroA:9
+        a=fqUNkrdyFdD8n_ck:21 a=NuahkGsremG9RNdR:21
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The upcoming buffer cache rework/kerenl sync-up requires atomic
-variables. I could use C++11 atomics build into GCC, but they are a
-pain to work with and shoe-horn into the kernel atomic variable API.
+Move the uncached buffer IO API into the xfs_buftarg.h and the local
+buftarg implementation. The uncached buffer IO implementation is
+different between kernel and userspace, but the API is the same.
+Hence implement it via the buftarg abstraction.
 
-Much easier is to introduce a dependency on liburcu - the userspace
-RCU library. This provides atomic variables that very closely match
-the kernel atomic variable API, and it provides a very similar
-memory model and memory barrier support to the kernel. And we get
-RCU support that has an identical interface to the kernel and works
-the same way.
+Pull the "alloc_write_buf()" function from mkfs up into the API as
+xfs_buf_get_uncached_daddr() so that it can be used in other places
+that need the same functionality.
 
-Hence kernel code written with RCU algorithms and atomic variables
-will just slot straight into the userspace xfsprogs code without us
-having to think about whether the lockless algorithms will work in
-userspace or not. This reduces glue and hoop jumping, and gets us
-a step closer to having the entire userspace libxfs code MT safe.
+The API movement still uses the existing raw buffer allocation
+and read IO implementation. This requires us to temporarily export
+the the prototypes for these functions in xfs_buftarg.h. They will
+go away once the buftarg has it's own buffer allocation and IO
+engine implementations.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- configure.ac               |  3 +++
- copy/Makefile              |  3 ++-
- copy/xfs_copy.c            |  3 +++
- db/Makefile                |  3 ++-
- debian/control             |  2 +-
- growfs/Makefile            |  3 ++-
- include/builddefs.in       |  4 +++-
- include/platform_defs.h.in |  1 +
- libfrog/workqueue.c        |  3 +++
- libxfs/init.c              |  3 +++
- libxfs/libxfs_priv.h       |  3 +--
- logprint/Makefile          |  3 ++-
- m4/Makefile                |  1 +
- m4/package_urcu.m4         | 22 ++++++++++++++++++++++
- mdrestore/Makefile         |  3 ++-
- mkfs/Makefile              |  2 +-
- repair/Makefile            |  2 +-
- repair/prefetch.c          |  9 +++++++--
- repair/progress.c          |  4 +++-
- scrub/Makefile             |  3 ++-
- scrub/progress.c           |  2 ++
- 21 files changed, 67 insertions(+), 15 deletions(-)
- create mode 100644 m4/package_urcu.m4
+ libxfs/buftarg.c     | 90 ++++++++++++++++++++++++++++++++++++++++++++
+ libxfs/libxfs_io.h   | 22 +----------
+ libxfs/rdwr.c        | 88 ++++++-------------------------------------
+ libxfs/xfs_buftarg.h | 39 +++++++++++++++++++
+ mkfs/xfs_mkfs.c      | 29 ++++++++++----
+ 5 files changed, 164 insertions(+), 104 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index dc57bbd7cd8c..378622e89232 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -154,6 +154,9 @@ AC_PACKAGE_NEED_UUIDCOMPARE
- AC_PACKAGE_NEED_PTHREAD_H
- AC_PACKAGE_NEED_PTHREADMUTEXINIT
- 
-+AC_PACKAGE_NEED_URCU_H
-+AC_PACKAGE_NEED_RCU_INIT
-+
- AC_HAVE_FADVISE
- AC_HAVE_MADVISE
- AC_HAVE_MINCORE
-diff --git a/copy/Makefile b/copy/Makefile
-index 449b235fad40..1b00cd0d5743 100644
---- a/copy/Makefile
-+++ b/copy/Makefile
-@@ -9,7 +9,8 @@ LTCOMMAND = xfs_copy
- CFILES = xfs_copy.c
- HFILES = xfs_copy.h
- 
--LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT)
-+LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT) \
-+	  $(LIBURCU)
- LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
- 
-diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
-index fc7d225fe6a2..f5eff96976d7 100644
---- a/copy/xfs_copy.c
-+++ b/copy/xfs_copy.c
-@@ -110,6 +110,7 @@ do_message(int flags, int code, const char *fmt, ...)
- 		fprintf(stderr,
- 			_("Aborting XFS copy -- logfile error -- reason: %s\n"),
- 			strerror(errno));
-+		rcu_unregister_thread();
- 		pthread_exit(NULL);
- 	}
+diff --git a/libxfs/buftarg.c b/libxfs/buftarg.c
+index d4bcb2936f01..2a0aad2e0f8c 100644
+--- a/libxfs/buftarg.c
++++ b/libxfs/buftarg.c
+@@ -97,3 +97,93 @@ xfs_buftarg_free(
+ 	platform_flush_device(btp->bt_fd, btp->bt_bdev);
+ 	free(btp);
  }
-@@ -224,6 +225,7 @@ begin_reader(void *arg)
++
++/*
++ * Allocate an uncached buffer that points at daddr.  The refcount will be 1,
++ * and the cache node hash list will be empty to indicate that it's uncached.
++ */
++int
++xfs_buf_get_uncached_daddr(
++	struct xfs_buftarg	*target,
++	xfs_daddr_t		daddr,
++	size_t			bblen,
++	struct xfs_buf		**bpp)
++{
++	struct xfs_buf	*bp;
++
++	bp = libxfs_getbufr(target, daddr, bblen);
++	if (!bp)
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&bp->b_node.cn_hash);
++	bp->b_node.cn_count = 1;
++	bp->b_bn = daddr;
++        bp->b_maps[0].bm_bn = daddr;
++	*bpp = bp;
++	return 0;
++}
++
++int
++xfs_buf_read_uncached(
++	struct xfs_buftarg	*target,
++	xfs_daddr_t		daddr,
++	size_t			bblen,
++	int			flags,
++	struct xfs_buf		**bpp,
++	const struct xfs_buf_ops *ops)
++{
++	struct xfs_buf		 *bp;
++	int			error;
++
++
++	error = xfs_buf_get_uncached(target, bblen, flags, &bp);
++	if (error)
++		return error;
++
++	error = libxfs_readbufr(target, daddr, bp, bblen, flags);
++	if (error)
++		goto release_buf;
++
++	error = libxfs_readbuf_verify(bp, ops);
++	if (error)
++		goto release_buf;
++
++	*bpp = bp;
++	return 0;
++
++release_buf:
++	libxfs_buf_relse(bp);
++	return error;
++}
++
++/*
++ * Return a buffer associated to external memory via xfs_buf_associate_memory()
++ * back to it's empty state.
++ */
++void
++xfs_buf_set_empty(
++	struct xfs_buf		*bp,
++	size_t			numblks)
++{
++	bp->b_addr = NULL;
++	bp->b_length = numblks;
++
++	ASSERT(bp->b_map_count == 1);
++	bp->b_bn = XFS_BUF_DADDR_NULL;
++	bp->b_maps[0].bm_bn = XFS_BUF_DADDR_NULL;
++	bp->b_maps[0].bm_len = bp->b_length;
++}
++
++/*
++ * Associate external memory with an empty uncached buffer.
++ */
++int
++xfs_buf_associate_memory(
++	struct xfs_buf		*bp,
++	void			*mem,
++	size_t			len)
++{
++	bp->b_addr = mem;
++	bp->b_length = BTOBB(len);
++	return 0;
++}
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 0f9630e8e17a..7f8fd88f7de8 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -61,7 +61,7 @@ struct xfs_buf {
+ 	struct xfs_mount	*b_mount;
+ 	struct xfs_buf_map	*b_maps;
+ 	struct xfs_buf_map	__b_map;
+-	int			b_nmaps;
++	int			b_map_count;
+ 	struct list_head	b_list;
+ };
+ 
+@@ -77,8 +77,6 @@ bool xfs_verify_magic16(struct xfs_buf *bp, __be16 dmagic);
+ 
+ typedef unsigned int xfs_buf_flags_t;
+ 
+-#define XFS_BUF_DADDR_NULL		((xfs_daddr_t) (-1LL))
+-
+ #define xfs_buf_offset(bp, offset)	((bp)->b_addr + (offset))
+ #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
+ 
+@@ -148,10 +146,6 @@ extern int	libxfs_bcache_overflowed(void);
+ 
+ /* Buffer (Raw) Interfaces */
+ int		libxfs_bwrite(struct xfs_buf *bp);
+-extern int	libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t,
+-				struct xfs_buf *, int, int);
+-extern int	libxfs_readbufr_map(struct xfs_buftarg *, struct xfs_buf *, int);
+-
+ extern int	libxfs_device_zero(struct xfs_buftarg *, xfs_daddr_t, uint);
+ 
+ extern int libxfs_bhash_size;
+@@ -170,26 +164,12 @@ xfs_buf_update_cksum(struct xfs_buf *bp, unsigned long cksum_offset)
+ 			 cksum_offset);
+ }
+ 
+-static inline int
+-xfs_buf_associate_memory(struct xfs_buf *bp, void *mem, size_t len)
+-{
+-	bp->b_addr = mem;
+-	bp->b_length = BTOBB(len);
+-	return 0;
+-}
+-
+ static inline void
+ xfs_buf_hold(struct xfs_buf *bp)
  {
- 	thread_args	*args = arg;
- 
-+	rcu_register_thread();
- 	for (;;) {
- 		pthread_mutex_lock(&args->wait);
- 		if (do_write(args, NULL))
-@@ -243,6 +245,7 @@ handle_error:
- 	if (--glob_masks.num_working == 0)
- 		pthread_mutex_unlock(&mainwait);
- 	pthread_mutex_unlock(&glob_masks.mutex);
-+	rcu_unregister_thread();
- 	pthread_exit(NULL);
- 	return NULL;
+ 	bp->b_node.cn_count++;
  }
-diff --git a/db/Makefile b/db/Makefile
-index 9bd9bf514f5d..4e44adc03577 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -17,7 +17,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
- CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c
- LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
  
--LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-+LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
-+	  $(LIBURCU)
- LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
- LLDFLAGS += -static-libtool-libs
+-int libxfs_buf_get_uncached(struct xfs_buftarg *targ, size_t bblen, int flags,
+-		struct xfs_buf **bpp);
+-int libxfs_buf_read_uncached(struct xfs_buftarg *targ, xfs_daddr_t daddr,
+-		size_t bblen, int flags, struct xfs_buf **bpp,
+-		const struct xfs_buf_ops *ops);
+-
+ /* Push a single buffer on a delwri queue. */
+ static inline bool
+ xfs_buf_delwri_queue(struct xfs_buf *bp, struct list_head *buffer_list)
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 5ab1987eb0fe..3e755402b024 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -249,7 +249,7 @@ __initbuf(struct xfs_buf *bp, struct xfs_buftarg *btp, xfs_daddr_t bno,
+ 	INIT_LIST_HEAD(&bp->b_li_list);
  
-diff --git a/debian/control b/debian/control
-index ddd17850e378..2a97fa633a1b 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config
-+Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config, liburcu-dev
- Standards-Version: 4.0.0
- Homepage: https://xfs.wiki.kernel.org/
- 
-diff --git a/growfs/Makefile b/growfs/Makefile
-index a107d348ab6d..08601de77ab3 100644
---- a/growfs/Makefile
-+++ b/growfs/Makefile
-@@ -9,7 +9,8 @@ LTCOMMAND = xfs_growfs
- 
- CFILES = xfs_growfs.c
- 
--LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-+LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
-+	  $(LIBURCU)
- 
- ifeq ($(ENABLE_EDITLINE),yes)
- LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
-diff --git a/include/builddefs.in b/include/builddefs.in
-index e8f447f92baf..78eddf4a9852 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -22,6 +22,7 @@ LDFLAGS =
- 
- LIBRT = @librt@
- LIBUUID = @libuuid@
-+LIBURCU = @liburcu@
- LIBPTHREAD = @libpthread@
- LIBTERMCAP = @libtermcap@
- LIBEDITLINE = @libeditline@
-@@ -125,7 +126,8 @@ CROND_DIR = @crond_dir@
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
- #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
- 
--PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
-+# _LGPL_SOURCE is for liburcu to work correctly with GPL/LGPL programs
-+PCFLAGS = -D_LGPL_SOURCE -D_GNU_SOURCE $(GCCFLAGS)
- ifeq ($(HAVE_UMODE_T),yes)
- PCFLAGS += -DHAVE_UMODE_T
- endif
-diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
-index 1f7ceafb1fbc..8af43f3b8d8a 100644
---- a/include/platform_defs.h.in
-+++ b/include/platform_defs.h.in
-@@ -23,6 +23,7 @@
- #include <limits.h>
- #include <stdbool.h>
- #include <libgen.h>
-+#include <urcu.h>
- 
- typedef struct filldir		filldir_t;
- 
-diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
-index fe3de4289379..cd232d9bddc0 100644
---- a/libfrog/workqueue.c
-+++ b/libfrog/workqueue.c
-@@ -11,6 +11,7 @@
- #include <stdbool.h>
- #include <errno.h>
- #include <assert.h>
-+#include <urcu.h>
- #include "workqueue.h"
- 
- /* Main processing thread */
-@@ -24,6 +25,7 @@ workqueue_thread(void *arg)
- 	 * Loop pulling work from the passed in work queue.
- 	 * Check for notification to exit after every chunk of work.
- 	 */
-+	rcu_register_thread();
- 	while (1) {
- 		pthread_mutex_lock(&wq->lock);
- 
-@@ -52,6 +54,7 @@ workqueue_thread(void *arg)
- 		(wi->function)(wi->queue, wi->index, wi->arg);
- 		free(wi);
- 	}
-+	rcu_unregister_thread();
- 
- 	return NULL;
- }
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 4dab7d25727e..477487e985c4 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -310,6 +310,8 @@ libxfs_init(libxfs_init_t *a)
- 	fd = -1;
- 	flags = (a->isreadonly | a->isdirect);
- 
-+	rcu_init();
-+	rcu_register_thread();
- 	radix_tree_init();
- 
- 	if (a->volname) {
-@@ -957,6 +959,7 @@ libxfs_destroy(
- 	libxfs_bcache_free();
- 	cache_destroy(libxfs_bcache);
- 	leaked = destroy_zones();
-+	rcu_unregister_thread();
- 	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
+ 	if (!bp->b_maps) {
+-		bp->b_nmaps = 1;
++		bp->b_map_count = 1;
+ 		bp->b_maps = &bp->__b_map;
+ 		bp->b_maps[0].bm_bn = bp->b_bn;
+ 		bp->b_maps[0].bm_len = bp->b_length;
+@@ -279,7 +279,7 @@ libxfs_initbuf_map(struct xfs_buf *bp, struct xfs_buftarg *btp,
+ 			strerror(errno));
  		exit(1);
- }
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index b88939c04adb..4cce1d680921 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -194,8 +194,7 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
- #define spin_unlock(a)		((void) 0)
- #define likely(x)		(x)
- #define unlikely(x)		(x)
--#define rcu_read_lock()		((void) 0)
--#define rcu_read_unlock()	((void) 0)
-+
- /* Need to be able to handle this bare or in control flow */
- static inline bool WARN_ON(bool expr) {
- 	return (expr);
-diff --git a/logprint/Makefile b/logprint/Makefile
-index 758504b39f0f..cdedbd0dbe82 100644
---- a/logprint/Makefile
-+++ b/logprint/Makefile
-@@ -12,7 +12,8 @@ CFILES = logprint.c \
- 	 log_copy.c log_dump.c log_misc.c \
- 	 log_print_all.c log_print_trans.c log_redo.c
+ 	}
+-	bp->b_nmaps = nmaps;
++	bp->b_map_count = nmaps;
  
--LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-+LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
-+	  $(LIBURCU)
- LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
- 
-diff --git a/m4/Makefile b/m4/Makefile
-index c6c73dc9bbee..7312053039f4 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -24,6 +24,7 @@ LSRCFILES = \
- 	package_services.m4 \
- 	package_types.m4 \
- 	package_icu.m4 \
-+	package_urcu.m4 \
- 	package_utilies.m4 \
- 	package_uuiddev.m4 \
- 	multilib.m4 \
-diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
-new file mode 100644
-index 000000000000..9b0dee35d9a1
---- /dev/null
-+++ b/m4/package_urcu.m4
-@@ -0,0 +1,22 @@
-+AC_DEFUN([AC_PACKAGE_NEED_URCU_H],
-+  [ AC_CHECK_HEADERS(urcu.h)
-+    if test $ac_cv_header_urcu_h = no; then
-+	AC_CHECK_HEADERS(urcu.h,, [
-+	echo
-+	echo 'FATAL ERROR: could not find a valid urcu header.'
-+	exit 1])
-+    fi
-+  ])
-+
-+AC_DEFUN([AC_PACKAGE_NEED_RCU_INIT],
-+  [ AC_MSG_CHECKING([for liburcu])
-+    AC_TRY_COMPILE([
-+#define _GNU_SOURCE
-+#include <urcu.h>
-+    ], [
-+	rcu_init();
-+    ],	liburcu=-lurcu
-+	AC_MSG_RESULT(yes),
-+	AC_MSG_RESULT(no))
-+    AC_SUBST(liburcu)
-+  ])
-diff --git a/mdrestore/Makefile b/mdrestore/Makefile
-index d946955b0517..8f28ddab326b 100644
---- a/mdrestore/Makefile
-+++ b/mdrestore/Makefile
-@@ -8,7 +8,8 @@ include $(TOPDIR)/include/builddefs
- LTCOMMAND = xfs_mdrestore
- CFILES = xfs_mdrestore.c
- 
--LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBUUID)
-+LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBUUID) \
-+	  $(LIBURCU)
- LTDEPENDENCIES = $(LIBXFS) $(LIBFROG)
- LLDFLAGS = -static
- 
-diff --git a/mkfs/Makefile b/mkfs/Makefile
-index b8805f7e1ea1..811ba9dbe29b 100644
---- a/mkfs/Makefile
-+++ b/mkfs/Makefile
-@@ -11,7 +11,7 @@ HFILES =
- CFILES = proto.c xfs_mkfs.c
- 
- LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
--	$(LIBUUID) $(LIBINIH)
-+	$(LIBUUID) $(LIBINIH) $(LIBURCU)
- LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
- 
-diff --git a/repair/Makefile b/repair/Makefile
-index 5f0764d1c3cd..47536ca1cc11 100644
---- a/repair/Makefile
-+++ b/repair/Makefile
-@@ -72,7 +72,7 @@ CFILES = \
- 	xfs_repair.c
- 
- LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
--	$(LIBPTHREAD) $(LIBBLKID)
-+	$(LIBPTHREAD) $(LIBBLKID) $(LIBURCU)
- LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG)
- LLDFLAGS = -static-libtool-libs
- 
-diff --git a/repair/prefetch.c b/repair/prefetch.c
-index 48affa1869f8..22a0c0c902d9 100644
---- a/repair/prefetch.c
-+++ b/repair/prefetch.c
-@@ -660,6 +660,7 @@ pf_io_worker(
- 	if (buf == NULL)
- 		return NULL;
- 
-+	rcu_register_thread();
- 	pthread_mutex_lock(&args->lock);
- 	while (!args->queuing_done || !btree_is_empty(args->io_queue)) {
- 		pftrace("waiting to start prefetch I/O for AG %d", args->agno);
-@@ -682,6 +683,7 @@ pf_io_worker(
- 	free(buf);
- 
- 	pftrace("finished prefetch I/O for AG %d", args->agno);
-+	rcu_unregister_thread();
- 
- 	return NULL;
- }
-@@ -726,6 +728,8 @@ pf_queuing_worker(
- 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
- 	unsigned long long	cluster_mask;
- 
-+	rcu_register_thread();
-+
- 	cluster_mask = (1ULL << igeo->inodes_per_cluster) - 1;
- 
- 	for (i = 0; i < PF_THREAD_COUNT; i++) {
-@@ -739,7 +743,7 @@ pf_queuing_worker(
- 			args->io_threads[i] = 0;
- 			if (i == 0) {
- 				pf_skip_prefetch_thread(args);
--				return NULL;
-+				goto out;
- 			}
- 			/*
- 			 * since we have at least one I/O thread, use them for
-@@ -779,7 +783,6 @@ pf_queuing_worker(
- 			 * Start processing as well, in case everything so
- 			 * far was already prefetched and the queue is empty.
- 			 */
--			
- 			pf_start_io_workers(args);
- 			pf_start_processing(args);
- 			sem_wait(&args->ra_count);
-@@ -841,6 +844,8 @@ pf_queuing_worker(
- 	if (next_args)
- 		pf_create_prefetch_thread(next_args);
- 
-+out:
-+	rcu_unregister_thread();
- 	return NULL;
+ 	bytes = 0;
+ 	for ( i = 0; i < nmaps; i++) {
+@@ -331,7 +331,7 @@ __libxfs_getbufr(int blen)
+ 	return bp;
  }
  
-diff --git a/repair/progress.c b/repair/progress.c
-index e5a9c1efa822..f6c4d988444e 100644
---- a/repair/progress.c
-+++ b/repair/progress.c
-@@ -182,6 +182,7 @@ progress_rpt_thread (void *p)
- 		do_error (_("progress_rpt: cannot malloc progress msg buffer\n"));
+-static struct xfs_buf *
++struct xfs_buf *
+ libxfs_getbufr(struct xfs_buftarg *btp, xfs_daddr_t blkno, int bblen)
+ {
+ 	struct xfs_buf	*bp;
+@@ -617,7 +617,7 @@ libxfs_readbufr_map(struct xfs_buftarg *btp, struct xfs_buf *bp, int flags)
  
- 	running = 1;
-+	rcu_register_thread();
+ 	fd = libxfs_device_to_fd(btp->bt_bdev);
+ 	buf = bp->b_addr;
+-	for (i = 0; i < bp->b_nmaps; i++) {
++	for (i = 0; i < bp->b_map_count; i++) {
+ 		off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
+ 		int len = BBTOB(bp->b_maps[i].bm_len);
+ 
+@@ -707,75 +707,6 @@ err:
+ 	return error;
+ }
+ 
+-/* Allocate a raw uncached buffer. */
+-static inline struct xfs_buf *
+-libxfs_getbufr_uncached(
+-	struct xfs_buftarg	*targ,
+-	xfs_daddr_t		daddr,
+-	size_t			bblen)
+-{
+-	struct xfs_buf		*bp;
+-
+-	bp = libxfs_getbufr(targ, daddr, bblen);
+-	if (!bp)
+-		return NULL;
+-
+-	INIT_LIST_HEAD(&bp->b_node.cn_hash);
+-	bp->b_node.cn_count = 1;
+-	return bp;
+-}
+-
+-/*
+- * Allocate an uncached buffer that points nowhere.  The refcount will be 1,
+- * and the cache node hash list will be empty to indicate that it's uncached.
+- */
+-int
+-libxfs_buf_get_uncached(
+-	struct xfs_buftarg	*targ,
+-	size_t			bblen,
+-	int			flags,
+-	struct xfs_buf		**bpp)
+-{
+-	*bpp = libxfs_getbufr_uncached(targ, XFS_BUF_DADDR_NULL, bblen);
+-	return *bpp != NULL ? 0 : -ENOMEM;
+-}
+-
+-/*
+- * Allocate and read an uncached buffer.  The refcount will be 1, and the cache
+- * node hash list will be empty to indicate that it's uncached.
+- */
+-int
+-libxfs_buf_read_uncached(
+-	struct xfs_buftarg	*targ,
+-	xfs_daddr_t		daddr,
+-	size_t			bblen,
+-	int			flags,
+-	struct xfs_buf		**bpp,
+-	const struct xfs_buf_ops *ops)
+-{
+-	struct xfs_buf		*bp;
+-	int			error;
+-
+-	*bpp = NULL;
+-	bp = libxfs_getbufr_uncached(targ, daddr, bblen);
+-	if (!bp)
+-		return -ENOMEM;
+-
+-	error = libxfs_readbufr(targ, daddr, bp, bblen, flags);
+-	if (error)
+-		goto err;
+-
+-	error = libxfs_readbuf_verify(bp, ops);
+-	if (error)
+-		goto err;
+-
+-	*bpp = bp;
+-	return 0;
+-err:
+-	libxfs_buf_relse(bp);
+-	return error;
+-}
+-
+ static int
+ __write_buf(int fd, void *buf, int len, off64_t offset, int flags)
+ {
+@@ -836,7 +767,7 @@ libxfs_bwrite(
+ 		int	i;
+ 		void	*buf = bp->b_addr;
+ 
+-		for (i = 0; i < bp->b_nmaps; i++) {
++		for (i = 0; i < bp->b_map_count; i++) {
+ 			off64_t	offset = LIBXFS_BBTOOFF64(bp->b_maps[i].bm_bn);
+ 			int len = BBTOB(bp->b_maps[i].bm_len);
+ 
+@@ -1207,6 +1138,7 @@ libxfs_log_clear(
+ 	xfs_daddr_t		blk;
+ 	xfs_daddr_t		end_blk;
+ 	char			*ptr;
++	int			error;
+ 
+ 	if (((btp && dptr) || (!btp && !dptr)) ||
+ 	    (btp && !btp->bt_bdev) || !fs_uuid)
+@@ -1236,7 +1168,9 @@ libxfs_log_clear(
+ 	/* write out the first log record */
+ 	ptr = dptr;
+ 	if (btp) {
+-		bp = libxfs_getbufr_uncached(btp, start, len);
++		error = xfs_buf_get_uncached_daddr(btp, start, len, &bp);
++		if (error)
++			return error;
+ 		ptr = bp->b_addr;
+ 	}
+ 	libxfs_log_header(ptr, fs_uuid, version, sunit, fmt, lsn, tail_lsn,
+@@ -1284,7 +1218,9 @@ libxfs_log_clear(
+ 
+ 		ptr = dptr;
+ 		if (btp) {
+-			bp = libxfs_getbufr_uncached(btp, blk, len);
++			error = xfs_buf_get_uncached_daddr(btp, blk, len, &bp);
++			if (error)
++				return error;
+ 			ptr = bp->b_addr;
+ 		}
+ 		/*
+diff --git a/libxfs/xfs_buftarg.h b/libxfs/xfs_buftarg.h
+index 1bc3a4d0bc9c..5429c96c0547 100644
+--- a/libxfs/xfs_buftarg.h
++++ b/libxfs/xfs_buftarg.h
+@@ -11,6 +11,8 @@ struct xfs_mount;
+ struct xfs_buf;
+ struct xfs_buf_ops;
+ 
++#define XFS_BUF_DADDR_NULL ((xfs_daddr_t) (-1LL))
++
+ /*
+  * The xfs_buftarg contains 2 notions of "sector size" -
+  *
+@@ -52,4 +54,41 @@ int xfs_buftarg_setsize(struct xfs_buftarg *target, unsigned int size);
+ 
+ #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+ 
++/*
++ * Low level buftarg IO routines.
++ *
++ * This includes the uncached buffer IO API, as the memory management associated
++ * with uncached buffers is tightly tied to the kernel buffer implementation.
++ */
++
++void xfs_buf_set_empty(struct xfs_buf *bp, size_t numblks);
++int xfs_buf_associate_memory(struct xfs_buf *bp, void *mem, size_t length);
++
++int xfs_buf_get_uncached_daddr(struct xfs_buftarg *target, xfs_daddr_t daddr,
++				size_t bblen, struct xfs_buf **bpp);
++static inline int
++xfs_buf_get_uncached(
++	struct xfs_buftarg	*target,
++	size_t			bblen,
++	int			flags,
++	struct xfs_buf		**bpp)
++{
++	return xfs_buf_get_uncached_daddr(target, XFS_BUF_DADDR_NULL, bblen, bpp);
++}
++
++int xfs_buf_read_uncached(struct xfs_buftarg *target, xfs_daddr_t daddr,
++			  size_t bblen, int flags, struct xfs_buf **bpp,
++			  const struct xfs_buf_ops *ops);
++
++/*
++ * Raw buffer access functions. These exist as temporary bridges for uncached IO
++ * that uses direct access to the buffers to submit IO. These will go away with
++ * the new buffer cache IO engine.
++ */
++struct xfs_buf *libxfs_getbufr(struct xfs_buftarg *btp, xfs_daddr_t blkno,
++			int bblen);
++int libxfs_readbufr(struct xfs_buftarg *, xfs_daddr_t, struct xfs_buf *, int,
++			int);
++int libxfs_readbufr_map(struct xfs_buftarg *, struct xfs_buf *, int);
++
+ #endif /* __XFS_BUFTARG_H */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 794955a9624c..87e1881e3152 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3463,6 +3463,7 @@ prepare_devices(
+ 	struct xfs_buf		*buf;
+ 	int			whack_blks = BTOBB(WHACK_SIZE);
+ 	int			lsunit;
++	int			error;
  
  	/*
- 	 * Specify a repeating timer that fires each MSG_INTERVAL seconds.
-@@ -286,7 +287,8 @@ progress_rpt_thread (void *p)
- 		do_warn(_("cannot delete timer\n"));
+ 	 * If there's an old XFS filesystem on the device with enough intact
+@@ -3496,8 +3497,10 @@ prepare_devices(
+ 	 * the end of the device.  (MD sb is ~64k from the end, take out a wider
+ 	 * swath to be sure)
+ 	 */
+-	buf = alloc_write_buf(mp->m_ddev_targp, (xi->dsize - whack_blks),
+-			whack_blks);
++	error = xfs_buf_get_uncached_daddr(mp->m_ddev_targp,
++				(xi->dsize - whack_blks), whack_blks, &buf);
++	if (error)
++		goto out_error;
+ 	memset(buf->b_addr, 0, WHACK_SIZE);
+ 	libxfs_buf_mark_dirty(buf);
+ 	libxfs_buf_relse(buf);
+@@ -3508,14 +3511,18 @@ prepare_devices(
+ 	 * swap (somewhere around the page size), jfs (32k),
+ 	 * ext[2,3] and reiserfs (64k) - and hopefully all else.
+ 	 */
+-	buf = alloc_write_buf(mp->m_ddev_targp, 0, whack_blks);
++	error = xfs_buf_get_uncached_daddr(mp->m_ddev_targp, 0, whack_blks, &buf);
++	if (error)
++		goto out_error;
+ 	memset(buf->b_addr, 0, WHACK_SIZE);
+ 	libxfs_buf_mark_dirty(buf);
+ 	libxfs_buf_relse(buf);
  
- 	free (msgbuf);
--	return (NULL);
-+	rcu_unregister_thread();
-+	return NULL;
- }
- 
- int
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 47c887eb79a1..849e3afd5af3 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -71,7 +71,8 @@ spacemap.c \
- vfs.c \
- xfs_scrub.c
- 
--LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBICU_LIBS) $(LIBRT)
-+LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBICU_LIBS) $(LIBRT) \
-+	$(LIBURCU)
- LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
- LLDFLAGS = -static
- 
-diff --git a/scrub/progress.c b/scrub/progress.c
-index d8130ca5f93c..4a66fb0d5cfb 100644
---- a/scrub/progress.c
-+++ b/scrub/progress.c
-@@ -117,6 +117,7 @@ progress_report_thread(void *arg)
- 	struct timespec		abstime;
- 	int			ret;
- 
-+	rcu_register_thread();
- 	pthread_mutex_lock(&pt.lock);
- 	while (1) {
- 		uint64_t	progress_val;
-@@ -140,6 +141,7 @@ progress_report_thread(void *arg)
- 			progress_report(progress_val);
+ 	/* OK, now write the superblock... */
+-	buf = alloc_write_buf(mp->m_ddev_targp, XFS_SB_DADDR,
+-			XFS_FSS_TO_BB(mp, 1));
++	error = xfs_buf_get_uncached_daddr(mp->m_ddev_targp, XFS_SB_DADDR,
++			XFS_FSS_TO_BB(mp, 1), &buf);
++	if (error)
++		goto out_error;
+ 	buf->b_ops = &xfs_sb_buf_ops;
+ 	memset(buf->b_addr, 0, cfg->sectorsize);
+ 	libxfs_sb_to_disk(buf->b_addr, sbp);
+@@ -3536,14 +3543,22 @@ prepare_devices(
+ 	/* finally, check we can write the last block in the realtime area */
+ 	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev &&
+ 	    cfg->rtblocks > 0) {
+-		buf = alloc_write_buf(mp->m_rtdev_targp,
++		error = xfs_buf_get_uncached_daddr(mp->m_rtdev_targp,
+ 				XFS_FSB_TO_BB(mp, cfg->rtblocks - 1LL),
+-				BTOBB(cfg->blocksize));
++				BTOBB(cfg->blocksize), &buf);
++		if (error)
++			goto out_error;
+ 		memset(buf->b_addr, 0, cfg->blocksize);
+ 		libxfs_buf_mark_dirty(buf);
+ 		libxfs_buf_relse(buf);
  	}
- 	pthread_mutex_unlock(&pt.lock);
-+	rcu_unregister_thread();
- 	return NULL;
+ 
++	return;
++
++out_error:
++	fprintf(stderr, _("Could not get memory for buffer, err=%d\n"),
++			error);
++	exit(1);
  }
  
+ static void
 -- 
 2.28.0
 
