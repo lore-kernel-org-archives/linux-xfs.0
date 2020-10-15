@@ -7,206 +7,256 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A164EC433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 17:09:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A555C433E7
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 17:12:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2A2FA22254
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 17:09:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3132F22254
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 17:12:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LSgKjDNq"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WsMk7gQK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389979AbgJORJX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Oct 2020 13:09:23 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:58836 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389725AbgJORJX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 13:09:23 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09FH4NJE100568;
-        Thu, 15 Oct 2020 17:09:20 GMT
+        id S2390205AbgJORMp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Oct 2020 13:12:45 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:42468 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390208AbgJORMo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 13:12:44 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09FH8bvZ193305;
+        Thu, 15 Oct 2020 17:12:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=FcwaZQxsvwoNahJy2ZfETdvv8q1p1D9bbJnJAqEofuE=;
- b=LSgKjDNq49hPEWQ5pVCZl7W8RR4Z+sWQn1/b676Of5aa+Gz2yUPpMub2Arfpz1ZnRbuq
- or4Uj6Y4/JbQObgyXot0WlywOQdCWUoJKBR7RiDmwIz5jiz6D2dRJAc1AEZMU4AGu+my
- 2F2TjWRBAyHX/zg2RShgs8n18iUh/AyT427YBUoHgGuwBLr7i10PvF8KSl0Yqt4I7DfL
- Jfmkb2uiWzyMqvW+5qVi3t2XEaoHaYBtxi0TeJXjQpab90LShWM3d4kIv6WM5AItish3
- OM+sTpjE/lq4g3reRIqe5OB5tGq0mdNIMPLxKvVCv2aBXbtg3dOh8A8kvyijpKsIgN+k ng== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 3434wkwvnm-1
+ bh=9h48zxhrk8n7aN+pFzcHA1ojfH6taaWrkBYr0YJUkOs=;
+ b=WsMk7gQKDKRIoMFIrjkcCIihFf8oZnns3OO/u6nqRC7PaRKIVx7/e9peJdWZfk3gt3ri
+ WWYFzbOCykW7rlay6UvQquoh/uN+Ye9keYfbZ6go41sUh7gGDJXbaljRKjdSI7axcSdQ
+ dIE/2pXO1YmfdUq85FBrDw7YL4hc6R6n9oSGuYmQ3gZHf8Z4hdSEZQN9pcfbyRfT9DvN
+ z1hEFIV9UZYaqPNL85FSuxQfidM+bOygm0sGittW86h077WioutLtGHK+1zUukiqDzUf
+ jnwJ5v5cXRxvI2vn/96wDzNmAVb+/A1zIqpjIz2qSsc6In6WnUfonKai/9rYMFKRlYGW /g== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2130.oracle.com with ESMTP id 346g8gk2pu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 15 Oct 2020 17:09:20 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09FH5Nvx089936;
-        Thu, 15 Oct 2020 17:09:20 GMT
+        Thu, 15 Oct 2020 17:12:42 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09FHAeTW168071;
+        Thu, 15 Oct 2020 17:12:41 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 343pv23ycj-1
+        by userp3030.oracle.com with ESMTP id 343pw0nf8u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 15 Oct 2020 17:09:20 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09FH9Ite029816;
-        Thu, 15 Oct 2020 17:09:19 GMT
+        Thu, 15 Oct 2020 17:12:41 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09FHCej9000408;
+        Thu, 15 Oct 2020 17:12:41 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 15 Oct 2020 10:09:18 -0700
-Date:   Thu, 15 Oct 2020 10:09:17 -0700
+        with ESMTP ; Thu, 15 Oct 2020 10:12:40 -0700
+Date:   Thu, 15 Oct 2020 10:12:39 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 10/27] libxfs: add kernel-compatible completion API
-Message-ID: <20201015170917.GU9832@magnolia>
+Subject: Re: [PATCH 12/27] xfsprogs: convert use-once buffer reads to
+ uncached IO
+Message-ID: <20201015171239.GV9832@magnolia>
 References: <20201015072155.1631135-1-david@fromorbit.com>
- <20201015072155.1631135-11-david@fromorbit.com>
+ <20201015072155.1631135-13-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201015072155.1631135-11-david@fromorbit.com>
+In-Reply-To: <20201015072155.1631135-13-david@fromorbit.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9775 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 spamscore=0
- adultscore=0 suspectscore=1 phishscore=0 bulkscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
+ bulkscore=0 mlxlogscore=999 suspectscore=1 malwarescore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010150113
+ definitions=main-2010150114
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9775 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 mlxscore=0
- malwarescore=0 phishscore=0 suspectscore=1 impostorscore=0 clxscore=1015
- spamscore=0 priorityscore=1501 bulkscore=0 adultscore=0 mlxlogscore=999
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 suspectscore=1
+ priorityscore=1501 phishscore=0 clxscore=1015 spamscore=0 adultscore=0
+ mlxscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999 lowpriorityscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010150113
+ definitions=main-2010150114
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 15, 2020 at 06:21:38PM +1100, Dave Chinner wrote:
+On Thu, Oct 15, 2020 at 06:21:40PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
-> 
-> This is needed for the kernel buffer cache conversion to be able
-> to wait on IO synchrnously. It is implemented with pthread mutexes
-> and conditional variables.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  include/Makefile     |  1 +
->  include/completion.h | 61 ++++++++++++++++++++++++++++++++++++++++++++
->  include/libxfs.h     |  1 +
->  libxfs/libxfs_priv.h |  1 +
->  4 files changed, 64 insertions(+)
->  create mode 100644 include/completion.h
+>  db/init.c     |  2 +-
+>  libxfs/init.c | 93 ++++++++++++++++++++++++++++++---------------------
+>  2 files changed, 55 insertions(+), 40 deletions(-)
 > 
-> diff --git a/include/Makefile b/include/Makefile
-> index f7c40a5ce1a1..98031e70fa0d 100644
-> --- a/include/Makefile
-> +++ b/include/Makefile
-> @@ -12,6 +12,7 @@ LIBHFILES = libxfs.h \
->  	atomic.h \
->  	bitops.h \
->  	cache.h \
-> +	completion.h \
->  	hlist.h \
->  	kmem.h \
->  	list.h \
-> diff --git a/include/completion.h b/include/completion.h
-> new file mode 100644
-> index 000000000000..92194c3f1484
-> --- /dev/null
-> +++ b/include/completion.h
-> @@ -0,0 +1,61 @@
-> +// SPDX-License-Identifier: GPL-2.0
+> diff --git a/db/init.c b/db/init.c
+> index 19f0900a862b..f797df8a768b 100644
+> --- a/db/init.c
+> +++ b/db/init.c
+> @@ -153,7 +153,7 @@ init(
+>  	 */
+>  	if (sbp->sb_rootino != NULLFSINO &&
+>  	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
+> -		int error = -libxfs_initialize_perag_data(mp, sbp->sb_agcount);
+> +		error = -libxfs_initialize_perag_data(mp, sbp->sb_agcount);
+
+Er... this and the xfs_check_sizes hoisting below don't have anything to
+do with uncached io conversion...?
+
+>  		if (error) {
+>  			fprintf(stderr,
+>  	_("%s: cannot init perag data (%d). Continuing anyway.\n"),
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index fe784940c299..fc30f92d6fb2 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -419,7 +419,7 @@ done:
+>   */
+>  static int
+>  rtmount_init(
+> -	xfs_mount_t	*mp,	/* file system mount structure */
+> +	struct xfs_mount *mp,
+>  	int		flags)
+>  {
+>  	struct xfs_buf	*bp;	/* buffer for last block of subvolume */
+> @@ -473,8 +473,9 @@ rtmount_init(
+>  			(unsigned long long) mp->m_sb.sb_rblocks);
+>  		return -1;
+>  	}
+> -	error = libxfs_buf_read(mp->m_rtdev, d - XFS_FSB_TO_BB(mp, 1),
+> -			XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
+> +	error = libxfs_buf_read_uncached(mp->m_rtdev_targp,
+> +					d - XFS_FSB_TO_BB(mp, 1),
+> +					XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
+>  	if (error) {
+>  		fprintf(stderr, _("%s: realtime size check failed\n"),
+>  			progname);
+> @@ -657,6 +658,52 @@ libxfs_buftarg_init(
+>  	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev);
+>  }
+>  
 > +/*
-> + * Copyright (c) 2019 RedHat, Inc.
-> + * All Rights Reserved.
-> + */
-> +#ifndef __LIBXFS_COMPLETION_H__
-> +#define __LIBXFS_COMPLETION_H__
-> +
-> +/*
-> + * This implements kernel compatible completion semantics. This is slightly
-> + * different to the way pthread conditional variables work in that completions
-> + * can be signalled before the waiter tries to wait on the variable. In the
-> + * pthread case, the completion is ignored and the waiter goes to sleep, whilst
-> + * the kernel will see that the completion has already been completed and so
-> + * will not block. This is handled through the addition of the the @signalled
-> + * flag in the struct completion.
+> + * Check that the data (and log if separate) is an ok size.
+> + *
+> + * XXX: copied from kernel, needs to be moved to shared code
 
-Hmm... do any of the existing pthread_cond_t users need these semantics?
+Ah, because you want to share this function with the kernel.
 
-I suspect the ones in scrub/vfs.c might actually be vulnerable to the
-signal-before-wait race that this completion structure solves.
-
-In any case, seeing as this primitive isn't inherent to the xfs disk
-format, maybe these new concurrency management things belong in libfrog?
+Hmm... what do you think about putting it in libxfs/xfs_sb.c ?
 
 --D
 
 > + */
-> +struct completion {
-> +	pthread_mutex_t		lock;
-> +	pthread_cond_t		cond;
-> +	bool			signalled; /* for kernel completion behaviour */
-> +	int			waiters;
-> +};
-> +
-> +static inline void
-> +init_completion(struct completion *w)
+> +STATIC int
+> +xfs_check_sizes(
+> +        struct xfs_mount *mp)
 > +{
-> +	pthread_mutex_init(&w->lock, NULL);
-> +	pthread_cond_init(&w->cond, NULL);
-> +	w->signalled = false;
-> +}
+> +	struct xfs_buf	*bp;
+> +	xfs_daddr_t	d;
+> +	int		error;
 > +
-> +static inline void
-> +complete(struct completion *w)
-> +{
-> +	pthread_mutex_lock(&w->lock);
-> +	w->signalled = true;
-> +	pthread_cond_broadcast(&w->cond);
-> +	pthread_mutex_unlock(&w->lock);
-> +}
-> +
-> +/*
-> + * Support for mulitple waiters requires that we count the number of waiters
-> + * we have and only clear the signalled variable once all those waiters have
-> + * been woken.
-> + */
-> +static inline void
-> +wait_for_completion(struct completion *w)
-> +{
-> +	pthread_mutex_lock(&w->lock);
-> +	if (!w->signalled) {
-> +		w->waiters++;
-> +		pthread_cond_wait(&w->cond, &w->lock);
-> +		w->waiters--;
+> +	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+> +	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
+> +		xfs_warn(mp, "filesystem size mismatch detected");
+> +		return -EFBIG;
 > +	}
-> +	if (!w->waiters)
-> +		w->signalled = false;
-> +	pthread_mutex_unlock(&w->lock);
+> +	error = libxfs_buf_read_uncached(mp->m_ddev_targp,
+> +					d - XFS_FSS_TO_BB(mp, 1),
+> +					XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+> +	if (error) {
+> +		xfs_warn(mp, "last sector read failed");
+> +		return error;
+> +	}
+> +	libxfs_buf_relse(bp);
+> +
+> +	if (mp->m_logdev_targp == mp->m_ddev_targp)
+> +		return 0;
+> +
+> +	d = (xfs_daddr_t)XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+> +	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks) {
+> +		xfs_warn(mp, "log size mismatch detected");
+> +		return -EFBIG;
+> +	}
+> +	error = libxfs_buf_read_uncached(mp->m_logdev_targp,
+> +					d - XFS_FSB_TO_BB(mp, 1),
+> +					XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
+> +	if (error) {
+> +		xfs_warn(mp, "log device read failed");
+> +		return error;
+> +	}
+> +	libxfs_buf_relse(bp);
+> +	return 0;
 > +}
 > +
-> +#endif /* __LIBXFS_COMPLETION_H__ */
-> diff --git a/include/libxfs.h b/include/libxfs.h
-> index caf4a5139469..d03ec8aeaf5c 100644
-> --- a/include/libxfs.h
-> +++ b/include/libxfs.h
-> @@ -19,6 +19,7 @@
->  #include "libfrog/radix-tree.h"
->  #include "atomic.h"
->  #include "spinlock.h"
-> +#include "completion.h"
+>  /*
+>   * Mount structure initialization, provides a filled-in xfs_mount_t
+>   * such that the numerous XFS_* macros can be used.  If dev is zero,
+> @@ -673,7 +720,6 @@ libxfs_mount(
+>  {
+>  	struct xfs_buf		*bp;
+>  	struct xfs_sb		*sbp;
+> -	xfs_daddr_t		d;
+>  	bool			debugger = (flags & LIBXFS_MOUNT_DEBUGGER);
+>  	int			error;
 >  
->  #include "xfs_types.h"
->  #include "xfs_fs.h"
-> diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-> index e134f65c5dd1..5cbc4fe69732 100644
-> --- a/libxfs/libxfs_priv.h
-> +++ b/libxfs/libxfs_priv.h
-> @@ -49,6 +49,7 @@
->  #include "libfrog/radix-tree.h"
->  #include "atomic.h"
->  #include "spinlock.h"
-> +#include "completion.h"
+> @@ -704,16 +750,6 @@ libxfs_mount(
+>  	xfs_rmapbt_compute_maxlevels(mp);
+>  	xfs_refcountbt_compute_maxlevels(mp);
 >  
->  #include "xfs_types.h"
->  #include "xfs_arch.h"
+> -	/*
+> -	 * Check that the data (and log if separate) are an ok size.
+> -	 */
+> -	d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks);
+> -	if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_dblocks) {
+> -		fprintf(stderr, _("%s: size check failed\n"), progname);
+> -		if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+> -			return NULL;
+> -	}
+> -
+>  	/*
+>  	 * We automatically convert v1 inodes to v2 inodes now, so if
+>  	 * the NLINK bit is not set we can't operate on the filesystem.
+> @@ -755,30 +791,9 @@ libxfs_mount(
+>  		return mp;
+>  
+>  	/* device size checks must pass unless we're a debugger. */
+> -	error = libxfs_buf_read(mp->m_dev, d - XFS_FSS_TO_BB(mp, 1),
+> -			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
+> -	if (error) {
+> -		fprintf(stderr, _("%s: data size check failed\n"), progname);
+> -		if (!debugger)
+> -			return NULL;
+> -	} else
+> -		libxfs_buf_relse(bp);
+> -
+> -	if (mp->m_logdev_targp->bt_bdev &&
+> -	    mp->m_logdev_targp->bt_bdev != mp->m_ddev_targp->bt_bdev) {
+> -		d = (xfs_daddr_t) XFS_FSB_TO_BB(mp, mp->m_sb.sb_logblocks);
+> -		if (XFS_BB_TO_FSB(mp, d) != mp->m_sb.sb_logblocks ||
+> -		    libxfs_buf_read(mp->m_logdev_targp,
+> -				d - XFS_FSB_TO_BB(mp, 1), XFS_FSB_TO_BB(mp, 1),
+> -				0, &bp, NULL)) {
+> -			fprintf(stderr, _("%s: log size checks failed\n"),
+> -					progname);
+> -			if (!debugger)
+> -				return NULL;
+> -		}
+> -		if (bp)
+> -			libxfs_buf_relse(bp);
+> -	}
+> +	error = xfs_check_sizes(mp);
+> +	if (error && !debugger)
+> +		return NULL;
+>  
+>  	/* Initialize realtime fields in the mount structure */
+>  	if (rtmount_init(mp, flags)) {
+> @@ -795,7 +810,7 @@ libxfs_mount(
+>  	 * read the first one and let the user know to check the geometry.
+>  	 */
+>  	if (sbp->sb_agcount > 1000000) {
+> -		error = libxfs_buf_read(mp->m_dev,
+> +		error = libxfs_buf_read_uncached(mp->m_ddev_targp,
+>  				XFS_AG_DADDR(mp, sbp->sb_agcount - 1, 0), 1,
+>  				0, &bp, NULL);
+>  		if (error) {
 > -- 
 > 2.28.0
 > 
