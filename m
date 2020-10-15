@@ -2,140 +2,146 @@ Return-Path: <SRS0=m1l6=DW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF952C43467
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84636C2D0A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D90E2224D
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38ABA2224D
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729482AbgJOHWO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Oct 2020 03:22:14 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:35830 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729232AbgJOHWO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 03:22:14 -0400
+        id S1729247AbgJOHWM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Oct 2020 03:22:12 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33398 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729073AbgJOHWL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 03:22:11 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9BCFA58C566
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 57D623AB15C
         for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 18:21:57 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kSxaH-000hwF-8C
-        for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:57 +1100
+        id 1kSxaG-000hvV-Kc
+        for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:56 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kSxaH-006qMV-0c
-        for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:57 +1100
+        id 1kSxaG-006qLm-D9
+        for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:56 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 24/27] libxfs: add a buftarg cache shrinker implementation
-Date:   Thu, 15 Oct 2020 18:21:52 +1100
-Message-Id: <20201015072155.1631135-25-david@fromorbit.com>
+Subject: [PATCH 09/27] atomic: convert to uatomic
+Date:   Thu, 15 Oct 2020 18:21:37 +1100
+Message-Id: <20201015072155.1631135-10-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201015072155.1631135-1-david@fromorbit.com>
 References: <20201015072155.1631135-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=8-x5ei8IBC0TpnjzmaYA:9
+        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=9uXBr0ESAAAA:20
+        a=ypXRH1f5fNK_8avgJkMA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a list_lru scanner that runs from the memory pressure detection
-to free an amount of the buffer cache that will keep the cache from
-growing when there is memory pressure.
+Now we have liburcu, we can make use of it's atomic variable
+implementation. It is almost identical to the kernel API - it's just
+got a "uatomic" prefix. liburcu also provides all the same aomtic
+variable memory barriers as the kernel, so if we pull memory barrier
+dependent kernel code across, it will just work with the right
+barrier wrappers.
+
+This is preparation the addition of more extensive atomic operations
+the that kernel buffer cache requires to function correctly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/buftarg.c | 51 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+ include/atomic.h | 60 +++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 52 insertions(+), 8 deletions(-)
 
-diff --git a/libxfs/buftarg.c b/libxfs/buftarg.c
-index 6c7142d41eb1..8332bf3341b6 100644
---- a/libxfs/buftarg.c
-+++ b/libxfs/buftarg.c
-@@ -62,6 +62,19 @@ xfs_buftarg_setsize_early(
- 	return xfs_buftarg_setsize(btp, bsize);
- }
+diff --git a/include/atomic.h b/include/atomic.h
+index 1aabecc3ae57..5860d7897ae5 100644
+--- a/include/atomic.h
++++ b/include/atomic.h
+@@ -7,18 +7,62 @@
+ #define __ATOMIC_H__
  
-+static void
-+dispose_list(
-+	struct list_head	*dispose)
-+{
-+	struct xfs_buf		*bp;
+ /*
+- * Warning: These are not really atomic at all. They are wrappers around the
+- * kernel atomic variable interface. If we do need these variables to be atomic
+- * (due to multithreading of the code that uses them) we need to add some
+- * pthreads magic here.
++ * Atomics are provided by liburcu.
++ *
++ * API and guidelines for which operations provide memory barriers is here:
++ *
++ * https://github.com/urcu/userspace-rcu/blob/master/doc/uatomic-api.md
++ *
++ * Unlike the kernel, the same interface supports 32 and 64 bit atomic integers.
+  */
++#include <urcu/uatomic.h>
++#include "spinlock.h"
 +
-+	while (!list_empty(dispose)) {
-+		bp = list_first_entry(dispose, struct xfs_buf, b_lru);
-+		list_del_init(&bp->b_lru);
-+		xfs_buf_rele(bp);
-+	}
+ typedef	int32_t	atomic_t;
+ typedef	int64_t	atomic64_t;
+ 
+-#define atomic_inc_return(x)	(++(*(x)))
+-#define atomic_dec_return(x)	(--(*(x)))
++#define atomic_read(a)		uatomic_read(a)
++#define atomic_set(a, v)	uatomic_set(a, v)
++
++#define atomic_inc_return(a)	uatomic_add_return(a, 1)
++#define atomic_dec_return(a)	uatomic_sub_return(a, 1)
++
++#define atomic_inc(a)		atomic_inc_return(a)
++#define atomic_dec(a)		atomic_inc_return(a)
++
++#define atomic_dec_and_test(a)	(atomic_dec_return(a) == 0)
++
++#define cmpxchg(a, o, n)        uatomic_cmpxchg(a, o, n);
++
++static inline bool atomic_add_unless(atomic_t *a, int v, int u)
++{
++	int r = atomic_read(a);
++	int n, o;
++
++	do {
++		o = r;
++		if (o == u)
++			break;
++		n = o + v;
++		r = uatomic_cmpxchg(a, o, n);
++	} while (r != o);
++
++	return o != u;
 +}
 +
- /*
-  * Scan a chunk of the buffer cache and drop LRU reference counts. If the
-  * count goes to zero, dispose of the buffer.
-@@ -70,6 +83,13 @@ static void
- xfs_buftarg_shrink(
- 	struct xfs_buftarg	*btc)
- {
-+	struct list_lru		*lru = &btc->bt_lru;
-+	struct xfs_buf		*bp;
-+	int			count;
-+	int			progress = 16384;
-+	int			rotate = 0;
-+	LIST_HEAD(dispose);
++static inline bool atomic_dec_and_lock(atomic_t *a, spinlock_t *lock)
++{
++	if (atomic_add_unless(a, -1, 1))
++		return 0;
 +
- 	/*
- 	 * Make the fact we are in memory reclaim externally visible. This
- 	 * allows buffer cache allocation throttling while we are trying to
-@@ -79,6 +99,37 @@ xfs_buftarg_shrink(
++	spin_lock(lock);
++	if (atomic_dec_and_test(a))
++		return 1;
++	spin_unlock(lock);
++	return 0;
++}
  
- 	fprintf(stderr, "Got memory pressure event. Shrinking caches!\n");
+-#define atomic64_read(x)	*(x)
+-#define atomic64_set(x, v)	(*(x) = v)
++#define atomic64_read(x)	uatomic_read(x)
++#define atomic64_set(x, v)	uatomic_set(x, v)
  
-+	spin_lock(&lru->l_lock);
-+	count = lru->l_count / 50;	/* 2% */
-+	fprintf(stderr, "cache size before %ld/%d\n", lru->l_count, count);
-+	while (count-- > 0 && !list_empty(&lru->l_lru)) {
-+		bp = list_first_entry(&lru->l_lru, struct xfs_buf, b_lru);
-+		spin_lock(&bp->b_lock);
-+		if (!atomic_add_unless(&bp->b_lru_ref, -1, 1)) {
-+			atomic_set(&bp->b_lru_ref, 0);
-+			bp->b_state |= XFS_BSTATE_DISPOSE;
-+			list_move(&bp->b_lru, &dispose);
-+			lru->l_count--;
-+		} else {
-+			rotate++;
-+			list_move_tail(&bp->b_lru, &lru->l_lru);
-+		}
-+
-+		spin_unlock(&bp->b_lock);
-+		if (--progress == 0) {
-+			fprintf(stderr, "Disposing! rotated %d, lru %ld\n", rotate, lru->l_count);
-+			spin_unlock(&lru->l_lock);
-+			dispose_list(&dispose);
-+			spin_lock(&lru->l_lock);
-+			progress = 16384;
-+			rotate = 0;
-+		}
-+	}
-+	spin_unlock(&lru->l_lock);
-+
-+	dispose_list(&dispose);
-+	fprintf(stderr, "cache size after %ld, count remaining %d\n", lru->l_count, count);
-+
- 	/*
- 	 * Now we've free a bunch of memory, trim the heap down to release the
- 	 * freed memory back to the kernel and reduce the pressure we are
+ #endif /* __ATOMIC_H__ */
 -- 
 2.28.0
 
