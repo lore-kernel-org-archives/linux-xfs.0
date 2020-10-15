@@ -7,143 +7,140 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7D84C433E7
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 21:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF7E2C433E7
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 21:42:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A6F5206DD
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 21:33:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A35B2076A
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 21:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727061AbgJOVdu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Oct 2020 17:33:50 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39156 "EHLO
+        id S1726426AbgJOVmE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Oct 2020 17:42:04 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:34108 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726696AbgJOVdt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 17:33:49 -0400
+        by vger.kernel.org with ESMTP id S1726392AbgJOVmD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 17:42:03 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E205A58C728;
-        Fri, 16 Oct 2020 08:33:45 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 02CB058C7B6;
+        Fri, 16 Oct 2020 08:42:00 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kTAsb-000v8o-8i; Fri, 16 Oct 2020 08:33:45 +1100
-Date:   Fri, 16 Oct 2020 08:33:45 +1100
+        id 1kTB0a-000vDe-4j; Fri, 16 Oct 2020 08:42:00 +1100
+Date:   Fri, 16 Oct 2020 08:42:00 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 24/27] libxfs: add a buftarg cache shrinker implementation
-Message-ID: <20201015213345.GJ7391@dread.disaster.area>
+Subject: Re: [PATCH 27/27] libxfs: convert sync IO buftarg engine to AIO
+Message-ID: <20201015214200.GK7391@dread.disaster.area>
 References: <20201015072155.1631135-1-david@fromorbit.com>
- <20201015072155.1631135-25-david@fromorbit.com>
- <20201015180141.GZ9832@magnolia>
+ <20201015072155.1631135-28-david@fromorbit.com>
+ <20201015182607.GA9832@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201015180141.GZ9832@magnolia>
+In-Reply-To: <20201015182607.GA9832@magnolia>
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
         a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=mOkLObkkJP7xtPHCCvcA:9 a=EVvicIIz3P5FW3-7:21 a=iyi2_4OjNmh-gyfn:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=dqtIDHtTHPJqPkzQoY4A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 15, 2020 at 11:01:41AM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 15, 2020 at 06:21:52PM +1100, Dave Chinner wrote:
+On Thu, Oct 15, 2020 at 11:26:07AM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 15, 2020 at 06:21:55PM +1100, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Add a list_lru scanner that runs from the memory pressure detection
-> > to free an amount of the buffer cache that will keep the cache from
-> > growing when there is memory pressure.
+> > Simple per-ag thread based completion engine. Will have issues with
+> > large AG counts.
+> 
+> Hm, I missed how any of this is per-AG... all I saw was an aio control
+> context that's attached to the buftarg.
+
+Stale - I got rid of the per-ag AIO structures because having 500
+completion threads in gdb is a PITA and it provided no better
+performance. i.e. it had problems with large AG counts.
+
+> > XXX: should this be combined with the struct btcache?
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > ---
-> >  libxfs/buftarg.c | 51 ++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 51 insertions(+)
+> >  include/atomic.h           |   7 +-
+> >  include/builddefs.in       |   2 +-
+> >  include/platform_defs.h.in |   1 +
+> >  libxfs/buftarg.c           | 202 +++++++++++++++++++++++++++++++------
+> >  libxfs/xfs_buf.h           |   6 ++
+> >  libxfs/xfs_buftarg.h       |   7 ++
+> >  6 files changed, 191 insertions(+), 34 deletions(-)
 > > 
-> > diff --git a/libxfs/buftarg.c b/libxfs/buftarg.c
-> > index 6c7142d41eb1..8332bf3341b6 100644
-> > --- a/libxfs/buftarg.c
-> > +++ b/libxfs/buftarg.c
-> > @@ -62,6 +62,19 @@ xfs_buftarg_setsize_early(
-> >  	return xfs_buftarg_setsize(btp, bsize);
-> >  }
+> > diff --git a/include/atomic.h b/include/atomic.h
+> > index 5860d7897ae5..8727fc4ddae9 100644
+> > --- a/include/atomic.h
+> > +++ b/include/atomic.h
+> > @@ -27,8 +27,11 @@ typedef	int64_t	atomic64_t;
+> >  #define atomic_inc_return(a)	uatomic_add_return(a, 1)
+> >  #define atomic_dec_return(a)	uatomic_sub_return(a, 1)
 > >  
-> > +static void
-> > +dispose_list(
-> > +	struct list_head	*dispose)
-> > +{
-> > +	struct xfs_buf		*bp;
+> > -#define atomic_inc(a)		atomic_inc_return(a)
+> > -#define atomic_dec(a)		atomic_inc_return(a)
+> > +#define atomic_add(a, v)	uatomic_add(a, v)
+> > +#define atomic_sub(a, v)	uatomic_sub(a, v)
 > > +
-> > +	while (!list_empty(dispose)) {
-> > +		bp = list_first_entry(dispose, struct xfs_buf, b_lru);
-> > +		list_del_init(&bp->b_lru);
-> > +		xfs_buf_rele(bp);
-> > +	}
-> > +}
-> > +
-> >  /*
-> >   * Scan a chunk of the buffer cache and drop LRU reference counts. If the
-> >   * count goes to zero, dispose of the buffer.
-> > @@ -70,6 +83,13 @@ static void
-> >  xfs_buftarg_shrink(
-> >  	struct xfs_buftarg	*btc)
-> >  {
-> > +	struct list_lru		*lru = &btc->bt_lru;
-> > +	struct xfs_buf		*bp;
-> > +	int			count;
-> > +	int			progress = 16384;
-> > +	int			rotate = 0;
-> > +	LIST_HEAD(dispose);
-> > +
-> >  	/*
-> >  	 * Make the fact we are in memory reclaim externally visible. This
-> >  	 * allows buffer cache allocation throttling while we are trying to
-> > @@ -79,6 +99,37 @@ xfs_buftarg_shrink(
-> >  
-> >  	fprintf(stderr, "Got memory pressure event. Shrinking caches!\n");
-> >  
-> > +	spin_lock(&lru->l_lock);
-> > +	count = lru->l_count / 50;	/* 2% */
+> > +#define atomic_inc(a)		uatomic_inc(a)
+> > +#define atomic_dec(a)		uatomic_dec(a)
 > 
-> If I'm reading this correctly, we react to a memory pressure event by
-> trying to skim 2% of the oldest disposable buffers off the buftarg LRU?
-> And every 16384 loop iterations we'll dispose the list even if we
-> haven't gotten our 2% yet?  How did you arrive at 2%?
+> Does this belong in the liburcu patch?
 
-Yup, 2% was the number I came up with. It's a trade-off between
-scanning enough to keep the cache growth in check but not so much as
-to trash the entire cache as stall events roll in. Also, the PSI
-monitor will report at most 1 event per second with the current
-config, so the amount of work the shrinker does doesn't need to
-consume lots of time.
+Probably.
 
-The system I was testing on ended up OOMing at around 1.2M cached
-buffers. Hence each invocation was scanning ~25-30k buffers every
-invocation. This was sufficient to control memory usage, without the
-PSI stall event tail trashing the cache once repair-triggered memory
-pressure had been brought under control
+> 
+> >  
+> >  #define atomic_dec_and_test(a)	(atomic_dec_return(a) == 0)
+> >  
+> > diff --git a/include/builddefs.in b/include/builddefs.in
+> > index 78eddf4a9852..c20a48f6258c 100644
+> > --- a/include/builddefs.in
+> > +++ b/include/builddefs.in
+> > @@ -29,7 +29,7 @@ LIBEDITLINE = @libeditline@
+> >  LIBBLKID = @libblkid@
+> >  LIBDEVMAPPER = @libdevmapper@
+> >  LIBINIH = @libinih@
+> > -LIBXFS = $(TOPDIR)/libxfs/libxfs.la
+> > +LIBXFS = $(TOPDIR)/libxfs/libxfs.la -laio
+> 
+> This needs all the autoconf magic to complain if libaio isn't installed,
+> right?
 
-The "progress" thing is just a way of batching up the work so that
-we free memory sooner. THe number of 16384 was from when I was
-discovering how this behaved and I was trimming up to 50% of the
-cache in a singel event. I needed some kind of progress indicaction
-while it stalled for seconds freeing memory. It may stay, it may go.
-We'll see.
+Yes.
 
-> (Also, I'm assuming that some of these stderr printfs will at some point
-> get turned into tracepoints or dbg_printf or the like?)
+> >  	/*
+> > -	 * This is a bit of a hack until we get AIO that runs completions.
+> > -	 * Success is treated as a completion here, but IO errors are handled as
+> > -	 * a submission error and are handled by the caller. AIO will clean this
+> > -	 * up.
+> > +	 * don't overwrite existing errors - otherwise we can lose errors on
+> > +	 * buffers that require multiple bios to complete.
+> > +	 *
+> > +	 * We check that the returned length was the same as specified for this
+> > +	 * IO. Note that this onyl works for read and write - if we start
+> > +	 * using readv/writev for discontiguous buffers then this needs more
+> > +	 * work.
+> 
+> Interesting RFC, though I gather discontig buffers don't work yet?
 
-Maybe. I would prefer the tracepoint model over dbg_printf(), but
-that's not something I'm thinking about right now...
+Right they don't work yet. I mention that in a couple of places.
 
-Note that this shrinker does not rotate buffers by default. The
-kernel rotates buffers once through the LRU before they are
-reclaimed. If I try to do that with PSI events, then we OOM kill
-because the system is completely out of memory by the time 5-6
-events have been delivered and then we get OOM killed. Hence it
-reclaims immediately, but that can be tuned for repair by converting
-the cache priorities for buffers in LRU references...
+> Or hmm maybe there's something funny going on with
+> xfs_buftarg_submit_io_map?  You didn't post a git branch link, so it's
+> hard(er) to just rummage around on my own. :/
+> 
+> This seems like a reasonable restructuring to allow asynchronous io.
+> It's sort of a pity that this isn't modular enough to allow multiple IO
+> engines (synchronous system calls and io_uring come to mine) but that
+> can come later.
+
+Making it modular is easy enough, but that can be done independently
+of this buffer cache enabling patchset.
 
 Cheers,
 
