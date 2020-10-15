@@ -2,170 +2,127 @@ Return-Path: <SRS0=m1l6=DW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4420C433DF
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 01:12:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A66A0C433DF
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 01:49:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 358F322275
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 01:12:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46A5C22255
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 01:49:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=aol.com header.i=@aol.com header.b="pB5PTdoc"
+	dkim=pass (2048-bit key) header.d=aol.com header.i=@aol.com header.b="OsH2kyFQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727518AbgJOBMR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 14 Oct 2020 21:12:17 -0400
-Received: from sonic315-55.consmr.mail.gq1.yahoo.com ([98.137.65.31]:38606
-        "EHLO sonic315-55.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727379AbgJOBLk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 21:11:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=aol.com; s=a2048; t=1602724298; bh=5Lh+ZUdH4grIzS3DNj6kBCT2hQFRkzXOavly3eVooxY=; h=Date:From:To:Cc:Subject:References:In-Reply-To:From:Subject; b=pB5PTdociK3rIoOOKpARv4+4cxATsVDh1XZ5+9KLcLA1CUszabT6toPc5Ig661E96ASpzhFiIrrjJF2LKy6upLfwuKqgPZE5WQsuGnrzmAOChXCOp1Tf0wnfjwh0CS5PHobLY5mny6nL9Wo5ubkYGD3bi9GxFfH3c6o1pQzUg6YyFSqgJ8ECjx8q0i3xS5rn4InnCBoZM67jQBHYX+3IBXt1AcSnOG0WB+xj2N9+oeX3wL94T7c9NZD6MIGQTGvr+ytvHyd5qTPNpxLXQ+tMzlGKSlK7mPpwQVGPPYgTJsBUjFhOBEJ+U2gwkvgVtHBaE+CWonUU+3oogiW1V75V8w==
-X-YMail-OSG: csbu4GsVM1nsC0OmQuIw5tS6gAtqgLWpM.lsmwr2Ru0SSrQ5vpZIG2eCZ01wlch
- 1TaDyJ5yZ1Hc197nbKI8mcU5X2HNxirKMaxwJYeNLihxfsYRLNFRU7ifjr1l1ZcyRBZ0jF3BijLP
- lGAr13.wsg7YZs912XVXT8.uqQRSFLOZNkiIb.ulM0ioQC3Rjoiuuf3C19iilebfn1HcFa6o77LV
- marZrLd8oZ4h_i4UeOxjIe2GLxyXoCE0sbm9LVUdTDkysFVX49pICGh6nimUbv_YvJKos9IdNitZ
- l9ryavTcCuHfgExB6gw32lZP_gZ7BpHK1XmnpVTS9d5dyd4DJXpMCtbDNHMMHdEi4ZKXaFRGHYVg
- sDM3fXEmpUQdSO3uZ8UHMOtYYfDVteDXRcPBEvlg_TgxeIk3ZSiE2jgdB0PPmO9xu54ajN94AAh5
- AsP7yD_AHWI_Ur6NSOy_kRFg4YfcXcFGSagRMABmH46cLjoXf0Tb2VEA454_i4hnFNP7nApVZWDC
- lOHsmLWMLq66IevQl9gICn37SaOfw_X41BQ_V8Zg8zxjIBHvuCVouehQcEENSJOSk_T4Ai3I4T3I
- rx6Q7u7bdKiT0fdX5BVDrWMudnFdQEO2zlnO9r3F4GtA8hNp1Vx.lj4c82xb92Du10WIqYyghWwI
- 1TSU9rnD3fUKM22b7.C.kCSXGjphB1GkOPT1Rr7aVAn4KXXdwLNVeVci7KMdcXMGW8yMm5s_nZPp
- Wa4MVYUENzoQerp.QrFIPFBI6tCw0ohu7Nm_hqgyVEY34d7r8k_E3gap6by6pnkuSXtcjftC2ILL
- 6sNl7jrjD3Cfp0NqIB6oFEp249fUPQNMmloSaud3.qEaW1L9ZchumMgFmt.80TkNI6baE61CLzwQ
- wVuc0cdX.JNNS9_nVm4zRZejZHx.fTzrIgfpEoF4BKaEIjOJiEbDsX7jniPDy0VasBq8UHQXtJ1I
- ImRgxvp9M8aFh4e60nFYbSbM9eaFuSBa.LV3PrQdbUgS_DGnO_r.goRs9fl8oRrc_yb6FfBmoiEg
- qqkk5HK6ymOrLBy6A8RrUH9GXFRpQtpTQrqsIBWTETh8JYBiXGccfq17caFEQQn7gNBPk7pnAQB6
- HPXHE41KBxkZtm5rvDd5hcpRgjPAEKKjKGQlbbpOYxw27fUiiQkdqgtNLhF1d2coHgMJpvUta3AD
- 8FhvMN8M.YX_MrTrDVPZdAB2to5NAFSoFJQb5auCKR1xru8DQ6MRwQyAoJcMbYMEfAF1YxmMP11v
- qQgUTVcX7Eky1iMGhPNGgQVC0qTuUiVsa51_sVKh3EAesKYFF924hky15npbLIF5DfY7okEXShOf
- AJeSnGn5hsR5coDQGnEf4.vj3dHvj8s2ZT9KaDzRRolXB1OfklVV8kikn.mx6QxhRm21ha_KU61h
- srtlcyIzZaLFKYeu9b8MgbDgH1bBuKWTehYmDrYIN6F6eQTZnbH7Vg4ydXxNRJknNptilfhhEr5A
- Pc1k.U5ypajAu5qTduGrG2PsXz0wDcovu7XCLGeNhXr4mnkSyMkUP6JBYSrj1Wq7CUsd_EugkW8F
- RBthWk5vIwn4-
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic315.consmr.mail.gq1.yahoo.com with HTTP; Thu, 15 Oct 2020 01:11:38 +0000
-Received: by smtp411.mail.ir2.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID 740164d210fc0f2ebf8256aabf95ea5d;
-          Thu, 15 Oct 2020 01:11:33 +0000 (UTC)
-Date:   Thu, 15 Oct 2020 09:11:24 +0800
+        id S1732367AbgJOBt1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 14 Oct 2020 21:49:27 -0400
+Received: from sonic314-20.consmr.mail.gq1.yahoo.com ([98.137.69.83]:45910
+        "EHLO sonic314-20.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728240AbgJOBt0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Oct 2020 21:49:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=aol.com; s=a2048; t=1602726565; bh=i/HIKPCNmJWKV8/+uiy5ef1LjyGXF7G6fu1xupl5gsg=; h=Date:From:To:Cc:Subject:References:In-Reply-To:From:Subject; b=OsH2kyFQuf2lgQ7wcbRzBHla+rhx46ROyDhEiIZa8ThRgQ3yof9+9y2bmNPSGU3NajMwPsio0CqwXa86Zl+CV9V0Q+osCz4248098ixR54GzypcpsK16QiomDs9vqIIAnFaxxCjhT0u+ORDpNLo/cLWU4wntTk148ImbuPYW+mq6hhL3qeMnZENAp8TKIE0Z+e5deGaXP/oFgQarw+iyY7Rl6XkkF2CyiaeCPNpt1KhyMNCU0SqqccAs2/N+5UqjmuXlQPXziq0L3Ssjf2Clfev+RKCXKoR+6JCWjUZILH6EtapbTCAhfWBiNVTbc11RLPCF7Ak8KjHtxpmtRD1fKA==
+X-YMail-OSG: zuwEqtgVM1mXeX6BD2jAedXAKWobcDD43GX9sRSJjZfLFkMAk2_wI_0c0lxyGcB
+ utTq46DzxhHpOQqCumwfuyu4lRLgaL8Rn5PKFVauQgb9Hoq9UIkVfK3_Jt0j4Fm_e4aNhUywjnyH
+ wCbNQYyOicpE6MpyNeWM11yXeetEKbRb1BbFW8vUpb7Xkv8k75m_oTY2y01qLVmkOs4Zog86jMdd
+ j6P4agCDxMmYHC8dsN7ovjzV53M81a1.L7lLgl3oIedXxVBAoFaxCdAXQPBMGH1.y6RDJyFRpnuN
+ 7c1fnIaaSBHV1choyZp.JesBZGvKyciPYQihD0RwJN5rhlrXw4rjvHNUpxCJkqrrbTd6DcBKsGhg
+ WZYxra3K47Qosk1EO3_yCyKhB4sczLZEtmq7uoreYLq33lgS9pmfq.Y3kzupgFqkvzmMRSz7dfF9
+ 4J6mq5c3mEHA4H3YHyJKHtq_TK6N_P7pmbQQX7028zOvA4hr76TU0P26cIrJUNeuLG49S9i_RzAt
+ gz1TForEVTMhqSdkMnMuRFwXk81lLiF1tU6ieh1meBC7_5HW3I4lcvnk3drF2jgIAORydL.eGYDx
+ nNXyh8uhYvZvXS9TDZuV7n1RXU4seztx243CCAEl3IaM4JmcgXoz8ha.rL5R_QuBS6EcA_gBsNfp
+ OMu4yuX7_kexvlQ6X3RkET0Qp7QWWHIZQLLiMnepFhOKuODeXUAYzneCpJ.LtFduXQ2kxx7G57UT
+ kFxhoNpIRh1k7xlhbG2k3HOdXlYBJZPXQZrXadcwBRFdEnrrxl1MD6JVhYWZVZHht6_545madTMg
+ NnjTu3WuKJg6ulQQCqd3bTFggMeQ94sVhxRqjiU5jIJLM2cVuW5ZgQZQ4io4b7xjdmh5qy5POycp
+ kggOcPohQzKdGfl5gRPym9vjxTYkCz74eLIngmfs_QB0SbavO0zpVBazmxMYg99OerFtETqi1_ot
+ 82q4TWVVjjanfFDst4Nju.cBlZgkETrLTbz2a079Lpqc7196267UMFUkaSLCEBSAwF79oGtLFglt
+ pp2QQciKf3Y5oFnQ8wuqPWas7m2qko_JkW1qZCWUh.jVoJTag1e0oTNe5.38roR2Upb4f401MYUq
+ pRZWIKK3CQDVZ_q4b6.CFNmGM9TvD83s_5Rsmic2xbBzyUTFbMmu1XdonbuBDJBM0DKZyK4gg__R
+ BXreDOOizp_1TJxxI_YX3lW4Quo4.hMmHeYuMMI7YEdezr2txrVM_EoiI0ohaUb4YoJytAoMKkc2
+ wYhbV9bGZchNbqbWqlvoZkhDjhHioPl_0E0jR_nO2n25KIYvNHrtNqvT7zrqkgUGBzuwb13Z2WkB
+ t5TJqEQoeRUCb2y5b9xU2vWo.QS_jTbqvJ4TIb5gzXuomIO1YA0i8wps1MPiBbEc6Ire5hACgbzu
+ MfSWT29a8CLboh1tcCggdjcdO9hZjz5K9vYA.B_NQt.Ajvq4BC.yJSf920fbL.pt3DregVzps1et
+ BHH5c3yYuhf1GpjPjLvwHRUTUvU2HAq5x7Qyu5ESl9aMro5yYN5Ur1pg6V4mRiFLiEGPvfNxCzP3
+ .n4FiprC47g--
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic314.consmr.mail.gq1.yahoo.com with HTTP; Thu, 15 Oct 2020 01:49:25 +0000
+Received: by smtp402.mail.ir2.yahoo.com (VZM Hermes SMTP Server) with ESMTPA ID c4d5986aaeee1a3b8ae4ce5b3fe65deb;
+          Thu, 15 Oct 2020 01:49:22 +0000 (UTC)
+Date:   Thu, 15 Oct 2020 09:49:15 +0800
 From:   Gao Xiang <hsiangkao@aol.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org, Gao Xiang <hsiangkao@redhat.com>
 Subject: Re: [RFC PATCH] xfs: support shrinking unused space in the last AG
-Message-ID: <20201015011116.GB7037@hsiangkao-HP-ZHAN-66-Pro-G1>
+Message-ID: <20201015014908.GC7037@hsiangkao-HP-ZHAN-66-Pro-G1>
 References: <20201014005809.6619-1-hsiangkao.ref@aol.com>
  <20201014005809.6619-1-hsiangkao@aol.com>
- <20201014160633.GD9832@magnolia>
+ <20201014170139.GC1109375@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201014160633.GD9832@magnolia>
+In-Reply-To: <20201014170139.GC1109375@bfoster>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Mailer: WebService/1.1.16845 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.aol Apache-HttpAsyncClient/4.1.4 (Java/11.0.7)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+Hi Brian,
 
-On Wed, Oct 14, 2020 at 09:06:33AM -0700, Darrick J. Wong wrote:
+On Wed, Oct 14, 2020 at 01:01:39PM -0400, Brian Foster wrote:
 > On Wed, Oct 14, 2020 at 08:58:09AM +0800, Gao Xiang wrote:
 > > From: Gao Xiang <hsiangkao@redhat.com>
 > > 
+> > At the first step of shrinking, this attempts to enable shrinking
+> > unused space in the last allocation group by fixing up freespace
+> > btree, agi, agf and adjusting super block.
+> > 
+> > This can be all done in one transaction for now, so I think no
+> > additional protection is needed.
+> > 
+> > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> > ---
+> > 
+> > Honestly, I've got headache about shrinking entire AGs
+> > since the codebase doesn't expect agcount can be decreased
+> > suddenly, I got some ideas from people but the modification
+> > seems all over the codebase, I will keep on this at least
+> > to learn more about XFS internals.
+> > 
+> > It might be worth sending out shrinking the last AG first
+> > since users might need to shrink a little unused space
+> > occasionally, yet I'm not quite sure the log space reservation
+> > calculation in this patch and other details are correct.
+> > I've done some manual test and it seems work. Yeah, as a
+> > formal patch it needs more test to be done but I'd like
+> > to hear more ideas about this first since I'm not quite
+> > familiar with XFS for now and this topic involves a lot
+> > new XFS-specific implementation details.
+> > 
+> > Kindly point out all strange places and what I'm missing
+> > so I can revise it. It would be of great help for me to
+> > learn more about XFS. At least just as a record on this
+> > topic for further discussion.
+> > 
+> 
+> Interesting... this seems fundamentally sane when narrowing the scope
+> down to tail AG shrinking. Does xfs_repair flag any issues in the simple
+> tail AG shrink case?
+
+Yeah, I ran xfs_repair together as well, For smaller sizes, it seems
+all fine, but I did observe some failure when much larger values
+passed in, so as a formal patch, it really needs to be solved later.
+
+Anyway, this patch tries to show if the overall direction is acceptable
+for further development / upstream. And I could get some more
+suggestion from it..
+
+> 
+> Some random initial thoughts..
+> 
 
 ...
 
-> > +xfs_ag_shrink_space(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_trans	*tp,
-> > +	struct aghdr_init_data	*id,
-> > +	xfs_extlen_t		len)
-> > +{
-> > +	struct xfs_buf		*agibp, *agfbp;
-> > +	struct xfs_agi		*agi;
-> > +	struct xfs_agf		*agf;
-> > +	int			error;
-> > +
-> > +	ASSERT(id->agno == mp->m_sb.sb_agcount - 1);
-> > +	error = xfs_ialloc_read_agi(mp, tp, id->agno, &agibp);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	agi = agibp->b_addr;
-> > +
-> > +	/* Cannot touch the log space */
-> > +	if (is_log_ag(mp, id) &&
-> > +	    XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart) +
-> > +	    mp->m_sb.sb_logblocks > be32_to_cpu(agi->agi_length) - len)
-> > +		return -EINVAL;
-> 
-> The space used by the internal log shouldn't also show up in the free
-> space btrees, so I think you could rely on the _alloc_vextent_shrink
-> call to return ENOSPC, right?
-
-Yeah, it makes sense since freespace btree doesn't have log space
-at all. I will drop this and make a comment on this.
-
-> 
-> > +
-> > +	error = xfs_alloc_read_agf(mp, tp, id->agno, 0, &agfbp);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	error = xfs_alloc_vextent_shrink(tp, agfbp,
-> > +			be32_to_cpu(agi->agi_length) - len, len);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/* Change the agi length */
-> > +	be32_add_cpu(&agi->agi_length, -len);
-> > +	xfs_ialloc_log_agi(tp, agibp, XFS_AGI_LENGTH);
-> > +
-> > +	/* Change agf length */
-> > +	agf = agfbp->b_addr;
-> > +	be32_add_cpu(&agf->agf_length, -len);
-> > +	ASSERT(agf->agf_length == agi->agi_length);
-> > +	xfs_alloc_log_agf(tp, agfbp, XFS_AGF_LENGTH);
-> > +	return 0;
-> > +}
-> > +
-> >  /*
-> >   * Extent the AG indicated by the @id by the length passed in
-> 
-> "Extend..." ?
-
-Yeah, yet not related to this patch, I could fix it independently
-(maybe together with other typos)...
-
-> 
-> >   */
-> > diff --git a/fs/xfs/libxfs/xfs_ag.h b/fs/xfs/libxfs/xfs_ag.h
-> > index 5166322807e7..f3b5bbfeadce 100644
-> > --- a/fs/xfs/libxfs/xfs_ag.h
-> > +++ b/fs/xfs/libxfs/xfs_ag.h
-> > @@ -24,6 +24,8 @@ struct aghdr_init_data {
-> >  };
-> >  
-> >  int xfs_ag_init_headers(struct xfs_mount *mp, struct aghdr_init_data *id);
-> > +int xfs_ag_shrink_space(struct xfs_mount *mp, struct xfs_trans *tp,
-> > +			struct aghdr_init_data *id, xfs_extlen_t len);
-> >  int xfs_ag_extend_space(struct xfs_mount *mp, struct xfs_trans *tp,
-> >  			struct aghdr_init_data *id, xfs_extlen_t len);
-> >  int xfs_ag_get_geometry(struct xfs_mount *mp, xfs_agnumber_t agno,
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 852b536551b5..681357bb2701 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -1118,6 +1118,61 @@ xfs_alloc_ag_vextent_small(
-> >  	return error;
-> >  }
-> >  
-> > +/*
-> > + * Allocate an extent for shrinking the last allocation group
-> > + * to fix the freespace btree.
-> > + * agfl fix is avoided in order to keep from dirtying the
-> > + * transaction unnecessarily compared with xfs_alloc_vextent().
-> > + */
 > > +int
 > > +xfs_alloc_vextent_shrink(
 > > +	struct xfs_trans	*tp,
@@ -183,29 +140,10 @@ Yeah, yet not related to this patch, I could fix it independently
 > > +		.agno = agno,
 > > +		.agbno = agbno,
 > > +		.fsbno = XFS_AGB_TO_FSB(mp, agno, agbno),
-> 
-> /me would have thought you could compute agbno from the AGF buffer
-> passed in and the length parameter.
-
-Yeah, that would be fine since agfbp has been passed in here. will update.
-
-> 
 > > +		.minlen = len,
 > > +		.maxlen = len,
 > > +		.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE,
 > > +		.resv = XFS_AG_RESV_NONE,
-> 
-> Hmm.  Using AG_RESV_NONE here means that the allocation can fail because
-> there won't be enough free space left to satisfy the AG metadata
-> preallocations.  I think you have to call xfs_ag_resv_free before
-> calling this allocation function to remove the preallocations, and then
-> call xfs_ag_resv_init afterwards (regardless of whether the shrink
-> succeeds) to re-establish the preallocations to fit the new AG size.
-
-Ok, currently I'm not quite familiar with code in libxfs/xfs_ag_resv.c.
-will look into that and try to follow your suggestion.
-
-> 
 > > +		.prod = 1,
 > > +		.alignment = 1,
 > > +		.pag = agbp->b_pag
@@ -215,109 +153,56 @@ will look into that and try to follow your suggestion.
 > > +	error = xfs_alloc_ag_vextent_exact(&args);
 > > +	if (error || args.agbno == NULLAGBLOCK)
 > > +		return -EBUSY;
-> > +
-> > +	ASSERT(args.agbno == agbno);
-> > +	ASSERT(args.len == len);
-> > +	ASSERT(!args.wasfromfl || args.resv != XFS_AG_RESV_AGFL);
 > 
-> Can wasfromfl==true actually happen?  I think for this shrink case we
-> need to prevent that from ever happening.
+> I think it's generally better to call into the top-level allocator API
+> (xfs_alloc_vextent()) because it will handle internal allocator business
+> like fixing up the AGFL and whatnot. Then you probably don't have to
+> specify as much in the args structure as well. The allocation mode
+> you've specified (THIS_BNO) will fall into the exact allocation codepath
+> and should enforce the semantics we need here (i.e. grant the exact
+> allocation or fail).
 
-I think it won't happen as well, since my idea currently is to avoid
-any reduntant step, e.g. to adjust agfl or move/defrag metadata. I think
-laterly userspace could do that with another ioctl (?) and if it fails
-(e.g. change concurrently....) to try some process again.
+Actually, I did in the same way (use xfs_alloc_vextent()) in my previous
+hack version
+https://git.kernel.org/pub/scm/linux/kernel/git/xiang/linux.git/commit/?id=65d87d223a4d984441453659f1baeca560f07de4
 
-> 
-> > +
-> > +	if (!args.wasfromfl) {
-> > +		error = xfs_alloc_update_counters(tp, agbp, -(long)len);
-> > +		if (error)
-> > +			return error;
-> > +
-> > +		ASSERT(!xfs_extent_busy_search(mp, args.agno, agbno, args.len));
-> > +	}
-> > +	xfs_ag_resv_alloc_extent(args.pag, args.resv, &args);
-> 
-> (I think you can skip this call if you free the AG's preallocations
-> before allocating the last freespace.)
+yet Dave pointed out in private agfl fix could dirty the transaction
+and if the later allocation fails, it would be unsafe to cancel
+the dirty transaction. So as far as my current XFS knowledge, I think
+that makes sense so I introduce a separate helper
+xfs_alloc_vextent_shrink()...
 
-Ok, will look into that as well. Currently the logic is mostly taken from
-xfs_alloc_vextent() but without agfl fix, so the entriance seems more
-straight-forward than shrinking stuffs are deep into a large
-xfs_alloc_vextent() details...
+I tend to avoid bury all shrinking specfic logic too deep in the large
+xfs_alloc_vextent() logic by using another new bool or something
+since it's rather complicated for now.
+
+Intoduce a new helper would make this process more straight-forward
+and bug less in the future IMO... Just my own current thought about
+this...
 
 > 
-> > +
-> > +	XFS_STATS_INC(mp, xs_allocx);
-> > +	XFS_STATS_ADD(mp, xs_allocb, args.len);
-> > +	return 0;
-> > +}
-> > +
-> >  /*
-> >   * Allocate a variable extent in the allocation group agno.
-> >   * Type and bno are used to determine where in the allocation group the
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> > index 6c22b12176b8..6080140bcb56 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.h
-> > +++ b/fs/xfs/libxfs/xfs_alloc.h
-> > @@ -160,6 +160,16 @@ int				/* error */
-> >  xfs_alloc_vextent(
-> >  	xfs_alloc_arg_t	*args);	/* allocation argument structure */
-> >  
-> > +/*
-> > + * Allocate an extent for shrinking the last AG
-> > + */
-> > +int
-> > +xfs_alloc_vextent_shrink(
-> > +	struct xfs_trans	*tp,
-> > +	struct xfs_buf		*agbp,
-> > +	xfs_agblock_t		agbno,
-> > +	xfs_extlen_t		len);	/* length of extent */
-> > +
-> >  /*
-> >   * Free an extent.
-> >   */
-> > diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> > index ef1d5bb88b93..80927d323939 100644
-> > --- a/fs/xfs/xfs_fsops.c
-> > +++ b/fs/xfs/xfs_fsops.c
-> > @@ -36,19 +36,21 @@ xfs_growfs_data_private(
-> >  	xfs_rfsblock_t		new;
-> >  	xfs_agnumber_t		oagcount;
-> >  	xfs_trans_t		*tp;
-> > +	bool			extend;
-> >  	struct aghdr_init_data	id = {};
-> >  
-> >  	nb = in->newblocks;
-> > -	if (nb < mp->m_sb.sb_dblocks)
-> > -		return -EINVAL;
-> >  	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
-> >  		return error;
-> 
-> Please convert this to the more normal format:
-> 
-> error = xfs_sb_validate...();
-> if (error)
-> 	return error;
+> I also wonder if we'll eventually have to be more intelligent here in
+> scenarios where ag metadata (i.e., free space root blocks, etc.) or the
+> agfl holds blocks in a range we're asked to shrink. I think those are
+> scenarios where such an allocation request would fail even though the
+> blocks are internal or technically free. Have you explored such
+> scenarios so far? I know we're trying to be opportunistic here, but if
+> the AG (or subset) is otherwise empty it seems a bit random to fail.
+> Hmm, maybe scrub/repair could help to reinit/defrag such an AG if we
+> could otherwise determine that blocks beyond a certain range are unused
+> externally.
 
-Ok, will update it with this patch.
+Yeah, currently I don't tend to defrag or fix agfl in the process but rather
+on shrinking unused space (not in AGFL) and make the kernel side simplier,
+since I think for the long term we could have 2 options by some combination
+with the userspace prog:
+ - lock the AG, defrag / move the AG, shrinking, unlock the AG;
+ - defrag / move the AG, shrinking, retry.
 
-> 
-> > -	error = xfs_buf_read_uncached(mp->m_ddev_targp,
 > > +
-> > +	if (nb > mp->m_sb.sb_dblocks) {
-> > +		error = xfs_buf_read_uncached(mp->m_ddev_targp,
-> >  				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
-> >  				XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-> > -	if (error)
-> > -		return error;
-> > -	xfs_buf_relse(bp);
-> > +		if (error)
-> > +			return error;
-> > +		xfs_buf_relse(bp);
-> > +	}
-> >  
+
+...
+
 > >  	new = nb;	/* use new as a temporary here */
 > >  	nb_mod = do_div(new, mp->m_sb.sb_agblocks);
 > > @@ -56,10 +58,18 @@ xfs_growfs_data_private(
@@ -327,15 +212,27 @@ Ok, will update it with this patch.
 > > -		if (nb < mp->m_sb.sb_dblocks)
 > > +		if (!nagcount)
 > >  			return -EINVAL;
-> 
-> Realistically, we don't ever want fewer than 2 AGs since that would
-> leave us with no superblock redundancy.  Repair doesn't really support
-> the 1 AG case.
-
-yeah, I notice that userspace warning, will update it.
-
-> 
 > >  	}
+> 
+> We probably need to rethink the bit of logic above this check for
+> shrinking. It looks like the current code checks for the minimum
+> supported AG size and if not satisfied, reduces the size the grow to the
+> next smaller AG count. That would actually increase the size of the
+> shrink from what the user requested, so we'd probably want to do the
+> opposite and reduce the size of the requested shrink. For now it
+> probably doesn't matter much since we fail to shrink the agcount.
+> 
+> That said, if I'm following the growfs behavior correctly it might be
+> worth considering analogous behavior for shrink. E.g., if the user asks
+> to trim 10GB off the last AG but only the last 4GB are free, then shrink
+> the fs by 4GB and report the new size to the user.
+
+I thought about this topic as well, yeah, anyway, I think it needs
+some clearer documented words about the behavior (round down or round
+up). My original idea is to unify them. But yeah, increase the size
+of the shrink might cause unexpected fail.
+
+> 
 > > -	new = nb - mp->m_sb.sb_dblocks;
 > > +
 > > +	if (nb > mp->m_sb.sb_dblocks) {
@@ -345,16 +242,15 @@ yeah, I notice that userspace warning, will update it.
 > > +		new = mp->m_sb.sb_dblocks - nb;
 > > +		extend = false;
 > > +	}
-> 
-> Er... maybe you should start by hoisting all the "make data device
-> larger" code into a separate function so that you can add the "make data
-> device smaller" code as a second function.  Then xfs_growfs_data_private
-> can decide which of the two to call based on the new size.
-
-Yeah, that is fine, I will try to do in the next version.
-
-> 
 > > +
+> 
+> s/new/delta (or something along those lines) might be more readable if
+> we go this route.
+
+In my previous random version, I once renamed it to bdelta, but I found
+the modification is large, I might need to clean up growfs naming first.
+
+> 
 > >  	oagcount = mp->m_sb.sb_agcount;
 > >  
 > >  	/* allocate the new per-ag structures */
@@ -370,19 +266,6 @@ Yeah, that is fine, I will try to do in the next version.
 > >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
 > > -			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
 > > +			(extend ? 0 : new) + XFS_GROWFS_SPACE_RES(mp), 0,
-> 
-> XFS_GROWFS_SPACE_RES is defined as twice m_ag_maxlevels, which I think
-> means (in the grow case) that it's reserving space for one full split
-> for each free space btree.
-> 
-> Shrink, by contrast, is removing the rightmost record from the bnobt and
-> some arbitrary record from the cntbt.  Can removing 1 record from each
-> btree actually cause a split?
-
-Yeah, I don't think so from btree implementation itself since it
-removes/adjusts the record, will think it deeper later.
-
-> 
 > > +			XFS_TRANS_RESERVE, &tp);
 > >  	if (error)
 > >  		return error;
@@ -400,32 +283,27 @@ removes/adjusts the record, will think it deeper later.
 > > +		if (error)
 > > +			goto out_trans_cancel;
 > > +	}
-> >  
-> >  	xfs_trans_agblocks_delta(tp, id.nfree);
-> >  
-> >  	/* If there are new blocks in the old last AG, extend it. */
-> >  	if (new) {
-> > -		error = xfs_ag_extend_space(mp, tp, &id, new);
-> > +		if (extend)
-> > +			error = xfs_ag_extend_space(mp, tp, &id, new);
-> > +		else
-> > +			error = xfs_ag_shrink_space(mp, tp, &id, new);
 > 
-> This logic is getting harder for me to track because the patch combines
-> grow and shrink logic in the same function....
+> The list check seems somewhat superfluous since we won't do anything
+> with an empty list anyways. Presumably it would be incorrect to ever
+> init a new AG on shrink so it might be cleaner to eventually refactor
+> this bit of logic out into a helper that we only call on extend since
+> this is a new AG initialization mechanism.
 
-Yeah, currently it shares almost the same logic, I will try to seperate them
-in the next version.
+Yeah, actually my previous hack version
+https://git.kernel.org/pub/scm/linux/kernel/git/xiang/linux.git/commit/?id=65d87d223a4d984441453659f1baeca560f07de4
 
+did like this, but in this version I'd like to avoid touching unrelated
+topic as much as possible.
 
-It's rough a preliminary version for now, if this direction is roughly
-acceptable for upstream, will look into it further...
+xfs_buf_delwri_submit() is not no-op for empty lists. Anyway, I will
+use 2 independent logic for entire extend / shrink seperately.
+
+Thanks for your suggestion!
 
 Thanks,
 Gao Xiang
 
-
 > 
-> --D
-> 
+> Brian
 
