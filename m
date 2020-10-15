@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A1ABC35265
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83ED7C4363A
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECA002224D
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E5BF2225F
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Oct 2020 07:22:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729580AbgJOHWP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Oct 2020 03:22:15 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33398 "EHLO
+        id S1728885AbgJOHWK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Oct 2020 03:22:10 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60707 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729324AbgJOHWO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 03:22:14 -0400
+        by vger.kernel.org with ESMTP id S1726462AbgJOHWJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 03:22:09 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id C50733AAFE9
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 15F233AB123
         for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 18:21:57 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kSxaH-000hwC-7I
-        for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:57 +1100
+        id 1kSxaG-000hvQ-Iw
+        for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:56 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kSxaG-006qMS-Vy
-        for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:57 +1100
+        id 1kSxaG-006qLg-B8
+        for linux-xfs@vger.kernel.org; Thu, 15 Oct 2020 18:21:56 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 23/27] libxfs: use PSI information to detect memory pressure
-Date:   Thu, 15 Oct 2020 18:21:51 +1100
-Message-Id: <20201015072155.1631135-24-david@fromorbit.com>
+Subject: [PATCH 07/27] xfsprogs: introduce liburcu support
+Date:   Thu, 15 Oct 2020 18:21:35 +1100
+Message-Id: <20201015072155.1631135-8-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201015072155.1631135-1-david@fromorbit.com>
 References: <20201015072155.1631135-1-david@fromorbit.com>
@@ -44,243 +44,457 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=b7aKuU4CZm3oD1x1e8oA:9
-        a=Aj25W7a1c1s4-jA-:21 a=cxFZG_LvAqqorLtZ:21
+        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=xNf9USuDAAAA:8
+        a=HJXtOWahcpWd6xppAhgA:9 a=AjGcO6oz07-iQ99wixmX:22
+        a=SEwjQc04WA-l_NiBhQ7s:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The buffer cache needs to have a reliable trigger for shrinking
-the cache. Modern kernels track and report memory pressure events to
-the userspace via the Pressure Stall Interface (PSI). Create a PSI
-memory pressure monitoring thread to listen for memory pressure
-events and use that to drive buffer cache shrinking interfaces.
+The upcoming buffer cache rework/kerenl sync-up requires atomic
+variables. I could use C++11 atomics build into GCC, but they are a
+pain to work with and shoe-horn into the kernel atomic variable API.
 
-Add the shrinker framework that will allow us to implement LRU
-reclaim of buffers when memory pressure occues.  We also create a
-low memory detection and reclaim wait mechanism to allow use to
-throttle back new allocations while we are shrinking the buffer
-cache.
+Much easier is to introduce a dependency on liburcu - the userspace
+RCU library. This provides atomic variables that very closely match
+the kernel atomic variable API, and it provides a very similar
+memory model and memory barrier support to the kernel. And we get
+RCU support that has an identical interface to the kernel and works
+the same way.
 
-We also include malloc heap trimming callouts so that once the
-shrinker frees the memory, we trim the malloc heap to release the
-freed memory back to the system.
+Hence kernel code written with RCU algorithms and atomic variables
+will just slot straight into the userspace xfsprogs code without us
+having to think about whether the lockless algorithms will work in
+userspace or not. This reduces glue and hoop jumping, and gets us
+a step closer to having the entire userspace libxfs code MT safe.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/buftarg.c     | 142 ++++++++++++++++++++++++++++++++++++++++++-
- libxfs/xfs_buftarg.h |   9 +++
- 2 files changed, 150 insertions(+), 1 deletion(-)
+ configure.ac               |  3 +++
+ copy/Makefile              |  3 ++-
+ copy/xfs_copy.c            |  3 +++
+ db/Makefile                |  3 ++-
+ debian/control             |  2 +-
+ growfs/Makefile            |  3 ++-
+ include/builddefs.in       |  4 +++-
+ include/platform_defs.h.in |  1 +
+ libfrog/workqueue.c        |  3 +++
+ libxfs/init.c              |  3 +++
+ libxfs/libxfs_priv.h       |  3 +--
+ logprint/Makefile          |  3 ++-
+ m4/Makefile                |  1 +
+ m4/package_urcu.m4         | 22 ++++++++++++++++++++++
+ mdrestore/Makefile         |  3 ++-
+ mkfs/Makefile              |  2 +-
+ repair/Makefile            |  2 +-
+ repair/prefetch.c          |  9 +++++++--
+ repair/progress.c          |  4 +++-
+ scrub/Makefile             |  3 ++-
+ scrub/progress.c           |  2 ++
+ 21 files changed, 67 insertions(+), 15 deletions(-)
+ create mode 100644 m4/package_urcu.m4
 
-diff --git a/libxfs/buftarg.c b/libxfs/buftarg.c
-index 42806e433715..6c7142d41eb1 100644
---- a/libxfs/buftarg.c
-+++ b/libxfs/buftarg.c
-@@ -62,6 +62,128 @@ xfs_buftarg_setsize_early(
- 	return xfs_buftarg_setsize(btp, bsize);
+diff --git a/configure.ac b/configure.ac
+index dc57bbd7cd8c..378622e89232 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -154,6 +154,9 @@ AC_PACKAGE_NEED_UUIDCOMPARE
+ AC_PACKAGE_NEED_PTHREAD_H
+ AC_PACKAGE_NEED_PTHREADMUTEXINIT
+ 
++AC_PACKAGE_NEED_URCU_H
++AC_PACKAGE_NEED_RCU_INIT
++
+ AC_HAVE_FADVISE
+ AC_HAVE_MADVISE
+ AC_HAVE_MINCORE
+diff --git a/copy/Makefile b/copy/Makefile
+index 449b235fad40..1b00cd0d5743 100644
+--- a/copy/Makefile
++++ b/copy/Makefile
+@@ -9,7 +9,8 @@ LTCOMMAND = xfs_copy
+ CFILES = xfs_copy.c
+ HFILES = xfs_copy.h
+ 
+-LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT)
++LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBPTHREAD) $(LIBRT) \
++	  $(LIBURCU)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/copy/xfs_copy.c b/copy/xfs_copy.c
+index fc7d225fe6a2..f5eff96976d7 100644
+--- a/copy/xfs_copy.c
++++ b/copy/xfs_copy.c
+@@ -110,6 +110,7 @@ do_message(int flags, int code, const char *fmt, ...)
+ 		fprintf(stderr,
+ 			_("Aborting XFS copy -- logfile error -- reason: %s\n"),
+ 			strerror(errno));
++		rcu_unregister_thread();
+ 		pthread_exit(NULL);
+ 	}
+ }
+@@ -224,6 +225,7 @@ begin_reader(void *arg)
+ {
+ 	thread_args	*args = arg;
+ 
++	rcu_register_thread();
+ 	for (;;) {
+ 		pthread_mutex_lock(&args->wait);
+ 		if (do_write(args, NULL))
+@@ -243,6 +245,7 @@ handle_error:
+ 	if (--glob_masks.num_working == 0)
+ 		pthread_mutex_unlock(&mainwait);
+ 	pthread_mutex_unlock(&glob_masks.mutex);
++	rcu_unregister_thread();
+ 	pthread_exit(NULL);
+ 	return NULL;
+ }
+diff --git a/db/Makefile b/db/Makefile
+index 9bd9bf514f5d..4e44adc03577 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -17,7 +17,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+ CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
++LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
++	  $(LIBURCU)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS += -static-libtool-libs
+ 
+diff --git a/debian/control b/debian/control
+index ddd17850e378..2a97fa633a1b 100644
+--- a/debian/control
++++ b/debian/control
+@@ -3,7 +3,7 @@ Section: admin
+ Priority: optional
+ Maintainer: XFS Development Team <linux-xfs@vger.kernel.org>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
+-Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config
++Build-Depends: uuid-dev, dh-autoreconf, debhelper (>= 5), gettext, libtool, libedit-dev, libblkid-dev (>= 2.17), linux-libc-dev, libdevmapper-dev, libattr1-dev, libicu-dev, dh-python, pkg-config, liburcu-dev
+ Standards-Version: 4.0.0
+ Homepage: https://xfs.wiki.kernel.org/
+ 
+diff --git a/growfs/Makefile b/growfs/Makefile
+index a107d348ab6d..08601de77ab3 100644
+--- a/growfs/Makefile
++++ b/growfs/Makefile
+@@ -9,7 +9,8 @@ LTCOMMAND = xfs_growfs
+ 
+ CFILES = xfs_growfs.c
+ 
+-LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
++LLDLIBS = $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
++	  $(LIBURCU)
+ 
+ ifeq ($(ENABLE_EDITLINE),yes)
+ LLDLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+diff --git a/include/builddefs.in b/include/builddefs.in
+index e8f447f92baf..78eddf4a9852 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -22,6 +22,7 @@ LDFLAGS =
+ 
+ LIBRT = @librt@
+ LIBUUID = @libuuid@
++LIBURCU = @liburcu@
+ LIBPTHREAD = @libpthread@
+ LIBTERMCAP = @libtermcap@
+ LIBEDITLINE = @libeditline@
+@@ -125,7 +126,8 @@ CROND_DIR = @crond_dir@
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+ 
+-PCFLAGS = -D_GNU_SOURCE $(GCCFLAGS)
++# _LGPL_SOURCE is for liburcu to work correctly with GPL/LGPL programs
++PCFLAGS = -D_LGPL_SOURCE -D_GNU_SOURCE $(GCCFLAGS)
+ ifeq ($(HAVE_UMODE_T),yes)
+ PCFLAGS += -DHAVE_UMODE_T
+ endif
+diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
+index 1f7ceafb1fbc..8af43f3b8d8a 100644
+--- a/include/platform_defs.h.in
++++ b/include/platform_defs.h.in
+@@ -23,6 +23,7 @@
+ #include <limits.h>
+ #include <stdbool.h>
+ #include <libgen.h>
++#include <urcu.h>
+ 
+ typedef struct filldir		filldir_t;
+ 
+diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
+index fe3de4289379..cd232d9bddc0 100644
+--- a/libfrog/workqueue.c
++++ b/libfrog/workqueue.c
+@@ -11,6 +11,7 @@
+ #include <stdbool.h>
+ #include <errno.h>
+ #include <assert.h>
++#include <urcu.h>
+ #include "workqueue.h"
+ 
+ /* Main processing thread */
+@@ -24,6 +25,7 @@ workqueue_thread(void *arg)
+ 	 * Loop pulling work from the passed in work queue.
+ 	 * Check for notification to exit after every chunk of work.
+ 	 */
++	rcu_register_thread();
+ 	while (1) {
+ 		pthread_mutex_lock(&wq->lock);
+ 
+@@ -52,6 +54,7 @@ workqueue_thread(void *arg)
+ 		(wi->function)(wi->queue, wi->index, wi->arg);
+ 		free(wi);
+ 	}
++	rcu_unregister_thread();
+ 
+ 	return NULL;
+ }
+diff --git a/libxfs/init.c b/libxfs/init.c
+index 4dab7d25727e..477487e985c4 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -310,6 +310,8 @@ libxfs_init(libxfs_init_t *a)
+ 	fd = -1;
+ 	flags = (a->isreadonly | a->isdirect);
+ 
++	rcu_init();
++	rcu_register_thread();
+ 	radix_tree_init();
+ 
+ 	if (a->volname) {
+@@ -957,6 +959,7 @@ libxfs_destroy(
+ 	libxfs_bcache_free();
+ 	cache_destroy(libxfs_bcache);
+ 	leaked = destroy_zones();
++	rcu_unregister_thread();
+ 	if (getenv("LIBXFS_LEAK_CHECK") && leaked)
+ 		exit(1);
+ }
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index b88939c04adb..4cce1d680921 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -194,8 +194,7 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE_WARN, CE_ALERT, CE_PANIC };
+ #define spin_unlock(a)		((void) 0)
+ #define likely(x)		(x)
+ #define unlikely(x)		(x)
+-#define rcu_read_lock()		((void) 0)
+-#define rcu_read_unlock()	((void) 0)
++
+ /* Need to be able to handle this bare or in control flow */
+ static inline bool WARN_ON(bool expr) {
+ 	return (expr);
+diff --git a/logprint/Makefile b/logprint/Makefile
+index 758504b39f0f..cdedbd0dbe82 100644
+--- a/logprint/Makefile
++++ b/logprint/Makefile
+@@ -12,7 +12,8 @@ CFILES = logprint.c \
+ 	 log_copy.c log_dump.c log_misc.c \
+ 	 log_print_all.c log_print_trans.c log_redo.c
+ 
+-LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
++LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD) \
++	  $(LIBURCU)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/m4/Makefile b/m4/Makefile
+index c6c73dc9bbee..7312053039f4 100644
+--- a/m4/Makefile
++++ b/m4/Makefile
+@@ -24,6 +24,7 @@ LSRCFILES = \
+ 	package_services.m4 \
+ 	package_types.m4 \
+ 	package_icu.m4 \
++	package_urcu.m4 \
+ 	package_utilies.m4 \
+ 	package_uuiddev.m4 \
+ 	multilib.m4 \
+diff --git a/m4/package_urcu.m4 b/m4/package_urcu.m4
+new file mode 100644
+index 000000000000..9b0dee35d9a1
+--- /dev/null
++++ b/m4/package_urcu.m4
+@@ -0,0 +1,22 @@
++AC_DEFUN([AC_PACKAGE_NEED_URCU_H],
++  [ AC_CHECK_HEADERS(urcu.h)
++    if test $ac_cv_header_urcu_h = no; then
++	AC_CHECK_HEADERS(urcu.h,, [
++	echo
++	echo 'FATAL ERROR: could not find a valid urcu header.'
++	exit 1])
++    fi
++  ])
++
++AC_DEFUN([AC_PACKAGE_NEED_RCU_INIT],
++  [ AC_MSG_CHECKING([for liburcu])
++    AC_TRY_COMPILE([
++#define _GNU_SOURCE
++#include <urcu.h>
++    ], [
++	rcu_init();
++    ],	liburcu=-lurcu
++	AC_MSG_RESULT(yes),
++	AC_MSG_RESULT(no))
++    AC_SUBST(liburcu)
++  ])
+diff --git a/mdrestore/Makefile b/mdrestore/Makefile
+index d946955b0517..8f28ddab326b 100644
+--- a/mdrestore/Makefile
++++ b/mdrestore/Makefile
+@@ -8,7 +8,8 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_mdrestore
+ CFILES = xfs_mdrestore.c
+ 
+-LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBUUID)
++LLDLIBS = $(LIBXFS) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBUUID) \
++	  $(LIBURCU)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBFROG)
+ LLDFLAGS = -static
+ 
+diff --git a/mkfs/Makefile b/mkfs/Makefile
+index b8805f7e1ea1..811ba9dbe29b 100644
+--- a/mkfs/Makefile
++++ b/mkfs/Makefile
+@@ -11,7 +11,7 @@ HFILES =
+ CFILES = proto.c xfs_mkfs.c
+ 
+ LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
+-	$(LIBUUID) $(LIBINIH)
++	$(LIBUUID) $(LIBINIH) $(LIBURCU)
+ LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/repair/Makefile b/repair/Makefile
+index 5f0764d1c3cd..47536ca1cc11 100644
+--- a/repair/Makefile
++++ b/repair/Makefile
+@@ -72,7 +72,7 @@ CFILES = \
+ 	xfs_repair.c
+ 
+ LLDLIBS = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG) $(LIBUUID) $(LIBRT) \
+-	$(LIBPTHREAD) $(LIBBLKID)
++	$(LIBPTHREAD) $(LIBBLKID) $(LIBURCU)
+ LTDEPENDENCIES = $(LIBXFS) $(LIBXLOG) $(LIBXCMD) $(LIBFROG)
+ LLDFLAGS = -static-libtool-libs
+ 
+diff --git a/repair/prefetch.c b/repair/prefetch.c
+index 48affa1869f8..22a0c0c902d9 100644
+--- a/repair/prefetch.c
++++ b/repair/prefetch.c
+@@ -660,6 +660,7 @@ pf_io_worker(
+ 	if (buf == NULL)
+ 		return NULL;
+ 
++	rcu_register_thread();
+ 	pthread_mutex_lock(&args->lock);
+ 	while (!args->queuing_done || !btree_is_empty(args->io_queue)) {
+ 		pftrace("waiting to start prefetch I/O for AG %d", args->agno);
+@@ -682,6 +683,7 @@ pf_io_worker(
+ 	free(buf);
+ 
+ 	pftrace("finished prefetch I/O for AG %d", args->agno);
++	rcu_unregister_thread();
+ 
+ 	return NULL;
+ }
+@@ -726,6 +728,8 @@ pf_queuing_worker(
+ 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+ 	unsigned long long	cluster_mask;
+ 
++	rcu_register_thread();
++
+ 	cluster_mask = (1ULL << igeo->inodes_per_cluster) - 1;
+ 
+ 	for (i = 0; i < PF_THREAD_COUNT; i++) {
+@@ -739,7 +743,7 @@ pf_queuing_worker(
+ 			args->io_threads[i] = 0;
+ 			if (i == 0) {
+ 				pf_skip_prefetch_thread(args);
+-				return NULL;
++				goto out;
+ 			}
+ 			/*
+ 			 * since we have at least one I/O thread, use them for
+@@ -779,7 +783,6 @@ pf_queuing_worker(
+ 			 * Start processing as well, in case everything so
+ 			 * far was already prefetched and the queue is empty.
+ 			 */
+-			
+ 			pf_start_io_workers(args);
+ 			pf_start_processing(args);
+ 			sem_wait(&args->ra_count);
+@@ -841,6 +844,8 @@ pf_queuing_worker(
+ 	if (next_args)
+ 		pf_create_prefetch_thread(next_args);
+ 
++out:
++	rcu_unregister_thread();
+ 	return NULL;
  }
  
-+/*
-+ * Scan a chunk of the buffer cache and drop LRU reference counts. If the
-+ * count goes to zero, dispose of the buffer.
-+ */
-+static void
-+xfs_buftarg_shrink(
-+	struct xfs_buftarg	*btc)
-+{
-+	/*
-+	 * Make the fact we are in memory reclaim externally visible. This
-+	 * allows buffer cache allocation throttling while we are trying to
-+	 * free memory.
-+	 */
-+	atomic_inc_return(&btc->bt_low_mem);
-+
-+	fprintf(stderr, "Got memory pressure event. Shrinking caches!\n");
-+
-+	/*
-+	 * Now we've free a bunch of memory, trim the heap down to release the
-+	 * freed memory back to the kernel and reduce the pressure we are
-+	 * placing on the system.
-+	 */
-+	malloc_trim(0);
-+
-+	/*
-+	 * Done, wake anyone waiting on memory reclaim to complete.
-+	 */
-+	atomic_dec_return(&btc->bt_low_mem);
-+	complete(&btc->bt_low_mem_wait);
-+}
-+
-+static void *
-+xfs_buftarg_shrinker(
-+	void			*args)
-+{
-+	struct xfs_buftarg	*btp = args;
-+	struct pollfd		 fds = {
-+		.fd = btp->bt_psi_fd,
-+		.events = POLLPRI,
-+	};
-+
+diff --git a/repair/progress.c b/repair/progress.c
+index e5a9c1efa822..f6c4d988444e 100644
+--- a/repair/progress.c
++++ b/repair/progress.c
+@@ -182,6 +182,7 @@ progress_rpt_thread (void *p)
+ 		do_error (_("progress_rpt: cannot malloc progress msg buffer\n"));
+ 
+ 	running = 1;
 +	rcu_register_thread();
-+	while (!btp->bt_exiting) {
-+		int	n;
-+
-+		n = poll(&fds, 1, 100);
-+		if (n == 0)
-+			continue;	/* timeout */
-+		if (n < 0) {
-+			perror("poll(PSI)");
-+			break;
-+		}
-+		if (fds.revents & POLLERR) {
-+			fprintf(stderr,
-+				"poll(psi) POLLERR: event source dead?\n");
-+			break;
-+		}
-+		if (!(fds.revents & POLLPRI)) {
-+			fprintf(stderr,
-+				"poll(psi): unknown event.  Ignoring.\n");
-+			continue;
-+		}
-+
-+		/* run the shrinker here */
-+		xfs_buftarg_shrink(btp);
-+
-+	}
+ 
+ 	/*
+ 	 * Specify a repeating timer that fires each MSG_INTERVAL seconds.
+@@ -286,7 +287,8 @@ progress_rpt_thread (void *p)
+ 		do_warn(_("cannot delete timer\n"));
+ 
+ 	free (msgbuf);
+-	return (NULL);
 +	rcu_unregister_thread();
 +	return NULL;
-+}
-+
-+/*
-+ * This only picks up on global memory pressure. Maybe in future we can detect
-+ * whether we are running inside a container and use the PSI information for the
-+ * container.
-+ *
-+ * We want relatively early notification of memory pressure stalls because
-+ * xfs_repair will consume lots of memory. Hence set a low trigger threshold for
-+ * reclaim to run - a partial stall of 5ms over a 1s sample period will trigger
-+ * reclaim algorithms.
-+ */
-+static int
-+xfs_buftarg_mempressue_init(
-+	struct xfs_buftarg	*btp)
-+{
-+	const char		*fname = "/proc/pressure/memory";
-+	const char		*trigger = "some 10000 1000000";
-+	int			error;
-+
-+	btp->bt_psi_fd = open(fname, O_RDWR | O_NONBLOCK);
-+	if (btp->bt_psi_fd < 0) {
-+		perror("open(PSI)");
-+		return -errno;
-+	}
-+	if (write(btp->bt_psi_fd, trigger, strlen(trigger) + 1) !=
-+						strlen(trigger) + 1) {
-+		perror("write(PSI)");
-+		error = -errno;
-+		goto out_close;
-+	}
-+
-+	atomic_set(&btp->bt_low_mem, 0);
-+	init_completion(&btp->bt_low_mem_wait);
-+
-+	/*
-+	 * Now create the monitoring reclaim thread. This will run until the
-+	 * buftarg is torn down.
-+	 */
-+	error = pthread_create(&btp->bt_psi_tid, NULL,
-+				xfs_buftarg_shrinker, btp);
-+	if (error)
-+		goto out_close;
-+
-+	return 0;
-+
-+out_close:
-+	close(btp->bt_psi_fd);
-+	btp->bt_psi_fd = -1;
-+	return error;
-+}
-+
-+
- struct xfs_buftarg *
- xfs_buftarg_alloc(
- 	struct xfs_mount	*mp,
-@@ -74,6 +196,8 @@ xfs_buftarg_alloc(
- 	btp->bt_mount = mp;
- 	btp->bt_fd = libxfs_device_to_fd(bdev);
- 	btp->bt_bdev = bdev;
-+	btp->bt_psi_fd = -1;
-+	btp->bt_exiting = false;
+ }
  
- 	if (xfs_buftarg_setsize_early(btp))
- 		goto error_free;
-@@ -84,8 +208,13 @@ xfs_buftarg_alloc(
- 	if (percpu_counter_init(&btp->bt_io_count, 0, GFP_KERNEL))
- 		goto error_lru;
+ int
+diff --git a/scrub/Makefile b/scrub/Makefile
+index 47c887eb79a1..849e3afd5af3 100644
+--- a/scrub/Makefile
++++ b/scrub/Makefile
+@@ -71,7 +71,8 @@ spacemap.c \
+ vfs.c \
+ xfs_scrub.c
  
-+	if (xfs_buftarg_mempressue_init(btp))
-+		goto error_pcp;
-+
- 	return btp;
+-LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBICU_LIBS) $(LIBRT)
++LLDLIBS += $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD) $(LIBICU_LIBS) $(LIBRT) \
++	$(LIBURCU)
+ LTDEPENDENCIES += $(LIBHANDLE) $(LIBFROG)
+ LLDFLAGS = -static
  
-+error_pcp:
-+	percpu_counter_destroy(&btp->bt_io_count);
- error_lru:
- 	list_lru_destroy(&btp->bt_lru);
- error_free:
-@@ -97,6 +226,12 @@ void
- xfs_buftarg_free(
- 	struct xfs_buftarg	*btp)
- {
-+	btp->bt_exiting = true;
-+	if (btp->bt_psi_tid)
-+		pthread_join(btp->bt_psi_tid, NULL);
-+	if (btp->bt_psi_fd >= 0)
-+		close(btp->bt_psi_fd);
-+
- 	ASSERT(percpu_counter_sum(&btp->bt_io_count) == 0);
- 	percpu_counter_destroy(&btp->bt_io_count);
- 	platform_flush_device(btp->bt_fd, btp->bt_bdev);
-@@ -121,10 +256,15 @@ xfs_buf_allocate_memory(
- 	struct xfs_buf		*bp,
- 	uint			flags)
- {
-+	struct xfs_buftarg	*btp = bp->b_target;
- 	size_t			size;
+diff --git a/scrub/progress.c b/scrub/progress.c
+index d8130ca5f93c..4a66fb0d5cfb 100644
+--- a/scrub/progress.c
++++ b/scrub/progress.c
+@@ -117,6 +117,7 @@ progress_report_thread(void *arg)
+ 	struct timespec		abstime;
+ 	int			ret;
  
-+	/* Throttle allocation while dealing with low memory events */
-+	while (atomic_read(&btp->bt_low_mem))
-+		wait_for_completion(&btp->bt_low_mem_wait);
-+
- 	size = BBTOB(bp->b_length);
--	bp->b_addr = memalign(bp->b_target->bt_meta_sectorsize, size);
-+	bp->b_addr = memalign(btp->bt_meta_sectorsize, size);
- 	if (!bp->b_addr)
- 		return -ENOMEM;
- 	return 0;
-diff --git a/libxfs/xfs_buftarg.h b/libxfs/xfs_buftarg.h
-index 798980fdafeb..d2ce47e22545 100644
---- a/libxfs/xfs_buftarg.h
-+++ b/libxfs/xfs_buftarg.h
-@@ -41,7 +41,16 @@ struct xfs_buftarg {
++	rcu_register_thread();
+ 	pthread_mutex_lock(&pt.lock);
+ 	while (1) {
+ 		uint64_t	progress_val;
+@@ -140,6 +141,7 @@ progress_report_thread(void *arg)
+ 			progress_report(progress_val);
+ 	}
+ 	pthread_mutex_unlock(&pt.lock);
++	rcu_unregister_thread();
+ 	return NULL;
+ }
  
- 	uint32_t		bt_io_count;
- 	unsigned int		flags;
-+
-+	/*
-+	 * Memory pressure (PSI) and cache reclaim infrastructure
-+	 */
- 	struct list_lru		bt_lru;
-+	int			bt_psi_fd;
-+	pthread_t		bt_psi_tid;
-+	bool			bt_exiting;
-+	bool			bt_low_mem;
-+	struct completion	bt_low_mem_wait;
- };
- 
- /* We purged a dirty buffer and lost a write. */
 -- 
 2.28.0
 
