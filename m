@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D018EC433DF
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Oct 2020 03:38:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0025CC43457
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Oct 2020 03:38:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CB8D208C7
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Oct 2020 03:38:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A05E72071A
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Oct 2020 03:38:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T7tV4VCu"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YkMxTXne"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394242AbgJPDih (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Oct 2020 23:38:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38274 "EHLO
+        id S2394243AbgJPDij (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Oct 2020 23:38:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38276 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2394231AbgJPDih (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 23:38:37 -0400
+        with ESMTP id S2394231AbgJPDii (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Oct 2020 23:38:38 -0400
 Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A4B80C061755
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 20:38:37 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id a1so667706pjd.1
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 20:38:37 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8EF1C061755
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 20:38:38 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id h4so672081pjk.0
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Oct 2020 20:38:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ldjkKG1ze1tFvfs/m9SjKWky0rdNAEa4EkGCpDfMVbs=;
-        b=T7tV4VCuYTImcNd3JI8aqFx1jErLp6m0PC8lqxumhtr300piMAAyKY1qtDHKGikEgR
-         eLmwxuJRaVfKeSYW0EJUqypZaNjaAuKVuYZegNYXSJVORE40ceQD+tbri0WCXGFz5b5s
-         +pUH9kZbhA7RQ26sIFlBKFp9gUa9g8cdKMn3HyqaBjVJ1R+C0qn3qBFDD96oCsa9QtOd
-         WFptyGqbeTqF0q83SgNOdXf4T5E4EULNuNTHDFfapFBejcQF6KbP8dGBn1HyIs9DblHS
-         qH/975hLqNDRFsS6KnapomICUC7GjqOCBgsoZjiHTkrtZjH+U2B3QcSenvjkBVgmQlWk
-         eVGQ==
+        bh=AxcmPMgk6Pv7pmjlyF7cb9EhnJeD6m3Xhl4+w4H5kBw=;
+        b=YkMxTXneQ4+NYdIZbbnhTXX3N4wXzGi1NsKW+NHCFuflp3MbvwRUldIyF5CSZgAdMD
+         kBIbSIADbdGYe/8b2XkevJXMuTkya60+BP97dSc/sDzWx6QlzOlt/6kp+1SBfY9dBrNI
+         H7efZ7eCx4qqiTJY0obM3lParG5tKCESjErW8ZegAOt/VgvGpnhiCA9nHW0UN46nt4NS
+         sSadb1fgNMwi3Hm8zlhGhT6krXWQbzTw+kXROUFoBe0BJzIDcWu5d4seg2bX5r1sSyda
+         6rPBZLQ+rqUw2rbL0TdZo3CArPRqlARG1TMb7JCgWn8YO/49ZST62OILILIgnWyr5Pqp
+         yOEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=ldjkKG1ze1tFvfs/m9SjKWky0rdNAEa4EkGCpDfMVbs=;
-        b=Lb3yI8VzGjs/WtQrIopIXtLniJh0NwK0tgXrzuEblUE6I11PPv6/PoIMdRpOVz6ff0
-         SsL3kiTNFu9zJ8/14enqlJaegVe8eGL2rhZ0xFmbmQcz0D6qtByI8VszAklGnIiqo5Sl
-         R5J+k8Mtj644j9nODHGdVch8QM2ss7uFSxFzNg2m5bpsep9AFU+fHtl/3m+y20kg+8u1
-         SKvAj2CeTVsrjaM4AE1FxwxUSXD1sdQj433NSQTt5ypvePphvy2OO7A9UwHdoxLt9kk+
-         yjCg+Hj4w2kPvqI6RpnFYNrSip7zjM9NHSf8/zAdHLtC6GRNMVJmUkQFxJPHboC1nEQH
-         Tnlg==
-X-Gm-Message-State: AOAM530IgmCvDBD0MA72+mUZRZJNHoHc3Iqcbjo7qIGwr0E39hp+iBGg
-        XxGZsedo3dyNI2C/J06rxQ3xOS83mw==
-X-Google-Smtp-Source: ABdhPJw3XL6tcHvtV7E4kABWVLiIKk3eACF/yVlkSdaQNCunVcgw+bTr4zNcx14dBQO5zd/57Q6AxA==
-X-Received: by 2002:a17:90b:1496:: with SMTP id js22mr1991756pjb.20.1602819516874;
-        Thu, 15 Oct 2020 20:38:36 -0700 (PDT)
+        bh=AxcmPMgk6Pv7pmjlyF7cb9EhnJeD6m3Xhl4+w4H5kBw=;
+        b=THxJcU2Xs12SPwMWvDxTmBDKDZcDlykUSuP2wiDvxdQmk2ZGeNo1Fd1cnrp1SGDw/N
+         4Ztxs+Ybi4uD8A5bMmTCw3bcziccE8k5SvvOEXBm1hmj8GNUwiLgmLOLX18I/cPjj5ys
+         z94G6rI+YK9xNhEQPCmULoLmAlrgDUpIGUODsgvqAHKpbAY+UNs3GCq1OxGsuD9N97By
+         QFKhP/ZcrOCTcDHXbtXj7G5R3xTvrSlk3xDxf+f7SFMg7kMugQzwSJkQNh9O9/7sQ/7F
+         pNiOsd5f+7J7gGjff81lsA86Ja3cCibAGQSZUg+XAqy8q3GHNODv7MBAS1URap8Jzqpb
+         ElFA==
+X-Gm-Message-State: AOAM532U1uLUVMdI/UMsmoqWj7kVq3CFEnN4xqoIJtubYoDStVEGMZGo
+        0P/q1M42WidwfyK8hQn1TjAbHKWsdw==
+X-Google-Smtp-Source: ABdhPJx5TsNIbJW168ufAHbi5D0A8+HflQp96MTLHR8S6FchNgiz7p0cmyJGsPunjPELsrYXXIdYMA==
+X-Received: by 2002:a17:90a:fe82:: with SMTP id co2mr1993643pjb.22.1602819517954;
+        Thu, 15 Oct 2020 20:38:37 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
-        by smtp.gmail.com with ESMTPSA id o15sm890238pfp.91.2020.10.15.20.38.35
+        by smtp.gmail.com with ESMTPSA id o15sm890238pfp.91.2020.10.15.20.38.36
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 15 Oct 2020 20:38:36 -0700 (PDT)
+        Thu, 15 Oct 2020 20:38:37 -0700 (PDT)
 From:   xiakaixu1987@gmail.com
 X-Google-Original-From: kaixuxia@tencent.com
 To:     linux-xfs@vger.kernel.org
 Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-Subject: [PATCH v6 2/3] xfs: check tp->t_dqinfo value instead of the XFS_TRANS_DQ_DIRTY flag
-Date:   Fri, 16 Oct 2020 11:38:27 +0800
-Message-Id: <1602819508-29033-3-git-send-email-kaixuxia@tencent.com>
+Subject: [PATCH v6 3/3] xfs: directly return if the delta equal to zero
+Date:   Fri, 16 Oct 2020 11:38:28 +0800
+Message-Id: <1602819508-29033-4-git-send-email-kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <1602819508-29033-1-git-send-email-kaixuxia@tencent.com>
 References: <1602819508-29033-1-git-send-email-kaixuxia@tencent.com>
@@ -73,120 +73,77 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Kaixu Xia <kaixuxia@tencent.com>
 
-Nowadays the only things that the XFS_TRANS_DQ_DIRTY flag seems to do
-are indicates the tp->t_dqinfo->dqs[XFS_QM_TRANS_{USR,GRP,PRJ}] values
-changed and check in xfs_trans_apply_dquot_deltas() and the unreserve
-variant xfs_trans_unreserve_and_mod_dquots(). Actually, we also can
-use the tp->t_dqinfo value instead of the XFS_TRANS_DQ_DIRTY flag, that
-is to say, we allocate the new tp->t_dqinfo only when the qtrx values
-changed, so the tp->t_dqinfo value isn't NULL equals the XFS_TRANS_DQ_DIRTY
-flag is set, we only need to check if tp->t_dqinfo == NULL in
-xfs_trans_apply_dquot_deltas() and its unreserve variant to determine
-whether lock all of the dquots and join them to the transaction.
+The xfs_trans_mod_dquot() function will allocate new tp->t_dqinfo if
+it is NULL and make the changes in the tp->t_dqinfo->dqs[XFS_QM_TRANS
+_{USR,GRP,PRJ}]. Nowadays seems none of the callers want to join the
+dquots to the transaction and push them to device when the delta is
+zero. Actually, most of time the caller would check the delta and go
+on only when the delta value is not zero, so we should bail out when
+it is zero.
 
 Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_shared.h |  1 -
- fs/xfs/xfs_inode.c         |  8 +-------
- fs/xfs/xfs_trans_dquot.c   | 13 ++-----------
- 3 files changed, 3 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_trans_dquot.c | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index c795ae47b3c9..8c61a461bf7b 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -62,7 +62,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define	XFS_TRANS_SB_DIRTY	0x02	/* superblock is modified */
- #define	XFS_TRANS_PERM_LOG_RES	0x04	/* xact took a permanent log res */
- #define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
--#define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
- #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
- #define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
- #define XFS_TRANS_RES_FDBLKS	0x80	/* reserve newly freed blocks */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 20bb5fae0d00..16885624015e 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -959,7 +959,6 @@ xfs_dir_ialloc(
- 	xfs_buf_t	*ialloc_context = NULL;
- 	int		code;
- 	void		*dqinfo;
--	uint		tflags;
- 
- 	tp = *tpp;
- 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-@@ -1018,12 +1017,9 @@ xfs_dir_ialloc(
- 		 * and attach it to the next transaction.
- 		 */
- 		dqinfo = NULL;
--		tflags = 0;
- 		if (tp->t_dqinfo) {
- 			dqinfo = (void *)tp->t_dqinfo;
- 			tp->t_dqinfo = NULL;
--			tflags = tp->t_flags & XFS_TRANS_DQ_DIRTY;
--			tp->t_flags &= ~(XFS_TRANS_DQ_DIRTY);
- 		}
- 
- 		code = xfs_trans_roll(&tp);
-@@ -1031,10 +1027,8 @@ xfs_dir_ialloc(
- 		/*
- 		 * Re-attach the quota info that we detached from prev trx.
- 		 */
--		if (dqinfo) {
-+		if (dqinfo)
- 			tp->t_dqinfo = dqinfo;
--			tp->t_flags |= tflags;
--		}
- 
- 		if (code) {
- 			xfs_buf_relse(ialloc_context);
 diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index 67f1e275b34d..0ebfd7930382 100644
+index 0ebfd7930382..28b8ac701919 100644
 --- a/fs/xfs/xfs_trans_dquot.c
 +++ b/fs/xfs/xfs_trans_dquot.c
-@@ -84,13 +84,6 @@ xfs_trans_dup_dqinfo(
+@@ -194,6 +194,9 @@ xfs_trans_mod_dquot(
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(tp->t_mountp));
+ 	qtrx = NULL;
  
- 	xfs_trans_alloc_dqinfo(ntp);
++	if (!delta)
++		return;
++
+ 	if (tp->t_dqinfo == NULL)
+ 		xfs_trans_alloc_dqinfo(tp);
+ 	/*
+@@ -205,10 +208,8 @@ xfs_trans_mod_dquot(
+ 	if (qtrx->qt_dquot == NULL)
+ 		qtrx->qt_dquot = dqp;
  
--	/*
--	 * Because the quota blk reservation is carried forward,
--	 * it is also necessary to carry forward the DQ_DIRTY flag.
--	 */
--	if (otp->t_flags & XFS_TRANS_DQ_DIRTY)
--		ntp->t_flags |= XFS_TRANS_DQ_DIRTY;
--
- 	for (j = 0; j < XFS_QM_TRANS_DQTYPES; j++) {
- 		oqa = otp->t_dqinfo->dqs[j];
- 		nqa = ntp->t_dqinfo->dqs[j];
-@@ -270,8 +263,6 @@ xfs_trans_mod_dquot(
+-	if (delta) {
+-		trace_xfs_trans_mod_dquot_before(qtrx);
+-		trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
+-	}
++	trace_xfs_trans_mod_dquot_before(qtrx);
++	trace_xfs_trans_mod_dquot(tp, dqp, field, delta);
  
- 	if (delta)
- 		trace_xfs_trans_mod_dquot_after(qtrx);
--
--	tp->t_flags |= XFS_TRANS_DQ_DIRTY;
+ 	switch (field) {
+ 	/* regular disk blk reservation */
+@@ -261,8 +262,7 @@ xfs_trans_mod_dquot(
+ 		ASSERT(0);
+ 	}
+ 
+-	if (delta)
+-		trace_xfs_trans_mod_dquot_after(qtrx);
++	trace_xfs_trans_mod_dquot_after(qtrx);
  }
  
  
-@@ -348,7 +339,7 @@ xfs_trans_apply_dquot_deltas(
- 	int64_t			totalbdelta;
- 	int64_t			totalrtbdelta;
- 
--	if (!(tp->t_flags & XFS_TRANS_DQ_DIRTY))
-+	if (!tp->t_dqinfo)
- 		return;
- 
- 	ASSERT(tp->t_dqinfo);
-@@ -490,7 +481,7 @@ xfs_trans_unreserve_and_mod_dquots(
- 	struct xfs_dqtrx	*qtrx, *qa;
- 	bool			locked;
- 
--	if (!tp->t_dqinfo || !(tp->t_flags & XFS_TRANS_DQ_DIRTY))
-+	if (!tp->t_dqinfo)
- 		return;
- 
- 	for (j = 0; j < XFS_QM_TRANS_DQTYPES; j++) {
+@@ -687,14 +687,9 @@ xfs_trans_dqresv(
+ 	 */
+ 	if (tp) {
+ 		ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
+-		if (nblks != 0)
+-			xfs_trans_mod_dquot(tp, dqp,
+-					    flags & XFS_QMOPT_RESBLK_MASK,
+-					    nblks);
+-		if (ninos != 0)
+-			xfs_trans_mod_dquot(tp, dqp,
+-					    XFS_TRANS_DQ_RES_INOS,
+-					    ninos);
++		xfs_trans_mod_dquot(tp, dqp, flags & XFS_QMOPT_RESBLK_MASK,
++				    nblks);
++		xfs_trans_mod_dquot(tp, dqp, XFS_TRANS_DQ_RES_INOS, ninos);
+ 	}
+ 	ASSERT(dqp->q_blk.reserved >= dqp->q_blk.count);
+ 	ASSERT(dqp->q_rtb.reserved >= dqp->q_rtb.count);
 -- 
 2.20.0
 
