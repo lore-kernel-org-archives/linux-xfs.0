@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42451C433DF
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Oct 2020 19:31:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5516C43457
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Oct 2020 19:37:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0CB3F207DE
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Oct 2020 19:31:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BCE4207DE
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Oct 2020 19:37:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603049511;
-	bh=33y6CAiMHrSEHGXU39bA0CzSEghh64lkJPtXonBCShA=;
+	s=default; t=1603049824;
+	bh=4hORzjUW7biOiEtzI4J06xVajXfDArg2iLiKGTgpZpQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jW9KuL091o1Oo923rVdRXT/3fmLRy4Scf0MUHZR6taXwtKAMzGSo9pUwWKivBM4Q6
-	 5oaVitViJmY22wJYCh2pxpKvSVIFgF0I2VKK2c2vwEQN/7yWHAiKjOJ4Hw1jkS3zb+
-	 GxOvmBIGYQX+/384j1Sqyi45gowiubx7XiMVMT4g=
+	b=zHGXTP2V9+nM3MBhQkjtVgGebMgA6/2ierthpgWzuKmZJdsxMr8PZdborJ7p8inPu
+	 K9MUeWHJ9rahMaLy7CliDX/d22fbXmd1TobC6f6lPYMKe8IMcq0e8Fs5hcfXFGeKer
+	 YfyiXTZ2lIYLYw+db2dMo7802NJ4h7dQfMkRwz1g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730153AbgJRTbu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:31:50 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42840 "EHLO mail.kernel.org"
+        id S1731345AbgJRTgj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:36:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41302 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731949AbgJRT1L (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:27:11 -0400
+        id S1731598AbgJRT0O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:26:14 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4C0CA2137B;
-        Sun, 18 Oct 2020 19:27:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B7B902137B;
+        Sun, 18 Oct 2020 19:26:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603049231;
-        bh=33y6CAiMHrSEHGXU39bA0CzSEghh64lkJPtXonBCShA=;
+        s=default; t=1603049173;
+        bh=4hORzjUW7biOiEtzI4J06xVajXfDArg2iLiKGTgpZpQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=xZGIXCHtDZFeLunM7R6FJfVTPMTYUmTD6I4aoCwMzwU8YpKErzXrsSEwhd9dJ56dG
-         zaO+u0Gu3lKJKGJ3W+f5q6AzY8TfsoFDxDZDrC+m/QFK/xAz7Xuq1BD1ZiZvtAqIKs
-         zpLe16jWvajkjNd6mq8K96MFm5UglH5ipwwbsS6M=
+        b=Ggm4RAY7KMJczHU5OizrheFiDH0uEey4kTrFCi15m7nATwruRw+wcoYStg+Rezx1y
+         i6vJzfl7sMhk5rKvQo5Qq7AIMizeRDKxOnf3hPOb11USiy/8WSUFJIk+HKW9nwzOsX
+         RLF74E/OYq88nXDriW8Hpfl/AbqT1QeZ44T2pdOs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 29/41] xfs: make sure the rt allocator doesn't run off the end
-Date:   Sun, 18 Oct 2020 15:26:23 -0400
-Message-Id: <20201018192635.4056198-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 36/52] xfs: make sure the rt allocator doesn't run off the end
+Date:   Sun, 18 Oct 2020 15:25:13 -0400
+Message-Id: <20201018192530.4055730-36-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201018192635.4056198-1-sashal@kernel.org>
-References: <20201018192635.4056198-1-sashal@kernel.org>
+In-Reply-To: <20201018192530.4055730-1-sashal@kernel.org>
+References: <20201018192530.4055730-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -79,7 +79,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 11 insertions(+)
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 0d93d3c10fcc4..d812f84252d5b 100644
+index cdcb7235e41ae..7d3b56872e563 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
 @@ -257,6 +257,9 @@ xfs_rtallocate_extent_block(
