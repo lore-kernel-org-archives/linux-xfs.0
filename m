@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A75E0C43467
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Oct 2020 19:21:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 144EFC43457
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Oct 2020 19:29:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 699AF22363
-	for <linux-xfs@archiver.kernel.org>; Sun, 18 Oct 2020 19:21:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE1142137B
+	for <linux-xfs@archiver.kernel.org>; Sun, 18 Oct 2020 19:29:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603048907;
-	bh=OUR4xePPL/uT6nw4O/uyuUsxy+afCtN8euw1cYdPSTU=;
+	s=default; t=1603049350;
+	bh=rhQUtfgDqGzMszkNsU5kJi4JNSGAIIkSwnapQlDVunA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=XpUFn0QaUm9dYQBtfHSigdDAim7Z+7FU1dItmOV6BznM04+Ia2+vNEVlZCnFQ4MQM
-	 R2H7PelIKWecE8RwmUJXNesnNsfEiKSXkvqOa4PRX9fs19D+vbJn5IT8G5uU5ZUi2V
-	 lUauyA9F2w+99lCQeELzk5BhIFps/8pGv5zUgEyI=
+	b=Fi+Ze51T7gYxjqKWsFst0XaqWiXH9PpoHHSKz0hQmqxBHLMUuxThB9gWAGUkkvHvK
+	 1O8a/7UiuTNGTEsDszS7WpVBQyWwgOloZLEzXAurT9XCkOT5KZYn4yxP40Lh5RbINm
+	 cslo20gsxGj2/ism+86ucUZH474EF1JnHCQvoiII=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729571AbgJRTVp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 18 Oct 2020 15:21:45 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34056 "EHLO mail.kernel.org"
+        id S1730153AbgJRT17 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 18 Oct 2020 15:27:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44056 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729564AbgJRTVp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 18 Oct 2020 15:21:45 -0400
+        id S1732196AbgJRT1y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 18 Oct 2020 15:27:54 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DFF90222E8;
-        Sun, 18 Oct 2020 19:21:43 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1659722272;
+        Sun, 18 Oct 2020 19:27:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603048904;
-        bh=OUR4xePPL/uT6nw4O/uyuUsxy+afCtN8euw1cYdPSTU=;
+        s=default; t=1603049273;
+        bh=rhQUtfgDqGzMszkNsU5kJi4JNSGAIIkSwnapQlDVunA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E32TqPJBvU6LDZjgTVAhHZcF6/ClDMluLFPWhzi86I+//FBg0DeYaVNcPcVl/jbIz
-         ymcmOtGAl9OXklpSHn9OaIgugtrMpIwn94vBK2D8kZNGpDLmb2hzSid13d5bUUfIaK
-         80ZKBdJ+pKwyDtOAxXNpvF2VY7Y7G+qdBbMAtliQ=
+        b=quSv5VjRJZAgLkCuqbdafzVMniMTHMp8p5BMLWokGcSsDSDBSudTWL7qgVGNkYPMQ
+         AeLN5xWEcd+XbCP2sBoQxkZZAKuDUDSBPsCy0bTjYT986izJUhGW0PMLldeHo5QW/b
+         j6WchU22tliR1dlUqG4isxSHzv6Z5FcoOvdkeZKo=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.8 065/101] xfs: make sure the rt allocator doesn't run off the end
-Date:   Sun, 18 Oct 2020 15:19:50 -0400
-Message-Id: <20201018192026.4053674-65-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 21/33] xfs: make sure the rt allocator doesn't run off the end
+Date:   Sun, 18 Oct 2020 15:27:16 -0400
+Message-Id: <20201018192728.4056577-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201018192026.4053674-1-sashal@kernel.org>
-References: <20201018192026.4053674-1-sashal@kernel.org>
+In-Reply-To: <20201018192728.4056577-1-sashal@kernel.org>
+References: <20201018192728.4056577-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -79,10 +79,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 11 insertions(+)
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 6209e7b6b895b..86994d7f7cba3 100644
+index 919b6544b61a3..bda5248fc6498 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -247,6 +247,9 @@ xfs_rtallocate_extent_block(
+@@ -256,6 +256,9 @@ xfs_rtallocate_extent_block(
  		end = XFS_BLOCKTOBIT(mp, bbno + 1) - 1;
  	     i <= end;
  	     i++) {
@@ -92,7 +92,7 @@ index 6209e7b6b895b..86994d7f7cba3 100644
  		/*
  		 * See if there's a free extent of maxlen starting at i.
  		 * If it's not so then next will contain the first non-free.
-@@ -442,6 +445,14 @@ xfs_rtallocate_extent_near(
+@@ -447,6 +450,14 @@ xfs_rtallocate_extent_near(
  	 */
  	if (bno >= mp->m_sb.sb_rextents)
  		bno = mp->m_sb.sb_rextents - 1;
