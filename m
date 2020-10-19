@@ -2,84 +2,77 @@ Return-Path: <SRS0=Yj0O=D2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E88C433DF
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 16:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7B32C43457
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 16:55:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27E7322314
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 16:32:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52137222EA
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 16:55:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iF7KCc5x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730587AbgJSQcR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Oct 2020 12:32:17 -0400
-Received: from sandeen.net ([63.231.237.45]:45830 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730565AbgJSQcR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Oct 2020 12:32:17 -0400
-Received: from liberator.local (unknown [10.0.1.163])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1730739AbgJSQzK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Oct 2020 12:55:10 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:21095 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730690AbgJSQzJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Oct 2020 12:55:09 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603126508;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=UIbgrH9eig0psNy0ASBb0vz+iWA/QXOrTGiB/ABhnmc=;
+        b=iF7KCc5x2+Ns5CrWUq8Asiw4q+P8Jsl3YWiNks7ogQwKBuaAvD0WPfgVSOv4Q4tiFUAGXC
+        Iykt/NCsvZcPYD2CNRLJ/zrIyQSn3hEA/ZrljdY6/ofqTY4FEDMs6Of5h4CO8LXpzQPNOS
+        NdyxY11EnvLbJuqQ/855uN0H8FlDZEA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-408-9iXIkeU7Pd6nvSlKqryVmg-1; Mon, 19 Oct 2020 12:55:04 -0400
+X-MC-Unique: 9iXIkeU7Pd6nvSlKqryVmg-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 08EAE33FD;
-        Mon, 19 Oct 2020 11:30:56 -0500 (CDT)
-To:     xiakaixu1987@gmail.com, linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com, Kaixu Xia <kaixuxia@tencent.com>
-References: <1603100845-12205-1-git-send-email-kaixuxia@tencent.com>
- <1603100845-12205-2-git-send-email-kaixuxia@tencent.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] xfs: use the SECTOR_SHIFT macro instead of the magic
- number
-Message-ID: <771644f3-99dd-bdad-ef34-60f65faecd1a@sandeen.net>
-Date:   Mon, 19 Oct 2020 11:32:15 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.3.1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7AF5A425CF;
+        Mon, 19 Oct 2020 16:55:03 +0000 (UTC)
+Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 08C8C5D9D2;
+        Mon, 19 Oct 2020 16:55:02 +0000 (UTC)
+Date:   Mon, 19 Oct 2020 12:55:01 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] iomap: use page dirty state to seek data over
+ unwritten extents
+Message-ID: <20201019165501.GA1232435@bfoster>
+References: <20201012140350.950064-1-bfoster@redhat.com>
+ <20201012140350.950064-2-bfoster@redhat.com>
+ <20201015094700.GB21420@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1603100845-12205-2-git-send-email-kaixuxia@tencent.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201015094700.GB21420@infradead.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/19/20 4:47 AM, xiakaixu1987@gmail.com wrote:
-> From: Kaixu Xia <kaixuxia@tencent.com>
+On Thu, Oct 15, 2020 at 10:47:00AM +0100, Christoph Hellwig wrote:
+> I don't think we can solve this properly.  Due to the racyness we can
+> always err one side.  The beauty of treating all the uptodate pages
+> as present data is that we err on the safe side, as applications
+> expect holes to never have data, while "data" could always be zeroed.
 > 
-> We use the SECTOR_SHIFT macro to define the sector size shift, so maybe
-> it is more reasonable to use it than the magic number 9.
-> 
-> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 
-Hm ...  SECTOR_SHIFT is a block layer #define, really,
-and blkdev_issue_zeroout is a block layer interface I guess.
+I don't think that's quite accurate. Nothing prevents a dirty page from
+being written back and reclaimed between acquiring the (unwritten)
+mapping and doing the pagecache scan, so it's possible to present valid
+data (written to the kernel prior to a seek) as a hole with the current
+code.
 
-We also have our own BBSHIFT in XFS which is used elsewhere, though.
+Brian
 
-And FWIW, /many/ other fs/* manipulations still use the "- 9" today when
-converting s_blocksize_bits to sectors.  *shrug* this seems like something
-that should change tree-wide, if it's to be changed at all.
-
--Eric
-
-> ---
->  fs/xfs/xfs_bmap_util.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index f2a8a0e75e1f..9f02c1824205 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -63,8 +63,8 @@ xfs_zero_extent(
->  	sector_t		block = XFS_BB_TO_FSBT(mp, sector);
->  
->  	return blkdev_issue_zeroout(target->bt_bdev,
-> -		block << (mp->m_super->s_blocksize_bits - 9),
-> -		count_fsb << (mp->m_super->s_blocksize_bits - 9),
-> +		block << (mp->m_super->s_blocksize_bits - SECTOR_SHIFT),
-> +		count_fsb << (mp->m_super->s_blocksize_bits - SECTOR_SHIFT),
->  		GFP_NOFS, 0);
->  }
->  
-> 
