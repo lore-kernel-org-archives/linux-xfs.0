@@ -8,64 +8,64 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A152EC433E7
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 06:41:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF0CEC433E7
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 06:41:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5491F22260
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 06:41:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E5CF22260
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 06:41:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XbwyXCjq"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e2vwAMn9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726996AbgJSGla (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Oct 2020 02:41:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52222 "EHLO
+        id S1727078AbgJSGle (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Oct 2020 02:41:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52234 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726840AbgJSGl3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Oct 2020 02:41:29 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8611BC061755
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Oct 2020 23:41:29 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id x13so5434658pgp.7
-        for <linux-xfs@vger.kernel.org>; Sun, 18 Oct 2020 23:41:29 -0700 (PDT)
+        with ESMTP id S1726840AbgJSGld (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Oct 2020 02:41:33 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65043C061755
+        for <linux-xfs@vger.kernel.org>; Sun, 18 Oct 2020 23:41:32 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id b19so4499950pld.0
+        for <linux-xfs@vger.kernel.org>; Sun, 18 Oct 2020 23:41:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=0V3DO6nHiBSINlQ/fV4OzjiC+RHGej2jIrHfYsPI47M=;
-        b=XbwyXCjqWPbwVvr2NkHzl6TGqHC6AAaPNoWNM/Z4yFchmNE2mnBr2hE0ePAbkIFMeV
-         1+s0AE0btz9B0kirMEafWGUpWBZ7espED/Lvrm8OZYHuqCRIGdWPs9WJANNeVyLiCXga
-         mISRF9JQaQdkC12TVmNRIx5XrMS3FO/qGnUz1MAitLFvC7HwNLVsCgdRIo9iBH5G8t9L
-         bZkgZApK1N5sd6MtluhUsurrcyGMOkmx7R3eU5td8bwP+ZM2WcM5UojW3OjGHogdync0
-         uMPsGeIYBHvO3YAsd3UcthvLChRdXePOQjfZT0WJMsRAniiob35BFWhAXks9wLOWkrii
-         /Ukg==
+        bh=oVyvNGULGulgdR7oslYUMz3NcAvyS5HBRlENdd6QKHA=;
+        b=e2vwAMn9dCwBZ0yEAQPXwnZh2REwNOHfHzKLG03BABg6idUt7ncmRromE5a8wrnoo7
+         GoV06aIDG/zpE011TVzDnpYV5EKJALA0zLIWGH7rD3IjVvwmwrCAwyymVBbAqG9Jab+E
+         RPIJ+U5z85nXA95SfFRPQ8J8bGjukRBsO2ZvubTS3pUt1XyiM5Vh6y7Oz0XCT3GSosEn
+         //wQeFZMyXcfKyETNmdZFzDVIlF/Cvtrd8L2HxlJ+OtRvlTexRezeRUt+neVnFPk1dce
+         1jHpqJ85i9hczCQ3EcSbPnHlyvAmgWN+RVgWIVglSfb8YM73fRxdDEuoM3TgWCn+/bpm
+         26Aw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=0V3DO6nHiBSINlQ/fV4OzjiC+RHGej2jIrHfYsPI47M=;
-        b=LCEYf3p/D/xmzNNZUN0iZFNMSrGNSEV/xdwjhnsHWj6rJHgwfKm7BKlnH/am5Bb0Fh
-         odZxNaNXwECgicMRjUG+lQ4A2Z2hwGlsjQ/FfqA/jHzJ4KYbwKoca+Fa+3HYKpBTkBnk
-         Y9BZrgGZJ0kK65ixU5QQ2X6lRU0GlVWySxk9AjlQsiFYDyu1Gs9PPHiX5psJHeipCt5f
-         hiOPwjQq3OOwggv6VaS5+c3hu1rbVeWAbDB+F9G3or1edA6V2hy9B4qBIY6gNsPIi6Zr
-         FVZoCo7SB8qYkN/PmNjbKv87LkR1e6XKLS+TyBVrydkhBNX8ibvDxVSirOtPt5Lxpzi/
-         rTYQ==
-X-Gm-Message-State: AOAM531TXP1t+M9kjZLy0dYwc1ABDUWws0G8AOQF9uZ+mDR+TexjIsbK
-        TeQjFz/4V/EHNcEG4JO0tHfPJIa3JTA=
-X-Google-Smtp-Source: ABdhPJxj5qIH+8t2abOxDqk0y5vKC+WP4FeQlKpD1fL8qwFlqBedx5DmzLqpaB1/CSBEW2/PJivVnw==
-X-Received: by 2002:a65:55ce:: with SMTP id k14mr13033551pgs.65.1603089688859;
-        Sun, 18 Oct 2020 23:41:28 -0700 (PDT)
+        bh=oVyvNGULGulgdR7oslYUMz3NcAvyS5HBRlENdd6QKHA=;
+        b=KvMwXnBavFvmZxs9s3dxNfYM3/BhePEj9EChS2y8WuSeLx4ws5SyEZb/pb1vTJIbAG
+         Fc4m15mzuWs5T2uGrBqYB6Jw26WqdS5Naa/nnF6aa5zVAJhYkf/GQsRGhUOCTwq6L3NK
+         CJeyjipROyeud2VzxzLZrupnbxTPliMYWqKFQz6ZP+sCVlhqvKYZYqkTGem5A6I3RCJ/
+         UIwbmi1bLDloJsVVuS5JYMHYQ7+6KYwQ9Dk/xNenOWN0cVC50Ja4u0ClzF+hlJ37uOIp
+         WQJ7hk2FGJVPSXnPFqR8kfmgxYZmESUH/XBZ7IQS9f76PzBWa66rwQlONWbNzejrUN/T
+         uOpA==
+X-Gm-Message-State: AOAM533U8CBvR10dArD901/XXW7Dbdw2IgXeFmk0JyLd1Ype0rtiWtZe
+        M+aboMqgj3V1l7qoQ3yN5CMWtxKOlGM=
+X-Google-Smtp-Source: ABdhPJxWTkIQx1mYCqMBawVXxXOU5KpniSF8v7BEB7SDfFee9ZacWf4AXFGKg/Qq89IpmDqCaDY1OA==
+X-Received: by 2002:a17:90a:f187:: with SMTP id bv7mr16502651pjb.198.1603089691680;
+        Sun, 18 Oct 2020 23:41:31 -0700 (PDT)
 Received: from localhost.localdomain ([122.179.121.224])
-        by smtp.gmail.com with ESMTPSA id w74sm11164189pff.200.2020.10.18.23.41.26
+        by smtp.gmail.com with ESMTPSA id w74sm11164189pff.200.2020.10.18.23.41.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 18 Oct 2020 23:41:28 -0700 (PDT)
+        Sun, 18 Oct 2020 23:41:31 -0700 (PDT)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com,
         david@fromorbit.com, hch@infradead.org,
         Christoph Hellwig <hch@lst.de>
-Subject: [PATCH V7 06/14] xfs: Check for extent overflow when writing to unwritten extent
-Date:   Mon, 19 Oct 2020 12:10:40 +0530
-Message-Id: <20201019064048.6591-7-chandanrlinux@gmail.com>
+Subject: [PATCH V7 07/14] xfs: Check for extent overflow when moving extent from cow to data fork
+Date:   Mon, 19 Oct 2020 12:10:41 +0530
+Message-Id: <20201019064048.6591-8-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201019064048.6591-1-chandanrlinux@gmail.com>
 References: <20201019064048.6591-1-chandanrlinux@gmail.com>
@@ -75,54 +75,56 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-A write to a sub-interval of an existing unwritten extent causes
-the original extent to be split into 3 extents
-i.e. | Unwritten | Real | Unwritten |
-Hence extent count can increase by 2.
+Moving an extent to data fork can cause a sub-interval of an existing
+extent to be unmapped. This will increase extent count by 1. Mapping in
+the new extent can increase the extent count by 1 again i.e.
+ | Old extent | New extent | Old extent |
+Hence number of extents increases by 2.
 
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- fs/xfs/libxfs/xfs_inode_fork.h | 8 ++++++++
- fs/xfs/xfs_iomap.c             | 5 +++++
- 2 files changed, 13 insertions(+)
+ fs/xfs/libxfs/xfs_inode_fork.h | 9 +++++++++
+ fs/xfs/xfs_reflink.c           | 5 +++++
+ 2 files changed, 14 insertions(+)
 
 diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
-index fd93fdc67ee4..afb647e1e3fa 100644
+index afb647e1e3fa..b99e67e7b59b 100644
 --- a/fs/xfs/libxfs/xfs_inode_fork.h
 +++ b/fs/xfs/libxfs/xfs_inode_fork.h
-@@ -70,6 +70,14 @@ struct xfs_ifork {
- #define XFS_IEXT_DIR_MANIP_CNT(mp) \
- 	((XFS_DA_NODE_MAXDEPTH + 1 + 1) * (mp)->m_dir_geo->fsbcount)
+@@ -78,6 +78,15 @@ struct xfs_ifork {
+  */
+ #define XFS_IEXT_WRITE_UNWRITTEN_CNT	(2)
  
 +/*
-+ * A write to a sub-interval of an existing unwritten extent causes the original
-+ * extent to be split into 3 extents
-+ * i.e. | Unwritten | Real | Unwritten |
-+ * Hence extent count can increase by 2.
++ * Moving an extent to data fork can cause a sub-interval of an existing extent
++ * to be unmapped. This will increase extent count by 1. Mapping in the new
++ * extent can increase the extent count by 1 again i.e.
++ * | Old extent | New extent | Old extent |
++ * Hence number of extents increases by 2.
 + */
-+#define XFS_IEXT_WRITE_UNWRITTEN_CNT	(2)
++#define XFS_IEXT_REFLINK_END_COW_CNT	(2)
 +
  /*
   * Fork handling.
   */
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index a302a96823b8..2aa788379611 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -566,6 +566,11 @@ xfs_iomap_write_unwritten(
- 		if (error)
- 			goto error_on_bmapi_transaction;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 16098dc42add..4f0198f636ad 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -628,6 +628,11 @@ xfs_reflink_end_cow_extent(
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
  
-+		error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
-+				XFS_IEXT_WRITE_UNWRITTEN_CNT);
-+		if (error)
-+			goto error_on_bmapi_transaction;
++	error = xfs_iext_count_may_overflow(ip, XFS_DATA_FORK,
++			XFS_IEXT_REFLINK_END_COW_CNT);
++	if (error)
++		goto out_cancel;
 +
- 		/*
- 		 * Modify the unwritten extent state of the buffer.
- 		 */
+ 	/*
+ 	 * In case of racing, overlapping AIO writes no COW extents might be
+ 	 * left by the time I/O completes for the loser of the race.  In that
 -- 
 2.28.0
 
