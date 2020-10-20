@@ -2,179 +2,351 @@ Return-Path: <SRS0=H2w8=D3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34180C388F7
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 14:33:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF7BC4363A
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 14:50:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA9F3223BF
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 14:33:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2B022224B
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 14:50:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=fb.com header.i=@fb.com header.b="ITtb96WW";
-	dkim=pass (1024-bit key) header.d=fb.onmicrosoft.com header.i=@fb.onmicrosoft.com header.b="LyT1l1me"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TJSuciem"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408118AbgJTOdP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Oct 2020 10:33:15 -0400
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:64968 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2408012AbgJTOdP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Oct 2020 10:33:15 -0400
-Received: from pps.filterd (m0148460.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09KEOFKn016543;
-        Tue, 20 Oct 2020 07:33:06 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : content-type :
- content-transfer-encoding : mime-version; s=facebook;
- bh=tM8Gr01FWepPCALQMlNdtDpxR4MH8oddWYwfCrL26YQ=;
- b=ITtb96WWopNAcCj/MDT0UTYmXwtngddGrg3HLAReOtqKpa0pwt/wFiap9HaDTTNJBCiy
- XhwtD8cMQmcZhrc19FNMxbvcHUy3wVo0/2Bdjfi/FAnk5Ky2Kwo73e7juWbXhMV3Qf8b
- dAQiaDedhkQaxskuIbOVhow71r0NBQNk0lo= 
-Received: from maileast.thefacebook.com ([163.114.130.16])
-        by mx0a-00082601.pphosted.com with ESMTP id 34a01e0jgw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
-        Tue, 20 Oct 2020 07:33:06 -0700
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (100.104.31.183)
- by o365-in.thefacebook.com (100.104.35.173) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.1979.3; Tue, 20 Oct 2020 07:33:03 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ANqKTUWU9phvx6HAm0c+BMiCajltzgvsCvxDXQcFECEyQLMI7vQ0R/f3ouU4NTTZbqgGyclSDHg8fJEgeqEmFrx9WH/mKhEzVB7P0FnNethvSogAnagYSzMMxqHZG2JJs44vJgAMmYlSR4H7MvOFskKVzRmW+5FX1AmiCesiSKjj2j1nrK09MYeUSDrXYJZt54OZYLvzJxW7oJnVX3Jrhp6gPbpKiHdNNyw5gi+kpS1jX7b53wKsWXg6Ra2MppdenVojzoEW6xBEhdc3B0pxy2AxdDs430Tt7klVfwamPpcJZ/CF9CS5wzaEzKlKMFEJAQXfswuwwohJvNl7SC+p+A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tM8Gr01FWepPCALQMlNdtDpxR4MH8oddWYwfCrL26YQ=;
- b=ggf4tw3ou0ivVbYcoivgpIcbPyS+tLTvaLAf/Bph0wWooaxcW2zJJ1Sn4rYRR04NnvynQohK0Lj7XVRAKeHV2u25NLciSmqm/lzOpREIsWq1iFFJfg/NNeKkkxLjZgWswvlnt7iBrIn14UYSNM7KdNdLvwPbEmepdQnHpNqkKDk6SY5/AfK8XuKzR2ly3B5SujZ5bFVPATtUUI4ODOk9aFmfsadKuV70kVRtsAuRFdiMLXQARZjTOMuLYnxMFd8p033J6WDg31KJJCefEhjXi6kDiJdUhgowpF8Q3MoPEseOATkn+3zC8Mh1jtBPG+2yciCj/ZtIkLdWPcD0ijT1ig==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=fb.com; dmarc=pass action=none header.from=fb.com; dkim=pass
- header.d=fb.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=fb.onmicrosoft.com;
- s=selector2-fb-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tM8Gr01FWepPCALQMlNdtDpxR4MH8oddWYwfCrL26YQ=;
- b=LyT1l1me9hc5XGQsDD4X7CPIXK1rnZDhdbRDGFWJ1zWw/Mk+0s3ONXenM3QZQhZZmgcAJ93ivLy1PC3StmRtqcaKWAFHOIAEqr9CxghFnGGmd0aHve0Y+sH9QDVNE2ww4z360wWzzpeb66MMlQ0p3QnOofMOno8XxEGatliteqg=
-Authentication-Results: infradead.org; dkim=none (message not signed)
- header.d=none;infradead.org; dmarc=none action=none header.from=fb.com;
-Received: from MN2PR15MB2878.namprd15.prod.outlook.com (2603:10b6:208:e9::12)
- by MN2PR15MB3421.namprd15.prod.outlook.com (2603:10b6:208:a1::32) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.18; Tue, 20 Oct
- 2020 14:33:02 +0000
-Received: from MN2PR15MB2878.namprd15.prod.outlook.com
- ([fe80::38aa:c2b:59bf:1d7]) by MN2PR15MB2878.namprd15.prod.outlook.com
- ([fe80::38aa:c2b:59bf:1d7%6]) with mapi id 15.20.3477.028; Tue, 20 Oct 2020
- 14:33:02 +0000
-From:   "Chris Mason" <clm@fb.com>
-To:     Matthew Wilcox <willy@infradead.org>
-CC:     <linux-mm@kvack.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>
-Subject: Re: Splitting a THP beyond EOF
-Date:   Tue, 20 Oct 2020 10:32:59 -0400
-X-Mailer: MailMate (1.13.2r5673)
-Message-ID: <AD1D4324-F072-4E8F-9594-BC450A215ED3@fb.com>
-In-Reply-To: <20201020014357.GW20115@casper.infradead.org>
-References: <20201020014357.GW20115@casper.infradead.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [2620:10d:c091:480::1:704b]
-X-ClientProxiedBy: BL0PR0102CA0044.prod.exchangelabs.com
- (2603:10b6:208:25::21) To MN2PR15MB2878.namprd15.prod.outlook.com
- (2603:10b6:208:e9::12)
+        id S1731222AbgJTOuY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Oct 2020 10:50:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27275 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730866AbgJTOuX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Oct 2020 10:50:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603205420;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Bvfa7/27txb0dnuEYwTTIZLtfuJ8P4ErFdIwvI61Sck=;
+        b=TJSuciemu0jgyUCGtS7dKU8RnD8WUvhEFa5OhQVZx01F0o9aX9XO9CshpSO7c4232qTnoB
+        MUGflramO5jSv84G00eAMmsw3NHVnjqLzRGdh/15wrVLjgOoF4PyjXAo/UgSBtRkoVgjtI
+        kOWlEBYI23He3swy2hECjY+SWZku1Lo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-327-OM_83ApWMV-Avfw9cO4Skg-1; Tue, 20 Oct 2020 10:50:18 -0400
+X-MC-Unique: OM_83ApWMV-Avfw9cO4Skg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7F2C780362F;
+        Tue, 20 Oct 2020 14:50:17 +0000 (UTC)
+Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0F2E627BDC;
+        Tue, 20 Oct 2020 14:50:13 +0000 (UTC)
+Date:   Tue, 20 Oct 2020 10:50:12 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Gao Xiang <hsiangkao@aol.com>
+Cc:     linux-xfs@vger.kernel.org, Gao Xiang <hsiangkao@redhat.com>
+Subject: Re: [RFC PATCH] xfs: support shrinking unused space in the last AG
+Message-ID: <20201020145012.GA1272590@bfoster>
+References: <20201014005809.6619-1-hsiangkao.ref@aol.com>
+ <20201014005809.6619-1-hsiangkao@aol.com>
+ <20201014170139.GC1109375@bfoster>
+ <20201015014908.GC7037@hsiangkao-HP-ZHAN-66-Pro-G1>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [100.109.29.250] (2620:10d:c091:480::1:704b) by BL0PR0102CA0044.prod.exchangelabs.com (2603:10b6:208:25::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.18 via Frontend Transport; Tue, 20 Oct 2020 14:33:02 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 79a23545-a1bd-44a5-9ee2-08d875050cdd
-X-MS-TrafficTypeDiagnostic: MN2PR15MB3421:
-X-Microsoft-Antispam-PRVS: <MN2PR15MB34213203C2CDB4300694156DD31F0@MN2PR15MB3421.namprd15.prod.outlook.com>
-X-FB-Source: Internal
-X-MS-Oob-TLC-OOBClassifiers: OLM:4941;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: vcEx9IHRLLFZ0BFZeIHy2YtudnhsHPZOZzhSQ+irX+Cuw4OJ53DY+AZ5DBnhVJY7fA9iVODnXXiyjffX+lNX8pOik1kR2ywTbMz+0d7hpUpoxGL4qAy//L36vX9bojaAsAUhnJBjDBgqN12uJC1svVfzbbFAzRFWEc0ojo/onkjX5kvFssMqs3AyrsreTyGJNAPYdVv2MSSxGOKUffaFiM9wgYxbfQU4pG7CnABh896tSZjakHO0PUuS+0guPxaQXgnxq4rSHOGoM4/usc0s0z/nkhHV77xW5ORoXSsvNNoJX8g69Pi7OgxUfJ298pKNpGRfCEqGVJNAUx/x7SJ1ofl+QG0BGuky8/xC5tUBB+sBBe2FoN0vHcRSIXdoO1on
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR15MB2878.namprd15.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(346002)(376002)(366004)(136003)(39860400002)(6486002)(316002)(478600001)(956004)(6916009)(86362001)(8676002)(8936002)(36756003)(2616005)(53546011)(4326008)(16526019)(186003)(2906002)(33656002)(66556008)(66476007)(52116002)(66946007)(5660300002)(6666004)(83380400001)(78286007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: S2g+ly6IW9o9FcpjpwiaUJQ76WPGvxQmLDay1HB/fS/IHKEfhj1BFF93kgoDLsy3MlZ4dXkSAvqnLDehUAr+ZRICiqsAFrzlzFPHKHoVptAfGG/ekClJRtvPy/sFJkGV3XkO8kkq7GSfd48LdzWMDFG8Z9YEJpmUsJOmFAdIEndP2AqCIMKF/BZJVzQgsJmjqdV3aifvxTRa/SqcyjVrJP+INIB5TIXqTEkMy+45GQP50Lv7aQyCN7DPG0LTZKW7vJOx6FMyIzpJ7ZvmL2hwDuoo/8tMnW6ckB7NajkTKUN8DkTLg5L9pxz2d4dPhKhX3lQ2h3et+jkyv6PF1hkOL+QT8mwIY3R2R2aqoAgK5je/nyCsUoYJ7Igc8aIeA6QOVtlZ17Ofc/fAs/GmRTpsjJ1JTD1dqXRiNpCitXbI44/UI46ZCZc9+dB+ZfgV5ZMVT2/uAwon8pGg051u0YNzkxzjdDIAXslADgsaV6TDWzyZbHsAqzlHI8CPdy0m5+D2HBhPjSV2m53rds9bsIdR6KpUhoE9mIpTr7ONvGdRYUW7y9udGSQ3bkY8178n2XimtLN++gKMmYC3HxSIcTbiCYabrTwZkuNWxVvFFuVtB3V/K114f9HitEaMnv31oHNQQQjO3d8Rdg2z/9AiRAk53skkWOx0xYJsy0BYK8CK4lTOrBpDnHZOT1OAJ9/NX7+B
-X-MS-Exchange-CrossTenant-Network-Message-Id: 79a23545-a1bd-44a5-9ee2-08d875050cdd
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR15MB2878.namprd15.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Oct 2020 14:33:02.7330
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ae927fe-1255-47a7-a2af-5f3a069daaa2
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: N0zA4/QpFfEHwB+pOV5qvInuo1ddE0+47iiz+37NStuiWNe76pSrS2JFwAawhZc1
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR15MB3421
-X-OriginatorOrg: fb.com
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.737
- definitions=2020-10-20_06:2020-10-20,2020-10-20 signatures=0
-X-Proofpoint-Spam-Details: rule=fb_default_notspam policy=fb_default score=0 malwarescore=0 mlxscore=0
- bulkscore=0 adultscore=0 priorityscore=1501 impostorscore=0
- lowpriorityscore=0 spamscore=0 phishscore=0 clxscore=1011 mlxlogscore=999
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010200099
-X-FB-Internal: deliver
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201015014908.GC7037@hsiangkao-HP-ZHAN-66-Pro-G1>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Thu, Oct 15, 2020 at 09:49:15AM +0800, Gao Xiang wrote:
+> Hi Brian,
+> 
+> On Wed, Oct 14, 2020 at 01:01:39PM -0400, Brian Foster wrote:
+> > On Wed, Oct 14, 2020 at 08:58:09AM +0800, Gao Xiang wrote:
+> > > From: Gao Xiang <hsiangkao@redhat.com>
+> > > 
+> > > At the first step of shrinking, this attempts to enable shrinking
+> > > unused space in the last allocation group by fixing up freespace
+> > > btree, agi, agf and adjusting super block.
+> > > 
+> > > This can be all done in one transaction for now, so I think no
+> > > additional protection is needed.
+> > > 
+> > > Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> > > ---
+> > > 
+> > > Honestly, I've got headache about shrinking entire AGs
+> > > since the codebase doesn't expect agcount can be decreased
+> > > suddenly, I got some ideas from people but the modification
+> > > seems all over the codebase, I will keep on this at least
+> > > to learn more about XFS internals.
+> > > 
+> > > It might be worth sending out shrinking the last AG first
+> > > since users might need to shrink a little unused space
+> > > occasionally, yet I'm not quite sure the log space reservation
+> > > calculation in this patch and other details are correct.
+> > > I've done some manual test and it seems work. Yeah, as a
+> > > formal patch it needs more test to be done but I'd like
+> > > to hear more ideas about this first since I'm not quite
+> > > familiar with XFS for now and this topic involves a lot
+> > > new XFS-specific implementation details.
+> > > 
+> > > Kindly point out all strange places and what I'm missing
+> > > so I can revise it. It would be of great help for me to
+> > > learn more about XFS. At least just as a record on this
+> > > topic for further discussion.
+> > > 
+> > 
+> > Interesting... this seems fundamentally sane when narrowing the scope
+> > down to tail AG shrinking. Does xfs_repair flag any issues in the simple
+> > tail AG shrink case?
+> 
+> Yeah, I ran xfs_repair together as well, For smaller sizes, it seems
+> all fine, but I did observe some failure when much larger values
+> passed in, so as a formal patch, it really needs to be solved later.
+> 
 
+I'm curious to see what xfs_repair complained about if you have a record
+of it. That might call out some other things we could be overlooking.
 
-On 19 Oct 2020, at 21:43, Matthew Wilcox wrote:
+> Anyway, this patch tries to show if the overall direction is acceptable
+> for further development / upstream. And I could get some more
+> suggestion from it..
+> 
 
-> This is a weird one ... which is good because it means the obvious
-> ones have been fixed and now I'm just tripping over the weird cases.
-> And fortunately, xfstests exercises the weird cases.
->
-> 1. The file is 0x3d000 bytes long.
-> 2. A readahead allocates an order-2 THP for 0x3c000-0x3ffff
-> 3. We simulate a read error for 0x3c000-0x3cfff
-> 4. Userspace writes to 0x3d697 to 0x3dfaa
-> 5. iomap_write_begin() gets the 0x3c page, sees it's THP and !Uptodate
->    so it calls iomap_split_page() (passing page 0x3d)
-> 6. iomap_split_page() calls split_huge_page()
-> 7. split_huge_page() sees that page 0x3d is beyond EOF, so it removes 
-> it
->    from i_pages
-> 8. iomap_write_actor() copies the data into page 0x3d
+Sure.
 
-I’m guessing that iomap_write_begin() is still in charge of locking 
-the pages, and that iomap_split_page()->split_huge_page() is just 
-reusing that lock?
+> > 
+> > Some random initial thoughts..
+> > 
+> 
+> ...
+> 
+> > > +int
+> > > +xfs_alloc_vextent_shrink(
+> > > +	struct xfs_trans	*tp,
+> > > +	struct xfs_buf		*agbp,
+> > > +	xfs_agblock_t		agbno,
+> > > +	xfs_extlen_t		len)
+> > > +{
+> > > +	struct xfs_mount	*mp = tp->t_mountp;
+> > > +	xfs_agnumber_t		agno = agbp->b_pag->pag_agno;
+> > > +	struct xfs_alloc_arg	args = {
+> > > +		.tp = tp,
+> > > +		.mp = mp,
+> > > +		.type = XFS_ALLOCTYPE_THIS_BNO,
+> > > +		.agbp = agbp,
+> > > +		.agno = agno,
+> > > +		.agbno = agbno,
+> > > +		.fsbno = XFS_AGB_TO_FSB(mp, agno, agbno),
+> > > +		.minlen = len,
+> > > +		.maxlen = len,
+> > > +		.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE,
+> > > +		.resv = XFS_AG_RESV_NONE,
+> > > +		.prod = 1,
+> > > +		.alignment = 1,
+> > > +		.pag = agbp->b_pag
+> > > +	};
+> > > +	int			error;
+> > > +
+> > > +	error = xfs_alloc_ag_vextent_exact(&args);
+> > > +	if (error || args.agbno == NULLAGBLOCK)
+> > > +		return -EBUSY;
+> > 
+> > I think it's generally better to call into the top-level allocator API
+> > (xfs_alloc_vextent()) because it will handle internal allocator business
+> > like fixing up the AGFL and whatnot. Then you probably don't have to
+> > specify as much in the args structure as well. The allocation mode
+> > you've specified (THIS_BNO) will fall into the exact allocation codepath
+> > and should enforce the semantics we need here (i.e. grant the exact
+> > allocation or fail).
+> 
+> Actually, I did in the same way (use xfs_alloc_vextent()) in my previous
+> hack version
+> https://git.kernel.org/pub/scm/linux/kernel/git/xiang/linux.git/commit/?id=65d87d223a4d984441453659f1baeca560f07de4
+> 
+> yet Dave pointed out in private agfl fix could dirty the transaction
+> and if the later allocation fails, it would be unsafe to cancel
+> the dirty transaction. So as far as my current XFS knowledge, I think
+> that makes sense so I introduce a separate helper
+> xfs_alloc_vextent_shrink()...
+> 
 
-It sounds like you’re missing a flag to iomap_split_page() that says: 
-I care about range A->B, even if its beyond EOF.  IOW, 
-iomap_write_begin()’s path should be in charge of doing the right 
-thing for the write, without relying on the rest of the kernel to avoid 
-upsetting it.
+Yeah, I could see that being an issue. I'm curious if we're exposed to
+that problem with exact allocation requests in other places.  We only
+use it in a couple places that look like they have fallback allocation
+requests. Combine that with the pre-allocation space checks and perhaps
+this isn't something we'd currently hit in practice.
 
-> 9. The write is lost.
->
-> Trying to persuade XFS to update i_size before calling
-> iomap_file_buffered_write() seems like a bad idea.
->
-> Changing split_huge_page() to disregard i_size() is something I kind
-> of want to be able to do long-term in order to make hole-punch more
-> efficient, but that seems like a lot of work right now.
->
+That said, I don't think this justifies diving directly into the lower
+levels of the allocator (or branching any of the code, etc.). I suspect
+not doing the agfl fixups and whatnot could cause other problems if they
+are ultimately required for the subsequent allocation. The easiest
+workaround is to just commit the transaction instead of cancelling it
+once the allocation call is made. A more involved followon fix might be
+to improve the early checks for exact allocations, but it's not clear at
+this stage if that's really worth the extra code. We might also
+eventually want to handle that another way to ensure that the agfl fixup
+doesn't actually do an allocation that conflicts with the shrink itself.
 
-The problem with trusting i_size is that it changes at surprising times. 
-  For this code inside split_huge_page(), end == i_size_read()
+> I tend to avoid bury all shrinking specfic logic too deep in the large
+> xfs_alloc_vextent() logic by using another new bool or something
+> since it's rather complicated for now.
+> 
+> Intoduce a new helper would make this process more straight-forward
+> and bug less in the future IMO... Just my own current thought about
+> this...
+> 
 
-         for (i = HPAGE_PMD_NR - 1; i >= 1; i--) {
-                 __split_huge_page_tail(head, i, lruvec, list);
-                 /* Some pages can be beyond i_size: drop them from page 
-cache */
-                 if (head[i].index >= end) {
-                         ClearPageDirty(head + i);
+I'd just work around it as above for now. It's a fairly minor
+distraction with respect to the feature.
 
-But, we actually change i_size after dropping all the page locks.  In 
-xfs this is xfs_setattr_size()->truncate_setsize(), all of which means 
-that dropping PageDirty seems unwise if this code is running 
-concurrently with an expanding truncate.  If i_size jumps past the page 
-where you’re clearing dirty, it probably won’t be good.  Ignore me 
-if this is already handled differently, it just seems error prone in 
-current Linus.
+> > 
+> > I also wonder if we'll eventually have to be more intelligent here in
+> > scenarios where ag metadata (i.e., free space root blocks, etc.) or the
+> > agfl holds blocks in a range we're asked to shrink. I think those are
+> > scenarios where such an allocation request would fail even though the
+> > blocks are internal or technically free. Have you explored such
+> > scenarios so far? I know we're trying to be opportunistic here, but if
+> > the AG (or subset) is otherwise empty it seems a bit random to fail.
+> > Hmm, maybe scrub/repair could help to reinit/defrag such an AG if we
+> > could otherwise determine that blocks beyond a certain range are unused
+> > externally.
+> 
+> Yeah, currently I don't tend to defrag or fix agfl in the process but rather
+> on shrinking unused space (not in AGFL) and make the kernel side simplier,
+> since I think for the long term we could have 2 options by some combination
+> with the userspace prog:
+>  - lock the AG, defrag / move the AG, shrinking, unlock the AG;
+>  - defrag / move the AG, shrinking, retry.
+> 
+> > > +
+> 
+> ...
+> 
+> > >  	new = nb;	/* use new as a temporary here */
+> > >  	nb_mod = do_div(new, mp->m_sb.sb_agblocks);
+> > > @@ -56,10 +58,18 @@ xfs_growfs_data_private(
+> > >  	if (nb_mod && nb_mod < XFS_MIN_AG_BLOCKS) {
+> > >  		nagcount--;
+> > >  		nb = (xfs_rfsblock_t)nagcount * mp->m_sb.sb_agblocks;
+> > > -		if (nb < mp->m_sb.sb_dblocks)
+> > > +		if (!nagcount)
+> > >  			return -EINVAL;
+> > >  	}
+> > 
+> > We probably need to rethink the bit of logic above this check for
+> > shrinking. It looks like the current code checks for the minimum
+> > supported AG size and if not satisfied, reduces the size the grow to the
+> > next smaller AG count. That would actually increase the size of the
+> > shrink from what the user requested, so we'd probably want to do the
+> > opposite and reduce the size of the requested shrink. For now it
+> > probably doesn't matter much since we fail to shrink the agcount.
+> > 
+> > That said, if I'm following the growfs behavior correctly it might be
+> > worth considering analogous behavior for shrink. E.g., if the user asks
+> > to trim 10GB off the last AG but only the last 4GB are free, then shrink
+> > the fs by 4GB and report the new size to the user.
+> 
+> I thought about this topic as well, yeah, anyway, I think it needs
+> some clearer documented words about the behavior (round down or round
+> up). My original idea is to unify them. But yeah, increase the size
+> of the shrink might cause unexpected fail.
+> 
 
--chris
+It's probably debatable as to whether we should reduce the size of the
+shrink or just fail the operation, but I think to increase the size of
+the shrink from what the user requested (even if it occurs "by accident"
+due to the AG size rules) is inappropriate. With regard to the former,
+have you looked into how shrink behaves on other filesystems (ext4)? I
+think one advantage of shrinking what's available is to at least give
+the user an opportunity to make incremental progress.
+
+> > 
+> > > -	new = nb - mp->m_sb.sb_dblocks;
+> > > +
+> > > +	if (nb > mp->m_sb.sb_dblocks) {
+> > > +		new = nb - mp->m_sb.sb_dblocks;
+> > > +		extend = true;
+> > > +	} else {
+> > > +		new = mp->m_sb.sb_dblocks - nb;
+> > > +		extend = false;
+> > > +	}
+> > > +
+> > 
+> > s/new/delta (or something along those lines) might be more readable if
+> > we go this route.
+> 
+> In my previous random version, I once renamed it to bdelta, but I found
+> the modification is large, I might need to clean up growfs naming first.
+> 
+> > 
+> > >  	oagcount = mp->m_sb.sb_agcount;
+> > >  
+> > >  	/* allocate the new per-ag structures */
+> > > @@ -67,10 +77,14 @@ xfs_growfs_data_private(
+> > >  		error = xfs_initialize_perag(mp, nagcount, &nagimax);
+> > >  		if (error)
+> > >  			return error;
+> > > +	} else if (nagcount != oagcount) {
+> > > +		/* TODO: shrinking a whole AG hasn't yet implemented */
+> > > +		return -EINVAL;
+> > >  	}
+> > >  
+> > >  	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_growdata,
+> > > -			XFS_GROWFS_SPACE_RES(mp), 0, XFS_TRANS_RESERVE, &tp);
+> > > +			(extend ? 0 : new) + XFS_GROWFS_SPACE_RES(mp), 0,
+> > > +			XFS_TRANS_RESERVE, &tp);
+> > >  	if (error)
+> > >  		return error;
+> > >  
+> > > @@ -103,15 +117,22 @@ xfs_growfs_data_private(
+> > >  			goto out_trans_cancel;
+> > >  		}
+> > >  	}
+> > > -	error = xfs_buf_delwri_submit(&id.buffer_list);
+> > > -	if (error)
+> > > -		goto out_trans_cancel;
+> > > +
+> > > +	if (!list_empty(&id.buffer_list)) {
+> > > +		error = xfs_buf_delwri_submit(&id.buffer_list);
+> > > +		if (error)
+> > > +			goto out_trans_cancel;
+> > > +	}
+> > 
+> > The list check seems somewhat superfluous since we won't do anything
+> > with an empty list anyways. Presumably it would be incorrect to ever
+> > init a new AG on shrink so it might be cleaner to eventually refactor
+> > this bit of logic out into a helper that we only call on extend since
+> > this is a new AG initialization mechanism.
+> 
+> Yeah, actually my previous hack version
+> https://git.kernel.org/pub/scm/linux/kernel/git/xiang/linux.git/commit/?id=65d87d223a4d984441453659f1baeca560f07de4
+> 
+> did like this, but in this version I'd like to avoid touching unrelated
+> topic as much as possible.
+> 
+> xfs_buf_delwri_submit() is not no-op for empty lists. Anyway, I will
+> use 2 independent logic for entire extend / shrink seperately.
+> 
+
+I'm not sure we need to split out the entire function. It just might
+make some sense to refactor the existing code a bit so the common code
+is clearly readable for shrink/grow and that any larger hunks of code
+specific to either grow or shrink are factored out into separate
+functions.
+
+Brian
+
+> Thanks for your suggestion!
+> 
+> Thanks,
+> Gao Xiang
+> 
+> > 
+> > Brian
+> 
+
