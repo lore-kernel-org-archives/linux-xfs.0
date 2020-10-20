@@ -1,129 +1,82 @@
-Return-Path: <SRS0=Yj0O=D2=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=H2w8=D3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA733C433E7
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 22:36:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBC40C433DF
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 01:44:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 743FB22284
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Oct 2020 22:36:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9800322283
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 01:44:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="arOkUU5T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388378AbgJSWg5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Oct 2020 18:36:57 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52748 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388253AbgJSWgy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Oct 2020 18:36:54 -0400
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C365058C414;
-        Tue, 20 Oct 2020 09:36:51 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kUdlr-002IK2-0e; Tue, 20 Oct 2020 09:36:51 +1100
-Date:   Tue, 20 Oct 2020 09:36:51 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 12/27] xfsprogs: convert use-once buffer reads to
- uncached IO
-Message-ID: <20201019223651.GN7391@dread.disaster.area>
-References: <20201015072155.1631135-1-david@fromorbit.com>
- <20201015072155.1631135-13-david@fromorbit.com>
- <20201015171239.GV9832@magnolia>
+        id S2390149AbgJTBoA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Oct 2020 21:44:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34582 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390146AbgJTBoA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Oct 2020 21:44:00 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C57F6C0613D1;
+        Mon, 19 Oct 2020 18:43:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Type:MIME-Version:Message-ID:
+        Subject:To:From:Date:Sender:Reply-To:Cc:Content-Transfer-Encoding:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=xEnEQq4nhEt/2fPSUDq2nZHDfs7mNAitmj1S5VLZSMQ=; b=arOkUU5TY+O40I7N80zRWQ7QRE
+        ajSuiRELkQGbs6eHaqqV5F/WyGEB4H3JPVOXpSWgU6kUIE+bv3arCj1FpkhyxLdju6oRAInySSd9L
+        vkOSSJ9pv6Zz+JcOer6LBC+ZZnD4q1IFEaw8Xquomh1ophb7vr8WrfOcrs9Pze94KGaVCMoFMQXl2
+        NhV7WslroeNk+CrkVQLAG4aGFZ3OR64tDmEu38zS6hyqFuU8AvBV39pOlYvhjhZUF3KNFhVLJbVlP
+        5Mr2ksaT5XcV8daulnEHfFV5kFByINcWwznHKNr+uqvN+XI6DdYh1QbvaimVBsumhK+OOU3wqHeZv
+        LQTdq5Tw==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kUggv-0002jF-Nt; Tue, 20 Oct 2020 01:43:57 +0000
+Date:   Tue, 20 Oct 2020 02:43:57 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Splitting a THP beyond EOF
+Message-ID: <20201020014357.GW20115@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201015171239.GV9832@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8
-        a=xLWNyae8_8MFG3-PZ5wA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 15, 2020 at 10:12:39AM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 15, 2020 at 06:21:40PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  db/init.c     |  2 +-
-> >  libxfs/init.c | 93 ++++++++++++++++++++++++++++++---------------------
-> >  2 files changed, 55 insertions(+), 40 deletions(-)
-> > 
-> > diff --git a/db/init.c b/db/init.c
-> > index 19f0900a862b..f797df8a768b 100644
-> > --- a/db/init.c
-> > +++ b/db/init.c
-> > @@ -153,7 +153,7 @@ init(
-> >  	 */
-> >  	if (sbp->sb_rootino != NULLFSINO &&
-> >  	    xfs_sb_version_haslazysbcount(&mp->m_sb)) {
-> > -		int error = -libxfs_initialize_perag_data(mp, sbp->sb_agcount);
-> > +		error = -libxfs_initialize_perag_data(mp, sbp->sb_agcount);
-> 
-> Er... this and the xfs_check_sizes hoisting below don't have anything to
-> do with uncached io conversion...?
-> 
-> >  		if (error) {
-> >  			fprintf(stderr,
-> >  	_("%s: cannot init perag data (%d). Continuing anyway.\n"),
-> > diff --git a/libxfs/init.c b/libxfs/init.c
-> > index fe784940c299..fc30f92d6fb2 100644
-> > --- a/libxfs/init.c
-> > +++ b/libxfs/init.c
-> > @@ -419,7 +419,7 @@ done:
-> >   */
-> >  static int
-> >  rtmount_init(
-> > -	xfs_mount_t	*mp,	/* file system mount structure */
-> > +	struct xfs_mount *mp,
-> >  	int		flags)
-> >  {
-> >  	struct xfs_buf	*bp;	/* buffer for last block of subvolume */
-> > @@ -473,8 +473,9 @@ rtmount_init(
-> >  			(unsigned long long) mp->m_sb.sb_rblocks);
-> >  		return -1;
-> >  	}
-> > -	error = libxfs_buf_read(mp->m_rtdev, d - XFS_FSB_TO_BB(mp, 1),
-> > -			XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
-> > +	error = libxfs_buf_read_uncached(mp->m_rtdev_targp,
-> > +					d - XFS_FSB_TO_BB(mp, 1),
-> > +					XFS_FSB_TO_BB(mp, 1), 0, &bp, NULL);
-> >  	if (error) {
-> >  		fprintf(stderr, _("%s: realtime size check failed\n"),
-> >  			progname);
-> > @@ -657,6 +658,52 @@ libxfs_buftarg_init(
-> >  	mp->m_rtdev_targp = libxfs_buftarg_alloc(mp, rtdev);
-> >  }
-> >  
-> > +/*
-> > + * Check that the data (and log if separate) is an ok size.
-> > + *
-> > + * XXX: copied from kernel, needs to be moved to shared code
-> 
-> Ah, because you want to share this function with the kernel.
-> 
-> Hmm... what do you think about putting it in libxfs/xfs_sb.c ?
+This is a weird one ... which is good because it means the obvious
+ones have been fixed and now I'm just tripping over the weird cases.
+And fortunately, xfstests exercises the weird cases.
 
-It's not really superblock functionality - it's buftarg
-functionality - but I don't see anywhere else that is even vaguely
-appropriate. And the buftarg implementation is not intendeed to be
-shared code, so it doesn't fit there, either. :/
+1. The file is 0x3d000 bytes long.
+2. A readahead allocates an order-2 THP for 0x3c000-0x3ffff
+3. We simulate a read error for 0x3c000-0x3cfff
+4. Userspace writes to 0x3d697 to 0x3dfaa
+5. iomap_write_begin() gets the 0x3c page, sees it's THP and !Uptodate
+   so it calls iomap_split_page() (passing page 0x3d)
+6. iomap_split_page() calls split_huge_page()
+7. split_huge_page() sees that page 0x3d is beyond EOF, so it removes it
+   from i_pages
+8. iomap_write_actor() copies the data into page 0x3d
+9. The write is lost.
 
-So, yeah, maybe that is the only suitable place it can be put. I'll
-split it out into it's own patch.
+Trying to persuade XFS to update i_size before calling
+iomap_file_buffered_write() seems like a bad idea.
 
-Cheers,
+Changing split_huge_page() to disregard i_size() is something I kind
+of want to be able to do long-term in order to make hole-punch more
+efficient, but that seems like a lot of work right now.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I think the easiest way to fix this is to decline to allocate readahead
+pages beyond EOF.  That is, if we have a file which is, say, 61 pages
+long, read the last 5 pages into an order-2 THP and an order-0 THP
+instead of allocating an order-3 THP and zeroing the last three pages.
+
+It's probably the right thing to do anyway -- we split THPs that overlap
+the EOF on a truncate.  I'll start implementing this in the morning,
+but I thought I'd share the problem & proposed solution in case anybody
+has a better idea.
