@@ -2,112 +2,77 @@ Return-Path: <SRS0=H2w8=D3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55FCEC43467
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 11:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A8F1C4363A
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 14:26:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9F182224B
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 11:21:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C93552224F
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 14:26:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UrYIw+Uo"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GEOh84wv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406060AbgJTLVq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Oct 2020 07:21:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39192 "EHLO
+        id S2408060AbgJTO0z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Oct 2020 10:26:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406058AbgJTLVp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Oct 2020 07:21:45 -0400
+        with ESMTP id S2408059AbgJTO0z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Oct 2020 10:26:55 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78CDFC061755;
-        Tue, 20 Oct 2020 04:21:45 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CEC58C061755;
+        Tue, 20 Oct 2020 07:26:54 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        References:Message-ID:Subject:To:From:Date:Sender:Reply-To:Cc:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=tSS1MuZ8AFbkW+ypKAMNnv6YlEacISP3BShZ3dh/KFQ=; b=UrYIw+UoNzUIduQWr+Vr0lA53w
-        +Cic3Xur8MBbfGAFjra5xdsoOviIc1j3gA/WUG5RUFHxFVo0sRUHNHhk1+w46kip7KYZy8q216ogu
-        Lrd6UmvNEcWmQ2vxAZwRnLi2ZlSEExY+eNkAR942XEQ6ZXgVrrViPyS2TGhT7EYKK4KMg90QTj/ud
-        ER2FY5jiFgtlaATtoiuhSUTPGLw+Axd1ZG6seTYpp70FCzkOMKE7UR4VtE8gvKx11BCnI7K8DmBax
-        XHDjIYzpZaMmw6AUQ2RWw9qL2qxEf35fdGMi/UU+e+QxUHG4F7H0CXg4sGWHmHsqq9juPpeVq5eJK
-        U/CMYL1Q==;
+        bh=2aLHtQDOdruUdSroCRCDtJfw/xvi97M7ZJVS89XU29o=; b=GEOh84wvtk8kt+7ZHCJ2SLd14k
+        MDKN+W1Uo2yzQZd9iDWQyL7Q7YVdMvSrA3NOhaH6KCF5O+156BHFhWhJY7ZLUpywcPl6eUlKG/3Og
+        F7aR6V7ihql/EpGK/i95/VJOhDTCv6B3wydBUHh0OWo8YvlUNYpuF3ziUDHT1CgyqDqBdnnvDJa6e
+        SjVx42l2yGQe8xhw+nz/+5+TcBeKtCVmwT+9yduHxq//U6bMX3MKCKTvpI87EMY+fpkcr60wVbrmS
+        ynJmRxIs32A2X0n05MFplEuag6/nGUza83h/g+WvUUndHSS/hGuB6Ff/VEWtxOIUxTo+S2z0pTMZW
+        MZeC2v7A==;
 Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kUphy-0001Fq-Ny; Tue, 20 Oct 2020 11:21:38 +0000
-Date:   Tue, 20 Oct 2020 12:21:38 +0100
+        id 1kUsbF-00084P-86; Tue, 20 Oct 2020 14:26:53 +0000
+Date:   Tue, 20 Oct 2020 15:26:53 +0100
 From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+To:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
         linux-xfs@vger.kernel.org
 Subject: Re: Splitting a THP beyond EOF
-Message-ID: <20201020112138.GZ20115@casper.infradead.org>
+Message-ID: <20201020142653.GB20115@casper.infradead.org>
 References: <20201020014357.GW20115@casper.infradead.org>
- <20201020045928.GO7391@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201020045928.GO7391@dread.disaster.area>
+In-Reply-To: <20201020014357.GW20115@casper.infradead.org>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 20, 2020 at 03:59:28PM +1100, Dave Chinner wrote:
-> On Tue, Oct 20, 2020 at 02:43:57AM +0100, Matthew Wilcox wrote:
-> > This is a weird one ... which is good because it means the obvious
-> > ones have been fixed and now I'm just tripping over the weird cases.
-> > And fortunately, xfstests exercises the weird cases.
-> > 
-> > 1. The file is 0x3d000 bytes long.
-> > 2. A readahead allocates an order-2 THP for 0x3c000-0x3ffff
-> > 3. We simulate a read error for 0x3c000-0x3cfff
-> > 4. Userspace writes to 0x3d697 to 0x3dfaa
-> 
-> So this is a write() beyond EOF, yes?
-> 
-> If yes, then we first go through this path:
-> 
-> 	xfs_file_buffered_aio_write()
-> 	  xfs_file_aio_write_checks()
-> 	    iomap_zero_range(isize, pos - isize)
-> 
-> To zero the region between the current EOF and where the new write
-> starts. i.e. from 0x3d000 to 0x3d696.
+On Tue, Oct 20, 2020 at 02:43:57AM +0100, Matthew Wilcox wrote:
+> I think the easiest way to fix this is to decline to allocate readahead
+> pages beyond EOF.  That is, if we have a file which is, say, 61 pages
+> long, read the last 5 pages into an order-2 THP and an order-0 THP
+> instead of allocating an order-3 THP and zeroing the last three pages.
 
-Yes.  That calls iomap_write_begin() which calls iomap_split_page()
-which is where we run into trouble.  I elided the exact path from the
-description of the problem.
+Oh yeah, really easy.
 
-> > 5. iomap_write_begin() gets the 0x3c page, sees it's THP and !Uptodate
-> >    so it calls iomap_split_page() (passing page 0x3d)
-> 
-> Splitting the page because it's !Uptodate seems rather drastic to
-> me.  Why does it need to split the page here?
++++ b/mm/readahead.c
+@@ -481,6 +481,11 @@ void page_cache_ra_order(struct readahead_control *ractl,
+                        if (order == 1)
+                                order = 0;
+                }
++               /* Don't allocate pages past EOF */
++               while (index + (1UL << order) - 1 > limit) {
++                       if (--order == 1)
++                               order = 0;
++               }
+                err = ra_alloc_page(ractl, index, mark, order, gfp);
+                if (err)
+                        break;
 
-Because we can't handle Dirty, !Uptodate THPs in the truncate path.
-Previous discussion:
-https://lore.kernel.org/linux-mm/20200821144021.GV17456@casper.infradead.org/
-
-The current assumption is that a !Uptodate THP is due to a read error,
-and so the sensible thing to do is split it and handle read errors at
-a single-page level.
-
-I've been playing around with creating THPs in the write path, and that
-offers a different pathway to creating Dirty, !Uptodate THPs, so this
-may also change at some point.  I'd like to get what I have merged and
-then figure out how to make this better.
-
-> Also, this concerns me: if we are exposing the cached EOF page via
-> mmap, it needs to contain only zeroes in the region beyond EOF so
-> that we don't expose stale data to userspace. Hence when a THP that
-> contains EOF is instantiated, we have to ensure that the region
-> beyond EOF is compeltely zeroed. It then follows that if we read all
-> the data in that THP up to EOF, then the page is actually up to
-> date...
-
-We do that in iomap_readpage_actor().  Had the readahead I/O not "failed",
-we'd've had an Uptodate THP which straddled EOF.  I dumped the page and
-its uptodate bits are 0xfff0 (1kB block size filesystem, the three pages
-0x3d-0x3f are uptodate because they were zeroed and 0x3c is !uptodate
-because the I/O failed).
-
+I've added that to an earlier patch and I've pushed out commit
+cd3fa4bc6516 as the head of
+http://git.infradead.org/users/willy/pagecache.git/shortlog
