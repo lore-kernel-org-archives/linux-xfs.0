@@ -2,105 +2,112 @@ Return-Path: <SRS0=H2w8=D3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3053EC433E7
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 10:38:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55FCEC43467
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 11:21:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C630022283
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 10:38:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9F182224B
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Oct 2020 11:21:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O0YJNbkF"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UrYIw+Uo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393195AbgJTKiu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Oct 2020 06:38:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22491 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2393144AbgJTKiu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Oct 2020 06:38:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603190329;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CSTsesIBzJQZb/lbzbzwgMUNZuTKjGzoKrb7YV1NSyM=;
-        b=O0YJNbkFTK3tzeXwnj0GvVfJdvt9W8Q6C0aVbW+HA9gntX2doPGfU99CrKn80aMKw8Ywoa
-        w4QWeoBg4zwBOBL/HOo+4pLzf2kmKU3zM4Ulz/7eBvDrQjdInQvjKsWG9h3M4bovGeVKtG
-        hqCuJ7+9Ia7s2++l5tBcN/wwHSYDBCE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-345-qzh9NhaVMmqi6fTX404n3g-1; Tue, 20 Oct 2020 06:38:47 -0400
-X-MC-Unique: qzh9NhaVMmqi6fTX404n3g-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4509D107AD96;
-        Tue, 20 Oct 2020 10:38:46 +0000 (UTC)
-Received: from bfoster (ovpn-112-249.rdu2.redhat.com [10.10.112.249])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E71A461983;
-        Tue, 20 Oct 2020 10:38:45 +0000 (UTC)
-Date:   Tue, 20 Oct 2020 06:38:44 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: cancel intents immediately if process_intents fails
-Message-ID: <20201020103844.GC1263949@bfoster>
-References: <20201019162917.GJ9832@magnolia>
+        id S2406060AbgJTLVq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Oct 2020 07:21:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39192 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2406058AbgJTLVp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Oct 2020 07:21:45 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78CDFC061755;
+        Tue, 20 Oct 2020 04:21:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=tSS1MuZ8AFbkW+ypKAMNnv6YlEacISP3BShZ3dh/KFQ=; b=UrYIw+UoNzUIduQWr+Vr0lA53w
+        +Cic3Xur8MBbfGAFjra5xdsoOviIc1j3gA/WUG5RUFHxFVo0sRUHNHhk1+w46kip7KYZy8q216ogu
+        Lrd6UmvNEcWmQ2vxAZwRnLi2ZlSEExY+eNkAR942XEQ6ZXgVrrViPyS2TGhT7EYKK4KMg90QTj/ud
+        ER2FY5jiFgtlaATtoiuhSUTPGLw+Axd1ZG6seTYpp70FCzkOMKE7UR4VtE8gvKx11BCnI7K8DmBax
+        XHDjIYzpZaMmw6AUQ2RWw9qL2qxEf35fdGMi/UU+e+QxUHG4F7H0CXg4sGWHmHsqq9juPpeVq5eJK
+        U/CMYL1Q==;
+Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kUphy-0001Fq-Ny; Tue, 20 Oct 2020 11:21:38 +0000
+Date:   Tue, 20 Oct 2020 12:21:38 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: Splitting a THP beyond EOF
+Message-ID: <20201020112138.GZ20115@casper.infradead.org>
+References: <20201020014357.GW20115@casper.infradead.org>
+ <20201020045928.GO7391@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201019162917.GJ9832@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20201020045928.GO7391@dread.disaster.area>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 19, 2020 at 09:29:17AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Oct 20, 2020 at 03:59:28PM +1100, Dave Chinner wrote:
+> On Tue, Oct 20, 2020 at 02:43:57AM +0100, Matthew Wilcox wrote:
+> > This is a weird one ... which is good because it means the obvious
+> > ones have been fixed and now I'm just tripping over the weird cases.
+> > And fortunately, xfstests exercises the weird cases.
+> > 
+> > 1. The file is 0x3d000 bytes long.
+> > 2. A readahead allocates an order-2 THP for 0x3c000-0x3ffff
+> > 3. We simulate a read error for 0x3c000-0x3cfff
+> > 4. Userspace writes to 0x3d697 to 0x3dfaa
 > 
-> If processing recovered log intent items fails, we need to cancel all
-> the unprocessed recovered items immediately so that a subsequent AIL
-> push in the bail out path won't get wedged on the pinned intent items
-> that didn't get processed.
+> So this is a write() beyond EOF, yes?
 > 
-> This can happen if the log contains (1) an intent that gets and releases
-> an inode, (2) an intent that cannot be recovered successfully, and (3)
-> some third intent item.  When recovery of (2) fails, we leave (3) pinned
-> in memory.  Inode reclamation is called in the error-out path of
-> xfs_mountfs before xfs_log_cancel_mount.  Reclamation calls
-> xfs_ail_push_all_sync, which gets stuck waiting for (3).
+> If yes, then we first go through this path:
 > 
-> Therefore, call xlog_recover_cancel_intents if _process_intents fails.
+> 	xfs_file_buffered_aio_write()
+> 	  xfs_file_aio_write_checks()
+> 	    iomap_zero_range(isize, pos - isize)
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
+> To zero the region between the current EOF and where the new write
+> starts. i.e. from 0x3d000 to 0x3d696.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Yes.  That calls iomap_write_begin() which calls iomap_split_page()
+which is where we run into trouble.  I elided the exact path from the
+description of the problem.
 
->  fs/xfs/xfs_log_recover.c |    8 ++++++++
->  1 file changed, 8 insertions(+)
+> > 5. iomap_write_begin() gets the 0x3c page, sees it's THP and !Uptodate
+> >    so it calls iomap_split_page() (passing page 0x3d)
 > 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index a8289adc1b29..87886b7f77da 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -3446,6 +3446,14 @@ xlog_recover_finish(
->  		int	error;
->  		error = xlog_recover_process_intents(log);
->  		if (error) {
-> +			/*
-> +			 * Cancel all the unprocessed intent items now so that
-> +			 * we don't leave them pinned in the AIL.  This can
-> +			 * cause the AIL to livelock on the pinned item if
-> +			 * anyone tries to push the AIL (inode reclaim does
-> +			 * this) before we get around to xfs_log_mount_cancel.
-> +			 */
-> +			xlog_recover_cancel_intents(log);
->  			xfs_alert(log->l_mp, "Failed to recover intents");
->  			return error;
->  		}
-> 
+> Splitting the page because it's !Uptodate seems rather drastic to
+> me.  Why does it need to split the page here?
+
+Because we can't handle Dirty, !Uptodate THPs in the truncate path.
+Previous discussion:
+https://lore.kernel.org/linux-mm/20200821144021.GV17456@casper.infradead.org/
+
+The current assumption is that a !Uptodate THP is due to a read error,
+and so the sensible thing to do is split it and handle read errors at
+a single-page level.
+
+I've been playing around with creating THPs in the write path, and that
+offers a different pathway to creating Dirty, !Uptodate THPs, so this
+may also change at some point.  I'd like to get what I have merged and
+then figure out how to make this better.
+
+> Also, this concerns me: if we are exposing the cached EOF page via
+> mmap, it needs to contain only zeroes in the region beyond EOF so
+> that we don't expose stale data to userspace. Hence when a THP that
+> contains EOF is instantiated, we have to ensure that the region
+> beyond EOF is compeltely zeroed. It then follows that if we read all
+> the data in that THP up to EOF, then the page is actually up to
+> date...
+
+We do that in iomap_readpage_actor().  Had the readahead I/O not "failed",
+we'd've had an Uptodate THP which straddled EOF.  I dumped the page and
+its uptodate bits are 0xfff0 (1kB block size filesystem, the three pages
+0x3d-0x3f are uptodate because they were zeroed and 0x3c is !uptodate
+because the I/O failed).
 
