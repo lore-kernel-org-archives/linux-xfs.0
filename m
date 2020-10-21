@@ -2,227 +2,274 @@ Return-Path: <SRS0=FA9X=D4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C969C388F9
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 13:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B30AC5DF9E
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 13:31:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1DA322249
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 13:21:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="b72nf6/F"
+	by mail.kernel.org (Postfix) with ESMTP id 0312D222C8
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 13:31:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408672AbgJUNVZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Oct 2020 09:21:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22169 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2404801AbgJUNVZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Oct 2020 09:21:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603286482;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=sx3CLE+7AS9/xeQWK7EDHFhDB4umOTjrEB9hjciD+88=;
-        b=b72nf6/F6708cgsmbtSXrVc/cgjJ0VDQ/RMp6a5u/+GPFUxoL27IqdwsZmBMRyrd1fDTVs
-        o9QJE7lMc1X+EwigF9sreQYdEgULrXDQkrIGrreTcTc2Eq48XcNUZrBaGj1hW5xtygqnqZ
-        TqBv5e5RN+sKKIIvoIgjU8xSHrdyfT8=
-Received: from mail-pf1-f198.google.com (mail-pf1-f198.google.com
- [209.85.210.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-273-d13mBQyhNMiVCe337F7S4Q-1; Wed, 21 Oct 2020 09:21:20 -0400
-X-MC-Unique: d13mBQyhNMiVCe337F7S4Q-1
-Received: by mail-pf1-f198.google.com with SMTP id b195so1276817pfb.9
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Oct 2020 06:21:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=sx3CLE+7AS9/xeQWK7EDHFhDB4umOTjrEB9hjciD+88=;
-        b=jHl9rnuXrhCINo0rOIazJkLKFht+flzGrr5bPloSenQpzecAy94WKd01xA3/lKifiC
-         cjgxnR+MEXnIkt6a1OlvahB9hlKdIgvuLfPyb7WBtb6MNrE72X8iOTTL8Yg0LKIZS65J
-         8zE7Id0xxubo4EKKjiBEQGm9Ablu8SIG/FB+tnPwJxj3jc8QIxnoEmj/ap7WPrZMzl+m
-         PboRPVz4w7pnSeX6hrGQH64yjSErJJ1/lQY4LzOndPQShm/cA2yGJsNYyEGGKedYoDxq
-         ftzcoKPD/0ZnNQCDL9fUT6+Ev50KBNpU/0PN7UAfS/n8Qp7nCVG4LXiV2kgLjLGwUPq3
-         670A==
-X-Gm-Message-State: AOAM530h3wnJN9fQriEo/wplAbmkGyTIhLnf8lRgORk54lOjcdrPDKR+
-        Q+YA/gXMps5uAlgN4ITEh4wzzdOX+Y63tVQ6ocX3oVx1oxk+Mu067BmBRqpE0M3GpDCRGA/WV/B
-        S4UOKMKZs1wlZqjNMPZ+i
-X-Received: by 2002:a65:6158:: with SMTP id o24mr3536539pgv.120.1603286478601;
-        Wed, 21 Oct 2020 06:21:18 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJykRNeVTO+kKx8IeBLg+XEcFAh2n19/rVk9ZVKf7/tZ6IgfhCQtiJceLuF0tKz3e3nl3Ue05g==
-X-Received: by 2002:a65:6158:: with SMTP id o24mr3536520pgv.120.1603286478250;
-        Wed, 21 Oct 2020 06:21:18 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id 20sm2474113pfh.219.2020.10.21.06.21.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2020 06:21:17 -0700 (PDT)
-Date:   Wed, 21 Oct 2020 21:21:08 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Gao Xiang <hsiangkao@aol.com>, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs: support shrinking unused space in the last AG
-Message-ID: <20201021132108.GA25141@xiangao.remote.csb>
-References: <20201014005809.6619-1-hsiangkao.ref@aol.com>
- <20201014005809.6619-1-hsiangkao@aol.com>
- <20201014170139.GC1109375@bfoster>
- <20201015014908.GC7037@hsiangkao-HP-ZHAN-66-Pro-G1>
- <20201020145012.GA1272590@bfoster>
- <20201021031922.GA31275@hsiangkao-HP-ZHAN-66-Pro-G1>
- <20201021095519.GA1327166@bfoster>
+        id S2441646AbgJUNbv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Oct 2020 09:31:51 -0400
+Received: from mx2.suse.de ([195.135.220.15]:54310 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2438814AbgJUNbu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Oct 2020 09:31:50 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 239A1AD12;
+        Wed, 21 Oct 2020 13:31:48 +0000 (UTC)
+Subject: Re: [PATCH 0/2] block layer filter and block device snapshot module
+To:     Sergei Shtepa <sergei.shtepa@veeam.com>, axboe@kernel.dk,
+        viro@zeniv.linux.org.uk, hch@infradead.org,
+        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, rjw@rjwysocki.net,
+        len.brown@intel.com, pavel@ucw.cz, akpm@linux-foundation.org,
+        johannes.thumshirn@wdc.com, ming.lei@redhat.com, jack@suse.cz,
+        tj@kernel.org, gustavo@embeddedor.com, bvanassche@acm.org,
+        osandov@fb.com, koct9i@gmail.com, damien.lemoal@wdc.com,
+        steve@sk2.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-mm@kvack.org
+References: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <71926887-5707-04a5-78a2-ffa2ee32bd68@suse.de>
+Date:   Wed, 21 Oct 2020 15:31:46 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201021095519.GA1327166@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 21, 2020 at 05:55:19AM -0400, Brian Foster wrote:
-> On Wed, Oct 21, 2020 at 11:19:28AM +0800, Gao Xiang wrote:
-> > On Tue, Oct 20, 2020 at 10:50:12AM -0400, Brian Foster wrote:
-> > > On Thu, Oct 15, 2020 at 09:49:15AM +0800, Gao Xiang wrote:
-> > 
-> > ...
-> > 
-> > > > > 
-> > > > > Interesting... this seems fundamentally sane when narrowing the scope
-> > > > > down to tail AG shrinking. Does xfs_repair flag any issues in the simple
-> > > > > tail AG shrink case?
-> > > > 
-> > > > Yeah, I ran xfs_repair together as well, For smaller sizes, it seems
-> > > > all fine, but I did observe some failure when much larger values
-> > > > passed in, so as a formal patch, it really needs to be solved later.
-> > > > 
-> > > 
-> > > I'm curious to see what xfs_repair complained about if you have a record
-> > > of it. That might call out some other things we could be overlooking.
-> > 
-> > Sorry for somewhat slow progress...
-> > 
-> > it could show random "SB summary counter sanity check failed" runtime message
-> > when the shrink size is large (much close to ag start).
-> > 
+On 10/21/20 11:04 AM, Sergei Shtepa wrote:
+> Hello everyone! Requesting for your comments and suggestions.
 > 
-> Ok. That error looks associated with a few different checks:
+> # blk-filter
 > 
->         if (XFS_BUF_ADDR(bp) == XFS_SB_DADDR && !sbp->sb_inprogress &&
->             (sbp->sb_fdblocks > sbp->sb_dblocks ||
->              !xfs_verify_icount(mp, sbp->sb_icount) ||
->              sbp->sb_ifree > sbp->sb_icount)) {
->                 xfs_warn(mp, "SB summary counter sanity check failed");
->                 return -EFSCORRUPTED;
->         }
+> Block layer filter allows to intercept BIO requests to a block device.
 > 
-> Though I think the inode counters should be a subset of allocated space
-> (i.e. inode chunks) so are unlikely to be impacted by a removal of free
-> space. Without looking into details, I'd guess it's most likely just an
-> accounting bug and it's easiest to dump the relevant values that land in
-> the superblock and work backwards from there. FWIW, the followon
-> shutdown, repair (dirty log) and log recovery behavior (write and read
-> verifier failures) are typical and to be expected on metadata
-> corruption. IOW, I suspect that if we address the write verifier
-> failure, the followon issues will likely be resolved as well.
-
-After looking into a little bit, the exact failure condition is
-sbp->sb_fdblocks > sbp->sb_dblocks,
-
-and it seems sbp->sb_fdblocks doesn't decrease as expected when the shrink
-size is large (in fact, it's still the number as the origin compared with
-correct small shrink size) I'm still looking into what's exactly happening.
-
+> Interception is performed at the very beginning of the BIO request
+> processing, and therefore does not affect the operation of the request
+> processing queue. This also makes it possible to intercept requests from
+> a specific block device, rather than from the entire disk.
 > 
-
-...
-
-> > > 
-> > > It's probably debatable as to whether we should reduce the size of the
-> > > shrink or just fail the operation, but I think to increase the size of
-> > > the shrink from what the user requested (even if it occurs "by accident"
-> > > due to the AG size rules) is inappropriate. With regard to the former,
-> > > have you looked into how shrink behaves on other filesystems (ext4)? I
-> > > think one advantage of shrinking what's available is to at least give
-> > > the user an opportunity to make incremental progress.
-> > 
-> > I quickly check what resize2fs does.
-> > 
-> > errcode_t adjust_fs_info(ext2_filsys fs, ext2_filsys old_fs,
-> > 			 ext2fs_block_bitmap reserve_blocks, blk64_t new_size)
-> > ...
-> > 	ext2fs_blocks_count_set(fs->super, new_size);
-> > 	fs->super->s_overhead_clusters = 0;
-> > 
-> > retry:
-> > ...
-> > 	/*
-> > 	 * Overhead is the number of bookkeeping blocks per group.  It
-> > 	 * includes the superblock backup, the group descriptor
-> > 	 * backups, the inode bitmap, the block bitmap, and the inode
-> > 	 * table.
-> > 	 */
-> > 	overhead = (int) (2 + fs->inode_blocks_per_group);
-> > ...
-> > 	/*
-> > 	 * See if the last group is big enough to support the
-> > 	 * necessary data structures.  If not, we need to get rid of
-> > 	 * it.
-> > 	 */
-> > 	rem = (ext2fs_blocks_count(fs->super) - fs->super->s_first_data_block) %
-> > 		fs->super->s_blocks_per_group;
-> > 	if ((fs->group_desc_count == 1) && rem && (rem < overhead))
-> > 		return EXT2_ET_TOOSMALL;
-> > 	if ((fs->group_desc_count > 1) && rem && (rem < overhead+50)) {
-> > 		ext2fs_blocks_count_set(fs->super,
-> > 					ext2fs_blocks_count(fs->super) - rem);
-> > 		goto retry;
-> > 	}
-> > 
-> > from the code itself it seems for some cases it increases the size of
-> > the shrink from what the user requested. and for the other cases, it
-> > just errors out.
-> > 
-> > and I also tried with some configuration:
-> > 
-> > First block:              1
-> > Block size:               1024
-> > Fragment size:            1024
-> > Group descriptor size:    64
-> > Reserved GDT blocks:      256
-> > Blocks per group:         8192
-> > Fragments per group:      8192
-> > Inodes per group:         2016
-> > Inode blocks per group:   252
-> > 
-> > # resize2fs test.ext4.img 262500
-> > resize2fs 1.44.5 (15-Dec-2018)
-> > Resizing the filesystem on test.ext4.img to 262500 (1k) blocks.
-> > The filesystem on test.ext4.img is now 262500 (1k) blocks long.
-> > 
-> > # resize2fs test.ext4.img 262403
-> > resize2fs 1.44.5 (15-Dec-2018)
-> > Resizing the filesystem on test.ext4.img to 262403 (1k) blocks.
-> > The filesystem on test.ext4.img is now 262145 (1k) blocks long.
-> > 
+> The logic of the submit_bio function has been changed - since the
+> function execution results are not processed anywhere (except for swap
+> and direct-io) the function won't return a value anymore.
 > 
-> Interesting. It looks like there's similar logic around having a minimum
-> size "allocation group" to support internal structures, but I really
-> don't know enough about ext4 to comment further. I suppose this behavior
-> does make sense if you consider that a common purpose of shrink is to
-> inform the filesystem of a pending block device size change. In that
-> case, the desired result is to ensure the fs fits within the new,
-> smaller device and thus it might make sense to either increase the size
-> of the shrink and otherwise have straightforward success or failure
-> semantics. Thanks for the research.
-
-Yeah, I'm fine with either of that if we document the behavior well.
-
-Thanks,
-Gao Xiang
-
+> Now the submit_bio_direct() function is called whenever the result of
+> the blk_qc_t function is required. submit_bio_direct() is not
+> intercepted by the block layer filter. This is logical for swap and
+> direct-io.
 > 
-> Brian
+> Block layer filter allows you to enable and disable the filter driver on
+> the fly. When a new block device is added, the filter driver can start
+> filtering this device. When you delete a device, the filter can remove
+> its own filter.
 > 
+> The idea of multiple altitudes had to be abandoned in order to simplify
+> implementation and make it more reliable. Different filter drivers can
+> work simultaneously, but each on its own block device.
+> 
+> # blk-snap
+> 
+> We propose a new kernel module - blk-snap. This module implements
+> snapshot and changed block tracking functionality. It is intended to
+> create backup copies of any block devices without usage of device mapper.
+> Snapshots are temporary and are destroyed after the backup process has
+> finished. Changed block tracking allows for incremental and differential
+> backup copies.
+> 
+> blk-snap uses block layer filter. Block layer filter provides a callback
+> to intercept bio-requests. If a block device disappears for whatever
+> reason, send a synchronous request to remove the device from filtering.
+> 
+> blk-snap kernel module is a product of a deep refactoring of the
+> out-of-tree kernel veeamsnap kernel module
+> (https://github.com/veeam/veeamsnap/):
+> * all conditional compilation branches that served for the purpose of
+>    compatibility with older kernels have been removed;
+> * linux kernel code style has been applied;
+> * blk-snap mostly takes advantage of the existing kernel code instead of
+>    reinventing the wheel;
+> * all redundant code (such as persistent cbt and snapstore collector)
+>    has been removed.
+> 
+> Several important things are still have to be done:
+> * refactor the module interface for interaction with a user-space code -
+>    it is already clear that the implementation of some calls can be
+>    improved.
+> 
+> Your feedback would be greatly appreciated!
+> 
+> Sergei Shtepa (2):
+>    Block layer filter - second version
+>    blk-snap - snapshots and change-tracking for block devices
+> 
+>   block/Kconfig                               |  11 +
+>   block/Makefile                              |   1 +
+>   block/blk-core.c                            |  52 +-
+>   block/blk-filter-internal.h                 |  29 +
+>   block/blk-filter.c                          | 286 ++++++
+>   block/partitions/core.c                     |  14 +-
+>   drivers/block/Kconfig                       |   2 +
+>   drivers/block/Makefile                      |   1 +
+>   drivers/block/blk-snap/Kconfig              |  24 +
+>   drivers/block/blk-snap/Makefile             |  28 +
+>   drivers/block/blk-snap/big_buffer.c         | 193 ++++
+>   drivers/block/blk-snap/big_buffer.h         |  24 +
+>   drivers/block/blk-snap/blk-snap-ctl.h       | 190 ++++
+>   drivers/block/blk-snap/blk_deferred.c       | 566 +++++++++++
+>   drivers/block/blk-snap/blk_deferred.h       |  67 ++
+>   drivers/block/blk-snap/blk_descr_file.c     |  82 ++
+>   drivers/block/blk-snap/blk_descr_file.h     |  26 +
+>   drivers/block/blk-snap/blk_descr_mem.c      |  66 ++
+>   drivers/block/blk-snap/blk_descr_mem.h      |  14 +
+>   drivers/block/blk-snap/blk_descr_multidev.c |  86 ++
+>   drivers/block/blk-snap/blk_descr_multidev.h |  25 +
+>   drivers/block/blk-snap/blk_descr_pool.c     | 190 ++++
+>   drivers/block/blk-snap/blk_descr_pool.h     |  38 +
+>   drivers/block/blk-snap/blk_redirect.c       | 507 ++++++++++
+>   drivers/block/blk-snap/blk_redirect.h       |  73 ++
+>   drivers/block/blk-snap/blk_util.c           |  33 +
+>   drivers/block/blk-snap/blk_util.h           |  33 +
+>   drivers/block/blk-snap/cbt_map.c            | 210 +++++
+>   drivers/block/blk-snap/cbt_map.h            |  62 ++
+>   drivers/block/blk-snap/common.h             |  31 +
+>   drivers/block/blk-snap/ctrl_fops.c          | 691 ++++++++++++++
+>   drivers/block/blk-snap/ctrl_fops.h          |  19 +
+>   drivers/block/blk-snap/ctrl_pipe.c          | 562 +++++++++++
+>   drivers/block/blk-snap/ctrl_pipe.h          |  34 +
+>   drivers/block/blk-snap/ctrl_sysfs.c         |  73 ++
+>   drivers/block/blk-snap/ctrl_sysfs.h         |   5 +
+>   drivers/block/blk-snap/defer_io.c           | 397 ++++++++
+>   drivers/block/blk-snap/defer_io.h           |  39 +
+>   drivers/block/blk-snap/main.c               |  82 ++
+>   drivers/block/blk-snap/params.c             |  58 ++
+>   drivers/block/blk-snap/params.h             |  29 +
+>   drivers/block/blk-snap/rangevector.c        |  85 ++
+>   drivers/block/blk-snap/rangevector.h        |  31 +
+>   drivers/block/blk-snap/snapimage.c          | 982 ++++++++++++++++++++
+>   drivers/block/blk-snap/snapimage.h          |  16 +
+>   drivers/block/blk-snap/snapshot.c           | 225 +++++
+>   drivers/block/blk-snap/snapshot.h           |  17 +
+>   drivers/block/blk-snap/snapstore.c          | 929 ++++++++++++++++++
+>   drivers/block/blk-snap/snapstore.h          |  68 ++
+>   drivers/block/blk-snap/snapstore_device.c   | 532 +++++++++++
+>   drivers/block/blk-snap/snapstore_device.h   |  63 ++
+>   drivers/block/blk-snap/snapstore_file.c     |  52 ++
+>   drivers/block/blk-snap/snapstore_file.h     |  15 +
+>   drivers/block/blk-snap/snapstore_mem.c      |  91 ++
+>   drivers/block/blk-snap/snapstore_mem.h      |  20 +
+>   drivers/block/blk-snap/snapstore_multidev.c | 118 +++
+>   drivers/block/blk-snap/snapstore_multidev.h |  22 +
+>   drivers/block/blk-snap/tracker.c            | 449 +++++++++
+>   drivers/block/blk-snap/tracker.h            |  38 +
+>   drivers/block/blk-snap/tracking.c           | 270 ++++++
+>   drivers/block/blk-snap/tracking.h           |  13 +
+>   drivers/block/blk-snap/version.h            |   7 +
+>   fs/block_dev.c                              |   6 +-
+>   fs/direct-io.c                              |   2 +-
+>   fs/iomap/direct-io.c                        |   2 +-
+>   include/linux/bio.h                         |   4 +-
+>   include/linux/blk-filter.h                  |  76 ++
+>   include/linux/genhd.h                       |   8 +-
+>   kernel/power/swap.c                         |   2 +-
+>   mm/page_io.c                                |   4 +-
+>   70 files changed, 9074 insertions(+), 26 deletions(-)
+>   create mode 100644 block/blk-filter-internal.h
+>   create mode 100644 block/blk-filter.c
+>   create mode 100644 drivers/block/blk-snap/Kconfig
+>   create mode 100644 drivers/block/blk-snap/Makefile
+>   create mode 100644 drivers/block/blk-snap/big_buffer.c
+>   create mode 100644 drivers/block/blk-snap/big_buffer.h
+>   create mode 100644 drivers/block/blk-snap/blk-snap-ctl.h
+>   create mode 100644 drivers/block/blk-snap/blk_deferred.c
+>   create mode 100644 drivers/block/blk-snap/blk_deferred.h
+>   create mode 100644 drivers/block/blk-snap/blk_descr_file.c
+>   create mode 100644 drivers/block/blk-snap/blk_descr_file.h
+>   create mode 100644 drivers/block/blk-snap/blk_descr_mem.c
+>   create mode 100644 drivers/block/blk-snap/blk_descr_mem.h
+>   create mode 100644 drivers/block/blk-snap/blk_descr_multidev.c
+>   create mode 100644 drivers/block/blk-snap/blk_descr_multidev.h
+>   create mode 100644 drivers/block/blk-snap/blk_descr_pool.c
+>   create mode 100644 drivers/block/blk-snap/blk_descr_pool.h
+>   create mode 100644 drivers/block/blk-snap/blk_redirect.c
+>   create mode 100644 drivers/block/blk-snap/blk_redirect.h
+>   create mode 100644 drivers/block/blk-snap/blk_util.c
+>   create mode 100644 drivers/block/blk-snap/blk_util.h
+>   create mode 100644 drivers/block/blk-snap/cbt_map.c
+>   create mode 100644 drivers/block/blk-snap/cbt_map.h
+>   create mode 100644 drivers/block/blk-snap/common.h
+>   create mode 100644 drivers/block/blk-snap/ctrl_fops.c
+>   create mode 100644 drivers/block/blk-snap/ctrl_fops.h
+>   create mode 100644 drivers/block/blk-snap/ctrl_pipe.c
+>   create mode 100644 drivers/block/blk-snap/ctrl_pipe.h
+>   create mode 100644 drivers/block/blk-snap/ctrl_sysfs.c
+>   create mode 100644 drivers/block/blk-snap/ctrl_sysfs.h
+>   create mode 100644 drivers/block/blk-snap/defer_io.c
+>   create mode 100644 drivers/block/blk-snap/defer_io.h
+>   create mode 100644 drivers/block/blk-snap/main.c
+>   create mode 100644 drivers/block/blk-snap/params.c
+>   create mode 100644 drivers/block/blk-snap/params.h
+>   create mode 100644 drivers/block/blk-snap/rangevector.c
+>   create mode 100644 drivers/block/blk-snap/rangevector.h
+>   create mode 100644 drivers/block/blk-snap/snapimage.c
+>   create mode 100644 drivers/block/blk-snap/snapimage.h
+>   create mode 100644 drivers/block/blk-snap/snapshot.c
+>   create mode 100644 drivers/block/blk-snap/snapshot.h
+>   create mode 100644 drivers/block/blk-snap/snapstore.c
+>   create mode 100644 drivers/block/blk-snap/snapstore.h
+>   create mode 100644 drivers/block/blk-snap/snapstore_device.c
+>   create mode 100644 drivers/block/blk-snap/snapstore_device.h
+>   create mode 100644 drivers/block/blk-snap/snapstore_file.c
+>   create mode 100644 drivers/block/blk-snap/snapstore_file.h
+>   create mode 100644 drivers/block/blk-snap/snapstore_mem.c
+>   create mode 100644 drivers/block/blk-snap/snapstore_mem.h
+>   create mode 100644 drivers/block/blk-snap/snapstore_multidev.c
+>   create mode 100644 drivers/block/blk-snap/snapstore_multidev.h
+>   create mode 100644 drivers/block/blk-snap/tracker.c
+>   create mode 100644 drivers/block/blk-snap/tracker.h
+>   create mode 100644 drivers/block/blk-snap/tracking.c
+>   create mode 100644 drivers/block/blk-snap/tracking.h
+>   create mode 100644 drivers/block/blk-snap/version.h
+>   create mode 100644 include/linux/blk-filter.h
+> 
+> --
+> 2.20.1
+> 
+I do understand where you are coming from, but then we already have a 
+dm-snap which does exactly what you want to achieve.
+Of course, that would require a reconfiguration of the storage stack on 
+the machine, which is not always possible (or desired).
 
+What I _could_ imagine would be a 'dm-intercept' thingie, which 
+redirects the current submit_bio() function for any block device, and 
+re-routes that to a linear device-mapper device pointing back to the 
+original block device.
+
+That way you could attach it to basically any block device, _and_ can 
+use the existing device-mapper functionality to do fancy stuff once the 
+submit_io() callback has been re-routed.
+
+And it also would help in other scenarios, too; with such a 
+functionality we could seamlessly clone devices without having to move 
+the whole setup to device-mapper first.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
