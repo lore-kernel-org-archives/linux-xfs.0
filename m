@@ -2,162 +2,138 @@ Return-Path: <SRS0=FA9X=D4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5257C388F9
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 14:22:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDE69C388F9
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 14:35:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79DE420874
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 14:22:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56FE622283
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 14:35:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="J5tePHhs"
+	dkim=pass (1024-bit key) header.d=veeam.com header.i=@veeam.com header.b="W3XiTq17"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2442838AbgJUOWp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Oct 2020 10:22:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35775 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2437414AbgJUOWp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Oct 2020 10:22:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603290163;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=cVzfsxfYPtWCdtBN3vAsiw7mlOAPTzS3OFx80/jGlU8=;
-        b=J5tePHhsfeAqmzB+zPs/tJRcQgUGTzlOP8/HRh3nfGQyj55PHaxR0iXd5rKcgokxZSxd3H
-        90txGGKfVnKoS4MVDk6RpFYT4ZSGSNG+nTEpfrYLD1jaAL63lWIl1Y6dDC9LP625EKZiJH
-        piGSXlxiMrm/Y3sD4Usq4JCBpxvyF3g=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-257-3zlfmQ96PkKfqfVbPIra0g-1; Wed, 21 Oct 2020 10:22:41 -0400
-X-MC-Unique: 3zlfmQ96PkKfqfVbPIra0g-1
-Received: by mail-pj1-f69.google.com with SMTP id gv16so1327926pjb.9
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Oct 2020 07:22:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=cVzfsxfYPtWCdtBN3vAsiw7mlOAPTzS3OFx80/jGlU8=;
-        b=LwadJfY6Ed5K2+3c1Wpma9jJlOYGUK/UBM9BO4lYNhycPu4NTXcd+3HgneEzk2aXby
-         nyH+NXjO2rBXj+EuWrpMeQk7N1Shu1TMvcnJH8HcEwUZqxlgyeOz8/VTmxARSYIbVphP
-         m0lt+ITH9xnQ7BdIxqaGx/kU3jw+A5DRso9dg1nMi0+lpCqTM6MLqTj1eVgXjjSI64eG
-         IszCs7Qn1k44+428MbWAC/1jiT1H9RSJe9vn14Eh8sBZpZpw34NriQrGFTzlxGJCSkxh
-         IRFSqWdrkO51sTJ1PhYT+4jdAIV2jHOhIdchy5M49HdDfPvG6jUwweqToPoj6vjpCON/
-         GrQQ==
-X-Gm-Message-State: AOAM532L3ARUkg4JD+PqHnLcpwssPzJVWa0tB7TmUJ4iy/zgUZGWy8iG
-        U4KZSSJGDDwnYXo8DZBZT9BQqfFWB2xwNh4G2anUTLVaEONKy5o57nMZ4cdS7E9E0MDNbxhM3X7
-        ayGTD94jhHY4rCS0/aLfs
-X-Received: by 2002:a17:90a:ce8c:: with SMTP id g12mr3455018pju.185.1603290160663;
-        Wed, 21 Oct 2020 07:22:40 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwTx7v+QcqnEqJYZ/YY5/z5Ms8DmnwJuUadaDOKaTTzz0Og83Osk3NPW/aatfLpxBYu7nt/xg==
-X-Received: by 2002:a17:90a:ce8c:: with SMTP id g12mr3455005pju.185.1603290160401;
-        Wed, 21 Oct 2020 07:22:40 -0700 (PDT)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id i9sm2714709pgc.71.2020.10.21.07.22.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Oct 2020 07:22:39 -0700 (PDT)
-Date:   Wed, 21 Oct 2020 22:22:30 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     Gao Xiang <hsiangkao@aol.com>, linux-xfs@vger.kernel.org
-Subject: Re: [RFC PATCH] xfs: support shrinking unused space in the last AG
-Message-ID: <20201021142230.GA30714@xiangao.remote.csb>
-References: <20201014005809.6619-1-hsiangkao.ref@aol.com>
- <20201014005809.6619-1-hsiangkao@aol.com>
- <20201014170139.GC1109375@bfoster>
- <20201015014908.GC7037@hsiangkao-HP-ZHAN-66-Pro-G1>
- <20201020145012.GA1272590@bfoster>
- <20201021031922.GA31275@hsiangkao-HP-ZHAN-66-Pro-G1>
- <20201021095519.GA1327166@bfoster>
- <20201021132108.GA25141@xiangao.remote.csb>
+        id S2443598AbgJUOfI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Oct 2020 10:35:08 -0400
+Received: from mx4.veeam.com ([104.41.138.86]:46256 "EHLO mx4.veeam.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2443592AbgJUOfH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Oct 2020 10:35:07 -0400
+Received: from mail.veeam.com (prgmbx01.amust.local [172.24.0.171])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx4.veeam.com (Postfix) with ESMTPS id 29CA78A77D;
+        Wed, 21 Oct 2020 17:35:04 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=veeam.com; s=mx4;
+        t=1603290904; bh=gcs9fDGrugmEFnHD7BVk3TKsrIQsLRHT9hgdToOOQuI=;
+        h=Date:From:To:CC:Subject:References:In-Reply-To:From;
+        b=W3XiTq17/EjMVJayE5rGdsC29XtujNHnsX7S2+TuMTBKQwGsHfaTM6Ahtdk/thl47
+         GskMaiU5eQDILnl6aTJnSfY8+VIAqFn1Qz+uuGKwU2w3NTGpxT1b8fiOfm5p451Ss8
+         RuKh+SJAXrlHpeoEUPjx6l6iyYBr/gc4MF2QujA4=
+Received: from veeam.com (172.24.14.5) by prgmbx01.amust.local (172.24.0.171)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.721.2; Wed, 21 Oct 2020
+ 16:35:02 +0200
+Date:   Wed, 21 Oct 2020 17:35:53 +0300
+From:   Sergei Shtepa <sergei.shtepa@veeam.com>
+To:     Matthew Wilcox <willy@infradead.org>
+CC:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "len.brown@intel.com" <len.brown@intel.com>,
+        "pavel@ucw.cz" <pavel@ucw.cz>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "jack@suse.cz" <jack@suse.cz>, "tj@kernel.org" <tj@kernel.org>,
+        "gustavo@embeddedor.com" <gustavo@embeddedor.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "koct9i@gmail.com" <koct9i@gmail.com>,
+        "steve@sk2.org" <steve@sk2.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>
+Subject: Re: [PATCH 1/2] Block layer filter - second version
+Message-ID: <20201021143553.GG20749@veeam.com>
+References: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
+ <1603271049-20681-2-git-send-email-sergei.shtepa@veeam.com>
+ <BL0PR04MB65141320C7BF75B7142CA30CE71C0@BL0PR04MB6514.namprd04.prod.outlook.com>
+ <20201021114438.GK20115@casper.infradead.org>
+ <20201021125555.GE20749@veeam.com>
+ <20201021130753.GM20115@casper.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <20201021132108.GA25141@xiangao.remote.csb>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20201021130753.GM20115@casper.infradead.org>
+X-Originating-IP: [172.24.14.5]
+X-ClientProxiedBy: prgmbx02.amust.local (172.24.0.172) To prgmbx01.amust.local
+ (172.24.0.171)
+X-EsetResult: clean, is OK
+X-EsetId: 37303A29C604D26A677566
+X-Veeam-MMEX: True
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 21, 2020 at 09:21:08PM +0800, Gao Xiang wrote:
-> On Wed, Oct 21, 2020 at 05:55:19AM -0400, Brian Foster wrote:
-...
-> > > > > > 
-> > > > > > Interesting... this seems fundamentally sane when narrowing the scope
-> > > > > > down to tail AG shrinking. Does xfs_repair flag any issues in the simple
-> > > > > > tail AG shrink case?
-> > > > > 
-> > > > > Yeah, I ran xfs_repair together as well, For smaller sizes, it seems
-> > > > > all fine, but I did observe some failure when much larger values
-> > > > > passed in, so as a formal patch, it really needs to be solved later.
-> > > > > 
-> > > > 
-> > > > I'm curious to see what xfs_repair complained about if you have a record
-> > > > of it. That might call out some other things we could be overlooking.
-> > > 
-> > > Sorry for somewhat slow progress...
-> > > 
-> > > it could show random "SB summary counter sanity check failed" runtime message
-> > > when the shrink size is large (much close to ag start).
-> > > 
+The 10/21/2020 16:07, Matthew Wilcox wrote:
+> On Wed, Oct 21, 2020 at 03:55:55PM +0300, Sergei Shtepa wrote:
+> > The 10/21/2020 14:44, Matthew Wilcox wrote:
+> > > I don't understand why O_DIRECT gets to bypass the block filter.  Nor do
+> > > I understand why anybody would place a block filter on the swap device.
+> > > But if somebody did place a filter on the swap device, why should swap
+> > > be able to bypass the filter?
 > > 
-> > Ok. That error looks associated with a few different checks:
+> > Yes, intercepting the swap partition is absurd. But we can't guarantee
+> > that the filter won't intercept swap.
 > > 
-> >         if (XFS_BUF_ADDR(bp) == XFS_SB_DADDR && !sbp->sb_inprogress &&
-> >             (sbp->sb_fdblocks > sbp->sb_dblocks ||
-> >              !xfs_verify_icount(mp, sbp->sb_icount) ||
-> >              sbp->sb_ifree > sbp->sb_icount)) {
-> >                 xfs_warn(mp, "SB summary counter sanity check failed");
-> >                 return -EFSCORRUPTED;
-> >         }
-> > 
-> > Though I think the inode counters should be a subset of allocated space
-> > (i.e. inode chunks) so are unlikely to be impacted by a removal of free
-> > space. Without looking into details, I'd guess it's most likely just an
-> > accounting bug and it's easiest to dump the relevant values that land in
-> > the superblock and work backwards from there. FWIW, the followon
-> > shutdown, repair (dirty log) and log recovery behavior (write and read
-> > verifier failures) are typical and to be expected on metadata
-> > corruption. IOW, I suspect that if we address the write verifier
-> > failure, the followon issues will likely be resolved as well.
+> > Swap operation is related to the memory allocation logic. If a swap on
+> > the block device are accessed during memory allocation from filter,
+> > a deadlock occurs. We can allow filters to occasionally shoot off their
+> > feet, especially under high load. But I think it's better not to do it.
 > 
-> After looking into a little bit, the exact failure condition is
-> sbp->sb_fdblocks > sbp->sb_dblocks,
+> We already have logic to prevent this in Linux.  Filters need to
+> call memalloc_noio_save() while they might cause swap to happen and
+> memalloc_noio_restore() once it's safe for them to cause swap again.
+
+Yes, I looked at this function, it can really be useful for the filter.
+Then I don't need to enter the submit_bio_direct() function and the wait
+loop associated with the queue polling function blk_mq_poll() will have
+to be rewritten.
+
 > 
-> and it seems sbp->sb_fdblocks doesn't decrease as expected when the shrink
-> size is large (in fact, it's still the number as the origin compared with
-> correct small shrink size) I'm still looking into what's exactly happening.
->
+> > "directly access" - it is not O_DIRECT. This means (I think) direct
+> > reading from the device file, like "dd if=/dev/sda1".
+> > As for intercepting direct reading, I don't know how to do the right thing.
+> > 
+> > The problem here is that in fs/block_dev.c in function __blkdev_direct_IO()
+> > uses the qc - value returned by the submit_bio() function.
+> > This value is used below when calling 
+> > blk_poll(bdev_get_queue(dev), qc, true).
+> > The filter cannot return a meaningful value of the blk_qc_t type when
+> > intercepting a request, because at that time it does not know which queue
+> > the request will fall into.
+> > 
+> > If function submit_bio() will always return BLK_QC_T_NONE - I think the
+> > algorithm of the __blk dev_direct_IO() will not work correctly.
+> > If we need to intercept direct access to a block device, we need to at
+> > least redo the __blkdev_direct_IO function, getting rid of blk_pool.
+> > I'm not sure it's necessary yet.
+> 
+> This isn't part of the block layer that I'm familiar with, so I can't
+> help solve this problem, but allowing O_DIRECT to bypass the block filter
+> is a hole that needs to be fixed before these patches can be considered.
 
-Update: the following incremental patch can fix the issue, yet I'm not sure
-if it's the correct way or not...
+I think there is no such problem, but I will check, of course.
 
-Thanks,
-Gao Xiang
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 80927d323939..0a395901bc3f 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -149,6 +149,14 @@ xfs_growfs_data_private(
-                                 nb - mp->m_sb.sb_dblocks);
-        if (id.nfree)
-                xfs_trans_mod_sb(tp, XFS_TRANS_SB_FDBLOCKS, id.nfree);
-+
-+       /*
-+        * update in-core counters (especially sb_fdblocks) now
-+        * so xfs_validate_sb_write() can pass.
-+        */
-+       if (xfs_sb_version_haslazysbcount(&mp->m_sb))
-+               xfs_log_sb(tp);
-+
-        xfs_trans_set_sync(tp);
-        error = xfs_trans_commit(tp);
-        if (error)
-
-
- 
-
+-- 
+Sergei Shtepa
+Veeam Software developer.
