@@ -2,209 +2,169 @@ Return-Path: <SRS0=FA9X=D4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 988C2C55179
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 16:59:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E220C4363A
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 22:14:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40E41223BF
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 16:59:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YQTAhwkL"
+	by mail.kernel.org (Postfix) with ESMTP id B8ADB24198
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 22:14:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2503321AbgJUQ70 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Oct 2020 12:59:26 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:52499 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2442450AbgJUQ7Z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Oct 2020 12:59:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603299563;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CS3s/nQfR82ihoySmhC+CIHgOihhQvZqioOTDsFPayg=;
-        b=YQTAhwkLNKUlgCO7Qi2o/tLgUpLrY6rewYUAs69wxT9Ju8Warin+Ii5tQ1oQOJ0ryQQLUQ
-        Stzm37pUPiIotJ5grtLuMuF6LvgLMinOjmk2W7ixI/y/sIXSJmIaLRy6lBY/dB78ai0/d7
-        vA4yqPEROjq9XNTIpJLVJ8x45YLANtA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-462-JonXkP0gOWOy34tlnyxcbw-1; Wed, 21 Oct 2020 12:59:18 -0400
-X-MC-Unique: JonXkP0gOWOy34tlnyxcbw-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 278B5106B3B7;
-        Wed, 21 Oct 2020 16:59:10 +0000 (UTC)
-Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 86E8476640;
-        Wed, 21 Oct 2020 16:59:09 +0000 (UTC)
-Date:   Wed, 21 Oct 2020 12:59:07 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] iomap: zero cached page over unwritten extent on
- truncate page
-Message-ID: <20201021165907.GA1328297@bfoster>
-References: <20201021133329.1337689-1-bfoster@redhat.com>
- <20201021162547.GL9832@magnolia>
+        id S2502165AbgJUWOk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Oct 2020 18:14:40 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:57107 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2502060AbgJUWOk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Oct 2020 18:14:40 -0400
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 20EA458CF5A;
+        Thu, 22 Oct 2020 09:14:36 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kVMNP-002yDm-1U; Thu, 22 Oct 2020 09:14:35 +1100
+Date:   Thu, 22 Oct 2020 09:14:35 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: Splitting a THP beyond EOF
+Message-ID: <20201021221435.GR7391@dread.disaster.area>
+References: <20201020014357.GW20115@casper.infradead.org>
+ <20201020045928.GO7391@dread.disaster.area>
+ <20201020112138.GZ20115@casper.infradead.org>
+ <20201020211634.GQ7391@dread.disaster.area>
+ <20201020225331.GE20115@casper.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201021162547.GL9832@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <20201020225331.GE20115@casper.infradead.org>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=VwQbUJbxAAAA:8 a=JfrnYn6hAAAA:8
+        a=7-415B0cAAAA:8 a=512na9dZCLelpKU4a54A:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=1CNFftbPRP8L7MoqJWF3:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 21, 2020 at 09:25:47AM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 21, 2020 at 09:33:29AM -0400, Brian Foster wrote:
-> > iomap_truncate_page() relies on zero range and zero range
-> > unconditionally skips unwritten mappings. This is normally not a
-> > problem as most users synchronize in-core state to the underlying
-> > block mapping by flushing pagecache prior to calling into iomap.
-> > This is not the case for iomap_truncate_page(), however. XFS calls
-> > iomap_truncate_page() on truncate down before flushing the new EOF
-> > page of the file. This means that if the new EOF block is unwritten
-> > but covered by a dirty or writeback page (i.e. awaiting unwritten
-> > conversion after writeback), iomap fails to zero that page. The
-> > subsequent truncate_setsize() call does perform page zeroing, but
-> > doesn't dirty the page. Therefore if the new EOF page is written
-> > back after calling into iomap but before the pagecache truncate, the
-> > post-EOF zeroing is lost on page reclaim. This exposes stale
-> > post-EOF data on mapped reads.
+On Tue, Oct 20, 2020 at 11:53:31PM +0100, Matthew Wilcox wrote:
+> On Wed, Oct 21, 2020 at 08:16:34AM +1100, Dave Chinner wrote:
+> > On Tue, Oct 20, 2020 at 12:21:38PM +0100, Matthew Wilcox wrote:
+> > > On Tue, Oct 20, 2020 at 03:59:28PM +1100, Dave Chinner wrote:
+> > > > On Tue, Oct 20, 2020 at 02:43:57AM +0100, Matthew Wilcox wrote:
+> > > > > This is a weird one ... which is good because it means the obvious
+> > > > > ones have been fixed and now I'm just tripping over the weird cases.
+> > > > > And fortunately, xfstests exercises the weird cases.
+> > > > > 
+> > > > > 1. The file is 0x3d000 bytes long.
+> > > > > 2. A readahead allocates an order-2 THP for 0x3c000-0x3ffff
+> > > > > 3. We simulate a read error for 0x3c000-0x3cfff
+> > > > > 4. Userspace writes to 0x3d697 to 0x3dfaa
+> > > > 
+> > > > So this is a write() beyond EOF, yes?
+> > > > 
+> > > > If yes, then we first go through this path:
+> > > > 
+> > > > 	xfs_file_buffered_aio_write()
+> > > > 	  xfs_file_aio_write_checks()
+> > > > 	    iomap_zero_range(isize, pos - isize)
+> > > > 
+> > > > To zero the region between the current EOF and where the new write
+> > > > starts. i.e. from 0x3d000 to 0x3d696.
+> > > 
+> > > Yes.  That calls iomap_write_begin() which calls iomap_split_page()
+> > > which is where we run into trouble.  I elided the exact path from the
+> > > description of the problem.
+> > > 
+> > > > > 5. iomap_write_begin() gets the 0x3c page, sees it's THP and !Uptodate
+> > > > >    so it calls iomap_split_page() (passing page 0x3d)
+> > > > 
+> > > > Splitting the page because it's !Uptodate seems rather drastic to
+> > > > me.  Why does it need to split the page here?
+> > > 
+> > > Because we can't handle Dirty, !Uptodate THPs in the truncate path.
+> > > Previous discussion:
+> > > https://lore.kernel.org/linux-mm/20200821144021.GV17456@casper.infradead.org/
 > > 
-> > Rework iomap_truncate_page() to check pagecache state before calling
-> > into iomap_apply() and use that info to determine whether we can
-> > safely skip zeroing unwritten extents. The filesystem has locked out
-> > concurrent I/O and mapped operations at this point but is not
-> > serialized against writeback, unwritten extent conversion (I/O
-> > completion) or page reclaim. Therefore if a page does not exist
-> > before we acquire the mapping, we can be certain that an unwritten
-> > extent cannot be converted before we return and thus it is safe to
-> > skip. If a page does exist over an unwritten block, it could be in
-> > the dirty or writeback states, convert the underlying mapping at any
-> > time, and thus should be explicitly written to avoid racing with
-> > writeback. Finally, since iomap_truncate_page() only targets the new
-> > EOF block and must now pass additional state to the actor, open code
-> > the zeroing actor instead of plumbing through zero range.
+> > Maybe I'm just dense, but this doesn't explain the reason for
+> > needing to split THPs during partial THP invalidation, nor the
+> > reason why we need to split THPs when the write path sees a
+> > partially up to date THP. iomap is supposed to be tracking the
+> > sub-page regions that are not up to date, so why would we ever need
+> > to split the page to get sub-page regions into the correct state?
+> 
+> True, we don't _have to_ split THP on holepunch/truncation/... but it's
+> a better implementation to free pages which cover blocks that no longer
+> have data associated with them.
+
+"Better" is a very subjective measure. What numbers do you have
+to back that up?
+
+e.g. if we are just punching a 4kB hole in a range covered by a THP,
+then breaking up the THP is, IMO, exactly the wrong thing to do.
+Just zeroing it out via iomap_zero_range() has much lower overhead
+and is far simpler than breaking up the THP just to remove a single
+page from the range...
+
+> > FWIW, didn't you change the dirty tracking to be done sub-page and
+> > held in the iomap_page? If so, releasing the iomap_page on a partial
+> > page invalidation looks ... problematic. i.e. not only are you
+> > throwing away the per-block up-to-date state on a THP, you're alos
+> > throwing away the per-block dirty state.
+> 
+> That wasn't my patch.  Also, discarding the iomap_page causes the entire
+> page to be treated as a single unit.  So if we lose per-block state,
+> and the page is marked as dirty, then each subpage (that remains after
+> the holepunch) will be treated as dirty.
+
+That really sounds like something that your patchset needs to do,
+though. You're jumping through hoops to handle untracked partial
+THP page state that add complexity, but you can avoid all this with
+a relatively simple change...
+
+> > > The current assumption is that a !Uptodate THP is due to a read error,
+> > > and so the sensible thing to do is split it and handle read errors at
+> > > a single-page level.
 > > 
-> > This does have the tradeoff that an existing clean page is dirtied
-> > and causes unwritten conversion, but this is analogous to historical
-> > behavior implemented by block_truncate_page(). This patch restores
-> > historical behavior to address the data exposure problem and leaves
-> > filtering out the clean page case for a separate patch.
-> > Fixes: 68a9f5e7007c ("xfs: implement iomap based buffered write path")
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
+> > Why? Apart from the range of the file coverd by the page, how is
+> > handling a read error at a single page level any different from
+> > handling it at a THP level?
 > > 
-> > v2:
-> > - Rework to check for cached page explicitly and avoid use of seek data.
-> > v1: https://lore.kernel.org/linux-fsdevel/20201012140350.950064-1-bfoster@redhat.com/
+> > Alternatively, if there's a read error on THP-based readahead, then
+> > why isn't the entire THP tossed away when a subsequent read sees
+> > PageError() so it can then be re-read synchronously into the cache
+> > using single pages?
 > 
-> Has the reproducer listed in that email been turned into a fstest case
-> yet? :)
-> 
+> Splitting the page instead of throwing it away makes sense once we can
+> transfer the Uptodate bits to each subpage.  If we don't have that,
+> it doesn't really matter which we do.
 
-Heh.. that reproducer actually required customization to manufacture the
-problem. I'll have to think more about a generic reproducer.
+Sounds like more required functionality...
 
-FWIW, I've also just come across a similar post-eof data exposure
-failure with this patch, so I'll need to dig into that first and
-foremost and figure out whether this is still incorrect/insufficient for
-some reason...
-
+> > > We do that in iomap_readpage_actor().  Had the readahead I/O not "failed",
+> > > we'd've had an Uptodate THP which straddled EOF.
 > > 
-> >  fs/iomap/buffered-io.c | 41 ++++++++++++++++++++++++++++++++++++++++-
-> >  1 file changed, 40 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > index bcfc288dba3f..2cdfcff02307 100644
-> > --- a/fs/iomap/buffered-io.c
-> > +++ b/fs/iomap/buffered-io.c
-> > @@ -1000,17 +1000,56 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-> >  }
-> >  EXPORT_SYMBOL_GPL(iomap_zero_range);
-> >  
-> > +struct iomap_trunc_priv {
-> > +	bool *did_zero;
-> > +	bool has_page;
-> > +};
-> > +
-> > +static loff_t
-> > +iomap_truncate_page_actor(struct inode *inode, loff_t pos, loff_t count,
-> > +		void *data, struct iomap *iomap, struct iomap *srcmap)
-> > +{
-> > +	struct iomap_trunc_priv	*priv = data;
-> > +	unsigned offset;
-> > +	int status;
-> > +
-> > +	if (srcmap->type == IOMAP_HOLE)
-> > +		return count;
-> > +	if (srcmap->type == IOMAP_UNWRITTEN && !priv->has_page)
-> > +		return count;
-> > +
-> > +	offset = offset_in_page(pos);
-> > +	if (IS_DAX(inode))
-> > +		status = dax_iomap_zero(pos, offset, count, iomap);
-> > +	else
-> > +		status = iomap_zero(inode, pos, offset, count, iomap, srcmap);
-> > +	if (status < 0)
-> > +		return status;
-> > +
-> > +	if (priv->did_zero)
-> > +		*priv->did_zero = true;
-> > +	return count;
-> > +}
-> > +
-> >  int
-> >  iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-> >  		const struct iomap_ops *ops)
-> >  {
-> > +	struct iomap_trunc_priv priv = { .did_zero = did_zero };
-> >  	unsigned int blocksize = i_blocksize(inode);
-> >  	unsigned int off = pos & (blocksize - 1);
-> > +	loff_t ret;
-> >  
-> >  	/* Block boundary? Nothing to do */
-> >  	if (!off)
-> >  		return 0;
-> > -	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
-> > +
-> > +	priv.has_page = filemap_range_has_page(inode->i_mapping, pos, pos);
+> > If the IO error in a THP is the trigger for bad things here, then
+> > surely the correct thing to do is trash the THP on IO error, not
+> > leave a landmine that every path has to handle specially...
 > 
-> Er... shouldn't that second 'pos' be 'pos + blocksize - off - 1', like
-> the apply call below?  I guess it doesn't matter since we're only
-> interested in the page at pos, but the double usage of pos caught my
-> eye.
-> 
+> Can't split a page on I/O error -- split_huge_page() has to be called
+> from process context and we get notified about the error in BH context.
 
-Yeah. I'll fix that up.
+That's exactly why we have workqueues on the write IO completion
+path - much of the write completion work we do must execute in a
+context where we can take sleeping locks, block, issue more IO, etc.
 
-> I also wonder, can you move this into the actor so that you can pass
-> *did_zero straight through without the two-item struct?
-> 
+IOWs, if the THP read IO fails, punt it to a workqueue to do the
+page split and update the page error states.
 
-I don't think so because the idea was to explicitly check for page
-presence prior to getting the mapping.
+CHeers,
 
-Brian
-
-> --D
-> 
-> > +	ret = iomap_apply(inode, pos, blocksize - off, IOMAP_ZERO, ops, &priv,
-> > +			  iomap_truncate_page_actor);
-> > +	if (ret <= 0)
-> > +		return ret;
-> > +	return 0;
-> >  }
-> >  EXPORT_SYMBOL_GPL(iomap_truncate_page);
-> >  
-> > -- 
-> > 2.25.4
-> > 
-> 
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
