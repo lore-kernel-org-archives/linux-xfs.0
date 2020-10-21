@@ -4,41 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E626FC388F9
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 10:00:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9906C4363A
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 10:26:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 910A8221FC
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 10:00:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68C7F22249
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Oct 2020 10:26:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=veeam.com header.i=@veeam.com header.b="C23hn96+"
+	dkim=pass (1024-bit key) header.d=veeam.com header.i=@veeam.com header.b="jrDBfzIY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2441645AbgJUKAq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Oct 2020 06:00:46 -0400
-Received: from mx4.veeam.com ([104.41.138.86]:42144 "EHLO mx4.veeam.com"
+        id S2438793AbgJUK0l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Oct 2020 06:26:41 -0400
+Received: from mx4.veeam.com ([104.41.138.86]:35840 "EHLO mx4.veeam.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2409323AbgJUKAq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Oct 2020 06:00:46 -0400
+        id S2390048AbgJUK0k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Oct 2020 06:26:40 -0400
 Received: from mail.veeam.com (spbmbx01.amust.local [172.17.17.171])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx4.veeam.com (Postfix) with ESMTPS id 181608A785;
-        Wed, 21 Oct 2020 13:00:43 +0300 (MSK)
+        by mx4.veeam.com (Postfix) with ESMTPS id B5A348A76E;
+        Wed, 21 Oct 2020 13:26:37 +0300 (MSK)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=veeam.com; s=mx4;
-        t=1603274443; bh=mUDQL7MG1scyFSQ0a9pyxTVI6LvdRs8mu9vhMjIp5BA=;
+        t=1603275998; bh=/p6v/6SAhY5h2ewrJ9FDQ7iNuIivMlmHNS95z40vB54=;
         h=Date:From:To:CC:Subject:References:In-Reply-To:From;
-        b=C23hn96+ZA4EBt3/VYBOTpzXQzD8tcwqS6E0abaBi/XPXMnly4pog8QybPaBZRItI
-         IkAlomgIGuw5ehdil8CcHH54yyHHMyf4tHWdhoRP1oEmTn9Vm3IlcOgOT7K7o+lWSl
-         RilRxDz8BpJahoGW4BtThhWSXLO1v31QNnpmnRhs=
+        b=jrDBfzIYLZTU18COuJMG0YH/YRmu3Q2RULo8V7nTZTWqSfnco57Gjh+9xOeIo3NaI
+         DD/wJhV5nzj4GgE0Gu4lUnVWX35iD1GJuqg39VSgVYIWx4tn/xt9ulFjk+JltEEkS1
+         opM1cZ9QZI/RTdxiEPExGJcHHduM+DtFPWfA6B5o=
 Received: from veeam.com (172.24.14.5) by spbmbx01.amust.local (172.17.17.171)
  with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.595.3; Wed, 21 Oct 2020
- 13:00:39 +0300
-Date:   Wed, 21 Oct 2020 13:01:26 +0300
+ 13:26:35 +0300
+Date:   Wed, 21 Oct 2020 13:27:24 +0300
 From:   Sergei Shtepa <sergei.shtepa@veeam.com>
-To:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
 CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
         "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
         "hch@infradead.org" <hch@infradead.org>,
@@ -49,27 +49,27 @@ CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
         "len.brown@intel.com" <len.brown@intel.com>,
         "pavel@ucw.cz" <pavel@ucw.cz>,
         "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
         "ming.lei@redhat.com" <ming.lei@redhat.com>,
         "jack@suse.cz" <jack@suse.cz>, "tj@kernel.org" <tj@kernel.org>,
         "gustavo@embeddedor.com" <gustavo@embeddedor.com>,
         "bvanassche@acm.org" <bvanassche@acm.org>,
         "osandov@fb.com" <osandov@fb.com>,
         "koct9i@gmail.com" <koct9i@gmail.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
         "steve@sk2.org" <steve@sk2.org>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
         "linux-mm@kvack.org" <linux-mm@kvack.org>
 Subject: Re: [PATCH 1/2] Block layer filter - second version
-Message-ID: <20201021100126.GB20749@veeam.com>
+Message-ID: <20201021102724.GC20749@veeam.com>
 References: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
  <1603271049-20681-2-git-send-email-sergei.shtepa@veeam.com>
- <SN4PR0401MB3598185077055334ADE1BB159B1C0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+ <BL0PR04MB65141320C7BF75B7142CA30CE71C0@BL0PR04MB6514.namprd04.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <SN4PR0401MB3598185077055334ADE1BB159B1C0@SN4PR0401MB3598.namprd04.prod.outlook.com>
+In-Reply-To: <BL0PR04MB65141320C7BF75B7142CA30CE71C0@BL0PR04MB6514.namprd04.prod.outlook.com>
 X-Originating-IP: [172.24.14.5]
 X-ClientProxiedBy: spbmbx02.amust.local (172.17.17.172) To
  spbmbx01.amust.local (172.17.17.171)
@@ -80,28 +80,21 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The 10/21/2020 12:14, Johannes Thumshirn wrote:
-> On 21/10/2020 11:04, Sergei Shtepa wrote:
-> > +	help
-> > +	  Enabling this lets third-party kernel modules intercept
-> > +	  bio requests for any block device. This allows them to implement
-> 
-> The "third-party kernel modules" part sounds a bit worrisome to me. Especially
-> as this functionality is based on EXPORT_SYMBOL()s without the GPL suffix.
-> 
-> I read it as a "allow a proprietary module to mess with bios", which is a big 
-> no-no to me.
-> 
-> Not providing any sort of changelog doesn't help much either.
-> 
-> Thanks,
-> 	Johannes
-> 
+EXPORT_SYMBOL_GPL - ok.
 
-I think the words "third-party" are is not necessary.
-In my opinion, creating proprietary kernel modules for Linux is an empty idea.
+#ifdef CONFIG_BLK_FILTER or IS_ENABLED() - It's a matter of habit.
 
-EXPORT_SYMBOL() -> EXPORT_SYMBOL_GPL() - no problem.
+> double blank line
+Ok, I did.
+Looks like a candidate for ./scripts/checkpatch.pl.
+
+> Separate into multiple patches: one that introduces the filter
+> functions/ops code and another that changes the block layer where needed.
+
+I'll think about it. Personally, it seems to me that this separation
+does not make it easier to understand the code. 
+It is important for me to know immediately where the function is called,
+and this determines its behavior.
 
 -- 
 Sergei Shtepa
