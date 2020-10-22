@@ -2,94 +2,141 @@ Return-Path: <SRS0=jqsF=D5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60553C4363A
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 08:23:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A09BFC388F7
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 09:43:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03EBE223C7
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 08:23:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BD052463B
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 09:43:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=veeam.com header.i=@veeam.com header.b="oQQKDYEm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726227AbgJVIX5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Oct 2020 04:23:57 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:49150 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726023AbgJVIX4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 04:23:56 -0400
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8C67F58BB17;
-        Thu, 22 Oct 2020 19:23:54 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kVVt4-00373H-2i; Thu, 22 Oct 2020 19:23:54 +1100
-Date:   Thu, 22 Oct 2020 19:23:54 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/7] repair: don't duplicate names in phase 6
-Message-ID: <20201022082354.GU7391@dread.disaster.area>
-References: <20201022051537.2286402-1-david@fromorbit.com>
- <20201022051537.2286402-6-david@fromorbit.com>
- <20201022062152.GQ9832@magnolia>
+        id S2896057AbgJVJn0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Oct 2020 05:43:26 -0400
+Received: from mx2.veeam.com ([64.129.123.6]:60718 "EHLO mx2.veeam.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2895914AbgJVJn0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Oct 2020 05:43:26 -0400
+Received: from mail.veeam.com (prgmbx01.amust.local [172.24.0.171])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mx2.veeam.com (Postfix) with ESMTPS id 2AB83413F2;
+        Thu, 22 Oct 2020 05:43:21 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=veeam.com; s=mx2;
+        t=1603359801; bh=URjUPvv4BF0KAk65rVnV3rB7ijtCMnz1I7O/6wLzuXQ=;
+        h=Date:From:To:CC:Subject:References:In-Reply-To:From;
+        b=oQQKDYEmamFH8Ys0kCLf7ywAyZM/wz8lHMKZxHCl8WudkvvaT2RFL89vccmfn1BCh
+         BQIIafd7dyM1Xj67jFQVOk0/701HowZTS335k21tL80eefEELrNesD2rDmQIVVBM0H
+         VNfsPHYwKyMOGvUNgJCnpwjvMSeRh8DnllIA7/To=
+Received: from veeam.com (172.24.14.5) by prgmbx01.amust.local (172.24.0.171)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.721.2; Thu, 22 Oct 2020
+ 11:43:19 +0200
+Date:   Thu, 22 Oct 2020 12:44:02 +0300
+From:   Sergei Shtepa <sergei.shtepa@veeam.com>
+To:     Hannes Reinecke <hare@suse.de>
+CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "len.brown@intel.com" <len.brown@intel.com>,
+        "pavel@ucw.cz" <pavel@ucw.cz>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "jack@suse.cz" <jack@suse.cz>, "tj@kernel.org" <tj@kernel.org>,
+        "gustavo@embeddedor.com" <gustavo@embeddedor.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "koct9i@gmail.com" <koct9i@gmail.com>,
+        "damien.lemoal@wdc.com" <damien.lemoal@wdc.com>,
+        "steve@sk2.org" <steve@sk2.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>
+Subject: Re: [PATCH 0/2] block layer filter and block device snapshot module
+Message-ID: <20201022094402.GA21466@veeam.com>
+References: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
+ <71926887-5707-04a5-78a2-ffa2ee32bd68@suse.de>
+ <20201021141044.GF20749@veeam.com>
+ <ca8eaa40-b422-2272-1fd9-1d0a354c42bf@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Disposition: inline
-In-Reply-To: <20201022062152.GQ9832@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=7-415B0cAAAA:8
-        a=SI0Ruv5vGkQRBez8TP8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ca8eaa40-b422-2272-1fd9-1d0a354c42bf@suse.de>
+X-Originating-IP: [172.24.14.5]
+X-ClientProxiedBy: prgmbx01.amust.local (172.24.0.171) To prgmbx01.amust.local
+ (172.24.0.171)
+X-EsetResult: clean, is OK
+X-EsetId: 37303A29C604D26A677460
+X-Veeam-MMEX: True
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 21, 2020 at 11:21:52PM -0700, Darrick J. Wong wrote:
-> On Thu, Oct 22, 2020 at 04:15:35PM +1100, Dave Chinner wrote:
-....
-> > @@ -1387,6 +1371,7 @@ dir2_kill_block(
-> >  		res_failed(error);
-> >  	libxfs_trans_ijoin(tp, ip, 0);
-> >  	libxfs_trans_bjoin(tp, bp);
-> > +	libxfs_trans_bhold(tp, bp);
+The 10/22/2020 08:58, Hannes Reinecke wrote:
+> On 10/21/20 4:10 PM, Sergei Shtepa wrote:
+> > The 10/21/2020 16:31, Hannes Reinecke wrote:
+> >> I do understand where you are coming from, but then we already have a
+> >> dm-snap which does exactly what you want to achieve.
+> >> Of course, that would require a reconfiguration of the storage stack on
+> >> the machine, which is not always possible (or desired).
+> > 
+> > Yes, reconfiguring the storage stack on a machine is almost impossible.
+> > 
+> >>
+> >> What I _could_ imagine would be a 'dm-intercept' thingie, which
+> >> redirects the current submit_bio() function for any block device, and
+> >> re-routes that to a linear device-mapper device pointing back to the
+> >> original block device.
+> >>
+> >> That way you could attach it to basically any block device, _and_ can
+> >> use the existing device-mapper functionality to do fancy stuff once the
+> >> submit_io() callback has been re-routed.
+> >>
+> >> And it also would help in other scenarios, too; with such a
+> >> functionality we could seamlessly clone devices without having to move
+> >> the whole setup to device-mapper first.
+> > 
+> > Hm...
+> > Did I understand correctly that the filter itself can be left approximately
+> > as it is, but the blk-snap module can be replaced with 'dm-intercept',
+> > which would use the re-route mechanism from the dm?
+> > I think I may be able to implement it, if you describe your idea in more
+> > detail.
+> > 
+> > 
+> Actually, once we have an dm-intercept, why do you need the block-layer 
+> filter at all?
+>  From you initial description the block-layer filter was implemented 
+> such that blk-snap could work; but if we have dm-intercept (and with it 
+> the ability to use device-mapper functionality even for normal block 
+> devices) there wouldn't be any need for the block-layer filter, no?
+
+Maybe, but the problem is that I can't imagine how to implement
+dm-intercept yet. 
+How to use dm to implement interception without changing the stack
+of block devices. We'll have to make a hook somewhere, isn`t it?
+
 > 
-> Why hold on to the buffer?  We killed the block, why keep the reference
-> around so that someone else has to remember to drop it later?
-
-Consistency in buffer handling. This "kill block" path nulled out
-the buffer in the bplist array (the reason it's passed as a **bpp
-to longform_dir2_entry_check_data(). This path releases the buffer
-through the trans_commit(), the alternate path here:
-
-> > @@ -1558,10 +1541,8 @@ longform_dir2_entry_check_data(
-> >  			dir2_kill_block(mp, ip, da_bno, bp);
-> >  		} else {
-> >  			do_warn(_("would junk block\n"));
-> > -			libxfs_buf_relse(bp);
-> >  		}
-> >  		freetab->ents[db].v = NULLDATAOFF;
-> > -		*bpp = NULL;
-> >  		return;
-> >  	}
-
-does an explicit release, and all other paths end up with the
-buffers being released way back where the bplist is defined.
-
-If the directory is in block form, nulling out the buffer in the
-bplist here will result in dereferencing a null pointer later when
-the buffer is pulled from bplist[0] without checking.
-
-So I changed longform_dir2_entry_check_data() to never release the
-buffer so that the caller knows that it has always got a valid
-buffer reference and the isblock path will always work correctly....
-
-Cheers,
-
-Dave.
-
+> Cheers,
+> 
+> Hannes
+> -- 
+> Dr. Hannes Reinecke                Kernel Storage Architect
+> hare@suse.de                              +49 911 74053 688
+> SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+> HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
 
 -- 
-Dave Chinner
-david@fromorbit.com
+Sergei Shtepa
+Veeam Software developer.
