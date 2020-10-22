@@ -2,213 +2,100 @@ Return-Path: <SRS0=jqsF=D5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F0F8C5DF9D
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 17:54:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 402E7C4363A
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 18:35:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2653B221EB
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 17:54:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D174724641
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 18:35:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S368405AbgJVRya (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Oct 2020 13:54:30 -0400
-Received: from mail-pj1-f67.google.com ([209.85.216.67]:38189 "EHLO
-        mail-pj1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S368401AbgJVRy3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 13:54:29 -0400
-Received: by mail-pj1-f67.google.com with SMTP id lw2so1365526pjb.3;
-        Thu, 22 Oct 2020 10:54:28 -0700 (PDT)
+        id S369714AbgJVSfQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Oct 2020 14:35:16 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:42208 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S368258AbgJVSfQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 14:35:16 -0400
+Received: by mail-pf1-f193.google.com with SMTP id x13so1675919pfa.9;
+        Thu, 22 Oct 2020 11:35:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=jZuHlEwh3g7UcDcJaONWe8EfIxBYtT9I7AYk4QdFzwc=;
-        b=HpUKeYLOpey2keZ7sqmID8yCJJa9s8k9XXg194te9ikqq7sUoJgXsGO+0Mzyl8gNES
-         eacpNxyEJ5MFm4cjqQjfIK/DxIV9StLF5a1drbN5lhmqxA+Co5DlCbDmuWUeLRSr3ir3
-         kFx2/LZcD9SZlo6PAN+Rna7UUpt08byAxKSwPiDjt1AF470BndULHvqyPclInZ1prSxO
-         EGGQHV9dmF4XsCGNgMJnV2sjsvrTmYkIB9xfcl0PsDFSe81Z0DfqFV/GGdOVxQTbOl+k
-         G/XceJLqD910vdO7Cv48Wjh4YhVTmjTDXGvnOvVLm34AH9AA4ay7nnUjwl5mnBOAEXqW
-         5EQw==
-X-Gm-Message-State: AOAM532ZCrkUmIg+dCbL6MGWHrLtq4I1GmI0p1GrFEdNDwcKjtAFkuCy
-        ravVzeaaGskJ5KlTZXYMlYPM3AYtiKeXcxojjG4=
-X-Google-Smtp-Source: ABdhPJxcm7nxDfpt8QtfKwOARuDT6nuFczBSIqDJ7vYnHyrPosWkJvFSDvOcbTMeVUL5SpoaDYnY4onxzd0QAP3w2Bs=
-X-Received: by 2002:a17:902:c254:b029:d4:c2d4:15f with SMTP id
- 20-20020a170902c254b02900d4c2d4015fmr3651304plg.18.1603389267970; Thu, 22 Oct
- 2020 10:54:27 -0700 (PDT)
+        bh=1XI2Q+0LJ+MrF6PTdb/vTI0hg1qM7/BgdBxfc/cQLFU=;
+        b=KfvJzwfxn7jq43862MSUDXsjHVLQiDL2XxoZJGmoXONgP4vY3GlCA5FN+8DrSsW8wB
+         9SmbJi6W4JdS5zP5MzYogQw2PEMOlYdeKT6+WY0h01gtWfYbQhRjLOx0oc5r/8kiEOLp
+         4eIQiBAyv4wvJfpI6+JS713/r5xD54+18A2io2LjdPOKLQCw3Xa5BGWDUkjlj5m5F1SR
+         raWFqZtJq/rlWV3AqoLz7KXLZypGdBl3h/vciJMketksAu0hImF/F4e3OxebTToubG+f
+         1/VAmkFB1GxeNxg75NKaDKeoIUGinxz/SKDwgRSkrGuq/Xq3oIYt2o+5il5uSpTq1j7G
+         cmcQ==
+X-Gm-Message-State: AOAM53173u/AwlX54c+Hsy6e5BJ0qGFyF8+wWy5WJICweLZmcvJ93i1Y
+        hO+KLdQJP5Q3SwhAmQL9TxmqQ9iFEr7O+8FtCOE=
+X-Google-Smtp-Source: ABdhPJz36fkFyGr3qzw17+AgK9oYpIzBshcfChZVSHFTISPy8X4z6IdPGqE/7nwcLSyFF6/1DoPxCQ5X7a4DVfLIwnM=
+X-Received: by 2002:a63:a546:: with SMTP id r6mr3310324pgu.160.1603391713825;
+ Thu, 22 Oct 2020 11:35:13 -0700 (PDT)
 MIME-Version: 1.0
 References: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
- <71926887-5707-04a5-78a2-ffa2ee32bd68@suse.de> <20201021141044.GF20749@veeam.com>
- <ca8eaa40-b422-2272-1fd9-1d0a354c42bf@suse.de> <20201022094402.GA21466@veeam.com>
- <BL0PR04MB6514AC1B1FF313E6A14D122CE71D0@BL0PR04MB6514.namprd04.prod.outlook.com>
- <20201022135213.GB21466@veeam.com> <20201022151418.GR9832@magnolia>
-In-Reply-To: <20201022151418.GR9832@magnolia>
+In-Reply-To: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
 From:   Mike Snitzer <snitzer@redhat.com>
-Date:   Thu, 22 Oct 2020 13:54:16 -0400
-Message-ID: <CAMM=eLfO_L-ZzcGmpPpHroznnSOq_KEWignFoM09h7Am9yE83g@mail.gmail.com>
+Date:   Thu, 22 Oct 2020 14:35:02 -0400
+Message-ID: <CAMM=eLfTf2f2Me7f5tpL5DEGgKsqaFaAS0qTDVpLAYrwR5Jf5g@mail.gmail.com>
 Subject: Re: [PATCH 0/2] block layer filter and block device snapshot module
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Sergei Shtepa <sergei.shtepa@veeam.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "len.brown@intel.com" <len.brown@intel.com>,
-        "pavel@ucw.cz" <pavel@ucw.cz>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "jack@suse.cz" <jack@suse.cz>, "tj@kernel.org" <tj@kernel.org>,
-        "gustavo@embeddedor.com" <gustavo@embeddedor.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "koct9i@gmail.com" <koct9i@gmail.com>,
-        "steve@sk2.org" <steve@sk2.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+To:     Sergei Shtepa <sergei.shtepa@veeam.com>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>, rjw@rjwysocki.net,
+        len.brown@intel.com, Pavel Machek <pavel@ucw.cz>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        johannes.thumshirn@wdc.com, Ming Lei <ming.lei@redhat.com>,
+        Jan Kara <jack@suse.cz>, Tejun Heo <tj@kernel.org>,
+        gustavo@embeddedor.com, Bart Van Assche <bvanassche@acm.org>,
+        osandov@fb.com, koct9i@gmail.com,
+        Damien Le Moal <damien.lemoal@wdc.com>, steve@sk2.org,
+        linux-block <linux-block@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>,
-        device-mapper development <dm-devel@redhat.com>,
-        Alasdair G Kergon <agk@redhat.com>
+        linux-pm@vger.kernel.org, linux-mm@kvack.org,
+        device-mapper development <dm-devel@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 22, 2020 at 11:14 AM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
+On Wed, Oct 21, 2020 at 5:04 AM Sergei Shtepa <sergei.shtepa@veeam.com> wrote:
 >
-> On Thu, Oct 22, 2020 at 04:52:13PM +0300, Sergei Shtepa wrote:
-> > The 10/22/2020 13:28, Damien Le Moal wrote:
-> > > On 2020/10/22 18:43, Sergei Shtepa wrote:
-> > > >
-> > > > Maybe, but the problem is that I can't imagine how to implement
-> > > > dm-intercept yet.
-> > > > How to use dm to implement interception without changing the stack
-> > > > of block devices. We'll have to make a hook somewhere, isn`t it?
-> > >
-> > > Once your dm-intercept target driver is inserted with "dmsetup" or any user land
-> > > tool you implement using libdevicemapper, the "hooks" will naturally be in place
-> > > since the dm infrastructure already does that: all submitted BIOs will be passed
-> > > to dm-intercept through the "map" operation defined in the target_type
-> > > descriptor. It is then that driver job to execute the BIOs as it sees fit.
-> > >
-> > > Look at simple device mappers like dm-linear or dm-flakey for hints of how
-> > > things work (driver/md/dm-linear.c). More complex dm drivers like dm-crypt,
-> > > dm-writecache or dm-thin can give you hints about more features of device mapper.
-> > > Functions such as __map_bio() in drivers/md/dm.c are the core of DM and show
-> > > what happens to BIOs depending on the the return value of the map operation.
-> > > dm_submit_bio() and __split_and_process_bio() is the entry points for BIO
-> > > processing in DM.
-> > >
-> >
-> > Is there something I don't understand? Please correct me.
-> >
-> > Let me remind that by the condition of the problem, we can't change
-> > the configuration of the block device stack.
-> >
-> > Let's imagine this configuration: /root mount point on ext filesystem
-> > on /dev/sda1.
-> > +---------------+
-> > |               |
-> > |  /root        |
-> > |               |
-> > +---------------+
-> > |               |
-> > | EXT FS        |
-> > |               |
-> > +---------------+
-> > |               |
-> > | block layer   |
-> > |               |
-> > | sda queue     |
-> > |               |
-> > +---------------+
-> > |               |
-> > | scsi driver   |
-> > |               |
-> > +---------------+
-> >
-> > We need to add change block tracking (CBT) and snapshot functionality for
-> > incremental backup.
-> >
-> > With the DM we need to change the block device stack. Add device /dev/sda1
-> > to LVM Volume group, create logical volume, change /etc/fstab and reboot.
-> >
-> > The new scheme will look like this:
-> > +---------------+
-> > |               |
-> > |  /root        |
-> > |               |
-> > +---------------+
-> > |               |
-> > | EXT FS        |
-> > |               |
-> > +---------------+
-> > |               |
-> > | LV-root       |
-> > |               |
-> > +------------------+
-> > |                  |
-> > | dm-cbt & dm-snap |
-> > |                  |
-> > +------------------+
-> > |               |
-> > | sda queue     |
-> > |               |
-> > +---------------+
-> > |               |
-> > | scsi driver   |
-> > |               |
-> > +---------------+
-> >
-> > But I cannot change block device stack. And so I propose a scheme with
-> > interception.
-> > +---------------+
-> > |               |
-> > |  /root        |
-> > |               |
-> > +---------------+
-> > |               |
-> > | EXT FS        |
-> > |               |
-> > +---------------+   +-----------------+
-> > |  |            |   |                 |
-> > |  | blk-filter |-> | cbt & snapshot  |
-> > |  |            |<- |                 |
-> > |  +------------+   +-----------------+
-> > |               |
-> > | sda blk queue |
-> > |               |
-> > +---------------+
-> > |               |
-> > | scsi driver   |
-> > |               |
-> > +---------------+
-> >
-> > Perhaps I can make "cbt & snapshot" inside the DM, but without interception
-> > in any case, it will not work. Isn't that right?
+> Hello everyone! Requesting for your comments and suggestions.
 >
-> Stupid question: Why don't you change the block layer to make it
-> possible to insert device mapper devices after the blockdev has been set
-> up?
+> # blk-filter
+>
+> Block layer filter allows to intercept BIO requests to a block device.
+>
+> Interception is performed at the very beginning of the BIO request
+> processing, and therefore does not affect the operation of the request
+> processing queue. This also makes it possible to intercept requests from
+> a specific block device, rather than from the entire disk.
+>
+> The logic of the submit_bio function has been changed - since the
+> function execution results are not processed anywhere (except for swap
+> and direct-io) the function won't return a value anymore.
 
-Not a stupid question.  Definitely something that us DM developers
-have wanted to do for a while.  Devil is in the details but it is the
-right way forward.
+Your desire to switch to a void return comes exactly when I've noticed
+we need it.
 
-Otherwise, this intercept is really just a DM-lite remapping layer
-without any of DM's well established capabilities.  Encouragingly, all
-of the replies have effectively echoed this point.  (amusingly, seems
-every mailing list under the sun is on the cc except dm-devel... now
-rectified)
+->submit_bio's blk_qc_t return is the cookie assigned by blk-mq.  Up
+to this point we haven't actually used it for bio-based devices but it
+seems clear we'll soon need for bio-based IO polling support.
 
-Alasdair has some concrete ideas on this line of work; I'm trying to
-encourage him to reply ;)
+Just today, I've been auditing drivers/md/dm.c with an eye toward
+properly handling the blk_qc_t return (or lack thereof) from various
+DM methods.
+
+It could easily be that __submit_bio_noacct and __submit_bio_noacct_mq
+will be updated to do something meaningful with the returned cookie
+(or that DM will) to facilitate proper IO polling.
 
 Mike
