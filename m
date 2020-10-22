@@ -2,185 +2,152 @@ Return-Path: <SRS0=jqsF=D5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08A3CC388F7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A27B4C388F2
 	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:15:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A410D2145D
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:15:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3C27F223FB
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:15:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2507849AbgJVFPl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Oct 2020 01:15:41 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50591 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2444305AbgJVFPl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 01:15:41 -0400
+        id S2444256AbgJVFPm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Oct 2020 01:15:42 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59135 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2444246AbgJVFPm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 01:15:42 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 98A7C588250
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 98D2F3ABE3B
         for <linux-xfs@vger.kernel.org>; Thu, 22 Oct 2020 16:15:38 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kVSwr-0034Kt-SP
+        id 1kVSwr-0034Kl-OR
         for linux-xfs@vger.kernel.org; Thu, 22 Oct 2020 16:15:37 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kVSwr-009aoO-Ki
+        id 1kVSwr-009aoB-G6
         for linux-xfs@vger.kernel.org; Thu, 22 Oct 2020 16:15:37 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 4/7] repair: parallelise phase 6
-Date:   Thu, 22 Oct 2020 16:15:34 +1100
-Message-Id: <20201022051537.2286402-5-david@fromorbit.com>
+Subject: [PATCH 0/7] repair: Phase 6 performance improvements
+Date:   Thu, 22 Oct 2020 16:15:30 +1100
+Message-Id: <20201022051537.2286402-1-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201022051537.2286402-1-david@fromorbit.com>
-References: <20201022051537.2286402-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=6KEnGoqAMqwac_kpMeoA:9
+        a=afefHYAZSVUA:10 a=l-sH4dQmTrt7G0A92foA:9 a=1T9b15BddVrSr8tc:21
+        a=ktkXJtHXQezyTPRX:21
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks
 
-A recent metadump provided to us caused repair to take hours in
-phase6. It wasn't IO bound - it was fully CPU bound the entire time.
-The only way to speed it up is to make phase 6 run multiple
-concurrent processing threads.
+Phase 6 is single threaded, processing a single AG at a time and a
+single directory inode at a time.  Phase 6 if often IO latency bound
+despite the prefetching it does, resulting in low disk utilisation
+and high runtimes. The solution for this is the same as phase 3 and
+4 - scan multiple AGs at once for directory inodes to process. This
+patch set enables phase 6 to scan multiple AGS at once, and hence
+requires concurrent updates of inode records as tehy can be accessed
+and modified by multiple scanning threads now. We also need to
+protect the bad inodes list from concurrent access and then we can
+enable concurrent processing of directories.
 
-The obvious way to do this is to spread the concurrency across AGs,
-like the other phases, and while this works it is not optimal. When
-a processing thread hits a really large directory, it essentially
-sits CPU bound until that directory is processed. IF an AG has lots
-of large directories, we end up with a really long single threaded
-tail that limits concurrency.
+However, directory entry checking and reconstruction can also be CPU
+bound - large directories overwhelm the directory name hash
+structures because the algorithms have poor scalability - one is O(n
++ n^2), another is O(n^2) when the number of dirents greatly
+outsizes the hash table sizes. Hence we need to more than just
+parallelise across AGs - we need to parallelise processing within
+AGs so that a single large directory doesn't completely serialise
+processing within an AG.  This is done by using bound-depth
+workqueues to allow inode records to be processed asynchronously as
+the inode records are fetched from disk.
 
-Hence we also need to have concurrency /within/ the AG. This is
-realtively easy, as the inode chunk records allow for a simple
-concurrency mechanism within an AG. We can simply feed each chunk
-record to a workqueue, and we get concurrency within the AG for
-free. However, this allows prefetch to run way ahead of processing
-and this blows out the buffer cache size and can cause OOM.
+Further, we need to fix the bad alogrithmic scalability of the in
+memory directory tracking structures. This is done through a
+combination of better structures and more appropriate dynamic size
+choices.
 
-However, we can use the new workqueue depth limiting to limit the
-number of inode chunks queued, and this then backs up the inode
-prefetching to it's maximum queue depth. Hence we prevent having the
-prefetch code queue the entire AG's inode chunks on the workqueue
-blowing out memory by throttling the prefetch consumer.
+The results on a filesystem with a single 10 million entry directory
+containing 400MB of directory entry data is as follows:
 
-This takes phase 6 from taking many, many hours down to:
+v5.6.0 (Baseline)
 
-Phase 6:        10/30 21:12:58  10/30 21:40:48  27 minutes, 50 seconds
+       XFS_REPAIR Summary    Thu Oct 22 12:10:52 2020
 
-And burning 20-30 cpus that entire time on my test rig.
+Phase           Start           End             Duration
+Phase 1:        10/22 12:06:41  10/22 12:06:41
+Phase 2:        10/22 12:06:41  10/22 12:06:41
+Phase 3:        10/22 12:06:41  10/22 12:07:00  19 seconds
+Phase 4:        10/22 12:07:00  10/22 12:07:12  12 seconds
+Phase 5:        10/22 12:07:12  10/22 12:07:13  1 second
+Phase 6:        10/22 12:07:13  10/22 12:10:51  3 minutes, 38 seconds
+Phase 7:        10/22 12:10:51  10/22 12:10:51
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- repair/phase6.c | 43 +++++++++++++++++++++++++++++++++++--------
- 1 file changed, 35 insertions(+), 8 deletions(-)
+Total run time: 4 minutes, 10 seconds
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 70d32089bb57..bf0719c186fb 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -6,6 +6,7 @@
- 
- #include "libxfs.h"
- #include "threads.h"
-+#include "threads.h"
- #include "prefetch.h"
- #include "avl.h"
- #include "globals.h"
-@@ -3109,20 +3110,45 @@ check_for_orphaned_inodes(
- }
- 
- static void
--traverse_function(
-+do_dir_inode(
- 	struct workqueue	*wq,
--	xfs_agnumber_t 		agno,
-+	xfs_agnumber_t		agno,
- 	void			*arg)
- {
--	ino_tree_node_t 	*irec;
-+	struct ino_tree_node	*irec = arg;
- 	int			i;
-+
-+	for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
-+		if (inode_isadir(irec, i))
-+			process_dir_inode(wq->wq_ctx, agno, irec, i);
-+	}
-+}
-+
-+static void
-+traverse_function(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		agno,
-+	void			*arg)
-+{
-+	struct ino_tree_node	*irec;
- 	prefetch_args_t		*pf_args = arg;
-+	struct workqueue	lwq;
-+	struct xfs_mount	*mp = wq->wq_ctx;
-+
- 
- 	wait_for_inode_prefetch(pf_args);
- 
- 	if (verbose)
- 		do_log(_("        - agno = %d\n"), agno);
- 
-+	/*
-+	 * The more AGs we have in flight at once, the fewer processing threads
-+	 * per AG. This means we don't overwhelm the machine with hundreds of
-+	 * threads when we start acting on lots of AGs at once. We just want
-+	 * enough that we can keep multiple CPUs busy across multiple AGs.
-+	 */
-+	workqueue_create_bound(&lwq, mp, ag_stride, 1000);
-+
- 	for (irec = findfirst_inode_rec(agno); irec; irec = next_ino_rec(irec)) {
- 		if (irec->ino_isa_dir == 0)
- 			continue;
-@@ -3130,18 +3156,19 @@ traverse_function(
- 		if (pf_args) {
- 			sem_post(&pf_args->ra_count);
- #ifdef XR_PF_TRACE
-+			{
-+			int	i;
- 			sem_getvalue(&pf_args->ra_count, &i);
- 			pftrace(
- 		"processing inode chunk %p in AG %d (sem count = %d)",
- 				irec, agno, i);
-+			}
- #endif
- 		}
- 
--		for (i = 0; i < XFS_INODES_PER_CHUNK; i++)  {
--			if (inode_isadir(irec, i))
--				process_dir_inode(wq->wq_ctx, agno, irec, i);
--		}
-+		queue_work(&lwq, do_dir_inode, agno, irec);
- 	}
-+	destroy_work_queue(&lwq);
- 	cleanup_inode_prefetch(pf_args);
- }
- 
-@@ -3169,7 +3196,7 @@ static void
- traverse_ags(
- 	struct xfs_mount	*mp)
- {
--	do_inode_prefetch(mp, 0, traverse_function, false, true);
-+	do_inode_prefetch(mp, ag_stride, traverse_function, false, true);
- }
- 
- void
+real	4m11.151s
+user	4m20.083s
+sys	0m14.744s
+
+
+5.9.0-rc1 + patchset:
+
+        XFS_REPAIR Summary    Thu Oct 22 13:19:02 2020
+
+Phase           Start           End             Duration
+Phase 1:        10/22 13:18:09  10/22 13:18:09
+Phase 2:        10/22 13:18:09  10/22 13:18:09
+Phase 3:        10/22 13:18:09  10/22 13:18:31  22 seconds
+Phase 4:        10/22 13:18:31  10/22 13:18:45  14 seconds
+Phase 5:        10/22 13:18:45  10/22 13:18:45
+Phase 6:        10/22 13:18:45  10/22 13:19:00  15 seconds
+Phase 7:        10/22 13:19:00  10/22 13:19:00
+
+Total run time: 51 seconds
+
+real	0m52.375s
+user	1m3.739s
+sys	0m20.346s
+
+
+Performance improvements on filesystems with small directories and
+really fast storage are, at best, modest. The big improvements are
+seen with either really large directories and/or relatively slow
+devices that are IO latency bound and can benefit from having more
+IO in flight at once.
+
+Cheers,
+
+Dave.
+
+
+Dave Chinner (7):
+  workqueue: bound maximum queue depth
+  repair: Protect bad inode list with mutex
+  repair: protect inode chunk tree records with a mutex
+  repair: parallelise phase 6
+  repair: don't duplicate names in phase 6
+  repair: convert the dir byaddr hash to a radix tree
+  repair: scale duplicate name checking in phase 6.
+
+ libfrog/radix-tree.c |  46 +++++
+ libfrog/workqueue.c  |  42 ++++-
+ libfrog/workqueue.h  |   4 +
+ repair/dir2.c        |  32 ++--
+ repair/incore.h      |  23 +++
+ repair/incore_ino.c  |  15 ++
+ repair/phase6.c      | 396 +++++++++++++++++++++----------------------
+ 7 files changed, 338 insertions(+), 220 deletions(-)
+
 -- 
 2.28.0
 
