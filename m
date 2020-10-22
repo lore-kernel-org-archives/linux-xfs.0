@@ -2,263 +2,137 @@ Return-Path: <SRS0=jqsF=D5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A507C388F7
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 15:38:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE23BC388F7
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 15:53:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA4A524640
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 15:38:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9426120770
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 15:53:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IesIYjY4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="puPFbUVn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S368663AbgJVPiZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Oct 2020 11:38:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49206 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S368660AbgJVPiZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 11:38:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603381102;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=m4Asgev83Tka7r7j/POCa1VlBTVdBlqPCEudBLFgiIE=;
-        b=IesIYjY4npRC5CPzlrOfX6QYhNxOMIernaCXoF9sa4HbHE0DFmM4NAuFVrjTVAjmj0Fac7
-        TDEYRyuM/u00WoEilFoZdMF9GwtRoZplVFeSYuECV2CH9nOWD6/n+YFSG90wzz4TJ8ZrBv
-        WUih/LYjd7FcLnpqPHF8KZLosXJqGd0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-485-Iw8-ioMaPw2beEBXi4twzg-1; Thu, 22 Oct 2020 11:38:20 -0400
-X-MC-Unique: Iw8-ioMaPw2beEBXi4twzg-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 72DC4879517;
-        Thu, 22 Oct 2020 15:38:19 +0000 (UTC)
-Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D878110013D0;
-        Thu, 22 Oct 2020 15:38:18 +0000 (UTC)
-Date:   Thu, 22 Oct 2020 11:38:17 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2] iomap: zero cached page over unwritten extent on
- truncate page
-Message-ID: <20201022153817.GA1370765@bfoster>
-References: <20201021133329.1337689-1-bfoster@redhat.com>
- <20201021162547.GL9832@magnolia>
- <20201021165907.GA1328297@bfoster>
+        id S2508526AbgJVPxb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Oct 2020 11:53:31 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39156 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2508519AbgJVPxb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 11:53:31 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09MFiNKa107870;
+        Thu, 22 Oct 2020 15:53:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=0sWgqLEsGqSJzwuFXtYXnDRKzEbT06Z/111utI9Mevs=;
+ b=puPFbUVnZOiEezB9iZ2UOj0QTolqYkoj+FKerqXCYzxfQIIyxOhqcGaJDwCC96mz+IFk
+ pir1vt2HV/36z/t9ehazHYXgR3/fUnPl2gBfGlvxacSrz8WSRfWNjcAzB+0ymNUj802V
+ VfobPIRSAqWi1e1C7z8gQldwKXqE0G5sUsTBrqWF3OnT/aJyhIA8zhJzQdX+kplnlQgL
+ efekg0TT+fAPnug4MLf6JvWqPpD27u9PXOBbnBxSQMbWYH0H5yozkM8NMlP6OGXuyAoK
+ F+MUoz4yEANxa0S5ZVp9cdB++yQJPIigt+99uyNTxpocpxyM8zyuncd+r0h7RMALBr7S Rg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 34ak16q118-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 22 Oct 2020 15:53:28 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09MFjha4062072;
+        Thu, 22 Oct 2020 15:53:27 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 348ah0yv69-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 22 Oct 2020 15:53:27 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09MFrQJv019583;
+        Thu, 22 Oct 2020 15:53:26 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 22 Oct 2020 08:53:25 -0700
+Date:   Thu, 22 Oct 2020 08:53:24 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/7] repair: don't duplicate names in phase 6
+Message-ID: <20201022155324.GS9832@magnolia>
+References: <20201022051537.2286402-1-david@fromorbit.com>
+ <20201022051537.2286402-6-david@fromorbit.com>
+ <20201022062152.GQ9832@magnolia>
+ <20201022082354.GU7391@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201021165907.GA1328297@bfoster>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20201022082354.GU7391@dread.disaster.area>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9781 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 phishscore=0
+ malwarescore=0 spamscore=0 suspectscore=1 bulkscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010220105
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9781 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
+ priorityscore=1501 clxscore=1015 malwarescore=0 mlxscore=0 adultscore=0
+ lowpriorityscore=0 impostorscore=0 spamscore=0 mlxlogscore=999
+ suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010220105
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 21, 2020 at 12:59:07PM -0400, Brian Foster wrote:
-> On Wed, Oct 21, 2020 at 09:25:47AM -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 21, 2020 at 09:33:29AM -0400, Brian Foster wrote:
-> > > iomap_truncate_page() relies on zero range and zero range
-> > > unconditionally skips unwritten mappings. This is normally not a
-> > > problem as most users synchronize in-core state to the underlying
-> > > block mapping by flushing pagecache prior to calling into iomap.
-> > > This is not the case for iomap_truncate_page(), however. XFS calls
-> > > iomap_truncate_page() on truncate down before flushing the new EOF
-> > > page of the file. This means that if the new EOF block is unwritten
-> > > but covered by a dirty or writeback page (i.e. awaiting unwritten
-> > > conversion after writeback), iomap fails to zero that page. The
-> > > subsequent truncate_setsize() call does perform page zeroing, but
-> > > doesn't dirty the page. Therefore if the new EOF page is written
-> > > back after calling into iomap but before the pagecache truncate, the
-> > > post-EOF zeroing is lost on page reclaim. This exposes stale
-> > > post-EOF data on mapped reads.
-> > > 
-> > > Rework iomap_truncate_page() to check pagecache state before calling
-> > > into iomap_apply() and use that info to determine whether we can
-> > > safely skip zeroing unwritten extents. The filesystem has locked out
-> > > concurrent I/O and mapped operations at this point but is not
-> > > serialized against writeback, unwritten extent conversion (I/O
-> > > completion) or page reclaim. Therefore if a page does not exist
-> > > before we acquire the mapping, we can be certain that an unwritten
-> > > extent cannot be converted before we return and thus it is safe to
-> > > skip. If a page does exist over an unwritten block, it could be in
-> > > the dirty or writeback states, convert the underlying mapping at any
-> > > time, and thus should be explicitly written to avoid racing with
-> > > writeback. Finally, since iomap_truncate_page() only targets the new
-> > > EOF block and must now pass additional state to the actor, open code
-> > > the zeroing actor instead of plumbing through zero range.
-> > > 
-> > > This does have the tradeoff that an existing clean page is dirtied
-> > > and causes unwritten conversion, but this is analogous to historical
-> > > behavior implemented by block_truncate_page(). This patch restores
-> > > historical behavior to address the data exposure problem and leaves
-> > > filtering out the clean page case for a separate patch.
-> > > Fixes: 68a9f5e7007c ("xfs: implement iomap based buffered write path")
-> > > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > > ---
-> > > 
-> > > v2:
-> > > - Rework to check for cached page explicitly and avoid use of seek data.
-> > > v1: https://lore.kernel.org/linux-fsdevel/20201012140350.950064-1-bfoster@redhat.com/
+On Thu, Oct 22, 2020 at 07:23:54PM +1100, Dave Chinner wrote:
+> On Wed, Oct 21, 2020 at 11:21:52PM -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 22, 2020 at 04:15:35PM +1100, Dave Chinner wrote:
+> ....
+> > > @@ -1387,6 +1371,7 @@ dir2_kill_block(
+> > >  		res_failed(error);
+> > >  	libxfs_trans_ijoin(tp, ip, 0);
+> > >  	libxfs_trans_bjoin(tp, bp);
+> > > +	libxfs_trans_bhold(tp, bp);
 > > 
-> > Has the reproducer listed in that email been turned into a fstest case
-> > yet? :)
-> > 
+> > Why hold on to the buffer?  We killed the block, why keep the reference
+> > around so that someone else has to remember to drop it later?
 > 
-> Heh.. that reproducer actually required customization to manufacture the
-> problem. I'll have to think more about a generic reproducer.
+> Consistency in buffer handling. This "kill block" path nulled out
+> the buffer in the bplist array (the reason it's passed as a **bpp
+> to longform_dir2_entry_check_data(). This path releases the buffer
+> through the trans_commit(), the alternate path here:
 > 
-> FWIW, I've also just come across a similar post-eof data exposure
-> failure with this patch, so I'll need to dig into that first and
-> foremost and figure out whether this is still incorrect/insufficient for
-> some reason...
+> > > @@ -1558,10 +1541,8 @@ longform_dir2_entry_check_data(
+> > >  			dir2_kill_block(mp, ip, da_bno, bp);
+> > >  		} else {
+> > >  			do_warn(_("would junk block\n"));
+> > > -			libxfs_buf_relse(bp);
+> > >  		}
+> > >  		freetab->ents[db].v = NULLDATAOFF;
+> > > -		*bpp = NULL;
+> > >  		return;
+> > >  	}
 > 
+> does an explicit release, and all other paths end up with the
+> buffers being released way back where the bplist is defined.
+> 
+> If the directory is in block form, nulling out the buffer in the
+> bplist here will result in dereferencing a null pointer later when
+> the buffer is pulled from bplist[0] without checking.
+> 
+> So I changed longform_dir2_entry_check_data() to never release the
+> buffer so that the caller knows that it has always got a valid
+> buffer reference and the isblock path will always work correctly....
 
-This actually turned out to be a similar, but separate issue. With the
-unwritten problem addressed by this patch, similar post-eof stale data
-exposure is possible on truncate down if the new EOF happens to land on
-a data fork hole covered by a cow block. I suspect the cow fork block
-exists simply due to cow fork preallocation/alignment on overwrite of a
-nearby shared block, but then is subsequently written over and the page
-dirtied. Similar to the data fork unwritten block problem,
-iomap_truncate_page() sees the hole and does nothing even though there
-happens to be a dirty page covering the new EOF of the file.
+Hmmm, looking through the directory code, I see that it calls binval to
+stale the buffer, so the kill_block caller won't be able to do much with
+its incore reference.
 
-A prospective fix for that one could be to move the IOMAP_ZERO check in
-xfs_buffered_write_iomap_begin() a few lines down just after the
-immediately following xfs_is_cow_inode() branch. This allows
-iomap_truncate_page() to find the "effective" mapping as if it were a
-write request (since a write may have previously occurred) and behave
-accordingly. That said, I'm not sure that is generally appropriate
-because a zero range would unconditionally treat cow blocks as real file
-blocks, even if they are transient in nature (i.e., over a hole and
-never written).
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-FWIW, testing that tweak triggers a new zero range problem related to
-collapse range. If zero range is modified to find cow fork mappings over
-holes, the iomap_zero_range() call via xfs_free_file_space() can issue a
-buffered write if it happens to land on a cow fork block that otherwise
-isn't mapped in the data fork or cached. This occurs after the data fork
-range has been unmapped and thus shortly thereafter writeback completion
-drops the cow fork block back into the previously unmapped range of the
-data fork. If the free_file_space() occurs for a collapse range, the
-collapse ultimately runs into an existing block where it's attempting to
-shift (i.e. expecting a hole) and fails.
+--D
 
-I think that particular side effect is fixable by cancelling reflink
-blocks in the target range of xfs_free_file_space() immediately after
-the data fork range is unmapped, but I'm still not convinced moving the
-IOMAP_ZERO check is the right approach in the first place. Given all of
-this whack-a-mole, I'm kind of wondering if it would be better (at least
-as an initial step) to split off a new xfs_truncate_page_iomap_begin()
-handler where XFS can potentially fudge the mapping returned to iomap
-based on what it wants to see happen. For example, if there's a
-dirty||writeback page covering an unwritten data block or cow block,
-call it a normal mapping so iomap does the overwrite. If there's an
-uncached cow block over a data fork hole, return a hole, etc. Then
-again, that idea makes the original patch [1] a heck of a lot more
-appealing than I originally thought it was (particularly for a bug that
-goes back to v4.8 or so). :P Thoughts? Better ideas?
-
-Brian
-
-[1] https://lore.kernel.org/linux-xfs/20201007143509.669729-1-bfoster@redhat.com/
-
-> > > 
-> > >  fs/iomap/buffered-io.c | 41 ++++++++++++++++++++++++++++++++++++++++-
-> > >  1 file changed, 40 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> > > index bcfc288dba3f..2cdfcff02307 100644
-> > > --- a/fs/iomap/buffered-io.c
-> > > +++ b/fs/iomap/buffered-io.c
-> > > @@ -1000,17 +1000,56 @@ iomap_zero_range(struct inode *inode, loff_t pos, loff_t len, bool *did_zero,
-> > >  }
-> > >  EXPORT_SYMBOL_GPL(iomap_zero_range);
-> > >  
-> > > +struct iomap_trunc_priv {
-> > > +	bool *did_zero;
-> > > +	bool has_page;
-> > > +};
-> > > +
-> > > +static loff_t
-> > > +iomap_truncate_page_actor(struct inode *inode, loff_t pos, loff_t count,
-> > > +		void *data, struct iomap *iomap, struct iomap *srcmap)
-> > > +{
-> > > +	struct iomap_trunc_priv	*priv = data;
-> > > +	unsigned offset;
-> > > +	int status;
-> > > +
-> > > +	if (srcmap->type == IOMAP_HOLE)
-> > > +		return count;
-> > > +	if (srcmap->type == IOMAP_UNWRITTEN && !priv->has_page)
-> > > +		return count;
-> > > +
-> > > +	offset = offset_in_page(pos);
-> > > +	if (IS_DAX(inode))
-> > > +		status = dax_iomap_zero(pos, offset, count, iomap);
-> > > +	else
-> > > +		status = iomap_zero(inode, pos, offset, count, iomap, srcmap);
-> > > +	if (status < 0)
-> > > +		return status;
-> > > +
-> > > +	if (priv->did_zero)
-> > > +		*priv->did_zero = true;
-> > > +	return count;
-> > > +}
-> > > +
-> > >  int
-> > >  iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
-> > >  		const struct iomap_ops *ops)
-> > >  {
-> > > +	struct iomap_trunc_priv priv = { .did_zero = did_zero };
-> > >  	unsigned int blocksize = i_blocksize(inode);
-> > >  	unsigned int off = pos & (blocksize - 1);
-> > > +	loff_t ret;
-> > >  
-> > >  	/* Block boundary? Nothing to do */
-> > >  	if (!off)
-> > >  		return 0;
-> > > -	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
-> > > +
-> > > +	priv.has_page = filemap_range_has_page(inode->i_mapping, pos, pos);
-> > 
-> > Er... shouldn't that second 'pos' be 'pos + blocksize - off - 1', like
-> > the apply call below?  I guess it doesn't matter since we're only
-> > interested in the page at pos, but the double usage of pos caught my
-> > eye.
-> > 
 > 
-> Yeah. I'll fix that up.
+> Cheers,
 > 
-> > I also wonder, can you move this into the actor so that you can pass
-> > *did_zero straight through without the two-item struct?
-> > 
+> Dave.
 > 
-> I don't think so because the idea was to explicitly check for page
-> presence prior to getting the mapping.
 > 
-> Brian
-> 
-> > --D
-> > 
-> > > +	ret = iomap_apply(inode, pos, blocksize - off, IOMAP_ZERO, ops, &priv,
-> > > +			  iomap_truncate_page_actor);
-> > > +	if (ret <= 0)
-> > > +		return ret;
-> > > +	return 0;
-> > >  }
-> > >  EXPORT_SYMBOL_GPL(iomap_truncate_page);
-> > >  
-> > > -- 
-> > > 2.25.4
-> > > 
-> > 
-> 
-
+> -- 
+> Dave Chinner
+> david@fromorbit.com
