@@ -2,226 +2,93 @@ Return-Path: <SRS0=jqsF=D5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8040DC388F9
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 15:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39A1AC388F7
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 15:35:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14550207BB
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 15:15:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Lgfj/Qci"
+	by mail.kernel.org (Postfix) with ESMTP id D7C8E2463F
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 15:35:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2901277AbgJVPPW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Oct 2020 11:15:22 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:59410 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2509904AbgJVPPW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 11:15:22 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09MF4mnk016525;
-        Thu, 22 Oct 2020 15:14:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=nLO8sRXFYpUQiwJEfuTU4CZ+g0g8h2RhbpdmgN5Y+ZI=;
- b=Lgfj/QcigNg8QFu6Y2BR/yBjN7jQxSJ+R2uX2FPIQz5G7kTbNftMK0zuZfQ5p5Bg3H8t
- mZpBMAT8LRgmn3uOpk2x5f3U+PWoHuEd7bebPEaTTEVE4s+E4fQ11S4g0aIAJ7srVV9T
- eZ3LRQQSlcH8L6kpvZHCjbHTsT1bPW6wIaqM7jicrDu+xi5T0gMQ9DC/iXmMry+Xrc+s
- vAQhfbIkQ61tzxH/hI9+1FpldlF9IYounWQZeiWzRLgK3KjH206xJvmZKWziWFQQq0zB
- JlOe8hbBK1SevVExweNF5I9lXsiFkUgF78RjdIZnR4/wFxcDiaD9garniIo0Ko8cISeu Tg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 34ak16psv6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 22 Oct 2020 15:14:30 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09MF1HY3176840;
-        Thu, 22 Oct 2020 15:14:29 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 348ahyvxma-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Oct 2020 15:14:29 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09MFELTb031437;
-        Thu, 22 Oct 2020 15:14:21 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 22 Oct 2020 08:14:20 -0700
-Date:   Thu, 22 Oct 2020 08:14:18 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Sergei Shtepa <sergei.shtepa@veeam.com>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "hch@infradead.org" <hch@infradead.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-        "len.brown@intel.com" <len.brown@intel.com>,
-        "pavel@ucw.cz" <pavel@ucw.cz>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "jack@suse.cz" <jack@suse.cz>, "tj@kernel.org" <tj@kernel.org>,
-        "gustavo@embeddedor.com" <gustavo@embeddedor.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "koct9i@gmail.com" <koct9i@gmail.com>,
-        "steve@sk2.org" <steve@sk2.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "linux-mm@kvack.org" <linux-mm@kvack.org>
-Subject: Re: [PATCH 0/2] block layer filter and block device snapshot module
-Message-ID: <20201022151418.GR9832@magnolia>
-References: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
- <71926887-5707-04a5-78a2-ffa2ee32bd68@suse.de>
- <20201021141044.GF20749@veeam.com>
- <ca8eaa40-b422-2272-1fd9-1d0a354c42bf@suse.de>
- <20201022094402.GA21466@veeam.com>
- <BL0PR04MB6514AC1B1FF313E6A14D122CE71D0@BL0PR04MB6514.namprd04.prod.outlook.com>
- <20201022135213.GB21466@veeam.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201022135213.GB21466@veeam.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9781 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 bulkscore=0
- malwarescore=0 spamscore=0 mlxlogscore=999 mlxscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010220103
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9781 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0
- priorityscore=1501 clxscore=1011 malwarescore=0 mlxscore=0 adultscore=0
- lowpriorityscore=0 impostorscore=0 spamscore=0 mlxlogscore=999
- suspectscore=1 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010220103
+        id S2901457AbgJVPfe convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Oct 2020 11:35:34 -0400
+Received: from us-smtp-delivery-44.mimecast.com ([207.211.30.44]:30073 "EHLO
+        us-smtp-delivery-44.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2503603AbgJVPfe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 11:35:34 -0400
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-581-za5zEBnYOSqH-hBOoifJQA-1; Thu, 22 Oct 2020 11:35:29 -0400
+X-MC-Unique: za5zEBnYOSqH-hBOoifJQA-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 17FAA804B64;
+        Thu, 22 Oct 2020 15:35:28 +0000 (UTC)
+Received: from ovpn-66-200.rdu2.redhat.com (ovpn-66-200.rdu2.redhat.com [10.10.66.200])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C3D9319C4F;
+        Thu, 22 Oct 2020 15:35:26 +0000 (UTC)
+Message-ID: <7ec15e2710db02be81a6c47afc57abed4bf8016c.camel@lca.pw>
+Subject: Re: kernel BUG at mm/page-writeback.c:2241 [
+ BUG_ON(PageWriteback(page); ]
+From:   Qian Cai <cai@lca.pw>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-mm@kvack.org
+Date:   Thu, 22 Oct 2020 11:35:26 -0400
+In-Reply-To: <20201022004906.GQ20115@casper.infradead.org>
+References: <645a3f332f37e09057c10bc32f4f298ce56049bb.camel@lca.pw>
+         <20201022004906.GQ20115@casper.infradead.org>
+Mime-Version: 1.0
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Authentication-Results: relay.mimecast.com;
+        auth=pass smtp.auth=CUSA124A263 smtp.mailfrom=cai@lca.pw
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: lca.pw
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 22, 2020 at 04:52:13PM +0300, Sergei Shtepa wrote:
-> The 10/22/2020 13:28, Damien Le Moal wrote:
-> > On 2020/10/22 18:43, Sergei Shtepa wrote:
-> > > 
-> > > Maybe, but the problem is that I can't imagine how to implement
-> > > dm-intercept yet. 
-> > > How to use dm to implement interception without changing the stack
-> > > of block devices. We'll have to make a hook somewhere, isn`t it?
-> > 
-> > Once your dm-intercept target driver is inserted with "dmsetup" or any user land
-> > tool you implement using libdevicemapper, the "hooks" will naturally be in place
-> > since the dm infrastructure already does that: all submitted BIOs will be passed
-> > to dm-intercept through the "map" operation defined in the target_type
-> > descriptor. It is then that driver job to execute the BIOs as it sees fit.
-> > 
-> > Look at simple device mappers like dm-linear or dm-flakey for hints of how
-> > things work (driver/md/dm-linear.c). More complex dm drivers like dm-crypt,
-> > dm-writecache or dm-thin can give you hints about more features of device mapper.
-> > Functions such as __map_bio() in drivers/md/dm.c are the core of DM and show
-> > what happens to BIOs depending on the the return value of the map operation.
-> > dm_submit_bio() and __split_and_process_bio() is the entry points for BIO
-> > processing in DM.
-> > 
+On Thu, 2020-10-22 at 01:49 +0100, Matthew Wilcox wrote:
+> On Wed, Oct 21, 2020 at 08:30:18PM -0400, Qian Cai wrote:
+> > Today's linux-next starts to trigger this wondering if anyone has any clue.
 > 
-> Is there something I don't understand? Please correct me.
+> I've seen that occasionally too.  I changed that BUG_ON to VM_BUG_ON_PAGE
+> to try to get a clue about it.  Good to know it's not the THP patches
+> since they aren't in linux-next.
 > 
-> Let me remind that by the condition of the problem, we can't change
-> the configuration of the block device stack.
+> I don't understand how it can happen.  We have the page locked, and then we
+> do:
 > 
-> Let's imagine this configuration: /root mount point on ext filesystem
-> on /dev/sda1.
-> +---------------+
-> |               |
-> |  /root        |
-> |               |
-> +---------------+
-> |               |
-> | EXT FS        |
-> |               |
-> +---------------+
-> |               |
-> | block layer   |
-> |               |
-> | sda queue     |
-> |               |
-> +---------------+
-> |               |
-> | scsi driver   |
-> |               |
-> +---------------+
+>                         if (PageWriteback(page)) {
+>                                 if (wbc->sync_mode != WB_SYNC_NONE)
+>                                         wait_on_page_writeback(page);
+>                                 else
+>                                         goto continue_unlock;
+>                         }
 > 
-> We need to add change block tracking (CBT) and snapshot functionality for
-> incremental backup.
+>                         VM_BUG_ON_PAGE(PageWriteback(page), page);
 > 
-> With the DM we need to change the block device stack. Add device /dev/sda1
-> to LVM Volume group, create logical volume, change /etc/fstab and reboot.
-> 
-> The new scheme will look like this:
-> +---------------+
-> |               |
-> |  /root        |
-> |               |
-> +---------------+
-> |               |
-> | EXT FS        |
-> |               |
-> +---------------+
-> |               |
-> | LV-root       |
-> |               |
-> +------------------+
-> |                  |
-> | dm-cbt & dm-snap |
-> |                  |
-> +------------------+
-> |               |
-> | sda queue     |
-> |               |
-> +---------------+
-> |               |
-> | scsi driver   |
-> |               |
-> +---------------+
-> 
-> But I cannot change block device stack. And so I propose a scheme with
-> interception.
-> +---------------+
-> |               |
-> |  /root        |
-> |               |
-> +---------------+
-> |               |
-> | EXT FS        |
-> |               |
-> +---------------+   +-----------------+
-> |  |            |   |                 |
-> |  | blk-filter |-> | cbt & snapshot  |
-> |  |            |<- |                 |
-> |  +------------+   +-----------------+
-> |               |
-> | sda blk queue |
-> |               |
-> +---------------+
-> |               |
-> | scsi driver   |
-> |               |
-> +---------------+
-> 
-> Perhaps I can make "cbt & snapshot" inside the DM, but without interception
-> in any case, it will not work. Isn't that right?
+> Nobody should be able to put this page under writeback while we have it
+> locked ... right?  The page can be redirtied by the code that's supposed
+> to be writing it back, but I don't see how anyone can make PageWriteback
+> true while we're holding the page lock.
 
-Stupid question: Why don't you change the block layer to make it
-possible to insert device mapper devices after the blockdev has been set
-up?
+It happened again on today's linux-next:
 
---D
+[ 7613.579890][T55770] page:00000000a4b35e02 refcount:3 mapcount:0 mapping:00000000457ceb87 index:0x3e pfn:0x1cef4e
+[ 7613.590594][T55770] aops:xfs_address_space_operations ino:805d85a dentry name:"doio.f1.55762"
+[ 7613.599192][T55770] flags: 0xbfffc0000000bf(locked|waiters|referenced|uptodate|dirty|lru|active)
+[ 7613.608596][T55770] raw: 00bfffc0000000bf ffffea0005027d48 ffff88810eaec030 ffff888231f3a6a8
+[ 7613.617101][T55770] raw: 000000000000003e 0000000000000000 00000003ffffffff ffff888143724000
+[ 7613.625590][T55770] page dumped because: VM_BUG_ON_PAGE(PageWriteback(page))
+[ 7613.632695][T55770] page->mem_cgroup:ffff888143724000
 
-> 
-> -- 
-> Sergei Shtepa
-> Veeam Software developer.
