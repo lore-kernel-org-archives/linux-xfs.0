@@ -2,40 +2,40 @@ Return-Path: <SRS0=jqsF=D5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD6CC5517A
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:15:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87A05C388F7
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:33:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7E68223FB
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:15:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3780C2225F
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2444246AbgJVFPp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Oct 2020 01:15:45 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59671 "EHLO
+        id S2502876AbgJVFdC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Oct 2020 01:33:02 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49089 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2507850AbgJVFPp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 01:15:45 -0400
+        by vger.kernel.org with ESMTP id S2502871AbgJVFdC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 01:33:02 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 989393ABCED
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Oct 2020 16:15:38 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7B3953AC0B3
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Oct 2020 16:32:58 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kVSwr-0034L6-W1
+        id 1kVSwr-0034Km-PD
         for linux-xfs@vger.kernel.org; Thu, 22 Oct 2020 16:15:37 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kVSwr-009aoX-OD
+        id 1kVSwr-009aoD-He
         for linux-xfs@vger.kernel.org; Thu, 22 Oct 2020 16:15:37 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 7/7] repair: scale duplicate name checking in phase 6.
-Date:   Thu, 22 Oct 2020 16:15:37 +1100
-Message-Id: <20201022051537.2286402-8-david@fromorbit.com>
+Subject: [PATCH 1/7] workqueue: bound maximum queue depth
+Date:   Thu, 22 Oct 2020 16:15:31 +1100
+Message-Id: <20201022051537.2286402-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201022051537.2286402-1-david@fromorbit.com>
 References: <20201022051537.2286402-1-david@fromorbit.com>
@@ -44,109 +44,162 @@ Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=3pgqu3-PYap36f93kZgA:9
-        a=8SLSQ6RLE708x3xS:21 a=HYTXw9kBQAD6o9LZ:21
+        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=vJvmB_99ysriVlu2_BwA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-phase 6 on large directories is cpu bound on duplicate name checking
-due to the algorithm having effectively O(n^2) scalability. Hence
-when the duplicate name hash table  size is far smaller than the
-number of directory entries, we end up with long hash chains that
-are searched linearly on every new entry that is found in the
-directory to do duplicate detection.
+Existing users of workqueues have bound maximum queue depths in
+their external algorithms (e.g. prefetch counts). For parallelising
+work that doesn't have an external bound, allow workqueues to
+throttle incoming requests at a maximum bound. bounded workqueues
+also need to distribute work over all worker threads themselves as
+there is no external bounding or worker function throttling
+provided.
 
-The in-memory hash table size is limited to 64k entries. Hence when
-we have millions of entries in a directory, duplicate entry lookups
-on the hash table have substantial overhead. Scale this table out to
-larger sizes so that we keep the chain lengths short and hence the
-O(n^2) scalability impact is limited because N is always small.
-
-For a 10M entry directoryi consuming 400MB of directory data, the
-hash table now sizes at 6.4 million entries instead of ~64k - it is
-~100x larger. While the hash table now consumes ~50MB of RAM, the
-xfs_repair footprint barely changes at it's using already consuming
-~9GB of RAM at this point in time. IOWs, the incremental memory
-usage change is noise, but the directory checking time:
-
-Unpatched:
-
-  97.11%  xfs_repair          [.] dir_hash_add
-   0.38%  xfs_repair          [.] longform_dir2_entry_check_data
-   0.34%  libc-2.31.so        [.] __libc_calloc
-   0.32%  xfs_repair          [.] avl_ino_start
-
-Phase 6:        10/22 12:11:40  10/22 12:14:28  2 minutes, 48 seconds
-
-Patched:
-
-  46.74%  xfs_repair          [.] radix_tree_lookup
-  32.13%  xfs_repair          [.] dir_hash_see_all
-   7.70%  xfs_repair          [.] radix_tree_tag_get
-   3.92%  xfs_repair          [.] dir_hash_add
-   3.52%  xfs_repair          [.] radix_tree_tag_clear
-   2.43%  xfs_repair          [.] crc32c_le
-
-Phase 6:        10/22 13:11:01  10/22 13:11:18  17 seconds
-
-has been reduced by an order of magnitude.
+Existing callers are not throttled and retain direct control of
+worker threads, only users of the new create interface will be
+throttled and concurrency managed.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/phase6.c | 30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
+ libfrog/workqueue.c | 42 +++++++++++++++++++++++++++++++++++++++---
+ libfrog/workqueue.h |  4 ++++
+ 2 files changed, 43 insertions(+), 3 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 21f49dd748e1..7dd6130056ee 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -288,19 +288,37 @@ dir_hash_done(
- 	free(hashtab);
+diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
+index fe3de4289379..e42b2a2f678b 100644
+--- a/libfrog/workqueue.c
++++ b/libfrog/workqueue.c
+@@ -40,13 +40,21 @@ workqueue_thread(void *arg)
+ 		}
+ 
+ 		/*
+-		 *  Dequeue work from the head of the list.
++		 *  Dequeue work from the head of the list. If the queue was
++		 *  full then send a wakeup if we're configured to do so.
+ 		 */
+ 		assert(wq->item_count > 0);
++		if (wq->max_queued && wq->item_count == wq->max_queued)
++			pthread_cond_signal(&wq->queue_full);
++
+ 		wi = wq->next_item;
+ 		wq->next_item = wi->next;
+ 		wq->item_count--;
+ 
++		if (wq->max_queued && wq->next_item) {
++			/* more work, wake up another worker */
++			pthread_cond_signal(&wq->wakeup);
++		}
+ 		pthread_mutex_unlock(&wq->lock);
+ 
+ 		(wi->function)(wi->queue, wi->index, wi->arg);
+@@ -58,10 +66,11 @@ workqueue_thread(void *arg)
+ 
+ /* Allocate a work queue and threads.  Returns zero or negative error code. */
+ int
+-workqueue_create(
++workqueue_create_bound(
+ 	struct workqueue	*wq,
+ 	void			*wq_ctx,
+-	unsigned int		nr_workers)
++	unsigned int		nr_workers,
++	unsigned int		max_queue)
+ {
+ 	unsigned int		i;
+ 	int			err = 0;
+@@ -70,12 +79,16 @@ workqueue_create(
+ 	err = -pthread_cond_init(&wq->wakeup, NULL);
+ 	if (err)
+ 		return err;
++	err = -pthread_cond_init(&wq->queue_full, NULL);
++	if (err)
++		goto out_wake;
+ 	err = -pthread_mutex_init(&wq->lock, NULL);
+ 	if (err)
+ 		goto out_cond;
+ 
+ 	wq->wq_ctx = wq_ctx;
+ 	wq->thread_count = nr_workers;
++	wq->max_queued = max_queue;
+ 	wq->threads = malloc(nr_workers * sizeof(pthread_t));
+ 	if (!wq->threads) {
+ 		err = -errno;
+@@ -102,10 +115,21 @@ workqueue_create(
+ out_mutex:
+ 	pthread_mutex_destroy(&wq->lock);
+ out_cond:
++	pthread_cond_destroy(&wq->queue_full);
++out_wake:
+ 	pthread_cond_destroy(&wq->wakeup);
+ 	return err;
  }
  
-+/*
-+ * Create a directory hash index structure based on the size of the directory we
-+ * are about to try to repair. The size passed in is the size of the data
-+ * segment of the directory in bytes, so we don't really know exactly how many
-+ * entries are in it. Hence assume an entry size of around 64 bytes - that's a
-+ * name length of 40+ bytes so should cover a most situations with large
-+ * really directories.
-+ */
- static struct dir_hash_tab *
- dir_hash_init(
- 	xfs_fsize_t		size)
- {
--	struct dir_hash_tab	*hashtab;
-+	struct dir_hash_tab	*hashtab = NULL;
- 	int			hsize;
- 
--	hsize = size / (16 * 4);
--	if (hsize > 65536)
--		hsize = 63336;
--	else if (hsize < 16)
-+	hsize = size / 64;
-+	if (hsize < 16)
- 		hsize = 16;
--	if ((hashtab = calloc(DIR_HASH_TAB_SIZE(hsize), 1)) == NULL)
++int
++workqueue_create(
++	struct workqueue	*wq,
++	void			*wq_ctx,
++	unsigned int		nr_workers)
++{
++	return workqueue_create_bound(wq, wq_ctx, nr_workers, 0);
++}
 +
-+	/*
-+	 * Try to allocate as large a hash table as possible. Failure to
-+	 * allocate isn't fatal, it will just result in slower performance as we
-+	 * reduce the size of the table.
-+	 */
-+	while (hsize >= 16) {
-+		hashtab = calloc(DIR_HASH_TAB_SIZE(hsize), 1);
-+		if (hashtab)
-+			break;
-+		hsize /= 2;
-+	}
-+	if (!hashtab)
- 		do_error(_("calloc failed in dir_hash_init\n"));
- 	hashtab->size = hsize;
- 	hashtab->byhash = (struct dir_hash_ent **)((char *)hashtab +
+ /*
+  * Create a work item consisting of a function and some arguments and schedule
+  * the work item to be run via the thread pool.  Returns zero or a negative
+@@ -140,6 +164,7 @@ workqueue_add(
+ 
+ 	/* Now queue the new work structure to the work queue. */
+ 	pthread_mutex_lock(&wq->lock);
++restart:
+ 	if (wq->next_item == NULL) {
+ 		assert(wq->item_count == 0);
+ 		ret = -pthread_cond_signal(&wq->wakeup);
+@@ -150,6 +175,16 @@ workqueue_add(
+ 		}
+ 		wq->next_item = wi;
+ 	} else {
++		/* throttle on a full queue if configured */
++		if (wq->max_queued && wq->item_count == wq->max_queued) {
++			pthread_cond_wait(&wq->queue_full, &wq->lock);
++			/*
++			 * Queue might be empty or even still full by the time
++			 * we get the lock back, so restart the lookup so we do
++			 * the right thing with the current state of the queue.
++			 */
++			goto restart;
++		}
+ 		wq->last_item->next = wi;
+ 	}
+ 	wq->last_item = wi;
+@@ -201,5 +236,6 @@ workqueue_destroy(
+ 	free(wq->threads);
+ 	pthread_mutex_destroy(&wq->lock);
+ 	pthread_cond_destroy(&wq->wakeup);
++	pthread_cond_destroy(&wq->queue_full);
+ 	memset(wq, 0, sizeof(*wq));
+ }
+diff --git a/libfrog/workqueue.h b/libfrog/workqueue.h
+index a56d1cf14081..a9c108d0e66a 100644
+--- a/libfrog/workqueue.h
++++ b/libfrog/workqueue.h
+@@ -31,10 +31,14 @@ struct workqueue {
+ 	unsigned int		thread_count;
+ 	bool			terminate;
+ 	bool			terminated;
++	int			max_queued;
++	pthread_cond_t		queue_full;
+ };
+ 
+ int workqueue_create(struct workqueue *wq, void *wq_ctx,
+ 		unsigned int nr_workers);
++int workqueue_create_bound(struct workqueue *wq, void *wq_ctx,
++		unsigned int nr_workers, unsigned int max_queue);
+ int workqueue_add(struct workqueue *wq, workqueue_func_t fn,
+ 		uint32_t index, void *arg);
+ int workqueue_terminate(struct workqueue *wq);
 -- 
 2.28.0
 
