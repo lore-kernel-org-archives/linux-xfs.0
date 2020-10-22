@@ -2,204 +2,310 @@ Return-Path: <SRS0=jqsF=D5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87A05C388F7
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E51C388F2
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:33:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3780C2225F
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:33:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67F992244C
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Oct 2020 05:33:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502876AbgJVFdC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Oct 2020 01:33:02 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49089 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2502871AbgJVFdC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 01:33:02 -0400
+        id S2502871AbgJVFdE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Oct 2020 01:33:04 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39915 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2502848AbgJVFdD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Oct 2020 01:33:03 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7B3953AC0B3
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Oct 2020 16:32:58 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 282F158D092
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Oct 2020 16:32:59 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kVSwr-0034Km-PD
+        id 1kVSwr-0034Kr-RL
         for linux-xfs@vger.kernel.org; Thu, 22 Oct 2020 16:15:37 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kVSwr-009aoD-He
+        id 1kVSwr-009aoJ-JG
         for linux-xfs@vger.kernel.org; Thu, 22 Oct 2020 16:15:37 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/7] workqueue: bound maximum queue depth
-Date:   Thu, 22 Oct 2020 16:15:31 +1100
-Message-Id: <20201022051537.2286402-2-david@fromorbit.com>
+Subject: [PATCH 3/7] repair: protect inode chunk tree records with a mutex
+Date:   Thu, 22 Oct 2020 16:15:33 +1100
+Message-Id: <20201022051537.2286402-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201022051537.2286402-1-david@fromorbit.com>
 References: <20201022051537.2286402-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=vJvmB_99ysriVlu2_BwA:9
+        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=T_8LcwnyJo5SsLRZtwYA:9
+        a=1gB5eKhlqS7B6gGJ:21 a=aWqMy_GDOUPUWl2T:21
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Existing users of workqueues have bound maximum queue depths in
-their external algorithms (e.g. prefetch counts). For parallelising
-work that doesn't have an external bound, allow workqueues to
-throttle incoming requests at a maximum bound. bounded workqueues
-also need to distribute work over all worker threads themselves as
-there is no external bounding or worker function throttling
-provided.
+Phase 6 accesses inode chunk records mostly in an isolated manner.
+However, when it finds a corruption in a directory or there are
+multiple hardlinks to an inode, there can be concurrent access
+to the inode chunk record to update state.
 
-Existing callers are not throttled and retain direct control of
-worker threads, only users of the new create interface will be
-throttled and concurrency managed.
+Hence the inode record itself needs a mutex. This protects all state
+changes within the inode chunk record, as well as inode link counts
+and chunk references. That allows us to process multiple chunks at
+once, providing concurrency within an AG as well as across AGs.
+
+The inode chunk tree itself is not modified in phase 6 - it's built
+in phases 3 and 4  - and so we do not need to worry about locking
+for AVL tree lookups to find the inode chunk records themselves.
+hence internal locking is all we need here.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- libfrog/workqueue.c | 42 +++++++++++++++++++++++++++++++++++++++---
- libfrog/workqueue.h |  4 ++++
- 2 files changed, 43 insertions(+), 3 deletions(-)
+ repair/incore.h     | 23 +++++++++++++++++++++++
+ repair/incore_ino.c | 15 +++++++++++++++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
-index fe3de4289379..e42b2a2f678b 100644
---- a/libfrog/workqueue.c
-+++ b/libfrog/workqueue.c
-@@ -40,13 +40,21 @@ workqueue_thread(void *arg)
- 		}
+diff --git a/repair/incore.h b/repair/incore.h
+index 5b29d5d1efd8..6564e0d38963 100644
+--- a/repair/incore.h
++++ b/repair/incore.h
+@@ -282,6 +282,7 @@ typedef struct ino_tree_node  {
+ 		parent_list_t	*plist;		/* phases 2-5 */
+ 	} ino_un;
+ 	uint8_t			*ftypes;	/* phases 3,6 */
++	pthread_mutex_t		lock;
+ } ino_tree_node_t;
  
- 		/*
--		 *  Dequeue work from the head of the list.
-+		 *  Dequeue work from the head of the list. If the queue was
-+		 *  full then send a wakeup if we're configured to do so.
- 		 */
- 		assert(wq->item_count > 0);
-+		if (wq->max_queued && wq->item_count == wq->max_queued)
-+			pthread_cond_signal(&wq->queue_full);
-+
- 		wi = wq->next_item;
- 		wq->next_item = wi->next;
- 		wq->item_count--;
- 
-+		if (wq->max_queued && wq->next_item) {
-+			/* more work, wake up another worker */
-+			pthread_cond_signal(&wq->wakeup);
-+		}
- 		pthread_mutex_unlock(&wq->lock);
- 
- 		(wi->function)(wi->queue, wi->index, wi->arg);
-@@ -58,10 +66,11 @@ workqueue_thread(void *arg)
- 
- /* Allocate a work queue and threads.  Returns zero or negative error code. */
- int
--workqueue_create(
-+workqueue_create_bound(
- 	struct workqueue	*wq,
- 	void			*wq_ctx,
--	unsigned int		nr_workers)
-+	unsigned int		nr_workers,
-+	unsigned int		max_queue)
+ #define INOS_PER_IREC	(sizeof(uint64_t) * NBBY)
+@@ -412,7 +413,9 @@ next_free_ino_rec(ino_tree_node_t *ino_rec)
+  */
+ static inline void add_inode_refchecked(struct ino_tree_node *irec, int offset)
  {
- 	unsigned int		i;
- 	int			err = 0;
-@@ -70,12 +79,16 @@ workqueue_create(
- 	err = -pthread_cond_init(&wq->wakeup, NULL);
- 	if (err)
- 		return err;
-+	err = -pthread_cond_init(&wq->queue_full, NULL);
-+	if (err)
-+		goto out_wake;
- 	err = -pthread_mutex_init(&wq->lock, NULL);
- 	if (err)
- 		goto out_cond;
- 
- 	wq->wq_ctx = wq_ctx;
- 	wq->thread_count = nr_workers;
-+	wq->max_queued = max_queue;
- 	wq->threads = malloc(nr_workers * sizeof(pthread_t));
- 	if (!wq->threads) {
- 		err = -errno;
-@@ -102,10 +115,21 @@ workqueue_create(
- out_mutex:
- 	pthread_mutex_destroy(&wq->lock);
- out_cond:
-+	pthread_cond_destroy(&wq->queue_full);
-+out_wake:
- 	pthread_cond_destroy(&wq->wakeup);
- 	return err;
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_un.ex_data->ino_processed |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
  }
  
-+int
-+workqueue_create(
-+	struct workqueue	*wq,
-+	void			*wq_ctx,
-+	unsigned int		nr_workers)
-+{
-+	return workqueue_create_bound(wq, wq_ctx, nr_workers, 0);
-+}
-+
+ static inline int is_inode_refchecked(struct ino_tree_node *irec, int offset)
+@@ -438,12 +441,16 @@ static inline int is_inode_confirmed(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_isadir(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_isa_dir |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline void clear_inode_isadir(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_isa_dir &= ~IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int inode_isadir(struct ino_tree_node *irec, int offset)
+@@ -456,15 +463,19 @@ static inline int inode_isadir(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_free(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	set_inode_confirmed(irec, offset);
+ 	irec->ir_free |= XFS_INOBT_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ 
+ }
+ 
+ static inline void set_inode_used(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	set_inode_confirmed(irec, offset);
+ 	irec->ir_free &= ~XFS_INOBT_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int is_inode_free(struct ino_tree_node *irec, int offset)
+@@ -477,7 +488,9 @@ static inline int is_inode_free(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_sparse(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ir_sparse |= XFS_INOBT_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline bool is_inode_sparse(struct ino_tree_node *irec, int offset)
+@@ -490,12 +503,16 @@ static inline bool is_inode_sparse(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_was_rl(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_was_rl |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline void clear_inode_was_rl(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_was_rl &= ~IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int inode_was_rl(struct ino_tree_node *irec, int offset)
+@@ -508,12 +525,16 @@ static inline int inode_was_rl(struct ino_tree_node *irec, int offset)
+  */
+ static inline void set_inode_is_rl(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_is_rl |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline void clear_inode_is_rl(struct ino_tree_node *irec, int offset)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_is_rl &= ~IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ static inline int inode_is_rl(struct ino_tree_node *irec, int offset)
+@@ -546,7 +567,9 @@ static inline int is_inode_reached(struct ino_tree_node *irec, int offset)
+ static inline void add_inode_reached(struct ino_tree_node *irec, int offset)
+ {
+ 	add_inode_ref(irec, offset);
++	pthread_mutex_lock(&irec->lock);
+ 	irec->ino_un.ex_data->ino_reached |= IREC_MASK(offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
  /*
-  * Create a work item consisting of a function and some arguments and schedule
-  * the work item to be run via the thread pool.  Returns zero or a negative
-@@ -140,6 +164,7 @@ workqueue_add(
+diff --git a/repair/incore_ino.c b/repair/incore_ino.c
+index 82956ae93005..299e4f949e5e 100644
+--- a/repair/incore_ino.c
++++ b/repair/incore_ino.c
+@@ -91,6 +91,7 @@ void add_inode_ref(struct ino_tree_node *irec, int ino_offset)
+ {
+ 	ASSERT(irec->ino_un.ex_data != NULL);
  
- 	/* Now queue the new work structure to the work queue. */
- 	pthread_mutex_lock(&wq->lock);
-+restart:
- 	if (wq->next_item == NULL) {
- 		assert(wq->item_count == 0);
- 		ret = -pthread_cond_signal(&wq->wakeup);
-@@ -150,6 +175,16 @@ workqueue_add(
- 		}
- 		wq->next_item = wi;
- 	} else {
-+		/* throttle on a full queue if configured */
-+		if (wq->max_queued && wq->item_count == wq->max_queued) {
-+			pthread_cond_wait(&wq->queue_full, &wq->lock);
-+			/*
-+			 * Queue might be empty or even still full by the time
-+			 * we get the lock back, so restart the lookup so we do
-+			 * the right thing with the current state of the queue.
-+			 */
-+			goto restart;
-+		}
- 		wq->last_item->next = wi;
++	pthread_mutex_lock(&irec->lock);
+ 	switch (irec->nlink_size) {
+ 	case sizeof(uint8_t):
+ 		if (irec->ino_un.ex_data->counted_nlinks.un8[ino_offset] < 0xff) {
+@@ -112,6 +113,7 @@ void add_inode_ref(struct ino_tree_node *irec, int ino_offset)
+ 	default:
+ 		ASSERT(0);
  	}
- 	wq->last_item = wi;
-@@ -201,5 +236,6 @@ workqueue_destroy(
- 	free(wq->threads);
- 	pthread_mutex_destroy(&wq->lock);
- 	pthread_cond_destroy(&wq->wakeup);
-+	pthread_cond_destroy(&wq->queue_full);
- 	memset(wq, 0, sizeof(*wq));
++	pthread_mutex_unlock(&irec->lock);
  }
-diff --git a/libfrog/workqueue.h b/libfrog/workqueue.h
-index a56d1cf14081..a9c108d0e66a 100644
---- a/libfrog/workqueue.h
-+++ b/libfrog/workqueue.h
-@@ -31,10 +31,14 @@ struct workqueue {
- 	unsigned int		thread_count;
- 	bool			terminate;
- 	bool			terminated;
-+	int			max_queued;
-+	pthread_cond_t		queue_full;
- };
  
- int workqueue_create(struct workqueue *wq, void *wq_ctx,
- 		unsigned int nr_workers);
-+int workqueue_create_bound(struct workqueue *wq, void *wq_ctx,
-+		unsigned int nr_workers, unsigned int max_queue);
- int workqueue_add(struct workqueue *wq, workqueue_func_t fn,
- 		uint32_t index, void *arg);
- int workqueue_terminate(struct workqueue *wq);
+ void drop_inode_ref(struct ino_tree_node *irec, int ino_offset)
+@@ -120,6 +122,7 @@ void drop_inode_ref(struct ino_tree_node *irec, int ino_offset)
+ 
+ 	ASSERT(irec->ino_un.ex_data != NULL);
+ 
++	pthread_mutex_lock(&irec->lock);
+ 	switch (irec->nlink_size) {
+ 	case sizeof(uint8_t):
+ 		ASSERT(irec->ino_un.ex_data->counted_nlinks.un8[ino_offset] > 0);
+@@ -139,6 +142,7 @@ void drop_inode_ref(struct ino_tree_node *irec, int ino_offset)
+ 
+ 	if (refs == 0)
+ 		irec->ino_un.ex_data->ino_reached &= ~IREC_MASK(ino_offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
+@@ -161,6 +165,7 @@ uint32_t num_inode_references(struct ino_tree_node *irec, int ino_offset)
+ void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
+ 		uint32_t nlinks)
+ {
++	pthread_mutex_lock(&irec->lock);
+ 	switch (irec->nlink_size) {
+ 	case sizeof(uint8_t):
+ 		if (nlinks < 0xff) {
+@@ -182,6 +187,7 @@ void set_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset,
+ 	default:
+ 		ASSERT(0);
+ 	}
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ uint32_t get_inode_disk_nlinks(struct ino_tree_node *irec, int ino_offset)
+@@ -253,6 +259,7 @@ alloc_ino_node(
+ 	irec->nlink_size = sizeof(uint8_t);
+ 	irec->disk_nlinks.un8 = alloc_nlink_array(irec->nlink_size);
+ 	irec->ftypes = alloc_ftypes_array(mp);
++	pthread_mutex_init(&irec->lock, NULL);
+ 	return irec;
+ }
+ 
+@@ -294,6 +301,7 @@ free_ino_tree_node(
+ 	}
+ 
+ 	free(irec->ftypes);
++	pthread_mutex_destroy(&irec->lock);
+ 	free(irec);
+ }
+ 
+@@ -600,6 +608,7 @@ set_inode_parent(
+ 	uint64_t		bitmask;
+ 	parent_entry_t		*tmp;
+ 
++	pthread_mutex_lock(&irec->lock);
+ 	if (full_ino_ex_data)
+ 		ptbl = irec->ino_un.ex_data->parents;
+ 	else
+@@ -625,6 +634,7 @@ set_inode_parent(
+ #endif
+ 		ptbl->pentries[0] = parent;
+ 
++		pthread_mutex_unlock(&irec->lock);
+ 		return;
+ 	}
+ 
+@@ -642,6 +652,7 @@ set_inode_parent(
+ #endif
+ 		ptbl->pentries[target] = parent;
+ 
++		pthread_mutex_unlock(&irec->lock);
+ 		return;
+ 	}
+ 
+@@ -682,6 +693,7 @@ set_inode_parent(
+ #endif
+ 	ptbl->pentries[target] = parent;
+ 	ptbl->pmask |= (1ULL << offset);
++	pthread_mutex_unlock(&irec->lock);
+ }
+ 
+ xfs_ino_t
+@@ -692,6 +704,7 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
+ 	int		i;
+ 	int		target;
+ 
++	pthread_mutex_lock(&irec->lock);
+ 	if (full_ino_ex_data)
+ 		ptbl = irec->ino_un.ex_data->parents;
+ 	else
+@@ -709,9 +722,11 @@ get_inode_parent(ino_tree_node_t *irec, int offset)
+ #ifdef DEBUG
+ 		ASSERT(target < ptbl->cnt);
+ #endif
++		pthread_mutex_unlock(&irec->lock);
+ 		return(ptbl->pentries[target]);
+ 	}
+ 
++	pthread_mutex_unlock(&irec->lock);
+ 	return(0LL);
+ }
+ 
 -- 
 2.28.0
 
