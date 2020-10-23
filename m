@@ -2,67 +2,201 @@ Return-Path: <SRS0=+s6N=D6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D1FFC56201
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Oct 2020 18:53:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76793C388F9
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Oct 2020 20:53:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECF6A20E65
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Oct 2020 18:53:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C70A2137B
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Oct 2020 20:53:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603479196;
-	bh=HHt80Ha7I/hetx4FemW8Gke/bL18AaLTJWY5rr037oQ=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=U9zIGEr7rh/ZFZwhz6l705gBdAsDvOfDYtJMTC65UU7iDwXBS88qKSNr0weDIwkO7
-	 0ZyflwrMOqFmd5CyrV9gbVbarw3CmyfWW7k9HKa/GlHpRXPvkqF60nYATU66vadnN+
-	 uYHMCKV0DHrYVR7j1aY7rQrJR5fO6JpiLfE1J8Xw=
+	s=default; t=1603486422;
+	bh=ojQX8v4FWHWriM/9vutOQ7P1tVXDPKF1/x3d5VeoJaw=;
+	h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:List-ID:
+	 From;
+	b=SZBh88/pbdRTnZPSJeShCB1Q3w+kxznmuKbBu/PBWaRWn0WvaU0lJSAzMCngrlU23
+	 v9MZx2dnztHBl/6pxRyWciedSXqVCkk9S2X6X+8dy77iBHmLnv7/wKgUbeOq+0UDeT
+	 Un3ZZ1KLA01/MayqFgQO501OLxURqsf44YN8bl1E=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1755083AbgJWSxL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Oct 2020 14:53:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59620 "EHLO mail.kernel.org"
+        id S1756430AbgJWUxl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Oct 2020 16:53:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:57368 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751075AbgJWSxL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Oct 2020 14:53:11 -0400
-Subject: Re: [GIT PULL] vfs: move the clone/dedupe/remap helpers to a single file
+        id S1756428AbgJWUxk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Oct 2020 16:53:40 -0400
+Received: from paulmck-ThinkPad-P72.home (50-39-104-11.bvtn.or.frontiernet.net [50.39.104.11])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 693F1208E4;
+        Fri, 23 Oct 2020 20:53:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603479190;
-        bh=HHt80Ha7I/hetx4FemW8Gke/bL18AaLTJWY5rr037oQ=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=DLYX7c/AhjZTAerCcfUdQob+yeV3nEfKbuh7RwnCJSM3lf3bgk6qnBIHsF8SnkmR+
-         BMC/rkc22FtzdOqjv+suTPNrnoeKrls256AWFzcnRKYKYcDykCF2I7KvmO05zHxD9S
-         g/ZNTJJqgszAtbuz9YAOpASxOG1yXoKEJImiqSPo=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20201022222358.GD9825@magnolia>
-References: <20201022222358.GD9825@magnolia>
-X-PR-Tracked-List-Id: <linux-mm.kvack.org>
-X-PR-Tracked-Message-Id: <20201022222358.GD9825@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.10-merge-1
-X-PR-Tracked-Commit-Id: 407e9c63ee571f44a2dfb0828fc30daa02abb6dc
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: c4728cfbed0f54eacc21138c99da2a91895c8c5a
-Message-Id: <160347919039.2166.4768124292251668926.pr-tracker-bot@kernel.org>
-Date:   Fri, 23 Oct 2020 18:53:10 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+        s=default; t=1603486419;
+        bh=ojQX8v4FWHWriM/9vutOQ7P1tVXDPKF1/x3d5VeoJaw=;
+        h=Date:From:To:Cc:Subject:Reply-To:References:In-Reply-To:From;
+        b=kvqPjaUAbhgOA7v9m5hPwFhSot+9JpnZXoeCrdsm06tmZk3i0PrkuY3l00nQhXTO7
+         mME/ZUGMaFJ8HfKVhEI2MvB8tG0mJXu0Oz9Lq5QXxDSvD9OeEOp7qTfPlU5UBnvfap
+         tnFzhsUdlh/9ZNLst1GWoxnofysl3fTu/WbsWfz4=
+Received: by paulmck-ThinkPad-P72.home (Postfix, from userid 1000)
+        id 03E563520D11; Fri, 23 Oct 2020 13:53:39 -0700 (PDT)
+Date:   Fri, 23 Oct 2020 13:53:38 -0700
+From:   "Paul E. McKenney" <paulmck@kernel.org>
+To:     Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
+        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+        Christoph Lameter <cl@linux.com>,
+        Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        Michel Lespinasse <walken@google.com>,
+        Waiman Long <longman@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Randy Dunlap <rdunlap@infradead.org>, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
+        Qian Cai <cai@lca.pw>, linux-xfs@vger.kernel.org,
+        Daniel Vetter <daniel.vetter@intel.com>
+Subject: Re: [PATCH 04/65] mm: Extract might_alloc() debug check
+Message-ID: <20201023205338.GQ3249@paulmck-ThinkPad-P72>
+Reply-To: paulmck@kernel.org
+References: <20201021163242.1458885-1-daniel.vetter@ffwll.ch>
+ <20201023122216.2373294-1-daniel.vetter@ffwll.ch>
+ <20201023122216.2373294-4-daniel.vetter@ffwll.ch>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201023122216.2373294-4-daniel.vetter@ffwll.ch>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Thu, 22 Oct 2020 15:23:58 -0700:
+On Fri, Oct 23, 2020 at 02:21:15PM +0200, Daniel Vetter wrote:
+> Extracted from slab.h, which seems to have the most complete version
+> including the correct might_sleep() check. Roll it out to slob.c.
+> 
+> Motivated by a discussion with Paul about possibly changing call_rcu
+> behaviour to allocate memory, but only roughly every 500th call.
+> 
+> There are a lot fewer places in the kernel that care about whether
+> allocating memory is allowed or not (due to deadlocks with reclaim
+> code) than places that care whether sleeping is allowed. But debugging
+> these also tends to be a lot harder, so nice descriptive checks could
+> come in handy. I might have some use eventually for annotations in
+> drivers/gpu.
+> 
+> Note that unlike fs_reclaim_acquire/release gfpflags_allow_blocking
+> does not consult the PF_MEMALLOC flags. But there is no flag
+> equivalent for GFP_NOWAIT, hence this check can't go wrong due to
+> memalloc_no*_save/restore contexts.
+> 
+> Cc: Paul E. McKenney <paulmck@kernel.org>
+> Cc: Christoph Lameter <cl@linux.com>
+> Cc: Pekka Enberg <penberg@kernel.org>
+> Cc: David Rientjes <rientjes@google.com>
+> Cc: Joonsoo Kim <iamjoonsoo.kim@lge.com>
+> Cc: Andrew Morton <akpm@linux-foundation.org>
+> Cc: Peter Zijlstra <peterz@infradead.org>
+> Cc: Ingo Molnar <mingo@kernel.org>
+> Cc: Vlastimil Babka <vbabka@suse.cz>
+> Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+> Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Cc: Michel Lespinasse <walken@google.com>
+> Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+> Cc: Waiman Long <longman@redhat.com>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Randy Dunlap <rdunlap@infradead.org>
+> Cc: linux-mm@kvack.org
+> Cc: linux-fsdevel@vger.kernel.org
+> Cc: Dave Chinner <david@fromorbit.com>
+> Cc: Qian Cai <cai@lca.pw>
+> Cc: linux-xfs@vger.kernel.org
+> Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.10-merge-1
+Nice!!!
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/c4728cfbed0f54eacc21138c99da2a91895c8c5a
+Acked-by: Paul E. McKenney <paulmck@kernel.org>
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+> ---
+>  include/linux/sched/mm.h | 16 ++++++++++++++++
+>  mm/slab.h                |  5 +----
+>  mm/slob.c                |  6 ++----
+>  3 files changed, 19 insertions(+), 8 deletions(-)
+> 
+> diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
+> index f889e332912f..2b0037abac0b 100644
+> --- a/include/linux/sched/mm.h
+> +++ b/include/linux/sched/mm.h
+> @@ -205,6 +205,22 @@ static inline void fs_reclaim_acquire(gfp_t gfp_mask) { }
+>  static inline void fs_reclaim_release(gfp_t gfp_mask) { }
+>  #endif
+>  
+> +/**
+> + * might_alloc - Marks possible allocation sites
+> + * @gfp_mask: gfp_t flags that would be use to allocate
+> + *
+> + * Similar to might_sleep() and other annotations this can be used in functions
+> + * that might allocate, but often dont. Compiles to nothing without
+> + * CONFIG_LOCKDEP. Includes a conditional might_sleep() if @gfp allows blocking.
+> + */
+> +static inline void might_alloc(gfp_t gfp_mask)
+> +{
+> +	fs_reclaim_acquire(gfp_mask);
+> +	fs_reclaim_release(gfp_mask);
+> +
+> +	might_sleep_if(gfpflags_allow_blocking(gfp_mask));
+> +}
+> +
+>  /**
+>   * memalloc_noio_save - Marks implicit GFP_NOIO allocation scope.
+>   *
+> diff --git a/mm/slab.h b/mm/slab.h
+> index 6cc323f1313a..fedd789b2270 100644
+> --- a/mm/slab.h
+> +++ b/mm/slab.h
+> @@ -492,10 +492,7 @@ static inline struct kmem_cache *slab_pre_alloc_hook(struct kmem_cache *s,
+>  {
+>  	flags &= gfp_allowed_mask;
+>  
+> -	fs_reclaim_acquire(flags);
+> -	fs_reclaim_release(flags);
+> -
+> -	might_sleep_if(gfpflags_allow_blocking(flags));
+> +	might_alloc(flags);
+>  
+>  	if (should_failslab(s, flags))
+>  		return NULL;
+> diff --git a/mm/slob.c b/mm/slob.c
+> index 7cc9805c8091..8d4bfa46247f 100644
+> --- a/mm/slob.c
+> +++ b/mm/slob.c
+> @@ -474,8 +474,7 @@ __do_kmalloc_node(size_t size, gfp_t gfp, int node, unsigned long caller)
+>  
+>  	gfp &= gfp_allowed_mask;
+>  
+> -	fs_reclaim_acquire(gfp);
+> -	fs_reclaim_release(gfp);
+> +	might_alloc(gfp);
+>  
+>  	if (size < PAGE_SIZE - minalign) {
+>  		int align = minalign;
+> @@ -597,8 +596,7 @@ static void *slob_alloc_node(struct kmem_cache *c, gfp_t flags, int node)
+>  
+>  	flags &= gfp_allowed_mask;
+>  
+> -	fs_reclaim_acquire(flags);
+> -	fs_reclaim_release(flags);
+> +	might_alloc(flags);
+>  
+>  	if (c->size < PAGE_SIZE) {
+>  		b = slob_alloc(c->size, flags, c->align, node, 0);
+> -- 
+> 2.28.0
+> 
