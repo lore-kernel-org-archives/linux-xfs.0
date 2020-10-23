@@ -2,129 +2,117 @@ Return-Path: <SRS0=+s6N=D6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AC8EC55178
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Oct 2020 07:50:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31AACC55179
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Oct 2020 09:14:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD12722460
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Oct 2020 07:50:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC790241A4
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Oct 2020 09:14:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lHd/Y1XE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S375912AbgJWHuJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Oct 2020 03:50:09 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:8343 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S375898AbgJWHuI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Oct 2020 03:50:08 -0400
-X-IronPort-AV: E=Sophos;i="5.77,407,1596470400"; 
-   d="scan'208";a="100439341"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 23 Oct 2020 15:50:01 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 9C9E14CE1A07;
-        Fri, 23 Oct 2020 15:50:00 +0800 (CST)
-Received: from [10.167.225.206] (10.167.225.206) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Fri, 23 Oct 2020 15:50:00 +0800
-Subject: Re: [PATCH v2] fs: Handle I_DONTCACHE in iput_final() instead of
- generic_drop_inode()
-To:     <viro@zeniv.linux.org.uk>
-CC:     <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <y-goto@fujitsu.com>, "Ira Weiny" <ira.weiny@intel.com>
-References: <20200904075939.176366-1-lihao2018.fnst@cn.fujitsu.com>
- <20200908230331.GF1930795@iweiny-DESK2.sc.intel.com>
-From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
-Message-ID: <f1d1a56f-caec-3c68-6c70-1b6f995cab95@cn.fujitsu.com>
-Date:   Fri, 23 Oct 2020 15:49:59 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.2
+        id S461217AbgJWJOM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Oct 2020 05:14:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37052 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S461183AbgJWJOL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Oct 2020 05:14:11 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C989C0613CE;
+        Fri, 23 Oct 2020 02:14:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=Bc/Tl7QrHQ8TS00H9eZHX8HpJf7gnLju80W3+dBio3s=; b=lHd/Y1XEta78XOwzEbRgq/UpU2
+        A73VJLFqdMTxta2mKEIuA4xhXip9HWuId1knbAKvRkldwoW/HCUVhiDtojltIj8JcsLhWqCrMVJVu
+        TWggv/tZBG2rywCZT9hxTZ1KWViMWFeX+/1jN8Q4GJNcQl/5tO1GpHlomoV7+s5pg4/GoXkBAHxXl
+        N9bvOBR1/3BgkmHsIoiihX/L2LKkryJc3oI7y7muTeVt4v66HZE/jkji3cbb6myWrMgnKFX/EW0HI
+        3FYEGvf4D5QnGxvF83oZCyFuAF/SKnjGgp9x4wtd8xSoAh69Cgmt+1sg259JZHpXkc0NkMJbJafpJ
+        P8zwFb2Q==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kVt8s-0006xU-8j; Fri, 23 Oct 2020 09:13:46 +0000
+Date:   Fri, 23 Oct 2020 10:13:46 +0100
+From:   "hch@infradead.org" <hch@infradead.org>
+To:     Mike Snitzer <snitzer@redhat.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Sergei Shtepa <sergei.shtepa@veeam.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "hch@infradead.org" <hch@infradead.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+        "len.brown@intel.com" <len.brown@intel.com>,
+        "pavel@ucw.cz" <pavel@ucw.cz>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "jack@suse.cz" <jack@suse.cz>, "tj@kernel.org" <tj@kernel.org>,
+        "gustavo@embeddedor.com" <gustavo@embeddedor.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "koct9i@gmail.com" <koct9i@gmail.com>,
+        "steve@sk2.org" <steve@sk2.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        "linux-mm@kvack.org" <linux-mm@kvack.org>,
+        device-mapper development <dm-devel@redhat.com>,
+        Alasdair G Kergon <agk@redhat.com>
+Subject: Re: [PATCH 0/2] block layer filter and block device snapshot module
+Message-ID: <20201023091346.GA25115@infradead.org>
+References: <1603271049-20681-1-git-send-email-sergei.shtepa@veeam.com>
+ <71926887-5707-04a5-78a2-ffa2ee32bd68@suse.de>
+ <20201021141044.GF20749@veeam.com>
+ <ca8eaa40-b422-2272-1fd9-1d0a354c42bf@suse.de>
+ <20201022094402.GA21466@veeam.com>
+ <BL0PR04MB6514AC1B1FF313E6A14D122CE71D0@BL0PR04MB6514.namprd04.prod.outlook.com>
+ <20201022135213.GB21466@veeam.com>
+ <20201022151418.GR9832@magnolia>
+ <CAMM=eLfO_L-ZzcGmpPpHroznnSOq_KEWignFoM09h7Am9yE83g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20200908230331.GF1930795@iweiny-DESK2.sc.intel.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [10.167.225.206]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
-X-yoursite-MailScanner-ID: 9C9E14CE1A07.AB7FC
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAMM=eLfO_L-ZzcGmpPpHroznnSOq_KEWignFoM09h7Am9yE83g@mail.gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello,
+On Thu, Oct 22, 2020 at 01:54:16PM -0400, Mike Snitzer wrote:
+> On Thu, Oct 22, 2020 at 11:14 AM Darrick J. Wong
+> > Stupid question: Why don't you change the block layer to make it
+> > possible to insert device mapper devices after the blockdev has been set
+> > up?
+> 
+> Not a stupid question.  Definitely something that us DM developers
+> have wanted to do for a while.  Devil is in the details but it is the
+> right way forward.
+> 
 
-Ping.
+Yes, I think that is the right thing to do.  And I don't think it should
+be all that hard.  All we'd need in the I/O path is something like the
+pseudo-patch below, which will allow the interposer driver to resubmit
+bios using submit_bio_noacct as long as the driver sets BIO_INTERPOSED.
 
-This patch need to be merged... Thanks.
-
-On 2020/9/9 7:03, Ira Weiny wrote:
-> On Fri, Sep 04, 2020 at 03:59:39PM +0800, Hao Li wrote:
->> If generic_drop_inode() returns true, it means iput_final() can evict
->> this inode regardless of whether it is dirty or not. If we check
->> I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
->> evicted unconditionally. This is not the desired behavior because
->> I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
->> As for whether we need to evict this inode, this is what
->> generic_drop_inode() should do. This patch corrects the usage of
->> I_DONTCACHE.
->>
->> This patch was proposed in [1].
->>
->> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
->>
->> Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
->> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
-> Reviewed-by: Ira Weiny <ira.weiny@intel.com>
->
->> ---
->> Changes in v2:
->>  - Adjust code format
->>  - Add Fixes tag in commit message
->>
->>  fs/inode.c         | 4 +++-
->>  include/linux/fs.h | 3 +--
->>  2 files changed, 4 insertions(+), 3 deletions(-)
->>
->> diff --git a/fs/inode.c b/fs/inode.c
->> index 72c4c347afb7..19ad823f781c 100644
->> --- a/fs/inode.c
->> +++ b/fs/inode.c
->> @@ -1625,7 +1625,9 @@ static void iput_final(struct inode *inode)
->>  	else
->>  		drop = generic_drop_inode(inode);
->>  
->> -	if (!drop && (sb->s_flags & SB_ACTIVE)) {
->> +	if (!drop &&
->> +	    !(inode->i_state & I_DONTCACHE) &&
->> +	    (sb->s_flags & SB_ACTIVE)) {
->>  		inode_add_lru(inode);
->>  		spin_unlock(&inode->i_lock);
->>  		return;
->> diff --git a/include/linux/fs.h b/include/linux/fs.h
->> index e019ea2f1347..93caee80ce47 100644
->> --- a/include/linux/fs.h
->> +++ b/include/linux/fs.h
->> @@ -2922,8 +2922,7 @@ extern int inode_needs_sync(struct inode *inode);
->>  extern int generic_delete_inode(struct inode *inode);
->>  static inline int generic_drop_inode(struct inode *inode)
->>  {
->> -	return !inode->i_nlink || inode_unhashed(inode) ||
->> -		(inode->i_state & I_DONTCACHE);
->> +	return !inode->i_nlink || inode_unhashed(inode);
->>  }
->>  extern void d_mark_dontcache(struct inode *inode);
->>  
->> -- 
->> 2.28.0
->>
->>
->>
->
-
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index ac00d2fa4eb48d..3f6f1eb565e0a8 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1051,6 +1051,9 @@ blk_qc_t submit_bio_noacct(struct bio *bio)
+ 		return BLK_QC_T_NONE;
+ 	}
+ 
++	if (blk_has_interposer(bio->bi_disk) &&
++	    !(bio->bi_flags & BIO_INTERPOSED))
++		return __submit_bio_interposed(bio);
+ 	if (!bio->bi_disk->fops->submit_bio)
+ 		return __submit_bio_noacct_mq(bio);
+ 	return __submit_bio_noacct(bio);
