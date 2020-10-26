@@ -7,102 +7,122 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBFCBC2D0A3
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:36:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32D70C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:36:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9581E20872
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:36:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E33FA20809
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:36:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CD8e0NOY"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="w+rOZhGP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407135AbgJZXgK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Oct 2020 19:36:10 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55714 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407121AbgJZXgK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 19:36:10 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNPIcd164850;
-        Mon, 26 Oct 2020 23:36:06 GMT
+        id S2407144AbgJZXgO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Oct 2020 19:36:14 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:44248 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407121AbgJZXgO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 19:36:14 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNPR14177127;
+        Mon, 26 Oct 2020 23:36:12 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=KhXQBoE2w1vKGR/d5aZsMXWN3rcgmC+N4pG8nBh/RvM=;
- b=CD8e0NOY2vqhex15kN8vpWCzmSOTxGa0qi/pNhBkbx2VqcbYclpSgZCqCm/H4hBHnOx4
- 10Av1zlLTfFV1iEZ+B2tmVrfrfV2DB3WO3XUtpCICd1cCui4uxnR7cOoDZRbYXi5DzhH
- PzUcpNFCKawz3FSSU/fsGD6+OTz3fsqStdt4WKUvaJFL8MuRvmrOWzZvcaDQkl6tviXQ
- ESl6GYjRZU9FC4kXlhkwx/7zg8Ftcn9BEW8405xgqYRnPpZeEbV+CYAeXrbfV3Tv30t+
- XddcLeqf9DemQuU7G//oQ0Chf/wH9pFSNaIcP4x3ayi7LZzh0IuBkL55u0apm4dDwaEK Dg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 34dgm3vutf-1
+ bh=EhhIgA2MsuQt18BuRPWm72CQT2P50BXW6z9ecQn61jA=;
+ b=w+rOZhGPa8QnPbp5eM0lB1AGwjnaLEv40iONjobsfAPas4UgtDHqaI6UEF6pfGmApR6l
+ 85ufyn/FNtk0mBDorgutDB1z9+/l7ncAsBMc6NRHIX/YxCMxfWGvdIuImwwRoG9Kr2P7
+ wdwd8ggqEgtSOLlld8beCfFKUTGQjXG5w4ItcVdcxCej1iIRaAydjs2ab8PtjOSIFzsq
+ uWXO8p1oXQ2DhJc5nmH2yjCV5TqLDToPIxHtMKNPO1rW+k1B3ph2p+VseHx3iGeGgPCe
+ 7zxUUypI+giTvtrt1MkPq50Yhebsnoryn+uRkWcfO4SYzEP/wjTAX7oVkCl734cAWfOB bg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 34c9saqd6w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 26 Oct 2020 23:36:06 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNQNUT058408;
-        Mon, 26 Oct 2020 23:34:05 GMT
+        Mon, 26 Oct 2020 23:36:12 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNPxkC110446;
+        Mon, 26 Oct 2020 23:36:12 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 34cwukr89g-1
+        by aserp3020.oracle.com with ESMTP id 34cx5wfsxe-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Oct 2020 23:34:05 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09QNY4rT005459;
-        Mon, 26 Oct 2020 23:34:04 GMT
+        Mon, 26 Oct 2020 23:36:12 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09QNaBmS006264;
+        Mon, 26 Oct 2020 23:36:11 GMT
 Received: from localhost (/10.159.145.170)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Oct 2020 16:34:03 -0700
-Subject: [PATCH 9/9] xfs: enable new inode btree counters feature
+        with ESMTP ; Mon, 26 Oct 2020 16:36:10 -0700
+Subject: [PATCH 19/26] libfrog: list the bigtime feature when reporting
+ geometry
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net, darrick.wong@oracle.com, bfoster@redhat.com
+To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Oct 2020 16:34:03 -0700
-Message-ID: <160375524304.880355.8724068973017769929.stgit@magnolia>
-In-Reply-To: <160375518573.880355.12052697509237086329.stgit@magnolia>
-References: <160375518573.880355.12052697509237086329.stgit@magnolia>
+Date:   Mon, 26 Oct 2020 16:36:10 -0700
+Message-ID: <160375537005.881414.6068353624094235785.stgit@magnolia>
+In-Reply-To: <160375524618.881414.16347303401529121282.stgit@magnolia>
+References: <160375524618.881414.16347303401529121282.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=999
+ suspectscore=0 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010260153
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
- suspectscore=0 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010260153
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010260153
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Source kernel commit: b896a39faa5a2f97dadfb347928466afb12cc63a
+When we're reporting on a filesystem's geometry, report if the bigtime
+feature is enabled on this filesystem.
 
-Enable the new inode btree counters feature.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_format.h |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ libfrog/fsgeom.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 
-diff --git a/libxfs/xfs_format.h b/libxfs/xfs_format.h
-index 01544f9d5a57..5a183b6658e6 100644
---- a/libxfs/xfs_format.h
-+++ b/libxfs/xfs_format.h
-@@ -453,7 +453,8 @@ xfs_sb_has_compat_feature(
- #define XFS_SB_FEAT_RO_COMPAT_ALL \
- 		(XFS_SB_FEAT_RO_COMPAT_FINOBT | \
- 		 XFS_SB_FEAT_RO_COMPAT_RMAPBT | \
--		 XFS_SB_FEAT_RO_COMPAT_REFLINK)
-+		 XFS_SB_FEAT_RO_COMPAT_REFLINK| \
-+		 XFS_SB_FEAT_RO_COMPAT_INOBTCNT)
- #define XFS_SB_FEAT_RO_COMPAT_UNKNOWN	~XFS_SB_FEAT_RO_COMPAT_ALL
- static inline bool
- xfs_sb_has_ro_compat_feature(
+diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+index bd93924ea795..14507668e41b 100644
+--- a/libfrog/fsgeom.c
++++ b/libfrog/fsgeom.c
+@@ -28,6 +28,7 @@ xfs_report_geom(
+ 	int			spinodes;
+ 	int			rmapbt_enabled;
+ 	int			reflink_enabled;
++	int			bigtime_enabled;
+ 
+ 	isint = geo->logstart > 0;
+ 	lazycount = geo->flags & XFS_FSOP_GEOM_FLAGS_LAZYSB ? 1 : 0;
+@@ -43,12 +44,13 @@ xfs_report_geom(
+ 	spinodes = geo->flags & XFS_FSOP_GEOM_FLAGS_SPINODES ? 1 : 0;
+ 	rmapbt_enabled = geo->flags & XFS_FSOP_GEOM_FLAGS_RMAPBT ? 1 : 0;
+ 	reflink_enabled = geo->flags & XFS_FSOP_GEOM_FLAGS_REFLINK ? 1 : 0;
++	bigtime_enabled = geo->flags & XFS_FSOP_GEOM_FLAGS_BIGTIME ? 1 : 0;
+ 
+ 	printf(_(
+ "meta-data=%-22s isize=%-6d agcount=%u, agsize=%u blks\n"
+ "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
+ "         =%-22s crc=%-8u finobt=%u, sparse=%u, rmapbt=%u\n"
+-"         =%-22s reflink=%u\n"
++"         =%-22s reflink=%-4u bigtime=%u\n"
+ "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
+ "         =%-22s sunit=%-6u swidth=%u blks\n"
+ "naming   =version %-14u bsize=%-6u ascii-ci=%d, ftype=%d\n"
+@@ -58,7 +60,7 @@ xfs_report_geom(
+ 		mntpoint, geo->inodesize, geo->agcount, geo->agblocks,
+ 		"", geo->sectsize, attrversion, projid32bit,
+ 		"", crcs_enabled, finobt_enabled, spinodes, rmapbt_enabled,
+-		"", reflink_enabled,
++		"", reflink_enabled, bigtime_enabled,
+ 		"", geo->blocksize, (unsigned long long)geo->datablocks,
+ 			geo->imaxpct,
+ 		"", geo->sunit, geo->swidth,
 
