@@ -2,98 +2,190 @@ Return-Path: <SRS0=rYOu=EB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E2E9C4363A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 16:48:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF8B6C4363A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 18:20:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19EE42222C
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 16:48:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8ACC62087C
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 18:20:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C0p4dBlt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1786388AbgJZQs0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Oct 2020 12:48:26 -0400
-Received: from mx2.suse.de ([195.135.220.15]:43326 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1781112AbgJZQsM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Oct 2020 12:48:12 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id D56F5ACF5;
-        Mon, 26 Oct 2020 16:48:10 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 9E3A81E10F5; Mon, 26 Oct 2020 17:48:10 +0100 (CET)
-Date:   Mon, 26 Oct 2020 17:48:10 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Jan Kara <jack@suse.cz>, linux-fsdevel@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: Strange SEEK_HOLE / SEEK_DATA behavior
-Message-ID: <20201026164810.GI28769@quack2.suse.cz>
-References: <20201026145710.GF28769@quack2.suse.cz>
- <20201026151404.GR20115@casper.infradead.org>
+        id S1784279AbgJZSU0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Oct 2020 14:20:26 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:40427 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1784248AbgJZSUZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 14:20:25 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603736423;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=ptTkFFr2gcLe9Snuv32mfp/MeRnopkFApzasgpnIT9A=;
+        b=C0p4dBlt/+lVsJHolOuO1tQHGUU09T7ZlfA0zlPGTW7oPbD7nDKqFQwpIHXjXBnLLoOusx
+        6p80FxYODvUMImQGSiEaKQgRYKXWNKPxF6L7q1O0iagv29LW6I5LPA2jUegi7yD5b49+Wj
+        Ns2LFgQHh5xyHfziwq1jgaQStXTZer0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-312-Ooe0c2evOYSlV1DriIfhKA-1; Mon, 26 Oct 2020 14:20:21 -0400
+X-MC-Unique: Ooe0c2evOYSlV1DriIfhKA-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DEBBD1005513;
+        Mon, 26 Oct 2020 18:20:20 +0000 (UTC)
+Received: from bfoster.redhat.com (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 7442F5D9F3;
+        Mon, 26 Oct 2020 18:20:20 +0000 (UTC)
+From:   Brian Foster <bfoster@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     linux-fsdevel@vger.kernel.org
+Subject: [PATCH] iomap: support partial page discard on writeback block mapping failure
+Date:   Mon, 26 Oct 2020 14:20:19 -0400
+Message-Id: <20201026182019.1547662-1-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201026151404.GR20115@casper.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 26-10-20 15:14:04, Matthew Wilcox wrote:
-> On Mon, Oct 26, 2020 at 03:57:10PM +0100, Jan Kara wrote:
-> > Hello!
-> > 
-> > When reviewing Matthew's THP patches I've noticed one odd behavior which
-> > got copied from current iomap seek hole/data helpers. Currently we have:
-> > 
-> > # fallocate -l 4096 testfile
-> > # xfs_io -x -c "seek -h 0" testfile
-> > Whence	Result
-> > HOLE	0
-> > # dd if=testfile bs=4096 count=1 of=/dev/null
-> > # xfs_io -x -c "seek -h 0" testfile
-> > Whence	Result
-> > HOLE	4096
-> > 
-> > So once we read from an unwritten extent, the areas with cached pages
-> > suddently become treated as data. Later when pages get evicted, they become
-> > treated as holes again. Strictly speaking I wouldn't say this is a bug
-> > since nobody promises we won't treat holes as data but it looks weird.
-> > Shouldn't we treat clean pages over unwritten extents still as holes and
-> > only once the page becomes dirty treat is as data? What do other people
-> > think?
-> 
-> I think we actually discussed this recently.  Unless I misunderstood
-> one or both messages:
-> 
-> https://lore.kernel.org/linux-fsdevel/20201014223743.GD7391@dread.disaster.area/
+iomap writeback mapping failure only calls into ->discard_page() if
+the current page has not been added to the ioend. Accordingly, the
+XFS callback assumes a full page discard and invalidation. This is
+problematic for sub-page block size filesystems where some portion
+of a page might have been mapped successfully before a failure to
+map a delalloc block occurs. ->discard_page() is not called in that
+error scenario and the bio is explicitly failed by iomap via the
+error return from ->prepare_ioend(). As a result, the filesystem
+leaks delalloc blocks and corrupts the filesystem block counters.
 
-Thanks for the link. That indeed explains it, the concern is that if we'd
-check for PageDirty like I suggested, then it would be racy (page could
-have been written out just before we found it but after we've received
-block mapping from the filesystem). So using PageUptodate is less racy
-(although still somewhat racy because page could be also reclaimed).
+Since XFS is the only user of ->discard_page(), tweak the semantics
+to invoke the callback unconditionally on mapping errors and provide
+the first offset in the page that failed to map. Update
+xfs_discard_page() to discard the corresponding portion of the file
+and pass the range along to iomap_invalidatepage(). The latter
+already properly handles both full and sub-page scenarios by not
+changing any iomap or page state on sub-page invalidations.
 
-> I agree it's not great, but I'm not sure it's worth getting it "right"
-> by tracking whether a page contains only zeroes.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-Yeah, I don't think it's worth it just for this.
+One additional thing I'm trying to rectify that is slightly related to
+this patch is how iomap handles the page in the partial writepage error
+case. The comments suggest the page should be kept dirty, but
+write_cache_pages() clears the dirty state for each page before calling
+into ->writepage(). iomap_writepage_map() does call
+clear_page_dirty_for_io() in the success path, which seems harmless but
+superfluous. That aside, we don't seem to actually redirty the page in
+the partial writepage case, so the set_page_writeback_keepwrite() call
+seems insufficient. I.e., even if we did cycle back into
+write_cache_pages() and find the TOWRITE page, we just skip it since the
+page isn't actually dirty.
 
-> I have been vaguely thinking about optimising for read-mostly workloads
-> on sparse files by storing a magic entry that means "use the zero
-> page" in the page cache instead of a page, like DAX does (only better).
-> It hasn't risen to the top of my list yet.  Does anyone have a workload
-> that would benefit from it?
-> 
-> (I don't mean "can anybody construct one"; that's trivially possible.
-> I mean, do any customers care about the performance of that workload?)
+Unless I'm missing something, this all seems slightly broken to me. I
+think we can drop the clear_page_dirty_for_io() call from iomap, and
+instead we need to add a call to redirty_page_for_writepage() in the
+_keepwrite() error case. Beyond that, I'm kind of wondering if there's a
+reason for using _keepwrite() to revisit pages as such at all. AFAICT
+write_cache_pages() doesn't cycle around until it's invoked again, at
+which point it retags a new set of dirty pages and as above, we
+presumably have to redirty the page for _keepwrite() to have any
+practical effect anyways. Thoughts? Am I missing something here?
 
-No workload comes to my mind now.
+Brian
 
-								Honza
+ fs/iomap/buffered-io.c | 16 +++++++++-------
+ fs/xfs/xfs_aops.c      | 13 +++++++------
+ include/linux/iomap.h  |  2 +-
+ 3 files changed, 17 insertions(+), 14 deletions(-)
+
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index bcfc288dba3f..a99964c4b93f 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1412,14 +1412,16 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 	 * appropriately.
+ 	 */
+ 	if (unlikely(error)) {
++		unsigned int	pageoff = offset_in_page(file_offset);
++		/*
++		 * Let the filesystem know what portion of the current page
++		 * failed to map. If the page wasn't been added to ioend, it
++		 * won't be affected by I/O completion and we must unlock it
++		 * now.
++		 */
++		if (wpc->ops->discard_page)
++			wpc->ops->discard_page(page, pageoff);
+ 		if (!count) {
+-			/*
+-			 * If the current page hasn't been added to ioend, it
+-			 * won't be affected by I/O completions and we must
+-			 * discard and unlock it right here.
+-			 */
+-			if (wpc->ops->discard_page)
+-				wpc->ops->discard_page(page);
+ 			ClearPageUptodate(page);
+ 			unlock_page(page);
+ 			goto done;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index b35611882ff9..8a17b46a3978 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -527,13 +527,14 @@ xfs_prepare_ioend(
+  */
+ static void
+ xfs_discard_page(
+-	struct page		*page)
++	struct page		*page,
++	unsigned int		pageoff)
+ {
+ 	struct inode		*inode = page->mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	loff_t			offset = page_offset(page);
+-	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
++	loff_t			fileoff = page_offset(page) + pageoff;
++	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, fileoff);
+ 	int			error;
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+@@ -541,14 +542,14 @@ xfs_discard_page(
+ 
+ 	xfs_alert_ratelimited(mp,
+ 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
+-			page, ip->i_ino, offset);
++			page, ip->i_ino, fileoff);
+ 
+ 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+-			PAGE_SIZE / i_blocksize(inode));
++			(PAGE_SIZE - pageoff) / i_blocksize(inode));
+ 	if (error && !XFS_FORCED_SHUTDOWN(mp))
+ 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+ out_invalidate:
+-	iomap_invalidatepage(page, 0, PAGE_SIZE);
++	iomap_invalidatepage(page, pageoff, PAGE_SIZE - pageoff);
+ }
+ 
+ static const struct iomap_writeback_ops xfs_writeback_ops = {
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 4d1d3c3469e9..646aaefe0dae 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -220,7 +220,7 @@ struct iomap_writeback_ops {
+ 	 * Optional, allows the file system to discard state on a page where
+ 	 * we failed to submit any I/O.
+ 	 */
+-	void (*discard_page)(struct page *page);
++	void (*discard_page)(struct page *page, unsigned int pageoff);
+ };
+ 
+ struct iomap_writepage_ctx {
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.25.4
+
