@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26951C4363A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:38:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59E61C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:38:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE86020809
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:38:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2342120809
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:38:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LF19oZJm"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DFdOTnM1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407215AbgJZXi2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Oct 2020 19:38:28 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:57064 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407243AbgJZXi2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 19:38:28 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNQKxA165355;
-        Mon, 26 Oct 2020 23:38:22 GMT
+        id S2407253AbgJZXic (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Oct 2020 19:38:32 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:45796 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407243AbgJZXic (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 19:38:32 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNRVQ8178130;
+        Mon, 26 Oct 2020 23:38:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=8EyWHRkyD/RbCiCn4Ice7a5ylkF68ttYnpRSP2zGtJM=;
- b=LF19oZJmrHxkJ7aby1GGXdBXZby1fyXwbR2RVVKfHEZZFufaFn8JID6yM3rSWXpCWoKs
- MoNDst709r1t5iOfw9MJ3CBIKpAt8lHuWRJwDD/XoUg4+5QUp/wxOL/B9vUblcs7w77v
- bxsv3VuwLxh6nsuYcG1s5wECC/0OtwZIQHUff2zhkEMORMC8MqCauHkpdbPQIX7Kd2de
- U4H3tYHDuTAdQB+lFK1cnfXhQ5BA42uza7l6jszspOJciHitgTp1nKtXr1QE32H6+kdz
- pcq36GEALNQu2JQ1jbbVZxOR3/iB4h6gAEmdq7RIHsptsQld3cRvEfR/3Yz59lX1f6k1 9g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 34dgm3vuxb-1
+ bh=FasFLPm8wvobKvntM6PJhsjlR0POhoWoR6iGm+nDhc0=;
+ b=DFdOTnM1SXoohix9w8eRc8AftunqhYdUjY8vqePbdoiqB79pW7ZrG3CVSayjOV6RaEVy
+ pBRIVTZuYobGbUL2/plS2YnMemwZvA4Ns/GJIjc7gmVShWCxtFLnlc7vUSTL8Z+QNXkR
+ vjtO9kD4QZgWQXHvjgUtTI9lx456Yqx+Z9118sA80qdtTFKbg8pJZtNxgQhqCu96cebU
+ WgWsSIX7SezweQevfLwdAQPGAUsZJWwZkoov3dhjjGi793a3pWrI6a2oklMNu6fKwNuD
+ 7jLaF0A0mYVxzGCAWLlnqfxBEwA+1S92NBhyD3emTa+eUJvsoWrZIoSnk1O3HPEAW6zR tw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 34c9saqdb4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 26 Oct 2020 23:38:21 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNQF7b032587;
-        Mon, 26 Oct 2020 23:38:21 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 34cx1q2d7c-1
+        Mon, 26 Oct 2020 23:38:27 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNPxG5110502;
+        Mon, 26 Oct 2020 23:38:27 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 34cx5wftva-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Oct 2020 23:38:21 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09QNcKJJ030409;
-        Mon, 26 Oct 2020 23:38:20 GMT
+        Mon, 26 Oct 2020 23:38:27 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09QNcQEn009017;
+        Mon, 26 Oct 2020 23:38:26 GMT
 Received: from localhost (/10.159.145.170)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Oct 2020 16:38:20 -0700
-Subject: [PATCH 13/21] xfs: proper replay of deferred ops queued during log
- recovery
+        with ESMTP ; Mon, 26 Oct 2020 16:38:26 -0700
+Subject: [PATCH 14/21] xfs: xfs_defer_capture should absorb remaining block
+ reservations
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>,
+Cc:     Christoph Hellwig <hch@lst.de>, Brian Foster <bfoster@redhat.com>,
         linux-xfs@vger.kernel.org
-Date:   Mon, 26 Oct 2020 16:38:19 -0700
-Message-ID: <160375549936.882906.17819983161008721070.stgit@magnolia>
+Date:   Mon, 26 Oct 2020 16:38:25 -0700
+Message-ID: <160375550572.882906.4778143498429867343.stgit@magnolia>
 In-Reply-To: <160375541713.882906.11902959014062334120.stgit@magnolia>
 References: <160375541713.882906.11902959014062334120.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -65,201 +65,104 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
- suspectscore=2 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=999
+ suspectscore=0 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010260153
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
- suspectscore=2 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010260153
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010260153
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Source kernel commit: e6fff81e487089e47358a028526a9f63cdbcd503
+Source kernel commit: 4f9a60c48078c0efa3459678fa8d6e050e8ada5d
 
-When we replay unfinished intent items that have been recovered from the
-log, it's possible that the replay will cause the creation of more
-deferred work items.  As outlined in commit 509955823cc9c ("xfs: log
-recovery should replay deferred ops in order"), later work items have an
-implicit ordering dependency on earlier work items.  Therefore, recovery
-must replay the items (both recovered and created) in the same order
-that they would have been during normal operation.
+When xfs_defer_capture extracts the deferred ops and transaction state
+from a transaction, it should record the remaining block reservations so
+that when we continue the dfops chain, we can reserve the same number of
+blocks to use.  We capture the reservations for both data and realtime
+volumes.
 
-For log recovery, we enforce this ordering by using an empty transaction
-to collect deferred ops that get created in the process of recovering a
-log intent item to prevent them from being committed before the rest of
-the recovered intent items.  After we finish committing all the
-recovered log items, we allocate a transaction with an enormous block
-reservation, splice our huge list of created deferred ops into that
-transaction, and commit it, thereby finishing all those ops.
-
-This is /really/ hokey -- it's the one place in XFS where we allow
-nested transactions; the splicing of the defer ops list is is inelegant
-and has to be done twice per recovery function; and the broken way we
-handle inode pointers and block reservations cause subtle use-after-free
-and allocator problems that will be fixed by this patch and the two
-patches after it.
-
-Therefore, replace the hokey empty transaction with a structure designed
-to capture each chain of deferred ops that are created as part of
-recovering a single unfinished log intent.  Finally, refactor the loop
-that replays those chains to do so using one transaction per chain.
+This adds the requirement that every log intent item recovery function
+must be careful to reserve enough blocks to handle both itself and all
+defer ops that it can queue.  On the other hand, this enables us to do
+away with the handwaving block estimation nonsense that was going on in
+xlog_finish_defer_ops.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libxfs/xfs_defer.c |   89 ++++++++++++++++++++++++++++++++++++++++++++++++----
- libxfs/xfs_defer.h |   19 +++++++++++
- 2 files changed, 100 insertions(+), 8 deletions(-)
+ include/xfs_trans.h |    2 ++
+ libxfs/trans.c      |    1 +
+ libxfs/xfs_defer.c  |    4 ++++
+ libxfs/xfs_defer.h  |    4 ++++
+ 4 files changed, 11 insertions(+)
 
 
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index 9292a4a54237..f19914068030 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -64,9 +64,11 @@ typedef struct xfs_trans {
+ 	unsigned int	t_log_res;		/* amt of log space resvd */
+ 	unsigned int	t_log_count;		/* count for perm log res */
+ 	unsigned int	t_blk_res;		/* # of blocks resvd */
++	unsigned int	t_rtx_res;
+ 	xfs_fsblock_t	t_firstblock;		/* first block allocated */
+ 	struct xfs_mount *t_mountp;		/* ptr to fs mount struct */
+ 	unsigned int	t_blk_res_used;		/* # of resvd blocks used */
++	unsigned int	t_rtx_res_used;
+ 	unsigned int	t_flags;		/* misc flags */
+ 	long		t_icount_delta;		/* superblock icount change */
+ 	long		t_ifree_delta;		/* superblock ifree change */
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 6838b727350b..6499a30aef05 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -230,6 +230,7 @@ xfs_trans_reserve(
+ 			error = -ENOSPC;
+ 			goto undo_blocks;
+ 		}
++		tp->t_rtx_res += rtextents;
+ 	}
+ 
+ 	return 0;
 diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
-index 4f844b04641b..90dc9ce92106 100644
+index 90dc9ce92106..fc5c860e5d56 100644
 --- a/libxfs/xfs_defer.c
 +++ b/libxfs/xfs_defer.c
-@@ -547,14 +547,89 @@ xfs_defer_move(
-  *
-  * Create and log intent items for all the work that we're capturing so that we
-  * can be assured that the items will get replayed if the system goes down
-- * before log recovery gets a chance to finish the work it put off.  Then we
-- * move the chain from stp to dtp.
-+ * before log recovery gets a chance to finish the work it put off.  The entire
-+ * deferred ops state is transferred to the capture structure and the
-+ * transaction is then ready for the caller to commit it.  If there are no
-+ * intent items to capture, this function returns NULL.
-+ */
-+static struct xfs_defer_capture *
-+xfs_defer_ops_capture(
-+	struct xfs_trans		*tp)
-+{
-+	struct xfs_defer_capture	*dfc;
+@@ -573,6 +573,10 @@ xfs_defer_ops_capture(
+ 	dfc->dfc_tpflags = tp->t_flags & XFS_TRANS_LOWMODE;
+ 	tp->t_flags &= ~XFS_TRANS_LOWMODE;
+ 
++	/* Capture the remaining block reservations along with the dfops. */
++	dfc->dfc_blkres = tp->t_blk_res - tp->t_blk_res_used;
++	dfc->dfc_rtxres = tp->t_rtx_res - tp->t_rtx_res_used;
 +
-+	if (list_empty(&tp->t_dfops))
-+		return NULL;
-+
-+	/* Create an object to capture the defer ops. */
-+	dfc = kmem_zalloc(sizeof(*dfc), KM_NOFS);
-+	INIT_LIST_HEAD(&dfc->dfc_list);
-+	INIT_LIST_HEAD(&dfc->dfc_dfops);
-+
-+	xfs_defer_create_intents(tp);
-+
-+	/* Move the dfops chain and transaction state to the capture struct. */
-+	list_splice_init(&tp->t_dfops, &dfc->dfc_dfops);
-+	dfc->dfc_tpflags = tp->t_flags & XFS_TRANS_LOWMODE;
-+	tp->t_flags &= ~XFS_TRANS_LOWMODE;
-+
-+	return dfc;
-+}
-+
-+/* Release all resources that we used to capture deferred ops. */
-+void
-+xfs_defer_ops_release(
-+	struct xfs_mount		*mp,
-+	struct xfs_defer_capture	*dfc)
-+{
-+	xfs_defer_cancel_list(mp, &dfc->dfc_dfops);
-+	kmem_free(dfc);
-+}
-+
-+/*
-+ * Capture any deferred ops and commit the transaction.  This is the last step
-+ * needed to finish a log intent item that we recovered from the log.
-+ */
-+int
-+xfs_defer_ops_capture_and_commit(
-+	struct xfs_trans		*tp,
-+	struct list_head		*capture_list)
-+{
-+	struct xfs_mount		*mp = tp->t_mountp;
-+	struct xfs_defer_capture	*dfc;
-+	int				error;
-+
-+	/* If we don't capture anything, commit transaction and exit. */
-+	dfc = xfs_defer_ops_capture(tp);
-+	if (!dfc)
-+		return xfs_trans_commit(tp);
-+
-+	/* Commit the transaction and add the capture structure to the list. */
-+	error = xfs_trans_commit(tp);
-+	if (error) {
-+		xfs_defer_ops_release(mp, dfc);
-+		return error;
-+	}
-+
-+	list_add_tail(&dfc->dfc_list, capture_list);
-+	return 0;
-+}
-+
-+/*
-+ * Attach a chain of captured deferred ops to a new transaction and free the
-+ * capture structure.
-  */
- void
--xfs_defer_capture(
--	struct xfs_trans	*dtp,
--	struct xfs_trans	*stp)
-+xfs_defer_ops_continue(
-+	struct xfs_defer_capture	*dfc,
-+	struct xfs_trans		*tp)
- {
--	xfs_defer_create_intents(stp);
--	xfs_defer_move(dtp, stp);
-+	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
-+	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
-+
-+	/* Move captured dfops chain and state to the transaction. */
-+	list_splice_init(&dfc->dfc_dfops, &tp->t_dfops);
-+	tp->t_flags |= dfc->dfc_tpflags;
-+
-+	kmem_free(dfc);
+ 	return dfc;
  }
+ 
 diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
-index 3164199162b6..3af82ebc1249 100644
+index 3af82ebc1249..5c0e59b69ffa 100644
 --- a/libxfs/xfs_defer.h
 +++ b/libxfs/xfs_defer.h
-@@ -8,6 +8,7 @@
- 
- struct xfs_btree_cur;
- struct xfs_defer_op_type;
-+struct xfs_defer_capture;
+@@ -75,6 +75,10 @@ struct xfs_defer_capture {
+ 	/* Deferred ops state saved from the transaction. */
+ 	struct list_head	dfc_dfops;
+ 	unsigned int		dfc_tpflags;
++
++	/* Block reservations for the data and rt devices. */
++	unsigned int		dfc_blkres;
++	unsigned int		dfc_rtxres;
+ };
  
  /*
-  * Header for deferred operation list.
-@@ -63,10 +64,26 @@ extern const struct xfs_defer_op_type xfs_rmap_update_defer_type;
- extern const struct xfs_defer_op_type xfs_extent_free_defer_type;
- extern const struct xfs_defer_op_type xfs_agfl_free_defer_type;
- 
-+/*
-+ * This structure enables a dfops user to detach the chain of deferred
-+ * operations from a transaction so that they can be continued later.
-+ */
-+struct xfs_defer_capture {
-+	/* List of other capture structures. */
-+	struct list_head	dfc_list;
-+
-+	/* Deferred ops state saved from the transaction. */
-+	struct list_head	dfc_dfops;
-+	unsigned int		dfc_tpflags;
-+};
-+
- /*
-  * Functions to capture a chain of deferred operations and continue them later.
-  * This doesn't normally happen except log recovery.
-  */
--void xfs_defer_capture(struct xfs_trans *dtp, struct xfs_trans *stp);
-+int xfs_defer_ops_capture_and_commit(struct xfs_trans *tp,
-+		struct list_head *capture_list);
-+void xfs_defer_ops_continue(struct xfs_defer_capture *d, struct xfs_trans *tp);
-+void xfs_defer_ops_release(struct xfs_mount *mp, struct xfs_defer_capture *d);
- 
- #endif /* __XFS_DEFER_H__ */
 
