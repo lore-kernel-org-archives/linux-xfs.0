@@ -2,390 +2,242 @@ Return-Path: <SRS0=rYOu=EB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 823ABC388F7
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 03:23:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45B87C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 05:04:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3222220878
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 03:23:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDA4C208E4
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 05:04:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ov15loRb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eHXAEsKV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1418685AbgJZDX0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 25 Oct 2020 23:23:26 -0400
-Received: from mail-pj1-f66.google.com ([209.85.216.66]:50381 "EHLO
-        mail-pj1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1418058AbgJZDX0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Oct 2020 23:23:26 -0400
-Received: by mail-pj1-f66.google.com with SMTP id p21so2424461pju.0
-        for <linux-xfs@vger.kernel.org>; Sun, 25 Oct 2020 20:23:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=4IM5WQPMmjRs/RLJidSlXp2yoXqUgayxvOL56ZoOe1A=;
-        b=ov15loRbtjKZyy9d1DyCf9HK8t6NHhGe5auoaPK/vEjSMv/Z7mGafMsqkt4tq4hPE/
-         Yd+QUq9sfNKzmhaTrWWH+QbJJbTmztFh9V91xJGJc3zMEsrGwD//04kYP7NXDpLmg0Zo
-         pTVoyW/26ChTQCIm4lS5ZaxnMd07MjjaUyBfNT7garWb/5K0v6Ynms7OHn0zxLYF8Yyg
-         Z+6UURmVnavqxavL9/xpIKmsKb2He6TIM0g2e/LPaz7RRjQRPcQpxa7PvGLmLOY4/QUp
-         lkNUR4vnj2JJIn9Z68aNRSAydxjd40lsLuVBtZT+89LEcwExRAEvV9dpq3cp2GLUuZmx
-         f8Aw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=4IM5WQPMmjRs/RLJidSlXp2yoXqUgayxvOL56ZoOe1A=;
-        b=C9c7JknA59iIt6Wt6NiKbXRXdsE0xiv+aYpmPUMgvGn4D9byyPnumoZQvffZZ4+AmX
-         7+r7keHsXwzeq/Adcwu1tyOwxTKgdqCYR8OWsve1M24LF2n6F/2MM8MJlvv96ufbcFpo
-         HrkH3PCktXiPMaK56fSyzXPsy7vrk5WE1UFFOTsfVa6R2SiXneEM02wFTrPeU55x8e1/
-         2MfrbTOPjGTzi7STfX8tgQFgOWn+BSn0Vk1xTQzgm55Rh8t37J6PREXaWx9oaIT83DTs
-         JwvrzRDsy+zQtpMJMnG7yyc1b7uex7iJg96sdzwUWZWPBRWA6cEYX9YHqhpKNXoC4uOl
-         fXyg==
-X-Gm-Message-State: AOAM531ly3l3sohMZMCMbUGCv77wGY1hkzfbBkWjVQJRQHx8X/rtAWT7
-        PZYm54MEH/b8rtQWQ9PAW6A=
-X-Google-Smtp-Source: ABdhPJxw2txz9lDRv5742c8tn0YVvFuifsJph/L+7Yxu4WQYrcupBA0LdL9tcCYT0bczoOreLlATHQ==
-X-Received: by 2002:a17:90a:c1:: with SMTP id v1mr14284260pjd.89.1603682605140;
-        Sun, 25 Oct 2020 20:23:25 -0700 (PDT)
-Received: from garuda.localnet ([122.167.144.110])
-        by smtp.gmail.com with ESMTPSA id j11sm10030636pfh.143.2020.10.25.20.23.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 25 Oct 2020 20:23:24 -0700 (PDT)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     Allison Henderson <allison.henderson@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        david@fromorbit.com, hch@infradead.org
-Subject: Re: [PATCH V7 14/14] xfs: Introduce error injection to allocate only minlen size extents for files
-Date:   Mon, 26 Oct 2020 08:53:21 +0530
-Message-ID: <2166998.mU4Sq72Tuv@garuda>
-In-Reply-To: <8878dee5-c3d4-0bf5-ead9-d4682fafdf6f@oracle.com>
-References: <20201019064048.6591-1-chandanrlinux@gmail.com> <20201019064048.6591-15-chandanrlinux@gmail.com> <8878dee5-c3d4-0bf5-ead9-d4682fafdf6f@oracle.com>
+        id S1422353AbgJZFEi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Oct 2020 01:04:38 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:29717 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2390280AbgJZFEi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 01:04:38 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603688674;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Mb4zsKcO4pJ6H7AOzHLE4ZgWY+ztFC6WU7ngOXJuvGk=;
+        b=eHXAEsKVnx+aUXMdX9ywDs+NKWBOV7+i/l28NcqdIqHJrdRG9kAic6q04grqzxFCuoCG9c
+        Qd/MsqmbXVRcxva5gFQWCop+KwbH/IpjTZIpD11Vll2xJXKJKqsPwOIoQqt7xdQCzJiX2q
+        F59bzY2/fTo7j7ef8wg3/5ZUPYDUKTE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-235-j3LZigxCPA2_eKq2_ZkbzA-1; Mon, 26 Oct 2020 01:04:31 -0400
+X-MC-Unique: j3LZigxCPA2_eKq2_ZkbzA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 467701009E32;
+        Mon, 26 Oct 2020 05:04:30 +0000 (UTC)
+Received: from localhost (unknown [10.66.61.36])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id B758C5C1A3;
+        Mon, 26 Oct 2020 05:04:29 +0000 (UTC)
+Date:   Mon, 26 Oct 2020 13:19:48 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix invalid pointer dereference in
+ xfs_attr3_node_inactive
+Message-ID: <20201026051947.GE17190@localhost.localdomain>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+References: <20200204070636.25572-1-zlang@redhat.com>
+ <20200204213932.GM20628@dread.disaster.area>
+ <20200205000910.GB6870@magnolia>
+ <20200205040211.GO14282@dhcp-12-102.nay.redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200205040211.GO14282@dhcp-12-102.nay.redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sunday 25 October 2020 6:52:53 AM IST Allison Henderson wrote:
+On Wed, Feb 05, 2020 at 12:02:11PM +0800, Zorro Lang wrote:
+> On Tue, Feb 04, 2020 at 04:09:10PM -0800, Darrick J. Wong wrote:
+> > On Wed, Feb 05, 2020 at 08:39:32AM +1100, Dave Chinner wrote:
+> > > On Tue, Feb 04, 2020 at 03:06:36PM +0800, Zorro Lang wrote:
+> > > > This patch fixes below KASAN report. The xfs_attr3_node_inactive()
+> > > > gets 'child_bp' at there:
+> > > >   error = xfs_trans_get_buf(*trans, mp->m_ddev_targp,
+> > > >                             child_blkno,
+> > > >                             XFS_FSB_TO_BB(mp, mp->m_attr_geo->fsbcount), 0,
+> > > >                             &child_bp);
+> > > >   if (error)
+> > > >           return error;
+> > > >   error = bp->b_error;
+> > > > 
+> > > > But it turns to use 'bp', not 'child_bp'. And the 'bp' has been freed by:
+> > > >   xfs_trans_brelse(*trans, bp);
+> > > 
+> > > ....
+> > > > ---
+> > > >  fs/xfs/xfs_attr_inactive.c | 2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> > > > index bbfa6ba84dcd..26230d150bf2 100644
+> > > > --- a/fs/xfs/xfs_attr_inactive.c
+> > > > +++ b/fs/xfs/xfs_attr_inactive.c
+> > > > @@ -211,7 +211,7 @@ xfs_attr3_node_inactive(
+> > > >  				&child_bp);
+> > > >  		if (error)
+> > > >  			return error;
+> > > > -		error = bp->b_error;
+> > > > +		error = child_bp->b_error;
+> > > >  		if (error) {
+> > > >  			xfs_trans_brelse(*trans, child_bp);
+> > > >  			return error;
+> > > 
+> > > Isn't this dead code now? i.e. any error that occurs on the buffer
+> > > during a xfs_trans_get_buf() call is returned directly and so it's
+> > > caught by the "if (error)" check. Hence this whole child_bp->b_error
+> > > check can be removed, right?
+> > 
+> > It will be after I send in the second half of the 5.6 merge window.  I
+> > decided to hang onto the buffer error code rework until all of the
+> > kernel fuzz tests finished running and I was satisfied with my own
+> > userspace port of the same series.
+> > 
+> > (All that is now done, so I'll send that to linus tomorrow.)
+
+Hi,
+
+Has this issue been fixed? Due to I still hit xfs/433 fail on latest xfs-linux:
+
+[53972.827180] run fstests xfs/433 at 2020-10-24 23:11:10
+[53975.984049] XFS (vda3): Mounting V5 Filesystem
+[53976.134116] XFS (vda3): Ending clean mount
+[53976.210045] xfs filesystem being mounted at /mnt/xfstests/scratch supports timestamps until 2038 (0x7fffffff)
+[53982.471101] XFS (vda3): Unmounting Filesystem
+[53982.823725] XFS (vda3): Mounting V5 Filesystem
+[53982.876916] XFS (vda3): Ending clean mount
+[53982.898987] xfs filesystem being mounted at /mnt/xfstests/scratch supports timestamps until 2038 (0x7fffffff)
+[53982.949671] XFS (vda3): Injecting error (false) at file fs/xfs/xfs_buf.c, line 2345, on filesystem "vda3"
+[53982.952998] XFS (vda3): Injecting error (false) at file fs/xfs/xfs_buf.c, line 2345, on filesystem "vda3"
+[53982.957436] XFS (vda3): Injecting error (false) at file fs/xfs/xfs_buf.c, line 2345, on filesystem "vda3"
+[53982.960791] XFS (vda3): Injecting error (false) at file fs/xfs/xfs_buf.c, line 2345, on filesystem "vda3"
+[53982.963502] ==================================================================
+[53982.966070] BUG: KASAN: use-after-free in xfs_attr3_node_inactive+0x684/0x7c0 [xfs]
+[53982.968000] Read of size 4 at addr fffffc0106509854 by task rm/2847654
+
+[53982.970018] CPU: 0 PID: 2847654 Comm: rm Tainted: G        W         5.9.0-rc4 #1
+[53982.971872] Hardware name: QEMU KVM Virtual Machine, BIOS 0.0.0 02/06/2015
+[53982.973583] Call trace:
+[53982.974323]  dump_backtrace+0x0/0x3d0
+[53982.975267]  show_stack+0x1c/0x28
+[53982.976159]  dump_stack+0x13c/0x1b8
+[53982.977092]  print_address_description.constprop.12+0x68/0x4e0
+[53982.978575]  kasan_report+0x134/0x1b8
+[53982.979521]  __asan_report_load4_noabort+0x2c/0x50
+[53982.980876]  xfs_attr3_node_inactive+0x684/0x7c0 [xfs]
+[53982.982320]  xfs_attr_inactive+0x414/0x7e8 [xfs]
+[53982.983633]  xfs_inactive+0x398/0x4e8 [xfs]
+[53982.984835]  xfs_fs_destroy_inode+0x440/0xf48 [xfs]
+[53982.986080]  destroy_inode+0xa8/0x178
+[53982.987024]  evict+0x2bc/0x4a8
+[53982.987804]  iput+0x504/0x8f8
+[53982.988561]  do_unlinkat+0x36c/0x480
+[53982.989482]  __arm64_sys_unlinkat+0x94/0xf0
+[53982.990558]  do_el0_svc+0x1c4/0x3c0
+[53982.991442]  el0_sync_handler+0xf8/0x124
+[53982.992437]  el0_sync+0x140/0x180
+
+[53982.993669] Allocated by task 2847654:
+[53982.994663]  kasan_save_stack+0x24/0x50
+[53982.995682]  __kasan_kmalloc.isra.6+0xc4/0xe0
+[53982.996798]  kasan_slab_alloc+0x14/0x20
+[53982.997768]  slab_post_alloc_hook+0x5c/0x548
+[53982.998846]  kmem_cache_alloc+0x170/0x400
+[53983.000016]  _xfs_buf_alloc+0x68/0x1318 [xfs]
+[53983.001249]  xfs_buf_get_map+0x13c/0xcb8 [xfs]
+[53983.002504]  xfs_buf_read_map+0xbc/0xdc0 [xfs]
+[53983.003765]  xfs_trans_read_buf_map+0x534/0x1ff0 [xfs]
+[53983.005209]  xfs_da_read_buf+0x1ac/0x258 [xfs]
+[53983.006487]  xfs_da3_node_read+0x3c/0x98 [xfs]
+[53983.007735]  xfs_attr_inactive+0x5b8/0x7e8 [xfs]
+[53983.009034]  xfs_inactive+0x398/0x4e8 [xfs]
+[53983.010240]  xfs_fs_destroy_inode+0x440/0xf48 [xfs]
+[53983.011507]  destroy_inode+0xa8/0x178
+[53983.012442]  evict+0x2bc/0x4a8
+[53983.013228]  iput+0x504/0x8f8
+[53983.013972]  do_unlinkat+0x36c/0x480
+[53983.014884]  __arm64_sys_unlinkat+0x94/0xf0
+[53983.015964]  do_el0_svc+0x1c4/0x3c0
+[53983.016864]  el0_sync_handler+0xf8/0x124
+[53983.017858]  el0_sync+0x140/0x180
+
+[53983.019086] Freed by task 2847654:
+[53983.019946]  kasan_save_stack+0x24/0x50
+[53983.020953]  kasan_set_track+0x24/0x38
+[53983.021908]  kasan_set_free_info+0x20/0x40
+[53983.022940]  __kasan_slab_free+0x100/0x170
+[53983.023973]  kasan_slab_free+0x10/0x18
+[53983.024924]  slab_free_freelist_hook+0xf8/0x260
+[53983.026093]  kmem_cache_free+0xd0/0x4b0
+[53983.027205]  xfs_buf_free+0x354/0x958 [xfs]
+[53983.028399]  xfs_buf_rele+0x1040/0x1a90 [xfs]
+[53983.029643]  xfs_trans_brelse+0x294/0x858 [xfs]
+[53983.030941]  xfs_attr3_node_inactive+0x1a4/0x7c0 [xfs]
+[53983.032396]  xfs_attr_inactive+0x414/0x7e8 [xfs]
+[53983.033693]  xfs_inactive+0x398/0x4e8 [xfs]
+[53983.034889]  xfs_fs_destroy_inode+0x440/0xf48 [xfs]
+[53983.036143]  destroy_inode+0xa8/0x178
+[53983.037083]  evict+0x2bc/0x4a8
+[53983.037868]  iput+0x504/0x8f8
+[53983.038636]  do_unlinkat+0x36c/0x480
+[53983.039553]  __arm64_sys_unlinkat+0x94/0xf0
+[53983.040622]  do_el0_svc+0x1c4/0x3c0
+[53983.041515]  el0_sync_handler+0xf8/0x124
+[53983.042523]  el0_sync+0x140/0x180
+
+[53983.043750] The buggy address belongs to the object at fffffc0106509600
+                which belongs to the cache xfs_buf of size 632
+[53983.046824] The buggy address is located 596 bytes inside of
+                632-byte region [fffffc0106509600, fffffc0106509878)
+[53983.049772] The buggy address belongs to the page:
+[53983.050993] page:00000000e91654da refcount:1 mapcount:0 mapping:0000000000000000 index:0xfffffc0106500000 pfn:0x14650
+[53983.053681] flags: 0x17ffff8000000200(slab)
+[53983.054748] raw: 17ffff8000000200 ffffffff7ffaaa80 0000000600000006 fffffc012154a380
+[53983.056713] raw: fffffc0106500000 000000008055004a 00000001ffffffff 0000000000000000
+[53983.058688] page dumped because: kasan: bad access detected
+
+[53983.060494] Memory state around the buggy address:
+[53983.061719]  fffffc0106509700: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[53983.063569]  fffffc0106509780: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[53983.065350] >fffffc0106509800: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fc
+[53983.067180]                                                  ^
+[53983.068670]  fffffc0106509880: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+[53983.070474]  fffffc0106509900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[53983.072340] ==================================================================
+
 > 
-> On 10/18/20 11:40 PM, Chandan Babu R wrote:
-> > This commit adds XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT error tag which
-> > helps userspace test programs to get xfs_bmap_btalloc() to always
-> > allocate minlen sized extents.
-> > 
-> > This is required for test programs which need a guarantee that minlen
-> > extents allocated for a file do not get merged with their existing
-> > neighbours in the inode's BMBT. "Inode fork extent overflow check" for
-> > Directories, Xattrs and extension of realtime inodes need this since the
-> > file offset at which the extents are being allocated cannot be
-> > explicitly controlled from userspace.
-> > 
-> > One way to use this error tag is to,
-> > 1. Consume all of the free space by sequentially writing to a file.
-> > 2. Punch alternate blocks of the file. This causes CNTBT to contain
-> >     sufficient number of one block sized extent records.
-> > 3. Inject XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT error tag.
-> > After step 3, xfs_bmap_btalloc() will issue space allocation
-> > requests for minlen sized extents only.
-> > 
-> > ENOSPC error code is returned to userspace when there aren't any "one
-> > block sized" extents left in any of the AGs.
-> > 
-> > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
-> > ---
-> >   fs/xfs/libxfs/xfs_alloc.c    |  50 ++++++++++++++++++
-> >   fs/xfs/libxfs/xfs_alloc.h    |   3 ++
-> >   fs/xfs/libxfs/xfs_bmap.c     | 100 +++++++++++++++++++++++++++++++----
-> >   fs/xfs/libxfs/xfs_errortag.h |   4 +-
-> >   fs/xfs/xfs_error.c           |   3 ++
-> >   5 files changed, 150 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 852b536551b5..8e132f8b9cc4 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -2473,6 +2473,47 @@ xfs_defer_agfl_block(
-> >   	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_AGFL_FREE, &new->xefi_list);
-> >   }
-> >   
-> > +#ifdef DEBUG
-> > +/*
-> > + * Check if an AGF has a free extent record whose length is equal to
-> > + * args->minlen.
-> > + */
-> > +STATIC int
-> > +xfs_exact_minlen_extent_available(
-> > +	struct xfs_alloc_arg	*args,
-> > +	struct xfs_buf		*agbp,
-> > +	int			*stat)
-> > +{
-> > +	struct xfs_btree_cur	*cnt_cur;
-> > +	xfs_agblock_t		fbno;
-> > +	xfs_extlen_t		flen;
-> > +	int			error = 0;
-> > +
-> > +	cnt_cur = xfs_allocbt_init_cursor(args->mp, args->tp, agbp,
-> > +			args->agno, XFS_BTNUM_CNT);
-> > +	error = xfs_alloc_lookup_ge(cnt_cur, 0, args->minlen, stat);
-> > +	if (error)
-> > +		goto out;
-> > +
-> > +	if (*stat == 0) {
-> > +		error = -EFSCORRUPTED;
-> > +		goto out;
-> > +	}
-> > +
-> > +	error = xfs_alloc_get_rec(cnt_cur, &fbno, &flen, stat);
-> > +	if (error)
-> > +		goto out;
-> > +
-> > +	if (*stat == 1 && flen != args->minlen)
-> > +		*stat = 0;
-> > +
-> > +out:
-> > +	xfs_btree_del_cursor(cnt_cur, error);
-> > +
-> > +	return error;
-> > +}
-> > +#endif
-> > +
-> >   /*
-> >    * Decide whether to use this allocation group for this allocation.
-> >    * If so, fix up the btree freelist's size.
-> > @@ -2544,6 +2585,15 @@ xfs_alloc_fix_freelist(
-> >   	if (!xfs_alloc_space_available(args, need, flags))
-> >   		goto out_agbp_relse;
-> >   
-> > +#ifdef DEBUG
-> > +	if (args->alloc_minlen_only) {
-> > +		int i;
-> Just a nit: I think "i" seems like a bit of an odd name here.  I think I 
-> might have called it stat to match its parameter name.  Other than that, 
-> I think the rest looks ok.
-
-Ok, I will rename "i" with "stat" as you have suggested.
-
-Thank you for reviewing the patchset.
-
+> Oh, that's great! Please ignore this noise(/patch) :)
 > 
-> Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
-> Allison
-> > +
-> > +		error = xfs_exact_minlen_extent_available(args, agbp, &i);
-> > +		if (error || !i)
-> > +			goto out_agbp_relse;
-> > +	}
-> > +#endif
-> >   	/*
-> >   	 * Make the freelist shorter if it's too long.
-> >   	 *
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-> > index 6c22b12176b8..a4427c5775c2 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.h
-> > +++ b/fs/xfs/libxfs/xfs_alloc.h
-> > @@ -75,6 +75,9 @@ typedef struct xfs_alloc_arg {
-> >   	char		wasfromfl;	/* set if allocation is from freelist */
-> >   	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
-> >   	enum xfs_ag_resv_type	resv;	/* block reservation to use */
-> > +#ifdef DEBUG
-> > +	bool		alloc_minlen_only; /* allocate exact minlen extent */
-> > +#endif
-> >   } xfs_alloc_arg_t;
-> >   
-> >   /*
-> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> > index 88db23afc51c..74e148cc41b2 100644
-> > --- a/fs/xfs/libxfs/xfs_bmap.c
-> > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> > @@ -3474,11 +3474,13 @@ xfs_bmap_compute_alignments(
-> >   	int			error;
-> >   
-> >   	/* stripe alignment for allocation is determined by mount parameters */
-> > -	*stripe_align = 0;
-> > -	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
-> > -		*stripe_align = mp->m_swidth;
-> > -	else if (mp->m_dalign)
-> > -		*stripe_align = mp->m_dalign;
-> > +	if (stripe_align) {
-> > +		*stripe_align = 0;
-> > +		if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
-> > +			*stripe_align = mp->m_swidth;
-> > +		else if (mp->m_dalign)
-> > +			*stripe_align = mp->m_dalign;
-> > +	}
-> >   
-> >   	if (ap->flags & XFS_BMAPI_COWFORK)
-> >   		align = xfs_get_cowextsz_hint(ap->ip);
-> > @@ -3551,6 +3553,71 @@ xfs_bmap_process_allocated_extent(
-> >   	xfs_bmap_btalloc_accounting(ap, args);
-> >   }
-> >   
-> > +#ifdef DEBUG
-> > +static int
-> > +xfs_bmap_exact_minlen_extent_alloc(
-> > +	struct xfs_bmalloca	*ap)
-> > +{
-> > +	struct xfs_alloc_arg	args;
-> > +	struct xfs_mount	*mp = ap->ip->i_mount;
-> > +	xfs_fileoff_t		orig_offset;
-> > +	xfs_extlen_t		orig_length;
-> > +	int			error;
-> > +
-> > +	ASSERT(ap->length);
-> > +	orig_offset = ap->offset;
-> > +	orig_length = ap->length;
-> > +
-> > +	memset(&args, 0, sizeof(args));
-> > +	args.alloc_minlen_only = 1;
-> > +	args.tp = ap->tp;
-> > +	args.mp = mp;
-> > +
-> > +	xfs_bmap_compute_alignments(ap, &args, NULL);
-> > +
-> > +	if (ap->tp->t_firstblock == NULLFSBLOCK) {
-> > +		/*
-> > +		 * Unlike the longest extent available in an AG, we don't track
-> > +		 * the length of an AG's shortest extent.
-> > +		 * XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT is a debug only knob and
-> > +		 * hence we can afford to start traversing from the 0th AG since
-> > +		 * we need not be concerned about a drop in performance in
-> > +		 * "debug only" code paths.
-> > +		 */
-> > +		ap->blkno = XFS_AGB_TO_FSB(mp, 0, 0);
-> > +	} else {
-> > +		ap->blkno = ap->tp->t_firstblock;
-> > +	}
-> > +
-> > +	args.fsbno = ap->blkno;
-> > +	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
-> > +	args.type = XFS_ALLOCTYPE_FIRST_AG;
-> > +	args.total = args.minlen = args.maxlen = ap->minlen;
-> > +
-> > +	args.alignment = 1;
-> > +	args.minalignslop = 0;
-> > +
-> > +	args.minleft = ap->minleft;
-> > +	args.wasdel = ap->wasdel;
-> > +	args.resv = XFS_AG_RESV_NONE;
-> > +	args.datatype = ap->datatype;
-> > +
-> > +	error = xfs_alloc_vextent(&args);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	if (args.fsbno != NULLFSBLOCK) {
-> > +		xfs_bmap_process_allocated_extent(ap, &args, orig_offset,
-> > +			orig_length);
-> > +	} else {
-> > +		ap->blkno = NULLFSBLOCK;
-> > +		ap->length = 0;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +#endif
-> > +
-> >   STATIC int
-> >   xfs_bmap_btalloc(
-> >   	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
-> > @@ -4112,7 +4179,13 @@ xfs_bmap_alloc_userdata(
-> >   			return xfs_bmap_rtalloc(bma);
-> >   	}
-> >   
-> > -	return xfs_bmap_btalloc(bma);
-> > +#ifdef DEBUG
-> > +	if (unlikely(XFS_TEST_ERROR(false, mp,
-> > +			XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
-> > +		return xfs_bmap_exact_minlen_extent_alloc(bma);
-> > +	else
-> > +#endif
-> > +		return xfs_bmap_btalloc(bma);
-> >   }
-> >   
-> >   static int
-> > @@ -4148,10 +4221,19 @@ xfs_bmapi_allocate(
-> >   	else
-> >   		bma->minlen = 1;
-> >   
-> > -	if (bma->flags & XFS_BMAPI_METADATA)
-> > -		error = xfs_bmap_btalloc(bma);
-> > -	else
-> > +	if (bma->flags & XFS_BMAPI_METADATA) {
-> > +#ifdef DEBUG
-> > +		if (unlikely(XFS_TEST_ERROR(false, mp,
-> > +				XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
-> > +			error = xfs_bmap_exact_minlen_extent_alloc(bma);
-> > +		else
-> > +#endif
-> > +			error = xfs_bmap_btalloc(bma);
-> > +
-> > +
-> > +	} else {
-> >   		error = xfs_bmap_alloc_userdata(bma);
-> > +	}
-> >   	if (error || bma->blkno == NULLFSBLOCK)
-> >   		return error;
-> >   
-> > diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-> > index 1c56fcceeea6..6ca9084b6934 100644
-> > --- a/fs/xfs/libxfs/xfs_errortag.h
-> > +++ b/fs/xfs/libxfs/xfs_errortag.h
-> > @@ -57,7 +57,8 @@
-> >   #define XFS_ERRTAG_IUNLINK_FALLBACK			34
-> >   #define XFS_ERRTAG_BUF_IOERROR				35
-> >   #define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
-> > -#define XFS_ERRTAG_MAX					37
-> > +#define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
-> > +#define XFS_ERRTAG_MAX					38
-> >   
-> >   /*
-> >    * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-> > @@ -99,5 +100,6 @@
-> >   #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
-> >   #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
-> >   #define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
-> > +#define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
-> >   
-> >   #endif /* __XFS_ERRORTAG_H_ */
-> > diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-> > index 3780b118cc47..185b4915b7bf 100644
-> > --- a/fs/xfs/xfs_error.c
-> > +++ b/fs/xfs/xfs_error.c
-> > @@ -55,6 +55,7 @@ static unsigned int xfs_errortag_random_default[] = {
-> >   	XFS_RANDOM_IUNLINK_FALLBACK,
-> >   	XFS_RANDOM_BUF_IOERROR,
-> >   	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
-> > +	XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT,
-> >   };
-> >   
-> >   struct xfs_errortag_attr {
-> > @@ -166,6 +167,7 @@ XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
-> >   XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
-> >   XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
-> >   XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
-> > +XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
-> >   
-> >   static struct attribute *xfs_errortag_attrs[] = {
-> >   	XFS_ERRORTAG_ATTR_LIST(noerror),
-> > @@ -205,6 +207,7 @@ static struct attribute *xfs_errortag_attrs[] = {
-> >   	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
-> >   	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
-> >   	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
-> > +	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
-> >   	NULL,
-> >   };
-> >   
+> Thanks,
+> Zorro
+> 
+> > 
+> > --D
+> > 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
 > > 
 > 
-
-
--- 
-chandan
-
-
 
