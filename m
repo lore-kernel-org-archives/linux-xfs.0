@@ -4,48 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B908C83020
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 00:34:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AD2CC2D0A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 00:43:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE1C420882
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 00:34:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0294420747
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 00:43:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603758874;
-	bh=G5u/P+M9cxw0aGemHQX2PaHhw/C9NPpD6hKT9YDESVQ=;
+	s=default; t=1603759381;
+	bh=mPBuKbaS/hmJtHA4/4Z3Ltibrw3uuXcBuYlOE2nTEe4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ILkp07BMH7sIz+W426RKGDcpU2P8fdSIg8nroNosZLszRDu48hLjaRpnuk6xwEZCG
-	 9yXSlsyBmDrTst7NZo0nKGSyX9YfUCBQ6w9BflqPCMJlYUb8s0/3IfnnU5eYv7Wq5+
-	 qNjylu9yufmL4BNfvDd7IH+xauXG9zEgD5P5k2OE=
+	b=STgPyD67m3Eoc0P4mghkmwPqFR3X9+Gaxn31yvpE5scTtbDAWDA4E1zaudvEbgfaM
+	 60XlSdjou2J/ux5CginN+CC9aX3sMlYv93hD4kl3zzwKpeP3xuwlG3m7ziXdixl+SS
+	 lVKrXTSrBgKsa5Do+neg6o6Z0KrXS5nw1Z2L0k5o=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408960AbgJZXt6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Oct 2020 19:49:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47934 "EHLO mail.kernel.org"
+        id S2502308AbgJ0Amp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Oct 2020 20:42:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47716 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2408781AbgJZXtl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Oct 2020 19:49:41 -0400
+        id S2408752AbgJZXtf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Oct 2020 19:49:35 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 51D5920872;
-        Mon, 26 Oct 2020 23:49:40 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5B6F120882;
+        Mon, 26 Oct 2020 23:49:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603756181;
-        bh=G5u/P+M9cxw0aGemHQX2PaHhw/C9NPpD6hKT9YDESVQ=;
+        s=default; t=1603756175;
+        bh=mPBuKbaS/hmJtHA4/4Z3Ltibrw3uuXcBuYlOE2nTEe4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FkoF/gMiKh6yEv5f2xx2eB75s0VENVbfaT85PntiYtyJR6sQkhe+lz6nKubZCIoy7
-         hmNTmdXqv1cgr65S3gaeuAGIOdUSYaB9JGEZXlqsxpdOWdSSzIrEXR2eAlcjSGb0V3
-         cj8RbzGKkf6q35k2vk4QgvVej/3mp+EjwQyRNv5E=
+        b=VM9+rlURgFwxCtUg+pOOjqNmTIzdsK38a1kacqlQ3JDgYSpJnRy6JL2PXeLmESWmA
+         imbgfETH2EAJ0CZpiU9espOZ33pqOn8HZRIt8YeFQM4AeDon0nhcdTz9DPoLABGfol
+         B20SBLUCdAUW6cDV9xA0/9qlzyS6UjjK3oqKiNuw=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Chandan Babu R <chandanrlinux@gmail.com>,
+Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 028/147] xfs: fix realtime bitmap/summary file truncation when growing rt volume
-Date:   Mon, 26 Oct 2020 19:47:06 -0400
-Message-Id: <20201026234905.1022767-28-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.9 023/147] xfs: Set xfs_buf type flag when growing summary/bitmap files
+Date:   Mon, 26 Oct 2020 19:47:01 -0400
+Message-Id: <20201026234905.1022767-23-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20201026234905.1022767-1-sashal@kernel.org>
 References: <20201026234905.1022767-1-sashal@kernel.org>
@@ -57,67 +58,83 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+From: Chandan Babu R <chandanrlinux@gmail.com>
 
-[ Upstream commit f4c32e87de7d66074d5612567c5eac7325024428 ]
+[ Upstream commit 72cc95132a93293dcd0b6f68353f4741591c9aeb ]
 
-The realtime bitmap and summary files are regular files that are hidden
-away from the directory tree.  Since they're regular files, inode
-inactivation will try to purge what it thinks are speculative
-preallocations beyond the incore size of the file.  Unfortunately,
-xfs_growfs_rt forgets to update the incore size when it resizes the
-inodes, with the result that inactivating the rt inodes at unmount time
-will cause their contents to be truncated.
+The following sequence of commands,
 
-Fix this by updating the incore size when we change the ondisk size as
-part of updating the superblock.  Note that we don't do this when we're
-allocating blocks to the rt inodes because we actually want those blocks
-to get purged if the growfs fails.
+  mkfs.xfs -f -m reflink=0 -r rtdev=/dev/loop1,size=10M /dev/loop0
+  mount -o rtdev=/dev/loop1 /dev/loop0 /mnt
+  xfs_growfs  /mnt
 
-This fixes corruption complaints from the online rtsummary checker when
-running xfs/233.  Since that test requires rmap, one can also trigger
-this by growing an rt volume, cycling the mount, and creating rt files.
+... causes the following call trace to be printed on the console,
 
+XFS: Assertion failed: (bip->bli_flags & XFS_BLI_STALE) || (xfs_blft_from_flags(&bip->__bli_format) > XFS_BLFT_UNKNOWN_BUF && xfs_blft_from_flags(&bip->__bli_format) < XFS_BLFT_MAX_BUF), file: fs/xfs/xfs_buf_item.c, line: 331
+Call Trace:
+ xfs_buf_item_format+0x632/0x680
+ ? kmem_alloc_large+0x29/0x90
+ ? kmem_alloc+0x70/0x120
+ ? xfs_log_commit_cil+0x132/0x940
+ xfs_log_commit_cil+0x26f/0x940
+ ? xfs_buf_item_init+0x1ad/0x240
+ ? xfs_growfs_rt_alloc+0x1fc/0x280
+ __xfs_trans_commit+0xac/0x370
+ xfs_growfs_rt_alloc+0x1fc/0x280
+ xfs_growfs_rt+0x1a0/0x5e0
+ xfs_file_ioctl+0x3fd/0xc70
+ ? selinux_file_ioctl+0x174/0x220
+ ksys_ioctl+0x87/0xc0
+ __x64_sys_ioctl+0x16/0x20
+ do_syscall_64+0x3e/0x70
+ entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+This occurs because the buffer being formatted has the value of
+XFS_BLFT_UNKNOWN_BUF assigned to the 'type' subfield of
+bip->bli_formats->blf_flags.
+
+This commit fixes the issue by assigning one of XFS_BLFT_RTSUMMARY_BUF
+and XFS_BLFT_RTBITMAP_BUF to the 'type' subfield of
+bip->bli_formats->blf_flags before committing the corresponding
+transaction.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- fs/xfs/xfs_rtalloc.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_rtalloc.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 48be55b18c494..3ecbf859d3522 100644
+index 6209e7b6b895b..04b953c3ffa75 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -1016,10 +1016,13 @@ xfs_growfs_rt(
- 		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
- 		/*
--		 * Update the bitmap inode's size.
-+		 * Update the bitmap inode's size ondisk and incore.  We need
-+		 * to update the incore size so that inode inactivation won't
-+		 * punch what it thinks are "posteof" blocks.
- 		 */
- 		mp->m_rbmip->i_d.di_size =
- 			nsbp->sb_rbmblocks * nsbp->sb_blocksize;
-+		i_size_write(VFS_I(mp->m_rbmip), mp->m_rbmip->i_d.di_size);
- 		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
- 		/*
- 		 * Get the summary inode into the transaction.
-@@ -1027,9 +1030,12 @@ xfs_growfs_rt(
- 		xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL);
- 		xfs_trans_ijoin(tp, mp->m_rsumip, XFS_ILOCK_EXCL);
- 		/*
--		 * Update the summary inode's size.
-+		 * Update the summary inode's size.  We need to update the
-+		 * incore size so that inode inactivation won't punch what it
-+		 * thinks are "posteof" blocks.
- 		 */
- 		mp->m_rsumip->i_d.di_size = nmp->m_rsumsize;
-+		i_size_write(VFS_I(mp->m_rsumip), mp->m_rsumip->i_d.di_size);
- 		xfs_trans_log_inode(tp, mp->m_rsumip, XFS_ILOG_CORE);
- 		/*
- 		 * Copy summary data from old to new sizes.
+@@ -767,8 +767,14 @@ xfs_growfs_rt_alloc(
+ 	struct xfs_bmbt_irec	map;		/* block map output */
+ 	int			nmap;		/* number of block maps */
+ 	int			resblks;	/* space reservation */
++	enum xfs_blft		buf_type;
+ 	struct xfs_trans	*tp;
+ 
++	if (ip == mp->m_rsumip)
++		buf_type = XFS_BLFT_RTSUMMARY_BUF;
++	else
++		buf_type = XFS_BLFT_RTBITMAP_BUF;
++
+ 	/*
+ 	 * Allocate space to the file, as necessary.
+ 	 */
+@@ -830,6 +836,8 @@ xfs_growfs_rt_alloc(
+ 					mp->m_bsize, 0, &bp);
+ 			if (error)
+ 				goto out_trans_cancel;
++
++			xfs_trans_buf_set_type(tp, bp, buf_type);
+ 			memset(bp->b_addr, 0, mp->m_sb.sb_blocksize);
+ 			xfs_trans_log_buf(tp, bp, 0, mp->m_sb.sb_blocksize - 1);
+ 			/*
 -- 
 2.25.1
 
