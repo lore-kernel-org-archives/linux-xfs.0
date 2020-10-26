@@ -7,70 +7,72 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A58B8C2D0A3
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:38:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26951C4363A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:38:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5178320874
+	by mail.kernel.org (Postfix) with ESMTP id DE86020809
 	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 23:38:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MJUfFmCg"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LF19oZJm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407246AbgJZXi1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Oct 2020 19:38:27 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:57054 "EHLO
+        id S2407215AbgJZXi2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Oct 2020 19:38:28 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:57064 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407215AbgJZXi1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 19:38:27 -0400
+        with ESMTP id S2407243AbgJZXi2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 19:38:28 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNOsL4164741;
-        Mon, 26 Oct 2020 23:38:25 GMT
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNQKxA165355;
+        Mon, 26 Oct 2020 23:38:22 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=bR4NVP8Qsnt0FcZ2kMLINjJnfpSDMQ9gSRI2t5PBPzE=;
- b=MJUfFmCg/dBa5oU7riOTvfLN5PHHpPKId99+39Cg7zrlKimxFOqon3EC56iOtgj1dViC
- w/CSJzVpFIK49JpnDlO2NWlcQb3FtcaRaOpOGcixa9vaH85ll6p53zMWG7WASzwdjWKq
- 9CfBCWo+lDoNfFD8Lp2XWhFhRX4RtsJubJc5FYo2rzvd05pesBBM7iLlsjP1wd2Arr32
- SXbQqK0U+3BvppFfP9xoX1KoA80HDGKVoVTtWjt9gfxKcU1M5h25OGzq+2bbbWpyfcXx
- nBPPyLwoSwthXrHXX2Gq3bBLc1u7ao923su+8D3rUiGPMe7QW9DG/AFGqAxuEkPWLBet ag== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 34dgm3vuxd-1
+ bh=8EyWHRkyD/RbCiCn4Ice7a5ylkF68ttYnpRSP2zGtJM=;
+ b=LF19oZJmrHxkJ7aby1GGXdBXZby1fyXwbR2RVVKfHEZZFufaFn8JID6yM3rSWXpCWoKs
+ MoNDst709r1t5iOfw9MJ3CBIKpAt8lHuWRJwDD/XoUg4+5QUp/wxOL/B9vUblcs7w77v
+ bxsv3VuwLxh6nsuYcG1s5wECC/0OtwZIQHUff2zhkEMORMC8MqCauHkpdbPQIX7Kd2de
+ U4H3tYHDuTAdQB+lFK1cnfXhQ5BA42uza7l6jszspOJciHitgTp1nKtXr1QE32H6+kdz
+ pcq36GEALNQu2JQ1jbbVZxOR3/iB4h6gAEmdq7RIHsptsQld3cRvEfR/3Yz59lX1f6k1 9g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 34dgm3vuxb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 26 Oct 2020 23:38:25 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNQNHf058416;
-        Mon, 26 Oct 2020 23:36:24 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 34cwukr9hh-1
+        Mon, 26 Oct 2020 23:38:21 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09QNQF7b032587;
+        Mon, 26 Oct 2020 23:38:21 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 34cx1q2d7c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Oct 2020 23:36:24 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09QNaNNQ006418;
-        Mon, 26 Oct 2020 23:36:23 GMT
+        Mon, 26 Oct 2020 23:38:21 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09QNcKJJ030409;
+        Mon, 26 Oct 2020 23:38:20 GMT
 Received: from localhost (/10.159.145.170)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Oct 2020 16:36:23 -0700
-Subject: [PATCH 21/26] xfs_db: support printing time limits
+        with ESMTP ; Mon, 26 Oct 2020 16:38:20 -0700
+Subject: [PATCH 13/21] xfs: proper replay of deferred ops queued during log
+ recovery
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Oct 2020 16:36:22 -0700
-Message-ID: <160375538229.881414.12318967122326451609.stgit@magnolia>
-In-Reply-To: <160375524618.881414.16347303401529121282.stgit@magnolia>
-References: <160375524618.881414.16347303401529121282.stgit@magnolia>
+Cc:     Brian Foster <bfoster@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        linux-xfs@vger.kernel.org
+Date:   Mon, 26 Oct 2020 16:38:19 -0700
+Message-ID: <160375549936.882906.17819983161008721070.stgit@magnolia>
+In-Reply-To: <160375541713.882906.11902959014062334120.stgit@magnolia>
+References: <160375541713.882906.11902959014062334120.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
+ suspectscore=2 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010260153
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
  adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
- suspectscore=0 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
+ suspectscore=2 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010260153
 Precedence: bulk
@@ -79,251 +81,185 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Support printing the minimum and maxium timestamp limits on this
-filesystem.
+Source kernel commit: e6fff81e487089e47358a028526a9f63cdbcd503
+
+When we replay unfinished intent items that have been recovered from the
+log, it's possible that the replay will cause the creation of more
+deferred work items.  As outlined in commit 509955823cc9c ("xfs: log
+recovery should replay deferred ops in order"), later work items have an
+implicit ordering dependency on earlier work items.  Therefore, recovery
+must replay the items (both recovered and created) in the same order
+that they would have been during normal operation.
+
+For log recovery, we enforce this ordering by using an empty transaction
+to collect deferred ops that get created in the process of recovering a
+log intent item to prevent them from being committed before the rest of
+the recovered intent items.  After we finish committing all the
+recovered log items, we allocate a transaction with an enormous block
+reservation, splice our huge list of created deferred ops into that
+transaction, and commit it, thereby finishing all those ops.
+
+This is /really/ hokey -- it's the one place in XFS where we allow
+nested transactions; the splicing of the defer ops list is is inelegant
+and has to be done twice per recovery function; and the broken way we
+handle inode pointers and block reservations cause subtle use-after-free
+and allocator problems that will be fixed by this patch and the two
+patches after it.
+
+Therefore, replace the hokey empty transaction with a structure designed
+to capture each chain of deferred ops that are created as part of
+recovering a single unfinished log intent.  Finally, refactor the loop
+that replays those chains to do so using one transaction per chain.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/Makefile       |    3 +
- db/command.c      |    1 
- db/command.h      |    1 
- db/timelimit.c    |  160 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_db.8 |   23 ++++++++
- 5 files changed, 187 insertions(+), 1 deletion(-)
- create mode 100644 db/timelimit.c
+ libxfs/xfs_defer.c |   89 ++++++++++++++++++++++++++++++++++++++++++++++++----
+ libxfs/xfs_defer.h |   19 +++++++++++
+ 2 files changed, 100 insertions(+), 8 deletions(-)
 
 
-diff --git a/db/Makefile b/db/Makefile
-index 67908a2c3c98..beafb1058269 100644
---- a/db/Makefile
-+++ b/db/Makefile
-@@ -14,7 +14,8 @@ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
- 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
- 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
- 	fuzz.h
--CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c
-+CFILES = $(HFILES:.h=.c) btdump.c btheight.c convert.c info.c namei.c \
-+	timelimit.c
- LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
- 
- LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
-diff --git a/db/command.c b/db/command.c
-index 053097742b12..02f778b9316b 100644
---- a/db/command.c
-+++ b/db/command.c
-@@ -140,4 +140,5 @@ init_commands(void)
- 	write_init();
- 	dquot_init();
- 	fuzz_init();
-+	timelimit_init();
- }
-diff --git a/db/command.h b/db/command.h
-index bf130e63c85c..fd5cead9be78 100644
---- a/db/command.h
-+++ b/db/command.h
-@@ -33,3 +33,4 @@ extern void		btdump_init(void);
- extern void		info_init(void);
- extern void		btheight_init(void);
- extern void		namei_init(void);
-+extern void		timelimit_init(void);
-diff --git a/db/timelimit.c b/db/timelimit.c
-new file mode 100644
-index 000000000000..53a0a399a7f2
---- /dev/null
-+++ b/db/timelimit.c
-@@ -0,0 +1,160 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2020 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
+diff --git a/libxfs/xfs_defer.c b/libxfs/xfs_defer.c
+index 4f844b04641b..90dc9ce92106 100644
+--- a/libxfs/xfs_defer.c
++++ b/libxfs/xfs_defer.c
+@@ -547,14 +547,89 @@ xfs_defer_move(
+  *
+  * Create and log intent items for all the work that we're capturing so that we
+  * can be assured that the items will get replayed if the system goes down
+- * before log recovery gets a chance to finish the work it put off.  Then we
+- * move the chain from stp to dtp.
++ * before log recovery gets a chance to finish the work it put off.  The entire
++ * deferred ops state is transferred to the capture structure and the
++ * transaction is then ready for the caller to commit it.  If there are no
++ * intent items to capture, this function returns NULL.
 + */
-+#include "libxfs.h"
-+#include "command.h"
-+#include "output.h"
-+#include "init.h"
-+
-+enum show_what {
-+	SHOW_AUTO,
-+	SHOW_CLASSIC,
-+	SHOW_BIGTIME,
-+};
-+
-+
-+enum print_how {
-+	PRINT_RAW,
-+	PRINT_PRETTY,
-+	PRINT_COMPACT,
-+};
-+
-+static void
-+show_limit(
-+	const char	*tag,
-+	int64_t		limit,
-+	enum print_how	how)
++static struct xfs_defer_capture *
++xfs_defer_ops_capture(
++	struct xfs_trans		*tp)
 +{
-+	if (how == PRINT_COMPACT) {
-+		dbprintf("%" PRId64 " ", limit);
-+		return;
-+	}
++	struct xfs_defer_capture	*dfc;
 +
-+	if (how == PRINT_PRETTY && limit <= LONG_MAX && limit >= LONG_MIN) {
-+		time_t	tt = limit;
-+		char	*c;
++	if (list_empty(&tp->t_dfops))
++		return NULL;
 +
-+		c = ctime(&tt);
-+		if (c) {
-+			dbprintf("%s = %24.24s\n", tag, c);
-+			return;
-+		}
-+	}
++	/* Create an object to capture the defer ops. */
++	dfc = kmem_zalloc(sizeof(*dfc), KM_NOFS);
++	INIT_LIST_HEAD(&dfc->dfc_list);
++	INIT_LIST_HEAD(&dfc->dfc_dfops);
 +
-+	dbprintf("%s = %" PRId64 "\n", tag, limit);
++	xfs_defer_create_intents(tp);
++
++	/* Move the dfops chain and transaction state to the capture struct. */
++	list_splice_init(&tp->t_dfops, &dfc->dfc_dfops);
++	dfc->dfc_tpflags = tp->t_flags & XFS_TRANS_LOWMODE;
++	tp->t_flags &= ~XFS_TRANS_LOWMODE;
++
++	return dfc;
 +}
 +
-+static void
-+show_limits(
-+	enum show_what	whatkind,
-+	enum print_how	how)
++/* Release all resources that we used to capture deferred ops. */
++void
++xfs_defer_ops_release(
++	struct xfs_mount		*mp,
++	struct xfs_defer_capture	*dfc)
 +{
-+	enum print_how	grace_how = how;
-+
-+	switch (whatkind) {
-+	case SHOW_AUTO:
-+		/* should never get here */
-+		break;
-+	case SHOW_CLASSIC:
-+		show_limit("time.min", XFS_LEGACY_TIME_MIN, how);
-+		show_limit("time.max", XFS_LEGACY_TIME_MAX, how);
-+		show_limit("dqtimer.min", XFS_DQ_LEGACY_EXPIRY_MIN, how);
-+		show_limit("dqtimer.max", XFS_DQ_LEGACY_EXPIRY_MAX, how);
-+		break;
-+	case SHOW_BIGTIME:
-+		show_limit("time.min",
-+				xfs_bigtime_to_unix(XFS_BIGTIME_TIME_MIN), how);
-+		show_limit("time.max",
-+				xfs_bigtime_to_unix(XFS_BIGTIME_TIME_MAX), how);
-+		show_limit("dqtimer.min",
-+				xfs_dq_bigtime_to_unix(XFS_DQ_BIGTIME_EXPIRY_MIN),
-+				how);
-+		show_limit("dqtimer.max",
-+				xfs_dq_bigtime_to_unix(XFS_DQ_BIGTIME_EXPIRY_MAX),
-+				how);
-+		break;
-+	}
-+
-+	/* grace periods are always integers */
-+	if (grace_how != PRINT_COMPACT)
-+		grace_how = PRINT_RAW;
-+	show_limit("dqgrace.min", XFS_DQ_GRACE_MIN, grace_how);
-+	show_limit("dqgrace.min", XFS_DQ_GRACE_MAX, grace_how);
-+
-+	if (how == PRINT_COMPACT)
-+		dbprintf("\n");
++	xfs_defer_cancel_list(mp, &dfc->dfc_dfops);
++	kmem_free(dfc);
 +}
 +
-+static int
-+timelimit_f(
-+	int		argc,
-+	char		**argv)
++/*
++ * Capture any deferred ops and commit the transaction.  This is the last step
++ * needed to finish a log intent item that we recovered from the log.
++ */
++int
++xfs_defer_ops_capture_and_commit(
++	struct xfs_trans		*tp,
++	struct list_head		*capture_list)
 +{
-+	enum show_what	whatkind = SHOW_AUTO;
-+	enum print_how	how = PRINT_RAW;
-+	int		i;
++	struct xfs_mount		*mp = tp->t_mountp;
++	struct xfs_defer_capture	*dfc;
++	int				error;
 +
-+	for (i = 1; i < argc; i++) {
-+		if (!strcmp("--classic", argv[i]))
-+			whatkind = SHOW_CLASSIC;
-+		else if (!strcmp("--bigtime", argv[i]))
-+			whatkind = SHOW_BIGTIME;
-+		else if (!strcmp("--pretty", argv[i]))
-+			how = PRINT_PRETTY;
-+		else if (!strcmp("--compact", argv[i]))
-+			how = PRINT_COMPACT;
-+		else {
-+			dbprintf(_("%s: bad option for timelimit command\n"),
-+					argv[i]);
-+			return 1;
-+		}
++	/* If we don't capture anything, commit transaction and exit. */
++	dfc = xfs_defer_ops_capture(tp);
++	if (!dfc)
++		return xfs_trans_commit(tp);
++
++	/* Commit the transaction and add the capture structure to the list. */
++	error = xfs_trans_commit(tp);
++	if (error) {
++		xfs_defer_ops_release(mp, dfc);
++		return error;
 +	}
 +
-+	if (whatkind == SHOW_AUTO) {
-+		if (xfs_sb_version_hasbigtime(&mp->m_sb))
-+			whatkind = SHOW_BIGTIME;
-+		else
-+			whatkind = SHOW_CLASSIC;
-+	}
-+
-+	show_limits(whatkind, how);
++	list_add_tail(&dfc->dfc_list, capture_list);
 +	return 0;
 +}
 +
-+static void
-+timelimit_help(void)
-+{
-+	dbprintf(_(
-+"\n"
-+" Print the minimum and maximum supported values for inode timestamps,\n"
-+" disk quota expiration timers, and disk quota grace periods supported\n"
-+" by this filesystem.\n"
-+"\n"
-+" Options:\n"
-+"   --classic -- Force printing of the classic time limits.\n"
-+"   --bigtime -- Force printing of the bigtime limits.\n"
-+"   --pretty  -- Pretty-print the time limits.\n"
-+"   --compact -- Print the limits in a single line.\n"
-+"\n"
-+));
++/*
++ * Attach a chain of captured deferred ops to a new transaction and free the
++ * capture structure.
+  */
+ void
+-xfs_defer_capture(
+-	struct xfs_trans	*dtp,
+-	struct xfs_trans	*stp)
++xfs_defer_ops_continue(
++	struct xfs_defer_capture	*dfc,
++	struct xfs_trans		*tp)
+ {
+-	xfs_defer_create_intents(stp);
+-	xfs_defer_move(dtp, stp);
++	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
++	ASSERT(!(tp->t_flags & XFS_TRANS_DIRTY));
 +
-+}
++	/* Move captured dfops chain and state to the transaction. */
++	list_splice_init(&dfc->dfc_dfops, &tp->t_dfops);
++	tp->t_flags |= dfc->dfc_tpflags;
 +
-+static const cmdinfo_t	timelimit_cmd = {
-+	.name		= "timelimit",
-+	.cfunc		= timelimit_f,
-+	.argmin		= 0,
-+	.argmax		= -1,
-+	.canpush	= 0,
-+	.args		= N_("[--classic|--bigtime] [--pretty]"),
-+	.oneline	= N_("display timestamp limits"),
-+	.help		= timelimit_help,
++	kmem_free(dfc);
+ }
+diff --git a/libxfs/xfs_defer.h b/libxfs/xfs_defer.h
+index 3164199162b6..3af82ebc1249 100644
+--- a/libxfs/xfs_defer.h
++++ b/libxfs/xfs_defer.h
+@@ -8,6 +8,7 @@
+ 
+ struct xfs_btree_cur;
+ struct xfs_defer_op_type;
++struct xfs_defer_capture;
+ 
+ /*
+  * Header for deferred operation list.
+@@ -63,10 +64,26 @@ extern const struct xfs_defer_op_type xfs_rmap_update_defer_type;
+ extern const struct xfs_defer_op_type xfs_extent_free_defer_type;
+ extern const struct xfs_defer_op_type xfs_agfl_free_defer_type;
+ 
++/*
++ * This structure enables a dfops user to detach the chain of deferred
++ * operations from a transaction so that they can be continued later.
++ */
++struct xfs_defer_capture {
++	/* List of other capture structures. */
++	struct list_head	dfc_list;
++
++	/* Deferred ops state saved from the transaction. */
++	struct list_head	dfc_dfops;
++	unsigned int		dfc_tpflags;
 +};
 +
-+void
-+timelimit_init(void)
-+{
-+	add_command(&timelimit_cmd);
-+}
-diff --git a/man/man8/xfs_db.8 b/man/man8/xfs_db.8
-index fefe862b7564..f2520e9ad1ac 100644
---- a/man/man8/xfs_db.8
-+++ b/man/man8/xfs_db.8
-@@ -905,6 +905,29 @@ The possible data types are:
- .BR rtsummary ", " sb ", " symlink " and " text .
- See the TYPES section below for more information on these data types.
- .TP
-+.BI "timelimit [" OPTIONS ]
-+Print the minimum and maximum supported values for inode timestamps,
-+quota expiration timers, and quota grace periods supported by this
-+filesystem.
-+Options include:
-+.RS 1.0i
-+.TP 0.4i
-+.B \--bigtime
-+Print the time limits of an XFS filesystem with the
-+.B bigtime
-+feature enabled.
-+.TP 0.4i
-+.B \--classic
-+Print the time limits of a classic XFS filesystem.
-+.TP 0.4i
-+.B \--compact
-+Print all limits as raw values on a single line.
-+.TP 0.4i
-+.B \--pretty
-+Print the timestamps in the current locale's date and time format instead of
-+raw seconds since the Unix epoch.
-+.RE
-+.TP
- .BI "uuid [" uuid " | " generate " | " rewrite " | " restore ]
- Set the filesystem universally unique identifier (UUID).
- The filesystem UUID can be used by
+ /*
+  * Functions to capture a chain of deferred operations and continue them later.
+  * This doesn't normally happen except log recovery.
+  */
+-void xfs_defer_capture(struct xfs_trans *dtp, struct xfs_trans *stp);
++int xfs_defer_ops_capture_and_commit(struct xfs_trans *tp,
++		struct list_head *capture_list);
++void xfs_defer_ops_continue(struct xfs_defer_capture *d, struct xfs_trans *tp);
++void xfs_defer_ops_release(struct xfs_mount *mp, struct xfs_defer_capture *d);
+ 
+ #endif /* __XFS_DEFER_H__ */
 
