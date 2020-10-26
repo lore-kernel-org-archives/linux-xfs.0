@@ -2,190 +2,107 @@ Return-Path: <SRS0=rYOu=EB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF8B6C4363A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 18:20:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 984CEC4363A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 22:29:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8ACC62087C
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 18:20:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="C0p4dBlt"
+	by mail.kernel.org (Postfix) with ESMTP id 6173B2087C
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Oct 2020 22:29:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1784279AbgJZSU0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Oct 2020 14:20:26 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:40427 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1784248AbgJZSUZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 14:20:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603736423;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=ptTkFFr2gcLe9Snuv32mfp/MeRnopkFApzasgpnIT9A=;
-        b=C0p4dBlt/+lVsJHolOuO1tQHGUU09T7ZlfA0zlPGTW7oPbD7nDKqFQwpIHXjXBnLLoOusx
-        6p80FxYODvUMImQGSiEaKQgRYKXWNKPxF6L7q1O0iagv29LW6I5LPA2jUegi7yD5b49+Wj
-        Ns2LFgQHh5xyHfziwq1jgaQStXTZer0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-312-Ooe0c2evOYSlV1DriIfhKA-1; Mon, 26 Oct 2020 14:20:21 -0400
-X-MC-Unique: Ooe0c2evOYSlV1DriIfhKA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DEBBD1005513;
-        Mon, 26 Oct 2020 18:20:20 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 7442F5D9F3;
-        Mon, 26 Oct 2020 18:20:20 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org
-Subject: [PATCH] iomap: support partial page discard on writeback block mapping failure
-Date:   Mon, 26 Oct 2020 14:20:19 -0400
-Message-Id: <20201026182019.1547662-1-bfoster@redhat.com>
+        id S2391448AbgJZW3r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Oct 2020 18:29:47 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:57878 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2394447AbgJZW3r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Oct 2020 18:29:47 -0400
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 402B958C338;
+        Tue, 27 Oct 2020 09:29:44 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kXAzn-004g09-IR; Tue, 27 Oct 2020 09:29:43 +1100
+Date:   Tue, 27 Oct 2020 09:29:43 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/7] workqueue: bound maximum queue depth
+Message-ID: <20201026222943.GV7391@dread.disaster.area>
+References: <20201022051537.2286402-1-david@fromorbit.com>
+ <20201022051537.2286402-2-david@fromorbit.com>
+ <20201025044114.GA347246@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201025044114.GA347246@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=7-415B0cAAAA:8
+        a=x0LLTTe_3G05Sdl5dqgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-iomap writeback mapping failure only calls into ->discard_page() if
-the current page has not been added to the ioend. Accordingly, the
-XFS callback assumes a full page discard and invalidation. This is
-problematic for sub-page block size filesystems where some portion
-of a page might have been mapped successfully before a failure to
-map a delalloc block occurs. ->discard_page() is not called in that
-error scenario and the bio is explicitly failed by iomap via the
-error return from ->prepare_ioend(). As a result, the filesystem
-leaks delalloc blocks and corrupts the filesystem block counters.
+On Sat, Oct 24, 2020 at 09:41:14PM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 22, 2020 at 04:15:31PM +1100, Dave Chinner wrote:
+> > @@ -140,6 +164,7 @@ workqueue_add(
+> >  
+> >  	/* Now queue the new work structure to the work queue. */
+> >  	pthread_mutex_lock(&wq->lock);
+> > +restart:
+> >  	if (wq->next_item == NULL) {
+> >  		assert(wq->item_count == 0);
+> >  		ret = -pthread_cond_signal(&wq->wakeup);
+> > @@ -150,6 +175,16 @@ workqueue_add(
+> >  		}
+> >  		wq->next_item = wi;
+> >  	} else {
+> > +		/* throttle on a full queue if configured */
+> > +		if (wq->max_queued && wq->item_count == wq->max_queued) {
+> > +			pthread_cond_wait(&wq->queue_full, &wq->lock);
+> 
+> I ported xfs_scrub to use max_queued for the inode scanner, and got a
+> hang here.  It uses two workqueues -- the first is an unbouned workqueue
+> that receives one work item per AG in which each work item calls
+> INUMBERS, creates a work item for the returned inode chunk, and throws
+> it at the second workqueue.  The second workqueue is a bounded workqueue
+> that calls BULKSTAT on the INUMBERS work item and then calls the
+> iteration function on each bulkstat record returned.
+> 
+> The hang happens when the inumbers workqueue has more than one thread
+> running.
 
-Since XFS is the only user of ->discard_page(), tweak the semantics
-to invoke the callback unconditionally on mapping errors and provide
-the first offset in the page that failed to map. Update
-xfs_discard_page() to discard the corresponding portion of the file
-and pass the range along to iomap_invalidatepage(). The latter
-already properly handles both full and sub-page scenarios by not
-changing any iomap or page state on sub-page invalidations.
+IIUC, that means you have multiple producer threads? IIRC, he usage
+in this patchset is single producer, so it won't hit this problem...
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+> Both* threads notice the full workqueue and wait on
+> queue_full.  One of the workers in the second workqueue goes to pull off
+> the next work item, ends up in this if body, signals one of the sleeping
+> threads, and starts calling bulkstat.
+> 
+> In the time it takes to wake up the sleeping thread from wq 1, the
+> second workqueue pulls far enough ahead that the single thread from wq1
+> never manages to fill wq2 again.  Often, the wq1 thread was sleeping so
+> that it could add the last inode chunk of that AG to wq2.  We therefore
+> never wake up the *other* sleeping thread from wq1, and the whole app
+> stalls.
+> 
+> I dunno if that's a sane way to structure an inumbers/bulkstat scan, but
+> it seemed reasonable to me.  I can envision two possible fixes here: (1)
+> use pthread_cond_broadcast to wake everything up; or (2) always call
+> pthread_cond_wait when we pull a work item off the queue.  Thoughts?
 
-One additional thing I'm trying to rectify that is slightly related to
-this patch is how iomap handles the page in the partial writepage error
-case. The comments suggest the page should be kept dirty, but
-write_cache_pages() clears the dirty state for each page before calling
-into ->writepage(). iomap_writepage_map() does call
-clear_page_dirty_for_io() in the success path, which seems harmless but
-superfluous. That aside, we don't seem to actually redirty the page in
-the partial writepage case, so the set_page_writeback_keepwrite() call
-seems insufficient. I.e., even if we did cycle back into
-write_cache_pages() and find the TOWRITE page, we just skip it since the
-page isn't actually dirty.
+pthread_cond_broadcast() makes more sense, but I suspect there will
+be other issues with multiple producers that render the throttling
+ineffective. I suspect supporting multiple producers should be a
+separate patchset...
 
-Unless I'm missing something, this all seems slightly broken to me. I
-think we can drop the clear_page_dirty_for_io() call from iomap, and
-instead we need to add a call to redirty_page_for_writepage() in the
-_keepwrite() error case. Beyond that, I'm kind of wondering if there's a
-reason for using _keepwrite() to revisit pages as such at all. AFAICT
-write_cache_pages() doesn't cycle around until it's invoked again, at
-which point it retags a new set of dirty pages and as above, we
-presumably have to redirty the page for _keepwrite() to have any
-practical effect anyways. Thoughts? Am I missing something here?
+Cheers,
 
-Brian
-
- fs/iomap/buffered-io.c | 16 +++++++++-------
- fs/xfs/xfs_aops.c      | 13 +++++++------
- include/linux/iomap.h  |  2 +-
- 3 files changed, 17 insertions(+), 14 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index bcfc288dba3f..a99964c4b93f 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1412,14 +1412,16 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	 * appropriately.
- 	 */
- 	if (unlikely(error)) {
-+		unsigned int	pageoff = offset_in_page(file_offset);
-+		/*
-+		 * Let the filesystem know what portion of the current page
-+		 * failed to map. If the page wasn't been added to ioend, it
-+		 * won't be affected by I/O completion and we must unlock it
-+		 * now.
-+		 */
-+		if (wpc->ops->discard_page)
-+			wpc->ops->discard_page(page, pageoff);
- 		if (!count) {
--			/*
--			 * If the current page hasn't been added to ioend, it
--			 * won't be affected by I/O completions and we must
--			 * discard and unlock it right here.
--			 */
--			if (wpc->ops->discard_page)
--				wpc->ops->discard_page(page);
- 			ClearPageUptodate(page);
- 			unlock_page(page);
- 			goto done;
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index b35611882ff9..8a17b46a3978 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -527,13 +527,14 @@ xfs_prepare_ioend(
-  */
- static void
- xfs_discard_page(
--	struct page		*page)
-+	struct page		*page,
-+	unsigned int		pageoff)
- {
- 	struct inode		*inode = page->mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
--	loff_t			offset = page_offset(page);
--	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
-+	loff_t			fileoff = page_offset(page) + pageoff;
-+	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, fileoff);
- 	int			error;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -541,14 +542,14 @@ xfs_discard_page(
- 
- 	xfs_alert_ratelimited(mp,
- 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
--			page, ip->i_ino, offset);
-+			page, ip->i_ino, fileoff);
- 
- 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
--			PAGE_SIZE / i_blocksize(inode));
-+			(PAGE_SIZE - pageoff) / i_blocksize(inode));
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
--	iomap_invalidatepage(page, 0, PAGE_SIZE);
-+	iomap_invalidatepage(page, pageoff, PAGE_SIZE - pageoff);
- }
- 
- static const struct iomap_writeback_ops xfs_writeback_ops = {
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 4d1d3c3469e9..646aaefe0dae 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -220,7 +220,7 @@ struct iomap_writeback_ops {
- 	 * Optional, allows the file system to discard state on a page where
- 	 * we failed to submit any I/O.
- 	 */
--	void (*discard_page)(struct page *page);
-+	void (*discard_page)(struct page *page, unsigned int pageoff);
- };
- 
- struct iomap_writepage_ctx {
+Dave.
 -- 
-2.25.4
-
+Dave Chinner
+david@fromorbit.com
