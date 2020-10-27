@@ -2,148 +2,251 @@ Return-Path: <SRS0=u7A2=EC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA6F2C56201
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 20:53:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54C25C5DF9E
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 20:53:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9882222202
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 20:53:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 260222225E
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 20:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S373346AbgJ0UxE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1797652AbgJ0UxE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 27 Oct 2020 16:53:04 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48557 "EHLO
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48303 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S373343AbgJ0UxD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 16:53:03 -0400
+        by vger.kernel.org with ESMTP id S373321AbgJ0UxE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 16:53:04 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E798C58C440
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D85AD58C432
         for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2020 07:52:58 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kXVxi-004zyB-9m
+        id 1kXVxi-004zyQ-Ek
         for linux-xfs@vger.kernel.org; Wed, 28 Oct 2020 07:52:58 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kXVxi-00Bqlx-2B
+        id 1kXVxi-00BqmB-7K
         for linux-xfs@vger.kernel.org; Wed, 28 Oct 2020 07:52:58 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3 0/5] mkfs: Configuration file defined options
-Date:   Wed, 28 Oct 2020 07:52:53 +1100
-Message-Id: <20201027205258.2824424-1-david@fromorbit.com>
+Subject: [PATCH v3 5/5] mkfs: document config files in mkfs.xfs(8)
+Date:   Wed, 28 Oct 2020 07:52:58 +1100
+Message-Id: <20201027205258.2824424-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20201027205258.2824424-1-david@fromorbit.com>
+References: <20201027205258.2824424-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=afefHYAZSVUA:10 a=VwQbUJbxAAAA:8 a=oiYcDx2ZSc9FvUAsWkkA:9
-        a=AjGcO6oz07-iQ99wixmX:22
+        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=WTW2C1-nxof8fN0EWrAA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Version 3:
+From: Dave Chinner <dchinner@redhat.com>
 
-- really do "-c file=xxx" > "-c options=xxx" everywhere
-- update libinih parser error handling to be more robust
-- ini_name -> ini_section and comment updates
-- man page layout and grammar improvements
-- Updated Darrick's old config file fstests to exercise the new
-  code.
+So people know it exists.
 
-Version 2:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ man/man8/mkfs.xfs.8 | 113 +++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 106 insertions(+), 7 deletions(-)
 
-- "-c file=xxx" > "-c options=xxx"
-- split out constification into new patch
-- removed debug output
-- fixed some comments
-- added man page stuff
-
-Hi Folks,
-
-Because needing config files for mkfs came up yet again in
-discussion, here is a simple implementation of INI format config
-files. These config files behave identically to options specified on
-the command line - the do not change defaults, they do not override
-CLI options, they are not overridden by cli options.
-
-Example:
-
-$ echo -e "[metadata]\ncrc = 0" > foo
-$ mkfs/mkfs.xfs -N -c options=foo -d file=1,size=100m blah
-Parameters parsed from config file foo successfully
-meta-data=blah                   isize=256    agcount=4, agsize=6400 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=0        finobt=0, sparse=0, rmapbt=0
-         =                       reflink=0
-data     =                       bsize=4096   blocks=25600, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=853, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-$
-
-And there's a V4 filesystem as specified by the option defined
-in the config file. If we do:
-
-$ mkfs/mkfs.xfs -N -c options=foo -m crc=1 -d file=1,size=100m blah
--m crc option respecified
-Usage: mkfs.xfs
-.....
-$
-
-You can see it errors out because the CRC option was specified in
-both the config file and on the CLI.
-
-There's lots of stuff we can do to make the conflict and respec
-error messages better, but that doesn't change the basic
-functionality of config file based mkfs options. To allow for future
-changes to the way we want to apply config files, I created a
-full option subtype for config files. That means we can add another
-option to say "apply config file as default values rather than as
-options" if we decide that is functionality that we want to support.
-
-However, policy decisions like that are completely separate to the
-mechanism, so these patches don't try to address desires to ship
-"tuned" configs, system wide option files, shipping distro specific
-defaults in config files, etc. This is purely a mechanism to allow
-users to specify options via files instead of on the CLI.  No more,
-no less.
-
-Git branch can be found here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/dgc/xfsprogs-dev.git mkfs-config-file
-
-Cheers,
-
-Dave.
-
-
-Dave Chinner (5):
-  build: add support for libinih for mkfs
-  mkfs: add initial ini format config file parsing support
-  mkfs: constify various strings
-  mkfs: hook up suboption parsing to ini files
-  mkfs: document config files in mkfs.xfs(8)
-
- configure.ac         |   3 +
- doc/INSTALL          |   5 +
- include/builddefs.in |   1 +
- include/linux.h      |   2 +-
- m4/package_inih.m4   |  20 ++++
- man/man8/mkfs.xfs.8  | 113 +++++++++++++++++++--
- mkfs/Makefile        |   2 +-
- mkfs/xfs_mkfs.c      | 231 ++++++++++++++++++++++++++++++++++++++-----
- 8 files changed, 343 insertions(+), 34 deletions(-)
- create mode 100644 m4/package_inih.m4
-
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 0a7858748457..b959f293edb5 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -122,8 +122,46 @@ If the size of the block or sector is not specified, the default sizes
+ Many feature options allow an optional argument of 0 or 1, to explicitly
+ disable or enable the functionality.
+ .SH OPTIONS
++Options may be specified either on the command line or in a configuration file.
++Not all command line options can be specified in configuration files; only the
++command line options followed by a
++.B [section]
++label can be used in a configuration file.
++.PP
++Options that can be used in configuration files are grouped into related
++sections containing multiple options.
++The command line options and configuration files use the same option
++sections and grouping.
++Configuration file section names are listed in the command line option
++sections below.
++Option names and values are the same for both command line
++and configuration file specification.
++.PP
++Options specified are the combined set of command line parameters and
++configuration file parameters.
++Duplicated options will result in a respecification error, regardless of the
++location they were specified at.
++.TP
++.BI \-c " configuration_file_option"
++This option specifies the files that mkfs configuration will be obtained from.
++The valid
++.I configuration_file_option
++is:
++.RS 1.2i
+ .TP
++.BI options= name
++The configuration options will be sourced from the file specified by the
++.I name
++option string.
++This option can be use either an absolute or relative path to the configuration
++file to be read.
++.RE
++.PP
++.PD 0
+ .BI \-b " block_size_options"
++.TP
++.BI "Section Name: " [block]
++.PD
+ This option specifies the fundamental block size of the filesystem.
+ The valid
+ .I block_size_option
+@@ -141,8 +179,12 @@ Although
+ will accept any of these values and create a valid filesystem,
+ XFS on Linux can only mount filesystems with pagesize or smaller blocks.
+ .RE
+-.TP
++.PP
++.PD 0
+ .BI \-m " global_metadata_options"
++.TP
++.BI "Section Name: " [metadata]
++.PD
+ These options specify metadata format options that either apply to the entire
+ filesystem or aren't easily characterised by a specific functionality group. The
+ valid
+@@ -243,8 +285,12 @@ reflink-enabled XFS filesystems.  To use filesystem DAX with XFS, specify the
+ .B \-m reflink=0
+ option to mkfs.xfs to disable the reflink feature.
+ .RE
+-.TP
++.PP
++.PD 0
+ .BI \-d " data_section_options"
++.TP
++.BI "Section Name: " [data]
++.PD
+ These options specify the location, size, and other parameters of the
+ data section of the filesystem. The valid
+ .I data_section_options
+@@ -416,8 +462,12 @@ By default,
+ .B mkfs.xfs
+ will not write to the device if it suspects that there is a filesystem
+ or partition table on the device already.
+-.TP
++.PP
++.PD 0
+ .BI \-i " inode_options"
++.TP
++.BI "Section Name: " [inode]
++.PD
+ This option specifies the inode size of the filesystem, and other
+ inode allocation parameters.
+ The XFS inode contains a fixed-size part and a variable-size part.
+@@ -537,8 +587,12 @@ accommodate a chunk of 64 inodes. Without this feature enabled, inode
+ allocations can fail with out of space errors under severe fragmented
+ free space conditions.
+ .RE
+-.TP
++.PP
++.PD 0
+ .BI \-l " log_section_options"
++.TP
++.BI "Section Name: " [log]
++.PD
+ These options specify the location, size, and other parameters of the
+ log section of the filesystem. The valid
+ .I log_section_options
+@@ -651,8 +705,12 @@ is 1 (on) so you must specify
+ if you want to disable this feature for older kernels which don't support
+ it.
+ .RE
+-.TP
++.PP
++.PD 0
+ .BI \-n " naming_options"
++.TP
++.BI "Section Name: " [naming]
++.PD
+ These options specify the version and size parameters for the naming
+ (directory) area of the filesystem. The valid
+ .I naming_options
+@@ -858,8 +916,12 @@ to be constructed;
+ the
+ .B \-q
+ flag suppresses this.
+-.TP
++.PP
++.PD 0
+ .BI \-r " realtime_section_options"
++.TP
++.BI "Section Name: " [realtime]
++.PD
+ These options specify the location, size, and other parameters of the
+ real-time section of the filesystem. The valid
+ .I realtime_section_options
+@@ -893,8 +955,12 @@ or logical volume containing the section.
+ This option disables stripe size detection, enforcing a realtime device with no
+ stripe geometry.
+ .RE
+-.TP
++.PP
++.PD 0
+ .BI \-s " sector_size_options"
++.TP
++.BI "Section Name: " [sector]
++.PD
+ This option specifies the fundamental sector size of the filesystem.
+ The valid
+ .I sector_size_option
+@@ -933,6 +999,39 @@ Do not attempt to discard blocks at mkfs time.
+ .TP
+ .B \-V
+ Prints the version number and exits.
++.SH Configuration File Format
++The configuration file uses a basic INI format to specify sections and options
++within a section.
++Section and option names are case sensitive.
++Section names must not contain whitespace.
++Options are name-value pairs, ended by the first whitespace in the line.
++Option names cannot contain whitespace.
++Full line comments can be added by starting a line with a # symbol.
++If values contain whitespace, then it must be quoted.
++.PP
++The following example configuration file sets the block size to 4096 bytes,
++turns on reverse mapping btrees and sets the inode size to 2048 bytes.
++.PP
++.PD 0
++# Example mkfs.xfs configuration file
++.HP
++.HP
++[block]
++.HP
++size=4k
++.HP
++.HP
++[metadata]
++.HP
++rmapbt=1
++.HP
++.HP
++[inode]
++.HP
++size=2048
++.HP
++.PD
++.PP
+ .SH SEE ALSO
+ .BR xfs (5),
+ .BR mkfs (8),
 -- 
 2.28.0
 
