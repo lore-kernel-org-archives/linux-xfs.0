@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22050C55178
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 00:14:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD122C55178
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 00:19:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE4DF20791
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 00:14:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE20320708
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 00:19:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1603757675;
-	bh=zowSaM2yXYleuKA3rxe7uKTPuSn6i1DqtdSgPtVliFQ=;
+	s=default; t=1603757949;
+	bh=GbZM0ehyN3//vrdwUIz7Z80K9dCZVaua0fJUMMfbTIc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=jj6Bakw7WFnKfhk4qjhrvjzwgHQxe6F3O1utTQGZfZnIVxF9kDnzu+cMhK85QQHxX
-	 RAzcCAeqPy/Vz+C+YiQb9eRD16haSQ93ngNbgDVMhc9KDBbS6sTdhiDPZoIaFur+xB
-	 qzaIu+oO79EgIoI6HTcdhWuKqDk/1er8eDkpni4c=
+	b=VSVYYPj5osK9evn3Pu/azkFy/wbrypYRN74qcl33OC2ZljwamxyGnLrSdZv1qvQax
+	 iTas34y5mH1mGAbSz99ojzh/vRKJIN3bBt5FM8yOGktRG0hJKlaKKfcnsNheOqqXPE
+	 oZ2EErPKzCiHXFz/xBVvhn4oY3+WHiARFUx903ow=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439595AbgJ0AOX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Oct 2020 20:14:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33160 "EHLO mail.kernel.org"
+        id S2440935AbgJ0ATI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Oct 2020 20:19:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58512 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2411750AbgJ0ALa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Oct 2020 20:11:30 -0400
+        id S2439094AbgJ0AJ6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Oct 2020 20:09:58 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8FEF22087C;
-        Tue, 27 Oct 2020 00:11:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 51A0E20754;
+        Tue, 27 Oct 2020 00:09:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1603757490;
-        bh=zowSaM2yXYleuKA3rxe7uKTPuSn6i1DqtdSgPtVliFQ=;
+        s=default; t=1603757397;
+        bh=GbZM0ehyN3//vrdwUIz7Z80K9dCZVaua0fJUMMfbTIc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kT99U4w0l6qN/TfkaB+KpYHUdiuSt6mIuwbgSXeZWmC1YFT9K+bsW4dd/xHwtaok7
-         m04Hmt8XJdE9R3tY62mmn1+gmuuHepdqLXHE1tPxWr7M613wKtB+zu/qfnPe79amAR
-         2spsiF8ERoR7fSXhJt3+ZNHqqAt3e/phJ+C45N8E=
+        b=oWaMOtWSlwSX2pl1nefBgI7cVtX+LFsImd19LN6ytwwsAMR00mG5FV731SUKqBsTS
+         JusoxZi0GCHzLCpYg7wzm843S/JUvWQ+l9mzke72SP8ycvbulbUNk5NHHhfWDTbbEf
+         g4pnVBFUCc2MOoP6DClJ6aaaYPMF+zw1/TYJ4dxM=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
         Chandan Babu R <chandanrlinux@gmail.com>,
         Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 05/25] xfs: fix realtime bitmap/summary file truncation when growing rt volume
-Date:   Mon, 26 Oct 2020 20:11:03 -0400
-Message-Id: <20201027001123.1027642-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 09/46] xfs: fix realtime bitmap/summary file truncation when growing rt volume
+Date:   Mon, 26 Oct 2020 20:09:08 -0400
+Message-Id: <20201027000946.1026923-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20201027001123.1027642-1-sashal@kernel.org>
-References: <20201027001123.1027642-1-sashal@kernel.org>
+In-Reply-To: <20201027000946.1026923-1-sashal@kernel.org>
+References: <20201027000946.1026923-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -86,10 +86,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 8 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 919b6544b61a3..eb7a0e69dd0bd 100644
+index cdcb7235e41ae..54c654ff3d936 100644
 --- a/fs/xfs/xfs_rtalloc.c
 +++ b/fs/xfs/xfs_rtalloc.c
-@@ -1006,10 +1006,13 @@ xfs_growfs_rt(
+@@ -1003,10 +1003,13 @@ xfs_growfs_rt(
  		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
  		xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
  		/*
@@ -104,7 +104,7 @@ index 919b6544b61a3..eb7a0e69dd0bd 100644
  		xfs_trans_log_inode(tp, mp->m_rbmip, XFS_ILOG_CORE);
  		/*
  		 * Get the summary inode into the transaction.
-@@ -1017,9 +1020,12 @@ xfs_growfs_rt(
+@@ -1014,9 +1017,12 @@ xfs_growfs_rt(
  		xfs_ilock(mp->m_rsumip, XFS_ILOCK_EXCL);
  		xfs_trans_ijoin(tp, mp->m_rsumip, XFS_ILOCK_EXCL);
  		/*
