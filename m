@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDBB1C55178
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:04:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75904C4363A
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:04:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA09A21556
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:04:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CFAC21D42
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:04:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iV8HXAfc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cWr2AzOF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1829283AbgJ0TEN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 15:04:13 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47758 "EHLO
+        id S1829287AbgJ0TES (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 15:04:18 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47834 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1822827AbgJ0TEM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:04:12 -0400
+        with ESMTP id S1829284AbgJ0TES (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:04:18 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIt3Yj108039;
-        Tue, 27 Oct 2020 19:04:11 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIt2W0108016;
+        Tue, 27 Oct 2020 19:04:16 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=sj+qu+vI2/5m699ZBpH0ronawW0mrEB0FVs91jkGSck=;
- b=iV8HXAfc4P6mzQs3354Vr4ThfKlFE40v5/Aehuho6r4C0C/i0WLCj4pUkTCTxF19S/+l
- xHeYOUnlmBQj+f36BdOmFUWkm+h7KOwZ3khhkqQY0grTteT7xuO7Zhmq571uuf9h83+E
- 8iGh8puESrIW4nQDJ79Eq0MpMgtIbQBmTl1zaMCadx3Q4jOyzs/q1drXNsVvWXJiJguu
- vGapDBV+44bGF8DZNTLbS21B78gVH6tXjLaprjoAvCCWwDJBS9T/Rzhn9MskOcuPh9+c
- LsUB6zXv2XLxtnW4EzGm+B04nqYsktyF5SDyEz2fPIzZc9vwyzgCYSiUtP89gkFlS/mG Kw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 34cc7kuv06-1
+ bh=79MuuFDS1BTCk5xIZQJVJpUrApbqEYZZwrRDqFvo0lI=;
+ b=cWr2AzOFtc+3aOGd1gXoHg3+3ctd/NWqQ1OLnYwxSZoyn8Pn7q/G7P3RwFK/I9tup9FQ
+ Z8PPl7rO1oVzGoauYo7kZMclwsVDJoythlQgnRQ8XjfJZFKQl6bny/nwv9KKBb759COs
+ MwyQ0Ang/66XppQ3XVeTDScCtCD7nYCAIGCi9oWJKOoM6upuxLzm0YkFszH4+JfJIz0J
+ x8dM7o/jj2Z3hv2hU5RUlxV2+Gfkk2bBZaD8wVEK8kamgJQmKsVbGY8LS2NdVs3TeU/+
+ i64PFNh/3K1w48w+BdCUZpq+PXFEty98DZ+e8F2Xg4PZ6WGW9cL1IPBAkmP2/gJMgBKV nA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 34cc7kuv0h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 27 Oct 2020 19:04:11 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIuMkD091061;
-        Tue, 27 Oct 2020 19:04:10 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 34cx1r3way-1
+        Tue, 27 Oct 2020 19:04:16 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RItJfr019783;
+        Tue, 27 Oct 2020 19:04:15 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 34cx6wbp54-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 27 Oct 2020 19:04:10 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09RJ49A3028450;
-        Tue, 27 Oct 2020 19:04:09 GMT
+        Tue, 27 Oct 2020 19:04:15 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09RJ4E7j025696;
+        Tue, 27 Oct 2020 19:04:14 GMT
 Received: from localhost (/10.159.243.144)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 27 Oct 2020 12:04:08 -0700
-Subject: [PATCH 2/4] xfs/122: add legacy timestamps to ondisk checker
+        with ESMTP ; Tue, 27 Oct 2020 12:04:14 -0700
+Subject: [PATCH 3/4] xfs: detect time limits from filesystem
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Tue, 27 Oct 2020 12:04:07 -0700
-Message-ID: <160382544732.1203848.9001133589345314135.stgit@magnolia>
+Date:   Tue, 27 Oct 2020 12:04:13 -0700
+Message-ID: <160382545348.1203848.12227735405144915534.stgit@magnolia>
 In-Reply-To: <160382543472.1203848.8335854864075548402.stgit@magnolia>
 References: <160382543472.1203848.8335854864075548402.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -63,8 +63,8 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9787 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
- suspectscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ bulkscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010270110
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9787 signatures=668682
@@ -79,37 +79,137 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add these new ondisk structures.
+Teach fstests to extract timestamp limits of a filesystem using the new
+xfs_db timelimit command.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/122     |    1 +
- tests/xfs/122.out |    1 +
- 2 files changed, 2 insertions(+)
+ common/rc         |    2 +-
+ common/xfs        |   14 ++++++++++++++
+ tests/xfs/911     |   44 ++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/911.out |   15 +++++++++++++++
+ tests/xfs/group   |    1 +
+ 5 files changed, 75 insertions(+), 1 deletion(-)
+ create mode 100755 tests/xfs/911
+ create mode 100644 tests/xfs/911.out
 
 
-diff --git a/tests/xfs/122 b/tests/xfs/122
-index a4248031..db21f2d5 100755
---- a/tests/xfs/122
-+++ b/tests/xfs/122
-@@ -182,6 +182,7 @@ struct xfs_iext_cursor
- struct xfs_ino_geometry
- struct xfs_attrlist
- struct xfs_attrlist_ent
-+struct xfs_legacy_ictimestamp
- EOF
- 
- echo 'int main(int argc, char *argv[]) {' >>$cprog
-diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-index b0773756..f229465a 100644
---- a/tests/xfs/122.out
-+++ b/tests/xfs/122.out
-@@ -97,6 +97,7 @@ sizeof(struct xfs_inode_log_format) = 56
- sizeof(struct xfs_inode_log_format_32) = 52
- sizeof(struct xfs_inumbers) = 24
- sizeof(struct xfs_inumbers_req) = 64
-+sizeof(struct xfs_legacy_timestamp) = 8
- sizeof(struct xfs_log_dinode) = 176
- sizeof(struct xfs_map_extent) = 32
- sizeof(struct xfs_phys_extent) = 16
+diff --git a/common/rc b/common/rc
+index 41f93047..162d957a 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2029,7 +2029,7 @@ _filesystem_timestamp_range()
+ 		echo "0 $u32max"
+ 		;;
+ 	xfs)
+-		echo "$s32min $s32max"
++		_xfs_timestamp_range "$device"
+ 		;;
+ 	btrfs)
+ 		echo "$s64min $s64max"
+diff --git a/common/xfs b/common/xfs
+index e548a0a1..19ccee03 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -994,3 +994,17 @@ _require_xfs_scratch_inobtcount()
+ 		_notrun "inobtcount not supported by scratch filesystem type: $FSTYP"
+ 	_scratch_unmount
+ }
++
++_xfs_timestamp_range()
++{
++	local use_db=0
++	local dbprog="$XFS_DB_PROG $device"
++	test "$device" = "$SCRATCH_DEV" && dbprog=_scratch_xfs_db
++
++	$dbprog -f -c 'help timelimit' | grep -v -q 'not found' && use_db=1
++	if [ $use_db -eq 0 ]; then
++		echo "-$((1<<31)) $(((1<<31)-1))"
++	else
++		$dbprog -f -c 'timelimit --compact' | awk '{printf("%s %s", $1, $2);}'
++	fi
++}
+diff --git a/tests/xfs/911 b/tests/xfs/911
+new file mode 100755
+index 00000000..bccd1e8f
+--- /dev/null
++++ b/tests/xfs/911
+@@ -0,0 +1,44 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# FS QA Test No. 911
++#
++# Check that the xfs_db timelimit command prints the ranges that we expect.
++# This in combination with an xfs_ondisk.h build time check in the kernel
++# ensures that the kernel agrees with userspace.
++
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++
++# real QA test starts here
++_supported_fs xfs
++_require_scratch
++_require_xfs_db_command timelimit
++
++rm -f $seqres.full
++
++# Format filesystem without bigtime support and populate it
++_scratch_mkfs > $seqres.full
++echo classic xfs timelimits
++_scratch_xfs_db -c 'timelimit --classic'
++echo bigtime xfs timelimits
++_scratch_xfs_db -c 'timelimit --bigtime'
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/911.out b/tests/xfs/911.out
+new file mode 100644
+index 00000000..84dc475b
+--- /dev/null
++++ b/tests/xfs/911.out
+@@ -0,0 +1,15 @@
++QA output created by 911
++classic xfs timelimits
++time.min = -2147483648
++time.max = 2147483647
++dqtimer.min = 1
++dqtimer.max = 4294967295
++dqgrace.min = 0
++dqgrace.min = 4294967295
++bigtime xfs timelimits
++time.min = -2147483648
++time.max = 16299260424
++dqtimer.min = 4
++dqtimer.max = 16299260424
++dqgrace.min = 0
++dqgrace.min = 4294967295
+diff --git a/tests/xfs/group b/tests/xfs/group
+index 862df3be..f61d46a1 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -525,6 +525,7 @@
+ 761 auto quick realtime
+ 763 auto quick rw realtime
+ 910 auto quick inobtcount
++911 auto quick bigtime
+ 915 auto quick quota
+ 917 auto quick db
+ 918 auto quick db
 
