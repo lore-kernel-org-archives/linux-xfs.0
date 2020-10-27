@@ -2,137 +2,201 @@ Return-Path: <SRS0=u7A2=EC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B6A4C388F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 20:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FF7EC55179
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 20:53:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61FE4218AC
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 20:53:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07CD422249
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 20:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S373345AbgJ0UxB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 16:53:01 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48311 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S373343AbgJ0UxB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 16:53:01 -0400
+        id S1796657AbgJ0UxE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 16:53:04 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56530 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S373341AbgJ0UxD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 16:53:03 -0400
 Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E6B3658C43F
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E62563AA0A2
         for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2020 07:52:58 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1kXVxi-004zyD-Az
+        id 1kXVxi-004zyH-DF
         for linux-xfs@vger.kernel.org; Wed, 28 Oct 2020 07:52:58 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.94)
         (envelope-from <david@fromorbit.com>)
-        id 1kXVxi-00Bqlz-38
+        id 1kXVxi-00Bqm5-5e
         for linux-xfs@vger.kernel.org; Wed, 28 Oct 2020 07:52:58 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3 1/5] build: add support for libinih for mkfs
-Date:   Wed, 28 Oct 2020 07:52:54 +1100
-Message-Id: <20201027205258.2824424-2-david@fromorbit.com>
+Subject: [PATCH v3 3/5] mkfs: constify various strings
+Date:   Wed, 28 Oct 2020 07:52:56 +1100
+Message-Id: <20201027205258.2824424-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201027205258.2824424-1-david@fromorbit.com>
 References: <20201027205258.2824424-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
         a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8 a=NHsjDDs8AAAA:20
-        a=QwDmcnV3u2fYWEkn6UMA:9
+        a=afefHYAZSVUA:10 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8
+        a=YDoY5Q6TbSLZV4WViUwA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Need to make sure the library is present so we can build mkfs with
-config file support.
+Because the ini parser uses const strings and so the opt parsing
+needs to be told about it to avoid compiler warnings.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- configure.ac         |  3 +++
- doc/INSTALL          |  5 +++++
- include/builddefs.in |  1 +
- m4/package_inih.m4   | 20 ++++++++++++++++++++
- 4 files changed, 29 insertions(+)
- create mode 100644 m4/package_inih.m4
+ include/linux.h |  2 +-
+ mkfs/xfs_mkfs.c | 28 ++++++++++++++--------------
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/configure.ac b/configure.ac
-index 345d90be8b8c..c419f16c39c2 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -145,6 +145,9 @@ AC_PACKAGE_UTILITIES(xfsprogs)
- AC_MULTILIB($enable_lib64)
- AC_RT($enable_librt)
+diff --git a/include/linux.h b/include/linux.h
+index 57726bb12b74..03b3278bb895 100644
+--- a/include/linux.h
++++ b/include/linux.h
+@@ -92,7 +92,7 @@ static __inline__ void platform_uuid_unparse(uuid_t *uu, char *buffer)
+ 	uuid_unparse(*uu, buffer);
+ }
  
-+AC_PACKAGE_NEED_INI_H
-+AC_PACKAGE_NEED_LIBINIH
-+
- AC_PACKAGE_NEED_UUID_H
- AC_PACKAGE_NEED_UUIDCOMPARE
+-static __inline__ int platform_uuid_parse(char *buffer, uuid_t *uu)
++static __inline__ int platform_uuid_parse(const char *buffer, uuid_t *uu)
+ {
+ 	return uuid_parse(buffer, *uu);
+ }
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 33be9ba16c90..829f0383b602 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -975,8 +975,8 @@ respec(
  
-diff --git a/doc/INSTALL b/doc/INSTALL
-index d4395eefa834..2b04f9cfe108 100644
---- a/doc/INSTALL
-+++ b/doc/INSTALL
-@@ -28,6 +28,11 @@ Linux Instructions
-    (on an RPM based system) or the uuid-dev package (on a Debian system)
-    as some of the commands make use of the UUID library provided by these.
+ static void
+ unknown(
+-	char		opt,
+-	char		*s)
++	const char	opt,
++	const char	*s)
+ {
+ 	fprintf(stderr, _("unknown option -%c %s\n"), opt, s);
+ 	usage();
+@@ -1387,7 +1387,7 @@ getnum(
+  */
+ static char *
+ getstr(
+-	char			*str,
++	const char		*str,
+ 	struct opt_params	*opts,
+ 	int			index)
+ {
+@@ -1396,14 +1396,14 @@ getstr(
+ 	/* empty strings for string options are not valid */
+ 	if (!str || *str == '\0')
+ 		reqval(opts->name, opts->subopts, index);
+-	return str;
++	return (char *)str;
+ }
  
-+   If your distro does not provide a libinih package, you can download and build
-+   it from source from the upstream repository found at:
-+
-+	https://github.com/benhoyt/inih
-+
-    To build the package and install it manually, use the following steps:
- 
- 	# make
-diff --git a/include/builddefs.in b/include/builddefs.in
-index 30b2727a8db4..e8f447f92baf 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -27,6 +27,7 @@ LIBTERMCAP = @libtermcap@
- LIBEDITLINE = @libeditline@
- LIBBLKID = @libblkid@
- LIBDEVMAPPER = @libdevmapper@
-+LIBINIH = @libinih@
- LIBXFS = $(TOPDIR)/libxfs/libxfs.la
- LIBFROG = $(TOPDIR)/libfrog/libfrog.la
- LIBXCMD = $(TOPDIR)/libxcmd/libxcmd.la
-diff --git a/m4/package_inih.m4 b/m4/package_inih.m4
-new file mode 100644
-index 000000000000..a2775592e09d
---- /dev/null
-+++ b/m4/package_inih.m4
-@@ -0,0 +1,20 @@
-+AC_DEFUN([AC_PACKAGE_NEED_INI_H],
-+  [ AC_CHECK_HEADERS([ini.h])
-+    if test $ac_cv_header_ini_h = no; then
-+	echo
-+	echo 'FATAL ERROR: could not find a valid ini.h header.'
-+	echo 'Install the libinih development package.'
-+	exit 1
-+    fi
-+  ])
-+
-+AC_DEFUN([AC_PACKAGE_NEED_LIBINIH],
-+  [ AC_CHECK_LIB(inih, ini_parse,, [
-+	echo
-+	echo 'FATAL ERROR: could not find a valid inih library.'
-+	echo 'Install the libinih library package.'
-+	exit 1
-+    ])
-+    libinih=-linih
-+    AC_SUBST(libinih)
-+  ])
+ static int
+ block_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1420,7 +1420,7 @@ static int
+ cfgfile_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1437,7 +1437,7 @@ static int
+ data_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1506,7 +1506,7 @@ static int
+ inode_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1541,7 +1541,7 @@ static int
+ log_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1587,7 +1587,7 @@ static int
+ meta_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1621,7 +1621,7 @@ static int
+ naming_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1650,7 +1650,7 @@ static int
+ rtdev_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1680,7 +1680,7 @@ static int
+ sector_opts_parser(
+ 	struct opt_params	*opts,
+ 	int			subopt,
+-	char			*value,
++	const char		*value,
+ 	struct cli_params	*cli)
+ {
+ 	switch (subopt) {
+@@ -1700,7 +1700,7 @@ static struct subopts {
+ 	struct opt_params *opts;
+ 	int		(*parser)(struct opt_params	*opts,
+ 				  int			subopt,
+-				  char			*value,
++				  const char		*value,
+ 				  struct cli_params	*cli);
+ } subopt_tab[] = {
+ 	{ 'b', &bopts, block_opts_parser },
 -- 
 2.28.0
 
