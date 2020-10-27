@@ -2,125 +2,124 @@ Return-Path: <SRS0=u7A2=EC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45781C4363A
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 05:31:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E129C4363A
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 05:35:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBD49218AC
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 05:31:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD37621D41
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 05:35:49 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GGfgm6UU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2505871AbgJ0Fbc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 01:31:32 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:46182 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2505870AbgJ0Fbb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 01:31:31 -0400
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 1C0923A936B;
-        Tue, 27 Oct 2020 16:31:28 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kXHZu-004mIO-TP; Tue, 27 Oct 2020 16:31:26 +1100
-Date:   Tue, 27 Oct 2020 16:31:26 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: Splitting a THP beyond EOF
-Message-ID: <20201027053126.GY7391@dread.disaster.area>
-References: <20201020014357.GW20115@casper.infradead.org>
- <20201020045928.GO7391@dread.disaster.area>
- <20201020112138.GZ20115@casper.infradead.org>
- <20201020211634.GQ7391@dread.disaster.area>
- <20201020225331.GE20115@casper.infradead.org>
- <20201021221435.GR7391@dread.disaster.area>
- <20201021230422.GP20115@casper.infradead.org>
+        id S2505913AbgJ0Fft (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 01:35:49 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:40014 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2505912AbgJ0Fft (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 01:35:49 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09R5ZBRr028903;
+        Tue, 27 Oct 2020 05:35:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=dbcz4wfVd4s87Cg4JGuf8cchK6K9y6FsA31fpBLRVK8=;
+ b=GGfgm6UUCFqJHTMdGqF1aaCSxyBwDrnJH9Bn7I78J4MSqa/4ZIn9H+fna1bdK/UBk8/D
+ OZgDg64CUTUXWnPU2vuNXJXw5aRw4lRUW4HoNnfsPy0OCi0hF+c0ebbV22lW7k0jR8Tz
+ EM0nWl/iwmPsqqrqFYSLhnsDhqe4/TD/uM3yKBMaWxDLORL65f0xPRlVDnpneVL07fMp
+ UZKxno1HJZCoUueQgdTeFwHYintXg0f4Q1XdAAzKxP735DBopNJC6KkRJZMy4tcCdA32
+ n5nfV3mzDXoyUfICV0vkpK/hjKUjdQ7r/hId97nwytW4mKn8D6cd8E0pOCipWUp2w9Zp rQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 34c9sar2h1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 27 Oct 2020 05:35:46 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09R5Q0b3009495;
+        Tue, 27 Oct 2020 05:35:46 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 34cx5wq59b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 27 Oct 2020 05:35:46 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09R5Zi1T025528;
+        Tue, 27 Oct 2020 05:35:45 GMT
+Received: from [192.168.1.223] (/67.1.244.254)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 26 Oct 2020 22:35:44 -0700
+Subject: Re: [PATCH 1/5] mkfs: allow users to specify rtinherit=0
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
+Cc:     linux-xfs@vger.kernel.org
+References: <160375511371.879169.3659553317719857738.stgit@magnolia>
+ <160375511989.879169.8816363379781873320.stgit@magnolia>
+From:   Allison Henderson <allison.henderson@oracle.com>
+Message-ID: <feecba0a-04a0-1bf5-343c-fb3c63364165@oracle.com>
+Date:   Mon, 26 Oct 2020 22:35:43 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201021230422.GP20115@casper.infradead.org>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=7-415B0cAAAA:8
-        a=CvBOQ0YqrXvA0BptNmkA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <160375511989.879169.8816363379781873320.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=999
+ suspectscore=0 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010270036
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9786 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010270037
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 22, 2020 at 12:04:22AM +0100, Matthew Wilcox wrote:
-> On Thu, Oct 22, 2020 at 09:14:35AM +1100, Dave Chinner wrote:
-> > On Tue, Oct 20, 2020 at 11:53:31PM +0100, Matthew Wilcox wrote:
-> > > True, we don't _have to_ split THP on holepunch/truncation/... but it's
-> > > a better implementation to free pages which cover blocks that no longer
-> > > have data associated with them.
-> > 
-> > "Better" is a very subjective measure. What numbers do you have
-> > to back that up?
+
+
+On 10/26/20 4:31 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> None.  When we choose to use a THP, we're choosing to treat a chunk
-> of a file as a single unit for the purposes of tracking dirtiness,
-> age, membership of the workingset, etc.  We're trading off reduced
-> precision for reduced overhead; just like the CPU tracks dirtiness on
-> a cacheline basis instead of at byte level.
+> mkfs has quite a few boolean options that can be specified in several
+> ways: "option=1" (turn it on), "option" (turn it on), or "option=0"
+> (turn it off).  For whatever reason, rtinherit sticks out as the only
+> mkfs parameter that doesn't behave that way.  Let's make it behave the
+> same as all the other boolean variables.
 > 
-> So at some level, we've making the assumption that this 128kB THP is
-> all one thingand it should be tracked together.  But the user has just
-> punched a hole in it.  I can think of no stronger signal to say "The
-> piece before this hole, the piece I just got rid of and the piece after
-> this are three separate pieces of the file".
+Looks ok
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 
-There's a difference between the physical layout of the file and
-representing data efficiently in the page cache. Just because we can
-use a THP to represent a single extent doesn't mean we should always
-use that relationship, nor should we require that small
-manipulations of on-disk extent state require that page cache pages
-be split or gathered.
-
-i.e. the whole point of the page cache is to decouple the physical
-layout of the file from the user access mechanisms for performance
-reasons, not tie them tightly together. I think that's the wrong
-approach to be taking here - truncate/holepunch do not imply that
-THPs need to be split unconditionally. Indeed, readahead doesn't
-care that a THP might be split across mulitple extents and require
-multiple bios to bring tha data into cache, so why should
-truncate/holepunch type operations require the THP to be split to
-reflect underlying disk layouts?
-
-> If I could split them into pieces that weren't single pages, I would.
-> Zi Yan has a patch to do just that, and I'm very much looking forward
-> to that being merged.  But saying "Oh, this is quite small, I'll keep
-> the rest of the THP together" is conceptually wrong.
-
-Yet that's exactly what we do with block size < PAGE_SIZE
-configurations, so I fail to see why it's conceptually wrong for
-THPs to behave the same way and normal pages....
-
-> > > Splitting the page instead of throwing it away makes sense once we can
-> > > transfer the Uptodate bits to each subpage.  If we don't have that,
-> > > it doesn't really matter which we do.
-> > 
-> > Sounds like more required functionality...
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>   mkfs/xfs_mkfs.c |    4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
 > 
-> I'm not saying that my patchset is the last word and there will be no
-> tweaking.  I'm saying I think it's good enough, an improvement on the
-> status quo, and it's better to merge it for 5.11 than to keep it out of
-> tree for another three months while we tinker with improving it.
 > 
-> Do you disagree?
-
-In part. Concepts and algorithms need to be sound and agreed upon
-before we merge patches, and right now I disagree with the some of
-the basic assumptions about how THP and filesystem layout operations
-are being coupled. That part needs to be sorted before stuff gets
-merged...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 8fe149d74b0a..908d520df909 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -349,7 +349,7 @@ static struct opt_params dopts = {
+>   		},
+>   		{ .index = D_RTINHERIT,
+>   		  .conflicts = { { NULL, LAST_CONFLICT } },
+> -		  .minval = 1,
+> +		  .minval = 0,
+>   		  .maxval = 1,
+>   		  .defaultval = 1,
+>   		},
+> @@ -1429,6 +1429,8 @@ data_opts_parser(
+>   	case D_RTINHERIT:
+>   		if (getnum(value, opts, subopt))
+>   			cli->fsx.fsx_xflags |= FS_XFLAG_RTINHERIT;
+> +		else
+> +			cli->fsx.fsx_xflags &= ~FS_XFLAG_RTINHERIT;
+>   		break;
+>   	case D_PROJINHERIT:
+>   		cli->fsx.fsx_projid = getnum(value, opts, subopt);
+> 
