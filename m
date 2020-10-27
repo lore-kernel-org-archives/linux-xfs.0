@@ -2,148 +2,139 @@ Return-Path: <SRS0=u7A2=EC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABFE1C388F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 12:14:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12A1AC55178
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 12:16:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26DFE22258
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 12:14:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACA7E24181
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 12:16:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hDle2mjA"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KJrlSpLT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1750752AbgJ0MOv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 08:14:51 -0400
-Received: from casper.infradead.org ([90.155.50.34]:39428 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbgJ0MOu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 08:14:50 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=QsKMGecGq9Or2BsBvxuQRWoxGfvn0O5yuvLyglZO3vY=; b=hDle2mjA+YsHd4CAjzM6MZhiKX
-        CkWha5NPOK4eTYVR8ucIlAt2qQd1zievHtI2Sm2ALPknCoGF3cpw0LFUIRXCe4+3d0OpNHlOSqWjh
-        WCDHqRe/mzFVBPBtHG8kUCathxaBYPJsvgFEzia1U2c2WWc4zidevQVldDRJBVM5Atjvmbj538fV8
-        mgpvCTWwpsqHh6jNg+3tMYeFs8IDzi6o9DUTWqUADWlt4jg58wyHFFIOBRLPwaQncctsHcRhyiWzN
-        gJe040ZJT6Ax6nT2OvrSENn30ntLF7TFG3dRIvEGMXWffCaoddmxYGB7L9E4fkxQKdkrRo5+HwCZu
-        YZLrgXSg==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kXNsF-0008H6-NI; Tue, 27 Oct 2020 12:14:47 +0000
-Date:   Tue, 27 Oct 2020 12:14:47 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: Splitting a THP beyond EOF
-Message-ID: <20201027121447.GV20115@casper.infradead.org>
-References: <20201020014357.GW20115@casper.infradead.org>
- <20201020045928.GO7391@dread.disaster.area>
- <20201020112138.GZ20115@casper.infradead.org>
- <20201020211634.GQ7391@dread.disaster.area>
- <20201020225331.GE20115@casper.infradead.org>
- <20201021221435.GR7391@dread.disaster.area>
- <20201021230422.GP20115@casper.infradead.org>
- <20201027053126.GY7391@dread.disaster.area>
+        id S1750885AbgJ0MQE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 08:16:04 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:42404 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750756AbgJ0MQC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 08:16:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603800960;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=GYsdmr3JWS8fRJk/WfZTPZd+TGZ+dGKTMJPdjRxapnY=;
+        b=KJrlSpLTXzgqRe4JoabYDBukMtFV6a+RxDaoueKXXWv11JFsh5ScNxreyku0YrkaJ/e1Cf
+        FtVwsIv0HUe0iyIq/1InUL+HafM3CTeVM+cOndlp1QOVG018D+ZqmhZdCVCqG0EUbeQjAW
+        7yyqIoGHnTLEejXXfeTfsJQ7Hsl0ACk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-466-xaDhiv9rOvaHFr9i-ardCw-1; Tue, 27 Oct 2020 08:15:56 -0400
+X-MC-Unique: xaDhiv9rOvaHFr9i-ardCw-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E7AD7188C128;
+        Tue, 27 Oct 2020 12:15:55 +0000 (UTC)
+Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 82CE25B4A5;
+        Tue, 27 Oct 2020 12:15:55 +0000 (UTC)
+Date:   Tue, 27 Oct 2020 08:15:53 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v13 01/10] xfs: Add helper xfs_attr_node_remove_step
+Message-ID: <20201027121553.GA1560077@bfoster>
+References: <20201023063435.7510-1-allison.henderson@oracle.com>
+ <20201023063435.7510-2-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201027053126.GY7391@dread.disaster.area>
+In-Reply-To: <20201023063435.7510-2-allison.henderson@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 04:31:26PM +1100, Dave Chinner wrote:
-> On Thu, Oct 22, 2020 at 12:04:22AM +0100, Matthew Wilcox wrote:
-> > On Thu, Oct 22, 2020 at 09:14:35AM +1100, Dave Chinner wrote:
-> > > On Tue, Oct 20, 2020 at 11:53:31PM +0100, Matthew Wilcox wrote:
-> > > > True, we don't _have to_ split THP on holepunch/truncation/... but it's
-> > > > a better implementation to free pages which cover blocks that no longer
-> > > > have data associated with them.
-> > > 
-> > > "Better" is a very subjective measure. What numbers do you have
-> > > to back that up?
-> > 
-> > None.  When we choose to use a THP, we're choosing to treat a chunk
-> > of a file as a single unit for the purposes of tracking dirtiness,
-> > age, membership of the workingset, etc.  We're trading off reduced
-> > precision for reduced overhead; just like the CPU tracks dirtiness on
-> > a cacheline basis instead of at byte level.
-> > 
-> > So at some level, we've making the assumption that this 128kB THP is
-> > all one thingand it should be tracked together.  But the user has just
-> > punched a hole in it.  I can think of no stronger signal to say "The
-> > piece before this hole, the piece I just got rid of and the piece after
-> > this are three separate pieces of the file".
+On Thu, Oct 22, 2020 at 11:34:26PM -0700, Allison Henderson wrote:
+> From: Allison Collins <allison.henderson@oracle.com>
 > 
-> There's a difference between the physical layout of the file and
-> representing data efficiently in the page cache. Just because we can
-> use a THP to represent a single extent doesn't mean we should always
-> use that relationship, nor should we require that small
-> manipulations of on-disk extent state require that page cache pages
-> be split or gathered.
+> This patch adds a new helper function xfs_attr_node_remove_step.  This
+> will help simplify and modularize the calling function
+> xfs_attr_node_remove.
 > 
-> i.e. the whole point of the page cache is to decouple the physical
-> layout of the file from the user access mechanisms for performance
-> reasons, not tie them tightly together. I think that's the wrong
-> approach to be taking here - truncate/holepunch do not imply that
-> THPs need to be split unconditionally. Indeed, readahead doesn't
-> care that a THP might be split across mulitple extents and require
-> multiple bios to bring tha data into cache, so why should
-> truncate/holepunch type operations require the THP to be split to
-> reflect underlying disk layouts?
-
-At the time we do readahead, we've inferred from the user's access
-patterns that they're reading this file if not sequentially, then close
-enough to sequentially that it makes sense to bring in more of the file.
-On-media layout of the file is irrelevant, as you say.
-
-Now the user has given us another hint about how they see the file.
-A call to FALLOC_FL_PUNCH_HOLE is certainly an instruction to the
-filesystem to change the layout, but it's also giving the page cache
-information about how the file is being treated.  It tells us that
-the portion of the file before the hole is different from the portion
-of the file after the hole, and treating those two portions of the
-file as being similar for the purposes of working set tracking is
-going to lead to wrong decisions.
-
-Let's take an example where an app uses 1kB fixed size records.  First it
-does a linear scan (so readahead kicks in and we get all the way up to
-allocating 256kB pages).  Then it decides some records are obsolete, so it
-calls PUNCH_HOLE on the range 20kB to 27kB in the page, then PUNCH_HOLE
-40kB-45kB and finally PUNCH_HOLE 150kB-160kB.  In my current scheme,
-this splits the page into 4kB pages.  If the app then only operates on
-the records after 160kB and before 20kB, the pages used to cache records
-in the 24kB-40kB and 44kB-150kB ranges will naturally fall out of cache
-and the memory will be used for other purposes.  With your scheme,
-the 256kB page would be retained in cache as a single piece.
-
-> > If I could split them into pieces that weren't single pages, I would.
-> > Zi Yan has a patch to do just that, and I'm very much looking forward
-> > to that being merged.  But saying "Oh, this is quite small, I'll keep
-> > the rest of the THP together" is conceptually wrong.
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 46 ++++++++++++++++++++++++++++++++++------------
+>  1 file changed, 34 insertions(+), 12 deletions(-)
 > 
-> Yet that's exactly what we do with block size < PAGE_SIZE
-> configurations, so I fail to see why it's conceptually wrong for
-> THPs to behave the same way and normal pages....
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index fd8e641..f4d39bf 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+...
+> @@ -1267,18 +1262,45 @@ xfs_attr_node_removename(
+>  	if (retval && (state->path.active > 1)) {
+>  		error = xfs_da3_join(state);
+>  		if (error)
+> -			goto out;
+> +			return error;
+>  		error = xfs_defer_finish(&args->trans);
+>  		if (error)
+> -			goto out;
+> +			return error;
+>  		/*
+>  		 * Commit the Btree join operation and start a new trans.
+>  		 */
+>  		error = xfs_trans_roll_inode(&args->trans, dp);
+>  		if (error)
+> -			goto out;
+> +			return error;
+>  	}
+>  
+> +	return error;
+> +}
+> +
+> +/*
+> + * Remove a name from a B-tree attribute list.
+> + *
+> + * This routine will find the blocks of the name to remove, remove them and
+> + * shirnk the tree if needed.
+> + */
+> +STATIC int
+> +xfs_attr_node_removename(
+> +	struct xfs_da_args	*args)
+> +{
+> +	struct xfs_da_state	*state;
 
-We don't have the ability to mmap files at smaller than PAGE_SIZE
-granularity, so we can't do that.
+It urks me a little bit that we have to dig down into a couple functions
+to grok that state allocation is the first step or otherwise occurs
+before we potentially use the error path. Since we already check for
+state in the out path, can we just initialize this as *state = NULL
+here so the logic is clear? Otherwise the patch LGTM:
 
-> > I'm not saying that my patchset is the last word and there will be no
-> > tweaking.  I'm saying I think it's good enough, an improvement on the
-> > status quo, and it's better to merge it for 5.11 than to keep it out of
-> > tree for another three months while we tinker with improving it.
-> > 
-> > Do you disagree?
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +	int			error;
+> +	struct xfs_inode	*dp = args->dp;
+> +
+> +	trace_xfs_attr_node_removename(args);
+> +
+> +	error = xfs_attr_node_removename_setup(args, &state);
+> +	if (error)
+> +		goto out;
+> +
+> +	error = xfs_attr_node_remove_step(args, state);
+> +	if (error)
+> +		goto out;
+> +
+>  	/*
+>  	 * If the result is small enough, push it all into the inode.
+>  	 */
+> -- 
+> 2.7.4
 > 
-> In part. Concepts and algorithms need to be sound and agreed upon
-> before we merge patches, and right now I disagree with the some of
-> the basic assumptions about how THP and filesystem layout operations
-> are being coupled. That part needs to be sorted before stuff gets
-> merged...
 
-They're not being coupled.  I'm using the information the user is
-giving the kernel to make better decisions about what to cache.
