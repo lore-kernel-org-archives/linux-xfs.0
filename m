@@ -2,36 +2,36 @@ Return-Path: <SRS0=u7A2=EC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBCB9C388F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 17:22:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D686BC55178
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 17:24:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF0752076B
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 17:22:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 929B42076B
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 17:24:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1818666AbgJ0RWh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 13:22:37 -0400
-Received: from sandeen.net ([63.231.237.45]:49068 "EHLO sandeen.net"
+        id S2900789AbgJ0RYf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 13:24:35 -0400
+Received: from sandeen.net ([63.231.237.45]:49178 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1818683AbgJ0RW1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Oct 2020 13:22:27 -0400
+        id S1818874AbgJ0RYd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Oct 2020 13:24:33 -0400
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 52314324E5E;
-        Tue, 27 Oct 2020 12:22:14 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id 64860328A03;
+        Tue, 27 Oct 2020 12:24:18 -0500 (CDT)
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <160375511371.879169.3659553317719857738.stgit@magnolia>
  <160375511989.879169.8816363379781873320.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 1/5] mkfs: allow users to specify rtinherit=0
-Message-ID: <be9be8b9-55ab-3e13-fa42-c9f5a5275252@sandeen.net>
-Date:   Tue, 27 Oct 2020 12:22:25 -0500
+Subject: [PATCH 1.5/5] mkfs: clarify valid "inherit" option values
+Message-ID: <d59f5cbc-42b0-70f0-5471-210f87bf0fe3@sandeen.net>
+Date:   Tue, 27 Oct 2020 12:24:29 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
  Gecko/20100101 Thunderbird/78.4.0
 MIME-Version: 1.0
@@ -43,48 +43,51 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/26/20 6:31 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> mkfs has quite a few boolean options that can be specified in several
-> ways: "option=1" (turn it on), "option" (turn it on), or "option=0"
-> (turn it off).  For whatever reason, rtinherit sticks out as the only
-> mkfs parameter that doesn't behave that way.  Let's make it behave the
-> same as all the other boolean variables.
+Clarify which values are valid for the various *inherit= mkfs
+options.
 
-Seems fine; tho looking over mkfs.xfs.8, I think we could clarify what all
-the valid ${FOO}inherit=[value] values are, in general.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com> 
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 0a785874..a2be066b 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -377,21 +377,21 @@ This option disables automatic geometry detection and creates the filesystem
+ without stripe geometry alignment even if the underlying storage device provides
+ this information.
+ .TP
+-.BI rtinherit= value
+-If set, all inodes created by
++.BI rtinherit= [0|1]
++If set to 1, all inodes created by
+ .B mkfs.xfs
+ will be created with the realtime flag set.
+ Directories will pass on this flag to newly created regular files and
+ directories.
+ .TP
+-.BI projinherit= value
++.BI projinherit= projid
+ All inodes created by
+ .B mkfs.xfs
+ will be assigned this project quota id.
+ Directories will pass on the project id to newly created regular files and
+ directories.
+ .TP
+-.BI extszinherit= value
++.BI extszinherit= extentsize
+ All inodes created by
+ .B mkfs.xfs
+ will have this extent size hint applied.
+@@ -399,8 +399,8 @@ The value must be provided in units of filesystem blocks.
+ Directories will pass on this hint to newly created regular files and
+ directories.
+ .TP
+-.BI daxinherit= value
+-If set, all inodes created by
++.BI daxinherit= [0|1]
++If set to 1, all inodes created by
+ .B mkfs.xfs
+ will be created with the DAX flag set.
+ Directories will pass on this flag to newly created regular files and
 
--Eric
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  mkfs/xfs_mkfs.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 8fe149d74b0a..908d520df909 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -349,7 +349,7 @@ static struct opt_params dopts = {
->  		},
->  		{ .index = D_RTINHERIT,
->  		  .conflicts = { { NULL, LAST_CONFLICT } },
-> -		  .minval = 1,
-> +		  .minval = 0,
->  		  .maxval = 1,
->  		  .defaultval = 1,
->  		},
-> @@ -1429,6 +1429,8 @@ data_opts_parser(
->  	case D_RTINHERIT:
->  		if (getnum(value, opts, subopt))
->  			cli->fsx.fsx_xflags |= FS_XFLAG_RTINHERIT;
-> +		else
-> +			cli->fsx.fsx_xflags &= ~FS_XFLAG_RTINHERIT;
->  		break;
->  	case D_PROJINHERIT:
->  		cli->fsx.fsx_projid = getnum(value, opts, subopt);
-> 
