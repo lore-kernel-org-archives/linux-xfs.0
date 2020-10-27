@@ -7,57 +7,58 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 075DEC388F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:03:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA027C388F9
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:03:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFEB2206D4
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:03:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 724DC21527
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:03:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="wrXV5X2c"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CskHry16"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502004AbgJ0TDq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 15:03:46 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:56996 "EHLO
+        id S1829274AbgJ0TDs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 15:03:48 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:57022 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2444462AbgJ0TDq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:03:46 -0400
+        with ESMTP id S2444462AbgJ0TDs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:03:48 -0400
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RItNOJ022017;
-        Tue, 27 Oct 2020 19:03:44 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RItCWa021962;
+        Tue, 27 Oct 2020 19:03:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=tCCbh4g/i0lM/N0oF6OVt3huFnrxDODn7jb+17KL0q4=;
- b=wrXV5X2cLmfjouQ1gMXVxwo3cDNBqf7qnePSB5OaheF4b91Cd5vWBAB92wHbaeRvlHC5
- WOPik4e+b1fkHJ8zOLO6XA3c/LHuW5/IZhJKewSVl895rLXte6eVNKYZHuuahR6BKc3V
- X+TxSsYCUBwGlakh1F3FN/2SpsxJtyAUPUWg1T2fwxIJnP30sB04DDHyxx8Lvn0VX5vJ
- AWl13wEAO0KmL2JNqG1A4ISAS7zAgTkUgAljHjir86Bn79zIdxWAl+E8GuO7UpWFPAUR
- a0EM/GA+3cybKj4yY5hRaRHJTrEP902nlGbTJZYrrZKW2C/++y7sQj/YqLjnQcy6LpEV +w== 
+ bh=k24mu1SEzrRVr0eQZFRK8u2EfMsNnwp40aWcyaLM0zI=;
+ b=CskHry16tRqFkjbnO0p+O4Md7o4FjnPF65RtsXRPOeNrhkqJczJamFcnJ7r2iTO0w1tV
+ HAajTGXfsecZa7kHsW+DbI3a3sc0baSG0VkP8okTEiNIdYIz7SAVfthDMeQjjrQuGbhG
+ EgBNbWlgJcxh3VBYec2i1bj4MlbzyBLy0loUMks1S2J1/WssM5bHjlT7Oab3pfGyqWg7
+ z+PEYTr/RaYPFoG05DeyhJuygXHk0I/024iebrW5h71PrVAua6hah0V3fmp05GBExJeX
+ pGQIQleCROjhw3D8F4EEBJFrJ3RxD+dfU8PelG+x8hoBKxYdne3z2rwLH9aGz7ro2PTW Kg== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 34c9sav0c2-1
+        by aserp2130.oracle.com with ESMTP id 34c9sav0c5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 27 Oct 2020 19:03:44 +0000
+        Tue, 27 Oct 2020 19:03:46 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIu2bF133033;
-        Tue, 27 Oct 2020 19:01:43 GMT
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIu2E0133014;
+        Tue, 27 Oct 2020 19:03:46 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 34cx5xg7kk-1
+        by aserp3020.oracle.com with ESMTP id 34cx5xg9ef-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 27 Oct 2020 19:01:43 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09RJ1hE9023031;
-        Tue, 27 Oct 2020 19:01:43 GMT
+        Tue, 27 Oct 2020 19:03:46 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09RJ3j4L024163;
+        Tue, 27 Oct 2020 19:03:45 GMT
 Received: from localhost (/10.159.243.144)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 27 Oct 2020 12:01:43 -0700
-Subject: [PATCH 2/9] xfs/520: disable external devices
+        with ESMTP ; Tue, 27 Oct 2020 12:03:43 -0700
+Subject: [PATCH 1/2] xfs/122: embiggen struct xfs_agi size for inobtcount
+ feature
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Tue, 27 Oct 2020 12:01:42 -0700
-Message-ID: <160382530205.1202316.9303713563959751852.stgit@magnolia>
-In-Reply-To: <160382528936.1202316.2338876126552815991.stgit@magnolia>
-References: <160382528936.1202316.2338876126552815991.stgit@magnolia>
+Date:   Tue, 27 Oct 2020 12:03:42 -0700
+Message-ID: <160382542261.1203756.6377970904886103725.stgit@magnolia>
+In-Reply-To: <160382541643.1203756.12015378093281554469.stgit@magnolia>
+References: <160382541643.1203756.12015378093281554469.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -79,32 +80,54 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This is a regression test for a specific bug that requires a specific
-configuration of the data device.  Realtime volumes and external logs
-don't affect the efficacy of the test, but the test can fail mkfs if the
-realtime device is very large.
-
-Therefore, unset USE_EXTERNAL so that we always run this regression
-test, even if the tester enabled realtime.
+Make the expected AGI size larger for the inobtcount feature.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/520 |    3 +++
- 1 file changed, 3 insertions(+)
+ tests/xfs/010     |    3 ++-
+ tests/xfs/030     |    2 ++
+ tests/xfs/122.out |    2 +-
+ 3 files changed, 5 insertions(+), 2 deletions(-)
 
 
-diff --git a/tests/xfs/520 b/tests/xfs/520
-index 51bc4100..b99b9c6e 100755
---- a/tests/xfs/520
-+++ b/tests/xfs/520
-@@ -41,6 +41,9 @@ _disable_dmesg_check
- _require_check_dmesg
- _require_scratch_nocheck
+diff --git a/tests/xfs/010 b/tests/xfs/010
+index 1f9bcdff..95cc2555 100755
+--- a/tests/xfs/010
++++ b/tests/xfs/010
+@@ -113,7 +113,8 @@ _check_scratch_fs
+ _corrupt_finobt_root $SCRATCH_DEV
  
-+# Don't let the rtbitmap fill up the data device and screw up this test
-+unset USE_EXTERNAL
-+
- force_crafted_metadata() {
- 	_scratch_mkfs_xfs -f $fsdsopt "$4" >> $seqres.full 2>&1 || _fail "mkfs failed"
- 	_scratch_xfs_set_metadata_field "$1" "$2" "$3" >> $seqres.full 2>&1
+ filter_finobt_repair() {
+-	sed -e '/^agi has bad CRC/d' | \
++	sed -e '/^agi has bad CRC/d' \
++	    -e '/^bad finobt block/d' | \
+ 		_filter_repair_lostblocks
+ }
+ 
+diff --git a/tests/xfs/030 b/tests/xfs/030
+index 04440f9c..906d9019 100755
+--- a/tests/xfs/030
++++ b/tests/xfs/030
+@@ -44,6 +44,8 @@ _check_ag()
+ 			    -e '/^bad agbno AGBNO for refcntbt/d' \
+ 			    -e '/^agf has bad CRC/d' \
+ 			    -e '/^agi has bad CRC/d' \
++			    -e '/^bad inobt block count/d' \
++			    -e '/^bad finobt block count/d' \
+ 			    -e '/^Missing reverse-mapping record.*/d' \
+ 			    -e '/^bad levels LEVELS for [a-z]* root.*/d' \
+ 			    -e '/^unknown block state, ag AGNO, block.*/d'
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index cfe09c6d..b0773756 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -113,7 +113,7 @@ sizeof(struct xfs_scrub_metadata) = 64
+ sizeof(struct xfs_unmount_log_format) = 8
+ sizeof(xfs_agf_t) = 224
+ sizeof(xfs_agfl_t) = 36
+-sizeof(xfs_agi_t) = 336
++sizeof(xfs_agi_t) = 344
+ sizeof(xfs_alloc_key_t) = 8
+ sizeof(xfs_alloc_rec_incore_t) = 8
+ sizeof(xfs_alloc_rec_t) = 8
 
