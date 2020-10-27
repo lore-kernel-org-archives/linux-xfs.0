@@ -2,62 +2,64 @@ Return-Path: <SRS0=u7A2=EC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,PDS_BTC_ID,PDS_BTC_MSGID,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A5B1C388F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:04:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB10EC388F9
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:04:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8F1221D41
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:04:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A62D6206D4
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:04:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aZ3cfyS4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dNy2H4lr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1829316AbgJ0TE2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 15:04:28 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:57546 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1829304AbgJ0TE0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:04:26 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RItCvt021945;
-        Tue, 27 Oct 2020 19:04:23 GMT
+        id S1829333AbgJ0TEn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 15:04:43 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:50674 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1829330AbgJ0TEn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:04:43 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIsvGh111768;
+        Tue, 27 Oct 2020 19:04:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=Zn0SQwCErYui6dkoBmRp1cc4mbyeWNN22WEUtcgvKLE=;
- b=aZ3cfyS4U61vQUlvbrS3r1ezyqGVLlZh5rirDg6KUEr9I4HM6rW5pTDpnX/Deu9p23mK
- JiW+DF0HEI6U6BuI7guY3UPOGI1OVUWh/nwhAdF6cAgq8oH/NmvH9KZlZHuiZwC46wlE
- oisnqYZX16F8RKouZB/FOSlcslerPfOZgtvBQX2ej9RvS678YBB54mlnnBGP5GWHHomq
- l4jvV0ZjlZNZbIEEmXQYvyoORoAWFhKwW8HAJ7XIbbNJiszRXB7IHmYUdOVyubBzExBp
- 9EGWrYHsDfabAl72IFCLJa0KMC6Zc1uQ8P9Xiabhi3oQQkOMJ9lPc1V3hYoWFpuuPETV cQ== 
+ bh=qsNfI1wuTKWJ8pWR0QHvQzeLVrIEeYFFqFbpNG8gLbs=;
+ b=dNy2H4lrTv8jd6LigQym5lKgqrRHXOXx8gXjiy77v5YoRJWD9H0CAkeJAYxmAHpDJuyS
+ 9xj2JBLEo462LX0rTazgGPa3jGO0gLbkjfmCETy0Gh5aemAIz7yB0pgsN2i6+xdwm100
+ bqZ7NUd6p5iHWGyB/uLY40dHEX1gk8EFCkbFAEkzevqt+Qz2vzl0xdiVJyr+zjUp6pFn
+ iEMxmc1oI1egojfbrrD+gHBvIh/8SUNpvkkoeOvlmDWXxRPgCMvOgCdp41IBTBbcSPTK
+ rHw5A5oE2N7lXYTCg7C2Ht+1SYQ6PyvKzJEW/MUVn7AQNr57kcSF56tSCxFmdYHaydNI xg== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 34c9sav0f6-1
+        by userp2120.oracle.com with ESMTP id 34dgm41fbn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 27 Oct 2020 19:04:22 +0000
+        Tue, 27 Oct 2020 19:04:40 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIuLgX090867;
-        Tue, 27 Oct 2020 19:04:22 GMT
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIuK5W090794;
+        Tue, 27 Oct 2020 19:02:39 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 34cx1r3wft-1
+        by userp3020.oracle.com with ESMTP id 34cx1r3ux7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 27 Oct 2020 19:04:21 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09RJ4KJZ007111;
-        Tue, 27 Oct 2020 19:04:20 GMT
+        Tue, 27 Oct 2020 19:02:39 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09RJ2cnC006321;
+        Tue, 27 Oct 2020 19:02:38 GMT
 Received: from localhost (/10.159.243.144)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 27 Oct 2020 12:04:20 -0700
-Subject: [PATCH 4/4] xfs: test upgrading filesystem to bigtime
+        with ESMTP ; Tue, 27 Oct 2020 12:02:38 -0700
+Subject: [PATCH 1/7] xfs: test fallocate ops when rt extent size is and isn't
+ a power of 2
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Tue, 27 Oct 2020 12:04:19 -0700
-Message-ID: <160382545965.1203848.17436126884496645934.stgit@magnolia>
-In-Reply-To: <160382543472.1203848.8335854864075548402.stgit@magnolia>
-References: <160382543472.1203848.8335854864075548402.stgit@magnolia>
+Date:   Tue, 27 Oct 2020 12:02:37 -0700
+Message-ID: <160382535741.1203387.10647004373989609905.stgit@magnolia>
+In-Reply-To: <160382535113.1203387.16777876271740782481.stgit@magnolia>
+References: <160382535113.1203387.16777876271740782481.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -68,347 +70,321 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phish
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010270110
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9787 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
- priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010270110
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
+ suspectscore=0 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010270110
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Test that we can upgrade an existing filesystem to use bigtime.
+Make sure that fallocate works when the rt extent size is and isn't a
+power of 2.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/xfs        |   16 ++++++
- tests/xfs/908     |   87 ++++++++++++++++++++++++++++++
- tests/xfs/908.out |   10 +++
- tests/xfs/909     |  153 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/909.out |    4 +
- tests/xfs/group   |    2 +
- 6 files changed, 272 insertions(+)
- create mode 100755 tests/xfs/908
- create mode 100644 tests/xfs/908.out
- create mode 100755 tests/xfs/909
- create mode 100644 tests/xfs/909.out
+ tests/xfs/763     |  181 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/763.out |   91 +++++++++++++++++++++++++++
+ tests/xfs/group   |    1 
+ 3 files changed, 273 insertions(+)
+ create mode 100755 tests/xfs/763
+ create mode 100644 tests/xfs/763.out
 
 
-diff --git a/common/xfs b/common/xfs
-index 19ccee03..4274eee7 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -1008,3 +1008,19 @@ _xfs_timestamp_range()
- 		$dbprog -f -c 'timelimit --compact' | awk '{printf("%s %s", $1, $2);}'
- 	fi
- }
+diff --git a/tests/xfs/763 b/tests/xfs/763
+new file mode 100755
+index 00000000..4b0b08a0
+--- /dev/null
++++ b/tests/xfs/763
+@@ -0,0 +1,181 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# FS QA Test No. 763
++#
++# Make sure that regular fallocate functions work ok when the realtime extent
++# size is and isn't a power of 2.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+_require_xfs_mkfs_bigtime()
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	_scratch_mkfs_xfs_supported -m bigtime=1 >/dev/null 2>&1 \
-+	   || _notrun "mkfs.xfs doesn't have bigtime feature"
++	cd /
++	_scratch_unmount >> $seqres.full 2>&1
++	test -e "$rtdev" && losetup -d $rtdev >> $seqres.full 2>&1
++	rm -f $tmp.* $TEST_DIR/$seq.rtvol
 +}
 +
-+_require_xfs_scratch_bigtime()
-+{
-+	_require_scratch
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
 +
-+	_scratch_mkfs -m bigtime=1 > /dev/null
-+	_try_scratch_mount || \
-+		_notrun "bigtime not supported by scratch filesystem type: $FSTYP"
++# real QA test starts here
++_supported_fs xfs
++_require_xfs_io_command "fpunch"
++_require_xfs_io_command "fzero"
++_require_xfs_io_command "fcollapse"
++_require_xfs_io_command "finsert"
++# Note that we don't _require_realtime because we synthesize a rt volume
++# below.  This also means we cannot run the post-test check.
++_require_scratch_nocheck
++
++log() {
++	echo "$@" | tee -a $seqres.full
++}
++
++mk_file() {
++	local file="$1"
++	local rextsize="$2"
++
++	$XFS_IO_PROG -f \
++		-c "pwrite -S 0x57 -b $rextsize 0 $rextsize" \
++		-c "pwrite -S 0x58 -b $rextsize $rextsize $rextsize" \
++		-c "pwrite -S 0x59 -b $rextsize $((rextsize * 2)) $rextsize" \
++		-c fsync \
++		"$file" >> $seqres.full
++}
++
++check_file() {
++	filefrag -v "$1" >> $seqres.full
++	od -tx1 -Ad -c "$1" >> $seqres.full
++	md5sum "$1" | _filter_scratch | tee -a $seqres.full
++}
++
++test_ops() {
++	local rextsize=$1
++	local sz=$((rextsize * 3))
++	local unaligned_sz=65536
++	local unaligned_off=$((rextsize * 2 + unaligned_sz))
++	local lunaligned_sz=$((rextsize * 2))
++	local lunaligned_off=$unaligned_sz
++
++	log "Format rtextsize=$rextsize"
 +	_scratch_unmount
++	_scratch_mkfs -r extsize=$rextsize >> $seqres.full
++	_scratch_mount || \
++		_notrun "Could not mount rextsize=$rextsize with synthetic rt volume"
++
++	# Force all files to be realtime files
++	$XFS_IO_PROG -c 'chattr +t' $SCRATCH_MNT
++
++	log "Test regular write, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/write $rextsize
++	check_file $SCRATCH_MNT/write
++
++	log "Test aligned falloc, rextsize=$rextsize"
++	$XFS_IO_PROG -f -c "falloc 0 $sz" $SCRATCH_MNT/falloc >> $seqres.full
++	check_file $SCRATCH_MNT/falloc
++
++	log "Test aligned fcollapse, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/collapse $rextsize
++	$XFS_IO_PROG -f -c "fcollapse $rextsize $rextsize" $SCRATCH_MNT/collapse >> $seqres.full
++	check_file $SCRATCH_MNT/collapse
++
++	log "Test aligned finsert, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/insert $rextsize
++	$XFS_IO_PROG -f -c "finsert $rextsize $rextsize" $SCRATCH_MNT/insert >> $seqres.full
++	check_file $SCRATCH_MNT/insert
++
++	log "Test aligned fzero, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/zero $rextsize
++	$XFS_IO_PROG -f -c "fzero $rextsize $rextsize" $SCRATCH_MNT/zero >> $seqres.full
++	check_file $SCRATCH_MNT/zero
++
++	log "Test aligned fpunch, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/punch $rextsize
++	$XFS_IO_PROG -f -c "fpunch $rextsize $rextsize" $SCRATCH_MNT/punch >> $seqres.full
++	check_file $SCRATCH_MNT/punch
++
++	log "Test unaligned falloc, rextsize=$rextsize"
++	$XFS_IO_PROG -f -c "falloc $unaligned_off $unaligned_sz" $SCRATCH_MNT/ufalloc >> $seqres.full
++	check_file $SCRATCH_MNT/ufalloc
++
++	log "Test unaligned fcollapse, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/ucollapse $rextsize
++	$XFS_IO_PROG -f -c "fcollapse $unaligned_off $unaligned_sz" $SCRATCH_MNT/ucollapse >> $seqres.full
++	check_file $SCRATCH_MNT/ucollapse
++
++	log "Test unaligned finsert, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/uinsert $rextsize
++	$XFS_IO_PROG -f -c "finsert $unaligned_off $unaligned_sz" $SCRATCH_MNT/uinsert >> $seqres.full
++	check_file $SCRATCH_MNT/uinsert
++
++	log "Test unaligned fzero, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/uzero $rextsize
++	$XFS_IO_PROG -f -c "fzero $unaligned_off $unaligned_sz" $SCRATCH_MNT/uzero >> $seqres.full
++	check_file $SCRATCH_MNT/uzero
++
++	log "Test unaligned fpunch, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/upunch $rextsize
++	$XFS_IO_PROG -f -c "fpunch $unaligned_off $unaligned_sz" $SCRATCH_MNT/upunch >> $seqres.full
++	check_file $SCRATCH_MNT/upunch
++
++	log "Test large unaligned fzero, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/luzero $rextsize
++	$XFS_IO_PROG -f -c "fzero $lunaligned_off $lunaligned_sz" $SCRATCH_MNT/luzero >> $seqres.full
++	check_file $SCRATCH_MNT/luzero
++
++	log "Test large unaligned fpunch, rextsize=$rextsize"
++	mk_file $SCRATCH_MNT/lpunch $rextsize
++	$XFS_IO_PROG -f -c "fpunch $lunaligned_off $lunaligned_sz" $SCRATCH_MNT/lpunch >> $seqres.full
++	check_file $SCRATCH_MNT/lpunch
++
++	log "Remount and compare"
++	_scratch_cycle_mount
++	check_file $SCRATCH_MNT/write
++	check_file $SCRATCH_MNT/falloc
++	check_file $SCRATCH_MNT/collapse
++	check_file $SCRATCH_MNT/insert
++	check_file $SCRATCH_MNT/zero
++	check_file $SCRATCH_MNT/punch
++	check_file $SCRATCH_MNT/ufalloc
++	check_file $SCRATCH_MNT/ucollapse
++	check_file $SCRATCH_MNT/uinsert
++	check_file $SCRATCH_MNT/uzero
++	check_file $SCRATCH_MNT/upunch
++	check_file $SCRATCH_MNT/luzero
++	check_file $SCRATCH_MNT/lpunch
++
++	log "Check everything, rextsize=$rextsize"
++	_check_scratch_fs
 +}
-diff --git a/tests/xfs/908 b/tests/xfs/908
-new file mode 100755
-index 00000000..e368d66c
---- /dev/null
-+++ b/tests/xfs/908
-@@ -0,0 +1,87 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 908
-+#
-+# Check that we can upgrade a filesystem to support bigtime and that inode
-+# timestamps work properly after the upgrade.
 +
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
++echo "Create fake rt volume"
++truncate -s 400m $TEST_DIR/$seq.rtvol
++rtdev=$(_create_loop_device $TEST_DIR/$seq.rtvol)
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
++echo "Make sure synth rt volume works"
++export USE_EXTERNAL=yes
++export SCRATCH_RTDEV=$rtdev
++_scratch_mkfs > $seqres.full
++_scratch_mount || \
++	_notrun "Could not mount with synthetic rt volume"
 +
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
++# power of two
++test_ops 262144
 +
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# We have very specific formatting parameters, so don't let things get complex
-+# with realtime devices and external logs.
-+unset USE_EXTERNAL
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_mkfs_crc
-+_require_xfs_mkfs_bigtime
-+_require_xfs_scratch_bigtime
-+
-+date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
-+	_notrun "Userspace does not support dates past 2038."
-+
-+rm -f $seqres.full
-+
-+# Format V5 filesystem without bigtime support and populate it
-+_scratch_mkfs -m crc=1,bigtime=0 > $seqres.full
-+_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/a
-+touch -d 'Jan 9 19:19:19 UTC 1999' $SCRATCH_MNT/b
-+ls -la $SCRATCH_MNT/* >> $seqres.full
-+
-+echo before upgrade:
-+TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
-+TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
-+
-+_scratch_unmount
-+_check_scratch_fs
-+
-+# Now upgrade to bigtime support
-+_scratch_xfs_admin -O bigtime >> $seqres.full
-+_check_scratch_fs
-+_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
-+
-+# Mount again, look at our files
-+_scratch_mount >> $seqres.full
-+ls -la $SCRATCH_MNT/* >> $seqres.full
-+
-+# Modify one of the timestamps to stretch beyond 2038
-+touch -d 'Feb 22 22:22:22 UTC 2222' $SCRATCH_MNT/b
-+
-+echo after upgrade:
-+TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
-+TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
-+
-+_scratch_cycle_mount
-+
-+# Did the timestamp survive the remount?
-+ls -la $SCRATCH_MNT/* >> $seqres.full
-+
-+echo after upgrade and remount:
-+TZ=UTC stat -c '%Y' $SCRATCH_MNT/a
-+TZ=UTC stat -c '%Y' $SCRATCH_MNT/b
++# not a power of two
++test_ops 327680
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/908.out b/tests/xfs/908.out
+diff --git a/tests/xfs/763.out b/tests/xfs/763.out
 new file mode 100644
-index 00000000..f0f412be
+index 00000000..27c87bab
 --- /dev/null
-+++ b/tests/xfs/908.out
-@@ -0,0 +1,10 @@
-+QA output created by 908
-+before upgrade:
-+915909559
-+915909559
-+after upgrade:
-+915909559
-+7956915742
-+after upgrade and remount:
-+915909559
-+7956915742
-diff --git a/tests/xfs/909 b/tests/xfs/909
-new file mode 100755
-index 00000000..7010eb9e
---- /dev/null
-+++ b/tests/xfs/909
-@@ -0,0 +1,153 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 909
-+#
-+# Check that we can upgrade a filesystem to support bigtime and that quota
-+# timers work properly after the upgrade.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/quota
-+
-+# We have very specific formatting parameters, so don't let things get complex
-+# with realtime devices and external logs.
-+unset USE_EXTERNAL
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_quota
-+_require_xfs_mkfs_crc
-+_require_xfs_mkfs_bigtime
-+_require_xfs_scratch_bigtime
-+
-+date --date='Jan 1 00:00:00 UTC 2040' > /dev/null 2>&1 || \
-+	_notrun "Userspace does not support dates past 2038."
-+
-+rm -f $seqres.full
-+
-+# Format V5 filesystem without bigtime support and populate it
-+_scratch_mkfs -m crc=1,bigtime=0 > $seqres.full
-+_qmount_option "usrquota"
-+_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
-+_scratch_mount >> $seqres.full
-+
-+# Force the block counters for uid 1 and 2 above zero
-+_pwrite_byte 0x61 0 64k $SCRATCH_MNT/a >> $seqres.full
-+_pwrite_byte 0x61 0 64k $SCRATCH_MNT/b >> $seqres.full
-+sync
-+chown 1 $SCRATCH_MNT/a
-+chown 2 $SCRATCH_MNT/b
-+
-+# Set quota limits on uid 1 before upgrading
-+$XFS_QUOTA_PROG -x -c 'limit -u bsoft=12k bhard=1m 1' $SCRATCH_MNT
-+
-+# Make sure the grace period is at /some/ point in the future.  We have to
-+# use bc because not all bashes can handle integer comparisons with 64-bit
-+# numbers.
-+repquota -upn $SCRATCH_MNT > $tmp.repquota
-+cat $tmp.repquota >> $seqres.full
-+grace="$(cat $tmp.repquota | grep '^#1' | awk '{print $6}')"
-+now="$(date +%s)"
-+res="$(echo "${grace} > ${now}" | $BC_PROG)"
-+test $res -eq 1 || echo "Expected timer expiry (${grace}) to be after now (${now})."
-+
-+_scratch_unmount
-+
-+# Now upgrade to bigtime support
-+_scratch_xfs_admin -O bigtime >> $seqres.full
-+_check_scratch_fs
-+_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' >> $seqres.full
-+
-+# Mount again, see if our quota timer survived
-+_scratch_mount
-+
-+# Set a very generous grace period and quota limits on uid 2 after upgrading
-+$XFS_QUOTA_PROG -x -c 'timer -u -b -d 2147483647' $SCRATCH_MNT
-+$XFS_QUOTA_PROG -x -c 'limit -u bsoft=10000 bhard=150000 2' $SCRATCH_MNT
-+
-+# Query the grace periods to see if they got set properly after the upgrade.
-+repquota -upn $SCRATCH_MNT > $tmp.repquota
-+cat $tmp.repquota >> $seqres.full
-+grace1="$(repquota -upn $SCRATCH_MNT | grep '^#1' | awk '{print $6}')"
-+grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
-+now="$(date +%s)"
-+
-+# Make sure that uid 1's expiration is in the future...
-+res1="$(echo "${grace} > ${now}" | $BC_PROG)"
-+test "${res1}" -eq 1 || echo "Expected uid 1 expiry (${grace1}) to be after now (${now})."
-+
-+# ...and that uid 2's expiration is after uid 1's...
-+res2="$(echo "${grace2} > ${grace1}" | $BC_PROG)"
-+test "${res2}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after uid 1 (${grace1})."
-+
-+# ...and that uid 2's expiration is after 2038 if right now is far enough
-+# past 1970 that our generous grace period would provide for that.
-+res3="$(echo "(${now} < 100) || (${grace2} > 2147483648)" | $BC_PROG)"
-+test "${res3}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after 2038."
-+
-+_scratch_cycle_mount
-+
-+# Query the grace periods to see if they survived a remount.
-+repquota -upn $SCRATCH_MNT > $tmp.repquota
-+cat $tmp.repquota >> $seqres.full
-+grace1="$(repquota -upn $SCRATCH_MNT | grep '^#1' | awk '{print $6}')"
-+grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
-+now="$(date +%s)"
-+
-+# Make sure that uid 1's expiration is in the future...
-+res1="$(echo "${grace} > ${now}" | $BC_PROG)"
-+test "${res1}" -eq 1 || echo "Expected uid 1 expiry (${grace1}) to be after now (${now})."
-+
-+# ...and that uid 2's expiration is after uid 1's...
-+res2="$(echo "${grace2} > ${grace1}" | $BC_PROG)"
-+test "${res2}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after uid 1 (${grace1})."
-+
-+# ...and that uid 2's expiration is after 2038 if right now is far enough
-+# past 1970 that our generous grace period would provide for that.
-+res3="$(echo "(${now} < 100) || (${grace2} > 2147483648)" | $BC_PROG)"
-+test "${res3}" -eq 1 || echo "Expected uid 2 expiry (${grace2}) to be after 2038."
-+
-+# Now try setting uid 2's expiration to Feb 22 22:22:22 UTC 2222
-+new_expiry=$(date -d 'Feb 22 22:22:22 UTC 2222' +%s)
-+now=$(date +%s)
-+test $now -ge $new_expiry && \
-+	echo "Now is after February 2222?  Expect problems."
-+expiry_delta=$((new_expiry - now))
-+
-+echo "setting expiration to $new_expiry - $now = $expiry_delta" >> $seqres.full
-+$XFS_QUOTA_PROG -x -c "timer -u $expiry_delta 2" -c 'report' $SCRATCH_MNT >> $seqres.full
-+
-+# Did we get an expiration within 5s of the target range?
-+grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
-+echo "grace2 is $grace2" >> $seqres.full
-+_within_tolerance "grace2 expiry" $grace2 $new_expiry 5 -v
-+
-+_scratch_cycle_mount
-+
-+# ...and is it still within 5s after a remount?
-+grace2="$(repquota -upn $SCRATCH_MNT | grep '^#2' | awk '{print $6}')"
-+echo "grace2 is $grace2" >> $seqres.full
-+_within_tolerance "grace2 expiry after remount" $grace2 $new_expiry 5 -v
-+
-+# success, all done
-+echo Silence is golden.
-+status=0
-+exit
-diff --git a/tests/xfs/909.out b/tests/xfs/909.out
-new file mode 100644
-index 00000000..948502b7
---- /dev/null
-+++ b/tests/xfs/909.out
-@@ -0,0 +1,4 @@
-+QA output created by 909
-+grace2 expiry is in range
-+grace2 expiry after remount is in range
-+Silence is golden.
++++ b/tests/xfs/763.out
+@@ -0,0 +1,91 @@
++QA output created by 763
++Create fake rt volume
++Make sure synth rt volume works
++Format rtextsize=262144
++Test regular write, rextsize=262144
++2dce060217cb2293dde96f7fdb3b9232  SCRATCH_MNT/write
++Test aligned falloc, rextsize=262144
++cb18a5d28e77522dfec6a6255bc3847e  SCRATCH_MNT/falloc
++Test aligned fcollapse, rextsize=262144
++2e94746ab733025c21a9cae7d19c18d0  SCRATCH_MNT/collapse
++Test aligned finsert, rextsize=262144
++24e228d3d5f68b612eceec47f8416a7d  SCRATCH_MNT/insert
++Test aligned fzero, rextsize=262144
++ecb6eb78ceb5c43ce86d523437b1fa95  SCRATCH_MNT/zero
++Test aligned fpunch, rextsize=262144
++ecb6eb78ceb5c43ce86d523437b1fa95  SCRATCH_MNT/punch
++Test unaligned falloc, rextsize=262144
++157e39521e47ad1c923a94edd69ad59c  SCRATCH_MNT/ufalloc
++Test unaligned fcollapse, rextsize=262144
++fallocate: Invalid argument
++2dce060217cb2293dde96f7fdb3b9232  SCRATCH_MNT/ucollapse
++Test unaligned finsert, rextsize=262144
++fallocate: Invalid argument
++2dce060217cb2293dde96f7fdb3b9232  SCRATCH_MNT/uinsert
++Test unaligned fzero, rextsize=262144
++4402ca12d4425d7f94c9f536b756d924  SCRATCH_MNT/uzero
++Test unaligned fpunch, rextsize=262144
++4402ca12d4425d7f94c9f536b756d924  SCRATCH_MNT/upunch
++Test large unaligned fzero, rextsize=262144
++be43c5a0de0b510a6a573d682b0df726  SCRATCH_MNT/luzero
++Test large unaligned fpunch, rextsize=262144
++be43c5a0de0b510a6a573d682b0df726  SCRATCH_MNT/lpunch
++Remount and compare
++2dce060217cb2293dde96f7fdb3b9232  SCRATCH_MNT/write
++cb18a5d28e77522dfec6a6255bc3847e  SCRATCH_MNT/falloc
++2e94746ab733025c21a9cae7d19c18d0  SCRATCH_MNT/collapse
++24e228d3d5f68b612eceec47f8416a7d  SCRATCH_MNT/insert
++ecb6eb78ceb5c43ce86d523437b1fa95  SCRATCH_MNT/zero
++ecb6eb78ceb5c43ce86d523437b1fa95  SCRATCH_MNT/punch
++157e39521e47ad1c923a94edd69ad59c  SCRATCH_MNT/ufalloc
++2dce060217cb2293dde96f7fdb3b9232  SCRATCH_MNT/ucollapse
++2dce060217cb2293dde96f7fdb3b9232  SCRATCH_MNT/uinsert
++4402ca12d4425d7f94c9f536b756d924  SCRATCH_MNT/uzero
++4402ca12d4425d7f94c9f536b756d924  SCRATCH_MNT/upunch
++be43c5a0de0b510a6a573d682b0df726  SCRATCH_MNT/luzero
++be43c5a0de0b510a6a573d682b0df726  SCRATCH_MNT/lpunch
++Check everything, rextsize=262144
++Format rtextsize=327680
++Test regular write, rextsize=327680
++dcc4a2d49adcac61bceae7db66611880  SCRATCH_MNT/write
++Test aligned falloc, rextsize=327680
++63a6c5a8b8da92e30cd0ef23c56d4f06  SCRATCH_MNT/falloc
++Test aligned fcollapse, rextsize=327680
++8bdd728a7a4af4ac18bbcbe39dea14d5  SCRATCH_MNT/collapse
++Test aligned finsert, rextsize=327680
++2b178c860f7bef4c0e55399be5172c5e  SCRATCH_MNT/insert
++Test aligned fzero, rextsize=327680
++350defefe2530d8eb8d6a6772c81c206  SCRATCH_MNT/zero
++Test aligned fpunch, rextsize=327680
++350defefe2530d8eb8d6a6772c81c206  SCRATCH_MNT/punch
++Test unaligned falloc, rextsize=327680
++cb18a5d28e77522dfec6a6255bc3847e  SCRATCH_MNT/ufalloc
++Test unaligned fcollapse, rextsize=327680
++fallocate: Invalid argument
++dcc4a2d49adcac61bceae7db66611880  SCRATCH_MNT/ucollapse
++Test unaligned finsert, rextsize=327680
++fallocate: Invalid argument
++dcc4a2d49adcac61bceae7db66611880  SCRATCH_MNT/uinsert
++Test unaligned fzero, rextsize=327680
++c9c7b8791f445ec8c5fbbf82cb26b33c  SCRATCH_MNT/uzero
++Test unaligned fpunch, rextsize=327680
++c9c7b8791f445ec8c5fbbf82cb26b33c  SCRATCH_MNT/upunch
++Test large unaligned fzero, rextsize=327680
++d8bf9fa95e4a7dd228d0b03768045db9  SCRATCH_MNT/luzero
++Test large unaligned fpunch, rextsize=327680
++d8bf9fa95e4a7dd228d0b03768045db9  SCRATCH_MNT/lpunch
++Remount and compare
++dcc4a2d49adcac61bceae7db66611880  SCRATCH_MNT/write
++63a6c5a8b8da92e30cd0ef23c56d4f06  SCRATCH_MNT/falloc
++8bdd728a7a4af4ac18bbcbe39dea14d5  SCRATCH_MNT/collapse
++2b178c860f7bef4c0e55399be5172c5e  SCRATCH_MNT/insert
++350defefe2530d8eb8d6a6772c81c206  SCRATCH_MNT/zero
++350defefe2530d8eb8d6a6772c81c206  SCRATCH_MNT/punch
++cb18a5d28e77522dfec6a6255bc3847e  SCRATCH_MNT/ufalloc
++dcc4a2d49adcac61bceae7db66611880  SCRATCH_MNT/ucollapse
++dcc4a2d49adcac61bceae7db66611880  SCRATCH_MNT/uinsert
++c9c7b8791f445ec8c5fbbf82cb26b33c  SCRATCH_MNT/uzero
++c9c7b8791f445ec8c5fbbf82cb26b33c  SCRATCH_MNT/upunch
++d8bf9fa95e4a7dd228d0b03768045db9  SCRATCH_MNT/luzero
++d8bf9fa95e4a7dd228d0b03768045db9  SCRATCH_MNT/lpunch
++Check everything, rextsize=327680
 diff --git a/tests/xfs/group b/tests/xfs/group
-index f61d46a1..ab98a706 100644
+index b89c0a4e..ffd18166 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -524,6 +524,8 @@
- 760 auto quick rw collapse punch insert zero prealloc
- 761 auto quick realtime
- 763 auto quick rw realtime
-+908 auto quick bigtime
-+909 auto quick bigtime quota
- 910 auto quick inobtcount
- 911 auto quick bigtime
- 915 auto quick quota
+@@ -519,3 +519,4 @@
+ 519 auto quick reflink
+ 520 auto quick reflink
+ 521 auto quick realtime growfs
++763 auto quick rw realtime
 
