@@ -4,63 +4,90 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98422C388F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 18:51:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE69BC4363A
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:01:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31D2A207DE
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 18:51:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9027721527
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:01:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="i49o8MWw"
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="ITgfknbV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439278AbgJ0SvH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 14:51:07 -0400
-Received: from casper.infradead.org ([90.155.50.34]:53220 "EHLO
-        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1829173AbgJ0SvG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 14:51:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=ueT7v/ug264msf+mSaH0QCMQsIO6o9z3ClQckle+Jks=; b=i49o8MWwOVHUMNFtxElm61SAKY
-        AZQrmhKjqpfq59Y0Hb3t3cEaTznrlvFcuc/JZghsOsKKNHzBsE9zfXabfGFJSpOaMvc5rZo7Thrig
-        D3k4Md+yzAsi8YOG7iDeIV/3TFlsABGaBbM/vUY/9YcpuWBVH3K8Pc5hvGD1Q96TNnrR/TK/mYDWn
-        YIoo3iVVk/9c54hclgO33suFi7CWPE95OBKe0ZBGGFV2JJnnFf91mMAEbVX280fcQxRmcFc4jSsa0
-        hkm5/D52GOHvzVl7rmuiJ+drTSdTSDarUrmsFkWTC4m/6lAVROWl68aWqhNFuxJRV9nLuwdPMqhi0
-        cDtVBz1A==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kXU3g-0003rm-2q; Tue, 27 Oct 2020 18:51:00 +0000
-Date:   Tue, 27 Oct 2020 18:51:00 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Daniel Vetter <daniel.vetter@ffwll.ch>
+        id S1829223AbgJ0TBa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 15:01:30 -0400
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:41940 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S371435AbgJ0TB2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:01:28 -0400
+Received: by mail-oi1-f194.google.com with SMTP id k65so2389165oih.8
+        for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2020 12:01:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ffwll.ch; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=M/ppSbcOSIkyb0WLxSLtuLH+l8WQbDgVdPBCEGLhzkg=;
+        b=ITgfknbVMZfp35lpmLI31j4Nz1iCLqIjRADmmwWUK5/lEwTGJCtZuIg7KxFWy7ItTQ
+         hfI9rUKmuyCzK+NN6zramPdeJQr3T/y85wtC502Wh1aA+EVeb5zEhSA9pSEyllBQ0ubV
+         93+c6QQRkdWNThoyRK6g0NvSsnUYPyNsOg5A0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=M/ppSbcOSIkyb0WLxSLtuLH+l8WQbDgVdPBCEGLhzkg=;
+        b=pf8MCVJkT9t0xCRxgqm7SoL/UMpBmcbLiS7PGM//Qd2mFqYFbDZorYYqFq1HZDqH+t
+         OOPZpxGdsGyfI9AGksWhk8nOR5caBOe9jftjd5zKk50xVCUjOHZpoU7QxujEtUa6lKx9
+         UcN0qoyuTcNlXOO7VPCV4oWgk3aepXOwTeax1HRj+K/gEUCNz8wczYke3bIJJowc+MKo
+         6iTMgjoC9qbl0LNi3q77iYqCH1SXgeZfS/1nW7u6fWNLUmpS5uLZ8B13FqiAE4MdvmU9
+         41QLYAph+7jvH1Epg2aHUpRnz9TgPBomYO17KfLHbE92h18f+IFW6EP1boHG8BxEYmvn
+         9DVQ==
+X-Gm-Message-State: AOAM530aQ68HHapVSqEka+gE4sHVZBGZnr/Pr29gM8prHU+y7ILWumeo
+        ENLLrL/KLUfvKI3x++5Qep/rV2XX53/8z4JTrQ0TTA==
+X-Google-Smtp-Source: ABdhPJwHcWbTJCbJ7AAyjVib0AGCCVAs4xDrwxrSwOfpPtT8albuTTgqSli8X5JVplvyhTsqPY2DxlaYLA/ZcsBiLvA=
+X-Received: by 2002:aca:39d6:: with SMTP id g205mr2530848oia.14.1603825286633;
+ Tue, 27 Oct 2020 12:01:26 -0700 (PDT)
+MIME-Version: 1.0
+References: <20201021163242.1458885-1-daniel.vetter@ffwll.ch>
+ <20201023122216.2373294-1-daniel.vetter@ffwll.ch> <20201023122216.2373294-3-daniel.vetter@ffwll.ch>
+ <20201027185100.GD12824@infradead.org>
+In-Reply-To: <20201027185100.GD12824@infradead.org>
+From:   Daniel Vetter <daniel.vetter@ffwll.ch>
+Date:   Tue, 27 Oct 2020 20:01:15 +0100
+Message-ID: <CAKMK7uERSRmJ+E03SWsXcjVEbg24pzbVcXf7dpCvcR1JvnTcnA@mail.gmail.com>
+Subject: Re: [PATCH 03/65] mm: Track mmu notifiers in fs_reclaim_acquire/release
+To:     Christoph Hellwig <hch@infradead.org>
 Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
         Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
         linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
         Qian Cai <cai@lca.pw>, linux-xfs@vger.kernel.org,
-        Thomas Hellstr??m <thomas_os@shipmail.org>,
+        "Thomas Hellstr??m" <thomas_os@shipmail.org>,
         Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@mellanox.com>, linux-mm@kvack.org,
-        linux-rdma@vger.kernel.org,
+        Jason Gunthorpe <jgg@mellanox.com>,
+        Linux MM <linux-mm@kvack.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
         Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Christian K??nig <christian.koenig@amd.com>,
+        "Christian K??nig" <christian.koenig@amd.com>,
         Daniel Vetter <daniel.vetter@intel.com>
-Subject: Re: [PATCH 03/65] mm: Track mmu notifiers in
- fs_reclaim_acquire/release
-Message-ID: <20201027185100.GD12824@infradead.org>
-References: <20201021163242.1458885-1-daniel.vetter@ffwll.ch>
- <20201023122216.2373294-1-daniel.vetter@ffwll.ch>
- <20201023122216.2373294-3-daniel.vetter@ffwll.ch>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201023122216.2373294-3-daniel.vetter@ffwll.ch>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Is there a list that has the cover letter and the whole series?
-I've only found fragments (and mostly the same fragments) while
-wading through my backlog in various list folders..
+On Tue, Oct 27, 2020 at 7:51 PM Christoph Hellwig <hch@infradead.org> wrote:
+> Is there a list that has the cover letter and the whole series?
+> I've only found fragments (and mostly the same fragments) while
+> wading through my backlog in various list folders..
+
+Typoed git send-email command that I only caught half-way through. I
+tried to reply with apologies in a few spots, I guess I didn't cover
+all the lists this spams :-/
+
+The patch itself is still somewhere on my todo to respin, I want to
+pep it up with some testcases since previous version was kinda badly
+broken. Just didn't get around to that yet.
+-Daniel
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
