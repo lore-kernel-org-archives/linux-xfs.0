@@ -2,92 +2,112 @@ Return-Path: <SRS0=u7A2=EC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE69BC4363A
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:01:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B82C55178
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9027721527
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:01:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A9D521556
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Oct 2020 19:01:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="ITgfknbV"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oK7qEhsj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1829223AbgJ0TBa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Oct 2020 15:01:30 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:41940 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S371435AbgJ0TB2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:01:28 -0400
-Received: by mail-oi1-f194.google.com with SMTP id k65so2389165oih.8
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Oct 2020 12:01:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ffwll.ch; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=M/ppSbcOSIkyb0WLxSLtuLH+l8WQbDgVdPBCEGLhzkg=;
-        b=ITgfknbVMZfp35lpmLI31j4Nz1iCLqIjRADmmwWUK5/lEwTGJCtZuIg7KxFWy7ItTQ
-         hfI9rUKmuyCzK+NN6zramPdeJQr3T/y85wtC502Wh1aA+EVeb5zEhSA9pSEyllBQ0ubV
-         93+c6QQRkdWNThoyRK6g0NvSsnUYPyNsOg5A0=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=M/ppSbcOSIkyb0WLxSLtuLH+l8WQbDgVdPBCEGLhzkg=;
-        b=pf8MCVJkT9t0xCRxgqm7SoL/UMpBmcbLiS7PGM//Qd2mFqYFbDZorYYqFq1HZDqH+t
-         OOPZpxGdsGyfI9AGksWhk8nOR5caBOe9jftjd5zKk50xVCUjOHZpoU7QxujEtUa6lKx9
-         UcN0qoyuTcNlXOO7VPCV4oWgk3aepXOwTeax1HRj+K/gEUCNz8wczYke3bIJJowc+MKo
-         6iTMgjoC9qbl0LNi3q77iYqCH1SXgeZfS/1nW7u6fWNLUmpS5uLZ8B13FqiAE4MdvmU9
-         41QLYAph+7jvH1Epg2aHUpRnz9TgPBomYO17KfLHbE92h18f+IFW6EP1boHG8BxEYmvn
-         9DVQ==
-X-Gm-Message-State: AOAM530aQ68HHapVSqEka+gE4sHVZBGZnr/Pr29gM8prHU+y7ILWumeo
-        ENLLrL/KLUfvKI3x++5Qep/rV2XX53/8z4JTrQ0TTA==
-X-Google-Smtp-Source: ABdhPJwHcWbTJCbJ7AAyjVib0AGCCVAs4xDrwxrSwOfpPtT8albuTTgqSli8X5JVplvyhTsqPY2DxlaYLA/ZcsBiLvA=
-X-Received: by 2002:aca:39d6:: with SMTP id g205mr2530848oia.14.1603825286633;
- Tue, 27 Oct 2020 12:01:26 -0700 (PDT)
+        id S1829242AbgJ0TBh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Oct 2020 15:01:37 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:48074 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1829232AbgJ0TBf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Oct 2020 15:01:35 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIsWGA111607;
+        Tue, 27 Oct 2020 19:01:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=Xk+AyRCV0pZZzNovL9u8uITY8vGc6FI9GJmCX8C4rXM=;
+ b=oK7qEhsjyzfEPg+mC8EXA1TFVxKIj69Gg23pE9sBZeK6CMwyfByRNC3bz9YH9wdxqwvY
+ UsNJO6BnvaRluDvEQ7B31+krorMqTepM8JwDqiZkY07I+uYNROyxUY2O1Qi1VfwLsN02
+ EithR3cB0Om2fM86V8xfBOpnsRpRgexS86hkfTvN1fpD7/t8qWtJWNGD+4HfP4b7TJ/i
+ SeteXbCUJzccZb/3VVlqTML/3/0e5t1toVl1mQHObI92POMMixlNpKHy59XriibmVkqh
+ cGZH4Ra/z9T5/A5TTGK1oVD7rrlqsVBIDtjRJlOgqTa95cla+rbHYHKWgaBTzCnzzbv/ Mg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 34dgm41ew0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 27 Oct 2020 19:01:33 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09RIsPSQ076504;
+        Tue, 27 Oct 2020 19:01:32 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 34cwumrhaa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 27 Oct 2020 19:01:32 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09RJ1WUC005682;
+        Tue, 27 Oct 2020 19:01:32 GMT
+Received: from localhost (/10.159.243.144)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 27 Oct 2020 12:01:30 -0700
+Subject: [PATCH 0/9] xfstests: random fixes
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com, guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Date:   Tue, 27 Oct 2020 12:01:29 -0700
+Message-ID: <160382528936.1202316.2338876126552815991.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-References: <20201021163242.1458885-1-daniel.vetter@ffwll.ch>
- <20201023122216.2373294-1-daniel.vetter@ffwll.ch> <20201023122216.2373294-3-daniel.vetter@ffwll.ch>
- <20201027185100.GD12824@infradead.org>
-In-Reply-To: <20201027185100.GD12824@infradead.org>
-From:   Daniel Vetter <daniel.vetter@ffwll.ch>
-Date:   Tue, 27 Oct 2020 20:01:15 +0100
-Message-ID: <CAKMK7uERSRmJ+E03SWsXcjVEbg24pzbVcXf7dpCvcR1JvnTcnA@mail.gmail.com>
-Subject: Re: [PATCH 03/65] mm: Track mmu notifiers in fs_reclaim_acquire/release
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     DRI Development <dri-devel@lists.freedesktop.org>,
-        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-        linux-fsdevel@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-        Qian Cai <cai@lca.pw>, linux-xfs@vger.kernel.org,
-        "Thomas Hellstr??m" <thomas_os@shipmail.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@mellanox.com>,
-        Linux MM <linux-mm@kvack.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        "Christian K??nig" <christian.koenig@amd.com>,
-        Daniel Vetter <daniel.vetter@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9787 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
+ spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010270110
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9787 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
+ suspectscore=0 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010270110
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 7:51 PM Christoph Hellwig <hch@infradead.org> wrote:
-> Is there a list that has the cover letter and the whole series?
-> I've only found fragments (and mostly the same fragments) while
-> wading through my backlog in various list folders..
+Hi all,
 
-Typoed git send-email command that I only caught half-way through. I
-tried to reply with apologies in a few spots, I guess I didn't cover
-all the lists this spams :-/
+This series contains random fixes to fstests.
 
-The patch itself is still somewhere on my todo to respin, I want to
-pep it up with some testcases since previous version was kinda badly
-broken. Just didn't get around to that yet.
--Daniel
--- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+---
+ check             |   21 ++++++++++++++++++++-
+ common/populate   |    5 +++++
+ common/rc         |   13 ++++++++++---
+ common/repair     |    1 +
+ common/xfs        |   20 ++++++++++++++++++++
+ tests/xfs/030     |    1 +
+ tests/xfs/272     |    3 +++
+ tests/xfs/276     |    8 +++++++-
+ tests/xfs/327     |   18 ++++++++++++++++--
+ tests/xfs/327.out |   13 +++++++------
+ tests/xfs/328     |    2 +-
+ tests/xfs/341     |    8 +++++---
+ tests/xfs/520     |    3 +++
+ 13 files changed, 99 insertions(+), 17 deletions(-)
+
