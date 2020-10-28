@@ -7,140 +7,119 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03292C388F7
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:31:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B772AC56201
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:31:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A15892080D
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:31:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AACC207DE
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:31:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VIFVpxxD"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BuwArRLb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387913AbgJ1Wbc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:31:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:30300 "EHLO
+        id S2387898AbgJ1Wb2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:31:28 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56382 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387905AbgJ1Wbb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 18:31:31 -0400
+        by vger.kernel.org with ESMTP id S2387895AbgJ1Wb0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 18:31:26 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603924290;
+        s=mimecast20190719; t=1603924285;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=TQGrqXAUmlrtRtkH/30yLYIDSS640VbA/u3zdICZ6T0=;
-        b=VIFVpxxD/s9v+kLyFdxSIheZaLw7aHveqD8H8wY6ByYQ46i8l0RvF0stwVHUOz0qkRbAKK
-        L+if5D5M92AKnju9st+0mB6lkwj5JB+wGWEAp1vvHsbo5yEnEs19ZmzaFpR8ciTgcKDzGP
-        OzcJ1VvBNjsxIK1q+p+0VTmupMNEviA=
+        bh=7+jwzQF0mpu5S6XCR4XY493w936NSTbYPTr+dJlZ1qI=;
+        b=BuwArRLbmw6iuZeYgXLefPZLn+UUt474Q9jLN9uaRlfwDUnRBkuQ4fyIZXurEKFfLgIJB0
+        PIykk7R4ZCuO3mzFlhiWOOVISJe27PQHkKqBYH6JlxZuKcgYwCWGu5CSVB31HC097wvZXm
+        qE4ptTXY26pWt5kqgqp4IX0T12PM59c=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-436-wzc739XLMNClsWmeeTkZeQ-1; Wed, 28 Oct 2020 13:30:41 -0400
-X-MC-Unique: wzc739XLMNClsWmeeTkZeQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-528-ujEa2nnBPHyF-kvUAlRVZA-1; Wed, 28 Oct 2020 13:30:03 -0400
+X-MC-Unique: ujEa2nnBPHyF-kvUAlRVZA-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 65907805EFD;
-        Wed, 28 Oct 2020 17:30:40 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 248C4108E1AD;
+        Wed, 28 Oct 2020 17:30:02 +0000 (UTC)
 Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D8EAB100238E;
-        Wed, 28 Oct 2020 17:30:39 +0000 (UTC)
-Date:   Wed, 28 Oct 2020 13:30:38 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A275260BF1;
+        Wed, 28 Oct 2020 17:30:01 +0000 (UTC)
+Date:   Wed, 28 Oct 2020 13:29:59 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] mkfs: enable the inode btree counter feature
-Message-ID: <20201028173038.GG1611922@bfoster>
+Subject: Re: [PATCH 6/9] xfs_repair: check inode btree block counters in AGI
+Message-ID: <20201028172959.GE1611922@bfoster>
 References: <160375518573.880355.12052697509237086329.stgit@magnolia>
- <160375523682.880355.16796358046529188083.stgit@magnolia>
+ <160375522427.880355.15446960142376313542.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160375523682.880355.16796358046529188083.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <160375522427.880355.15446960142376313542.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 26, 2020 at 04:33:56PM -0700, Darrick J. Wong wrote:
+On Mon, Oct 26, 2020 at 04:33:44PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Teach mkfs how to enable the inode btree counter feature.
+> Make sure that both inode btree block counters in the AGI are correct.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  man/man8/mkfs.xfs.8 |   15 +++++++++++++++
->  mkfs/xfs_mkfs.c     |   34 +++++++++++++++++++++++++++++++++-
->  2 files changed, 48 insertions(+), 1 deletion(-)
+>  repair/scan.c |   38 +++++++++++++++++++++++++++++++++++---
+>  1 file changed, 35 insertions(+), 3 deletions(-)
 > 
 > 
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> index 0a7858748457..1a6a5f93f0ea 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8
+> diff --git a/repair/scan.c b/repair/scan.c
+> index 2a38ae5197c6..c826af7dee86 100644
+> --- a/repair/scan.c
+> +++ b/repair/scan.c
 ...
-> @@ -862,7 +871,8 @@ usage( void )
->  {
->  	fprintf(stderr, _("Usage: %s\n\
->  /* blocksize */		[-b size=num]\n\
-> -/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1]\n\
-> +/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,\n\
-> +			    inobtcnt=0|1]\n\
->  /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
->  			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
->  			    sectsize=num\n\
-
-Any plans to add a geometry flag so the feature state is reported on
-success? Otherwise LGTM:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-> @@ -1565,6 +1575,9 @@ meta_opts_parser(
->  	case M_REFLINK:
->  		cli->sb_feat.reflink = getnum(value, opts, subopt);
->  		break;
-> +	case M_INOBTCNT:
-> +		cli->sb_feat.inobtcnt = getnum(value, opts, subopt);
-> +		break;
->  	default:
->  		return -EINVAL;
+> @@ -2022,6 +2029,17 @@ scan_inobt(
+>  			return;
 >  	}
-> @@ -1988,6 +2001,22 @@ _("reflink not supported without CRC support\n"));
->  			usage();
->  		}
->  		cli->sb_feat.reflink = false;
-> +
-> +		if (cli->sb_feat.inobtcnt && cli_opt_set(&mopts, M_INOBTCNT)) {
-> +			fprintf(stderr,
-> +_("inode btree counters not supported without CRC support\n"));
-> +			usage();
-> +		}
-> +		cli->sb_feat.inobtcnt = false;
+>  
+> +	switch (magic) {
+> +	case XFS_FIBT_MAGIC:
+> +	case XFS_FIBT_CRC_MAGIC:
+> +		ipriv->fino_blocks++;
+> +		break;
+> +	case XFS_IBT_MAGIC:
+> +	case XFS_IBT_CRC_MAGIC:
+> +		ipriv->ino_blocks++;
+> +		break;
 > +	}
 > +
-> +	if (!cli->sb_feat.finobt) {
-> +		if (cli->sb_feat.inobtcnt && cli_opt_set(&mopts, M_INOBTCNT)) {
-> +			fprintf(stderr,
-> +_("inode btree counters not supported without finobt support\n"));
-> +			usage();
-> +		}
-> +		cli->sb_feat.inobtcnt = false;
+
+Is this intentionally not folded into the earlier magic switch
+statement?
+
+>  	/*
+>  	 * check for btree blocks multiply claimed, any unknown/free state
+>  	 * is ok in the bitmap block.
+...
+> @@ -2393,6 +2414,17 @@ validate_agi(
+>  		}
 >  	}
 >  
->  	if ((cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
-> @@ -2955,6 +2984,8 @@ sb_set_features(
->  		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
->  	if (fp->reflink)
->  		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
-> +	if (fp->inobtcnt)
-> +		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
->  
->  	/*
->  	 * Sparse inode chunk support has two main inode alignment requirements.
-> @@ -3617,6 +3648,7 @@ main(
->  			.spinodes = true,
->  			.rmapbt = false,
->  			.reflink = true,
-> +			.inobtcnt = false,
->  			.parent_pointers = false,
->  			.nodalign = false,
->  			.nortalign = false,
+> +	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
+> +		if (be32_to_cpu(agi->agi_iblocks) != priv.ino_blocks)
+> +			do_warn(_("bad inobt block count %u, saw %u\n"),
+> +					priv.ino_blocks,
+> +					be32_to_cpu(agi->agi_iblocks));
+
+These two params are backwards (here and below), no?
+
+Brian
+
+> +		if (be32_to_cpu(agi->agi_fblocks) != priv.fino_blocks)
+> +			do_warn(_("bad finobt block count %u, saw %u\n"),
+> +					priv.fino_blocks,
+> +					be32_to_cpu(agi->agi_fblocks));
+> +	}
+> +
+>  	if (be32_to_cpu(agi->agi_count) != agcnts->agicount) {
+>  		do_warn(_("agi_count %u, counted %u in ag %u\n"),
+>  			 be32_to_cpu(agi->agi_count), agcnts->agicount, agno);
 > 
 
