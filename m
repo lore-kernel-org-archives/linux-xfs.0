@@ -4,140 +4,101 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5DE2C55179
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:33:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 569FAC388F7
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:35:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B8AF24842
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:33:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA03024844
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:35:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Zj4Yseer"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oYbHlSOn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726115AbgJ1Vdb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 17:33:31 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:27755 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725964AbgJ1VdO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 17:33:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603920793;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=FRxckUNRLC0IZ+zYMP2AzU6qzBRsyuZ6desZQcjX5/o=;
-        b=Zj4YseertZ/H1oeDXwHJtlSLwkbrnSP1qqtfkH21PdTl4hKmHbA3cZzm1pos/nWPu5DI1D
-        pnF7IrEisVDGGuOC9eudfDJXblfIlAmOd1Z6ZKhR7rywTyVyvKAvOcaJlHu+lBO62jtyWy
-        pAVqXUY8G30+HJaFw1PyF8S2OeYQtUM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-506-czQ5cbKoPkestDaF3LltuQ-1; Wed, 28 Oct 2020 07:31:39 -0400
-X-MC-Unique: czQ5cbKoPkestDaF3LltuQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A3BBD8070F2;
-        Wed, 28 Oct 2020 11:31:38 +0000 (UTC)
-Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2F7DA10013C4;
-        Wed, 28 Oct 2020 11:31:38 +0000 (UTC)
-Date:   Wed, 28 Oct 2020 07:31:36 -0400
-From:   Brian Foster <bfoster@redhat.com>
+        id S1726740AbgJ1VfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:35:20 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:35732 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726727AbgJ1VfQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 17:35:16 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09SGJEHk045421;
+        Wed, 28 Oct 2020 16:27:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=UUXDEozMvn119ez0JVw8YFtu/Rn2KiPlU5o3S6MHI+E=;
+ b=oYbHlSOndU6lRxUKQSB9iZsJXorulLCesj0Hev2iyLysb4OGWmMdV5dRukXiZqlU1kmB
+ Tnhi7pZudAGQP4MF6b7DPYd4FVtI8cJw/UxzKrSwy1lMoYbP7VUrw/3bXD7F7oayMMhp
+ 22QMW4MmYAFvYyC6+s1y8ECfADRlHzmxbcKxGbCPMEXx5wqGAkh6cyOE9TXebXeL3mHH
+ AXdt3hICX9s1Wg1Lu4m80uUU/c5AR+k88tz4SGP2oL0T/Bg8KIFFHzB/oL2ckoOlDXrO
+ 0k2y+SLwXwHZl7QILT27ORMQttDKEeNyBBOkm7+SksfPa7wj0PLs3nySmtrfS37rzCwM Ww== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 34c9sb0kfp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 28 Oct 2020 16:27:28 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09SGKUWX063791;
+        Wed, 28 Oct 2020 16:27:28 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 34cwunsfx5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 28 Oct 2020 16:27:28 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09SGRPXr025819;
+        Wed, 28 Oct 2020 16:27:26 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 28 Oct 2020 09:27:25 -0700
+Date:   Wed, 28 Oct 2020 09:27:24 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] iomap: zero cached pages over unwritten extents on
- zero range
-Message-ID: <20201028113136.GB1610972@bfoster>
-References: <20201012140350.950064-1-bfoster@redhat.com>
- <20201012140350.950064-3-bfoster@redhat.com>
- <20201015094901.GC21420@infradead.org>
- <20201019165519.GB1232435@bfoster>
- <20201019180144.GC1232435@bfoster>
- <20201020162150.GB1272590@bfoster>
- <20201027181552.GB32577@infradead.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 9/9] common/populate: make sure _scratch_xfs_populate
+ puts its files on the data device
+Message-ID: <20201028162724.GC1061252@magnolia>
+References: <160382528936.1202316.2338876126552815991.stgit@magnolia>
+ <160382534741.1202316.10109027018039105023.stgit@magnolia>
+ <20201028074446.GI2750@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201027181552.GB32577@infradead.org>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <20201028074446.GI2750@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
+ spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010280109
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
+ priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=1
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010280109
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 06:15:52PM +0000, Christoph Hellwig wrote:
-> On Tue, Oct 20, 2020 at 12:21:50PM -0400, Brian Foster wrote:
-> > Ugh, so the above doesn't quite describe historical behavior.
-> > block_truncate_page() converts an unwritten block if a page exists
-> > (dirty or not), but bails out if a page doesn't exist. We could still do
-> > the above, but if we wanted something more intelligent I think we need
-> > to check for a page before we get the mapping to know whether we can
-> > safely skip an unwritten block or need to write over it. Otherwise if we
-> > check for a page within the actor, we have no way of knowing whether
-> > there was a (possibly dirty) page that had been written back and/or
-> > reclaimed since ->iomap_begin(). If we check for the page first, I think
-> > that the iolock/mmaplock in the truncate path ensures that a page can't
-> > be added before we complete. We might be able to take that further and
-> > check for a dirty || writeback page, but that might be safer as a
-> > separate patch. See the (compile tested only) diff below for an idea of
-> > what I was thinking.
+On Wed, Oct 28, 2020 at 07:44:46AM +0000, Christoph Hellwig wrote:
+> On Tue, Oct 27, 2020 at 12:02:27PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Make sure that _scratch_xfs_populate always installs its files on the
+> > data device even if the test config selects rt by default.
 > 
-> The idea looks reasonable, but a few comment below:
-> 
+> Can you explain why this is important (preferably also in a comment in
+> the source)?
 
-JFYI, I had posted an implementation of this idea here[1] and followed
-up with some details on a similar COW related issue that was exposed
-once the unwritten variant was addressed. I was reasoning about a
-slightly different approach that might more clearly facilitate handling
-both scenarios, but I think I mentioned to Darrick offline that this all
-has me back to preferring the original patch to flush the new EOF block
-first, at least as a first step.
+Ok.  I'll change it to this:
 
-I have a couple other fixes (one being the discard_page() patch you've
-already commented on) related to iomap and I'm going to be offline for a
-few weeks after this week so I'll try to collect them in a series and
-get them posted together soon..
+	# We cannot directly force the filesystem to create the metadata
+	# structures we want; we can only achieve this indirectly by carefully
+	# crafting files and a directory tree.  Therefore, we must have exact
+	# control over the layout and device selection of all files created.
+	# Clear the rtinherit flag on the root directory so that files are
+	# always created on the data volume regardless of MKFS_OPTIONS.
+	# We can set the realtime flag when needed.
+	$XFS_IO_PROG -c 'chattr -t' $SCRATCH_MNT
 
-Brian
-
-[1] https://lore.kernel.org/linux-fsdevel/20201021133329.1337689-1-bfoster@redhat.com/
-
-> > +struct iomap_trunc_priv {
-> > +	bool *did_zero;
-> 
-> I don't think there is any point on using a pointer here, when we
-> can trivially copy out the scalar value.
-> 
-> > +	bool has_page;
-> 
-> The naming of this flag really confuses me.  Maybe has_data or
-> in_pagecache might be better options?
-> 
-> > +static loff_t
-> > +iomap_truncate_page_actor(struct inode *inode, loff_t pos, loff_t count,
-> > +		void *data, struct iomap *iomap, struct iomap *srcmap)
-> > +{
-> > +	struct iomap_trunc_priv	*priv = data;
-> > +	unsigned offset;
-> > +	int status;
-> > +
-> > +	if (srcmap->type == IOMAP_HOLE)
-> > +		return count;
-> > +	if (srcmap->type == IOMAP_UNWRITTEN && !priv->has_page)
-> > +		return count;
-> 
-> Maybe add a comment here to explain why priv->has_page matters?
-> 
-> > +
-> > +	offset = offset_in_page(pos);
-> 
-> I'd move this on the initialization line.
-> 
-> > +	ret = iomap_apply(inode, pos, blocksize - off, IOMAP_ZERO, ops, &priv,
-> > +			  iomap_truncate_page_actor);
-> > +	if (ret <= 0)
-> > +		return ret;
-> 
-> The check could just be < 0 and would be a little more obvious.
-> 
-
+--D
