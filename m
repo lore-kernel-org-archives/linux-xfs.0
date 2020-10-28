@@ -2,175 +2,104 @@ Return-Path: <SRS0=iKFT=ED=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29B8FC388F7
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 22:26:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D9BEC4363A
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 22:29:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C83CB206F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 22:26:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CDB620714
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 22:29:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mXIIOKjS"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jM0gcn9f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733028AbgJ1WYp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:24:45 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:44474 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732941AbgJ1WY0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 18:24:26 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09SMJFPM172285;
-        Wed, 28 Oct 2020 22:24:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=9z10xMVcuhTeCp1KBESvCxRUUhDSAblD5Dwcu8HA9ec=;
- b=mXIIOKjSezussF3BeD1gp1G+O/SEgu6uz2/dwynYj9ncwaSv8Is8EnoZfiub8i7rX1s1
- 7bAxgbUxejQp70aWJthwyuMiEu0IknJQAzTBOQhDY7mQr4HLzjBYihqQESP+PuFceNew
- mhGuu0EFHyyQqSJL/iEj24JvETHtJr4q+E9Bdfxta0CIl3G7lzbCf7vK9mFXXyqL/HO6
- jCgwBhzcu9bKgIz7XYW/krCkBBBFRcsonn9AFWRGCxzb1xmui+/c70qrty7s6ehFHshY
- RvgUjYID0EheJlwBtzjfecw5VrrqkfcDC1muiQBaYKq1hjbhGe4B3xgE+rwSh+SJ9mH0 Gw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 34c9sb25xq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 28 Oct 2020 22:24:14 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09SMKLah180153;
-        Wed, 28 Oct 2020 22:24:14 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 34cx1shev4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 28 Oct 2020 22:24:13 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09SMODvk001220;
-        Wed, 28 Oct 2020 22:24:13 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 28 Oct 2020 15:24:12 -0700
-Date:   Wed, 28 Oct 2020 15:24:11 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH 1/9] common: extract rt extent size for
- _get_file_block_size
-Message-ID: <20201028222411.GE1061252@magnolia>
-References: <160382528936.1202316.2338876126552815991.stgit@magnolia>
- <160382529579.1202316.931742119756545034.stgit@magnolia>
- <20201028074119.GA2750@infradead.org>
+        id S2387615AbgJ1W3j (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:29:39 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:38610 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2387610AbgJ1W3g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 18:29:36 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603924175;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=1a+Od4sgTvDB5zz3kdJ/uyuyxltSAMB2cl/27cor0V0=;
+        b=jM0gcn9f+eyDPj/7rokDItLcD2cHleqldWJh5nmlnfQD3CfgsD6WaiSTbuGTmI4cN0hQIw
+        H3EVE09uR7Y6HRfNvloEMIIwVqgGzIFCP397gTSMDPl6GJfOZPyCh1ay4sNmOPDiP7hM28
+        t/Vb3sgOqCoFTiiPWcneM84eFHf8EdI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-516-7b3VsgAuOciUUhWNrlr0Sw-1; Wed, 28 Oct 2020 13:29:02 -0400
+X-MC-Unique: 7b3VsgAuOciUUhWNrlr0Sw-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id AC2B5108E1B0;
+        Wed, 28 Oct 2020 17:29:01 +0000 (UTC)
+Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2829F5C1D0;
+        Wed, 28 Oct 2020 17:29:01 +0000 (UTC)
+Date:   Wed, 28 Oct 2020 13:28:59 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/9] xfs_db: support displaying inode btree block counts
+ in AGI header
+Message-ID: <20201028172859.GC1611922@bfoster>
+References: <160375518573.880355.12052697509237086329.stgit@magnolia>
+ <160375521177.880355.5574700800853381205.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201028074119.GA2750@infradead.org>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
- suspectscore=1 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010280137
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
- priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=1
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010280137
+In-Reply-To: <160375521177.880355.5574700800853381205.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 07:41:19AM +0000, Christoph Hellwig wrote:
-> On Tue, Oct 27, 2020 at 12:01:35PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > _get_file_block_size is intended to return the size (in bytes) of the
-> > fundamental allocation unit for a file.  This is required for remapping
-> > operations like fallocate and reflink, which can only operate on
-> > allocation units.  Since the XFS realtime volume can be configure for
-> > allocation units larger than 1 fs block, we need to factor that in here.
+On Mon, Oct 26, 2020 at 04:33:31PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Should this also cover the ext4 bigalloc clusters?  Or do they not
-> matter for fallocate?
+> Fix up xfs_db to support displaying the btree block counts.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-They don't matter for fallocate, because ext4 doesn't require clusters
-to be fully allocated like ocfs2 and xfs do.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-This means that all the bigalloc codepaths have this horrible "implied
-cluster allocation" thing sprinkled everywhere where to map in a single
-block you have to scan left and right in the extent map to see if anyone
-already mapped something.  And even more strangely, extent tree blocks
-don't do this, so it seems to waste the entire cluster past the first fs
-block.
+>  db/agi.c |    2 ++
+>  db/sb.c  |    2 ++
+>  2 files changed, 4 insertions(+)
+> 
+> 
+> diff --git a/db/agi.c b/db/agi.c
+> index bf21b2d40f04..cfb4f7b8528a 100644
+> --- a/db/agi.c
+> +++ b/db/agi.c
+> @@ -48,6 +48,8 @@ const field_t	agi_flds[] = {
+>  	{ "lsn", FLDT_UINT64X, OI(OFF(lsn)), C1, 0, TYP_NONE },
+>  	{ "free_root", FLDT_AGBLOCK, OI(OFF(free_root)), C1, 0, TYP_FINOBT },
+>  	{ "free_level", FLDT_UINT32D, OI(OFF(free_level)), C1, 0, TYP_NONE },
+> +	{ "ino_blocks", FLDT_UINT32D, OI(OFF(iblocks)), C1, 0, TYP_NONE },
+> +	{ "fino_blocks", FLDT_UINT32D, OI(OFF(fblocks)), C1, 0, TYP_NONE },
+>  	{ NULL }
+>  };
+>  
+> diff --git a/db/sb.c b/db/sb.c
+> index 8a303422b427..e3b1fe0b2e6e 100644
+> --- a/db/sb.c
+> +++ b/db/sb.c
+> @@ -687,6 +687,8 @@ version_string(
+>  		strcat(s, ",RMAPBT");
+>  	if (xfs_sb_version_hasreflink(sbp))
+>  		strcat(s, ",REFLINK");
+> +	if (xfs_sb_version_hasinobtcounts(sbp))
+> +		strcat(s, ",INOBTCNT");
+>  	return s;
+>  }
+>  
+> 
 
-But I guess it /does/ mean that _get_file_block_size doesn't have to do
-anything special for ext*.
-
---D
-
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/rc  |   13 ++++++++++---
-> >  common/xfs |   20 ++++++++++++++++++++
-> >  2 files changed, 30 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 27a27ea3..41f93047 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -3974,11 +3974,18 @@ _get_file_block_size()
-> >  		echo "Missing mount point argument for _get_file_block_size"
-> >  		exit 1
-> >  	fi
-> > -	if [ "$FSTYP" = "ocfs2" ]; then
-> > +
-> > +	case "$FSTYP" in
-> > +	"ocfs2")
-> >  		stat -c '%o' $1
-> > -	else
-> > +		;;
-> > +	"xfs")
-> > +		_xfs_get_file_block_size $1
-> > +		;;
-> > +	*)
-> >  		_get_block_size $1
-> > -	fi
-> > +		;;
-> > +	esac
-> >  }
-> >  
-> >  # Get the minimum block size of an fs.
-> > diff --git a/common/xfs b/common/xfs
-> > index 79dab058..3f5c14ba 100644
-> > --- a/common/xfs
-> > +++ b/common/xfs
-> > @@ -174,6 +174,26 @@ _scratch_mkfs_xfs()
-> >  	return $mkfs_status
-> >  }
-> >  
-> > +# Get the size of an allocation unit of a file.  Normally this is just the
-> > +# block size of the file, but for realtime files, this is the realtime extent
-> > +# size.
-> > +_xfs_get_file_block_size()
-> > +{
-> > +	local path="$1"
-> > +
-> > +	if ! ($XFS_IO_PROG -c "stat -v" "$path" 2>&1 | egrep -q '(rt-inherit|realtime)'); then
-> > +		_get_block_size "$path"
-> > +		return
-> > +	fi
-> > +
-> > +	# Otherwise, call xfs_info until we find a mount point or the root.
-> > +	path="$(readlink -m "$path")"
-> > +	while ! $XFS_INFO_PROG "$path" &>/dev/null && [ "$path" != "/" ]; do
-> > +		path="$(dirname "$path")"
-> > +	done
-> > +	$XFS_INFO_PROG "$path" | grep realtime | sed -e 's/^.*extsz=\([0-9]*\).*$/\1/g'
-> > +}
-> > +
-> >  # xfs_check script is planned to be deprecated. But, we want to
-> >  # be able to invoke "xfs_check" behavior in xfstests in order to
-> >  # maintain the current verification levels.
-> > 
-> ---end quoted text---
