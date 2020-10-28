@@ -2,251 +2,269 @@ Return-Path: <SRS0=iKFT=ED=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09FBAC55179
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 596D4C4363A
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:48:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B01B221582
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:42:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nz4X7SQl"
+	by mail.kernel.org (Postfix) with ESMTP id 1A4172064C
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:48:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725836AbgJ1Vmk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 17:42:40 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:50512 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726187AbgJ1Vm3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 17:42:29 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09S193NX170013
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2020 01:10:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=urEXcrPvgyz9ZyUpkNET4+FtLnwSZhjRByK8l+YARzg=;
- b=nz4X7SQl2WIwGX0aPIH2OhsZfXl/IZO+z01u3Xon13tZLf3/YZ96T5jQTu6ZRmGYNRVs
- SIK4O3HqNH+kOD9iMIBhARl6t5XJR/n4HvzdRW3KA+bvIVSmYGezqOHCbXMfGGmV8a7W
- b9UO2o/frv4sful39AjPD64h5cbO5tB70jEBeQ36rK3dspyoJtjwVFaurC1w6JKEOBZJ
- pTKlXHOwEDQhWgsKeufZAF5l27pvMoupCLDaXMV05/7jxekyjvj1p2492rBYNQzKXqbC
- FAjAswX7i29B/fNzh89D3nV56/tqIo32H0cpUF37KlfwBgK77ifL1z6gDHYy0GvGY5X9 gg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 34cc7kvxae-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2020 01:10:27 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09S15KAx007695
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2020 01:10:26 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 34cx6wmp0p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2020 01:10:26 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09S1APXL009640
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Oct 2020 01:10:25 GMT
-Received: from localhost (/10.159.243.144)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 27 Oct 2020 18:10:25 -0700
-Subject: [PATCH 2/2] design: document changes for the bigtime feature
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 27 Oct 2020 18:10:24 -0700
-Message-ID: <160384742449.1365004.183534023194389095.stgit@magnolia>
-In-Reply-To: <160384741244.1365004.6341029408891306870.stgit@magnolia>
-References: <160384741244.1365004.6341029408891306870.stgit@magnolia>
-User-Agent: StGit/0.19
+        id S1726356AbgJ1Vsb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:48:31 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:56402 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727828AbgJ1Vsa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 17:48:30 -0400
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5873658C599;
+        Wed, 28 Oct 2020 12:27:04 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kXaEx-005431-Eh; Wed, 28 Oct 2020 12:27:03 +1100
+Date:   Wed, 28 Oct 2020 12:27:03 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs_db: add an ls command
+Message-ID: <20201028012703.GA7391@dread.disaster.area>
+References: <160375514873.880118.10145241423813965771.stgit@magnolia>
+ <160375516100.880118.14555322605178437533.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9787 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
- bulkscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010280002
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9787 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0 suspectscore=1
- priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010280002
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160375516100.880118.14555322605178437533.stgit@magnolia>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
+        a=RXP_zP5u0uVEFUwKNq4A:9 a=UaMI6QF61Q7ME9Dh:21 a=XaoduWK0L3oULcm0:21
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Oct 26, 2020 at 04:32:41PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add to xfs_db the ability to list a directory.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  db/namei.c               |  380 ++++++++++++++++++++++++++++++++++++++++++++++
+>  libxfs/libxfs_api_defs.h |    1 
+>  man/man8/xfs_db.8        |   14 ++
+>  3 files changed, 395 insertions(+)
+> 
+> 
+> diff --git a/db/namei.c b/db/namei.c
+> index 3c9889d62338..b2c036e6777a 100644
+> --- a/db/namei.c
+> +++ b/db/namei.c
+> @@ -221,8 +221,388 @@ static const cmdinfo_t path_cmd = {
+>  	.help		= path_help,
+>  };
+>  
+> +/* List a directory's entries. */
+> +
+> +static const char *filetype_strings[XFS_DIR3_FT_MAX] = {
+> +	[XFS_DIR3_FT_UNKNOWN]	= N_("unknown"),
+> +	[XFS_DIR3_FT_REG_FILE]	= N_("regular"),
+> +	[XFS_DIR3_FT_DIR]	= N_("directory"),
+> +	[XFS_DIR3_FT_CHRDEV]	= N_("chardev"),
+> +	[XFS_DIR3_FT_BLKDEV]	= N_("blkdev"),
+> +	[XFS_DIR3_FT_FIFO]	= N_("fifo"),
+> +	[XFS_DIR3_FT_SOCK]	= N_("socket"),
+> +	[XFS_DIR3_FT_SYMLINK]	= N_("symlink"),
+> +	[XFS_DIR3_FT_WHT]	= N_("whiteout"),
+> +};
 
-Document the changes to the ondisk format when we enable the bigtime
-feature.
+What does N_() do that is different to _()?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- .../allocation_groups.asciidoc                     |    6 ++
- design/XFS_Filesystem_Structure/docinfo.xml        |   14 ++++
- .../internal_inodes.asciidoc                       |    5 ++
- .../XFS_Filesystem_Structure/ondisk_inode.asciidoc |    4 +
- .../XFS_Filesystem_Structure/timestamps.asciidoc   |   65 ++++++++++++++++++++
- .../xfs_filesystem_structure.asciidoc              |    2 +
- 6 files changed, 96 insertions(+)
- create mode 100644 design/XFS_Filesystem_Structure/timestamps.asciidoc
+> +static const char *
+> +get_dstr(
+> +	struct xfs_mount	*mp,
+> +	uint8_t			filetype)
+> +{
+> +	if (!xfs_sb_version_hasftype(&mp->m_sb))
+> +		return filetype_strings[XFS_DIR3_FT_UNKNOWN];
+> +
+> +	if (filetype >= XFS_DIR3_FT_MAX)
+> +		return filetype_strings[XFS_DIR3_FT_UNKNOWN];
+> +
+> +	return filetype_strings[filetype];
+> +}
+> +
+> +static void
+> +dir_emit(
+> +	struct xfs_mount	*mp,
+> +	char			*name,
+> +	ssize_t			namelen,
+> +	xfs_ino_t		ino,
+> +	uint8_t			dtype)
+> +{
+> +	char			*display_name;
+> +	struct xfs_name		xname = { .name = name };
+> +	const char		*dstr = get_dstr(mp, dtype);
+> +	xfs_dahash_t		hash;
+> +	bool			good;
+> +
+> +	if (namelen < 0) {
+> +		/* Negative length means that name is null-terminated. */
+> +		display_name = name;
+> +		xname.len = strlen(name);
+> +		good = true;
+> +	} else {
+> +		/*
+> +		 * Otherwise, name came from a directory entry, so we have to
+> +		 * copy the string to a buffer so that we can add the null
+> +		 * terminator.
+> +		 */
+> +		display_name = malloc(namelen + 1);
+> +		memcpy(display_name, name, namelen);
+> +		display_name[namelen] = 0;
+> +		xname.len = namelen;
+> +		good = libxfs_dir2_namecheck(name, namelen);
+> +	}
+> +	hash = libxfs_dir2_hashname(mp, &xname);
+> +
+> +	dbprintf("%-18llu %-14s 0x%08llx %3d %s", ino, dstr, hash, xname.len,
+> +			display_name);
+> +	if (!good)
+> +		dbprintf(_(" (corrupt)"));
+> +	dbprintf("\n");
+
+Can we get this to emit the directory offset of the entry as well?
+Also, can this be done as a single dbprintf call like this?
+
+	dbprintf(%-18llu %-14s 0x%08llx %3d %s %s\n",
+		ino, dstr, hash, xname.len, display_name,
+		good ? _("(good)") : _("(corrupt)"));
+
+(there will be lots of output on big directories....)
+
+> +static int
+> +list_sfdir(
+> +	struct xfs_da_args		*args)
+> +{
+> +	struct xfs_inode		*dp = args->dp;
+> +	struct xfs_mount		*mp = dp->i_mount;
+> +	struct xfs_dir2_sf_entry	*sfep;
+> +	struct xfs_dir2_sf_hdr		*sfp;
+> +	xfs_ino_t			ino;
+> +	unsigned int			i;
+> +	uint8_t				filetype;
+> +
+> +	sfp = (struct xfs_dir2_sf_hdr *)dp->i_df.if_u1.if_data;
+> +
+> +	/* . and .. entries */
+> +	dir_emit(args->dp->i_mount, ".", -1, dp->i_ino, XFS_DIR3_FT_DIR);
+> +
+> +	ino = libxfs_dir2_sf_get_parent_ino(sfp);
+> +	dir_emit(args->dp->i_mount, "..", -1, ino, XFS_DIR3_FT_DIR);
+> +
+> +	/* Walk everything else. */
+> +	sfep = xfs_dir2_sf_firstentry(sfp);
+> +	for (i = 0; i < sfp->count; i++) {
+> +		ino = libxfs_dir2_sf_get_ino(mp, sfp, sfep);
+> +		filetype = libxfs_dir2_sf_get_ftype(mp, sfep);
+> +
+> +		dir_emit(args->dp->i_mount, (char *)sfep->name, sfep->namelen,
+> +				ino, filetype);
+> +		sfep = libxfs_dir2_sf_nextentry(mp, sfp, sfep);
+> +	}
+> +
+> +	return 0;
+> +}
+
+Hmmm - how much of the xfs_readdir() implementation from the kernel
+does this duplicate? It doesn't contain the seek cookie stuff, but
+otherwise it's almost identical, right?
+
+[....]
+
+> +/* If the io cursor points to a directory, list its contents. */
+> +static int
+> +ls_cur(
+> +	char			*tag,
+> +	bool			direct)
+
+I find the name "direct" rather confusing here. according to
+the help below, it will be true when we want to "list the directory
+itself, not it's contents"....
 
 
-diff --git a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-index 2e78f56..2eaab02 100644
---- a/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-+++ b/design/XFS_Filesystem_Structure/allocation_groups.asciidoc
-@@ -443,6 +443,12 @@ See the chapter on xref:Sparse_Inodes[Sparse Inodes] for more information.
- Metadata UUID.  The UUID stamped into each metadata block must match the value
- in +sb_meta_uuid+.  This enables the administrator to change +sb_uuid+ at will
- without having to rewrite the entire filesystem.
-+
-+| +XFS_SB_FEAT_INCOMPAT_BIGTIME+ |
-+Large timestamps.  Inode timestamps and quota expiration timers are extended to
-+support times through the year 2486.  See the section on
-+xref:Timestamps[timestamps] for more information.
-+
- |=====
- 
- *sb_features_log_incompat*::
-diff --git a/design/XFS_Filesystem_Structure/docinfo.xml b/design/XFS_Filesystem_Structure/docinfo.xml
-index 29ffbb5..d7374b0 100644
---- a/design/XFS_Filesystem_Structure/docinfo.xml
-+++ b/design/XFS_Filesystem_Structure/docinfo.xml
-@@ -184,4 +184,18 @@
- 			</simplelist>
- 		</revdescription>
- 	</revision>
-+	<revision>
-+		<revnumber>3.1415926</revnumber>
-+		<date>October 2020</date>
-+		<author>
-+			<firstname>Darrick</firstname>
-+			<surname>Wong</surname>
-+			<email>darrick.wong@oracle.com</email>
-+		</author>
-+		<revdescription>
-+			<simplelist>
-+				<member>Document the bigtime and inobtcount features.</member>
-+			</simplelist>
-+		</revdescription>
-+	</revision>
- </revhistory>
-diff --git a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-index 45eeb8b..84e4cb9 100644
---- a/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-+++ b/design/XFS_Filesystem_Structure/internal_inodes.asciidoc
-@@ -128,6 +128,11 @@ limit will turn into a hard limit after the elapsed time exceeds ID zero's
- +d_itimer+ value. When d_icount goes back below +d_ino_softlimit+, +d_itimer+
- is reset back to zero.
- 
-+If the +XFS_SB_FEAT_INCOMPAT_BIGTIME+ feature is enabled, the 32 bits used by
-+the timestamp field are interpreted as the upper 32 bits of an 34-bit unsigned
-+seconds counter.  See the section about xref:Quota_Timers[quota expiration
-+timers] for more details.
-+
- *d_btimer*::
- Specifies the time when the ID's +d_bcount+ exceeded +d_blk_softlimit+. The soft
- limit will turn into a hard limit after the elapsed time exceeds ID zero's
-diff --git a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-index 02d44ac..1922954 100644
---- a/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-+++ b/design/XFS_Filesystem_Structure/ondisk_inode.asciidoc
-@@ -200,6 +200,10 @@ struct xfs_timestamp {
- };
- ----
- 
-+If the +XFS_SB_FEAT_INCOMPAT_BIGTIME+ feature is enabled, the 64 bits used by
-+the timestamp field are interpreted as a flat 64-bit nanosecond counter.
-+See the section about xref:Inode_Timestamps[inode timestamps] for more details.
-+
- *di_mtime*::
- Specifies the last time the file was modified.
- 
-diff --git a/design/XFS_Filesystem_Structure/timestamps.asciidoc b/design/XFS_Filesystem_Structure/timestamps.asciidoc
-new file mode 100644
-index 0000000..08baa1e
---- /dev/null
-+++ b/design/XFS_Filesystem_Structure/timestamps.asciidoc
-@@ -0,0 +1,65 @@
-+[[Timestamps]]
-+= Timestamps
-+
-+XFS needs to be able to persist the concept of a point in time.  This chapter
-+discusses how timestamps are represented on disk.
-+
-+[[Inode_Timestamps]]
-+== Inode Timestamps
-+
-+The filesystem preserves up to four different timestamps for each file stored
-+in the filesystem.  These quantities are: the time when the file was created
-+(+di_crtime+), the last time the file metadata were changed (+di_ctime+), the
-+last time the file contents were changed (+di_mtime+), and the last time the
-+file contents were accessed (+di_atime+).  The filesystem epoch is aligned with
-+the Unix epoch, which is to say that a value of all zeroes represents 00:00:00
-+UTC on January 1st, 1970.
-+
-+Prior to the introduction of the bigtime feature, inode timestamps were
-+laid out as as segmented counter of seconds and nanoseconds:
-+
-+[source, c]
-+----
-+struct xfs_legacy_timestamp {
-+     __int32_t                 t_sec;
-+     __int32_t                 t_nsec;
-+};
-+----
-+
-+The smallest date this format can represent is 20:45:52 UTC on December 31st,
-+1901, and the largest date supported is 03:14:07 UTC on January 19, 2038.
-+
-+With the introduction of the bigtime feature, the format is changed to
-+interpret the timestamp as a 64-bit count of nanoseconds since the smallest
-+date supported by the old encoding.  This means that the smallest date
-+supported is still 20:45:52 UTC on December 31st, 1901; but now the largest
-+date supported is 20:20:24 UTC on July 2nd, 2486.
-+
-+[[Quota_Timers]]
-+== Quota Grace Period Expiration Timers
-+
-+XFS' quota control allows administrators to set a soft limit on each type of
-+resource that a regular user can consume: inodes, blocks, and realtime blocks.
-+The administrator can establish a grace period after which the soft limit
-+becomes a hard limit for the user.  Therefore, XFS needs to be able to store
-+the exact time when a grace period expires.
-+
-+Prior to the introduction of the bigtime feature, quota grace period
-+expirations were unsigned 32-bit seconds counters, with the magic value zero
-+meaning that the soft limit has not been exceeded.  Therefore, the smallest
-+expiration date that can be expressed is 00:00:01 UTC on January 1st, 1970; and
-+the largest is 06:28:15 on February 7th, 2106.
-+
-+With the introduction of the bigtime feature, the ondisk field now encodes the
-+upper 32 bits of an unsigned 34-bit seconds counter.  Zero is still a magic
-+value that means the soft limit has not been exceeded.  The smallest quota
-+expiration date is now 00:00:04 UTC on January 1st, 1970; and the largest is
-+20:20:24 UTC on July 2nd, 2486.  The format can encode slightly larger
-+expiration dates, but it was decided to end support for both timers at exactly
-+the same point.
-+
-+The default grace periods are stored in the timer fields of the quota record
-+for id zero.  Since this quantity is an interval, these fields are always
-+interpreted as an unsigned 32 bit quantity.  Therefore, the longest possible
-+grace period is approximately 136 years, 29 weeks, 3 days, 6 hours, 28 minutes
-+and 15 seconds.
-diff --git a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-index 5c1642c..a95a580 100644
---- a/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-+++ b/design/XFS_Filesystem_Structure/xfs_filesystem_structure.asciidoc
-@@ -72,6 +72,8 @@ include::btrees.asciidoc[]
- 
- include::dabtrees.asciidoc[]
- 
-+include::timestamps.asciidoc[]
-+
- include::allocation_groups.asciidoc[]
- 
- include::rmapbt.asciidoc[]
+> +{
+> +	struct xfs_inode	*dp;
+> +	int			ret = 0;
+> +
+> +	if (iocur_top->typ != &typtab[TYP_INODE]) {
+> +		dbprintf(_("current object is not an inode.\n"));
+> +		return -1;
+> +	}
+> +
+> +	ret = -libxfs_iget(mp, NULL, iocur_top->ino, 0, &dp);
+> +	if (ret) {
+> +		dbprintf(_("failed to iget directory %llu, error %d\n"),
+> +				(unsigned long long)iocur_top->ino, ret);
+> +		return -1;
+> +	}
+> +
+> +	if (S_ISDIR(VFS_I(dp)->i_mode) && !direct) {
+> +		/* List the contents of a directory. */
+> +		if (tag)
+> +			dbprintf(_("%s:\n"), tag);
+> +
+> +		ret = listdir(dp);
+> +		if (ret) {
+> +			dbprintf(_("failed to list directory %llu: %s\n"),
+> +					(unsigned long long)iocur_top->ino,
+> +					strerror(ret));
+> +			ret = -1;
+> +			goto rele;
+> +		}
+> +	} else if (direct || !S_ISDIR(VFS_I(dp)->i_mode)) {
+> +		/* List the directory entry associated with a single file. */
+> +		char		inum[32];
+> +
+> +		if (!tag) {
+> +			snprintf(inum, sizeof(inum), "<%llu>",
+> +					(unsigned long long)iocur_top->ino);
+> +			tag = inum;
+> +		} else {
+> +			char	*p = strrchr(tag, '/');
+> +
+> +			if (p)
+> +				tag = p + 1;
+> +		}
+> +
+> +		dir_emit(mp, tag, -1, iocur_top->ino,
+> +				libxfs_mode_to_ftype(VFS_I(dp)->i_mode));
 
+I'm not sure what this is supposed to do - we turn the current inode
+if it's not a directory into a -directory entry- without actually
+know it's name? And we can pass in an inode that isn't a directory
+and do the same? This doesn't make a huge amount of sense to me - it
+tries to display the inode number as a dirent?
+
+> +	} else {
+> +		dbprintf(_("current inode %llu is not a directory.\n"),
+> +				(unsigned long long)iocur_top->ino);
+> +		ret = -1;
+> +		goto rele;
+> +	}
+
+I don't think we can get to this else branch. If we don't take the
+first branch (dir && !direct), the either we are not a dir or direct
+is set. The second branch will then be taken if we are not a dir or
+direct is set....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
