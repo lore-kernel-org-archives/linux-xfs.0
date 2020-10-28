@@ -5,311 +5,563 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7929AC388F7
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:04:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02AC4C55179
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:31:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32A0F207E8
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:04:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 944E6216C4
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:31:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YLDyor8l"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cLyd0NvN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390736AbgJ2AEM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 20:04:12 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:57552 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388359AbgJ2ADk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 20:03:40 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09SNvcVP143043;
-        Thu, 29 Oct 2020 00:03:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=46GhvvUVZwtZvksMv2Azfj6BeBOubjeLGScdeHHMbe0=;
- b=YLDyor8lNQ4UpvDbXyc1MBObU+/ZoYFrw7iNlQL0Mc/Gnsnl64begTDkgQOU84FJ5ndq
- Yzj4qs9FP8kR9RqPL9WE933LJi9y5LybcRp2UlmLDOk5faJZypKTUXZt+ig0Lg+iBhUO
- EGR9116upFPVmRfKxtTF+0bdcWsvPFKDsrom9Tb2xfZ3F00vXRDz2EmWX9loVkZ9qKWK
- 2VO01CyWUM6QfhTVSf2ZkfkQXNDfp/6y86OvzN5ZkNur0fDF7d5FpA5g+gu61S08oBh/
- A7bCTP+x2yrSu8rsr+0bT2FIX3Di1xTQMLp9yHNkvi6ftxzQqSD3Ib8dugc4kuj+9MRy 9g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 34c9sb2cw9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 29 Oct 2020 00:03:35 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09SNuLeQ062520;
-        Thu, 29 Oct 2020 00:03:34 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 34cx1skqc7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Oct 2020 00:03:34 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09T03XcX008474;
-        Thu, 29 Oct 2020 00:03:33 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 28 Oct 2020 17:03:33 -0700
-Date:   Wed, 28 Oct 2020 17:03:32 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/9] xfs_db: add inobtcnt upgrade path
-Message-ID: <20201029000332.GG1061252@magnolia>
-References: <160375518573.880355.12052697509237086329.stgit@magnolia>
- <160375521801.880355.2055596956122419535.stgit@magnolia>
- <20201028172925.GD1611922@bfoster>
+        id S2388136AbgJ1WdH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 18:33:07 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:59810 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1733253AbgJ1WcZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 18:32:25 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603924342;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=un43XGNiugklYIgQpzpgMQrCpdjgU3hQ0llHESkma1Q=;
+        b=cLyd0NvNTiRv2rK8X51aKOEMOcdpO2RgTsp613hclJ707HfaxXAEnQrFgcFJf9Q/tMW2Pu
+        MU8YTPDd0vW6WnUlD9jQnI3TdM3d5LjHsAPBsLjAmcjr1OjAB/jP5UdKgSDA4TsLSf5jE2
+        UdY73bDCQdDQKgLDSzbKDPcSyB0qRBM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-445-PlnPsWGiNCizAHG3na8QjA-1; Wed, 28 Oct 2020 08:28:44 -0400
+X-MC-Unique: PlnPsWGiNCizAHG3na8QjA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B73FD108E1A2;
+        Wed, 28 Oct 2020 12:28:43 +0000 (UTC)
+Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 327B75C1D7;
+        Wed, 28 Oct 2020 12:28:43 +0000 (UTC)
+Date:   Wed, 28 Oct 2020 08:28:41 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v13 02/10] xfs: Add delay ready attr remove routines
+Message-ID: <20201028122841.GA1611922@bfoster>
+References: <20201023063435.7510-1-allison.henderson@oracle.com>
+ <20201023063435.7510-3-allison.henderson@oracle.com>
+ <20201027121645.GB1560077@bfoster>
+ <95c25c2e-c7b2-cfa0-51e3-129a0df7f828@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20201028172925.GD1611922@bfoster>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
- suspectscore=7 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010280149
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
- priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=7
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010280149
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <95c25c2e-c7b2-cfa0-51e3-129a0df7f828@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 01:29:25PM -0400, Brian Foster wrote:
-> On Mon, Oct 26, 2020 at 04:33:38PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Oct 27, 2020 at 03:27:20PM -0700, Allison Henderson wrote:
+> 
+> 
+> On 10/27/20 5:16 AM, Brian Foster wrote:
+> > On Thu, Oct 22, 2020 at 11:34:27PM -0700, Allison Henderson wrote:
+> > > This patch modifies the attr remove routines to be delay ready. This
+> > > means they no longer roll or commit transactions, but instead return
+> > > -EAGAIN to have the calling routine roll and refresh the transaction. In
+> > > this series, xfs_attr_remove_args has become xfs_attr_remove_iter, which
+> > > uses a sort of state machine like switch to keep track of where it was
+> > > when EAGAIN was returned. xfs_attr_node_removename has also been
+> > > modified to use the switch, and a new version of xfs_attr_remove_args
+> > > consists of a simple loop to refresh the transaction until the operation
+> > > is completed.  A new XFS_DAC_DEFER_FINISH flag is used to finish the
+> > > transaction where ever the existing code used to.
+> > > 
+> > > Calls to xfs_attr_rmtval_remove are replaced with the delay ready
+> > > version __xfs_attr_rmtval_remove. We will rename
+> > > __xfs_attr_rmtval_remove back to xfs_attr_rmtval_remove when we are
+> > > done.
+> > > 
+> > > xfs_attr_rmtval_remove itself is still in use by the set routines (used
+> > > during a rename).  For reasons of preserving existing function, we
+> > > modify xfs_attr_rmtval_remove to call xfs_defer_finish when the flag is
+> > > set.  Similar to how xfs_attr_remove_args does here.  Once we transition
+> > > the set routines to be delay ready, xfs_attr_rmtval_remove is no longer
+> > > used and will be removed.
+> > > 
+> > > This patch also adds a new struct xfs_delattr_context, which we will use
+> > > to keep track of the current state of an attribute operation. The new
+> > > xfs_delattr_state enum is used to track various operations that are in
+> > > progress so that we know not to repeat them, and resume where we left
+> > > off before EAGAIN was returned to cycle out the transaction. Other
+> > > members take the place of local variables that need to retain their
+> > > values across multiple function recalls.  See xfs_attr.h for a more
+> > > detailed diagram of the states.
+> > > 
+> > > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> > > ---
+> > >   fs/xfs/libxfs/xfs_attr.c        | 200 +++++++++++++++++++++++++++++-----------
+> > >   fs/xfs/libxfs/xfs_attr.h        |  72 +++++++++++++++
+> > >   fs/xfs/libxfs/xfs_attr_leaf.c   |   2 +-
+> > >   fs/xfs/libxfs/xfs_attr_remote.c |  37 ++++----
+> > >   fs/xfs/libxfs/xfs_attr_remote.h |   2 +-
+> > >   fs/xfs/xfs_attr_inactive.c      |   2 +-
+> > >   6 files changed, 241 insertions(+), 74 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> > > index f4d39bf..6ca94cb 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr.c
+> > > +++ b/fs/xfs/libxfs/xfs_attr.c
+...
+> > > @@ -1282,31 +1356,53 @@ xfs_attr_node_remove_step(
+> > >    *
+> > >    * This routine will find the blocks of the name to remove, remove them and
+> > >    * shirnk the tree if needed.
+> > > + *
+> > > + * This routine is meant to function as either an inline or delayed operation,
+> > > + * and may return -EAGAIN when the transaction needs to be rolled.  Calling
+> > > + * functions will need to handle this, and recall the function until a
+> > > + * successful error code is returned.
+> > >    */
+> > >   STATIC int
+> > > -xfs_attr_node_removename(
+> > > -	struct xfs_da_args	*args)
+> > > +xfs_attr_node_removename_iter(
+> > > +	struct xfs_delattr_context	*dac)
+> > >   {
+> > > -	struct xfs_da_state	*state;
+> > > -	int			error;
+> > > -	struct xfs_inode	*dp = args->dp;
+> > > +	struct xfs_da_args		*args = dac->da_args;
+> > > +	struct xfs_da_state		*state;
+> > > +	int				error;
+> > > +	struct xfs_inode		*dp = args->dp;
+> > >   	trace_xfs_attr_node_removename(args);
+> > > +	state = dac->da_state;
+> > > -	error = xfs_attr_node_removename_setup(args, &state);
+> > > -	if (error)
+> > > -		goto out;
+> > > +	if ((dac->flags & XFS_DAC_NODE_RMVNAME_INIT) == 0) {
+> > > +		dac->flags |= XFS_DAC_NODE_RMVNAME_INIT;
+> > > +		error = xfs_attr_node_removename_setup(dac, &state);
+> > > +		if (error)
+> > > +			goto out;
+> > > +	}
+> > > -	error = xfs_attr_node_remove_step(args, state);
+> > > -	if (error)
+> > > -		goto out;
+> > > +	switch (dac->dela_state) {
+> > > +	case XFS_DAS_UNINIT:
+> > > +		error = xfs_attr_node_remove_step(dac);
+> > > +		if (error)
+> > > +			break;
 > > 
-> > Enable users to upgrade their filesystems to support inode btree block
-> > counters.
+> > I think there's a bit more preliminary refactoring to do here to isolate
+> > the state management to this one function. I.e., from the discussion on
+> > the previous version, we'd ideally pull the logic that checks for the
+> > subsequent shrink state out of xfs_attr_node_remove_step() and lift it
+> > into this branch. See the pseudocode in the previous discussion for an
+> > example of what I mean:
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  db/sb.c              |   76 +++++++++++++++++++++++++++++++++++++++++++++++++-
-> >  db/xfs_admin.sh      |    4 ++-
-> >  man/man8/xfs_admin.8 |   16 +++++++++++
-> >  3 files changed, 94 insertions(+), 2 deletions(-)
+> >    https://urldefense.com/v3/__https://lore.kernel.org/linux-xfs/20200901170020.GC174813@bfoster/__;!!GqivPVa7Brio!JKxU3Z07HVj0V1YFesXrveRWnoGuWqiTZuaIDiG9UFmSxz-aFGsZPpLtjIOjSht7WL_h$
 > > 
+> > The general goal of that is to refactor the existing code such that all
+> > of the state transitions and whatnot are shown in one place and the rest
+> > is broken down into smaller functional helpers.
 > > 
-> > diff --git a/db/sb.c b/db/sb.c
-> > index e3b1fe0b2e6e..b1033e5ef7f0 100644
-> > --- a/db/sb.c
-> > +++ b/db/sb.c
-> > @@ -620,6 +620,44 @@ do_version(xfs_agnumber_t agno, uint16_t version, uint32_t features)
-> >  	return 1;
-> >  }
-> >  
-> > +/* Add new V5 features to the filesystem. */
-> > +static bool
-> > +add_v5_features(
-> > +	struct xfs_mount	*mp,
-> > +	uint32_t		compat,
-> > +	uint32_t		ro_compat,
-> > +	uint32_t		incompat,
-> > +	uint32_t		log_incompat)
-> > +{
-> > +	struct xfs_sb		tsb;
-> > +	xfs_agnumber_t		agno;
-> > +
-> > +	dbprintf(_("Upgrading V5 filesystem\n"));
-> > +	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++) {
-> > +		if (!get_sb(agno, &tsb))
-> > +			break;
-> > +
-> > +		tsb.sb_features_compat |= compat;
-> > +		tsb.sb_features_ro_compat |= ro_compat;
-> > +		tsb.sb_features_incompat |= incompat;
-> > +		tsb.sb_features_log_incompat |= log_incompat;
-> > +		libxfs_sb_to_disk(iocur_top->data, &tsb);
-> > +		write_cur();
-> > +	}
-> > +
-> > +	if (agno != mp->m_sb.sb_agcount) {
-> > +		dbprintf(
-> > +_("Failed to upgrade V5 filesystem AG %d\n"), agno);
-> > +		return false;
+> > Brian
 > 
-> Do we need to undo changes if this somehow occurs?
-
-Not sure.  The superblocks are inconsistent now, but I guess we should
-try to put them back the way they were.
-
-> > +	}
-> > +
-> > +	mp->m_sb.sb_features_compat |= compat;
-> > +	mp->m_sb.sb_features_ro_compat |= ro_compat;
-> > +	mp->m_sb.sb_features_incompat |= incompat;
-> > +	mp->m_sb.sb_features_log_incompat |= log_incompat;
-> > +	return true;
-> > +}
-> > +
-> >  static char *
-> >  version_string(
-> >  	xfs_sb_t	*sbp)
-> > @@ -705,6 +743,10 @@ version_f(
+> Yes, I did see the pseudo code, though I wasnt able to get it through the
+> test cases quite the way it appears.  Because whether or not we proceed to
+> shrink is determined by the leaf remove that's burried in the step function.
+> Otherwise we run into some failed asserts in the shrink routines for
+> "state->path.active == 1". Alternatly we can add another helper to pull it
+> up to this scope.  Then the switch ends up looking like this:
 > 
-> The comment above version_f() needs an update if we start to support v5
-> features.
 
-Ok.
+Ok. That was more focused on just showing an approach that collects all
+of the state transition logic in one place. The factoring below seems
+generally reasonable to me..
 
-> >  {
-> >  	uint16_t	version = 0;
-> >  	uint32_t	features = 0;
-> > +	uint32_t	upgrade_compat = 0;
-> > +	uint32_t	upgrade_ro_compat = 0;
-> > +	uint32_t	upgrade_incompat = 0;
-> > +	uint32_t	upgrade_log_incompat = 0;
-> >  	xfs_agnumber_t	ag;
-> >  
-> >  	if (argc == 2) {	/* WRITE VERSION */
-> > @@ -716,7 +758,28 @@ version_f(
-> >  		}
-> >  
-> >  		/* Logic here derived from the IRIX xfs_chver(1M) script. */
-> > -		if (!strcasecmp(argv[1], "extflg")) {
-> > +		if (!strcasecmp(argv[1], "inobtcount")) {
-> > +			if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
-> > +				dbprintf(
-> > +		_("inode btree counter feature is already enabled\n"));
-> > +				exitcode = 1;
-> > +				return 1;
-> > +			}
-> > +			if (!xfs_sb_version_hasfinobt(&mp->m_sb)) {
-> > +				dbprintf(
-> > +		_("inode btree counter feature cannot be enabled on filesystems lacking free inode btrees\n"));
-> > +				exitcode = 1;
-> > +				return 1;
-> > +			}
-> > +			if (!xfs_sb_version_hascrc(&mp->m_sb)) {
-> > +				dbprintf(
-> > +		_("inode btree counter feature cannot be enabled on pre-V5 filesystems\n"));
-> > +				exitcode = 1;
-> > +				return 1;
-> > +			}
-> > +
-> > +			upgrade_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
-> > +		} else if (!strcasecmp(argv[1], "extflg")) {
-> >  			switch (XFS_SB_VERSION_NUM(&mp->m_sb)) {
-> >  			case XFS_SB_VERSION_1:
-> >  				version = 0x0004 | XFS_SB_VERSION_EXTFLGBIT;
-> > @@ -807,6 +870,17 @@ version_f(
-> >  			mp->m_sb.sb_versionnum = version;
-> >  			mp->m_sb.sb_features2 = features;
-> >  		}
-> > +
-> > +		if (upgrade_compat || upgrade_ro_compat || upgrade_incompat ||
-> > +		    upgrade_log_incompat) {
-> > +			if (!add_v5_features(mp, upgrade_compat,
-> > +					upgrade_ro_compat,
-> > +					upgrade_incompat,
-> > +					upgrade_log_incompat)) {
-> > +				exitcode = 1;
-> > +				return 1;
-> > +			}
-> > +		}
+>         switch (dac->dela_state) {
 > 
-> What's the purpose of the unused upgrade variables?
+>         case XFS_DAS_UNINIT:
+> 
+>                 /*
+> 
+>                  * repeatedly remove remote blocks, remove the entry and
+>                  * join. returns -EAGAIN or 0 for completion of the step.
+>                  */
+> 
+>                 error = xfs_attr_node_remove_step(dac);
+> 
+>                 if (error)
+> 
+>                         break;
+> 
+> 
+> 
+>                 retval = xfs_attr_node_remove_cleanup(dac);
+> 
+> 
+> 
+>                 /*
+> 
+>                  * Check to see if the tree needs to be collapsed.  Set the
+> flag to
+>                  * indicate that the calling function needs to move the to
+> shrink
+>                  * operation
+> 
+>                  */
+> 
+>                 if (retval && (state->path.active > 1)) {
+> 
+>                         error = xfs_da3_join(state);
+> 
+>                         if (error)
+> 
+>                                 return error;
+> 
+> 
+> 
+>                         dac->dela_state = XFS_DAS_RM_SHRINK;
+> 
+>                         return -EAGAIN;
+> 
+>                 }
+> 
+> 
+> 
+>                 /* check whether to shrink or return success */
+> 
+>                 if (!error && xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> 
+>                         dac->dela_state = XFS_DAS_RM_SHRINK;
+> 
+>                         error = -EAGAIN;
+> 
+>                 }
 
-I'm laying the groundwork for adding more features later, such as
-bigtime and atomic log swapping.
-
-> Also, it looks like we just update the feature bits here. What about the
-> counters? Is the user expected to run xfs_repair?
-
-Yes.  Come to think of it, I could set sb_inprogress and force the user
-to run repair.
+... though what is the purpose of this hunk? This seems to diverge from
+the current logic, but maybe I'm missing something.
 
 > 
-> >  	}
-> >  
-> >  	if (argc == 3) {	/* VERSIONNUM + FEATURES2 */
-> > diff --git a/db/xfs_admin.sh b/db/xfs_admin.sh
-> > index bd325da2f776..0f0c8d18d6cb 100755
-> > --- a/db/xfs_admin.sh
-> > +++ b/db/xfs_admin.sh
-> > @@ -9,7 +9,7 @@ DB_OPTS=""
-> >  REPAIR_OPTS=""
-> >  USAGE="Usage: xfs_admin [-efjlpuV] [-c 0|1] [-L label] [-U uuid] device [logdev]"
-> >  
-> > -while getopts "efjlpuc:L:U:V" c
-> > +while getopts "efjlpuc:L:O:U:V" c
-> >  do
-> >  	case $c in
-> >  	c)	REPAIR_OPTS=$REPAIR_OPTS" -c lazycount="$OPTARG;;
-> > @@ -19,6 +19,8 @@ do
-> >  	l)	DB_OPTS=$DB_OPTS" -r -c label";;
-> >  	L)	DB_OPTS=$DB_OPTS" -c 'label "$OPTARG"'";;
-> >  	p)	DB_OPTS=$DB_OPTS" -c 'version projid32bit'";;
-> > +	O)	DB_OPTS=$DB_OPTS" -c 'version "$OPTARG"'";
-> > +		REPAIR_OPTS="$REPAIR_OPTS ";;
+>                 break;
 > 
-> Ah, I see.. xfs_admin runs repair if options are specified, hence this
-> little whitespace hack. It might be worth a comment here so somebody
-> doesn't fly by and "clean" that up. ;)
-
-Ok.
-
-> BTW, does this also address the error scenario I asked about above...?
-
-Yes, but I think we should revert the primary super if the upgrade
-fails.
-
-> >  	u)	DB_OPTS=$DB_OPTS" -r -c uuid";;
-> >  	U)	DB_OPTS=$DB_OPTS" -c 'uuid "$OPTARG"'";;
-> >  	V)	xfs_db -p xfs_admin -V
-> > diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
-> > index 8afc873fb50a..65ca6afc1e12 100644
-> > --- a/man/man8/xfs_admin.8
-> > +++ b/man/man8/xfs_admin.8
-> > @@ -6,6 +6,8 @@ xfs_admin \- change parameters of an XFS filesystem
-> >  [
-> >  .B \-eflpu
-> >  ] [
-> > +.BR \-O " feature"
-> > +] [
-> >  .BR "\-c 0" | 1
-> >  ] [
-> >  .B \-L
-> > @@ -103,6 +105,20 @@ The filesystem label can be cleared using the special "\c
-> >  " value for
-> >  .IR label .
-> >  .TP
-> > +.BI \-O " feature"
-> > +Add a new feature to the filesystem.
-> > +Only one feature can be specified at a time.
-> > +Features are as follows:
-> > +.RS 0.7i
-> > +.TP
-> > +.B inobtcount
-> > +Upgrade the filesystem to support the inode btree counters feature.
-> > +This reduces mount time by caching the size of the inode btrees in the
-> > +allocation group metadata.
-> > +Once enabled, the filesystem will not be writable by older kernels.
-> > +The filesystem cannot be downgraded after this feature is enabled.
+>         case XFS_DAS_RM_SHRINK:
 > 
-> Any reason for not allowing the downgrade path? It seems like we're
-> mostly there implementation wise and that might facilitate enabling the
-> feature by default.
-
-Downgrading will not be easy for bigtime, since we'd have to scan the
-whole fs to see if there are any timestamps past 2038.  For other
-features it might not be such a big deal, but in general I don't want to
-increase our testing burden even further.
-
-I'll ask the ext4 folks if they know of people downgrading filesystems
-with tune2fs, but AFAIK it's not generally done.
-
---D
-
-> Brian
+>                 /*
 > 
-> > +.RE
-> > +.TP
-> >  .BI \-U " uuid"
-> >  Set the UUID of the filesystem to
-> >  .IR uuid .
+>                  * If the result is small enough, push it all into the
+> inode.
+>                  */
+> 
+>                 error = xfs_attr_node_shrink(args, state);
+> 
+> 
+> 
+>                 break;
+> 
+>         default:
+> 
+>                 ASSERT(0);
+> 
+>                 return -EINVAL;
+> 
+>         }
+> 
+> 
+> 
+>         if (error == -EAGAIN)
+> 
+>                 return error;
+> 
+> 
+> 
+> 
+> 
+> And then we have this little clean up helper that we pull out of
+> remove_step:
+> 
+> 
+> 
+> STATIC int
+> 
+> xfs_attr_node_remove_cleanup(
+> 
+>         struct xfs_delattr_context      *dac)
+> 
+> {
+> 
+>         struct xfs_da_args              *args = dac->da_args;
+> 
+>         struct xfs_da_state_blk         *blk;
+> 
+>         int                             retval;
+> 
+> 
+> 
+>         /*
+> 
+>          * Remove the name and update the hashvals in the tree.
+> 
+>          */
+> 
+>         blk = &dac->da_state->path.blk[ dac->da_state->path.active-1 ];
+> 
+>         ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+> 
+>         retval = xfs_attr3_leaf_remove(blk->bp, args);
+> 
+>         xfs_da3_fixhashpath(dac->da_state, &dac->da_state->path);
+> 
+> 
+> 
+>         return retval;
+> 
+> }
+> 
+> 
+> This configuration seems to get through the test cases.  It's not quite as
+> tidy, but it does get all the state handling into this scope.  If people
+> prefer it this way I can add in the extra helper and make these adjustments?
+> 
+
+Makes sense. I think the goal should be to pull the state management
+into one (or as few) place(s) as technically possible and we should
+refactor however necessary to accomplish that (please just pull the
+refactoring out into preliminary patches to facilitate review). Thanks.
+
+Brian
+
+> Allison
+> 
+> > 
+> > > -	/*
+> > > -	 * If the result is small enough, push it all into the inode.
+> > > -	 */
+> > > -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> > > -		error = xfs_attr_node_shrink(args, state);
+> > > +		/* do not break, proceed to shrink if needed */
+> > > +	case XFS_DAS_RM_SHRINK:
+> > > +		/*
+> > > +		 * If the result is small enough, push it all into the inode.
+> > > +		 */
+> > > +		if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
+> > > +			error = xfs_attr_node_shrink(args, state);
+> > > +		break;
+> > > +	default:
+> > > +		ASSERT(0);
+> > > +		return -EINVAL;
+> > > +	}
+> > > +
+> > > +	if (error == -EAGAIN)
+> > > +		return error;
+> > >   out:
+> > >   	if (state)
+> > >   		xfs_da_state_free(state);
+> > > diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> > > index 3e97a93..64dcf0f 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr.h
+> > > +++ b/fs/xfs/libxfs/xfs_attr.h
+> > > @@ -74,6 +74,74 @@ struct xfs_attr_list_context {
+> > >   };
+> > > +/*
+> > > + * ========================================================================
+> > > + * Structure used to pass context around among the delayed routines.
+> > > + * ========================================================================
+> > > + */
+> > > +
+> > > +/*
+> > > + * Below is a state machine diagram for attr remove operations. The  XFS_DAS_*
+> > > + * states indicate places where the function would return -EAGAIN, and then
+> > > + * immediately resume from after being recalled by the calling function. States
+> > > + * marked as a "subroutine state" indicate that they belong to a subroutine, and
+> > > + * so the calling function needs to pass them back to that subroutine to allow
+> > > + * it to finish where it left off. But they otherwise do not have a role in the
+> > > + * calling function other than just passing through.
+> > > + *
+> > > + * xfs_attr_remove_iter()
+> > > + *	  XFS_DAS_RM_SHRINK ─┐
+> > > + *	  (subroutine state) │
+> > > + *	                     └─>xfs_attr_node_removename()
+> > > + *	                                      │
+> > > + *	                                      v
+> > > + *	                                   need to
+> > > + *	                                shrink tree? ─n─┐
+> > > + *	                                      │         │
+> > > + *	                                      y         │
+> > > + *	                                      │         │
+> > > + *	                                      v         │
+> > > + *	                              XFS_DAS_RM_SHRINK │
+> > > + *	                                      │         │
+> > > + *	                                      v         │
+> > > + *	                                     done <─────┘
+> > > + *
+> > > + */
+> > > +
+> > > +/*
+> > > + * Enum values for xfs_delattr_context.da_state
+> > > + *
+> > > + * These values are used by delayed attribute operations to keep track  of where
+> > > + * they were before they returned -EAGAIN.  A return code of -EAGAIN signals the
+> > > + * calling function to roll the transaction, and then recall the subroutine to
+> > > + * finish the operation.  The enum is then used by the subroutine to jump back
+> > > + * to where it was and resume executing where it left off.
+> > > + */
+> > > +enum xfs_delattr_state {
+> > > +	XFS_DAS_UNINIT		= 0,  /* No state has been set yet */
+> > > +	XFS_DAS_RM_SHRINK,	      /* We are shrinking the tree */
+> > > +};
+> > > +
+> > > +/*
+> > > + * Defines for xfs_delattr_context.flags
+> > > + */
+> > > +#define XFS_DAC_DEFER_FINISH		0x01 /* finish the transaction */
+> > > +#define XFS_DAC_NODE_RMVNAME_INIT	0x02 /* xfs_attr_node_removename init */
+> > > +
+> > > +/*
+> > > + * Context used for keeping track of delayed attribute operations
+> > > + */
+> > > +struct xfs_delattr_context {
+> > > +	struct xfs_da_args      *da_args;
+> > > +
+> > > +	/* Used in xfs_attr_node_removename to roll through removing blocks */
+> > > +	struct xfs_da_state     *da_state;
+> > > +
+> > > +	/* Used to keep track of current state of delayed operation */
+> > > +	unsigned int            flags;
+> > > +	enum xfs_delattr_state  dela_state;
+> > > +};
+> > > +
+> > >   /*========================================================================
+> > >    * Function prototypes for the kernel.
+> > >    *========================================================================*/
+> > > @@ -91,6 +159,10 @@ int xfs_attr_set(struct xfs_da_args *args);
+> > >   int xfs_attr_set_args(struct xfs_da_args *args);
+> > >   int xfs_has_attr(struct xfs_da_args *args);
+> > >   int xfs_attr_remove_args(struct xfs_da_args *args);
+> > > +int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
+> > > +int xfs_attr_trans_roll(struct xfs_delattr_context *dac);
+> > >   bool xfs_attr_namecheck(const void *name, size_t length);
+> > > +void xfs_delattr_context_init(struct xfs_delattr_context *dac,
+> > > +			      struct xfs_da_args *args);
+> > >   #endif	/* __XFS_ATTR_H__ */
+> > > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > > index bb128db..338377e 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> > > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> > > @@ -19,8 +19,8 @@
+> > >   #include "xfs_bmap_btree.h"
+> > >   #include "xfs_bmap.h"
+> > >   #include "xfs_attr_sf.h"
+> > > -#include "xfs_attr_remote.h"
+> > >   #include "xfs_attr.h"
+> > > +#include "xfs_attr_remote.h"
+> > >   #include "xfs_attr_leaf.h"
+> > >   #include "xfs_error.h"
+> > >   #include "xfs_trace.h"
+> > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> > > index 48d8e9c..1426c15 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> > > +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> > > @@ -674,10 +674,12 @@ xfs_attr_rmtval_invalidate(
+> > >    */
+> > >   int
+> > >   xfs_attr_rmtval_remove(
+> > > -	struct xfs_da_args      *args)
+> > > +	struct xfs_da_args		*args)
+> > >   {
+> > > -	int			error;
+> > > -	int			retval;
+> > > +	int				error;
+> > > +	struct xfs_delattr_context	dac  = {
+> > > +		.da_args	= args,
+> > > +	};
+> > >   	trace_xfs_attr_rmtval_remove(args);
+> > > @@ -685,19 +687,17 @@ xfs_attr_rmtval_remove(
+> > >   	 * Keep de-allocating extents until the remote-value region is gone.
+> > >   	 */
+> > >   	do {
+> > > -		retval = __xfs_attr_rmtval_remove(args);
+> > > -		if (retval && retval != -EAGAIN)
+> > > -			return retval;
+> > > +		error = __xfs_attr_rmtval_remove(&dac);
+> > > +		if (error != -EAGAIN)
+> > > +			break;
+> > > -		/*
+> > > -		 * Close out trans and start the next one in the chain.
+> > > -		 */
+> > > -		error = xfs_trans_roll_inode(&args->trans, args->dp);
+> > > +		error = xfs_attr_trans_roll(&dac);
+> > >   		if (error)
+> > >   			return error;
+> > > -	} while (retval == -EAGAIN);
+> > > -	return 0;
+> > > +	} while (true);
+> > > +
+> > > +	return error;
+> > >   }
+> > >   /*
+> > > @@ -707,9 +707,10 @@ xfs_attr_rmtval_remove(
+> > >    */
+> > >   int
+> > >   __xfs_attr_rmtval_remove(
+> > > -	struct xfs_da_args	*args)
+> > > +	struct xfs_delattr_context	*dac)
+> > >   {
+> > > -	int			error, done;
+> > > +	struct xfs_da_args		*args = dac->da_args;
+> > > +	int				error, done;
+> > >   	/*
+> > >   	 * Unmap value blocks for this attr.
+> > > @@ -719,12 +720,10 @@ __xfs_attr_rmtval_remove(
+> > >   	if (error)
+> > >   		return error;
+> > > -	error = xfs_defer_finish(&args->trans);
+> > > -	if (error)
+> > > -		return error;
+> > > -
+> > > -	if (!done)
+> > > +	if (!done) {
+> > > +		dac->flags |= XFS_DAC_DEFER_FINISH;
+> > >   		return -EAGAIN;
+> > > +	}
+> > >   	return error;
+> > >   }
+> > > diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+> > > index 9eee615..002fd30 100644
+> > > --- a/fs/xfs/libxfs/xfs_attr_remote.h
+> > > +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+> > > @@ -14,5 +14,5 @@ int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> > >   int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+> > >   		xfs_buf_flags_t incore_flags);
+> > >   int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+> > > -int __xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> > > +int __xfs_attr_rmtval_remove(struct xfs_delattr_context *dac);
+> > >   #endif /* __XFS_ATTR_REMOTE_H__ */
+> > > diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+> > > index bfad669..aaa7e66 100644
+> > > --- a/fs/xfs/xfs_attr_inactive.c
+> > > +++ b/fs/xfs/xfs_attr_inactive.c
+> > > @@ -15,10 +15,10 @@
+> > >   #include "xfs_da_format.h"
+> > >   #include "xfs_da_btree.h"
+> > >   #include "xfs_inode.h"
+> > > +#include "xfs_attr.h"
+> > >   #include "xfs_attr_remote.h"
+> > >   #include "xfs_trans.h"
+> > >   #include "xfs_bmap.h"
+> > > -#include "xfs_attr.h"
+> > >   #include "xfs_attr_leaf.h"
+> > >   #include "xfs_quota.h"
+> > >   #include "xfs_dir2.h"
+> > > -- 
+> > > 2.7.4
+> > > 
 > > 
 > 
+
