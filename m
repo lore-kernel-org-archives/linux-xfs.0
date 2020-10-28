@@ -2,269 +2,77 @@ Return-Path: <SRS0=iKFT=ED=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DATE_IN_PAST_12_24,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 596D4C4363A
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:48:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA070C388F7
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:51:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A4172064C
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:48:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F0612245A
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Oct 2020 21:51:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dNzShcfY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726356AbgJ1Vsb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 17:48:31 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:56402 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727828AbgJ1Vsa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 17:48:30 -0400
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5873658C599;
-        Wed, 28 Oct 2020 12:27:04 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kXaEx-005431-Eh; Wed, 28 Oct 2020 12:27:03 +1100
-Date:   Wed, 28 Oct 2020 12:27:03 +1100
-From:   Dave Chinner <david@fromorbit.com>
+        id S1728226AbgJ1Vvu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 17:51:50 -0400
+Received: from casper.infradead.org ([90.155.50.34]:44160 "EHLO
+        casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728218AbgJ1Vvu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 17:51:50 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=6JR5L+wTP9qjEfvNi/Be4fRnZJreo8FoB8roNtGUflM=; b=dNzShcfYUa1O26wBFlNYfxFrFU
+        7hrNZBl2DkPIALal8F0XTnO2lKdVebry00ERjNt1bhvAcTXD87HOkuD0ipEUTVBTsFIz6NR4pnXOk
+        Xl42wY/wrbCv3iId0C7gFrMxGScfZctClfCo6XKhJ0KBUJ6G8pV2kSuA7MUm+/fcuDNzWnO2C2Ajh
+        zDM09/N3P6eN792yreoVRs14nsWkyWB+9rvHrDoDTsx9IUcntbY7uByjVs/I0SR3EsdYk8T3dSsB9
+        rOwTNvC/PW1NWypvVsr3uc2NHpaKZ3uhwWCVyUEG0fCo8G+fjgRNNvkRpSX2advwqhD2XB6PCaQLL
+        9PZyOo9A==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kXfze-0000SS-Jy; Wed, 28 Oct 2020 07:35:38 +0000
+Date:   Wed, 28 Oct 2020 07:35:38 +0000
+From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_db: add an ls command
-Message-ID: <20201028012703.GA7391@dread.disaster.area>
-References: <160375514873.880118.10145241423813965771.stgit@magnolia>
- <160375516100.880118.14555322605178437533.stgit@magnolia>
+Subject: Re: [PATCH 5/5] xfs_repair: correctly detect partially written
+ extents
+Message-ID: <20201028073538.GG32068@infradead.org>
+References: <160375511371.879169.3659553317719857738.stgit@magnolia>
+ <160375514426.879169.1166063350727282652.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160375516100.880118.14555322605178437533.stgit@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=afefHYAZSVUA:10 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8
-        a=RXP_zP5u0uVEFUwKNq4A:9 a=UaMI6QF61Q7ME9Dh:21 a=XaoduWK0L3oULcm0:21
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <160375514426.879169.1166063350727282652.stgit@magnolia>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 26, 2020 at 04:32:41PM -0700, Darrick J. Wong wrote:
+On Mon, Oct 26, 2020 at 04:32:24PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Add to xfs_db the ability to list a directory.
+> Recently, I was able to create a realtime file with a 16b extent size
+> and the following data fork mapping:
+> 
+> data offset 0 startblock 144 (0/144) count 3 flag 0
+> data offset 3 startblock 147 (0/147) count 3 flag 1
+> data offset 6 startblock 150 (0/150) count 10 flag 0
+> 
+> Notice how we have a written extent, then an unwritten extent, and then
+> another written extent.  The current code in process_rt_rec trips over
+> that third extent, because repair only knows not to complain about inuse
+> extents if the mapping was unwritten.
+> 
+> This loop logic is confusing, because it tries to do too many things.
+> Move the phase3 and phase4 code to separate helper functions, then
+> isolate the code that handles a mapping that starts in the middle of an
+> rt extent so that it's clearer what's going on.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  db/namei.c               |  380 ++++++++++++++++++++++++++++++++++++++++++++++
->  libxfs/libxfs_api_defs.h |    1 
->  man/man8/xfs_db.8        |   14 ++
->  3 files changed, 395 insertions(+)
-> 
-> 
-> diff --git a/db/namei.c b/db/namei.c
-> index 3c9889d62338..b2c036e6777a 100644
-> --- a/db/namei.c
-> +++ b/db/namei.c
-> @@ -221,8 +221,388 @@ static const cmdinfo_t path_cmd = {
->  	.help		= path_help,
->  };
->  
-> +/* List a directory's entries. */
-> +
-> +static const char *filetype_strings[XFS_DIR3_FT_MAX] = {
-> +	[XFS_DIR3_FT_UNKNOWN]	= N_("unknown"),
-> +	[XFS_DIR3_FT_REG_FILE]	= N_("regular"),
-> +	[XFS_DIR3_FT_DIR]	= N_("directory"),
-> +	[XFS_DIR3_FT_CHRDEV]	= N_("chardev"),
-> +	[XFS_DIR3_FT_BLKDEV]	= N_("blkdev"),
-> +	[XFS_DIR3_FT_FIFO]	= N_("fifo"),
-> +	[XFS_DIR3_FT_SOCK]	= N_("socket"),
-> +	[XFS_DIR3_FT_SYMLINK]	= N_("symlink"),
-> +	[XFS_DIR3_FT_WHT]	= N_("whiteout"),
-> +};
 
-What does N_() do that is different to _()?
+Looks good,
 
-> +static const char *
-> +get_dstr(
-> +	struct xfs_mount	*mp,
-> +	uint8_t			filetype)
-> +{
-> +	if (!xfs_sb_version_hasftype(&mp->m_sb))
-> +		return filetype_strings[XFS_DIR3_FT_UNKNOWN];
-> +
-> +	if (filetype >= XFS_DIR3_FT_MAX)
-> +		return filetype_strings[XFS_DIR3_FT_UNKNOWN];
-> +
-> +	return filetype_strings[filetype];
-> +}
-> +
-> +static void
-> +dir_emit(
-> +	struct xfs_mount	*mp,
-> +	char			*name,
-> +	ssize_t			namelen,
-> +	xfs_ino_t		ino,
-> +	uint8_t			dtype)
-> +{
-> +	char			*display_name;
-> +	struct xfs_name		xname = { .name = name };
-> +	const char		*dstr = get_dstr(mp, dtype);
-> +	xfs_dahash_t		hash;
-> +	bool			good;
-> +
-> +	if (namelen < 0) {
-> +		/* Negative length means that name is null-terminated. */
-> +		display_name = name;
-> +		xname.len = strlen(name);
-> +		good = true;
-> +	} else {
-> +		/*
-> +		 * Otherwise, name came from a directory entry, so we have to
-> +		 * copy the string to a buffer so that we can add the null
-> +		 * terminator.
-> +		 */
-> +		display_name = malloc(namelen + 1);
-> +		memcpy(display_name, name, namelen);
-> +		display_name[namelen] = 0;
-> +		xname.len = namelen;
-> +		good = libxfs_dir2_namecheck(name, namelen);
-> +	}
-> +	hash = libxfs_dir2_hashname(mp, &xname);
-> +
-> +	dbprintf("%-18llu %-14s 0x%08llx %3d %s", ino, dstr, hash, xname.len,
-> +			display_name);
-> +	if (!good)
-> +		dbprintf(_(" (corrupt)"));
-> +	dbprintf("\n");
-
-Can we get this to emit the directory offset of the entry as well?
-Also, can this be done as a single dbprintf call like this?
-
-	dbprintf(%-18llu %-14s 0x%08llx %3d %s %s\n",
-		ino, dstr, hash, xname.len, display_name,
-		good ? _("(good)") : _("(corrupt)"));
-
-(there will be lots of output on big directories....)
-
-> +static int
-> +list_sfdir(
-> +	struct xfs_da_args		*args)
-> +{
-> +	struct xfs_inode		*dp = args->dp;
-> +	struct xfs_mount		*mp = dp->i_mount;
-> +	struct xfs_dir2_sf_entry	*sfep;
-> +	struct xfs_dir2_sf_hdr		*sfp;
-> +	xfs_ino_t			ino;
-> +	unsigned int			i;
-> +	uint8_t				filetype;
-> +
-> +	sfp = (struct xfs_dir2_sf_hdr *)dp->i_df.if_u1.if_data;
-> +
-> +	/* . and .. entries */
-> +	dir_emit(args->dp->i_mount, ".", -1, dp->i_ino, XFS_DIR3_FT_DIR);
-> +
-> +	ino = libxfs_dir2_sf_get_parent_ino(sfp);
-> +	dir_emit(args->dp->i_mount, "..", -1, ino, XFS_DIR3_FT_DIR);
-> +
-> +	/* Walk everything else. */
-> +	sfep = xfs_dir2_sf_firstentry(sfp);
-> +	for (i = 0; i < sfp->count; i++) {
-> +		ino = libxfs_dir2_sf_get_ino(mp, sfp, sfep);
-> +		filetype = libxfs_dir2_sf_get_ftype(mp, sfep);
-> +
-> +		dir_emit(args->dp->i_mount, (char *)sfep->name, sfep->namelen,
-> +				ino, filetype);
-> +		sfep = libxfs_dir2_sf_nextentry(mp, sfp, sfep);
-> +	}
-> +
-> +	return 0;
-> +}
-
-Hmmm - how much of the xfs_readdir() implementation from the kernel
-does this duplicate? It doesn't contain the seek cookie stuff, but
-otherwise it's almost identical, right?
-
-[....]
-
-> +/* If the io cursor points to a directory, list its contents. */
-> +static int
-> +ls_cur(
-> +	char			*tag,
-> +	bool			direct)
-
-I find the name "direct" rather confusing here. according to
-the help below, it will be true when we want to "list the directory
-itself, not it's contents"....
-
-
-> +{
-> +	struct xfs_inode	*dp;
-> +	int			ret = 0;
-> +
-> +	if (iocur_top->typ != &typtab[TYP_INODE]) {
-> +		dbprintf(_("current object is not an inode.\n"));
-> +		return -1;
-> +	}
-> +
-> +	ret = -libxfs_iget(mp, NULL, iocur_top->ino, 0, &dp);
-> +	if (ret) {
-> +		dbprintf(_("failed to iget directory %llu, error %d\n"),
-> +				(unsigned long long)iocur_top->ino, ret);
-> +		return -1;
-> +	}
-> +
-> +	if (S_ISDIR(VFS_I(dp)->i_mode) && !direct) {
-> +		/* List the contents of a directory. */
-> +		if (tag)
-> +			dbprintf(_("%s:\n"), tag);
-> +
-> +		ret = listdir(dp);
-> +		if (ret) {
-> +			dbprintf(_("failed to list directory %llu: %s\n"),
-> +					(unsigned long long)iocur_top->ino,
-> +					strerror(ret));
-> +			ret = -1;
-> +			goto rele;
-> +		}
-> +	} else if (direct || !S_ISDIR(VFS_I(dp)->i_mode)) {
-> +		/* List the directory entry associated with a single file. */
-> +		char		inum[32];
-> +
-> +		if (!tag) {
-> +			snprintf(inum, sizeof(inum), "<%llu>",
-> +					(unsigned long long)iocur_top->ino);
-> +			tag = inum;
-> +		} else {
-> +			char	*p = strrchr(tag, '/');
-> +
-> +			if (p)
-> +				tag = p + 1;
-> +		}
-> +
-> +		dir_emit(mp, tag, -1, iocur_top->ino,
-> +				libxfs_mode_to_ftype(VFS_I(dp)->i_mode));
-
-I'm not sure what this is supposed to do - we turn the current inode
-if it's not a directory into a -directory entry- without actually
-know it's name? And we can pass in an inode that isn't a directory
-and do the same? This doesn't make a huge amount of sense to me - it
-tries to display the inode number as a dirent?
-
-> +	} else {
-> +		dbprintf(_("current inode %llu is not a directory.\n"),
-> +				(unsigned long long)iocur_top->ino);
-> +		ret = -1;
-> +		goto rele;
-> +	}
-
-I don't think we can get to this else branch. If we don't take the
-first branch (dir && !direct), the either we are not a dir or direct
-is set. The second branch will then be taken if we are not a dir or
-direct is set....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
