@@ -2,124 +2,86 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B772AC56201
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB1EC4363A
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:56:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AACC207DE
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:31:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C192720790
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:56:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BuwArRLb"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F+rq1I6c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387898AbgJ1Wb2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 18:31:28 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:56382 "EHLO
+        id S1727678AbgJ2A4B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 20:56:01 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:24848 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2387895AbgJ1Wb0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 18:31:26 -0400
+        by vger.kernel.org with ESMTP id S1731645AbgJ1WRi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 18:17:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603924285;
+        s=mimecast20190719; t=1603923457;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=7+jwzQF0mpu5S6XCR4XY493w936NSTbYPTr+dJlZ1qI=;
-        b=BuwArRLbmw6iuZeYgXLefPZLn+UUt474Q9jLN9uaRlfwDUnRBkuQ4fyIZXurEKFfLgIJB0
-        PIykk7R4ZCuO3mzFlhiWOOVISJe27PQHkKqBYH6JlxZuKcgYwCWGu5CSVB31HC097wvZXm
-        qE4ptTXY26pWt5kqgqp4IX0T12PM59c=
+        bh=U+J9Zk1IP6t34fGKZVaWA98c8E3lKZDT942o5Pt7dGs=;
+        b=F+rq1I6cJ/xVBrhEGmeX5wrMHJosY8xQ6au+jaKjhyQMhmCSv0uvNgi6WjSkHlJRMQ00SZ
+        nYhCwp2620ZzI0a1kH/mPFMZN4shu8Ll9QghdZt+kDtBvywJxdGdlduxbgnGnSqP+c8Dak
+        VGhvLMz0NR2t8sYLKlFe6f5K9bewGZ0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-528-ujEa2nnBPHyF-kvUAlRVZA-1; Wed, 28 Oct 2020 13:30:03 -0400
-X-MC-Unique: ujEa2nnBPHyF-kvUAlRVZA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-296-1V8D38d5NgSGU6nic-NKUQ-1; Wed, 28 Oct 2020 10:16:02 -0400
+X-MC-Unique: 1V8D38d5NgSGU6nic-NKUQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 248C4108E1AD;
-        Wed, 28 Oct 2020 17:30:02 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D627E86ABCE;
+        Wed, 28 Oct 2020 14:16:01 +0000 (UTC)
 Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A275260BF1;
-        Wed, 28 Oct 2020 17:30:01 +0000 (UTC)
-Date:   Wed, 28 Oct 2020 13:29:59 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5AA046EF4A;
+        Wed, 28 Oct 2020 14:16:01 +0000 (UTC)
+Date:   Wed, 28 Oct 2020 10:15:59 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/9] xfs_repair: check inode btree block counters in AGI
-Message-ID: <20201028172959.GE1611922@bfoster>
-References: <160375518573.880355.12052697509237086329.stgit@magnolia>
- <160375522427.880355.15446960142376313542.stgit@magnolia>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] iomap: support partial page discard on writeback block
+ mapping failure
+Message-ID: <20201028141559.GB1611922@bfoster>
+References: <20201026182019.1547662-1-bfoster@redhat.com>
+ <20201028073127.GA32068@infradead.org>
+ <20201028113200.GC1610972@bfoster>
+ <20201028140408.GA7841@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160375522427.880355.15446960142376313542.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20201028140408.GA7841@infradead.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 26, 2020 at 04:33:44PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Oct 28, 2020 at 02:04:08PM +0000, Christoph Hellwig wrote:
+> On Wed, Oct 28, 2020 at 07:32:00AM -0400, Brian Foster wrote:
+> > I used the variable just to avoid having to split the function call into
+> > multiple lines. I.e., it just looked more readable to me than:
+> > 
+> >                if (wpc->ops->discard_page)
+> >                         wpc->ops->discard_page(page,
+> >                                                offset_in_page(file_offset));
+> > 
+> > I can change it back if that is preferred (or possibly use a function
+> > pointer variable instead). I suppose that's also avoided by passing
+> > file_offset directly, but that seems a little odd to me for a page
+> > oriented callback.
 > 
-> Make sure that both inode btree block counters in the AGI are correct.
+> I think passing the file offset makes more sense, especially as the
+> only instance needs it anyway.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  repair/scan.c |   38 +++++++++++++++++++++++++++++++++++---
->  1 file changed, 35 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/repair/scan.c b/repair/scan.c
-> index 2a38ae5197c6..c826af7dee86 100644
-> --- a/repair/scan.c
-> +++ b/repair/scan.c
-...
-> @@ -2022,6 +2029,17 @@ scan_inobt(
->  			return;
->  	}
->  
-> +	switch (magic) {
-> +	case XFS_FIBT_MAGIC:
-> +	case XFS_FIBT_CRC_MAGIC:
-> +		ipriv->fino_blocks++;
-> +		break;
-> +	case XFS_IBT_MAGIC:
-> +	case XFS_IBT_CRC_MAGIC:
-> +		ipriv->ino_blocks++;
-> +		break;
-> +	}
-> +
 
-Is this intentionally not folded into the earlier magic switch
-statement?
-
->  	/*
->  	 * check for btree blocks multiply claimed, any unknown/free state
->  	 * is ok in the bitmap block.
-...
-> @@ -2393,6 +2414,17 @@ validate_agi(
->  		}
->  	}
->  
-> +	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
-> +		if (be32_to_cpu(agi->agi_iblocks) != priv.ino_blocks)
-> +			do_warn(_("bad inobt block count %u, saw %u\n"),
-> +					priv.ino_blocks,
-> +					be32_to_cpu(agi->agi_iblocks));
-
-These two params are backwards (here and below), no?
+The callback uses both, but I'm not tied to it either way. I'll make
+that tweak for the next version..
 
 Brian
-
-> +		if (be32_to_cpu(agi->agi_fblocks) != priv.fino_blocks)
-> +			do_warn(_("bad finobt block count %u, saw %u\n"),
-> +					priv.fino_blocks,
-> +					be32_to_cpu(agi->agi_fblocks));
-> +	}
-> +
->  	if (be32_to_cpu(agi->agi_count) != agcnts->agicount) {
->  		do_warn(_("agi_count %u, counted %u in ag %u\n"),
->  			 be32_to_cpu(agi->agi_count), agcnts->agicount, agno);
-> 
 
