@@ -2,173 +2,128 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB51EC2D0A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 16:33:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD02C4363A
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 16:47:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B7BB20825
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 16:33:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D39D920838
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 16:47:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H70wImdP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MeNduKps"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725841AbgJ2Qd5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 12:33:57 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:45233 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726858AbgJ2QdS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 12:33:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603989197;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=SS6A26T4RLb6i2WE+ahOb9L4d19n3QKM0FCoC7jzsoY=;
-        b=H70wImdP2lBA72bjxe1cDSNX/nlTG7N1c1M1Yc59mHv6GpqB+pdV7DtvVrpLOuOFhJvmOe
-        zLMbogh62n1OwRzbj0+TMoW8rJFdG/uwh7U7FqOoQZTqyCrktJBenPJffc4/TJJF9hE0lY
-        qchaD1Y6NColEdJcefX87//jzopFu28=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-565-MCNx3gjsODe6bbSUlZJatA-1; Thu, 29 Oct 2020 12:33:15 -0400
-X-MC-Unique: MCNx3gjsODe6bbSUlZJatA-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 07BE88BD4C8;
-        Thu, 29 Oct 2020 16:33:14 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id A3DBD672C0;
-        Thu, 29 Oct 2020 16:33:13 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-fsdevel@vger.kernel.org
+        id S1725805AbgJ2QrC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 12:47:02 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:42258 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726680AbgJ2Qpc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 12:45:32 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TGjQ9c047769;
+        Thu, 29 Oct 2020 16:45:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=5f+NODKZG2QyANjOuDDpQ0Ju9FLIiwynas7ucvKqYVY=;
+ b=MeNduKpsMnBm2k3k1qozxIS4Vz6+RpgYMm+VFf3vtvlA5OZFelMAHY1zKjb+CEU6CbHY
+ mR9V15V7eW12MVK0vHp+HBi1DT2SHpUxGgl+uDdHIy3Fc/mGtEiFRIZRxqN3y9+f4q5a
+ dOaE9ehevADRze2w1/GRoLlD8ccvY1D+/1S/+IrMQM79ixrhJ281avg60h6Z+xzHaDZl
+ u/w5qjXVB4/Mi7TvRFqSkA8h/DNnmiqszNEkRMdFSiJisF85vILnRnYoFMDfC+n543zQ
+ 27zPyI1Wf/75LcFzGzkYQw4pAgRTTglIKLkG7w0z3OZm+52WgMGYE4fIO5yEj2PwnNd7 dg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 34cc7m5wm5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 29 Oct 2020 16:45:30 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TGeBFY138449;
+        Thu, 29 Oct 2020 16:45:30 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 34cx60qdyn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Oct 2020 16:45:30 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09TGjSTt017854;
+        Thu, 29 Oct 2020 16:45:29 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Oct 2020 09:45:27 -0700
+Date:   Thu, 29 Oct 2020 09:45:26 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2.1 2/3] iomap: support partial page discard on writeback block mapping failure
-Date:   Thu, 29 Oct 2020 12:33:13 -0400
-Message-Id: <20201029163313.1766967-1-bfoster@redhat.com>
-In-Reply-To: <20201029132325.1663790-3-bfoster@redhat.com>
-References: <20201029132325.1663790-3-bfoster@redhat.com>
+Subject: Re: [PATCH 3/7] repair: protect inode chunk tree records with a mutex
+Message-ID: <20201029164526.GO1061252@magnolia>
+References: <20201022051537.2286402-1-david@fromorbit.com>
+ <20201022051537.2286402-4-david@fromorbit.com>
+ <20201022060256.GO9832@magnolia>
+ <20201022081505.GT7391@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201022081505.GT7391@dread.disaster.area>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=999
+ suspectscore=1 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010290115
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
+ malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0 suspectscore=1
+ priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010290115
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-iomap writeback mapping failure only calls into ->discard_page() if
-the current page has not been added to the ioend. Accordingly, the
-XFS callback assumes a full page discard and invalidation. This is
-problematic for sub-page block size filesystems where some portion
-of a page might have been mapped successfully before a failure to
-map a delalloc block occurs. ->discard_page() is not called in that
-error scenario and the bio is explicitly failed by iomap via the
-error return from ->prepare_ioend(). As a result, the filesystem
-leaks delalloc blocks and corrupts the filesystem block counters.
+On Thu, Oct 22, 2020 at 07:15:05PM +1100, Dave Chinner wrote:
+> On Wed, Oct 21, 2020 at 11:02:56PM -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 22, 2020 at 04:15:33PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Phase 6 accesses inode chunk records mostly in an isolated manner.
+> > > However, when it finds a corruption in a directory or there are
+> > > multiple hardlinks to an inode, there can be concurrent access
+> > > to the inode chunk record to update state.
+> > > 
+> > > Hence the inode record itself needs a mutex. This protects all state
+> > > changes within the inode chunk record, as well as inode link counts
+> > > and chunk references. That allows us to process multiple chunks at
+> > > once, providing concurrency within an AG as well as across AGs.
+> > > 
+> > > The inode chunk tree itself is not modified in phase 6 - it's built
+> > 
+> > Well, that's not 100% true -- mk_orphanage can do that, but AFAICT
+> > that's outside the scope of the parallel processing (and I don't see
+> > much point in parallelizing that part) so I guess that's fine?
+> 
+> AFAICT, yes.
 
-Since XFS is the only user of ->discard_page(), tweak the semantics
-to invoke the callback unconditionally on mapping errors and provide
-the file offset that failed to map. Update xfs_discard_page() to
-discard the corresponding portion of the file and pass the range
-along to iomap_invalidatepage(). The latter already properly handles
-both full and sub-page scenarios by not changing any iomap or page
-state on sub-page invalidations.
+Ok, good, I'm confident I understand what's going on here. :)
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-v2.1:
-- Rebased to v5.10-rc1.
+--D
 
- fs/iomap/buffered-io.c | 15 ++++++++-------
- fs/xfs/xfs_aops.c      | 14 ++++++++------
- include/linux/iomap.h  |  2 +-
- 3 files changed, 17 insertions(+), 14 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 8180061b9e16..e4ea1f9f94d0 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1382,14 +1382,15 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	 * appropriately.
- 	 */
- 	if (unlikely(error)) {
-+		/*
-+		 * Let the filesystem know what portion of the current page
-+		 * failed to map. If the page wasn't been added to ioend, it
-+		 * won't be affected by I/O completion and we must unlock it
-+		 * now.
-+		 */
-+		if (wpc->ops->discard_page)
-+			wpc->ops->discard_page(page, file_offset);
- 		if (!count) {
--			/*
--			 * If the current page hasn't been added to ioend, it
--			 * won't be affected by I/O completions and we must
--			 * discard and unlock it right here.
--			 */
--			if (wpc->ops->discard_page)
--				wpc->ops->discard_page(page);
- 			ClearPageUptodate(page);
- 			unlock_page(page);
- 			goto done;
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 55d126d4e096..5bf37afae5e9 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -527,13 +527,15 @@ xfs_prepare_ioend(
-  */
- static void
- xfs_discard_page(
--	struct page		*page)
-+	struct page		*page,
-+	loff_t			fileoff)
- {
- 	struct inode		*inode = page->mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
--	loff_t			offset = page_offset(page);
--	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
-+	unsigned int		pageoff = offset_in_page(fileoff);
-+	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, fileoff);
-+	xfs_fileoff_t		pageoff_fsb = XFS_B_TO_FSBT(mp, pageoff);
- 	int			error;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -541,14 +543,14 @@ xfs_discard_page(
- 
- 	xfs_alert_ratelimited(mp,
- 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
--			page, ip->i_ino, offset);
-+			page, ip->i_ino, fileoff);
- 
- 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
--			i_blocks_per_page(inode, page));
-+			i_blocks_per_page(inode, page) - pageoff_fsb);
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
--	iomap_invalidatepage(page, 0, PAGE_SIZE);
-+	iomap_invalidatepage(page, pageoff, PAGE_SIZE - pageoff);
- }
- 
- static const struct iomap_writeback_ops xfs_writeback_ops = {
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 172b3397a1a3..5bd3cac4df9c 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -221,7 +221,7 @@ struct iomap_writeback_ops {
- 	 * Optional, allows the file system to discard state on a page where
- 	 * we failed to submit any I/O.
- 	 */
--	void (*discard_page)(struct page *page);
-+	void (*discard_page)(struct page *page, loff_t fileoff);
- };
- 
- struct iomap_writepage_ctx {
--- 
-2.25.4
-
+> > > in phases 3 and 4  - and so we do not need to worry about locking
+> > > for AVL tree lookups to find the inode chunk records themselves.
+> > > hence internal locking is all we need here.
+> > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > TBH I wonder if all the phase6.c code to recreate the root dir, the
+> > orphanage, and the realtime inodes ought to get moved to another file,
+> > particularly since the metadata directory patches add quite a bit more
+> > stuff here?  But that's a topic for another patch...
+> 
+> Probably should and yes, spearate patch :)
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
