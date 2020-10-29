@@ -2,102 +2,139 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B85F9C55179
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 11:28:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45AC4C55179
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 12:09:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5798E207BC
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 11:28:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D832620796
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 12:09:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jiXmTQpS"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KqqH0mbv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726556AbgJ2L2U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 07:28:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37162 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725774AbgJ2L2U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 07:28:20 -0400
-Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 946C0C0613CF;
-        Thu, 29 Oct 2020 04:28:18 -0700 (PDT)
-Received: by mail-io1-xd42.google.com with SMTP id p7so2930860ioo.6;
-        Thu, 29 Oct 2020 04:28:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=hfi+UtL37/p8gDwiSQgVd9ExgUieCTKeWhlouG7mSq8=;
-        b=jiXmTQpSaXOBu9pHohffNcwieSx4dv4YPeq3gl2FXe7ZgJOCzurCjj/KNwCn4EchRA
-         DF+vuok80qNTw2r96c0slcvoDDpmH+EZ2UXe7OqNIsAX5f131LiNrmCWT9hmrMa4qukY
-         2SrFeq+hcFJDaiBf68n6kY0ahQ/tgmNkbWQexBqU57ijiCPLtUTcUKbWNxuHYL8g6zd1
-         8O0u0CNOwWtv6F39gWKuk123QjPKCCEQsC7mW3QgVW2iajRfvnjM0SbsuGAawNmhXdKD
-         oS1CWN1jGif+Y2wEqTY7lvSocXCB9B+d6GKRJYGjv6zM1Y67ffAM3Nv1iKX+nffTsrBm
-         fjVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=hfi+UtL37/p8gDwiSQgVd9ExgUieCTKeWhlouG7mSq8=;
-        b=VTZzUgKPN/BZnkMVBPI3poAgDnIIqm1JGhm/EPPBrH2Mn/srt2rvJbA7d5JZonc1Z2
-         olRTiCee1sxNr4/xYnUZKkXNybDklE0q1kH2r5biTsKEPVQfyWKadaSOVHzZ1UEh5nS9
-         QUsTZo2wFs+sqnwSkvV1TR4JbdVhMNqlCh5K8Eu/fDUaP0NJWx3yzs6gyLMY1JiAyMmf
-         2J4YeNwef34Vc1QqCD2Q1VbleXj1Cx6AIOS0JGN+Bi/IjBc1JqhCQll/BbWjEWbVJCyr
-         xjSHVunbRtC1I6uYpgU9RmHgDwX1VKko0i5tWuJEgmzmvgkCszialA3UhxI5pnOxzHBz
-         8z2w==
-X-Gm-Message-State: AOAM532X/97cI55df4oOkzBxDFTsj+ztLh6ON74GN4Ofhljo/UlRu4Tr
-        GwWWRJxtnYGrCdZCGQjxppDuipp8rfwCRFu43jem+ktJ+7k=
-X-Google-Smtp-Source: ABdhPJzOyKchjWQ2rMofI1cglsYAktjmXh0lvE8ihOlCN63XxYlzHeIRganUbbCag85OiRGE5YJkaksjVfezVYMl6NE=
-X-Received: by 2002:a5e:c107:: with SMTP id v7mr2982186iol.203.1603970898054;
- Thu, 29 Oct 2020 04:28:18 -0700 (PDT)
-MIME-Version: 1.0
-References: <160382543472.1203848.8335854864075548402.stgit@magnolia> <160382544732.1203848.9001133589345314135.stgit@magnolia>
-In-Reply-To: <160382544732.1203848.9001133589345314135.stgit@magnolia>
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Thu, 29 Oct 2020 13:28:07 +0200
-Message-ID: <CAOQ4uxi8=dYG95SJMc07oTidcc1nJheUzPVhNThykrtmT5a+kg@mail.gmail.com>
-Subject: Re: [PATCH 2/4] xfs/122: add legacy timestamps to ondisk checker
+        id S1725972AbgJ2MJM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 08:09:12 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50017 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725976AbgJ2MJM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 08:09:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603973350;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=lmL3VWpI7zPBibgY3qXNaxnvkag2a9L9y2m4S8oChQ4=;
+        b=KqqH0mbvEsMMfUGkbsRQ3pb37HK3Cvw3tlxugXE7ixrqPB9Z8cfp5m57FSj9if7HHsS3hJ
+        EoR/WjKXQIM8yY/ZGwfhKRw2knONCfYHY20lMdnx+1nPQyiVP+FrWRYG1upVBjQY5hT9K/
+        3Sw+Tpek4iAKp6OffpVqoIEIJU1ehuo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-283-piVOUlItMviIn1MKZihZxg-1; Thu, 29 Oct 2020 08:09:08 -0400
+X-MC-Unique: piVOUlItMviIn1MKZihZxg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8792F1882FBB;
+        Thu, 29 Oct 2020 12:09:07 +0000 (UTC)
+Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id F3F111974D;
+        Thu, 29 Oct 2020 12:09:06 +0000 (UTC)
+Date:   Thu, 29 Oct 2020 08:09:05 -0400
+From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eryu Guan <guaneryu@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/9] xfs_db: add inobtcnt upgrade path
+Message-ID: <20201029120905.GA1657878@bfoster>
+References: <160375518573.880355.12052697509237086329.stgit@magnolia>
+ <160375521801.880355.2055596956122419535.stgit@magnolia>
+ <20201028172925.GD1611922@bfoster>
+ <20201029000332.GG1061252@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201029000332.GG1061252@magnolia>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 10:25 PM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
->
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> Add these new ondisk structures.
->
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Oct 28, 2020 at 05:03:32PM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 28, 2020 at 01:29:25PM -0400, Brian Foster wrote:
+> > On Mon, Oct 26, 2020 at 04:33:38PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Enable users to upgrade their filesystems to support inode btree block
+> > > counters.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  db/sb.c              |   76 +++++++++++++++++++++++++++++++++++++++++++++++++-
+> > >  db/xfs_admin.sh      |    4 ++-
+> > >  man/man8/xfs_admin.8 |   16 +++++++++++
+> > >  3 files changed, 94 insertions(+), 2 deletions(-)
+> > > 
+> > > 
+...
+> > > diff --git a/man/man8/xfs_admin.8 b/man/man8/xfs_admin.8
+> > > index 8afc873fb50a..65ca6afc1e12 100644
+> > > --- a/man/man8/xfs_admin.8
+> > > +++ b/man/man8/xfs_admin.8
+...
+> > > @@ -103,6 +105,20 @@ The filesystem label can be cleared using the special "\c
+> > >  " value for
+> > >  .IR label .
+> > >  .TP
+> > > +.BI \-O " feature"
+> > > +Add a new feature to the filesystem.
+> > > +Only one feature can be specified at a time.
+> > > +Features are as follows:
+> > > +.RS 0.7i
+> > > +.TP
+> > > +.B inobtcount
+> > > +Upgrade the filesystem to support the inode btree counters feature.
+> > > +This reduces mount time by caching the size of the inode btrees in the
+> > > +allocation group metadata.
+> > > +Once enabled, the filesystem will not be writable by older kernels.
+> > > +The filesystem cannot be downgraded after this feature is enabled.
+> > 
+> > Any reason for not allowing the downgrade path? It seems like we're
+> > mostly there implementation wise and that might facilitate enabling the
+> > feature by default.
+> 
+> Downgrading will not be easy for bigtime, since we'd have to scan the
+> whole fs to see if there are any timestamps past 2038.  For other
+> features it might not be such a big deal, but in general I don't want to
+> increase our testing burden even further.
+> 
 
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Well it's not something I'd say we should necessarily support for every
+feature. TBH, I wasn't expecting an upgrade mechanism for inobtcount in
+the first place since I thought we didn't tend to do that for v5
+filesystems. ISTM it's simple enough to support and perhaps that's good
+enough reason to do so, but if we're going to move the "test burden"
+line anyways it seems rather arbitrary to me to support one direction
+and not the other when they are presumably of comparable complexity.
+Just my .02 of course, and I don't feel strongly about whether we
+support upgrade, downgrade, or neither...
 
-> ---
->  tests/xfs/122     |    1 +
->  tests/xfs/122.out |    1 +
->  2 files changed, 2 insertions(+)
->
->
-> diff --git a/tests/xfs/122 b/tests/xfs/122
-> index a4248031..db21f2d5 100755
-> --- a/tests/xfs/122
-> +++ b/tests/xfs/122
-> @@ -182,6 +182,7 @@ struct xfs_iext_cursor
->  struct xfs_ino_geometry
->  struct xfs_attrlist
->  struct xfs_attrlist_ent
-> +struct xfs_legacy_ictimestamp
+Brian
 
-<OCD move near xfs_ictimestamp_t similar to other adjacent struct and
-typedefs />
+> I'll ask the ext4 folks if they know of people downgrading filesystems
+> with tune2fs, but AFAIK it's not generally done.
+> 
+> --D
+> 
+> > Brian
+> > 
+> > > +.RE
+> > > +.TP
+> > >  .BI \-U " uuid"
+> > >  Set the UUID of the filesystem to
+> > >  .IR uuid .
+> > > 
+> > 
+> 
 
-Thanks,
-Amir.
