@@ -7,63 +7,58 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CCC5C2D0A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 09:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A88BCC2D0A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 09:49:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F17520790
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 09:49:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 475E02076D
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 09:49:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NIECMAZ6"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="uqjG6uQF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726063AbgJ2JtC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 05:49:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49796 "EHLO
+        id S1726118AbgJ2JtO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 05:49:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49830 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725999AbgJ2JtC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 05:49:02 -0400
+        with ESMTP id S1725894AbgJ2JtO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 05:49:14 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC92DC0613CF
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2020 02:49:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D4E0C0613CF
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Oct 2020 02:49:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
         References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=fIwOlg7FOjN29BA34fUg9OVMYHbpxG0NtAETaoI1qr8=; b=NIECMAZ6lzeuVnjpqpATg0oJ/1
-        B2H/8HvT9hUiYNJirq2Y40dzPU5L8ha1FrEFwlq5n4Iq3AMmlt90amzXfttVMJkw+RRMEn7f+tIox
-        tACeABPG+Sj5XgKnmNMuwe19pDJQuPdc+JcZVFk5m8okBDxTmcubUivZNygd4ncexDcW1bIwFq/AM
-        /yxpUEzk5D5Uw1GAo+lUz99lMCvxETYd3C97UmlflELj2exr2aIbmafCtmeXQ/lXHdh+2sKLgfp/N
-        YAFPo2uEiGYSYWz935bPav3pyZxm3fnQ2A9gqCeTLJbQ/7UPzRw0nGrR3sriG6NJnV2kIjJ2l5+aP
-        XNDg1fXw==;
+        bh=FVUbO6ZU+K9B6BdgJRHq/4S4TFBi9qXofujGwbwed5U=; b=uqjG6uQFxaOV2C3K9hYSBF3VBv
+        LdQHhP8BYKTWO2DFzFWOseRntdZ6iccLJeN/i/f3MfxRS6KPbO80VMW6xC6yk2PEXqCQVbfDMPMk0
+        dKlopZ9FjoNWjl05y3SjUB6NOi8/gKxVIt+I2ClRwmQ0/VLcwMzyaSHPv2rxV1anKweQY9m3XIQfH
+        y0yxoRrZ6vDAKtSWekqPITGc8ujWG+j7WaH8lml8MMpLWmi+XWu2V2wkHn0Tgc3HRoN10Lm9Fgv3d
+        vNI1xB9n5OXOBLQemgtFyEfc6hvievL1Hz38yqP06XO2MnhwiKY8S53WJhHH8qhfEpYj8vfHG5Asb
+        //mOpvTg==;
 Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kY4YE-0001cQ-LU; Thu, 29 Oct 2020 09:48:58 +0000
-Date:   Thu, 29 Oct 2020 09:48:58 +0000
+        id 1kY4YR-0001cp-Fe; Thu, 29 Oct 2020 09:49:11 +0000
+Date:   Thu, 29 Oct 2020 09:49:11 +0000
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 18/26] libxfs: propagate bigtime inode flag when
- allocating
-Message-ID: <20201029094858.GM2091@infradead.org>
+Subject: Re: [PATCH 19/26] libfrog: list the bigtime feature when reporting
+ geometry
+Message-ID: <20201029094911.GN2091@infradead.org>
 References: <160375524618.881414.16347303401529121282.stgit@magnolia>
- <160375536384.881414.3371469706002982157.stgit@magnolia>
+ <160375537005.881414.6068353624094235785.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160375536384.881414.3371469706002982157.stgit@magnolia>
+In-Reply-To: <160375537005.881414.6068353624094235785.stgit@magnolia>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 26, 2020 at 04:36:03PM -0700, Darrick J. Wong wrote:
+On Mon, Oct 26, 2020 at 04:36:10PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Ensure that we propagate the bigtime inode flag correctly when creating
-> new inodes.  There critical part here is to use the new_diflags2 field
-> in the incore geometry just like we do in the kernel.
-> 
-> We also modify xfs_flags2diflags2 to have the same behavior as the
-> kernel.  This isn't strictly needed here, but we aim to avoid letting
-> userspace diverge from the kernel function when we can.
+> When we're reporting on a filesystem's geometry, report if the bigtime
+> feature is enabled on this filesystem.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
