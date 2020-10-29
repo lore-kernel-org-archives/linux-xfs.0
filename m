@@ -7,308 +7,316 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66D65C4742C
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 21:07:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 269F2C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 21:18:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6F9D20791
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 21:07:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4C1D20838
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 21:18:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ehMY99pP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WG7G9hN8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726200AbgJ2VHG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 17:07:06 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:37052 "EHLO
+        id S1726027AbgJ2VSk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 17:18:40 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47646 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726404AbgJ2VHF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 17:07:05 -0400
+        with ESMTP id S1725948AbgJ2VSj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 17:18:39 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TL5cm0003340;
-        Thu, 29 Oct 2020 21:07:03 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TL9BTc006362;
+        Thu, 29 Oct 2020 21:18:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=rxU42wIs0tupRYk8JK0dLW1lZX8J2oHAnB+BfAiMNSo=;
- b=ehMY99pPbkwKpfGxAqcYWTLJJsNa41UraKKQVn4ZP9osN4QWOLX2WEZzi5UC/qjZJ8rz
- 6qtj/KeIuMjk5yLfov1mXgkMVB1mKqFTvU2YAt4iq0hlZ4nm966ofyra4FQvCymid/Eo
- wAxL8HoDyyT3xWwJojA2Opfmd66oKHMnhhXwwB61CIiRwUt/tI/T4UVdjYwKRm4qy3Hi
- N0QSWvntz/xnmU2FPC6moCA2GfvVZUXpQt64t6cE9xZGYSJftNYPSXy7yj7yZe1B6Vfh
- VJlx7FafpxFGWlZRnqzWJpka99XNZMDarqc4Wf+/uET/ry/0WDyh6DGl9mpCOsm+AnMd qw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 34cc7m72c0-1
+ bh=bsYxchL/BTEB3cgmEWX7Vit2zZc5tdNCqZHy6Q4M22M=;
+ b=WG7G9hN8B8b38Wmyeq7SPwz141JPGqXQUUSYtoXh1f1EkSJVKO+v3rrlQT7cZ9XfEXYK
+ fTN1XNmCbRnunB/S9yDgUntQZzzwtAfnz5VfFbEyBp/FiFd3aXYT98qlAOD7zo+3fe+a
+ 8AYKjbXmCC/LvcBylkcXvPvZ+cXMVuRzLdx93wOyqK6lUToP9lzc3e03Bj3D88hrMDiy
+ kiN4xgAPIuNLN0WhBjk9ZDH13bHyCbnKQQyCvhZOBE3ryyL6V1tp+iSoDc1BpwtRDLeg
+ WKL0nYO5jL7qIWWPeeDB+LV3vxIbfbl/bj4GoXNeIDrs/7UUk6SP+5rlXoBIS4xHn8q6 wQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 34cc7m748n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 29 Oct 2020 21:07:03 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TL6P68003526;
-        Thu, 29 Oct 2020 21:07:02 GMT
+        Thu, 29 Oct 2020 21:18:36 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TLAC2a062573;
+        Thu, 29 Oct 2020 21:18:36 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 34cx1tpb8u-1
+        by aserp3020.oracle.com with ESMTP id 34cx60yh6t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Oct 2020 21:07:02 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09TL718F031818;
-        Thu, 29 Oct 2020 21:07:01 GMT
+        Thu, 29 Oct 2020 21:18:36 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09TLIY6T006475;
+        Thu, 29 Oct 2020 21:18:35 GMT
 Received: from localhost (/10.159.244.77)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Oct 2020 14:07:01 -0700
-Date:   Thu, 29 Oct 2020 14:07:00 -0700
+        with ESMTP ; Thu, 29 Oct 2020 14:18:34 -0700
+Date:   Thu, 29 Oct 2020 14:18:33 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 2/5] mkfs: add initial ini format config file parsing
- support
-Message-ID: <20201029210700.GE1061252@magnolia>
+Subject: Re: [PATCH v3 4/5] mkfs: hook up suboption parsing to ini files
+Message-ID: <20201029211833.GF1061252@magnolia>
 References: <20201027205258.2824424-1-david@fromorbit.com>
- <20201027205258.2824424-3-david@fromorbit.com>
+ <20201027205258.2824424-5-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201027205258.2824424-3-david@fromorbit.com>
+In-Reply-To: <20201027205258.2824424-5-david@fromorbit.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
- suspectscore=1 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=999
+ suspectscore=1 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010290147
+ definitions=main-2010290148
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
  malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0 suspectscore=1
  priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
  mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010290147
+ engine=8.12.0-2009150000 definitions=main-2010290148
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 07:52:55AM +1100, Dave Chinner wrote:
+On Wed, Oct 28, 2020 at 07:52:57AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Add the framework that will allow the config file to be supplied on
-> the CLI and passed to the library that will parse it. This does not
-> yet do any option parsing from the config file.
+> Now we have the config file parsing hooked up and feeding in
+> parameters to mkfs, wire the parameters up to the existing CLI
+> option parsing functions. THis gives the config file exactly the
+> same capabilities and constraints as the command line option
+> specification.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  mkfs/xfs_mkfs.c | 94 +++++++++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 79 insertions(+), 15 deletions(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 829f0383b602..635a36f393b7 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -143,6 +143,12 @@ enum {
+>   * name MANDATORY
+>   *   Name is a single char, e.g., for '-d file', name is 'd'.
+>   *
+> + * ini_section MANDATORY
+> + *   This field is required to connect each opt_params (that is to say, each
+> + *   option class) to a section in the config file. The only option class this
+> + *   is not required for is the config file specification class itself.
+> + *   The section name is a string, not longer than MAX_INI_NAME_LEN.
+> + *
+>   * subopts MANDATORY
+>   *   Subopts is a list of strings naming suboptions. In the example above,
+>   *   it would contain "file". The last entry of this list has to be NULL.
+> @@ -201,6 +207,8 @@ enum {
+>   */
+>  struct opt_params {
+>  	const char	name;
+> +#define MAX_INI_NAME_LEN	32
+> +	const char	ini_section[MAX_INI_NAME_LEN];
+>  	const char	*subopts[MAX_SUBOPTS];
+>  
+>  	struct subopt_param {
+> @@ -228,6 +236,7 @@ static struct opt_params sopts;
+>  
+>  static struct opt_params bopts = {
+>  	.name = 'b',
+> +	.ini_section = "block",
+>  	.subopts = {
+>  		[B_SIZE] = "size",
+>  	},
+> @@ -267,6 +276,7 @@ static struct opt_params copts = {
+>  
+>  static struct opt_params dopts = {
+>  	.name = 'd',
+> +	.ini_section = "data",
+>  	.subopts = {
+>  		[D_AGCOUNT] = "agcount",
+>  		[D_FILE] = "file",
+> @@ -411,6 +421,7 @@ static struct opt_params dopts = {
+>  
+>  static struct opt_params iopts = {
+>  	.name = 'i',
+> +	.ini_section = "inode",
+>  	.subopts = {
+>  		[I_ALIGN] = "align",
+>  		[I_MAXPCT] = "maxpct",
+> @@ -472,6 +483,7 @@ static struct opt_params iopts = {
+>  
+>  static struct opt_params lopts = {
+>  	.name = 'l',
+> +	.ini_section = "log",
+>  	.subopts = {
+>  		[L_AGNUM] = "agnum",
+>  		[L_INTERNAL] = "internal",
+> @@ -571,6 +583,7 @@ static struct opt_params lopts = {
+>  
+>  static struct opt_params nopts = {
+>  	.name = 'n',
+> +	.ini_section = "naming",
+>  	.subopts = {
+>  		[N_SIZE] = "size",
+>  		[N_VERSION] = "version",
+> @@ -602,6 +615,7 @@ static struct opt_params nopts = {
+>  
+>  static struct opt_params ropts = {
+>  	.name = 'r',
+> +	.ini_section = "realtime",
+>  	.subopts = {
+>  		[R_EXTSIZE] = "extsize",
+>  		[R_SIZE] = "size",
+> @@ -652,6 +666,7 @@ static struct opt_params ropts = {
+>  
+>  static struct opt_params sopts = {
+>  	.name = 's',
+> +	.ini_section = "sector",
+>  	.subopts = {
+>  		[S_SIZE] = "size",
+>  		[S_SECTSIZE] = "sectsize",
+> @@ -682,6 +697,7 @@ static struct opt_params sopts = {
+>  
+>  static struct opt_params mopts = {
+>  	.name = 'm',
+> +	.ini_section = "metadata",
+>  	.subopts = {
+>  		[M_CRC] = "crc",
+>  		[M_FINOBT] = "finobt",
+> @@ -982,6 +998,17 @@ unknown(
+>  	usage();
+>  }
+>  
+> +static void
+> +invalid_cfgfile_opt(
+> +	const char	*filename,
+> +	const char	*section,
+> +	const char	*name,
+> +	const char	*value)
+> +{
+> +	fprintf(stderr, _("%s: invalid config file option: [%s]:%s=%s\n"),
+> +		filename, section, name, value);
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Silly nit: space after the last colon.
+
+"/etc/xfs.conf: invalid config file option: [metadata]: crc=0"
+
+(A pity libinih doesn't tell you the line number...)
+
+Also, does this really need a separate function since it's only called
+from one place?
+
+> +}
+> +
+>  static void
+>  check_device_type(
+>  	const char	*name,
+> @@ -1696,23 +1723,22 @@ sector_opts_parser(
+>  }
+>  
+>  static struct subopts {
+> -	char		opt;
+>  	struct opt_params *opts;
+>  	int		(*parser)(struct opt_params	*opts,
+>  				  int			subopt,
+>  				  const char		*value,
+>  				  struct cli_params	*cli);
+>  } subopt_tab[] = {
+> -	{ 'b', &bopts, block_opts_parser },
+> -	{ 'c', &copts, cfgfile_opts_parser },
+> -	{ 'd', &dopts, data_opts_parser },
+> -	{ 'i', &iopts, inode_opts_parser },
+> -	{ 'l', &lopts, log_opts_parser },
+> -	{ 'm', &mopts, meta_opts_parser },
+> -	{ 'n', &nopts, naming_opts_parser },
+> -	{ 'r', &ropts, rtdev_opts_parser },
+> -	{ 's', &sopts, sector_opts_parser },
+> -	{ '\0', NULL, NULL },
+> +	{ &bopts, block_opts_parser },
+> +	{ &copts, cfgfile_opts_parser },
+> +	{ &dopts, data_opts_parser },
+> +	{ &iopts, inode_opts_parser },
+> +	{ &lopts, log_opts_parser },
+> +	{ &mopts, meta_opts_parser },
+> +	{ &nopts, naming_opts_parser },
+> +	{ &ropts, rtdev_opts_parser },
+> +	{ &sopts, sector_opts_parser },
+> +	{ NULL, NULL },
+>  };
+>  
+>  static void
+> @@ -1726,7 +1752,7 @@ parse_subopts(
+>  	int		ret = 0;
+>  
+>  	while (sop->opts) {
+> -		if (sop->opt == opt)
+> +		if (opt && sop->opts->name == opt)
+
+When does parse_subopts get passed a opt==0?  AFAICT the only caller is
+the switch statement under getopt, which constrains c to one of
+'bdilmnrsc'.
 
 --D
 
-> ---
->  mkfs/Makefile   |   2 +-
->  mkfs/xfs_mkfs.c | 119 +++++++++++++++++++++++++++++++++++++++++++++++-
->  2 files changed, 119 insertions(+), 2 deletions(-)
-> 
-> diff --git a/mkfs/Makefile b/mkfs/Makefile
-> index 31482b08d559..b8805f7e1ea1 100644
-> --- a/mkfs/Makefile
-> +++ b/mkfs/Makefile
-> @@ -11,7 +11,7 @@ HFILES =
->  CFILES = proto.c xfs_mkfs.c
->  
->  LLDLIBS += $(LIBXFS) $(LIBXCMD) $(LIBFROG) $(LIBRT) $(LIBPTHREAD) $(LIBBLKID) \
-> -	$(LIBUUID)
-> +	$(LIBUUID) $(LIBINIH)
->  LTDEPENDENCIES += $(LIBXFS) $(LIBXCMD) $(LIBFROG)
->  LLDFLAGS = -static-libtool-libs
->  
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 8fe149d74b0a..33be9ba16c90 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -11,6 +11,7 @@
->  #include "libfrog/fsgeom.h"
->  #include "libfrog/topology.h"
->  #include "libfrog/convert.h"
-> +#include <ini.h>
->  
->  #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
->  #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
-> @@ -44,6 +45,11 @@ enum {
->  	B_MAX_OPTS,
->  };
->  
-> +enum {
-> +	C_OPTFILE = 0,
-> +	C_MAX_OPTS,
-> +};
-> +
->  enum {
->  	D_AGCOUNT = 0,
->  	D_FILE,
-> @@ -237,6 +243,28 @@ static struct opt_params bopts = {
->  	},
->  };
->  
-> +/*
-> + * Config file specification. Usage is:
-> + *
-> + * mkfs.xfs -c options=<name>
-> + *
-> + * A subopt is used for the filename so in future we can extend the behaviour
-> + * of the config file (e.g. specified defaults rather than options) if we ever
-> + * have a need to do that sort of thing.
-> + */
-> +static struct opt_params copts = {
-> +	.name = 'c',
-> +	.subopts = {
-> +		[C_OPTFILE] = "options",
-> +	},
-> +	.subopt_params = {
-> +		{ .index = C_OPTFILE,
-> +		  .conflicts = { { NULL, LAST_CONFLICT } },
-> +		  .defaultval = SUBOPT_NEEDS_VAL,
-> +		},
-> +	},
-> +};
-> +
->  static struct opt_params dopts = {
->  	.name = 'd',
->  	.subopts = {
-> @@ -748,6 +776,8 @@ struct cli_params {
->  	int	sectorsize;
->  	int	blocksize;
->  
-> +	char	*cfgfile;
-> +
->  	/* parameters that depend on sector/block size being validated. */
->  	char	*dsize;
->  	char	*agsize;
-> @@ -862,6 +892,7 @@ usage( void )
->  {
->  	fprintf(stderr, _("Usage: %s\n\
->  /* blocksize */		[-b size=num]\n\
-> +/* config file */	[-c options=xxx]\n\
->  /* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1]\n\
->  /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
->  			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
-> @@ -1385,6 +1416,23 @@ block_opts_parser(
->  	return 0;
->  }
->  
-> +static int
-> +cfgfile_opts_parser(
-> +	struct opt_params	*opts,
-> +	int			subopt,
-> +	char			*value,
-> +	struct cli_params	*cli)
-> +{
-> +	switch (subopt) {
-> +	case C_OPTFILE:
-> +		cli->cfgfile = getstr(value, opts, subopt);
-> +		break;
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +	return 0;
-> +}
-> +
->  static int
->  data_opts_parser(
->  	struct opt_params	*opts,
-> @@ -1656,6 +1704,7 @@ static struct subopts {
->  				  struct cli_params	*cli);
->  } subopt_tab[] = {
->  	{ 'b', &bopts, block_opts_parser },
-> +	{ 'c', &copts, cfgfile_opts_parser },
->  	{ 'd', &dopts, data_opts_parser },
->  	{ 'i', &iopts, inode_opts_parser },
->  	{ 'l', &lopts, log_opts_parser },
-> @@ -3562,6 +3611,65 @@ check_root_ino(
+>  			break;
+>  		sop++;
+>  	}
+> @@ -1749,6 +1775,45 @@ parse_subopts(
 >  	}
 >  }
 >  
-> +/*
-> + * INI file format option parser.
-> + *
-> + * This is called by the file parser library for every valid option it finds in
-> + * the config file. The option is already broken down into a
-> + * {section,name,value} tuple, so all we need to do is feed it to the correct
-> + * suboption parser function and translate the return value.
-> + *
-> + * Returns 0 on failure, 1 for success.
-> + */
-> +static int
-> +cfgfile_parse_ini(
-> +	void			*user,
-> +	const char		*section,
-> +	const char		*name,
-> +	const char		*value)
+> +static bool
+> +parse_cfgopt(
+> +	const char	*section,
+> +	const char	*name,
+> +	const char	*value,
+> +	struct cli_params *cli)
 > +{
-> +	struct cli_params	*cli = user;
+> +	struct subopts	*sop = &subopt_tab[0];
+> +	char		**subopts;
+> +	int		ret = 0;
+> +	int		i;
 > +
-> +	fprintf(stderr, "Ini debug: file %s, section %s, name %s, value %s\n",
-> +		cli->cfgfile, section, name, value);
-> +
-> +	return 1;
-> +}
-> +
-> +void
-> +cfgfile_parse(
-> +	struct cli_params	*cli)
-> +{
-> +	int			error;
-> +
-> +	if (!cli->cfgfile)
-> +		return;
-> +
-> +	error = ini_parse(cli->cfgfile, cfgfile_parse_ini, cli);
-> +	if (error) {
-> +		if (error > 0) {
-> +			fprintf(stderr,
-> +		_("%s: Unrecognised input on line %d. Aborting.\n"),
-> +				cli->cfgfile, error);
-> +		} else if (error == -1) {
-> +			fprintf(stderr,
-> +		_("Unable to open config file %s. Aborting.\n"),
-> +				cli->cfgfile);
-> +		} else if (error == -2) {
-> +			fprintf(stderr,
-> +		_("Memory allocation failure parsing %s. Aborting.\n"),
-> +				cli->cfgfile);
-> +		} else {
-> +			fprintf(stderr,
-> +		_("Unknown error %d opening config file %s. Aborting.\n"),
-> +				error, cli->cfgfile);
-> +		}
-> +		exit(1);
+> +	while (sop->opts) {
+> +		if (sop->opts->ini_section[0] != '\0' &&
+> +		    strcasecmp(section, sop->opts->ini_section) == 0)
+> +			break;
+> +		sop++;
 > +	}
-> +	printf(_("Parameters parsed from config file %s successfully\n"),
-> +		cli->cfgfile);
+> +
+> +	/* Config files with unknown sections get caught here. */
+> +	if (!sop->opts)
+> +		goto invalid_opt;
+> +
+> +	subopts = (char **)sop->opts->subopts;
+> +	for (i = 0; i < MAX_SUBOPTS; i++) {
+> +		if (!subopts[i])
+> +			break;
+> +		if (strcasecmp(name, subopts[i]) == 0) {
+> +			ret = (sop->parser)(sop->opts, i, value, cli);
+> +			if (ret)
+> +				goto invalid_opt;
+> +			return true;
+> +		}
+> +	}
+> +invalid_opt:
+> +	invalid_cfgfile_opt(cli->cfgfile, section, name, value);
+> +	return false;
 > +}
 > +
->  int
->  main(
->  	int			argc,
-> @@ -3648,13 +3756,14 @@ main(
->  	memcpy(&cli.sb_feat, &dft.sb_feat, sizeof(cli.sb_feat));
->  	memcpy(&cli.fsx, &dft.fsx, sizeof(cli.fsx));
+>  static void
+>  validate_sectorsize(
+>  	struct mkfs_params	*cfg,
+> @@ -3630,9 +3695,8 @@ cfgfile_parse_ini(
+>  {
+>  	struct cli_params	*cli = user;
 >  
-> -	while ((c = getopt(argc, argv, "b:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
-> +	while ((c = getopt(argc, argv, "b:c:d:i:l:L:m:n:KNp:qr:s:CfV")) != EOF) {
->  		switch (c) {
->  		case 'C':
->  		case 'f':
->  			force_overwrite = 1;
->  			break;
->  		case 'b':
-> +		case 'c':
->  		case 'd':
->  		case 'i':
->  		case 'l':
-> @@ -3698,6 +3807,14 @@ main(
->  	} else
->  		dfile = xi.dname;
+> -	fprintf(stderr, "Ini debug: file %s, section %s, name %s, value %s\n",
+> -		cli->cfgfile, section, name, value);
+> -
+> +	if (!parse_cfgopt(section, name, value, cli))
+> +		return 0;
+>  	return 1;
+>  }
 >  
-> +	/*
-> +	 * Now we have all the options parsed, we can read in the option file
-> +	 * specified on the command line via "-c options=xxx". Once we have all
-> +	 * the options from this file parsed, we can then proceed with parameter
-> +	 * and bounds checking and making the filesystem.
-> +	 */
-> +	cfgfile_parse(&cli);
-> +
->  	protostring = setup_proto(protofile);
->  
->  	/*
 > -- 
 > 2.28.0
 > 
