@@ -5,50 +5,50 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B067BC55179
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 13:24:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDDAEC2D0A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 13:24:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54DA2207DE
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 13:24:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94A7420809
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 13:24:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VS4DRljD"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MZ9Aj1+T"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727037AbgJ2NYH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 09:24:07 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:40510 "EHLO
+        id S1727055AbgJ2NYI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 09:24:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:47044 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725554AbgJ2NYH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 09:24:07 -0400
+        by vger.kernel.org with ESMTP id S1726979AbgJ2NYI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 09:24:08 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603977845;
+        s=mimecast20190719; t=1603977847;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=OY8uEFwhhCpbmM11k5zwiPPtYztte7utm2kD/PT+in0=;
-        b=VS4DRljDQW9N4vzYofxoyU5XPq04PG5PrrPRJ/bx/YYUdzHzsJ8Cmea8I92kD0kxQOr0PS
-        XR5hchJMEtYwBSfUueuXiVh7Yaw8xQRqJOvngdL1jbsP/El/4LGRd/mlUQ8bRB9u6WO2pb
-        Md9KOm/ZXtXk0cW3E0goVYot1V1gn20=
+        bh=kXDAgkOg53rpMqwfYC2liQyN7SUkaG6ONZ52U5Jw9/s=;
+        b=MZ9Aj1+TPWCLqgTm8YykOiJ7tRGnOPpfH0fioC+Qmmj1VAfCHwXlQ7+lXV/dBzOhF1GmH5
+        KrQmfQRbyUu+gFWhWXkosaEwlexUQvBROSTQfvqfs9AIqXbe1zWr5aNdfflO2HkpwhboIH
+        psQmtk5j7SOorgcP0fuf5IAu16+A7Aw=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-259-8bXqWVDLPUO2LkwtrbwbvA-1; Thu, 29 Oct 2020 09:24:03 -0400
-X-MC-Unique: 8bXqWVDLPUO2LkwtrbwbvA-1
+ us-mta-259-s_FBFXpOOYuoubqyxZsaVA-1; Thu, 29 Oct 2020 09:24:03 -0400
+X-MC-Unique: s_FBFXpOOYuoubqyxZsaVA-1
 Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1162B195D435;
-        Thu, 29 Oct 2020 13:23:28 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 727E68B12F3;
+        Thu, 29 Oct 2020 13:23:27 +0000 (UTC)
 Received: from bfoster.redhat.com (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 992245C63A;
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 16B935C1C4;
         Thu, 29 Oct 2020 13:23:27 +0000 (UTC)
 From:   Brian Foster <bfoster@redhat.com>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 2/3] iomap: support partial page discard on writeback block mapping failure
-Date:   Thu, 29 Oct 2020 09:23:24 -0400
-Message-Id: <20201029132325.1663790-3-bfoster@redhat.com>
+Subject: [PATCH v2 1/3] xfs: flush new eof page on truncate to avoid post-eof corruption
+Date:   Thu, 29 Oct 2020 09:23:23 -0400
+Message-Id: <20201029132325.1663790-2-bfoster@redhat.com>
 In-Reply-To: <20201029132325.1663790-1-bfoster@redhat.com>
 References: <20201029132325.1663790-1-bfoster@redhat.com>
 MIME-Version: 1.0
@@ -58,111 +58,61 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-iomap writeback mapping failure only calls into ->discard_page() if
-the current page has not been added to the ioend. Accordingly, the
-XFS callback assumes a full page discard and invalidation. This is
-problematic for sub-page block size filesystems where some portion
-of a page might have been mapped successfully before a failure to
-map a delalloc block occurs. ->discard_page() is not called in that
-error scenario and the bio is explicitly failed by iomap via the
-error return from ->prepare_ioend(). As a result, the filesystem
-leaks delalloc blocks and corrupts the filesystem block counters.
+It is possible to expose non-zeroed post-EOF data in XFS if the new
+EOF page is dirty, backed by an unwritten block and the truncate
+happens to race with writeback. iomap_truncate_page() will not zero
+the post-EOF portion of the page if the underlying block is
+unwritten. The subsequent call to truncate_setsize() will, but
+doesn't dirty the page. Therefore, if writeback happens to complete
+after iomap_truncate_page() (so it still sees the unwritten block)
+but before truncate_setsize(), the cached page becomes inconsistent
+with the on-disk block. A mapped read after the associated page is
+reclaimed or invalidated exposes non-zero post-EOF data.
 
-Since XFS is the only user of ->discard_page(), tweak the semantics
-to invoke the callback unconditionally on mapping errors and provide
-the file offset that failed to map. Update xfs_discard_page() to
-discard the corresponding portion of the file and pass the range
-along to iomap_invalidatepage(). The latter already properly handles
-both full and sub-page scenarios by not changing any iomap or page
-state on sub-page invalidations.
+For example, consider the following sequence when run on a kernel
+modified to explicitly flush the new EOF page within the race
+window:
 
+$ xfs_io -fc "falloc 0 4k" -c fsync /mnt/file
+$ xfs_io -c "pwrite 0 4k" -c "truncate 1k" /mnt/file
+  ...
+$ xfs_io -c "mmap 0 4k" -c "mread -v 1k 8" /mnt/file
+00000400:  00 00 00 00 00 00 00 00  ........
+$ umount /mnt/; mount <dev> /mnt/
+$ xfs_io -c "mmap 0 4k" -c "mread -v 1k 8" /mnt/file
+00000400:  cd cd cd cd cd cd cd cd  ........
+
+Update xfs_setattr_size() to explicitly flush the new EOF page prior
+to the page truncate to ensure iomap has the latest state of the
+underlying block.
+
+Fixes: 68a9f5e7007c ("xfs: implement iomap based buffered write path")
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/iomap/buffered-io.c | 15 ++++++++-------
- fs/xfs/xfs_aops.c      | 13 +++++++------
- include/linux/iomap.h  |  2 +-
- 3 files changed, 16 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_iops.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index bcfc288dba3f..d1f04eabc7e4 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1412,14 +1412,15 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	 * appropriately.
- 	 */
- 	if (unlikely(error)) {
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 5e165456da68..1414ab79eacf 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -911,6 +911,16 @@ xfs_setattr_size(
+ 		error = iomap_zero_range(inode, oldsize, newsize - oldsize,
+ 				&did_zeroing, &xfs_buffered_write_iomap_ops);
+ 	} else {
 +		/*
-+		 * Let the filesystem know what portion of the current page
-+		 * failed to map. If the page wasn't been added to ioend, it
-+		 * won't be affected by I/O completion and we must unlock it
-+		 * now.
++		 * iomap won't detect a dirty page over an unwritten block (or a
++		 * cow block over a hole) and subsequently skips zeroing the
++		 * newly post-EOF portion of the page. Flush the new EOF to
++		 * convert the block before the pagecache truncate.
 +		 */
-+		if (wpc->ops->discard_page)
-+			wpc->ops->discard_page(page, file_offset);
- 		if (!count) {
--			/*
--			 * If the current page hasn't been added to ioend, it
--			 * won't be affected by I/O completions and we must
--			 * discard and unlock it right here.
--			 */
--			if (wpc->ops->discard_page)
--				wpc->ops->discard_page(page);
- 			ClearPageUptodate(page);
- 			unlock_page(page);
- 			goto done;
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index b35611882ff9..46920c530b20 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -527,13 +527,14 @@ xfs_prepare_ioend(
-  */
- static void
- xfs_discard_page(
--	struct page		*page)
-+	struct page		*page,
-+	loff_t			fileoff)
- {
- 	struct inode		*inode = page->mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
--	loff_t			offset = page_offset(page);
--	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, offset);
-+	unsigned int		pageoff = offset_in_page(fileoff);
-+	xfs_fileoff_t		start_fsb = XFS_B_TO_FSBT(mp, fileoff);
- 	int			error;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -541,14 +542,14 @@ xfs_discard_page(
- 
- 	xfs_alert_ratelimited(mp,
- 		"page discard on page "PTR_FMT", inode 0x%llx, offset %llu.",
--			page, ip->i_ino, offset);
-+			page, ip->i_ino, fileoff);
- 
- 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
--			PAGE_SIZE / i_blocksize(inode));
-+			(PAGE_SIZE - pageoff) / i_blocksize(inode));
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
--	iomap_invalidatepage(page, 0, PAGE_SIZE);
-+	iomap_invalidatepage(page, pageoff, PAGE_SIZE - pageoff);
- }
- 
- static const struct iomap_writeback_ops xfs_writeback_ops = {
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 4d1d3c3469e9..36e0ab19210a 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -220,7 +220,7 @@ struct iomap_writeback_ops {
- 	 * Optional, allows the file system to discard state on a page where
- 	 * we failed to submit any I/O.
- 	 */
--	void (*discard_page)(struct page *page);
-+	void (*discard_page)(struct page *page, loff_t fileoff);
- };
- 
- struct iomap_writepage_ctx {
++		error = filemap_write_and_wait_range(inode->i_mapping, newsize,
++						     newsize);
++		if (error)
++			return error;
+ 		error = iomap_truncate_page(inode, newsize, &did_zeroing,
+ 				&xfs_buffered_write_iomap_ops);
+ 	}
 -- 
 2.25.4
 
