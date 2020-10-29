@@ -2,117 +2,233 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3278BC55179
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 19:53:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DB6AC4742C
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 20:24:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C808820838
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 19:53:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96E4A20809
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 20:24:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="CFPhX2Li"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="T+G21ktp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726146AbgJ2TxX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 15:53:23 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:9018 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725980AbgJ2TxW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 15:53:22 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 09TJYOm9127339;
-        Thu, 29 Oct 2020 15:53:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=wqX6CLeoDapKERTcG3S0RVEmkQlKUlM+bdp1Fmhqzzo=;
- b=CFPhX2LiDdF4tCEGJoku8Y3x1Kdt0DosIumVMqHTO0VQxXguSbnrGLY3XGdnB5GsK6QK
- sB09s/uU2VNRsvegvTE025MKS/D8mkyob5tJnn/TOV+6+c9fifrOO9FAkH/3W06wGnnX
- 3vrq4pQmeq81tlu/bBnrvky3Xvkp0gcXveV8W4UlBFqrTgSv29htxpq8rIenXASWspjf
- L86iQPTPrdJOcjsbkrg310OS16UcRYETR27Rf8IGNuTw8CXgu5oO+Ej9+oganYmiTnhi
- 9CZe38QMh+s9FcoVzWhTKaTxClcjtSdzO3er99ktbzfZ0NDcuUkiDEJYFMCGf7ImtvJ+ EA== 
-Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 34fwvewh0a-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 29 Oct 2020 15:53:18 -0400
-Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
-        by ppma03ams.nl.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 09TJkhTe022987;
-        Thu, 29 Oct 2020 19:53:16 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma03ams.nl.ibm.com with ESMTP id 34e56quavj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 29 Oct 2020 19:53:16 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 09TJrEpO30933382
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Oct 2020 19:53:14 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8E7B24C059;
-        Thu, 29 Oct 2020 19:53:14 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id CF3E54C040;
-        Thu, 29 Oct 2020 19:53:12 +0000 (GMT)
-Received: from riteshh-domain.ibmuc.com (unknown [9.199.33.247])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu, 29 Oct 2020 19:53:12 +0000 (GMT)
-From:   Ritesh Harjani <riteshh@linux.ibm.com>
-To:     fstests@vger.kernel.org
-Cc:     anju@linux.vnet.ibm.com, Eryu Guan <guan@eryu.me>,
-        linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-xfs@vger.kernel.org, Ritesh Harjani <riteshh@linux.ibm.com>
-Subject: [PATCH 3/3] common/rc: source common/xfs and common/btrfs
-Date:   Fri, 30 Oct 2020 01:22:53 +0530
-Message-Id: <8d7db41971a227c5bd83677464d139399607e720.1604000570.git.riteshh@linux.ibm.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <cover.1604000570.git.riteshh@linux.ibm.com>
-References: <cover.1604000570.git.riteshh@linux.ibm.com>
+        id S1726479AbgJ2UYr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 16:24:47 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:60086 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725764AbgJ2UYq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 16:24:46 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TKOcbI088271;
+        Thu, 29 Oct 2020 20:24:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=5Pw+fi9NjCuosMXAQJJwp7G7pk7Nbl7MfBGVDcpOzu8=;
+ b=T+G21ktprrdg9+YA0e9Kn1woa3EvP2p8+MCPOELgYlno8fjzwkQKIZxIKxn9YieJaaha
+ AgApVYJPyjhTAdi3yeova8HFb4Q+5ChfS6oTnzM1NYKgR31huyFzCBcCtAgaC3PDTPus
+ a/8QGcjrjBj/cmYOXTRhrXLKvXvsKmTwZsoHMV3/PMPdeEEw7NOe/jsc/X0R/nh67JVC
+ LUceqfQpKU3FR1OKQtH2S/x8OHOP/Z7NUIuYrxU43cF4bQ/618torjYy1eiku91R5Yi1
+ b2MF/FnbxAAzwJsAlK0Zz17xWbw4rLNgHdGY/Hhkkx3ZL8M4moahHN8hevyyDxDgY6Vh Zg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 34dgm4cfvw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 29 Oct 2020 20:24:44 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TKKPkP070578;
+        Thu, 29 Oct 2020 20:24:44 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 34cx1tn6y3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Oct 2020 20:24:44 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09TKOhq6012837;
+        Thu, 29 Oct 2020 20:24:43 GMT
+Received: from localhost (/10.159.244.77)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Oct 2020 13:24:42 -0700
+Date:   Thu, 29 Oct 2020 13:24:42 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: test the xfs_db ls command
+Message-ID: <20201029202442.GZ1061252@magnolia>
+References: <160382540004.1203622.14607732322524118731.stgit@magnolia>
+ <160382541257.1203622.11553283849694190202.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.312,18.0.737
- definitions=2020-10-29_12:2020-10-29,2020-10-29 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 suspectscore=1
- mlxlogscore=940 bulkscore=0 phishscore=0 impostorscore=0
- lowpriorityscore=0 adultscore=0 clxscore=1015 malwarescore=0 spamscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010290131
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160382541257.1203622.11553283849694190202.stgit@magnolia>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
+ suspectscore=3 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010290141
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
+ suspectscore=3 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010290141
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Without this patch I am unable to test for multiple different
-filesystem sections for the same tests. Since we anyway have only
-function definitions in these files, so it should be ok to source it
-by default too.
-e.g. when I run ./check -s btrfs tests/generic/613 with 3 different [***_fs]
-sections from local.config file, I see below failures.
+On Tue, Oct 27, 2020 at 12:03:32PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Make sure that the xfs_db ls command works the way the author thinks it
+> does.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-./common/rc: line 2801: _check_btrfs_filesystem: command not found
+FWIW, this test will have to change to accomodate some of the review
+suggestions, so anyone looking at this series might as well wait until
+v2.
 
-./check -s xfs_4k -g swap (for XFS this fails like below)
-./common/rc: line 749: _scratch_mkfs_xfs: command not found
-check: failed to mkfs $SCRATCH_DEV using specified options
+--D
 
-Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
----
- common/rc | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/common/rc b/common/rc
-index 4c59968a6bd3..e9ba1b6e8265 100644
---- a/common/rc
-+++ b/common/rc
-@@ -3,6 +3,8 @@
- # Copyright (c) 2000-2006 Silicon Graphics, Inc.  All Rights Reserved.
- 
- . common/config
-+. ./common/xfs
-+. ./common/btrfs
- 
- BC=$(which bc 2> /dev/null) || BC=
- 
--- 
-2.26.2
-
+> ---
+>  tests/xfs/918     |   87 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/918.out |   23 ++++++++++++++
+>  tests/xfs/group   |    1 +
+>  3 files changed, 111 insertions(+)
+>  create mode 100755 tests/xfs/918
+>  create mode 100644 tests/xfs/918.out
+> 
+> 
+> diff --git a/tests/xfs/918 b/tests/xfs/918
+> new file mode 100755
+> index 00000000..759943ac
+> --- /dev/null
+> +++ b/tests/xfs/918
+> @@ -0,0 +1,87 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0-or-later
+> +# Copyright (c) 2020, Oracle and/or its affiliates.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 918
+> +#
+> +# Make sure the xfs_db ls command works the way the author thinks it does.
+> +# This means that we can list the current directory, list an arbitrary path,
+> +# and we can't list things that aren't directories.
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_require_xfs_db_command "path"
+> +_require_xfs_db_command "ls"
+> +_require_scratch
+> +
+> +echo "Format filesystem and populate"
+> +_scratch_mkfs > $seqres.full
+> +_scratch_mount >> $seqres.full
+> +
+> +$XFS_INFO_PROG $SCRATCH_MNT | grep -q ftype=1 || \
+> +	_notrun "filesystem does not support ftype"
+> +
+> +filter_ls() {
+> +	sed	-e "s/^$root_ino /rootd/g" \
+> +		-e "s/^$a_ino /a_ino/g" \
+> +		-e "s/^$b_ino /b_ino/g" \
+> +		-e "s/^$c_ino /c_ino/g" \
+> +		-e "s/^$d_ino /d_ino/g" \
+> +		-e "s/^$e_ino /e_ino/g" |
+> +	awk '{printf("%s %s %s %s %s\n", $1, $2, $3, $4, $5);}'
+> +}
+> +
+> +mkdir $SCRATCH_MNT/a
+> +mkdir $SCRATCH_MNT/a/b
+> +$XFS_IO_PROG -f -c 'pwrite 0 61' $SCRATCH_MNT/a/c >> $seqres.full
+> +ln $SCRATCH_MNT/a/c $SCRATCH_MNT/d
+> +ln -s -f b $SCRATCH_MNT/a/e
+> +
+> +root_ino=$(stat -c '%i' $SCRATCH_MNT)
+> +a_ino=$(stat -c '%i' $SCRATCH_MNT/a)
+> +b_ino=$(stat -c '%i' $SCRATCH_MNT/a/b)
+> +c_ino=$(stat -c '%i' $SCRATCH_MNT/a/c)
+> +d_ino=$(stat -c '%i' $SCRATCH_MNT/d)
+> +e_ino=$(stat -c '%i' $SCRATCH_MNT/a/e)
+> +
+> +_scratch_unmount
+> +
+> +echo "Manually navigate to root dir then list"
+> +_scratch_xfs_db -c 'sb 0' -c 'addr rootino' -c ls | filter_ls
+> +
+> +echo "Use path to navigate to root dir then list"
+> +_scratch_xfs_db -c 'path /' -c ls | filter_ls
+> +
+> +echo "Use path to navigate to /a then list"
+> +_scratch_xfs_db -c 'path /a' -c ls | filter_ls
+> +
+> +echo "Use path to navigate to /a/b then list"
+> +_scratch_xfs_db -c 'path /a/b' -c ls | filter_ls
+> +
+> +echo "Use path to navigate to /a/c then list"
+> +_scratch_xfs_db -c 'path /a/c' -c ls | \
+> +	sed -e "s/^$c_ino /c_ino /g" -e "s/<$c_ino>/<c_ino>/g" |
+> +	awk '{printf("%s %s %s\n", $1, $2, $5);}'
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/918.out b/tests/xfs/918.out
+> new file mode 100644
+> index 00000000..2e0ad939
+> --- /dev/null
+> +++ b/tests/xfs/918.out
+> @@ -0,0 +1,23 @@
+> +QA output created by 918
+> +Format filesystem and populate
+> +Manually navigate to root dir then list
+> +rootd directory 0x0000002e 1 .
+> +rootd directory 0x0000172e 2 ..
+> +a_ino directory 0x00000061 1 a
+> +c_ino regular 0x00000064 1 d
+> +Use path to navigate to root dir then list
+> +rootd directory 0x0000002e 1 .
+> +rootd directory 0x0000172e 2 ..
+> +a_ino directory 0x00000061 1 a
+> +c_ino regular 0x00000064 1 d
+> +Use path to navigate to /a then list
+> +a_ino directory 0x0000002e 1 .
+> +rootd directory 0x0000172e 2 ..
+> +b_ino directory 0x00000062 1 b
+> +c_ino regular 0x00000063 1 c
+> +e_ino symlink 0x00000065 1 e
+> +Use path to navigate to /a/b then list
+> +b_ino directory 0x0000002e 1 .
+> +a_ino directory 0x0000172e 2 ..
+> +Use path to navigate to /a/c then list
+> +c_ino regular <c_ino>
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 82e02196..4b0caea4 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -526,3 +526,4 @@
+>  763 auto quick rw realtime
+>  915 auto quick quota
+>  917 auto quick db
+> +918 auto quick db
+> 
