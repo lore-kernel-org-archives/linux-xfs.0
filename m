@@ -2,86 +2,172 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB1EC4363A
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80C9AC55179
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 01:02:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C192720790
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 00:56:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29B3D207E8
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 01:02:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F+rq1I6c"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="vmsdgezo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727678AbgJ2A4B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 20:56:01 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:24848 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731645AbgJ1WRi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 18:17:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603923457;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=U+J9Zk1IP6t34fGKZVaWA98c8E3lKZDT942o5Pt7dGs=;
-        b=F+rq1I6cJ/xVBrhEGmeX5wrMHJosY8xQ6au+jaKjhyQMhmCSv0uvNgi6WjSkHlJRMQ00SZ
-        nYhCwp2620ZzI0a1kH/mPFMZN4shu8Ll9QghdZt+kDtBvywJxdGdlduxbgnGnSqP+c8Dak
-        VGhvLMz0NR2t8sYLKlFe6f5K9bewGZ0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-296-1V8D38d5NgSGU6nic-NKUQ-1; Wed, 28 Oct 2020 10:16:02 -0400
-X-MC-Unique: 1V8D38d5NgSGU6nic-NKUQ-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D627E86ABCE;
-        Wed, 28 Oct 2020 14:16:01 +0000 (UTC)
-Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5AA046EF4A;
-        Wed, 28 Oct 2020 14:16:01 +0000 (UTC)
-Date:   Wed, 28 Oct 2020 10:15:59 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] iomap: support partial page discard on writeback block
- mapping failure
-Message-ID: <20201028141559.GB1611922@bfoster>
-References: <20201026182019.1547662-1-bfoster@redhat.com>
- <20201028073127.GA32068@infradead.org>
- <20201028113200.GC1610972@bfoster>
- <20201028140408.GA7841@infradead.org>
+        id S1730948AbgJ2BCM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 21:02:12 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:37684 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730996AbgJ2BCH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 21:02:07 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09T0jeer012690;
+        Thu, 29 Oct 2020 01:02:04 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=tsY9bppPQoqz1ic0Ue+K1Q/u3ySsEKMXBYF+mHXVom0=;
+ b=vmsdgezoKQSjUnxEHjo1kyWjaCdA6P6/BAMf0kJOfAPj2AGDPYW2dC+tRE//rJhC76gD
+ 0LYucUpWUp4I4r1VErG1tFThqpUFjsduESuBn2XkGVaedWg3T0qTpYvtYXCFGnB+T45S
+ g0SBWETVZi5Ay/CaE5hJBXgpKas0GPGdylr5dcnyYRGklD6q1ZidImeLqJ927m6Qmnnk
+ e6brdZt6MyqvQQzyICzGnYNf+jln7BVLbea4f8DoXoDYZscDRczh7thXcIgMQlpUqNK8
+ 8e+lyI5L7eo9ita0JFHMBVJ/us2svIG+NqSiW34MEXgfaVHxtge7IfFa96HfMGGvQqac Uw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 34cc7m2b58-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 29 Oct 2020 01:02:03 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09T0jOs9028766;
+        Thu, 29 Oct 2020 01:02:03 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 34cx6xvx35-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Oct 2020 01:02:03 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09T122fC032237;
+        Thu, 29 Oct 2020 01:02:02 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 28 Oct 2020 18:02:01 -0700
+Date:   Wed, 28 Oct 2020 18:02:01 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 8/9] mkfs: enable the inode btree counter feature
+Message-ID: <20201029010201.GI1061252@magnolia>
+References: <160375518573.880355.12052697509237086329.stgit@magnolia>
+ <160375523682.880355.16796358046529188083.stgit@magnolia>
+ <20201028173038.GG1611922@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201028140408.GA7841@infradead.org>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <20201028173038.GG1611922@bfoster>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ bulkscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010290001
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
+ malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0 suspectscore=1
+ priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010290001
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 02:04:08PM +0000, Christoph Hellwig wrote:
-> On Wed, Oct 28, 2020 at 07:32:00AM -0400, Brian Foster wrote:
-> > I used the variable just to avoid having to split the function call into
-> > multiple lines. I.e., it just looked more readable to me than:
+On Wed, Oct 28, 2020 at 01:30:38PM -0400, Brian Foster wrote:
+> On Mon, Oct 26, 2020 at 04:33:56PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> >                if (wpc->ops->discard_page)
-> >                         wpc->ops->discard_page(page,
-> >                                                offset_in_page(file_offset));
+> > Teach mkfs how to enable the inode btree counter feature.
 > > 
-> > I can change it back if that is preferred (or possibly use a function
-> > pointer variable instead). I suppose that's also avoided by passing
-> > file_offset directly, but that seems a little odd to me for a page
-> > oriented callback.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  man/man8/mkfs.xfs.8 |   15 +++++++++++++++
+> >  mkfs/xfs_mkfs.c     |   34 +++++++++++++++++++++++++++++++++-
+> >  2 files changed, 48 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+> > index 0a7858748457..1a6a5f93f0ea 100644
+> > --- a/man/man8/mkfs.xfs.8
+> > +++ b/man/man8/mkfs.xfs.8
+> ...
+> > @@ -862,7 +871,8 @@ usage( void )
+> >  {
+> >  	fprintf(stderr, _("Usage: %s\n\
+> >  /* blocksize */		[-b size=num]\n\
+> > -/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1]\n\
+> > +/* metadata */		[-m crc=0|1,finobt=0|1,uuid=xxx,rmapbt=0|1,reflink=0|1,\n\
+> > +			    inobtcnt=0|1]\n\
+> >  /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
+> >  			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
+> >  			    sectsize=num\n\
 > 
-> I think passing the file offset makes more sense, especially as the
-> only instance needs it anyway.
+> Any plans to add a geometry flag so the feature state is reported on
+> success? Otherwise LGTM:
+
+<shrug> This feature doesn't enable any user-visible functionality, so I
+don't see much point in doing so.
+
+Thanks for the review!
+
+--D
+
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-
-The callback uses both, but I'm not tied to it either way. I'll make
-that tweak for the next version..
-
-Brian
-
+> > @@ -1565,6 +1575,9 @@ meta_opts_parser(
+> >  	case M_REFLINK:
+> >  		cli->sb_feat.reflink = getnum(value, opts, subopt);
+> >  		break;
+> > +	case M_INOBTCNT:
+> > +		cli->sb_feat.inobtcnt = getnum(value, opts, subopt);
+> > +		break;
+> >  	default:
+> >  		return -EINVAL;
+> >  	}
+> > @@ -1988,6 +2001,22 @@ _("reflink not supported without CRC support\n"));
+> >  			usage();
+> >  		}
+> >  		cli->sb_feat.reflink = false;
+> > +
+> > +		if (cli->sb_feat.inobtcnt && cli_opt_set(&mopts, M_INOBTCNT)) {
+> > +			fprintf(stderr,
+> > +_("inode btree counters not supported without CRC support\n"));
+> > +			usage();
+> > +		}
+> > +		cli->sb_feat.inobtcnt = false;
+> > +	}
+> > +
+> > +	if (!cli->sb_feat.finobt) {
+> > +		if (cli->sb_feat.inobtcnt && cli_opt_set(&mopts, M_INOBTCNT)) {
+> > +			fprintf(stderr,
+> > +_("inode btree counters not supported without finobt support\n"));
+> > +			usage();
+> > +		}
+> > +		cli->sb_feat.inobtcnt = false;
+> >  	}
+> >  
+> >  	if ((cli->fsx.fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
+> > @@ -2955,6 +2984,8 @@ sb_set_features(
+> >  		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_RMAPBT;
+> >  	if (fp->reflink)
+> >  		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_REFLINK;
+> > +	if (fp->inobtcnt)
+> > +		sbp->sb_features_ro_compat |= XFS_SB_FEAT_RO_COMPAT_INOBTCNT;
+> >  
+> >  	/*
+> >  	 * Sparse inode chunk support has two main inode alignment requirements.
+> > @@ -3617,6 +3648,7 @@ main(
+> >  			.spinodes = true,
+> >  			.rmapbt = false,
+> >  			.reflink = true,
+> > +			.inobtcnt = false,
+> >  			.parent_pointers = false,
+> >  			.nodalign = false,
+> >  			.nortalign = false,
+> > 
+> 
