@@ -2,172 +2,160 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4EF8C2D0A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 18:42:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99B8DC55179
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 18:56:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4648E20825
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 18:42:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24F8420838
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 18:56:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="e4JS+P6J"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BBidAWnU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725870AbgJ2SmD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 14:42:03 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:56578 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725648AbgJ2SmD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 14:42:03 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TITkCV071273;
-        Thu, 29 Oct 2020 18:42:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=E6aPN8RHQ5/uHQcXh6d2e3TvuCSxwTT3C1jmt6Xw/WY=;
- b=e4JS+P6JOoswFwmTLtVLfJwBAhkEII3qhxkJbgMlAfTNvS9vAckiDXui67Z017A6us4q
- 5tJkdZ7vMtiFwmOeqPspQTBXrZdOFUFh6leNeF4qNkJxBc+eulnDee8pV1zNdIr5hLQ9
- /TQD6rrwCHGc8qiH2EbJXv7O/M35avRrqw1Mphs6CI3E2FYT0MfPCEqi+VErPXnOCIfP
- RTgIdD5W20X5mxZKoG1/6qvZzmq8Hr0rkKXCFqIdvDpussSFCS7h0ijy/a1m5gTghRWL
- yLxOe7summOByEb9gVFJlQ2NLntTMe/nlkJ2yAbXd1POtIrHwWtMMKSk9+VPl2BBSNkt 1A== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 34cc7m6ed5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 29 Oct 2020 18:42:00 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TIUW2a104219;
-        Thu, 29 Oct 2020 18:42:00 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 34cwuq3wwy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Oct 2020 18:42:00 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09TIfwAr020054;
-        Thu, 29 Oct 2020 18:41:58 GMT
-Received: from localhost (/10.159.244.77)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Oct 2020 11:41:58 -0700
-Date:   Thu, 29 Oct 2020 11:41:57 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_db: add an ls command
-Message-ID: <20201029184157.GY1061252@magnolia>
-References: <160375514873.880118.10145241423813965771.stgit@magnolia>
- <160375516100.880118.14555322605178437533.stgit@magnolia>
- <20201028012703.GA7391@dread.disaster.area>
- <20201028225046.GF1061252@magnolia>
- <20201028232056.GB7391@dread.disaster.area>
+        id S1725768AbgJ2S4k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 14:56:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50660 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725648AbgJ2S4k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 14:56:40 -0400
+Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECA67C0613CF;
+        Thu, 29 Oct 2020 11:56:39 -0700 (PDT)
+Received: by mail-il1-x142.google.com with SMTP id v18so4143476ilg.1;
+        Thu, 29 Oct 2020 11:56:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=kI/Crql0FNrlDa/ubfAXL2ewr6hUN9HF7DMpMQOLpos=;
+        b=BBidAWnUi5C23d9DhOWDOzNMcXAtx7SLfwBimeHZiJoMuNVJhvv0GBfEFcaAbJjNZ3
+         MJimk6nSvGHwAJQkVX4zNRoq9I6xC77AmN9hgiUOCSmfGq1jTvNEdXXUbxxSKgakCZPW
+         7uO4PoApZATR/Z3JXAHE4Q83+IMm7pKKASiVhQ2uFf+rPlPZPCouXfqerq/VXwZwTrUo
+         6wqcd0+VgqY2rrcD3yqpzYFQk8h1Z/q161zvBRw1LuylVh0c/ygRIeKxGY81MKl//hkU
+         I93ynQxKTOVIP5O9cqqDix+3caG/Yi26Y2W5B5432Qk9rTrSf5n91IirVxmcOxAJKUwJ
+         Oo1A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=kI/Crql0FNrlDa/ubfAXL2ewr6hUN9HF7DMpMQOLpos=;
+        b=ZvfaPcCBqmQpbetsuJpibdZbPzvW6uM+Z29/ivwURuTJkN/5oQOocUVFo0v/Q89G/Q
+         Nv7Myb74mJiI5G90/WN3ShakyhAfm6z0NrpCRx2r1XF2+pclcqyvh+GfqbI3/5kDkJGs
+         3ALxDK4CRN73WcteC0KWajIWeVqMMAtrFnEXkLjjLdDZI6eik6oorZpPDMxIJUWju1Ax
+         +gRDR6PSamjJ8WLw2XKAsgMIrhVJINOVYmNnYetrJ6iukcikynmIXELUFgsQxIhvIZ8Z
+         fu1+TZV6QYifWzBQa0JFxuSyj0MQHmqsWqIpTGkfKwXf/JnTII7pM4Lvz1QEcXcFAqAz
+         RSiw==
+X-Gm-Message-State: AOAM531Y5uhI7X84QYQA8jjOuRHtTZ0W4iWSpvTt7/GxM5ZJyI3wnB+I
+        ed4sBDW5fWNV04Hw1frODRqXGhnAnwAk8PNt6CY=
+X-Google-Smtp-Source: ABdhPJxON1hmj6X9tUJGCHVExUCOkn3uqr3SjA0b9qm1V/2xenLm9xgWyGIHMeoL4x9cadgCBUn1FTX++Bdngmjf/E4=
+X-Received: by 2002:a92:d30f:: with SMTP id x15mr2673971ila.9.1603997799356;
+ Thu, 29 Oct 2020 11:56:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201028232056.GB7391@dread.disaster.area>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010290128
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
- malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0 suspectscore=1
- priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010290128
+References: <160382543472.1203848.8335854864075548402.stgit@magnolia>
+ <160382545348.1203848.12227735405144915534.stgit@magnolia>
+ <CAOQ4uxhNpej-U-7NjA1VuU3OH=ttT7npwYrzODqThdta5Qka1A@mail.gmail.com> <20201029182747.GU1061252@magnolia>
+In-Reply-To: <20201029182747.GU1061252@magnolia>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 29 Oct 2020 20:56:28 +0200
+Message-ID: <CAOQ4uxhHjfGdkHdyDDRbfu7vzb2r__89CyrQ4HikBCXpVspmUQ@mail.gmail.com>
+Subject: Re: [PATCH 3/4] xfs: detect time limits from filesystem
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>,
+        Deepa Dinamani <deepa.kernel@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 29, 2020 at 10:20:56AM +1100, Dave Chinner wrote:
-> On Wed, Oct 28, 2020 at 03:50:46PM -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 28, 2020 at 12:27:03PM +1100, Dave Chinner wrote:
-> > > On Mon, Oct 26, 2020 at 04:32:41PM -0700, Darrick J. Wong wrote:
-> > > > +	hash = libxfs_dir2_hashname(mp, &xname);
-> > > > +
-> > > > +	dbprintf("%-18llu %-14s 0x%08llx %3d %s", ino, dstr, hash, xname.len,
-> > > > +			display_name);
-> > > > +	if (!good)
-> > > > +		dbprintf(_(" (corrupt)"));
-> > > > +	dbprintf("\n");
-> > > 
-> > > Can we get this to emit the directory offset of the entry as well?
-> > 
-> > Er... I think so.  Do you want to report the u32 value that gets loaded
-> > in ctx->pos?  Or the actual byte offset within the directory?
-> 
-> I'd suggest that it should be the same as the telldir cookie that is
-> returned by the kernel for the given entry.
-
-Done.
-
-> > > > +	} else if (direct || !S_ISDIR(VFS_I(dp)->i_mode)) {
-> > > > +		/* List the directory entry associated with a single file. */
-> > > > +		char		inum[32];
-> > > > +
-> > > > +		if (!tag) {
-> > > > +			snprintf(inum, sizeof(inum), "<%llu>",
-> > > > +					(unsigned long long)iocur_top->ino);
-> > > > +			tag = inum;
-> > > > +		} else {
-> > > > +			char	*p = strrchr(tag, '/');
-> > > > +
-> > > > +			if (p)
-> > > > +				tag = p + 1;
-> > > > +		}
-> > > > +
-> > > > +		dir_emit(mp, tag, -1, iocur_top->ino,
-> > > > +				libxfs_mode_to_ftype(VFS_I(dp)->i_mode));
-> > > 
-> > > I'm not sure what this is supposed to do - we turn the current inode
-> > > if it's not a directory into a -directory entry- without actually
-> > > know it's name? And we can pass in an inode that isn't a directory
-> > > and do the same? This doesn't make a huge amount of sense to me - it
-> > > tries to display the inode number as a dirent?
-> > 
-> > I added this (somewhat confusing) ability so that fstests could resolve
-> > a path to an inode number without having to dig any farther into the
-> > disk format.
-> > 
-> > IOWs, you can do:
-> > 
-> > ino=$(_scratch_xfs_db -c 'ls -d /usr/bin/bash')
+On Thu, Oct 29, 2020 at 8:27 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Thu, Oct 29, 2020 at 12:47:32PM +0200, Amir Goldstein wrote:
+> > On Wed, Oct 28, 2020 at 10:24 PM Darrick J. Wong
+> > <darrick.wong@oracle.com> wrote:
+> > >
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > >
+> > > Teach fstests to extract timestamp limits of a filesystem using the new
+> > > xfs_db timelimit command.
+> > >
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  common/rc         |    2 +-
+> > >  common/xfs        |   14 ++++++++++++++
+> > >  tests/xfs/911     |   44 ++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/911.out |   15 +++++++++++++++
+> > >  tests/xfs/group   |    1 +
+> > >  5 files changed, 75 insertions(+), 1 deletion(-)
+> > >  create mode 100755 tests/xfs/911
+> > >  create mode 100644 tests/xfs/911.out
+> > >
+> > >
+> > > diff --git a/common/rc b/common/rc
+> > > index 41f93047..162d957a 100644
+> > > --- a/common/rc
+> > > +++ b/common/rc
+> > > @@ -2029,7 +2029,7 @@ _filesystem_timestamp_range()
+> > >                 echo "0 $u32max"
+> > >                 ;;
+> > >         xfs)
+> > > -               echo "$s32min $s32max"
+> > > +               _xfs_timestamp_range "$device"
+> > >                 ;;
+> > >         btrfs)
+> > >                 echo "$s64min $s64max"
+> > > diff --git a/common/xfs b/common/xfs
+> > > index e548a0a1..19ccee03 100644
+> > > --- a/common/xfs
+> > > +++ b/common/xfs
+> > > @@ -994,3 +994,17 @@ _require_xfs_scratch_inobtcount()
+> > >                 _notrun "inobtcount not supported by scratch filesystem type: $FSTYP"
+> > >         _scratch_unmount
+> > >  }
+> > > +
+> > > +_xfs_timestamp_range()
+> > > +{
+> > > +       local use_db=0
+> > > +       local dbprog="$XFS_DB_PROG $device"
+>
+> Heh, device isn't defined, I'll fix that.
+>
+> > > +       test "$device" = "$SCRATCH_DEV" && dbprog=_scratch_xfs_db
+> > > +
+> > > +       $dbprog -f -c 'help timelimit' | grep -v -q 'not found' && use_db=1
+> > > +       if [ $use_db -eq 0 ]; then
+> > > +               echo "-$((1<<31)) $(((1<<31)-1))"
 > >
-> > to get the inode number directly.  Without this, you'd have to do
-> > something horrible like this...
-> 
-> You mean:
-> 
-> $ ls -i /bin/bash | cut -f 1 -d " "
-> 175492
-> $
-> 
-> i.e. if you want to provide the inode number rather than just the
-> path, then let's use the same names as a real ls  implementation :)
+> > This embodies an assumption that the tested filesystem does not have
+> > bigtime enabled if xfs_db tool is not uptodate.
+>
+> If the xfs_db tool doesn't support the timelimit command then it doesn't
+> support formatting with bigtime.  I don't think it's reasonable to
+> expect to be able to run fstests on a test filesystem that xfsprogs
+> doesn't support.  Hence it's fine to output the old limits if the
+> timelimit command doesn't exist.
 
-Done.  The option is now -i instead of -d.
+ok.
 
-> > To map a path to an inode number.  I thought it made a lot more sense to
-> > do that in C (even if it makes the xfs_db CLI a little weird) than
-> > implement a bunch of string parsing after the fact.
-> 
-> I also suspect it would be simpler to separate it out into two
-> functions rather than the way it is implemented now....
+>
+> > Maybe it makes sense, but it may be safer to return "-1 -1" and not_run
+> > generic/402 if xfs_db is not uptodate, perhaps with an extra message
+> > hinting the user to upgrade xfs_db.
+>
+> TBH it boggles my mind that there *still* is no way to ask the kernel
+> for the supported timestamp range of a mounted filesystem.  The
+> timelimit command and this mess in fstests was supposed to be a
+> temporary workaround that would (in my ideal world) have become
+> unnecessary before this landed, but ... ugh.
+>
 
-Done.
+Oh well, consider this
 
---D
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-> > Maybe I should just simplify it to "display the inode number of whatever
-> > the path resolves to" instead of constructing an artificial directory
-> > entry.
-> 
-> *nod*
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Thanks,
+Amir.
