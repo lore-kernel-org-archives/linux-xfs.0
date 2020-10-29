@@ -2,134 +2,109 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3970C2D0A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 17:40:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA19C4363A
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 17:46:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32FC12076A
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 17:40:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E1602076E
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 17:45:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="CAaEgyNa"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="URbV5mRD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726709AbgJ2Rkb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 13:40:31 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:37280 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725957AbgJ2Rkb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 13:40:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603993230;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uHmhmkw2EkiMd2xFWUeXs7qFzWJ7GiwP0EHcPBUwCGc=;
-        b=CAaEgyNa5FUQeguvXCVRiSCECmNZ6dkvC/AjfLj9kWH7SHOYE4T6umYxGfDnChSSRD2Yyz
-        u15wa4EHhErltDgC4+xQXj0zQAqtX9rv6Kf1ARqoqImMD8puFRc8q2akmXKrukUFFuv10x
-        B9WDYuule5oMUlmnbSdgFj2I+WsYeg8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-160-PpBcwhv6NPyJC9uMTCwaRg-1; Thu, 29 Oct 2020 13:40:26 -0400
-X-MC-Unique: PpBcwhv6NPyJC9uMTCwaRg-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6F343803651;
-        Thu, 29 Oct 2020 17:40:25 +0000 (UTC)
-Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DE5375DA2A;
-        Thu, 29 Oct 2020 17:40:24 +0000 (UTC)
-Date:   Thu, 29 Oct 2020 13:40:23 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: test inobtcount upgrade
-Message-ID: <20201029174023.GC1660404@bfoster>
-References: <160382541643.1203756.12015378093281554469.stgit@magnolia>
- <160382542877.1203756.11339393830951325848.stgit@magnolia>
+        id S1727964AbgJ2Rp4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 13:45:56 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:36780 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726700AbgJ2Rpz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 13:45:55 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09THdnsG150060;
+        Thu, 29 Oct 2020 17:45:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=/8mI6ZaxV64OME0YPmDo1WLYpTKloT6rNqpk4wkIg/U=;
+ b=URbV5mRDmpCOKHbT9Flqw1pm2BpRLkBi6qvKbelQXnB0qXW4n71mjb/2GdhPAITJpuw0
+ Ht9Ng6ylXcxEydruePO0BdyzJOWh9Qlk1qGkRVyst642HZ/HZ8ViF0DFrAmjOJl4FJtL
+ swrY4Z9hwTx+UKzWTRITVq9C1rf9yhTXvDnCYoyFa8SEIA7sFpQigX3+Vv4nXz+skskr
+ JjRrIyMU3pzOmSA7kKqRkZrdYf12ps60QlleIg7lNf24Ia+RQ/IxzuQ8vdzdk81oGLQ2
+ bsNFJcQ1eWQ5m+vrMj5IVZKWTRs9GsazRlHlOILsla0ICSRWQxo6PRljEzykqMZMoeds 1A== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 34cc7m66fk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 29 Oct 2020 17:45:48 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09THeQT6156104;
+        Thu, 29 Oct 2020 17:45:48 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 34cx1tghue-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Oct 2020 17:45:48 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09THjkP0015318;
+        Thu, 29 Oct 2020 17:45:47 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Oct 2020 10:45:45 -0700
+Date:   Thu, 29 Oct 2020 10:45:44 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 20/26] xfs_db: report bigtime format timestamps
+Message-ID: <20201029174544.GR1061252@magnolia>
+References: <160375524618.881414.16347303401529121282.stgit@magnolia>
+ <160375537615.881414.8162037930017365466.stgit@magnolia>
+ <20201029095010.GO2091@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160382542877.1203756.11339393830951325848.stgit@magnolia>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20201029095010.GO2091@infradead.org>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
+ suspectscore=1 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010290123
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 adultscore=0
+ malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0 suspectscore=1
+ priorityscore=1501 impostorscore=0 bulkscore=0 phishscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2010290123
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 12:03:48PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 29, 2020 at 09:50:10AM +0000, Christoph Hellwig wrote:
+> > +static void
+> > +fp_time64(
+> > +	time64_t		sec)
+> >  {
+> > +	time_t			tt = sec;
+> >  	char			*c;
+> > +
+> > +	BUILD_BUG_ON(sizeof(long) != sizeof(time_t));
 > 
-> Make sure we can actually upgrade filesystems to support inobtcounts.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  common/xfs        |   16 ++++++++++++
->  tests/xfs/910     |   72 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/910.out |    3 ++
->  tests/xfs/group   |    1 +
->  4 files changed, 92 insertions(+)
->  create mode 100755 tests/xfs/910
->  create mode 100644 tests/xfs/910.out
-> 
-> 
-...
-> diff --git a/tests/xfs/910 b/tests/xfs/910
-> new file mode 100755
-> index 00000000..1924d9ea
-> --- /dev/null
-> +++ b/tests/xfs/910
-> @@ -0,0 +1,72 @@
-...
-> +
-> +# Now upgrade to inobtcount support
-> +_scratch_xfs_admin -O inobtcount >> $seqres.full
-> +_check_scratch_fs
-> +_scratch_xfs_db -c 'version' -c 'sb 0' -c 'p' -c 'agi 0' -c 'p' >> $seqres.full
-> +
-> +# Mount again, look at our files
-> +_scratch_mount >> $seqres.full
-> +cat $SCRATCH_MNT/urk
-> +
+> Why?
 
-I think we probably want some more explicit form of validation here.
-Perhaps dump the inobt block counters from the above xfs_db command to
-the golden output..? As it is, we can comment out the xfs_admin command
-and the test still passes.
+Trying to make the best of a braindead situation.  IIRC C99/11/18 don't
+provide a specific definition of what time_t is supposed to be.  POSIX
+2017 seems to hint that it should be an integer seconds counter, but
+doesn't provide any further clarity.  (And then says it defers to ISO C,
+having made that allusion to integerness.)
 
-> +# success, all done
-> +echo Silence is golden.
+Since I'd rather print a raw s64 value than risk truncating a time and
+printing a totally garbage prettyprinted timestamp, I added the
+LONG_{MIN,MAX} checks, but that assumes that time_t is a long.
 
-We can also probably drop this if we have some other form of output from
-the test.
+Hence adding a trap so that if xfsprogs ever does encounter C library
+where time_t isn't a long int, we'd get to hear about it.  Granted that
+further assumes that time_t isn't a float, but ... ugh.
 
-Brian
+I guess this could have assigned sec to a time_t value and then compared
+it back to the original value to see if we ripped off any upper bits.
 
-> +status=0
-> +exit
-> diff --git a/tests/xfs/910.out b/tests/xfs/910.out
-> new file mode 100644
-> index 00000000..83992f49
-> --- /dev/null
-> +++ b/tests/xfs/910.out
-> @@ -0,0 +1,3 @@
-> +QA output created by 910
-> +moo
-> +Silence is golden.
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index 4b0caea4..862df3be 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -524,6 +524,7 @@
->  760 auto quick rw collapse punch insert zero prealloc
->  761 auto quick realtime
->  763 auto quick rw realtime
-> +910 auto quick inobtcount
->  915 auto quick quota
->  917 auto quick db
->  918 auto quick db
-> 
-
+--D
