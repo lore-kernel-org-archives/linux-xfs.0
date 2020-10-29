@@ -4,140 +4,121 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5F91C4363A
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 17:32:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33AE5C4363A
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 17:39:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DA4720704
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 17:32:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C6C862076D
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 17:39:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="E5ujJMYn"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="YVFDNG2Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726019AbgJ2Rco (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 13:32:44 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:38646 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725777AbgJ2Rcn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 13:32:43 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09THPTmS189916;
-        Thu, 29 Oct 2020 17:32:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=aVTTdDqWAfLBW+wUu9axjUdzFWnWpnZdHME61ijBP6k=;
- b=E5ujJMYnpIpgiMJxAyIGF7LrRpAxNaaGxCsLXpi1pJrK2Ud/04vQX+LBo+cono9WfSfH
- ZF28jsaO6It4W1L6H+BvJ/EhvcBwNab8sa1OFcSy/U0hvyXWkWbLhSwxENe0y9dvXe8X
- EO4tTxcx8okkVxxDoWXubMil0Eb30mVNZFGSCotlykfvrWgSa/TeGdKdVJWv6mquP6/V
- JYib6o4lfO1CjHCocS2qVhnF08yo2PUSRDlnpbCIAukD07P84td7U1JDX91bq/6IsuwO
- PUkfHPJulYWirNISGjkAZoeY6vzqakxQCFz/8/iZppHDM6ODFIJm3QDOCeqQAFAv9qhF eg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 34c9sb69m6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 29 Oct 2020 17:32:39 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09THUYw1084875;
-        Thu, 29 Oct 2020 17:32:38 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 34cwuq1tkn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Oct 2020 17:32:38 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09THWa8K018840;
-        Thu, 29 Oct 2020 17:32:36 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Oct 2020 10:32:35 -0700
-Date:   Thu, 29 Oct 2020 10:32:34 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/26] xfs_quota: convert time_to_string to use time64_t
-Message-ID: <20201029173234.GE1061260@magnolia>
-References: <160375524618.881414.16347303401529121282.stgit@magnolia>
- <160375527834.881414.2581158648212089750.stgit@magnolia>
- <20201029094712.GI2091@infradead.org>
+        id S1725971AbgJ2Rj1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 13:39:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49509 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725849AbgJ2Rj1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 13:39:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1603993166;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=za4qqp11aWu/+2AHNdYdKBHeaC7lyDiORvL8Yt9mnTM=;
+        b=YVFDNG2Zzf7Gi3oEDravLKgC9bmFuOpoyPtPaOpVwlvAEizRTVCGdHd+vs2Jv6G/2WSr0n
+        x92RLqsNMahh3+Ur4kmJnMFRTkCtYHWkFaRGPvwjh0zKHyZxPMDqcOfzBg6Roq64ZFyC/p
+        zfwg+m6GPfUmOmjl6EdnAQJsOrFwnk8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-97-nLFS-62lPFqMZb_PEUhmHg-1; Thu, 29 Oct 2020 13:39:24 -0400
+X-MC-Unique: nLFS-62lPFqMZb_PEUhmHg-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1065764159;
+        Thu, 29 Oct 2020 17:39:23 +0000 (UTC)
+Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6EEB8614F5;
+        Thu, 29 Oct 2020 17:39:22 +0000 (UTC)
+Date:   Thu, 29 Oct 2020 13:39:20 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs/122: embiggen struct xfs_agi size for inobtcount
+ feature
+Message-ID: <20201029173920.GB1660404@bfoster>
+References: <160382541643.1203756.12015378093281554469.stgit@magnolia>
+ <160382542261.1203756.6377970904886103725.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201029094712.GI2091@infradead.org>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- spamscore=0 adultscore=0 malwarescore=0 mlxlogscore=999 suspectscore=1
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2010290122
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
- priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=1
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010290121
+In-Reply-To: <160382542261.1203756.6377970904886103725.stgit@magnolia>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 29, 2020 at 09:47:12AM +0000, Christoph Hellwig wrote:
-> On Mon, Oct 26, 2020 at 04:34:38PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Rework the time_to_string helper to be capable of dealing with 64-bit
-> > timestamps.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  quota/quota.c  |   16 ++++++++++------
-> >  quota/quota.h  |    2 +-
-> >  quota/report.c |   16 ++++++++++------
-> >  quota/util.c   |    5 +++--
-> >  4 files changed, 24 insertions(+), 15 deletions(-)
-> > 
-> > 
-> > diff --git a/quota/quota.c b/quota/quota.c
-> > index 9545cc430a93..8ba0995d9174 100644
-> > --- a/quota/quota.c
-> > +++ b/quota/quota.c
-> > @@ -48,6 +48,7 @@ quota_mount(
-> >  	uint		flags)
-> >  {
-> >  	fs_disk_quota_t	d;
-> > +	time64_t	timer;
-> >  	char		*dev = mount->fs_name;
-> >  	char		c[8], h[8], s[8];
-> >  	uint		qflags;
-> > @@ -100,6 +101,7 @@ quota_mount(
-> >  	}
-> >  
-> >  	if (form & XFS_BLOCK_QUOTA) {
-> > +		timer = d.d_btimer;
-> >  		qflags = (flags & HUMAN_FLAG);
-> >  		if (d.d_blk_hardlimit && d.d_bcount > d.d_blk_hardlimit)
-> >  			qflags |= LIMIT_FLAG;
-> > @@ -111,16 +113,17 @@ quota_mount(
-> >  				bbs_to_string(d.d_blk_softlimit, s, sizeof(s)),
-> >  				bbs_to_string(d.d_blk_hardlimit, h, sizeof(h)),
-> >  				d.d_bwarns,
-> > -				time_to_string(d.d_btimer, qflags));
-> > +				time_to_string(timer, qflags));
+On Tue, Oct 27, 2020 at 12:03:42PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> What do the local variables buy us over just relying on the implicit cast
-> to a larger integer type?
+> Make the expected AGI size larger for the inobtcount feature.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
-It's a setup to avoid long lines of nested function call crud once we
-get to patch 23.  Without the local variable, the fprintf turns into
-this ugliness:
+It would be nice for the commit log to have a sentence or two about the
+other changes as well, but either way:
 
-			fprintf(fp, " %6s %6s %6s  %02d %8s ",
-				bbs_to_string(d.d_bcount, c, sizeof(c)),
-				bbs_to_string(d.d_blk_softlimit, s, sizeof(s)),
-				bbs_to_string(d.d_blk_hardlimit, h, sizeof(h)),
-				d.d_bwarns,
-				time_to_string(decode_timer(&d, d.d_itimer,
-								d.d_itimer_hi),
-						qflags));
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Which I guess is also fine but I kind of hate function call inside
-function call inside function call combined with high indent levels.
+>  tests/xfs/010     |    3 ++-
+>  tests/xfs/030     |    2 ++
+>  tests/xfs/122.out |    2 +-
+>  3 files changed, 5 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/tests/xfs/010 b/tests/xfs/010
+> index 1f9bcdff..95cc2555 100755
+> --- a/tests/xfs/010
+> +++ b/tests/xfs/010
+> @@ -113,7 +113,8 @@ _check_scratch_fs
+>  _corrupt_finobt_root $SCRATCH_DEV
+>  
+>  filter_finobt_repair() {
+> -	sed -e '/^agi has bad CRC/d' | \
+> +	sed -e '/^agi has bad CRC/d' \
+> +	    -e '/^bad finobt block/d' | \
+>  		_filter_repair_lostblocks
+>  }
+>  
+> diff --git a/tests/xfs/030 b/tests/xfs/030
+> index 04440f9c..906d9019 100755
+> --- a/tests/xfs/030
+> +++ b/tests/xfs/030
+> @@ -44,6 +44,8 @@ _check_ag()
+>  			    -e '/^bad agbno AGBNO for refcntbt/d' \
+>  			    -e '/^agf has bad CRC/d' \
+>  			    -e '/^agi has bad CRC/d' \
+> +			    -e '/^bad inobt block count/d' \
+> +			    -e '/^bad finobt block count/d' \
+>  			    -e '/^Missing reverse-mapping record.*/d' \
+>  			    -e '/^bad levels LEVELS for [a-z]* root.*/d' \
+>  			    -e '/^unknown block state, ag AGNO, block.*/d'
+> diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+> index cfe09c6d..b0773756 100644
+> --- a/tests/xfs/122.out
+> +++ b/tests/xfs/122.out
+> @@ -113,7 +113,7 @@ sizeof(struct xfs_scrub_metadata) = 64
+>  sizeof(struct xfs_unmount_log_format) = 8
+>  sizeof(xfs_agf_t) = 224
+>  sizeof(xfs_agfl_t) = 36
+> -sizeof(xfs_agi_t) = 336
+> +sizeof(xfs_agi_t) = 344
+>  sizeof(xfs_alloc_key_t) = 8
+>  sizeof(xfs_alloc_rec_incore_t) = 8
+>  sizeof(xfs_alloc_rec_t) = 8
+> 
 
---D
