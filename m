@@ -2,246 +2,194 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D41C2D0A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 22:21:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC611C4742C
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 22:23:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47C66214F1
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 22:21:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78DB620838
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 22:23:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="V4uMTHwj"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WoC+NGe5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725562AbgJ2WVj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 18:21:39 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:33186 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725372AbgJ2WVj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 18:21:39 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TMFLND043896;
-        Thu, 29 Oct 2020 22:21:34 GMT
+        id S1725782AbgJ2WXH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 18:23:07 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38142 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725372AbgJ2WXG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 18:23:06 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TMF4Mc136026;
+        Thu, 29 Oct 2020 22:23:02 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=qXCKHaUS5U57w0awlg0R0uj13wDhATs0vk/rS+kqk8o=;
- b=V4uMTHwjX1t9SN4Zh/goSq+kUASzZwO/B+kVgWk6lLjZn0alRVDKZ8NSm7bNmJEMmI0n
- ize1480R/GpeBqOBC/XXMfTT4bAxjL//5+BDzbYyiblksiTA6DccmjjBhDt2i59Y6F0P
- nLfTVcoyB396VxMXFIPQCJEX712N+erpLZfGFPWtkFxFYK8SoEHRLF1/VUqZsOSJefg3
- oTNRP19m0CmLWbxp6X7io4lpvCUmXxwgVQXMxGHbuCRNQ4B9gCQgkV71exNCpXIwl0+O
- jJWGhZ+v/wGltwY/Ot7vUPK5MKIMh6qtfpihriGyuQKzRw5yDHmO5Wu4ol1mkOCEpXnu rQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 34c9sb7fpq-1
+ bh=X3Bq7G3xZw1TqFSn3fK/xwIX33lOuQ7xawisFHj3ceo=;
+ b=WoC+NGe5VUfBIDj3/DYO/wDJf1zkRgv6H+73nh+6UAPWD9IHMlbtlnCBvkKFiJ6SNaMl
+ DJ4aYepM1/ZbliRCWA8wYa9xfNNkHnvk1x6cBrqgl+1NCjdjc1l8WIcVkSmqkJvlhIvM
+ uEMqBxauowCME291XeoWHHj1Qar4FIxF8czA3IRoXTVZiBRTgkHgHIKn2XdR/mgghCJc
+ DhN1dJ8F3n/3nAYZcqWtyyVZ14XFKWdN1jnV1KPAj7jwmTqH1h7Yr92CiH8nNJFWSn/C
+ Bs1XIF0FLGyCmY2uyDi5Es4EPcv1dBYR+2VEI06MA1oNbpsH9SK7o88xNDOygkT0z1RS Zw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 34dgm4cx5r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 29 Oct 2020 22:21:34 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TMKBvk080915;
-        Thu, 29 Oct 2020 22:21:34 GMT
+        Thu, 29 Oct 2020 22:23:01 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09TMKQxl043603;
+        Thu, 29 Oct 2020 22:23:01 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 34cx6119sr-1
+        by userp3020.oracle.com with ESMTP id 34cx1trk5x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Oct 2020 22:21:34 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09TMLWST005364;
-        Thu, 29 Oct 2020 22:21:32 GMT
+        Thu, 29 Oct 2020 22:23:01 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 09TMN0bH005894;
+        Thu, 29 Oct 2020 22:23:00 GMT
 Received: from localhost (/10.159.244.77)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Oct 2020 15:21:31 -0700
-Date:   Thu, 29 Oct 2020 15:21:30 -0700
+        with ESMTP ; Thu, 29 Oct 2020 15:23:00 -0700
+Date:   Thu, 29 Oct 2020 15:22:59 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org,
         allison.henderson@oracle.com
-Subject: Re: [PATCH V8 12/14] xfs: Compute bmap extent alignments in a
- separate function
-Message-ID: <20201029222130.GM1061252@magnolia>
+Subject: Re: [PATCH V8 13/14] xfs: Process allocated extent in a separate
+ function
+Message-ID: <20201029222259.GN1061252@magnolia>
 References: <20201029101348.4442-1-chandanrlinux@gmail.com>
- <20201029101348.4442-13-chandanrlinux@gmail.com>
+ <20201029101348.4442-14-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201029101348.4442-13-chandanrlinux@gmail.com>
+In-Reply-To: <20201029101348.4442-14-chandanrlinux@gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 mlxlogscore=999
- suspectscore=2 bulkscore=0 malwarescore=0 spamscore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
+ suspectscore=5 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010290153
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9789 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
- priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=2
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010290152
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
+ suspectscore=5 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010290152
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 29, 2020 at 03:43:46PM +0530, Chandan Babu R wrote:
-> This commit moves over the code which computes stripe alignment and
-> extent size hint alignment into a separate function. Apart from
-> xfs_bmap_btalloc(), the new function will be used by another function
-> introduced in a future commit.
+On Thu, Oct 29, 2020 at 03:43:47PM +0530, Chandan Babu R wrote:
+> This commit moves over the code in xfs_bmap_btalloc() which is
+> responsible for processing an allocated extent to a new function. Apart
+> from xfs_bmap_btalloc(), the new function will be invoked by another
+> function introduced in a future commit.
 > 
 > Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
 > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+
+Looks like a straightforward hoist.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
 > ---
->  fs/xfs/libxfs/xfs_bmap.c | 88 +++++++++++++++++++++++-----------------
->  1 file changed, 51 insertions(+), 37 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c | 74 ++++++++++++++++++++++++----------------
+>  1 file changed, 45 insertions(+), 29 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-> index 64c4d0e384a5..935f2d506748 100644
+> index 935f2d506748..88db23afc51c 100644
 > --- a/fs/xfs/libxfs/xfs_bmap.c
 > +++ b/fs/xfs/libxfs/xfs_bmap.c
-> @@ -3463,13 +3463,58 @@ xfs_bmap_btalloc_accounting(
->  		args->len);
+> @@ -3509,6 +3509,48 @@ xfs_bmap_compute_alignments(
+>  	}
 >  }
 >  
 > +static void
-
-Why not return stripe_align instead of passing pointers?
-
-> +xfs_bmap_compute_alignments(
+> +xfs_bmap_process_allocated_extent(
 > +	struct xfs_bmalloca	*ap,
 > +	struct xfs_alloc_arg	*args,
-> +	int			*stripe_align)
+> +	xfs_fileoff_t		orig_offset,
+> +	xfs_extlen_t		orig_length)
 > +{
-> +	struct xfs_mount	*mp = args->mp;
-> +	xfs_extlen_t		align = 0; /* minimum allocation alignment */
-> +	int			error;
+> +	int			nullfb;
 > +
-> +	/* stripe alignment for allocation is determined by mount parameters */
-> +	*stripe_align = 0;
-> +	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
-> +		*stripe_align = mp->m_swidth;
-> +	else if (mp->m_dalign)
-> +		*stripe_align = mp->m_dalign;
+> +	nullfb = ap->tp->t_firstblock == NULLFSBLOCK;
 > +
-> +	if (ap->flags & XFS_BMAPI_COWFORK)
-> +		align = xfs_get_cowextsz_hint(ap->ip);
-> +	else if (ap->datatype & XFS_ALLOC_USERDATA)
-> +		align = xfs_get_extsz_hint(ap->ip);
-> +	if (align) {
-> +		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
-> +						align, 0, ap->eof, 0, ap->conv,
-> +						&ap->offset, &ap->length);
-> +		ASSERT(!error);
-> +		ASSERT(ap->length);
-> +	}
+> +	/*
+> +	 * check the allocation happened at the same or higher AG than
+> +	 * the first block that was allocated.
+> +	 */
+> +	ASSERT(nullfb ||
+> +		XFS_FSB_TO_AGNO(args->mp, ap->tp->t_firstblock) <=
+> +		XFS_FSB_TO_AGNO(args->mp, args->fsbno));
 > +
-> +	/* apply extent size hints if obtained earlier */
-> +	if (align) {
-> +		args->prod = align;
-> +		div_u64_rem(ap->offset, args->prod, &args->mod);
-> +		if (args->mod)
-> +			args->mod = args->prod - args->mod;
-> +	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
-> +		args->prod = 1;
-> +		args->mod = 0;
-> +	} else {
-> +		args->prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
-> +		div_u64_rem(ap->offset, args->prod, &args->mod);
-> +		if (args->mod)
-> +			args->mod = args->prod - args->mod;
-> +	}
+> +	ap->blkno = args->fsbno;
+> +	if (nullfb)
+> +		ap->tp->t_firstblock = args->fsbno;
+> +	ap->length = args->len;
+> +	/*
+> +	 * If the extent size hint is active, we tried to round the
+> +	 * caller's allocation request offset down to extsz and the
+> +	 * length up to another extsz boundary.  If we found a free
+> +	 * extent we mapped it in starting at this new offset.  If the
+> +	 * newly mapped space isn't long enough to cover any of the
+> +	 * range of offsets that was originally requested, move the
+> +	 * mapping up so that we can fill as much of the caller's
+> +	 * original request as possible.  Free space is apparently
+> +	 * very fragmented so we're unlikely to be able to satisfy the
+> +	 * hints anyway.
+> +	 */
+> +	if (ap->length <= orig_length)
+> +		ap->offset = orig_offset;
+> +	else if (ap->offset + ap->length < orig_offset + orig_length)
+> +		ap->offset = orig_offset + orig_length - ap->length;
+> +	xfs_bmap_btalloc_accounting(ap, args);
 > +}
 > +
 >  STATIC int
 >  xfs_bmap_btalloc(
 >  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
->  {
->  	xfs_mount_t	*mp;		/* mount point structure */
->  	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
-> -	xfs_extlen_t	align = 0;	/* minimum allocation alignment */
->  	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
->  	xfs_agnumber_t	ag;
->  	xfs_alloc_arg_t	args;
-> @@ -3489,25 +3534,11 @@ xfs_bmap_btalloc(
->  
->  	mp = ap->ip->i_mount;
->  
-> -	/* stripe alignment for allocation is determined by mount parameters */
-> -	stripe_align = 0;
-> -	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
-> -		stripe_align = mp->m_swidth;
-> -	else if (mp->m_dalign)
-> -		stripe_align = mp->m_dalign;
-> -
-> -	if (ap->flags & XFS_BMAPI_COWFORK)
-> -		align = xfs_get_cowextsz_hint(ap->ip);
-> -	else if (ap->datatype & XFS_ALLOC_USERDATA)
-> -		align = xfs_get_extsz_hint(ap->ip);
-> -	if (align) {
-> -		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
-> -						align, 0, ap->eof, 0, ap->conv,
-> -						&ap->offset, &ap->length);
-> -		ASSERT(!error);
-> -		ASSERT(ap->length);
-> -	}
-> +	memset(&args, 0, sizeof(args));
-> +	args.tp = ap->tp;
-> +	args.mp = mp;
-
-FWIW you might as well clean up the variable declarations while you're
-moving this stuff around:
-
-STATIC int
-xfs_bmap_btalloc(
-	struct xfs_bmalloca	*ap)
-{
-	struct xfs_mount	*mp = ap->ip->i_mount;
-	struct xfs_alloc_arg	args = { .tp = ap->tp, .mp = mp };
-
-And then you can get rid of the memset call.
-
-AFAICT there aren't any data dependencies between the parts where we
-initialize args.fsbno and where we set args.prod and args.mod, so I
-guess this is a reasonable hoist.
-
-Other than those cleanups, this looks ok to me.
-
---D
-
->  
-> +	xfs_bmap_compute_alignments(ap, &args, &stripe_align);
->  
->  	nullfb = ap->tp->t_firstblock == NULLFSBLOCK;
->  	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp,
-> @@ -3538,9 +3569,6 @@ xfs_bmap_btalloc(
->  	 * Normal allocation, done through xfs_alloc_vextent.
->  	 */
->  	tryagain = isaligned = 0;
-> -	memset(&args, 0, sizeof(args));
-> -	args.tp = ap->tp;
-> -	args.mp = mp;
->  	args.fsbno = ap->blkno;
->  	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
->  
-> @@ -3571,21 +3599,7 @@ xfs_bmap_btalloc(
->  		args.total = ap->total;
->  		args.minlen = ap->minlen;
+> @@ -3701,36 +3743,10 @@ xfs_bmap_btalloc(
+>  			return error;
+>  		ap->tp->t_flags |= XFS_TRANS_LOWMODE;
 >  	}
-> -	/* apply extent size hints if obtained earlier */
-> -	if (align) {
-> -		args.prod = align;
-> -		div_u64_rem(ap->offset, args.prod, &args.mod);
-> -		if (args.mod)
-> -			args.mod = args.prod - args.mod;
-> -	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
-> -		args.prod = 1;
-> -		args.mod = 0;
-> -	} else {
-> -		args.prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
-> -		div_u64_rem(ap->offset, args.prod, &args.mod);
-> -		if (args.mod)
-> -			args.mod = args.prod - args.mod;
-> -	}
 > +
->  	/*
->  	 * If we are not low on available data blocks, and the underlying
->  	 * logical volume manager is a stripe, and the file offset is zero then
+>  	if (args.fsbno != NULLFSBLOCK) {
+> -		/*
+> -		 * check the allocation happened at the same or higher AG than
+> -		 * the first block that was allocated.
+> -		 */
+> -		ASSERT(ap->tp->t_firstblock == NULLFSBLOCK ||
+> -		       XFS_FSB_TO_AGNO(mp, ap->tp->t_firstblock) <=
+> -		       XFS_FSB_TO_AGNO(mp, args.fsbno));
+> -
+> -		ap->blkno = args.fsbno;
+> -		if (ap->tp->t_firstblock == NULLFSBLOCK)
+> -			ap->tp->t_firstblock = args.fsbno;
+> -		ap->length = args.len;
+> -		/*
+> -		 * If the extent size hint is active, we tried to round the
+> -		 * caller's allocation request offset down to extsz and the
+> -		 * length up to another extsz boundary.  If we found a free
+> -		 * extent we mapped it in starting at this new offset.  If the
+> -		 * newly mapped space isn't long enough to cover any of the
+> -		 * range of offsets that was originally requested, move the
+> -		 * mapping up so that we can fill as much of the caller's
+> -		 * original request as possible.  Free space is apparently
+> -		 * very fragmented so we're unlikely to be able to satisfy the
+> -		 * hints anyway.
+> -		 */
+> -		if (ap->length <= orig_length)
+> -			ap->offset = orig_offset;
+> -		else if (ap->offset + ap->length < orig_offset + orig_length)
+> -			ap->offset = orig_offset + orig_length - ap->length;
+> -		xfs_bmap_btalloc_accounting(ap, &args);
+> +		xfs_bmap_process_allocated_extent(ap, &args, orig_offset,
+> +			orig_length);
+>  	} else {
+>  		ap->blkno = NULLFSBLOCK;
+>  		ap->length = 0;
 > -- 
 > 2.28.0
 > 
