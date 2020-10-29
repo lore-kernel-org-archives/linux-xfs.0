@@ -2,153 +2,135 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C4C2C55179
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 01:03:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21181C4363A
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 01:04:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9ED520790
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 01:03:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCC99207E8
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 01:04:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hF4Pf3b+"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="d2Z7UnsG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728376AbgJ2BDY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Oct 2020 21:03:24 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:39236 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729951AbgJ2BDW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 21:03:22 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09T0jxJY044625;
-        Thu, 29 Oct 2020 01:03:18 GMT
+        id S1730882AbgJ2BEQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Oct 2020 21:04:16 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:55474 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730416AbgJ2BEP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Oct 2020 21:04:15 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09T0l3m1022758;
+        Thu, 29 Oct 2020 01:04:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=8131klkizT4jC62dBxTgIhn3i3ABvASoY+tMsR1o6QY=;
- b=hF4Pf3b+5spdUWxMVm0VEvSSknKAN/bjhRSaeBn1aLjKBLS9m0VIe0YvGpxX1IKjWYRn
- iHcQwBEobbtkprJtRudIYEQ5jRIBXTQOBQw4Zot8Hi+kRRK0hrx1H1prJ534gOdzzctl
- BZAysf5MQE+hhhHE9Gr9Vq8Z7Dz9QQ0xjVsJRSEhAXEDT9IFwCnqpGcODznd/5p0D5zp
- UcmbnN7Ff+lI+8j8dUYMjz3vZIG4cqpTioBXN6G7fbVRIBfC3Hl6CF2k0vfCdEEIfuui
- nTU/Q5uCk1LzvTCrEovrLE1575BWf2hvdpPhx3i/KUdp0GPy0rsJXizxVHEjgp5F7l4s bg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 34c9sb2g3f-1
+ bh=c3LNCcBqqLUo+k2y04dTOEa7tP0v+qRJt/Vn4t88m1I=;
+ b=d2Z7UnsGjA3ShP3DOv6v+t4YYvRgNtR2OadX9+ubUr+0Ru681Bsp1yo5jSNbZpqKRs/T
+ NOv0VXYpKTqPBdsCnIUCBUjW9olXyJ32yifD9HVnwR53jSqan7B0SvmoZcoEBEP3FbM/
+ +VAXw0to9Nw9r07t6gofnOYp/979kgJTcWy/Owp4Ajcs/2o3QDG5PNrX6a7gWNiqzWoK
+ LeTQ/PsphtiEHxI3TpYg7BCbhdmNey4YaWw3Mb07/072aUMgpBMJ42zTo6rNbxpfhWdB
+ WaqXGjm/UVoDESfBslh5TxvzW5ftFrb0dt5JkPfyeJKYHDGfbWhJn0B6J5/OI4oMfh01 jA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 34dgm47y56-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 29 Oct 2020 01:03:18 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09T0kNgV192967;
-        Thu, 29 Oct 2020 01:01:17 GMT
+        Thu, 29 Oct 2020 01:04:06 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 09T0jO0n028731;
+        Thu, 29 Oct 2020 01:04:06 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 34cx1smy8w-1
+        by userp3030.oracle.com with ESMTP id 34cx6xvys4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Oct 2020 01:01:17 +0000
+        Thu, 29 Oct 2020 01:04:06 +0000
 Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09T11GG4020933;
-        Thu, 29 Oct 2020 01:01:16 GMT
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 09T145ai022014;
+        Thu, 29 Oct 2020 01:04:05 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 28 Oct 2020 18:01:16 -0700
-Date:   Wed, 28 Oct 2020 18:01:15 -0700
+        with ESMTP ; Wed, 28 Oct 2020 18:04:05 -0700
+Date:   Wed, 28 Oct 2020 18:04:04 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 6/9] xfs_repair: check inode btree block counters in AGI
-Message-ID: <20201029010115.GH1061252@magnolia>
-References: <160375518573.880355.12052697509237086329.stgit@magnolia>
- <160375522427.880355.15446960142376313542.stgit@magnolia>
- <20201028172959.GE1611922@bfoster>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 8/9] check: run tests in a systemd scope for mandatory
+ test cleanup
+Message-ID: <20201029010404.GJ1061252@magnolia>
+References: <160382528936.1202316.2338876126552815991.stgit@magnolia>
+ <160382534122.1202316.7161591166906029132.stgit@magnolia>
+ <20201028074407.GH2750@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201028172959.GE1611922@bfoster>
+In-Reply-To: <20201028074407.GH2750@infradead.org>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 bulkscore=0
- suspectscore=5 malwarescore=0 mlxlogscore=999 mlxscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 phishscore=0 spamscore=0
+ bulkscore=0 malwarescore=0 mlxlogscore=999 mlxscore=0 suspectscore=1
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2010290001
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9788 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 impostorscore=0
- mlxlogscore=999 malwarescore=0 lowpriorityscore=0 bulkscore=0
- priorityscore=1501 spamscore=0 phishscore=0 clxscore=1015 suspectscore=5
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2010290001
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
+ adultscore=0 bulkscore=0 spamscore=0 phishscore=0 mlxlogscore=999
+ suspectscore=1 clxscore=1015 mlxscore=0 malwarescore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2010290001
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 28, 2020 at 01:29:59PM -0400, Brian Foster wrote:
-> On Mon, Oct 26, 2020 at 04:33:44PM -0700, Darrick J. Wong wrote:
+[resend; I can't keep track of which messages actually got NOSEND
+warnings and which ones just dropped off...]
+
+On Wed, Oct 28, 2020 at 07:44:07AM +0000, Christoph Hellwig wrote:
+> On Tue, Oct 27, 2020 at 12:02:21PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Make sure that both inode btree block counters in the AGI are correct.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  repair/scan.c |   38 +++++++++++++++++++++++++++++++++++---
-> >  1 file changed, 35 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/repair/scan.c b/repair/scan.c
-> > index 2a38ae5197c6..c826af7dee86 100644
-> > --- a/repair/scan.c
-> > +++ b/repair/scan.c
-> ...
-> > @@ -2022,6 +2029,17 @@ scan_inobt(
-> >  			return;
-> >  	}
-> >  
-> > +	switch (magic) {
-> > +	case XFS_FIBT_MAGIC:
-> > +	case XFS_FIBT_CRC_MAGIC:
-> > +		ipriv->fino_blocks++;
-> > +		break;
-> > +	case XFS_IBT_MAGIC:
-> > +	case XFS_IBT_CRC_MAGIC:
-> > +		ipriv->ino_blocks++;
-> > +		break;
-> > +	}
-> > +
+> > If systemd is available, run each test in its own temporary systemd
+> > scope.  This enables the test harness to forcibly clean up all of the
+> > test's child processes (if it does not do so itself) so that we can move
+> > into the post-test unmount and check cleanly.
 > 
-> Is this intentionally not folded into the earlier magic switch
-> statement?
+> Can you explain what this mean in more detail?  Most importantly what
+> problems it fixes.
 
-I'd originally thought that we wouldn't want to count the block if it's
-obviously bad, but the tree and the agi counter are supposed to be
-consistent with each other, so yes, we should always bump the counter
-when we are pointed towards a block.
+I'll answer these in reverse order. :)
 
-> >  	/*
-> >  	 * check for btree blocks multiply claimed, any unknown/free state
-> >  	 * is ok in the bitmap block.
-> ...
-> > @@ -2393,6 +2414,17 @@ validate_agi(
-> >  		}
-> >  	}
-> >  
-> > +	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
-> > +		if (be32_to_cpu(agi->agi_iblocks) != priv.ino_blocks)
-> > +			do_warn(_("bad inobt block count %u, saw %u\n"),
-> > +					priv.ino_blocks,
-> > +					be32_to_cpu(agi->agi_iblocks));
-> 
-> These two params are backwards (here and below), no?
+I frequently run fstests in "low" memory situations (2GB!) to force the
+kernel to do interesting things.  There are a few tests like generic/224
+and generic/561 that put processes in the background and occasionally
+trigger the OOM killer.  Most of the time the OOM killer correctly
+shoots down fsstress or duperemove, but once in a while it's stupid
+enough to shoot down the test control process (i.e. tests/generic/224)
+instead.  fsstress is still running in the background, and the one
+process that knew about that is dead.
 
-Oops.  Good catch!
+When the control process dies, ./check moves on to the post-test fsck,
+which fails because fsstress is still running and we can't unmount.
+After fsck fails, ./check moves on to the next test, which fails because
+fsstress is /still/ writing to the filesystem and we can't unmount or
+format.
+
+The end result is that that one OOM kill causes cascading test failures,
+and I have to re-start fstests to see if I get a clean(er) run.  This is
+frustrating in the -rc1 days, where I more frequently observe problems
+with memory reclaim and OOM kills.  (Note: those problems are usually
+gone by -rc3.)
+
+So, the solution I present in this patch is to teach ./check to try to
+run the test script in a systemd scope.  If that succeeds, ./check will
+tell systemd to kill the scope when the test script exits and returns
+control to ./check.  Concretely, this means that systemd creates a new
+cgroup, stuffs the processes in that cgroup, and when we kill the scope,
+systemd kills all the processes in that cgroup and deletes the cgroup.
+
+The end result is that fstests now has an easy way to ensure that /all/
+child processes of a test are dead before we try to unmount the test and
+scratch devices.  I've designed this to be optional, because not
+everyone does or wants or likes to run systemd, but it makes QA easier.
+
+Hmm, this might make a better commit log.  I'll excerpt this into the
+patch message.
 
 --D
-
-> Brian
-> 
-> > +		if (be32_to_cpu(agi->agi_fblocks) != priv.fino_blocks)
-> > +			do_warn(_("bad finobt block count %u, saw %u\n"),
-> > +					priv.fino_blocks,
-> > +					be32_to_cpu(agi->agi_fblocks));
-> > +	}
-> > +
-> >  	if (be32_to_cpu(agi->agi_count) != agcnts->agicount) {
-> >  		do_warn(_("agi_count %u, counted %u in ag %u\n"),
-> >  			 be32_to_cpu(agi->agi_count), agcnts->agicount, agno);
-> > 
-> 
