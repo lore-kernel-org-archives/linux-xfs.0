@@ -2,142 +2,58 @@ Return-Path: <SRS0=cOuX=EE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE2BC2D0A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 13:24:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11D94C4363A
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 15:04:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A4B3207DE
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 13:24:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A03A620838
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Oct 2020 15:04:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="guPMKvjv"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YYaMXgNo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726979AbgJ2NYN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Oct 2020 09:24:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37883 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727005AbgJ2NYL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 09:24:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1603977848;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LIjuJOqsQwW30+SKQoN3FAByfEAXVCvb14GA26xjLV0=;
-        b=guPMKvjvMqvIhig8K1xaYh3NbzIOwM7QVpvOS35vLC+5wOy+Kt7dZEXAxCEMn9/SnaghDu
-        hqtfs+gBhH8ncBJ7SI2tvDueYcKzkRMM1OFieIFusJcYkokPqEPa5cVBxUq/KGWAe/EI6M
-        5H+Rn9yfj96kbDFoR8gTSdp7SAONSdo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-591-k5combDPNo2rN734D2XroQ-1; Thu, 29 Oct 2020 09:24:04 -0400
-X-MC-Unique: k5combDPNo2rN734D2XroQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 90681195D452;
-        Thu, 29 Oct 2020 13:23:28 +0000 (UTC)
-Received: from bfoster.redhat.com (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 333055C1C4;
-        Thu, 29 Oct 2020 13:23:28 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-fsdevel@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 3/3] iomap: clean up writeback state logic on writepage error
-Date:   Thu, 29 Oct 2020 09:23:25 -0400
-Message-Id: <20201029132325.1663790-4-bfoster@redhat.com>
-In-Reply-To: <20201029132325.1663790-1-bfoster@redhat.com>
+        id S1727933AbgJ2PES (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Oct 2020 11:04:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42354 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727865AbgJ2PES (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Oct 2020 11:04:18 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D52F6C0613D2;
+        Thu, 29 Oct 2020 08:04:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=YYaMXgNoEN7XqnFXpLFDPHc1Xt
+        eJf9c6TO3UBvtt3qh6Zojzhuh6n0aVYUCjP8493O8KIE5UfFlr2ggam7kDV9xnMRTaXKWB7qavRKL
+        cNtqVshnVANfKUCJuTcKI6o2QyKnNlFtjU9DeDCcPwMFyFwm8PQPfgSODWqSEPFZHRDpJ5plqaj3j
+        TB4o8RUCknrPFKRfvuJ/Ux6Ms6hVDLzEggkPMDb1CbxhZWcALYE7hxHKO80zYI59eB8vl4blnN1dd
+        c4GeI17UFwef7h+TIpnjs1qNKEOdtDC2hUeK2jVVCiOZz+vz/dh2O7mbIdnP34YaJZQ+Kvp190ZZ4
+        ic0++f6w==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kY9TL-0005cg-7I; Thu, 29 Oct 2020 15:04:15 +0000
+Date:   Thu, 29 Oct 2020 15:04:15 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v2 1/3] xfs: flush new eof page on truncate to avoid
+ post-eof corruption
+Message-ID: <20201029150415.GA21018@infradead.org>
 References: <20201029132325.1663790-1-bfoster@redhat.com>
+ <20201029132325.1663790-2-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201029132325.1663790-2-bfoster@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The iomap writepage error handling logic is a mash of old and
-slightly broken XFS writepage logic. When keepwrite writeback state
-tracking was introduced in XFS in commit 0d085a529b42 ("xfs: ensure
-WB_SYNC_ALL writeback handles partial pages correctly"), XFS had an
-additional cluster writeback context that scanned ahead of
-->writepage() to process dirty pages over the current ->writepage()
-extent mapping. This context expected a dirty page and required
-retention of the TOWRITE tag on partial page processing so the
-higher level writeback context would revisit the page (in contrast
-to ->writepage(), which passes a page with the dirty bit already
-cleared).
+Looks good,
 
-The cluster writeback mechanism was eventually removed and some of
-the error handling logic folded into the primary writeback path in
-commit 150d5be09ce4 ("xfs: remove xfs_cancel_ioend"). This patch
-accidentally conflated the two contexts by using the keepwrite logic
-in ->writepage() without accounting for the fact that the page is
-not dirty. Further, the keepwrite logic has no practical effect on
-the core ->writepage() caller (write_cache_pages()) because it never
-revisits a page in the current function invocation.
-
-Technically, the page should be redirtied for the keepwrite logic to
-have any effect. Otherwise, write_cache_pages() may find the tagged
-page but will skip it since it is clean. Even if the page was
-redirtied, however, there is still no practical effect to keepwrite
-since write_cache_pages() does not wrap around within a single
-invocation of the function. Therefore, the dirty page would simply
-end up retagged on the next writeback sequence over the associated
-range.
-
-All that being said, none of this really matters because redirtying
-a partially processed page introduces a potential infinite redirty
--> writeback failure loop that deviates from the current design
-principle of clearing the dirty state on writepage failure to avoid
-building up too much dirty, unreclaimable memory on the system.
-Therefore, drop the spurious keepwrite usage and dirty state
-clearing logic from iomap_writepage_map(), treat the partially
-processed page the same as a fully processed page, and let the
-imminent ioend failure clean up the writeback state.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/iomap/buffered-io.c | 15 ++-------------
- 1 file changed, 2 insertions(+), 13 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index d1f04eabc7e4..e3a4568f6c2e 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1404,6 +1404,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	WARN_ON_ONCE(!wpc->ioend && !list_empty(&submit_list));
- 	WARN_ON_ONCE(!PageLocked(page));
- 	WARN_ON_ONCE(PageWriteback(page));
-+	WARN_ON_ONCE(PageDirty(page));
- 
- 	/*
- 	 * We cannot cancel the ioend directly here on error.  We may have
-@@ -1425,21 +1426,9 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 			unlock_page(page);
- 			goto done;
- 		}
--
--		/*
--		 * If the page was not fully cleaned, we need to ensure that the
--		 * higher layers come back to it correctly.  That means we need
--		 * to keep the page dirty, and for WB_SYNC_ALL writeback we need
--		 * to ensure the PAGECACHE_TAG_TOWRITE index mark is not removed
--		 * so another attempt to write this page in this writeback sweep
--		 * will be made.
--		 */
--		set_page_writeback_keepwrite(page);
--	} else {
--		clear_page_dirty_for_io(page);
--		set_page_writeback(page);
- 	}
- 
-+	set_page_writeback(page);
- 	unlock_page(page);
- 
- 	/*
--- 
-2.25.4
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
