@@ -2,137 +2,147 @@ Return-Path: <SRS0=YpFG=EF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA07EC4363A
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Oct 2020 12:08:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50B03C4741F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Oct 2020 13:18:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B699207DE
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Oct 2020 12:08:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1BD420731
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Oct 2020 13:18:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RIdgxlY6"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gXdQIRyp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726481AbgJ3MIW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Oct 2020 08:08:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:58314 "EHLO
+        id S1726624AbgJ3NSi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Oct 2020 09:18:38 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43255 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726483AbgJ3MIV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Oct 2020 08:08:21 -0400
+        by vger.kernel.org with ESMTP id S1726613AbgJ3NSh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Oct 2020 09:18:37 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1604059700;
+        s=mimecast20190719; t=1604063916;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=KxlJ8Mwn0Tke0WPb8nHZ6w8mEJXEo5j2Z00nnV/ApfQ=;
-        b=RIdgxlY6iQ0/cWzjuztCs3yLSNoFPiu2wvIaeCkOUC5fJC4DEvcZKVQBJr0bW1toWZBdGY
-        vYe5hM1+Dy5mAzwk4wyIKUNz5R7uxO9qJjcF9NwRFpEVh9+3VhGQSXo231aTSTTO6GAHT1
-        AuAH71UuqhM40pGz2hEU8IO2AsbOY1w=
+        bh=IpBz9HE0+LF1roOf+93vzSdfOChLyFY4c0u+B2Dio2o=;
+        b=gXdQIRypedSj06Bt48/L2+ZORCQnxiiSqjqugwVnSs6fnqGUD9SoF2Lz+DEjlRL1ckp/vi
+        mNWkkK5WWyl0NA4jDqXIOfVlowx2CjcTCv5SJgmQziNyfqvy822X51p6B9qiWP/0VuP9Bd
+        nIQNRoYBo1G1AtFBUl8vD/AIkf7Jc7o=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-50-AzIfXLJtNRSF2-f3T9HVoQ-1; Fri, 30 Oct 2020 08:08:18 -0400
-X-MC-Unique: AzIfXLJtNRSF2-f3T9HVoQ-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+ us-mta-373-UgVc5cf0MX2JsHjS2xyaxg-1; Fri, 30 Oct 2020 09:18:34 -0400
+X-MC-Unique: UgVc5cf0MX2JsHjS2xyaxg-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1A88A101F000;
-        Fri, 30 Oct 2020 12:08:17 +0000 (UTC)
-Received: from ovpn-66-212.rdu2.redhat.com (ovpn-66-212.rdu2.redhat.com [10.10.66.212])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id F238219C71;
-        Fri, 30 Oct 2020 12:08:15 +0000 (UTC)
-Message-ID: <be8410fb81e6908457a524bc8e1df83a648d38f1.camel@redhat.com>
-Subject: Re: kernel BUG at mm/page-writeback.c:2241 [
- BUG_ON(PageWriteback(page); ]
-From:   Qian Cai <cai@redhat.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-mm@kvack.org
-Date:   Fri, 30 Oct 2020 08:08:15 -0400
-In-Reply-To: <20201022171243.GX20115@casper.infradead.org>
-References: <645a3f332f37e09057c10bc32f4f298ce56049bb.camel@lca.pw>
-         <20201022004906.GQ20115@casper.infradead.org>
-         <7ec15e2710db02be81a6c47afc57abed4bf8016c.camel@lca.pw>
-         <20201022171243.GX20115@casper.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 75044188C130;
+        Fri, 30 Oct 2020 13:18:32 +0000 (UTC)
+Received: from bfoster (ovpn-113-186.rdu2.redhat.com [10.10.113.186])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 97D875B4A7;
+        Fri, 30 Oct 2020 13:18:31 +0000 (UTC)
+Date:   Fri, 30 Oct 2020 09:18:29 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Ritesh Harjani <riteshh@linux.ibm.com>
+Cc:     fstests@vger.kernel.org, anju@linux.vnet.ibm.com,
+        Eryu Guan <guan@eryu.me>, linux-ext4@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] common/rc: Make swapon check in
+ _require_scratch_swapfile() specific to btrfs
+Message-ID: <20201030131829.GB1794672@bfoster>
+References: <cover.1604000570.git.riteshh@linux.ibm.com>
+ <6070d16aab6a61bbbc988fc68cc727c21ec7baef.1604000570.git.riteshh@linux.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6070d16aab6a61bbbc988fc68cc727c21ec7baef.1604000570.git.riteshh@linux.ibm.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2020-10-22 at 18:12 +0100, Matthew Wilcox wrote:
-> On Thu, Oct 22, 2020 at 11:35:26AM -0400, Qian Cai wrote:
-> > On Thu, 2020-10-22 at 01:49 +0100, Matthew Wilcox wrote:
-> > > On Wed, Oct 21, 2020 at 08:30:18PM -0400, Qian Cai wrote:
-> > > > Today's linux-next starts to trigger this wondering if anyone has any
-> > > > clue.
-> > > 
-> > > I've seen that occasionally too.  I changed that BUG_ON to VM_BUG_ON_PAGE
-> > > to try to get a clue about it.  Good to know it's not the THP patches
-> > > since they aren't in linux-next.
-> > > 
-> > > I don't understand how it can happen.  We have the page locked, and then
-> > > we
-> > > do:
-> > > 
-> > >                         if (PageWriteback(page)) {
-> > >                                 if (wbc->sync_mode != WB_SYNC_NONE)
-> > >                                         wait_on_page_writeback(page);
-> > >                                 else
-> > >                                         goto continue_unlock;
-> > >                         }
-> > > 
-> > >                         VM_BUG_ON_PAGE(PageWriteback(page), page);
-> > > 
-> > > Nobody should be able to put this page under writeback while we have it
-> > > locked ... right?  The page can be redirtied by the code that's supposed
-> > > to be writing it back, but I don't see how anyone can make PageWriteback
-> > > true while we're holding the page lock.
-> > 
-> > It happened again on today's linux-next:
-> > 
-> > [ 7613.579890][T55770] page:00000000a4b35e02 refcount:3 mapcount:0
-> > mapping:00000000457ceb87 index:0x3e pfn:0x1cef4e
-> > [ 7613.590594][T55770] aops:xfs_address_space_operations ino:805d85a dentry
-> > name:"doio.f1.55762"
-> > [ 7613.599192][T55770] flags:
-> > 0xbfffc0000000bf(locked|waiters|referenced|uptodate|dirty|lru|active)
-> > [ 7613.608596][T55770] raw: 00bfffc0000000bf ffffea0005027d48
-> > ffff88810eaec030 ffff888231f3a6a8
-> > [ 7613.617101][T55770] raw: 000000000000003e 0000000000000000
-> > 00000003ffffffff ffff888143724000
-> > [ 7613.625590][T55770] page dumped because:
-> > VM_BUG_ON_PAGE(PageWriteback(page))
-> > [ 7613.632695][T55770] page->mem_cgroup:ffff888143724000
+On Fri, Oct 30, 2020 at 01:22:51AM +0530, Ritesh Harjani wrote:
+> swapon/off check in _require_scratch_swapfile() was specifically added
+> for btrfs[1]/[2] since in previous kernels, swapfile was not supported on btrfs.
+> This rather masks the issue sometimes with swapon system call in
+> case if it fails.
+> for e.g. in latest ext4 upstream tree when "-g quick" (which ran swap tests too)
+> was tested, all swap tests resulted into "_notrun" since swapon failed
+> inside _require_scratch_swapfile() itself.
+> Whereas this failure on ext4 was actually due to a regression with latest
+> fast-commit patch, which went un-noticed.
+> Hence make this swapon/off check only specific to btrfs.
+> Tested default config of xfs/btrfs/ext4/f2fs with this patch.
 > 
-> Seems like it reproduces for you pretty quickly.  I have no luck ;-(
+> With this change on buggy kernel, we could clearly catch the swap failures.
+> e.g.
+> generic/472 17s ...
+> <...>
+> @@ -1,4 +1,7 @@
+> QA output created by 472
+> regular swap
+> +swapon: Invalid argument
+> too long swap
+> +swapon: Invalid argument
+> tiny swap
+> +swapon: Invalid argument
+> ...
+> (Run 'diff -u /home/qemu/src/tools-work/xfstests-dev/tests/generic/472.out \
+> /home/qemu/src/tools-work/xfstests-dev/results//ext4/generic/472.out.bad' \
+> to see the entire diff)
 > 
-> Can you add this?
-
-It turns out I had no luck for the last a few days. I'll keep running and report
-back if it triggers again.
-
+> [1]: 8c96cfbfe530 ("generic/35[67]: disable swapfile tests on Btrfs")
+> [2]: bd6d67ee598e ("generic: enable swapfile tests on Btrfs")
 > 
-> +++ b/mm/page-writeback.c
-> @@ -2774,6 +2774,7 @@ int __test_set_page_writeback(struct page *page, bool
-> keep_write)
->         struct address_space *mapping = page_mapping(page);
->         int ret, access_ret;
+> Signed-off-by: Ritesh Harjani <riteshh@linux.ibm.com>
+> ---
+>  common/rc | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
+> 
+> diff --git a/common/rc b/common/rc
+> index b0c353c4c107..4c59968a6bd3 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -2358,18 +2358,20 @@ _require_scratch_swapfile()
+>  	[ -n "$SELINUX_MOUNT_OPTIONS" ] && export \
+>  		SELINUX_MOUNT_OPTIONS="-o context=system_u:object_r:swapfile_t:s0"
 >  
-> +       VM_BUG_ON_PAGE(!PageLocked(page), page);
->         lock_page_memcg(page);
->         if (mapping && mapping_use_writeback_tags(mapping)) {
->                 XA_STATE(xas, &mapping->i_pages, page_index(page));
-> 
-> This is the only place (afaict) that sets PageWriteback, so that will
-> tell us whether someone is setting Writeback without holding the lock,
-> or whether we're suffering from a spurious wakeup.
+> -	_scratch_mount
+> +	if [ "$FSTYP" = "btrfs" ]; then
+> +		_scratch_mount
+> +
+> +		# Minimum size for mkswap is 10 pages
+> +		_format_swapfile "$SCRATCH_MNT/swap" $(($(get_page_size) * 10))
+>  
+> -	# Minimum size for mkswap is 10 pages
+> -	_format_swapfile "$SCRATCH_MNT/swap" $(($(get_page_size) * 10))
+> +		if ! swapon "$SCRATCH_MNT/swap" >/dev/null 2>&1; then
+> +			_scratch_unmount
+> +			_notrun "swapfiles are not supported"
+> +		fi
+>  
+> -	if ! swapon "$SCRATCH_MNT/swap" >/dev/null 2>&1; then
+> +		swapoff "$SCRATCH_MNT/swap" >/dev/null 2>&1
+>  		_scratch_unmount
+> -		_notrun "swapfiles are not supported"
+>  	fi
+> -
+> -	swapoff "$SCRATCH_MNT/swap" >/dev/null 2>&1
+> -	_scratch_unmount
+>  }
+
+This factors out the majority of this function for !btrfs cases to the
+point where it doesn't do anything swap related. Perhaps it would be
+more clear to do something like '[ $FSTYP = "btrfs" ] &&
+_require_scratch_swapfile()' in the actual tests that require filtering
+out on btrfs..?
+
+Brian
+
+>  
+>  # Check that a fs has enough free space (in 1024b blocks)
+> -- 
+> 2.26.2
 > 
 
