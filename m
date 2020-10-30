@@ -2,100 +2,137 @@ Return-Path: <SRS0=YpFG=EF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91B9DC4741F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Oct 2020 11:37:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA07EC4363A
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Oct 2020 12:08:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AEB92054F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Oct 2020 11:37:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B699207DE
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Oct 2020 12:08:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lf8p/BEQ"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RIdgxlY6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726597AbgJ3LhQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Oct 2020 07:37:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35966 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726612AbgJ3Lgm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Oct 2020 07:36:42 -0400
-Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 291B7C0613D4;
-        Fri, 30 Oct 2020 04:36:42 -0700 (PDT)
-Received: by mail-il1-x12d.google.com with SMTP id k1so6174317ilc.10;
-        Fri, 30 Oct 2020 04:36:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=Ew4StMpVo5ez/gEFLEgiv2+lcmSuiaGgtLUtTDkvJwo=;
-        b=Lf8p/BEQUhthouU+btyK82bWtOqlH6j+tun8LQ2ImKsTkxUHsHb5+GN+hxt72GN9fe
-         fmQMgtAeAwqWNXH+W3cJxBIFAHF27J17AQpdWKKdeh1RjkCObSktx8sV/JYv98cfl4ZI
-         YMnjtZQLg9TFYrgCjS9ErR0O0HSI4Ns8WUUcz/fDV/XU8C2UZNCGo1CCS8KaW9UubxON
-         dqL8IE71wUvGVQefVF1LQ5fxVDZo68cpE2kRUON9aSVULMXeY/pYeqCFjmq2NfCGiE3w
-         vip2Hifunp9agDufsEnquFjeFy1L7QEvcaY1Fr4SetVaVYYT0/d0nhaGwfuw7t0LbIdw
-         7zFA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=Ew4StMpVo5ez/gEFLEgiv2+lcmSuiaGgtLUtTDkvJwo=;
-        b=T7sxqYriwqhG4ymZT+jYDqdU9p1lz0cGefmmWt5y6tS70ZPxeGZ74bDKxtQu0oNxbM
-         abjR4C03GCkhGGki8aRAcN6a0hntzo7d4flHyQOVTtxfaphbcfcF9+7EZUM58RVwmWMY
-         FRvIjlyw6zR2uODcy5DM8RE/t0+R1yulqtrDCfF9fEoKLYaq+4CWXIGkorAI3tL68Iby
-         2Hqn9EDuEsjlAgTFmjpe383mnIQxGGNMnEbG4TLV7Khd8z1qEvUKqrdwt4+igTMP9RWU
-         y0z9GrhxUPmi6as2JMcuacUGUzK8yA0DfO41oaKhCFQMk/s+g1f0PgKHVahuGso4fwPy
-         q0DA==
-X-Gm-Message-State: AOAM5313KNESrL7FQJAQCBIkAqqHhY2btMCMacYQ4BKXcaDTHpxMSqMs
-        hf4biHhcj3m/dpU1Uc4EXQDONYR9Ox4v0GDdiqQ=
-X-Google-Smtp-Source: ABdhPJxqH9M8AIb8SmhcdDwUNFZKXLMtHK1hDHZ5JOyAaF0QPeUmS+TCTxpLKzJuKPwyUkiggZXt1qHu7upJZt8uPjg=
-X-Received: by 2002:a05:6e02:c1:: with SMTP id r1mr1500489ilq.250.1604057801608;
- Fri, 30 Oct 2020 04:36:41 -0700 (PDT)
-MIME-Version: 1.0
-From:   Amir Goldstein <amir73il@gmail.com>
-Date:   Fri, 30 Oct 2020 13:36:30 +0200
-Message-ID: <CAOQ4uxjia_L5mzEa=R9221sdO9KrsmvyGyKGcrmYKc47msJ=bg@mail.gmail.com>
-Subject: Random xfs_check errors
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, Eryu Guan <guaneryu@gmail.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        fstests <fstests@vger.kernel.org>
+        id S1726481AbgJ3MIW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Oct 2020 08:08:22 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:58314 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726483AbgJ3MIV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Oct 2020 08:08:21 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1604059700;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KxlJ8Mwn0Tke0WPb8nHZ6w8mEJXEo5j2Z00nnV/ApfQ=;
+        b=RIdgxlY6iQ0/cWzjuztCs3yLSNoFPiu2wvIaeCkOUC5fJC4DEvcZKVQBJr0bW1toWZBdGY
+        vYe5hM1+Dy5mAzwk4wyIKUNz5R7uxO9qJjcF9NwRFpEVh9+3VhGQSXo231aTSTTO6GAHT1
+        AuAH71UuqhM40pGz2hEU8IO2AsbOY1w=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-50-AzIfXLJtNRSF2-f3T9HVoQ-1; Fri, 30 Oct 2020 08:08:18 -0400
+X-MC-Unique: AzIfXLJtNRSF2-f3T9HVoQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1A88A101F000;
+        Fri, 30 Oct 2020 12:08:17 +0000 (UTC)
+Received: from ovpn-66-212.rdu2.redhat.com (ovpn-66-212.rdu2.redhat.com [10.10.66.212])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F238219C71;
+        Fri, 30 Oct 2020 12:08:15 +0000 (UTC)
+Message-ID: <be8410fb81e6908457a524bc8e1df83a648d38f1.camel@redhat.com>
+Subject: Re: kernel BUG at mm/page-writeback.c:2241 [
+ BUG_ON(PageWriteback(page); ]
+From:   Qian Cai <cai@redhat.com>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-mm@kvack.org
+Date:   Fri, 30 Oct 2020 08:08:15 -0400
+In-Reply-To: <20201022171243.GX20115@casper.infradead.org>
+References: <645a3f332f37e09057c10bc32f4f298ce56049bb.camel@lca.pw>
+         <20201022004906.GQ20115@casper.infradead.org>
+         <7ec15e2710db02be81a6c47afc57abed4bf8016c.camel@lca.pw>
+         <20201022171243.GX20115@casper.infradead.org>
 Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi guys,
+On Thu, 2020-10-22 at 18:12 +0100, Matthew Wilcox wrote:
+> On Thu, Oct 22, 2020 at 11:35:26AM -0400, Qian Cai wrote:
+> > On Thu, 2020-10-22 at 01:49 +0100, Matthew Wilcox wrote:
+> > > On Wed, Oct 21, 2020 at 08:30:18PM -0400, Qian Cai wrote:
+> > > > Today's linux-next starts to trigger this wondering if anyone has any
+> > > > clue.
+> > > 
+> > > I've seen that occasionally too.  I changed that BUG_ON to VM_BUG_ON_PAGE
+> > > to try to get a clue about it.  Good to know it's not the THP patches
+> > > since they aren't in linux-next.
+> > > 
+> > > I don't understand how it can happen.  We have the page locked, and then
+> > > we
+> > > do:
+> > > 
+> > >                         if (PageWriteback(page)) {
+> > >                                 if (wbc->sync_mode != WB_SYNC_NONE)
+> > >                                         wait_on_page_writeback(page);
+> > >                                 else
+> > >                                         goto continue_unlock;
+> > >                         }
+> > > 
+> > >                         VM_BUG_ON_PAGE(PageWriteback(page), page);
+> > > 
+> > > Nobody should be able to put this page under writeback while we have it
+> > > locked ... right?  The page can be redirtied by the code that's supposed
+> > > to be writing it back, but I don't see how anyone can make PageWriteback
+> > > true while we're holding the page lock.
+> > 
+> > It happened again on today's linux-next:
+> > 
+> > [ 7613.579890][T55770] page:00000000a4b35e02 refcount:3 mapcount:0
+> > mapping:00000000457ceb87 index:0x3e pfn:0x1cef4e
+> > [ 7613.590594][T55770] aops:xfs_address_space_operations ino:805d85a dentry
+> > name:"doio.f1.55762"
+> > [ 7613.599192][T55770] flags:
+> > 0xbfffc0000000bf(locked|waiters|referenced|uptodate|dirty|lru|active)
+> > [ 7613.608596][T55770] raw: 00bfffc0000000bf ffffea0005027d48
+> > ffff88810eaec030 ffff888231f3a6a8
+> > [ 7613.617101][T55770] raw: 000000000000003e 0000000000000000
+> > 00000003ffffffff ffff888143724000
+> > [ 7613.625590][T55770] page dumped because:
+> > VM_BUG_ON_PAGE(PageWriteback(page))
+> > [ 7613.632695][T55770] page->mem_cgroup:ffff888143724000
+> 
+> Seems like it reproduces for you pretty quickly.  I have no luck ;-(
+> 
+> Can you add this?
 
-I've been running the latest xfstests with xfsprogs v5.9 and stable
-kernel v5.9.y past week (including v5.9.2 today) and I'm getting
-reports like below after random tests.
+It turns out I had no luck for the last a few days. I'll keep running and report
+back if it triggers again.
 
-This one was after generic/466, but already got similar reports
-(with more blocks) after generic/511,518,519 on different test runs.
+> 
+> +++ b/mm/page-writeback.c
+> @@ -2774,6 +2774,7 @@ int __test_set_page_writeback(struct page *page, bool
+> keep_write)
+>         struct address_space *mapping = page_mapping(page);
+>         int ret, access_ret;
+>  
+> +       VM_BUG_ON_PAGE(!PageLocked(page), page);
+>         lock_page_memcg(page);
+>         if (mapping && mapping_use_writeback_tags(mapping)) {
+>                 XA_STATE(xas, &mapping->i_pages, page_index(page));
+> 
+> This is the only place (afaict) that sets PageWriteback, so that will
+> tell us whether someone is setting Writeback without holding the lock,
+> or whether we're suffering from a spurious wakeup.
+> 
 
-Is anyone else seeing this?
-Any advice on what to look for?
-
-Did not get to test v5.10-rc1 yet. I thought I would ask here first
-in case it's a known issue.
-
-Sasha, I am wondering which xfsprogs version are you using
-when verifying stable kernel patches, because I have just recently
-upgraded xfsprogs to v5.9 in my stable test environment.
-
-Thanks,
-Amir.
-
-
-_check_xfs_filesystem: filesystem on
-/dev/mapper/0fce4d2d--779b--44e8--91d0--2cb1b252f68e-xfs_scratch is
-inconsistent (c)
-*** xfs_check output ***
-block 0/10 expected type unknown got free1
-agf_freeblks 1310702, counted 1310701 in ag 0
-agi_freecount 61, counted 58 in ag 0
-sb_ifree 61, counted 58
-sb_fdblocks 5240288, counted 5240287
-sb_fdblocks 5240288, aggregate AGF count 5240287
-*** end xfs_check output
