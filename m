@@ -2,92 +2,144 @@ Return-Path: <SRS0=AlMJ=EI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDD49C388F9
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 19:47:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B3AFC388F9
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 21:40:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FF0F2071E
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 19:47:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EF4F22258
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 21:40:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OEz9+YGj"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="s4bgtLwa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726493AbgKBTrB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Nov 2020 14:47:01 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20422 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725838AbgKBTp6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Nov 2020 14:45:58 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1604346357;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=DE8pElyjPr0cfRSpPEx78xZUW98cDZtjcM1DL4ttUEY=;
-        b=OEz9+YGjEBU5AbYU/1Hz9mKC408l22waQ+RcOek4urbs4Jl711Lb0CpK+JEIGqku9p3i7T
-        Basxar+p35ygTq36HUOCJtSW9Nax49XfHFCwxqrgZzYsNijHUJbV45DN0fyVWMsxVqo0rL
-        QZZ3Mfqvx7l+GIFkQFqpieN0ydbLDUE=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-397-d3R-WnpcNPObl36yK-iLKQ-1; Mon, 02 Nov 2020 14:45:55 -0500
-X-MC-Unique: d3R-WnpcNPObl36yK-iLKQ-1
-Received: by mail-wm1-f71.google.com with SMTP id c10so2873278wmh.6
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Nov 2020 11:45:55 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=DE8pElyjPr0cfRSpPEx78xZUW98cDZtjcM1DL4ttUEY=;
-        b=TFsgmbBzhzO6FflxIB8VUb8b1tHN57A+BXoUUk4dz9p8Zz/7BHSgWE9NeHdjEz+8M5
-         mT3WFWN6glepJ9meUQdIlqdy47D0ZtMCENnDRcsw8Wv7b9WIQUrW0V8trCtF1nUCZ3+F
-         XzFLevvfnQCSrSFLSFPGHZsKXt3nxL6XShLM8M5QpL+5IhbN3dNvNAsVPhuFo/FtuoiG
-         w/REXniSOw0njKyc4fweYv5s7Z0gvVaSQ1Qnakhf7OJpx2FbXamk8CXCa8EmMxfeRqD/
-         +FY+zZo4j/uVtIiz0hBpPsiN+zYkRNl/KguCtmQEbYGR6lZ4oM/oIOir8fJTO1O6dm6m
-         1A0Q==
-X-Gm-Message-State: AOAM531CrOcKt9+14aI5DboslZMKI3LnA/clK/8iQnBSQkXV4HF3G8la
-        lT73FtIGMA3A2DrDBIERnCJ8lLEAaNz+9nb3YGJtRapTKTgiuGjqzDjB6Y/s5ir/kP1jCq+zeSn
-        eI890H3Qel6kdC3bANdMD
-X-Received: by 2002:a1c:63c4:: with SMTP id x187mr19609224wmb.172.1604346354117;
-        Mon, 02 Nov 2020 11:45:54 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwy9K1pVqbg8+2nhTvXMu7Mjhu6aSt024uRjIVWnOcjrEea4fXRrmSeLx9S4l3mlxYKs2eVAA==
-X-Received: by 2002:a1c:63c4:: with SMTP id x187mr19609215wmb.172.1604346353983;
-        Mon, 02 Nov 2020 11:45:53 -0800 (PST)
-Received: from localhost.localdomain ([84.19.91.81])
-        by smtp.gmail.com with ESMTPSA id c64sm481562wme.29.2020.11.02.11.45.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Nov 2020 11:45:53 -0800 (PST)
-Subject: Re: [PATCH v12 4/4] xfs: replace mrlock_t with rw_semaphores
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20201016021005.548850-1-preichl@redhat.com>
- <20201016021005.548850-5-preichl@redhat.com>
- <20201029223534.GP1061252@magnolia>
-From:   Pavel Reichl <preichl@redhat.com>
-Message-ID: <fa33cd29-9b84-552e-b5f6-d4df723c879a@redhat.com>
-Date:   Mon, 2 Nov 2020 20:45:47 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.1
+        id S1726055AbgKBVkC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Nov 2020 16:40:02 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:38320 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725841AbgKBVkB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Nov 2020 16:40:01 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2LZ6U1129680;
+        Mon, 2 Nov 2020 21:39:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=nzuqmNkfFI7Urn8rFfVQrG+qE6j7V0bHGpyv7sLYHb8=;
+ b=s4bgtLwatB9ULRzyx0zXxgS2FlDG9id+xwfy8gxxSumTFdoWfPRgsi3nS/97fKM1AwU9
+ 0pwl4o1H0ns/8NYIaDEs83QxIz4lv+ryeFMgGLNWjOPJ0PYqdQ/9pwmLkCDo6V/BeQ6J
+ CgsXMDfMuH0mh4O/CAmw6MnQGIrvRIkF1YG0xLIzU7881TcOLu2A7kvGMSwt4nn34SuS
+ OX9TplV8FmxOPgdl9FjzskqTKLpBXHQsV/kchaz8O0oxlGW+aW0JNu1S4Z2mM2nwa4nE
+ o81ZvCDnJxWNIdRLKn9w+FDHqDIXNJy6U5l22nzCPXgBTVAafFOg7xxhfwXSKPJaM8eZ FA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 34hhw2ea6c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 02 Nov 2020 21:39:58 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2LYjpf035737;
+        Mon, 2 Nov 2020 21:37:58 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 34jf477dqq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 02 Nov 2020 21:37:58 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0A2LbvvX031883;
+        Mon, 2 Nov 2020 21:37:57 GMT
+Received: from localhost (/10.159.228.245)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 02 Nov 2020 13:37:57 -0800
+Date:   Mon, 2 Nov 2020 13:37:56 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH 8/9] check: run tests in a systemd scope for mandatory
+ test cleanup
+Message-ID: <20201102213756.GA7118@magnolia>
+References: <160382528936.1202316.2338876126552815991.stgit@magnolia>
+ <160382534122.1202316.7161591166906029132.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20201029223534.GP1061252@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160382534122.1202316.7161591166906029132.stgit@magnolia>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9793 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=3 mlxscore=0
+ bulkscore=0 malwarescore=0 mlxlogscore=999 phishscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011020163
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9793 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
+ suspectscore=3 clxscore=1015 priorityscore=1501 impostorscore=0
+ spamscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011020163
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
- 
-> Looks ok to me.  Would you mind rebasing this against 5.10-rc1 so I can
-> start testing a work branch with all the accumulated 5.11 stuff?
+On Tue, Oct 27, 2020 at 12:02:21PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> If systemd is available, run each test in its own temporary systemd
+> scope.  This enables the test harness to forcibly clean up all of the
+> test's child processes (if it does not do so itself) so that we can move
+> into the post-test unmount and check cleanly.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  check |   21 ++++++++++++++++++++-
+>  1 file changed, 20 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/check b/check
+> index 5072dd82..47c72fa2 100755
+> --- a/check
+> +++ b/check
+> @@ -521,6 +521,11 @@ _expunge_test()
+>  	return 0
+>  }
+>  
+> +# Can we run systemd scopes?
+> +HAVE_SYSTEMD_SCOPES=
+> +systemd-run --quiet --unit "fstests-check" --scope bash -c "exit 77" &> /dev/null
+> +test $? -eq 77 && HAVE_SYSTEMD_SCOPES=yes
+> +
+>  # Make the check script unattractive to the OOM killer...
+>  OOM_SCORE_ADJ="/proc/self/oom_score_adj"
+>  test -w ${OOM_SCORE_ADJ} && echo -1000 > ${OOM_SCORE_ADJ}
+> @@ -528,8 +533,22 @@ test -w ${OOM_SCORE_ADJ} && echo -1000 > ${OOM_SCORE_ADJ}
+>  # ...and make the tests themselves somewhat more attractive to it, so that if
+>  # the system runs out of memory it'll be the test that gets killed and not the
+>  # test framework.
+> +#
+> +# If systemd is available, run the entire test script in a scope so that we can
+> +# kill all subprocesses of the test if it fails to clean up after itself.  This
+> +# is essential for ensuring that the post-test unmount succeeds.
+>  _run_seq() {
+> -	bash -c "test -w ${OOM_SCORE_ADJ} && echo 250 > ${OOM_SCORE_ADJ}; exec ./$seq"
+> +	local cmd=(bash -c "test -w ${OOM_SCORE_ADJ} && echo 250 > ${OOM_SCORE_ADJ}; exec ./$seq")
+> +
+> +	if [ -n "${HAVE_SYSTEMD_SCOPES}" ]; then
+> +		local unit="$(systemd-escape "fs$seq").scope"
+> +		systemd-run --quiet --unit "${unit}" --scope "${cmd[@]}"
 
-Hi,
+/me discovers that systemd preserves failed transient scopes (where
+"failed" means the processes get killed, not that they return nonzero),
+so this patch has to reset-failed the scope in case the user calls
+fstests before rebooting.
 
-version #13 is on the list - it's rebased against 5.10-rc1 and also contains the changes Brian proposed.
+Hence, self NAK.
 
-Bye.
+--D
 
+> +		res=$?
+> +		systemctl stop "${unit}" &> /dev/null
+> +		return "${res}"
+> +	else
+> +		"${cmd[@]}"
+> +	fi
+>  }
+>  
+>  _detect_kmemleak
+> 
