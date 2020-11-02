@@ -5,319 +5,223 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB6A8C388F2
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 17:03:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FDB5C00A89
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 17:05:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B54820786
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 17:03:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E436C20786
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 17:05:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rR2cvg2e"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LfdkzVcO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727458AbgKBRDX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Nov 2020 12:03:23 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:39880 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727144AbgKBRDX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Nov 2020 12:03:23 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2GjPGl156878;
-        Mon, 2 Nov 2020 17:03:18 GMT
+        id S1727185AbgKBRFj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Nov 2020 12:05:39 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:40738 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727228AbgKBRFj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Nov 2020 12:05:39 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2H4sIE163029;
+        Mon, 2 Nov 2020 17:05:33 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=j0eHUfd+s72HH13DTtQtHpB5X+ZhcL1ff3ENF0Ac9q0=;
- b=rR2cvg2eUmbJBbQTg84KIV/Pf3B/WchQybeliLdZhTzqn4b0LqPaCS3sZYdXBcHgOlpj
- IluR0avADvhhU4pIO+CVfxIT6C8Mu3ueVVmyIWU7TMmTfIFSt9KbPkBBVQ5iei8bJGur
- D/2Hj8bVUcyn0Yd5qTOpQyKAY2RJ4bPXRORMJRl8htPCvIKSFA8E1CWxP9X6R0+C3ElK
- GlvjlxONaayfknZykSCVluIegbm5Sp9w+raNT13z5iiBlgrPnT8uSlAL1dpZTssMgiEh
- 0Wkwn49KxtW5phww9UUgQYTVyndxCaFw8KCae5Lma3Bfy4rOGMNBpZh3XSliIWRLeESh 1w== 
+ bh=ml89R8QLRJ/rSnRGFwLqimtrAGtpSWl7RGRD1ht8goU=;
+ b=LfdkzVcOd+Z2tc4OR7l6z1bTBOXl+L0kUd7jtCCR0tHD0z8+TB+4QOl5BbAUnkVtv+Vj
+ PSs8RHgpe9BL7gzTb6qHvz9PJqCZ1EEHn1qUUGGxe0bTdhPYe5ZxyQpktiCvtt/3/4Jt
+ O8/yELoID3E71BeHjFp40MgAlgvF30ugHaYEvykB+/+pFDy6gQsC1kK7I6L9rvHkXRRn
+ UpZQgmRy2fvOjMm1dE15myIxjcD/whLo61+8xZvUYdmkm6tNMvZbbwAMK3viEmMDfKBN
+ Ns65KXYNgTAB+w0EMEdRWWzl9E/J7Xr/yW/PzhBPh5IHG/dQysBDz0TZelaz2M2xEXRn 2A== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 34hhvc52mn-1
+        by userp2120.oracle.com with ESMTP id 34hhw2d471-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 02 Nov 2020 17:03:18 +0000
+        Mon, 02 Nov 2020 17:05:33 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2GkQ0t046485;
-        Mon, 2 Nov 2020 17:03:18 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 34hw0fbcdg-1
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2GkONn046332;
+        Mon, 2 Nov 2020 17:05:32 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 34hw0fbgem-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 02 Nov 2020 17:03:17 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A2H3G90013354;
-        Mon, 2 Nov 2020 17:03:17 GMT
+        Mon, 02 Nov 2020 17:05:32 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0A2H5UDx005411;
+        Mon, 2 Nov 2020 17:05:30 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 02 Nov 2020 09:03:15 -0800
-Date:   Mon, 2 Nov 2020 09:03:13 -0800
+        with ESMTP ; Mon, 02 Nov 2020 09:05:29 -0800
+Date:   Mon, 2 Nov 2020 09:05:28 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Gao Xiang <hsiangkao@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [RFC PATCH] xfsdump: fix handling bind mount targets
-Message-ID: <20201102170313.GB7123@magnolia>
-References: <20201102100120.660443-1-hsiangkao@redhat.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org,
+        allison.henderson@oracle.com
+Subject: Re: [PATCH V9 12/14] xfs: Compute bmap extent alignments in a
+ separate function
+Message-ID: <20201102170528.GC7123@magnolia>
+References: <20201102095048.100956-1-chandanrlinux@gmail.com>
+ <20201102095048.100956-13-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201102100120.660443-1-hsiangkao@redhat.com>
+In-Reply-To: <20201102095048.100956-13-chandanrlinux@gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9793 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 bulkscore=0
- mlxscore=0 suspectscore=1 spamscore=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 suspectscore=2 spamscore=0 mlxlogscore=999 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011020129
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9793 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1
- impostorscore=0 malwarescore=0 priorityscore=1501 mlxlogscore=999
- bulkscore=0 phishscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011020129
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
+ suspectscore=2 clxscore=1015 priorityscore=1501 impostorscore=0
+ spamscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011020130
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 02, 2020 at 06:01:20PM +0800, Gao Xiang wrote:
-> Sometimes, it's not true that the root directory is always
-> the first result from calling bulkstat with lastino == 0
-> assumed by xfsdump.
+On Mon, Nov 02, 2020 at 03:20:46PM +0530, Chandan Babu R wrote:
+> This commit moves over the code which computes stripe alignment and
+> extent size hint alignment into a separate function. Apart from
+> xfs_bmap_btalloc(), the new function will be used by another function
+> introduced in a future commit.
 > 
-> Recently XFS_BULK_IREQ_SPECIAL_ROOT was introduced last year,
-> yet that doesn't exist in old kernels.
-
-Is this patch supposed to make xfsrestore start using that?
-
-> Alternatively, we can also use bulkstat to walk through
-> all dirs and find the exact dir whose ino # of ".." is
-> itself by getdents, and that should be considered as the
-> root dir.
-> 
-> Fixes: 25195ebf107d ("xfsdump: handle bind mount targets")
-> Cc: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 > ---
-> preliminary test with the original testcase is done...
+>  fs/xfs/libxfs/xfs_bmap.c | 88 +++++++++++++++++++++++-----------------
+>  1 file changed, 51 insertions(+), 37 deletions(-)
 > 
->  dump/content.c | 168 ++++++++++++++++++++++++++++++++++++++++---------
->  1 file changed, 140 insertions(+), 28 deletions(-)
-> 
-> diff --git a/dump/content.c b/dump/content.c
-> index 30232d4..653d4eb 100644
-> --- a/dump/content.c
-> +++ b/dump/content.c
-> @@ -511,6 +511,132 @@ static bool_t create_inv_session(
->  		ix_t subtreecnt,
->  		size_t strmix);
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 64c4d0e384a5..935f2d506748 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3463,13 +3463,58 @@ xfs_bmap_btalloc_accounting(
+>  		args->len);
+>  }
 >  
-> +struct fixrootino_context {
-> +	xfs_ino_t	rootino;
-> +	struct dirent	*gdp;
-> +	size_t		gdsz;
-> +};
-> +
-> +static bool_t
-> +scan_rootinode(int fd,
-> +	       xfs_ino_t ino,
-> +	       struct dirent *gdp,
-> +	       size_t gdsz)
-> +{
-> +	while (1) {
-> +		struct dirent *p;
-> +		int nread;
-> +
-> +		nread = getdents_wrap(fd, (char *)gdp, gdsz);
-> +		/*
-> +		 * negative count indicates something very bad happened;
-> +		 * try to gracefully end this dir.
-> +		 */
-> +		if (nread < 0) {
-> +			mlog(MLOG_NORMAL | MLOG_WARNING,
-> +_("unable to read dirents for directory ino %llu: %s\n"),
-> +			      ino, strerror(errno));
-> +			/* !!! curtis looked at this, and pointed out that
-> +			 * we could take some recovery action here. if the
-> +			 * errno is appropriate, lseek64 to the value of
-> +			 * doff field of the last dirent successfully
-> +			 * obtained, and contiue the loop.
-> +			 */
-> +			nread = 0; /* pretend we are done */
-> +		}
-> +
-> +		/* no more directory entries: break; */
-> +		if (!nread)
-> +			break;
-> +
-> +		for (p = gdp; nread > 0;
-> +		     nread -= (int)p->d_reclen,
-> +		     assert(nread >= 0),
-> +		     p = (struct dirent *)((char *)p + p->d_reclen)) {
-> +			if (!strcmp(p->d_name, "..") && p->d_ino == ino) {
+> +static void
+> +xfs_bmap_compute_alignments(
+> +	struct xfs_bmalloca	*ap,
+> +	struct xfs_alloc_arg	*args,
+> +	int			*stripe_align)
 
-Doesn't this fail on bind mounted directories?  The VFS remaps '..' on a
-bind mount to the directory on the parent mount, which means...
-
-# ls -di /
-128 drwxr-xr-x 20 root root 317 May 30 10:05 //
-# ls -ila /home/
-total 16
-      128 drwxr-xr-x  9 root   root     90 Apr 28  2018 ./
-      128 drwxr-xr-x 20 root   root    317 May 30 10:05 ../
-
-that reading '..' won't get you to the root of /home, it'll get you to
-the root of the root filesystem.
+Uh were you going to change this to return stripe_align?
 
 --D
 
-> +				mlog(MLOG_NITTY, "FOUND: name %s d_ino %llu\n",
-> +				     p->d_name, ino);
-> +				return BOOL_TRUE;
-> +			}
-> +		}
-> +	}
-> +	return BOOL_FALSE;
-> +}
-> +
-> +/* ARGSUSED */
-> +static int
-> +cb_find_root_inode(void *arg1,
-> +	jdm_fshandle_t *fshandlep,
-> +	int fsfd,
-> +	struct xfs_bstat *statp)
 > +{
-> +	int fd;
-> +	struct fixrootino_context *ctx = arg1;
+> +	struct xfs_mount	*mp = args->mp;
+> +	xfs_extlen_t		align = 0; /* minimum allocation alignment */
+> +	int			error;
 > +
-> +	/* open the directory named by statp*/
-> +	fd = jdm_open(fshandlep, statp, O_RDONLY);
-> +	if (fd < 0) {
-> +		mlog(MLOG_NORMAL | MLOG_WARNING, _(
-> +		      "unable to open directory: ino %llu: %s\n"),
-> +		      statp->bs_ino, strerror(errno));
-> +		return RV_OK; /* continue anyway */
+> +	/* stripe alignment for allocation is determined by mount parameters */
+> +	*stripe_align = 0;
+> +	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
+> +		*stripe_align = mp->m_swidth;
+> +	else if (mp->m_dalign)
+> +		*stripe_align = mp->m_dalign;
+> +
+> +	if (ap->flags & XFS_BMAPI_COWFORK)
+> +		align = xfs_get_cowextsz_hint(ap->ip);
+> +	else if (ap->datatype & XFS_ALLOC_USERDATA)
+> +		align = xfs_get_extsz_hint(ap->ip);
+> +	if (align) {
+> +		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+> +						align, 0, ap->eof, 0, ap->conv,
+> +						&ap->offset, &ap->length);
+> +		ASSERT(!error);
+> +		ASSERT(ap->length);
 > +	}
 > +
-> +	if (scan_rootinode(fd, statp->bs_ino, ctx->gdp, ctx->gdsz)) {
-> +		ctx->rootino = statp->bs_ino;
-> +		return RV_NOMORE;
+> +	/* apply extent size hints if obtained earlier */
+> +	if (align) {
+> +		args->prod = align;
+> +		div_u64_rem(ap->offset, args->prod, &args->mod);
+> +		if (args->mod)
+> +			args->mod = args->prod - args->mod;
+> +	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
+> +		args->prod = 1;
+> +		args->mod = 0;
+> +	} else {
+> +		args->prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
+> +		div_u64_rem(ap->offset, args->prod, &args->mod);
+> +		if (args->mod)
+> +			args->mod = args->prod - args->mod;
 > +	}
-> +	return RV_OK;
 > +}
 > +
-> +static bool_t
-> +fix_root_inode(
-> +	stat64_t *rootstat,
-> +	struct xfs_bstat *sc_rootxfsstatp)
-> +{
-> +	struct xfs_bstat *bstatbufp;
-> +	int rval;
-> +	struct fixrootino_context ctx;
-> +	rv_t rv = RV_OK;
-> +
-> +	ctx.gdsz = sizeof(struct dirent) + NAME_MAX + 1;
-> +	if (ctx.gdsz < GETDENTSBUF_SZ_MIN)
-> +		ctx.gdsz = GETDENTSBUF_SZ_MIN;
-> +
-> +	ctx.gdp = (struct dirent *)calloc(1, ctx.gdsz);
-> +	assert(ctx.gdp);
-> +
-> +	/* already a root dir */
-> +	if (scan_rootinode(sc_fsfd, rootstat->st_ino, ctx.gdp, ctx.gdsz))
-> +		goto out;
-> +
-> +	/* allocate a buffer for use by bigstat_iter */
-> +	bstatbufp = (struct xfs_bstat *)calloc(BSTATBUFLEN,
-> +					       sizeof(struct xfs_bstat));
-> +	assert(bstatbufp);
-> +
-> +	rval = bigstat_iter(sc_fshandlep, sc_fsfd, BIGSTAT_ITER_DIR,
-> +			    (xfs_ino_t)0, cb_find_root_inode,
-> +			    &ctx, NULL, NULL, (int *)&rv, preemptchk,
-> +			    bstatbufp, BSTATBUFLEN);
-> +	if (rval)
-> +		return BOOL_FALSE;
-> +
-> +	if (rv != RV_NOMORE && rv != RV_OK)
-> +		return BOOL_FALSE;
-> +
-> +	mlog(MLOG_NORMAL | MLOG_NOTE,
-> +	     "fix up rootino %lld, bind mount?\n", ctx.rootino);
-> +	rootstat->st_ino = ctx.rootino;
-> +out:
-> +	if (bigstat_one(sc_fsfd, rootstat->st_ino, sc_rootxfsstatp) < 0) {
-> +		mlog( MLOG_ERROR,
-> +		      _("failed to get bulkstat information for root inode\n"));
-> +		return BOOL_FALSE;
-> +	}
-> +	return BOOL_TRUE;
-> +}
-> +
->  bool_t
->  content_init(int argc,
->  	      char *argv[],
-> @@ -1381,6 +1507,18 @@ baseuuidbypass:
->  		return BOOL_FALSE;
->  	}
+>  STATIC int
+>  xfs_bmap_btalloc(
+>  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+>  {
+>  	xfs_mount_t	*mp;		/* mount point structure */
+>  	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
+> -	xfs_extlen_t	align = 0;	/* minimum allocation alignment */
+>  	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+>  	xfs_agnumber_t	ag;
+>  	xfs_alloc_arg_t	args;
+> @@ -3489,25 +3534,11 @@ xfs_bmap_btalloc(
 >  
-> +	/* alloc a file system handle, to be used with the jdm_open()
-> +	 * functions.
-> +	 */
-> +	sc_fshandlep = jdm_getfshandle(mntpnt);
-> +	if (!sc_fshandlep) {
-> +		mlog(MLOG_NORMAL, _(
-> +		      "unable to construct a file system handle for %s: %s\n"),
-> +		      mntpnt,
-> +		      strerror(errno));
-> +		return BOOL_FALSE;
-> +	}
-> +
->  	/* figure out the ino for the root directory of the fs
->  	 * and get its struct xfs_bstat for inomap_build().  This could
->  	 * be a bind mount; don't ask for the mount point inode,
-> @@ -1388,9 +1526,6 @@ baseuuidbypass:
->  	 */
->  	{
->  		stat64_t rootstat;
-> -		xfs_ino_t lastino = 0;
-> -		int ocount = 0;
-> -		struct xfs_fsop_bulkreq bulkreq;
+>  	mp = ap->ip->i_mount;
 >  
->  		/* Get the inode of the mount point */
->  		rval = fstat64(sc_fsfd, &rootstat);
-> @@ -1404,33 +1539,10 @@ baseuuidbypass:
->  			(struct xfs_bstat *)calloc(1, sizeof(struct xfs_bstat));
->  		assert(sc_rootxfsstatp);
->  
-> -		/* Get the first valid (i.e. root) inode in this fs */
-> -		bulkreq.lastip = (__u64 *)&lastino;
-> -		bulkreq.icount = 1;
-> -		bulkreq.ubuffer = sc_rootxfsstatp;
-> -		bulkreq.ocount = &ocount;
-> -		if (ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq) < 0) {
-> -			mlog(MLOG_ERROR,
-> -			      _("failed to get bulkstat information for root inode\n"));
-> +		if (!fix_root_inode(&rootstat, sc_rootxfsstatp)) {
-> +			mlog(MLOG_ERROR, _("failed to fix root inode\n"));
->  			return BOOL_FALSE;
->  		}
+> -	/* stripe alignment for allocation is determined by mount parameters */
+> -	stripe_align = 0;
+> -	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
+> -		stripe_align = mp->m_swidth;
+> -	else if (mp->m_dalign)
+> -		stripe_align = mp->m_dalign;
 > -
-> -		if (sc_rootxfsstatp->bs_ino != rootstat.st_ino)
-> -			mlog (MLOG_NORMAL | MLOG_NOTE,
-> -			       _("root ino %lld differs from mount dir ino %lld, bind mount?\n"),
-> -			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
+> -	if (ap->flags & XFS_BMAPI_COWFORK)
+> -		align = xfs_get_cowextsz_hint(ap->ip);
+> -	else if (ap->datatype & XFS_ALLOC_USERDATA)
+> -		align = xfs_get_extsz_hint(ap->ip);
+> -	if (align) {
+> -		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+> -						align, 0, ap->eof, 0, ap->conv,
+> -						&ap->offset, &ap->length);
+> -		ASSERT(!error);
+> -		ASSERT(ap->length);
 > -	}
-> -
-> -	/* alloc a file system handle, to be used with the jdm_open()
-> -	 * functions.
-> -	 */
-> -	sc_fshandlep = jdm_getfshandle(mntpnt);
-> -	if (!sc_fshandlep) {
-> -		mlog(MLOG_NORMAL, _(
-> -		      "unable to construct a file system handle for %s: %s\n"),
-> -		      mntpnt,
-> -		      strerror(errno));
-> -		return BOOL_FALSE;
->  	}
+> +	memset(&args, 0, sizeof(args));
+> +	args.tp = ap->tp;
+> +	args.mp = mp;
 >  
->  	if (preemptchk(PREEMPT_FULL)) {
+> +	xfs_bmap_compute_alignments(ap, &args, &stripe_align);
+>  
+>  	nullfb = ap->tp->t_firstblock == NULLFSBLOCK;
+>  	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp,
+> @@ -3538,9 +3569,6 @@ xfs_bmap_btalloc(
+>  	 * Normal allocation, done through xfs_alloc_vextent.
+>  	 */
+>  	tryagain = isaligned = 0;
+> -	memset(&args, 0, sizeof(args));
+> -	args.tp = ap->tp;
+> -	args.mp = mp;
+>  	args.fsbno = ap->blkno;
+>  	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
+>  
+> @@ -3571,21 +3599,7 @@ xfs_bmap_btalloc(
+>  		args.total = ap->total;
+>  		args.minlen = ap->minlen;
+>  	}
+> -	/* apply extent size hints if obtained earlier */
+> -	if (align) {
+> -		args.prod = align;
+> -		div_u64_rem(ap->offset, args.prod, &args.mod);
+> -		if (args.mod)
+> -			args.mod = args.prod - args.mod;
+> -	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
+> -		args.prod = 1;
+> -		args.mod = 0;
+> -	} else {
+> -		args.prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
+> -		div_u64_rem(ap->offset, args.prod, &args.mod);
+> -		if (args.mod)
+> -			args.mod = args.prod - args.mod;
+> -	}
+> +
+>  	/*
+>  	 * If we are not low on available data blocks, and the underlying
+>  	 * logical volume manager is a stripe, and the file offset is zero then
 > -- 
-> 2.18.1
+> 2.28.0
 > 
