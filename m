@@ -5,216 +5,319 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD84C388F2
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 16:55:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB6A8C388F2
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 17:03:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D968B222B9
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 16:55:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B54820786
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 17:03:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uv8V4Qf4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rR2cvg2e"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727393AbgKBQzT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Nov 2020 11:55:19 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:59744 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727267AbgKBQzS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Nov 2020 11:55:18 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2GipSt125557;
-        Mon, 2 Nov 2020 16:55:09 GMT
+        id S1727458AbgKBRDX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Nov 2020 12:03:23 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:39880 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727144AbgKBRDX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Nov 2020 12:03:23 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2GjPGl156878;
+        Mon, 2 Nov 2020 17:03:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=fpbCG2OtM1Up+kxO9vDyx7qYKStM0Y5WPsRxKyG/cJI=;
- b=uv8V4Qf4EQB9/QknsVF9Fi+L5IzOM4Wwg0EdpgdoVrzuOAiw0U7kWc2aDPwhz/5P2nfO
- zvgqR+c6RnG5U434+RUrVh30FYJx3U/3jjyrpCN7OA6PQx844u6C0NeBdcauoa4c78Hm
- eCakjsdk+baDOOmmLcq41BgFp5XKu29bePRp3OhdeSzcD890v2BVLKbWTrHBVMC2MZwz
- t/SwcXA+DTQikvbYJBR/QOPIuwAg4gf5sdjD3j+xOFswEV7ZLSzRtPDgmTCzmQcFK6+7
- 2i2YRwz8GcfhqIvmeQ/U+6ORLu54UIuwVlOFNsf5VCztdUPKkKxrNNNAG8SPWet/tB1x hQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 34hhw2d26h-1
+ bh=j0eHUfd+s72HH13DTtQtHpB5X+ZhcL1ff3ENF0Ac9q0=;
+ b=rR2cvg2eUmbJBbQTg84KIV/Pf3B/WchQybeliLdZhTzqn4b0LqPaCS3sZYdXBcHgOlpj
+ IluR0avADvhhU4pIO+CVfxIT6C8Mu3ueVVmyIWU7TMmTfIFSt9KbPkBBVQ5iei8bJGur
+ D/2Hj8bVUcyn0Yd5qTOpQyKAY2RJ4bPXRORMJRl8htPCvIKSFA8E1CWxP9X6R0+C3ElK
+ GlvjlxONaayfknZykSCVluIegbm5Sp9w+raNT13z5iiBlgrPnT8uSlAL1dpZTssMgiEh
+ 0Wkwn49KxtW5phww9UUgQYTVyndxCaFw8KCae5Lma3Bfy4rOGMNBpZh3XSliIWRLeESh 1w== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 34hhvc52mn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Mon, 02 Nov 2020 16:55:08 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2Gijnr188226;
-        Mon, 2 Nov 2020 16:55:08 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 34jf46sw14-1
+        Mon, 02 Nov 2020 17:03:18 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2GkQ0t046485;
+        Mon, 2 Nov 2020 17:03:18 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 34hw0fbcdg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 02 Nov 2020 16:55:07 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A2Gt4LQ017674;
-        Mon, 2 Nov 2020 16:55:04 GMT
+        Mon, 02 Nov 2020 17:03:17 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A2H3G90013354;
+        Mon, 2 Nov 2020 17:03:17 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 02 Nov 2020 08:55:04 -0800
-Date:   Mon, 2 Nov 2020 08:55:02 -0800
+        with ESMTP ; Mon, 02 Nov 2020 09:03:15 -0800
+Date:   Mon, 2 Nov 2020 09:03:13 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Naohiro Aota <naohiro.aota@wdc.com>
-Cc:     linux-btrfs@vger.kernel.org, dsterba@suse.com, hare@suse.com,
-        linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v9 02/41] iomap: support REQ_OP_ZONE_APPEND
-Message-ID: <20201102165502.GA7123@magnolia>
-References: <d9a0a445560db3a9eb240c6535f8dd1bbd0abd96.1604065694.git.naohiro.aota@wdc.com>
- <cb409918a22b8f15ec20d7efad2281cb4c99d18c.1604065694.git.naohiro.aota@wdc.com>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [RFC PATCH] xfsdump: fix handling bind mount targets
+Message-ID: <20201102170313.GB7123@magnolia>
+References: <20201102100120.660443-1-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <cb409918a22b8f15ec20d7efad2281cb4c99d18c.1604065694.git.naohiro.aota@wdc.com>
+In-Reply-To: <20201102100120.660443-1-hsiangkao@redhat.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9793 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1 mlxscore=0
- bulkscore=0 malwarescore=0 mlxlogscore=999 phishscore=0 adultscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0 bulkscore=0
+ mlxscore=0 suspectscore=1 spamscore=0 mlxlogscore=999 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011020129
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9793 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
- suspectscore=1 clxscore=1011 priorityscore=1501 impostorscore=0
- spamscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011020129
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1
+ impostorscore=0 malwarescore=0 priorityscore=1501 mlxlogscore=999
+ bulkscore=0 phishscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011020129
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 30, 2020 at 10:51:09PM +0900, Naohiro Aota wrote:
-> A ZONE_APPEND bio must follow hardware restrictions (e.g. not exceeding
-> max_zone_append_sectors) not to be split. bio_iov_iter_get_pages builds
-> such restricted bio using __bio_iov_append_get_pages if bio_op(bio) ==
-> REQ_OP_ZONE_APPEND.
+On Mon, Nov 02, 2020 at 06:01:20PM +0800, Gao Xiang wrote:
+> Sometimes, it's not true that the root directory is always
+> the first result from calling bulkstat with lastino == 0
+> assumed by xfsdump.
 > 
-> To utilize it, we need to set the bio_op before calling
-> bio_iov_iter_get_pages(). This commit introduces IOMAP_F_ZONE_APPEND, so
-> that iomap user can set the flag to indicate they want REQ_OP_ZONE_APPEND
-> and restricted bio.
+> Recently XFS_BULK_IREQ_SPECIAL_ROOT was introduced last year,
+> yet that doesn't exist in old kernels.
 
-Would you mind putting this paragraph in a comment before the
-bio_iov_iter_get_pages call?  I could easily see someone (i.e. 2021 me)
-forgetting there's a data dependency and breaking this.
+Is this patch supposed to make xfsrestore start using that?
 
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Signed-off-by: Naohiro Aota <naohiro.aota@wdc.com>
+> Alternatively, we can also use bulkstat to walk through
+> all dirs and find the exact dir whose ino # of ".." is
+> itself by getdents, and that should be considered as the
+> root dir.
+> 
+> Fixes: 25195ebf107d ("xfsdump: handle bind mount targets")
+> Cc: Eric Sandeen <sandeen@redhat.com>
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 > ---
->  fs/iomap/direct-io.c  | 22 ++++++++++++++++------
->  include/linux/iomap.h |  1 +
->  2 files changed, 17 insertions(+), 6 deletions(-)
+> preliminary test with the original testcase is done...
 > 
-> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-> index c1aafb2ab990..e534703c5594 100644
-> --- a/fs/iomap/direct-io.c
-> +++ b/fs/iomap/direct-io.c
-> @@ -210,6 +210,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  	struct bio *bio;
->  	bool need_zeroout = false;
->  	bool use_fua = false;
-> +	bool zone_append = false;
->  	int nr_pages, ret = 0;
->  	size_t copied = 0;
->  	size_t orig_count;
-> @@ -241,6 +242,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  			use_fua = true;
->  	}
+>  dump/content.c | 168 ++++++++++++++++++++++++++++++++++++++++---------
+>  1 file changed, 140 insertions(+), 28 deletions(-)
+> 
+> diff --git a/dump/content.c b/dump/content.c
+> index 30232d4..653d4eb 100644
+> --- a/dump/content.c
+> +++ b/dump/content.c
+> @@ -511,6 +511,132 @@ static bool_t create_inv_session(
+>  		ix_t subtreecnt,
+>  		size_t strmix);
 >  
-> +	zone_append = ;
+> +struct fixrootino_context {
+> +	xfs_ino_t	rootino;
+> +	struct dirent	*gdp;
+> +	size_t		gdsz;
+> +};
 > +
->  	/*
->  	 * Save the original count and trim the iter to just the extent we
->  	 * are operating on right now.  The iter will be re-expanded once
-> @@ -278,6 +281,19 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
->  		bio->bi_private = dio;
->  		bio->bi_end_io = iomap_dio_bio_end_io;
->  
-> +		if (dio->flags & IOMAP_DIO_WRITE) {
-> +			bio->bi_opf = (zone_append ? REQ_OP_ZONE_APPEND : REQ_OP_WRITE) |
-> +				      REQ_SYNC | REQ_IDLE;
-> +			if (use_fua)
-> +				bio->bi_opf |= REQ_FUA;
-> +			else
-> +				dio->flags &= ~IOMAP_DIO_WRITE_FUA;
-> +		} else {
-> +			WARN_ON_ONCE(zone_append);
+> +static bool_t
+> +scan_rootinode(int fd,
+> +	       xfs_ino_t ino,
+> +	       struct dirent *gdp,
+> +	       size_t gdsz)
+> +{
+> +	while (1) {
+> +		struct dirent *p;
+> +		int nread;
 > +
-> +			bio->bi_opf = REQ_OP_READ;
+> +		nread = getdents_wrap(fd, (char *)gdp, gdsz);
+> +		/*
+> +		 * negative count indicates something very bad happened;
+> +		 * try to gracefully end this dir.
+> +		 */
+> +		if (nread < 0) {
+> +			mlog(MLOG_NORMAL | MLOG_WARNING,
+> +_("unable to read dirents for directory ino %llu: %s\n"),
+> +			      ino, strerror(errno));
+> +			/* !!! curtis looked at this, and pointed out that
+> +			 * we could take some recovery action here. if the
+> +			 * errno is appropriate, lseek64 to the value of
+> +			 * doff field of the last dirent successfully
+> +			 * obtained, and contiue the loop.
+> +			 */
+> +			nread = 0; /* pretend we are done */
 > +		}
+> +
+> +		/* no more directory entries: break; */
+> +		if (!nread)
+> +			break;
+> +
+> +		for (p = gdp; nread > 0;
+> +		     nread -= (int)p->d_reclen,
+> +		     assert(nread >= 0),
+> +		     p = (struct dirent *)((char *)p + p->d_reclen)) {
+> +			if (!strcmp(p->d_name, "..") && p->d_ino == ino) {
 
-Also, I think this should be hoisted into a separate helper to return
-bi_opf rather than making iomap_dio_bio_actor even longer...
+Doesn't this fail on bind mounted directories?  The VFS remaps '..' on a
+bind mount to the directory on the parent mount, which means...
 
-/*
- * Figure out the bio's operation flags from the dio request, the
- * mapping, and whether or not we want FUA.  Note that we can end up
- * clearing the WRITE_FUA flag in the dio request.
- */
-static inline unsigned int
-iomap_dio_bio_opflags(struct iomap_dio *dio, struct iomap *iomap, bool use_fua)
-{
-	unsigned int opflags = REQ_SYNC | REQ_IDLE;
+# ls -di /
+128 drwxr-xr-x 20 root root 317 May 30 10:05 //
+# ls -ila /home/
+total 16
+      128 drwxr-xr-x  9 root   root     90 Apr 28  2018 ./
+      128 drwxr-xr-x 20 root   root    317 May 30 10:05 ../
 
-	if (!(dio->flags & IOMAP_DIO_WRITE)) {
-		WARN_ON_ONCE(iomap->flags & IOMAP_F_ZONE_APPEND);
-		return REQ_OP_READ;
-	}
-
-	if (iomap->flags & IOMAP_F_ZONE_APPEND)
-		opflags |= REQ_OP_ZONE_APPEND;
-	else
-		opflags |= REQ_OP_WRITE;
-
-	if (use_fua)
-		opflags |= REQ_FUA;
-	else
-		dio->flags &= ~IOMAP_DIO_WRITE_FUA;
-
-	return opflags;
-}
-
-	/*
-	 * Set the operation flags early so that bio_iov_iter_get_pages can
-	 * set up the page vector appropriately for a ZONE_APPEND operation.
-	 */
-	bio->bi_opf = iomap_dio_bio_opflags(dio, iomap, use_fua);
-
-	ret = bio_iov_iter_get_pages(bio, dio->submit.iter);
-	if (unlikely(ret)) {
+that reading '..' won't get you to the root of /home, it'll get you to
+the root of the root filesystem.
 
 --D
 
+> +				mlog(MLOG_NITTY, "FOUND: name %s d_ino %llu\n",
+> +				     p->d_name, ino);
+> +				return BOOL_TRUE;
+> +			}
+> +		}
+> +	}
+> +	return BOOL_FALSE;
+> +}
 > +
->  		ret = bio_iov_iter_get_pages(bio, dio->submit.iter);
->  		if (unlikely(ret)) {
->  			/*
-> @@ -292,14 +308,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+> +/* ARGSUSED */
+> +static int
+> +cb_find_root_inode(void *arg1,
+> +	jdm_fshandle_t *fshandlep,
+> +	int fsfd,
+> +	struct xfs_bstat *statp)
+> +{
+> +	int fd;
+> +	struct fixrootino_context *ctx = arg1;
+> +
+> +	/* open the directory named by statp*/
+> +	fd = jdm_open(fshandlep, statp, O_RDONLY);
+> +	if (fd < 0) {
+> +		mlog(MLOG_NORMAL | MLOG_WARNING, _(
+> +		      "unable to open directory: ino %llu: %s\n"),
+> +		      statp->bs_ino, strerror(errno));
+> +		return RV_OK; /* continue anyway */
+> +	}
+> +
+> +	if (scan_rootinode(fd, statp->bs_ino, ctx->gdp, ctx->gdsz)) {
+> +		ctx->rootino = statp->bs_ino;
+> +		return RV_NOMORE;
+> +	}
+> +	return RV_OK;
+> +}
+> +
+> +static bool_t
+> +fix_root_inode(
+> +	stat64_t *rootstat,
+> +	struct xfs_bstat *sc_rootxfsstatp)
+> +{
+> +	struct xfs_bstat *bstatbufp;
+> +	int rval;
+> +	struct fixrootino_context ctx;
+> +	rv_t rv = RV_OK;
+> +
+> +	ctx.gdsz = sizeof(struct dirent) + NAME_MAX + 1;
+> +	if (ctx.gdsz < GETDENTSBUF_SZ_MIN)
+> +		ctx.gdsz = GETDENTSBUF_SZ_MIN;
+> +
+> +	ctx.gdp = (struct dirent *)calloc(1, ctx.gdsz);
+> +	assert(ctx.gdp);
+> +
+> +	/* already a root dir */
+> +	if (scan_rootinode(sc_fsfd, rootstat->st_ino, ctx.gdp, ctx.gdsz))
+> +		goto out;
+> +
+> +	/* allocate a buffer for use by bigstat_iter */
+> +	bstatbufp = (struct xfs_bstat *)calloc(BSTATBUFLEN,
+> +					       sizeof(struct xfs_bstat));
+> +	assert(bstatbufp);
+> +
+> +	rval = bigstat_iter(sc_fshandlep, sc_fsfd, BIGSTAT_ITER_DIR,
+> +			    (xfs_ino_t)0, cb_find_root_inode,
+> +			    &ctx, NULL, NULL, (int *)&rv, preemptchk,
+> +			    bstatbufp, BSTATBUFLEN);
+> +	if (rval)
+> +		return BOOL_FALSE;
+> +
+> +	if (rv != RV_NOMORE && rv != RV_OK)
+> +		return BOOL_FALSE;
+> +
+> +	mlog(MLOG_NORMAL | MLOG_NOTE,
+> +	     "fix up rootino %lld, bind mount?\n", ctx.rootino);
+> +	rootstat->st_ino = ctx.rootino;
+> +out:
+> +	if (bigstat_one(sc_fsfd, rootstat->st_ino, sc_rootxfsstatp) < 0) {
+> +		mlog( MLOG_ERROR,
+> +		      _("failed to get bulkstat information for root inode\n"));
+> +		return BOOL_FALSE;
+> +	}
+> +	return BOOL_TRUE;
+> +}
+> +
+>  bool_t
+>  content_init(int argc,
+>  	      char *argv[],
+> @@ -1381,6 +1507,18 @@ baseuuidbypass:
+>  		return BOOL_FALSE;
+>  	}
 >  
->  		n = bio->bi_iter.bi_size;
->  		if (dio->flags & IOMAP_DIO_WRITE) {
-> -			bio->bi_opf = REQ_OP_WRITE | REQ_SYNC | REQ_IDLE;
-> -			if (use_fua)
-> -				bio->bi_opf |= REQ_FUA;
-> -			else
-> -				dio->flags &= ~IOMAP_DIO_WRITE_FUA;
->  			task_io_account_write(n);
->  		} else {
-> -			bio->bi_opf = REQ_OP_READ;
->  			if (dio->flags & IOMAP_DIO_DIRTY)
->  				bio_set_pages_dirty(bio);
+> +	/* alloc a file system handle, to be used with the jdm_open()
+> +	 * functions.
+> +	 */
+> +	sc_fshandlep = jdm_getfshandle(mntpnt);
+> +	if (!sc_fshandlep) {
+> +		mlog(MLOG_NORMAL, _(
+> +		      "unable to construct a file system handle for %s: %s\n"),
+> +		      mntpnt,
+> +		      strerror(errno));
+> +		return BOOL_FALSE;
+> +	}
+> +
+>  	/* figure out the ino for the root directory of the fs
+>  	 * and get its struct xfs_bstat for inomap_build().  This could
+>  	 * be a bind mount; don't ask for the mount point inode,
+> @@ -1388,9 +1526,6 @@ baseuuidbypass:
+>  	 */
+>  	{
+>  		stat64_t rootstat;
+> -		xfs_ino_t lastino = 0;
+> -		int ocount = 0;
+> -		struct xfs_fsop_bulkreq bulkreq;
+>  
+>  		/* Get the inode of the mount point */
+>  		rval = fstat64(sc_fsfd, &rootstat);
+> @@ -1404,33 +1539,10 @@ baseuuidbypass:
+>  			(struct xfs_bstat *)calloc(1, sizeof(struct xfs_bstat));
+>  		assert(sc_rootxfsstatp);
+>  
+> -		/* Get the first valid (i.e. root) inode in this fs */
+> -		bulkreq.lastip = (__u64 *)&lastino;
+> -		bulkreq.icount = 1;
+> -		bulkreq.ubuffer = sc_rootxfsstatp;
+> -		bulkreq.ocount = &ocount;
+> -		if (ioctl(sc_fsfd, XFS_IOC_FSBULKSTAT, &bulkreq) < 0) {
+> -			mlog(MLOG_ERROR,
+> -			      _("failed to get bulkstat information for root inode\n"));
+> +		if (!fix_root_inode(&rootstat, sc_rootxfsstatp)) {
+> +			mlog(MLOG_ERROR, _("failed to fix root inode\n"));
+>  			return BOOL_FALSE;
 >  		}
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 4d1d3c3469e9..1bccd1880d0d 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -54,6 +54,7 @@ struct vm_fault;
->  #define IOMAP_F_SHARED		0x04
->  #define IOMAP_F_MERGED		0x08
->  #define IOMAP_F_BUFFER_HEAD	0x10
-> +#define IOMAP_F_ZONE_APPEND	0x20
+> -
+> -		if (sc_rootxfsstatp->bs_ino != rootstat.st_ino)
+> -			mlog (MLOG_NORMAL | MLOG_NOTE,
+> -			       _("root ino %lld differs from mount dir ino %lld, bind mount?\n"),
+> -			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
+> -	}
+> -
+> -	/* alloc a file system handle, to be used with the jdm_open()
+> -	 * functions.
+> -	 */
+> -	sc_fshandlep = jdm_getfshandle(mntpnt);
+> -	if (!sc_fshandlep) {
+> -		mlog(MLOG_NORMAL, _(
+> -		      "unable to construct a file system handle for %s: %s\n"),
+> -		      mntpnt,
+> -		      strerror(errno));
+> -		return BOOL_FALSE;
+>  	}
 >  
->  /*
->   * Flags set by the core iomap code during operations:
+>  	if (preemptchk(PREEMPT_FULL)) {
 > -- 
-> 2.27.0
+> 2.18.1
 > 
