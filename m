@@ -2,108 +2,219 @@ Return-Path: <SRS0=AlMJ=EI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C08EAC00A89
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 10:18:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD84C388F2
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 16:55:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D91A2225E
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 10:18:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D968B222B9
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Nov 2020 16:55:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="K/Xf1PJ3"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="uv8V4Qf4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728132AbgKBKSi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Nov 2020 05:18:38 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:24711 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728005AbgKBKSi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Nov 2020 05:18:38 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1604312317;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=CeWbDhDo2Gw9STZku/FwuhApJ6x2gXsMqFCyGJfbl10=;
-        b=K/Xf1PJ3xJkUYLZ+/2QqTXwrJRlVR1zMXn6uAgFmNJpJ7RVpffld+LTnnpDkrzy6iQ5rNx
-        Y1IhPYvOThKkN3+TZHaZZcoaHOmx4zRLSJP7Wtxs4W/IO10y+b1CRizuv397DvszYvnx7F
-        qlXhwubtHMlmD6/0NQ3D2HYKYd2WF8k=
-Received: from mail-pg1-f197.google.com (mail-pg1-f197.google.com
- [209.85.215.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-209-RYriyQcSNF238qzscoaorQ-1; Mon, 02 Nov 2020 05:18:35 -0500
-X-MC-Unique: RYriyQcSNF238qzscoaorQ-1
-Received: by mail-pg1-f197.google.com with SMTP id c9so5921719pgk.10
-        for <linux-xfs@vger.kernel.org>; Mon, 02 Nov 2020 02:18:35 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=CeWbDhDo2Gw9STZku/FwuhApJ6x2gXsMqFCyGJfbl10=;
-        b=ZnkrAEaqm33I+mHdJIhnDgXwZ/uRl+LyBVFq2N+HG1N/2f3hqBWvfVFP8HBGsZrMMA
-         ZzjCiEgtOHZoKifgoxF55sQntGeYW/iMIPVIr6EbxJyUxXhLlM2+/HRTV+B7a8I9sqSS
-         vjhaaUUROPeIq9bQLOdM2rGnMDpwUSprJeJZ0sexZpIkt0Ul9eyHWycydll1FsSxtJuI
-         zAeCrvV2OY5olMpu25Iq/tj+mFdGh34VIiQ9T/NTw8vBEfyLMQ16/9utBxuESK0wxNz3
-         X7R3GN0Qlazigk3UHNGgFJTyXuTCuoP6qungp5jQWyvycbefs6YRZiKOLnI5M/AfI8us
-         qFFw==
-X-Gm-Message-State: AOAM533sc5XTXnC7pt/lPNkYTbtMopaujAs7q8uFWs+fsvTmWbTkXFTH
-        taiAl1oLO6UEPRpPKlhK74+2wRWWXjr5KrGoiUigm2LL53gpFZiJgmqagkyolTxbw1JE0q841pb
-        csEvhQuxOSqgWAQImeIXj
-X-Received: by 2002:a17:90b:ec9:: with SMTP id gz9mr2252pjb.105.1604312314462;
-        Mon, 02 Nov 2020 02:18:34 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyv4l97rHKve0rJVBYtslAqVYetcWb/r0FiLq7WgFhentaQYCLSKiGfb2B15AnpUT96uL6mNA==
-X-Received: by 2002:a17:90b:ec9:: with SMTP id gz9mr2223pjb.105.1604312314203;
-        Mon, 02 Nov 2020 02:18:34 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id j5sm4426583pji.29.2020.11.02.02.18.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Nov 2020 02:18:33 -0800 (PST)
-Date:   Mon, 2 Nov 2020 18:18:24 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [RFC PATCH] xfsdump: fix handling bind mount targets
-Message-ID: <20201102101824.GA661583@xiangao.remote.csb>
-References: <20201102100120.660443-1-hsiangkao@redhat.com>
+        id S1727393AbgKBQzT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Nov 2020 11:55:19 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:59744 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727267AbgKBQzS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Nov 2020 11:55:18 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2GipSt125557;
+        Mon, 2 Nov 2020 16:55:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=fpbCG2OtM1Up+kxO9vDyx7qYKStM0Y5WPsRxKyG/cJI=;
+ b=uv8V4Qf4EQB9/QknsVF9Fi+L5IzOM4Wwg0EdpgdoVrzuOAiw0U7kWc2aDPwhz/5P2nfO
+ zvgqR+c6RnG5U434+RUrVh30FYJx3U/3jjyrpCN7OA6PQx844u6C0NeBdcauoa4c78Hm
+ eCakjsdk+baDOOmmLcq41BgFp5XKu29bePRp3OhdeSzcD890v2BVLKbWTrHBVMC2MZwz
+ t/SwcXA+DTQikvbYJBR/QOPIuwAg4gf5sdjD3j+xOFswEV7ZLSzRtPDgmTCzmQcFK6+7
+ 2i2YRwz8GcfhqIvmeQ/U+6ORLu54UIuwVlOFNsf5VCztdUPKkKxrNNNAG8SPWet/tB1x hQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 34hhw2d26h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 02 Nov 2020 16:55:08 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A2Gijnr188226;
+        Mon, 2 Nov 2020 16:55:08 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 34jf46sw14-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 02 Nov 2020 16:55:07 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A2Gt4LQ017674;
+        Mon, 2 Nov 2020 16:55:04 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 02 Nov 2020 08:55:04 -0800
+Date:   Mon, 2 Nov 2020 08:55:02 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Naohiro Aota <naohiro.aota@wdc.com>
+Cc:     linux-btrfs@vger.kernel.org, dsterba@suse.com, hare@suse.com,
+        linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v9 02/41] iomap: support REQ_OP_ZONE_APPEND
+Message-ID: <20201102165502.GA7123@magnolia>
+References: <d9a0a445560db3a9eb240c6535f8dd1bbd0abd96.1604065694.git.naohiro.aota@wdc.com>
+ <cb409918a22b8f15ec20d7efad2281cb4c99d18c.1604065694.git.naohiro.aota@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201102100120.660443-1-hsiangkao@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <cb409918a22b8f15ec20d7efad2281cb4c99d18c.1604065694.git.naohiro.aota@wdc.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9793 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=1 mlxscore=0
+ bulkscore=0 malwarescore=0 mlxlogscore=999 phishscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011020129
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9793 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
+ suspectscore=1 clxscore=1011 priorityscore=1501 impostorscore=0
+ spamscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011020129
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 02, 2020 at 06:01:20PM +0800, Gao Xiang wrote:
-> Sometimes, it's not true that the root directory is always
-> the first result from calling bulkstat with lastino == 0
-> assumed by xfsdump.
+On Fri, Oct 30, 2020 at 10:51:09PM +0900, Naohiro Aota wrote:
+> A ZONE_APPEND bio must follow hardware restrictions (e.g. not exceeding
+> max_zone_append_sectors) not to be split. bio_iov_iter_get_pages builds
+> such restricted bio using __bio_iov_append_get_pages if bio_op(bio) ==
+> REQ_OP_ZONE_APPEND.
 > 
-> Recently XFS_BULK_IREQ_SPECIAL_ROOT was introduced last year,
-> yet that doesn't exist in old kernels.
-> 
-> Alternatively, we can also use bulkstat to walk through
-> all dirs and find the exact dir whose ino # of ".." is
-> itself by getdents, and that should be considered as the
-> root dir.
-> 
-> Fixes: 25195ebf107d ("xfsdump: handle bind mount targets")
-> Cc: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> To utilize it, we need to set the bio_op before calling
+> bio_iov_iter_get_pages(). This commit introduces IOMAP_F_ZONE_APPEND, so
+> that iomap user can set the flag to indicate they want REQ_OP_ZONE_APPEND
+> and restricted bio.
+
+Would you mind putting this paragraph in a comment before the
+bio_iov_iter_get_pages call?  I could easily see someone (i.e. 2021 me)
+forgetting there's a data dependency and breaking this.
+
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Cc: linux-xfs@vger.kernel.org
+> Signed-off-by: Naohiro Aota <naohiro.aota@wdc.com>
 > ---
-> preliminary test with the original testcase is done...
+>  fs/iomap/direct-io.c  | 22 ++++++++++++++++------
+>  include/linux/iomap.h |  1 +
+>  2 files changed, 17 insertions(+), 6 deletions(-)
+> 
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index c1aafb2ab990..e534703c5594 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -210,6 +210,7 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  	struct bio *bio;
+>  	bool need_zeroout = false;
+>  	bool use_fua = false;
+> +	bool zone_append = false;
+>  	int nr_pages, ret = 0;
+>  	size_t copied = 0;
+>  	size_t orig_count;
+> @@ -241,6 +242,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  			use_fua = true;
+>  	}
+>  
+> +	zone_append = ;
+> +
+>  	/*
+>  	 * Save the original count and trim the iter to just the extent we
+>  	 * are operating on right now.  The iter will be re-expanded once
+> @@ -278,6 +281,19 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  		bio->bi_private = dio;
+>  		bio->bi_end_io = iomap_dio_bio_end_io;
+>  
+> +		if (dio->flags & IOMAP_DIO_WRITE) {
+> +			bio->bi_opf = (zone_append ? REQ_OP_ZONE_APPEND : REQ_OP_WRITE) |
+> +				      REQ_SYNC | REQ_IDLE;
+> +			if (use_fua)
+> +				bio->bi_opf |= REQ_FUA;
+> +			else
+> +				dio->flags &= ~IOMAP_DIO_WRITE_FUA;
+> +		} else {
+> +			WARN_ON_ONCE(zone_append);
+> +
+> +			bio->bi_opf = REQ_OP_READ;
+> +		}
 
-I think that way is feasible, yet if my own understanding on
-xfsdump codebase is correct, xfsdump itself won't record ".."
-dirent for all its dir records, so I'm not sure how to find
-the root inode # for already broken images easily (maybe we
-might use union-find algorithm to scan all dirs, and then
-deduce the real root dir via the result of the algorithm,
-still looking into that if it's possible and easy to implement
-...)
+Also, I think this should be hoisted into a separate helper to return
+bi_opf rather than making iomap_dio_bio_actor even longer...
 
-Thanks,
-Gao Xiang
+/*
+ * Figure out the bio's operation flags from the dio request, the
+ * mapping, and whether or not we want FUA.  Note that we can end up
+ * clearing the WRITE_FUA flag in the dio request.
+ */
+static inline unsigned int
+iomap_dio_bio_opflags(struct iomap_dio *dio, struct iomap *iomap, bool use_fua)
+{
+	unsigned int opflags = REQ_SYNC | REQ_IDLE;
 
+	if (!(dio->flags & IOMAP_DIO_WRITE)) {
+		WARN_ON_ONCE(iomap->flags & IOMAP_F_ZONE_APPEND);
+		return REQ_OP_READ;
+	}
+
+	if (iomap->flags & IOMAP_F_ZONE_APPEND)
+		opflags |= REQ_OP_ZONE_APPEND;
+	else
+		opflags |= REQ_OP_WRITE;
+
+	if (use_fua)
+		opflags |= REQ_FUA;
+	else
+		dio->flags &= ~IOMAP_DIO_WRITE_FUA;
+
+	return opflags;
+}
+
+	/*
+	 * Set the operation flags early so that bio_iov_iter_get_pages can
+	 * set up the page vector appropriately for a ZONE_APPEND operation.
+	 */
+	bio->bi_opf = iomap_dio_bio_opflags(dio, iomap, use_fua);
+
+	ret = bio_iov_iter_get_pages(bio, dio->submit.iter);
+	if (unlikely(ret)) {
+
+--D
+
+> +
+>  		ret = bio_iov_iter_get_pages(bio, dio->submit.iter);
+>  		if (unlikely(ret)) {
+>  			/*
+> @@ -292,14 +308,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+>  
+>  		n = bio->bi_iter.bi_size;
+>  		if (dio->flags & IOMAP_DIO_WRITE) {
+> -			bio->bi_opf = REQ_OP_WRITE | REQ_SYNC | REQ_IDLE;
+> -			if (use_fua)
+> -				bio->bi_opf |= REQ_FUA;
+> -			else
+> -				dio->flags &= ~IOMAP_DIO_WRITE_FUA;
+>  			task_io_account_write(n);
+>  		} else {
+> -			bio->bi_opf = REQ_OP_READ;
+>  			if (dio->flags & IOMAP_DIO_DIRTY)
+>  				bio_set_pages_dirty(bio);
+>  		}
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 4d1d3c3469e9..1bccd1880d0d 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -54,6 +54,7 @@ struct vm_fault;
+>  #define IOMAP_F_SHARED		0x04
+>  #define IOMAP_F_MERGED		0x08
+>  #define IOMAP_F_BUFFER_HEAD	0x10
+> +#define IOMAP_F_ZONE_APPEND	0x20
+>  
+>  /*
+>   * Flags set by the core iomap code during operations:
+> -- 
+> 2.27.0
+> 
