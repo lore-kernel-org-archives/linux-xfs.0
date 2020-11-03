@@ -5,214 +5,228 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF39CC388F9
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Nov 2020 19:48:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4D9C388F7
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Nov 2020 19:51:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9DCB22280
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Nov 2020 19:48:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94DD420E65
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Nov 2020 19:51:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eoj0Jx71"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZGNdYrrD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729775AbgKCTsd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Nov 2020 14:48:33 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:43872 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729737AbgKCTsd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Nov 2020 14:48:33 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A3Jk17L104720;
-        Tue, 3 Nov 2020 19:48:22 GMT
+        id S1729718AbgKCTvY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Nov 2020 14:51:24 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:59040 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729716AbgKCTvX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Nov 2020 14:51:23 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A3JmvDb021069;
+        Tue, 3 Nov 2020 19:51:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=Y1yUClLcgi9YZbPCP84TKPcE5DOxGrg0KhgPBKB3C8w=;
- b=eoj0Jx71Lr425C6AOPbv4fAInJmVA3FoiflhgGwNPl0cGX/pbjaDEFREsEGuLxPbh5ML
- FcAbLF6NyBgVayS/3SURnrj62dxW9Cltui0vWWKcacJEKA7VlucI4rHOcemCkHWUsS9D
- 1H54QyFgIttwcHiIRukkzA/9OecryD5L6ovFNuQzCj8w6moaITDblBieBQYDhL2BmSx0
- i74hgy21YY+B55t33Msnai+HctVw10x6mli5qdk6GP9Gn3vje7tzhIV+o5PdG7StvMSc
- rL99IxLH9G5pY24G7u/g5wNKh7obkh8lcm7h2ej+h0y/uLgT0pKG72wCRSIz85IzqnEo vg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 34hhvcb7qw-1
+ bh=70cOlRsEDv96tWy2T97tVzJZyUdwqIIG5yWDwim0awY=;
+ b=ZGNdYrrDyMlSYtsPjO8dEXWB5IehF/ge8ryG9FH3bUBaXsULBZ76uOrwpVeToGzqhM7e
+ 7jCWVICGEGdoq+1qB+HtlAmnKJ8WHTpyA70BaxJgyjPSh+P6fvLxNA4NWCbDKoWDuXcU
+ /8qzRIZjM4h3qEPCHJrEbWutDtPyu+TPgEtHztjkzgmL1oyauqH6YhBT14aORRa6T37L
+ 1/Q7EDJ93R9LImLkeqcR+urXsFGpa6lXI5pSMeOibXAPNUW2LuelFXKJ5BSRSqUw0hPD
+ ruwQdd7o/nvrKtLm5+YgIzKrof0E+asi5Eyy/fihTCdaZIRjITVEsg9LOk3U/UcNyqAt gw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 34hhw2k7u8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 03 Nov 2020 19:48:22 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A3JegOh081256;
-        Tue, 3 Nov 2020 19:48:21 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 34hw0e3m14-1
+        Tue, 03 Nov 2020 19:51:19 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A3JonPa049021;
+        Tue, 3 Nov 2020 19:51:18 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 34jf48ysxg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Nov 2020 19:48:21 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0A3JmKq0012617;
-        Tue, 3 Nov 2020 19:48:20 GMT
+        Tue, 03 Nov 2020 19:51:18 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A3JpGQj030710;
+        Tue, 3 Nov 2020 19:51:17 GMT
 Received: from localhost (/10.159.234.173)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Nov 2020 11:48:20 -0800
-Date:   Tue, 3 Nov 2020 11:48:19 -0800
+        with ESMTP ; Tue, 03 Nov 2020 11:51:16 -0800
+Date:   Tue, 3 Nov 2020 11:51:14 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Yafang Shao <laoar.shao@gmail.com>
-Cc:     akpm@linux-foundation.org, david@fromorbit.com, hch@infradead.org,
-        willy@infradead.org, mhocko@kernel.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v8 resend 1/2] mm: Add become_kswapd and restore_kswapd
-Message-ID: <20201103194819.GM7123@magnolia>
-References: <20201103131754.94949-1-laoar.shao@gmail.com>
- <20201103131754.94949-2-laoar.shao@gmail.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@infradead.org,
+        allison.henderson@oracle.com
+Subject: Re: [PATCH V10 12/14] xfs: Compute bmap extent alignments in a
+ separate function
+Message-ID: <20201103195114.GA7115@magnolia>
+References: <20201103150642.2032284-1-chandanrlinux@gmail.com>
+ <20201103150642.2032284-13-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201103131754.94949-2-laoar.shao@gmail.com>
+In-Reply-To: <20201103150642.2032284-13-chandanrlinux@gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9794 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=5 mlxlogscore=999
- phishscore=0 bulkscore=0 spamscore=0 malwarescore=0 mlxscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011030132
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=2 mlxscore=0
+ bulkscore=0 malwarescore=0 mlxlogscore=999 phishscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011030133
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9794 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=5
- impostorscore=0 malwarescore=0 priorityscore=1501 mlxlogscore=999
- bulkscore=0 phishscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011030132
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
+ suspectscore=2 clxscore=1015 priorityscore=1501 impostorscore=0
+ spamscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011030133
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 03, 2020 at 09:17:53PM +0800, Yafang Shao wrote:
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+On Tue, Nov 03, 2020 at 08:36:40PM +0530, Chandan Babu R wrote:
+> This commit moves over the code which computes stripe alignment and
+> extent size hint alignment into a separate function. Apart from
+> xfs_bmap_btalloc(), the new function will be used by another function
+> introduced in a future commit.
 > 
-> Since XFS needs to pretend to be kswapd in some of its worker threads,
-> create methods to save & restore kswapd state.  Don't bother restoring
-> kswapd state in kswapd -- the only time we reach this code is when we're
-> exiting and the task_struct is about to be destroyed anyway.
-> 
-> Cc: Dave Chinner <david@fromorbit.com>
-> Acked-by: Michal Hocko <mhocko@suse.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-> Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
-> ---
->  fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
->  include/linux/sched/mm.h  | 23 +++++++++++++++++++++++
->  mm/vmscan.c               | 16 +---------------
->  3 files changed, 32 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
-> index 2d25bab..a04a442 100644
-> --- a/fs/xfs/libxfs/xfs_btree.c
-> +++ b/fs/xfs/libxfs/xfs_btree.c
-> @@ -2813,8 +2813,9 @@ struct xfs_btree_split_args {
->  {
->  	struct xfs_btree_split_args	*args = container_of(work,
->  						struct xfs_btree_split_args, work);
-> +	bool			is_kswapd = args->kswapd;
->  	unsigned long		pflags;
-> -	unsigned long		new_pflags = PF_MEMALLOC_NOFS;
-> +	int			memalloc_nofs;
->  
->  	/*
->  	 * we are in a transaction context here, but may also be doing work
-> @@ -2822,16 +2823,17 @@ struct xfs_btree_split_args {
->  	 * temporarily to ensure that we don't block waiting for memory reclaim
->  	 * in any way.
->  	 */
-> -	if (args->kswapd)
-> -		new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-> -
-> -	current_set_flags_nested(&pflags, new_pflags);
-> +	if (is_kswapd)
-> +		pflags = become_kswapd();
-> +	memalloc_nofs = memalloc_nofs_save();
->  
->  	args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
->  					 args->key, args->curp, args->stat);
->  	complete(args->done);
->  
-> -	current_restore_flags_nested(&pflags, new_pflags);
-> +	memalloc_nofs_restore(memalloc_nofs);
-> +	if (is_kswapd)
-> +		restore_kswapd(pflags);
+> Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-Note that there's a trivial merge conflict with the mrlock_t removal
-series.  I'll carry the fix in the tree, assuming that everything
-passes.
+Looks fine at last :)
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Could you please add a fsstress style test that sets the errortag to see
+what kinds of, uh, testing artifacts fall out of that mode?
 
 --D
 
+> ---
+>  fs/xfs/libxfs/xfs_bmap.c | 89 +++++++++++++++++++++++-----------------
+>  1 file changed, 52 insertions(+), 37 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 64c4d0e384a5..5032539d5e85 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -3463,13 +3463,59 @@ xfs_bmap_btalloc_accounting(
+>  		args->len);
 >  }
 >  
->  /*
-> diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
-> index d5ece7a..2faf03e 100644
-> --- a/include/linux/sched/mm.h
-> +++ b/include/linux/sched/mm.h
-> @@ -278,6 +278,29 @@ static inline void memalloc_nocma_restore(unsigned int flags)
->  }
->  #endif
->  
-> +/*
-> + * Tell the memory management code that this thread is working on behalf
-> + * of background memory reclaim (like kswapd).  That means that it will
-> + * get access to memory reserves should it need to allocate memory in
-> + * order to make forward progress.  With this great power comes great
-> + * responsibility to not exhaust those reserves.
-> + */
-> +#define KSWAPD_PF_FLAGS		(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
-> +
-> +static inline unsigned long become_kswapd(void)
+> +static int
+> +xfs_bmap_compute_alignments(
+> +	struct xfs_bmalloca	*ap,
+> +	struct xfs_alloc_arg	*args)
 > +{
-> +	unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
+> +	struct xfs_mount	*mp = args->mp;
+> +	xfs_extlen_t		align = 0; /* minimum allocation alignment */
+> +	int			stripe_align = 0;
+> +	int			error;
 > +
-> +	current->flags |= KSWAPD_PF_FLAGS;
+> +	/* stripe alignment for allocation is determined by mount parameters */
+> +	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
+> +		stripe_align = mp->m_swidth;
+> +	else if (mp->m_dalign)
+> +		stripe_align = mp->m_dalign;
 > +
-> +	return flags;
+> +	if (ap->flags & XFS_BMAPI_COWFORK)
+> +		align = xfs_get_cowextsz_hint(ap->ip);
+> +	else if (ap->datatype & XFS_ALLOC_USERDATA)
+> +		align = xfs_get_extsz_hint(ap->ip);
+> +	if (align) {
+> +		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+> +						align, 0, ap->eof, 0, ap->conv,
+> +						&ap->offset, &ap->length);
+> +		ASSERT(!error);
+> +		ASSERT(ap->length);
+> +	}
+> +
+> +	/* apply extent size hints if obtained earlier */
+> +	if (align) {
+> +		args->prod = align;
+> +		div_u64_rem(ap->offset, args->prod, &args->mod);
+> +		if (args->mod)
+> +			args->mod = args->prod - args->mod;
+> +	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
+> +		args->prod = 1;
+> +		args->mod = 0;
+> +	} else {
+> +		args->prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
+> +		div_u64_rem(ap->offset, args->prod, &args->mod);
+> +		if (args->mod)
+> +			args->mod = args->prod - args->mod;
+> +	}
+> +
+> +	return stripe_align;
 > +}
 > +
-> +static inline void restore_kswapd(unsigned long flags)
-> +{
-> +	current->flags &= ~(flags ^ KSWAPD_PF_FLAGS);
-> +}
-> +
->  #ifdef CONFIG_MEMCG
->  DECLARE_PER_CPU(struct mem_cgroup *, int_active_memcg);
->  /**
-> diff --git a/mm/vmscan.c b/mm/vmscan.c
-> index 1b8f0e0..77bc1dd 100644
-> --- a/mm/vmscan.c
-> +++ b/mm/vmscan.c
-> @@ -3869,19 +3869,7 @@ static int kswapd(void *p)
->  	if (!cpumask_empty(cpumask))
->  		set_cpus_allowed_ptr(tsk, cpumask);
+>  STATIC int
+>  xfs_bmap_btalloc(
+>  	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
+>  {
+>  	xfs_mount_t	*mp;		/* mount point structure */
+>  	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
+> -	xfs_extlen_t	align = 0;	/* minimum allocation alignment */
+>  	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
+>  	xfs_agnumber_t	ag;
+>  	xfs_alloc_arg_t	args;
+> @@ -3489,25 +3535,11 @@ xfs_bmap_btalloc(
 >  
-> -	/*
-> -	 * Tell the memory management that we're a "memory allocator",
-> -	 * and that if we need more memory we should get access to it
-> -	 * regardless (see "__alloc_pages()"). "kswapd" should
-> -	 * never get caught in the normal page freeing logic.
-> -	 *
-> -	 * (Kswapd normally doesn't need memory anyway, but sometimes
-> -	 * you need a small amount of memory in order to be able to
-> -	 * page out something else, and this flag essentially protects
-> -	 * us from recursively trying to free more memory as we're
-> -	 * trying to free the first piece of memory in the first place).
-> -	 */
-> -	tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
-> +	become_kswapd();
->  	set_freezable();
+>  	mp = ap->ip->i_mount;
 >  
->  	WRITE_ONCE(pgdat->kswapd_order, 0);
-> @@ -3931,8 +3919,6 @@ static int kswapd(void *p)
->  			goto kswapd_try_sleep;
->  	}
->  
-> -	tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
+> -	/* stripe alignment for allocation is determined by mount parameters */
+> -	stripe_align = 0;
+> -	if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
+> -		stripe_align = mp->m_swidth;
+> -	else if (mp->m_dalign)
+> -		stripe_align = mp->m_dalign;
 > -
->  	return 0;
->  }
+> -	if (ap->flags & XFS_BMAPI_COWFORK)
+> -		align = xfs_get_cowextsz_hint(ap->ip);
+> -	else if (ap->datatype & XFS_ALLOC_USERDATA)
+> -		align = xfs_get_extsz_hint(ap->ip);
+> -	if (align) {
+> -		error = xfs_bmap_extsize_align(mp, &ap->got, &ap->prev,
+> -						align, 0, ap->eof, 0, ap->conv,
+> -						&ap->offset, &ap->length);
+> -		ASSERT(!error);
+> -		ASSERT(ap->length);
+> -	}
+> +	memset(&args, 0, sizeof(args));
+> +	args.tp = ap->tp;
+> +	args.mp = mp;
 >  
+> +	stripe_align = xfs_bmap_compute_alignments(ap, &args);
+>  
+>  	nullfb = ap->tp->t_firstblock == NULLFSBLOCK;
+>  	fb_agno = nullfb ? NULLAGNUMBER : XFS_FSB_TO_AGNO(mp,
+> @@ -3538,9 +3570,6 @@ xfs_bmap_btalloc(
+>  	 * Normal allocation, done through xfs_alloc_vextent.
+>  	 */
+>  	tryagain = isaligned = 0;
+> -	memset(&args, 0, sizeof(args));
+> -	args.tp = ap->tp;
+> -	args.mp = mp;
+>  	args.fsbno = ap->blkno;
+>  	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
+>  
+> @@ -3571,21 +3600,7 @@ xfs_bmap_btalloc(
+>  		args.total = ap->total;
+>  		args.minlen = ap->minlen;
+>  	}
+> -	/* apply extent size hints if obtained earlier */
+> -	if (align) {
+> -		args.prod = align;
+> -		div_u64_rem(ap->offset, args.prod, &args.mod);
+> -		if (args.mod)
+> -			args.mod = args.prod - args.mod;
+> -	} else if (mp->m_sb.sb_blocksize >= PAGE_SIZE) {
+> -		args.prod = 1;
+> -		args.mod = 0;
+> -	} else {
+> -		args.prod = PAGE_SIZE >> mp->m_sb.sb_blocklog;
+> -		div_u64_rem(ap->offset, args.prod, &args.mod);
+> -		if (args.mod)
+> -			args.mod = args.prod - args.mod;
+> -	}
+> +
+>  	/*
+>  	 * If we are not low on available data blocks, and the underlying
+>  	 * logical volume manager is a stripe, and the file offset is zero then
 > -- 
-> 1.8.3.1
+> 2.28.0
 > 
