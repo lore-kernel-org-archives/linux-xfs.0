@@ -2,142 +2,242 @@ Return-Path: <SRS0=J5OL=EL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5F71C4741F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 10:55:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B44AC388F9
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 13:05:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68CF522203
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 10:55:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 143EE20936
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 13:05:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pO6y9W7Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728371AbgKEKzP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Nov 2020 05:55:15 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:23755 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726777AbgKEKzP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 05:55:15 -0500
-X-IronPort-AV: E=Sophos;i="5.77,453,1596470400"; 
-   d="scan'208";a="100980844"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 05 Nov 2020 18:55:11 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id C21544CE38B0;
-        Thu,  5 Nov 2020 18:55:06 +0800 (CST)
-Received: from [10.167.225.206] (10.167.225.206) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 5 Nov 2020 18:55:06 +0800
-Subject: Re: [PATCH v2] fs: Kill DCACHE_DONTCACHE dentry even if
- DCACHE_REFERENCED is set
-To:     Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>
-CC:     <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <david@fromorbit.com>, <ira.weiny@intel.com>,
-        <linux-xfs@vger.kernel.org>, <y-goto@fujitsu.com>
-References: <20200924055958.825515-1-lihao2018.fnst@cn.fujitsu.com>
- <20200924145856.GB3361@quack2.suse.cz>
- <20201021135133.GA25702@quack2.suse.cz>
-From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
-Message-ID: <053ff976-8d75-b249-2bba-3a8b7a98b1a4@cn.fujitsu.com>
-Date:   Thu, 5 Nov 2020 18:54:49 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.3.2
+        id S1730044AbgKENFB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Nov 2020 08:05:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59452 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729992AbgKENFA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 08:05:00 -0500
+Received: from mail-il1-x142.google.com (mail-il1-x142.google.com [IPv6:2607:f8b0:4864:20::142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73451C0613CF;
+        Thu,  5 Nov 2020 05:04:59 -0800 (PST)
+Received: by mail-il1-x142.google.com with SMTP id y17so1304921ilg.4;
+        Thu, 05 Nov 2020 05:04:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=JZXQ3BAddNN3gYrfwjUK8hjD6WjwUEDBLj1eNYEOzUo=;
+        b=pO6y9W7YRw3qCKIWJKv7KZ5gPH5HAp3M0yP7f3VXh/iCV2RltcdOM+NZMmK+Lr6WAG
+         bJAR8Py8WsSCI0QAyk+8oFNjw/b8qmB44FFdIACEWpcu2gvFaflNUqgOmr1dAYQ5WzUL
+         JKhlX0+EzqmRcvtWgitpsmPUMsatZVa+9VJiF22i786f4JmuJM0zkGNME1HKOzSK/aRu
+         BQnPNvMGhSGbSPtpMYXm1M1u2Cw9YF2pKiVAPxZxDbbf91KXXtLR13ClcVPE0zPWSByk
+         f10H23ydhFYmul63BdYVywg3N1sGTA7+tsmqNguEutZ9RsJsBRw701fvMoeJOwJx0lC+
+         wMoQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=JZXQ3BAddNN3gYrfwjUK8hjD6WjwUEDBLj1eNYEOzUo=;
+        b=TJNCnIUYMo7I3IAYbaN3OeebjG0neukjAW+q61WmZ5LugmKNffWshztCcTT9mWSTHD
+         kM7ylbnJdH3t2oM5t8mP//pIk2ST0G1Sc/z1y7J0pf4OqcB2wuEdE/Tidoz0dUXpyrSW
+         epReaAQl5hekmC+cbI3KtDL3ctM7C9oFMqToeGgiMFul3rxCuNhdXo4kjT1rRt3DcBq8
+         dFG/4CzPA1/XJEMfW+fsnyy+4Hp9j2ZsG2Nz+8e3L+I/dxEk5kX1ohmz+vv/RhnUSZaQ
+         8x+EOWiyExWG4UpA/OJ/Epc/o3t3EKH08ImpLhuAwE/cuvWS1U4Mlge7nLpmDEl52tAv
+         vvag==
+X-Gm-Message-State: AOAM533pXas4P36JugDaodvU2cP17fDnBhh9PcBygN3zOmZTSDI/MjDo
+        m/wZw14CLjJvh23km5VoD+ESRcHoV9wUtKcp9MQ=
+X-Google-Smtp-Source: ABdhPJxDmC0wfjLJrqd5m/AlPqEkfeGyCmP9jd4qeKTe5TycmK1XIO774yC4d5EC1LAMCmHsJzoFb5yFBg6q19YBHMo=
+X-Received: by 2002:a92:3003:: with SMTP id x3mr1690953ile.93.1604581498765;
+ Thu, 05 Nov 2020 05:04:58 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20201021135133.GA25702@quack2.suse.cz>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
-X-Originating-IP: [10.167.225.206]
-X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
-X-yoursite-MailScanner-ID: C21544CE38B0.ABBE8
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
+References: <20201103131754.94949-1-laoar.shao@gmail.com> <20201103131754.94949-2-laoar.shao@gmail.com>
+ <20201103194819.GM7123@magnolia> <CALOAHbBbMdmq0UFy9gWikXufzSdZmSjdUa8Pbkwr31ZdvnodQQ@mail.gmail.com>
+ <20201104162640.GD7115@magnolia>
+In-Reply-To: <20201104162640.GD7115@magnolia>
+From:   Yafang Shao <laoar.shao@gmail.com>
+Date:   Thu, 5 Nov 2020 21:04:22 +0800
+Message-ID: <CALOAHbAy8WeNgrk3RDF41N2KbEj-2FUOOPbwBrBMDotjRimdRw@mail.gmail.com>
+Subject: Re: [PATCH v8 resend 1/2] mm: Add become_kswapd and restore_kswapd
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Matthew Wilcox <willy@infradead.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Linux MM <linux-mm@kvack.org>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Ping :)
-
-On 2020/10/21 21:51, Jan Kara wrote:
-> Hum, Al, did this patch get lost?
+On Thu, Nov 5, 2020 at 12:26 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
 >
-> 								Honza
+> On Wed, Nov 04, 2020 at 10:17:16PM +0800, Yafang Shao wrote:
+> > On Wed, Nov 4, 2020 at 3:48 AM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> > >
+> > > On Tue, Nov 03, 2020 at 09:17:53PM +0800, Yafang Shao wrote:
+> > > > From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
+> > > >
+> > > > Since XFS needs to pretend to be kswapd in some of its worker threads,
+> > > > create methods to save & restore kswapd state.  Don't bother restoring
+> > > > kswapd state in kswapd -- the only time we reach this code is when we're
+> > > > exiting and the task_struct is about to be destroyed anyway.
+> > > >
+> > > > Cc: Dave Chinner <david@fromorbit.com>
+> > > > Acked-by: Michal Hocko <mhocko@suse.com>
+> > > > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+> > > > Signed-off-by: Yafang Shao <laoar.shao@gmail.com>
+> > > > ---
+> > > >  fs/xfs/libxfs/xfs_btree.c | 14 ++++++++------
+> > > >  include/linux/sched/mm.h  | 23 +++++++++++++++++++++++
+> > > >  mm/vmscan.c               | 16 +---------------
+> > > >  3 files changed, 32 insertions(+), 21 deletions(-)
+> > > >
+> > > > diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+> > > > index 2d25bab..a04a442 100644
+> > > > --- a/fs/xfs/libxfs/xfs_btree.c
+> > > > +++ b/fs/xfs/libxfs/xfs_btree.c
+> > > > @@ -2813,8 +2813,9 @@ struct xfs_btree_split_args {
+> > > >  {
+> > > >       struct xfs_btree_split_args     *args = container_of(work,
+> > > >                                               struct xfs_btree_split_args, work);
+> > > > +     bool                    is_kswapd = args->kswapd;
+> > > >       unsigned long           pflags;
+> > > > -     unsigned long           new_pflags = PF_MEMALLOC_NOFS;
+> > > > +     int                     memalloc_nofs;
+> > > >
+> > > >       /*
+> > > >        * we are in a transaction context here, but may also be doing work
+> > > > @@ -2822,16 +2823,17 @@ struct xfs_btree_split_args {
+> > > >        * temporarily to ensure that we don't block waiting for memory reclaim
+> > > >        * in any way.
+> > > >        */
+> > > > -     if (args->kswapd)
+> > > > -             new_pflags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+> > > > -
+> > > > -     current_set_flags_nested(&pflags, new_pflags);
+> > > > +     if (is_kswapd)
+> > > > +             pflags = become_kswapd();
+> > > > +     memalloc_nofs = memalloc_nofs_save();
+> > > >
+> > > >       args->result = __xfs_btree_split(args->cur, args->level, args->ptrp,
+> > > >                                        args->key, args->curp, args->stat);
+> > > >       complete(args->done);
+> > > >
+> > > > -     current_restore_flags_nested(&pflags, new_pflags);
+> > > > +     memalloc_nofs_restore(memalloc_nofs);
+> > > > +     if (is_kswapd)
+> > > > +             restore_kswapd(pflags);
+> > >
+> > > Note that there's a trivial merge conflict with the mrlock_t removal
+> > > series.  I'll carry the fix in the tree, assuming that everything
+> > > passes.
+> > >
+> >
+> > This patchset is based on Andrew's tree currently.
+> > Seems I should rebase this patchset on your tree instead of Andrew's tree ?
 >
-> On Thu 24-09-20 16:58:56, Jan Kara wrote:
->> On Thu 24-09-20 13:59:58, Hao Li wrote:
->>> If DCACHE_REFERENCED is set, fast_dput() will return true, and then
->>> retain_dentry() have no chance to check DCACHE_DONTCACHE. As a result,
->>> the dentry won't be killed and the corresponding inode can't be evicted.
->>> In the following example, the DAX policy can't take effects unless we
->>> do a drop_caches manually.
->>>
->>>   # DCACHE_LRU_LIST will be set
->>>   echo abcdefg > test.txt
->>>
->>>   # DCACHE_REFERENCED will be set and DCACHE_DONTCACHE can't do anything
->>>   xfs_io -c 'chattr +x' test.txt
->>>
->>>   # Drop caches to make DAX changing take effects
->>>   echo 2 > /proc/sys/vm/drop_caches
->>>
->>> What this patch does is preventing fast_dput() from returning true if
->>> DCACHE_DONTCACHE is set. Then retain_dentry() will detect the
->>> DCACHE_DONTCACHE and will return false. As a result, the dentry will be
->>> killed and the inode will be evicted. In this way, if we change per-file
->>> DAX policy, it will take effects automatically after this file is closed
->>> by all processes.
->>>
->>> I also add some comments to make the code more clear.
->>>
->>> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
->> The patch looks good to me. You can add:
->>
->> Reviewed-by: Jan Kara <jack@suse.cz>
->>
->> 								Honza
->>
->>> ---
->>> v1 is split into two standalone patch as discussed in [1], and the first
->>> patch has been reviewed in [2]. This is the second patch.
->>>
->>> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
->>> [2]: https://lore.kernel.org/linux-fsdevel/20200906214002.GI12131@dread.disaster.area/
->>>
->>>  fs/dcache.c | 9 ++++++++-
->>>  1 file changed, 8 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/fs/dcache.c b/fs/dcache.c
->>> index ea0485861d93..97e81a844a96 100644
->>> --- a/fs/dcache.c
->>> +++ b/fs/dcache.c
->>> @@ -793,10 +793,17 @@ static inline bool fast_dput(struct dentry *dentry)
->>>  	 * a reference to the dentry and change that, but
->>>  	 * our work is done - we can leave the dentry
->>>  	 * around with a zero refcount.
->>> +	 *
->>> +	 * Nevertheless, there are two cases that we should kill
->>> +	 * the dentry anyway.
->>> +	 * 1. free disconnected dentries as soon as their refcount
->>> +	 *    reached zero.
->>> +	 * 2. free dentries if they should not be cached.
->>>  	 */
->>>  	smp_rmb();
->>>  	d_flags = READ_ONCE(dentry->d_flags);
->>> -	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST | DCACHE_DISCONNECTED;
->>> +	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST |
->>> +			DCACHE_DISCONNECTED | DCACHE_DONTCACHE;
->>>  
->>>  	/* Nothing to do? Dropping the reference was all we needed? */
->>>  	if (d_flags == (DCACHE_REFERENCED | DCACHE_LRU_LIST) && !d_unhashed(dentry))
->>> -- 
->>> 2.28.0
->>>
->>>
->>>
->> -- 
->> Jan Kara <jack@suse.com>
->> SUSE Labs, CR
+> That depends on whether or not you want me to push these two patches
+> through the xfs tree or if they're going through Andrew (Morton?)'s
+> quiltset.
+>
+> Frankly I'd rather take them via xfs since most of the diff is xfs...
+>
+
+Sure, I will rebase in on the xfs tree.
+
+> > >
+> > > >  }
+> > > >
+> > > >  /*
+> > > > diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
+> > > > index d5ece7a..2faf03e 100644
+> > > > --- a/include/linux/sched/mm.h
+> > > > +++ b/include/linux/sched/mm.h
+> > > > @@ -278,6 +278,29 @@ static inline void memalloc_nocma_restore(unsigned int flags)
+> > > >  }
+> > > >  #endif
+> > > >
+> > > > +/*
+> > > > + * Tell the memory management code that this thread is working on behalf
+> > > > + * of background memory reclaim (like kswapd).  That means that it will
+> > > > + * get access to memory reserves should it need to allocate memory in
+> > > > + * order to make forward progress.  With this great power comes great
+> > > > + * responsibility to not exhaust those reserves.
+> > > > + */
+> > > > +#define KSWAPD_PF_FLAGS              (PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD)
+> > > > +
+> > > > +static inline unsigned long become_kswapd(void)
+> > > > +{
+> > > > +     unsigned long flags = current->flags & KSWAPD_PF_FLAGS;
+> > > > +
+> > > > +     current->flags |= KSWAPD_PF_FLAGS;
+> > > > +
+> > > > +     return flags;
+> > > > +}
+> > > > +
+> > > > +static inline void restore_kswapd(unsigned long flags)
+> > > > +{
+> > > > +     current->flags &= ~(flags ^ KSWAPD_PF_FLAGS);
+> > > > +}
+> > > > +
+> > > >  #ifdef CONFIG_MEMCG
+> > > >  DECLARE_PER_CPU(struct mem_cgroup *, int_active_memcg);
+> > > >  /**
+> > > > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > > > index 1b8f0e0..77bc1dd 100644
+> > > > --- a/mm/vmscan.c
+> > > > +++ b/mm/vmscan.c
+> > > > @@ -3869,19 +3869,7 @@ static int kswapd(void *p)
+> > > >       if (!cpumask_empty(cpumask))
+> > > >               set_cpus_allowed_ptr(tsk, cpumask);
+> > > >
+> > > > -     /*
+> > > > -      * Tell the memory management that we're a "memory allocator",
+> > > > -      * and that if we need more memory we should get access to it
+> > > > -      * regardless (see "__alloc_pages()"). "kswapd" should
+> > > > -      * never get caught in the normal page freeing logic.
+> > > > -      *
+> > > > -      * (Kswapd normally doesn't need memory anyway, but sometimes
+> > > > -      * you need a small amount of memory in order to be able to
+> > > > -      * page out something else, and this flag essentially protects
+> > > > -      * us from recursively trying to free more memory as we're
+> > > > -      * trying to free the first piece of memory in the first place).
+> > > > -      */
+> > > > -     tsk->flags |= PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD;
+> > > > +     become_kswapd();
+> > > >       set_freezable();
+> > > >
+> > > >       WRITE_ONCE(pgdat->kswapd_order, 0);
+> > > > @@ -3931,8 +3919,6 @@ static int kswapd(void *p)
+> > > >                       goto kswapd_try_sleep;
+> > > >       }
+> > > >
+> > > > -     tsk->flags &= ~(PF_MEMALLOC | PF_SWAPWRITE | PF_KSWAPD);
+> > > > -
+> > > >       return 0;
+> > > >  }
+> > > >
+> > > > --
+> > > > 1.8.3.1
+> > > >
+> >
+> >
+> >
+> > --
+> > Thanks
+> > Yafang
 
 
+
+-- 
+Thanks
+Yafang
