@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C175C4741F
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 10:55:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5F71C4741F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 10:55:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 109F622210
+	by mail.kernel.org (Postfix) with ESMTP id 68CF522203
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 10:55:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730057AbgKEKzS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Nov 2020 05:55:18 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:23907 "EHLO
+        id S1728371AbgKEKzP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Nov 2020 05:55:15 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:23755 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727836AbgKEKzS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 05:55:18 -0500
+        with ESMTP id S1726777AbgKEKzP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 05:55:15 -0500
 X-IronPort-AV: E=Sophos;i="5.77,453,1596470400"; 
-   d="scan'208";a="100980851"
+   d="scan'208";a="100980844"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 05 Nov 2020 18:55:14 +0800
+  by heian.cn.fujitsu.com with ESMTP; 05 Nov 2020 18:55:11 +0800
 Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id 9DBFE4CE38AD;
-        Thu,  5 Nov 2020 18:55:12 +0800 (CST)
+        by cn.fujitsu.com (Postfix) with ESMTP id C21544CE38B0;
+        Thu,  5 Nov 2020 18:55:06 +0800 (CST)
 Received: from [10.167.225.206] (10.167.225.206) by
  G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Thu, 5 Nov 2020 18:55:12 +0800
-Subject: Re: [PATCH v2] fs: Handle I_DONTCACHE in iput_final() instead of
- generic_drop_inode()
-From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
-To:     <viro@zeniv.linux.org.uk>
+ (TLS) id 15.0.1497.2; Thu, 5 Nov 2020 18:55:06 +0800
+Subject: Re: [PATCH v2] fs: Kill DCACHE_DONTCACHE dentry even if
+ DCACHE_REFERENCED is set
+To:     Jan Kara <jack@suse.cz>, Al Viro <viro@zeniv.linux.org.uk>
 CC:     <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
-        <y-goto@fujitsu.com>, "Ira Weiny" <ira.weiny@intel.com>
-References: <20200904075939.176366-1-lihao2018.fnst@cn.fujitsu.com>
- <20200908230331.GF1930795@iweiny-DESK2.sc.intel.com>
- <f1d1a56f-caec-3c68-6c70-1b6f995cab95@cn.fujitsu.com>
-Message-ID: <5e3a45e3-c4a7-aadf-9fbe-9a51929bb58d@cn.fujitsu.com>
-Date:   Thu, 5 Nov 2020 18:55:11 +0800
+        <david@fromorbit.com>, <ira.weiny@intel.com>,
+        <linux-xfs@vger.kernel.org>, <y-goto@fujitsu.com>
+References: <20200924055958.825515-1-lihao2018.fnst@cn.fujitsu.com>
+ <20200924145856.GB3361@quack2.suse.cz>
+ <20201021135133.GA25702@quack2.suse.cz>
+From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
+Message-ID: <053ff976-8d75-b249-2bba-3a8b7a98b1a4@cn.fujitsu.com>
+Date:   Thu, 5 Nov 2020 18:54:49 +0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.3.2
 MIME-Version: 1.0
-In-Reply-To: <f1d1a56f-caec-3c68-6c70-1b6f995cab95@cn.fujitsu.com>
+In-Reply-To: <20201021135133.GA25702@quack2.suse.cz>
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Content-Language: en-US
 X-Originating-IP: [10.167.225.206]
 X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
  G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
-X-yoursite-MailScanner-ID: 9DBFE4CE38AD.A1031
+X-yoursite-MailScanner-ID: C21544CE38B0.ABBE8
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
 Precedence: bulk
@@ -60,76 +60,84 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 Ping :)
 
-
-On 2020/10/23 15:49, Li, Hao wrote:
-> Hello,
+On 2020/10/21 21:51, Jan Kara wrote:
+> Hum, Al, did this patch get lost?
 >
-> Ping.
+> 								Honza
 >
-> This patch need to be merged... Thanks.
->
-> On 2020/9/9 7:03, Ira Weiny wrote:
->> On Fri, Sep 04, 2020 at 03:59:39PM +0800, Hao Li wrote:
->>> If generic_drop_inode() returns true, it means iput_final() can evict
->>> this inode regardless of whether it is dirty or not. If we check
->>> I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
->>> evicted unconditionally. This is not the desired behavior because
->>> I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
->>> As for whether we need to evict this inode, this is what
->>> generic_drop_inode() should do. This patch corrects the usage of
->>> I_DONTCACHE.
+> On Thu 24-09-20 16:58:56, Jan Kara wrote:
+>> On Thu 24-09-20 13:59:58, Hao Li wrote:
+>>> If DCACHE_REFERENCED is set, fast_dput() will return true, and then
+>>> retain_dentry() have no chance to check DCACHE_DONTCACHE. As a result,
+>>> the dentry won't be killed and the corresponding inode can't be evicted.
+>>> In the following example, the DAX policy can't take effects unless we
+>>> do a drop_caches manually.
 >>>
->>> This patch was proposed in [1].
+>>>   # DCACHE_LRU_LIST will be set
+>>>   echo abcdefg > test.txt
 >>>
->>> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
+>>>   # DCACHE_REFERENCED will be set and DCACHE_DONTCACHE can't do anything
+>>>   xfs_io -c 'chattr +x' test.txt
 >>>
->>> Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
+>>>   # Drop caches to make DAX changing take effects
+>>>   echo 2 > /proc/sys/vm/drop_caches
+>>>
+>>> What this patch does is preventing fast_dput() from returning true if
+>>> DCACHE_DONTCACHE is set. Then retain_dentry() will detect the
+>>> DCACHE_DONTCACHE and will return false. As a result, the dentry will be
+>>> killed and the inode will be evicted. In this way, if we change per-file
+>>> DAX policy, it will take effects automatically after this file is closed
+>>> by all processes.
+>>>
+>>> I also add some comments to make the code more clear.
+>>>
 >>> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
->> Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+>> The patch looks good to me. You can add:
+>>
+>> Reviewed-by: Jan Kara <jack@suse.cz>
+>>
+>> 								Honza
 >>
 >>> ---
->>> Changes in v2:
->>>  - Adjust code format
->>>  - Add Fixes tag in commit message
+>>> v1 is split into two standalone patch as discussed in [1], and the first
+>>> patch has been reviewed in [2]. This is the second patch.
 >>>
->>>  fs/inode.c         | 4 +++-
->>>  include/linux/fs.h | 3 +--
->>>  2 files changed, 4 insertions(+), 3 deletions(-)
+>>> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
+>>> [2]: https://lore.kernel.org/linux-fsdevel/20200906214002.GI12131@dread.disaster.area/
 >>>
->>> diff --git a/fs/inode.c b/fs/inode.c
->>> index 72c4c347afb7..19ad823f781c 100644
->>> --- a/fs/inode.c
->>> +++ b/fs/inode.c
->>> @@ -1625,7 +1625,9 @@ static void iput_final(struct inode *inode)
->>>  	else
->>>  		drop = generic_drop_inode(inode);
+>>>  fs/dcache.c | 9 ++++++++-
+>>>  1 file changed, 8 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/fs/dcache.c b/fs/dcache.c
+>>> index ea0485861d93..97e81a844a96 100644
+>>> --- a/fs/dcache.c
+>>> +++ b/fs/dcache.c
+>>> @@ -793,10 +793,17 @@ static inline bool fast_dput(struct dentry *dentry)
+>>>  	 * a reference to the dentry and change that, but
+>>>  	 * our work is done - we can leave the dentry
+>>>  	 * around with a zero refcount.
+>>> +	 *
+>>> +	 * Nevertheless, there are two cases that we should kill
+>>> +	 * the dentry anyway.
+>>> +	 * 1. free disconnected dentries as soon as their refcount
+>>> +	 *    reached zero.
+>>> +	 * 2. free dentries if they should not be cached.
+>>>  	 */
+>>>  	smp_rmb();
+>>>  	d_flags = READ_ONCE(dentry->d_flags);
+>>> -	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST | DCACHE_DISCONNECTED;
+>>> +	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST |
+>>> +			DCACHE_DISCONNECTED | DCACHE_DONTCACHE;
 >>>  
->>> -	if (!drop && (sb->s_flags & SB_ACTIVE)) {
->>> +	if (!drop &&
->>> +	    !(inode->i_state & I_DONTCACHE) &&
->>> +	    (sb->s_flags & SB_ACTIVE)) {
->>>  		inode_add_lru(inode);
->>>  		spin_unlock(&inode->i_lock);
->>>  		return;
->>> diff --git a/include/linux/fs.h b/include/linux/fs.h
->>> index e019ea2f1347..93caee80ce47 100644
->>> --- a/include/linux/fs.h
->>> +++ b/include/linux/fs.h
->>> @@ -2922,8 +2922,7 @@ extern int inode_needs_sync(struct inode *inode);
->>>  extern int generic_delete_inode(struct inode *inode);
->>>  static inline int generic_drop_inode(struct inode *inode)
->>>  {
->>> -	return !inode->i_nlink || inode_unhashed(inode) ||
->>> -		(inode->i_state & I_DONTCACHE);
->>> +	return !inode->i_nlink || inode_unhashed(inode);
->>>  }
->>>  extern void d_mark_dontcache(struct inode *inode);
->>>  
+>>>  	/* Nothing to do? Dropping the reference was all we needed? */
+>>>  	if (d_flags == (DCACHE_REFERENCED | DCACHE_LRU_LIST) && !d_unhashed(dentry))
 >>> -- 
 >>> 2.28.0
 >>>
 >>>
 >>>
->
+>> -- 
+>> Jan Kara <jack@suse.com>
+>> SUSE Labs, CR
 
 
