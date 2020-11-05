@@ -2,118 +2,134 @@ Return-Path: <SRS0=J5OL=EL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7205DC388F7
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 01:59:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C175C4741F
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 10:55:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F190F20719
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 01:59:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fUvsZ0xA"
+	by mail.kernel.org (Postfix) with ESMTP id 109F622210
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Nov 2020 10:55:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731255AbgKEB7I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Nov 2020 20:59:08 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:58034 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726152AbgKEB7I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Nov 2020 20:59:08 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A51uveW179606;
-        Thu, 5 Nov 2020 01:59:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=aVWVXgsAgH2PBET9Poxk8LzSKFGVzRwTpWTdi/jyszQ=;
- b=fUvsZ0xArxp4r0f4dkZ0uZLb/8A52T2PdFwBs+Ar81BydtGi+cWJocsal2JG45M7HqUi
- sPkHHkr5M5ETqQLukedGdn/h6dRg1S9j3WINyIkiv42RyYZPDel+H4pm9agYd3MX7+O9
- tg9ZmkB/ksWn3mJlZLEUJ7OxjvQPeEsUUKr0zUNLg9H6Tpt/sAv0by6KECgncwuxYCfM
- wlhj4CQMgj1n22jZzXWO3xJGp/JN2xswJOYT2IMRfLCqJOQip0vYjYeBQeFq5vGyku03
- 52/jwYzFiRhoHWejW6KXuBzvctbsXzYhInKSg/7cZP3G1L2AM6wLteUwyofDUkrTcHGa jg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 34hhw2spyx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 05 Nov 2020 01:59:06 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A51tnxU053548;
-        Thu, 5 Nov 2020 01:59:06 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 34hvrys1rb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Nov 2020 01:59:06 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A51x5Lx004639;
-        Thu, 5 Nov 2020 01:59:05 GMT
-Received: from localhost (/10.159.129.213)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 04 Nov 2020 17:59:05 -0800
-Date:   Wed, 4 Nov 2020 17:59:04 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Subject: [ANNOUNCE] xfs/iomap: for-next updated to 46afb0628b86
-Message-ID: <20201105015904.GO7123@magnolia>
+        id S1730057AbgKEKzS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Nov 2020 05:55:18 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:23907 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727836AbgKEKzS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 05:55:18 -0500
+X-IronPort-AV: E=Sophos;i="5.77,453,1596470400"; 
+   d="scan'208";a="100980851"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 05 Nov 2020 18:55:14 +0800
+Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
+        by cn.fujitsu.com (Postfix) with ESMTP id 9DBFE4CE38AD;
+        Thu,  5 Nov 2020 18:55:12 +0800 (CST)
+Received: from [10.167.225.206] (10.167.225.206) by
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Thu, 5 Nov 2020 18:55:12 +0800
+Subject: Re: [PATCH v2] fs: Handle I_DONTCACHE in iput_final() instead of
+ generic_drop_inode()
+From:   "Li, Hao" <lihao2018.fnst@cn.fujitsu.com>
+To:     <viro@zeniv.linux.org.uk>
+CC:     <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <david@fromorbit.com>, <linux-xfs@vger.kernel.org>,
+        <y-goto@fujitsu.com>, "Ira Weiny" <ira.weiny@intel.com>
+References: <20200904075939.176366-1-lihao2018.fnst@cn.fujitsu.com>
+ <20200908230331.GF1930795@iweiny-DESK2.sc.intel.com>
+ <f1d1a56f-caec-3c68-6c70-1b6f995cab95@cn.fujitsu.com>
+Message-ID: <5e3a45e3-c4a7-aadf-9fbe-9a51929bb58d@cn.fujitsu.com>
+Date:   Thu, 5 Nov 2020 18:55:11 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9795 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 mlxscore=0
- malwarescore=0 mlxlogscore=999 suspectscore=7 spamscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011050015
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9795 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
- suspectscore=7 clxscore=1015 priorityscore=1501 impostorscore=0
- spamscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011050015
+In-Reply-To: <f1d1a56f-caec-3c68-6c70-1b6f995cab95@cn.fujitsu.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [10.167.225.206]
+X-ClientProxiedBy: G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) To
+ G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201)
+X-yoursite-MailScanner-ID: 9DBFE4CE38AD.A1031
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
-
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I'm still churning through bug fixes for 5.10, and
-sending this to both lists because there's a couple of iomap fixes that
-go along with the xfs fixes.
-
-The new head of the for-next branch is commit:
-
-46afb0628b86 xfs: only flush the unshared range in xfs_reflink_unshare
-
-New Commits:
-
-Brian Foster (3):
-      [869ae85dae64] xfs: flush new eof page on truncate to avoid post-eof corruption
-      [763e4cdc0f6d] iomap: support partial page discard on writeback block mapping failure
-      [50e7d6c7a521] iomap: clean up writeback state logic on writepage error
-
-Darrick J. Wong (4):
-      [2c334e12f957] xfs: set xefi_discard when creating a deferred agfl free log intent item
-      [c2f09217a430] xfs: fix missing CoW blocks writeback conversion retry
-      [c1f6b1ac0075] xfs: fix scrub flagging rtinherit even if there is no rt device
-      [46afb0628b86] xfs: only flush the unshared range in xfs_reflink_unshare
+Ping :)
 
 
-Code Diffstat:
+On 2020/10/23 15:49, Li, Hao wrote:
+> Hello,
+>
+> Ping.
+>
+> This patch need to be merged... Thanks.
+>
+> On 2020/9/9 7:03, Ira Weiny wrote:
+>> On Fri, Sep 04, 2020 at 03:59:39PM +0800, Hao Li wrote:
+>>> If generic_drop_inode() returns true, it means iput_final() can evict
+>>> this inode regardless of whether it is dirty or not. If we check
+>>> I_DONTCACHE in generic_drop_inode(), any inode with this bit set will be
+>>> evicted unconditionally. This is not the desired behavior because
+>>> I_DONTCACHE only means the inode shouldn't be cached on the LRU list.
+>>> As for whether we need to evict this inode, this is what
+>>> generic_drop_inode() should do. This patch corrects the usage of
+>>> I_DONTCACHE.
+>>>
+>>> This patch was proposed in [1].
+>>>
+>>> [1]: https://lore.kernel.org/linux-fsdevel/20200831003407.GE12096@dread.disaster.area/
+>>>
+>>> Fixes: dae2f8ed7992 ("fs: Lift XFS_IDONTCACHE to the VFS layer")
+>>> Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
+>> Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+>>
+>>> ---
+>>> Changes in v2:
+>>>  - Adjust code format
+>>>  - Add Fixes tag in commit message
+>>>
+>>>  fs/inode.c         | 4 +++-
+>>>  include/linux/fs.h | 3 +--
+>>>  2 files changed, 4 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/fs/inode.c b/fs/inode.c
+>>> index 72c4c347afb7..19ad823f781c 100644
+>>> --- a/fs/inode.c
+>>> +++ b/fs/inode.c
+>>> @@ -1625,7 +1625,9 @@ static void iput_final(struct inode *inode)
+>>>  	else
+>>>  		drop = generic_drop_inode(inode);
+>>>  
+>>> -	if (!drop && (sb->s_flags & SB_ACTIVE)) {
+>>> +	if (!drop &&
+>>> +	    !(inode->i_state & I_DONTCACHE) &&
+>>> +	    (sb->s_flags & SB_ACTIVE)) {
+>>>  		inode_add_lru(inode);
+>>>  		spin_unlock(&inode->i_lock);
+>>>  		return;
+>>> diff --git a/include/linux/fs.h b/include/linux/fs.h
+>>> index e019ea2f1347..93caee80ce47 100644
+>>> --- a/include/linux/fs.h
+>>> +++ b/include/linux/fs.h
+>>> @@ -2922,8 +2922,7 @@ extern int inode_needs_sync(struct inode *inode);
+>>>  extern int generic_delete_inode(struct inode *inode);
+>>>  static inline int generic_drop_inode(struct inode *inode)
+>>>  {
+>>> -	return !inode->i_nlink || inode_unhashed(inode) ||
+>>> -		(inode->i_state & I_DONTCACHE);
+>>> +	return !inode->i_nlink || inode_unhashed(inode);
+>>>  }
+>>>  extern void d_mark_dontcache(struct inode *inode);
+>>>  
+>>> -- 
+>>> 2.28.0
+>>>
+>>>
+>>>
+>
 
- fs/iomap/buffered-io.c    | 30 ++++++++++--------------------
- fs/xfs/libxfs/xfs_alloc.c |  1 +
- fs/xfs/libxfs/xfs_bmap.h  |  2 +-
- fs/xfs/scrub/inode.c      |  3 +--
- fs/xfs/xfs_aops.c         | 20 ++++++++++++--------
- fs/xfs/xfs_iops.c         | 10 ++++++++++
- fs/xfs/xfs_reflink.c      |  3 ++-
- include/linux/iomap.h     |  2 +-
- 8 files changed, 38 insertions(+), 33 deletions(-)
+
