@@ -2,131 +2,133 @@ Return-Path: <SRS0=DzrB=EM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70ECAC388F7
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 03:32:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59B20C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 04:10:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D6C820729
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 03:32:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E83A02075A
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 04:10:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="g+hd3o9q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725875AbgKFDca (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Nov 2020 22:32:30 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48011 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725842AbgKFDca (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 22:32:30 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 502EF58BA4E;
-        Fri,  6 Nov 2020 14:32:27 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kasUE-008Ab6-CX; Fri, 06 Nov 2020 14:32:26 +1100
-Date:   Fri, 6 Nov 2020 14:32:26 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        fdmanana@kernel.org
-Subject: Re: [RFC PATCH] vfs: remove lockdep bogosity in __sb_start_write
-Message-ID: <20201106033226.GF7391@dread.disaster.area>
-References: <20201103173300.GF7123@magnolia>
- <20201103173921.GA32219@infradead.org>
- <20201103183444.GH7123@magnolia>
- <20201103184659.GA19623@infradead.org>
- <20201103193750.GK7123@magnolia>
- <20201105213415.GD7391@dread.disaster.area>
- <20201106021951.GF7148@magnolia>
+        id S1725815AbgKFEKg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Nov 2020 23:10:36 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:39860 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725616AbgKFEKg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 23:10:36 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A643uA5017936;
+        Fri, 6 Nov 2020 04:10:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=pgvQYCLalddNOo+GLs4x1pKNzRl7IWtapQb1qld2a/Y=;
+ b=g+hd3o9qVaxUEjXxcMhk296Japo7OTbVJEakencu2+5XxAsI09+cWEuUARdHcO9nTMns
+ cU62wgCnhKBxE2YbL9nsnx3/skeLfPnQNfar0T7ZnpQgMaW4pp/AGbktJ9Vz+/3Iv57n
+ GfGQbcDLR9M2iRZNmfirGD9QcApJmp1feEodZRAow+6fHUGGS5YZ55c2vBs4PsTjBt4x
+ I6H+YI+1ofFxtR6bBlchhlPHPy9UE015V7ypG4XOkIlqv49TPyeIp83urgHLHVjKUFnn
+ L2pQYvrmk6XtLmAGnPEQitd1foirz+cQqwzsdYat4azxLS/xa7L36rX5F7b9iROUgxyA Lg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 34hhvcq61t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 06 Nov 2020 04:10:29 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A645rK8121033;
+        Fri, 6 Nov 2020 04:10:29 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 34hvs1tnsf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Nov 2020 04:10:28 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A64ANsf024488;
+        Fri, 6 Nov 2020 04:10:23 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 05 Nov 2020 20:10:22 -0800
+Subject: [PATCH 0/2] vfs: remove lockdep fs freeze weirdness
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de,
+        fdmanana@kernel.org, linux-fsdevel@vger.kernel.org
+Date:   Thu, 05 Nov 2020 20:10:21 -0800
+Message-ID: <160463582157.1669281.13010940328517200152.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201106021951.GF7148@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=nNwsprhYR40A:10 a=7-415B0cAAAA:8
-        a=RObj2HEUvNYVxs8GEq8A:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9796 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 mlxscore=0
+ malwarescore=0 mlxlogscore=999 suspectscore=0 spamscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011060026
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9796 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
+ impostorscore=0 malwarescore=0 priorityscore=1501 mlxlogscore=999
+ bulkscore=0 phishscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011060026
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 05, 2020 at 06:19:51PM -0800, Darrick J. Wong wrote:
-> On Fri, Nov 06, 2020 at 08:34:15AM +1100, Dave Chinner wrote:
-> > On Tue, Nov 03, 2020 at 11:37:50AM -0800, Darrick J. Wong wrote:
-> > > On Tue, Nov 03, 2020 at 06:46:59PM +0000, Christoph Hellwig wrote:
-> > > > On Tue, Nov 03, 2020 at 10:34:44AM -0800, Darrick J. Wong wrote:
-> > > > > > Please split the function into __sb_start_write and
-> > > > > > __sb_start_write_trylock while you're at it..
-> > > > > 
-> > > > > Any thoughts on this patch itself?  I don't feel like I have 100% of the
-> > > > > context to know whether the removal is a good idea for non-xfs
-> > > > > filesystems, though I'm fairly sure the current logic is broken.
-> > > > 
-> > > > The existing logic looks pretty bogus to me as well.  Did you try to find
-> > > > the discussion that lead to it?
-> > > 
-> > > TBH I don't know where the discussion happened.  The "convert to
-> > > trylock" behavior first appeared as commit 5accdf82ba25c back in 2012;
-> > > that commit seems to have come from v6 of a patch[1] that Jan Kara sent
-> > > to try to fix fs freeze handling back in 2012.  The behavior was not in
-> > > the v5[0] patch, nor was there any discussion for any of the v5 patches
-> > > that would suggest why things changed from v5 to v6.
-> > > 
-> > > Dave and I were talking about this on IRC yesterday, and his memory
-> > > thought that this was lockdep trying to handle xfs taking intwrite
-> > > protection while handling a write (or page_mkwrite) operation.  I'm not
-> > > sure where "XFS for example gets freeze protection on internal level
-> > > twice in some cases" would actually happen -- did xfs support nested
-> > > transactions in the past?  We definitely don't now, so I don't think the
-> > > comment is valid anymore.
-> > > 
-> > > The last commit to touch this area was f4b554af9931 (in 2015), which
-> > > says that Dave explained that the trylock hack + comment could be
-> > > removed, but the patch author never did that, and lore doesn't seem to
-> > > know where or when Dave actually said that?
-> > 
-> > I'm pretty sure this "nesting internal freeze references" stems from
-> > the fact we log and flush the superblock after fulling freezing the
-> > filesystem to dirty the journal so recovery after a crash while
-> > frozen handles unlinked inodes.
-> > 
-> > The high level VFS freeze annotations were not able to handle
-> > running this transaction when transactions were supposed to already
-> > be blocked and drained, so there was a special hack to hide it from
-> > lockdep. Then we ended up hiding it from the VFS via
-> > XFS_TRANS_NO_WRITECOUNT in xfs_sync_sb() because we needed it in
-> > more places than just freeze (e.g. the log covering code
-> > run by the background log worker). It's kinda documented here:
-> > 
-> > /*
-> >  * xfs_sync_sb
-> >  *
-> >  * Sync the superblock to disk.
-> >  *
-> >  * Note that the caller is responsible for checking the frozen state of the
-> >  * filesystem. This procedure uses the non-blocking transaction allocator and
-> >  * thus will allow modifications to a frozen fs. This is required because this
-> >  * code can be called during the process of freezing where use of the high-level
-> >  * allocator would deadlock.
-> >  */
-> > 
-> > So, AFAICT, the whole "XFS nests internal transactions" lockdep 
-> > handling in __sb_start_write() has been unnecessary for quite a few
-> > years now....
-> 
-> Yeah.  Would you be willing to RVB this, or are you all waiting for a v2
-> series?
+Hi all,
 
-Send out a v2 - you probably need to include some of the above
-information in the change log removing the lockdep stuff so it's
-preserved this time...
+A long time ago, XFS got tangled up with lockdep because the last thing
+it does during a fs freeze is use a transaction to flush the superblock
+to disk.  Transactions require int(ernal) write freeze protection, which
+implies a recursive grab of the intwrite lock and makes lockdep all sad.
 
-Cheers,
+This was "solved" in lockdep back in 2012 as commit 5accdf82ba25c by
+adding a "convert XFS' blocking fsfreeze lock attempts into a trylock"
+behavior in v6 of a patch[1] that Jan Kara sent to try to fix fs freeze
+handling.  The behavior was not in the v5[0] patch, nor was there any
+discussion for any of the v5 patches that would suggest why things
+changed from v5 to v6.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Commit f4b554af9931 in 2015 created the current weird logic in
+__sb_start_write, which converts recursive freeze lock grabs into
+trylocks whose return values are ignored(!!!).  XFS solved the problem
+by creating a variant of transactions (XFS_TRANS_NO_WRITECOUNT) that
+don't grab intwrite freeze protection, thus making lockdep's solution
+unnecessary.  The commit claims that Dave Chinner explained that the
+trylock hack + comment could be removed, but the patch author never did
+that, and lore doesn't seem to know where or when Dave actually said
+that?
+
+Now it's 2020, and still nobody removed this from __sb_start_write.
+Worse yet, nowadays lock_is_held returns 1 if lockdep is built-in but
+offline.  This causes attempts to grab the pagefaults freeze lock
+synchronously to turn into unchecked trylocks!  Hilarity ensues if a
+page fault races with fsfreeze and loses, which causes us to break the
+locking model.
+
+This finally came to a head in 5.10-rc1 because the new lockdep bugs
+introduced during the merge window caused this maintainer to hit the
+weird case where sb_start_pagefault can return without having taken the
+freeze lock, leading to test failures and memory corruption.
+
+Since this insanity is dangerous and hasn't been needed by xfs since the
+late 2.6(???) days, kill it with fire.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=remove-freeze-weirdness-5.11
+---
+ fs/aio.c           |    2 +-
+ fs/io_uring.c      |    3 +--
+ fs/super.c         |   43 ++++++++++++-------------------------------
+ include/linux/fs.h |   21 +++++++++++----------
+ 4 files changed, 25 insertions(+), 44 deletions(-)
+
