@@ -2,69 +2,73 @@ Return-Path: <SRS0=DzrB=EM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCF31C2D0A3
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 08:39:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F691C55178
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 21:33:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71D8721707
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 08:39:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D59820735
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 21:33:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725848AbgKFIja (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Nov 2020 03:39:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45264 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725830AbgKFIj3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Nov 2020 03:39:29 -0500
-X-Greylist: delayed 435 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 06 Nov 2020 00:39:29 PST
-Received: from mail.lichtvoll.de (lichtvoll.de [IPv6:2001:67c:14c:12f::11:100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADEBFC0613CF
-        for <linux-xfs@vger.kernel.org>; Fri,  6 Nov 2020 00:39:29 -0800 (PST)
-Received: from 127.0.0.1 (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.lichtvoll.de (Postfix) with ESMTPSA id A768617D3E7;
-        Fri,  6 Nov 2020 09:32:09 +0100 (CET)
-From:   Martin Steigerwald <martin@lichtvoll.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     liang bai <darkagainst@gmail.com>
+        id S1728280AbgKFVc7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Nov 2020 16:32:59 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:39787 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728096AbgKFVc6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Nov 2020 16:32:58 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5CA4F3AB09F;
+        Sat,  7 Nov 2020 08:32:55 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kb9Lq-008Qc8-Dc; Sat, 07 Nov 2020 08:32:54 +1100
+Date:   Sat, 7 Nov 2020 08:32:54 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     liang bai <darkagainst@gmail.com>
+Cc:     linux-xfs@vger.kernel.org
 Subject: Re: About material on old xfs wiki
-Date:   Fri, 06 Nov 2020 09:32:08 +0100
-Message-ID: <2134940.iZASKD2KPV@merkaba>
-In-Reply-To: <CA+Kr39MGk=mj0Mx7idzUvkEOxw5qzwfqzWuxN0mgzTGSHLsK5Q@mail.gmail.com>
+Message-ID: <20201106213254.GG7391@dread.disaster.area>
 References: <CA+Kr39MGk=mj0Mx7idzUvkEOxw5qzwfqzWuxN0mgzTGSHLsK5Q@mail.gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
-Authentication-Results: mail.lichtvoll.de;
-        auth=pass smtp.auth=martin smtp.mailfrom=martin@lichtvoll.de
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+Kr39MGk=mj0Mx7idzUvkEOxw5qzwfqzWuxN0mgzTGSHLsK5Q@mail.gmail.com>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=nNwsprhYR40A:10 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8
+        a=xDvEBrSEsUZi0YHBj7wA:9 a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi.
-
-liang bai - 06.11.20, 09:14:05 CET:
+On Fri, Nov 06, 2020 at 04:14:05PM +0800, liang bai wrote:
+> Hi,
 > I am doing some research about how SSD can better cooperate with XFS.
 > So I need to know much about the design of the XFS.
-> I find some material in new xfs wiki, but I would like to know more
-> about internal design and details in old xfs wiki. It's a pity that
-> the old one
-> can not work now. I'd like to know if the web will recover and if
-> there is a way to get the material.
 
-Internet Archive Wayback machine to the rescue:
+https://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git/
 
-Try this:
+Though your best resource is going to be asking questions on this
+list.
 
-https://web.archive.org/web/20200518215919/https://xfs.org/index.php/
-Main_Page
+I'd be interested to know what sort of SSD optimisations you are
+thinking of, because largely SSD optimisations are similar to the
+layout optimisations that we do for RAID (alignment, cross-file
+packing, locality groupings, etc) and as such we don't actually have
+any specific SSD-only optimisations in XFS at all.
 
-Thanks,
+Most of this knowledge isn't documented anywhere, so the only way
+you will understand what we already know works and doesn't work is
+to discuss the topic directly here on this list...
+
+Cheers,
+
+Dave.
 -- 
-Martin
-
-
+Dave Chinner
+david@fromorbit.com
