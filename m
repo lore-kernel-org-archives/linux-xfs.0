@@ -2,133 +2,229 @@ Return-Path: <SRS0=DzrB=EM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59B20C2D0A3
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 04:10:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAEE5C388F2
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 04:10:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E83A02075A
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 04:10:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71172206F7
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Nov 2020 04:10:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="g+hd3o9q"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="f9aLxLhM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725815AbgKFEKg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Nov 2020 23:10:36 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:39860 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725616AbgKFEKg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 23:10:36 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A643uA5017936;
-        Fri, 6 Nov 2020 04:10:29 GMT
+        id S1725868AbgKFEKn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Nov 2020 23:10:43 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:45254 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725616AbgKFEKn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Nov 2020 23:10:43 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A645EZH121769;
+        Fri, 6 Nov 2020 04:10:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=pgvQYCLalddNOo+GLs4x1pKNzRl7IWtapQb1qld2a/Y=;
- b=g+hd3o9qVaxUEjXxcMhk296Japo7OTbVJEakencu2+5XxAsI09+cWEuUARdHcO9nTMns
- cU62wgCnhKBxE2YbL9nsnx3/skeLfPnQNfar0T7ZnpQgMaW4pp/AGbktJ9Vz+/3Iv57n
- GfGQbcDLR9M2iRZNmfirGD9QcApJmp1feEodZRAow+6fHUGGS5YZ55c2vBs4PsTjBt4x
- I6H+YI+1ofFxtR6bBlchhlPHPy9UE015V7ypG4XOkIlqv49TPyeIp83urgHLHVjKUFnn
- L2pQYvrmk6XtLmAGnPEQitd1foirz+cQqwzsdYat4azxLS/xa7L36rX5F7b9iROUgxyA Lg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 34hhvcq61t-1
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=Y1V5UKpvZl7SoelSV6SSCFD8cKpEZEi8WjLcTgXPGZM=;
+ b=f9aLxLhMQtbL76Prr8uD4pgh6OKP8EJwkU5SsGkdTbHgwr2C2lZqHNfOZla3gmxpSS4A
+ XGGecpVjXtpEGvfBiO9bD2tcEZRy9IyvfosOBr6t8ALC3NFBtL17smKj2nSjgp+Tc7Bf
+ 0rOr/xJlk4HwtcBboBpxA/liNO8KqPCyx4Fj88xk4fRwQ/6+k3dcV0ztcZVOprYocqHU
+ JZ2XOnVRUJX3rnaSa51YMHKoDNAlZq3+VcNXCDkxDZ+kwSSQWCZutF9Vwm6ku0sFwjF8
+ IbVrgHr4+I3drUQG6vWTX2SpKSXsN5HAMrLD/AHbgmdlvomYSS6/gZ1rqzkFYgXro67D ag== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 34hhw2y5fd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Fri, 06 Nov 2020 04:10:29 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A645rK8121033;
-        Fri, 6 Nov 2020 04:10:29 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 34hvs1tnsf-1
+        Fri, 06 Nov 2020 04:10:37 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A644oBb013986;
+        Fri, 6 Nov 2020 04:10:36 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 34hw0jj33m-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Nov 2020 04:10:28 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A64ANsf024488;
-        Fri, 6 Nov 2020 04:10:23 GMT
+        Fri, 06 Nov 2020 04:10:36 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0A64AZXb005812;
+        Fri, 6 Nov 2020 04:10:35 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Nov 2020 20:10:22 -0800
-Subject: [PATCH 0/2] vfs: remove lockdep fs freeze weirdness
+        with ESMTP ; Thu, 05 Nov 2020 20:10:35 -0800
+Subject: [PATCH 2/2] vfs: separate __sb_start_write into blocking and
+ non-blocking helpers
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de,
         fdmanana@kernel.org, linux-fsdevel@vger.kernel.org
-Date:   Thu, 05 Nov 2020 20:10:21 -0800
-Message-ID: <160463582157.1669281.13010940328517200152.stgit@magnolia>
+Date:   Thu, 05 Nov 2020 20:10:34 -0800
+Message-ID: <160463583438.1669281.14783057013328963357.stgit@magnolia>
+In-Reply-To: <160463582157.1669281.13010940328517200152.stgit@magnolia>
+References: <160463582157.1669281.13010940328517200152.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9796 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 adultscore=0 mlxscore=0
- malwarescore=0 mlxlogscore=999 suspectscore=0 spamscore=0 phishscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011060026
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9796 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 mlxscore=0
+ suspectscore=1 clxscore=1015 priorityscore=1501 impostorscore=0
+ spamscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011060026
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9796 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 suspectscore=0
- impostorscore=0 malwarescore=0 priorityscore=1501 mlxlogscore=999
- bulkscore=0 phishscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0
- clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011060026
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-A long time ago, XFS got tangled up with lockdep because the last thing
-it does during a fs freeze is use a transaction to flush the superblock
-to disk.  Transactions require int(ernal) write freeze protection, which
-implies a recursive grab of the intwrite lock and makes lockdep all sad.
+Break this function into two helpers so that it's obvious that the
+trylock versions return a value that must be checked, and the blocking
+versions don't require that.  While we're at it, clean up the return
+type mismatch.
 
-This was "solved" in lockdep back in 2012 as commit 5accdf82ba25c by
-adding a "convert XFS' blocking fsfreeze lock attempts into a trylock"
-behavior in v6 of a patch[1] that Jan Kara sent to try to fix fs freeze
-handling.  The behavior was not in the v5[0] patch, nor was there any
-discussion for any of the v5 patches that would suggest why things
-changed from v5 to v6.
-
-Commit f4b554af9931 in 2015 created the current weird logic in
-__sb_start_write, which converts recursive freeze lock grabs into
-trylocks whose return values are ignored(!!!).  XFS solved the problem
-by creating a variant of transactions (XFS_TRANS_NO_WRITECOUNT) that
-don't grab intwrite freeze protection, thus making lockdep's solution
-unnecessary.  The commit claims that Dave Chinner explained that the
-trylock hack + comment could be removed, but the patch author never did
-that, and lore doesn't seem to know where or when Dave actually said
-that?
-
-Now it's 2020, and still nobody removed this from __sb_start_write.
-Worse yet, nowadays lock_is_held returns 1 if lockdep is built-in but
-offline.  This causes attempts to grab the pagefaults freeze lock
-synchronously to turn into unchecked trylocks!  Hilarity ensues if a
-page fault races with fsfreeze and loses, which causes us to break the
-locking model.
-
-This finally came to a head in 5.10-rc1 because the new lockdep bugs
-introduced during the merge window caused this maintainer to hit the
-weird case where sb_start_pagefault can return without having taken the
-freeze lock, leading to test failures and memory corruption.
-
-Since this insanity is dangerous and hasn't been needed by xfs since the
-late 2.6(???) days, kill it with fire.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=remove-freeze-weirdness-5.11
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
  fs/aio.c           |    2 +-
  fs/io_uring.c      |    3 +--
- fs/super.c         |   43 ++++++++++++-------------------------------
+ fs/super.c         |   18 ++++++++++++------
  include/linux/fs.h |   21 +++++++++++----------
- 4 files changed, 25 insertions(+), 44 deletions(-)
+ 4 files changed, 25 insertions(+), 19 deletions(-)
+
+
+diff --git a/fs/aio.c b/fs/aio.c
+index c45c20d87538..04bb4bac327f 100644
+--- a/fs/aio.c
++++ b/fs/aio.c
+@@ -1572,7 +1572,7 @@ static int aio_write(struct kiocb *req, const struct iocb *iocb,
+ 		 * we return to userspace.
+ 		 */
+ 		if (S_ISREG(file_inode(file)->i_mode)) {
+-			__sb_start_write(file_inode(file)->i_sb, SB_FREEZE_WRITE, true);
++			__sb_start_write(file_inode(file)->i_sb, SB_FREEZE_WRITE);
+ 			__sb_writers_release(file_inode(file)->i_sb, SB_FREEZE_WRITE);
+ 		}
+ 		req->ki_flags |= IOCB_WRITE;
+diff --git a/fs/io_uring.c b/fs/io_uring.c
+index b42dfa0243bf..b735fecb49da 100644
+--- a/fs/io_uring.c
++++ b/fs/io_uring.c
+@@ -3532,8 +3532,7 @@ static int io_write(struct io_kiocb *req, bool force_nonblock,
+ 	 * we return to userspace.
+ 	 */
+ 	if (req->flags & REQ_F_ISREG) {
+-		__sb_start_write(file_inode(req->file)->i_sb,
+-					SB_FREEZE_WRITE, true);
++		__sb_start_write(file_inode(req->file)->i_sb, SB_FREEZE_WRITE);
+ 		__sb_writers_release(file_inode(req->file)->i_sb,
+ 					SB_FREEZE_WRITE);
+ 	}
+diff --git a/fs/super.c b/fs/super.c
+index e1fd667454d4..59aa59279133 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -1645,16 +1645,22 @@ EXPORT_SYMBOL(__sb_end_write);
+  * This is an internal function, please use sb_start_{write,pagefault,intwrite}
+  * instead.
+  */
+-int __sb_start_write(struct super_block *sb, int level, bool wait)
++void __sb_start_write(struct super_block *sb, int level)
+ {
+-	if (!wait)
+-		return percpu_down_read_trylock(sb->s_writers.rw_sem + level-1);
+-
+-	percpu_down_read(sb->s_writers.rw_sem + level-1);
+-	return 1;
++	percpu_down_read(sb->s_writers.rw_sem + level - 1);
+ }
+ EXPORT_SYMBOL(__sb_start_write);
+ 
++/*
++ * This is an internal function, please use sb_start_{write,pagefault,intwrite}
++ * instead.
++ */
++bool __sb_start_write_trylock(struct super_block *sb, int level)
++{
++	return percpu_down_read_trylock(sb->s_writers.rw_sem + level - 1);
++}
++EXPORT_SYMBOL_GPL(__sb_start_write_trylock);
++
+ /**
+  * sb_wait_write - wait until all writers to given file system finish
+  * @sb: the super for which we wait
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 0bd126418bb6..98548ec7de0b 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1581,7 +1581,8 @@ extern struct timespec64 current_time(struct inode *inode);
+  */
+ 
+ void __sb_end_write(struct super_block *sb, int level);
+-int __sb_start_write(struct super_block *sb, int level, bool wait);
++void __sb_start_write(struct super_block *sb, int level);
++bool __sb_start_write_trylock(struct super_block *sb, int level);
+ 
+ #define __sb_writers_acquired(sb, lev)	\
+ 	percpu_rwsem_acquire(&(sb)->s_writers.rw_sem[(lev)-1], 1, _THIS_IP_)
+@@ -1645,12 +1646,12 @@ static inline void sb_end_intwrite(struct super_block *sb)
+  */
+ static inline void sb_start_write(struct super_block *sb)
+ {
+-	__sb_start_write(sb, SB_FREEZE_WRITE, true);
++	__sb_start_write(sb, SB_FREEZE_WRITE);
+ }
+ 
+-static inline int sb_start_write_trylock(struct super_block *sb)
++static inline bool sb_start_write_trylock(struct super_block *sb)
+ {
+-	return __sb_start_write(sb, SB_FREEZE_WRITE, false);
++	return __sb_start_write_trylock(sb, SB_FREEZE_WRITE);
+ }
+ 
+ /**
+@@ -1674,7 +1675,7 @@ static inline int sb_start_write_trylock(struct super_block *sb)
+  */
+ static inline void sb_start_pagefault(struct super_block *sb)
+ {
+-	__sb_start_write(sb, SB_FREEZE_PAGEFAULT, true);
++	__sb_start_write(sb, SB_FREEZE_PAGEFAULT);
+ }
+ 
+ /*
+@@ -1692,12 +1693,12 @@ static inline void sb_start_pagefault(struct super_block *sb)
+  */
+ static inline void sb_start_intwrite(struct super_block *sb)
+ {
+-	__sb_start_write(sb, SB_FREEZE_FS, true);
++	__sb_start_write(sb, SB_FREEZE_FS);
+ }
+ 
+-static inline int sb_start_intwrite_trylock(struct super_block *sb)
++static inline bool sb_start_intwrite_trylock(struct super_block *sb)
+ {
+-	return __sb_start_write(sb, SB_FREEZE_FS, false);
++	return __sb_start_write_trylock(sb, SB_FREEZE_FS);
+ }
+ 
+ 
+@@ -2756,14 +2757,14 @@ static inline void file_start_write(struct file *file)
+ {
+ 	if (!S_ISREG(file_inode(file)->i_mode))
+ 		return;
+-	__sb_start_write(file_inode(file)->i_sb, SB_FREEZE_WRITE, true);
++	__sb_start_write(file_inode(file)->i_sb, SB_FREEZE_WRITE);
+ }
+ 
+ static inline bool file_start_write_trylock(struct file *file)
+ {
+ 	if (!S_ISREG(file_inode(file)->i_mode))
+ 		return true;
+-	return __sb_start_write(file_inode(file)->i_sb, SB_FREEZE_WRITE, false);
++	return __sb_start_write_trylock(file_inode(file)->i_sb, SB_FREEZE_WRITE);
+ }
+ 
+ static inline void file_end_write(struct file *file)
 
