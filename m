@@ -6,74 +6,89 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2CCCC388F7
-	for <linux-xfs@archiver.kernel.org>; Sat,  7 Nov 2020 20:47:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A552FC388F7
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Nov 2020 22:56:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6EB24208FE
-	for <linux-xfs@archiver.kernel.org>; Sat,  7 Nov 2020 20:47:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D05C206B2
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Nov 2020 22:56:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725846AbgKGUrz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 7 Nov 2020 15:47:55 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:35098 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725836AbgKGUry (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Nov 2020 15:47:54 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E990B58C03C;
-        Sun,  8 Nov 2020 07:47:50 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kbV7j-008kzQ-5r; Sun, 08 Nov 2020 07:47:47 +1100
-Date:   Sun, 8 Nov 2020 07:47:47 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Gionatan Danti <g.danti@assyoma.it>
+        id S1726021AbgKGW4T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 7 Nov 2020 17:56:19 -0500
+Received: from mr013msb.fastweb.it ([85.18.95.104]:40455 "EHLO
+        mr013msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725838AbgKGW4S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Nov 2020 17:56:18 -0500
+Received-SPF: pass (mr013msb.fastweb.it: domain assyoma.it designates
+ 93.63.55.57 as permitted sender) identity=mailfrom;
+ receiver=mr013msb.fastweb.it; client-ip=93.63.55.57;
+ envelope-from=g.danti@assyoma.it; helo=plutone.assyoma.it;
+X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedujedrudduvddgtddvucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuhfetuffvhgfguedpucfqfgfvnecuuegrihhlohhuthemuceftddtnecunecujfgurhepggffhffvufgjfhgfkfigtgfgsehtjehjtddtredvnecuhfhrohhmpefiihhonhgrthgrnhcuffgrnhhtihcuoehgrdgurghnthhisegrshhshihomhgrrdhitheqnecuggftrfgrthhtvghrnhepvdffvedtueevleehudekffeileeuhfdvtdeigfeukefgvddvhfelhefgkeffgfdtnecuffhomhgrihhnpegrshhshihomhgrrdhithenucfkphepleefrdeifedrheehrdehjeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehplhhuthhonhgvrdgrshhshihomhgrrdhithdpihhnvghtpeelfedrieefrdehhedrheejpdhmrghilhhfrhhomhepoehgrdgurghnthhisegrshhshihomhgrrdhitheqpdhrtghpthhtohepoegurghvihgusehfrhhomhhorhgsihhtrdgtohhmqecuqfftvefrvfeprhhftgekvddvnegurghvihgusehfrhhomhhorhgsihhtrdgtohhmpdhrtghpthhtohepoehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgqecuqfftvefrvfeprhhftgekvddvnehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhg
+X-RazorGate-Vade-Verdict: clean 0
+X-RazorGate-Vade-Classification: clean
+Received: from plutone.assyoma.it (93.63.55.57) by mr013msb.fastweb.it (5.8.208)
+        id 5F4CF1900638D6A3; Sat, 7 Nov 2020 23:56:13 +0100
+Received: from webmail.assyoma.it (localhost [IPv6:::1])
+        by plutone.assyoma.it (Postfix) with ESMTPA id 89C79C01BC40;
+        Sat,  7 Nov 2020 23:56:13 +0100 (CET)
+MIME-Version: 1.0
+Date:   Sat, 07 Nov 2020 23:56:13 +0100
+From:   Gionatan Danti <g.danti@assyoma.it>
+To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
 Subject: Re: Recover preallocated space after a crash?
-Message-ID: <20201107204747.GH7391@dread.disaster.area>
+In-Reply-To: <20201107204747.GH7391@dread.disaster.area>
 References: <274ec62926defe526850a4253d2b96a8@assyoma.it>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <274ec62926defe526850a4253d2b96a8@assyoma.it>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=nNwsprhYR40A:10 a=7-415B0cAAAA:8
-        a=nHAAI5wXA9Jvdu6jZWgA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+ <20201107204747.GH7391@dread.disaster.area>
+User-Agent: Roundcube Webmail/1.4.9
+Message-ID: <1e8b6ec2fe950a3320236af8e8353ea2@assyoma.it>
+X-Sender: g.danti@assyoma.it
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 07, 2020 at 08:55:50PM +0100, Gionatan Danti wrote:
-> Hi list,
-> it is my understanding that XFS can preallocate some "extra" space via
-> speculative EOF preallocation and speculative COW preallocation.
+Il 2020-11-07 21:47 Dave Chinner ha scritto:
+> On Sat, Nov 07, 2020 at 08:55:50PM +0100, Gionatan Danti wrote:
+>> Hi list,
+>> it is my understanding that XFS can preallocate some "extra" space via
+>> speculative EOF preallocation and speculative COW preallocation.
+>> 
+>> During normal system operation, that extra space is recovered after 
+>> some
+>> time. But what if system crashes? Can it be even recovered? If so, it 
+>> is
+>> done at mount time or via a (more invasive) fsck?
 > 
-> During normal system operation, that extra space is recovered after some
-> time. But what if system crashes? Can it be even recovered? If so, it is
-> done at mount time or via a (more invasive) fsck?
+> It will be done silently the next time the inode is cycled through
+> memory via an open()/close() pair as specualtive prealloc is removed
+> on the final close() of a file.
+> 
+> Alternatively, you can trigger reclaim on the current set of
+> in-memory inodes by running:
+> 
+> # xfs_spaceman -c "prealloc -m 64k -s" /mnt
+> 
+> to remove speculative preallocations of more than 64k from all
+> inodes that are in-memory and wait for the operation to complete.
+> 
+> You still need to bring the inodes into memory, so you can do this
+> via find command that reads some inode metadata (e.g. find /mnt
+> -ctime 2>&1 /dev/null). This means you don't need to actually
+> open/close each inode in userspace - the filesystem will traversal
+> all the in-memory inodes and clear the prealloc space itself.
+> 
+> Cheers,
+> 
+> Dave.
 
-It will be done silently the next time the inode is cycled through
-memory via an open()/close() pair as specualtive prealloc is removed
-on the final close() of a file.
+Hi Dave,
+thanks so much for the clear answer.
 
-Alternatively, you can trigger reclaim on the current set of
-in-memory inodes by running:
-
-# xfs_spaceman -c "prealloc -m 64k -s" /mnt
-
-to remove speculative preallocations of more than 64k from all
-inodes that are in-memory and wait for the operation to complete.
-
-You still need to bring the inodes into memory, so you can do this
-via find command that reads some inode metadata (e.g. find /mnt
--ctime 2>&1 /dev/null). This means you don't need to actually
-open/close each inode in userspace - the filesystem will traversal
-all the in-memory inodes and clear the prealloc space itself.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
