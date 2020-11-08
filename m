@@ -1,94 +1,89 @@
-Return-Path: <SRS0=AdL6=EN=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=Jdan=EO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A552FC388F7
-	for <linux-xfs@archiver.kernel.org>; Sat,  7 Nov 2020 22:56:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BEF2C388F9
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Nov 2020 10:05:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D05C206B2
-	for <linux-xfs@archiver.kernel.org>; Sat,  7 Nov 2020 22:56:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1ADFC20719
+	for <linux-xfs@archiver.kernel.org>; Sun,  8 Nov 2020 10:05:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726021AbgKGW4T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 7 Nov 2020 17:56:19 -0500
-Received: from mr013msb.fastweb.it ([85.18.95.104]:40455 "EHLO
-        mr013msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725838AbgKGW4S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 7 Nov 2020 17:56:18 -0500
-Received-SPF: pass (mr013msb.fastweb.it: domain assyoma.it designates
- 93.63.55.57 as permitted sender) identity=mailfrom;
- receiver=mr013msb.fastweb.it; client-ip=93.63.55.57;
- envelope-from=g.danti@assyoma.it; helo=plutone.assyoma.it;
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedujedrudduvddgtddvucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuhfetuffvhgfguedpucfqfgfvnecuuegrihhlohhuthemuceftddtnecunecujfgurhepggffhffvufgjfhgfkfigtgfgsehtjehjtddtredvnecuhfhrohhmpefiihhonhgrthgrnhcuffgrnhhtihcuoehgrdgurghnthhisegrshhshihomhgrrdhitheqnecuggftrfgrthhtvghrnhepvdffvedtueevleehudekffeileeuhfdvtdeigfeukefgvddvhfelhefgkeffgfdtnecuffhomhgrihhnpegrshhshihomhgrrdhithenucfkphepleefrdeifedrheehrdehjeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehplhhuthhonhgvrdgrshhshihomhgrrdhithdpihhnvghtpeelfedrieefrdehhedrheejpdhmrghilhhfrhhomhepoehgrdgurghnthhisegrshhshihomhgrrdhitheqpdhrtghpthhtohepoegurghvihgusehfrhhomhhorhgsihhtrdgtohhmqecuqfftvefrvfeprhhftgekvddvnegurghvihgusehfrhhomhhorhgsihhtrdgtohhmpdhrtghpthhtohepoehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhgqecuqfftvefrvfeprhhftgekvddvnehlihhnuhigqdigfhhssehvghgvrhdrkhgvrhhnvghlrdhorhhg
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from plutone.assyoma.it (93.63.55.57) by mr013msb.fastweb.it (5.8.208)
-        id 5F4CF1900638D6A3; Sat, 7 Nov 2020 23:56:13 +0100
-Received: from webmail.assyoma.it (localhost [IPv6:::1])
-        by plutone.assyoma.it (Postfix) with ESMTPA id 89C79C01BC40;
-        Sat,  7 Nov 2020 23:56:13 +0100 (CET)
+        id S1726607AbgKHKFh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 8 Nov 2020 05:05:37 -0500
+Received: from out20-111.mail.aliyun.com ([115.124.20.111]:56885 "EHLO
+        out20-111.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726178AbgKHKFh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 8 Nov 2020 05:05:37 -0500
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.09129193|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0182243-0.0046172-0.977159;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047212;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.Iu3W0ke_1604829932;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.Iu3W0ke_1604829932)
+          by smtp.aliyun-inc.com(10.147.40.233);
+          Sun, 08 Nov 2020 18:05:32 +0800
+Date:   Sun, 8 Nov 2020 18:05:32 +0800
+From:   Eryu Guan <guan@eryu.me>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 0/9] xfstests: random fixes
+Message-ID: <20201108100532.GI3853@desktop>
+References: <160382528936.1202316.2338876126552815991.stgit@magnolia>
 MIME-Version: 1.0
-Date:   Sat, 07 Nov 2020 23:56:13 +0100
-From:   Gionatan Danti <g.danti@assyoma.it>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Recover preallocated space after a crash?
-In-Reply-To: <20201107204747.GH7391@dread.disaster.area>
-References: <274ec62926defe526850a4253d2b96a8@assyoma.it>
- <20201107204747.GH7391@dread.disaster.area>
-User-Agent: Roundcube Webmail/1.4.9
-Message-ID: <1e8b6ec2fe950a3320236af8e8353ea2@assyoma.it>
-X-Sender: g.danti@assyoma.it
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160382528936.1202316.2338876126552815991.stgit@magnolia>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Il 2020-11-07 21:47 Dave Chinner ha scritto:
-> On Sat, Nov 07, 2020 at 08:55:50PM +0100, Gionatan Danti wrote:
->> Hi list,
->> it is my understanding that XFS can preallocate some "extra" space via
->> speculative EOF preallocation and speculative COW preallocation.
->> 
->> During normal system operation, that extra space is recovered after 
->> some
->> time. But what if system crashes? Can it be even recovered? If so, it 
->> is
->> done at mount time or via a (more invasive) fsck?
-> 
-> It will be done silently the next time the inode is cycled through
-> memory via an open()/close() pair as specualtive prealloc is removed
-> on the final close() of a file.
-> 
-> Alternatively, you can trigger reclaim on the current set of
-> in-memory inodes by running:
-> 
-> # xfs_spaceman -c "prealloc -m 64k -s" /mnt
-> 
-> to remove speculative preallocations of more than 64k from all
-> inodes that are in-memory and wait for the operation to complete.
-> 
-> You still need to bring the inodes into memory, so you can do this
-> via find command that reads some inode metadata (e.g. find /mnt
-> -ctime 2>&1 /dev/null). This means you don't need to actually
-> open/close each inode in userspace - the filesystem will traversal
-> all the in-memory inodes and clear the prealloc space itself.
-> 
-> Cheers,
-> 
-> Dave.
+Hi Darric,
 
-Hi Dave,
-thanks so much for the clear answer.
+On Tue, Oct 27, 2020 at 12:01:29PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> This series contains random fixes to fstests.
 
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+I applied patch 2-7 in this patchset, which were reviewed by Christoph,
+and seems other patches need rework.
+
+And regarding to your other patchsets, I'm a bit lost, it seems some of
+them need rework as well. So I'd wait for your refresh version :)
+
+Thanks,
+Eryu
+
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+> 
+> kernel git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
+> 
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+> ---
+>  check             |   21 ++++++++++++++++++++-
+>  common/populate   |    5 +++++
+>  common/rc         |   13 ++++++++++---
+>  common/repair     |    1 +
+>  common/xfs        |   20 ++++++++++++++++++++
+>  tests/xfs/030     |    1 +
+>  tests/xfs/272     |    3 +++
+>  tests/xfs/276     |    8 +++++++-
+>  tests/xfs/327     |   18 ++++++++++++++++--
+>  tests/xfs/327.out |   13 +++++++------
+>  tests/xfs/328     |    2 +-
+>  tests/xfs/341     |    8 +++++---
+>  tests/xfs/520     |    3 +++
+>  13 files changed, 99 insertions(+), 17 deletions(-)
