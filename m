@@ -1,69 +1,138 @@
-Return-Path: <SRS0=Jdan=EO=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A968C388F9
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Nov 2020 18:29:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2219C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Nov 2020 18:16:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A99CE20773
-	for <linux-xfs@archiver.kernel.org>; Sun,  8 Nov 2020 18:29:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1604860174;
-	bh=THFqTXAA4yMHALpHIc6pZ3ddHFYaIDzAq6L1GIC3lJk=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=xOvvMxMt1HPyZy/afE6BTOdppR+Qlwq4dpd5HpVseCKWmoVHE3laB4UqHuNIx+AaE
-	 SmzHxOylnvgH13o3xHqsN4Ci/tFsQx/3fjEKdxFPDQT7jl15l1GWl/MP/jFZyLNsMn
-	 AGxgpYtTB9pyUAAPlcd9s2C4qYtQzsB7ymnjgim4=
+	by mail.kernel.org (Postfix) with ESMTP id 4B63F206A1
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Nov 2020 18:16:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OFiMZ2Y9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728104AbgKHS3e (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 8 Nov 2020 13:29:34 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58234 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727929AbgKHS3d (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 8 Nov 2020 13:29:33 -0500
-Subject: Re: [GIT PULL] xfs: fixes for 5.10-rc3
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604860173;
-        bh=THFqTXAA4yMHALpHIc6pZ3ddHFYaIDzAq6L1GIC3lJk=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=W4F7xIT6oUJpC5XXSHF+KvtpcON62T9VGLD+yU5JMXaoytk6apY5ADnpECl6fS7fT
-         lphZOFMdAvd8BS901S1TBr2OvU4PjRD72Rgae8QtQ77OgsIi4P0BKsAgw632Ssg/5a
-         c1RqLKgMaQaRG1BPl/f4ur1P7RqchYLheU4yXo7U=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20201108172235.GA9695@magnolia>
-References: <20201108172235.GA9695@magnolia>
-X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20201108172235.GA9695@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.10-fixes-3
-X-PR-Tracked-Commit-Id: 46afb0628b86347933b16ac966655f74eab65c8c
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 9dbc1c03eeb534b82647cccb059aca0685d449a7
-Message-Id: <160486017351.13369.1949013647647886765.pr-tracker-bot@kernel.org>
-Date:   Sun, 08 Nov 2020 18:29:33 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+        id S1729666AbgKISQy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Nov 2020 13:16:54 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:54958 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729119AbgKISQy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Nov 2020 13:16:54 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A9I9pZo120449;
+        Mon, 9 Nov 2020 18:16:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=DrY95ZEYCvkKcuGJulq2EUOjlqD79ffG/X3fYNYMaBg=;
+ b=OFiMZ2Y9J07gF3lRLQqZamXSP/vjxqCfPkecne9lBAlTY1m/q68vcoF309a5MTCe9EME
+ mNpFXY+86XsaWXNIie8a5nlzq7IAjo/AGQfIlYlO1NZW1Dhd79H7vtBx0U6hJbrWO1UZ
+ vHYlJrn4rWOGgFNOCNAAn6XOIKtoOnbnpqDZYYCa6pI/KLl2HUM3XHKSH98JO6Q+BQyx
+ 3N2P7Hoew7Lm+kN9bhtGcFyTewEQi3TEAaW/8eW8G8/aLbS9/zli+PKu0zoI8eTZQ/GP
+ XJseGSGGLkfwPYjERmc8/A3SUEjJOXZm4DolHo71C/C5XT/CM6C8WEs8lw65y4BVmcJ3 bA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 34nh3aqn4p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 09 Nov 2020 18:16:47 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0A9IB9Cq195309;
+        Mon, 9 Nov 2020 18:16:46 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 34p55m9mt2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 09 Nov 2020 18:16:46 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0A9IGjfr009811;
+        Mon, 9 Nov 2020 18:16:45 GMT
+Received: from localhost (/10.159.239.129)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 09 Nov 2020 10:16:45 -0800
+Subject: [PATCH v3 0/3] vfs: remove lockdep fs freeze weirdness
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, hch@lst.de, fdmanana@kernel.org,
+        linux-fsdevel@vger.kernel.org
+Date:   Mon, 09 Nov 2020 10:16:44 -0800
+Message-ID: <160494580419.772573.9286165021627298770.stgit@magnolia>
+User-Agent: StGit/0.19
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9800 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011090126
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9800 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
+ clxscore=1015 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=0
+ mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011090126
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Sun, 8 Nov 2020 09:22:35 -0800:
+Hi all,
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.10-fixes-3
+A long time ago, XFS got tangled up with lockdep because the last thing
+it does during a fs freeze is use a transaction to flush the superblock
+to disk.  Transactions require int(ernal) write freeze protection, which
+implies a recursive grab of the intwrite lock and makes lockdep all sad.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/9dbc1c03eeb534b82647cccb059aca0685d449a7
+This was "solved" in lockdep back in 2012 as commit 5accdf82ba25c by
+adding a "convert XFS' blocking fsfreeze lock attempts into a trylock"
+behavior in v6 of a patch[1] that Jan Kara sent to try to fix fs freeze
+handling.  The behavior was not in the v5[0] patch, nor was there any
+discussion for any of the v5 patches that would suggest why things
+changed from v5 to v6.
 
-Thank you!
+Commit f4b554af9931 in 2015 created the current weird logic in
+__sb_start_write, which converts recursive freeze lock grabs into
+trylocks whose return values are ignored(!!!).  XFS solved the problem
+by creating a variant of transactions (XFS_TRANS_NO_WRITECOUNT) that
+don't grab intwrite freeze protection, thus making lockdep's solution
+unnecessary.  The commit claims that Dave Chinner explained that the
+trylock hack + comment could be removed, but the patch author never did
+that, and lore doesn't seem to know where or when Dave actually said
+that?
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Now it's 2020, and still nobody removed this from __sb_start_write.
+Worse yet, nowadays lock_is_held returns 1 if lockdep is built-in but
+offline.  This causes attempts to grab the pagefaults freeze lock
+synchronously to turn into unchecked trylocks!  Hilarity ensues if a
+page fault races with fsfreeze and loses, which causes us to break the
+locking model.
+
+This finally came to a head in 5.10-rc1 because the new lockdep bugs
+introduced during the merge window caused this maintainer to hit the
+weird case where sb_start_pagefault can return without having taken the
+freeze lock, leading to test failures and memory corruption.
+
+Since this insanity is dangerous and hasn't been needed by xfs since the
+late 2.6(???) days, kill it with fire.
+
+v2: refactor helpers to be more cohesive
+v3: move more cohesive helpers to header files
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=remove-freeze-weirdness-5.11
+---
+ fs/aio.c           |    2 +-
+ fs/io_uring.c      |    3 +--
+ fs/super.c         |   49 -------------------------------------------------
+ include/linux/fs.h |   38 +++++++++++++++++++++++++++-----------
+ 4 files changed, 29 insertions(+), 63 deletions(-)
+
