@@ -2,114 +2,144 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04DE5C388F7
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 02:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53176C5517A
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 04:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A437C20867
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 02:59:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0234820663
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 04:04:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ICLUn1Mg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729451AbgKJC7R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Nov 2020 21:59:17 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:64516 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729243AbgKJC7R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Nov 2020 21:59:17 -0500
-X-IronPort-AV: E=Sophos;i="5.77,465,1596470400"; 
-   d="scan'208";a="101126857"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 10 Nov 2020 10:59:11 +0800
-Received: from G08CNEXMBPEKD05.g08.fujitsu.local (unknown [10.167.33.204])
-        by cn.fujitsu.com (Postfix) with ESMTP id 1D2124CE4BB7;
-        Tue, 10 Nov 2020 10:59:09 +0800 (CST)
-Received: from G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.205) by
- G08CNEXMBPEKD05.g08.fujitsu.local (10.167.33.204) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Tue, 10 Nov 2020 10:59:08 +0800
-Received: from localhost.localdomain (10.167.225.206) by
- G08CNEXCHPEKD06.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Tue, 10 Nov 2020 10:59:08 +0800
-From:   Hao Li <lihao2018.fnst@cn.fujitsu.com>
-To:     <torvalds@linux-foundation.org>
-CC:     <jack@suse.cz>, <ira.weiny@intel.com>,
-        <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-xfs@vger.kernel.org>
-Subject: [PATCH] fs: Kill DCACHE_DONTCACHE dentry even if DCACHE_REFERENCED is set
-Date:   Tue, 10 Nov 2020 10:59:07 +0800
-Message-ID: <20201110025907.5237-1-lihao2018.fnst@cn.fujitsu.com>
-X-Mailer: git-send-email 2.28.0
+        id S1732060AbgKJEEk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Nov 2020 23:04:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55234 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732628AbgKJDyX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Nov 2020 22:54:23 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1F4A22080A;
+        Tue, 10 Nov 2020 03:54:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1604980463;
+        bh=L9hys1Giri6V/FU+HlVhSRrLuGhgm3iyfg9ETMDZEj0=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=ICLUn1MghNRns9G3b1KYdITIzhQPl64YzZ9wkd76T7pJvkVGVga2u1fBFNEpVy/qM
+         Q3h44tKd8RxO+R+UbCpbiSr6JbIaJCG/0LZig6IAiTGqj3+OKojVhKIS7FEwBke70d
+         8rMg/4+dH/CD4L657xQIEkachNMbBrTmcIfhIdOI=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Brian Foster <bfoster@redhat.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.9 45/55] iomap: clean up writeback state logic on writepage error
+Date:   Mon,  9 Nov 2020 22:53:08 -0500
+Message-Id: <20201110035318.423757-45-sashal@kernel.org>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20201110035318.423757-1-sashal@kernel.org>
+References: <20201110035318.423757-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: 1D2124CE4BB7.AC907
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: lihao2018.fnst@cn.fujitsu.com
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If DCACHE_REFERENCED is set, fast_dput() will return true, and then
-retain_dentry() have no chance to check DCACHE_DONTCACHE. As a result,
-the dentry won't be killed and the corresponding inode can't be evicted.
-In the following example, the DAX policy can't take effects unless we
-do a drop_caches manually.
+From: Brian Foster <bfoster@redhat.com>
 
-  # DCACHE_LRU_LIST will be set
-  echo abcdefg > test.txt
+[ Upstream commit 50e7d6c7a5210063b9a6f0d8799d9d1440907fcf ]
 
-  # DCACHE_REFERENCED will be set and DCACHE_DONTCACHE can't do anything
-  xfs_io -c 'chattr +x' test.txt
+The iomap writepage error handling logic is a mash of old and
+slightly broken XFS writepage logic. When keepwrite writeback state
+tracking was introduced in XFS in commit 0d085a529b42 ("xfs: ensure
+WB_SYNC_ALL writeback handles partial pages correctly"), XFS had an
+additional cluster writeback context that scanned ahead of
+->writepage() to process dirty pages over the current ->writepage()
+extent mapping. This context expected a dirty page and required
+retention of the TOWRITE tag on partial page processing so the
+higher level writeback context would revisit the page (in contrast
+to ->writepage(), which passes a page with the dirty bit already
+cleared).
 
-  # Drop caches to make DAX changing take effects
-  echo 2 > /proc/sys/vm/drop_caches
+The cluster writeback mechanism was eventually removed and some of
+the error handling logic folded into the primary writeback path in
+commit 150d5be09ce4 ("xfs: remove xfs_cancel_ioend"). This patch
+accidentally conflated the two contexts by using the keepwrite logic
+in ->writepage() without accounting for the fact that the page is
+not dirty. Further, the keepwrite logic has no practical effect on
+the core ->writepage() caller (write_cache_pages()) because it never
+revisits a page in the current function invocation.
 
-What this patch does is preventing fast_dput() from returning true if
-DCACHE_DONTCACHE is set. Then retain_dentry() will detect the
-DCACHE_DONTCACHE and will return false. As a result, the dentry will be
-killed and the inode will be evicted. In this way, if we change per-file
-DAX policy, it will take effects automatically after this file is closed
-by all processes.
+Technically, the page should be redirtied for the keepwrite logic to
+have any effect. Otherwise, write_cache_pages() may find the tagged
+page but will skip it since it is clean. Even if the page was
+redirtied, however, there is still no practical effect to keepwrite
+since write_cache_pages() does not wrap around within a single
+invocation of the function. Therefore, the dirty page would simply
+end up retagged on the next writeback sequence over the associated
+range.
 
-I also add some comments to make the code more clear.
+All that being said, none of this really matters because redirtying
+a partially processed page introduces a potential infinite redirty
+-> writeback failure loop that deviates from the current design
+principle of clearing the dirty state on writepage failure to avoid
+building up too much dirty, unreclaimable memory on the system.
+Therefore, drop the spurious keepwrite usage and dirty state
+clearing logic from iomap_writepage_map(), treat the partially
+processed page the same as a fully processed page, and let the
+imminent ioend failure clean up the writeback state.
 
-Signed-off-by: Hao Li <lihao2018.fnst@cn.fujitsu.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
-This patch may have been forgotten.
-Original patch: https://lore.kernel.org/linux-fsdevel/20200924055958.825515-1-lihao2018.fnst@cn.fujitsu.com/
+ fs/iomap/buffered-io.c | 15 ++-------------
+ 1 file changed, 2 insertions(+), 13 deletions(-)
 
- fs/dcache.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/fs/dcache.c b/fs/dcache.c
-index ea0485861d93..97e81a844a96 100644
---- a/fs/dcache.c
-+++ b/fs/dcache.c
-@@ -793,10 +793,17 @@ static inline bool fast_dput(struct dentry *dentry)
- 	 * a reference to the dentry and change that, but
- 	 * our work is done - we can leave the dentry
- 	 * around with a zero refcount.
-+	 *
-+	 * Nevertheless, there are two cases that we should kill
-+	 * the dentry anyway.
-+	 * 1. free disconnected dentries as soon as their refcount
-+	 *    reached zero.
-+	 * 2. free dentries if they should not be cached.
- 	 */
- 	smp_rmb();
- 	d_flags = READ_ONCE(dentry->d_flags);
--	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST | DCACHE_DISCONNECTED;
-+	d_flags &= DCACHE_REFERENCED | DCACHE_LRU_LIST |
-+			DCACHE_DISCONNECTED | DCACHE_DONTCACHE;
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index b115e7d47fcec..238613443bec2 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1395,6 +1395,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 	WARN_ON_ONCE(!wpc->ioend && !list_empty(&submit_list));
+ 	WARN_ON_ONCE(!PageLocked(page));
+ 	WARN_ON_ONCE(PageWriteback(page));
++	WARN_ON_ONCE(PageDirty(page));
  
- 	/* Nothing to do? Dropping the reference was all we needed? */
- 	if (d_flags == (DCACHE_REFERENCED | DCACHE_LRU_LIST) && !d_unhashed(dentry))
+ 	/*
+ 	 * We cannot cancel the ioend directly here on error.  We may have
+@@ -1415,21 +1416,9 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 			unlock_page(page);
+ 			goto done;
+ 		}
+-
+-		/*
+-		 * If the page was not fully cleaned, we need to ensure that the
+-		 * higher layers come back to it correctly.  That means we need
+-		 * to keep the page dirty, and for WB_SYNC_ALL writeback we need
+-		 * to ensure the PAGECACHE_TAG_TOWRITE index mark is not removed
+-		 * so another attempt to write this page in this writeback sweep
+-		 * will be made.
+-		 */
+-		set_page_writeback_keepwrite(page);
+-	} else {
+-		clear_page_dirty_for_io(page);
+-		set_page_writeback(page);
+ 	}
+ 
++	set_page_writeback(page);
+ 	unlock_page(page);
+ 
+ 	/*
 -- 
-2.28.0
-
-
+2.27.0
 
