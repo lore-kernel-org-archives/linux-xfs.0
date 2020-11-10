@@ -2,141 +2,64 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33C82C4742C
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 11:36:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A87CC388F7
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 14:14:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C7FFB207BB
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 11:36:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC5E920797
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 14:14:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730397AbgKJLg3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 06:36:29 -0500
-Received: from mx2.suse.de ([195.135.220.15]:43708 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730308AbgKJLg3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Nov 2020 06:36:29 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 47407AC2E;
-        Tue, 10 Nov 2020 11:36:27 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id E47351E130B; Tue, 10 Nov 2020 12:36:26 +0100 (CET)
-Date:   Tue, 10 Nov 2020 12:36:26 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de,
-        fdmanana@kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 3/3] vfs: move __sb_{start,end}_write* to fs.h
-Message-ID: <20201110113626.GE20780@quack2.suse.cz>
-References: <160494580419.772573.9286165021627298770.stgit@magnolia>
- <160494582399.772573.10836748188202532335.stgit@magnolia>
+        id S1730070AbgKJOOm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 09:14:42 -0500
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:38944 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726721AbgKJOOm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 09:14:42 -0500
+Received: from callcc.thunk.org (pool-72-74-133-215.bstnma.fios.verizon.net [72.74.133.215])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 0AAEEUTs000834
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 10 Nov 2020 09:14:31 -0500
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id 5C28D420107; Tue, 10 Nov 2020 09:14:30 -0500 (EST)
+Date:   Tue, 10 Nov 2020 09:14:30 -0500
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Michal Suchanek <msuchanek@suse.de>
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] Tristate moount option comatibility fixup
+Message-ID: <20201110141430.GA2951190@mit.edu>
+References: <cover.1604948373.git.msuchanek@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160494582399.772573.10836748188202532335.stgit@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <cover.1604948373.git.msuchanek@suse.de>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 09-11-20 10:17:04, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Nov 09, 2020 at 08:10:07PM +0100, Michal Suchanek wrote:
+> Hello,
 > 
-> Now that we've straightened out the callers, move these three functions
-> to fs.h since they're fairly trivial.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> after the tristate dax option change some applications fail to detect
+> pmem devices because the dax option no longer shows in mtab when device
+> is mounted with -o dax.
 
-Looks good to me. You can add:
+Which applications?  Name them.
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+We *really* don't want to encourage applications to make decisions
+only based on the mount options.  For example, it could be that the
+application's files will have the S_DAX flag set.
 
-								Honza
+It would be a real shame if we are actively encourage applications to
+use a broken configuration mechanism which was only used as a hack
+while DAX was in experimental status.
 
-> ---
->  fs/super.c         |   30 ------------------------------
->  include/linux/fs.h |   21 ++++++++++++++++++---
->  2 files changed, 18 insertions(+), 33 deletions(-)
-> 
-> 
-> diff --git a/fs/super.c b/fs/super.c
-> index 59aa59279133..98bb0629ee10 100644
-> --- a/fs/super.c
-> +++ b/fs/super.c
-> @@ -1631,36 +1631,6 @@ int super_setup_bdi(struct super_block *sb)
->  }
->  EXPORT_SYMBOL(super_setup_bdi);
->  
-> -/*
-> - * This is an internal function, please use sb_end_{write,pagefault,intwrite}
-> - * instead.
-> - */
-> -void __sb_end_write(struct super_block *sb, int level)
-> -{
-> -	percpu_up_read(sb->s_writers.rw_sem + level-1);
-> -}
-> -EXPORT_SYMBOL(__sb_end_write);
-> -
-> -/*
-> - * This is an internal function, please use sb_start_{write,pagefault,intwrite}
-> - * instead.
-> - */
-> -void __sb_start_write(struct super_block *sb, int level)
-> -{
-> -	percpu_down_read(sb->s_writers.rw_sem + level - 1);
-> -}
-> -EXPORT_SYMBOL(__sb_start_write);
-> -
-> -/*
-> - * This is an internal function, please use sb_start_{write,pagefault,intwrite}
-> - * instead.
-> - */
-> -bool __sb_start_write_trylock(struct super_block *sb, int level)
-> -{
-> -	return percpu_down_read_trylock(sb->s_writers.rw_sem + level - 1);
-> -}
-> -EXPORT_SYMBOL_GPL(__sb_start_write_trylock);
-> -
->  /**
->   * sb_wait_write - wait until all writers to given file system finish
->   * @sb: the super for which we wait
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 305989afd49c..6dabd019cab0 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -1580,9 +1580,24 @@ extern struct timespec64 current_time(struct inode *inode);
->   * Snapshotting support.
->   */
->  
-> -void __sb_end_write(struct super_block *sb, int level);
-> -void __sb_start_write(struct super_block *sb, int level);
-> -bool __sb_start_write_trylock(struct super_block *sb, int level);
-> +/*
-> + * These are internal functions, please use sb_start_{write,pagefault,intwrite}
-> + * instead.
-> + */
-> +static inline void __sb_end_write(struct super_block *sb, int level)
-> +{
-> +	percpu_up_read(sb->s_writers.rw_sem + level-1);
-> +}
-> +
-> +static inline void __sb_start_write(struct super_block *sb, int level)
-> +{
-> +	percpu_down_read(sb->s_writers.rw_sem + level - 1);
-> +}
-> +
-> +static inline bool __sb_start_write_trylock(struct super_block *sb, int level)
-> +{
-> +	return percpu_down_read_trylock(sb->s_writers.rw_sem + level - 1);
-> +}
->  
->  #define __sb_writers_acquired(sb, lev)	\
->  	percpu_rwsem_acquire(&(sb)->s_writers.rw_sem[(lev)-1], 1, _THIS_IP_)
-> 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+						- Ted
