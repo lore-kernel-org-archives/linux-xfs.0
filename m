@@ -4,46 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B81FC4742C
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 11:32:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4FB5C388F7
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 11:33:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4772220781
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 11:31:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 727D920781
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 11:33:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729794AbgKJLb5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 06:31:57 -0500
-Received: from mx2.suse.de ([195.135.220.15]:38920 "EHLO mx2.suse.de"
+        id S1726944AbgKJLdC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 06:33:02 -0500
+Received: from mx2.suse.de ([195.135.220.15]:39686 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726900AbgKJLb5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 10 Nov 2020 06:31:57 -0500
+        id S1726900AbgKJLdC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Nov 2020 06:33:02 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 8E69FAC75;
-        Tue, 10 Nov 2020 11:31:55 +0000 (UTC)
+        by mx2.suse.de (Postfix) with ESMTP id 6EF73ABD1;
+        Tue, 10 Nov 2020 11:33:00 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 4AE121E130B; Tue, 10 Nov 2020 12:31:55 +0100 (CET)
-Date:   Tue, 10 Nov 2020 12:31:55 +0100
+        id 3F5D61E130B; Tue, 10 Nov 2020 12:33:00 +0100 (CET)
+Date:   Tue, 10 Nov 2020 12:33:00 +0100
 From:   Jan Kara <jack@suse.cz>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de,
-        fdmanana@kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 1/2] vfs: remove lockdep bogosity in __sb_start_write
-Message-ID: <20201110113155.GB20780@quack2.suse.cz>
-References: <160463582157.1669281.13010940328517200152.stgit@magnolia>
- <160463582800.1669281.17833985365149618163.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, fdmanana@kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/3] vfs: remove lockdep bogosity in __sb_start_write
+Message-ID: <20201110113300.GC20780@quack2.suse.cz>
+References: <160494580419.772573.9286165021627298770.stgit@magnolia>
+ <160494581071.772573.10466314698408344068.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160463582800.1669281.17833985365149618163.stgit@magnolia>
+In-Reply-To: <160494581071.772573.10466314698408344068.stgit@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 05-11-20 20:10:28, Darrick J. Wong wrote:
+On Mon 09-11-20 10:16:50, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
 > __sb_start_write has some weird looking lockdep code that claims to
@@ -93,9 +94,7 @@ On Thu 05-11-20 20:10:28, Darrick J. Wong wrote:
 > trylock hack + comment could be removed, but nobody ever did.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/super.c |   33 ++++-----------------------------
->  1 file changed, 4 insertions(+), 29 deletions(-)
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 Thanks for cleaning this up. You can add:
 
@@ -103,7 +102,9 @@ Reviewed-by: Jan Kara <jack@suse.cz>
 
 								Honza
 
-
+> ---
+>  fs/super.c |   33 ++++-----------------------------
+>  1 file changed, 4 insertions(+), 29 deletions(-)
 > 
 > 
 > diff --git a/fs/super.c b/fs/super.c
