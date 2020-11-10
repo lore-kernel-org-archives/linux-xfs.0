@@ -2,144 +2,156 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53176C5517A
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 04:04:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B81FC4742C
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 11:32:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0234820663
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 04:04:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="ICLUn1Mg"
+	by mail.kernel.org (Postfix) with ESMTP id 4772220781
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 11:31:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732060AbgKJEEk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Nov 2020 23:04:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55234 "EHLO mail.kernel.org"
+        id S1729794AbgKJLb5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 06:31:57 -0500
+Received: from mx2.suse.de ([195.135.220.15]:38920 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732628AbgKJDyX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Nov 2020 22:54:23 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1F4A22080A;
-        Tue, 10 Nov 2020 03:54:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1604980463;
-        bh=L9hys1Giri6V/FU+HlVhSRrLuGhgm3iyfg9ETMDZEj0=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ICLUn1MghNRns9G3b1KYdITIzhQPl64YzZ9wkd76T7pJvkVGVga2u1fBFNEpVy/qM
-         Q3h44tKd8RxO+R+UbCpbiSr6JbIaJCG/0LZig6IAiTGqj3+OKojVhKIS7FEwBke70d
-         8rMg/4+dH/CD4L657xQIEkachNMbBrTmcIfhIdOI=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Brian Foster <bfoster@redhat.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.9 45/55] iomap: clean up writeback state logic on writepage error
-Date:   Mon,  9 Nov 2020 22:53:08 -0500
-Message-Id: <20201110035318.423757-45-sashal@kernel.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20201110035318.423757-1-sashal@kernel.org>
-References: <20201110035318.423757-1-sashal@kernel.org>
+        id S1726900AbgKJLb5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 10 Nov 2020 06:31:57 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 8E69FAC75;
+        Tue, 10 Nov 2020 11:31:55 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 4AE121E130B; Tue, 10 Nov 2020 12:31:55 +0100 (CET)
+Date:   Tue, 10 Nov 2020 12:31:55 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com, hch@lst.de,
+        fdmanana@kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 1/2] vfs: remove lockdep bogosity in __sb_start_write
+Message-ID: <20201110113155.GB20780@quack2.suse.cz>
+References: <160463582157.1669281.13010940328517200152.stgit@magnolia>
+ <160463582800.1669281.17833985365149618163.stgit@magnolia>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <160463582800.1669281.17833985365149618163.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Brian Foster <bfoster@redhat.com>
+On Thu 05-11-20 20:10:28, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> __sb_start_write has some weird looking lockdep code that claims to
+> exist to handle nested freeze locking requests from xfs.  The code as
+> written seems broken -- if we think we hold a read lock on any of the
+> higher freeze levels (e.g. we hold SB_FREEZE_WRITE and are trying to
+> lock SB_FREEZE_PAGEFAULT), it converts a blocking lock attempt into a
+> trylock.
+> 
+> However, it's not correct to downgrade a blocking lock attempt to a
+> trylock unless the downgrading code or the callers are prepared to deal
+> with that situation.  Neither __sb_start_write nor its callers handle
+> this at all.  For example:
+> 
+> sb_start_pagefault ignores the return value completely, with the result
+> that if xfs_filemap_fault loses a race with a different thread trying to
+> fsfreeze, it will proceed without pagefault freeze protection (thereby
+> breaking locking rules) and then unlocks the pagefault freeze lock that
+> it doesn't own on its way out (thereby corrupting the lock state), which
+> leads to a system hang shortly afterwards.
+> 
+> Normally, this won't happen because our ownership of a read lock on a
+> higher freeze protection level blocks fsfreeze from grabbing a write
+> lock on that higher level.  *However*, if lockdep is offline,
+> lock_is_held_type unconditionally returns 1, which means that
+> percpu_rwsem_is_held returns 1, which means that __sb_start_write
+> unconditionally converts blocking freeze lock attempts into trylocks,
+> even when we *don't* hold anything that would block a fsfreeze.
+> 
+> Apparently this all held together until 5.10-rc1, when bugs in lockdep
+> caused lockdep to shut itself off early in an fstests run, and once
+> fstests gets to the "race writes with freezer" tests, kaboom.  This
+> might explain the long trail of vanishingly infrequent livelocks in
+> fstests after lockdep goes offline that I've never been able to
+> diagnose.
+> 
+> We could fix it by spinning on the trylock if wait==true, but AFAICT the
+> locking works fine if lockdep is not built at all (and I didn't see any
+> complaints running fstests overnight), so remove this snippet entirely.
+> 
+> NOTE: Commit f4b554af9931 in 2015 created the current weird logic (which
+> used to exist in a different form in commit 5accdf82ba25c from 2012) in
+> __sb_start_write.  XFS solved this whole problem in the late 2.6 era by
+> creating a variant of transactions (XFS_TRANS_NO_WRITECOUNT) that don't
+> grab intwrite freeze protection, thus making lockdep's solution
+> unnecessary.  The commit claims that Dave Chinner explained that the
+> trylock hack + comment could be removed, but nobody ever did.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/super.c |   33 ++++-----------------------------
+>  1 file changed, 4 insertions(+), 29 deletions(-)
 
-[ Upstream commit 50e7d6c7a5210063b9a6f0d8799d9d1440907fcf ]
+Thanks for cleaning this up. You can add:
 
-The iomap writepage error handling logic is a mash of old and
-slightly broken XFS writepage logic. When keepwrite writeback state
-tracking was introduced in XFS in commit 0d085a529b42 ("xfs: ensure
-WB_SYNC_ALL writeback handles partial pages correctly"), XFS had an
-additional cluster writeback context that scanned ahead of
-->writepage() to process dirty pages over the current ->writepage()
-extent mapping. This context expected a dirty page and required
-retention of the TOWRITE tag on partial page processing so the
-higher level writeback context would revisit the page (in contrast
-to ->writepage(), which passes a page with the dirty bit already
-cleared).
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-The cluster writeback mechanism was eventually removed and some of
-the error handling logic folded into the primary writeback path in
-commit 150d5be09ce4 ("xfs: remove xfs_cancel_ioend"). This patch
-accidentally conflated the two contexts by using the keepwrite logic
-in ->writepage() without accounting for the fact that the page is
-not dirty. Further, the keepwrite logic has no practical effect on
-the core ->writepage() caller (write_cache_pages()) because it never
-revisits a page in the current function invocation.
+								Honza
 
-Technically, the page should be redirtied for the keepwrite logic to
-have any effect. Otherwise, write_cache_pages() may find the tagged
-page but will skip it since it is clean. Even if the page was
-redirtied, however, there is still no practical effect to keepwrite
-since write_cache_pages() does not wrap around within a single
-invocation of the function. Therefore, the dirty page would simply
-end up retagged on the next writeback sequence over the associated
-range.
 
-All that being said, none of this really matters because redirtying
-a partially processed page introduces a potential infinite redirty
--> writeback failure loop that deviates from the current design
-principle of clearing the dirty state on writepage failure to avoid
-building up too much dirty, unreclaimable memory on the system.
-Therefore, drop the spurious keepwrite usage and dirty state
-clearing logic from iomap_writepage_map(), treat the partially
-processed page the same as a fully processed page, and let the
-imminent ioend failure clean up the writeback state.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- fs/iomap/buffered-io.c | 15 ++-------------
- 1 file changed, 2 insertions(+), 13 deletions(-)
-
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index b115e7d47fcec..238613443bec2 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1395,6 +1395,7 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	WARN_ON_ONCE(!wpc->ioend && !list_empty(&submit_list));
- 	WARN_ON_ONCE(!PageLocked(page));
- 	WARN_ON_ONCE(PageWriteback(page));
-+	WARN_ON_ONCE(PageDirty(page));
- 
- 	/*
- 	 * We cannot cancel the ioend directly here on error.  We may have
-@@ -1415,21 +1416,9 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 			unlock_page(page);
- 			goto done;
- 		}
--
--		/*
--		 * If the page was not fully cleaned, we need to ensure that the
--		 * higher layers come back to it correctly.  That means we need
--		 * to keep the page dirty, and for WB_SYNC_ALL writeback we need
--		 * to ensure the PAGECACHE_TAG_TOWRITE index mark is not removed
--		 * so another attempt to write this page in this writeback sweep
--		 * will be made.
--		 */
--		set_page_writeback_keepwrite(page);
--	} else {
--		clear_page_dirty_for_io(page);
--		set_page_writeback(page);
- 	}
- 
-+	set_page_writeback(page);
- 	unlock_page(page);
- 
- 	/*
+> 
+> 
+> diff --git a/fs/super.c b/fs/super.c
+> index a51c2083cd6b..e1fd667454d4 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -1647,36 +1647,11 @@ EXPORT_SYMBOL(__sb_end_write);
+>   */
+>  int __sb_start_write(struct super_block *sb, int level, bool wait)
+>  {
+> -	bool force_trylock = false;
+> -	int ret = 1;
+> +	if (!wait)
+> +		return percpu_down_read_trylock(sb->s_writers.rw_sem + level-1);
+>  
+> -#ifdef CONFIG_LOCKDEP
+> -	/*
+> -	 * We want lockdep to tell us about possible deadlocks with freezing
+> -	 * but it's it bit tricky to properly instrument it. Getting a freeze
+> -	 * protection works as getting a read lock but there are subtle
+> -	 * problems. XFS for example gets freeze protection on internal level
+> -	 * twice in some cases, which is OK only because we already hold a
+> -	 * freeze protection also on higher level. Due to these cases we have
+> -	 * to use wait == F (trylock mode) which must not fail.
+> -	 */
+> -	if (wait) {
+> -		int i;
+> -
+> -		for (i = 0; i < level - 1; i++)
+> -			if (percpu_rwsem_is_held(sb->s_writers.rw_sem + i)) {
+> -				force_trylock = true;
+> -				break;
+> -			}
+> -	}
+> -#endif
+> -	if (wait && !force_trylock)
+> -		percpu_down_read(sb->s_writers.rw_sem + level-1);
+> -	else
+> -		ret = percpu_down_read_trylock(sb->s_writers.rw_sem + level-1);
+> -
+> -	WARN_ON(force_trylock && !ret);
+> -	return ret;
+> +	percpu_down_read(sb->s_writers.rw_sem + level-1);
+> +	return 1;
+>  }
+>  EXPORT_SYMBOL(__sb_start_write);
+>  
+> 
 -- 
-2.27.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
