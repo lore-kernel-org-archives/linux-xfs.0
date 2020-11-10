@@ -2,259 +2,745 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7BD9C388F7
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 21:57:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D04CFC388F7
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 22:59:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BE18207D3
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 21:57:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UmncTD+0"
+	by mail.kernel.org (Postfix) with ESMTP id 58C77204EF
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 22:59:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726737AbgKJV5I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 16:57:08 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:52332 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726688AbgKJV5I (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 16:57:08 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AALe5ld095433;
-        Tue, 10 Nov 2020 21:57:06 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=oKpREjsxy3mv10+J+cdG5CZzMFLaJoFEc0ALb7w5hEI=;
- b=UmncTD+0hbBaqpONovdEcvR6+3QMqz4XJU9Wly8VWAxYThKUla63E3/06UTARW61aSoB
- aYlp1mDlFQHSLFBK48bHeYHF+O9fMGFyzbvy4FuEQ9wee70NrMldUZPmeUzuz0Lb4Yly
- Hw5cS++KxfE0/HLiPtxkrUFB6eNibAkBJJWIDtVucUqkJnHfyGrdx7S7sAhB5OVgDwE0
- 3wp8CjAHB34jnNTSDf3b4tdKumT0BamZDpjI9wBMdUFvDO71iuVHLXdprXhr66PNn9vZ
- tbpVCzIaqU/e/qSxBevwHLjQ04ZFaLFPvcNd175LbJzdoTQL42Ab+tncpAcxrVrNn9FZ Yg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 34nh3axcx8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 10 Nov 2020 21:57:05 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AALf5ko084190;
-        Tue, 10 Nov 2020 21:57:05 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 34qgp7exm6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 10 Nov 2020 21:57:05 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AALv3Ma007502;
-        Tue, 10 Nov 2020 21:57:04 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Nov 2020 13:57:03 -0800
-Date:   Tue, 10 Nov 2020 13:57:02 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Chandan Babu R <chandanrlinux@gmail.com>
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v13 03/10] xfs: Add delay ready attr set routines
-Message-ID: <20201110215702.GH9695@magnolia>
-References: <20201023063435.7510-1-allison.henderson@oracle.com>
- <20201023063435.7510-4-allison.henderson@oracle.com>
- <534604869.YD8572SIOA@garuda>
+        id S1732054AbgKJW7g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 17:59:36 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49962 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731907AbgKJW7g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 17:59:36 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 39E953A9B82
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2020 09:59:26 +1100 (AEDT)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kccbl-009pNe-1k
+        for linux-xfs@vger.kernel.org; Wed, 11 Nov 2020 09:59:25 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.94)
+        (envelope-from <david@fromorbit.com>)
+        id 1kccbk-00GulN-Nt
+        for linux-xfs@vger.kernel.org; Wed, 11 Nov 2020 09:59:24 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] [RFC] spaceman: physically move a regular inode
+Date:   Wed, 11 Nov 2020 09:59:24 +1100
+Message-Id: <20201110225924.4031404-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <534604869.YD8572SIOA@garuda>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
- adultscore=0 mlxscore=0 malwarescore=0 suspectscore=1 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011100148
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
- clxscore=1015 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=1
- mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011100148
+Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=nNwsprhYR40A:10 a=20KFwNOVAAAA:8 a=myu2YSmQo_11sOQ7t4IA:9
+        a=3DS5zZEWb2WOpUtQ:21 a=jDB7GZ6fhO4h3lOr:21
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 27, 2020 at 07:02:55PM +0530, Chandan Babu R wrote:
-> On Friday 23 October 2020 12:04:28 PM IST Allison Henderson wrote:
-> > This patch modifies the attr set routines to be delay ready. This means
-> > they no longer roll or commit transactions, but instead return -EAGAIN
-> > to have the calling routine roll and refresh the transaction.  In this
-> > series, xfs_attr_set_args has become xfs_attr_set_iter, which uses a
-> > state machine like switch to keep track of where it was when EAGAIN was
-> > returned. See xfs_attr.h for a more detailed diagram of the states.
-> > 
-> > Two new helper functions have been added: xfs_attr_rmtval_set_init and
-> > xfs_attr_rmtval_set_blk.  They provide a subset of logic similar to
-> > xfs_attr_rmtval_set, but they store the current block in the delay attr
-> > context to allow the caller to roll the transaction between allocations.
-> > This helps to simplify and consolidate code used by
-> > xfs_attr_leaf_addname and xfs_attr_node_addname. xfs_attr_set_args has
-> > now become a simple loop to refresh the transaction until the operation
-> > is completed.  Lastly, xfs_attr_rmtval_remove is no longer used, and is
-> > removed.
-> 
-> One nit. xfs_attr_rmtval_remove()'s prototype declaration needs to be removed
-> from xfs_attr_remote.h.
-> 
-> > 
-> > Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_attr.c        | 370 ++++++++++++++++++++++++++--------------
-> >  fs/xfs/libxfs/xfs_attr.h        | 126 +++++++++++++-
-> >  fs/xfs/libxfs/xfs_attr_remote.c |  99 +++++++----
-> >  fs/xfs/libxfs/xfs_attr_remote.h |   4 +
-> >  fs/xfs/xfs_trace.h              |   1 -
-> >  5 files changed, 439 insertions(+), 161 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index 6ca94cb..95c98d7 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -44,7 +44,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
-> >   * Internal routines when attribute list is one block.
-> >   */
-> >  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
-> > -STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
-> > +STATIC int xfs_attr_leaf_addname(struct xfs_delattr_context *dac);
-> >  STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
-> >  STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
-> >  
-> > @@ -52,12 +52,15 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
-> >   * Internal routines when attribute list is more than one block.
-> >   */
-> >  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
-> > -STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
-> > +STATIC int xfs_attr_node_addname(struct xfs_delattr_context *dac);
-> >  STATIC int xfs_attr_node_removename_iter(struct xfs_delattr_context *dac);
-> >  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
-> >  				 struct xfs_da_state **state);
-> >  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
-> >  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
-> > +STATIC int xfs_attr_leaf_try_add(struct xfs_da_args *args, struct xfs_buf *bp);
-> > +STATIC int xfs_attr_set_iter(struct xfs_delattr_context *dac,
-> > +			     struct xfs_buf **leaf_bp);
-> >  
-> >  int
-> >  xfs_inode_hasattr(
-> > @@ -218,8 +221,11 @@ xfs_attr_is_shortform(
-> >  
-> >  /*
-> >   * Attempts to set an attr in shortform, or converts short form to leaf form if
-> > - * there is not enough room.  If the attr is set, the transaction is committed
-> > - * and set to NULL.
-> > + * there is not enough room.  This function is meant to operate as a helper
-> > + * routine to the delayed attribute functions.  It returns -EAGAIN to indicate
-> > + * that the calling function should roll the transaction, and then proceed to
-> > + * add the attr in leaf form.  This subroutine does not expect to be recalled
-> > + * again like the other delayed attr routines do.
-> >   */
-> >  STATIC int
-> >  xfs_attr_set_shortform(
-> > @@ -227,16 +233,16 @@ xfs_attr_set_shortform(
-> >  	struct xfs_buf		**leaf_bp)
-> >  {
-> >  	struct xfs_inode	*dp = args->dp;
-> > -	int			error, error2 = 0;
-> > +	int			error = 0;
-> >  
-> >  	/*
-> >  	 * Try to add the attr to the attribute list in the inode.
-> >  	 */
-> >  	error = xfs_attr_try_sf_addname(dp, args);
-> > +
-> > +	/* Should only be 0, -EEXIST or ENOSPC */
-> >  	if (error != -ENOSPC) {
-> > -		error2 = xfs_trans_commit(args->trans);
-> > -		args->trans = NULL;
-> > -		return error ? error : error2;
-> > +		return error;
-> >  	}
-> >  	/*
-> >  	 * It won't fit in the shortform, transform to a leaf block.  GROT:
-> > @@ -249,18 +255,10 @@ xfs_attr_set_shortform(
-> >  	/*
-> >  	 * Prevent the leaf buffer from being unlocked so that a concurrent AIL
-> >  	 * push cannot grab the half-baked leaf buffer and run into problems
-> > -	 * with the write verifier. Once we're done rolling the transaction we
-> > -	 * can release the hold and add the attr to the leaf.
-> > +	 * with the write verifier.
-> >  	 */
-> >  	xfs_trans_bhold(args->trans, *leaf_bp);
-> > -	error = xfs_defer_finish(&args->trans);
-> > -	xfs_trans_bhold_release(args->trans, *leaf_bp);
-> > -	if (error) {
-> > -		xfs_trans_brelse(args->trans, *leaf_bp);
-> > -		return error;
-> > -	}
-> > -
-> > -	return 0;
-> > +	return -EAGAIN;
-> >  }
-> >  
-> >  /*
-> > @@ -268,7 +266,7 @@ xfs_attr_set_shortform(
-> >   * also checks for a defer finish.  Transaction is finished and rolled as
-> >   * needed, and returns true of false if the delayed operation should continue.
-> >   */
-> > -int
-> > +STATIC int
-> >  xfs_attr_trans_roll(
-> >  	struct xfs_delattr_context	*dac)
-> >  {
-> > @@ -297,61 +295,130 @@ int
-> >  xfs_attr_set_args(
-> >  	struct xfs_da_args	*args)
-> >  {
-> > -	struct xfs_inode	*dp = args->dp;
-> > -	struct xfs_buf          *leaf_bp = NULL;
-> > -	int			error = 0;
-> > +	struct xfs_buf			*leaf_bp = NULL;
-> > +	int				error = 0;
-> > +	struct xfs_delattr_context	dac = {
-> > +		.da_args	= args,
-> > +	};
-> > +
-> > +	do {
-> > +		error = xfs_attr_set_iter(&dac, &leaf_bp);
-> > +		if (error != -EAGAIN)
-> > +			break;
-> > +
-> > +		error = xfs_attr_trans_roll(&dac);
-> > +		if (error)
-> > +			return error;
-> > +
-> > +		if (leaf_bp) {
-> > +			xfs_trans_bjoin(args->trans, leaf_bp);
-> > +			xfs_trans_bhold(args->trans, leaf_bp);
-> > +		}
-> 
-> When xfs_attr_set_iter() causes a "short form" attribute list to be converted
-> to "leaf form", leaf_bp would point to an xfs_buf which has been added to the
-> transaction and also XFS_BLI_HOLD flag is set on the buffer (last statement in
-> xfs_attr_set_shortform()). XFS_BLI_HOLD flag makes sure that the new
-> transaction allocated by xfs_attr_trans_roll() would continue to have leaf_bp
-> in the transaction's item list. Hence I think the above calls to
-> xfs_trans_bjoin() and xfs_trans_bhold() are not required.
+From: Dave Chinner <dchinner@redhat.com>
 
-I /think/ the defer ops will rejoin the buffer each time it rolls, which
-means that xfs_attr_trans_roll returns with the buffer already joined to
-the transaction?  And I think you're right that the bhold isn't needed,
-because holding is dictated by the lower levels (i.e. _set_iter).
+To be able to shrink a filesystem, we need to be able to physically
+move an inode and all it's data and metadata from it's current
+location to a new AG.  Add a command to spaceman to allow an inode
+to be moved to a new AG.
 
-> Please let me know if I am missing something obvious here.
+This new command is not intended to be a perfect solution. I am not
+trying to handle atomic movement of open files - this is intended to
+be run as a maintenance operation on idle filesystem. If root
+filesystems are the target, then this should be run via a rescue
+environment that is not executing directly on the root fs. With
+those caveats in place, we can do the entire inode move as a set of
+non-destructive operations finalised by an atomic inode swap
+without any needing special kernel support.
 
-The entire function goes away by the end of the series. :)
+To ensure we move metadata such as BMBT blocks even if we don't need
+to move data, we clone the data to a new inode that we've allocated
+in the destination AG. This will result in new bmbt blocks being
+allocated in the new location even though the data is not copied.
+Attributes need to be copied one at a time from the original inode.
 
---D
+If data needs to be moved, then we use fallocate(UNSHARE) to create
+a private copy of the range of data that needs to be moved in the
+new inode. This will be allocated in the destination AG by normal
+allocation policy.
 
-> 
-> -- 
-> chandan
-> 
-> 
-> 
+Once the new inode has been finalised, use RENAME_EXCHANGE to swap
+it into place and unlink the original inode to free up all the
+resources it still pins.
+
+There are many optimisations still possible to speed this up, but
+the goal here is "functional" rather than "optimal". Performance can
+be optimised once all the parts for a "empty the tail of the
+filesystem before shrink" operation are implemented and solidly
+tested.
+
+This functionality has been smoke tested by creating a 32MB data
+file with 4k extents and several hundred attributes:
+
+$ cat test.sh
+fname=/mnt/scratch/foo
+xfs_io -f -c "pwrite 0 32m" -c sync $fname
+for (( i=0; i < 4096 ; i++ )); do
+	xfs_io -c "fpunch $((i * 8))k 4k" $fname
+done
+
+for (( i=0; i < 100 ; i++ )); do
+	setfattr -n user.blah.$i.$i.blah -v blah.$i.$i.blah $fname
+	setfattr -n user.foo.$i.$i.foo -v $i.cantbele.$i.ve.$i.tsnotbutter $fname
+done
+for (( i=0; i < 100 ; i++ )); do
+	setfattr -n security.baz.$i.$i.baz -v wotchul$i$iookinat $fname
+done
+
+xfs_io -c stat -c "bmap -vp" -c "bmap -avp" $fname
+xfs_spaceman -c "move_inode -a 22" /mnt/scratch/foo
+xfs_io -c stat -c "bmap -vp" -c "bmap -avp" $fname
+$
+
+and the output looks something like:
+
+$ sudo ./test.sh
+....
+fd.path = "/mnt/scratch/foo"
+fd.flags = non-sync,non-direct,read-write
+stat.ino = 133
+/mnt/scratch/foo:
+ EXT: FILE-OFFSET      BLOCK-RANGE       AG AG-OFFSET        TOTAL FLAGS
+   0: [0..7]:          hole                                      8
+   1: [8..15]:         208..215           0 (208..215)           8 000000
+   2: [16..23]:        hole                                      8
+   3: [24..31]:        224..231           0 (224..231)           8 000000
+....
+8189: [65512..65519]:  65712..65719       0 (65712..65719)       8 000000
+8190: [65520..65527]:  hole                                      8
+8191: [65528..65535]:  65728..65735       0 (65728..65735)       8 000000
+mnt/scratch/foo:
+ EXT: FILE-OFFSET      BLOCK-RANGE       AG AG-OFFSET        TOTAL FLAGS
+   0: [0..7]:          392..399           0 (392..399)           8 000000
+   1: [8..15]:         408..415           0 (408..415)           8 000000
+   2: [16..23]:        424..431           0 (424..431)           8 000000
+   3: [24..31]:        456..463           0 (456..463)           8 000000
+move mnt /mnt/scratch, path /mnt/scratch/foo, agno 22
+fd.path = "/mnt/scratch/foo"
+fd.flags = non-sync,non-direct,read-write
+stat.ino = 47244651475
+....
+/mnt/scratch/foo:
+ EXT: FILE-OFFSET      BLOCK-RANGE               AG AG-OFFSET        TOTAL FLAGS
+   0: [0..7]:          hole                                              8
+   1: [8..15]:         47244763192..47244763199  22 (123112..123119)     8 000000
+   2: [16..23]:        hole                                              8
+   3: [24..31]:        47244763208..47244763215  22 (123128..123135)     8 000000
+....
+8189: [65512..65519]:  47244828808..47244828815  22 (188728..188735)     8 000000
+8190: [65520..65527]:  hole                                              8
+8191: [65528..65535]:  47244828824..47244828831  22 (188744..188751)     8 000000
+/mnt/scratch/foo:
+ EXT: FILE-OFFSET      BLOCK-RANGE               AG AG-OFFSET        TOTAL FLAGS
+   0: [0..7]:          47244763176..47244763183  22 (123096..123103)     8 000000
+$
+
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ spaceman/Makefile     |   6 +-
+ spaceman/file.c       |   2 +-
+ spaceman/init.c       |   1 +
+ spaceman/move_inode.c | 518 ++++++++++++++++++++++++++++++++++++++++++
+ spaceman/space.h      |   1 +
+ 5 files changed, 524 insertions(+), 4 deletions(-)
+ create mode 100644 spaceman/move_inode.c
+
+diff --git a/spaceman/Makefile b/spaceman/Makefile
+index 2a3669183a40..e90f66e8abc6 100644
+--- a/spaceman/Makefile
++++ b/spaceman/Makefile
+@@ -7,11 +7,11 @@ include $(TOPDIR)/include/builddefs
+ 
+ LTCOMMAND = xfs_spaceman
+ HFILES = init.h space.h
+-CFILES = info.c init.c file.c health.c prealloc.c trim.c
++CFILES = info.c init.c file.c health.c move_inode.c prealloc.c trim.c
+ LSRCFILES = xfs_info.sh
+ 
+-LLDLIBS = $(LIBXCMD) $(LIBFROG)
+-LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
++LLDLIBS = $(LIBXCMD) $(LIBFROG) $(LIBHANDLE)
++LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG) $(LIBHANDLE)
+ LLDFLAGS = -static
+ 
+ ifeq ($(ENABLE_EDITLINE),yes)
+diff --git a/spaceman/file.c b/spaceman/file.c
+index eec7ee9f4ba9..1777ed7d4602 100644
+--- a/spaceman/file.c
++++ b/spaceman/file.c
+@@ -52,7 +52,7 @@ openfile(
+ 	struct fs_path	*fsp;
+ 	int		ret;
+ 
+-	ret = -xfd_open(xfd, path, O_RDONLY);
++	ret = -xfd_open(xfd, path, O_RDWR);
+ 	if (ret) {
+ 		if (ret == ENOTTY)
+ 			fprintf(stderr,
+diff --git a/spaceman/init.c b/spaceman/init.c
+index cf1ff3cbb0ee..c3bfe3e5922f 100644
+--- a/spaceman/init.c
++++ b/spaceman/init.c
+@@ -35,6 +35,7 @@ init_commands(void)
+ 	trim_init();
+ 	freesp_init();
+ 	health_init();
++	move_inode_init();
+ }
+ 
+ static int
+diff --git a/spaceman/move_inode.c b/spaceman/move_inode.c
+new file mode 100644
+index 000000000000..c3f791c82c45
+--- /dev/null
++++ b/spaceman/move_inode.c
+@@ -0,0 +1,518 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2012 Red Hat, Inc.
++ * All Rights Reserved.
++ */
++
++#include "libxfs.h"
++#include "libfrog/fsgeom.h"
++#include "command.h"
++#include "init.h"
++#include "libfrog/paths.h"
++#include "space.h"
++#include "input.h"
++#include "handle.h"
++
++#include <linux/fiemap.h>
++#include <linux/falloc.h>
++#include <attr/attributes.h>
++
++static cmdinfo_t move_inode_cmd;
++
++/*
++ * We can't entirely use O_TMPFILE here because we want to use RENAME_EXCHANGE
++ * to swap the inode once rebuild is complete. Hence the new file has to be
++ * somewhere in the namespace for rename to act upon. Hence we use a normal
++ * open(O_CREATE) for now.
++ *
++ * This could potentially use O_TMPFILE to rebuild the entire inode, the use
++ * a linkat()/renameat2() pair to add it to the namespace then atomically
++ * replace the original.
++ */
++static int
++create_tmpfile(
++	const char	*mnt,
++	struct xfs_fd	*xfd,
++	xfs_agnumber_t	agno,
++	char		**tmpfile,
++	int		*tmpfd)
++{
++	char		name[PATH_MAX + 1];
++	mode_t		mask;
++	int		fd;
++	int		i;
++	int		ret;
++
++	/* construct tmpdir */
++	mask = umask(0);
++
++	snprintf(name, PATH_MAX, "%s/.spaceman", mnt);
++	ret = mkdir(name, 0700);
++	if (ret) {
++		if (errno != EEXIST) {
++			fprintf(stderr, _("could not create tmpdir: %s: %s\n"),
++					name, strerror(errno));
++			ret = -errno;
++			goto out_cleanup;
++		}
++	}
++
++	/* loop creating directories until we get one in the right AG */
++	for (i = 0; i < xfd->fsgeom.agcount; i++) {
++		struct stat	st;
++
++		snprintf(name, PATH_MAX, "%s/.spaceman/dir%d", mnt, i);
++		ret = mkdir(name, 0700);
++		if (ret) {
++			if (errno != EEXIST) {
++				fprintf(stderr,
++					_("cannot create tmpdir: %s: %s\n"),
++				       name, strerror(errno));
++				ret = -errno;
++				goto out_cleanup_dir;
++			}
++		}
++		ret = lstat(name, &st);
++		if (ret) {
++			fprintf(stderr, _("cannot stat tmpdir: %s: %s\n"),
++				       name, strerror(errno));
++			ret = -errno;
++			rmdir(name);
++			goto out_cleanup_dir;
++		}
++		if (cvt_ino_to_agno(xfd, st.st_ino) == agno)
++			break;
++
++		/* remove directory in wrong AG */
++		rmdir(name);
++	}
++
++	if (i == xfd->fsgeom.agcount) {
++		/*
++		 * Nothing landed in the selected AG! Must have been skipped
++		 * because the AG is out of space.
++		 */
++		fprintf(stderr, _("Cannot create AG tmpdir.\n"));
++		ret = -ENOSPC;
++		goto out_cleanup_dir;
++	}
++
++	/* create tmpfile */
++	snprintf(name, PATH_MAX, "%s/.spaceman/dir%d/tmpfile.%d", mnt, i, getpid());
++	fd = open(name, O_CREAT|O_EXCL|O_RDWR, 0700);
++	if (fd < 0) {
++		fprintf(stderr, _("cannot create tmpfile: %s: %s\n"),
++		       name, strerror(errno));
++		ret = -errno;
++	}
++
++	/* return name and fd */
++	(void)umask(mask);
++	*tmpfd = fd;
++	*tmpfile = strdup(name);
++
++	return 0;
++out_cleanup_dir:
++	snprintf(name, PATH_MAX, "%s/.spaceman", mnt);
++	rmdir(name);
++out_cleanup:
++	(void)umask(mask);
++	return ret;
++}
++
++static int
++get_attr(
++	void		*hdl,
++	size_t		hlen,
++	char		*name,
++	void		*attrbuf,
++	int		*attrlen,
++	int		attr_ns)
++{
++	struct xfs_attr_multiop	ops = {
++		.am_opcode	= ATTR_OP_GET,
++		.am_attrname	= name,
++		.am_attrvalue	= attrbuf,
++		.am_length	= *attrlen,
++		.am_flags	= attr_ns,
++	};
++	int		ret;
++
++	ret = attr_multi_by_handle(hdl, hlen, &ops, 1, 0);
++	if (ret < 0) {
++		fprintf(stderr, _("attr_multi_by_handle(GET): %s\n"),
++			strerror(errno));
++		return -errno;
++	}
++	*attrlen = ops.am_length;
++	return 0;
++}
++
++static int
++set_attr(
++	void		*hdl,
++	size_t		hlen,
++	char		*name,
++	void		*attrbuf,
++	int		attrlen,
++	int		attr_ns)
++{
++	struct xfs_attr_multiop	ops = {
++		.am_opcode	= ATTR_OP_SET,
++		.am_attrname	= name,
++		.am_attrvalue	= attrbuf,
++		.am_length	= attrlen,
++		.am_flags	= ATTR_CREATE | attr_ns,
++	};
++	int		ret;
++
++	ret = attr_multi_by_handle(hdl, hlen, &ops, 1, 0);
++	if (ret < 0) {
++		fprintf(stderr, _("attr_multi_by_handle(SET): %s\n"),
++			strerror(errno));
++		return -errno;
++	}
++	return 0;
++}
++
++/*
++ * Copy all the attributes from the original source file into the replacement
++ * destination.
++ *
++ * Oh the humanity of deprecated Irix compatible attr interfaces that are more
++ * functional and useful than their native Linux replacements!
++ */
++static int
++copy_attrs(
++	int			srcfd,
++	int			dstfd,
++	int			attr_ns)
++{
++	void			*shdl;
++	void			*dhdl;
++	size_t			shlen;
++	size_t			dhlen;
++	attrlist_cursor_t	cursor;
++	attrlist_t		*alist;
++	struct attrlist_ent	*ent;
++	char			alistbuf[XATTR_LIST_MAX];
++	char			attrbuf[XATTR_SIZE_MAX];
++	int			attrlen;
++	int			error;
++	int			i;
++
++	memset(&cursor, 0, sizeof(cursor));
++
++	/*
++	 * All this handle based stuff is hoop jumping to avoid:
++	 *
++	 * a) deprecated API warnings because attr_list, attr_get and attr_set
++	 *    have been deprecated hence through compiler warnings; and
++	 *
++	 * b) listxattr() failing hard if there are more than 64kB worth of attr
++	 *    names on the inode so is unusable.
++	 *
++	 * That leaves libhandle as the only usable interface for iterating all
++	 * xattrs on an inode reliably. Lucky for us, libhandle is part of
++	 * xfsprogs, so this hoop jump isn't going to get ripped out from under
++	 * us any time soon.
++	 */
++	error = fd_to_handle(srcfd, (void **)&shdl, &shlen);
++	if (error) {
++		fprintf(stderr, _("fd_to_handle(shdl): %s\n"),
++			strerror(errno));
++		return -errno;
++	}
++	error = fd_to_handle(dstfd, (void **)&dhdl, &dhlen);
++	if (error) {
++		fprintf(stderr, _("fd_to_handle(dhdl): %s\n"),
++			strerror(errno));
++		goto out_free_shdl;
++	}
++
++	/* loop to iterate all xattrs */
++	error = attr_list_by_handle(shdl, shlen, alistbuf,
++					XATTR_LIST_MAX, attr_ns, &cursor);
++	if (error) {
++		fprintf(stderr, _("attr_list_by_handle(shdl): %s\n"),
++			strerror(errno));
++	}
++	while (!error) {
++		alist = (attrlist_t *)alistbuf;
++
++		/*
++		 * We loop one attr at a time for initial implementation
++		 * simplicity. attr_multi_by_handle() can retrieve and set
++		 * multiple attrs in a single call, but that is more complex.
++		 * Get it working first, then optimise.
++		 */
++		for (i = 0; i < alist->al_count; i++) {
++			ent = ATTR_ENTRY(alist, i);
++
++			/* get xattr (val, len) from name */
++			attrlen = XATTR_SIZE_MAX;
++			error = get_attr(shdl, shlen, ent->a_name, attrbuf,
++						&attrlen, attr_ns);
++			if (error)
++				break;
++
++			/* set xattr (val, len) to name */
++			error = set_attr(dhdl, dhlen, ent->a_name, attrbuf,
++						attrlen, ATTR_CREATE | attr_ns);
++			if (error)
++				break;
++		}
++
++		if (!alist->al_more)
++			break;
++		error = attr_list_by_handle(shdl, shlen, alistbuf,
++					XATTR_LIST_MAX, attr_ns, &cursor);
++	}
++
++	free_handle(dhdl, dhlen);
++out_free_shdl:
++	free_handle(shdl, shlen);
++	return error ? -errno : 0;
++}
++
++/*
++ * scan the range of the new file for data that isn't in the destination AG
++ * and unshare it to create a new copy of it in the current target location
++ * of the new file.
++ */
++#define EXTENT_BATCH 32
++static int
++unshare_data(
++	struct xfs_fd	*xfd,
++	int		destfd,
++	xfs_agnumber_t	agno)
++{
++	int		ret;
++	struct fiemap	*fiemap;
++	int		done = 0;
++	int		fiemap_flags = FIEMAP_FLAG_SYNC;
++	int		i;
++	int		map_size;
++	__u64		last_logical = 0;	/* last extent offset handled */
++	off64_t		range_end = -1LL;	/* mapping end*/
++
++	/* fiemap loop over extents */
++	map_size = sizeof(struct fiemap) +
++		(EXTENT_BATCH * sizeof(struct fiemap_extent));
++	fiemap = malloc(map_size);
++	if (!fiemap) {
++		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
++			progname, map_size);
++		return -ENOMEM;
++	}
++
++	while (!done) {
++		memset(fiemap, 0, map_size);
++		fiemap->fm_flags = fiemap_flags;
++		fiemap->fm_start = last_logical;
++		fiemap->fm_length = range_end - last_logical;
++		fiemap->fm_extent_count = EXTENT_BATCH;
++
++		ret = ioctl(destfd, FS_IOC_FIEMAP, (unsigned long)fiemap);
++		if (ret < 0) {
++			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP): %s\n",
++				progname, strerror(errno));
++			free(fiemap);
++			return -errno;
++		}
++
++		/* No more extents to map, exit */
++		if (!fiemap->fm_mapped_extents)
++			break;
++
++		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
++			struct fiemap_extent	*extent;
++			xfs_agnumber_t		this_agno;
++
++			extent = &fiemap->fm_extents[i];
++			this_agno = cvt_daddr_to_agno(xfd,
++					cvt_btobbt(extent->fe_physical));
++
++			/*
++			 * If extent not in dst AG, unshare whole extent to
++			 * trigger reallocated of the extent to be local to
++			 * the current inode.
++			 */
++			if (this_agno != agno) {
++				ret = fallocate(destfd, FALLOC_FL_UNSHARE_RANGE,
++					extent->fe_logical, extent->fe_length);
++				if (ret) {
++					fprintf(stderr,
++						"%s: fallocate(UNSHARE): %s\n",
++						progname, strerror(errno));
++					return -errno;
++				}
++			}
++
++			last_logical = extent->fe_logical + extent->fe_length;
++
++			/* Kernel has told us there are no more extents */
++			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
++				done = 1;
++				break;
++			}
++		}
++	}
++	return 0;
++}
++
++static int
++move_file_to_ag(
++	const char		*mnt,
++	const char		*path,
++	struct xfs_fd		*xfd,
++	xfs_agnumber_t		agno)
++{
++	int			ret;
++	int			tmpfd = -1;
++	char			*tmpfile = NULL;
++
++	fprintf(stderr, "move mnt %s, path %s, agno %d\n", mnt, path, agno);
++
++	/* create temporary file in agno */
++	ret = create_tmpfile(mnt, xfd, agno, &tmpfile, &tmpfd);
++
++	/* clone data to tempfile */
++	ret = ioctl(tmpfd, FICLONE, xfd->fd);
++	if (ret)
++		goto out_cleanup;
++
++	/* copy system attributes to tempfile */
++	ret = copy_attrs(xfd->fd, tmpfd, ATTR_ROOT);
++	if (ret)
++		goto out_cleanup;
++
++	/* copy user attributes to tempfile */
++	ret = copy_attrs(xfd->fd, tmpfd, 0);
++	if (ret)
++		goto out_cleanup;
++
++	/* unshare data to move it */
++	ret = unshare_data(xfd, tmpfd, agno);
++	if (ret)
++		goto out_cleanup;
++
++	/* RENAME_EXCHANGE to replace the inode */
++	ret = renameat2(AT_FDCWD, tmpfile, AT_FDCWD, path, RENAME_EXCHANGE);
++
++out_cleanup:
++	if (ret == -1)
++		ret = -errno;
++
++	close(tmpfd);
++	if (tmpfile)
++		unlink(tmpfile);
++	free(tmpfile);
++
++	return ret;
++}
++
++static int
++move_inode_f(
++	int			argc,
++	char			**argv)
++{
++	void			*fshandle;
++	size_t			fshdlen;
++	xfs_agnumber_t		agno = 0;
++	struct stat		st;
++	int			ret;
++	int			c;
++
++	while ((c = getopt(argc, argv, "a:")) != EOF) {
++		switch (c) {
++		case 'a':
++			agno = cvt_u32(optarg, 10);
++			if (errno) {
++				fprintf(stderr, _("bad agno value %s\n"),
++					optarg);
++				return command_usage(&move_inode_cmd);
++			}
++			break;
++		default:
++			return command_usage(&move_inode_cmd);
++		}
++	}
++
++	if (optind != argc)
++		return command_usage(&move_inode_cmd);
++
++	if (agno >= file->xfd.fsgeom.agcount) {
++		fprintf(stderr,
++_("Destination AG %d does not exist. Filesystem only has %d AGs\n"),
++			agno, file->xfd.fsgeom.agcount);
++			exitcode = 1;
++			return 0;
++	}
++
++	/* this is so we can use fd_to_handle() later on */
++	ret = path_to_fshandle(file->fs_path.fs_dir, &fshandle, &fshdlen);
++	if (ret < 0) {
++		fprintf(stderr, _("Cannot get fshandle for mount %s: %s\n"),
++			file->fs_path.fs_dir, strerror(errno));
++		goto exit_fail;
++	}
++
++	ret = fstat(file->xfd.fd, &st);
++	if (ret) {
++		fprintf(stderr, _("stat(%s) failed: %s\n"),
++			file->name, strerror(errno));
++		goto exit_fail;
++	}
++
++	if (S_ISREG(st.st_mode)) {
++		ret = move_file_to_ag(file->fs_path.fs_dir, file->name,
++				&file->xfd, agno);
++	} else {
++		fprintf(stderr, _("Unsupported: %s is not a regular file.\n"),
++			file->name);
++		goto exit_fail;
++	}
++
++	if (ret) {
++		fprintf(stderr, _("Failed to move inode to AG %d: %s\n"),
++			agno, strerror(-ret));
++		goto exit_fail;
++	}
++	fshandle_destroy();
++	return 0;
++
++exit_fail:
++	fshandle_destroy();
++	exitcode = 1;
++	return 0;
++}
++
++static void
++move_inode_help(void)
++{
++	printf(_(
++"\n"
++"Physically move an inode into a new allocation group\n"
++"\n"
++" -a agno       -- destination AG agno for the current open file\n"
++"\n"));
++
++}
++
++void
++move_inode_init(void)
++{
++	move_inode_cmd.name = "move_inode";
++	move_inode_cmd.altname = "mvino";
++	move_inode_cmd.cfunc = move_inode_f;
++	move_inode_cmd.argmin = 2;
++	move_inode_cmd.argmax = 2;
++	move_inode_cmd.args = "-a agno";
++	move_inode_cmd.flags = CMD_FLAG_ONESHOT;
++	move_inode_cmd.oneline = _("Move an inode into a new AG.");
++	move_inode_cmd.help = move_inode_help;
++
++	add_command(&move_inode_cmd);
++}
++
+diff --git a/spaceman/space.h b/spaceman/space.h
+index 723209edd998..79deed812cdf 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -33,5 +33,6 @@ extern void	freesp_init(void);
+ #endif
+ extern void	info_init(void);
+ extern void	health_init(void);
++void		move_inode_init(void);
+ 
+ #endif /* XFS_SPACEMAN_SPACE_H_ */
+-- 
+2.28.0
+
