@@ -2,745 +2,1082 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D04CFC388F7
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 22:59:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBA90C388F7
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 23:10:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58C77204EF
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 22:59:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 46C3720781
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Nov 2020 23:10:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="fe0P9JM2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732054AbgKJW7g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 17:59:36 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49962 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731907AbgKJW7g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 17:59:36 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 39E953A9B82
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2020 09:59:26 +1100 (AEDT)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kccbl-009pNe-1k
-        for linux-xfs@vger.kernel.org; Wed, 11 Nov 2020 09:59:25 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.94)
-        (envelope-from <david@fromorbit.com>)
-        id 1kccbk-00GulN-Nt
-        for linux-xfs@vger.kernel.org; Wed, 11 Nov 2020 09:59:24 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] [RFC] spaceman: physically move a regular inode
-Date:   Wed, 11 Nov 2020 09:59:24 +1100
-Message-Id: <20201110225924.4031404-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.28.0
+        id S1727275AbgKJXK2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 18:10:28 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:55784 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727018AbgKJXK2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 18:10:28 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AAN9tc2049143
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Nov 2020 23:10:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2020-01-29;
+ bh=mt1LhqKcfOYN3FdFb7HfTkddk28P4PypOz395Rp9d0A=;
+ b=fe0P9JM2dEEXqbPtySmKxM1nZ5SG0Q2/p44/CoNx8WbmvVZXpr2NNhmunmvMAa2LfIVz
+ mAmlIWTea/LPmC3Rk1IB7ZG3pEitMYS3vC/cQf2VbWSKpo1jTfryyMpPOEntoqVjInbr
+ zk+CkXa+YdE/ZPA4fdFtJs2gf9QnEo8dD0p325usRXTnQD+DoPU3Fkx8dX1IKCYixWVj
+ qm5DfsBQhO6zfLX/yqdK36q6hIjuSGgDzkQbZ1yvlcqL7RhHaiXOs+kkX9K6QEmvjdaK
+ d270DbjkqPyo95KrxqzgTgGkP5mHsUQ4bFZZFA+Ai0B29FvpopPwRzqsr4+0UFebs+pU xA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 34p72emmac-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Nov 2020 23:10:21 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AAN55R2165826
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Nov 2020 23:10:21 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 34qgp7h6bq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Nov 2020 23:10:20 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AANAKGg022830
+        for <linux-xfs@vger.kernel.org>; Tue, 10 Nov 2020 23:10:20 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 10 Nov 2020 15:10:19 -0800
+Date:   Tue, 10 Nov 2020 15:10:16 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Allison Henderson <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v13 03/10] xfs: Add delay ready attr set routines
+Message-ID: <20201110231016.GI9695@magnolia>
+References: <20201023063435.7510-1-allison.henderson@oracle.com>
+ <20201023063435.7510-4-allison.henderson@oracle.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=nNwsprhYR40A:10 a=20KFwNOVAAAA:8 a=myu2YSmQo_11sOQ7t4IA:9
-        a=3DS5zZEWb2WOpUtQ:21 a=jDB7GZ6fhO4h3lOr:21
+In-Reply-To: <20201023063435.7510-4-allison.henderson@oracle.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
+ adultscore=0 mlxscore=0 malwarescore=0 suspectscore=5 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011100155
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
+ malwarescore=0 suspectscore=5 lowpriorityscore=0 adultscore=0 phishscore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011100155
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Oct 22, 2020 at 11:34:28PM -0700, Allison Henderson wrote:
+> This patch modifies the attr set routines to be delay ready. This means
+> they no longer roll or commit transactions, but instead return -EAGAIN
+> to have the calling routine roll and refresh the transaction.  In this
+> series, xfs_attr_set_args has become xfs_attr_set_iter, which uses a
+> state machine like switch to keep track of where it was when EAGAIN was
+> returned. See xfs_attr.h for a more detailed diagram of the states.
+> 
+> Two new helper functions have been added: xfs_attr_rmtval_set_init and
+> xfs_attr_rmtval_set_blk.  They provide a subset of logic similar to
+> xfs_attr_rmtval_set, but they store the current block in the delay attr
+> context to allow the caller to roll the transaction between allocations.
+> This helps to simplify and consolidate code used by
+> xfs_attr_leaf_addname and xfs_attr_node_addname. xfs_attr_set_args has
+> now become a simple loop to refresh the transaction until the operation
+> is completed.  Lastly, xfs_attr_rmtval_remove is no longer used, and is
+> removed.
+> 
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c        | 370 ++++++++++++++++++++++++++--------------
+>  fs/xfs/libxfs/xfs_attr.h        | 126 +++++++++++++-
+>  fs/xfs/libxfs/xfs_attr_remote.c |  99 +++++++----
+>  fs/xfs/libxfs/xfs_attr_remote.h |   4 +
+>  fs/xfs/xfs_trace.h              |   1 -
+>  5 files changed, 439 insertions(+), 161 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 6ca94cb..95c98d7 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -44,7 +44,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
+>   * Internal routines when attribute list is one block.
+>   */
+>  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
+> -STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
+> +STATIC int xfs_attr_leaf_addname(struct xfs_delattr_context *dac);
+>  STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
+>  STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+>  
+> @@ -52,12 +52,15 @@ STATIC int xfs_attr_leaf_hasname(struct xfs_da_args *args, struct xfs_buf **bp);
+>   * Internal routines when attribute list is more than one block.
+>   */
+>  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
+> -STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
+> +STATIC int xfs_attr_node_addname(struct xfs_delattr_context *dac);
+>  STATIC int xfs_attr_node_removename_iter(struct xfs_delattr_context *dac);
+>  STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
+>  				 struct xfs_da_state **state);
+>  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
+>  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
+> +STATIC int xfs_attr_leaf_try_add(struct xfs_da_args *args, struct xfs_buf *bp);
+> +STATIC int xfs_attr_set_iter(struct xfs_delattr_context *dac,
+> +			     struct xfs_buf **leaf_bp);
+>  
+>  int
+>  xfs_inode_hasattr(
+> @@ -218,8 +221,11 @@ xfs_attr_is_shortform(
+>  
+>  /*
+>   * Attempts to set an attr in shortform, or converts short form to leaf form if
+> - * there is not enough room.  If the attr is set, the transaction is committed
+> - * and set to NULL.
+> + * there is not enough room.  This function is meant to operate as a helper
+> + * routine to the delayed attribute functions.  It returns -EAGAIN to indicate
+> + * that the calling function should roll the transaction, and then proceed to
+> + * add the attr in leaf form.  This subroutine does not expect to be recalled
+> + * again like the other delayed attr routines do.
+>   */
+>  STATIC int
+>  xfs_attr_set_shortform(
+> @@ -227,16 +233,16 @@ xfs_attr_set_shortform(
+>  	struct xfs_buf		**leaf_bp)
+>  {
+>  	struct xfs_inode	*dp = args->dp;
+> -	int			error, error2 = 0;
+> +	int			error = 0;
+>  
+>  	/*
+>  	 * Try to add the attr to the attribute list in the inode.
+>  	 */
+>  	error = xfs_attr_try_sf_addname(dp, args);
+> +
+> +	/* Should only be 0, -EEXIST or ENOSPC */
 
-To be able to shrink a filesystem, we need to be able to physically
-move an inode and all it's data and metadata from it's current
-location to a new AG.  Add a command to spaceman to allow an inode
-to be moved to a new AG.
+Nit: "...or -ENOSPC"
 
-This new command is not intended to be a perfect solution. I am not
-trying to handle atomic movement of open files - this is intended to
-be run as a maintenance operation on idle filesystem. If root
-filesystems are the target, then this should be run via a rescue
-environment that is not executing directly on the root fs. With
-those caveats in place, we can do the entire inode move as a set of
-non-destructive operations finalised by an atomic inode swap
-without any needing special kernel support.
+Also, this comment could go a couple of lines up:
 
-To ensure we move metadata such as BMBT blocks even if we don't need
-to move data, we clone the data to a new inode that we've allocated
-in the destination AG. This will result in new bmbt blocks being
-allocated in the new location even though the data is not copied.
-Attributes need to be copied one at a time from the original inode.
-
-If data needs to be moved, then we use fallocate(UNSHARE) to create
-a private copy of the range of data that needs to be moved in the
-new inode. This will be allocated in the destination AG by normal
-allocation policy.
-
-Once the new inode has been finalised, use RENAME_EXCHANGE to swap
-it into place and unlink the original inode to free up all the
-resources it still pins.
-
-There are many optimisations still possible to speed this up, but
-the goal here is "functional" rather than "optimal". Performance can
-be optimised once all the parts for a "empty the tail of the
-filesystem before shrink" operation are implemented and solidly
-tested.
-
-This functionality has been smoke tested by creating a 32MB data
-file with 4k extents and several hundred attributes:
-
-$ cat test.sh
-fname=/mnt/scratch/foo
-xfs_io -f -c "pwrite 0 32m" -c sync $fname
-for (( i=0; i < 4096 ; i++ )); do
-	xfs_io -c "fpunch $((i * 8))k 4k" $fname
-done
-
-for (( i=0; i < 100 ; i++ )); do
-	setfattr -n user.blah.$i.$i.blah -v blah.$i.$i.blah $fname
-	setfattr -n user.foo.$i.$i.foo -v $i.cantbele.$i.ve.$i.tsnotbutter $fname
-done
-for (( i=0; i < 100 ; i++ )); do
-	setfattr -n security.baz.$i.$i.baz -v wotchul$i$iookinat $fname
-done
-
-xfs_io -c stat -c "bmap -vp" -c "bmap -avp" $fname
-xfs_spaceman -c "move_inode -a 22" /mnt/scratch/foo
-xfs_io -c stat -c "bmap -vp" -c "bmap -avp" $fname
-$
-
-and the output looks something like:
-
-$ sudo ./test.sh
-....
-fd.path = "/mnt/scratch/foo"
-fd.flags = non-sync,non-direct,read-write
-stat.ino = 133
-/mnt/scratch/foo:
- EXT: FILE-OFFSET      BLOCK-RANGE       AG AG-OFFSET        TOTAL FLAGS
-   0: [0..7]:          hole                                      8
-   1: [8..15]:         208..215           0 (208..215)           8 000000
-   2: [16..23]:        hole                                      8
-   3: [24..31]:        224..231           0 (224..231)           8 000000
-....
-8189: [65512..65519]:  65712..65719       0 (65712..65719)       8 000000
-8190: [65520..65527]:  hole                                      8
-8191: [65528..65535]:  65728..65735       0 (65728..65735)       8 000000
-mnt/scratch/foo:
- EXT: FILE-OFFSET      BLOCK-RANGE       AG AG-OFFSET        TOTAL FLAGS
-   0: [0..7]:          392..399           0 (392..399)           8 000000
-   1: [8..15]:         408..415           0 (408..415)           8 000000
-   2: [16..23]:        424..431           0 (424..431)           8 000000
-   3: [24..31]:        456..463           0 (456..463)           8 000000
-move mnt /mnt/scratch, path /mnt/scratch/foo, agno 22
-fd.path = "/mnt/scratch/foo"
-fd.flags = non-sync,non-direct,read-write
-stat.ino = 47244651475
-....
-/mnt/scratch/foo:
- EXT: FILE-OFFSET      BLOCK-RANGE               AG AG-OFFSET        TOTAL FLAGS
-   0: [0..7]:          hole                                              8
-   1: [8..15]:         47244763192..47244763199  22 (123112..123119)     8 000000
-   2: [16..23]:        hole                                              8
-   3: [24..31]:        47244763208..47244763215  22 (123128..123135)     8 000000
-....
-8189: [65512..65519]:  47244828808..47244828815  22 (188728..188735)     8 000000
-8190: [65520..65527]:  hole                                              8
-8191: [65528..65535]:  47244828824..47244828831  22 (188744..188751)     8 000000
-/mnt/scratch/foo:
- EXT: FILE-OFFSET      BLOCK-RANGE               AG AG-OFFSET        TOTAL FLAGS
-   0: [0..7]:          47244763176..47244763183  22 (123096..123103)     8 000000
-$
+	/*
+	 * Try to add the attr to the attribute list in the inode.
+	 * This should only return 0, -EEXIST, or -ENOSPC.
+	 */
+	error = xfs_attr_try_sf_addname(dp, args);
+	if (error != -ENOSPC)
+		return error;
 
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- spaceman/Makefile     |   6 +-
- spaceman/file.c       |   2 +-
- spaceman/init.c       |   1 +
- spaceman/move_inode.c | 518 ++++++++++++++++++++++++++++++++++++++++++
- spaceman/space.h      |   1 +
- 5 files changed, 524 insertions(+), 4 deletions(-)
- create mode 100644 spaceman/move_inode.c
+>  	if (error != -ENOSPC) {
+> -		error2 = xfs_trans_commit(args->trans);
+> -		args->trans = NULL;
+> -		return error ? error : error2;
+> +		return error;
+>  	}
+>  	/*
+>  	 * It won't fit in the shortform, transform to a leaf block.  GROT:
+> @@ -249,18 +255,10 @@ xfs_attr_set_shortform(
+>  	/*
+>  	 * Prevent the leaf buffer from being unlocked so that a concurrent AIL
+>  	 * push cannot grab the half-baked leaf buffer and run into problems
+> -	 * with the write verifier. Once we're done rolling the transaction we
+> -	 * can release the hold and add the attr to the leaf.
+> +	 * with the write verifier.
+>  	 */
+>  	xfs_trans_bhold(args->trans, *leaf_bp);
+> -	error = xfs_defer_finish(&args->trans);
+> -	xfs_trans_bhold_release(args->trans, *leaf_bp);
+> -	if (error) {
+> -		xfs_trans_brelse(args->trans, *leaf_bp);
+> -		return error;
+> -	}
+> -
+> -	return 0;
+> +	return -EAGAIN;
 
-diff --git a/spaceman/Makefile b/spaceman/Makefile
-index 2a3669183a40..e90f66e8abc6 100644
---- a/spaceman/Makefile
-+++ b/spaceman/Makefile
-@@ -7,11 +7,11 @@ include $(TOPDIR)/include/builddefs
- 
- LTCOMMAND = xfs_spaceman
- HFILES = init.h space.h
--CFILES = info.c init.c file.c health.c prealloc.c trim.c
-+CFILES = info.c init.c file.c health.c move_inode.c prealloc.c trim.c
- LSRCFILES = xfs_info.sh
- 
--LLDLIBS = $(LIBXCMD) $(LIBFROG)
--LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
-+LLDLIBS = $(LIBXCMD) $(LIBFROG) $(LIBHANDLE)
-+LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG) $(LIBHANDLE)
- LLDFLAGS = -static
- 
- ifeq ($(ENABLE_EDITLINE),yes)
-diff --git a/spaceman/file.c b/spaceman/file.c
-index eec7ee9f4ba9..1777ed7d4602 100644
---- a/spaceman/file.c
-+++ b/spaceman/file.c
-@@ -52,7 +52,7 @@ openfile(
- 	struct fs_path	*fsp;
- 	int		ret;
- 
--	ret = -xfd_open(xfd, path, O_RDONLY);
-+	ret = -xfd_open(xfd, path, O_RDWR);
- 	if (ret) {
- 		if (ret == ENOTTY)
- 			fprintf(stderr,
-diff --git a/spaceman/init.c b/spaceman/init.c
-index cf1ff3cbb0ee..c3bfe3e5922f 100644
---- a/spaceman/init.c
-+++ b/spaceman/init.c
-@@ -35,6 +35,7 @@ init_commands(void)
- 	trim_init();
- 	freesp_init();
- 	health_init();
-+	move_inode_init();
- }
- 
- static int
-diff --git a/spaceman/move_inode.c b/spaceman/move_inode.c
-new file mode 100644
-index 000000000000..c3f791c82c45
---- /dev/null
-+++ b/spaceman/move_inode.c
-@@ -0,0 +1,518 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2012 Red Hat, Inc.
-+ * All Rights Reserved.
-+ */
-+
-+#include "libxfs.h"
-+#include "libfrog/fsgeom.h"
-+#include "command.h"
-+#include "init.h"
-+#include "libfrog/paths.h"
-+#include "space.h"
-+#include "input.h"
-+#include "handle.h"
-+
-+#include <linux/fiemap.h>
-+#include <linux/falloc.h>
-+#include <attr/attributes.h>
-+
-+static cmdinfo_t move_inode_cmd;
-+
-+/*
-+ * We can't entirely use O_TMPFILE here because we want to use RENAME_EXCHANGE
-+ * to swap the inode once rebuild is complete. Hence the new file has to be
-+ * somewhere in the namespace for rename to act upon. Hence we use a normal
-+ * open(O_CREATE) for now.
-+ *
-+ * This could potentially use O_TMPFILE to rebuild the entire inode, the use
-+ * a linkat()/renameat2() pair to add it to the namespace then atomically
-+ * replace the original.
-+ */
-+static int
-+create_tmpfile(
-+	const char	*mnt,
-+	struct xfs_fd	*xfd,
-+	xfs_agnumber_t	agno,
-+	char		**tmpfile,
-+	int		*tmpfd)
-+{
-+	char		name[PATH_MAX + 1];
-+	mode_t		mask;
-+	int		fd;
-+	int		i;
-+	int		ret;
-+
-+	/* construct tmpdir */
-+	mask = umask(0);
-+
-+	snprintf(name, PATH_MAX, "%s/.spaceman", mnt);
-+	ret = mkdir(name, 0700);
-+	if (ret) {
-+		if (errno != EEXIST) {
-+			fprintf(stderr, _("could not create tmpdir: %s: %s\n"),
-+					name, strerror(errno));
-+			ret = -errno;
-+			goto out_cleanup;
-+		}
-+	}
-+
-+	/* loop creating directories until we get one in the right AG */
-+	for (i = 0; i < xfd->fsgeom.agcount; i++) {
-+		struct stat	st;
-+
-+		snprintf(name, PATH_MAX, "%s/.spaceman/dir%d", mnt, i);
-+		ret = mkdir(name, 0700);
-+		if (ret) {
-+			if (errno != EEXIST) {
-+				fprintf(stderr,
-+					_("cannot create tmpdir: %s: %s\n"),
-+				       name, strerror(errno));
-+				ret = -errno;
-+				goto out_cleanup_dir;
-+			}
-+		}
-+		ret = lstat(name, &st);
-+		if (ret) {
-+			fprintf(stderr, _("cannot stat tmpdir: %s: %s\n"),
-+				       name, strerror(errno));
-+			ret = -errno;
-+			rmdir(name);
-+			goto out_cleanup_dir;
-+		}
-+		if (cvt_ino_to_agno(xfd, st.st_ino) == agno)
-+			break;
-+
-+		/* remove directory in wrong AG */
-+		rmdir(name);
-+	}
-+
-+	if (i == xfd->fsgeom.agcount) {
-+		/*
-+		 * Nothing landed in the selected AG! Must have been skipped
-+		 * because the AG is out of space.
-+		 */
-+		fprintf(stderr, _("Cannot create AG tmpdir.\n"));
-+		ret = -ENOSPC;
-+		goto out_cleanup_dir;
-+	}
-+
-+	/* create tmpfile */
-+	snprintf(name, PATH_MAX, "%s/.spaceman/dir%d/tmpfile.%d", mnt, i, getpid());
-+	fd = open(name, O_CREAT|O_EXCL|O_RDWR, 0700);
-+	if (fd < 0) {
-+		fprintf(stderr, _("cannot create tmpfile: %s: %s\n"),
-+		       name, strerror(errno));
-+		ret = -errno;
-+	}
-+
-+	/* return name and fd */
-+	(void)umask(mask);
-+	*tmpfd = fd;
-+	*tmpfile = strdup(name);
-+
-+	return 0;
-+out_cleanup_dir:
-+	snprintf(name, PATH_MAX, "%s/.spaceman", mnt);
-+	rmdir(name);
-+out_cleanup:
-+	(void)umask(mask);
-+	return ret;
-+}
-+
-+static int
-+get_attr(
-+	void		*hdl,
-+	size_t		hlen,
-+	char		*name,
-+	void		*attrbuf,
-+	int		*attrlen,
-+	int		attr_ns)
-+{
-+	struct xfs_attr_multiop	ops = {
-+		.am_opcode	= ATTR_OP_GET,
-+		.am_attrname	= name,
-+		.am_attrvalue	= attrbuf,
-+		.am_length	= *attrlen,
-+		.am_flags	= attr_ns,
-+	};
-+	int		ret;
-+
-+	ret = attr_multi_by_handle(hdl, hlen, &ops, 1, 0);
-+	if (ret < 0) {
-+		fprintf(stderr, _("attr_multi_by_handle(GET): %s\n"),
-+			strerror(errno));
-+		return -errno;
-+	}
-+	*attrlen = ops.am_length;
-+	return 0;
-+}
-+
-+static int
-+set_attr(
-+	void		*hdl,
-+	size_t		hlen,
-+	char		*name,
-+	void		*attrbuf,
-+	int		attrlen,
-+	int		attr_ns)
-+{
-+	struct xfs_attr_multiop	ops = {
-+		.am_opcode	= ATTR_OP_SET,
-+		.am_attrname	= name,
-+		.am_attrvalue	= attrbuf,
-+		.am_length	= attrlen,
-+		.am_flags	= ATTR_CREATE | attr_ns,
-+	};
-+	int		ret;
-+
-+	ret = attr_multi_by_handle(hdl, hlen, &ops, 1, 0);
-+	if (ret < 0) {
-+		fprintf(stderr, _("attr_multi_by_handle(SET): %s\n"),
-+			strerror(errno));
-+		return -errno;
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * Copy all the attributes from the original source file into the replacement
-+ * destination.
-+ *
-+ * Oh the humanity of deprecated Irix compatible attr interfaces that are more
-+ * functional and useful than their native Linux replacements!
-+ */
-+static int
-+copy_attrs(
-+	int			srcfd,
-+	int			dstfd,
-+	int			attr_ns)
-+{
-+	void			*shdl;
-+	void			*dhdl;
-+	size_t			shlen;
-+	size_t			dhlen;
-+	attrlist_cursor_t	cursor;
-+	attrlist_t		*alist;
-+	struct attrlist_ent	*ent;
-+	char			alistbuf[XATTR_LIST_MAX];
-+	char			attrbuf[XATTR_SIZE_MAX];
-+	int			attrlen;
-+	int			error;
-+	int			i;
-+
-+	memset(&cursor, 0, sizeof(cursor));
-+
-+	/*
-+	 * All this handle based stuff is hoop jumping to avoid:
-+	 *
-+	 * a) deprecated API warnings because attr_list, attr_get and attr_set
-+	 *    have been deprecated hence through compiler warnings; and
-+	 *
-+	 * b) listxattr() failing hard if there are more than 64kB worth of attr
-+	 *    names on the inode so is unusable.
-+	 *
-+	 * That leaves libhandle as the only usable interface for iterating all
-+	 * xattrs on an inode reliably. Lucky for us, libhandle is part of
-+	 * xfsprogs, so this hoop jump isn't going to get ripped out from under
-+	 * us any time soon.
-+	 */
-+	error = fd_to_handle(srcfd, (void **)&shdl, &shlen);
-+	if (error) {
-+		fprintf(stderr, _("fd_to_handle(shdl): %s\n"),
-+			strerror(errno));
-+		return -errno;
-+	}
-+	error = fd_to_handle(dstfd, (void **)&dhdl, &dhlen);
-+	if (error) {
-+		fprintf(stderr, _("fd_to_handle(dhdl): %s\n"),
-+			strerror(errno));
-+		goto out_free_shdl;
-+	}
-+
-+	/* loop to iterate all xattrs */
-+	error = attr_list_by_handle(shdl, shlen, alistbuf,
-+					XATTR_LIST_MAX, attr_ns, &cursor);
-+	if (error) {
-+		fprintf(stderr, _("attr_list_by_handle(shdl): %s\n"),
-+			strerror(errno));
-+	}
-+	while (!error) {
-+		alist = (attrlist_t *)alistbuf;
-+
-+		/*
-+		 * We loop one attr at a time for initial implementation
-+		 * simplicity. attr_multi_by_handle() can retrieve and set
-+		 * multiple attrs in a single call, but that is more complex.
-+		 * Get it working first, then optimise.
-+		 */
-+		for (i = 0; i < alist->al_count; i++) {
-+			ent = ATTR_ENTRY(alist, i);
-+
-+			/* get xattr (val, len) from name */
-+			attrlen = XATTR_SIZE_MAX;
-+			error = get_attr(shdl, shlen, ent->a_name, attrbuf,
-+						&attrlen, attr_ns);
-+			if (error)
-+				break;
-+
-+			/* set xattr (val, len) to name */
-+			error = set_attr(dhdl, dhlen, ent->a_name, attrbuf,
-+						attrlen, ATTR_CREATE | attr_ns);
-+			if (error)
-+				break;
-+		}
-+
-+		if (!alist->al_more)
-+			break;
-+		error = attr_list_by_handle(shdl, shlen, alistbuf,
-+					XATTR_LIST_MAX, attr_ns, &cursor);
-+	}
-+
-+	free_handle(dhdl, dhlen);
-+out_free_shdl:
-+	free_handle(shdl, shlen);
-+	return error ? -errno : 0;
-+}
-+
-+/*
-+ * scan the range of the new file for data that isn't in the destination AG
-+ * and unshare it to create a new copy of it in the current target location
-+ * of the new file.
-+ */
-+#define EXTENT_BATCH 32
-+static int
-+unshare_data(
-+	struct xfs_fd	*xfd,
-+	int		destfd,
-+	xfs_agnumber_t	agno)
-+{
-+	int		ret;
-+	struct fiemap	*fiemap;
-+	int		done = 0;
-+	int		fiemap_flags = FIEMAP_FLAG_SYNC;
-+	int		i;
-+	int		map_size;
-+	__u64		last_logical = 0;	/* last extent offset handled */
-+	off64_t		range_end = -1LL;	/* mapping end*/
-+
-+	/* fiemap loop over extents */
-+	map_size = sizeof(struct fiemap) +
-+		(EXTENT_BATCH * sizeof(struct fiemap_extent));
-+	fiemap = malloc(map_size);
-+	if (!fiemap) {
-+		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
-+			progname, map_size);
-+		return -ENOMEM;
-+	}
-+
-+	while (!done) {
-+		memset(fiemap, 0, map_size);
-+		fiemap->fm_flags = fiemap_flags;
-+		fiemap->fm_start = last_logical;
-+		fiemap->fm_length = range_end - last_logical;
-+		fiemap->fm_extent_count = EXTENT_BATCH;
-+
-+		ret = ioctl(destfd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+		if (ret < 0) {
-+			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP): %s\n",
-+				progname, strerror(errno));
-+			free(fiemap);
-+			return -errno;
-+		}
-+
-+		/* No more extents to map, exit */
-+		if (!fiemap->fm_mapped_extents)
-+			break;
-+
-+		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
-+			struct fiemap_extent	*extent;
-+			xfs_agnumber_t		this_agno;
-+
-+			extent = &fiemap->fm_extents[i];
-+			this_agno = cvt_daddr_to_agno(xfd,
-+					cvt_btobbt(extent->fe_physical));
-+
-+			/*
-+			 * If extent not in dst AG, unshare whole extent to
-+			 * trigger reallocated of the extent to be local to
-+			 * the current inode.
-+			 */
-+			if (this_agno != agno) {
-+				ret = fallocate(destfd, FALLOC_FL_UNSHARE_RANGE,
-+					extent->fe_logical, extent->fe_length);
-+				if (ret) {
-+					fprintf(stderr,
-+						"%s: fallocate(UNSHARE): %s\n",
-+						progname, strerror(errno));
-+					return -errno;
-+				}
-+			}
-+
-+			last_logical = extent->fe_logical + extent->fe_length;
-+
-+			/* Kernel has told us there are no more extents */
-+			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
-+				done = 1;
-+				break;
-+			}
-+		}
-+	}
-+	return 0;
-+}
-+
-+static int
-+move_file_to_ag(
-+	const char		*mnt,
-+	const char		*path,
-+	struct xfs_fd		*xfd,
-+	xfs_agnumber_t		agno)
-+{
-+	int			ret;
-+	int			tmpfd = -1;
-+	char			*tmpfile = NULL;
-+
-+	fprintf(stderr, "move mnt %s, path %s, agno %d\n", mnt, path, agno);
-+
-+	/* create temporary file in agno */
-+	ret = create_tmpfile(mnt, xfd, agno, &tmpfile, &tmpfd);
-+
-+	/* clone data to tempfile */
-+	ret = ioctl(tmpfd, FICLONE, xfd->fd);
-+	if (ret)
-+		goto out_cleanup;
-+
-+	/* copy system attributes to tempfile */
-+	ret = copy_attrs(xfd->fd, tmpfd, ATTR_ROOT);
-+	if (ret)
-+		goto out_cleanup;
-+
-+	/* copy user attributes to tempfile */
-+	ret = copy_attrs(xfd->fd, tmpfd, 0);
-+	if (ret)
-+		goto out_cleanup;
-+
-+	/* unshare data to move it */
-+	ret = unshare_data(xfd, tmpfd, agno);
-+	if (ret)
-+		goto out_cleanup;
-+
-+	/* RENAME_EXCHANGE to replace the inode */
-+	ret = renameat2(AT_FDCWD, tmpfile, AT_FDCWD, path, RENAME_EXCHANGE);
-+
-+out_cleanup:
-+	if (ret == -1)
-+		ret = -errno;
-+
-+	close(tmpfd);
-+	if (tmpfile)
-+		unlink(tmpfile);
-+	free(tmpfile);
-+
-+	return ret;
-+}
-+
-+static int
-+move_inode_f(
-+	int			argc,
-+	char			**argv)
-+{
-+	void			*fshandle;
-+	size_t			fshdlen;
-+	xfs_agnumber_t		agno = 0;
-+	struct stat		st;
-+	int			ret;
-+	int			c;
-+
-+	while ((c = getopt(argc, argv, "a:")) != EOF) {
-+		switch (c) {
-+		case 'a':
-+			agno = cvt_u32(optarg, 10);
-+			if (errno) {
-+				fprintf(stderr, _("bad agno value %s\n"),
-+					optarg);
-+				return command_usage(&move_inode_cmd);
-+			}
-+			break;
-+		default:
-+			return command_usage(&move_inode_cmd);
-+		}
-+	}
-+
-+	if (optind != argc)
-+		return command_usage(&move_inode_cmd);
-+
-+	if (agno >= file->xfd.fsgeom.agcount) {
-+		fprintf(stderr,
-+_("Destination AG %d does not exist. Filesystem only has %d AGs\n"),
-+			agno, file->xfd.fsgeom.agcount);
-+			exitcode = 1;
-+			return 0;
-+	}
-+
-+	/* this is so we can use fd_to_handle() later on */
-+	ret = path_to_fshandle(file->fs_path.fs_dir, &fshandle, &fshdlen);
-+	if (ret < 0) {
-+		fprintf(stderr, _("Cannot get fshandle for mount %s: %s\n"),
-+			file->fs_path.fs_dir, strerror(errno));
-+		goto exit_fail;
-+	}
-+
-+	ret = fstat(file->xfd.fd, &st);
-+	if (ret) {
-+		fprintf(stderr, _("stat(%s) failed: %s\n"),
-+			file->name, strerror(errno));
-+		goto exit_fail;
-+	}
-+
-+	if (S_ISREG(st.st_mode)) {
-+		ret = move_file_to_ag(file->fs_path.fs_dir, file->name,
-+				&file->xfd, agno);
-+	} else {
-+		fprintf(stderr, _("Unsupported: %s is not a regular file.\n"),
-+			file->name);
-+		goto exit_fail;
-+	}
-+
-+	if (ret) {
-+		fprintf(stderr, _("Failed to move inode to AG %d: %s\n"),
-+			agno, strerror(-ret));
-+		goto exit_fail;
-+	}
-+	fshandle_destroy();
-+	return 0;
-+
-+exit_fail:
-+	fshandle_destroy();
-+	exitcode = 1;
-+	return 0;
-+}
-+
-+static void
-+move_inode_help(void)
-+{
-+	printf(_(
-+"\n"
-+"Physically move an inode into a new allocation group\n"
-+"\n"
-+" -a agno       -- destination AG agno for the current open file\n"
-+"\n"));
-+
-+}
-+
-+void
-+move_inode_init(void)
-+{
-+	move_inode_cmd.name = "move_inode";
-+	move_inode_cmd.altname = "mvino";
-+	move_inode_cmd.cfunc = move_inode_f;
-+	move_inode_cmd.argmin = 2;
-+	move_inode_cmd.argmax = 2;
-+	move_inode_cmd.args = "-a agno";
-+	move_inode_cmd.flags = CMD_FLAG_ONESHOT;
-+	move_inode_cmd.oneline = _("Move an inode into a new AG.");
-+	move_inode_cmd.help = move_inode_help;
-+
-+	add_command(&move_inode_cmd);
-+}
-+
-diff --git a/spaceman/space.h b/spaceman/space.h
-index 723209edd998..79deed812cdf 100644
---- a/spaceman/space.h
-+++ b/spaceman/space.h
-@@ -33,5 +33,6 @@ extern void	freesp_init(void);
- #endif
- extern void	info_init(void);
- extern void	health_init(void);
-+void		move_inode_init(void);
- 
- #endif /* XFS_SPACEMAN_SPACE_H_ */
--- 
-2.28.0
+What state are we in when return -EAGAIN here?  Are we still in
+XFS_DAS_UNINIT, but with an attr fork that is no longer in local format,
+which means that we skip the xfs_attr_is_shortform branch next time
+around?
 
+>  }
+>  
+>  /*
+> @@ -268,7 +266,7 @@ xfs_attr_set_shortform(
+>   * also checks for a defer finish.  Transaction is finished and rolled as
+>   * needed, and returns true of false if the delayed operation should continue.
+>   */
+> -int
+> +STATIC int
+>  xfs_attr_trans_roll(
+>  	struct xfs_delattr_context	*dac)
+>  {
+> @@ -297,61 +295,130 @@ int
+>  xfs_attr_set_args(
+>  	struct xfs_da_args	*args)
+>  {
+> -	struct xfs_inode	*dp = args->dp;
+> -	struct xfs_buf          *leaf_bp = NULL;
+> -	int			error = 0;
+> +	struct xfs_buf			*leaf_bp = NULL;
+> +	int				error = 0;
+> +	struct xfs_delattr_context	dac = {
+> +		.da_args	= args,
+> +	};
+> +
+> +	do {
+> +		error = xfs_attr_set_iter(&dac, &leaf_bp);
+> +		if (error != -EAGAIN)
+> +			break;
+> +
+> +		error = xfs_attr_trans_roll(&dac);
+> +		if (error)
+> +			return error;
+> +
+> +		if (leaf_bp) {
+> +			xfs_trans_bjoin(args->trans, leaf_bp);
+> +			xfs_trans_bhold(args->trans, leaf_bp);
+> +		}
+> +
+> +	} while (true);
+> +
+> +	return error;
+> +}
+> +
+> +/*
+> + * Set the attribute specified in @args.
+> + * This routine is meant to function as a delayed operation, and may return
+> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
+> + * to handle this, and recall the function until a successful error code is
+> + * returned.
+> + */
+> +STATIC int
+> +xfs_attr_set_iter(
+> +	struct xfs_delattr_context	*dac,
+> +	struct xfs_buf			**leaf_bp)
+> +{
+> +	struct xfs_da_args		*args = dac->da_args;
+> +	struct xfs_inode		*dp = args->dp;
+> +	int				error = 0;
+> +
+> +	/* State machine switch */
+> +	switch (dac->dela_state) {
+> +	case XFS_DAS_FLIP_LFLAG:
+> +	case XFS_DAS_FOUND_LBLK:
+
+Do we need to catch XFS_DAS_RM_LBLK here?
+
+> +		goto das_leaf;
+> +	case XFS_DAS_FOUND_NBLK:
+> +	case XFS_DAS_FLIP_NFLAG:
+> +	case XFS_DAS_ALLOC_NODE:
+> +		goto das_node;
+> +	default:
+> +		break;
+> +	}
+>  
+>  	/*
+>  	 * If the attribute list is already in leaf format, jump straight to
+>  	 * leaf handling.  Otherwise, try to add the attribute to the shortform
+>  	 * list; if there's no room then convert the list to leaf format and try
+> -	 * again.
+> +	 * again. No need to set state as we will be in leaf form when we come
+> +	 * back
+>  	 */
+>  	if (xfs_attr_is_shortform(dp)) {
+>  
+>  		/*
+> -		 * If the attr was successfully set in shortform, the
+> -		 * transaction is committed and set to NULL.  Otherwise, is it
+> -		 * converted from shortform to leaf, and the transaction is
+> -		 * retained.
+> +		 * If the attr was successfully set in shortform, no need to
+> +		 * continue.  Otherwise, is it converted from shortform to leaf
+> +		 * and -EAGAIN is returned.
+>  		 */
+> -		error = xfs_attr_set_shortform(args, &leaf_bp);
+> -		if (error || !args->trans)
+> -			return error;
+> +		error = xfs_attr_set_shortform(args, leaf_bp);
+> +		if (error == -EAGAIN)
+> +			dac->flags |= XFS_DAC_DEFER_FINISH;
+> +
+> +		return error;
+>  	}
+>  
+> -	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> -		error = xfs_attr_leaf_addname(args);
+> -		if (error != -ENOSPC)
+> -			return error;
+> +	/*
+> +	 * After a shortform to leaf conversion, we need to hold the leaf and
+> +	 * cycle out the transaction.  When we get back, we need to release
+> +	 * the leaf.
+
+"...to release the hold on the leaf buffer."
+
+> +	 */
+> +	if (*leaf_bp != NULL) {
+> +		xfs_trans_bhold_release(args->trans, *leaf_bp);
+> +		*leaf_bp = NULL;
+> +	}
+>  
+> -		/*
+> -		 * Promote the attribute list to the Btree format.
+> -		 */
+> -		error = xfs_attr3_leaf_to_node(args);
+> -		if (error)
+> -			return error;
+> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+> +		error = xfs_attr_leaf_try_add(args, *leaf_bp);
+> +		switch (error) {
+> +		case -ENOSPC:
+> +			/*
+> +			 * Promote the attribute list to the Btree format.
+> +			 */
+> +			error = xfs_attr3_leaf_to_node(args);
+> +			if (error)
+> +				return error;
+>  
+> -		/*
+> -		 * Finish any deferred work items and roll the transaction once
+> -		 * more.  The goal here is to call node_addname with the inode
+> -		 * and transaction in the same state (inode locked and joined,
+> -		 * transaction clean) no matter how we got to this step.
+> -		 */
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> +			/*
+> +			 * Finish any deferred work items and roll the
+> +			 * transaction once more.  The goal here is to call
+> +			 * node_addname with the inode and transaction in the
+> +			 * same state (inode locked and joined, transaction
+> +			 * clean) no matter how we got to this step.
+> +			 */
+> +			dac->flags |= XFS_DAC_DEFER_FINISH;
+> +			return -EAGAIN;
+
+What state should we be in at this -EAGAIN return?  Is it
+XFS_DAS_UNINIT, but with more than one extent in the attr fork?
+
+/me is wishing these would get turned into explicit states, since afaict
+we don't unlock the inode and so we should find it in /exactly/ the
+state that the delattr_context says it should be in.
+
+> +		case 0:
+> +			dac->dela_state = XFS_DAS_FOUND_LBLK;
+> +			return -EAGAIN;
+> +		default:
+>  			return error;
+> +		}
+> +das_leaf:
+
+The only way to get to this block of code is by jumping to das_leaf,
+from the switch statement above, right?  If so, then shouldn't it be up
+there in the switch statement?
+
+> +		error = xfs_attr_leaf_addname(dac);
+> +		if (error == -ENOSPC)
+> +			/*
+> +			 * No need to set state.  We will be in node form when
+> +			 * we are recalled
+> +			 */
+> +			return -EAGAIN;
+
+How do we get to node form?
+
+> -		/*
+> -		 * Commit the current trans (including the inode) and
+> -		 * start a new one.
+> -		 */
+> -		error = xfs_trans_roll_inode(&args->trans, dp);
+> -		if (error)
+> -			return error;
+> +		return error;
+>  	}
+> -
+> -	error = xfs_attr_node_addname(args);
+> +das_node:
+> +	error = xfs_attr_node_addname(dac);
+>  	return error;
+
+Similarly, I think the only way get to this block of code is if we're in
+the initial state (XFS_DAS_UNINIT?) and the inode wasn't in short
+format; or if we jumped here via DAS_{FOUND_NBLK,FLIP_NFLAG,ALLOC_NODE},
+right?
+
+I think you could straighten this out a bit further (I left out the
+comments):
+
+	switch (dac->dela_state) {
+	case XFS_DAS_FLIP_LFLAG:
+	case XFS_DAS_FOUND_LBLK:
+		error = xfs_attr_leaf_addname(dac);
+		if (error == -ENOSPC)
+			return -EAGAIN;
+		return error;
+	case XFS_DAS_FOUND_NBLK:
+	case XFS_DAS_FLIP_NFLAG:
+	case XFS_DAS_ALLOC_NODE:
+		return xfs_attr_node_addname(dac);
+	case XFS_DAS_UNINIT:
+		break;
+	default:
+		...assert on the XFS_DAS_RM_* flags...
+	}
+
+	if (xfs_attr_is_shortform(dp))
+		return xfs_attr_set_shortform(args, leaf_bp);
+
+	if (*leaf_bp != NULL) {
+		...release bhold...
+	}
+
+	if (!xfs_bmap_one_block(...))
+		return xfs_attr_node_addname(dac);
+
+	error = xfs_attr_leaf_try_add(args, *leaf_bp);
+	switch (error) {
+	...handle -ENOSPC and 0...
+	}
+	return error;
+
+>  }
+>  
+> @@ -723,28 +790,30 @@ xfs_attr_leaf_try_add(
+>   *
+>   * This leaf block cannot have a "remote" value, we only call this routine
+>   * if bmap_one_block() says there is only one block (ie: no remote blks).
+> + *
+> + * This routine is meant to function as a delayed operation, and may return
+> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
+> + * to handle this, and recall the function until a successful error code is
+> + * returned.
+>   */
+>  STATIC int
+>  xfs_attr_leaf_addname(
+> -	struct xfs_da_args	*args)
+> +	struct xfs_delattr_context	*dac)
+>  {
+> -	int			error, forkoff;
+> -	struct xfs_buf		*bp = NULL;
+> -	struct xfs_inode	*dp = args->dp;
+> -
+> -	trace_xfs_attr_leaf_addname(args);
+> -
+> -	error = xfs_attr_leaf_try_add(args, bp);
+> -	if (error)
+> -		return error;
+> +	struct xfs_da_args		*args = dac->da_args;
+> +	struct xfs_buf			*bp = NULL;
+> +	int				error, forkoff;
+> +	struct xfs_inode		*dp = args->dp;
+>  
+> -	/*
+> -	 * Commit the transaction that added the attr name so that
+> -	 * later routines can manage their own transactions.
+> -	 */
+> -	error = xfs_trans_roll_inode(&args->trans, dp);
+> -	if (error)
+> -		return error;
+> +	/* State machine switch */
+> +	switch (dac->dela_state) {
+> +	case XFS_DAS_FLIP_LFLAG:
+> +		goto das_flip_flag;
+> +	case XFS_DAS_RM_LBLK:
+> +		goto das_rm_lblk;
+> +	default:
+> +		break;
+> +	}
+>  
+>  	/*
+>  	 * If there was an out-of-line value, allocate the blocks we
+> @@ -752,12 +821,34 @@ xfs_attr_leaf_addname(
+>  	 * after we create the attribute so that we don't overflow the
+>  	 * maximum size of a transaction and/or hit a deadlock.
+>  	 */
+> -	if (args->rmtblkno > 0) {
+> -		error = xfs_attr_rmtval_set(args);
+> +
+> +	/* Open coded xfs_attr_rmtval_set without trans handling */
+> +	if ((dac->flags & XFS_DAC_LEAF_ADDNAME_INIT) == 0) {
+> +		dac->flags |= XFS_DAC_LEAF_ADDNAME_INIT;
+> +		if (args->rmtblkno > 0) {
+> +			error = xfs_attr_rmtval_find_space(dac);
+> +			if (error)
+> +				return error;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * Roll through the "value", allocating blocks on disk as
+> +	 * required.
+> +	 */
+> +	if (dac->blkcnt > 0) {
+> +		error = xfs_attr_rmtval_set_blk(dac);
+>  		if (error)
+>  			return error;
+> +
+> +		dac->flags |= XFS_DAC_DEFER_FINISH;
+> +		return -EAGAIN;
+
+What state are we in here?  FOUND_LBLK, with blkcnt slowly decreasing?
+
+>  	}
+>  
+> +	error = xfs_attr_rmtval_set_value(args);
+> +	if (error)
+> +		return error;
+> +
+>  	if (!(args->op_flags & XFS_DA_OP_RENAME)) {
+>  		/*
+>  		 * Added a "remote" value, just clear the incomplete flag.
+> @@ -777,29 +868,29 @@ xfs_attr_leaf_addname(
+>  	 * In a separate transaction, set the incomplete flag on the "old" attr
+>  	 * and clear the incomplete flag on the "new" attr.
+>  	 */
+> -
+>  	error = xfs_attr3_leaf_flipflags(args);
+>  	if (error)
+>  		return error;
+>  	/*
+>  	 * Commit the flag value change and start the next trans in series.
+>  	 */
+> -	error = xfs_trans_roll_inode(&args->trans, args->dp);
+> -	if (error)
+> -		return error;
+> -
+> +	dac->dela_state = XFS_DAS_FLIP_LFLAG;
+> +	return -EAGAIN;
+> +das_flip_flag:
+>  	/*
+>  	 * Dismantle the "old" attribute/value pair by removing a "remote" value
+>  	 * (if it exists).
+>  	 */
+>  	xfs_attr_restore_rmt_blk(args);
+>  
+> +	error = xfs_attr_rmtval_invalidate(args);
+> +	if (error)
+> +		return error;
+> +das_rm_lblk:
+>  	if (args->rmtblkno) {
+> -		error = xfs_attr_rmtval_invalidate(args);
+> -		if (error)
+> -			return error;
+> -
+> -		error = xfs_attr_rmtval_remove(args);
+> +		error = __xfs_attr_rmtval_remove(dac);
+> +		if (error == -EAGAIN)
+> +			dac->dela_state = XFS_DAS_RM_LBLK;
+>  		if (error)
+>  			return error;
+>  	}
+> @@ -965,23 +1056,38 @@ xfs_attr_node_hasname(
+>   *
+>   * "Remote" attribute values confuse the issue and atomic rename operations
+>   * add a whole extra layer of confusion on top of that.
+> + *
+> + * This routine is meant to function as a delayed operation, and may return
+> + * -EAGAIN when the transaction needs to be rolled.  Calling functions will need
+> + * to handle this, and recall the function until a successful error code is
+> + *returned.
+>   */
+>  STATIC int
+>  xfs_attr_node_addname(
+> -	struct xfs_da_args	*args)
+> +	struct xfs_delattr_context	*dac)
+>  {
+> -	struct xfs_da_state	*state;
+> -	struct xfs_da_state_blk	*blk;
+> -	struct xfs_inode	*dp;
+> -	int			retval, error;
+> +	struct xfs_da_args		*args = dac->da_args;
+> +	struct xfs_da_state		*state = NULL;
+> +	struct xfs_da_state_blk		*blk;
+> +	int				retval = 0;
+> +	int				error = 0;
+>  
+>  	trace_xfs_attr_node_addname(args);
+>  
+> -	/*
+> -	 * Fill in bucket of arguments/results/context to carry around.
+> -	 */
+> -	dp = args->dp;
+> -restart:
+> +	/* State machine switch */
+> +	switch (dac->dela_state) {
+> +	case XFS_DAS_FLIP_NFLAG:
+> +		goto das_flip_flag;
+> +	case XFS_DAS_FOUND_NBLK:
+> +		goto das_found_nblk;
+> +	case XFS_DAS_ALLOC_NODE:
+> +		goto das_alloc_node;
+> +	case XFS_DAS_RM_NBLK:
+> +		goto das_rm_nblk;
+> +	default:
+> +		break;
+> +	}
+> +
+>  	/*
+>  	 * Search to see if name already exists, and get back a pointer
+>  	 * to where it should go.
+> @@ -1027,19 +1133,13 @@ xfs_attr_node_addname(
+>  			error = xfs_attr3_leaf_to_node(args);
+>  			if (error)
+>  				goto out;
+> -			error = xfs_defer_finish(&args->trans);
+> -			if (error)
+> -				goto out;
+>  
+>  			/*
+> -			 * Commit the node conversion and start the next
+> -			 * trans in the chain.
+> +			 * Restart routine from the top.  No need to set  the
+> +			 * state
+>  			 */
+> -			error = xfs_trans_roll_inode(&args->trans, dp);
+> -			if (error)
+> -				goto out;
+> -
+> -			goto restart;
+> +			dac->flags |= XFS_DAC_DEFER_FINISH;
+> +			return -EAGAIN;
+
+What state are we in here?  Are we still in the same state that we were
+at the start of the function, but ready to try xfs_attr3_leaf_add again?
+
+>  		}
+>  
+>  		/*
+> @@ -1051,9 +1151,7 @@ xfs_attr_node_addname(
+>  		error = xfs_da3_split(state);
+>  		if (error)
+>  			goto out;
+> -		error = xfs_defer_finish(&args->trans);
+> -		if (error)
+> -			goto out;
+> +		dac->flags |= XFS_DAC_DEFER_FINISH;
+>  	} else {
+>  		/*
+>  		 * Addition succeeded, update Btree hashvals.
+> @@ -1068,13 +1166,9 @@ xfs_attr_node_addname(
+>  	xfs_da_state_free(state);
+>  	state = NULL;
+>  
+> -	/*
+> -	 * Commit the leaf addition or btree split and start the next
+> -	 * trans in the chain.
+> -	 */
+> -	error = xfs_trans_roll_inode(&args->trans, dp);
+> -	if (error)
+> -		goto out;
+> +	dac->dela_state = XFS_DAS_FOUND_NBLK;
+> +	return -EAGAIN;
+> +das_found_nblk:
+>  
+>  	/*
+>  	 * If there was an out-of-line value, allocate the blocks we
+> @@ -1083,7 +1177,27 @@ xfs_attr_node_addname(
+>  	 * maximum size of a transaction and/or hit a deadlock.
+>  	 */
+>  	if (args->rmtblkno > 0) {
+> -		error = xfs_attr_rmtval_set(args);
+> +		/* Open coded xfs_attr_rmtval_set without trans handling */
+> +		error = xfs_attr_rmtval_find_space(dac);
+> +		if (error)
+> +			return error;
+> +
+> +		/*
+> +		 * Roll through the "value", allocating blocks on disk as
+> +		 * required.
+> +		 */
+> +das_alloc_node:
+> +		if (dac->blkcnt > 0) {
+> +			error = xfs_attr_rmtval_set_blk(dac);
+> +			if (error)
+> +				return error;
+> +
+> +			dac->flags |= XFS_DAC_DEFER_FINISH;
+> +			dac->dela_state = XFS_DAS_ALLOC_NODE;
+> +			return -EAGAIN;
+> +		}
+> +
+> +		error = xfs_attr_rmtval_set_value(args);
+>  		if (error)
+>  			return error;
+>  	}
+> @@ -1113,22 +1227,28 @@ xfs_attr_node_addname(
+>  	/*
+>  	 * Commit the flag value change and start the next trans in series
+>  	 */
+> -	error = xfs_trans_roll_inode(&args->trans, args->dp);
+> -	if (error)
+> -		goto out;
+> -
+> +	dac->dela_state = XFS_DAS_FLIP_NFLAG;
+> +	return -EAGAIN;
+> +das_flip_flag:
+>  	/*
+>  	 * Dismantle the "old" attribute/value pair by removing a "remote" value
+>  	 * (if it exists).
+>  	 */
+>  	xfs_attr_restore_rmt_blk(args);
+>  
+> +	error = xfs_attr_rmtval_invalidate(args);
+> +	if (error)
+> +		return error;
+> +
+> +das_rm_nblk:
+>  	if (args->rmtblkno) {
+> -		error = xfs_attr_rmtval_invalidate(args);
+> -		if (error)
+> -			return error;
+> +		error = __xfs_attr_rmtval_remove(dac);
+> +
+> +		if (error == -EAGAIN) {
+> +			dac->dela_state = XFS_DAS_RM_NBLK;
+> +			return -EAGAIN;
+> +		}
+>  
+> -		error = xfs_attr_rmtval_remove(args);
+>  		if (error)
+>  			return error;
+>  	}
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 64dcf0f..501f9df 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -106,6 +106,118 @@ struct xfs_attr_list_context {
+>   *	                                      v         │
+>   *	                                     done <─────┘
+>   *
+> + *
+> + * Below is a state machine diagram for attr set operations.
+> + *
+> + *  xfs_attr_set_iter()
+> + *             │
+> + *             v
+
+I think this diagram is missing the part where we attempt to add a
+shortform attr?
+
+--D
+
+> + *   ┌───n── fork has
+> + *   │	    only 1 blk?
+> + *   │		│
+> + *   │		y
+> + *   │		│
+> + *   │		v
+> + *   │	xfs_attr_leaf_try_add()
+> + *   │		│
+> + *   │		v
+> + *   │	     had enough
+> + *   ├───n────space?
+> + *   │		│
+> + *   │		y
+> + *   │		│
+> + *   │		v
+> + *   │	XFS_DAS_FOUND_LBLK ──┐
+> + *   │	                     │
+> + *   │	XFS_DAS_FLIP_LFLAG ──┤
+> + *   │	(subroutine state)   │
+> + *   │		             │
+> + *   │		             └─>xfs_attr_leaf_addname()
+> + *   │		                      │
+> + *   │		                      v
+> + *   │		                   was this
+> + *   │		                   a rename? ──n─┐
+> + *   │		                      │          │
+> + *   │		                      y          │
+> + *   │		                      │          │
+> + *   │		                      v          │
+> + *   │		                flip incomplete  │
+> + *   │		                    flag         │
+> + *   │		                      │          │
+> + *   │		                      v          │
+> + *   │		              XFS_DAS_FLIP_LFLAG │
+> + *   │		                      │          │
+> + *   │		                      v          │
+> + *   │		                    remove       │
+> + *   │		XFS_DAS_RM_LBLK ─> old name      │
+> + *   │		         ^            │          │
+> + *   │		         │            v          │
+> + *   │		         └──────y── more to      │
+> + *   │		                    remove       │
+> + *   │		                      │          │
+> + *   │		                      n          │
+> + *   │		                      │          │
+> + *   │		                      v          │
+> + *   │		                     done <──────┘
+> + *   └──> XFS_DAS_FOUND_NBLK ──┐
+> + *	  (subroutine state)   │
+> + *	                       │
+> + *	  XFS_DAS_ALLOC_NODE ──┤
+> + *	  (subroutine state)   │
+> + *	                       │
+> + *	  XFS_DAS_FLIP_NFLAG ──┤
+> + *	  (subroutine state)   │
+> + *	                       │
+> + *	                       └─>xfs_attr_node_addname()
+> + *	                               │
+> + *	                               v
+> + *	                       find space to store
+> + *	                      attr. Split if needed
+> + *	                               │
+> + *	                               v
+> + *	                       XFS_DAS_FOUND_NBLK
+> + *	                               │
+> + *	                               v
+> + *	                 ┌─────n──  need to
+> + *	                 │        alloc blks?
+> + *	                 │             │
+> + *	                 │             y
+> + *	                 │             │
+> + *	                 │             v
+> + *	                 │  ┌─>XFS_DAS_ALLOC_NODE
+> + *	                 │  │          │
+> + *	                 │  │          v
+> + *	                 │  └──y── need to alloc
+> + *	                 │         more blocks?
+> + *	                 │             │
+> + *	                 │             n
+> + *	                 │             │
+> + *	                 │             v
+> + *	                 │          was this
+> + *	                 └────────> a rename? ──n─┐
+> + *	                               │          │
+> + *	                               y          │
+> + *	                               │          │
+> + *	                               v          │
+> + *	                         flip incomplete  │
+> + *	                             flag         │
+> + *	                               │          │
+> + *	                               v          │
+> + *	                       XFS_DAS_FLIP_NFLAG │
+> + *	                               │          │
+> + *	                               v          │
+> + *	                             remove       │
+> + *	         XFS_DAS_RM_NBLK ─> old name      │
+> + *	                  ^            │          │
+> + *	                  │            v          │
+> + *	                  └──────y── more to      │
+> + *	                             remove       │
+> + *	                               │          │
+> + *	                               n          │
+> + *	                               │          │
+> + *	                               v          │
+> + *	                              done <──────┘
+> + *
+>   */
+>  
+>  /*
+> @@ -120,6 +232,13 @@ struct xfs_attr_list_context {
+>  enum xfs_delattr_state {
+>  	XFS_DAS_UNINIT		= 0,  /* No state has been set yet */
+>  	XFS_DAS_RM_SHRINK,	      /* We are shrinking the tree */
+> +	XFS_DAS_FOUND_LBLK,	      /* We found leaf blk for attr */
+> +	XFS_DAS_FOUND_NBLK,	      /* We found node blk for attr */
+> +	XFS_DAS_FLIP_LFLAG,	      /* Flipped leaf INCOMPLETE attr flag */
+> +	XFS_DAS_RM_LBLK,	      /* A rename is removing leaf blocks */
+> +	XFS_DAS_ALLOC_NODE,	      /* We are allocating node blocks */
+> +	XFS_DAS_FLIP_NFLAG,	      /* Flipped node INCOMPLETE attr flag */
+> +	XFS_DAS_RM_NBLK,	      /* A rename is removing node blocks */
+>  };
+>  
+>  /*
+> @@ -127,6 +246,7 @@ enum xfs_delattr_state {
+>   */
+>  #define XFS_DAC_DEFER_FINISH		0x01 /* finish the transaction */
+>  #define XFS_DAC_NODE_RMVNAME_INIT	0x02 /* xfs_attr_node_removename init */
+> +#define XFS_DAC_LEAF_ADDNAME_INIT	0x04 /* xfs_attr_leaf_addname init*/
+>  
+>  /*
+>   * Context used for keeping track of delayed attribute operations
+> @@ -134,6 +254,11 @@ enum xfs_delattr_state {
+>  struct xfs_delattr_context {
+>  	struct xfs_da_args      *da_args;
+>  
+> +	/* Used in xfs_attr_rmtval_set_blk to roll through allocating blocks */
+> +	struct xfs_bmbt_irec	map;
+> +	xfs_dablk_t		lblkno;
+> +	int			blkcnt;
+> +
+>  	/* Used in xfs_attr_node_removename to roll through removing blocks */
+>  	struct xfs_da_state     *da_state;
+>  
+> @@ -160,7 +285,6 @@ int xfs_attr_set_args(struct xfs_da_args *args);
+>  int xfs_has_attr(struct xfs_da_args *args);
+>  int xfs_attr_remove_args(struct xfs_da_args *args);
+>  int xfs_attr_remove_iter(struct xfs_delattr_context *dac);
+> -int xfs_attr_trans_roll(struct xfs_delattr_context *dac);
+>  bool xfs_attr_namecheck(const void *name, size_t length);
+>  void xfs_delattr_context_init(struct xfs_delattr_context *dac,
+>  			      struct xfs_da_args *args);
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index 1426c15..5b445e7 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -441,7 +441,7 @@ xfs_attr_rmtval_get(
+>   * Find a "hole" in the attribute address space large enough for us to drop the
+>   * new attribute's value into
+>   */
+> -STATIC int
+> +int
+>  xfs_attr_rmt_find_hole(
+>  	struct xfs_da_args	*args)
+>  {
+> @@ -468,7 +468,7 @@ xfs_attr_rmt_find_hole(
+>  	return 0;
+>  }
+>  
+> -STATIC int
+> +int
+>  xfs_attr_rmtval_set_value(
+>  	struct xfs_da_args	*args)
+>  {
+> @@ -628,6 +628,69 @@ xfs_attr_rmtval_set(
+>  }
+>  
+>  /*
+> + * Find a hole for the attr and store it in the delayed attr context.  This
+> + * initializes the context to roll through allocating an attr extent for a
+> + * delayed attr operation
+> + */
+> +int
+> +xfs_attr_rmtval_find_space(
+> +	struct xfs_delattr_context	*dac)
+> +{
+> +	struct xfs_da_args		*args = dac->da_args;
+> +	struct xfs_bmbt_irec		*map = &dac->map;
+> +	int				error;
+> +
+> +	dac->lblkno = 0;
+> +	dac->blkcnt = 0;
+> +	args->rmtblkcnt = 0;
+> +	args->rmtblkno = 0;
+> +	memset(map, 0, sizeof(struct xfs_bmbt_irec));
+> +
+> +	error = xfs_attr_rmt_find_hole(args);
+> +	if (error)
+> +		return error;
+> +
+> +	dac->blkcnt = args->rmtblkcnt;
+> +	dac->lblkno = args->rmtblkno;
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Write one block of the value associated with an attribute into the
+> + * out-of-line buffer that we have defined for it. This is similar to a subset
+> + * of xfs_attr_rmtval_set, but records the current block to the delayed attr
+> + * context, and leaves transaction handling to the caller.
+> + */
+> +int
+> +xfs_attr_rmtval_set_blk(
+> +	struct xfs_delattr_context	*dac)
+> +{
+> +	struct xfs_da_args		*args = dac->da_args;
+> +	struct xfs_inode		*dp = args->dp;
+> +	struct xfs_bmbt_irec		*map = &dac->map;
+> +	int nmap;
+> +	int error;
+> +
+> +	nmap = 1;
+> +	error = xfs_bmapi_write(args->trans, dp, (xfs_fileoff_t)dac->lblkno,
+> +				dac->blkcnt, XFS_BMAPI_ATTRFORK, args->total,
+> +				map, &nmap);
+> +	if (error)
+> +		return error;
+> +
+> +	ASSERT(nmap == 1);
+> +	ASSERT((map->br_startblock != DELAYSTARTBLOCK) &&
+> +	       (map->br_startblock != HOLESTARTBLOCK));
+> +
+> +	/* roll attribute extent map forwards */
+> +	dac->lblkno += map->br_blockcount;
+> +	dac->blkcnt -= map->br_blockcount;
+> +
+> +	return 0;
+> +}
+> +
+> +/*
+>   * Remove the value associated with an attribute by deleting the
+>   * out-of-line buffer that it is stored on.
+>   */
+> @@ -669,38 +732,6 @@ xfs_attr_rmtval_invalidate(
+>  }
+>  
+>  /*
+> - * Remove the value associated with an attribute by deleting the
+> - * out-of-line buffer that it is stored on.
+> - */
+> -int
+> -xfs_attr_rmtval_remove(
+> -	struct xfs_da_args		*args)
+> -{
+> -	int				error;
+> -	struct xfs_delattr_context	dac  = {
+> -		.da_args	= args,
+> -	};
+> -
+> -	trace_xfs_attr_rmtval_remove(args);
+> -
+> -	/*
+> -	 * Keep de-allocating extents until the remote-value region is gone.
+> -	 */
+> -	do {
+> -		error = __xfs_attr_rmtval_remove(&dac);
+> -		if (error != -EAGAIN)
+> -			break;
+> -
+> -		error = xfs_attr_trans_roll(&dac);
+> -		if (error)
+> -			return error;
+> -
+> -	} while (true);
+> -
+> -	return error;
+> -}
+> -
+> -/*
+>   * Remove the value associated with an attribute by deleting the out-of-line
+>   * buffer that it is stored on. Returns EAGAIN for the caller to refresh the
+>   * transaction and re-call the function
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+> index 002fd30..84e2700 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.h
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+> @@ -15,4 +15,8 @@ int xfs_attr_rmtval_stale(struct xfs_inode *ip, struct xfs_bmbt_irec *map,
+>  		xfs_buf_flags_t incore_flags);
+>  int xfs_attr_rmtval_invalidate(struct xfs_da_args *args);
+>  int __xfs_attr_rmtval_remove(struct xfs_delattr_context *dac);
+> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
+> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
+> +int xfs_attr_rmtval_set_blk(struct xfs_delattr_context *dac);
+> +int xfs_attr_rmtval_find_space(struct xfs_delattr_context *dac);
+>  #endif /* __XFS_ATTR_REMOTE_H__ */
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 8695165..e9dde4e 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1925,7 +1925,6 @@ DEFINE_ATTR_EVENT(xfs_attr_refillstate);
+>  
+>  DEFINE_ATTR_EVENT(xfs_attr_rmtval_get);
+>  DEFINE_ATTR_EVENT(xfs_attr_rmtval_set);
+> -DEFINE_ATTR_EVENT(xfs_attr_rmtval_remove);
+>  
+>  #define DEFINE_DA_EVENT(name) \
+>  DEFINE_EVENT(xfs_da_class, name, \
+> -- 
+> 2.7.4
+> 
