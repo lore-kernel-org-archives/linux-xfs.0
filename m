@@ -2,158 +2,109 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B72C6C4742C
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 10:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCA32C388F9
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 16:07:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60E0320759
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 10:28:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 708642072C
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 16:07:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BmcP5zPb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727439AbgKKK2v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Nov 2020 05:28:51 -0500
-Received: from mx2.suse.de ([195.135.220.15]:58322 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727438AbgKKK2v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 11 Nov 2020 05:28:51 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 2474EADC1;
-        Wed, 11 Nov 2020 10:28:50 +0000 (UTC)
-Date:   Wed, 11 Nov 2020 11:28:48 +0100
-From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: show the dax option in mount options.
-Message-ID: <20201111102848.GD29778@kitsune.suse.cz>
-References: <cover.1604948373.git.msuchanek@suse.de>
- <f9f7ba25e97dacd92c09eb3ee6a4aca8b4f72b00.1604948373.git.msuchanek@suse.de>
- <20201109192419.GC9695@magnolia>
- <20201109202705.GZ29778@kitsune.suse.cz>
- <20201109210823.GI7391@dread.disaster.area>
+        id S1725959AbgKKQHR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 11 Nov 2020 11:07:17 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:36038 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725933AbgKKQHQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Nov 2020 11:07:16 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ABG3sbh095035;
+        Wed, 11 Nov 2020 16:07:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=waaiuNtgFRr9ugHYtNib/vvckyjZK0Sz6dx8wla8VN8=;
+ b=BmcP5zPbBwkwN2zJhWCBNlwqzip3AYYlS+8rjpM7ko0GoPo20tNJ4rmHmXRiMx0zzhqZ
+ 9+1TuuDHNuIuu2JmFUcpT7j+oAv0cUyxzHZ86Mu8kyvhux7RQoa/BZVBr+oxZJD13kDu
+ tQRsMZ4+upB9D2OE36HivXQkfgDFlEj7t7NUsg8QG1Q1OYr0/m8nxWTJZIRHBhmnQeVV
+ 0cgayI+BhuTyQbx7nvExN9KZXmLNsBgLYc1c4Tcq1QOeEnERF3k79Kp77eCiK2vZ7qXM
+ qjl3fdow5L45hlLYKedGUNqRHqD3G49csNpZOjzsuNHGiQD6fFXyieHpo+4qLO2HEs2o wg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 34nkhm1jcu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 11 Nov 2020 16:07:12 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ABG6Cke123116;
+        Wed, 11 Nov 2020 16:07:11 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 34p5gyjg5n-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 11 Nov 2020 16:07:11 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0ABG78Ji006487;
+        Wed, 11 Nov 2020 16:07:08 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 11 Nov 2020 08:07:08 -0800
+Date:   Wed, 11 Nov 2020 08:07:09 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix a missing unlock on error in xfs_fs_map_blocks
+Message-ID: <20201111160709.GQ9695@magnolia>
+References: <20201111094326.3513946-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201109210823.GI7391@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20201111094326.3513946-1-hch@lst.de>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
+ spamscore=0 phishscore=0 adultscore=0 malwarescore=0 suspectscore=1
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011110095
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
+ mlxscore=0 suspectscore=1 mlxlogscore=999 lowpriorityscore=0 spamscore=0
+ malwarescore=0 adultscore=0 clxscore=1015 bulkscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011110095
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 10, 2020 at 08:08:23AM +1100, Dave Chinner wrote:
-> On Mon, Nov 09, 2020 at 09:27:05PM +0100, Michal Suchánek wrote:
-> > On Mon, Nov 09, 2020 at 11:24:19AM -0800, Darrick J. Wong wrote:
-> > > On Mon, Nov 09, 2020 at 08:10:08PM +0100, Michal Suchanek wrote:
-> > > > xfs accepts both dax and dax_enum but shows only dax_enum. Show both
-> > > > options.
-> > > > 
-> > > > Fixes: 8d6c3446ec23 ("fs/xfs: Make DAX mount option a tri-state")
-> > > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
-> > > > ---
-> > > >  fs/xfs/xfs_super.c | 2 +-
-> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > index e3e229e52512..a3b00003840d 100644
-> > > > --- a/fs/xfs/xfs_super.c
-> > > > +++ b/fs/xfs/xfs_super.c
-> > > > @@ -163,7 +163,7 @@ xfs_fs_show_options(
-> > > >  		{ XFS_MOUNT_GRPID,		",grpid" },
-> > > >  		{ XFS_MOUNT_DISCARD,		",discard" },
-> > > >  		{ XFS_MOUNT_LARGEIO,		",largeio" },
-> > > > -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
-> > > > +		{ XFS_MOUNT_DAX_ALWAYS,		",dax,dax=always" },
-> > > 
-> > > NAK, programs that require DAX semantics for files stored on XFS must
-> > > call statx to detect the STATX_ATTR_DAX flag, as outlined in "Enabling
-> > > DAX on xfs" in Documentation/filesystems/dax.txt.
-> > statx can be used to query S_DAX.  NOTE that only regular files will
-> > ever have S_DAX set and therefore statx will never indicate that S_DAX
-> > is set on directories.
+On Wed, Nov 11, 2020 at 10:43:26AM +0100, Christoph Hellwig wrote:
+> We also need to drop the iolock when invalidate_inode_pages2 fails, not
+> only on all other error or successful cases.
 > 
-> Yup, by design.
-> 
-> The application doesn't need to do anything complex to make this
-> work. If the app wants to use DAX, then it should use
-> FS_IOC_FS{GS}ETXATTR to always set the on disk per inode DAX flags
-> for it's data dirs and files, and then STATX_ATTR_DAX will *always*
-> tell it whether DAX is actively in use at runtime. It's pretty
-> simple, really.
-> 
-> > The filesystem may not have any files so statx cannot be used.
-> 
-> Really?  The app or installer is about to *write to the fs* and has
-> all the permissions it needs to modify the contents of the fs. It's
-> pretty simple to create a tmpdir, set the DAX flag on the tmpdir,
-> then create a tmpfile in the tmpdir and run STATX_ATTR_DAX on it to
-> see if DAX is active or not.....
+> Fixes: 527851124d10 ("xfs: implement pNFS export operations")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Have you ever seen a 'wizard' style installer?
+Looks good to me,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Like one that firsts asks what to install, and then presents a list of
-suitable locations that have enough space, supported filesystem features
-enabled, and whatnot?
+--D
 
-So to present a list of mountpoints that support DAX one has to scribble
-over every mountpoint on the system?
-
-That sounds ridiculous.
+> ---
+>  fs/xfs/xfs_pnfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> However, keep in mind that from a system design perspective having
-> the installer detect DAX properties to make application level
-> install/config decisions is problematic from a lot of different
-> angles.
+> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+> index b101feb2aab452..f3082a957d5e1a 100644
+> --- a/fs/xfs/xfs_pnfs.c
+> +++ b/fs/xfs/xfs_pnfs.c
+> @@ -134,7 +134,7 @@ xfs_fs_map_blocks(
+>  		goto out_unlock;
+>  	error = invalidate_inode_pages2(inode->i_mapping);
+>  	if (WARN_ON_ONCE(error))
+> -		return error;
+> +		goto out_unlock;
+>  
+>  	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + length);
+>  	offset_fsb = XFS_B_TO_FSBT(mp, offset);
+> -- 
+> 2.28.0
 > 
-> - DAX is property of the *block device*, not the filesystem, so the
->   filesystem can make arbitrary decisions on whether to use DAX or
->   not to access data and these can change at any time without
->   warning.
-It is property of the mount point. Device supporting DAX is useless on
-its own - the filesystem must support and enable it as well. Filesystem
-support on its own is useless - it must be on a device that supports
-DAX, has matching block sise, it must be enabled at mount time.
-
-Then don't be surprised that the users use 'creative' ways to determine
-the information the kernel chooses to not share with them.
-> 
-> - Some filesystems may not have any user visible signs they are
->   using DAX to access data except for STATX_ATTR_DAX because they
->   always use DAX and only work on DAX capable block devices. e.g
->   NVFS.
-That's broken indeed.
-> 
-> - For filesystems where DAX is optional, the user can -always-
->   change the dax state of the fs (mount options) or even parts of
->   the filesystem (per inode flags) at any time after the installer
->   has run.
-The user can do a lot of thing indeed. They can even unmount the
-filesystem.
-> 
-> - The application might be storing it's data on a different
->   filesystem that isn't mounted at install time, so the installer
->   has no chance of detecting that the application is going to use
->   DAX enabled storage.
-> 
-> IOWs, the installer cannot make decisions based on DAX state on
-> behalf of applications because it does not know what environment the
-> application is going to be configured to run in.  DAX can only be
-> deteted reliably by the application at runtime inside it's
-> production execution environment.
-It can check that the mount point is suitable at the time of
-installation. Of course, if the system is reconfigured afterwards the
-application might fail. However, checking the requirements prior to
-installtion still provides valuable feedback to the user. They can be
-sure that the system was configured properly.
-
-Thanks
-
-Michal
