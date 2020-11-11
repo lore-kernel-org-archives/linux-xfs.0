@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F368C388F7
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:44:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 735F7C5517A
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:44:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2346721D7F
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:44:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33FCD21D7F
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:44:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jxn5dbZy"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dWS1KcIi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732437AbgKKAos (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 19:44:48 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:56044 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732432AbgKKAos (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:44:48 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0XrBu040631;
-        Wed, 11 Nov 2020 00:44:46 GMT
+        id S1732441AbgKKAoy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 19:44:54 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:48480 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732432AbgKKAoy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:44:54 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0XmHX110483;
+        Wed, 11 Nov 2020 00:44:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=y+SPDfh4kLI+6gCrC3nosZ+Q3ot+DI2IHj7DqRiI/+U=;
- b=jxn5dbZyyEkt6AoKd+EnoQluSim0hXgFSOp6bLOFWivpCe7Q3Lxev4lIFIONw2m4UPcR
- P8flJ6pbHiwptJX1nsoIHjVx9P6NF4IKJIOG3w42yL6VEj2XX2F/NpIZIwBxCR2MBcoY
- We+9R7Dgnkklher5HtXDinm8RJXLnn0KjKR4AohBHS774E+VwVcK2nHbUSvSKRM7p0it
- V9gjSkeESlClltedlOKZL73/MuLOD2dAkJiMLypoocETTPDM5U1JgbnANrbf1sa5fef4
- 1RqUe91fzsu99gy9ym23tR+6DpbdFAiu6ok8/kvDHnh6WHlCOI2OzY7f4YargCUQIKlv dA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2130.oracle.com with ESMTP id 34nh3axw4p-1
+ bh=tkXCYU/47noBy5aVHguIPhk5KrRsc7NNJTDueCtqj1s=;
+ b=dWS1KcIiKY34m5lpNDMw4EWyPsiiPpO4VDAz/tVFWBnKlJqkhtsdHR/cS8QUWONQidgH
+ YYFVM4lI3GZBSieVGW7Q8XRdxPUdBBhQ+mcR7Y2OeFMRN9Y8zcC2AJ6xWVC7+1768Skr
+ AQgpu8h4+JFLU7TYbDAJXSBA9mTDoQ55jkCxzMOeovdJw7JJBBP3dZmacFg+xQ09jM8r
+ EGxMGJXPzmfiGaVQNi/3mPqGPsk/cXFm7pMrSjFFwyjG9iJfIZyIrnRdHZN5rRKyLcel
+ whS9ut+a5/x40mmv+/Ru8ZSmbhEH0LZd5d0zLJr9f09AYt5MNuo/iv9mX2rQPE37hf1T SQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 34nkhkxnpf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 00:44:46 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0VCEp095247;
-        Wed, 11 Nov 2020 00:44:46 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 34p55paudw-1
+        Wed, 11 Nov 2020 00:44:52 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0UrOG171436;
+        Wed, 11 Nov 2020 00:44:52 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 34p5g12qbt-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Nov 2020 00:44:46 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AB0ijg7029360;
-        Wed, 11 Nov 2020 00:44:45 GMT
+        Wed, 11 Nov 2020 00:44:52 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AB0ipM8001091;
+        Wed, 11 Nov 2020 00:44:51 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Nov 2020 16:44:44 -0800
-Subject: [PATCH 1/4] fsx: fix strncpy usage error
+        with ESMTP ; Tue, 10 Nov 2020 16:44:50 -0800
+Subject: [PATCH 2/4] fsstress: stop using attr_set
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Tue, 10 Nov 2020 16:44:43 -0800
-Message-ID: <160505548377.1389938.2367585875193826371.stgit@magnolia>
+Date:   Tue, 10 Nov 2020 16:44:49 -0800
+Message-ID: <160505548994.1389938.10129281247073522665.stgit@magnolia>
 In-Reply-To: <160505547722.1389938.14377167906399924976.stgit@magnolia>
 References: <160505547722.1389938.14377167906399924976.stgit@magnolia>
 User-Agent: StGit/0.19
@@ -63,14 +63,14 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
+ adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=919 suspectscore=2
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011110001
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
- clxscore=1015 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=0
- mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
+ mlxscore=0 suspectscore=2 mlxlogscore=938 lowpriorityscore=0 spamscore=0
+ malwarescore=0 adultscore=0 clxscore=1015 bulkscore=0 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011110001
 Precedence: bulk
@@ -79,54 +79,58 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We shouldn't feed sizeof() to strncpy as the string length.  Just use
-snprintf, which at least doesn't have the zero termination problems.
-
-In file included from /usr/include/string.h:495,
-                 from ../src/global.h:73,
-                 from fsx.c:16:
-In function 'strncpy',
-    inlined from 'main' at fsx.c:2944:5:
-/usr/include/x86_64-linux-gnu/bits/string_fortified.h:106:10: warning:
-'__builtin_strncpy' specified bound 4096 equals destination size
-[-Wstringop-truncation]
-  106 |   return __builtin___strncpy_chk (__dest, __src, __len, __bos (__dest));
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In function 'strncpy',
-    inlined from 'main' at fsx.c:2914:4:
-/usr/include/x86_64-linux-gnu/bits/string_fortified.h:106:10: warning:
-'__builtin_strncpy' specified bound 1024 equals destination size
-[-Wstringop-truncation]
-  106 |   return __builtin___strncpy_chk (__dest, __src, __len, __bos (__dest));
-      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+attr_set is deprecated, so replace it with lsetxattr.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsx.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ ltp/fsstress.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 
-diff --git a/ltp/fsx.c b/ltp/fsx.c
-index 0abd7de1..cd0bae55 100644
---- a/ltp/fsx.c
-+++ b/ltp/fsx.c
-@@ -2769,8 +2769,7 @@ main(int argc, char **argv)
- 			randomoplen = 0;
- 			break;
- 		case 'P':
--			strncpy(dname, optarg, sizeof(dname));
--			strcat(dname, "/");
-+			snprintf(dname, sizeof(dname), "%s/", optarg);
- 			dirpath = strlen(dname);
- 			break;
-                 case 'R':
-@@ -2799,7 +2798,7 @@ main(int argc, char **argv)
- 			break;
- 		case 255:  /* --record-ops */
- 			if (optarg)
--				strncpy(opsfile, optarg, sizeof(opsfile));
-+				snprintf(opsfile, sizeof(opsfile), "%s", optarg);
- 			recordops = opsfile;
- 			break;
- 		case 256:  /* --replay-ops */
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index 1238fcf5..41b31060 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -395,7 +395,7 @@ void	add_to_flist(int, int, int, int);
+ void	append_pathname(pathname_t *, char *);
+ int	attr_list_path(pathname_t *, char *, const int, int, attrlist_cursor_t *);
+ int	attr_remove_path(pathname_t *, const char *, int);
+-int	attr_set_path(pathname_t *, const char *, const char *, const int, int);
++int	attr_set_path(pathname_t *, const char *, const char *, const int);
+ void	check_cwd(void);
+ void	cleanup_flist(void);
+ int	creat_path(pathname_t *, mode_t);
+@@ -909,19 +909,19 @@ attr_remove_path(pathname_t *name, const char *attrname, int flags)
+ 
+ int
+ attr_set_path(pathname_t *name, const char *attrname, const char *attrvalue,
+-	      const int valuelength, int flags)
++	      const int valuelength)
+ {
+ 	char		buf[NAME_MAX + 1];
+ 	pathname_t	newname;
+ 	int		rval;
+ 
+-	rval = attr_set(name->path, attrname, attrvalue, valuelength, flags);
++	rval = lsetxattr(name->path, attrname, attrvalue, valuelength, 0);
+ 	if (rval >= 0 || errno != ENAMETOOLONG)
+ 		return rval;
+ 	separate_pathname(name, buf, &newname);
+ 	if (chdir(buf) == 0) {
+-		rval = attr_set_path(&newname, attrname, attrvalue, valuelength,
+-			flags);
++		rval = attr_set_path(&newname, attrname, attrvalue,
++				     valuelength);
+ 		assert(chdir("..") == 0);
+ 	}
+ 	free_pathname(&newname);
+@@ -2392,7 +2392,7 @@ attr_set_f(int opno, long r)
+ 		len = 1;
+ 	aval = malloc(len);
+ 	memset(aval, nameseq & 0xff, len);
+-	e = attr_set_path(&f, aname, aval, len, ATTR_DONTFOLLOW) < 0 ?
++	e = attr_set_path(&f, aname, aval, len) < 0 ?
+ 		errno : 0;
+ 	check_cwd();
+ 	free(aval);
 
