@@ -2,67 +2,69 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B595C55ABD
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:44:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F368C388F7
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:44:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 422B021741
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:44:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2346721D7F
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:44:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eeypsEf4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jxn5dbZy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732033AbgKKAol (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 19:44:41 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:55940 "EHLO
+        id S1732437AbgKKAos (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 19:44:48 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:56044 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731713AbgKKAol (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:44:41 -0500
+        with ESMTP id S1732432AbgKKAos (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:44:48 -0500
 Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0Xwc2040688;
-        Wed, 11 Nov 2020 00:44:39 GMT
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0XrBu040631;
+        Wed, 11 Nov 2020 00:44:46 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : mime-version : content-type :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=cDUII2V+pipVAq3tinIKe87DBxXIZ/22TFE9+ZAwY94=;
- b=eeypsEf4Rkrv8d9k628ToZPlzxKjyZr4Os0P0T3fwSBUX0/PvzrbGt9nsgjeLS0WDM54
- aG5Gq6+x6R/GBeB248DVfD7FCbCHNFUVNHULSVClWLNzS45ULM1xJ/We3P7vjH8piVoB
- PTgrV0iD30LAfcHW31u/O4w2/+IvuWMEczUgqoNEGQun8CvYuDvP+eB5mQ3jySd2CmHE
- cLOr7I7ScRRJofMuCCeXc9IxE9l7aLLJ1NFL8bvteCpZRJ8gohfXbN6TlcFberFDRNQf
- w0yo4xS5fu4Tj60yvwJtxTR+e9W51h1PNJO4od7FJ9G/GJ3f6yyW29qb4dPmPWkxyd13 Kg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 34nh3axw47-1
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=y+SPDfh4kLI+6gCrC3nosZ+Q3ot+DI2IHj7DqRiI/+U=;
+ b=jxn5dbZyyEkt6AoKd+EnoQluSim0hXgFSOp6bLOFWivpCe7Q3Lxev4lIFIONw2m4UPcR
+ P8flJ6pbHiwptJX1nsoIHjVx9P6NF4IKJIOG3w42yL6VEj2XX2F/NpIZIwBxCR2MBcoY
+ We+9R7Dgnkklher5HtXDinm8RJXLnn0KjKR4AohBHS774E+VwVcK2nHbUSvSKRM7p0it
+ V9gjSkeESlClltedlOKZL73/MuLOD2dAkJiMLypoocETTPDM5U1JgbnANrbf1sa5fef4
+ 1RqUe91fzsu99gy9ym23tR+6DpbdFAiu6ok8/kvDHnh6WHlCOI2OzY7f4YargCUQIKlv dA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2130.oracle.com with ESMTP id 34nh3axw4p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 00:44:39 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0UrXB171476;
-        Wed, 11 Nov 2020 00:44:39 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 34p5g12q7p-1
+        Wed, 11 Nov 2020 00:44:46 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0VCEp095247;
+        Wed, 11 Nov 2020 00:44:46 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 34p55paudw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Nov 2020 00:44:39 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AB0icvc014039;
-        Wed, 11 Nov 2020 00:44:38 GMT
+        Wed, 11 Nov 2020 00:44:46 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AB0ijg7029360;
+        Wed, 11 Nov 2020 00:44:45 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Nov 2020 16:44:38 -0800
-Subject: [PATCH 0/4] xfstests: fix compiler warnings with fsx/fsstress
+        with ESMTP ; Tue, 10 Nov 2020 16:44:44 -0800
+Subject: [PATCH 1/4] fsx: fix strncpy usage error
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Tue, 10 Nov 2020 16:44:37 -0800
-Message-ID: <160505547722.1389938.14377167906399924976.stgit@magnolia>
+Date:   Tue, 10 Nov 2020 16:44:43 -0800
+Message-ID: <160505548377.1389938.2367585875193826371.stgit@magnolia>
+In-Reply-To: <160505547722.1389938.14377167906399924976.stgit@magnolia>
+References: <160505547722.1389938.14377167906399924976.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
- adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011110001
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
@@ -75,22 +77,56 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fix all the compiler warnings emitted when building fsstress and fsx.
+We shouldn't feed sizeof() to strncpy as the string length.  Just use
+snprintf, which at least doesn't have the zero termination problems.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+In file included from /usr/include/string.h:495,
+                 from ../src/global.h:73,
+                 from fsx.c:16:
+In function 'strncpy',
+    inlined from 'main' at fsx.c:2944:5:
+/usr/include/x86_64-linux-gnu/bits/string_fortified.h:106:10: warning:
+'__builtin_strncpy' specified bound 4096 equals destination size
+[-Wstringop-truncation]
+  106 |   return __builtin___strncpy_chk (__dest, __src, __len, __bos (__dest));
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In function 'strncpy',
+    inlined from 'main' at fsx.c:2914:4:
+/usr/include/x86_64-linux-gnu/bits/string_fortified.h:106:10: warning:
+'__builtin_strncpy' specified bound 1024 equals destination size
+[-Wstringop-truncation]
+  106 |   return __builtin___strncpy_chk (__dest, __src, __len, __bos (__dest));
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=fix-fsx-and-fsstress-warnings
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsstress.c |  102 ++++++++++++++++++++++++++------------------------------
- ltp/fsx.c      |    5 +--
- 2 files changed, 50 insertions(+), 57 deletions(-)
+ ltp/fsx.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index 0abd7de1..cd0bae55 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -2769,8 +2769,7 @@ main(int argc, char **argv)
+ 			randomoplen = 0;
+ 			break;
+ 		case 'P':
+-			strncpy(dname, optarg, sizeof(dname));
+-			strcat(dname, "/");
++			snprintf(dname, sizeof(dname), "%s/", optarg);
+ 			dirpath = strlen(dname);
+ 			break;
+                 case 'R':
+@@ -2799,7 +2798,7 @@ main(int argc, char **argv)
+ 			break;
+ 		case 255:  /* --record-ops */
+ 			if (optarg)
+-				strncpy(opsfile, optarg, sizeof(opsfile));
++				snprintf(opsfile, sizeof(opsfile), "%s", optarg);
+ 			recordops = opsfile;
+ 			break;
+ 		case 256:  /* --replay-ops */
 
