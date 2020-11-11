@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02279C388F7
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89754C55ABD
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:45:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4F0C21D7F
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:45:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38750221E9
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:45:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="avfYtBDs"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QEVdO8it"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732473AbgKKApH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 19:45:07 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:48600 "EHLO
+        id S1732432AbgKKApo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 19:45:44 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:48998 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732471AbgKKApH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:45:07 -0500
+        with ESMTP id S1731234AbgKKApo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:45:44 -0500
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0XmQC110506;
-        Wed, 11 Nov 2020 00:45:05 GMT
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0XmXW110516;
+        Wed, 11 Nov 2020 00:45:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=ZISJicSdjUHdd449hzWRzWMRs0WaLwYokQU7Kryy2ZU=;
- b=avfYtBDsYmR/9VC5uxA31DalPdbdKtcCQMcYSAHgY2fLU9KGlPeEvgOTjcboWdJb+XzB
- UDHkHtpHvTMSXgJh6rRN8uCqDnasnDYd2j1C7zWcZGJwbe7gBbuMs6OPTpT21kfkhZ9u
- 2ROzAjAnocK8jx36izW+V1QTs2a7y14bxgvoWowDL6wZqYiy3ANSBz8T/rUKmd1X4FpZ
- XtuO8hXzdkd9w03Kq1QwocPDjxp9P3r7O26c7yVziure0mfD6og0WqCw/vnERZSqamrP
- R5TLPBIHD0bqDq7gstOx13AvVYTWscuYfpaxd0nzAl4FsaSyiNGTSNeaazP5fUQPN8Wz hA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 34nkhkxnps-1
+ bh=5fcN2c6x1qnJaONISOZWck2J1DwRXoh1U4OLT3bUnLw=;
+ b=QEVdO8itcVedVEbiwTpagC5WLKA2CkXOLb4Zh0fe2v52Gb7m4TdqyTpB3leuAP4+1F/S
+ +B2d/O3sMIVZq7JWACgvdE9av1B+yeaOnCjTdRHaM7//H07waGcVQlwe9VdUUEEFPhPa
+ oFRVwJRCZ+UKJoJxtCqqN77yYNOd5kn8iQ+VNc/YDvez1qRuH6R7ckzycWxBvyqRNHoI
+ u+XhDxlLYF7zoC+P/qMjFsLOBcd40hB+A0LLAopXsiayIPslbj9lfkXcP/ZEvSk1bffB
+ wYT1wxgeff/r2yUqztKAnNKqHD2VWDNdTAniMfwiX0OKyFFrt/XaReCz4nR0oi0zeuux TQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 34nkhkxnqp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 00:45:05 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0U9OV097566;
-        Wed, 11 Nov 2020 00:45:04 GMT
+        Wed, 11 Nov 2020 00:45:42 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0VEuH095476;
+        Wed, 11 Nov 2020 00:43:42 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 34p5gxq7u1-1
+        by aserp3030.oracle.com with ESMTP id 34p55pattn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Nov 2020 00:45:04 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AB0j3uw029395;
-        Wed, 11 Nov 2020 00:45:03 GMT
+        Wed, 11 Nov 2020 00:43:42 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AB0heqm028935;
+        Wed, 11 Nov 2020 00:43:41 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Nov 2020 16:45:03 -0800
-Subject: [PATCH 4/4] fsstress: get rid of attr_list
+        with ESMTP ; Tue, 10 Nov 2020 16:43:40 -0800
+Subject: [PATCH 5/6] misc: fix _get_file_block_size usage
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com, guaneryu@gmail.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Tue, 10 Nov 2020 16:45:02 -0800
-Message-ID: <160505550232.1389938.14087037220733512558.stgit@magnolia>
-In-Reply-To: <160505547722.1389938.14377167906399924976.stgit@magnolia>
-References: <160505547722.1389938.14377167906399924976.stgit@magnolia>
+Date:   Tue, 10 Nov 2020 16:43:39 -0800
+Message-ID: <160505541965.1388647.5276414050359284933.stgit@magnolia>
+In-Reply-To: <160505537312.1388647.14788379902518687395.stgit@magnolia>
+References: <160505537312.1388647.14788379902518687395.stgit@magnolia>
 User-Agent: StGit/0.19
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- spamscore=0 phishscore=0 adultscore=0 malwarescore=0 suspectscore=2
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
+ mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011110001
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
- mlxscore=0 suspectscore=2 mlxlogscore=999 lowpriorityscore=0 spamscore=0
+ mlxscore=0 suspectscore=0 mlxlogscore=999 lowpriorityscore=0 spamscore=0
  malwarescore=0 adultscore=0 clxscore=1015 bulkscore=0 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011110001
@@ -79,153 +79,124 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-attr_list is deprecated, so just call llistxattr directly.  This is a
-bit involved, since attr_remove_f was highly dependent on libattr
-structures.  Note that attr_list uses llistxattr internally and
-llistxattr is limited to XATTR_LIST_MAX, so this doesn't result in any
-loss of functionality.
+Fix these tests that rely on the allocation unit size of a file, which
+might not necessarily be the fs block size.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- ltp/fsstress.c |   80 ++++++++++++++++++++++++++------------------------------
- 1 file changed, 37 insertions(+), 43 deletions(-)
+ tests/generic/157 |    2 +-
+ tests/generic/175 |    2 +-
+ tests/xfs/129     |    2 +-
+ tests/xfs/169     |    2 +-
+ tests/xfs/208     |    2 +-
+ tests/xfs/336     |    2 +-
+ tests/xfs/344     |    2 +-
+ tests/xfs/345     |    2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
 
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index ad42cb65..e4940ba4 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -393,7 +393,7 @@ struct print_string	flag_str = {0};
+diff --git a/tests/generic/157 b/tests/generic/157
+index 5ec8999e..379c38b9 100755
+--- a/tests/generic/157
++++ b/tests/generic/157
+@@ -46,7 +46,7 @@ testdir2=$SCRATCH_MNT/test-$seq
+ mkdir $testdir2
  
- void	add_to_flist(int, int, int, int);
- void	append_pathname(pathname_t *, char *);
--int	attr_list_path(pathname_t *, char *, const int, int, attrlist_cursor_t *);
-+int	attr_list_path(pathname_t *, char *, const int);
- int	attr_remove_path(pathname_t *, const char *);
- int	attr_set_path(pathname_t *, const char *, const char *, const int);
- void	check_cwd(void);
-@@ -860,28 +860,36 @@ append_pathname(pathname_t *name, char *str)
- 	name->len += len;
- }
+ echo "Create the original files"
+-blksz="$(_get_block_size $testdir1)"
++blksz="$(_get_file_block_size $testdir1)"
+ blks=1000
+ margin='7%'
+ sz=$((blksz * blks))
+diff --git a/tests/generic/175 b/tests/generic/175
+index f1b73522..436d2cca 100755
+--- a/tests/generic/175
++++ b/tests/generic/175
+@@ -41,7 +41,7 @@ testdir="$SCRATCH_MNT/test-$seq"
+ mkdir "$testdir"
  
-+int
-+attr_list_count(char *buffer, int buffersize)
-+{
-+	char *p = buffer;
-+	char *end = buffer + buffersize;
-+	int count = 0;
-+
-+	while (p < end && *p != 0) {
-+		count++;
-+		p += strlen(p) + 1;
-+	}
-+
-+	return count;
-+}
-+
- int
- attr_list_path(pathname_t *name,
- 	       char *buffer,
--	       const int buffersize,
--	       int flags,
--	       attrlist_cursor_t *cursor)
-+	       const int buffersize)
- {
- 	char		buf[NAME_MAX + 1];
- 	pathname_t	newname;
- 	int		rval;
+ echo "Create a one block file"
+-blksz="$(_get_block_size $testdir)"
++blksz="$(_get_file_block_size $testdir)"
+ _pwrite_byte 0x61 0 $blksz "$testdir/file1" >> "$seqres.full"
  
--	if (flags != ATTR_DONTFOLLOW) {
--		errno = EINVAL;
--		return -1;
--	}
--
--	rval = attr_list(name->path, buffer, buffersize, flags, cursor);
-+	rval = llistxattr(name->path, buffer, buffersize);
- 	if (rval >= 0 || errno != ENAMETOOLONG)
- 		return rval;
- 	separate_pathname(name, buf, &newname);
- 	if (chdir(buf) == 0) {
--		rval = attr_list_path(&newname, buffer, buffersize, flags, cursor);
-+		rval = attr_list_path(&newname, buffer, buffersize);
- 		assert(chdir("..") == 0);
- 	}
- 	free_pathname(&newname);
-@@ -2302,32 +2310,24 @@ aread_f(int opno, long r)
- void
- attr_remove_f(int opno, long r)
- {
--	attrlist_ent_t		*aep;
--	attrlist_t		*alist;
--	char			*aname;
--	char			buf[4096];
--	attrlist_cursor_t	cursor;
-+	char			*bufname;
-+	char			*bufend;
-+	char			*aname = NULL;
-+	char			buf[XATTR_LIST_MAX];
- 	int			e;
- 	int			ent;
- 	pathname_t		f;
--	int			total;
-+	int			total = 0;
- 	int			v;
- 	int			which;
+ fnr=19
+diff --git a/tests/xfs/129 b/tests/xfs/129
+index 5e348805..78baf5c4 100755
+--- a/tests/xfs/129
++++ b/tests/xfs/129
+@@ -44,7 +44,7 @@ mkdir $testdir
+ metadump_file=$TEST_DIR/${seq}_metadump
  
- 	init_pathname(&f);
- 	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
- 		append_pathname(&f, ".");
--	total = 0;
--	bzero(&cursor, sizeof(cursor));
--	do {
--		bzero(buf, sizeof(buf));
--		e = attr_list_path(&f, buf, sizeof(buf), ATTR_DONTFOLLOW, &cursor);
--		check_cwd();
--		if (e)
--			break;
--		alist = (attrlist_t *)buf;
--		total += alist->al_count;
--	} while (alist->al_more);
-+	e = attr_list_path(&f, buf, sizeof(buf));
-+	check_cwd();
-+	if (e > 0)
-+		total = attr_list_count(buf, e);
- 	if (total == 0) {
- 		if (v)
- 			printf("%d/%d: attr_remove - no attrs for %s\n",
-@@ -2335,25 +2335,19 @@ attr_remove_f(int opno, long r)
- 		free_pathname(&f);
- 		return;
- 	}
-+
- 	which = (int)(random() % total);
--	bzero(&cursor, sizeof(cursor));
-+	bufname = buf;
-+	bufend = buf + e;
- 	ent = 0;
--	aname = NULL;
--	do {
--		bzero(buf, sizeof(buf));
--		e = attr_list_path(&f, buf, sizeof(buf), ATTR_DONTFOLLOW, &cursor);
--		check_cwd();
--		if (e)
--			break;
--		alist = (attrlist_t *)buf;
--		if (which < ent + alist->al_count) {
--			aep = (attrlist_ent_t *)
--				&buf[alist->al_offset[which - ent]];
--			aname = aep->a_name;
-+	while (bufname < bufend) {
-+		if (which < ent) {
-+			aname = bufname;
- 			break;
- 		}
--		ent += alist->al_count;
--	} while (alist->al_more);
-+		ent++;
-+		bufname += strlen(bufname) + 1;
-+	}
- 	if (aname == NULL) {
- 		if (v)
- 			printf(
+ echo "Create the original file blocks"
+-blksz="$(_get_block_size $testdir)"
++blksz="$(_get_file_block_size $testdir)"
+ nr_blks=$((4 * blksz / 12))
+ _pwrite_byte 0x61 0 $((blksz * nr_blks)) $testdir/file1 >> $seqres.full
+ 
+diff --git a/tests/xfs/169 b/tests/xfs/169
+index 44577fbf..2051091f 100755
+--- a/tests/xfs/169
++++ b/tests/xfs/169
+@@ -42,7 +42,7 @@ testdir=$SCRATCH_MNT/test-$seq
+ mkdir $testdir
+ 
+ echo "Create the original file blocks"
+-blksz="$(_get_block_size $testdir)"
++blksz="$(_get_file_block_size $testdir)"
+ nr_blks=$((8 * blksz / 12))
+ 
+ for i in 1 2 x; do
+diff --git a/tests/xfs/208 b/tests/xfs/208
+index 104763d5..2a899fc0 100755
+--- a/tests/xfs/208
++++ b/tests/xfs/208
+@@ -56,7 +56,7 @@ bufnr=16
+ bufsize=$((blksz * bufnr))
+ 
+ _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
+-real_blksz=$(_get_block_size $testdir)
++real_blksz=$(_get_file_block_size $testdir)
+ internal_blks=$((filesize / real_blksz))
+ 
+ echo "Create the original files"
+diff --git a/tests/xfs/336 b/tests/xfs/336
+index 5f32f060..a006938d 100755
+--- a/tests/xfs/336
++++ b/tests/xfs/336
+@@ -39,7 +39,7 @@ _scratch_mkfs | _filter_mkfs 2>$tmp.mkfs >/dev/null
+ . $tmp.mkfs
+ cat $tmp.mkfs > "$seqres.full" 2>&1
+ _scratch_mount
+-blksz="$(_get_block_size $SCRATCH_MNT)"
++blksz="$(_get_file_block_size $SCRATCH_MNT)"
+ 
+ metadump_file=$TEST_DIR/${seq}_metadump
+ rm -rf $metadump_file
+diff --git a/tests/xfs/344 b/tests/xfs/344
+index b00541f6..46868fa5 100755
+--- a/tests/xfs/344
++++ b/tests/xfs/344
+@@ -55,7 +55,7 @@ bufnr=16
+ bufsize=$((blksz * bufnr))
+ 
+ _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
+-real_blksz=$(_get_block_size $testdir)
++real_blksz=$(_get_file_block_size $testdir)
+ internal_blks=$((filesize / real_blksz))
+ 
+ echo "Create the original files"
+diff --git a/tests/xfs/345 b/tests/xfs/345
+index ceb1dce9..4204cc22 100755
+--- a/tests/xfs/345
++++ b/tests/xfs/345
+@@ -53,7 +53,7 @@ bufnr=16
+ bufsize=$((blksz * bufnr))
+ 
+ _require_fs_space $SCRATCH_MNT $((filesize / 1024 * 3 * 5 / 4))
+-real_blksz=$(_get_block_size $testdir)
++real_blksz=$(_get_file_block_size $testdir)
+ internal_blks=$((filesize / real_blksz))
+ 
+ echo "Create the original files"
 
