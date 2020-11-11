@@ -2,116 +2,114 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 775A3C388F7
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:28:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA29C55ABD
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:42:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 263F82064B
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:28:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F51221D93
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:42:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iQTjZw16"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727275AbgKKA22 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 19:28:28 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48842 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730894AbgKKA22 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:28:28 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id AB08A58C4AC;
-        Wed, 11 Nov 2020 11:28:24 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kcdzm-009qhh-RV; Wed, 11 Nov 2020 11:28:18 +1100
-Date:   Wed, 11 Nov 2020 11:28:18 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Allison Henderson <allison.henderson@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v13 02/10] xfs: Add delay ready attr remove routines
-Message-ID: <20201111002818.GJ7391@dread.disaster.area>
-References: <20201023063435.7510-1-allison.henderson@oracle.com>
- <20201023063435.7510-3-allison.henderson@oracle.com>
- <20201110234331.GL9695@magnolia>
+        id S1731746AbgKKAm7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 19:42:59 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:47280 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727275AbgKKAm6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:42:58 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0XmQ3110506;
+        Wed, 11 Nov 2020 00:42:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=fo421s2EnfwyVevtgX+Hd+uckNvuyOPPkrlrr0SDd2M=;
+ b=iQTjZw16pus4DNs+/UrT5jPFTXm5puYcXFt5z9z/jZvjxvbyTWi+IJGZFawjHb22Ozsa
+ PaKh0FJBGE7wKcaDKq3Mesvn2Zq+q8hQ2wz3nmnv5TSlKsauCPy3QB8ncESvoEJr7N8I
+ y0no4nYmDSvjTmg9Fp3yoxFxtGWwbw4r/rk3xFwUSPJJsvTC8Acz47LtC579dmIdE5H8
+ tC053kpUPc6cHy76vUAT/Og45kPUT0sMOZWvn1Eup2CdwLkwk8UYhAxB/Ee/HGMFYMk3
+ QHVx2kGTRv39iPsnDAHEIOzdswWVckv2tStJ/uknDgUdl9L5tHrHPe7evto+qu7bSHV9 oA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 34nkhkxnk1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 11 Nov 2020 00:42:56 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0VEMR095430;
+        Wed, 11 Nov 2020 00:42:56 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 34p55pata7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 11 Nov 2020 00:42:55 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AB0gsnc000331;
+        Wed, 11 Nov 2020 00:42:54 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 10 Nov 2020 16:42:54 -0800
+Subject: [PATCH 0/6] xfstests: random fixes
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com, guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Date:   Tue, 10 Nov 2020 16:42:53 -0800
+Message-ID: <160505537312.1388647.14788379902518687395.stgit@magnolia>
+User-Agent: StGit/0.19
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201110234331.GL9695@magnolia>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=F8MpiZpN c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=kj9zAlcOel0A:10 a=nNwsprhYR40A:10 a=7-415B0cAAAA:8
-        a=O4jiMZvonYGVslo09fcA:9 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
+ mlxlogscore=998 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011110001
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
+ mlxscore=0 suspectscore=0 mlxlogscore=999 lowpriorityscore=0 spamscore=0
+ malwarescore=0 adultscore=0 clxscore=1015 bulkscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011110001
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 10, 2020 at 03:43:31PM -0800, Darrick J. Wong wrote:
-> On Thu, Oct 22, 2020 at 11:34:27PM -0700, Allison Henderson wrote:
-> > +/*
-> > + * Remove the attribute specified in @args.
-> > + *
-> > + * This function may return -EAGAIN to signal that the transaction needs to be
-> > + * rolled.  Callers should continue calling this function until they receive a
-> > + * return value other than -EAGAIN.
-> > + */
-> > +int
-> > +xfs_attr_remove_iter(
-> > +	struct xfs_delattr_context	*dac)
-> > +{
-> > +	struct xfs_da_args		*args = dac->da_args;
-> > +	struct xfs_inode		*dp = args->dp;
-> > +
-> > +	if (dac->dela_state == XFS_DAS_RM_SHRINK)
-> > +		goto node;
-> >  
-> 
-> Might as well just make this part of the if statement dispatch:
-> 
-> 	if (dac->dela_state == XFS_DAS_RM_SHRINK)
-> 		return xfs_attr_node_removename_iter(dac);
-> 	else if (!xfs_inode_hasattr(dp))
-> 		return -ENOATTR;
-> 
-> >  	if (!xfs_inode_hasattr(dp)) {
-> > -		error = -ENOATTR;
-> > +		return -ENOATTR;
-> >  	} else if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL) {
-> >  		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> > -		error = xfs_attr_shortform_remove(args);
-> > +		return xfs_attr_shortform_remove(args);
-> >  	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> > -		error = xfs_attr_leaf_removename(args);
-> > -	} else {
-> > -		error = xfs_attr_node_removename(args);
-> > +		return xfs_attr_leaf_removename(args);
-> >  	}
-> > -
-> > -	return error;
-> > +node:
-> > +	return  xfs_attr_node_removename_iter(dac);
+Hi all,
 
-Just a nitpick on this anti-pattern: else is not necessary
-when the branch returns.
+This series contains random fixes to fstests.
 
-	if (!xfs_inode_hasattr(dp))
-		return -ENOATTR;
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-	if (dac->dela_state == XFS_DAS_RM_SHRINK)
-		return xfs_attr_node_removename_iter(dac);
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-	if (dp->i_afp->if_format == XFS_DINODE_FMT_LOCAL) {
-		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-		return xfs_attr_shortform_remove(args);
-	}
+--D
 
-	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK))
-		return xfs_attr_leaf_removename(args);
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=random-fixes
 
-	return xfs_attr_node_removename_iter(dac);
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=random-fixes
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
+---
+ check             |   26 +++++++++++++++++++++++++-
+ common/populate   |   11 +++++++++++
+ common/rc         |   29 ++++++++++++++++++-----------
+ common/xfs        |   20 ++++++++++++++++++++
+ tests/ext4/032    |    2 +-
+ tests/generic/157 |    2 +-
+ tests/generic/175 |    2 +-
+ tests/shared/032  |    2 +-
+ tests/xfs/033     |    2 +-
+ tests/xfs/129     |    2 +-
+ tests/xfs/169     |    2 +-
+ tests/xfs/208     |    2 +-
+ tests/xfs/336     |    2 +-
+ tests/xfs/344     |    2 +-
+ tests/xfs/345     |    2 +-
+ 15 files changed, 85 insertions(+), 23 deletions(-)
+
