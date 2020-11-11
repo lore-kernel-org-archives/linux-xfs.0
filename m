@@ -4,366 +4,807 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,LOTS_OF_MONEY,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60301C55ABD
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A55C0C388F7
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 01:26:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 043AB21D7F
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 00:46:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 239D521D91
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 01:26:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="s0hbJZUj"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="smuA/zmw"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732086AbgKKAqP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Nov 2020 19:46:15 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:36110 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731234AbgKKAqP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 19:46:15 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0ZaiW016919;
-        Wed, 11 Nov 2020 00:46:12 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2020-01-29;
- bh=v1IAZkiAF3NM9o24W9oT6qepmKmulpIzg/r4pzdzeh4=;
- b=s0hbJZUjEJeJ2NCO2iuLk4ZdyGKXXFowjBMIgrF1MqG0E6nYGTzglfTFECzoeo5RgbGK
- WVsDAZR5QzMervxZklyPDsQDL4BX85jto12/IjGv+hRBSbtfUPXwsiYTRusKYsEhJSRf
- /lHDN+3YbnqHiIeThXvvqyZDOZO5A5hPH8XLwl74tkNs5uFxMlmSaCz85D/qZGIbtEZK
- EG5s+lNe7yHheVpjKF0GzeXyF2HHOFC6mtUPwSFwodoJWZc8LvLcKkV6Y36eqCB8K6+N
- x09bVKicTWlFgKKJsbCkyqxnWGWhpd8Ga59XfdubwFhX2wYJqSYAl9UZl9t0yRm7tU8W 1Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 34p72emv8q-1
+        id S1732213AbgKKB04 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Nov 2020 20:26:56 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:54066 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731805AbgKKB04 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Nov 2020 20:26:56 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB1O70W124212;
+        Wed, 11 Nov 2020 01:26:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=kjFvlf+ZXS/wrclgyCMps2wsBHvQNXDrNj3L1srtNn8=;
+ b=smuA/zmwBdSl9e2oK+GrfYO6csj6FoSiauTb9/UEo5o5p+9IpcFp1nNSjpuSEUB4GXfy
+ LvBXkXpX/ZOLhRtEM6bAYayZ8IUwm3C7L7hrl7GP23aRm+KcV182GMCNuwPPMHk0bBCR
+ TbpHe67XOaYIqaEnikqaHEygl/O2/EqHhwmPsM2BTyTmuETd60UA1GNrY7/nkgkuLReo
+ H27i4mo5fb/jB/gNQTpK3kB9ZUxX8Oi/TBEeItWqCo9FlqE9foIy6WuGFKMpMRSs3UEA
+ WJVaNMEHyEKzySJPhSQhQbjtqB4DrJ5wDd1b9qTa3XNe00PH1TapMP3PVu+Y3u2/lh7z FA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2130.oracle.com with ESMTP id 34nh3axysw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 00:46:11 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB0VEth095433;
-        Wed, 11 Nov 2020 00:44:11 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 34p55pau3t-1
+        Wed, 11 Nov 2020 01:26:51 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AB1P6fF168129;
+        Wed, 11 Nov 2020 01:26:50 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 34qgp7mrat-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Nov 2020 00:44:11 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AB0iAOm018286;
-        Wed, 11 Nov 2020 00:44:10 GMT
-Received: from localhost (/67.169.218.210)
+        Wed, 11 Nov 2020 01:26:50 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AB1QnpZ016626;
+        Wed, 11 Nov 2020 01:26:50 GMT
+Received: from localhost (/10.159.242.91)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 10 Nov 2020 16:44:09 -0800
-Subject: [PATCH 3/7] generic: test reflink and copy_file_range behavior with
- O_SYNC and FS_XFLAG_SYNC files
+        with ESMTP ; Tue, 10 Nov 2020 17:26:49 -0800
+Date:   Tue, 10 Nov 2020 17:26:46 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com, guaneryu@gmail.com
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Tue, 10 Nov 2020 16:44:08 -0800
-Message-ID: <160505544844.1388823.7727157246785406013.stgit@magnolia>
-In-Reply-To: <160505542802.1388823.10368384826199448253.stgit@magnolia>
-References: <160505542802.1388823.10368384826199448253.stgit@magnolia>
-User-Agent: StGit/0.19
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] [RFC] spaceman: physically move a regular inode
+Message-ID: <20201111012646.GO9695@magnolia>
+References: <20201110225924.4031404-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201110225924.4031404-1-david@fromorbit.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 spamscore=0 phishscore=0
- mlxlogscore=999 mlxscore=0 malwarescore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011110001
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999
+ adultscore=0 mlxscore=0 malwarescore=0 suspectscore=7 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011110004
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9801 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- malwarescore=0 suspectscore=0 lowpriorityscore=0 adultscore=0 phishscore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
+ clxscore=1015 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=7
+ mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011110001
+ definitions=main-2011110004
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Nov 11, 2020 at 09:59:24AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> To be able to shrink a filesystem, we need to be able to physically
+> move an inode and all it's data and metadata from it's current
+> location to a new AG.  Add a command to spaceman to allow an inode
+> to be moved to a new AG.
+> 
+> This new command is not intended to be a perfect solution. I am not
+> trying to handle atomic movement of open files - this is intended to
+> be run as a maintenance operation on idle filesystem. If root
+> filesystems are the target, then this should be run via a rescue
+> environment that is not executing directly on the root fs. With
+> those caveats in place, we can do the entire inode move as a set of
+> non-destructive operations finalised by an atomic inode swap
+> without any needing special kernel support.
+> 
+> To ensure we move metadata such as BMBT blocks even if we don't need
+> to move data, we clone the data to a new inode that we've allocated
 
-Add two regression tests to make sure that FICLONERANGE and the splice
-based copy_file_range actually flush all data and metadata to disk
-before the call ends.
+Very clever!
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
----
- tests/generic/947     |  117 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/947.out |   15 ++++++
- tests/generic/948     |   90 ++++++++++++++++++++++++++++++++++++++
- tests/generic/948.out |    9 ++++
- tests/generic/group   |    2 +
- 5 files changed, 233 insertions(+)
- create mode 100755 tests/generic/947
- create mode 100644 tests/generic/947.out
- create mode 100755 tests/generic/948
- create mode 100644 tests/generic/948.out
+On a related topic, I had been thinking about how to manage relocations
+of shared extents without breaking the sharing.  If userspace had a way
+to query the refcounts of some arbitrary range of disk, it could iterate
+over the extents of the doomed AG in decreasing refcount order using the
+GETFSMAP data and FIDEDUPERANGE to safely reconnect shared blocks in the
+surviving parts of the filesystem.
 
+(Granted you can compute the refcounts from the GETFSMAP data...)
 
-diff --git a/tests/generic/947 b/tests/generic/947
-new file mode 100755
-index 00000000..d2adf745
---- /dev/null
-+++ b/tests/generic/947
-@@ -0,0 +1,117 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2020, Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 947
-+#
-+# Make sure that reflink forces the log out if we open the file with O_SYNC or
-+# set FS_XFLAG_SYNC on the file.  We test that it actually forced the log by
-+# using dm-error to shut down the fs without flushing the log and then
-+# remounting to check file contents.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	_dmerror_unmount
-+	_dmerror_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/reflink
-+. ./common/dmerror
-+
-+# real QA test starts here
-+_supported_fs generic
-+_require_dm_target error
-+_require_scratch_reflink
-+_require_xfs_io_command "chattr" "s"
-+_require_cp_reflink
-+
-+rm -f $seqres.full
-+
-+# Format filesystem and set up quota limits
-+_scratch_mkfs > $seqres.full
-+_require_metadata_journaling $SCRATCH_DEV
-+_dmerror_init
-+_dmerror_mount
-+
-+# Test that O_SYNC actually results in file data being written even if the
-+# fs immediately dies
-+echo "test o_sync write"
-+$XFS_IO_PROG -x -f -s -c "pwrite -S 0x58 0 1m -b 1m" $SCRATCH_MNT/0 >> $seqres.full
-+_dmerror_load_error_table
-+_dmerror_unmount
-+_dmerror_load_working_table
-+_dmerror_mount
-+md5sum $SCRATCH_MNT/0 | _filter_scratch
-+
-+# Set up initial files for reflink test
-+$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 1m -b 1m' $SCRATCH_MNT/a >> $seqres.full
-+$XFS_IO_PROG -f -c 'pwrite -S 0x59 0 1m -b 1m' $SCRATCH_MNT/c >> $seqres.full
-+_cp_reflink $SCRATCH_MNT/a $SCRATCH_MNT/e
-+_cp_reflink $SCRATCH_MNT/c $SCRATCH_MNT/d
-+touch $SCRATCH_MNT/b
-+sync
-+
-+# Test that reflink forces dirty data/metadata to disk when destination file
-+# opened with O_SYNC
-+echo "test reflink flag not set o_sync"
-+$XFS_IO_PROG -x -s -c "reflink $SCRATCH_MNT/a" $SCRATCH_MNT/b >> $seqres.full
-+_dmerror_load_error_table
-+_dmerror_unmount
-+_dmerror_load_working_table
-+_dmerror_mount
-+md5sum $SCRATCH_MNT/a $SCRATCH_MNT/b | _filter_scratch
-+
-+# Test that reflink to a shared file forces dirty data/metadata to disk when
-+# destination is opened with O_SYNC
-+echo "test reflink flag already set o_sync"
-+$XFS_IO_PROG -x -s -c "reflink $SCRATCH_MNT/a" $SCRATCH_MNT/d >> $seqres.full
-+_dmerror_load_error_table
-+_dmerror_unmount
-+_dmerror_load_working_table
-+_dmerror_mount
-+md5sum $SCRATCH_MNT/a $SCRATCH_MNT/d | _filter_scratch
-+
-+# Set up the two files with chattr +S
-+rm -f $SCRATCH_MNT/b $SCRATCH_MNT/d
-+_cp_reflink $SCRATCH_MNT/c $SCRATCH_MNT/d
-+touch $SCRATCH_MNT/b
-+chattr +S $SCRATCH_MNT/b $SCRATCH_MNT/d
-+sync
-+
-+# Test that reflink forces dirty data/metadata to disk when destination file
-+# has the sync iflag set
-+echo "test reflink flag not set iflag"
-+$XFS_IO_PROG -x -c "reflink $SCRATCH_MNT/a" $SCRATCH_MNT/b >> $seqres.full
-+_dmerror_load_error_table
-+_dmerror_unmount
-+_dmerror_load_working_table
-+_dmerror_mount
-+md5sum $SCRATCH_MNT/a $SCRATCH_MNT/b | _filter_scratch
-+
-+# Test that reflink to a shared file forces dirty data/metadata to disk when
-+# destination file has the sync iflag set
-+echo "test reflink flag already set iflag"
-+$XFS_IO_PROG -x -c "reflink $SCRATCH_MNT/a" $SCRATCH_MNT/d >> $seqres.full
-+_dmerror_load_error_table
-+_dmerror_unmount
-+_dmerror_load_working_table
-+_dmerror_mount
-+md5sum $SCRATCH_MNT/a $SCRATCH_MNT/d | _filter_scratch
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/947.out b/tests/generic/947.out
-new file mode 100644
-index 00000000..05ba10d1
---- /dev/null
-+++ b/tests/generic/947.out
-@@ -0,0 +1,15 @@
-+QA output created by 947
-+test o_sync write
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/0
-+test reflink flag not set o_sync
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/b
-+test reflink flag already set o_sync
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/d
-+test reflink flag not set iflag
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/b
-+test reflink flag already set iflag
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/d
-diff --git a/tests/generic/948 b/tests/generic/948
-new file mode 100755
-index 00000000..83fe414b
---- /dev/null
-+++ b/tests/generic/948
-@@ -0,0 +1,90 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2020, Oracle.  All Rights Reserved.
-+#
-+# FS QA Test No. 948
-+#
-+# Make sure that copy_file_range forces the log out if we open the file with
-+# O_SYNC or set FS_XFLAG_SYNC on the file.  We test that it actually forced the
-+# log by using dm-error to shut down the fs without flushing the log and then
-+# remounting to check file contents.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+	_dmerror_unmount
-+	_dmerror_cleanup
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/dmerror
-+
-+# real QA test starts here
-+_supported_fs generic
-+_require_dm_target error
-+_require_xfs_io_command "chattr" "s"
-+
-+rm -f $seqres.full
-+
-+# Format filesystem and set up quota limits
-+_scratch_mkfs > $seqres.full
-+_require_metadata_journaling $SCRATCH_DEV
-+_dmerror_init
-+_dmerror_mount
-+
-+# Test that O_SYNC actually results in file data being written even if the
-+# fs immediately dies
-+echo "test o_sync write"
-+$XFS_IO_PROG -x -f -s -c "pwrite -S 0x58 0 1m -b 1m" $SCRATCH_MNT/0 >> $seqres.full
-+_dmerror_load_error_table
-+_dmerror_unmount
-+_dmerror_load_working_table
-+_dmerror_mount
-+md5sum $SCRATCH_MNT/0 | _filter_scratch
-+
-+# Set up initial files for copy test
-+$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 1m -b 1m' $SCRATCH_MNT/a >> $seqres.full
-+touch $SCRATCH_MNT/b
-+sync
-+
-+# Test that unaligned copy file range forces dirty data/metadata to disk when
-+# destination file opened with O_SYNC
-+echo "test unaligned copy range o_sync"
-+$XFS_IO_PROG -x -s -c "copy_range -s 13 -d 13 -l 1048550 $SCRATCH_MNT/a" $SCRATCH_MNT/b >> $seqres.full
-+_dmerror_load_error_table
-+_dmerror_unmount
-+_dmerror_load_working_table
-+_dmerror_mount
-+md5sum $SCRATCH_MNT/a $SCRATCH_MNT/b | _filter_scratch
-+
-+# Set up dest file with chattr +S
-+rm -f $SCRATCH_MNT/b
-+touch $SCRATCH_MNT/b
-+chattr +S $SCRATCH_MNT/b
-+sync
-+
-+# Test that unaligned copy file range forces dirty data/metadata to disk when
-+# destination file has the sync iflag set
-+echo "test unaligned copy range iflag"
-+$XFS_IO_PROG -x -c "copy_range -s 13 -d 13 -l 1048550 $SCRATCH_MNT/a" $SCRATCH_MNT/b >> $seqres.full
-+_dmerror_load_error_table
-+_dmerror_unmount
-+_dmerror_load_working_table
-+_dmerror_mount
-+md5sum $SCRATCH_MNT/a $SCRATCH_MNT/b | _filter_scratch
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/948.out b/tests/generic/948.out
-new file mode 100644
-index 00000000..eec6c0dc
---- /dev/null
-+++ b/tests/generic/948.out
-@@ -0,0 +1,9 @@
-+QA output created by 948
-+test o_sync write
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/0
-+test unaligned copy range o_sync
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
-+2a715d2093b5aca82783a0c5943ac0b8  SCRATCH_MNT/b
-+test unaligned copy range iflag
-+310f146ce52077fcd3308dcbe7632bb2  SCRATCH_MNT/a
-+2a715d2093b5aca82783a0c5943ac0b8  SCRATCH_MNT/b
-diff --git a/tests/generic/group b/tests/generic/group
-index ab8ae74e..4300158e 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -617,3 +617,5 @@
- 612 auto quick clone
- 613 auto quick encrypt
- 614 auto quick rw
-+947 auto quick rw clone
-+948 auto quick rw copy_range
+> in the destination AG. This will result in new bmbt blocks being
+> allocated in the new location even though the data is not copied.
 
+I assume you (or maybe hsiangkao) have some means to prevent those
+bmbt/xattr blocks from being allocated in the bad AG?
+
+> Attributes need to be copied one at a time from the original inode.
+> 
+> If data needs to be moved, then we use fallocate(UNSHARE) to create
+> a private copy of the range of data that needs to be moved in the
+> new inode. This will be allocated in the destination AG by normal
+> allocation policy.
+> 
+> Once the new inode has been finalised, use RENAME_EXCHANGE to swap
+> it into place and unlink the original inode to free up all the
+> resources it still pins.
+> 
+> There are many optimisations still possible to speed this up, but
+> the goal here is "functional" rather than "optimal". Performance can
+> be optimised once all the parts for a "empty the tail of the
+> filesystem before shrink" operation are implemented and solidly
+> tested.
+> 
+> This functionality has been smoke tested by creating a 32MB data
+> file with 4k extents and several hundred attributes:
+> 
+> $ cat test.sh
+> fname=/mnt/scratch/foo
+> xfs_io -f -c "pwrite 0 32m" -c sync $fname
+> for (( i=0; i < 4096 ; i++ )); do
+> 	xfs_io -c "fpunch $((i * 8))k 4k" $fname
+> done
+> 
+> for (( i=0; i < 100 ; i++ )); do
+> 	setfattr -n user.blah.$i.$i.blah -v blah.$i.$i.blah $fname
+> 	setfattr -n user.foo.$i.$i.foo -v $i.cantbele.$i.ve.$i.tsnotbutter $fname
+> done
+> for (( i=0; i < 100 ; i++ )); do
+> 	setfattr -n security.baz.$i.$i.baz -v wotchul$i$iookinat $fname
+> done
+> 
+> xfs_io -c stat -c "bmap -vp" -c "bmap -avp" $fname
+> xfs_spaceman -c "move_inode -a 22" /mnt/scratch/foo
+> xfs_io -c stat -c "bmap -vp" -c "bmap -avp" $fname
+> $
+> 
+> and the output looks something like:
+> 
+> $ sudo ./test.sh
+> ....
+> fd.path = "/mnt/scratch/foo"
+> fd.flags = non-sync,non-direct,read-write
+> stat.ino = 133
+> /mnt/scratch/foo:
+>  EXT: FILE-OFFSET      BLOCK-RANGE       AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..7]:          hole                                      8
+>    1: [8..15]:         208..215           0 (208..215)           8 000000
+>    2: [16..23]:        hole                                      8
+>    3: [24..31]:        224..231           0 (224..231)           8 000000
+> ....
+> 8189: [65512..65519]:  65712..65719       0 (65712..65719)       8 000000
+> 8190: [65520..65527]:  hole                                      8
+> 8191: [65528..65535]:  65728..65735       0 (65728..65735)       8 000000
+> mnt/scratch/foo:
+>  EXT: FILE-OFFSET      BLOCK-RANGE       AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..7]:          392..399           0 (392..399)           8 000000
+>    1: [8..15]:         408..415           0 (408..415)           8 000000
+>    2: [16..23]:        424..431           0 (424..431)           8 000000
+>    3: [24..31]:        456..463           0 (456..463)           8 000000
+> move mnt /mnt/scratch, path /mnt/scratch/foo, agno 22
+> fd.path = "/mnt/scratch/foo"
+> fd.flags = non-sync,non-direct,read-write
+> stat.ino = 47244651475
+> ....
+> /mnt/scratch/foo:
+>  EXT: FILE-OFFSET      BLOCK-RANGE               AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..7]:          hole                                              8
+>    1: [8..15]:         47244763192..47244763199  22 (123112..123119)     8 000000
+>    2: [16..23]:        hole                                              8
+>    3: [24..31]:        47244763208..47244763215  22 (123128..123135)     8 000000
+> ....
+> 8189: [65512..65519]:  47244828808..47244828815  22 (188728..188735)     8 000000
+> 8190: [65520..65527]:  hole                                              8
+> 8191: [65528..65535]:  47244828824..47244828831  22 (188744..188751)     8 000000
+> /mnt/scratch/foo:
+>  EXT: FILE-OFFSET      BLOCK-RANGE               AG AG-OFFSET        TOTAL FLAGS
+>    0: [0..7]:          47244763176..47244763183  22 (123096..123103)     8 000000
+> $
+> 
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  spaceman/Makefile     |   6 +-
+>  spaceman/file.c       |   2 +-
+>  spaceman/init.c       |   1 +
+>  spaceman/move_inode.c | 518 ++++++++++++++++++++++++++++++++++++++++++
+>  spaceman/space.h      |   1 +
+>  5 files changed, 524 insertions(+), 4 deletions(-)
+>  create mode 100644 spaceman/move_inode.c
+> 
+> diff --git a/spaceman/Makefile b/spaceman/Makefile
+> index 2a3669183a40..e90f66e8abc6 100644
+> --- a/spaceman/Makefile
+> +++ b/spaceman/Makefile
+> @@ -7,11 +7,11 @@ include $(TOPDIR)/include/builddefs
+>  
+>  LTCOMMAND = xfs_spaceman
+>  HFILES = init.h space.h
+> -CFILES = info.c init.c file.c health.c prealloc.c trim.c
+> +CFILES = info.c init.c file.c health.c move_inode.c prealloc.c trim.c
+>  LSRCFILES = xfs_info.sh
+>  
+> -LLDLIBS = $(LIBXCMD) $(LIBFROG)
+> -LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG)
+> +LLDLIBS = $(LIBXCMD) $(LIBFROG) $(LIBHANDLE)
+> +LTDEPENDENCIES = $(LIBXCMD) $(LIBFROG) $(LIBHANDLE)
+>  LLDFLAGS = -static
+>  
+>  ifeq ($(ENABLE_EDITLINE),yes)
+> diff --git a/spaceman/file.c b/spaceman/file.c
+> index eec7ee9f4ba9..1777ed7d4602 100644
+> --- a/spaceman/file.c
+> +++ b/spaceman/file.c
+> @@ -52,7 +52,7 @@ openfile(
+>  	struct fs_path	*fsp;
+>  	int		ret;
+>  
+> -	ret = -xfd_open(xfd, path, O_RDONLY);
+> +	ret = -xfd_open(xfd, path, O_RDWR);
+>  	if (ret) {
+>  		if (ret == ENOTTY)
+>  			fprintf(stderr,
+> diff --git a/spaceman/init.c b/spaceman/init.c
+> index cf1ff3cbb0ee..c3bfe3e5922f 100644
+> --- a/spaceman/init.c
+> +++ b/spaceman/init.c
+> @@ -35,6 +35,7 @@ init_commands(void)
+>  	trim_init();
+>  	freesp_init();
+>  	health_init();
+> +	move_inode_init();
+>  }
+>  
+>  static int
+> diff --git a/spaceman/move_inode.c b/spaceman/move_inode.c
+> new file mode 100644
+> index 000000000000..c3f791c82c45
+> --- /dev/null
+> +++ b/spaceman/move_inode.c
+> @@ -0,0 +1,518 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2012 Red Hat, Inc.
+
+2012?  O ye halcyon days before the world caught fire...
+
+> + * All Rights Reserved.
+> + */
+> +
+> +#include "libxfs.h"
+> +#include "libfrog/fsgeom.h"
+> +#include "command.h"
+> +#include "init.h"
+> +#include "libfrog/paths.h"
+> +#include "space.h"
+> +#include "input.h"
+> +#include "handle.h"
+> +
+> +#include <linux/fiemap.h>
+> +#include <linux/falloc.h>
+> +#include <attr/attributes.h>
+> +
+> +static cmdinfo_t move_inode_cmd;
+> +
+> +/*
+> + * We can't entirely use O_TMPFILE here because we want to use RENAME_EXCHANGE
+> + * to swap the inode once rebuild is complete. Hence the new file has to be
+> + * somewhere in the namespace for rename to act upon. Hence we use a normal
+> + * open(O_CREATE) for now.
+
+For the corner case that the inode is in a good AG but its blocks maybe
+aren't, I think you actually /could/ use O_TMPFILE for donor file.
+
+> + *
+> + * This could potentially use O_TMPFILE to rebuild the entire inode, the use
+> + * a linkat()/renameat2() pair to add it to the namespace then atomically
+> + * replace the original.
+> + */
+> +static int
+> +create_tmpfile(
+> +	const char	*mnt,
+> +	struct xfs_fd	*xfd,
+> +	xfs_agnumber_t	agno,
+> +	char		**tmpfile,
+> +	int		*tmpfd)
+> +{
+> +	char		name[PATH_MAX + 1];
+> +	mode_t		mask;
+> +	int		fd;
+> +	int		i;
+> +	int		ret;
+> +
+> +	/* construct tmpdir */
+> +	mask = umask(0);
+> +
+> +	snprintf(name, PATH_MAX, "%s/.spaceman", mnt);
+> +	ret = mkdir(name, 0700);
+> +	if (ret) {
+> +		if (errno != EEXIST) {
+> +			fprintf(stderr, _("could not create tmpdir: %s: %s\n"),
+> +					name, strerror(errno));
+> +			ret = -errno;
+> +			goto out_cleanup;
+> +		}
+> +	}
+> +
+> +	/* loop creating directories until we get one in the right AG */
+> +	for (i = 0; i < xfd->fsgeom.agcount; i++) {
+> +		struct stat	st;
+> +
+> +		snprintf(name, PATH_MAX, "%s/.spaceman/dir%d", mnt, i);
+> +		ret = mkdir(name, 0700);
+> +		if (ret) {
+> +			if (errno != EEXIST) {
+> +				fprintf(stderr,
+> +					_("cannot create tmpdir: %s: %s\n"),
+> +				       name, strerror(errno));
+> +				ret = -errno;
+> +				goto out_cleanup_dir;
+> +			}
+> +		}
+> +		ret = lstat(name, &st);
+> +		if (ret) {
+> +			fprintf(stderr, _("cannot stat tmpdir: %s: %s\n"),
+> +				       name, strerror(errno));
+> +			ret = -errno;
+> +			rmdir(name);
+> +			goto out_cleanup_dir;
+> +		}
+> +		if (cvt_ino_to_agno(xfd, st.st_ino) == agno)
+> +			break;
+> +
+> +		/* remove directory in wrong AG */
+> +		rmdir(name);
+> +	}
+> +
+> +	if (i == xfd->fsgeom.agcount) {
+> +		/*
+> +		 * Nothing landed in the selected AG! Must have been skipped
+> +		 * because the AG is out of space.
+> +		 */
+> +		fprintf(stderr, _("Cannot create AG tmpdir.\n"));
+> +		ret = -ENOSPC;
+> +		goto out_cleanup_dir;
+> +	}
+> +
+> +	/* create tmpfile */
+> +	snprintf(name, PATH_MAX, "%s/.spaceman/dir%d/tmpfile.%d", mnt, i, getpid());
+> +	fd = open(name, O_CREAT|O_EXCL|O_RDWR, 0700);
+> +	if (fd < 0) {
+> +		fprintf(stderr, _("cannot create tmpfile: %s: %s\n"),
+> +		       name, strerror(errno));
+> +		ret = -errno;
+> +	}
+> +
+> +	/* return name and fd */
+> +	(void)umask(mask);
+> +	*tmpfd = fd;
+> +	*tmpfile = strdup(name);
+> +
+> +	return 0;
+> +out_cleanup_dir:
+> +	snprintf(name, PATH_MAX, "%s/.spaceman", mnt);
+> +	rmdir(name);
+> +out_cleanup:
+> +	(void)umask(mask);
+> +	return ret;
+> +}
+> +
+> +static int
+> +get_attr(
+> +	void		*hdl,
+> +	size_t		hlen,
+> +	char		*name,
+> +	void		*attrbuf,
+> +	int		*attrlen,
+> +	int		attr_ns)
+> +{
+> +	struct xfs_attr_multiop	ops = {
+> +		.am_opcode	= ATTR_OP_GET,
+> +		.am_attrname	= name,
+> +		.am_attrvalue	= attrbuf,
+> +		.am_length	= *attrlen,
+> +		.am_flags	= attr_ns,
+> +	};
+> +	int		ret;
+> +
+> +	ret = attr_multi_by_handle(hdl, hlen, &ops, 1, 0);
+> +	if (ret < 0) {
+> +		fprintf(stderr, _("attr_multi_by_handle(GET): %s\n"),
+> +			strerror(errno));
+> +		return -errno;
+> +	}
+> +	*attrlen = ops.am_length;
+> +	return 0;
+> +}
+> +
+> +static int
+> +set_attr(
+> +	void		*hdl,
+> +	size_t		hlen,
+> +	char		*name,
+> +	void		*attrbuf,
+> +	int		attrlen,
+> +	int		attr_ns)
+> +{
+> +	struct xfs_attr_multiop	ops = {
+> +		.am_opcode	= ATTR_OP_SET,
+> +		.am_attrname	= name,
+> +		.am_attrvalue	= attrbuf,
+> +		.am_length	= attrlen,
+> +		.am_flags	= ATTR_CREATE | attr_ns,
+> +	};
+> +	int		ret;
+> +
+> +	ret = attr_multi_by_handle(hdl, hlen, &ops, 1, 0);
+> +	if (ret < 0) {
+> +		fprintf(stderr, _("attr_multi_by_handle(SET): %s\n"),
+> +			strerror(errno));
+> +		return -errno;
+> +	}
+> +	return 0;
+> +}
+> +
+> +/*
+> + * Copy all the attributes from the original source file into the replacement
+> + * destination.
+> + *
+> + * Oh the humanity of deprecated Irix compatible attr interfaces that are more
+> + * functional and useful than their native Linux replacements!
+> + */
+> +static int
+> +copy_attrs(
+> +	int			srcfd,
+> +	int			dstfd,
+> +	int			attr_ns)
+> +{
+> +	void			*shdl;
+> +	void			*dhdl;
+> +	size_t			shlen;
+> +	size_t			dhlen;
+> +	attrlist_cursor_t	cursor;
+> +	attrlist_t		*alist;
+> +	struct attrlist_ent	*ent;
+> +	char			alistbuf[XATTR_LIST_MAX];
+> +	char			attrbuf[XATTR_SIZE_MAX];
+> +	int			attrlen;
+> +	int			error;
+> +	int			i;
+> +
+> +	memset(&cursor, 0, sizeof(cursor));
+> +
+> +	/*
+> +	 * All this handle based stuff is hoop jumping to avoid:
+> +	 *
+> +	 * a) deprecated API warnings because attr_list, attr_get and attr_set
+> +	 *    have been deprecated hence through compiler warnings; and
+> +	 *
+> +	 * b) listxattr() failing hard if there are more than 64kB worth of attr
+> +	 *    names on the inode so is unusable.
+> +	 *
+> +	 * That leaves libhandle as the only usable interface for iterating all
+> +	 * xattrs on an inode reliably. Lucky for us, libhandle is part of
+> +	 * xfsprogs, so this hoop jump isn't going to get ripped out from under
+> +	 * us any time soon.
+> +	 */
+> +	error = fd_to_handle(srcfd, (void **)&shdl, &shlen);
+> +	if (error) {
+> +		fprintf(stderr, _("fd_to_handle(shdl): %s\n"),
+> +			strerror(errno));
+> +		return -errno;
+> +	}
+> +	error = fd_to_handle(dstfd, (void **)&dhdl, &dhlen);
+> +	if (error) {
+> +		fprintf(stderr, _("fd_to_handle(dhdl): %s\n"),
+> +			strerror(errno));
+> +		goto out_free_shdl;
+> +	}
+> +
+> +	/* loop to iterate all xattrs */
+> +	error = attr_list_by_handle(shdl, shlen, alistbuf,
+> +					XATTR_LIST_MAX, attr_ns, &cursor);
+> +	if (error) {
+> +		fprintf(stderr, _("attr_list_by_handle(shdl): %s\n"),
+> +			strerror(errno));
+> +	}
+> +	while (!error) {
+> +		alist = (attrlist_t *)alistbuf;
+> +
+> +		/*
+> +		 * We loop one attr at a time for initial implementation
+> +		 * simplicity. attr_multi_by_handle() can retrieve and set
+> +		 * multiple attrs in a single call, but that is more complex.
+> +		 * Get it working first, then optimise.
+> +		 */
+> +		for (i = 0; i < alist->al_count; i++) {
+> +			ent = ATTR_ENTRY(alist, i);
+> +
+> +			/* get xattr (val, len) from name */
+> +			attrlen = XATTR_SIZE_MAX;
+> +			error = get_attr(shdl, shlen, ent->a_name, attrbuf,
+> +						&attrlen, attr_ns);
+> +			if (error)
+> +				break;
+> +
+> +			/* set xattr (val, len) to name */
+> +			error = set_attr(dhdl, dhlen, ent->a_name, attrbuf,
+> +						attrlen, ATTR_CREATE | attr_ns);
+> +			if (error)
+> +				break;
+> +		}
+> +
+> +		if (!alist->al_more)
+> +			break;
+> +		error = attr_list_by_handle(shdl, shlen, alistbuf,
+> +					XATTR_LIST_MAX, attr_ns, &cursor);
+> +	}
+> +
+> +	free_handle(dhdl, dhlen);
+> +out_free_shdl:
+> +	free_handle(shdl, shlen);
+> +	return error ? -errno : 0;
+> +}
+> +
+> +/*
+> + * scan the range of the new file for data that isn't in the destination AG
+> + * and unshare it to create a new copy of it in the current target location
+> + * of the new file.
+> + */
+> +#define EXTENT_BATCH 32
+> +static int
+> +unshare_data(
+> +	struct xfs_fd	*xfd,
+> +	int		destfd,
+> +	xfs_agnumber_t	agno)
+> +{
+> +	int		ret;
+> +	struct fiemap	*fiemap;
+> +	int		done = 0;
+> +	int		fiemap_flags = FIEMAP_FLAG_SYNC;
+> +	int		i;
+> +	int		map_size;
+> +	__u64		last_logical = 0;	/* last extent offset handled */
+> +	off64_t		range_end = -1LL;	/* mapping end*/
+> +
+> +	/* fiemap loop over extents */
+> +	map_size = sizeof(struct fiemap) +
+> +		(EXTENT_BATCH * sizeof(struct fiemap_extent));
+> +	fiemap = malloc(map_size);
+> +	if (!fiemap) {
+> +		fprintf(stderr, _("%s: malloc of %d bytes failed.\n"),
+> +			progname, map_size);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	while (!done) {
+> +		memset(fiemap, 0, map_size);
+> +		fiemap->fm_flags = fiemap_flags;
+> +		fiemap->fm_start = last_logical;
+> +		fiemap->fm_length = range_end - last_logical;
+> +		fiemap->fm_extent_count = EXTENT_BATCH;
+> +
+> +		ret = ioctl(destfd, FS_IOC_FIEMAP, (unsigned long)fiemap);
+
+This could have reused scrub/filemap.c to avoid code duplication.
+
+Also, if the inode itself isn't in the doomed AG, you could use
+FIEMAP/BMAPX on the attr fork to find out if it's even necessary to copy
+the xattrs.
+
+> +		if (ret < 0) {
+> +			fprintf(stderr, "%s: ioctl(FS_IOC_FIEMAP): %s\n",
+> +				progname, strerror(errno));
+> +			free(fiemap);
+> +			return -errno;
+> +		}
+> +
+> +		/* No more extents to map, exit */
+> +		if (!fiemap->fm_mapped_extents)
+> +			break;
+> +
+> +		for (i = 0; i < fiemap->fm_mapped_extents; i++) {
+> +			struct fiemap_extent	*extent;
+> +			xfs_agnumber_t		this_agno;
+> +
+> +			extent = &fiemap->fm_extents[i];
+> +			this_agno = cvt_daddr_to_agno(xfd,
+> +					cvt_btobbt(extent->fe_physical));
+> +
+> +			/*
+> +			 * If extent not in dst AG, unshare whole extent to
+> +			 * trigger reallocated of the extent to be local to
+> +			 * the current inode.
+> +			 */
+> +			if (this_agno != agno) {
+> +				ret = fallocate(destfd, FALLOC_FL_UNSHARE_RANGE,
+> +					extent->fe_logical, extent->fe_length);
+> +				if (ret) {
+> +					fprintf(stderr,
+> +						"%s: fallocate(UNSHARE): %s\n",
+> +						progname, strerror(errno));
+> +					return -errno;
+> +				}
+> +			}
+> +
+> +			last_logical = extent->fe_logical + extent->fe_length;
+> +
+> +			/* Kernel has told us there are no more extents */
+> +			if (extent->fe_flags & FIEMAP_EXTENT_LAST) {
+> +				done = 1;
+> +				break;
+> +			}
+> +		}
+> +	}
+> +	return 0;
+> +}
+> +
+> +static int
+> +move_file_to_ag(
+> +	const char		*mnt,
+> +	const char		*path,
+> +	struct xfs_fd		*xfd,
+> +	xfs_agnumber_t		agno)
+> +{
+> +	int			ret;
+> +	int			tmpfd = -1;
+> +	char			*tmpfile = NULL;
+> +
+> +	fprintf(stderr, "move mnt %s, path %s, agno %d\n", mnt, path, agno);
+> +
+> +	/* create temporary file in agno */
+> +	ret = create_tmpfile(mnt, xfd, agno, &tmpfile, &tmpfd);
+> +
+> +	/* clone data to tempfile */
+> +	ret = ioctl(tmpfd, FICLONE, xfd->fd);
+> +	if (ret)
+> +		goto out_cleanup;
+> +	/* copy system attributes to tempfile */
+> +	ret = copy_attrs(xfd->fd, tmpfd, ATTR_ROOT);
+> +	if (ret)
+> +		goto out_cleanup;
+> +
+> +	/* copy user attributes to tempfile */
+> +	ret = copy_attrs(xfd->fd, tmpfd, 0);
+> +	if (ret)
+> +		goto out_cleanup;
+> +
+> +	/* unshare data to move it */
+> +	ret = unshare_data(xfd, tmpfd, agno);
+> +	if (ret)
+> +		goto out_cleanup;
+
+Do we need to clear out the CoW fork too, just in case there are
+preallocations in there that map to the bad AG?
+
+--D
+
+> +
+> +	/* RENAME_EXCHANGE to replace the inode */
+> +	ret = renameat2(AT_FDCWD, tmpfile, AT_FDCWD, path, RENAME_EXCHANGE);
+> +
+> +out_cleanup:
+> +	if (ret == -1)
+> +		ret = -errno;
+> +
+> +	close(tmpfd);
+> +	if (tmpfile)
+> +		unlink(tmpfile);
+> +	free(tmpfile);
+> +
+> +	return ret;
+> +}
+> +
+> +static int
+> +move_inode_f(
+> +	int			argc,
+> +	char			**argv)
+> +{
+> +	void			*fshandle;
+> +	size_t			fshdlen;
+> +	xfs_agnumber_t		agno = 0;
+> +	struct stat		st;
+> +	int			ret;
+> +	int			c;
+> +
+> +	while ((c = getopt(argc, argv, "a:")) != EOF) {
+> +		switch (c) {
+> +		case 'a':
+> +			agno = cvt_u32(optarg, 10);
+> +			if (errno) {
+> +				fprintf(stderr, _("bad agno value %s\n"),
+> +					optarg);
+> +				return command_usage(&move_inode_cmd);
+> +			}
+> +			break;
+> +		default:
+> +			return command_usage(&move_inode_cmd);
+> +		}
+> +	}
+> +
+> +	if (optind != argc)
+> +		return command_usage(&move_inode_cmd);
+> +
+> +	if (agno >= file->xfd.fsgeom.agcount) {
+> +		fprintf(stderr,
+> +_("Destination AG %d does not exist. Filesystem only has %d AGs\n"),
+> +			agno, file->xfd.fsgeom.agcount);
+> +			exitcode = 1;
+> +			return 0;
+> +	}
+> +
+> +	/* this is so we can use fd_to_handle() later on */
+> +	ret = path_to_fshandle(file->fs_path.fs_dir, &fshandle, &fshdlen);
+> +	if (ret < 0) {
+> +		fprintf(stderr, _("Cannot get fshandle for mount %s: %s\n"),
+> +			file->fs_path.fs_dir, strerror(errno));
+> +		goto exit_fail;
+> +	}
+> +
+> +	ret = fstat(file->xfd.fd, &st);
+> +	if (ret) {
+> +		fprintf(stderr, _("stat(%s) failed: %s\n"),
+> +			file->name, strerror(errno));
+> +		goto exit_fail;
+> +	}
+> +
+> +	if (S_ISREG(st.st_mode)) {
+> +		ret = move_file_to_ag(file->fs_path.fs_dir, file->name,
+> +				&file->xfd, agno);
+> +	} else {
+> +		fprintf(stderr, _("Unsupported: %s is not a regular file.\n"),
+> +			file->name);
+> +		goto exit_fail;
+> +	}
+> +
+> +	if (ret) {
+> +		fprintf(stderr, _("Failed to move inode to AG %d: %s\n"),
+> +			agno, strerror(-ret));
+> +		goto exit_fail;
+> +	}
+> +	fshandle_destroy();
+> +	return 0;
+> +
+> +exit_fail:
+> +	fshandle_destroy();
+> +	exitcode = 1;
+> +	return 0;
+> +}
+> +
+> +static void
+> +move_inode_help(void)
+> +{
+> +	printf(_(
+> +"\n"
+> +"Physically move an inode into a new allocation group\n"
+> +"\n"
+> +" -a agno       -- destination AG agno for the current open file\n"
+> +"\n"));
+> +
+> +}
+> +
+> +void
+> +move_inode_init(void)
+> +{
+> +	move_inode_cmd.name = "move_inode";
+> +	move_inode_cmd.altname = "mvino";
+> +	move_inode_cmd.cfunc = move_inode_f;
+> +	move_inode_cmd.argmin = 2;
+> +	move_inode_cmd.argmax = 2;
+> +	move_inode_cmd.args = "-a agno";
+> +	move_inode_cmd.flags = CMD_FLAG_ONESHOT;
+> +	move_inode_cmd.oneline = _("Move an inode into a new AG.");
+> +	move_inode_cmd.help = move_inode_help;
+> +
+> +	add_command(&move_inode_cmd);
+> +}
+> +
+> diff --git a/spaceman/space.h b/spaceman/space.h
+> index 723209edd998..79deed812cdf 100644
+> --- a/spaceman/space.h
+> +++ b/spaceman/space.h
+> @@ -33,5 +33,6 @@ extern void	freesp_init(void);
+>  #endif
+>  extern void	info_init(void);
+>  extern void	health_init(void);
+> +void		move_inode_init(void);
+>  
+>  #endif /* XFS_SPACEMAN_SPACE_H_ */
+> -- 
+> 2.28.0
+> 
