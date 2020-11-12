@@ -2,155 +2,152 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02697C56201
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 15:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 369E2C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 16:05:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B29EB20A8B
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 15:53:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B98C422227
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 16:05:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mU7mRL8t"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728328AbgKLPx4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Nov 2020 10:53:56 -0500
-Received: from sandeen.net ([63.231.237.45]:49204 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728263AbgKLPxz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Nov 2020 10:53:55 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 7BC1014A36;
-        Thu, 12 Nov 2020 09:53:37 -0600 (CST)
-To:     Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>, stable@vger.kernel.org
-References: <20201112063005.692054-1-hsiangkao@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH] xfs: fix signed calculation related to XFS_LITINO(mp)
-Message-ID: <3d04e9b3-f326-cbcd-e268-e4da40f35fa2@sandeen.net>
-Date:   Thu, 12 Nov 2020 09:53:53 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.4.2
+        id S1728450AbgKLQFd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Nov 2020 11:05:33 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:52630 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728389AbgKLQFd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Nov 2020 11:05:33 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACG4CYW105158;
+        Thu, 12 Nov 2020 16:05:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=QcG3U4kvcOQ8zFNcyoLknaXK3sdT4wyUM+MQ6f09P1o=;
+ b=mU7mRL8tCevmVkxbo2q+31PpxeMFjQEAclVT/OIbQhZRT/IS5qa9DwQAratXi/PVfw/3
+ VUDDeHKEmqUzcAuzRD3lu2BYKQ3gr1lLrll9/jAr3x12LBYHtBtp/SKlIW7sgjngRJ5q
+ 1JN3pzTuI1oaCmztxdHeGAixnbawmmYmC2Tw88V4PquX+yVPDsy5+iu1ebQ2ymQrYzfD
+ 9z0OHO8wdUDaKnz8MEpjNriXIRndTL0mWCj80MHTNE3Q8Cl2TzHsK8AYWy8dbheUl34x
+ HX6VApFsOI3rnVw3xkH1Gyqs9YKigQwVGyPL7vp8r4Q1bQAb6NqXn1RL+s+o8LNIYAGQ 2w== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2130.oracle.com with ESMTP id 34nh3b6bvy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 12 Nov 2020 16:05:29 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACG5Cba062880;
+        Thu, 12 Nov 2020 16:05:29 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 34rt5691ak-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Nov 2020 16:05:29 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0ACG5Rri031672;
+        Thu, 12 Nov 2020 16:05:27 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 12 Nov 2020 08:05:27 -0800
+Date:   Thu, 12 Nov 2020 08:05:26 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 1/4] xfs: fix brainos in the refcount scrubber's rmap
+ fragment processor
+Message-ID: <20201112160526.GS9695@magnolia>
+References: <160494585293.772802.13326482733013279072.stgit@magnolia>
+ <160494585913.772802.17231950418756379430.stgit@magnolia>
+ <3965877.p3O8HGrD7x@garuda>
 MIME-Version: 1.0
-In-Reply-To: <20201112063005.692054-1-hsiangkao@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3965877.p3O8HGrD7x@garuda>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9802 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 bulkscore=0 mlxscore=0
+ mlxlogscore=999 suspectscore=1 adultscore=0 phishscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011120095
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9802 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
+ clxscore=1015 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=1
+ mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011120095
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/12/20 12:30 AM, Gao Xiang wrote:
-> Currently, commit e9e2eae89ddb dropped a (int) decoration from
-> XFS_LITINO(mp), and since sizeof() expression is also involved,
-> the result of XFS_LITINO(mp) is simply as the size_t type
-> (commonly unsigned long).
-
-Thanks for finding this!  Let me think through it a little.
- 
-> Considering the expression in xfs_attr_shortform_bytesfit():
->   offset = (XFS_LITINO(mp) - bytes) >> 3;
-> let "bytes" be (int)340, and
->     "XFS_LITINO(mp)" be (unsigned long)336.
+On Thu, Nov 12, 2020 at 06:21:52PM +0530, Chandan Babu R wrote:
+> On Monday 9 November 2020 11:47:39 PM IST Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Fix some serious WTF in the reference count scrubber's rmap fragment
+> > processing.  The code comment says that this loop is supposed to move
+> > all fragment records starting at or before bno onto the worklist, but
+> > there's no obvious reason why nr (the number of items added) should
+> > increment starting from 1, and breaking the loop when we've added the
+> > target number seems dubious since we could have more rmap fragments that
+> > should have been added to the worklist.
+> > 
+> > This seems to manifest in xfs/411 when adding one to the refcount field.
+> > 
+> > Fixes: dbde19da9637 ("xfs: cross-reference the rmapbt data with the refcountbt")
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/scrub/refcount.c |    8 +++-----
+> >  1 file changed, 3 insertions(+), 5 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+> > index beaeb6fa3119..dd672e6bbc75 100644
+> > --- a/fs/xfs/scrub/refcount.c
+> > +++ b/fs/xfs/scrub/refcount.c
+> > @@ -170,7 +170,6 @@ xchk_refcountbt_process_rmap_fragments(
+> >  	 */
+> >  	INIT_LIST_HEAD(&worklist);
+> >  	rbno = NULLAGBLOCK;
+> > -	nr = 1;
+> >  
+> >  	/* Make sure the fragments actually /are/ in agbno order. */
+> >  	bno = 0;
+> > @@ -184,15 +183,14 @@ xchk_refcountbt_process_rmap_fragments(
+> >  	 * Find all the rmaps that start at or before the refc extent,
+> >  	 * and put them on the worklist.
+> >  	 */
+> > +	nr = 0;
+> >  	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
+> > -		if (frag->rm.rm_startblock > refchk->bno)
+> > -			goto done;
+> > +		if (frag->rm.rm_startblock > refchk->bno || nr > target_nr)
+> > +			break;
 > 
-> on 64-bit platform, the expression is
->   offset = ((unsigned long)336 - (int)340) >> 8 =
+> In the case of fuzzed refcnt value of 1, The condition "nr > target_nr" causes
+> "nr != target_nr" condition (appearing after the loop) to evaluate to true
+> (since atleast two rmap entries would be present for the refcount extent)
+> which in turn causes xchk_refcountbt_xref_rmap() to flag the data structure as
+> corrupt. Please let me know if my understanding of the code flow is correct?
 
-This should be >> 3, right.
+Right.
 
->            (int)(0xfffffffffffffffcUL >> 3) = -1
+--D
+
+> >  		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
+> >  		if (bno < rbno)
+> >  			rbno = bno;
+> >  		list_move_tail(&frag->list, &worklist);
+> > -		if (nr == target_nr)
+> > -			break;
+> >  		nr++;
+> >  	}
+> >  
+> > 
+> > 
 > 
-> but on 32-bit platform, the expression is
->   offset = ((unsigned long)336 - (int)340) >> 8 =
-
-and >> 3 here as well.
-
->            (int)(0xfffffffcUL >> 3) = 0x1fffffff
-> instead.
-
-Ok.  But wow, that magical cast to (int) in XFS_LITINO isn't at
-all clear to me.
-
-XFS_LITINO() indicates a /size/ - fixing this problem by making it a
-signed value feels very strange, but I'm not sure what would be better,
-yet.
-
-> Therefore, one result is
->   "ASSERT(new_size <= XFS_IFORK_SIZE(ip, whichfork));"
->   assertion failure in xfs_idata_realloc().
 > 
-> , which can be triggered with the following commands:
->  touch a;
->  setfattr -n user.0 -v "`seq 0 80`" a;
->  setfattr -n user.1 -v "`seq 0 80`" a
-> on 32-bit platform.
-
-Can you please write an xfstest for this? :)
-
-> Fix it by restoring (int) decorator to XFS_LITINO(mp) since
-> int type for XFS_LITINO(mp) is safe and all pre-exist signed
-> calculations are correct.
+> -- 
+> chandan
 > 
-> Fixes: e9e2eae89ddb ("xfs: only check the superblock version for dinode size calculation")
-> Cc: <stable@vger.kernel.org> # 5.7+
-> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
-> ---
-> I'm not sure this is the preferred way or just simply fix
-> xfs_attr_shortform_bytesfit() since I don't look into the
-> rest of XFS_LITINO(mp) users. Add (int) to XFS_LITINO(mp)
-> will avoid all potential regression at least.
 > 
->  fs/xfs/libxfs/xfs_format.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-> index dd764da08f6f..f58f0a44c024 100644
-> --- a/fs/xfs/libxfs/xfs_format.h
-> +++ b/fs/xfs/libxfs/xfs_format.h
-> @@ -1061,7 +1061,7 @@ enum xfs_dinode_fmt {
->  		sizeof(struct xfs_dinode) : \
->  		offsetof(struct xfs_dinode, di_crc))>  #define XFS_LITINO(mp) \
-> -	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb))
-> +	((int)((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb)))
-
-If we do keep the (int) cast here we at least need a comment explaining why
-it cannot be removed, unless there is a better way to solve the problem.
-
-I wonder if explicitly making XFS_LITINO() cast to a size_t would be
-best, and then in xfs_attr_shortform_bytesfit() we just quickly reject
-the query if the bytes are larger than the literal area:
-
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-index bb128db..5588c2e 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.c
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-@@ -535,6 +535,10 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
-        int                     maxforkoff;
-        int                     offset;
- 
-+       /* Is there no chance we can fit? */
-+       if (bytes > XFS_LITINO(mp))
-+               return 0;
-+
-        /* rounded down */
-        offset = (XFS_LITINO(mp) - bytes) >> 3;
-
-or, maybe simply:
-
--        offset = (XFS_LITINO(mp) - bytes) >> 3;
-+        offset = (int)(XFS_LITINO(mp) - bytes) >> 3;
-
-to be sure that the arithmetic doesn't get promoted to unsigned before the shift?
-
-or maybe others have better ideas.
-
--Eric
-
-  
->  /*
->   * Inode data & attribute fork sizes, per inode.
 > 
