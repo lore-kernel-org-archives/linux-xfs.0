@@ -2,212 +2,140 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB20C2D0A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 11:12:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8683C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 12:51:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B265C2220B
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 11:12:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 681CC21D7F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 12:51:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ejv1Iaxe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728065AbgKLLMc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Nov 2020 06:12:32 -0500
-Received: from mx2.suse.de ([195.135.220.15]:44036 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728035AbgKLLMV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Nov 2020 06:12:21 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id EB56AAEAA;
-        Thu, 12 Nov 2020 11:12:18 +0000 (UTC)
-Date:   Thu, 12 Nov 2020 12:12:17 +0100
-From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: show the dax option in mount options.
-Message-ID: <20201112111217.GF29778@kitsune.suse.cz>
-References: <cover.1604948373.git.msuchanek@suse.de>
- <f9f7ba25e97dacd92c09eb3ee6a4aca8b4f72b00.1604948373.git.msuchanek@suse.de>
- <20201109192419.GC9695@magnolia>
- <20201109202705.GZ29778@kitsune.suse.cz>
- <20201109210823.GI7391@dread.disaster.area>
- <20201111102848.GD29778@kitsune.suse.cz>
- <20201112014952.GL7391@dread.disaster.area>
+        id S1727646AbgKLMv5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Nov 2020 07:51:57 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43920 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727223AbgKLMv5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Nov 2020 07:51:57 -0500
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06D11C0613D1
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2020 04:51:56 -0800 (PST)
+Received: by mail-pg1-x541.google.com with SMTP id i7so4100507pgh.6
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2020 04:51:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=6P8CH300eAB1fASzSpZTbw+sEYZ0bvfF7KOk0y4iHb8=;
+        b=Ejv1IaxeE6OJ+ryOvfx08NsMYAEAuy2uowm544hpsESZSzR8SOxImmNXoxUfTmADqa
+         10pB8du0FMeIW5fIwy5FqP8uh3Rvr50DVcHTuYst7/je18SuEbNx8TG8mUwUjz3ZnHTR
+         ExmK7VEplEZmf488gtSpYKQvH5UY41JmnFbArLLynziWRdbaj2XQ+4qRFWmkRwsboBz9
+         z40mriaktPQ2glelK6Ac4vI0NXrTM9j9Yo8YIRpRzQPFhSdDrwEjJMa+KKDFZzLJ7kWX
+         9FgnmJqJNtLsBE1KYqKwy8IyAbiRlMg4U06ZGBdoZDnygCuXsj6zGLoBJI/jpodQ6yux
+         6bcA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=6P8CH300eAB1fASzSpZTbw+sEYZ0bvfF7KOk0y4iHb8=;
+        b=KKFJt085TQ6sdZDc6uaVGMfSMWBXcDbVZwIfgGClDKnwXNUlWwBH6noox9FOF8vDvG
+         KBIcAkg2Y7fD9mK20g+FFTuR2VvVDpED2FR/QQ9Ltw4LdruqApcJYnFgWPulcxYUC2rg
+         WfHH9EenmUOHbGCPNZBbF4JgJEsZXQ9451+cKa36CEjaQhFOfNK2Yx1m1X+tUbh5KvM7
+         g2zEak1TNi2u/0bzoqHHlIfLl4ZQHryydvQ6lJgbApfvPVlCiyAYEdBjRAWwKJkN3HwB
+         uy4RIB7AFrSXvXb51UMRPWoKR8XgWZFzQQhDn1+gr3VawcDqBydJTLPW2wDvght/YP7k
+         pNsQ==
+X-Gm-Message-State: AOAM533xg0unPENlfxoYHq+gJHS7G6EdJiH5btoi3LK6D3du0HbMZWB3
+        w8Ywx0tJ4GrLCr6tdBv+9Ew=
+X-Google-Smtp-Source: ABdhPJxfH8dWySuve0RIdMvAsO85sDPXslwnSMCbYy/jbgL827U7MlMHiaEUlIptD6jSlzoyPzsRBA==
+X-Received: by 2002:a63:4c24:: with SMTP id z36mr11603579pga.432.1605185515620;
+        Thu, 12 Nov 2020 04:51:55 -0800 (PST)
+Received: from garuda.localnet ([122.179.88.142])
+        by smtp.gmail.com with ESMTPSA id f4sm6715707pjs.8.2020.11.12.04.51.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Nov 2020 04:51:54 -0800 (PST)
+From:   Chandan Babu R <chandanrlinux@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 1/4] xfs: fix brainos in the refcount scrubber's rmap fragment processor
+Date:   Thu, 12 Nov 2020 18:21:52 +0530
+Message-ID: <3965877.p3O8HGrD7x@garuda>
+In-Reply-To: <160494585913.772802.17231950418756379430.stgit@magnolia>
+References: <160494585293.772802.13326482733013279072.stgit@magnolia> <160494585913.772802.17231950418756379430.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201112014952.GL7391@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 12, 2020 at 12:49:52PM +1100, Dave Chinner wrote:
-> On Wed, Nov 11, 2020 at 11:28:48AM +0100, Michal Suchánek wrote:
-> > On Tue, Nov 10, 2020 at 08:08:23AM +1100, Dave Chinner wrote:
-> > > On Mon, Nov 09, 2020 at 09:27:05PM +0100, Michal Suchánek wrote:
-> > > > On Mon, Nov 09, 2020 at 11:24:19AM -0800, Darrick J. Wong wrote:
-> > > > > On Mon, Nov 09, 2020 at 08:10:08PM +0100, Michal Suchanek wrote:
-> > > > > > xfs accepts both dax and dax_enum but shows only dax_enum. Show both
-> > > > > > options.
-> > > > > > 
-> > > > > > Fixes: 8d6c3446ec23 ("fs/xfs: Make DAX mount option a tri-state")
-> > > > > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
-> > > > > > ---
-> > > > > >  fs/xfs/xfs_super.c | 2 +-
-> > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > > > index e3e229e52512..a3b00003840d 100644
-> > > > > > --- a/fs/xfs/xfs_super.c
-> > > > > > +++ b/fs/xfs/xfs_super.c
-> > > > > > @@ -163,7 +163,7 @@ xfs_fs_show_options(
-> > > > > >  		{ XFS_MOUNT_GRPID,		",grpid" },
-> > > > > >  		{ XFS_MOUNT_DISCARD,		",discard" },
-> > > > > >  		{ XFS_MOUNT_LARGEIO,		",largeio" },
-> > > > > > -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
-> > > > > > +		{ XFS_MOUNT_DAX_ALWAYS,		",dax,dax=always" },
-> > > > > 
-> > > > > NAK, programs that require DAX semantics for files stored on XFS must
-> > > > > call statx to detect the STATX_ATTR_DAX flag, as outlined in "Enabling
-> > > > > DAX on xfs" in Documentation/filesystems/dax.txt.
-> > > > statx can be used to query S_DAX.  NOTE that only regular files will
-> > > > ever have S_DAX set and therefore statx will never indicate that S_DAX
-> > > > is set on directories.
-> > > 
-> > > Yup, by design.
-> > > 
-> > > The application doesn't need to do anything complex to make this
-> > > work. If the app wants to use DAX, then it should use
-> > > FS_IOC_FS{GS}ETXATTR to always set the on disk per inode DAX flags
-> > > for it's data dirs and files, and then STATX_ATTR_DAX will *always*
-> > > tell it whether DAX is actively in use at runtime. It's pretty
-> > > simple, really.
-> > > 
-> > > > The filesystem may not have any files so statx cannot be used.
-> > > 
-> > > Really?  The app or installer is about to *write to the fs* and has
-> > > all the permissions it needs to modify the contents of the fs. It's
-> > > pretty simple to create a tmpdir, set the DAX flag on the tmpdir,
-> > > then create a tmpfile in the tmpdir and run STATX_ATTR_DAX on it to
-> > > see if DAX is active or not.....
-> > 
-> > Have you ever seen a 'wizard' style installer?
+On Monday 9 November 2020 11:47:39 PM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I wrote my first one in 1995 on Windows NT 3.51 using Installshield.
+> Fix some serious WTF in the reference count scrubber's rmap fragment
+> processing.  The code comment says that this loop is supposed to move
+> all fragment records starting at or before bno onto the worklist, but
+> there's no obvious reason why nr (the number of items added) should
+> increment starting from 1, and breaking the loop when we've added the
+> target number seems dubious since we could have more rmap fragments that
+> should have been added to the worklist.
 > 
-> > Like one that firsts asks what to install, and then presents a list of
-> > suitable locations that have enough space, supported filesystem features
-> > enabled, and whatnot?
+> This seems to manifest in xfs/411 when adding one to the refcount field.
 > 
-> Hold on, 1995 is calling me. The application I was packaging used
-> ACLs. But the NTFS version created by windows NT 3.1 was
-> incompatible as ACL support didn't arrive until NT 3.51 and service
-> pack 4(?) for NT 3.1. Yes, I had to write code to probe the
-> filesystems to detect whether ACL support was available or not by
-> -trying to create an ACL-.
+> Fixes: dbde19da9637 ("xfs: cross-reference the rmapbt data with the refcountbt")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/refcount.c |    8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
 > 
-> I guess you could say "been there, done that, learnt the lesson".
-So we are trying to be as bad as Windows now?
 > 
-> > So to present a list of mountpoints that support DAX one has to scribble
-> > over every mountpoint on the system?
-> 
-> If you are filtering storage options presented to the user by
-> supported features, then you have to probe for them in some way.
-> And that means you have to consider that many option filesystem
-> features that applications use cannot be detected via mount options
-> checking the filesytem config. That is, there are features that can
-> only be discovered by actually testing whether they work or not.
-> 
-> > That sounds ridiculous.
-> 
-> Reality is a harsh mistress. :/
-> 
-> [snip the rest because you're being ridiculous]
-> 
-> Are you aware of ndctl?
-> 
-> $ ndctl list
-> [
->   {
->     "dev":"namespace1.0",
->     "mode":"fsdax",
->     "map":"mem",
->     "size":8589934592,
->     "sector_size":512,
->     "blockdev":"pmem1"
->   },
->   {
->     "dev":"namespace0.0",
->     "mode":"fsdax",
->     "map":"mem",
->     "size":8589934592,
->     "sector_size":512,
->     "blockdev":"pmem0"
->   }
-> ]
-Yes, that tells me that the device can be configured for dax. Not if the
-filesystem will use it.
-> 
-> Oh, look there are two block devices on this machine that are
-> configured for filesystem DAX (fsdax). They are /dev/pmem0 and
-> /dev/pmem1.
-> 
-> What filesytsems are on them?
-> 
-> $ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT /dev/pmem0 /dev/pmem1
-> NAME  SIZE FSTYPE MOUNTPOINT
-> pmem1   8G ext4   /mnt/test
-> pmem0   8G xfs    /mnt/scratch
-> $
-> 
-> One XFs, one ext4, both of which will be using DAX capable unless
-> the dax=never mount option is set. Which:
-Or the bock size does not match page size. Or whatever other requirement
-the filesystem might have is not met.
-> 
-> $ mount  |grep pmem
-> /dev/pmem0 on /mnt/scratch type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
-> /dev/pmem1 on /mnt/test type ext4 (rw,relatime)
-> $
-> 
-> is not set on either mount.
-> 
-> Hence both filesystems at DAX capable and enabled, and should be
-> presented as options to the user as such.
-No, it is not the case. That is why it would make sense for the kernel
-to make the information about DAX availability accessible somewhere.
-> 
-> And all this comes about because DAX is a property of the block
-> device, not the filesystem. Hence the only time a DAX capable
-> filesystem on a block device that is DAX capable will not be DAX
-> capable is if the dax=never is set...
-See, it is not property of the block device. It is property of the mount
-point. The availability on the device is one requirement but the
-filesystem options affect availability to the user in the end.
-> 
-> Of course, this is just encoding how existing filesystems behave -
-> it's not a requirement for future filesytsems so they may use other
-> mechanisms for enabling/disabling DAX. Which leaves you with the
-> only reliable mechanism of creating filesystem and checking
-> statx(STATX_ATTR_DAX)....
-Or the kernel could just tell the user. But right, information is power,
-and keeping the user in the dark is much more entertaining.
+> diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+> index beaeb6fa3119..dd672e6bbc75 100644
+> --- a/fs/xfs/scrub/refcount.c
+> +++ b/fs/xfs/scrub/refcount.c
+> @@ -170,7 +170,6 @@ xchk_refcountbt_process_rmap_fragments(
+>  	 */
+>  	INIT_LIST_HEAD(&worklist);
+>  	rbno = NULLAGBLOCK;
+> -	nr = 1;
+>  
+>  	/* Make sure the fragments actually /are/ in agbno order. */
+>  	bno = 0;
+> @@ -184,15 +183,14 @@ xchk_refcountbt_process_rmap_fragments(
+>  	 * Find all the rmaps that start at or before the refc extent,
+>  	 * and put them on the worklist.
+>  	 */
+> +	nr = 0;
+>  	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
+> -		if (frag->rm.rm_startblock > refchk->bno)
+> -			goto done;
+> +		if (frag->rm.rm_startblock > refchk->bno || nr > target_nr)
+> +			break;
 
-OK
+In the case of fuzzed refcnt value of 1, The condition "nr > target_nr" causes
+"nr != target_nr" condition (appearing after the loop) to evaluate to true
+(since atleast two rmap entries would be present for the refcount extent)
+which in turn causes xchk_refcountbt_xref_rmap() to flag the data structure as
+corrupt. Please let me know if my understanding of the code flow is correct?
 
-I guess I have exhausted sane discussion options here.
+>  		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
+>  		if (bno < rbno)
+>  			rbno = bno;
+>  		list_move_tail(&frag->list, &worklist);
+> -		if (nr == target_nr)
+> -			break;
+>  		nr++;
+>  	}
+>  
+> 
+> 
 
-Best regards
 
-Michal
+-- 
+chandan
+
+
+
