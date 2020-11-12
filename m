@@ -2,266 +2,141 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC5EDC5519F
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 16:09:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A222C5519F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 17:45:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94A5A22249
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 16:09:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F02C121D7F
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 17:45:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SNqL8cNo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728643AbgKLQJV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Nov 2020 11:09:21 -0500
-Received: from mga12.intel.com ([192.55.52.136]:36386 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728233AbgKLQJT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Nov 2020 11:09:19 -0500
-IronPort-SDR: fl4LmYVTz8Aeg0FJ12Qh9FBi5C4Tbfn/JOthXGnY4lk+MBcTwTWF0J28Bx2j6Qu0gIp34XSeRo
- 9ZGqDoVkad9Q==
-X-IronPort-AV: E=McAfee;i="6000,8403,9803"; a="149604659"
-X-IronPort-AV: E=Sophos;i="5.77,472,1596524400"; 
-   d="scan'208";a="149604659"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2020 08:08:52 -0800
-IronPort-SDR: 2WX/zC3wXdVeZl/AHCgFTjbTnPW/A7H3Vj8UrR8ERgMF0jxm3H7G8JXCnbAqmpVee/zAhSLClB
- F8zifaZLIrtQ==
-X-IronPort-AV: E=Sophos;i="5.77,472,1596524400"; 
-   d="scan'208";a="366401499"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.147])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2020 08:08:50 -0800
-Date:   Thu, 12 Nov 2020 08:08:49 -0800
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: show the dax option in mount options.
-Message-ID: <20201112160848.GS3976735@iweiny-DESK2.sc.intel.com>
-References: <cover.1604948373.git.msuchanek@suse.de>
- <f9f7ba25e97dacd92c09eb3ee6a4aca8b4f72b00.1604948373.git.msuchanek@suse.de>
- <20201109192419.GC9695@magnolia>
- <20201109202705.GZ29778@kitsune.suse.cz>
- <20201109210823.GI7391@dread.disaster.area>
- <20201111102848.GD29778@kitsune.suse.cz>
- <20201112014952.GL7391@dread.disaster.area>
- <20201112111217.GF29778@kitsune.suse.cz>
- <20201112151046.GD27697@quack2.suse.cz>
+        id S1726203AbgKLRpw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Nov 2020 12:45:52 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:35024 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725999AbgKLRpw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Nov 2020 12:45:52 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACHhN0Q182153;
+        Thu, 12 Nov 2020 17:45:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=cRenlXtOvoKV1YMeZZcWN5SaUFkv21/sdP1+SBER/+8=;
+ b=SNqL8cNoTsWrD/5TjGQQkjKbVw1gycPhY/GUi/gad29vF7qK2KJIcvtkZUKG5bO1KfFE
+ XWpMCisg4UjDZdhReTs7BuFSf7m/OqjDyJyhYHjkV4Chg2T5x4BwcM9f4LzCV3bYA1Id
+ j/JZK4AWuH1J/ZbyYlZYLc7CI/yjJjktRXLiBprF92AKdEhZGu+MCa2FtPv9JIcmCaij
+ AiaE7aao66hJjJVm15gSvNiZkVLUy3R5kuxAbTxv0N4tM+iKdQzAnSQZXnav5wWmQXMF
+ D8Jw1WeWd3IsxfhLYNebzSOFHIxw/gy9hHEK0MqfGH3huGUkA45MdcCCFzd4jMXJKWxe 1Q== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 34p72evx6c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Thu, 12 Nov 2020 17:45:48 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ACHaGR0020613;
+        Thu, 12 Nov 2020 17:43:48 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 34rtks53kd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 12 Nov 2020 17:43:47 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0ACHhlAs024118;
+        Thu, 12 Nov 2020 17:43:47 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 12 Nov 2020 09:43:46 -0800
+Date:   Thu, 12 Nov 2020 09:43:45 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH] libxfs: add realtime extent reservation and usage tracking
+ to transactions
+Message-ID: <20201112174345.GT9695@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201112151046.GD27697@quack2.suse.cz>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9803 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 phishscore=0
+ suspectscore=1 bulkscore=0 malwarescore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011120104
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9803 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
+ malwarescore=0 suspectscore=1 lowpriorityscore=0 adultscore=0 phishscore=0
+ priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011120105
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Nov 12, 2020 at 04:10:46PM +0100, Jan Kara wrote:
-> On Thu 12-11-20 12:12:17, Michal Suchánek wrote:
-> > On Thu, Nov 12, 2020 at 12:49:52PM +1100, Dave Chinner wrote:
-> > > On Wed, Nov 11, 2020 at 11:28:48AM +0100, Michal Suchánek wrote:
-> > > > On Tue, Nov 10, 2020 at 08:08:23AM +1100, Dave Chinner wrote:
-> > > > > On Mon, Nov 09, 2020 at 09:27:05PM +0100, Michal Suchánek wrote:
-> > > > > > On Mon, Nov 09, 2020 at 11:24:19AM -0800, Darrick J. Wong wrote:
-> > > > > > > On Mon, Nov 09, 2020 at 08:10:08PM +0100, Michal Suchanek wrote:
-> > > > > > > > xfs accepts both dax and dax_enum but shows only dax_enum. Show both
-> > > > > > > > options.
-> > > > > > > > 
-> > > > > > > > Fixes: 8d6c3446ec23 ("fs/xfs: Make DAX mount option a tri-state")
-> > > > > > > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
-> > > > > > > > ---
-> > > > > > > >  fs/xfs/xfs_super.c | 2 +-
-> > > > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > > > > 
-> > > > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > > > > > index e3e229e52512..a3b00003840d 100644
-> > > > > > > > --- a/fs/xfs/xfs_super.c
-> > > > > > > > +++ b/fs/xfs/xfs_super.c
-> > > > > > > > @@ -163,7 +163,7 @@ xfs_fs_show_options(
-> > > > > > > >  		{ XFS_MOUNT_GRPID,		",grpid" },
-> > > > > > > >  		{ XFS_MOUNT_DISCARD,		",discard" },
-> > > > > > > >  		{ XFS_MOUNT_LARGEIO,		",largeio" },
-> > > > > > > > -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
-> > > > > > > > +		{ XFS_MOUNT_DAX_ALWAYS,		",dax,dax=always" },
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I only caught this thread yesterday sorry about that...
+An upcoming patch will add to the deferred ops code the ability to
+capture the unfinished deferred ops and transaction reservation for
+later replay during log recovery.  This requires transactions to have
+the ability to track rt extent reservations and usage, so add that
+missing piece now.
 
-FWIW I think it odd to have this string.  Because what does 'dax,dax=always'
-mean?  dax=always is not the only way the FS can support DAX.  The default
-'dax=inode' also means the FS supports DAX.  So I'm not sure this is really
-even giving you what you want.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+FWIW this should have been a prep patch ahead of "xfs: xfs_defer_capture
+should absorb remaining block reservations" but I goofed.  Sorry about
+that... :(
+---
+ include/xfs_trans.h |    2 ++
+ libxfs/trans.c      |   14 ++++++++++++++
+ 2 files changed, 16 insertions(+)
 
-> > > > > > > 
-> > > > > > > NAK, programs that require DAX semantics for files stored on XFS must
-> > > > > > > call statx to detect the STATX_ATTR_DAX flag, as outlined in "Enabling
-> > > > > > > DAX on xfs" in Documentation/filesystems/dax.txt.
-> > > > > > statx can be used to query S_DAX.  NOTE that only regular files will
-> > > > > > ever have S_DAX set and therefore statx will never indicate that S_DAX
-> > > > > > is set on directories.
-> > > > > 
-> > > > > Yup, by design.
-> > > > > 
-> > > > > The application doesn't need to do anything complex to make this
-> > > > > work. If the app wants to use DAX, then it should use
-> > > > > FS_IOC_FS{GS}ETXATTR to always set the on disk per inode DAX flags
-> > > > > for it's data dirs and files, and then STATX_ATTR_DAX will *always*
-> > > > > tell it whether DAX is actively in use at runtime. It's pretty
-> > > > > simple, really.
-> > > > > 
-> > > > > > The filesystem may not have any files so statx cannot be used.
-> > > > > 
-> > > > > Really?  The app or installer is about to *write to the fs* and has
-> > > > > all the permissions it needs to modify the contents of the fs. It's
-> > > > > pretty simple to create a tmpdir, set the DAX flag on the tmpdir,
-> > > > > then create a tmpfile in the tmpdir and run STATX_ATTR_DAX on it to
-> > > > > see if DAX is active or not.....
-> > > > 
-> > > > Have you ever seen a 'wizard' style installer?
-> > > 
-> > > I wrote my first one in 1995 on Windows NT 3.51 using Installshield.
-
-I'm confused about this talk of an installer.  If 1 FS supports DAX and the
-other, say 10, do not; what happens when you install something special which
-to support DAX?  But what if the user of that software uses one of the other
-10 FS's?
-
-I think it has already been mentioned that the software needs this check at run
-time to be correct.
-
-> > > 
-> > > > Like one that firsts asks what to install, and then presents a list of
-> > > > suitable locations that have enough space, supported filesystem features
-> > > > enabled, and whatnot?
-> > > 
-> > > Hold on, 1995 is calling me. The application I was packaging used
-> > > ACLs. But the NTFS version created by windows NT 3.1 was
-> > > incompatible as ACL support didn't arrive until NT 3.51 and service
-> > > pack 4(?) for NT 3.1. Yes, I had to write code to probe the
-> > > filesystems to detect whether ACL support was available or not by
-> > > -trying to create an ACL-.
-> > > 
-> > > I guess you could say "been there, done that, learnt the lesson".
-> > So we are trying to be as bad as Windows now?
-> > > 
-> > > > So to present a list of mountpoints that support DAX one has to scribble
-> > > > over every mountpoint on the system?
-> > > 
-> > > If you are filtering storage options presented to the user by
-> > > supported features, then you have to probe for them in some way.
-> > > And that means you have to consider that many option filesystem
-> > > features that applications use cannot be detected via mount options
-> > > checking the filesytem config. That is, there are features that can
-> > > only be discovered by actually testing whether they work or not.
-> > > 
-> > > > That sounds ridiculous.
-> > > 
-> > > Reality is a harsh mistress. :/
-> > > 
-> > > [snip the rest because you're being ridiculous]
-> > > 
-> > > Are you aware of ndctl?
-> > > 
-> > > $ ndctl list
-> > > [
-> > >   {
-> > >     "dev":"namespace1.0",
-> > >     "mode":"fsdax",
-> > >     "map":"mem",
-> > >     "size":8589934592,
-> > >     "sector_size":512,
-> > >     "blockdev":"pmem1"
-> > >   },
-> > >   {
-> > >     "dev":"namespace0.0",
-> > >     "mode":"fsdax",
-> > >     "map":"mem",
-> > >     "size":8589934592,
-> > >     "sector_size":512,
-> > >     "blockdev":"pmem0"
-> > >   }
-> > > ]
-> > Yes, that tells me that the device can be configured for dax. Not if the
-> > filesystem will use it.
-> > > 
-> > > Oh, look there are two block devices on this machine that are
-> > > configured for filesystem DAX (fsdax). They are /dev/pmem0 and
-> > > /dev/pmem1.
-> > > 
-> > > What filesytsems are on them?
-> > > 
-> > > $ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT /dev/pmem0 /dev/pmem1
-> > > NAME  SIZE FSTYPE MOUNTPOINT
-> > > pmem1   8G ext4   /mnt/test
-> > > pmem0   8G xfs    /mnt/scratch
-> > > $
-> > > 
-> > > One XFs, one ext4, both of which will be using DAX capable unless
-> > > the dax=never mount option is set. Which:
-> > Or the bock size does not match page size. Or whatever other requirement
-> > the filesystem might have is not met.
-> > > 
-> > > $ mount  |grep pmem
-> > > /dev/pmem0 on /mnt/scratch type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
-> > > /dev/pmem1 on /mnt/test type ext4 (rw,relatime)
-> > > $
-> > > 
-> > > is not set on either mount.
-> > > 
-> > > Hence both filesystems at DAX capable and enabled, and should be
-> > > presented as options to the user as such.
-> > No, it is not the case. That is why it would make sense for the kernel
-> > to make the information about DAX availability accessible somewhere.
-
-But again at run time the software needs to verify it is being asked to operate
-on a FS which supports DAX.  So I don't think what you are proposing is going
-to work all of the time.
-
-> > > 
-> > > And all this comes about because DAX is a property of the block
-> > > device, not the filesystem. Hence the only time a DAX capable
-> > > filesystem on a block device that is DAX capable will not be DAX
-> > > capable is if the dax=never is set...
-> > See, it is not property of the block device. It is property of the mount
-> > point. The availability on the device is one requirement but the
-> > filesystem options affect availability to the user in the end.
-> 
-> No, it is not really a property of the mountpoint either. If anything it is
-> a property of the inode. Two different inodes on the very same filesystem,
-> one may support DAX the other will not (think for example of XFS real-time
-> volumes, or simply inodes with / without S_DAX flag set). And we are back
-> at what Dave tries to get accross. As inconvenient as it is
-> statx(STATX_ATTR_DAX) is the only way to tell.
-> 
-> > > Of course, this is just encoding how existing filesystems behave -
-> > > it's not a requirement for future filesytsems so they may use other
-> > > mechanisms for enabling/disabling DAX. Which leaves you with the
-> > > only reliable mechanism of creating filesystem and checking
-> > > statx(STATX_ATTR_DAX)....
-> > Or the kernel could just tell the user. But right, information is power,
-> > and keeping the user in the dark is much more entertaining.
-> 
-> I think it would be more productive if you actually answered Ted's
-> question: Exactly which application got broken by the change? I know for a
-> fact that one large DB vendor was parsing mount options in /proc/mounts to
-> determine whether their DB can use DAX or not (and this was already a
-> "cleaned up" method because before this they were parsing VMA flags in
-> /proc/<pid>/smaps which is even worse). But in this case they also seemed
-> OK to switch to statx() once it is available...
-
-I agree.  I struggled over these options and what to present when I added the
-feature and I never intended to break anything.
-
-That said, I'm not sure what exactly is broken.  Moreover, I'm concerned that
-there may be more wrong here than just the lack of a 'dax' option string in the
-mount.
-
-Ira
+diff --git a/include/xfs_trans.h b/include/xfs_trans.h
+index 9292a4a54237..f19914068030 100644
+--- a/include/xfs_trans.h
++++ b/include/xfs_trans.h
+@@ -64,9 +64,11 @@ typedef struct xfs_trans {
+ 	unsigned int	t_log_res;		/* amt of log space resvd */
+ 	unsigned int	t_log_count;		/* count for perm log res */
+ 	unsigned int	t_blk_res;		/* # of blocks resvd */
++	unsigned int	t_rtx_res;
+ 	xfs_fsblock_t	t_firstblock;		/* first block allocated */
+ 	struct xfs_mount *t_mountp;		/* ptr to fs mount struct */
+ 	unsigned int	t_blk_res_used;		/* # of resvd blocks used */
++	unsigned int	t_rtx_res_used;
+ 	unsigned int	t_flags;		/* misc flags */
+ 	long		t_icount_delta;		/* superblock icount change */
+ 	long		t_ifree_delta;		/* superblock ifree change */
+diff --git a/libxfs/trans.c b/libxfs/trans.c
+index 6838b727350b..912e95b8d708 100644
+--- a/libxfs/trans.c
++++ b/libxfs/trans.c
+@@ -230,6 +230,7 @@ xfs_trans_reserve(
+ 			error = -ENOSPC;
+ 			goto undo_blocks;
+ 		}
++		tp->t_rtx_res += rtextents;
+ 	}
+ 
+ 	return 0;
+@@ -765,6 +766,19 @@ _("Transaction block reservation exceeded! %u > %u\n"),
+ 		tp->t_ifree_delta += delta;
+ 		break;
+ 	case XFS_TRANS_SB_FREXTENTS:
++		/*
++		 * Track the number of rt extents allocated in the transaction.
++		 * Make sure it does not exceed the number reserved.
++		 */
++		if (delta < 0) {
++			tp->t_rtx_res_used += (uint)-delta;
++			if (tp->t_rtx_res_used > tp->t_rtx_res) {
++				fprintf(stderr,
++_("Transaction rt block reservation exceeded! %u > %u\n"),
++					tp->t_rtx_res_used, tp->t_rtx_res);
++				ASSERT(0);
++			}
++		}
+ 		tp->t_frextents_delta += delta;
+ 		break;
+ 	default:
