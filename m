@@ -2,110 +2,203 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D99D7C388F9
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 17:03:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9E33C56201
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 729A62074B
-	for <linux-xfs@archiver.kernel.org>; Wed, 11 Nov 2020 17:03:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dHIyCkRY"
+	by mail.kernel.org (Postfix) with ESMTP id 9C46A2076E
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726338AbgKKRDk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Nov 2020 12:03:40 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:58134 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726011AbgKKRDk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Nov 2020 12:03:40 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ABGs11E118551;
-        Wed, 11 Nov 2020 17:03:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=1J5K2D5KU7KesGW1tW4a1Qv5PHiX7vdapnhjq1yb2dI=;
- b=dHIyCkRYUahnGcfdx3bLEPWe9jsvfiWPQ5G6QS33t8/9N+0BlLhHhPsni+fhdVghkNsJ
- IiFVxf4VxfCSuHQbVsj3MYv4MMGbIPSVr1Ht0k3rKfbpw5ynMMHOdHiB19wBgGSJXc6K
- puhRe9cBbvzU0Yp43WD44nTkyxmBpeQi40eccq1OiEfIYZGxnynlqSCdKF/eTZ191AGJ
- 6da4doufRoYWgpMey03iCSwt96WDQquKYrYZWvxW7jXTuI+YZF22he4tb/f2t5jqPHMN
- bRF/5ObDq5SrCppiqabLwBip1f9alRvhQAZtgVf6Gd9dBSuKQe3vfxovfR1gglaT2CbZ dQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 34nh3b22qt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 11 Nov 2020 17:03:34 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0ABH0Cnm090381;
-        Wed, 11 Nov 2020 17:01:33 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 34p5gym8nv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 11 Nov 2020 17:01:33 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0ABH1Wf8022486;
-        Wed, 11 Nov 2020 17:01:32 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 11 Nov 2020 09:01:32 -0800
-Date:   Wed, 11 Nov 2020 09:01:31 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>
-Cc:     jack@suse.cz, hch@lst.de
-Subject: [ANNOUNCE] xfs-linux: vfs-for-next updated to 9b8523423b23
-Message-ID: <20201111170131.GR9695@magnolia>
+        id S1727925AbgKLFh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Nov 2020 00:37:59 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47170 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728642AbgKLBuA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Nov 2020 20:50:00 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9861458B977;
+        Thu, 12 Nov 2020 12:49:53 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1kd1kG-00ADL6-Sy; Thu, 12 Nov 2020 12:49:52 +1100
+Date:   Thu, 12 Nov 2020 12:49:52 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: show the dax option in mount options.
+Message-ID: <20201112014952.GL7391@dread.disaster.area>
+References: <cover.1604948373.git.msuchanek@suse.de>
+ <f9f7ba25e97dacd92c09eb3ee6a4aca8b4f72b00.1604948373.git.msuchanek@suse.de>
+ <20201109192419.GC9695@magnolia>
+ <20201109202705.GZ29778@kitsune.suse.cz>
+ <20201109210823.GI7391@dread.disaster.area>
+ <20201111102848.GD29778@kitsune.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9802 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- spamscore=0 phishscore=0 adultscore=0 malwarescore=0 suspectscore=2
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011110101
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9802 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 priorityscore=1501
- clxscore=1015 malwarescore=0 mlxscore=0 spamscore=0 suspectscore=2
- mlxlogscore=999 impostorscore=0 phishscore=0 adultscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011110100
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201111102848.GD29778@kitsune.suse.cz>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=8nJEP1OIZ-IA:10 a=nNwsprhYR40A:10 a=7-415B0cAAAA:8
+        a=VtnXJFtyVPRg2aRurhEA:9 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Wed, Nov 11, 2020 at 11:28:48AM +0100, Michal Suchánek wrote:
+> On Tue, Nov 10, 2020 at 08:08:23AM +1100, Dave Chinner wrote:
+> > On Mon, Nov 09, 2020 at 09:27:05PM +0100, Michal Suchánek wrote:
+> > > On Mon, Nov 09, 2020 at 11:24:19AM -0800, Darrick J. Wong wrote:
+> > > > On Mon, Nov 09, 2020 at 08:10:08PM +0100, Michal Suchanek wrote:
+> > > > > xfs accepts both dax and dax_enum but shows only dax_enum. Show both
+> > > > > options.
+> > > > > 
+> > > > > Fixes: 8d6c3446ec23 ("fs/xfs: Make DAX mount option a tri-state")
+> > > > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
+> > > > > ---
+> > > > >  fs/xfs/xfs_super.c | 2 +-
+> > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > 
+> > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > > > index e3e229e52512..a3b00003840d 100644
+> > > > > --- a/fs/xfs/xfs_super.c
+> > > > > +++ b/fs/xfs/xfs_super.c
+> > > > > @@ -163,7 +163,7 @@ xfs_fs_show_options(
+> > > > >  		{ XFS_MOUNT_GRPID,		",grpid" },
+> > > > >  		{ XFS_MOUNT_DISCARD,		",discard" },
+> > > > >  		{ XFS_MOUNT_LARGEIO,		",largeio" },
+> > > > > -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
+> > > > > +		{ XFS_MOUNT_DAX_ALWAYS,		",dax,dax=always" },
+> > > > 
+> > > > NAK, programs that require DAX semantics for files stored on XFS must
+> > > > call statx to detect the STATX_ATTR_DAX flag, as outlined in "Enabling
+> > > > DAX on xfs" in Documentation/filesystems/dax.txt.
+> > > statx can be used to query S_DAX.  NOTE that only regular files will
+> > > ever have S_DAX set and therefore statx will never indicate that S_DAX
+> > > is set on directories.
+> > 
+> > Yup, by design.
+> > 
+> > The application doesn't need to do anything complex to make this
+> > work. If the app wants to use DAX, then it should use
+> > FS_IOC_FS{GS}ETXATTR to always set the on disk per inode DAX flags
+> > for it's data dirs and files, and then STATX_ATTR_DAX will *always*
+> > tell it whether DAX is actively in use at runtime. It's pretty
+> > simple, really.
+> > 
+> > > The filesystem may not have any files so statx cannot be used.
+> > 
+> > Really?  The app or installer is about to *write to the fs* and has
+> > all the permissions it needs to modify the contents of the fs. It's
+> > pretty simple to create a tmpdir, set the DAX flag on the tmpdir,
+> > then create a tmpfile in the tmpdir and run STATX_ATTR_DAX on it to
+> > see if DAX is active or not.....
+> 
+> Have you ever seen a 'wizard' style installer?
 
-The vfs-for-next branch of the xfs-linux repository at:
+I wrote my first one in 1995 on Windows NT 3.51 using Installshield.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> Like one that firsts asks what to install, and then presents a list of
+> suitable locations that have enough space, supported filesystem features
+> enabled, and whatnot?
 
-has just been updated.
+Hold on, 1995 is calling me. The application I was packaging used
+ACLs. But the NTFS version created by windows NT 3.1 was
+incompatible as ACL support didn't arrive until NT 3.51 and service
+pack 4(?) for NT 3.1. Yes, I had to write code to probe the
+filesystems to detect whether ACL support was available or not by
+-trying to create an ACL-.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This is a short branch fixing the fs freeze locking
-races that we were discussing earlier this week.  I haven't decided if I
-really want to send the code cleanups for 5.10 (-fixes-2) but the first
-tag (-fixes-1) solves some real corruption problems.
+I guess you could say "been there, done that, learnt the lesson".
 
-The new head of the vfs-for-next branch is commit:
+> So to present a list of mountpoints that support DAX one has to scribble
+> over every mountpoint on the system?
 
-9b8523423b23 vfs: move __sb_{start,end}_write* to fs.h
+If you are filtering storage options presented to the user by
+supported features, then you have to probe for them in some way.
+And that means you have to consider that many option filesystem
+features that applications use cannot be detected via mount options
+checking the filesytem config. That is, there are features that can
+only be discovered by actually testing whether they work or not.
 
-New Commits:
+> That sounds ridiculous.
 
-Darrick J. Wong (3):
-      [22843291efc9] vfs: remove lockdep bogosity in __sb_start_write
-      [8a3c84b649b0] vfs: separate __sb_start_write into blocking and non-blocking helpers
-      [9b8523423b23] vfs: move __sb_{start,end}_write* to fs.h
+Reality is a harsh mistress. :/
 
+[snip the rest because you're being ridiculous]
 
-Code Diffstat:
+Are you aware of ndctl?
 
- fs/aio.c           |  2 +-
- fs/io_uring.c      |  3 +--
- fs/super.c         | 49 -------------------------------------------------
- include/linux/fs.h | 38 +++++++++++++++++++++++++++-----------
- 4 files changed, 29 insertions(+), 63 deletions(-)
+$ ndctl list
+[
+  {
+    "dev":"namespace1.0",
+    "mode":"fsdax",
+    "map":"mem",
+    "size":8589934592,
+    "sector_size":512,
+    "blockdev":"pmem1"
+  },
+  {
+    "dev":"namespace0.0",
+    "mode":"fsdax",
+    "map":"mem",
+    "size":8589934592,
+    "sector_size":512,
+    "blockdev":"pmem0"
+  }
+]
+
+Oh, look there are two block devices on this machine that are
+configured for filesystem DAX (fsdax). They are /dev/pmem0 and
+/dev/pmem1.
+
+What filesytsems are on them?
+
+$ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT /dev/pmem0 /dev/pmem1
+NAME  SIZE FSTYPE MOUNTPOINT
+pmem1   8G ext4   /mnt/test
+pmem0   8G xfs    /mnt/scratch
+$
+
+One XFs, one ext4, both of which will be using DAX capable unless
+the dax=never mount option is set. Which:
+
+$ mount  |grep pmem
+/dev/pmem0 on /mnt/scratch type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+/dev/pmem1 on /mnt/test type ext4 (rw,relatime)
+$
+
+is not set on either mount.
+
+Hence both filesystems at DAX capable and enabled, and should be
+presented as options to the user as such.
+
+And all this comes about because DAX is a property of the block
+device, not the filesystem. Hence the only time a DAX capable
+filesystem on a block device that is DAX capable will not be DAX
+capable is if the dax=never is set...
+
+Of course, this is just encoding how existing filesystems behave -
+it's not a requirement for future filesytsems so they may use other
+mechanisms for enabling/disabling DAX. Which leaves you with the
+only reliable mechanism of creating filesystem and checking
+statx(STATX_ATTR_DAX)....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
