@@ -2,229 +2,155 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED25DC2D0A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 15:19:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02697C56201
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 15:53:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95C2A22240
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 15:19:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B29EB20A8B
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 15:53:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727796AbgKLPTO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Nov 2020 10:19:14 -0500
-Received: from mx2.suse.de ([195.135.220.15]:57152 "EHLO mx2.suse.de"
+        id S1728328AbgKLPx4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Nov 2020 10:53:56 -0500
+Received: from sandeen.net ([63.231.237.45]:49204 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727035AbgKLPTO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 12 Nov 2020 10:19:14 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 1EAECAD8C;
-        Thu, 12 Nov 2020 15:19:12 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 3F41E1E130B; Thu, 12 Nov 2020 16:10:46 +0100 (CET)
-Date:   Thu, 12 Nov 2020 16:10:46 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-Cc:     Dave Chinner <david@fromorbit.com>,
+        id S1728263AbgKLPxz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Nov 2020 10:53:55 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 7BC1014A36;
+        Thu, 12 Nov 2020 09:53:37 -0600 (CST)
+To:     Gao Xiang <hsiangkao@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     Christoph Hellwig <hch@lst.de>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: show the dax option in mount options.
-Message-ID: <20201112151046.GD27697@quack2.suse.cz>
-References: <cover.1604948373.git.msuchanek@suse.de>
- <f9f7ba25e97dacd92c09eb3ee6a4aca8b4f72b00.1604948373.git.msuchanek@suse.de>
- <20201109192419.GC9695@magnolia>
- <20201109202705.GZ29778@kitsune.suse.cz>
- <20201109210823.GI7391@dread.disaster.area>
- <20201111102848.GD29778@kitsune.suse.cz>
- <20201112014952.GL7391@dread.disaster.area>
- <20201112111217.GF29778@kitsune.suse.cz>
+        Eric Sandeen <sandeen@redhat.com>, stable@vger.kernel.org
+References: <20201112063005.692054-1-hsiangkao@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH] xfs: fix signed calculation related to XFS_LITINO(mp)
+Message-ID: <3d04e9b3-f326-cbcd-e268-e4da40f35fa2@sandeen.net>
+Date:   Thu, 12 Nov 2020 09:53:53 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.4.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+In-Reply-To: <20201112063005.692054-1-hsiangkao@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201112111217.GF29778@kitsune.suse.cz>
-User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 12-11-20 12:12:17, Michal Suchánek wrote:
-> On Thu, Nov 12, 2020 at 12:49:52PM +1100, Dave Chinner wrote:
-> > On Wed, Nov 11, 2020 at 11:28:48AM +0100, Michal Suchánek wrote:
-> > > On Tue, Nov 10, 2020 at 08:08:23AM +1100, Dave Chinner wrote:
-> > > > On Mon, Nov 09, 2020 at 09:27:05PM +0100, Michal Suchánek wrote:
-> > > > > On Mon, Nov 09, 2020 at 11:24:19AM -0800, Darrick J. Wong wrote:
-> > > > > > On Mon, Nov 09, 2020 at 08:10:08PM +0100, Michal Suchanek wrote:
-> > > > > > > xfs accepts both dax and dax_enum but shows only dax_enum. Show both
-> > > > > > > options.
-> > > > > > > 
-> > > > > > > Fixes: 8d6c3446ec23 ("fs/xfs: Make DAX mount option a tri-state")
-> > > > > > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
-> > > > > > > ---
-> > > > > > >  fs/xfs/xfs_super.c | 2 +-
-> > > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > > > 
-> > > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > > > > index e3e229e52512..a3b00003840d 100644
-> > > > > > > --- a/fs/xfs/xfs_super.c
-> > > > > > > +++ b/fs/xfs/xfs_super.c
-> > > > > > > @@ -163,7 +163,7 @@ xfs_fs_show_options(
-> > > > > > >  		{ XFS_MOUNT_GRPID,		",grpid" },
-> > > > > > >  		{ XFS_MOUNT_DISCARD,		",discard" },
-> > > > > > >  		{ XFS_MOUNT_LARGEIO,		",largeio" },
-> > > > > > > -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
-> > > > > > > +		{ XFS_MOUNT_DAX_ALWAYS,		",dax,dax=always" },
-> > > > > > 
-> > > > > > NAK, programs that require DAX semantics for files stored on XFS must
-> > > > > > call statx to detect the STATX_ATTR_DAX flag, as outlined in "Enabling
-> > > > > > DAX on xfs" in Documentation/filesystems/dax.txt.
-> > > > > statx can be used to query S_DAX.  NOTE that only regular files will
-> > > > > ever have S_DAX set and therefore statx will never indicate that S_DAX
-> > > > > is set on directories.
-> > > > 
-> > > > Yup, by design.
-> > > > 
-> > > > The application doesn't need to do anything complex to make this
-> > > > work. If the app wants to use DAX, then it should use
-> > > > FS_IOC_FS{GS}ETXATTR to always set the on disk per inode DAX flags
-> > > > for it's data dirs and files, and then STATX_ATTR_DAX will *always*
-> > > > tell it whether DAX is actively in use at runtime. It's pretty
-> > > > simple, really.
-> > > > 
-> > > > > The filesystem may not have any files so statx cannot be used.
-> > > > 
-> > > > Really?  The app or installer is about to *write to the fs* and has
-> > > > all the permissions it needs to modify the contents of the fs. It's
-> > > > pretty simple to create a tmpdir, set the DAX flag on the tmpdir,
-> > > > then create a tmpfile in the tmpdir and run STATX_ATTR_DAX on it to
-> > > > see if DAX is active or not.....
-> > > 
-> > > Have you ever seen a 'wizard' style installer?
-> > 
-> > I wrote my first one in 1995 on Windows NT 3.51 using Installshield.
-> > 
-> > > Like one that firsts asks what to install, and then presents a list of
-> > > suitable locations that have enough space, supported filesystem features
-> > > enabled, and whatnot?
-> > 
-> > Hold on, 1995 is calling me. The application I was packaging used
-> > ACLs. But the NTFS version created by windows NT 3.1 was
-> > incompatible as ACL support didn't arrive until NT 3.51 and service
-> > pack 4(?) for NT 3.1. Yes, I had to write code to probe the
-> > filesystems to detect whether ACL support was available or not by
-> > -trying to create an ACL-.
-> > 
-> > I guess you could say "been there, done that, learnt the lesson".
-> So we are trying to be as bad as Windows now?
-> > 
-> > > So to present a list of mountpoints that support DAX one has to scribble
-> > > over every mountpoint on the system?
-> > 
-> > If you are filtering storage options presented to the user by
-> > supported features, then you have to probe for them in some way.
-> > And that means you have to consider that many option filesystem
-> > features that applications use cannot be detected via mount options
-> > checking the filesytem config. That is, there are features that can
-> > only be discovered by actually testing whether they work or not.
-> > 
-> > > That sounds ridiculous.
-> > 
-> > Reality is a harsh mistress. :/
-> > 
-> > [snip the rest because you're being ridiculous]
-> > 
-> > Are you aware of ndctl?
-> > 
-> > $ ndctl list
-> > [
-> >   {
-> >     "dev":"namespace1.0",
-> >     "mode":"fsdax",
-> >     "map":"mem",
-> >     "size":8589934592,
-> >     "sector_size":512,
-> >     "blockdev":"pmem1"
-> >   },
-> >   {
-> >     "dev":"namespace0.0",
-> >     "mode":"fsdax",
-> >     "map":"mem",
-> >     "size":8589934592,
-> >     "sector_size":512,
-> >     "blockdev":"pmem0"
-> >   }
-> > ]
-> Yes, that tells me that the device can be configured for dax. Not if the
-> filesystem will use it.
-> > 
-> > Oh, look there are two block devices on this machine that are
-> > configured for filesystem DAX (fsdax). They are /dev/pmem0 and
-> > /dev/pmem1.
-> > 
-> > What filesytsems are on them?
-> > 
-> > $ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT /dev/pmem0 /dev/pmem1
-> > NAME  SIZE FSTYPE MOUNTPOINT
-> > pmem1   8G ext4   /mnt/test
-> > pmem0   8G xfs    /mnt/scratch
-> > $
-> > 
-> > One XFs, one ext4, both of which will be using DAX capable unless
-> > the dax=never mount option is set. Which:
-> Or the bock size does not match page size. Or whatever other requirement
-> the filesystem might have is not met.
-> > 
-> > $ mount  |grep pmem
-> > /dev/pmem0 on /mnt/scratch type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
-> > /dev/pmem1 on /mnt/test type ext4 (rw,relatime)
-> > $
-> > 
-> > is not set on either mount.
-> > 
-> > Hence both filesystems at DAX capable and enabled, and should be
-> > presented as options to the user as such.
-> No, it is not the case. That is why it would make sense for the kernel
-> to make the information about DAX availability accessible somewhere.
-> > 
-> > And all this comes about because DAX is a property of the block
-> > device, not the filesystem. Hence the only time a DAX capable
-> > filesystem on a block device that is DAX capable will not be DAX
-> > capable is if the dax=never is set...
-> See, it is not property of the block device. It is property of the mount
-> point. The availability on the device is one requirement but the
-> filesystem options affect availability to the user in the end.
+On 11/12/20 12:30 AM, Gao Xiang wrote:
+> Currently, commit e9e2eae89ddb dropped a (int) decoration from
+> XFS_LITINO(mp), and since sizeof() expression is also involved,
+> the result of XFS_LITINO(mp) is simply as the size_t type
+> (commonly unsigned long).
 
-No, it is not really a property of the mountpoint either. If anything it is
-a property of the inode. Two different inodes on the very same filesystem,
-one may support DAX the other will not (think for example of XFS real-time
-volumes, or simply inodes with / without S_DAX flag set). And we are back
-at what Dave tries to get accross. As inconvenient as it is
-statx(STATX_ATTR_DAX) is the only way to tell.
+Thanks for finding this!  Let me think through it a little.
+ 
+> Considering the expression in xfs_attr_shortform_bytesfit():
+>   offset = (XFS_LITINO(mp) - bytes) >> 3;
+> let "bytes" be (int)340, and
+>     "XFS_LITINO(mp)" be (unsigned long)336.
+> 
+> on 64-bit platform, the expression is
+>   offset = ((unsigned long)336 - (int)340) >> 8 =
 
-> > Of course, this is just encoding how existing filesystems behave -
-> > it's not a requirement for future filesytsems so they may use other
-> > mechanisms for enabling/disabling DAX. Which leaves you with the
-> > only reliable mechanism of creating filesystem and checking
-> > statx(STATX_ATTR_DAX)....
-> Or the kernel could just tell the user. But right, information is power,
-> and keeping the user in the dark is much more entertaining.
+This should be >> 3, right.
 
-I think it would be more productive if you actually answered Ted's
-question: Exactly which application got broken by the change? I know for a
-fact that one large DB vendor was parsing mount options in /proc/mounts to
-determine whether their DB can use DAX or not (and this was already a
-"cleaned up" method because before this they were parsing VMA flags in
-/proc/<pid>/smaps which is even worse). But in this case they also seemed
-OK to switch to statx() once it is available...
+>            (int)(0xfffffffffffffffcUL >> 3) = -1
+> 
+> but on 32-bit platform, the expression is
+>   offset = ((unsigned long)336 - (int)340) >> 8 =
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+and >> 3 here as well.
+
+>            (int)(0xfffffffcUL >> 3) = 0x1fffffff
+> instead.
+
+Ok.  But wow, that magical cast to (int) in XFS_LITINO isn't at
+all clear to me.
+
+XFS_LITINO() indicates a /size/ - fixing this problem by making it a
+signed value feels very strange, but I'm not sure what would be better,
+yet.
+
+> Therefore, one result is
+>   "ASSERT(new_size <= XFS_IFORK_SIZE(ip, whichfork));"
+>   assertion failure in xfs_idata_realloc().
+> 
+> , which can be triggered with the following commands:
+>  touch a;
+>  setfattr -n user.0 -v "`seq 0 80`" a;
+>  setfattr -n user.1 -v "`seq 0 80`" a
+> on 32-bit platform.
+
+Can you please write an xfstest for this? :)
+
+> Fix it by restoring (int) decorator to XFS_LITINO(mp) since
+> int type for XFS_LITINO(mp) is safe and all pre-exist signed
+> calculations are correct.
+> 
+> Fixes: e9e2eae89ddb ("xfs: only check the superblock version for dinode size calculation")
+> Cc: <stable@vger.kernel.org> # 5.7+
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+> I'm not sure this is the preferred way or just simply fix
+> xfs_attr_shortform_bytesfit() since I don't look into the
+> rest of XFS_LITINO(mp) users. Add (int) to XFS_LITINO(mp)
+> will avoid all potential regression at least.
+> 
+>  fs/xfs/libxfs/xfs_format.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+> index dd764da08f6f..f58f0a44c024 100644
+> --- a/fs/xfs/libxfs/xfs_format.h
+> +++ b/fs/xfs/libxfs/xfs_format.h
+> @@ -1061,7 +1061,7 @@ enum xfs_dinode_fmt {
+>  		sizeof(struct xfs_dinode) : \
+>  		offsetof(struct xfs_dinode, di_crc))>  #define XFS_LITINO(mp) \
+> -	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb))
+> +	((int)((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb)))
+
+If we do keep the (int) cast here we at least need a comment explaining why
+it cannot be removed, unless there is a better way to solve the problem.
+
+I wonder if explicitly making XFS_LITINO() cast to a size_t would be
+best, and then in xfs_attr_shortform_bytesfit() we just quickly reject
+the query if the bytes are larger than the literal area:
+
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index bb128db..5588c2e 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -535,6 +535,10 @@ STATIC void xfs_attr3_leaf_moveents(struct xfs_da_args *args,
+        int                     maxforkoff;
+        int                     offset;
+ 
++       /* Is there no chance we can fit? */
++       if (bytes > XFS_LITINO(mp))
++               return 0;
++
+        /* rounded down */
+        offset = (XFS_LITINO(mp) - bytes) >> 3;
+
+or, maybe simply:
+
+-        offset = (XFS_LITINO(mp) - bytes) >> 3;
++        offset = (int)(XFS_LITINO(mp) - bytes) >> 3;
+
+to be sure that the arithmetic doesn't get promoted to unsigned before the shift?
+
+or maybe others have better ideas.
+
+-Eric
+
+  
+>  /*
+>   * Inode data & attribute fork sizes, per inode.
+> 
