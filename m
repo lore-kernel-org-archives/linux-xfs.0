@@ -2,203 +2,154 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9E33C56201
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92B10C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C46A2076E
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3AD4421534
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 05:38:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="sz13Xhk0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727925AbgKLFh7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Nov 2020 00:37:59 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47170 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728642AbgKLBuA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Nov 2020 20:50:00 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9861458B977;
-        Thu, 12 Nov 2020 12:49:53 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kd1kG-00ADL6-Sy; Thu, 12 Nov 2020 12:49:52 +1100
-Date:   Thu, 12 Nov 2020 12:49:52 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: show the dax option in mount options.
-Message-ID: <20201112014952.GL7391@dread.disaster.area>
-References: <cover.1604948373.git.msuchanek@suse.de>
- <f9f7ba25e97dacd92c09eb3ee6a4aca8b4f72b00.1604948373.git.msuchanek@suse.de>
- <20201109192419.GC9695@magnolia>
- <20201109202705.GZ29778@kitsune.suse.cz>
- <20201109210823.GI7391@dread.disaster.area>
- <20201111102848.GD29778@kitsune.suse.cz>
+        id S1727959AbgKLFiB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Nov 2020 00:38:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36406 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728002AbgKLCxu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Nov 2020 21:53:50 -0500
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7778C0613D1
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2020 18:53:49 -0800 (PST)
+Received: by mail-pg1-x541.google.com with SMTP id r10so2899545pgb.10
+        for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2020 18:53:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=7LR5R5fKUaSOdZXx1LOVnmUZug2O8Q7jTTQCXBUGAJo=;
+        b=sz13Xhk0pBPk0pCUCjvmYADmi+Jn2wqHnDOuaTj09xE+uNxAMwOrA++nLe/vxw/Jcq
+         ie14VeVSF3ArvaRe6GX0/FgfCkWi0tpvlnzX8ZVuX1dlFQOyRrpcCoJafsd8D74TUCvN
+         S44gS6nQRsaE0YEvwXvzkR+Bqaqrus5cTV66Dxp/twNhwrTVsiKFbWpwNY9Mzdyhc8Up
+         mS42799fhKAiPJ3+mN2kAtGbzdpeNyUhrj68wZ38iTiQ8s4LWcx0kkg6qoXuJhYgoTvy
+         jqlqttg4cA7X+xiMwI8gvX/NlNxRBVDst/Tf9xkI9Q+0RMldOxijNJ6GZAOEECnKenFY
+         XkDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=7LR5R5fKUaSOdZXx1LOVnmUZug2O8Q7jTTQCXBUGAJo=;
+        b=pMhP26H2hhyxBe3EfIL0jKaA7oPoK+J8+metCwYROVBudslU2QK1HTCYs10BTaT4FB
+         th5OzCP5T9pXW6mRuxVTI4/3Gh93wS5FnWpSvB3eEgjx/6n5Zz7x+yPzT0SqRAWaoqJ1
+         LkdY/+v9GiTxJ4nnm5c8d12lQFtTLX2kvo6MqdXHBlFEZ1dX9zberllFMqV+064Rp97h
+         7wMpqOWL22mYaWvQTvO2dWyIvOdm0NntBngU+uYHMC1NLMvQJLsgYFZVXYeupwXjcGb1
+         +rpJBJF+1h0p2iGPnPjeZCpz/fCNrmMzGTMQLCJ/sZkHloRENiPyEsQVoZeGclyiFTU5
+         1plA==
+X-Gm-Message-State: AOAM530xEqnInyPqgMyCZC3hT91hC8HngW7D0cX5b99gsKAhvlPafTqL
+        gFtqTykIn+yqdPd/QTW3fArO80DDMi1P
+X-Google-Smtp-Source: ABdhPJxLqNNgKrbUQ3lll6IPklnF+VajDArgyxZLkCExhXNYPLUOZzirF7mZp6to+WVrht7dssSnKA==
+X-Received: by 2002:a63:fc5f:: with SMTP id r31mr24072540pgk.90.1605149629170;
+        Wed, 11 Nov 2020 18:53:49 -0800 (PST)
+Received: from [10.76.131.47] ([103.7.29.6])
+        by smtp.gmail.com with ESMTPSA id i7sm3984857pjj.20.2020.11.11.18.53.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Nov 2020 18:53:47 -0800 (PST)
+Subject: Re: [PATCH v6 1/3] xfs: delete duplicated tp->t_dqinfo null check and
+ allocation
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
+References: <1602819508-29033-1-git-send-email-kaixuxia@tencent.com>
+ <1602819508-29033-2-git-send-email-kaixuxia@tencent.com>
+ <20201026225226.GF347246@magnolia>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <224e199b-36d1-401e-3f40-bd0e6c2b4c00@gmail.com>
+Date:   Thu, 12 Nov 2020 10:53:39 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20201111102848.GD29778@kitsune.suse.cz>
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=8nJEP1OIZ-IA:10 a=nNwsprhYR40A:10 a=7-415B0cAAAA:8
-        a=VtnXJFtyVPRg2aRurhEA:9 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20201026225226.GF347246@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 11, 2020 at 11:28:48AM +0100, Michal Suchánek wrote:
-> On Tue, Nov 10, 2020 at 08:08:23AM +1100, Dave Chinner wrote:
-> > On Mon, Nov 09, 2020 at 09:27:05PM +0100, Michal Suchánek wrote:
-> > > On Mon, Nov 09, 2020 at 11:24:19AM -0800, Darrick J. Wong wrote:
-> > > > On Mon, Nov 09, 2020 at 08:10:08PM +0100, Michal Suchanek wrote:
-> > > > > xfs accepts both dax and dax_enum but shows only dax_enum. Show both
-> > > > > options.
-> > > > > 
-> > > > > Fixes: 8d6c3446ec23 ("fs/xfs: Make DAX mount option a tri-state")
-> > > > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
-> > > > > ---
-> > > > >  fs/xfs/xfs_super.c | 2 +-
-> > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > > > 
-> > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > > index e3e229e52512..a3b00003840d 100644
-> > > > > --- a/fs/xfs/xfs_super.c
-> > > > > +++ b/fs/xfs/xfs_super.c
-> > > > > @@ -163,7 +163,7 @@ xfs_fs_show_options(
-> > > > >  		{ XFS_MOUNT_GRPID,		",grpid" },
-> > > > >  		{ XFS_MOUNT_DISCARD,		",discard" },
-> > > > >  		{ XFS_MOUNT_LARGEIO,		",largeio" },
-> > > > > -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
-> > > > > +		{ XFS_MOUNT_DAX_ALWAYS,		",dax,dax=always" },
-> > > > 
-> > > > NAK, programs that require DAX semantics for files stored on XFS must
-> > > > call statx to detect the STATX_ATTR_DAX flag, as outlined in "Enabling
-> > > > DAX on xfs" in Documentation/filesystems/dax.txt.
-> > > statx can be used to query S_DAX.  NOTE that only regular files will
-> > > ever have S_DAX set and therefore statx will never indicate that S_DAX
-> > > is set on directories.
-> > 
-> > Yup, by design.
-> > 
-> > The application doesn't need to do anything complex to make this
-> > work. If the app wants to use DAX, then it should use
-> > FS_IOC_FS{GS}ETXATTR to always set the on disk per inode DAX flags
-> > for it's data dirs and files, and then STATX_ATTR_DAX will *always*
-> > tell it whether DAX is actively in use at runtime. It's pretty
-> > simple, really.
-> > 
-> > > The filesystem may not have any files so statx cannot be used.
-> > 
-> > Really?  The app or installer is about to *write to the fs* and has
-> > all the permissions it needs to modify the contents of the fs. It's
-> > pretty simple to create a tmpdir, set the DAX flag on the tmpdir,
-> > then create a tmpfile in the tmpdir and run STATX_ATTR_DAX on it to
-> > see if DAX is active or not.....
+
+
+On 2020/10/27 6:52, Darrick J. Wong wrote:
+> On Fri, Oct 16, 2020 at 11:38:26AM +0800, xiakaixu1987@gmail.com wrote:
+>> From: Kaixu Xia <kaixuxia@tencent.com>
+>>
+>> The function xfs_trans_mod_dquot_byino() wraps around
+>> xfs_trans_mod_dquot() to account for quotas, and also there is the
+>> function call chain xfs_trans_reserve_quota_bydquots -> xfs_trans_dqresv
+>> -> xfs_trans_mod_dquot, both of them do the duplicated null check and
+>> allocation. Thus we can delete the duplicated operation from them.
+>>
+>> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
+>> Reviewed-by: Brian Foster <bfoster@redhat.com>
+>> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> Have you ever seen a 'wizard' style installer?
+> HAH this got all the way to v6, sorry I suck. :(
+> 
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-I wrote my first one in 1995 on Windows NT 3.51 using Installshield.
+Hi Darrick,
 
-> Like one that firsts asks what to install, and then presents a list of
-> suitable locations that have enough space, supported filesystem features
-> enabled, and whatnot?
+There are some patches that have been reviewed but not been merged
+into xfs for-next branch, I will reply to them.
+Sorry for the noise:)
 
-Hold on, 1995 is calling me. The application I was packaging used
-ACLs. But the NTFS version created by windows NT 3.1 was
-incompatible as ACL support didn't arrive until NT 3.51 and service
-pack 4(?) for NT 3.1. Yes, I had to write code to probe the
-filesystems to detect whether ACL support was available or not by
--trying to create an ACL-.
+Thanks,
+Kaixu
+> 
+> --D
+> 
+>> ---
+>>  fs/xfs/xfs_trans_dquot.c | 7 -------
+>>  1 file changed, 7 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+>> index fe45b0c3970c..67f1e275b34d 100644
+>> --- a/fs/xfs/xfs_trans_dquot.c
+>> +++ b/fs/xfs/xfs_trans_dquot.c
+>> @@ -143,9 +143,6 @@ xfs_trans_mod_dquot_byino(
+>>  	    xfs_is_quota_inode(&mp->m_sb, ip->i_ino))
+>>  		return;
+>>  
+>> -	if (tp->t_dqinfo == NULL)
+>> -		xfs_trans_alloc_dqinfo(tp);
+>> -
+>>  	if (XFS_IS_UQUOTA_ON(mp) && ip->i_udquot)
+>>  		(void) xfs_trans_mod_dquot(tp, ip->i_udquot, field, delta);
+>>  	if (XFS_IS_GQUOTA_ON(mp) && ip->i_gdquot)
+>> @@ -698,7 +695,6 @@ xfs_trans_dqresv(
+>>  	 * because we don't have the luxury of a transaction envelope then.
+>>  	 */
+>>  	if (tp) {
+>> -		ASSERT(tp->t_dqinfo);
+>>  		ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
+>>  		if (nblks != 0)
+>>  			xfs_trans_mod_dquot(tp, dqp,
+>> @@ -752,9 +748,6 @@ xfs_trans_reserve_quota_bydquots(
+>>  	if (!XFS_IS_QUOTA_RUNNING(mp) || !XFS_IS_QUOTA_ON(mp))
+>>  		return 0;
+>>  
+>> -	if (tp && tp->t_dqinfo == NULL)
+>> -		xfs_trans_alloc_dqinfo(tp);
+>> -
+>>  	ASSERT(flags & XFS_QMOPT_RESBLK_MASK);
+>>  
+>>  	if (udqp) {
+>> -- 
+>> 2.20.0
+>>
 
-I guess you could say "been there, done that, learnt the lesson".
-
-> So to present a list of mountpoints that support DAX one has to scribble
-> over every mountpoint on the system?
-
-If you are filtering storage options presented to the user by
-supported features, then you have to probe for them in some way.
-And that means you have to consider that many option filesystem
-features that applications use cannot be detected via mount options
-checking the filesytem config. That is, there are features that can
-only be discovered by actually testing whether they work or not.
-
-> That sounds ridiculous.
-
-Reality is a harsh mistress. :/
-
-[snip the rest because you're being ridiculous]
-
-Are you aware of ndctl?
-
-$ ndctl list
-[
-  {
-    "dev":"namespace1.0",
-    "mode":"fsdax",
-    "map":"mem",
-    "size":8589934592,
-    "sector_size":512,
-    "blockdev":"pmem1"
-  },
-  {
-    "dev":"namespace0.0",
-    "mode":"fsdax",
-    "map":"mem",
-    "size":8589934592,
-    "sector_size":512,
-    "blockdev":"pmem0"
-  }
-]
-
-Oh, look there are two block devices on this machine that are
-configured for filesystem DAX (fsdax). They are /dev/pmem0 and
-/dev/pmem1.
-
-What filesytsems are on them?
-
-$ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT /dev/pmem0 /dev/pmem1
-NAME  SIZE FSTYPE MOUNTPOINT
-pmem1   8G ext4   /mnt/test
-pmem0   8G xfs    /mnt/scratch
-$
-
-One XFs, one ext4, both of which will be using DAX capable unless
-the dax=never mount option is set. Which:
-
-$ mount  |grep pmem
-/dev/pmem0 on /mnt/scratch type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
-/dev/pmem1 on /mnt/test type ext4 (rw,relatime)
-$
-
-is not set on either mount.
-
-Hence both filesystems at DAX capable and enabled, and should be
-presented as options to the user as such.
-
-And all this comes about because DAX is a property of the block
-device, not the filesystem. Hence the only time a DAX capable
-filesystem on a block device that is DAX capable will not be DAX
-capable is if the dax=never is set...
-
-Of course, this is just encoding how existing filesystems behave -
-it's not a requirement for future filesytsems so they may use other
-mechanisms for enabling/disabling DAX. Which leaves you with the
-only reliable mechanism of creating filesystem and checking
-statx(STATX_ATTR_DAX)....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+kaixuxia
