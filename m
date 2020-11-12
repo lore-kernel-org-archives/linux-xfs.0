@@ -2,136 +2,212 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB1E3C56201
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 06:31:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB20C2D0A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 11:12:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 795D9206B5
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 06:31:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="D4os0q/C"
+	by mail.kernel.org (Postfix) with ESMTP id B265C2220B
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Nov 2020 11:12:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726316AbgKLGbX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Nov 2020 01:31:23 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:43992 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726291AbgKLGbW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Nov 2020 01:31:22 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605162681;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc; bh=RhtA6QSp1QbBfU96em4sj0ByA3Z5T9kaKGCTzLh5k6A=;
-        b=D4os0q/CP2wos0lqcfds3/+eVZ05+UDzEJCWcUCrR8I9tJsP5lJs0fkdn0kZ0W90fPvzkE
-        u6Qn/n6aYt+XbRpc6JDC1fvukF1FhuujlsDjWxqPC9vD+ZSnuJN2jLE7iS/W7EhsWFu3th
-        tIkWG4NwFoMDPfASEG37PKVp835tddU=
-Received: from mail-pl1-f197.google.com (mail-pl1-f197.google.com
- [209.85.214.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-58-Rytq7BZpMma961frbMAtKg-1; Thu, 12 Nov 2020 01:31:19 -0500
-X-MC-Unique: Rytq7BZpMma961frbMAtKg-1
-Received: by mail-pl1-f197.google.com with SMTP id t10so2794942ply.9
-        for <linux-xfs@vger.kernel.org>; Wed, 11 Nov 2020 22:31:19 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=RhtA6QSp1QbBfU96em4sj0ByA3Z5T9kaKGCTzLh5k6A=;
-        b=Zff/D0gcBNRg0qEWdV4CG/OMlvSTQ5x4YoRRRLItPNkWYQhsap5TeTcYJ7eu1vIIv+
-         fFF2/5goFO1Hps51AIxIeHoH7/tg+maYhrVLg5Vwikua3STGrqqP4yf9NZRId4rdQExE
-         rWCOp5k4yYhYCiHDj0Q7jTniSTcEZhGVqDAcvvvzW/DLwXaWZLZBg2wCvC+g3MnEC+80
-         R6vS3gb5oWjbxEgZS74vj+aqsNFf2/msqVqz22PXZ4IjVQZNpeU91RtVwOdJvpFTU1ti
-         9aXMT+adwEeqKloVXsT9puEj8H7eQubwC+H5KI9U2CHLfRVJFQv1KsH9bQDfZ3uPbN/T
-         /7qw==
-X-Gm-Message-State: AOAM533UJorl0UlMflLJWvAcaGwiN4+uLAV50KLNL+O9+z6MI3bwx6fw
-        FkcllTSRTerGrJlmEHxUU0o1A1JrD/0QLRtXT5MyztovNhk5RobIVnt5YeMe4nRvu+1Qs+e6jJ2
-        tE/uIb/Bq/9DO2NDOdB0eye3VUqLLIBKw0IZD2zgMJxCjlwIA8xtbkpZ5v8vmKTmnlcP9C81wYQ
-        ==
-X-Received: by 2002:a17:90b:f10:: with SMTP id br16mr7618505pjb.60.1605162678283;
-        Wed, 11 Nov 2020 22:31:18 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxkpudI07BN4usbj64YYaOQxy5Cz9zNtPxALGTMfevPPYhdXWMdSav0XlUgYldyBfOdUQZtIQ==
-X-Received: by 2002:a17:90b:f10:: with SMTP id br16mr7618477pjb.60.1605162677976;
-        Wed, 11 Nov 2020 22:31:17 -0800 (PST)
-Received: from xiangao.com ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id k25sm4942345pfi.42.2020.11.11.22.31.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Nov 2020 22:31:17 -0800 (PST)
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>,
-        Gao Xiang <hsiangkao@redhat.com>, stable@vger.kernel.org
-Subject: [PATCH] xfs: fix signed calculation related to XFS_LITINO(mp)
-Date:   Thu, 12 Nov 2020 14:30:05 +0800
-Message-Id: <20201112063005.692054-1-hsiangkao@redhat.com>
-X-Mailer: git-send-email 2.18.4
+        id S1728065AbgKLLMc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Nov 2020 06:12:32 -0500
+Received: from mx2.suse.de ([195.135.220.15]:44036 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728035AbgKLLMV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 12 Nov 2020 06:12:21 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id EB56AAEAA;
+        Thu, 12 Nov 2020 11:12:18 +0000 (UTC)
+Date:   Thu, 12 Nov 2020 12:12:17 +0100
+From:   Michal =?iso-8859-1?Q?Such=E1nek?= <msuchanek@suse.de>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: show the dax option in mount options.
+Message-ID: <20201112111217.GF29778@kitsune.suse.cz>
+References: <cover.1604948373.git.msuchanek@suse.de>
+ <f9f7ba25e97dacd92c09eb3ee6a4aca8b4f72b00.1604948373.git.msuchanek@suse.de>
+ <20201109192419.GC9695@magnolia>
+ <20201109202705.GZ29778@kitsune.suse.cz>
+ <20201109210823.GI7391@dread.disaster.area>
+ <20201111102848.GD29778@kitsune.suse.cz>
+ <20201112014952.GL7391@dread.disaster.area>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20201112014952.GL7391@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Currently, commit e9e2eae89ddb dropped a (int) decoration from
-XFS_LITINO(mp), and since sizeof() expression is also involved,
-the result of XFS_LITINO(mp) is simply as the size_t type
-(commonly unsigned long).
+On Thu, Nov 12, 2020 at 12:49:52PM +1100, Dave Chinner wrote:
+> On Wed, Nov 11, 2020 at 11:28:48AM +0100, Michal Suchánek wrote:
+> > On Tue, Nov 10, 2020 at 08:08:23AM +1100, Dave Chinner wrote:
+> > > On Mon, Nov 09, 2020 at 09:27:05PM +0100, Michal Suchánek wrote:
+> > > > On Mon, Nov 09, 2020 at 11:24:19AM -0800, Darrick J. Wong wrote:
+> > > > > On Mon, Nov 09, 2020 at 08:10:08PM +0100, Michal Suchanek wrote:
+> > > > > > xfs accepts both dax and dax_enum but shows only dax_enum. Show both
+> > > > > > options.
+> > > > > > 
+> > > > > > Fixes: 8d6c3446ec23 ("fs/xfs: Make DAX mount option a tri-state")
+> > > > > > Signed-off-by: Michal Suchanek <msuchanek@suse.de>
+> > > > > > ---
+> > > > > >  fs/xfs/xfs_super.c | 2 +-
+> > > > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > > > > index e3e229e52512..a3b00003840d 100644
+> > > > > > --- a/fs/xfs/xfs_super.c
+> > > > > > +++ b/fs/xfs/xfs_super.c
+> > > > > > @@ -163,7 +163,7 @@ xfs_fs_show_options(
+> > > > > >  		{ XFS_MOUNT_GRPID,		",grpid" },
+> > > > > >  		{ XFS_MOUNT_DISCARD,		",discard" },
+> > > > > >  		{ XFS_MOUNT_LARGEIO,		",largeio" },
+> > > > > > -		{ XFS_MOUNT_DAX_ALWAYS,		",dax=always" },
+> > > > > > +		{ XFS_MOUNT_DAX_ALWAYS,		",dax,dax=always" },
+> > > > > 
+> > > > > NAK, programs that require DAX semantics for files stored on XFS must
+> > > > > call statx to detect the STATX_ATTR_DAX flag, as outlined in "Enabling
+> > > > > DAX on xfs" in Documentation/filesystems/dax.txt.
+> > > > statx can be used to query S_DAX.  NOTE that only regular files will
+> > > > ever have S_DAX set and therefore statx will never indicate that S_DAX
+> > > > is set on directories.
+> > > 
+> > > Yup, by design.
+> > > 
+> > > The application doesn't need to do anything complex to make this
+> > > work. If the app wants to use DAX, then it should use
+> > > FS_IOC_FS{GS}ETXATTR to always set the on disk per inode DAX flags
+> > > for it's data dirs and files, and then STATX_ATTR_DAX will *always*
+> > > tell it whether DAX is actively in use at runtime. It's pretty
+> > > simple, really.
+> > > 
+> > > > The filesystem may not have any files so statx cannot be used.
+> > > 
+> > > Really?  The app or installer is about to *write to the fs* and has
+> > > all the permissions it needs to modify the contents of the fs. It's
+> > > pretty simple to create a tmpdir, set the DAX flag on the tmpdir,
+> > > then create a tmpfile in the tmpdir and run STATX_ATTR_DAX on it to
+> > > see if DAX is active or not.....
+> > 
+> > Have you ever seen a 'wizard' style installer?
+> 
+> I wrote my first one in 1995 on Windows NT 3.51 using Installshield.
+> 
+> > Like one that firsts asks what to install, and then presents a list of
+> > suitable locations that have enough space, supported filesystem features
+> > enabled, and whatnot?
+> 
+> Hold on, 1995 is calling me. The application I was packaging used
+> ACLs. But the NTFS version created by windows NT 3.1 was
+> incompatible as ACL support didn't arrive until NT 3.51 and service
+> pack 4(?) for NT 3.1. Yes, I had to write code to probe the
+> filesystems to detect whether ACL support was available or not by
+> -trying to create an ACL-.
+> 
+> I guess you could say "been there, done that, learnt the lesson".
+So we are trying to be as bad as Windows now?
+> 
+> > So to present a list of mountpoints that support DAX one has to scribble
+> > over every mountpoint on the system?
+> 
+> If you are filtering storage options presented to the user by
+> supported features, then you have to probe for them in some way.
+> And that means you have to consider that many option filesystem
+> features that applications use cannot be detected via mount options
+> checking the filesytem config. That is, there are features that can
+> only be discovered by actually testing whether they work or not.
+> 
+> > That sounds ridiculous.
+> 
+> Reality is a harsh mistress. :/
+> 
+> [snip the rest because you're being ridiculous]
+> 
+> Are you aware of ndctl?
+> 
+> $ ndctl list
+> [
+>   {
+>     "dev":"namespace1.0",
+>     "mode":"fsdax",
+>     "map":"mem",
+>     "size":8589934592,
+>     "sector_size":512,
+>     "blockdev":"pmem1"
+>   },
+>   {
+>     "dev":"namespace0.0",
+>     "mode":"fsdax",
+>     "map":"mem",
+>     "size":8589934592,
+>     "sector_size":512,
+>     "blockdev":"pmem0"
+>   }
+> ]
+Yes, that tells me that the device can be configured for dax. Not if the
+filesystem will use it.
+> 
+> Oh, look there are two block devices on this machine that are
+> configured for filesystem DAX (fsdax). They are /dev/pmem0 and
+> /dev/pmem1.
+> 
+> What filesytsems are on them?
+> 
+> $ lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT /dev/pmem0 /dev/pmem1
+> NAME  SIZE FSTYPE MOUNTPOINT
+> pmem1   8G ext4   /mnt/test
+> pmem0   8G xfs    /mnt/scratch
+> $
+> 
+> One XFs, one ext4, both of which will be using DAX capable unless
+> the dax=never mount option is set. Which:
+Or the bock size does not match page size. Or whatever other requirement
+the filesystem might have is not met.
+> 
+> $ mount  |grep pmem
+> /dev/pmem0 on /mnt/scratch type xfs (rw,relatime,attr2,inode64,logbufs=8,logbsize=32k,noquota)
+> /dev/pmem1 on /mnt/test type ext4 (rw,relatime)
+> $
+> 
+> is not set on either mount.
+> 
+> Hence both filesystems at DAX capable and enabled, and should be
+> presented as options to the user as such.
+No, it is not the case. That is why it would make sense for the kernel
+to make the information about DAX availability accessible somewhere.
+> 
+> And all this comes about because DAX is a property of the block
+> device, not the filesystem. Hence the only time a DAX capable
+> filesystem on a block device that is DAX capable will not be DAX
+> capable is if the dax=never is set...
+See, it is not property of the block device. It is property of the mount
+point. The availability on the device is one requirement but the
+filesystem options affect availability to the user in the end.
+> 
+> Of course, this is just encoding how existing filesystems behave -
+> it's not a requirement for future filesytsems so they may use other
+> mechanisms for enabling/disabling DAX. Which leaves you with the
+> only reliable mechanism of creating filesystem and checking
+> statx(STATX_ATTR_DAX)....
+Or the kernel could just tell the user. But right, information is power,
+and keeping the user in the dark is much more entertaining.
 
-Considering the expression in xfs_attr_shortform_bytesfit():
-  offset = (XFS_LITINO(mp) - bytes) >> 3;
-let "bytes" be (int)340, and
-    "XFS_LITINO(mp)" be (unsigned long)336.
+OK
 
-on 64-bit platform, the expression is
-  offset = ((unsigned long)336 - (int)340) >> 8 =
-           (int)(0xfffffffffffffffcUL >> 3) = -1
+I guess I have exhausted sane discussion options here.
 
-but on 32-bit platform, the expression is
-  offset = ((unsigned long)336 - (int)340) >> 8 =
-           (int)(0xfffffffcUL >> 3) = 0x1fffffff
-instead.
+Best regards
 
-so offset becomes a large number on 32-bit platform, and cause
-xfs_attr_shortform_bytesfit() returns maxforkoff rather than 0
-
-Therefore, one result is
-  "ASSERT(new_size <= XFS_IFORK_SIZE(ip, whichfork));"
-  assertion failure in xfs_idata_realloc().
-
-, which can be triggered with the following commands:
- touch a;
- setfattr -n user.0 -v "`seq 0 80`" a;
- setfattr -n user.1 -v "`seq 0 80`" a
-on 32-bit platform.
-
-Fix it by restoring (int) decorator to XFS_LITINO(mp) since
-int type for XFS_LITINO(mp) is safe and all pre-exist signed
-calculations are correct.
-
-Fixes: e9e2eae89ddb ("xfs: only check the superblock version for dinode size calculation")
-Cc: <stable@vger.kernel.org> # 5.7+
-Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
----
-I'm not sure this is the preferred way or just simply fix
-xfs_attr_shortform_bytesfit() since I don't look into the
-rest of XFS_LITINO(mp) users. Add (int) to XFS_LITINO(mp)
-will avoid all potential regression at least.
-
- fs/xfs/libxfs/xfs_format.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index dd764da08f6f..f58f0a44c024 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1061,7 +1061,7 @@ enum xfs_dinode_fmt {
- 		sizeof(struct xfs_dinode) : \
- 		offsetof(struct xfs_dinode, di_crc))
- #define XFS_LITINO(mp) \
--	((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb))
-+	((int)((mp)->m_sb.sb_inodesize - XFS_DINODE_SIZE(&(mp)->m_sb)))
- 
- /*
-  * Inode data & attribute fork sizes, per inode.
--- 
-2.18.4
-
+Michal
