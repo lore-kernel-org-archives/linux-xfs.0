@@ -8,63 +8,63 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51443C388F7
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 12:05:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28EE9C4742C
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 12:05:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 064302224C
+	by mail.kernel.org (Postfix) with ESMTP id E7F1322240
 	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 12:05:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NAiR9KTG"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NzpboTfJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727112AbgKMMFO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Nov 2020 07:05:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58124 "EHLO
+        id S1727104AbgKMMFN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Nov 2020 07:05:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726495AbgKML1n (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Nov 2020 06:27:43 -0500
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC55BC061A47;
-        Fri, 13 Nov 2020 03:27:38 -0800 (PST)
-Received: by mail-pf1-x42a.google.com with SMTP id v12so7350759pfm.13;
-        Fri, 13 Nov 2020 03:27:38 -0800 (PST)
+        with ESMTP id S1726184AbgKML1o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Nov 2020 06:27:44 -0500
+Received: from mail-pf1-x42d.google.com (mail-pf1-x42d.google.com [IPv6:2607:f8b0:4864:20::42d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8841C061A49;
+        Fri, 13 Nov 2020 03:27:43 -0800 (PST)
+Received: by mail-pf1-x42d.google.com with SMTP id a18so7390466pfl.3;
+        Fri, 13 Nov 2020 03:27:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=tDNJv2hKsH0A5GF/u9+v/0f2U4xIn/WtS6Vk2OEsrlw=;
-        b=NAiR9KTGTOTNFhUGoNYjOTjcd+fnGj4UGePcd/1luvGey+tw3s2HsyFDcl6dLJwGpn
-         ymRHwvQmC95OB+gK81PAfZSlCTEswiFgSh+AUhgdbzWR97lRXB5lvzP9sWAuu84kk8Q5
-         eehXeO/IZBb5bSzGEgysH94qwTKM6d8k4SVjT4LyhLmmgtss+Q2YqXK955lrI3l7yXlQ
-         TGoiMlBPtVDqBvFt/jqtLn4syu+8q77uNc1FBS9Zl7+gaGeAdQibcBf4Z9saNhdwKdjO
-         X+QNXrvTZB4C9fr2exkVfy1QQMAFz0AHkkFjqf9ushwuVDnmzbOfSmmRID2m2YuqTBGb
-         DZUw==
+        bh=z7HROPP4p0WyFli+42wxjrz7OGx+y1FoxAU7QHFJXTg=;
+        b=NzpboTfJEMzgZyXR3Cja3DvZ0/2FZmyxj+A7CLGoKlE9ICYKAU7jiBZiX9NNT5LzZL
+         UQaXbXiOxZth4VpNwYWP4jqjKOCJNXc8CtpmYYI8wVmFaFXVcOA66AY41hMu/Jcx4j/j
+         J2GrahHtkEGCrpFxsj6kqZureJKh5OlmOqF04nu7XpvSqOblxNlBqmlw5xt0b8rsGWaU
+         JnqH0/J/LSJ0PxpFMh7meWxBAgD27kqsbOKrhBIpfk/uymC+fBv1pNRkpw+z3+1TGB5Z
+         nwv6wvHcJUjMN4eUhhKG0kgE+vmi+uGCso7TYKNbRopkpClC1Q0vcwPCFqZv58epk2By
+         +ryw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=tDNJv2hKsH0A5GF/u9+v/0f2U4xIn/WtS6Vk2OEsrlw=;
-        b=gRO+zK7w21cTSPbr/TDuH5JoxgQQZUpY3pSQdSfk/e2bTj3QWj/iND+kfzSOM6AxV6
-         gaKXIxeudwj2ESywmANUyfuXjimf0pNIwKGrMCbu+DUyYvOmj6zoPbTa+dHciWtwxeDQ
-         9RJsc2roFi/BPo/z8PvNm69rsm+RrmNUXoz+qcOcMO+nTHdvG1tDyY62X9CGbpr6qi+G
-         tTAhtgP5G1QvJF8LMvWcFFe/PBdtoESbd2/X5vlrW+/4U0jLSlJz5cnotIe0o8lECJhN
-         yMKHdzaIco6oq9XdtpdUlpZDq/b2Uct76xL3Nog37povOEB8KJ9X7s8mjJKUdKPkwiiS
-         jcyw==
-X-Gm-Message-State: AOAM531QUYXQHEq8RT6ciDo9WlviBl1YUxUJ5HETTqerjC/AWqOG2AEi
-        FGFg8ZaJy5AOgrA3ZAVk/fMwsTavaeI=
-X-Google-Smtp-Source: ABdhPJxX0SVG2TKANFVjVB5vPi8NfGu7EJGrd7CoKnlvdNqmGBDh83HUcia3+4P4mq+GfasE9Wh99A==
-X-Received: by 2002:a05:6a00:4a:b029:18b:3748:8931 with SMTP id i10-20020a056a00004ab029018b37488931mr1587838pfk.61.1605266857945;
-        Fri, 13 Nov 2020 03:27:37 -0800 (PST)
+        bh=z7HROPP4p0WyFli+42wxjrz7OGx+y1FoxAU7QHFJXTg=;
+        b=bS23mKUjdxPa5ZGHmVa0ehwWrMj8luCCSe58wpBhnyt4k40Kj3BGfrq8sE/yXbwTv9
+         zjEjvHkNe53Fa2HSey8lfbpJDAllJ0stfotP78wkWlt59/m67fgMejV01LwD47D8C6Al
+         wNKLgCnwdq81vT4LG0hyY2FcW+UPrt/lEAnv21GNHAyf0y1i7Zt+JNqaK5IzvQy3CIug
+         OdeNtc/VTZD5G6YBtXWAZxZtzMdHYEQRGtU2CovHggzSrZ1prnPX98uAUKu1ul0M7uK6
+         Hx0rnTAnPxGJXIkftOv6F0OYRU1pDJHx1kHv/HjO5gSBRv5Sy+af51cQ5AIIyrVR9b6f
+         OAUg==
+X-Gm-Message-State: AOAM5320rJ3sYMsKupywrG3wdqV3YeVGkvjmC2lNrnECkc8sNVA4HbCj
+        0bauUxuUnxQXf/ItEi+TpJJybZlWleU=
+X-Google-Smtp-Source: ABdhPJzOxTKSVyJY2TXe21Qo9TbXfT6uQbmmEyrcISXRJdsMR+sBuHmpe9tFGejs45dChb1mzsRXiA==
+X-Received: by 2002:a17:90b:180f:: with SMTP id lw15mr2452378pjb.119.1605266862983;
+        Fri, 13 Nov 2020 03:27:42 -0800 (PST)
 Received: from localhost.localdomain ([122.172.185.167])
-        by smtp.gmail.com with ESMTPSA id w131sm9410857pfd.14.2020.11.13.03.27.35
+        by smtp.gmail.com with ESMTPSA id w131sm9410857pfd.14.2020.11.13.03.27.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Nov 2020 03:27:37 -0800 (PST)
+        Fri, 13 Nov 2020 03:27:42 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     fstests@vger.kernel.org
 Cc:     Chandan Babu R <chandanrlinux@gmail.com>,
         linux-xfs@vger.kernel.org, darrick.wong@oracle.com
-Subject: [PATCH 03/11] xfs: Check for extent overflow when trivally adding a new extent
-Date:   Fri, 13 Nov 2020 16:56:55 +0530
-Message-Id: <20201113112704.28798-4-chandanrlinux@gmail.com>
+Subject: [PATCH 05/11] xfs: Check for extent overflow when adding/removing xattrs
+Date:   Fri, 13 Nov 2020 16:56:57 +0530
+Message-Id: <20201113112704.28798-6-chandanrlinux@gmail.com>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20201113112704.28798-1-chandanrlinux@gmail.com>
 References: <20201113112704.28798-1-chandanrlinux@gmail.com>
@@ -74,35 +74,32 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Verify that XFS does not cause inode fork's extent count to overflow
-when adding a single extent while there's no possibility of splitting an
-existing mapping (limited to realtime files only).
+This test verifies that XFS does not cause inode fork's extent count to
+overflow when adding/removing xattrs.
 
 Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 ---
- tests/xfs/523     | 176 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/523.out |  18 +++++
+ tests/xfs/525     | 154 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/525.out |  16 +++++
  tests/xfs/group   |   1 +
- 3 files changed, 195 insertions(+)
- create mode 100755 tests/xfs/523
- create mode 100644 tests/xfs/523.out
+ 3 files changed, 171 insertions(+)
+ create mode 100755 tests/xfs/525
+ create mode 100644 tests/xfs/525.out
 
-diff --git a/tests/xfs/523 b/tests/xfs/523
+diff --git a/tests/xfs/525 b/tests/xfs/525
 new file mode 100755
-index 00000000..4f5b3584
+index 00000000..1d5d6e7c
 --- /dev/null
-+++ b/tests/xfs/523
-@@ -0,0 +1,176 @@
++++ b/tests/xfs/525
+@@ -0,0 +1,154 @@
 +#! /bin/bash
 +# SPDX-License-Identifier: GPL-2.0
 +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
 +#
-+# FS QA Test 523
++# FS QA Test 525
 +#
 +# Verify that XFS does not cause inode fork's extent count to overflow when
-+# adding a single extent while there's no possibility of splitting an existing
-+# mapping (limited to realtime files only).
-+#
++# Adding/removing xattrs.
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
 +echo "QA output created by $seq"
@@ -115,14 +112,13 @@ index 00000000..4f5b3584
 +_cleanup()
 +{
 +	cd /
-+	_scratch_unmount >> $seqres.full 2>&1
-+	test -e "$rtdev" && losetup -d $rtdev >> $seqres.full 2>&1
-+	rm -f $tmp.* $TEST_DIR/$seq.rtvol
++	rm -f $tmp.*
 +}
 +
 +# get standard environment, filters and checks
 +. ./common/rc
 +. ./common/filter
++. ./common/attr
 +. ./common/inject
 +
 +# remove previous $seqres.full before test
@@ -131,39 +127,27 @@ index 00000000..4f5b3584
 +# real QA test starts here
 +
 +_supported_fs xfs
-+_require_test
++_require_scratch
++_require_attrs
 +_require_xfs_debug
 +_require_test_program "punch-alternating"
 +_require_xfs_io_error_injection "reduce_max_iextents"
 +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
-+_require_scratch_nocheck
 +
-+grow_rtinodes()
++attr_set()
 +{
-+	echo "* Test extending rt inodes"
++	echo "* Set xattrs"
 +
-+	_scratch_mkfs | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
-+	. $tmp.mkfs
-+
-+	echo "Create fake rt volume"
-+	nr_bitmap_blks=25
-+	nr_bits=$((nr_bitmap_blks * dbsize * 8))
-+	rtextsz=$dbsize
-+	rtdevsz=$((nr_bits * rtextsz))
-+	truncate -s $rtdevsz $TEST_DIR/$seq.rtvol
-+	rtdev=$(_create_loop_device $TEST_DIR/$seq.rtvol)
-+
-+	echo "Format and mount rt volume"
-+	export USE_EXTERNAL=yes
-+	export SCRATCH_RTDEV=$rtdev
-+	_scratch_mkfs -d size=$((1024 * 1024 * 1024)) \
-+		      -r size=2M,extsize=${rtextsz} >> $seqres.full
++	echo "Format and mount fs"
++	_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
 +	_scratch_mount >> $seqres.full
++
++	bsize=$(_get_block_size $SCRATCH_MNT)
 +
 +	testfile=$SCRATCH_MNT/testfile
 +
 +	echo "Consume free space"
-+	dd if=/dev/zero of=${testfile} bs=${dbsize} >> $seqres.full 2>&1
++	dd if=/dev/zero of=${testfile} bs=${bsize} >> $seqres.full 2>&1
 +	sync
 +
 +	echo "Create fragmented filesystem"
@@ -176,68 +160,13 @@ index 00000000..4f5b3584
 +	echo "Inject bmap_alloc_minlen_extent error tag"
 +	xfs_io -x -c 'inject bmap_alloc_minlen_extent' $SCRATCH_MNT
 +
-+	echo "Grow realtime volume"
-+	xfs_growfs -r $SCRATCH_MNT >> $seqres.full 2>&1
-+	if [[ $? == 0 ]]; then
-+		echo "Growfs succeeded; should have failed."
-+		exit 1
-+	fi
++	echo "Create xattrs"
 +
-+	_scratch_unmount >> $seqres.full
-+
-+	echo "Verify rbmino's and rsumino's extent count"
-+	for rtino in rbmino rsumino; do
-+		ino=$(_scratch_xfs_db -c sb -c "print $rtino")
-+		ino=${ino##${rtino} = }
-+		echo "$rtino = $ino" >> $seqres.full
-+
-+		nextents=$(_scratch_get_iext_count $ino data || \
-+				_fail "Unable to obtain inode fork's extent count")
-+		if (( $nextents > 10 )); then
-+			echo "Extent count overflow check failed: nextents = $nextents"
-+			exit 1
-+		fi
-+	done
-+
-+	echo "Check filesystem"
-+	_check_xfs_filesystem $SCRATCH_DEV none $rtdev
-+
-+	losetup -d $rtdev
-+	rm -f $TEST_DIR/$seq.rtvol
-+
-+	export USE_EXTERNAL=""
-+	export SCRATCH_RTDEV=""
-+}
-+
-+rtfile_extend()
-+{
-+	echo "* Test extending an rt file"
-+
-+	_scratch_mkfs | _filter_mkfs >> $seqres.full 2> $tmp.mkfs
-+	. $tmp.mkfs
-+
-+	echo "Create fake rt volume"
-+	nr_blks=$((15 * 2))
-+	rtextsz=$dbsize
-+	rtdevsz=$((2 * nr_blks * rtextsz))
-+	truncate -s $rtdevsz $TEST_DIR/$seq.rtvol
-+	rtdev=$(_create_loop_device $TEST_DIR/$seq.rtvol)
-+
-+	echo "Format and mount rt volume"
-+	export USE_EXTERNAL=yes
-+	export SCRATCH_RTDEV=$rtdev
-+	_scratch_mkfs -d size=$((1024 * 1024 * 1024)) \
-+		      -r size=$rtdevsz >> $seqres.full
-+	_scratch_mount >> $seqres.full
-+
-+	echo "Inject reduce_max_iextents error tag"
-+	xfs_io -x -c 'inject reduce_max_iextents' $SCRATCH_MNT
-+
-+	echo "Create fragmented file on rt volume"
-+	testfile=$SCRATCH_MNT/testfile
-+	for i in $(seq 0 2 $((nr_blks - 1))); do
-+		xfs_io -Rf -c "pwrite $((i * dbsize)) $dbsize" -c fsync \
-+		       $testfile >> $seqres.full 2>&1
++	attr_len=$(uuidgen | wc -c)
++	nr_attrs=$((bsize * 20 / attr_len))
++	for i in $(seq 1 $nr_attrs); do
++		$SETFATTR_PROG -n "trusted.""$(uuidgen)" $testfile \
++			 >> $seqres.full 2>&1
 +		[[ $? != 0 ]] && break
 +	done
 +
@@ -245,63 +174,109 @@ index 00000000..4f5b3584
 +
 +	_scratch_unmount >> $seqres.full
 +
-+	echo "Verify \$testfile's extent count"
-+	nextents=$(_scratch_get_iext_count $testino data || \
++	echo "Verify uquota inode's extent count"
++
++	nextents=$(_scratch_get_iext_count $testino attr || \
 +			_fail "Unable to obtain inode fork's extent count")
 +	if (( $nextents > 10 )); then
 +		echo "Extent count overflow check failed: nextents = $nextents"
 +		exit 1
 +	fi
-+
-+	echo "Check filesystem"
-+	_check_xfs_filesystem $SCRATCH_DEV none $rtdev
-+
-+	losetup -d $rtdev
-+	rm -f $TEST_DIR/$seq.rtvol
-+
-+	export USE_EXTERNAL=""
-+	export SCRATCH_RTDEV=""
 +}
 +
-+grow_rtinodes
-+rtfile_extend
++attr_remove()
++{
++	echo "* Remove xattrs"
++
++	echo "Format and mount fs"
++	_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
++	_scratch_mount >> $seqres.full
++
++	bsize=$(_get_block_size $SCRATCH_MNT)
++
++	testfile=$SCRATCH_MNT/testfile
++
++	echo "Consume free space"
++	dd if=/dev/zero of=${testfile} bs=${bsize} >> $seqres.full 2>&1
++	sync
++
++	echo "Create fragmented filesystem"
++	$here/src/punch-alternating $testfile >> $seqres.full
++	sync
++
++	testino=$(stat -c "%i" $testfile)
++
++	naextents=0
++	last=""
++
++	attr_len=$(uuidgen | wc -c)
++	nr_attrs=$((bsize / attr_len))
++
++	echo "Create initial xattr extents"
++	while (( $naextents < 4 )); do
++		xfs_io -x -c 'inject bmap_alloc_minlen_extent' $SCRATCH_MNT
++
++		for i in $(seq 1 $nr_attrs); do
++			last="trusted.""$(uuidgen)"
++			$SETFATTR_PROG -n $last $testfile
++		done
++
++		_scratch_unmount >> $seqres.full
++
++		naextents=$(_scratch_get_iext_count $testino attr || \
++				_fail "Unable to obtain inode fork's extent count")
++
++		_scratch_mount >> $seqres.full
++	done
++
++	echo "Inject reduce_max_iextents error tag"
++	xfs_io -x -c 'inject reduce_max_iextents' $SCRATCH_MNT
++
++	echo "Remove xattr to trigger -EFBIG"
++	$SETFATTR_PROG -x "$last" $testfile >> $seqres.full 2>&1
++	if [[ $? == 0 ]]; then
++		echo "Xattr removal succeeded; Should have failed "
++		exit 1
++	fi
++}
++
++attr_set
++attr_remove
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/523.out b/tests/xfs/523.out
+diff --git a/tests/xfs/525.out b/tests/xfs/525.out
 new file mode 100644
-index 00000000..16b4e0ad
+index 00000000..cc40e6e2
 --- /dev/null
-+++ b/tests/xfs/523.out
-@@ -0,0 +1,18 @@
-+QA output created by 523
-+* Test extending rt inodes
-+Create fake rt volume
-+Format and mount rt volume
++++ b/tests/xfs/525.out
+@@ -0,0 +1,16 @@
++QA output created by 525
++* Set xattrs
++Format and mount fs
 +Consume free space
 +Create fragmented filesystem
 +Inject reduce_max_iextents error tag
 +Inject bmap_alloc_minlen_extent error tag
-+Grow realtime volume
-+Verify rbmino's and rsumino's extent count
-+Check filesystem
-+* Test extending an rt file
-+Create fake rt volume
-+Format and mount rt volume
++Create xattrs
++Verify uquota inode's extent count
++* Remove xattrs
++Format and mount fs
++Consume free space
++Create fragmented filesystem
++Create initial xattr extents
 +Inject reduce_max_iextents error tag
-+Create fragmented file on rt volume
-+Verify $testfile's extent count
-+Check filesystem
++Remove xattr to trigger -EFBIG
 diff --git a/tests/xfs/group b/tests/xfs/group
-index 1831f0b5..018c70ef 100644
+index 3fa38c36..bd38aff0 100644
 --- a/tests/xfs/group
 +++ b/tests/xfs/group
-@@ -520,3 +520,4 @@
- 520 auto quick reflink
- 521 auto quick realtime growfs
+@@ -522,3 +522,4 @@
  522 auto quick quota
-+523 auto quick realtime growfs
+ 523 auto quick realtime growfs
+ 524 auto quick punch zero insert collapse
++525 auto quick attr
 -- 
 2.28.0
 
