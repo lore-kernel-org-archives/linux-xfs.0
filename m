@@ -2,82 +2,84 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A7AC5519F
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 02:04:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 746A5C56202
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 02:13:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBCF1207DE
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 02:04:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16303216C4
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 02:13:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SxAbeqoa"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Fpq+SGHc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726041AbgKMCEb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Nov 2020 21:04:31 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:42417 "EHLO
+        id S1726196AbgKMCNJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Nov 2020 21:13:09 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:25175 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725972AbgKMCEa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Nov 2020 21:04:30 -0500
+        by vger.kernel.org with ESMTP id S1725965AbgKMCNI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Nov 2020 21:13:08 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605233068;
+        s=mimecast20190719; t=1605233586;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=9771iwkWuAD46+N/fVj/BNlrfVl88rQehbR1PBtLIQg=;
-        b=SxAbeqoawshvEu72/g0EBaWTNx0nMG09miiY2vYj5Ut7LbkziG2Y9a2mQhWj+AqwZMDD+a
-        Yg7Kk5INS1caOQDwkB63xjECBgl0o2zjUORMQMtB1hMfqR0FEu+T7dd7nMXA0xc1lAgyOZ
-        SlPb8YdtWJPeIn9W2Hjv69Gi4VVaep8=
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com
- [209.85.214.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-468-rK-AG7v7MNW6e6cIj-y1Iw-1; Thu, 12 Nov 2020 21:04:26 -0500
-X-MC-Unique: rK-AG7v7MNW6e6cIj-y1Iw-1
-Received: by mail-pl1-f200.google.com with SMTP id m7so4853202pls.12
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2020 18:04:26 -0800 (PST)
+         in-reply-to:in-reply-to; bh=6oM1dXJozOSLVQz6gRBJs6vUBSSzAUJlN3r5T2Civp0=;
+        b=Fpq+SGHcxgdx2Gucntr5NmhA/C9GXGJZsJNQEGhxbKrGP6YtBwOMsFR/PiMhFa+j9cxQAw
+        i/zP0dYnvsCBbVQ6HBeIVyGxOj6GtWc2tmUdlq8l3pZP+95aQAiBPqOm3WKzqyXBYjy2gV
+        W//h3PKcUXw/QBSAiDhYs2DrdIt5xpc=
+Received: from mail-pg1-f198.google.com (mail-pg1-f198.google.com
+ [209.85.215.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-306-BfgJ_jOzN7WnQS7I6De0mw-1; Thu, 12 Nov 2020 21:13:04 -0500
+X-MC-Unique: BfgJ_jOzN7WnQS7I6De0mw-1
+Received: by mail-pg1-f198.google.com with SMTP id v2so5127370pgv.2
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2020 18:13:04 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=9771iwkWuAD46+N/fVj/BNlrfVl88rQehbR1PBtLIQg=;
-        b=eLQ40bMEAnXxsRyFWGIBzpr0tdxQAIStjeouyVkuGHT4HAyRrVJpYd7v+u3mcR8LVG
-         7kMot6depzlPE//uhSD27pgUhGVbtPD+z8e0cAxGfNJq8BuEzGqw4QHkhclJNZt7O9Lj
-         9OdbrVcEvayWlmX2sw/yczH2H3/r9q85psC4ucFXQv9Co6XW3hwqBWm5Y3g/763xpxOI
-         qvRUdIebA4TAszk9f24emaHxN6OVMFEsGabmXy+BnNJaUB9Wo0SXFHMnMeel1GQb153O
-         uqBGkG8xc2aLiXfZCcRhFC5rduWdHXfgLc7DMox7jux+Lijr+cs3BrLvlpbHODtUJA8z
-         K3jg==
-X-Gm-Message-State: AOAM531yaBuGZQLQR1ge7BNQopfu+TLccdDLr/twORUCbYxAt1c2u54h
-        l66/SbOoc2LunPmnPRhFaHW3KXsRExcms8w3XYIUUi+0+z/co6DpQh9VMdwhk96QDX0PZILrhEE
-        yr+ZAQqIuobrrTQsCFj5r
-X-Received: by 2002:a17:90a:5e4d:: with SMTP id u13mr182680pji.171.1605233065346;
-        Thu, 12 Nov 2020 18:04:25 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxO2KgVhNVmLMLZFykgT1f3wrnn/SbbfD3DYyGsByd2FhMBKRMzXJVS16OYecIgfnZb9r3H1g==
-X-Received: by 2002:a17:90a:5e4d:: with SMTP id u13mr182652pji.171.1605233065064;
-        Thu, 12 Nov 2020 18:04:25 -0800 (PST)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=6oM1dXJozOSLVQz6gRBJs6vUBSSzAUJlN3r5T2Civp0=;
+        b=LaHxn9ldObJbJGWq48vemdIWh2Jf1DsJ1Ldk0NXghWfCoPUUShYetgaUywNkGb7Vbg
+         0C8tNEK/U0wjhrGDElmgS18Id9S41SKO+jBLrq3/J1l/8NNRbrfP9wyKT/m1e9w8aMlC
+         aS92/xySnZIkKMQNongvMr9BXbn7t35giq6ZaqAYYc0hFxTyCn1mTM3+4EwQTtz4ZSLR
+         yT2XuqKwizo3nRaosjWXh8jlIBw/ejYties82eB0wgtSZWEPHkNMiwMuIs/dQ3nuLHEd
+         tWTozTm5FyCxEUXx7fq6GkI3x0xv89Nn6rsfmma1wC/cPKasUhwlZ0ttDMEmfQbKBYdH
+         DPhg==
+X-Gm-Message-State: AOAM531YPznX2GctEJQeQe2cooIWhF+AQZeajgP47IsCelIVY8uz72/G
+        +ziVOFRvmByDkbwDgj/25k+lKZxERkkZestkhonNKBbHMLLafPLt0c+yaPT6OJZGTDRwYmMhVfj
+        XQEHiEiV5sI8elrRdSw4C
+X-Received: by 2002:a17:902:8490:b029:d6:d165:fde with SMTP id c16-20020a1709028490b02900d6d1650fdemr2195824plo.73.1605233583662;
+        Thu, 12 Nov 2020 18:13:03 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJzHEDnci5VkmW35p+GkK2tlw+enhePU4PuyWiPsmXmq5IOOlswViaz7fgp8I0I7jxwD/I/nJQ==
+X-Received: by 2002:a17:902:8490:b029:d6:d165:fde with SMTP id c16-20020a1709028490b02900d6d1650fdemr2195806plo.73.1605233583359;
+        Thu, 12 Nov 2020 18:13:03 -0800 (PST)
 Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id y18sm8297131pjn.53.2020.11.12.18.04.21
+        by smtp.gmail.com with ESMTPSA id c24sm7011431pgk.34.2020.11.12.18.12.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2020 18:04:24 -0800 (PST)
-Date:   Fri, 13 Nov 2020 10:04:13 +0800
+        Thu, 12 Nov 2020 18:13:02 -0800 (PST)
+Date:   Fri, 13 Nov 2020 10:12:51 +0800
 From:   Gao Xiang <hsiangkao@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@sandeen.net>
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dennis Gilmore <dgilmore@redhat.com>
 Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
         Eric Sandeen <sandeen@redhat.com>, stable@vger.kernel.org
 Subject: Re: [PATCH] xfs: fix signed calculation related to XFS_LITINO(mp)
-Message-ID: <20201113020413.GA844372@xiangao.remote.csb>
-References: <20201112063005.692054-1-hsiangkao@redhat.com>
- <3d04e9b3-f326-cbcd-e268-e4da40f35fa2@sandeen.net>
- <20201112183004.GU9695@magnolia>
+Message-ID: <20201113021251.GA847175@xiangao.remote.csb>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201112183004.GU9695@magnolia>
+In-Reply-To: <20201113020413.GA844372@xiangao.remote.csb>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
+
+[ sorry for forgetting to Cc dgilmore on this reply, it would be
+  much better/helpful with a "Tested-by:" for v2... Let me resend,
+  sorry for annoying. ]
 
 Hi,
 
