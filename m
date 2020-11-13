@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8412C388F9
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 05:11:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EE0CC388F9
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 06:35:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F74120B80
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 05:11:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F3DE20B80
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Nov 2020 06:35:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="l6S6k+vS"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YnSxouKV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726143AbgKMFLN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Nov 2020 00:11:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55412 "EHLO
+        id S1725999AbgKMGfg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Nov 2020 01:35:36 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726023AbgKMFLM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Nov 2020 00:11:12 -0500
-Received: from mail-pf1-x443.google.com (mail-pf1-x443.google.com [IPv6:2607:f8b0:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE362C0613D1
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2020 21:11:12 -0800 (PST)
-Received: by mail-pf1-x443.google.com with SMTP id a18so6643750pfl.3
-        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2020 21:11:12 -0800 (PST)
+        with ESMTP id S1725971AbgKMGfg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Nov 2020 01:35:36 -0500
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D92EC0613D1
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2020 22:35:36 -0800 (PST)
+Received: by mail-pg1-x541.google.com with SMTP id r186so6332444pgr.0
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Nov 2020 22:35:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=wLpIfp4PAh/DQQiDFSxanr0FT6rvuEuuUJ5YfIVwHbg=;
-        b=l6S6k+vSczYxmdfqO+SwU0IONMAjJK5SW9bfD8D0OohDO7+9VrIqhtoNUhJVJjOMgp
-         O1tT1mapFpbJwjEYGWGtuWQbE2mPDNbS3TkdObzCSpyS01+eZD1vwjEDcjlv8vRPjQFQ
-         LuedytzC3+CvfHBr199ExAFw8bupxARpWGBASgYs8AmNgAZ11THKSueY9McOghTKsNqg
-         8Xahy6Zn1UUjeOKDQxVcFBMjkbTrd3qXlhZ8hScyKGzQn7JpLxV97fiwX0xqwuB+maLR
-         qq14454853cKZWKEflx9Vl0kbseS+v9RVKSYf10ybnklMdRoU0vM8Or+ruKDPdkpPBy2
-         yLiA==
+        bh=G2ItJLPaySVH8yVL8bt4nFpt+dWdcU41XH8LeTZ6RtI=;
+        b=YnSxouKVRWW6FhntFHLlxer06PmRTYUlnNX/y0SWaVdt9gZR/Vpn5pobIhtVuynio0
+         oOkjqEWSBfln4SUtGLid9kxWaDoSK3rC3Z2l1eoZjrWFTqlxl1B7PItu5hH0dOjfPlt2
+         stvpNCATldLnizqwdlPjmZgRFkV3y76wUt7pcz83KlZWOPxew1luWQBdloMLse6KAbY0
+         uQnHuwKg5sqhKeIGTQfQFwXQhxi8cdbAtO70ik/OY3nKAiJ6sAa+t3OZnjbneaKOUPSh
+         ZtTSjc4HXdQP9MX4SoXiHsSDnhBK1PGwZAH78XDTq5WS4ucFqwp93pOfoxWVJaoyWALk
+         LObg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=wLpIfp4PAh/DQQiDFSxanr0FT6rvuEuuUJ5YfIVwHbg=;
-        b=cK/LxkzIBuYeEnKSHrfZBXBE9hOXe9ZT/JCnL7MK1ZGwwpfynVTjJf63BatFJH0fgp
-         xL2YWUym9OZa09TWP21Exi8f3m310HzRgeLXcgTkezAo+wXku2zSP1jibF3nBQIGE+VP
-         fuPdK2FbHY42R+a0KjS3xMdkuJKsMehv6CSYhpZ9eH/h0c2c3cVYqmSgnXu4Xa+CIjol
-         uKUbHpWT92WhtXo/ygSICANLfVWyKGIThjmO2B2rt1toTGd5B6myR8Hp8QybyA9bqC8Z
-         gAj464RUEZA/m8BV9T1blRYd+7kFGqqQH2dBNq9GXbsbo2osWMZkeOCOEIz6+C2RlIm5
-         4BSQ==
-X-Gm-Message-State: AOAM530yeeNTGTsjLgRMUQwiISbkFpB6brJVTdsuv/RbnInxkHziJijD
-        V1tRP9b27nT45EJKd51qD7DgtfdJMx4=
-X-Google-Smtp-Source: ABdhPJxoepVsXOipGI3mr7RSCeQ4skkuPSYeRf1QaKN90Ju3kbaMcGXhi9yk3E5JCV8nZbnIFwaS6w==
-X-Received: by 2002:aa7:82d0:0:b029:18b:d594:9dc5 with SMTP id f16-20020aa782d00000b029018bd5949dc5mr463365pfn.63.1605244272080;
-        Thu, 12 Nov 2020 21:11:12 -0800 (PST)
+        bh=G2ItJLPaySVH8yVL8bt4nFpt+dWdcU41XH8LeTZ6RtI=;
+        b=Bzd46OTALVi3PQR5Jf/l2LpnY6SEqIq59F0pxb5R9YwxhL3W00Z7ysa54zmVJ9qAfn
+         Ylg7FUWvT8jxj533snxLKzfk1r+64Jlw9ArOIJNbCSSz79oCYBfYV5dPedsfxMvpuNgw
+         taQZFE480LDaI63vlVm1wVbZ8S/gTepC7l9JdT9lYUehcF1Kb73OnOVYR+CcqRYsnWTF
+         k4pzQ3BHmil+E21UJvTmJ7ScceJrbDg12RVvpIS/WuWaakwuMBI+2MpfD6N91/U4akYA
+         MaqIAysAlASLAeuWLZteIuJstuG3vgLTvQ5awKo3yhAcDVjjMaEpx5rqowpOOrReqsJY
+         sTBQ==
+X-Gm-Message-State: AOAM531OxAibgNTJ6XGLK3rKm+68fLVe7n408pCEKMKfjbDFlV1PivQO
+        ddfUUOxOh4atvDYupDBfzEKBV09HXbo=
+X-Google-Smtp-Source: ABdhPJx+0eWFi17AdjYKKrm7xcXlfV4cpmQ5qlLgpxXHuxtSwGSgmaggTylCb1h+8hxABosbs7+oFg==
+X-Received: by 2002:a17:90a:ce88:: with SMTP id g8mr1226714pju.75.1605249335671;
+        Thu, 12 Nov 2020 22:35:35 -0800 (PST)
 Received: from garuda.localnet ([122.172.185.167])
-        by smtp.gmail.com with ESMTPSA id s15sm12865pfd.33.2020.11.12.21.11.09
+        by smtp.gmail.com with ESMTPSA id l9sm812275pjj.28.2020.11.12.22.35.33
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Nov 2020 21:11:11 -0800 (PST)
+        Thu, 12 Nov 2020 22:35:35 -0800 (PST)
 From:   Chandan Babu R <chandanrlinux@gmail.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH 1/4] xfs: fix brainos in the refcount scrubber's rmap fragment processor
-Date:   Fri, 13 Nov 2020 10:41:08 +0530
-Message-ID: <15587351.igeZXGC4du@garuda>
-In-Reply-To: <20201112160526.GS9695@magnolia>
-References: <160494585293.772802.13326482733013279072.stgit@magnolia> <3965877.p3O8HGrD7x@garuda> <20201112160526.GS9695@magnolia>
+Subject: Re: [PATCH 2/4] xfs: fix the minrecs logic when dealing with inode root child blocks
+Date:   Fri, 13 Nov 2020 12:05:32 +0530
+Message-ID: <1911194.Ks6Zr3F47T@garuda>
+In-Reply-To: <160494586556.772802.12631379595730474933.stgit@magnolia>
+References: <160494585293.772802.13326482733013279072.stgit@magnolia> <160494586556.772802.12631379595730474933.stgit@magnolia>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
@@ -72,79 +72,93 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thursday 12 November 2020 9:35:26 PM IST Darrick J. Wong wrote:
-> On Thu, Nov 12, 2020 at 06:21:52PM +0530, Chandan Babu R wrote:
-> > On Monday 9 November 2020 11:47:39 PM IST Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Fix some serious WTF in the reference count scrubber's rmap fragment
-> > > processing.  The code comment says that this loop is supposed to move
-> > > all fragment records starting at or before bno onto the worklist, but
-> > > there's no obvious reason why nr (the number of items added) should
-> > > increment starting from 1, and breaking the loop when we've added the
-> > > target number seems dubious since we could have more rmap fragments that
-> > > should have been added to the worklist.
-> > > 
-> > > This seems to manifest in xfs/411 when adding one to the refcount field.
-> > > 
-> > > Fixes: dbde19da9637 ("xfs: cross-reference the rmapbt data with the refcountbt")
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  fs/xfs/scrub/refcount.c |    8 +++-----
-> > >  1 file changed, 3 insertions(+), 5 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
-> > > index beaeb6fa3119..dd672e6bbc75 100644
-> > > --- a/fs/xfs/scrub/refcount.c
-> > > +++ b/fs/xfs/scrub/refcount.c
-> > > @@ -170,7 +170,6 @@ xchk_refcountbt_process_rmap_fragments(
-> > >  	 */
-> > >  	INIT_LIST_HEAD(&worklist);
-> > >  	rbno = NULLAGBLOCK;
-> > > -	nr = 1;
-> > >  
-> > >  	/* Make sure the fragments actually /are/ in agbno order. */
-> > >  	bno = 0;
-> > > @@ -184,15 +183,14 @@ xchk_refcountbt_process_rmap_fragments(
-> > >  	 * Find all the rmaps that start at or before the refc extent,
-> > >  	 * and put them on the worklist.
-> > >  	 */
-> > > +	nr = 0;
-> > >  	list_for_each_entry_safe(frag, n, &refchk->fragments, list) {
-> > > -		if (frag->rm.rm_startblock > refchk->bno)
-> > > -			goto done;
-> > > +		if (frag->rm.rm_startblock > refchk->bno || nr > target_nr)
-> > > +			break;
-> > 
-> > In the case of fuzzed refcnt value of 1, The condition "nr > target_nr" causes
-> > "nr != target_nr" condition (appearing after the loop) to evaluate to true
-> > (since atleast two rmap entries would be present for the refcount extent)
-> > which in turn causes xchk_refcountbt_xref_rmap() to flag the data structure as
-> > corrupt. Please let me know if my understanding of the code flow is correct?
+On Monday 9 November 2020 11:47:45 PM IST Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Right.
+> The comment and logic in xchk_btree_check_minrecs for dealing with
+> inode-rooted btrees isn't quite correct.  While the direct children of
+> the inode root are allowed to have fewer records than what would
+> normally be allowed for a regular ondisk btree block, this is only true
+> if there is only one child block and the number of records don't fit in
+> the inode root.
 >
-Ok. In that case the code change in this patch is handling the erroneous
-scenario correctly.
+
+The code changes are consistent with rules provided in the comments.
 
 Reviewed-by: Chandan Babu R <chandanrlinux@gmail.com>
 
-> --D
+> Fixes: 08a3a692ef58 ("xfs: btree scrub should check minrecs")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/btree.c |   45 +++++++++++++++++++++++++++------------------
+>  1 file changed, 27 insertions(+), 18 deletions(-)
 > 
-> > >  		bno = frag->rm.rm_startblock + frag->rm.rm_blockcount;
-> > >  		if (bno < rbno)
-> > >  			rbno = bno;
-> > >  		list_move_tail(&frag->list, &worklist);
-> > > -		if (nr == target_nr)
-> > > -			break;
-> > >  		nr++;
-> > >  	}
-> > >  
-> > > 
-> > > 
-> > 
-> > 
+> 
+> diff --git a/fs/xfs/scrub/btree.c b/fs/xfs/scrub/btree.c
+> index f52a7b8256f9..debf392e0515 100644
+> --- a/fs/xfs/scrub/btree.c
+> +++ b/fs/xfs/scrub/btree.c
+> @@ -452,32 +452,41 @@ xchk_btree_check_minrecs(
+>  	int			level,
+>  	struct xfs_btree_block	*block)
+>  {
+> -	unsigned int		numrecs;
+> -	int			ok_level;
+> -
+> -	numrecs = be16_to_cpu(block->bb_numrecs);
+> +	struct xfs_btree_cur	*cur = bs->cur;
+> +	unsigned int		root_level = cur->bc_nlevels - 1;
+> +	unsigned int		numrecs = be16_to_cpu(block->bb_numrecs);
+>  
+>  	/* More records than minrecs means the block is ok. */
+> -	if (numrecs >= bs->cur->bc_ops->get_minrecs(bs->cur, level))
+> +	if (numrecs >= cur->bc_ops->get_minrecs(cur, level))
+>  		return;
+>  
+>  	/*
+> -	 * Certain btree blocks /can/ have fewer than minrecs records.  Any
+> -	 * level greater than or equal to the level of the highest dedicated
+> -	 * btree block are allowed to violate this constraint.
+> -	 *
+> -	 * For a btree rooted in a block, the btree root can have fewer than
+> -	 * minrecs records.  If the btree is rooted in an inode and does not
+> -	 * store records in the root, the direct children of the root and the
+> -	 * root itself can have fewer than minrecs records.
+> +	 * For btrees rooted in the inode, it's possible that the root block
+> +	 * contents spilled into a regular ondisk block because there wasn't
+> +	 * enough space in the inode root.  The number of records in that
+> +	 * child block might be less than the standard minrecs, but that's ok
+> +	 * provided that there's only one direct child of the root.
+>  	 */
+> -	ok_level = bs->cur->bc_nlevels - 1;
+> -	if (bs->cur->bc_flags & XFS_BTREE_ROOT_IN_INODE)
+> -		ok_level--;
+> -	if (level >= ok_level)
+> +	if ((cur->bc_flags & XFS_BTREE_ROOT_IN_INODE) &&
+> +	    level == cur->bc_nlevels - 2) {
+> +		struct xfs_btree_block	*root_block;
+> +		struct xfs_buf		*root_bp;
+> +		int			root_maxrecs;
+> +
+> +		root_block = xfs_btree_get_block(cur, root_level, &root_bp);
+> +		root_maxrecs = cur->bc_ops->get_dmaxrecs(cur, root_level);
+> +		if (be16_to_cpu(root_block->bb_numrecs) != 1 ||
+> +		    numrecs <= root_maxrecs)
+> +			xchk_btree_set_corrupt(bs->sc, cur, level);
+>  		return;
+> +	}
+>  
+> -	xchk_btree_set_corrupt(bs->sc, bs->cur, level);
+> +	/*
+> +	 * Otherwise, only the root level is allowed to have fewer than minrecs
+> +	 * records or keyptrs.
+> +	 */
+> +	if (level < root_level)
+> +		xchk_btree_set_corrupt(bs->sc, cur, level);
+>  }
+>  
+>  /*
+> 
 > 
 
 
