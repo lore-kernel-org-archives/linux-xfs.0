@@ -5,106 +5,106 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71545C63697
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Nov 2020 00:08:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 822FCC55ABD
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Nov 2020 00:08:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 141D122258
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Nov 2020 00:08:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38BC02225E
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Nov 2020 00:08:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ljxyc/5t"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Vr/aQOHp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725866AbgKNAIK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Nov 2020 19:08:10 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:34124 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726020AbgKNAIJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Nov 2020 19:08:09 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AE03ra3022893;
-        Sat, 14 Nov 2020 00:08:07 GMT
+        id S1726156AbgKNAIk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Nov 2020 19:08:40 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:41728 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726020AbgKNAIk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Nov 2020 19:08:40 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AE0422i169098;
+        Sat, 14 Nov 2020 00:08:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=sBvcuevPREViU7kN9a5mWKPaYIklP+W1x4bfaAcmXLM=;
- b=Ljxyc/5tXtKscX49O+Ry1vbezZe9O9hQjPoKspG/d71JeFuiFkvJkohg/SHXZGhFrgGM
- 6tu0s5w6nf/c0IuwzGBhruDm2E08X9TRl5yeJfd4bn9XWl9SvuQeip/SZXaDctkNUEtq
- 9GcGA2Uq87Kp0ij3xUhS8Aa16Q1pbn1L/BxGtCeiPQzgXhcvaKImOZoHDHbp56g9DKj1
- wMdBOXU4n+RtmYcV795LKJxEo2gvf9Ltqa/VhKBiKC2vpXSjEx+ykejePotAkZOBlcKq
- AqWxCLOt9qs153V8lmZN/K+PrnrOyslXEOvK16pTTwGWw29bhJh8xKgm33CjofM4M7Bz BQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 34p72f2wuw-1
+ bh=4anXfsMzl466In0jjz6zFTjDXm4fAVtuQxbcYXqK73I=;
+ b=Vr/aQOHp3R9Nz5smMkS9ys+9d42n9kHRwKj1MDdsAkQzhlkaMNguLqYZtp7662z+47lV
+ Gz891sC6Bt4FhX/wZsKGfwRa9zTnmuYrKQ5SSvnjix/V8xwR2V6eFCIGEN6o8fzzeQqd
+ g0Tu3GSJhu1e5KUD7KvIvtKfDgX7VY5uaf2RcIc4EHuvwrpQQrr6Gh42yKao/EcPw33+
+ b5ew4xD3XvoZDI+9+IRLRCEDgaT7LnzOSxC9n9EcAfBTyeSkkbri40YIGdPrfTDb98ij
+ /sBdX2XZjOLwgSTXUb5ThJeCx8Bf8UTssWBXmCmnyw7ozi+k5XGH1kW4fOGGyaC9Hkwo pg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 34nkhmcq9c-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 14 Nov 2020 00:08:07 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AE0551L063975;
-        Sat, 14 Nov 2020 00:06:06 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 34p5g5q0pm-1
+        Sat, 14 Nov 2020 00:08:37 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AE06IOs119341;
+        Sat, 14 Nov 2020 00:08:37 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 34t4bs876k-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 14 Nov 2020 00:06:06 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AE065Q5004316;
-        Sat, 14 Nov 2020 00:06:05 GMT
+        Sat, 14 Nov 2020 00:08:36 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0AE08alZ014679;
+        Sat, 14 Nov 2020 00:08:36 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 13 Nov 2020 16:06:05 -0800
-Date:   Fri, 13 Nov 2020 16:06:02 -0800
+        with ESMTP ; Fri, 13 Nov 2020 16:08:35 -0800
+Date:   Fri, 13 Nov 2020 16:08:35 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Chandan Babu R <chandanrlinux@gmail.com>
 Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 11/11] xfs: Stress test with with
- bmap_alloc_minlen_extent error tag enabled
-Message-ID: <20201114000602.GZ9695@magnolia>
+Subject: Re: [PATCH 10/11] xfs: Check for extent overflow when swapping
+ extents
+Message-ID: <20201114000835.GA9695@magnolia>
 References: <20201113112704.28798-1-chandanrlinux@gmail.com>
- <20201113112704.28798-12-chandanrlinux@gmail.com>
+ <20201113112704.28798-11-chandanrlinux@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201113112704.28798-12-chandanrlinux@gmail.com>
+In-Reply-To: <20201113112704.28798-11-chandanrlinux@gmail.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9804 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 malwarescore=0
- adultscore=0 phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=5
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011130155
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 adultscore=0
+ mlxlogscore=999 spamscore=0 malwarescore=0 bulkscore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011130155
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9804 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- malwarescore=0 suspectscore=5 lowpriorityscore=0 adultscore=0 phishscore=0
- priorityscore=1501 spamscore=0 impostorscore=0 clxscore=1015
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 priorityscore=1501
+ mlxscore=0 suspectscore=1 mlxlogscore=999 lowpriorityscore=0 spamscore=0
+ malwarescore=0 adultscore=0 clxscore=1015 bulkscore=0 impostorscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
  definitions=main-2011130155
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 13, 2020 at 04:57:03PM +0530, Chandan Babu R wrote:
-> This commit adds a stress test that executes fsstress with
-> bmap_alloc_minlen_extent error tag enabled.
+On Fri, Nov 13, 2020 at 04:57:02PM +0530, Chandan Babu R wrote:
+> This test verifies that XFS does not cause inode fork's extent count to
+> overflow when swapping forks across two files.
 > 
 > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
 > ---
->  tests/xfs/531     | 85 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/531.out |  6 ++++
->  tests/xfs/group   |  1 +
->  3 files changed, 92 insertions(+)
->  create mode 100755 tests/xfs/531
->  create mode 100644 tests/xfs/531.out
+>  tests/xfs/530     | 115 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/530.out |  13 ++++++
+>  tests/xfs/group   |   1 +
+>  3 files changed, 129 insertions(+)
+>  create mode 100755 tests/xfs/530
+>  create mode 100644 tests/xfs/530.out
 > 
-> diff --git a/tests/xfs/531 b/tests/xfs/531
+> diff --git a/tests/xfs/530 b/tests/xfs/530
 > new file mode 100755
-> index 00000000..e846cc0e
+> index 00000000..fccc6de7
 > --- /dev/null
-> +++ b/tests/xfs/531
-> @@ -0,0 +1,85 @@
+> +++ b/tests/xfs/530
+> @@ -0,0 +1,115 @@
 > +#! /bin/bash
 > +# SPDX-License-Identifier: GPL-2.0
 > +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
 > +#
-> +# FS QA Test 531
+> +# FS QA Test 530
 > +#
-> +# Execute fsstress with bmap_alloc_minlen_extent error tag enabled.
-> +#
+> +# Verify that XFS does not cause inode fork's extent count to overflow when
+> +# swapping forks between files
 > +seq=`basename $0`
 > +seqres=$RESULT_DIR/$seq
 > +echo "QA output created by $seq"
@@ -133,84 +133,121 @@ On Fri, Nov 13, 2020 at 04:57:03PM +0530, Chandan Babu R wrote:
 > +_supported_fs xfs
 > +_require_scratch
 > +_require_xfs_debug
-> +_require_test_program "punch-alternating"
-> +_require_xfs_io_error_injection "bmap_alloc_minlen_extent"
+> +_require_xfs_scratch_rmapbt
+> +_require_xfs_io_command "fcollapse"
+> +_require_xfs_io_command "swapext"
+
+FWIW it's going to be a while before the swapext command goes upstream.
+Right now it's a part of the atomic file range exchange patchset.
+
+Do you want me to try to speed that up?
+
+--D
+
+> +_require_xfs_io_error_injection "reduce_max_iextents"
+> +
+> +echo "* Swap extent forks"
 > +
 > +echo "Format and mount fs"
-> +_scratch_mkfs_sized $((1024 * 1024 * 1024)) >> $seqres.full
-
-Why is a 1G fs required?
-
+> +_scratch_mkfs >> $seqres.full
 > +_scratch_mount >> $seqres.full
 > +
 > +bsize=$(_get_block_size $SCRATCH_MNT)
 > +
-> +testfile=$SCRATCH_MNT/testfile
+> +srcfile=${SCRATCH_MNT}/srcfile
+> +donorfile=${SCRATCH_MNT}/donorfile
 > +
-> +echo "Consume free space"
-> +dd if=/dev/zero of=${testfile} bs=${bsize} >> $seqres.full 2>&1
-> +sync
+> +echo "Create \$donorfile having an extent of length 17 blocks"
+> +xfs_io -f -c "pwrite -b $((17 * bsize)) 0 $((17 * bsize))" -c fsync $donorfile \
+> +       >> $seqres.full
 > +
-> +echo "Create fragmented filesystem"
-> +$here/src/punch-alternating $testfile >> $seqres.full
-> +sync
+> +# After the for loop the donor file will have the following extent layout
+> +# | 0-4 | 5 | 6 | 7 | 8 | 9 | 10 |
+> +echo "Fragment \$donorfile"
+> +for i in $(seq 5 10); do
+> +	start_offset=$((i * bsize))
+> +	xfs_io -f -c "fcollapse $start_offset $bsize" $donorfile >> $seqres.full
+> +done
+> +donorino=$(stat -c "%i" $donorfile)
 > +
-> +echo "Inject bmap_alloc_minlen_extent error tag"
-> +xfs_io -x -c 'inject bmap_alloc_minlen_extent' $SCRATCH_MNT
+> +echo "Create \$srcfile having an extent of length 18 blocks"
+> +xfs_io -f -c "pwrite -b $((18 * bsize)) 0 $((18 * bsize))" -c fsync $srcfile \
+> +       >> $seqres.full
 > +
-> +echo "Execute fsstress in background"
-> +$FSSTRESS_PROG -d $SCRATCH_MNT -p128 -n999999999 \
-
--n and -p ought to be computed from TIME_FACTOR and LOAD_FACTOR.
-
---D
-
-> +		 -f bulkstat=0 \
-> +		 -f bulkstat1=0 \
-> +		 -f fiemap=0 \
-> +		 -f getattr=0 \
-> +		 -f getdents=0 \
-> +		 -f getfattr=0 \
-> +		 -f listfattr=0 \
-> +		 -f mread=0 \
-> +		 -f read=0 \
-> +		 -f readlink=0 \
-> +		 -f readv=0 \
-> +		 -f stat=0 \
-> +		 -f aread=0 \
-> +		 -f dread=0 > /dev/null 2>&1 &
+> +echo "Fragment \$srcfile"
+> +# After the for loop the src file will have the following extent layout
+> +# | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7-10 |
+> +for i in $(seq 1 7); do
+> +	start_offset=$((i * bsize))
+> +	xfs_io -f -c "fcollapse $start_offset $bsize" $srcfile >> $seqres.full
+> +done
+> +srcino=$(stat -c "%i" $srcfile)
 > +
-> +fsstress_pid=$!
-> +sleep 2m
+> +_scratch_unmount >> $seqres.full
 > +
-> +echo "Killing fsstress process $fsstress_pid ..." >> $seqres.full
-> +kill $fsstress_pid >> $seqres.full
-> +wait $fsstress_pid
+> +echo "Collect \$donorfile's extent count"
+> +donor_nr_exts=$(_scratch_get_iext_count $donorino data || \
+> +		_fail "Unable to obtain inode fork's extent count")
+> +
+> +echo "Collect \$srcfile's extent count"
+> +src_nr_exts=$(_scratch_get_iext_count $srcino data || \
+> +		_fail "Unable to obtain inode fork's extent count")
+> +
+> +_scratch_mount >> $seqres.full
+> +
+> +echo "Inject reduce_max_iextents error tag"
+> +xfs_io -x -c 'inject reduce_max_iextents' $SCRATCH_MNT
+> +
+> +echo "Swap \$srcfile's and \$donorfile's extent forks"
+> +xfs_io -f -c "swapext $donorfile" $srcfile >> $seqres.full 2>&1
+> +
+> +_scratch_unmount >> $seqres.full
+> +
+> +echo "Check for \$donorfile's extent count overflow"
+> +nextents=$(_scratch_get_iext_count $donorino data || \
+> +		_fail "Unable to obtain inode fork's extent count")
+> +if (( $nextents == $src_nr_exts )); then
+> +	echo "\$donorfile: Extent count overflow check failed"
+> +fi
+> +
+> +echo "Check for \$srcfile's extent count overflow"
+> +nextents=$(_scratch_get_iext_count $srcino data || \
+> +		_fail "Unable to obtain inode fork's extent count")
+> +if (( $nextents == $donor_nr_exts )); then
+> +	echo "\$srcfile: Extent count overflow check failed"
+> +fi
 > +
 > +# success, all done
 > +status=0
 > +exit
-> diff --git a/tests/xfs/531.out b/tests/xfs/531.out
+> diff --git a/tests/xfs/530.out b/tests/xfs/530.out
 > new file mode 100644
-> index 00000000..e0a419c2
+> index 00000000..996af959
 > --- /dev/null
-> +++ b/tests/xfs/531.out
-> @@ -0,0 +1,6 @@
-> +QA output created by 531
+> +++ b/tests/xfs/530.out
+> @@ -0,0 +1,13 @@
+> +QA output created by 530
+> +* Swap extent forks
 > +Format and mount fs
-> +Consume free space
-> +Create fragmented filesystem
-> +Inject bmap_alloc_minlen_extent error tag
-> +Execute fsstress in background
+> +Create $donorfile having an extent of length 17 blocks
+> +Fragment $donorfile
+> +Create $srcfile having an extent of length 18 blocks
+> +Fragment $srcfile
+> +Collect $donorfile's extent count
+> +Collect $srcfile's extent count
+> +Inject reduce_max_iextents error tag
+> +Swap $srcfile's and $donorfile's extent forks
+> +Check for $donorfile's extent count overflow
+> +Check for $srcfile's extent count overflow
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index 81a15582..f4cb5af6 100644
+> index bc3958b3..81a15582 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -528,3 +528,4 @@
+> @@ -527,3 +527,4 @@
+>  527 auto quick
 >  528 auto quick reflink
 >  529 auto quick reflink
->  530 auto quick
-> +531 auto stress
+> +530 auto quick
 > -- 
 > 2.28.0
 > 
