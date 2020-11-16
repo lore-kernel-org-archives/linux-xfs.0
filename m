@@ -2,123 +2,175 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B32B7C55ABD
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Nov 2020 08:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E93FDC6379D
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Nov 2020 17:19:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47F5D21D93
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Nov 2020 08:37:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C98B222E8
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Nov 2020 17:19:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gGqzQbwb"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rbAO7uCc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726643AbgKPIXR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Nov 2020 03:23:17 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:50134 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726628AbgKPIXQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Nov 2020 03:23:16 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1605514995;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jeiiYaKwvyJyH5y+wcliNEtxg1lZaBGQ9AQLeWJN/BI=;
-        b=gGqzQbwb7IKKQGoM4mfO+1id6FupOqOWq07Hs7T6tZwyPJ3RY3X5dWioe02qF6UqjZpS78
-        HoGd9fgTbyUljtIXBjFy9aksvw6JFMJUdOJfGpARRX2pIB5LIvNTsS/N2+lbeL5b78wBWv
-        ojzX7t86t54Fb0iwg2j5oa1jfvZS4yM=
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
- [209.85.214.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-464-U4uI2y_6MySLXvc-rrJoJw-1; Mon, 16 Nov 2020 03:23:13 -0500
-X-MC-Unique: U4uI2y_6MySLXvc-rrJoJw-1
-Received: by mail-pl1-f198.google.com with SMTP id x19so8667288plm.19
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2020 00:23:12 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=jeiiYaKwvyJyH5y+wcliNEtxg1lZaBGQ9AQLeWJN/BI=;
-        b=n1tYtyY75lUlXZpVaTO4f+8KlPAdR8XE1gOquIXmcsaXwUKE09KiIbifZaW/N7sfjx
-         gyRzNFbJ/jenUo+IQ2oP6Z4hy090nFHaM6UtP33hGx2cL37Ck5hlVPw+/zfEOU2hjlAY
-         04fLAkvlpb1A9oVkC2Bx8Om1cWxmj9Xj8hkpz4HIdX32krNXWkwOxmTCz0x/Z7Tf/tPn
-         CvBASbI7DWIWWhCC4/x4BARfS7ykNDdjT9yR2NMj51kkv67J0l/UJ6ykRBV5HgnWnW3q
-         Gxw8hi4txisfLNOYwr3vAv0dyPXiYqhGXSxYvPItUptVAOIN5DrWwjxghVA2BPFcCVJo
-         +vuw==
-X-Gm-Message-State: AOAM531rOd5SJP0v+maQcVDqZmu/H/aEd3waq7T4mzhM+Sc87YFoUPJY
-        6lPXvRMu6Bakpwr06SlVxOLrEs6gxOpWfYshmi8g4JVkYs7ykDN+rwCro5RAXKk+Cj6jP3RCpDP
-        gFmIm3WNlww4aw1kSGLAg
-X-Received: by 2002:a63:e449:: with SMTP id i9mr11752878pgk.438.1605514991978;
-        Mon, 16 Nov 2020 00:23:11 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJzWvWC06RRFkS8J1mzWHfVtjiyFOmtqKRyIrvdw6zdttDYEjyuEfXyWFrCDpv9AzTqrX3xz2Q==
-X-Received: by 2002:a63:e449:: with SMTP id i9mr11752866pgk.438.1605514991672;
-        Mon, 16 Nov 2020 00:23:11 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id 26sm15258474pgm.92.2020.11.16.00.23.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Nov 2020 00:23:11 -0800 (PST)
-Date:   Mon, 16 Nov 2020 16:23:01 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org, Donald Douwsma <ddouwsma@redhat.com>
-Subject: Re: [RFC PATCH] xfsrestore: fix rootdir due to xfsdump bulkstat
- misuse
-Message-ID: <20201116082301.GB1486562@xiangao.remote.csb>
-References: <20201113125127.966243-1-hsiangkao@redhat.com>
- <e1e4f0a9-01bf-1ae4-5673-77738b3abd1b@sandeen.net>
- <20201113141553.GA981063@xiangao.remote.csb>
+        id S1730775AbgKPRTi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Nov 2020 12:19:38 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:57808 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730564AbgKPRTg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Nov 2020 12:19:36 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AGH9pbw085939;
+        Mon, 16 Nov 2020 17:19:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=cPRKgSySESo2zxfnjsZbisf8mWb8HgIEQBGfeUYxtFQ=;
+ b=rbAO7uCcIWLzWcLO+Gu8/TNyKzEQv6FPLpOuc7Y2MdFj1G8PG08qrG6WuO4e3xEW6oot
+ j3zib8LQnDr4eQP4aAnFE1GU3u/bDY35Zj7qMVDwddpRlA+s2BPNgIuq+Kql+5IANK/G
+ 9IPfPkigLwVdPktaHkJeDzhVHV89RVNhfqMLnXKMKbNrTJB4JdpY/J3N27bvor3ivNCB
+ 3wyu1slw8vKnJin8wUbZsrUR5UPP+D9WHCvw3D9JMBMud/TNH8nLWHjnQn9UFaRB5ccp
+ Kx2ONBeCpSH6tKQbWYDkH/HFRUfAsiHTeB0Ee5LAmBw9KjRfs3oxErh7ZEDWivRhfaz+ FQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 34t7vmx5ag-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Mon, 16 Nov 2020 17:19:27 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AGH9XvV161540;
+        Mon, 16 Nov 2020 17:19:26 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 34usps99rn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Nov 2020 17:19:26 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AGHJPbb018156;
+        Mon, 16 Nov 2020 17:19:25 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 16 Nov 2020 09:19:25 -0800
+Date:   Mon, 16 Nov 2020 09:19:24 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     sandeen@sandeen.net, bfoster@redhat.com
+Cc:     linux-xfs@vger.kernel.org
+Subject: [PATCH v2 6/9] xfs_repair: check inode btree block counters in AGI
+Message-ID: <20201116171924.GS9695@magnolia>
+References: <160375518573.880355.12052697509237086329.stgit@magnolia>
+ <160375522427.880355.15446960142376313542.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201113141553.GA981063@xiangao.remote.csb>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <160375522427.880355.15446960142376313542.stgit@magnolia>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9807 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 bulkscore=0 suspectscore=5 adultscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011160101
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9807 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=5
+ malwarescore=0 bulkscore=0 impostorscore=0 lowpriorityscore=0 spamscore=0
+ adultscore=0 mlxscore=0 priorityscore=1501 phishscore=0 clxscore=1015
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011160101
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Eric,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-On Fri, Nov 13, 2020 at 10:15:53PM +0800, Gao Xiang wrote:
-> On Fri, Nov 13, 2020 at 08:10:39AM -0600, Eric Sandeen wrote:
-> > On 11/13/20 6:51 AM, Gao Xiang wrote:
-> 
-> ...
-> 
-> > 
-> > Thank you for looking into this - I think you now understand xfsdump &
-> > xfsrestore better than anyone else on the planet.  ;)
-> > 
-> > One question - what happens if the wrong "root inode" is not a directory?
-> > I think that it is possible from the old "get the first active inode" heuristic
-> > to find any type of file and save it as the root inode.
-> > 
-> > I think that your approach still works in this case, but wanted to double check
-> > and see what you think.
-> 
-> Yeah, good question. I also think it works too, but just in case let me
-> do fault injection on a regular inode later (Donald's image is /var
-> subdir...)
-> 
+Make sure that both inode btree block counters in the AGI are correct.
 
-Sorry for the previous wrong conclusion...
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: fix backwards complaint message, consolidate switch statements
+---
+ repair/scan.c |   29 ++++++++++++++++++++++++++---
+ 1 file changed, 26 insertions(+), 3 deletions(-)
 
-From the code itself, tree_begindir() only triggers for node_t == dir but all
-dirents can be trigged by tree_addent(), so I update the patch and verified
-with manual fault injection code as well...
-
-RFC v2: https://lore.kernel.org/linux-xfs/20201116080723.1486270-1-hsiangkao@redhat.com/
-fault injection: https://lore.kernel.org/linux-xfs/20201116081359.GA1486562@xiangao.remote.csb/
-
-Thanks,
-Gao Xiang
-
-> Thanks,
-> Gao Xiang
-> 
-> > 
-> > Thanks,
-> > -Eric
-> > 
-
+diff --git a/repair/scan.c b/repair/scan.c
+index 2a38ae5197c6..44e794a0ac5a 100644
+--- a/repair/scan.c
++++ b/repair/scan.c
+@@ -1948,6 +1948,12 @@ _("invalid inode count, inode chunk %d/%u, count %d ninodes %d\n"),
+ 	return suspect;
+ }
+ 
++struct ino_priv {
++	struct aghdr_cnts	*agcnts;
++	uint32_t		ino_blocks;
++	uint32_t		fino_blocks;
++};
++
+ /*
+  * this one walks the inode btrees sucking the info there into
+  * the incore avl tree.  We try and rescue corrupted btree records
+@@ -1976,7 +1982,8 @@ scan_inobt(
+ 	void			*priv,
+ 	const struct xfs_buf_ops *ops)
+ {
+-	struct aghdr_cnts	*agcnts = priv;
++	struct ino_priv		*ipriv = priv;
++	struct aghdr_cnts	*agcnts = ipriv->agcnts;
+ 	char			*name;
+ 	xfs_agino_t		lastino = 0;
+ 	int			i;
+@@ -1994,10 +2001,12 @@ scan_inobt(
+ 	case XFS_FIBT_MAGIC:
+ 	case XFS_FIBT_CRC_MAGIC:
+ 		name = "fino";
++		ipriv->fino_blocks++;
+ 		break;
+ 	case XFS_IBT_MAGIC:
+ 	case XFS_IBT_CRC_MAGIC:
+ 		name = "ino";
++		ipriv->ino_blocks++;
+ 		break;
+ 	default:
+ 		name = "(unknown)";
+@@ -2363,6 +2372,9 @@ validate_agi(
+ 	xfs_agnumber_t		agno,
+ 	struct aghdr_cnts	*agcnts)
+ {
++	struct ino_priv		priv = {
++		.agcnts = agcnts,
++	};
+ 	xfs_agblock_t		bno;
+ 	int			i;
+ 	uint32_t		magic;
+@@ -2372,7 +2384,7 @@ validate_agi(
+ 		magic = xfs_sb_version_hascrc(&mp->m_sb) ? XFS_IBT_CRC_MAGIC
+ 							 : XFS_IBT_MAGIC;
+ 		scan_sbtree(bno, be32_to_cpu(agi->agi_level),
+-			    agno, 0, scan_inobt, 1, magic, agcnts,
++			    agno, 0, scan_inobt, 1, magic, &priv,
+ 			    &xfs_inobt_buf_ops);
+ 	} else {
+ 		do_warn(_("bad agbno %u for inobt root, agno %d\n"),
+@@ -2385,7 +2397,7 @@ validate_agi(
+ 			magic = xfs_sb_version_hascrc(&mp->m_sb) ?
+ 					XFS_FIBT_CRC_MAGIC : XFS_FIBT_MAGIC;
+ 			scan_sbtree(bno, be32_to_cpu(agi->agi_free_level),
+-				    agno, 0, scan_inobt, 1, magic, agcnts,
++				    agno, 0, scan_inobt, 1, magic, &priv,
+ 				    &xfs_finobt_buf_ops);
+ 		} else {
+ 			do_warn(_("bad agbno %u for finobt root, agno %d\n"),
+@@ -2393,6 +2405,17 @@ validate_agi(
+ 		}
+ 	}
+ 
++	if (xfs_sb_version_hasinobtcounts(&mp->m_sb)) {
++		if (be32_to_cpu(agi->agi_iblocks) != priv.ino_blocks)
++			do_warn(_("bad inobt block count %u, saw %u\n"),
++					be32_to_cpu(agi->agi_iblocks),
++					priv.ino_blocks);
++		if (be32_to_cpu(agi->agi_fblocks) != priv.fino_blocks)
++			do_warn(_("bad finobt block count %u, saw %u\n"),
++					be32_to_cpu(agi->agi_fblocks),
++					priv.fino_blocks);
++	}
++
+ 	if (be32_to_cpu(agi->agi_count) != agcnts->agicount) {
+ 		do_warn(_("agi_count %u, counted %u in ag %u\n"),
+ 			 be32_to_cpu(agi->agi_count), agcnts->agicount, agno);
