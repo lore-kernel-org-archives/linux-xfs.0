@@ -2,56 +2,58 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.6 required=3.0 tests=BAYES_50,DKIM_ADSP_CUSTOM_MED,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9724C64E90
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Nov 2020 16:45:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E1BC2D0E4
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Nov 2020 02:31:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B8D802419A
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Nov 2020 16:45:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C09120781
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Nov 2020 02:31:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727346AbgKOQoO convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Nov 2020 11:44:14 -0500
-Received: from sw73-70-41.adsl.seed.net.tw ([203.73.70.41]:33799 "EHLO
-        oa.trendtek.com.tw" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-        with ESMTP id S1727331AbgKOQoO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Nov 2020 11:44:14 -0500
-Received: from [156.96.44.214] ([156.96.44.214])
-        (authenticated bits=0)
-        by oa.trendtek.com.tw (8.13.8/8.13.1) with ESMTP id 0AFGhsB7031621
-        for <linux-xfs@vger.kernel.org>; Mon, 16 Nov 2020 00:44:12 +0800
-Message-Id: <202011151644.0AFGhsB7031621@oa.trendtek.com.tw>
-Content-Type: text/plain; charset="iso-8859-1"
+        id S1726146AbgKPCbR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Nov 2020 21:31:17 -0500
+Received: from sandeen.net ([63.231.237.45]:59516 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725872AbgKPCbR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Nov 2020 21:31:17 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 94B7D7904;
+        Sun, 15 Nov 2020 20:30:54 -0600 (CST)
+Subject: Re: [PATCH 02/27] xfsprogs: remove unused IO_DEBUG functionality
+To:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+References: <20201015072155.1631135-1-david@fromorbit.com>
+ <20201015072155.1631135-3-david@fromorbit.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9a55fdaf-4b8a-d844-57d9-6123b1e2d011@sandeen.net>
+Date:   Sun, 15 Nov 2020 20:31:16 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.4.3
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-Content-Description: Mail message body
-Subject: Corporate and Personal Loan *
-To:     linux-xfs@vger.kernel.org
-From:   "Investment  Corporate" <financialcapability6@gmail.com>
-Date:   Sun, 15 Nov 2020 08:44:09 -0800
-Reply-To: hmurrah39@gmail.com
+In-Reply-To: <20201015072155.1631135-3-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hello linux-xfs@vger.kernel.org
 
 
-We are Base Investment Company offering Corporate and Personal Loan at 3% Interest Rate for a duration of 10Years.
+On 10/15/20 2:21 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Similar to the XFS_BUF_TRACING code, this is largely unused and not
+> hugely helpfule for tracing buffer IO. Remove it to simplify the
+> conversion process to the kernel buffer cache.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
+Fine by me, I can merge this ahead of other stuff so you don't
+have to carry it along.
 
-We also pay 1% commission to brokers, who introduce project owners for finance or other opportunities.
-
-
-Please get back to me if you are interested for more
-
-details.
-
-
-Yours faithfully,
-
-Hashim Murrah
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
