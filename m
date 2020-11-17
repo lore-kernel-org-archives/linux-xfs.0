@@ -2,397 +2,428 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA8F9C2D0E4
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Nov 2020 13:45:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCC0AC56202
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Nov 2020 14:08:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95B652465E
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Nov 2020 13:45:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A93A2078D
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Nov 2020 14:08:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fZSpy1gX"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="RftOlyar"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732809AbgKQNpZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Nov 2020 08:45:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34870 "EHLO
+        id S2387902AbgKQOHR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Nov 2020 09:07:17 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38302 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732722AbgKQNpY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Nov 2020 08:45:24 -0500
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C27EEC0613CF
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2020 05:45:24 -0800 (PST)
-Received: by mail-pg1-x52a.google.com with SMTP id i13so16104533pgm.9
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2020 05:45:24 -0800 (PST)
+        with ESMTP id S2387533AbgKQOHR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Nov 2020 09:07:17 -0500
+Received: from mail-yb1-xb4a.google.com (mail-yb1-xb4a.google.com [IPv6:2607:f8b0:4864:20::b4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2A8FAC061A49
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2020 06:07:17 -0800 (PST)
+Received: by mail-yb1-xb4a.google.com with SMTP id c9so25290449ybs.8
+        for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2020 06:07:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=olhR5HB1EgorMwTXCqPaj+ypVe6b565JiLE0znLzIhI=;
-        b=fZSpy1gXdjml8ew3wgojPlV9+WYpE+9FOfRgJ9h79iWyNzpVfQIyYMHYpJXcsy29UE
-         HKvJDMqXzYgRLwLhfxFkc0L4eQDROxCCd5bXIh8YjMUXPcMj2CJYdI3sM3cw26IfFLHp
-         5A56FePnqWVkJzryBFWEy/emsLGUxUAE/zdgd6zVpPOMC49zZm19yoURmo7Zglf/1hFj
-         W/GdkNIae69GdN1C/DTbdCut5BjYsjX8A7YLwWkixUNnPKLhgliyX4FEbAzVlwaeLyQU
-         YednPKhpBVXlfT/xXrofp7pL3KES8voRmZWlfccLoXWhRYds5k3QjWlZ/lxIPgm/anZK
-         CAZA==
+        d=google.com; s=20161025;
+        h=sender:date:in-reply-to:message-id:mime-version:references:subject
+         :from:to:cc;
+        bh=gI9t9CC9GAbETMLuNAlH/ClZ/2jSqevbRrvZwCwXB2c=;
+        b=RftOlyar3vMM+UuLWWoDc+3E4txH9IyOqegNk1ZKpYqJ+64DndBUuka4yGqTGvV8HZ
+         kKKYIdA3FBdISG2pT5diEdurh7c6SenZdtfseQienr50nVwEs+lVPqoh/QQcPcHbxKTd
+         6z7tLj8QkLtfqCHUCSwGQImVKkXObQm1qs9c+uvW7zoloZat5A0FTqmA9aG/G8SXJdsa
+         XBCaiEzt4ANxyW9qoY3hqx21xVpXdpDPR+RQQfctNVrHqjmeDGIDEGd96xqHl9PF78S+
+         xVP/FSmJPwvk20i6vSzW80obRBeRa+undBkZLraZ4Zn/siWNcMZHVxphaEILVDyr4sDw
+         uynw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=olhR5HB1EgorMwTXCqPaj+ypVe6b565JiLE0znLzIhI=;
-        b=WpwrRtxj0SYzl2A1K8vuq1xvwIWOkJDFVb6bV6AyUM5akANWvWE1Y0bTWosZ+AsIV/
-         qtkYF2FZydXsq0VGDXyog2JkvmHOjpD1iXnwYcFvZFr1Qv0+iJCTAtHMAr29Tz27qCZX
-         S6cPbGP69y8SiNanx+VOivhdwN4W7sEIj0yNjzhwDCrV0Ps+izTYoSxnTYcPRNFGNm+a
-         rHZa83/lG+QptOD0F/R8oVQKmAJVmYOoJ5Qw/PbwmfwlttahJQ3uBiPv2rj4BKlYbJkt
-         WiTwWH7/Wq/MuP2MFrpf24ozyeWLrRgX1v/Nk863MSp0v3szJca7caA61xRjSZi7HjV3
-         e6jg==
-X-Gm-Message-State: AOAM533OGsyhue5DmXjiYbF58xbQgsy4NEKCDSUaUwmw7CobU8heaFFJ
-        ehtUXTCDLb0kcz5sAFnNkqQmenLRP14=
-X-Google-Smtp-Source: ABdhPJy4xaloClHI5vItRX3V5PVbUNCQzDDA3ngyzZfdbKSwWDXwZmbsNQ9dcLPDXqoGZ8G3L1T6ew==
-X-Received: by 2002:a62:64c1:0:b029:18a:d791:8162 with SMTP id y184-20020a6264c10000b029018ad7918162mr19151646pfb.24.1605620723837;
-        Tue, 17 Nov 2020 05:45:23 -0800 (PST)
-Received: from localhost.localdomain ([122.179.49.210])
-        by smtp.gmail.com with ESMTPSA id y3sm3669399pjb.18.2020.11.17.05.45.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2020 05:45:23 -0800 (PST)
-From:   Chandan Babu R <chandanrlinux@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Chandan Babu R <chandanrlinux@gmail.com>, darrick.wong@oracle.com
-Subject: [PATCH V11 14/14] xfs: Introduce error injection to allocate only minlen size extents for files
-Date:   Tue, 17 Nov 2020 19:14:16 +0530
-Message-Id: <20201117134416.207945-15-chandanrlinux@gmail.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20201117134416.207945-1-chandanrlinux@gmail.com>
-References: <20201117134416.207945-1-chandanrlinux@gmail.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        h=x-gm-message-state:sender:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=gI9t9CC9GAbETMLuNAlH/ClZ/2jSqevbRrvZwCwXB2c=;
+        b=km0jmvj5AyvZpfQyBi2MNp+eyB9BScXCG2PjrCT6YfR0FSu1XR7G4+mkXMtmIL8e5O
+         3Q465A6z5ub4sG8L+OhiKJmQ6X+IxUqlZpwTEXsLHVWqm8h6LpfLS3Wvjnkb8LN2l+ng
+         Br7u+dUPsHveUfyU8BdENx47WVjMi4KFzmIr/I+8YPkcL/41NN2PB1u4qOj6oWan8cbN
+         hU79e1vYwKfQmkjq3nxzxF1H/XyrGybXmEk2tofQH4eGeElVZ5+5wD4awq5UlNtBjohQ
+         JnM2D136Nqo4Y6JHYd8PeVN6SxbDU7G/XsLB370JFKYez50Eb6cDC24lemIK57aib0pN
+         n12Q==
+X-Gm-Message-State: AOAM5334XbfULtPRVnnDGLFEE3vb6GWD+7kYxeB5C2rVwl3nZ3j+86pI
+        OG80LU45DD7itC277bh4BZEjTQotl7I=
+X-Google-Smtp-Source: ABdhPJz9doXCbA2XybATuEWhl6nzDUH2qic2NqkzBZezLv85f8bG7r9mJGCgGG0IMaxYIkm8TwTZJBSohjQ=
+Sender: "satyat via sendgmr" <satyat@satyaprateek.c.googlers.com>
+X-Received: from satyaprateek.c.googlers.com ([fda3:e722:ac3:10:24:72f4:c0a8:1092])
+ (user=satyat job=sendgmr) by 2002:a25:d7d4:: with SMTP id o203mr23633500ybg.286.1605622036343;
+ Tue, 17 Nov 2020 06:07:16 -0800 (PST)
+Date:   Tue, 17 Nov 2020 14:07:02 +0000
+In-Reply-To: <20201117140708.1068688-1-satyat@google.com>
+Message-Id: <20201117140708.1068688-3-satyat@google.com>
+Mime-Version: 1.0
+References: <20201117140708.1068688-1-satyat@google.com>
+X-Mailer: git-send-email 2.29.2.299.gdc1121823c-goog
+Subject: [PATCH v7 2/8] blk-crypto: don't require user buffer alignment
+From:   Satya Tangirala <satyat@google.com>
+To:     "Theodore Y . Ts'o" <tytso@mit.edu>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Eric Biggers <ebiggers@kernel.org>, Chao Yu <chao@kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc:     linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-ext4@vger.kernel.org,
+        Satya Tangirala <satyat@google.com>,
+        Eric Biggers <ebiggers@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This commit adds XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT error tag which
-helps userspace test programs to get xfs_bmap_btalloc() to always
-allocate minlen sized extents.
+Previously, blk-crypto-fallback required the offset and length of each bvec
+in a bio to be aligned to the crypto data unit size. This patch enables
+blk-crypto-fallback to work even if that's not the case - the requirement
+now is only that the total length of the data in the bio is aligned to
+the crypto data unit size.
 
-This is required for test programs which need a guarantee that minlen
-extents allocated for a file do not get merged with their existing
-neighbours in the inode's BMBT. "Inode fork extent overflow check" for
-Directories, Xattrs and extension of realtime inodes need this since the
-file offset at which the extents are being allocated cannot be
-explicitly controlled from userspace.
+Now that blk-crypto-fallback can handle bvecs not aligned to crypto data
+units, and we've ensured that bios are not split in the middle of a
+crypto data unit, we can relax the alignment check done by blk-crypto.
 
-One way to use this error tag is to,
-1. Consume all of the free space by sequentially writing to a file.
-2. Punch alternate blocks of the file. This causes CNTBT to contain
-   sufficient number of one block sized extent records.
-3. Inject XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT error tag.
-After step 3, xfs_bmap_btalloc() will issue space allocation
-requests for minlen sized extents only.
-
-ENOSPC error code is returned to userspace when there aren't any "one
-block sized" extents left in any of the AGs.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+Co-developed-by: Eric Biggers <ebiggers@google.com>
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+Signed-off-by: Satya Tangirala <satyat@google.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c    |  50 ++++++++++++++
- fs/xfs/libxfs/xfs_alloc.h    |   3 +
- fs/xfs/libxfs/xfs_bmap.c     | 124 ++++++++++++++++++++++++++++-------
- fs/xfs/libxfs/xfs_errortag.h |   4 +-
- fs/xfs/xfs_error.c           |   3 +
- 5 files changed, 159 insertions(+), 25 deletions(-)
+ block/blk-crypto-fallback.c | 202 +++++++++++++++++++++++++++---------
+ block/blk-crypto.c          |  19 +---
+ 2 files changed, 157 insertions(+), 64 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 852b536551b5..a7c4eb1d71d5 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -2473,6 +2473,47 @@ xfs_defer_agfl_block(
- 	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_AGFL_FREE, &new->xefi_list);
+diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
+index db2d2c67b308..619f0746ce02 100644
+--- a/block/blk-crypto-fallback.c
++++ b/block/blk-crypto-fallback.c
+@@ -251,6 +251,65 @@ static void blk_crypto_dun_to_iv(const u64 dun[BLK_CRYPTO_DUN_ARRAY_SIZE],
+ 		iv->dun[i] = cpu_to_le64(dun[i]);
  }
  
-+#ifdef DEBUG
 +/*
-+ * Check if an AGF has a free extent record whose length is equal to
-+ * args->minlen.
++ * If the length of any bio segment isn't a multiple of data_unit_size
++ * (which can happen if data_unit_size > logical_block_size), then each
++ * encryption/decryption might need to be passed multiple scatterlist elements.
++ * If that will be the case, this function allocates and initializes src and dst
++ * scatterlists (or a combined src/dst scatterlist) with the needed length.
++ *
++ * If 1 element is guaranteed to be enough (which is usually the case, and is
++ * guaranteed when data_unit_size <= logical_block_size), then this function
++ * just initializes the on-stack scatterlist(s).
 + */
-+STATIC int
-+xfs_exact_minlen_extent_available(
-+	struct xfs_alloc_arg	*args,
-+	struct xfs_buf		*agbp,
-+	int			*stat)
++static bool blk_crypto_alloc_sglists(struct bio *bio,
++				     const struct bvec_iter *start_iter,
++				     unsigned int data_unit_size,
++				     struct scatterlist **src_p,
++				     struct scatterlist **dst_p)
 +{
-+	struct xfs_btree_cur	*cnt_cur;
-+	xfs_agblock_t		fbno;
-+	xfs_extlen_t		flen;
-+	int			error = 0;
++	struct bio_vec bv;
++	struct bvec_iter iter;
++	bool aligned = true;
++	unsigned int count = 0;
 +
-+	cnt_cur = xfs_allocbt_init_cursor(args->mp, args->tp, agbp,
-+			args->agno, XFS_BTNUM_CNT);
-+	error = xfs_alloc_lookup_ge(cnt_cur, 0, args->minlen, stat);
-+	if (error)
-+		goto out;
-+
-+	if (*stat == 0) {
-+		error = -EFSCORRUPTED;
-+		goto out;
++	__bio_for_each_segment(bv, bio, iter, *start_iter) {
++		count++;
++		aligned &= IS_ALIGNED(bv.bv_len, data_unit_size);
 +	}
-+
-+	error = xfs_alloc_get_rec(cnt_cur, &fbno, &flen, stat);
-+	if (error)
-+		goto out;
-+
-+	if (*stat == 1 && flen != args->minlen)
-+		*stat = 0;
-+
-+out:
-+	xfs_btree_del_cursor(cnt_cur, error);
-+
-+	return error;
-+}
-+#endif
-+
- /*
-  * Decide whether to use this allocation group for this allocation.
-  * If so, fix up the btree freelist's size.
-@@ -2544,6 +2585,15 @@ xfs_alloc_fix_freelist(
- 	if (!xfs_alloc_space_available(args, need, flags))
- 		goto out_agbp_relse;
- 
-+#ifdef DEBUG
-+	if (args->alloc_minlen_only) {
-+		int stat;
-+
-+		error = xfs_exact_minlen_extent_available(args, agbp, &stat);
-+		if (error || !stat)
-+			goto out_agbp_relse;
-+	}
-+#endif
- 	/*
- 	 * Make the freelist shorter if it's too long.
- 	 *
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 6c22b12176b8..a4427c5775c2 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -75,6 +75,9 @@ typedef struct xfs_alloc_arg {
- 	char		wasfromfl;	/* set if allocation is from freelist */
- 	struct xfs_owner_info	oinfo;	/* owner of blocks being allocated */
- 	enum xfs_ag_resv_type	resv;	/* block reservation to use */
-+#ifdef DEBUG
-+	bool		alloc_minlen_only; /* allocate exact minlen extent */
-+#endif
- } xfs_alloc_arg_t;
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index f6cd33684571..c57dcd3f46bc 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -3552,34 +3552,101 @@ xfs_bmap_process_allocated_extent(
- 	xfs_bmap_btalloc_accounting(ap, args);
- }
- 
--STATIC int
--xfs_bmap_btalloc(
--	struct xfs_bmalloca	*ap)	/* bmap alloc argument struct */
-+#ifdef DEBUG
-+static int
-+xfs_bmap_exact_minlen_extent_alloc(
-+	struct xfs_bmalloca	*ap)
- {
--	xfs_mount_t	*mp;		/* mount point structure */
--	xfs_alloctype_t	atype = 0;	/* type for allocation routines */
--	xfs_agnumber_t	fb_agno;	/* ag number of ap->firstblock */
--	xfs_agnumber_t	ag;
--	xfs_alloc_arg_t	args;
--	xfs_fileoff_t	orig_offset;
--	xfs_extlen_t	orig_length;
--	xfs_extlen_t	blen;
--	xfs_extlen_t	nextminlen = 0;
--	int		nullfb;		/* true if ap->firstblock isn't set */
--	int		isaligned;
--	int		tryagain;
--	int		error;
--	int		stripe_align;
-+	struct xfs_mount	*mp = ap->ip->i_mount;
-+	struct xfs_alloc_arg	args = { .tp = ap->tp, .mp = mp };
-+	xfs_fileoff_t		orig_offset;
-+	xfs_extlen_t		orig_length;
-+	int			error;
- 
- 	ASSERT(ap->length);
-+
-+	if (ap->minlen != 1) {
-+		ap->blkno = NULLFSBLOCK;
-+		ap->length = 0;
-+		return 0;
-+	}
-+
- 	orig_offset = ap->offset;
- 	orig_length = ap->length;
- 
--	mp = ap->ip->i_mount;
-+	args.alloc_minlen_only = 1;
- 
--	memset(&args, 0, sizeof(args));
--	args.tp = ap->tp;
--	args.mp = mp;
-+	xfs_bmap_compute_alignments(ap, &args);
-+
-+	if (ap->tp->t_firstblock == NULLFSBLOCK) {
++	if (aligned) {
++		count = 1;
++	} else {
 +		/*
-+		 * Unlike the longest extent available in an AG, we don't track
-+		 * the length of an AG's shortest extent.
-+		 * XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT is a debug only knob and
-+		 * hence we can afford to start traversing from the 0th AG since
-+		 * we need not be concerned about a drop in performance in
-+		 * "debug only" code paths.
++		 * We can't need more elements than bio segments, and we can't
++		 * need more than the number of sectors per data unit.  This may
++		 * overestimate the required length by a bit, but that's okay.
 +		 */
-+		ap->blkno = XFS_AGB_TO_FSB(mp, 0, 0);
-+	} else {
-+		ap->blkno = ap->tp->t_firstblock;
++		count = min(count, data_unit_size >> SECTOR_SHIFT);
 +	}
 +
-+	args.fsbno = ap->blkno;
-+	args.oinfo = XFS_RMAP_OINFO_SKIP_UPDATE;
-+	args.type = XFS_ALLOCTYPE_FIRST_AG;
-+	args.total = args.minlen = args.maxlen = ap->minlen;
-+
-+	args.alignment = 1;
-+	args.minalignslop = 0;
-+
-+	args.minleft = ap->minleft;
-+	args.wasdel = ap->wasdel;
-+	args.resv = XFS_AG_RESV_NONE;
-+	args.datatype = ap->datatype;
-+
-+	error = xfs_alloc_vextent(&args);
-+	if (error)
-+		return error;
-+
-+	if (args.fsbno != NULLFSBLOCK) {
-+		xfs_bmap_process_allocated_extent(ap, &args, orig_offset,
-+			orig_length);
-+	} else {
-+		ap->blkno = NULLFSBLOCK;
-+		ap->length = 0;
++	if (count > 1) {
++		*src_p = kmalloc_array(count, sizeof(struct scatterlist),
++				       GFP_NOIO);
++		if (!*src_p)
++			return false;
++		if (dst_p) {
++			*dst_p = kmalloc_array(count,
++					       sizeof(struct scatterlist),
++					       GFP_NOIO);
++			if (!*dst_p) {
++				kfree(*src_p);
++				*src_p = NULL;
++				return false;
++			}
++		}
 +	}
-+
-+	return 0;
++	sg_init_table(*src_p, count);
++	if (dst_p)
++		sg_init_table(*dst_p, count);
++	return true;
 +}
-+#else
 +
-+#define xfs_bmap_exact_minlen_extent_alloc(bma) (-EFSCORRUPTED)
-+
-+#endif
-+
-+STATIC int
-+xfs_bmap_btalloc(
-+	struct xfs_bmalloca	*ap)
-+{
-+	struct xfs_mount	*mp = ap->ip->i_mount;
-+	struct xfs_alloc_arg	args = { .tp = ap->tp, .mp = mp };
-+	xfs_alloctype_t		atype = 0;
-+	xfs_agnumber_t		fb_agno;	/* ag number of ap->firstblock */
-+	xfs_agnumber_t		ag;
-+	xfs_fileoff_t		orig_offset;
-+	xfs_extlen_t		orig_length;
-+	xfs_extlen_t		blen;
-+	xfs_extlen_t		nextminlen = 0;
-+	int			nullfb; /* true if ap->firstblock isn't set */
-+	int			isaligned;
-+	int			tryagain;
-+	int			error;
-+	int			stripe_align;
-+
-+	ASSERT(ap->length);
-+	orig_offset = ap->offset;
-+	orig_length = ap->length;
+ /*
+  * The crypto API fallback's encryption routine.
+  * Allocate a bounce bio for encryption, encrypt the input bio using crypto API,
+@@ -267,9 +326,12 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
+ 	struct skcipher_request *ciph_req = NULL;
+ 	DECLARE_CRYPTO_WAIT(wait);
+ 	u64 curr_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
+-	struct scatterlist src, dst;
++	struct scatterlist _src, *src = &_src;
++	struct scatterlist _dst, *dst = &_dst;
+ 	union blk_crypto_iv iv;
+-	unsigned int i, j;
++	unsigned int i;
++	unsigned int sg_idx = 0;
++	unsigned int du_filled = 0;
+ 	bool ret = false;
+ 	blk_status_t blk_st;
  
- 	stripe_align = xfs_bmap_compute_alignments(ap, &args);
+@@ -281,11 +343,18 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
+ 	bc = src_bio->bi_crypt_context;
+ 	data_unit_size = bc->bc_key->crypto_cfg.data_unit_size;
  
-@@ -4113,6 +4180,10 @@ xfs_bmap_alloc_userdata(
- 			return xfs_bmap_rtalloc(bma);
++	/* Allocate scatterlists if needed */
++	if (!blk_crypto_alloc_sglists(src_bio, &src_bio->bi_iter,
++				      data_unit_size, &src, &dst)) {
++		src_bio->bi_status = BLK_STS_RESOURCE;
++		return false;
++	}
++
+ 	/* Allocate bounce bio for encryption */
+ 	enc_bio = blk_crypto_clone_bio(src_bio);
+ 	if (!enc_bio) {
+ 		src_bio->bi_status = BLK_STS_RESOURCE;
+-		return false;
++		goto out_free_sglists;
  	}
  
-+	if (unlikely(XFS_TEST_ERROR(false, mp,
-+			XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
-+		return xfs_bmap_exact_minlen_extent_alloc(bma);
-+
- 	return xfs_bmap_btalloc(bma);
+ 	/*
+@@ -305,45 +374,57 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
+ 	}
+ 
+ 	memcpy(curr_dun, bc->bc_dun, sizeof(curr_dun));
+-	sg_init_table(&src, 1);
+-	sg_init_table(&dst, 1);
+ 
+-	skcipher_request_set_crypt(ciph_req, &src, &dst, data_unit_size,
++	skcipher_request_set_crypt(ciph_req, src, dst, data_unit_size,
+ 				   iv.bytes);
+ 
+-	/* Encrypt each page in the bounce bio */
++	/*
++	 * Encrypt each data unit in the bounce bio.
++	 *
++	 * Take care to handle the case where a data unit spans bio segments.
++	 * This can happen when data_unit_size > logical_block_size.
++	 */
+ 	for (i = 0; i < enc_bio->bi_vcnt; i++) {
+-		struct bio_vec *enc_bvec = &enc_bio->bi_io_vec[i];
+-		struct page *plaintext_page = enc_bvec->bv_page;
++		struct bio_vec *bv = &enc_bio->bi_io_vec[i];
++		struct page *plaintext_page = bv->bv_page;
+ 		struct page *ciphertext_page =
+ 			mempool_alloc(blk_crypto_bounce_page_pool, GFP_NOIO);
++		unsigned int offset_in_bv = 0;
+ 
+-		enc_bvec->bv_page = ciphertext_page;
++		bv->bv_page = ciphertext_page;
+ 
+ 		if (!ciphertext_page) {
+ 			src_bio->bi_status = BLK_STS_RESOURCE;
+ 			goto out_free_bounce_pages;
+ 		}
+ 
+-		sg_set_page(&src, plaintext_page, data_unit_size,
+-			    enc_bvec->bv_offset);
+-		sg_set_page(&dst, ciphertext_page, data_unit_size,
+-			    enc_bvec->bv_offset);
+-
+-		/* Encrypt each data unit in this page */
+-		for (j = 0; j < enc_bvec->bv_len; j += data_unit_size) {
+-			blk_crypto_dun_to_iv(curr_dun, &iv);
+-			if (crypto_wait_req(crypto_skcipher_encrypt(ciph_req),
+-					    &wait)) {
+-				i++;
+-				src_bio->bi_status = BLK_STS_IOERR;
+-				goto out_free_bounce_pages;
++		while (offset_in_bv < bv->bv_len) {
++			unsigned int n = min(bv->bv_len - offset_in_bv,
++					     data_unit_size - du_filled);
++			sg_set_page(&src[sg_idx], plaintext_page, n,
++				    bv->bv_offset + offset_in_bv);
++			sg_set_page(&dst[sg_idx], ciphertext_page, n,
++				    bv->bv_offset + offset_in_bv);
++			sg_idx++;
++			offset_in_bv += n;
++			du_filled += n;
++			if (du_filled == data_unit_size) {
++				blk_crypto_dun_to_iv(curr_dun, &iv);
++				if (crypto_wait_req(crypto_skcipher_encrypt(ciph_req),
++						    &wait)) {
++					src_bio->bi_status = BLK_STS_IOERR;
++					goto out_free_bounce_pages;
++				}
++				bio_crypt_dun_increment(curr_dun, 1);
++				sg_idx = 0;
++				du_filled = 0;
+ 			}
+-			bio_crypt_dun_increment(curr_dun, 1);
+-			src.offset += data_unit_size;
+-			dst.offset += data_unit_size;
+ 		}
+ 	}
++	if (WARN_ON_ONCE(du_filled != 0)) {
++		src_bio->bi_status = BLK_STS_IOERR;
++		goto out_free_bounce_pages;
++	}
+ 
+ 	enc_bio->bi_private = src_bio;
+ 	enc_bio->bi_end_io = blk_crypto_fallback_encrypt_endio;
+@@ -364,7 +445,11 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
+ out_put_enc_bio:
+ 	if (enc_bio)
+ 		bio_put(enc_bio);
+-
++out_free_sglists:
++	if (src != &_src)
++		kfree(src);
++	if (dst != &_dst)
++		kfree(dst);
+ 	return ret;
  }
  
-@@ -4149,10 +4220,15 @@ xfs_bmapi_allocate(
- 	else
- 		bma->minlen = 1;
+@@ -383,13 +468,21 @@ static void blk_crypto_fallback_decrypt_bio(struct work_struct *work)
+ 	DECLARE_CRYPTO_WAIT(wait);
+ 	u64 curr_dun[BLK_CRYPTO_DUN_ARRAY_SIZE];
+ 	union blk_crypto_iv iv;
+-	struct scatterlist sg;
++	struct scatterlist _sg, *sg = &_sg;
+ 	struct bio_vec bv;
+ 	struct bvec_iter iter;
+ 	const int data_unit_size = bc->bc_key->crypto_cfg.data_unit_size;
+-	unsigned int i;
++	unsigned int sg_idx = 0;
++	unsigned int du_filled = 0;
+ 	blk_status_t blk_st;
  
--	if (bma->flags & XFS_BMAPI_METADATA)
--		error = xfs_bmap_btalloc(bma);
--	else
-+	if (bma->flags & XFS_BMAPI_METADATA) {
-+		if (unlikely(XFS_TEST_ERROR(false, mp,
-+				XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT)))
-+			error = xfs_bmap_exact_minlen_extent_alloc(bma);
-+		else
-+			error = xfs_bmap_btalloc(bma);
-+	} else {
- 		error = xfs_bmap_alloc_userdata(bma);
++	/* Allocate scatterlist if needed */
++	if (!blk_crypto_alloc_sglists(bio, &f_ctx->crypt_iter, data_unit_size,
++				      &sg, NULL)) {
++		bio->bi_status = BLK_STS_RESOURCE;
++		goto out_no_sglists;
 +	}
- 	if (error || bma->blkno == NULLFSBLOCK)
- 		return error;
++
+ 	/*
+ 	 * Use the crypto API fallback keyslot manager to get a crypto_skcipher
+ 	 * for the algorithm and key specified for this bio.
+@@ -407,33 +500,48 @@ static void blk_crypto_fallback_decrypt_bio(struct work_struct *work)
+ 	}
  
-diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
-index 1c56fcceeea6..6ca9084b6934 100644
---- a/fs/xfs/libxfs/xfs_errortag.h
-+++ b/fs/xfs/libxfs/xfs_errortag.h
-@@ -57,7 +57,8 @@
- #define XFS_ERRTAG_IUNLINK_FALLBACK			34
- #define XFS_ERRTAG_BUF_IOERROR				35
- #define XFS_ERRTAG_REDUCE_MAX_IEXTENTS			36
--#define XFS_ERRTAG_MAX					37
-+#define XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT		37
-+#define XFS_ERRTAG_MAX					38
+ 	memcpy(curr_dun, bc->bc_dun, sizeof(curr_dun));
+-	sg_init_table(&sg, 1);
+-	skcipher_request_set_crypt(ciph_req, &sg, &sg, data_unit_size,
+-				   iv.bytes);
++	skcipher_request_set_crypt(ciph_req, sg, sg, data_unit_size, iv.bytes);
  
- /*
-  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
-@@ -99,5 +100,6 @@
- #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
- #define XFS_RANDOM_BUF_IOERROR				XFS_RANDOM_DEFAULT
- #define XFS_RANDOM_REDUCE_MAX_IEXTENTS			1
-+#define XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT		1
+-	/* Decrypt each segment in the bio */
++	/*
++	 * Decrypt each data unit in the bio.
++	 *
++	 * Take care to handle the case where a data unit spans bio segments.
++	 * This can happen when data_unit_size > logical_block_size.
++	 */
+ 	__bio_for_each_segment(bv, bio, iter, f_ctx->crypt_iter) {
+-		struct page *page = bv.bv_page;
+-
+-		sg_set_page(&sg, page, data_unit_size, bv.bv_offset);
+-
+-		/* Decrypt each data unit in the segment */
+-		for (i = 0; i < bv.bv_len; i += data_unit_size) {
+-			blk_crypto_dun_to_iv(curr_dun, &iv);
+-			if (crypto_wait_req(crypto_skcipher_decrypt(ciph_req),
+-					    &wait)) {
+-				bio->bi_status = BLK_STS_IOERR;
+-				goto out;
++		unsigned int offset_in_bv = 0;
++
++		while (offset_in_bv < bv.bv_len) {
++			unsigned int n = min(bv.bv_len - offset_in_bv,
++					     data_unit_size - du_filled);
++			sg_set_page(&sg[sg_idx++], bv.bv_page, n,
++				    bv.bv_offset + offset_in_bv);
++			offset_in_bv += n;
++			du_filled += n;
++			if (du_filled == data_unit_size) {
++				blk_crypto_dun_to_iv(curr_dun, &iv);
++				if (crypto_wait_req(crypto_skcipher_decrypt(ciph_req),
++						    &wait)) {
++					bio->bi_status = BLK_STS_IOERR;
++					goto out;
++				}
++				bio_crypt_dun_increment(curr_dun, 1);
++				sg_idx = 0;
++				du_filled = 0;
+ 			}
+-			bio_crypt_dun_increment(curr_dun, 1);
+-			sg.offset += data_unit_size;
+ 		}
+ 	}
+-
++	if (WARN_ON_ONCE(du_filled != 0)) {
++		bio->bi_status = BLK_STS_IOERR;
++		goto out;
++	}
+ out:
+ 	skcipher_request_free(ciph_req);
+ 	blk_ksm_put_slot(slot);
+ out_no_keyslot:
++	if (sg != &_sg)
++		kfree(sg);
++out_no_sglists:
+ 	mempool_free(f_ctx, bio_fallback_crypt_ctx_pool);
+ 	bio_endio(bio);
+ }
+diff --git a/block/blk-crypto.c b/block/blk-crypto.c
+index 5da43f0973b4..fcee0038f7e0 100644
+--- a/block/blk-crypto.c
++++ b/block/blk-crypto.c
+@@ -200,22 +200,6 @@ bool bio_crypt_ctx_mergeable(struct bio_crypt_ctx *bc1, unsigned int bc1_bytes,
+ 	return !bc1 || bio_crypt_dun_is_contiguous(bc1, bc1_bytes, bc2->bc_dun);
+ }
  
- #endif /* __XFS_ERRORTAG_H_ */
-diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
-index 3780b118cc47..185b4915b7bf 100644
---- a/fs/xfs/xfs_error.c
-+++ b/fs/xfs/xfs_error.c
-@@ -55,6 +55,7 @@ static unsigned int xfs_errortag_random_default[] = {
- 	XFS_RANDOM_IUNLINK_FALLBACK,
- 	XFS_RANDOM_BUF_IOERROR,
- 	XFS_RANDOM_REDUCE_MAX_IEXTENTS,
-+	XFS_RANDOM_BMAP_ALLOC_MINLEN_EXTENT,
- };
+-/* Check that all I/O segments are data unit aligned. */
+-static bool bio_crypt_check_alignment(struct bio *bio)
+-{
+-	const unsigned int data_unit_size =
+-		bio->bi_crypt_context->bc_key->crypto_cfg.data_unit_size;
+-	struct bvec_iter iter;
+-	struct bio_vec bv;
+-
+-	bio_for_each_segment(bv, bio, iter) {
+-		if (!IS_ALIGNED(bv.bv_len | bv.bv_offset, data_unit_size))
+-			return false;
+-	}
+-
+-	return true;
+-}
+-
+ blk_status_t __blk_crypto_init_request(struct request *rq)
+ {
+ 	return blk_ksm_get_slot_for_key(rq->q->ksm, rq->crypt_ctx->bc_key,
+@@ -271,7 +255,8 @@ bool __blk_crypto_bio_prep(struct bio **bio_ptr)
+ 		goto fail;
+ 	}
  
- struct xfs_errortag_attr {
-@@ -166,6 +167,7 @@ XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
- XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
- XFS_ERRORTAG_ATTR_RW(buf_ioerror,	XFS_ERRTAG_BUF_IOERROR);
- XFS_ERRORTAG_ATTR_RW(reduce_max_iextents,	XFS_ERRTAG_REDUCE_MAX_IEXTENTS);
-+XFS_ERRORTAG_ATTR_RW(bmap_alloc_minlen_extent,	XFS_ERRTAG_BMAP_ALLOC_MINLEN_EXTENT);
- 
- static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(noerror),
-@@ -205,6 +207,7 @@ static struct attribute *xfs_errortag_attrs[] = {
- 	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
- 	XFS_ERRORTAG_ATTR_LIST(buf_ioerror),
- 	XFS_ERRORTAG_ATTR_LIST(reduce_max_iextents),
-+	XFS_ERRORTAG_ATTR_LIST(bmap_alloc_minlen_extent),
- 	NULL,
- };
- 
+-	if (!bio_crypt_check_alignment(bio)) {
++	if (!IS_ALIGNED(bio->bi_iter.bi_size,
++			bc_key->crypto_cfg.data_unit_size)) {
+ 		bio->bi_status = BLK_STS_IOERR;
+ 		goto fail;
+ 	}
 -- 
-2.28.0
+2.29.2.299.gdc1121823c-goog
 
