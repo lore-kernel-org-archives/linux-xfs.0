@@ -2,342 +2,280 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,FSL_HELO_FAKE,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 480A7C63697
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Nov 2020 00:38:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9236EC56202
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Nov 2020 02:25:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E86BA2468E
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Nov 2020 00:38:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 394F92468E
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Nov 2020 02:25:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VW5QwgY8"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="N5UHe9UH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726598AbgKRAiW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Nov 2020 19:38:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52072 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726592AbgKRAiV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Nov 2020 19:38:21 -0500
-Received: from mail-pj1-x1044.google.com (mail-pj1-x1044.google.com [IPv6:2607:f8b0:4864:20::1044])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98481C061A52
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2020 16:38:21 -0800 (PST)
-Received: by mail-pj1-x1044.google.com with SMTP id f12so123457pjp.4
-        for <linux-xfs@vger.kernel.org>; Tue, 17 Nov 2020 16:38:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=OZQGoYGnoHs+9ApYZ7Z+Ccs9twmxhveiKgSrp4BfJLE=;
-        b=VW5QwgY8S3ARm2OVTjam3i2IiD1+N2XN2ZOpY78Dg6yLSF1FBsaEY7/QfGJY/AuE5f
-         7dGXOd/o80EAP+JeGVtvWPLq0V7bI5Re7+ALp/3OqjqJIbgDPAgciEemvPOXvdtfmt+7
-         3LLT4XPVeM9UbtidwTQzyBEusTxTrddWxswP44+1l717WS/bp3r+J4r/7nmS22SYANU3
-         VJ0K1MTmIE03z/3WYqA+b8Y+pIxigoZLnRFDTwUGkCCezoxMtaDH1RwCyJUCbAx2Ivj5
-         MPmSBra+unacpWd3V20u0lV55tt+RJn+mK2Ja+keZxkO2DzIimnFzo8BWkVkC54cHr/3
-         y9qg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=OZQGoYGnoHs+9ApYZ7Z+Ccs9twmxhveiKgSrp4BfJLE=;
-        b=nzQPXYwZ83YHJ+5YaCbe6n9oB7rsL8vBGLpjL1I2AuoueidQTm3/2PuaUZWeWiWyKP
-         bYRFwQFaXygQl6gUdtfsHm6R7RNJd8U13oC/rxjzjbfUOiN6CBkbfEgO8owQRYM6NXTx
-         j2AtVmv5wXIVankr41MrEbX+xqyQ7yklAeUI/Tv2vDux6CUqVb9acXKaQS9HUWDJ6yQ1
-         N1VEgG568TfH2CQeAZbzehkFOrgcgytNpWiMkiQ405pq3ABf7bBLDBf/fxGQqs4CjoAT
-         jFyOqicV4km8vN8A3lFiBZlkj78I/y4bTU7Uh0p9OT9ZLw2eC2O/LbbsI5p9+7W4IRin
-         vsZw==
-X-Gm-Message-State: AOAM532P/T5Nq0eIpSLFdLQH+HojMYNiyaHNR05imvzUFTXfRy2XNCZU
-        sqiSPFXUJjYG0Eo9cmEs38TQKy2CHAeeYw==
-X-Google-Smtp-Source: ABdhPJy2TXTaf056zBPCxRa1SgWNX6EQTPXIT5lKAHimL06t/ZIdVFml/2imblFH+T5TNY4TESqiBQ==
-X-Received: by 2002:a17:902:d211:b029:d7:cd5e:2857 with SMTP id t17-20020a170902d211b02900d7cd5e2857mr1660911ply.45.1605659900567;
-        Tue, 17 Nov 2020 16:38:20 -0800 (PST)
-Received: from google.com (154.137.233.35.bc.googleusercontent.com. [35.233.137.154])
-        by smtp.gmail.com with ESMTPSA id p4sm285186pjo.6.2020.11.17.16.38.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Nov 2020 16:38:19 -0800 (PST)
-Date:   Wed, 18 Nov 2020 00:38:15 +0000
-From:   Satya Tangirala <satyat@google.com>
-To:     Eric Biggers <ebiggers@kernel.org>
-Cc:     "Theodore Y . Ts'o" <tytso@mit.edu>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-kernel@vger.kernel.org, linux-fscrypt@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-ext4@vger.kernel.org
-Subject: Re: [PATCH v7 1/8] block: ensure bios are not split in middle of
- crypto data unit
-Message-ID: <20201118003815.GA1155188@google.com>
-References: <20201117140708.1068688-1-satyat@google.com>
- <20201117140708.1068688-2-satyat@google.com>
- <X7RdS2cINwFkl/MN@sol.localdomain>
+        id S1726110AbgKRCZz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Nov 2020 21:25:55 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:50888 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725730AbgKRCZz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Nov 2020 21:25:55 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AI2KSq6060545;
+        Wed, 18 Nov 2020 02:25:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=C99NlbDZWtDUxqZF57TpSgW4bQnyfW3UE7c/ZpHxB2g=;
+ b=N5UHe9UHKNDQyM8UOjhW3ZIq8NEiMIH1ZV6qjPe9bq0seUXpsjRFa79X7kr7PRkUtOwZ
+ qK70EODCqkzZQeAmFqAYLi3jbnjj2Xt6pCzd3lQflO/kCEC0SxK1fvXNiqxjffsTpmzk
+ RXJR2K1qb7ONyjDIBPzT1Lzan+3vtGZm5hjtp6g9o78oytq2ZsQHGn60SBbAo+INJ4+O
+ QMJsJVyyRw92s7/vLvmVsZajWWyXRP5QmgMgvlCPdvdY23RsSiSeORd4WIEUhTVOtJR9
+ 1OkNev91g6kI6elAszQESCxyoSMaA4lPWQwBXkzoRlns4EwhBCl23NIzhLNuDWnFIo79 zw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 34t76kwru3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 18 Nov 2020 02:25:52 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AI2Jcwp032456;
+        Wed, 18 Nov 2020 02:23:52 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 34uspu5rpf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Nov 2020 02:23:52 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AI2NpVA023813;
+        Wed, 18 Nov 2020 02:23:52 GMT
+Received: from localhost (/10.159.155.211)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 17 Nov 2020 18:23:51 -0800
+Date:   Tue, 17 Nov 2020 18:23:50 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Chandan Babu R <chandanrlinux@gmail.com>, t@magnolia
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 10/11] xfs: Check for extent overflow when swapping
+ extents
+Message-ID: <20201118022350.GA9695@magnolia>
+References: <20201113112704.28798-1-chandanrlinux@gmail.com>
+ <20201113112704.28798-11-chandanrlinux@gmail.com>
+ <20201114000835.GA9695@magnolia>
+ <5877518.Y88ADI1sEr@garuda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <X7RdS2cINwFkl/MN@sol.localdomain>
+In-Reply-To: <5877518.Y88ADI1sEr@garuda>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9808 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ mlxscore=0 bulkscore=0 suspectscore=1 adultscore=0 spamscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011180013
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9808 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 phishscore=0
+ adultscore=0 priorityscore=1501 bulkscore=0 clxscore=-1004 mlxlogscore=999
+ malwarescore=0 mlxscore=0 spamscore=0 lowpriorityscore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011180013
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 17, 2020 at 03:31:23PM -0800, Eric Biggers wrote:
-> On Tue, Nov 17, 2020 at 02:07:01PM +0000, Satya Tangirala wrote:
-> > Introduce blk_crypto_bio_sectors_alignment() that returns the required
-> > alignment for the number of sectors in a bio. Any bio split must ensure
-> > that the number of sectors in the resulting bios is aligned to that
-> > returned value. This patch also updates __blk_queue_split(),
-> > __blk_queue_bounce() and blk_crypto_split_bio_if_needed() to respect
-> > blk_crypto_bio_sectors_alignment() when splitting bios.
+On Tue, Nov 17, 2020 at 09:05:25PM +0530, Chandan Babu R wrote:
+> On Saturday 14 November 2020 5:38:35 AM IST Darrick J. Wong wrote:
+> > On Fri, Nov 13, 2020 at 04:57:02PM +0530, Chandan Babu R wrote:
+> > > This test verifies that XFS does not cause inode fork's extent count to
+> > > overflow when swapping forks across two files.
+> > > 
+> > > Signed-off-by: Chandan Babu R <chandanrlinux@gmail.com>
+> > > ---
+> > >  tests/xfs/530     | 115 ++++++++++++++++++++++++++++++++++++++++++++++
+> > >  tests/xfs/530.out |  13 ++++++
+> > >  tests/xfs/group   |   1 +
+> > >  3 files changed, 129 insertions(+)
+> > >  create mode 100755 tests/xfs/530
+> > >  create mode 100644 tests/xfs/530.out
+> > > 
+> > > diff --git a/tests/xfs/530 b/tests/xfs/530
+> > > new file mode 100755
+> > > index 00000000..fccc6de7
+> > > --- /dev/null
+> > > +++ b/tests/xfs/530
+> > > @@ -0,0 +1,115 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0
+> > > +# Copyright (c) 2020 Chandan Babu R.  All Rights Reserved.
+> > > +#
+> > > +# FS QA Test 530
+> > > +#
+> > > +# Verify that XFS does not cause inode fork's extent count to overflow when
+> > > +# swapping forks between files
+> > > +seq=`basename $0`
+> > > +seqres=$RESULT_DIR/$seq
+> > > +echo "QA output created by $seq"
+> > > +
+> > > +here=`pwd`
+> > > +tmp=/tmp/$$
+> > > +status=1	# failure is the default!
+> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > > +
+> > > +_cleanup()
+> > > +{
+> > > +	cd /
+> > > +	rm -f $tmp.*
+> > > +}
+> > > +
+> > > +# get standard environment, filters and checks
+> > > +. ./common/rc
+> > > +. ./common/filter
+> > > +. ./common/inject
+> > > +
+> > > +# remove previous $seqres.full before test
+> > > +rm -f $seqres.full
+> > > +
+> > > +# real QA test starts here
+> > > +
+> > > +_supported_fs xfs
+> > > +_require_scratch
+> > > +_require_xfs_debug
+> > > +_require_xfs_scratch_rmapbt
+> > > +_require_xfs_io_command "fcollapse"
+> > > +_require_xfs_io_command "swapext"
 > > 
-> > Signed-off-by: Satya Tangirala <satyat@google.com>
-> > ---
-> >  block/bio.c                 |  1 +
-> >  block/blk-crypto-fallback.c | 10 ++--
-> >  block/blk-crypto-internal.h | 18 +++++++
-> >  block/blk-merge.c           | 96 ++++++++++++++++++++++++++++++++-----
-> >  block/blk-mq.c              |  3 ++
-> >  block/bounce.c              |  4 ++
-> >  6 files changed, 117 insertions(+), 15 deletions(-)
-> > 
+> > FWIW it's going to be a while before the swapext command goes upstream.
+> > Right now it's a part of the atomic file range exchange patchset.
 > 
-> I feel like this should be split into multiple patches: one patch that
-> introduces blk_crypto_bio_sectors_alignment(), and a patch for each place that
-> needs to take blk_crypto_bio_sectors_alignment() into account.
+> Sorry, I didn't understand your statement. I have the following from my Linux
+> machine,
 > 
-> It would also help to give a real-world example of why support for
-> data_unit_size > logical_block_size is needed.  E.g. ext4 or f2fs encryption
-> with a 4096-byte filesystem block size, using eMMC inline encryption hardware
-> that has logical_block_size=512.
+> root@debian-guest:~# /sbin/xfs_io 
+> xfs_io> help swapext
+> swapext <donorfile> -- Swap extents between files.
 > 
-> Also, is this needed even without the fscrypt direct I/O support?  If so, it
-> should be sent out separately.
+>  Swaps extents between the open file descriptor and the supplied filename.
 > 
-Yes, I think it's needed even without the fscrypt direct I/O support.
-And ok, I'll send it out separately then :)
-> > diff --git a/block/blk-merge.c b/block/blk-merge.c
-> > index bcf5e4580603..f34dda7132f9 100644
-> > --- a/block/blk-merge.c
-> > +++ b/block/blk-merge.c
-> > @@ -149,13 +149,15 @@ static inline unsigned get_max_io_size(struct request_queue *q,
-> >  	unsigned pbs = queue_physical_block_size(q) >> SECTOR_SHIFT;
-> >  	unsigned lbs = queue_logical_block_size(q) >> SECTOR_SHIFT;
-> >  	unsigned start_offset = bio->bi_iter.bi_sector & (pbs - 1);
-> > +	unsigned int bio_sectors_alignment =
-> > +					blk_crypto_bio_sectors_alignment(bio);
-> >  
-> >  	max_sectors += start_offset;
-> >  	max_sectors &= ~(pbs - 1);
-> > -	if (max_sectors > start_offset)
-> > -		return max_sectors - start_offset;
-> > +	if (max_sectors - start_offset >= bio_sectors_alignment)
-> > +		return round_down(max_sectors - start_offset, bio_sectors_alignment);
-> >  
-> > -	return sectors & ~(lbs - 1);
-> > +	return round_down(sectors & ~(lbs - 1), bio_sectors_alignment);
-> >  }
-> 
-> 'max_sectors - start_offset >= bio_sectors_alignment' looks wrong, as
-> 'max_sectors - start_offset' underflows if 'max_sectors < start_offset'.
-> 
-> Maybe consider something like the below?
-> 
-> static inline unsigned get_max_io_size(struct request_queue *q,
-> 				       struct bio *bio)
-> {
-> 	unsigned sectors = blk_max_size_offset(q, bio->bi_iter.bi_sector);
-> 	unsigned pbs = queue_physical_block_size(q) >> SECTOR_SHIFT;
-> 	unsigned lbs = queue_logical_block_size(q) >> SECTOR_SHIFT;
-> 	sector_t pb_aligned_sector =
-> 		round_down(bio->bi_iter.bi_sector + sectors, pbs);
-> 
-> 	lbs = max(lbs, blk_crypto_bio_sectors_alignment(bio));
-> 
-> 	if (pb_aligned_sector >= bio->bi_iter.bi_sector + lbs)
-> 		sectors = pb_aligned_sector - bio->bi_iter.bi_sector;
-> 
-> 	return round_down(sectors, lbs);
-> }
-> 
-> Maybe it would be useful to have a helper function bio_required_alignment() that
-> returns the crypto data unit size if the bio has an encryption context, and the
-> logical block size if it doesn't?
->
-> >  
-> >  static inline unsigned get_max_segment_size(const struct request_queue *q,
-> > @@ -174,6 +176,41 @@ static inline unsigned get_max_segment_size(const struct request_queue *q,
-> >  			(unsigned long)queue_max_segment_size(q));
-> >  }
-> >  
-> > +/**
-> > + * update_aligned_sectors_and_segs() - Ensures that *@aligned_sectors is aligned
-> > + *				       to @bio_sectors_alignment, and that
-> > + *				       *@aligned_segs is the value of nsegs
-> > + *				       when sectors reached/first exceeded that
-> > + *				       value of *@aligned_sectors.
-> > + *
-> > + * @nsegs: [in] The current number of segs
-> > + * @sectors: [in] The current number of sectors
-> > + * @aligned_segs: [in,out] The number of segments that make up @aligned_sectors
-> > + * @aligned_sectors: [in,out] The largest number of sectors <= @sectors that is
-> > + *		     aligned to @sectors
-> > + * @bio_sectors_alignment: [in] The alignment requirement for the number of
-> > + *			  sectors
-> > + *
-> > + * Updates *@aligned_sectors to the largest number <= @sectors that is also a
-> > + * multiple of @bio_sectors_alignment. This is done by updating *@aligned_sectors
-> > + * whenever @sectors is at least @bio_sectors_alignment more than
-> > + * *@aligned_sectors, since that means we can increment *@aligned_sectors while
-> > + * still keeping it aligned to @bio_sectors_alignment and also keeping it <=
-> > + * @sectors. *@aligned_segs is updated to the value of nsegs when @sectors first
-> > + * reaches/exceeds any value that causes *@aligned_sectors to be updated.
-> > + */
-> > +static inline void update_aligned_sectors_and_segs(const unsigned int nsegs,
-> > +						   const unsigned int sectors,
-> > +						   unsigned int *aligned_segs,
-> > +				unsigned int *aligned_sectors,
-> > +				const unsigned int bio_sectors_alignment)
-> > +{
-> > +	if (sectors - *aligned_sectors < bio_sectors_alignment)
-> > +		return;
-> > +	*aligned_sectors = round_down(sectors, bio_sectors_alignment);
-> > +	*aligned_segs = nsegs;
-> > +}
-> > +
-> >  /**
-> >   * bvec_split_segs - verify whether or not a bvec should be split in the middle
-> >   * @q:        [in] request queue associated with the bio associated with @bv
-> > @@ -195,9 +232,12 @@ static inline unsigned get_max_segment_size(const struct request_queue *q,
-> >   * the block driver.
-> >   */
-> >  static bool bvec_split_segs(const struct request_queue *q,
-> > -			    const struct bio_vec *bv, unsigned *nsegs,
-> > -			    unsigned *sectors, unsigned max_segs,
-> > -			    unsigned max_sectors)
-> > +			    const struct bio_vec *bv, unsigned int *nsegs,
-> > +			    unsigned int *sectors, unsigned int *aligned_segs,
-> > +			    unsigned int *aligned_sectors,
-> > +			    unsigned int bio_sectors_alignment,
-> > +			    unsigned int max_segs,
-> > +			    unsigned int max_sectors)
-> >  {
-> >  	unsigned max_len = (min(max_sectors, UINT_MAX >> 9) - *sectors) << 9;
-> >  	unsigned len = min(bv->bv_len, max_len);
-> > @@ -211,6 +251,11 @@ static bool bvec_split_segs(const struct request_queue *q,
-> >  
-> >  		(*nsegs)++;
-> >  		total_len += seg_size;
-> > +		update_aligned_sectors_and_segs(*nsegs,
-> > +						*sectors + (total_len >> 9),
-> > +						aligned_segs,
-> > +						aligned_sectors,
-> > +						bio_sectors_alignment);
-> >  		len -= seg_size;
-> >  
-> >  		if ((bv->bv_offset + total_len) & queue_virt_boundary(q))
-> > @@ -235,6 +280,8 @@ static bool bvec_split_segs(const struct request_queue *q,
-> >   * following is guaranteed for the cloned bio:
-> >   * - That it has at most get_max_io_size(@q, @bio) sectors.
-> >   * - That it has at most queue_max_segments(@q) segments.
-> > + * - That the number of sectors in the returned bio is aligned to
-> > + *   blk_crypto_bio_sectors_alignment(@bio)
-> >   *
-> >   * Except for discard requests the cloned bio will point at the bi_io_vec of
-> >   * the original bio. It is the responsibility of the caller to ensure that the
-> > @@ -252,6 +299,9 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
-> >  	unsigned nsegs = 0, sectors = 0;
-> >  	const unsigned max_sectors = get_max_io_size(q, bio);
-> >  	const unsigned max_segs = queue_max_segments(q);
-> > +	const unsigned int bio_sectors_alignment =
-> > +					blk_crypto_bio_sectors_alignment(bio);
-> > +	unsigned int aligned_segs = 0, aligned_sectors = 0;
-> >  
-> >  	bio_for_each_bvec(bv, bio, iter) {
-> >  		/*
-> > @@ -266,8 +316,14 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
-> >  		    bv.bv_offset + bv.bv_len <= PAGE_SIZE) {
-> >  			nsegs++;
-> >  			sectors += bv.bv_len >> 9;
-> > -		} else if (bvec_split_segs(q, &bv, &nsegs, &sectors, max_segs,
-> > -					 max_sectors)) {
-> > +			update_aligned_sectors_and_segs(nsegs, sectors,
-> > +							&aligned_segs,
-> > +							&aligned_sectors,
-> > +							bio_sectors_alignment);
-> > +		} else if (bvec_split_segs(q, &bv, &nsegs, &sectors,
-> > +					   &aligned_segs, &aligned_sectors,
-> > +					   bio_sectors_alignment, max_segs,
-> > +					   max_sectors)) {
-> >  			goto split;
-> >  		}
-> >  
-> > @@ -275,11 +331,24 @@ static struct bio *blk_bio_segment_split(struct request_queue *q,
-> >  		bvprvp = &bvprv;
-> >  	}
-> >  
-> > +	/*
-> > +	 * The input bio's number of sectors is assumed to be aligned to
-> > +	 * bio_sectors_alignment. If that's the case, then this function should
-> > +	 * ensure that aligned_segs == nsegs and aligned_sectors == sectors if
-> > +	 * the bio is not going to be split.
-> > +	 */
-> > +	WARN_ON(aligned_segs != nsegs || aligned_sectors != sectors);
-> >  	*segs = nsegs;
-> >  	return NULL;
-> >  split:
-> > -	*segs = nsegs;
-> > -	return bio_split(bio, sectors, GFP_NOIO, bs);
-> > +	*segs = aligned_segs;
-> > +	if (WARN_ON(aligned_sectors == 0))
-> > +		goto err;
-> > +	return bio_split(bio, aligned_sectors, GFP_NOIO, bs);
-> > +err:
-> > +	bio->bi_status = BLK_STS_IOERR;
-> > +	bio_endio(bio);
-> > +	return bio;
-> >  }
-> 
-> This part is pretty complex.  Are you sure it's needed?  How was alignment to
-> logical_block_size ensured before?
-> 
-Afaict, alignment to logical_block_size (lbs) is done by assuming that
-bv->bv_len is always lbs aligned (among other things). Is that not the
-case?
+> The above command causes the following code path to be invoked inside the
+> kernel (assuming rmapbt feature is enabled),
+> xfs_ioc_swapext() => xfs_swap_extents() => xfs_swap_extent_rmap().
 
-If it is the case, that's what we're trying to avoid with this patch (we
-want to be able to submit bios that have 2 bvecs that together make up a
-single crypto data unit, for example). And this is complex because
-multiple segments could "add up" to make up a single crypto data unit,
-but this function's job is to limit both the number of segments *and*
-the number of sectors - so when ensuring that the number of sectors is
-aligned to crypto data unit size, we also want the smallest number of
-segments that can make up that aligned number of sectors.
-> > diff --git a/block/bounce.c b/block/bounce.c
-> > index 162a6eee8999..b15224799008 100644
-> > --- a/block/bounce.c
-> > +++ b/block/bounce.c
-> > @@ -295,6 +295,7 @@ static void __blk_queue_bounce(struct request_queue *q, struct bio **bio_orig,
-> >  	bool bounce = false;
-> >  	int sectors = 0;
-> >  	bool passthrough = bio_is_passthrough(*bio_orig);
-> > +	unsigned int bio_sectors_alignment;
-> >  
-> >  	bio_for_each_segment(from, *bio_orig, iter) {
-> >  		if (i++ < BIO_MAX_PAGES)
-> > @@ -305,6 +306,9 @@ static void __blk_queue_bounce(struct request_queue *q, struct bio **bio_orig,
-> >  	if (!bounce)
-> >  		return;
-> >  
-> > +	bio_sectors_alignment = blk_crypto_bio_sectors_alignment(bio);
-> > +	sectors = round_down(sectors, bio_sectors_alignment);
-> > +
+Oops.  I forgot that my atomic extent swap series *enhances* that
+command.  Please disregard the above. :/
+
+--D
+
+> > 
+> > Do you want me to try to speed that up?
+> > 
+> > --D
+> > 
+> > > +_require_xfs_io_error_injection "reduce_max_iextents"
+> > > +
+> > > +echo "* Swap extent forks"
+> > > +
+> > > +echo "Format and mount fs"
+> > > +_scratch_mkfs >> $seqres.full
+> > > +_scratch_mount >> $seqres.full
+> > > +
+> > > +bsize=$(_get_block_size $SCRATCH_MNT)
+> > > +
+> > > +srcfile=${SCRATCH_MNT}/srcfile
+> > > +donorfile=${SCRATCH_MNT}/donorfile
+> > > +
+> > > +echo "Create \$donorfile having an extent of length 17 blocks"
+> > > +xfs_io -f -c "pwrite -b $((17 * bsize)) 0 $((17 * bsize))" -c fsync $donorfile \
+> > > +       >> $seqres.full
+> > > +
+> > > +# After the for loop the donor file will have the following extent layout
+> > > +# | 0-4 | 5 | 6 | 7 | 8 | 9 | 10 |
+> > > +echo "Fragment \$donorfile"
+> > > +for i in $(seq 5 10); do
+> > > +	start_offset=$((i * bsize))
+> > > +	xfs_io -f -c "fcollapse $start_offset $bsize" $donorfile >> $seqres.full
+> > > +done
+> > > +donorino=$(stat -c "%i" $donorfile)
+> > > +
+> > > +echo "Create \$srcfile having an extent of length 18 blocks"
+> > > +xfs_io -f -c "pwrite -b $((18 * bsize)) 0 $((18 * bsize))" -c fsync $srcfile \
+> > > +       >> $seqres.full
+> > > +
+> > > +echo "Fragment \$srcfile"
+> > > +# After the for loop the src file will have the following extent layout
+> > > +# | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7-10 |
+> > > +for i in $(seq 1 7); do
+> > > +	start_offset=$((i * bsize))
+> > > +	xfs_io -f -c "fcollapse $start_offset $bsize" $srcfile >> $seqres.full
+> > > +done
+> > > +srcino=$(stat -c "%i" $srcfile)
+> > > +
+> > > +_scratch_unmount >> $seqres.full
+> > > +
+> > > +echo "Collect \$donorfile's extent count"
+> > > +donor_nr_exts=$(_scratch_get_iext_count $donorino data || \
+> > > +		_fail "Unable to obtain inode fork's extent count")
+> > > +
+> > > +echo "Collect \$srcfile's extent count"
+> > > +src_nr_exts=$(_scratch_get_iext_count $srcino data || \
+> > > +		_fail "Unable to obtain inode fork's extent count")
+> > > +
+> > > +_scratch_mount >> $seqres.full
+> > > +
+> > > +echo "Inject reduce_max_iextents error tag"
+> > > +xfs_io -x -c 'inject reduce_max_iextents' $SCRATCH_MNT
+> > > +
+> > > +echo "Swap \$srcfile's and \$donorfile's extent forks"
+> > > +xfs_io -f -c "swapext $donorfile" $srcfile >> $seqres.full 2>&1
+> > > +
+> > > +_scratch_unmount >> $seqres.full
+> > > +
+> > > +echo "Check for \$donorfile's extent count overflow"
+> > > +nextents=$(_scratch_get_iext_count $donorino data || \
+> > > +		_fail "Unable to obtain inode fork's extent count")
+> > > +if (( $nextents == $src_nr_exts )); then
+> > > +	echo "\$donorfile: Extent count overflow check failed"
+> > > +fi
+> > > +
+> > > +echo "Check for \$srcfile's extent count overflow"
+> > > +nextents=$(_scratch_get_iext_count $srcino data || \
+> > > +		_fail "Unable to obtain inode fork's extent count")
+> > > +if (( $nextents == $donor_nr_exts )); then
+> > > +	echo "\$srcfile: Extent count overflow check failed"
+> > > +fi
+> > > +
+> > > +# success, all done
+> > > +status=0
+> > > +exit
+> > > diff --git a/tests/xfs/530.out b/tests/xfs/530.out
+> > > new file mode 100644
+> > > index 00000000..996af959
+> > > --- /dev/null
+> > > +++ b/tests/xfs/530.out
+> > > @@ -0,0 +1,13 @@
+> > > +QA output created by 530
+> > > +* Swap extent forks
+> > > +Format and mount fs
+> > > +Create $donorfile having an extent of length 17 blocks
+> > > +Fragment $donorfile
+> > > +Create $srcfile having an extent of length 18 blocks
+> > > +Fragment $srcfile
+> > > +Collect $donorfile's extent count
+> > > +Collect $srcfile's extent count
+> > > +Inject reduce_max_iextents error tag
+> > > +Swap $srcfile's and $donorfile's extent forks
+> > > +Check for $donorfile's extent count overflow
+> > > +Check for $srcfile's extent count overflow
+> > > diff --git a/tests/xfs/group b/tests/xfs/group
+> > > index bc3958b3..81a15582 100644
+> > > --- a/tests/xfs/group
+> > > +++ b/tests/xfs/group
+> > > @@ -527,3 +527,4 @@
+> > >  527 auto quick
+> > >  528 auto quick reflink
+> > >  529 auto quick reflink
+> > > +530 auto quick
+> > 
 > 
-> This can be one line:
 > 
-> 	sectors = round_down(sectors, blk_crypto_bio_sectors_alignment(bio));
+> -- 
+> chandan
 > 
-Sure thing. I also messed up the argument being passed - it should've
-been *bio_orig, not bio :(. Would you have any recommendations on how to
-test code in bounce.c?
-> - Eric
+> 
+> 
