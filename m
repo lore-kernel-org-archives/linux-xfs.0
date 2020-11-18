@@ -2,138 +2,98 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,LONGWORDS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91BE9C63798
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Nov 2020 17:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58BD1C5519F
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Nov 2020 21:06:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BF69248AA
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Nov 2020 17:17:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IwL17tVU"
+	by mail.kernel.org (Postfix) with ESMTP id 0935222201
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Nov 2020 21:06:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728026AbgKRRRi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Nov 2020 12:17:38 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:52468 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725943AbgKRRRh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Nov 2020 12:17:37 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AIHAECE073044;
-        Wed, 18 Nov 2020 17:17:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=Y7RDndGVzQeN5im5B5VdCZDnnFdxreOzlbN5GxqqxM0=;
- b=IwL17tVUmIjvZI2qwSjTt3gRoA6NEBhxyEefDWG6VkprGVuz2fwUY5PokPGePLRrCJB9
- IF8wp6DnXmvd2GKkfeV37khi2xVohcKGYJLjWE9kv64CXeu12Dy3W1RTprz8OHrJ/Jtn
- FOKYcb2nFlKe2DhbE9l8mKx6ZrvRYVbegm+UHBlKZy3ssNhEKFGjTQiBd9BJwWBq2Odf
- q7UbnU3r3gd4VCh+1Iaxjtha+SBgiEdU37Htm9mFEeU75toUikh8lLAsNJ8nrc+d5uQw
- xeeYwB2SZxh6bAnwIMOlsghjJIRP2JwohlCNOJssY1WtFQpYpjSB0nSS+Tnw2aJkQiv8 Mg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 34t7vn956x-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 18 Nov 2020 17:17:27 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AIHBLkR091763;
-        Wed, 18 Nov 2020 17:17:26 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 34umd0u0hs-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Nov 2020 17:17:26 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AIHHPo3032243;
-        Wed, 18 Nov 2020 17:17:25 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Nov 2020 09:17:24 -0800
-Date:   Wed, 18 Nov 2020 09:17:23 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Yu Kuai <yukuai3@huawei.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yi.zhang@huawei.com, zhangxiaoxu5@huawei.com
-Subject: Re: [PATCH] xfs: return corresponding errcode if
- xfs_initialize_perag() fail
-Message-ID: <20201118171723.GC9695@magnolia>
-References: <20201118111531.455814-1-yukuai3@huawei.com>
+        id S1726316AbgKRVFo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Nov 2020 16:05:44 -0500
+Received: from sandeen.net ([63.231.237.45]:54224 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726243AbgKRVFo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Nov 2020 16:05:44 -0500
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id CD0F31164F;
+        Wed, 18 Nov 2020 15:05:16 -0600 (CST)
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>, bfoster@redhat.com
+Cc:     linux-xfs@vger.kernel.org
+References: <160375518573.880355.12052697509237086329.stgit@magnolia>
+ <160375521801.880355.2055596956122419535.stgit@magnolia>
+ <20201116211351.GT9695@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH v2 5/9] xfs_db: add inobtcnt upgrade path
+Message-ID: <cd58a995-7146-abfc-f24e-76b57067cebb@sandeen.net>
+Date:   Wed, 18 Nov 2020 15:05:42 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
+ Gecko/20100101 Thunderbird/78.4.3
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201118111531.455814-1-yukuai3@huawei.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9809 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=5 mlxscore=0 phishscore=0
- spamscore=0 bulkscore=0 mlxlogscore=999 malwarescore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011180119
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9809 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=5
- malwarescore=0 bulkscore=0 impostorscore=0 lowpriorityscore=0 spamscore=0
- adultscore=0 mlxscore=0 priorityscore=1501 phishscore=0 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011180119
+In-Reply-To: <20201116211351.GT9695@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 18, 2020 at 07:15:31PM +0800, Yu Kuai wrote:
-> In xfs_initialize_perag(), if kmem_zalloc(), xfs_buf_hash_init(), or
-> radix_tree_preload() failed, the returned value 'error' is not set
-> accordingly.
+On 11/16/20 3:13 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Fixes: commit 8b26c5825e02 ("xfs: handle ENOMEM correctly during initialisation of perag structures")
-
-/me suspects you really want
-
-Fixes: 9b2471797942 ("xfs: cache unlinked pointers in an rhashtable")
-
-but otherwise this is legit.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Yu Kuai <yukuai3@huawei.com>
+> Enable users to upgrade their filesystems to support inode btree block
+> counters.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/xfs_mount.c | 11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 150ee5cb8645..7110507a2b6b 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -194,20 +194,25 @@ xfs_initialize_perag(
->  		}
->  
->  		pag = kmem_zalloc(sizeof(*pag), KM_MAYFAIL);
-> -		if (!pag)
-> +		if (!pag) {
-> +			error = -ENOMEM;
->  			goto out_unwind_new_pags;
-> +		}
->  		pag->pag_agno = index;
->  		pag->pag_mount = mp;
->  		spin_lock_init(&pag->pag_ici_lock);
->  		INIT_RADIX_TREE(&pag->pag_ici_root, GFP_ATOMIC);
-> -		if (xfs_buf_hash_init(pag))
-> +
-> +		error = xfs_buf_hash_init(pag);
-> +		if (error)
->  			goto out_free_pag;
->  		init_waitqueue_head(&pag->pagb_wait);
->  		spin_lock_init(&pag->pagb_lock);
->  		pag->pagb_count = 0;
->  		pag->pagb_tree = RB_ROOT;
->  
-> -		if (radix_tree_preload(GFP_NOFS))
-> +		error = radix_tree_preload(GFP_NOFS);
-> +		if (error)
->  			goto out_hash_destroy;
->  
->  		spin_lock(&mp->m_perag_lock);
-> -- 
-> 2.25.4
-> 
+> v2: set inprogress to force repair (which xfs_admin immediately does),
+> clean up the code to pass around fewer arguments, and try to revert the
+> change if we hit io errors
+> ---
+
+sooooo the inprogress thing sets off some unexpected behavior.
+
+In testing this, I noticed that if we have inprogress set, and uknown features/
+version on disk, we go looking for backup superblocks and actually end up
+corrupting the filesystem before bailing out:
+
+# xfs_repair /dev/pmem0p2 
+Phase 1 - find and verify superblock...
+bad primary superblock - filesystem mkfs-in-progress bit set !!!
+
+attempting to find secondary superblock...
+.found candidate secondary superblock...
+verified secondary superblock...
+writing modified primary superblock
+sb realtime bitmap inode value 18446744073709551615 (NULLFSINO) inconsistent with calculated value 129
+resetting superblock realtime bitmap inode pointer to 129
+sb realtime summary inode value 18446744073709551615 (NULLFSINO) inconsistent with calculated value 130
+resetting superblock realtime summary inode pointer to 130
+Superblock has unknown compat/rocompat/incompat features (0x0/0x8/0x0).
+Using a more recent xfs_repair is recommended.
+Found unsupported filesystem features.  Exiting now.
+
+# xfs_db -c check /dev/pmem0p2
+disconnected inode 129, nlink 1
+disconnected inode 130, nlink 1
+
+so this seems to have exposed a hole in how repair deals with unknown features
+when the inprogress bit is set.
+
+And TBH scampering off to find backup superblocks to "repair" an inprogress
+filesystem seems like ... not the right thing to do after a feature upgrade.
+
+I'm not sure what's better, but 
+
+> bad primary superblock - filesystem mkfs-in-progress bit set !!!
+
+seems ... unexpected for this purpose.
+
+-Eric
+
