@@ -2,159 +2,197 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF084C2D0E4
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Nov 2020 04:23:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73CEDC388F9
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Nov 2020 07:31:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3DAA4208D5
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Nov 2020 04:23:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C32E22260
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Nov 2020 07:31:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725970AbgKSEXT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Nov 2020 23:23:19 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48838 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725964AbgKSEXT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Nov 2020 23:23:19 -0500
-Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E5EF358BF41;
-        Thu, 19 Nov 2020 15:23:15 +1100 (AEDT)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1kfbTX-00CfxS-9t; Thu, 19 Nov 2020 15:23:15 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.94)
-        (envelope-from <david@fromorbit.com>)
-        id 1kfbTX-002FMx-1l; Thu, 19 Nov 2020 15:23:15 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     axboe@kernel.dk
-Subject: [PATCH] xfs: don't allow NOWAIT DIO across extent boundaries
-Date:   Thu, 19 Nov 2020 15:23:15 +1100
-Message-Id: <20201119042315.535693-1-david@fromorbit.com>
-X-Mailer: git-send-email 2.28.0
+        id S1726300AbgKSHbu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Nov 2020 02:31:50 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:53635 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726269AbgKSHbu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Nov 2020 02:31:50 -0500
+Received: from theinternet.molgen.mpg.de (theinternet.molgen.mpg.de [141.14.31.7])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: buczek)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 8CBE82064785A;
+        Thu, 19 Nov 2020 08:31:46 +0100 (CET)
+Subject: Re: xfs_reclaim_inodes_ag taking several seconds
+From:   Donald Buczek <buczek@molgen.mpg.de>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>
+References: <8284912e-b99a-31af-1901-a38ea03b8648@molgen.mpg.de>
+ <20200731223255.GG2005@dread.disaster.area>
+ <d515fa07-5198-fc3c-24ac-d35aa4e08668@molgen.mpg.de>
+ <20200803221111.GC2114@dread.disaster.area>
+ <590739ea-1d92-4aa9-3b49-3717d512ac88@molgen.mpg.de>
+Message-ID: <c3dd6768-c02b-2cb4-ed06-83478da01cc9@molgen.mpg.de>
+Date:   Thu, 19 Nov 2020 08:31:46 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
+In-Reply-To: <590739ea-1d92-4aa9-3b49-3717d512ac88@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: de-DE
 Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.3 cv=YKPhNiOx c=1 sm=1 tr=0 cx=a_idp_d
-        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
-        a=nNwsprhYR40A:10 a=20KFwNOVAAAA:8 a=iauB3OMTt7I84X71ONoA:9
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On 8/12/20 8:49 AM, Donald Buczek wrote:
+> On 8/4/20 12:11 AM, Dave Chinner wrote:
+>> On Sat, Aug 01, 2020 at 12:25:40PM +0200, Donald Buczek wrote:
+>>> On 01.08.20 00:32, Dave Chinner wrote:
+>>>> On Fri, Jul 31, 2020 at 01:27:31PM +0200, Donald Buczek wrote:
+>>>>> Dear Linux people,
+>>>>>
+>>>>> we have a backup server with two xfs filesystems on 101.9TB md-raid6 devices (16 * 7.3 T disks) each, Current Linux version is 5.4.54.
+>>>> .....
+>>>>> root:done:/home/buczek/linux_problems/shrinker_semaphore/# cat /proc/meminfo
+>>>>> MemTotal:       263572332 kB
+>>>>
+>>>> 256GB of RAM.
+>>>>
+>>>>> MemFree:         2872368 kB
+>>>>> MemAvailable:   204193824 kB
+>>>>
+>>>> 200GB "available"
+>>>>
+>>>>> Buffers:            2568 kB
+>>>>> Cached:         164931356 kB
+>>>>
+>>>> 160GB in page cache
+>>>>
+>>>>> KReclaimable:   40079660 kB
+>>>>> Slab:           49988268 kB
+>>>>> SReclaimable:   40079660 kB
+>>>>
+>>>> 40GB in reclaimable slab objects.
+>>>>
+>>>> IOWs, you have no free memory in the machine and so allocation
+>>>> will frequently be dipping into memory reclaim to free up page cache
+>>>> and slab caches to make memory available.
+>>>>
+>>>>> xfs_inode         30978282 31196832    960    4    1 : tunables   54   27    8 : slabdata 7799208 7799208    434
+>>>>
+>>>> Yes, 30 million cached inodes.
+>>>>
+>>>>> bio_integrity_payload 29644966 30203481    192   21    1 : tunables  120   60    8 : slabdata 1438261 1438261    480
+>>>>
+>>>> Either there is a memory leak in this slab, or it is shared with
+>>>> something like the xfs_ili slab, which would indicate that most
+>>>> of the cached inodes have been dirtied in memory at some point in
+>>>> time.
+>>>
+>>> I think you are right here:
+>>>
+>>>      crash> p $s->name
+>>>      $84 = 0xffffffff82259401 "bio_integrity_payload"
+>>>      crash> p $s->refcount
+>>>      $88 = 8
+>>>      crash> p $s
+>>>      $92 = (struct kmem_cache *) 0xffff88bff92d2bc0
+>>>      crash> p sizeof(xfs_inode_log_item_t)
+>>>      $93 = 192
+>>>      crash> p $s->object_size
+>>>      $94 = 192
+>>>
+>>> So if I understand you correctly, this is expected behavior with
+>>> this kind of load and conceptual changes are already scheduled for
+>>> kernel 5.9. I don't understand most of it, but isn't it true that
+>>> with that planned changes the impact might be better limited to
+>>> the filesystem, so that the performance of other areas of the
+>>> system might improve?
+>>
+>> What the changes in 5.9 will do is remove the direct memory reclaim
+>> latency that comes from waiting on IO in the shrinker. Hence you
+>> will no longer see this problem from applications doing memory
+>> allocation. i.e. they'll get some other memory reclaimed without
+>> blocking (e.g. page cache or clean inodes) and so the specific
+>> symptom of having large numbers of dirty inodes in memory that you
+>> are seeing will go away.
+>>
+>> Which means that dirty inodes in memory will continue to build up
+>> until the next constraint is hit, and then it will go back to having
+>> unpredictable large latencies while waiting for inodes to be written
+>> back to free up whatever resource the filesystem has run out of.
+>>
+>> That resource will, most likely, be filesystem journal space. Every
+>> fs modification needs to reserve sufficient journal to complete
+>> before the modification starts. Hence if the journal fills, any
+>> modification to the fs will block waiting on dirty inode writeback
+>> to release space in the journal....
+>>
+>> You might be lucky and the backup process is slow enough that the
+>> disk subsystem can keep up with the rate of ingest of new data and
+>> so you never hit this limitation. However, the reported state of the
+>> machine and the amount of RAM it has for caching says to me that the
+>> underlying problem is that ingest is far faster than the filesystem
+>> and disk subsystem can sink...
+>>
+>> A solution to this problem might be to spread out the backups being
+>> done over a wider timeframe, such that there isn't a sustained heavy
+>> load at 3am in the morning when every machine is scheduled to be
+>> backed up at the same time...
+> 
+> It is already running round the clock. We have two of these servers, doing daily backups for 1374 file spaces (= directory trees below 1 TB) on 392 clients. The servers are doing daily mirrors of these file spaces, creating hard links for existing files and keeping these daily trees for 4 month. The schedule is free from fixed wall clock times. A backup is due when the last iteration is older than 24 hours, and will be done as time, threads and some locking constrains allow. Under normal circumstances the servers keep up, but are nearly continuously busy. The excess capacity is spread all over the day (sometimes there is no work to do for some minutes).
+> 
+> I monitor, how long a local mount takes (usually 0.03-0.04 seconds) and the worst time seen so far is over 16 minutes! Because we rely on autofs mounts for logins and some other things, the system kind of appears to be dead during that time.
+> 
+> I've limited the inode caches by running the backup jobs in memory control groups, but, as expected, this didn't really bring down the delays. I've also added a cond_resched() to mm/vmscan.c:shrink_slab_memcg(), which seems to be missing after the up_read(), but this didn't help either.
+> 
+>  From a user perspective it is hard to understand, that a saturated block device delays unrelated functions that much. Functions, which don't have any business with that block device.
+> 
+> Maybe our usage of the filesystem is just bad design and we should move the housekeeping and the metadata of the backup application from the filesystem into a database. But our applications is just an unprivileged user on a multiuser system, so it would be nice if the impact could be limited.
+> 
+> Is it acceptable that a shrinker blocks for minutes? If not, this would be a problem specific to xfs, which might already be addressed by the scheduled changes. Can it be tamed by other means somehow? Would it make sense to limit the xfs log size? You've mentioned the full size journal log in a previous mail. I could also split the big filesystems into multiple smaller filesystems. But I guess, this is not the idea of xfs, which internally kind of consists of multiple filesystems anyway? Pick another filesystem?
+> 
+> On the other hand, if it is acceptable for a shrinker to block for minutes, I wonder if the registration/deregistration of shrinkers could be made lockfree in regard to the current shrinker activity. It would need to be considered, that maybe subsystems currently reply on the implied serialization.
+> 
+> Best
+>    Donald
+> 
+>>> I'd love to test that with our load, but I
+>>> don't want to risk our backup data and it would be difficult to
+>>> produce the same load on a toy system. The patch set is not yet
+>>> ready to be tested on production data, is it?
+>>
+>> Not unless you like testing -rc1 kernels in production :)
 
-Jens has reported a situation where partial direct IOs can be issued
-and completed yet still return -EAGAIN. We don't want this to report
-a short IO as we want XFS to complete user DIO entirely or not at
-all.
+I just want to give a short update:
 
-This partial IO situation can occur on a write IO that is split
-across an allocated extent and a hole, and the second mapping is
-returning EAGAIN because allocation would be required.
+When 5.9 was released, I was eager to test that, but this has been delayed by the fact, that the two Adaptec 1100-8e HBAs of the system failed to operate with Linux  5.9 [1].
 
-The trivial reproducer:
+But by now we've got a (unreleased) version 2.1.8-005 smartpqi driver from Adaptec, which is working with Linux 5.9.8 on out system.
 
-$ sudo xfs_io -fdt -c "pwrite 0 4k" -c "pwrite -V 1 -b 8k -N 0 8k" /mnt/scr/foo
-wrote 4096/4096 bytes at offset 0
-4 KiB, 1 ops; 0.0001 sec (27.509 MiB/sec and 7042.2535 ops/sec)
-pwrite: Resource temporarily unavailable
-$
+ From this test I can acknowledge, that the problem reported in this thread is in fact no longer visible in Linux 5.9, as you expeced. :-)
 
-The pwritev2(0, 8kB, RWF_NOWAIT) call returns EAGAIN having done
-the first 4kB write:
+So far, no other negative effects of the high file system load have been observed.
 
- xfs_file_direct_write: dev 259:1 ino 0x83 size 0x1000 offset 0x0 count 0x2000
- iomap_apply:          dev 259:1 ino 0x83 pos 0 length 8192 flags WRITE|DIRECT|NOWAIT (0x31) ops xfs_direct_write_iomap_ops caller iomap_dio_rw actor iomap_dio_actor
- xfs_ilock_nowait:     dev 259:1 ino 0x83 flags ILOCK_SHARED caller xfs_ilock_for_iomap
- xfs_iunlock:          dev 259:1 ino 0x83 flags ILOCK_SHARED caller xfs_direct_write_iomap_begin
- xfs_iomap_found:      dev 259:1 ino 0x83 size 0x1000 offset 0x0 count 8192 fork data startoff 0x0 startblock 24 blockcount 0x1
- iomap_apply_dstmap:   dev 259:1 ino 0x83 bdev 259:1 addr 102400 offset 0 length 4096 type MAPPED flags DIRTY
+Best
 
-Here the first iomap loop has mapped the first 4kB of the file and
-issued the IO, and we enter the second iomap_apply loop:
+   Donald
 
- iomap_apply: dev 259:1 ino 0x83 pos 4096 length 4096 flags WRITE|DIRECT|NOWAIT (0x31) ops xfs_direct_write_iomap_ops caller iomap_dio_rw actor iomap_dio_actor
- xfs_ilock_nowait:     dev 259:1 ino 0x83 flags ILOCK_SHARED caller xfs_ilock_for_iomap
- xfs_iunlock:          dev 259:1 ino 0x83 flags ILOCK_SHARED caller xfs_direct_write_iomap_begin
+[1] https://lore.kernel.org/linux-scsi/7d22510c-da28-ea2d-a1b1-fc9e126879d1@molgen.mpg.de/
 
-And we exit with -EAGAIN out because we hit the allocate case trying
-to make the second 4kB block.
+>>
+>> Cheers,
+>>
+>> Dave.
+>>
+> 
 
-Then IO completes on the first 4kB and the original IO context
-completes and unlocks the inode, returning -EAGAIN to userspace:
 
- xfs_end_io_direct_write: dev 259:1 ino 0x83 isize 0x1000 disize 0x1000 offset 0x0 count 4096
- xfs_iunlock:          dev 259:1 ino 0x83 flags IOLOCK_SHARED caller xfs_file_dio_aio_write
-
-There are other vectors to the same problem when we re-enter the
-mapping code if we have to make multiple mappinfs under NOWAIT
-conditions. e.g. failing trylocks, COW extents being found,
-allocation being required, and so on.
-
-Avoid all these potential problems by only allowing IOMAP_NOWAIT IO
-to go ahead if the mapping we retrieve for the IO spans an entire
-allocated extent. This avoids the possibility of subsequent mappings
-to complete the IO from triggering NOWAIT semantics by any means as
-NOWAIT IO will now only enter the mapping code once per NOWAIT IO.
-
-Reported-and-tested-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_iomap.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 3abb8b9d6f4c..7b9ff824e82d 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -706,6 +706,23 @@ xfs_ilock_for_iomap(
- 	return 0;
- }
- 
-+/*
-+ * Check that the imap we are going to return to the caller spans the entire
-+ * range that the caller requested for the IO.
-+ */
-+static bool
-+imap_spans_range(
-+	struct xfs_bmbt_irec	*imap,
-+	xfs_fileoff_t		offset_fsb,
-+	xfs_fileoff_t		end_fsb)
-+{
-+	if (imap->br_startoff > offset_fsb)
-+		return false;
-+	if (imap->br_startoff + imap->br_blockcount < end_fsb)
-+		return false;
-+	return true;
-+}
-+
- static int
- xfs_direct_write_iomap_begin(
- 	struct inode		*inode,
-@@ -766,6 +783,18 @@ xfs_direct_write_iomap_begin(
- 	if (imap_needs_alloc(inode, flags, &imap, nimaps))
- 		goto allocate_blocks;
- 
-+	/*
-+	 * NOWAIT IO needs to span the entire requested IO with a single map so
-+	 * that we avoid partial IO failures due to the rest of the IO range not
-+	 * covered by this map triggering an EAGAIN condition when it is
-+	 * subsequently mapped and aborting the IO.
-+	 */
-+	if ((flags & IOMAP_NOWAIT) &&
-+	    !imap_spans_range(&imap, offset_fsb, end_fsb)) {
-+		error = -EAGAIN;
-+		goto out_unlock;
-+	}
-+
- 	xfs_iunlock(ip, lockmode);
- 	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
- 	return xfs_bmbt_to_iomap(ip, iomap, &imap, iomap_flags);
 -- 
-2.28.0
-
+Donald Buczek
+buczek@molgen.mpg.de
+Tel: +49 30 8413 1433
