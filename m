@@ -7,139 +7,229 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42B3AC64E7D
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Nov 2020 09:56:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 315F8C8300C
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Nov 2020 09:56:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD2A22240C
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Nov 2020 09:56:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFC0D22244
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Nov 2020 09:56:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="YJHuMUqO"
+	dkim=pass (1024-bit key) header.d=ffwll.ch header.i=@ffwll.ch header.b="gbKAYR06"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727709AbgKTJ4Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Nov 2020 04:56:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46082 "EHLO
+        id S1727801AbgKTJ4l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Nov 2020 04:56:41 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727641AbgKTJ4S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Nov 2020 04:56:18 -0500
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48764C0613CF
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Nov 2020 01:56:17 -0800 (PST)
-Received: by mail-wr1-x443.google.com with SMTP id p8so9397051wrx.5
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Nov 2020 01:56:17 -0800 (PST)
+        with ESMTP id S1727496AbgKTJ4O (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Nov 2020 04:56:14 -0500
+Received: from mail-wm1-x341.google.com (mail-wm1-x341.google.com [IPv6:2a00:1450:4864:20::341])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF798C061A49
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Nov 2020 01:56:12 -0800 (PST)
+Received: by mail-wm1-x341.google.com with SMTP id c9so9770747wml.5
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Nov 2020 01:56:12 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=ffwll.ch; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=lnj1vSewnYJ6/gw6qejvRzkdxRWgCvvqGMHaDGl+NSM=;
-        b=YJHuMUqOdXD3RjBDXwq4xxm28eTiQkgXVF1XT/DPzqcSwCe7bJ+AxNmLfgQwjHIsKW
-         3SeM+TDUPXszr6Zc57JPx/POuZ5YPbxXs6IfAyzVdZ+bCJo3OgkoLmATYI/rVBFBr9pw
-         e/MhE42helKCwyMkK6vSTfE6uxAtZHvyO2IBs=
+        bh=twJ9Iv0GrWi2HSfwSfV1gOqC9HMYu+pjSEuPdNwPfIY=;
+        b=gbKAYR06usTeKaSMH6KvB92fHlEBNo4+RmCIx3it8RmRuweXViGkHt2NLqQg41aUEm
+         /cdA7UEQtMS2Lfo2xXYvLteOUM15w6L4q4zFzc6iz6hRyia8XL8rj1a+ITjHiVkYOQnz
+         kyhh2EagpE9UkW23wbuldKAJzF6KntErybybI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=lnj1vSewnYJ6/gw6qejvRzkdxRWgCvvqGMHaDGl+NSM=;
-        b=R8Gfq4y4piDoeV6dq8TNqy3rP6BVBPjf55AD4Fj3mWI/jDeSUJEvZHujSo5e3cgLGg
-         TGYZvgtaUWqtZ+9XTBfLUxY7lM+fpykU4P/SA2oTAygUiFG9B1cn/GM8tAwk8DbWwa8w
-         pmLj7uQnHRAZzetuBiOpHXgKAdyY+cDGE93ltiZ06nVPxFEMhwnknig68LSTjKlAxdfl
-         Gg0L+WrjCvUxUw5rhmvI/NlZqAVAdNmyP4WxfQn6ougm+PDF2CNdQP0xlWoqvxzHfK3d
-         nSVb7ZRzERo+JZ9SMhEcNd9v37vtdn9mb0znViHFznUm78RS0ASFPaksSz72XDNckLbU
-         iUQQ==
-X-Gm-Message-State: AOAM531xDoCntW/oqc58WBv4W/Bb6SKAPefRlSSpvowPFfO9Ian8sGHW
-        chx6oB+kvZ5OqSB3USL7jnrerw==
-X-Google-Smtp-Source: ABdhPJweygNEvtsDvm694/J94/vH0HdxxfmvF5F1IyJUepsC34aungjZF3hY+8zZe4LmawNek04kBA==
-X-Received: by 2002:adf:b74d:: with SMTP id n13mr15648919wre.101.1605866176083;
-        Fri, 20 Nov 2020 01:56:16 -0800 (PST)
+        bh=twJ9Iv0GrWi2HSfwSfV1gOqC9HMYu+pjSEuPdNwPfIY=;
+        b=JCVQG2uRqF/djkuaDBiI9ZrgJnVXe/vZ+J/53Qj01FNWzNMm8RM26HzXdW1tWq3P0W
+         QCq/phYiAM2m2bBw6VPhS58siHYAyAjtwjnv+7whV4UcAHQTWq9FObq39v7FUtZET5JE
+         gOMehZ0yl9pFnOYRMMUj6xFaI8R3VO68BvcnCVAHPHkhUvJesNGnrLzBoXn0Ivrb+NxK
+         vwsCwNkVmGUHmr8UVdstZ95WXOflb1M6IXuH59S6XwRMCF6z1sIDDquAbKMS9zqnmPGg
+         clmZpQfG7JkCleixEBuWW2m/ATIBWt05+2RXPZ97LeG1UE43uSxDj7ViHGJvpGg4mSEV
+         v+hQ==
+X-Gm-Message-State: AOAM532GcAQ+bzyCnWn8RbeQwAl/O+8SDOT8REvtAdVpAmzxNUAWNzFo
+        bSsu3ENTkjbSc6ymn8rRcCWNTQ==
+X-Google-Smtp-Source: ABdhPJyHPm9O3wkh7JZ6u0DEVaNnU3GqZO5vw/S+tBPm5AXz0/1G/C3ZbR8ZP3R+EG2BDhICxCw1Rg==
+X-Received: by 2002:a7b:c7d3:: with SMTP id z19mr9261970wmk.4.1605866171520;
+        Fri, 20 Nov 2020 01:56:11 -0800 (PST)
 Received: from phenom.ffwll.local ([2a02:168:57f4:0:efd0:b9e5:5ae6:c2fa])
-        by smtp.gmail.com with ESMTPSA id t9sm4500208wrr.49.2020.11.20.01.56.14
+        by smtp.gmail.com with ESMTPSA id t9sm4500208wrr.49.2020.11.20.01.56.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Nov 2020 01:56:15 -0800 (PST)
+        Fri, 20 Nov 2020 01:56:10 -0800 (PST)
 From:   Daniel Vetter <daniel.vetter@ffwll.ch>
 To:     DRI Development <dri-devel@lists.freedesktop.org>
 Cc:     Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
         linux-mm@kvack.org, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
         Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Thomas Hellstrom <thellstrom@vmware.com>,
-        Brian Paul <brianp@vmware.com>,
-        Daniel Vetter <daniel.vetter@intel.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        Huang Rui <ray.huang@amd.com>
-Subject: [PATCH] drm/ttm: don't set page->mapping
-Date:   Fri, 20 Nov 2020 10:54:45 +0100
-Message-Id: <20201120095445.1195585-5-daniel.vetter@ffwll.ch>
+        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
+        =?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas_os@shipmail.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jason Gunthorpe <jgg@mellanox.com>, linux-rdma@vger.kernel.org,
+        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
+        Daniel Vetter <daniel.vetter@intel.com>
+Subject: [PATCH 1/3] mm: Track mmu notifiers in fs_reclaim_acquire/release
+Date:   Fri, 20 Nov 2020 10:54:42 +0100
+Message-Id: <20201120095445.1195585-2-daniel.vetter@ffwll.ch>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201120095445.1195585-1-daniel.vetter@ffwll.ch>
 References: <20201120095445.1195585-1-daniel.vetter@ffwll.ch>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Random observation while trying to review Christian's patch series to
-stop looking at struct page for dma-buf imports.
+fs_reclaim_acquire/release nicely catch recursion issues when
+allocating GFP_KERNEL memory against shrinkers (which gpu drivers tend
+to use to keep the excessive caches in check). For mmu notifier
+recursions we do have lockdep annotations since 23b68395c7c7
+("mm/mmu_notifiers: add a lockdep map for invalidate_range_start/end").
 
-This was originally added in
+But these only fire if a path actually results in some pte
+invalidation - for most small allocations that's very rarely the case.
+The other trouble is that pte invalidation can happen any time when
+__GFP_RECLAIM is set. Which means only really GFP_ATOMIC is a safe
+choice, GFP_NOIO isn't good enough to avoid potential mmu notifier
+recursion.
 
-commit 58aa6622d32af7d2c08d45085f44c54554a16ed7
-Author: Thomas Hellstrom <thellstrom@vmware.com>
-Date:   Fri Jan 3 11:47:23 2014 +0100
+I was pondering whether we should just do the general annotation, but
+there's always the risk for false positives. Plus I'm assuming that
+the core fs and io code is a lot better reviewed and tested than
+random mmu notifier code in drivers. Hence why I decide to only
+annotate for that specific case.
 
-    drm/ttm: Correctly set page mapping and -index members
+Furthermore even if we'd create a lockdep map for direct reclaim, we'd
+still need to explicit pull in the mmu notifier map - there's a lot
+more places that do pte invalidation than just direct reclaim, these
+two contexts arent the same.
 
-    Needed for some vm operations; most notably unmap_mapping_range() with
-    even_cows = 0.
+Note that the mmu notifiers needing their own independent lockdep map
+is also the reason we can't hold them from fs_reclaim_acquire to
+fs_reclaim_release - it would nest with the acquistion in the pte
+invalidation code, causing a lockdep splat. And we can't remove the
+annotations from pte invalidation and all the other places since
+they're called from many other places than page reclaim. Hence we can
+only do the equivalent of might_lock, but on the raw lockdep map.
 
-    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
-    Reviewed-by: Brian Paul <brianp@vmware.com>
+With this we can also remove the lockdep priming added in 66204f1d2d1b
+("mm/mmu_notifiers: prime lockdep") since the new annotations are
+strictly more powerful.
 
-but we do not have a single caller of unmap_mapping_range with
-even_cows == 0. And all the gem drivers don't do this, so another
-small thing we could standardize between drm and ttm drivers.
+v2: Review from Thomas Hellstrom:
+- unbotch the fs_reclaim context check, I accidentally inverted it,
+  but it didn't blow up because I inverted it immediately
+- fix compiling for !CONFIG_MMU_NOTIFIER
 
-Plus I don't really see a need for unamp_mapping_range where we don't
-want to indiscriminately shoot down all ptes.
+v3: Unbreak the PF_MEMALLOC_ context flags. Thanks to Qian for the
+report and Dave for explaining what I failed to see.
 
-Cc: Thomas Hellstrom <thellstrom@vmware.com>
-Cc: Brian Paul <brianp@vmware.com>
+Cc: linux-fsdevel@vger.kernel.org
+Cc: Dave Chinner <david@fromorbit.com>
+Cc: Qian Cai <cai@lca.pw>
+Cc: linux-xfs@vger.kernel.org
+Cc: Thomas Hellström (Intel) <thomas_os@shipmail.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@mellanox.com>
+Cc: linux-mm@kvack.org
+Cc: linux-rdma@vger.kernel.org
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Christian König <christian.koenig@amd.com>
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
-Cc: Christian Koenig <christian.koenig@amd.com>
-Cc: Huang Rui <ray.huang@amd.com>
 ---
- drivers/gpu/drm/ttm/ttm_tt.c | 12 ------------
- 1 file changed, 12 deletions(-)
+ mm/mmu_notifier.c |  7 -------
+ mm/page_alloc.c   | 31 ++++++++++++++++++++-----------
+ 2 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/gpu/drm/ttm/ttm_tt.c b/drivers/gpu/drm/ttm/ttm_tt.c
-index da9eeffe0c6d..5b2eb6d58bb7 100644
---- a/drivers/gpu/drm/ttm/ttm_tt.c
-+++ b/drivers/gpu/drm/ttm/ttm_tt.c
-@@ -284,17 +284,6 @@ int ttm_tt_swapout(struct ttm_bo_device *bdev, struct ttm_tt *ttm)
- 	return ret;
- }
+diff --git a/mm/mmu_notifier.c b/mm/mmu_notifier.c
+index 5654dd19addc..61ee40ed804e 100644
+--- a/mm/mmu_notifier.c
++++ b/mm/mmu_notifier.c
+@@ -612,13 +612,6 @@ int __mmu_notifier_register(struct mmu_notifier *subscription,
+ 	mmap_assert_write_locked(mm);
+ 	BUG_ON(atomic_read(&mm->mm_users) <= 0);
  
--static void ttm_tt_add_mapping(struct ttm_bo_device *bdev, struct ttm_tt *ttm)
--{
--	pgoff_t i;
+-	if (IS_ENABLED(CONFIG_LOCKDEP)) {
+-		fs_reclaim_acquire(GFP_KERNEL);
+-		lock_map_acquire(&__mmu_notifier_invalidate_range_start_map);
+-		lock_map_release(&__mmu_notifier_invalidate_range_start_map);
+-		fs_reclaim_release(GFP_KERNEL);
+-	}
 -
--	if (ttm->page_flags & TTM_PAGE_FLAG_SG)
--		return;
--
--	for (i = 0; i < ttm->num_pages; ++i)
--		ttm->pages[i]->mapping = bdev->dev_mapping;
--}
--
- int ttm_tt_populate(struct ttm_bo_device *bdev,
- 		    struct ttm_tt *ttm, struct ttm_operation_ctx *ctx)
+ 	if (!mm->notifier_subscriptions) {
+ 		/*
+ 		 * kmalloc cannot be called under mm_take_all_locks(), but we
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 23f5066bd4a5..ff0f9a84b8de 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -57,6 +57,7 @@
+ #include <trace/events/oom.h>
+ #include <linux/prefetch.h>
+ #include <linux/mm_inline.h>
++#include <linux/mmu_notifier.h>
+ #include <linux/migrate.h>
+ #include <linux/hugetlb.h>
+ #include <linux/sched/rt.h>
+@@ -4264,10 +4265,8 @@ should_compact_retry(struct alloc_context *ac, unsigned int order, int alloc_fla
+ static struct lockdep_map __fs_reclaim_map =
+ 	STATIC_LOCKDEP_MAP_INIT("fs_reclaim", &__fs_reclaim_map);
+ 
+-static bool __need_fs_reclaim(gfp_t gfp_mask)
++static bool __need_reclaim(gfp_t gfp_mask)
  {
-@@ -313,7 +302,6 @@ int ttm_tt_populate(struct ttm_bo_device *bdev,
- 	if (ret)
- 		return ret;
+-	gfp_mask = current_gfp_context(gfp_mask);
+-
+ 	/* no reclaim without waiting on it */
+ 	if (!(gfp_mask & __GFP_DIRECT_RECLAIM))
+ 		return false;
+@@ -4276,10 +4275,6 @@ static bool __need_fs_reclaim(gfp_t gfp_mask)
+ 	if (current->flags & PF_MEMALLOC)
+ 		return false;
  
--	ttm_tt_add_mapping(bdev, ttm);
- 	ttm->page_flags |= TTM_PAGE_FLAG_PRIV_POPULATED;
- 	if (unlikely(ttm->page_flags & TTM_PAGE_FLAG_SWAPPED)) {
- 		ret = ttm_tt_swapin(ttm);
+-	/* We're only interested __GFP_FS allocations for now */
+-	if (!(gfp_mask & __GFP_FS))
+-		return false;
+-
+ 	if (gfp_mask & __GFP_NOLOCKDEP)
+ 		return false;
+ 
+@@ -4298,15 +4293,29 @@ void __fs_reclaim_release(void)
+ 
+ void fs_reclaim_acquire(gfp_t gfp_mask)
+ {
+-	if (__need_fs_reclaim(gfp_mask))
+-		__fs_reclaim_acquire();
++	gfp_mask = current_gfp_context(gfp_mask);
++
++	if (__need_reclaim(gfp_mask)) {
++		if (gfp_mask & __GFP_FS)
++			__fs_reclaim_acquire();
++
++#ifdef CONFIG_MMU_NOTIFIER
++		lock_map_acquire(&__mmu_notifier_invalidate_range_start_map);
++		lock_map_release(&__mmu_notifier_invalidate_range_start_map);
++#endif
++
++	}
+ }
+ EXPORT_SYMBOL_GPL(fs_reclaim_acquire);
+ 
+ void fs_reclaim_release(gfp_t gfp_mask)
+ {
+-	if (__need_fs_reclaim(gfp_mask))
+-		__fs_reclaim_release();
++	gfp_mask = current_gfp_context(gfp_mask);
++
++	if (__need_reclaim(gfp_mask)) {
++		if (gfp_mask & __GFP_FS)
++			__fs_reclaim_release();
++	}
+ }
+ EXPORT_SYMBOL_GPL(fs_reclaim_release);
+ #endif
 -- 
 2.29.2
 
