@@ -7,138 +7,170 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EAA95C56202
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Nov 2020 14:36:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D3B9C63697
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Nov 2020 14:47:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF1CA2078E
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Nov 2020 14:36:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3113420888
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Nov 2020 14:47:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727882AbgKVOg1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 Nov 2020 09:36:27 -0500
-Received: from out20-13.mail.aliyun.com ([115.124.20.13]:40475 "EHLO
-        out20-13.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727634AbgKVOg0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Nov 2020 09:36:26 -0500
-X-Alimail-AntiSpam: AC=CONTINUE;BC=0.08755226|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_alarm|0.0377145-0.00088181-0.961404;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047193;MF=guan@eryu.me;NM=1;PH=DS;RN=4;RT=4;SR=0;TI=SMTPD_---.IzrUXFb_1606055752;
-Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.IzrUXFb_1606055752)
-          by smtp.aliyun-inc.com(10.147.41.158);
-          Sun, 22 Nov 2020 22:35:53 +0800
-Date:   Sun, 22 Nov 2020 22:35:52 +0800
+        id S1727804AbgKVOqn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Nov 2020 09:46:43 -0500
+Received: from out20-73.mail.aliyun.com ([115.124.20.73]:37738 "EHLO
+        out20-73.mail.aliyun.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727424AbgKVOqn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Nov 2020 09:46:43 -0500
+X-Alimail-AntiSpam: AC=CONTINUE;BC=0.07599941|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.0456755-0.000229841-0.954095;FP=0|0|0|0|0|-1|-1|-1;HT=ay29a033018047199;MF=guan@eryu.me;NM=1;PH=DS;RN=5;RT=5;SR=0;TI=SMTPD_---.IzrZVtS_1606056393;
+Received: from localhost(mailfrom:guan@eryu.me fp:SMTPD_---.IzrZVtS_1606056393)
+          by smtp.aliyun-inc.com(10.147.41.137);
+          Sun, 22 Nov 2020 22:46:34 +0800
+Date:   Sun, 22 Nov 2020 22:46:33 +0800
 From:   Eryu Guan <guan@eryu.me>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
-        fstests@vger.kernel.org
-Subject: Re: [PATCH 2/6] check: run tests in a systemd scope for mandatory
- test cleanup
-Message-ID: <20201122143552.GL3853@desktop>
-References: <160505537312.1388647.14788379902518687395.stgit@magnolia>
- <160505539618.1388647.12413009405934961273.stgit@magnolia>
+To:     Gao Xiang <hsiangkao@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [PATCH] generic: add test for XFS forkoff miscalcution on 32-bit
+ platform
+Message-ID: <20201122144633.GM3853@desktop>
+References: <20201118060258.1939824-1-hsiangkao@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <160505539618.1388647.12413009405934961273.stgit@magnolia>
+In-Reply-To: <20201118060258.1939824-1-hsiangkao@redhat.com>
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 10, 2020 at 04:43:16PM -0800, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Nov 18, 2020 at 02:02:58PM +0800, Gao Xiang wrote:
+> There is a regression that recent XFS_LITINO(mp) update causes
+> xfs_attr_shortform_bytesfit() returns maxforkoff rather than 0.
 > 
-> TLDR: If systemd is available, run each test in its own temporary
-> systemd scope.  This enables the test harness to forcibly clean up all
-> of the test's child processes (if it does not do so itself) so that we
-> can move into the post-test unmount and check cleanly.
+> Therefore, one result is
+>   "ASSERT(new_size <= XFS_IFORK_SIZE(ip, whichfork));"
 > 
-> I frequently run fstests in "low" memory situations (2GB!) to force the
-> kernel to do interesting things.  There are a few tests like generic/224
-> and generic/561 that put processes in the background and occasionally
-> trigger the OOM killer.  Most of the time the OOM killer correctly
-> shoots down fsstress or duperemove, but once in a while it's stupid
-> enough to shoot down the test control process (i.e. tests/generic/224)
-> instead.  fsstress is still running in the background, and the one
-> process that knew about that is dead.
+> Add a regression test in fstests generic to look after that since
+> the testcase itself isn't xfs-specific.
 > 
-> When the control process dies, ./check moves on to the post-test fsck,
-> which fails because fsstress is still running and we can't unmount.
-> After fsck fails, ./check moves on to the next test, which fails because
-> fsstress is /still/ writing to the filesystem and we can't unmount or
-> format.
+> Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+> ---
+> I have no usable 32-bit test environment to run xfstests, that is
+> what I have checked:
+>  - checked this new script can pass on x86_64;
+>  - manually ran script commands on i386 buildroot with problematic
+>    kernel and the filesystem got stuck on getfattr command.
 > 
-> The end result is that that one OOM kill causes cascading test failures,
-> and I have to re-start fstests to see if I get a clean(er) run.
+>  tests/generic/618     | 56 +++++++++++++++++++++++++++++++++++++++++++
+>  tests/generic/618.out |  4 ++++
+>  tests/generic/group   |  1 +
+>  3 files changed, 61 insertions(+)
+>  create mode 100755 tests/generic/618
+>  create mode 100644 tests/generic/618.out
 > 
-> So, the solution I present in this patch is to teach ./check to try to
-> run the test script in a systemd scope.  If that succeeds, ./check will
-> tell systemd to kill the scope when the test script exits and returns
-> control to ./check.  Concretely, this means that systemd creates a new
-> cgroup, stuffs the processes in that cgroup, and when we kill the scope,
-> systemd kills all the processes in that cgroup and deletes the cgroup.
-> 
-> The end result is that fstests now has an easy way to ensure that /all/
-> child processes of a test are dead before we try to unmount the test and
-> scratch devices.  I've designed this to be optional, because not
-> everyone does or wants or likes to run systemd, but it makes QA easier.
+> diff --git a/tests/generic/618 b/tests/generic/618
+> new file mode 100755
+> index 00000000..997c6f75
+> --- /dev/null
+> +++ b/tests/generic/618
+> @@ -0,0 +1,56 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2020 Red Hat, Inc. All Rights Reserved.
+> +#
+> +# FS QA Test 618
+> +#
+> +# Verify that forkoff can be returned as 0 properly if it isn't
+> +# able to fit inline for XFS.
+> +# However, this test is fs-neutral and can be done quickly so
+> +# leave it in generic
+> +# This test verifies the problem fixed in kernel with commit
+> +# xxxxxxxxxxxx ("xfs: fix forkoff miscalculation related to XFS_LITINO(mp)")
 
-Currently it uses systemd if the host has systemd enabled. Perhaps we
-could add an env to control the systemd usage in the future so we have a
-knob to turn it off even on hosts with systemd enabled. e.g.
+Would you please re-post when the commit is upstream? With the commit ID
+updated.
 
-USE_SYSTEMD_SCOPES=yes
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +. ./common/attr
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +
+> +_supported_fs generic
+> +_require_test
+> +_require_attrs user
+> +
+> +localfile="${TEST_DIR}/testfile"
 
-But I'd take it as is for now.
+Usually we use a testfile prefixed with $seq, e.g.
+
+localfile=${TEST_DIR}/$seq.testfile
+
+And remove it before test to avoid side effects from previous runs.
+
+rm -f $localfile
+touch $localfile
+
+> +
+> +touch "${localfile}"
+> +"${SETFATTR_PROG}" -n user.0 -v "`seq 0 80`" "${localfile}"
+> +"${SETFATTR_PROG}" -n user.1 -v "`seq 0 80`" "${localfile}"
+
+I'd be better to add comments on why we need two user attrs and why we
+need such long attr value.
+
+> +
+> +# Make sure that changes are written to disk
+> +_test_cycle_mount
+> +
+> +# check getfattr result as well
+
+Also, better to document the test failure behavior, e.g. kernel crash or
+hung or just a getfattr failure.
 
 Thanks,
 Eryu
 
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  check |   26 +++++++++++++++++++++++++-
->  1 file changed, 25 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/check b/check
-> index 5072dd82..83f6fc8b 100755
-> --- a/check
-> +++ b/check
-> @@ -521,6 +521,12 @@ _expunge_test()
->  	return 0
->  }
->  
-> +# Can we run systemd scopes?
-> +HAVE_SYSTEMD_SCOPES=
-> +systemctl reset-failed "fstests-check" &>/dev/null
-> +systemd-run --quiet --unit "fstests-check" --scope bash -c "exit 77" &> /dev/null
-> +test $? -eq 77 && HAVE_SYSTEMD_SCOPES=yes
+> +_getfattr --absolute-names -ebase64 -d $localfile | tail -n +2 | sort
 > +
->  # Make the check script unattractive to the OOM killer...
->  OOM_SCORE_ADJ="/proc/self/oom_score_adj"
->  test -w ${OOM_SCORE_ADJ} && echo -1000 > ${OOM_SCORE_ADJ}
-> @@ -528,8 +534,26 @@ test -w ${OOM_SCORE_ADJ} && echo -1000 > ${OOM_SCORE_ADJ}
->  # ...and make the tests themselves somewhat more attractive to it, so that if
->  # the system runs out of memory it'll be the test that gets killed and not the
->  # test framework.
-> +#
-> +# If systemd is available, run the entire test script in a scope so that we can
-> +# kill all subprocesses of the test if it fails to clean up after itself.  This
-> +# is essential for ensuring that the post-test unmount succeeds.  Note that
-> +# systemd doesn't automatically remove transient scopes that fail to terminate
-> +# when systemd tells them to terminate (e.g. programs stuck in D state when
-> +# systemd sends SIGKILL), so we use reset-failed to tear down the scope.
->  _run_seq() {
-> -	bash -c "test -w ${OOM_SCORE_ADJ} && echo 250 > ${OOM_SCORE_ADJ}; exec ./$seq"
-> +	local cmd=(bash -c "test -w ${OOM_SCORE_ADJ} && echo 250 > ${OOM_SCORE_ADJ}; exec ./$seq")
+> +status=0
+> +exit
+> diff --git a/tests/generic/618.out b/tests/generic/618.out
+> new file mode 100644
+> index 00000000..848fdc58
+> --- /dev/null
+> +++ b/tests/generic/618.out
+> @@ -0,0 +1,4 @@
+> +QA output created by 618
 > +
-> +	if [ -n "${HAVE_SYSTEMD_SCOPES}" ]; then
-> +		local unit="$(systemd-escape "fs$seq").scope"
-> +		systemctl reset-failed "${unit}" &> /dev/null
-> +		systemd-run --quiet --unit "${unit}" --scope "${cmd[@]}"
-> +		res=$?
-> +		systemctl stop "${unit}" &> /dev/null
-> +		return "${res}"
-> +	else
-> +		"${cmd[@]}"
-> +	fi
->  }
->  
->  _detect_kmemleak
+> +user.0=0sMAoxCjIKMwo0CjUKNgo3CjgKOQoxMAoxMQoxMgoxMwoxNAoxNQoxNgoxNwoxOAoxOQoyMAoyMQoyMgoyMwoyNAoyNQoyNgoyNwoyOAoyOQozMAozMQozMgozMwozNAozNQozNgozNwozOAozOQo0MAo0MQo0Mgo0Mwo0NAo0NQo0Ngo0Nwo0OAo0OQo1MAo1MQo1Mgo1Mwo1NAo1NQo1Ngo1Nwo1OAo1OQo2MAo2MQo2Mgo2Mwo2NAo2NQo2Ngo2Nwo2OAo2OQo3MAo3MQo3Mgo3Mwo3NAo3NQo3Ngo3Nwo3OAo3OQo4MA==
+> +user.1=0sMAoxCjIKMwo0CjUKNgo3CjgKOQoxMAoxMQoxMgoxMwoxNAoxNQoxNgoxNwoxOAoxOQoyMAoyMQoyMgoyMwoyNAoyNQoyNgoyNwoyOAoyOQozMAozMQozMgozMwozNAozNQozNgozNwozOAozOQo0MAo0MQo0Mgo0Mwo0NAo0NQo0Ngo0Nwo0OAo0OQo1MAo1MQo1Mgo1Mwo1NAo1NQo1Ngo1Nwo1OAo1OQo2MAo2MQo2Mgo2Mwo2NAo2NQo2Ngo2Nwo2OAo2OQo3MAo3MQo3Mgo3Mwo3NAo3NQo3Ngo3Nwo3OAo3OQo4MA==
+> diff --git a/tests/generic/group b/tests/generic/group
+> index 94e860b8..eca9d619 100644
+> --- a/tests/generic/group
+> +++ b/tests/generic/group
+> @@ -620,3 +620,4 @@
+>  615 auto rw
+>  616 auto rw io_uring stress
+>  617 auto rw io_uring stress
+> +618 auto quick attr
+> -- 
+> 2.18.4
