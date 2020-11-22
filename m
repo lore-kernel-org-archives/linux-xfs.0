@@ -2,211 +2,124 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF2F8C5519F
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Nov 2020 15:54:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFE10C5519F
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Nov 2020 18:38:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5600820781
-	for <linux-xfs@archiver.kernel.org>; Sun, 22 Nov 2020 15:54:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 937C320760
+	for <linux-xfs@archiver.kernel.org>; Sun, 22 Nov 2020 18:38:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Z2/nck3c"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PNDcoBU+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727777AbgKVPxt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 Nov 2020 10:53:49 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42189 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727728AbgKVPxt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Nov 2020 10:53:49 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606060427;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=YxggdvLZ3Wmjetpl6/VmN4AqR/tTtBrWLP7W2iSue6Q=;
-        b=Z2/nck3cJFwQxieWmF8QsZB9+IwwAGQCC4plJotYFMvekl74UBjefr09A12DbOOpogv/G8
-        eCZHV18KMme0O/9CWdYrXL3KDXUxoclXqT+jitdYc/d6XSVCNtb5RpbegSg1Iw/u8FBL0M
-        TzmUYUlXHr9ZoLXujJrdaunZqT4ZfKk=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-541-ImDJSUAvOSK_3OAKNTzL6Q-1; Sun, 22 Nov 2020 10:53:45 -0500
-X-MC-Unique: ImDJSUAvOSK_3OAKNTzL6Q-1
-Received: by mail-pg1-f199.google.com with SMTP id 22so10632662pge.7
-        for <linux-xfs@vger.kernel.org>; Sun, 22 Nov 2020 07:53:45 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=YxggdvLZ3Wmjetpl6/VmN4AqR/tTtBrWLP7W2iSue6Q=;
-        b=cWfJ0PZJwEzHsSOuvKzbthUPEPXeVmgNasxFgo3sd5aOeBxOz8+UtHMZw/3KjS5CjN
-         higRrAMd5gXfYwXUxNayVY2f76GZ4ELeqtL9wlmXvnYY+b+LFQa2hYs3qwuF3DFqLNLW
-         7cj3jtZCCfmp5M5khtR2RCVBfJsgidy+HBF5eI1KwvujYxNzemBsfFXt3ObEK36s8PFB
-         +h2pZTyGc41rbd5Px4WV6O/ilFkbu6L095teixnG1f8VTu1rISwXY4BEzxrg6slQHldc
-         R4ItYPfAQcRard5VNW2n/8X1xVDKYj82djuIzM/etaJ1IFlqA1RbuxDmqLmIh5y8bSVT
-         +0NA==
-X-Gm-Message-State: AOAM530rPNnlwmL+ZJLQ1TtqirNFGNr6XcxLpElhIgmCVHazt0YKXFEh
-        FaMp3wbpI3fh5iISPFuSqEepJMj11qk+FAsrlBdmFK/bwThxJYmv7d4HcUe6G8uv6gQoQK9iRE/
-        nhlqTd2HDCCXeT+ouegqa
-X-Received: by 2002:a63:fc5b:: with SMTP id r27mr199109pgk.100.1606060424425;
-        Sun, 22 Nov 2020 07:53:44 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJyZq9jLmzslgXLEc+50rAbupGMuPCYuRBazovAmlCfGSMarqinbRpUahgK+PEAHFnzCHdJ7Dg==
-X-Received: by 2002:a63:fc5b:: with SMTP id r27mr199093pgk.100.1606060424060;
-        Sun, 22 Nov 2020 07:53:44 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id k73sm8319397pga.88.2020.11.22.07.53.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 22 Nov 2020 07:53:43 -0800 (PST)
-Date:   Sun, 22 Nov 2020 23:53:32 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     Eryu Guan <guan@eryu.me>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH] generic: add test for XFS forkoff miscalcution on 32-bit
- platform
-Message-ID: <20201122155332.GA2797706@xiangao.remote.csb>
-References: <20201118060258.1939824-1-hsiangkao@redhat.com>
- <20201122144633.GM3853@desktop>
+        id S1727888AbgKVSid (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Nov 2020 13:38:33 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:48264 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727795AbgKVSic (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Nov 2020 13:38:32 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AMIYcv2041882
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Nov 2020 18:38:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=Mjehx8fqLqJPxlPIEhv2ZVIBhvmnkqIrrKmOcrVxQgI=;
+ b=PNDcoBU+ifB401ztcomKwXC0ut/n5Nzf1CWyiOwiBfZAi5kbZBLO2RVlgqgT5Ms/CV0k
+ u3z6WuJB7P98X7K++tsqmvx54xgCOUlzskZlNoWY7rT4lQjLOpyK86aELgQDc2io+v4a
+ yufXmSVJpmaVysCXdO0gpLG+jyRN6ZM5EL0hwtuVU/gi6cVQJlTB9LhrZubqkAUtE8QL
+ cyhoyHrJeD3wYtARaC6m6fUb/G3cbd+14OSIuqHLKn7iLUBd8UDYRRrDkfRuMKV/2lQw
+ 0FrGXl9z5bqBlAVBsbJX+RtDesrrZiwFrvWWb/ucYWHcNAV85dRnUM2exLoRPnGOKdZT lg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 34xtuktnpu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL)
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Nov 2020 18:38:32 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AMIZY2q066158
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Nov 2020 18:38:31 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 34ycsvqabw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Nov 2020 18:38:31 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AMIcV94016355
+        for <linux-xfs@vger.kernel.org>; Sun, 22 Nov 2020 18:38:31 GMT
+Received: from loom (/81.187.191.129)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Sun, 22 Nov 2020 10:38:30 -0800
+From:   Nick Alcock <nick.alcock@oracle.com>
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: XFS: corruption detected in 5.9.10, upgrading from 5.9.6: (partial) panic log
+Emacs:  it's like swatting a fly with a supernova.
+Date:   Sun, 22 Nov 2020 18:38:28 +0000
+Message-ID: <87lfetme3f.fsf@esperi.org.uk>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.3.50 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20201122144633.GM3853@desktop>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9813 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 suspectscore=0
+ mlxlogscore=777 adultscore=0 bulkscore=0 phishscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011220135
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9813 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 lowpriorityscore=0
+ malwarescore=0 mlxlogscore=786 impostorscore=0 spamscore=0 mlxscore=0
+ phishscore=0 clxscore=1011 suspectscore=0 bulkscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011220135
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Eryu,
+So I just tried to reboot my x86 server box from 5.9.6 to 5.9.10 and my
+system oopsed with an xfs fs corruption message when I kicked up
+Chromium on another machine which mounted $HOME from the server box (it
+panicked without logging anything, because the corruption was detected
+on the rootfs, and it is also the loghost). A subsequent reboot died
+instantly as soon as it tried to mount root, but the next one got all
+the way to starting Chromium before dying again the same way.
 
-On Sun, Nov 22, 2020 at 10:46:33PM +0800, Eryu Guan wrote:
-> On Wed, Nov 18, 2020 at 02:02:58PM +0800, Gao Xiang wrote:
+Rebooting back into 5.9.6 causes everything to work fine again, no
+reports of corruption and starting Chromium works.
 
-...
+This fs has rmapbt and reflinks enabled, on a filesystem originally
+created by xfsprogs 4.10.0, but I have never knowingly used them under
+the Chromium config dirs (or, actually, under that user's $HOME at all).
+I've used them extensively elsewhere on the fs though. The FS is sitting
+above a libata -> md-raid6 -> bcache stack. (It is barely possible that
+bcache is at fault, but bcache has seen no changes since 5.9.6 so I
+doubt it.)
 
-> > +# xxxxxxxxxxxx ("xfs: fix forkoff miscalculation related to XFS_LITINO(mp)")
-> 
-> Would you please re-post when the commit is upstream? With the commit ID
-> updated.
+The relevant bits of the log I could capture -- no console scrollback
+these days, of course :( and it was a panic anyway so the top is just
+lost -- is in a photo here:
 
-Sure will definitely do tomorrow.
+  <http://www.esperi.org.uk/~nix/temporary/xfs-crash.jpg>
 
-> 
-> > +
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/filter
-> > +. ./common/attr
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +
-> > +_supported_fs generic
-> > +_require_test
-> > +_require_attrs user
-> > +
-> > +localfile="${TEST_DIR}/testfile"
-> 
-> Usually we use a testfile prefixed with $seq, e.g.
-> 
-> localfile=${TEST_DIR}/$seq.testfile
-> 
-> And remove it before test to avoid side effects from previous runs.
-> 
-> rm -f $localfile
-> touch $localfile
+The mkfs line used to create this fs was:
 
-okay, will fix.
+mkfs.xfs -m rmapbt=1,reflink=1 -d agcount=17,sunit=$((128*8)),swidth=$((384*8)) -l logdev=/dev/sde3,size=521728b -i sparse=1,maxpct=25 /dev/main/root
 
-Actually I didn't take much time on this (just copy from
-generic/611 and use $TEST_DIR instead.) 
+(/dev/sde3 is an SSD which also hosts the bcache and RAID journal,
+though this RAID device is not journalled, and is operating fine.)
 
-> 
-> > +
-> > +touch "${localfile}"
-> > +"${SETFATTR_PROG}" -n user.0 -v "`seq 0 80`" "${localfile}"
-> > +"${SETFATTR_PROG}" -n user.1 -v "`seq 0 80`" "${localfile}"
-> 
-> I'd be better to add comments on why we need two user attrs and why we
-> need such long attr value.
+I am not using a realtime device.
 
-There is no specific reason of using "user attrs" and this
-combination, just the example in
-commit ada49d64fb35 ("xfs: fix forkoff miscalculation related to XFS_LITINO(mp)")
+I have *not* yet run xfs_repair, but just rebooted back into the old
+kernel, since everything worked there: I'll run xfs_repair over the fs
+if you think it wise to do so, but right now I have a state which
+crashes on one kernel and works on another one, which seems useful to
+not try to fix in case you have some use for it.
 
-long xattrs which acrosses inline xattr shortform fork can
-trigger this issue. As I said in the patch, the bug itself
-is xfs-specific, but the testcase is generic.
+Since everything is working fine in 5.9.6 and there were XFS changes
+after that, I'm hypothesising that this is probably a bug in the
+post-5.9.6 changes rather than anything xfs_repair should be trying to
+fix. But I really don't know :)
 
-> 
-> > +
-> > +# Make sure that changes are written to disk
-> > +_test_cycle_mount
-> > +
-> > +# check getfattr result as well
-> 
-> Also, better to document the test failure behavior, e.g. kernel crash or
-> hung or just a getfattr failure.
-
-It depends, since ASSERT already fails in the second setfattr
-and similar as
-https://bugzilla.redhat.com/show_bug.cgi?id=1894177
-
-if CONFIG_XFS_ASSERT_FATAL=n, what I saw was that hung on
-the _getfattr line. But in any case, _getfattr won't success
-with the correct result. So I don't think it needs to document
-such unstable status.
-
-Thanks,
-Gao Xiang
-
-> 
-> Thanks,
-> Eryu
-> 
-> > +_getfattr --absolute-names -ebase64 -d $localfile | tail -n +2 | sort
-> > +
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/618.out b/tests/generic/618.out
-> > new file mode 100644
-> > index 00000000..848fdc58
-> > --- /dev/null
-> > +++ b/tests/generic/618.out
-> > @@ -0,0 +1,4 @@
-> > +QA output created by 618
-> > +
-> > +user.0=0sMAoxCjIKMwo0CjUKNgo3CjgKOQoxMAoxMQoxMgoxMwoxNAoxNQoxNgoxNwoxOAoxOQoyMAoyMQoyMgoyMwoyNAoyNQoyNgoyNwoyOAoyOQozMAozMQozMgozMwozNAozNQozNgozNwozOAozOQo0MAo0MQo0Mgo0Mwo0NAo0NQo0Ngo0Nwo0OAo0OQo1MAo1MQo1Mgo1Mwo1NAo1NQo1Ngo1Nwo1OAo1OQo2MAo2MQo2Mgo2Mwo2NAo2NQo2Ngo2Nwo2OAo2OQo3MAo3MQo3Mgo3Mwo3NAo3NQo3Ngo3Nwo3OAo3OQo4MA==
-> > +user.1=0sMAoxCjIKMwo0CjUKNgo3CjgKOQoxMAoxMQoxMgoxMwoxNAoxNQoxNgoxNwoxOAoxOQoyMAoyMQoyMgoyMwoyNAoyNQoyNgoyNwoyOAoyOQozMAozMQozMgozMwozNAozNQozNgozNwozOAozOQo0MAo0MQo0Mgo0Mwo0NAo0NQo0Ngo0Nwo0OAo0OQo1MAo1MQo1Mgo1Mwo1NAo1NQo1Ngo1Nwo1OAo1OQo2MAo2MQo2Mgo2Mwo2NAo2NQo2Ngo2Nwo2OAo2OQo3MAo3MQo3Mgo3Mwo3NAo3NQo3Ngo3Nwo3OAo3OQo4MA==
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index 94e860b8..eca9d619 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -620,3 +620,4 @@
-> >  615 auto rw
-> >  616 auto rw io_uring stress
-> >  617 auto rw io_uring stress
-> > +618 auto quick attr
-> > -- 
-> > 2.18.4
-> 
-
+(I can't help but notice that all these post-5.9.6 XFS changes were
+sucked in by Sasha's magic regression-hunting stable-tree AI, which I
+thought wasn't meant to happen -- but I've not been watching closely,
+and if you changed your minds after the LWN article went in I won't have
+seen it.)
