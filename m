@@ -7,31 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38A6EC64E69
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE9FC64E75
 	for <linux-xfs@archiver.kernel.org>; Mon, 23 Nov 2020 00:42:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 115BB221FA
+	by mail.kernel.org (Postfix) with ESMTP id 2A14D2076E
 	for <linux-xfs@archiver.kernel.org>; Mon, 23 Nov 2020 00:42:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726921AbgKWAlv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 22 Nov 2020 19:41:51 -0500
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:44470 "EHLO
+        id S1727007AbgKWAlx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 22 Nov 2020 19:41:53 -0500
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:44490 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726822AbgKWAlt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Nov 2020 19:41:49 -0500
+        with ESMTP id S1726928AbgKWAlw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 22 Nov 2020 19:41:52 -0500
 X-IronPort-AV: E=Sophos;i="5.78,361,1599494400"; 
-   d="scan'208";a="101635236"
+   d="scan'208";a="101635247"
 Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 23 Nov 2020 08:41:41 +0800
-Received: from G08CNEXMBPEKD04.g08.fujitsu.local (unknown [10.167.33.201])
-        by cn.fujitsu.com (Postfix) with ESMTP id E1F334CE5458;
-        Mon, 23 Nov 2020 08:41:39 +0800 (CST)
+  by heian.cn.fujitsu.com with ESMTP; 23 Nov 2020 08:41:47 +0800
+Received: from G08CNEXMBPEKD06.g08.fujitsu.local (unknown [10.167.33.206])
+        by cn.fujitsu.com (Postfix) with ESMTP id 5CC4F4CE5475;
+        Mon, 23 Nov 2020 08:41:46 +0800 (CST)
+Received: from G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) by
+ G08CNEXMBPEKD06.g08.fujitsu.local (10.167.33.206) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Mon, 23 Nov 2020 08:41:44 +0800
 Received: from G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.203) by
- G08CNEXMBPEKD04.g08.fujitsu.local (10.167.33.201) with Microsoft SMTP Server
- (TLS) id 15.0.1497.2; Mon, 23 Nov 2020 08:41:41 +0800
+ G08CNEXJMPEKD02.g08.fujitsu.local (10.167.33.202) with Microsoft SMTP Server
+ (TLS) id 15.0.1497.2; Mon, 23 Nov 2020 08:41:47 +0800
 Received: from localhost.localdomain (10.167.225.141) by
  G08CNEXCHPEKD05.g08.fujitsu.local (10.167.33.209) with Microsoft SMTP Server
- id 15.0.1497.2 via Frontend Transport; Mon, 23 Nov 2020 08:41:19 +0800
+ id 15.0.1497.2 via Frontend Transport; Mon, 23 Nov 2020 08:41:46 +0800
 From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 To:     <linux-kernel@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
         <linux-nvdimm@lists.01.org>, <linux-mm@kvack.org>
@@ -39,185 +42,108 @@ CC:     <linux-fsdevel@vger.kernel.org>, <linux-raid@vger.kernel.org>,
         <darrick.wong@oracle.com>, <dan.j.williams@intel.com>,
         <david@fromorbit.com>, <hch@lst.de>, <song@kernel.org>,
         <rgoldwyn@suse.de>, <qi.fuli@fujitsu.com>, <y-goto@fujitsu.com>
-Subject: [RFC PATCH v2 1/6] fs: introduce ->storage_lost() for memory-failure
-Date:   Mon, 23 Nov 2020 08:41:11 +0800
-Message-ID: <20201123004116.2453-2-ruansy.fnst@cn.fujitsu.com>
+Subject: [RFC PATCH v2 6/6] fsdax: remove useless (dis)associate functions
+Date:   Mon, 23 Nov 2020 08:41:16 +0800
+Message-ID: <20201123004116.2453-7-ruansy.fnst@cn.fujitsu.com>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
 References: <20201123004116.2453-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
-X-yoursite-MailScanner-ID: E1F334CE5458.AB364
+X-yoursite-MailScanner-ID: 5CC4F4CE5475.ACCAE
 X-yoursite-MailScanner: Found to be clean
 X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This function is used to handle errors which may cause data lost in
-filesystem.  Such as memory-failure in fsdax mode.
-
-In XFS, it requires "rmapbt" feature in order to query for files or
-metadata which associated to the broken block.  Then we could call fs
-recover functions to try to repair the damaged data.(did not implemented
-in this patch)
-
-After that, the memory-failure also needs to kill processes who are
-using those files.  The struct mf_recover_controller is created to store
-necessary parameters.
-
-Only support data device.  Realtime device is not supported for now.
+Since owner tarcking is triggerred by pmem device, these functions are
+useless.  So remove it.
 
 Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 ---
- fs/xfs/xfs_super.c | 87 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/fs.h |  2 ++
- include/linux/mm.h |  6 ++++
- 3 files changed, 95 insertions(+)
+ fs/dax.c | 46 ----------------------------------------------
+ 1 file changed, 46 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e3e229e52512..f9a109217a80 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -35,6 +35,11 @@
- #include "xfs_refcount_item.h"
- #include "xfs_bmap_item.h"
- #include "xfs_reflink.h"
-+#include "xfs_alloc.h"
-+#include "xfs_rmap.h"
-+#include "xfs_rmap_btree.h"
-+#include "xfs_rtalloc.h"
-+#include "xfs_bit.h"
+diff --git a/fs/dax.c b/fs/dax.c
+index 34471acde683..6c037287cb04 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -323,48 +323,6 @@ static unsigned long dax_end_pfn(void *entry)
+ 	for (pfn = dax_to_pfn(entry); \
+ 			pfn < dax_end_pfn(entry); pfn++)
  
- #include <linux/magic.h>
- #include <linux/fs_context.h>
-@@ -1103,6 +1108,87 @@ xfs_fs_free_cached_objects(
- 	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
- }
+-/*
+- * TODO: for reflink+dax we need a way to associate a single page with
+- * multiple address_space instances at different linear_page_index()
+- * offsets.
+- */
+-static void dax_associate_entry(void *entry, struct address_space *mapping,
+-		struct vm_area_struct *vma, unsigned long address)
+-{
+-	unsigned long size = dax_entry_size(entry), pfn, index;
+-	int i = 0;
+-
+-	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+-		return;
+-
+-	index = linear_page_index(vma, address & ~(size - 1));
+-	for_each_mapped_pfn(entry, pfn) {
+-		struct page *page = pfn_to_page(pfn);
+-
+-		WARN_ON_ONCE(page->mapping);
+-		page->mapping = mapping;
+-		page->index = index + i++;
+-	}
+-}
+-
+-static void dax_disassociate_entry(void *entry, struct address_space *mapping,
+-		bool trunc)
+-{
+-	unsigned long pfn;
+-
+-	if (IS_ENABLED(CONFIG_FS_DAX_LIMITED))
+-		return;
+-
+-	for_each_mapped_pfn(entry, pfn) {
+-		struct page *page = pfn_to_page(pfn);
+-
+-		WARN_ON_ONCE(trunc && page_ref_count(page) > 1);
+-		WARN_ON_ONCE(page->mapping && page->mapping != mapping);
+-		page->mapping = NULL;
+-		page->index = 0;
+-	}
+-}
+-
+ static struct page *dax_busy_page(void *entry)
+ {
+ 	unsigned long pfn;
+@@ -516,7 +474,6 @@ static void *grab_mapping_entry(struct xa_state *xas,
+ 			xas_lock_irq(xas);
+ 		}
  
-+static int
-+xfs_storage_lost_helper(
-+	struct xfs_btree_cur		*cur,
-+	struct xfs_rmap_irec		*rec,
-+	void				*priv)
-+{
-+	struct xfs_inode		*ip;
-+	struct mf_recover_controller	*mfrc = priv;
-+	int rc = 0;
-+
-+	if (XFS_RMAP_NON_INODE_OWNER(rec->rm_owner)) {
-+		// TODO check and try to fix metadata
-+	} else {
-+		/*
-+		 * Get files that incore, filter out others that are not in use.
-+		 */
-+		rc = xfs_iget(cur->bc_mp, cur->bc_tp, rec->rm_owner,
-+			      XFS_IGET_INCORE, 0, &ip);
-+		if (rc || !ip)
-+			return rc;
-+		if (!VFS_I(ip)->i_mapping)
-+			goto out;
-+
-+		rc = mfrc->recover_fn(mfrc->pfn, mfrc->flags,
-+				      VFS_I(ip)->i_mapping, rec->rm_offset);
-+
-+		// TODO try to fix data
-+out:
-+		xfs_irele(ip);
-+	}
-+
-+	return rc;
-+}
-+
-+static int
-+xfs_fs_storage_lost(
-+	struct super_block	*sb,
-+	struct block_device	*bdev,
-+	loff_t			offset,
-+	void			*priv)
-+{
-+	struct xfs_mount	*mp = XFS_M(sb);
-+	struct xfs_trans	*tp = NULL;
-+	struct xfs_btree_cur	*cur = NULL;
-+	struct xfs_rmap_irec	rmap_low, rmap_high;
-+	struct xfs_buf		*agf_bp = NULL;
-+	xfs_fsblock_t		fsbno = XFS_B_TO_FSB(mp, offset);
-+	xfs_agnumber_t		agno = XFS_FSB_TO_AGNO(mp, fsbno);
-+	xfs_agblock_t		agbno = XFS_FSB_TO_AGBNO(mp, fsbno);
-+	int			error = 0;
-+
-+	if (mp->m_rtdev_targp && mp->m_rtdev_targp->bt_bdev == bdev) {
-+		xfs_warn(mp, "storage lost support not available for realtime device!");
-+		return 0;
-+	}
-+
-+	error = xfs_trans_alloc_empty(mp, &tp);
-+	if (error)
-+		return error;
-+
-+	error = xfs_alloc_read_agf(mp, tp, agno, 0, &agf_bp);
-+	if (error)
-+		return error;
-+
-+	cur = xfs_rmapbt_init_cursor(mp, tp, agf_bp, agno);
-+
-+	/* Construct a range for rmap query */
-+	memset(&rmap_low, 0, sizeof(rmap_low));
-+	memset(&rmap_high, 0xFF, sizeof(rmap_high));
-+	rmap_low.rm_startblock = rmap_high.rm_startblock = agbno;
-+
-+	error = xfs_rmap_query_range(cur, &rmap_low, &rmap_high,
-+				     xfs_storage_lost_helper, priv);
-+	if (error == -ECANCELED)
-+		error = 0;
-+
-+	xfs_btree_del_cursor(cur, error);
-+	xfs_trans_brelse(tp, agf_bp);
-+	return error;
-+}
-+
- static const struct super_operations xfs_super_operations = {
- 	.alloc_inode		= xfs_fs_alloc_inode,
- 	.destroy_inode		= xfs_fs_destroy_inode,
-@@ -1116,6 +1202,7 @@ static const struct super_operations xfs_super_operations = {
- 	.show_options		= xfs_fs_show_options,
- 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
-+	.storage_lost		= xfs_fs_storage_lost,
- };
+-		dax_disassociate_entry(entry, mapping, false);
+ 		xas_store(xas, NULL);	/* undo the PMD join */
+ 		dax_wake_entry(xas, entry, true);
+ 		mapping->nrexceptional--;
+@@ -653,7 +610,6 @@ static int __dax_invalidate_entry(struct address_space *mapping,
+ 	    (xas_get_mark(&xas, PAGECACHE_TAG_DIRTY) ||
+ 	     xas_get_mark(&xas, PAGECACHE_TAG_TOWRITE)))
+ 		goto out;
+-	dax_disassociate_entry(entry, mapping, trunc);
+ 	xas_store(&xas, NULL);
+ 	mapping->nrexceptional--;
+ 	ret = 1;
+@@ -747,8 +703,6 @@ static void *dax_insert_entry(struct xa_state *xas,
+ 	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
+ 		void *old;
  
- static int
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 0bd126418bb6..8c4f753e3ed9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1949,6 +1949,8 @@ struct super_operations {
- 				  struct shrink_control *);
- 	long (*free_cached_objects)(struct super_block *,
- 				    struct shrink_control *);
-+	int (*storage_lost)(struct super_block *sb, struct block_device *bdev,
-+			    loff_t offset, void *priv);
- };
- 
- /*
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index ef360fe70aaf..872b51ebe57b 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -3031,6 +3031,12 @@ extern void shake_page(struct page *p, int access);
- extern atomic_long_t num_poisoned_pages __read_mostly;
- extern int soft_offline_page(unsigned long pfn, int flags);
- 
-+struct mf_recover_controller {
-+	int (*recover_fn)(unsigned long pfn, int flags,
-+		struct address_space *mapping, pgoff_t index);
-+	unsigned long pfn;
-+	int flags;
-+};
- 
- /*
-  * Error handlers for various types of pages.
+-		dax_disassociate_entry(entry, mapping, false);
+-		dax_associate_entry(new_entry, mapping, vmf->vma, vmf->address);
+ 		/*
+ 		 * Only swap our new entry into the page cache if the current
+ 		 * entry is a zero page or an empty entry.  If a normal PTE or
 -- 
 2.29.2
 
