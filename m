@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EA44C6379D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71680C64E7A
 	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:52:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D27BF206F7
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:52:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 178CB206FA
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:52:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="FAqDqxgx"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UDtj4C8v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389676AbgKXPwY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Nov 2020 10:52:24 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:29003 "EHLO
+        id S2389883AbgKXPw1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Nov 2020 10:52:27 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59562 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389781AbgKXPwX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 10:52:23 -0500
+        by vger.kernel.org with ESMTP id S2389465AbgKXPw0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 10:52:26 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606233142;
+        s=mimecast20190719; t=1606233145;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=x8y8WjgQkYZjPuzLzq8Fs3USuayOj8l3E0SVvaPI1Vc=;
-        b=FAqDqxgxymNBHVSFUGNOQkh2IjmumdZ66NSl5ujCpXLyaOTvKb2ugZFZxwng2md2kzieMj
-        ax3hNjGe2C5ZfMyw6Wl9mlGuBVcfvOkKMkpTMBMQ29/3rkOcs1gyu17mVhtikYZmeRXRSx
-        1hTqhutnmiswA0FByCrw0qrimtaNdMU=
-Received: from mail-pg1-f199.google.com (mail-pg1-f199.google.com
- [209.85.215.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-470-J1yxPkhiOqGSVK25W8aONQ-1; Tue, 24 Nov 2020 10:52:20 -0500
-X-MC-Unique: J1yxPkhiOqGSVK25W8aONQ-1
-Received: by mail-pg1-f199.google.com with SMTP id i7so10182965pgn.22
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2020 07:52:19 -0800 (PST)
+        bh=8CjJhIyjuxuqdYkEDL3EVAWJbiBs4q6YVRMXB+7Jlqw=;
+        b=UDtj4C8v/DvGwXlK5iUHc0YNPuFxzAmbHyn0q044vVMyE9XT77Yhv31llk2ECC8PKktdyc
+        fhPvTLXRXx/qX6jaTfvSEPEutdFTNLXDmAnr1bIJVYJf7KJSJJhPWosH+/4FwlQ8tXra23
+        ODZjxy4Jbd8hJuLbMLcRing9OAVRih8=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-42-kIfDaDfyPpS9qI3CIuQ5nw-1; Tue, 24 Nov 2020 10:52:23 -0500
+X-MC-Unique: kIfDaDfyPpS9qI3CIuQ5nw-1
+Received: by mail-pl1-f199.google.com with SMTP id w9so13488239plp.1
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2020 07:52:23 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=x8y8WjgQkYZjPuzLzq8Fs3USuayOj8l3E0SVvaPI1Vc=;
-        b=oCGbli3WoFqTiw/OTYw8WlT0iUSWHKszlP6F1c9i8OIBFvZ0WBPbNDk88MSj175git
-         9HGEQpv7hCthEtEUJLhqJZzwb8AGFcIsQwg0qtKLRB9saTpJ/PH8AABkao+r+I2f2+Y/
-         G5NRATDUABYNk7NqGv6MguRy+9ccYuLSNKbJcp2zTSGHOLEsqzpjkweG7si/59sLMO7u
-         pGx5u947Tin5d+nCwOs/IKWwvrLo5s32RNjaPwadxB3VLrUm2DpyzmyG8822MJ9fXSCV
-         kQ/A6bCUu0ZEETQr3XcC2uKoJ0lEOgnYTED0e/Kc832fSLF3Nyr7cT92diGnjzLYYOiA
-         Z9Eg==
-X-Gm-Message-State: AOAM532c6PAOxCqMGwzQTM+BvD/TOhOChzSAdvgYBck34rwkf70CzeUx
-        eTQrNzTHXgcsl4ndOINW+ye0pLnX8K4wcZH8Do4BQ+FWy+3mEyDa+CfcQbiJzkl3V6YDEVbzcXy
-        iRQwjL931uK/oedwB2ceRb5bjIvL52cC6zacWJgAz4U4diYh3bVlCi4l7y0FTxg5XhTYuRj4HYw
+        bh=8CjJhIyjuxuqdYkEDL3EVAWJbiBs4q6YVRMXB+7Jlqw=;
+        b=UlOhcX/Gqxh8ZrVaAGbY5qMqubwJ0lR6u/yHsLsfIZP7lglr5rN4GeQSCcW+pw5vrw
+         MOAHN52HE7/aX0nWaACw7jJRX7tCRc97ST69FATwla+tYEwjRDpeI/QCkUKMqH7smPCu
+         nnIBwkiwEymbfobdtDQU2ovcObbBRk7XztxZYD77wF5RshOadgDscIhTuO9/osaSAUWg
+         GO4/b6oTRyj4zRVLLPZix5DstGU10WmrTRwr+G5Cs9VRUR/vzhkEl3JAKvVGCVimMMCn
+         nO5iqSHpBJQAIQ0C1NWHmbkliEUFD984OFJ8+xfaEZY6ny6uhdc9vsmGfHjGd1U6v2PH
+         OCPg==
+X-Gm-Message-State: AOAM531Ofva5pJ5AnDHRdYG9nrCruC8mBhkt+nLODDumt0DiivGQWexa
+        mLx/O9kNVfyaZzsP3jMVsdwjDNrEv9Q904cYZ1Kk0Cm3dsRPXorWWZCcozHlG8EqTmdnjn1fbjH
+        bh6gbLUGnNcRjnTDKW8JCXs/1OU1ZxAywFBeXI18yDqAzFws2AaUyB1gruKw8P/HiErAhi5T0tw
         ==
-X-Received: by 2002:a17:90a:460a:: with SMTP id w10mr5613725pjg.232.1606233138821;
-        Tue, 24 Nov 2020 07:52:18 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxLwGVuPWNkqttFygmFPIuRWFx7qTvhvCdGMI5xeR2NSVbKFHvgQjn8crzazX3c0XxRLg1uoQ==
-X-Received: by 2002:a17:90a:460a:: with SMTP id w10mr5613698pjg.232.1606233138502;
-        Tue, 24 Nov 2020 07:52:18 -0800 (PST)
+X-Received: by 2002:a17:90a:bc83:: with SMTP id x3mr5622112pjr.90.1606233142153;
+        Tue, 24 Nov 2020 07:52:22 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJym9odPozOYr5dF4hSiWearS4nICgev/VvPhu2lYCEdrF8Aq6iPuDjR/Bpr6mkF3mRjL9eJEA==
+X-Received: by 2002:a17:90a:bc83:: with SMTP id x3mr5622092pjr.90.1606233141889;
+        Tue, 24 Nov 2020 07:52:21 -0800 (PST)
 Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id mn21sm3723909pjb.28.2020.11.24.07.52.16
+        by smtp.gmail.com with ESMTPSA id mn21sm3723909pjb.28.2020.11.24.07.52.20
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2020 07:52:18 -0800 (PST)
+        Tue, 24 Nov 2020 07:52:21 -0800 (PST)
 From:   Gao Xiang <hsiangkao@redhat.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH 2/3] xfs: kill ialloced in xfs_dialloc()
-Date:   Tue, 24 Nov 2020 23:51:29 +0800
-Message-Id: <20201124155130.40848-2-hsiangkao@redhat.com>
+Subject: [PATCH 3/3] xfs: clean up xfs_dialloc() by introducing __xfs_dialloc()
+Date:   Tue, 24 Nov 2020 23:51:30 +0800
+Message-Id: <20201124155130.40848-3-hsiangkao@redhat.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20201124155130.40848-1-hsiangkao@redhat.com>
 References: <20201124155130.40848-1-hsiangkao@redhat.com>
@@ -72,85 +72,227 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-It's enough to just use return code, and get rid of an argument.
+Move the main loop out into a separated function, so we can save
+many extra xfs_perag_put()s and gotoes to make the logic cleaner.
+
+Also it can make the modification of perag protection by some lock
+for shrinking in the future somewhat easier.
 
 Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
 ---
- fs/xfs/libxfs/xfs_ialloc.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
+It tries to kill multiple goto exits... which makes the logic hard
+to read and modify.
+
+not quite sure the name of __xfs_dialloc(), cannot think of some
+better name since xfs_dialloc_ag is used...
+
+ fs/xfs/libxfs/xfs_ialloc.c | 166 ++++++++++++++++++++-----------------
+ 1 file changed, 88 insertions(+), 78 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 45cf7e55f5ee..5c8b0210aad3 100644
+index 5c8b0210aad3..937455c50570 100644
 --- a/fs/xfs/libxfs/xfs_ialloc.c
 +++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -607,13 +607,14 @@ xfs_inobt_insert_sprec(
+@@ -1681,6 +1681,83 @@ xfs_dialloc_ag(
+ 	return error;
+ }
  
- /*
-  * Allocate new inodes in the allocation group specified by agbp.
-- * Return 0 for success, else error code.
++/*
 + * Return 0 for successfully allocating some inodes in this AG;
 + *        1 for skipping to allocating in the next AG;
 + *      < 0 for error code.
-  */
- STATIC int
- xfs_ialloc_ag_alloc(
- 	struct xfs_trans	*tp,
--	struct xfs_buf		*agbp,
--	int			*alloc)
-+	struct xfs_buf		*agbp)
- {
- 	struct xfs_agi		*agi;
- 	struct xfs_alloc_arg	args;
-@@ -795,10 +796,9 @@ xfs_ialloc_ag_alloc(
- 		allocmask = (1 << (newlen / XFS_INODES_PER_HOLEMASK_BIT)) - 1;
- 	}
- 
--	if (args.fsbno == NULLFSBLOCK) {
--		*alloc = 0;
--		return 0;
--	}
-+	if (args.fsbno == NULLFSBLOCK)
++ */
++static int
++__xfs_dialloc(
++	struct xfs_trans	*tp,
++	xfs_ino_t		parent,
++	struct xfs_perag	*pag,
++	struct xfs_buf		**IO_agbp,
++	xfs_ino_t		*inop,
++	bool			okalloc)
++{
++	struct xfs_mount	*mp = tp->t_mountp;
++	xfs_agnumber_t		agno = pag->pag_agno;
++	struct xfs_buf		*agbp;
++	int			error;
++
++	if (!pag->pagi_inodeok) {
++		xfs_ialloc_next_ag(mp);
++		return 1;
++	}
++
++	if (!pag->pagi_init) {
++		error = xfs_ialloc_pagi_init(mp, tp, agno);
++		if (error)
++			return error;
++	}
++
++	/*
++	 * Do a first racy fast path check if this AG is usable.
++	 */
++	if (!pag->pagi_freecount && !okalloc)
 +		return 1;
 +
- 	ASSERT(args.len == args.minlen);
- 
- 	/*
-@@ -903,7 +903,6 @@ xfs_ialloc_ag_alloc(
- 	 */
- 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_ICOUNT, (long)newlen);
- 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, (long)newlen);
--	*alloc = 1;
- 	return 0;
- }
- 
-@@ -1715,7 +1714,6 @@ xfs_dialloc(
- 	struct xfs_buf		*agbp;
- 	xfs_agnumber_t		agno;
- 	int			error;
--	int			ialloced;
- 	bool			noroom = false;
- 	xfs_agnumber_t		start_agno;
- 	struct xfs_perag	*pag;
-@@ -1799,8 +1797,8 @@ xfs_dialloc(
- 			goto nextag_relse_buffer;
- 
- 
--		error = xfs_ialloc_ag_alloc(tp, agbp, &ialloced);
--		if (error) {
++	/*
++	 * Then read in the AGI buffer and recheck with the AGI buffer
++	 * lock held.
++	 */
++	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
++	if (error)
++		return error;
++
++	if (pag->pagi_freecount) {
++		*IO_agbp = NULL;
++		return xfs_dialloc_ag(tp, agbp, parent, inop);
++	}
++
++	if (okalloc) {
 +		error = xfs_ialloc_ag_alloc(tp, agbp);
 +		if (error < 0) {
- 			xfs_trans_brelse(tp, agbp);
- 
- 			if (error != -ENOSPC)
-@@ -1811,7 +1809,7 @@ xfs_dialloc(
- 			return 0;
- 		}
- 
--		if (ialloced) {
++			xfs_trans_brelse(tp, agbp);
++			if (error != -ENOSPC)
++				return error;
++
++			*inop = NULLFSINO;
++			return 0;
++		}
++
 +		if (!error) {
- 			/*
- 			 * We successfully allocated some inodes, return
- 			 * the current context to the caller so that it
++			/*
++			 * We successfully allocated some inodes, return
++			 * the current context to the caller so that it
++			 * can commit the current transaction and call
++			 * us again where we left off.
++			 */
++			ASSERT(pag->pagi_freecount > 0);
++			*IO_agbp = agbp;
++			*inop = NULLFSINO;
++			return 0;
++		}
++	}
++	xfs_trans_brelse(tp, agbp);
++	return 1;
++}
++
+ /*
+  * Allocate an inode on disk.
+  *
+@@ -1711,7 +1788,6 @@ xfs_dialloc(
+ 	xfs_ino_t		*inop)
+ {
+ 	struct xfs_mount	*mp = tp->t_mountp;
+-	struct xfs_buf		*agbp;
+ 	xfs_agnumber_t		agno;
+ 	int			error;
+ 	bool			noroom = false;
+@@ -1726,8 +1802,9 @@ xfs_dialloc(
+ 		 * continue where we left off before.  In this case, we
+ 		 * know that the allocation group has free inodes.
+ 		 */
+-		agbp = *IO_agbp;
+-		goto out_alloc;
++		error = xfs_dialloc_ag(tp, *IO_agbp, parent, inop);
++		*IO_agbp = NULL;
++		return error;
+ 	}
+ 
+ 	/*
+@@ -1761,87 +1838,20 @@ xfs_dialloc(
+ 	 * allocation groups upward, wrapping at the end.
+ 	 */
+ 	agno = start_agno;
+-	for (;;) {
++	do {
+ 		pag = xfs_perag_get(mp, agno);
+-		if (!pag->pagi_inodeok) {
+-			xfs_ialloc_next_ag(mp);
+-			goto nextag;
+-		}
+-
+-		if (!pag->pagi_init) {
+-			error = xfs_ialloc_pagi_init(mp, tp, agno);
+-			if (error)
+-				goto out_error;
+-		}
+-
+-		/*
+-		 * Do a first racy fast path check if this AG is usable.
+-		 */
+-		if (!pag->pagi_freecount && !okalloc)
+-			goto nextag;
+-
+-		/*
+-		 * Then read in the AGI buffer and recheck with the AGI buffer
+-		 * lock held.
+-		 */
+-		error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
+-		if (error)
+-			goto out_error;
+-
+-		if (pag->pagi_freecount) {
+-			xfs_perag_put(pag);
+-			goto out_alloc;
+-		}
+-
+-		if (!okalloc)
+-			goto nextag_relse_buffer;
+-
+-
+-		error = xfs_ialloc_ag_alloc(tp, agbp);
+-		if (error < 0) {
+-			xfs_trans_brelse(tp, agbp);
+-
+-			if (error != -ENOSPC)
+-				goto out_error;
+-
+-			xfs_perag_put(pag);
+-			*inop = NULLFSINO;
+-			return 0;
+-		}
+-
+-		if (!error) {
+-			/*
+-			 * We successfully allocated some inodes, return
+-			 * the current context to the caller so that it
+-			 * can commit the current transaction and call
+-			 * us again where we left off.
+-			 */
+-			ASSERT(pag->pagi_freecount > 0);
+-			xfs_perag_put(pag);
++		error = __xfs_dialloc(tp, parent, pag, IO_agbp, inop, okalloc);
++		xfs_perag_put(pag);
+ 
+-			*IO_agbp = agbp;
+-			*inop = NULLFSINO;
+-			return 0;
+-		}
++		if (error <= 0)
++			return error;
+ 
+-nextag_relse_buffer:
+-		xfs_trans_brelse(tp, agbp);
+-nextag:
+-		xfs_perag_put(pag);
+ 		if (++agno == mp->m_sb.sb_agcount)
+ 			agno = 0;
+-		if (agno == start_agno) {
+-			*inop = NULLFSINO;
+-			return noroom ? -ENOSPC : 0;
+-		}
+-	}
++	} while (agno != start_agno);
+ 
+-out_alloc:
+-	*IO_agbp = NULL;
+-	return xfs_dialloc_ag(tp, agbp, parent, inop);
+-out_error:
+-	xfs_perag_put(pag);
+-	return error;
++	*inop = NULLFSINO;
++	return noroom ? -ENOSPC : 0;
+ }
+ 
+ /*
 -- 
 2.18.4
 
