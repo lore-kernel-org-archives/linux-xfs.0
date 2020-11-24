@@ -2,139 +2,192 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1,
+	USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9214EC56201
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 05:53:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4698C63777
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 06:34:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 395FA2076C
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 05:53:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61F4A206CA
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 06:34:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="qhe1mkmW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728814AbgKXFxL convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Nov 2020 00:53:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57484 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729002AbgKXFxL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Nov 2020 00:53:11 -0500
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 210341] New: XFS (dm-3): Internal error xfs_trans_cancel at
- line 1041 of file fs/xfs/xfs_trans.c.
-Date:   Tue, 24 Nov 2020 05:53:09 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: blocking
-X-Bugzilla-Who: lokendra.rathour@hsc.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression attachments.created
-Message-ID: <bug-210341-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S1729813AbgKXGea (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Nov 2020 01:34:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54008 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729809AbgKXGe3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 01:34:29 -0500
+Received: from mail-oi1-x22a.google.com (mail-oi1-x22a.google.com [IPv6:2607:f8b0:4864:20::22a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 21B51C0613D6
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 22:34:28 -0800 (PST)
+Received: by mail-oi1-x22a.google.com with SMTP id y74so9284069oia.11
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 22:34:28 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=NRH6VONBYNIxV3zO4nNRr9V11VXjtGQdzP+hrNGAm3A=;
+        b=qhe1mkmWMwhGuf8fqGpCpj+e8tRFPMtqWbixqm50z4cHkRXVBUsZ7CU1/j/3vZBSEx
+         i02OxFKXk2LaAEF2fZz5tPHf9/q0ss9DbDxNVwhC7LKVfn+oQXptj0CFmw2v7eEfmSFJ
+         M86CkeLLA/t8Wn0Nn9rrOWw8p4ZUls/7JJw8vEpy+N6au2YzdMd/T4PwcEHuveafA3sq
+         zxAujieBdrx0MmJ2WiNkfYcYGM5h/HaN0/81OBBEE+PaVIft5zJvVBg0mxu7bj5mV/zF
+         0CCxa96dPF8hFwabQ+wMVg+QK5D/GRETSm2SsNTVmgVJ6yDhF5p3QGC7wnIvZr2Oad3A
+         aq6g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version;
+        bh=NRH6VONBYNIxV3zO4nNRr9V11VXjtGQdzP+hrNGAm3A=;
+        b=hphmZMY7kZvJWrBMRGVIeVz9rqkNTZTEh+j8mQ6JjHc1ZoT5CrTb7qDqCQa+cS+Czz
+         GxF2WZFhSDUyKj5eKzt9HesVavn0HNXODX5XAJBfa2VCbhW4cynTqf8YDHpy9MMAgdg/
+         TEn9qfbIARJqEIj2qExamlAMWHmIvFKwFXahCacQeGT052n6e/YqgZqfflfTJlwZwbPP
+         al/H9v7+febxlzOnVfsDBa5Ih8nPHlsWGTCJ4yhC80oYWDHhBrjJdJ/sv/kKMDHGOa8P
+         WiE4zTgsEZEk5LTICsMeLMOJpuxC6P5vIaZT7m0Bi2Sw8ZrzhDBj+7gf3rFJ7HCGZqFS
+         apZQ==
+X-Gm-Message-State: AOAM532msTxB5K3f4Xmk0JOfKi7WyXGVFOYS1hRMbRMMi6a0q+gC5zpH
+        867kSKqTVcf6kOzfVxLTxGFbLg==
+X-Google-Smtp-Source: ABdhPJyQ+wMmSncaYJbGrsIp+MuAFAXtXoBkYvhGm11e160LsNcAa3QgtmSHaVmvUvzrXb/dS3G0lQ==
+X-Received: by 2002:aca:3087:: with SMTP id w129mr1737657oiw.78.1606199667073;
+        Mon, 23 Nov 2020 22:34:27 -0800 (PST)
+Received: from eggly.attlocal.net (172-10-233-147.lightspeed.sntcca.sbcglobal.net. [172.10.233.147])
+        by smtp.gmail.com with ESMTPSA id m65sm8116677otm.40.2020.11.23.22.34.24
+        (version=TLS1 cipher=ECDHE-ECDSA-AES128-SHA bits=128/128);
+        Mon, 23 Nov 2020 22:34:25 -0800 (PST)
+Date:   Mon, 23 Nov 2020 22:34:12 -0800 (PST)
+From:   Hugh Dickins <hughd@google.com>
+X-X-Sender: hugh@eggly.anvils
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+cc:     Hugh Dickins <hughd@google.com>, Jan Kara <jack@suse.cz>,
+        syzbot <syzbot+3622cea378100f45d59f@syzkaller.appspotmail.com>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        Theodore Ts'o <tytso@mit.edu>, Linux-MM <linux-mm@kvack.org>,
+        Oleg Nesterov <oleg@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Kirill A. Shutemov" <kirill@shutemov.name>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>, Qian Cai <cai@lca.pw>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        William Kucharski <william.kucharski@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: kernel BUG at fs/ext4/inode.c:LINE!
+In-Reply-To: <CAHk-=whYO5v09E8oHoYQDn7qqV0hBu713AjF+zxJ9DCr1+WOtQ@mail.gmail.com>
+Message-ID: <alpine.LSU.2.11.2011232209540.5235@eggly.anvils>
+References: <000000000000d3a33205add2f7b2@google.com> <20200828100755.GG7072@quack2.suse.cz> <20200831100340.GA26519@quack2.suse.cz> <CAHk-=wivRS_1uy326sLqKuwerbL0APyKYKwa+vWVGsQg8sxhLw@mail.gmail.com> <alpine.LSU.2.11.2011231928140.4305@eggly.anvils>
+ <CAHk-=whYO5v09E8oHoYQDn7qqV0hBu713AjF+zxJ9DCr1+WOtQ@mail.gmail.com>
+User-Agent: Alpine 2.11 (LSU 23 2013-08-11)
 MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=210341
+On Mon, 23 Nov 2020, Linus Torvalds wrote:
+> On Mon, Nov 23, 2020 at 8:07 PM Hugh Dickins <hughd@google.com> wrote:
+> >
+> > The problem is that PageWriteback is not accompanied by a page reference
+> > (as the NOTE at the end of test_clear_page_writeback() acknowledges): as
+> > soon as TestClearPageWriteback has been done, that page could be removed
+> > from page cache, freed, and reused for something else by the time that
+> > wake_up_page() is reached.
+> 
+> Ugh.
+> 
+> Would it be possible to instead just make PageWriteback take the ref?
+> 
+> I don't hate your patch per se, but looking at that long explanation,
+> and looking at the gyrations end_page_writeback() does, I go "why
+> don't we do that?"
+> 
+> IOW, why couldn't we just make the __test_set_page_writeback()
+> increment the page count if the writeback flag wasn't already set, and
+> then make the end_page_writeback() do a put_page() after it all?
 
-            Bug ID: 210341
-           Summary: XFS (dm-3): Internal error xfs_trans_cancel at line
-                    1041 of file fs/xfs/xfs_trans.c.
-           Product: File System
-           Version: 2.5
-    Kernel Version: 4.18.0-147
-          Hardware: Intel
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: blocking
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: lokendra.rathour@hsc.com
-        Regression: No
+Right, that should be a lot simpler, and will not require any of the
+cleanup (much as I liked that).  If you're reasonably confident that
+adding the extra get_page+put_page to every writeback (instead of
+just to the waited case, which I presume significantly less common)
+will get lost in the noise - I was not confident of that, nor
+confident of devising realistic tests to decide it.
 
-Created attachment 293797
-  --> https://bugzilla.kernel.org/attachment.cgi?id=293797&action=edit
-Detailed logs as shown above
+What I did look into before sending, was whether in the filesystems
+there was a pattern of doing a put_page() after *set_page_writeback(),
+when it would just be a matter of deleting that put_page() and doing
+it instead at the end of end_page_writeback().  But no: there were a
+few cases like that, but in general no such pattern.
 
-Getting errror for xfs file system :
+Though, what I think I'll try is not quite what you suggest there,
+but instead do both get_page() and put_page() in end_page_writeback().
+The reason being, there are a number of places (in mm at least) where
+we judge what to do by the expected refcount: places that know to add
+1 on when PagePrivate is set (for buffers), but do not expect to add
+1 on when PageWriteback is set.  Now, all of those places probably
+have to have their own wait_on_page_writeback() too, but I'd rather
+narrow the window when the refcount is raised, than work through
+what if any change would be needed in those places.
 
-2020-11-11T11:55:16.809 controller-1 kernel: alert [419472.614847] XFS (dm-3):
-xfs_dabuf_map: bno 8388608 dir: inode 122425344
-2020-11-11T11:55:16.809 controller-1 kernel: alert [419472.621963] XFS (dm-3):
-[00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
-2020-11-11T11:55:16.823 controller-1 kernel: alert [419472.630908] XFS (dm-3):
-Internal error xfs_da_do_buf(1) at line 2558 of file
-fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_da_read_buf+0x6c/0x120 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644671] CPU: 1
-PID: 83210 Comm: heat-manage Kdump: loaded Tainted: G           O     ---------
--t - 4.18.0-147.3.1.el8_1.7.tis.x86_64 #1
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644672] Hardware
-name: HPE ProLiant DL360 Gen10/ProLiant DL360 Gen10, BIOS U32 04/18/2019
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644673] Call
-Trace:
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644679] 
-dump_stack+0x5a/0x73
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644708] 
-xfs_dabuf_map.constprop.18+0x166/0x380 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644725] 
-xfs_da_read_buf+0x6c/0x120 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644739] 
-xfs_da3_node_read+0x1e/0x100 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644754] 
-xfs_da3_node_lookup_int+0x6e/0x340 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644775]  ?
-kmem_zone_alloc+0x95/0x100 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644791] 
-xfs_dir2_node_removename+0x4e/0x610 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644806]  ?
-xfs_bmap_last_extent+0x5c/0xa0 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644821]  ?
-xfs_bmap_last_offset+0x54/0xc0 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644841]  ?
-kmem_alloc+0x96/0x100 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644858] 
-xfs_dir_removename+0x16d/0x180 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644879] 
-xfs_remove+0x250/0x300 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644900] 
-xfs_vn_unlink+0x55/0xa0 [xfs]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644904] 
-vfs_unlink+0xe1/0x1a0
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644909] 
-ovl_do_remove+0x381/0x490 [overlay]
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644912] 
-vfs_unlink+0xe1/0x1a0
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644914] 
-do_unlinkat+0x25f/0x2b0
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644917] 
-do_syscall_64+0x5b/0x1c0
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644919] 
-entry_SYSCALL_64_after_hwframe+0x65/0xca
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644921] RIP:
-0033:0x7f7334c08147
-2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644923] Code: 48
-3d 00 f0 ff ff 77 03 48 98 c3 48 8b 15 21 5d 2d 00 f7 d8 64 89 02 48 83 c8 ff
-eb eb 66 0f 1f 44 00 00 b8 57 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b
-0d f9 5c 2d 00 f7 d8 64 89 01 48
+> >
+> > Then on crashing a second time, realized there's a stronger reason against
+> > that approach.  If my testing just occasionally crashes on that check,
+> > when the page is reused for part of a compound page, wouldn't it be much
+> > more common for the page to get reused as an order-0 page before reaching
+> > wake_up_page()?  And on rare occasions, might that reused page already be
+> > marked PageWriteback by its new user, and already be waited upon?  What
+> > would that look like?
+> >
+> > It would look like BUG_ON(PageWriteback) after wait_on_page_writeback()
+> > in write_cache_pages() (though I have never seen that crash myself).
+> 
+> So looking more at the patch, I started looking at this part:
+> 
+> > +       writeback = TestClearPageWriteback(page);
+> > +       /* No need for smp_mb__after_atomic() after TestClear */
+> > +       waiters = PageWaiters(page);
+> > +       if (waiters) {
+> > +               /*
+> > +                * Writeback doesn't hold a page reference on its own, relying
+> > +                * on truncation to wait for the clearing of PG_writeback.
+> > +                * We could safely wake_up_page_bit(page, PG_writeback) here,
+> > +                * while holding i_pages lock: but that would be a poor choice
+> > +                * if the page is on a long hash chain; so instead choose to
+> > +                * get_page+put_page - though atomics will add some overhead.
+> > +                */
+> > +               get_page(page);
+> > +       }
+> 
+> and thinking more about this, my first reaction was "but that has the
+> same race, just a smaller window".
+> 
+> And then reading the comment more, I realize you relied on the i_pages
+> lock, and that this odd ordering was to avoid the possible latency.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Yes.  I decided to send the get_page+put_page variant, rather than the
+wake_up_page_bit while holding i_pages variant (also tested), in part
+because it's easier to edit the get_page+put_page one to the other.
+
+> 
+> But what about the non-mapping case? I'm not sure how that happens,
+> but this does seem very fragile.
+
+I don't see how the non-mapping case would ever occur: I think it
+probably comes from a general pattern of caution about NULL mapping
+when akpm (I think) originally wrote these functions.
+
+> 
+> I'm wondering why you didn't want to just do the get_page()
+> unconditionally and early. Is avoiding the refcount really such a big
+> optimization?
+
+I don't know: I trust your judgement more than mine.
+
+Hugh
