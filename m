@@ -2,107 +2,119 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD221C388F9
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Nov 2020 20:31:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F7ECC2D0E4
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 00:32:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B51C20727
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Nov 2020 20:31:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3314420729
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 00:32:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ClZ031gc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728166AbgKWUbD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Nov 2020 15:31:03 -0500
-Received: from sandeen.net ([63.231.237.45]:36716 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727461AbgKWUbA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Nov 2020 15:31:00 -0500
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4D217EDD;
-        Mon, 23 Nov 2020 14:30:56 -0600 (CST)
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <160503138275.1201232.927488386999483691.stgit@magnolia>
- <160503144025.1201232.11112616423278752638.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH 9/9] libxfs-apply: don't add duplicate headers
-Message-ID: <8adce075-983b-2b3f-eb3c-10eb72bccf0c@sandeen.net>
-Date:   Mon, 23 Nov 2020 14:30:58 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.5.0
+        id S1730533AbgKXAbp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Nov 2020 19:31:45 -0500
+Received: from aserp2130.oracle.com ([141.146.126.79]:54478 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730538AbgKXAbn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Nov 2020 19:31:43 -0500
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO0UY1s116271;
+        Tue, 24 Nov 2020 00:30:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2020-01-29;
+ bh=UJ2IooOa3qth53Eu+aG8b6OfZ/oPhvjmH3uhWCeRPCE=;
+ b=ClZ031gci3rQUKsgxg0lXlThAUmtTjhTQifnW7MEGJFqe1jyUPGtkPyDwCaPQB7Utjj9
+ V79Ju30qtxuEPa+MZc+3Hy+Zq0gGRhplKrcl7kPAUs9fRFeDxLRrbpQcG98wzIO32Fc0
+ H0MgoLziVSLE8GotvFbFUKhYOFCKnL1Sg6I91U5EOWk+z5Osqk8jXE1W2l2asDonRmtM
+ Tzuwwg730dI8QKkBtzkkpLv2KDyBgQoZNQ9L0V47PWG0wSOssXdg0J04kZq39VcdsJF+
+ o6uhd/zaqao2CurncyZVwOSzg+hyk3pbmrxCOwL90NYK1+hN7yOYDyhQJapCh/Cg3f4T 2Q== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2130.oracle.com with ESMTP id 34xrdar70p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 24 Nov 2020 00:30:34 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO0TtDE020732;
+        Tue, 24 Nov 2020 00:30:33 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 34ycnrp9fh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 24 Nov 2020 00:30:33 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AO0UTV3002451;
+        Tue, 24 Nov 2020 00:30:29 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 23 Nov 2020 16:30:29 -0800
+Date:   Mon, 23 Nov 2020 16:30:28 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xiakaixu1987@gmail.com
+Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
+Subject: Re: [PATCH] xfs: show the proper user quota options
+Message-ID: <20201124003028.GF7880@magnolia>
+References: <1606124332-22100-1-git-send-email-kaixuxia@tencent.com>
 MIME-Version: 1.0
-In-Reply-To: <160503144025.1201232.11112616423278752638.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1606124332-22100-1-git-send-email-kaixuxia@tencent.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=3
+ mlxlogscore=999 phishscore=0 spamscore=0 malwarescore=0 adultscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2009150000 definitions=main-2011240001
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0 mlxscore=0
+ mlxlogscore=999 spamscore=0 phishscore=0 clxscore=1015 malwarescore=0
+ lowpriorityscore=0 adultscore=0 suspectscore=3 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011240001
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/10/20 12:04 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Nov 23, 2020 at 05:38:52PM +0800, xiakaixu1987@gmail.com wrote:
+> From: Kaixu Xia <kaixuxia@tencent.com>
 > 
-> When we're backporting patches from libxfs, don't add a S-o-b header if
-> there's already one in the patch being ported.
+> The quota option 'usrquota' should be shown if both the XFS_UQUOTA_ACCT
+> and XFS_UQUOTA_ENFD flags are set. The option 'uqnoenforce' should be
+> shown when only the XFS_UQUOTA_ACCT flag is set. The current code logic
+> seems wrong, Fix it and show proper options.
 
-I guess the goal here is to not add 2 identical sign offs in a row.
+This needs a regression test case to make sure that quota mount options
+passed in ==> quota options in /proc/mounts, wouldn't you say? ;)
 
-But when I do the libxfs-application, I do feel like it should add
-my SOB as sort of a chain of custody record before I commit it to a
-new tree/project, no?
+--D
 
-So could this be modified to simply not add 2 identical SOBs in a row?
-
-Maybe we can just run "uniq" on the $_hdr.new file?
-
-Thanks,
--Eric
-
-
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
 > ---
->  tools/libxfs-apply |   14 +++++++++++---
->  1 file changed, 11 insertions(+), 3 deletions(-)
+>  fs/xfs/xfs_super.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
 > 
-> 
-> diff --git a/tools/libxfs-apply b/tools/libxfs-apply
-> index 3258272d6189..35cdb9c3449b 100755
-> --- a/tools/libxfs-apply
-> +++ b/tools/libxfs-apply
-> @@ -193,6 +193,14 @@ filter_xfsprogs_patch()
->  	rm -f $_libxfs_files
->  }
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index e3e229e52512..5ebd6cdc44a7 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -199,10 +199,12 @@ xfs_fs_show_options(
+>  		seq_printf(m, ",swidth=%d",
+>  				(int)XFS_FSB_TO_BB(mp, mp->m_swidth));
 >  
-> +add_header()
-> +{
-> +	local hdr="$1"
-> +	local hdrfile="$2"
-> +
-> +	grep -q "^${hdr}$" "$hdrfile" || echo "$hdr" >> "$hdrfile"
-> +}
-> +
->  fixup_header_format()
->  {
->  	local _source=$1
-> @@ -280,13 +288,13 @@ fixup_header_format()
->  	sed -i '${/^[[:space:]]*$/d;}' $_hdr.new
+> -	if (mp->m_qflags & (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD))
+> -		seq_puts(m, ",usrquota");
+> -	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
+> -		seq_puts(m, ",uqnoenforce");
+> +	if (mp->m_qflags & XFS_UQUOTA_ACCT) {
+> +		if (mp->m_qflags & XFS_UQUOTA_ENFD)
+> +			seq_puts(m, ",usrquota");
+> +		else
+> +			seq_puts(m, ",uqnoenforce");
+> +	}
 >  
->  	# Add Signed-off-by: header if specified
-> -	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
-> -		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
-> +	if [ ! -z ${SIGNED_OFF_BY+x} ]; then
-> +		add_header "Signed-off-by: $SIGNED_OFF_BY" $_hdr.new
->  	else	# get it from git config if present
->  		SOB_NAME=`git config --get user.name`
->  		SOB_EMAIL=`git config --get user.email`
->  		if [ ! -z ${SOB_NAME+x} ]; then
-> -			echo "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" >> $_hdr.new
-> +			add_header "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" $_hdr.new
->  		fi
->  	fi
->  
+>  	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
+>  		if (mp->m_qflags & XFS_PQUOTA_ENFD)
+> -- 
+> 2.20.0
 > 
