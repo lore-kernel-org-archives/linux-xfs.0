@@ -2,297 +2,131 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1,
+	USER_IN_DEF_DKIM_WL autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71680C64E7A
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:52:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F22FC64E75
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 16:28:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 178CB206FA
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:52:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9C6D206F9
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 16:28:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UDtj4C8v"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="h2tPcALc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389883AbgKXPw1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Nov 2020 10:52:27 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59562 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389465AbgKXPw0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 10:52:26 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606233145;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:in-reply-to:in-reply-to:references:references;
-        bh=8CjJhIyjuxuqdYkEDL3EVAWJbiBs4q6YVRMXB+7Jlqw=;
-        b=UDtj4C8v/DvGwXlK5iUHc0YNPuFxzAmbHyn0q044vVMyE9XT77Yhv31llk2ECC8PKktdyc
-        fhPvTLXRXx/qX6jaTfvSEPEutdFTNLXDmAnr1bIJVYJf7KJSJJhPWosH+/4FwlQ8tXra23
-        ODZjxy4Jbd8hJuLbMLcRing9OAVRih8=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-42-kIfDaDfyPpS9qI3CIuQ5nw-1; Tue, 24 Nov 2020 10:52:23 -0500
-X-MC-Unique: kIfDaDfyPpS9qI3CIuQ5nw-1
-Received: by mail-pl1-f199.google.com with SMTP id w9so13488239plp.1
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2020 07:52:23 -0800 (PST)
+        id S2390477AbgKXQ2d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Nov 2020 11:28:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33506 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728539AbgKXQ2c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 11:28:32 -0500
+Received: from mail-ot1-x329.google.com (mail-ot1-x329.google.com [IPv6:2607:f8b0:4864:20::329])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9DB34C0613D6
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2020 08:28:32 -0800 (PST)
+Received: by mail-ot1-x329.google.com with SMTP id l36so19896454ota.4
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2020 08:28:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=ah+J2wD/1faDZjYB3Zrgws96wmPFn4mzRk/eDM0VpfE=;
+        b=h2tPcALcjB1t4yCELbdTsVIXBflLhIBZpuIe7YEIWaqMrErciI4oYibsR4PuSR3eBm
+         a1HQUDkbKIXT7dw2dF1osk+Ewd3ry8H3qWPqrsnSSvpwphmnYiduGvPC/acc89Z4HoBF
+         dQR/Qust/cntC0l8MxoB01tlPMhZdg1GZvFe3YCRbX0EKSlHwbCzgWJ+8KF8ujYqRMcW
+         p809jw2U5Nyr4t7ccXvc7ZQ/lpTlBodFDk0ppPG9Td5VTTRT1dKl5zZ+op8i964Uwmcn
+         oQyidKfqYMNIuIxyBYIQwwGDr7gMOmgSS8FTpPSS8SBScIpqSj6pDarOKlRo1GGyy13e
+         DtPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=8CjJhIyjuxuqdYkEDL3EVAWJbiBs4q6YVRMXB+7Jlqw=;
-        b=UlOhcX/Gqxh8ZrVaAGbY5qMqubwJ0lR6u/yHsLsfIZP7lglr5rN4GeQSCcW+pw5vrw
-         MOAHN52HE7/aX0nWaACw7jJRX7tCRc97ST69FATwla+tYEwjRDpeI/QCkUKMqH7smPCu
-         nnIBwkiwEymbfobdtDQU2ovcObbBRk7XztxZYD77wF5RshOadgDscIhTuO9/osaSAUWg
-         GO4/b6oTRyj4zRVLLPZix5DstGU10WmrTRwr+G5Cs9VRUR/vzhkEl3JAKvVGCVimMMCn
-         nO5iqSHpBJQAIQ0C1NWHmbkliEUFD984OFJ8+xfaEZY6ny6uhdc9vsmGfHjGd1U6v2PH
-         OCPg==
-X-Gm-Message-State: AOAM531Ofva5pJ5AnDHRdYG9nrCruC8mBhkt+nLODDumt0DiivGQWexa
-        mLx/O9kNVfyaZzsP3jMVsdwjDNrEv9Q904cYZ1Kk0Cm3dsRPXorWWZCcozHlG8EqTmdnjn1fbjH
-        bh6gbLUGnNcRjnTDKW8JCXs/1OU1ZxAywFBeXI18yDqAzFws2AaUyB1gruKw8P/HiErAhi5T0tw
-        ==
-X-Received: by 2002:a17:90a:bc83:: with SMTP id x3mr5622112pjr.90.1606233142153;
-        Tue, 24 Nov 2020 07:52:22 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJym9odPozOYr5dF4hSiWearS4nICgev/VvPhu2lYCEdrF8Aq6iPuDjR/Bpr6mkF3mRjL9eJEA==
-X-Received: by 2002:a17:90a:bc83:: with SMTP id x3mr5622092pjr.90.1606233141889;
-        Tue, 24 Nov 2020 07:52:21 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id mn21sm3723909pjb.28.2020.11.24.07.52.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2020 07:52:21 -0800 (PST)
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Gao Xiang <hsiangkao@redhat.com>
-Subject: [PATCH 3/3] xfs: clean up xfs_dialloc() by introducing __xfs_dialloc()
-Date:   Tue, 24 Nov 2020 23:51:30 +0800
-Message-Id: <20201124155130.40848-3-hsiangkao@redhat.com>
-X-Mailer: git-send-email 2.18.4
-In-Reply-To: <20201124155130.40848-1-hsiangkao@redhat.com>
-References: <20201124155130.40848-1-hsiangkao@redhat.com>
+        h=x-gm-message-state:date:from:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version;
+        bh=ah+J2wD/1faDZjYB3Zrgws96wmPFn4mzRk/eDM0VpfE=;
+        b=PefZnVOXq/9ufi7Gbam+FYsvm3bvXZOnO1gk+C020YrTbCtpa9bsCCms874wyItN3B
+         6rONrv1ELJc4NJwFcyOkQVflhX+q2jgrdxaLTfk66HYxbJJQ+y4dOmmFjsRVsLVtB507
+         jcRomQCevPSPeOdBSVugS/FYbKvL0da6VtKVMUXwQLC1dvwF6gEhwAEWHelvAmQCVEO2
+         RC2ZT2wIpmpoADOPfegrHD7I7s6fOpzknJ8Q6CUYu5ZRCDT/fn7wV2uO9QnKhw/6w4LK
+         XfNbIseRLlHH8KFqP7MlbpVV8QwDvvkLx8389UX2+bQlTtnwRa1NM1pJGA/xM7XgVINA
+         PRCA==
+X-Gm-Message-State: AOAM5301nsZ4ZxIuqYpwwqRNMHTIX2deSv1KDrq4wX4m0vKp1pdcSXmf
+        CKhNe0/g6xENuiXGdI5h6guH8A==
+X-Google-Smtp-Source: ABdhPJwD6ulzDfoJYVk98EDsBubLOjkB0ZnaCfJOcW8zo99O0ipagto7b7cafmz/JIb+EReFJU1LvA==
+X-Received: by 2002:a05:6830:1f11:: with SMTP id u17mr4030280otg.287.1606235311779;
+        Tue, 24 Nov 2020 08:28:31 -0800 (PST)
+Received: from eggly.attlocal.net (172-10-233-147.lightspeed.sntcca.sbcglobal.net. [172.10.233.147])
+        by smtp.gmail.com with ESMTPSA id u4sm7428592ote.71.2020.11.24.08.28.29
+        (version=TLS1 cipher=ECDHE-ECDSA-AES128-SHA bits=128/128);
+        Tue, 24 Nov 2020 08:28:30 -0800 (PST)
+Date:   Tue, 24 Nov 2020 08:28:16 -0800 (PST)
+From:   Hugh Dickins <hughd@google.com>
+X-X-Sender: hugh@eggly.anvils
+To:     Matthew Wilcox <willy@infradead.org>
+cc:     Hugh Dickins <hughd@google.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Jan Kara <jack@suse.cz>,
+        syzbot <syzbot+3622cea378100f45d59f@syzkaller.appspotmail.com>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        Theodore Ts'o <tytso@mit.edu>, Linux-MM <linux-mm@kvack.org>,
+        Oleg Nesterov <oleg@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Kirill A. Shutemov" <kirill@shutemov.name>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>, Qian Cai <cai@lca.pw>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        William Kucharski <william.kucharski@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: kernel BUG at fs/ext4/inode.c:LINE!
+In-Reply-To: <20201124121912.GZ4327@casper.infradead.org>
+Message-ID: <alpine.LSU.2.11.2011240810470.1029@eggly.anvils>
+References: <000000000000d3a33205add2f7b2@google.com> <20200828100755.GG7072@quack2.suse.cz> <20200831100340.GA26519@quack2.suse.cz> <CAHk-=wivRS_1uy326sLqKuwerbL0APyKYKwa+vWVGsQg8sxhLw@mail.gmail.com> <alpine.LSU.2.11.2011231928140.4305@eggly.anvils>
+ <20201124121912.GZ4327@casper.infradead.org>
+User-Agent: Alpine 2.11 (LSU 23 2013-08-11)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move the main loop out into a separated function, so we can save
-many extra xfs_perag_put()s and gotoes to make the logic cleaner.
+On Tue, 24 Nov 2020, Matthew Wilcox wrote:
+> On Mon, Nov 23, 2020 at 08:07:24PM -0800, Hugh Dickins wrote:
+> > 
+> > Then on crashing a second time, realized there's a stronger reason against
+> > that approach.  If my testing just occasionally crashes on that check,
+> > when the page is reused for part of a compound page, wouldn't it be much
+> > more common for the page to get reused as an order-0 page before reaching
+> > wake_up_page()?  And on rare occasions, might that reused page already be
+> > marked PageWriteback by its new user, and already be waited upon?  What
+> > would that look like?
+> > 
+> > It would look like BUG_ON(PageWriteback) after wait_on_page_writeback()
+> > in write_cache_pages() (though I have never seen that crash myself).
+> 
+> I don't think this is it.  write_cache_pages() holds a reference to the
+> page -- indeed, it holds the page lock!  So this particular race cannot
+> cause the page to get recycled.  I still have no good ideas what this
+> is :-(
 
-Also it can make the modification of perag protection by some lock
-for shrinking in the future somewhat easier.
+It is confusing. I tried to explain that in the final paragraph:
 
-Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
----
-It tries to kill multiple goto exits... which makes the logic hard
-to read and modify.
+> > Was there a chance of missed wakeups before, since a page freed before
+> > reaching wake_up_page() would have PageWaiters cleared?  I think not,
+> > because each waiter does hold a reference on the page: this bug comes
+> > not from real waiters, but from when PageWaiters is a false positive.
 
-not quite sure the name of __xfs_dialloc(), cannot think of some
-better name since xfs_dialloc_ag is used...
+but got lost in between the original end_page_writeback() and the patched
+version when writing that last part - false positive PageWaiters are not
+relevant.  I'll try rewording that in the simpler version, following.
 
- fs/xfs/libxfs/xfs_ialloc.c | 166 ++++++++++++++++++++-----------------
- 1 file changed, 88 insertions(+), 78 deletions(-)
+The BUG_ON(PageWriteback) would occur when the old use of the page, the
+one we do TestClearPageWriteback on, had *no* waiters, so no additional
+page reference beyond the page cache (and whoever racily frees it). The
+reuse of the page definitely has a waiter holding a reference, as you
+point out, and PageWriteback still set; but our belated wake_up_page()
+has woken it to hit the BUG_ON.
 
-diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-index 5c8b0210aad3..937455c50570 100644
---- a/fs/xfs/libxfs/xfs_ialloc.c
-+++ b/fs/xfs/libxfs/xfs_ialloc.c
-@@ -1681,6 +1681,83 @@ xfs_dialloc_ag(
- 	return error;
- }
- 
-+/*
-+ * Return 0 for successfully allocating some inodes in this AG;
-+ *        1 for skipping to allocating in the next AG;
-+ *      < 0 for error code.
-+ */
-+static int
-+__xfs_dialloc(
-+	struct xfs_trans	*tp,
-+	xfs_ino_t		parent,
-+	struct xfs_perag	*pag,
-+	struct xfs_buf		**IO_agbp,
-+	xfs_ino_t		*inop,
-+	bool			okalloc)
-+{
-+	struct xfs_mount	*mp = tp->t_mountp;
-+	xfs_agnumber_t		agno = pag->pag_agno;
-+	struct xfs_buf		*agbp;
-+	int			error;
-+
-+	if (!pag->pagi_inodeok) {
-+		xfs_ialloc_next_ag(mp);
-+		return 1;
-+	}
-+
-+	if (!pag->pagi_init) {
-+		error = xfs_ialloc_pagi_init(mp, tp, agno);
-+		if (error)
-+			return error;
-+	}
-+
-+	/*
-+	 * Do a first racy fast path check if this AG is usable.
-+	 */
-+	if (!pag->pagi_freecount && !okalloc)
-+		return 1;
-+
-+	/*
-+	 * Then read in the AGI buffer and recheck with the AGI buffer
-+	 * lock held.
-+	 */
-+	error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
-+	if (error)
-+		return error;
-+
-+	if (pag->pagi_freecount) {
-+		*IO_agbp = NULL;
-+		return xfs_dialloc_ag(tp, agbp, parent, inop);
-+	}
-+
-+	if (okalloc) {
-+		error = xfs_ialloc_ag_alloc(tp, agbp);
-+		if (error < 0) {
-+			xfs_trans_brelse(tp, agbp);
-+			if (error != -ENOSPC)
-+				return error;
-+
-+			*inop = NULLFSINO;
-+			return 0;
-+		}
-+
-+		if (!error) {
-+			/*
-+			 * We successfully allocated some inodes, return
-+			 * the current context to the caller so that it
-+			 * can commit the current transaction and call
-+			 * us again where we left off.
-+			 */
-+			ASSERT(pag->pagi_freecount > 0);
-+			*IO_agbp = agbp;
-+			*inop = NULLFSINO;
-+			return 0;
-+		}
-+	}
-+	xfs_trans_brelse(tp, agbp);
-+	return 1;
-+}
-+
- /*
-  * Allocate an inode on disk.
-  *
-@@ -1711,7 +1788,6 @@ xfs_dialloc(
- 	xfs_ino_t		*inop)
- {
- 	struct xfs_mount	*mp = tp->t_mountp;
--	struct xfs_buf		*agbp;
- 	xfs_agnumber_t		agno;
- 	int			error;
- 	bool			noroom = false;
-@@ -1726,8 +1802,9 @@ xfs_dialloc(
- 		 * continue where we left off before.  In this case, we
- 		 * know that the allocation group has free inodes.
- 		 */
--		agbp = *IO_agbp;
--		goto out_alloc;
-+		error = xfs_dialloc_ag(tp, *IO_agbp, parent, inop);
-+		*IO_agbp = NULL;
-+		return error;
- 	}
- 
- 	/*
-@@ -1761,87 +1838,20 @@ xfs_dialloc(
- 	 * allocation groups upward, wrapping at the end.
- 	 */
- 	agno = start_agno;
--	for (;;) {
-+	do {
- 		pag = xfs_perag_get(mp, agno);
--		if (!pag->pagi_inodeok) {
--			xfs_ialloc_next_ag(mp);
--			goto nextag;
--		}
--
--		if (!pag->pagi_init) {
--			error = xfs_ialloc_pagi_init(mp, tp, agno);
--			if (error)
--				goto out_error;
--		}
--
--		/*
--		 * Do a first racy fast path check if this AG is usable.
--		 */
--		if (!pag->pagi_freecount && !okalloc)
--			goto nextag;
--
--		/*
--		 * Then read in the AGI buffer and recheck with the AGI buffer
--		 * lock held.
--		 */
--		error = xfs_ialloc_read_agi(mp, tp, agno, &agbp);
--		if (error)
--			goto out_error;
--
--		if (pag->pagi_freecount) {
--			xfs_perag_put(pag);
--			goto out_alloc;
--		}
--
--		if (!okalloc)
--			goto nextag_relse_buffer;
--
--
--		error = xfs_ialloc_ag_alloc(tp, agbp);
--		if (error < 0) {
--			xfs_trans_brelse(tp, agbp);
--
--			if (error != -ENOSPC)
--				goto out_error;
--
--			xfs_perag_put(pag);
--			*inop = NULLFSINO;
--			return 0;
--		}
--
--		if (!error) {
--			/*
--			 * We successfully allocated some inodes, return
--			 * the current context to the caller so that it
--			 * can commit the current transaction and call
--			 * us again where we left off.
--			 */
--			ASSERT(pag->pagi_freecount > 0);
--			xfs_perag_put(pag);
-+		error = __xfs_dialloc(tp, parent, pag, IO_agbp, inop, okalloc);
-+		xfs_perag_put(pag);
- 
--			*IO_agbp = agbp;
--			*inop = NULLFSINO;
--			return 0;
--		}
-+		if (error <= 0)
-+			return error;
- 
--nextag_relse_buffer:
--		xfs_trans_brelse(tp, agbp);
--nextag:
--		xfs_perag_put(pag);
- 		if (++agno == mp->m_sb.sb_agcount)
- 			agno = 0;
--		if (agno == start_agno) {
--			*inop = NULLFSINO;
--			return noroom ? -ENOSPC : 0;
--		}
--	}
-+	} while (agno != start_agno);
- 
--out_alloc:
--	*IO_agbp = NULL;
--	return xfs_dialloc_ag(tp, agbp, parent, inop);
--out_error:
--	xfs_perag_put(pag);
--	return error;
-+	*inop = NULLFSINO;
-+	return noroom ? -ENOSPC : 0;
- }
- 
- /*
--- 
-2.18.4
-
+Hugh
