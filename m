@@ -2,138 +2,139 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2237C63798
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 04:53:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9214EC56201
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 05:53:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D9A92085B
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 04:53:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="SwaVIz6Z"
+	by mail.kernel.org (Postfix) with ESMTP id 395FA2076C
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 05:53:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727454AbgKXExl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Nov 2020 23:53:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38578 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726934AbgKXExk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Nov 2020 23:53:40 -0500
-Received: from mail-lj1-x243.google.com (mail-lj1-x243.google.com [IPv6:2a00:1450:4864:20::243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A70BC0613CF
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 20:53:40 -0800 (PST)
-Received: by mail-lj1-x243.google.com with SMTP id y7so5629415lji.8
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 20:53:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=39gr2tFdgeuXdCwWbn22GRnP3K3VvibhIlGf9k17rGw=;
-        b=SwaVIz6ZuT6iXE5tagOrwT7N6KNmmSkcEsDFfOdmzj5yjFEuDkdXhaHbzf22ipogzf
-         zWRWhpolqbEMbnZmb7w8SY8YssaOfvRbra2P6MvkDrdQIcceCNS8eCPycSxvqCyBE/Wt
-         Aogcb79k9z8ri+jJ6nmyXvkP8hv8F792ZSl3g=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=39gr2tFdgeuXdCwWbn22GRnP3K3VvibhIlGf9k17rGw=;
-        b=RXZdXcIm1HVh4BwZr7GtzHH/YV3cAIAV8O3fWCWbbJ+gs5Ca9TRtHkHVDlWjZjs4+f
-         bEKiSMsxyVeCamfVfavcjGF7B3CbHLIDRt7NtmbHLfOCsuM4njXHCp0uWZiU7fiks2th
-         m/q8ioFkMCwpLIZI7dgNvzUjR8L8UDwedwveP8XW+N/zkmHUO3wKWzTup3R850vBIwFw
-         VI7akLH6rr2gUwotXCOa5BekawY3pzeUYgFbVYHVCZaDbkybIuQjC/TqPDY/3dXeL17u
-         VPz4yqhO+GzVFoBwuiaPH61/LAtHIFdo2YYpou00n4YFMN9MbZCCIybTE6wqLMOT0NFT
-         0dTA==
-X-Gm-Message-State: AOAM533k8WEXS3XmOr9cC0EnnKaFRHYDmKsWYAMNy8GfCTehzkBeskuw
-        4RSeHuaaTsQiND5xkF4JGj7W59diGVn01w==
-X-Google-Smtp-Source: ABdhPJxyg4s1toj0Nd9SlSuYgr7OiEIV+o3o/nFSXi57EnnzEps/FOC38MnIEv9+kQ1y4T5n+mXqcA==
-X-Received: by 2002:a2e:8e97:: with SMTP id z23mr1082619ljk.230.1606193618777;
-        Mon, 23 Nov 2020 20:53:38 -0800 (PST)
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com. [209.85.208.178])
-        by smtp.gmail.com with ESMTPSA id 16sm1593403lfk.186.2020.11.23.20.53.37
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Nov 2020 20:53:38 -0800 (PST)
-Received: by mail-lj1-f178.google.com with SMTP id i17so20567976ljd.3
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 20:53:37 -0800 (PST)
-X-Received: by 2002:a19:ae06:: with SMTP id f6mr1057406lfc.133.1606193616810;
- Mon, 23 Nov 2020 20:53:36 -0800 (PST)
-MIME-Version: 1.0
-References: <000000000000d3a33205add2f7b2@google.com> <20200828100755.GG7072@quack2.suse.cz>
- <20200831100340.GA26519@quack2.suse.cz> <CAHk-=wivRS_1uy326sLqKuwerbL0APyKYKwa+vWVGsQg8sxhLw@mail.gmail.com>
- <alpine.LSU.2.11.2011231928140.4305@eggly.anvils>
-In-Reply-To: <alpine.LSU.2.11.2011231928140.4305@eggly.anvils>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon, 23 Nov 2020 20:53:20 -0800
-X-Gmail-Original-Message-ID: <CAHk-=whYO5v09E8oHoYQDn7qqV0hBu713AjF+zxJ9DCr1+WOtQ@mail.gmail.com>
-Message-ID: <CAHk-=whYO5v09E8oHoYQDn7qqV0hBu713AjF+zxJ9DCr1+WOtQ@mail.gmail.com>
-Subject: Re: kernel BUG at fs/ext4/inode.c:LINE!
-To:     Hugh Dickins <hughd@google.com>
-Cc:     Jan Kara <jack@suse.cz>,
-        syzbot <syzbot+3622cea378100f45d59f@syzkaller.appspotmail.com>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
-        "Theodore Ts'o" <tytso@mit.edu>, Linux-MM <linux-mm@kvack.org>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Kirill A. Shutemov" <kirill@shutemov.name>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Alex Shi <alex.shi@linux.alibaba.com>, Qian Cai <cai@lca.pw>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        William Kucharski <william.kucharski@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
+        id S1728814AbgKXFxL convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Nov 2020 00:53:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57484 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729002AbgKXFxL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Nov 2020 00:53:11 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-xfs@vger.kernel.org
+Subject: [Bug 210341] New: XFS (dm-3): Internal error xfs_trans_cancel at
+ line 1041 of file fs/xfs/xfs_trans.c.
+Date:   Tue, 24 Nov 2020 05:53:09 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Product: File System
+X-Bugzilla-Component: XFS
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: blocking
+X-Bugzilla-Who: lokendra.rathour@hsc.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression attachments.created
+Message-ID: <bug-210341-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 23, 2020 at 8:07 PM Hugh Dickins <hughd@google.com> wrote:
->
-> Then on crashing a second time, realized there's a stronger reason against
-> that approach.  If my testing just occasionally crashes on that check,
-> when the page is reused for part of a compound page, wouldn't it be much
-> more common for the page to get reused as an order-0 page before reaching
-> wake_up_page()?  And on rare occasions, might that reused page already be
-> marked PageWriteback by its new user, and already be waited upon?  What
-> would that look like?
->
-> It would look like BUG_ON(PageWriteback) after wait_on_page_writeback()
-> in write_cache_pages() (though I have never seen that crash myself).
+https://bugzilla.kernel.org/show_bug.cgi?id=210341
 
-So looking more at the patch, I started looking at this part:
+            Bug ID: 210341
+           Summary: XFS (dm-3): Internal error xfs_trans_cancel at line
+                    1041 of file fs/xfs/xfs_trans.c.
+           Product: File System
+           Version: 2.5
+    Kernel Version: 4.18.0-147
+          Hardware: Intel
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: lokendra.rathour@hsc.com
+        Regression: No
 
-> +       writeback = TestClearPageWriteback(page);
-> +       /* No need for smp_mb__after_atomic() after TestClear */
-> +       waiters = PageWaiters(page);
-> +       if (waiters) {
-> +               /*
-> +                * Writeback doesn't hold a page reference on its own, relying
-> +                * on truncation to wait for the clearing of PG_writeback.
-> +                * We could safely wake_up_page_bit(page, PG_writeback) here,
-> +                * while holding i_pages lock: but that would be a poor choice
-> +                * if the page is on a long hash chain; so instead choose to
-> +                * get_page+put_page - though atomics will add some overhead.
-> +                */
-> +               get_page(page);
-> +       }
+Created attachment 293797
+  --> https://bugzilla.kernel.org/attachment.cgi?id=293797&action=edit
+Detailed logs as shown above
 
-and thinking more about this, my first reaction was "but that has the
-same race, just a smaller window".
+Getting errror for xfs file system :
 
-And then reading the comment more, I realize you relied on the i_pages
-lock, and that this odd ordering was to avoid the possible latency.
+2020-11-11T11:55:16.809 controller-1 kernel: alert [419472.614847] XFS (dm-3):
+xfs_dabuf_map: bno 8388608 dir: inode 122425344
+2020-11-11T11:55:16.809 controller-1 kernel: alert [419472.621963] XFS (dm-3):
+[00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
+2020-11-11T11:55:16.823 controller-1 kernel: alert [419472.630908] XFS (dm-3):
+Internal error xfs_da_do_buf(1) at line 2558 of file
+fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_da_read_buf+0x6c/0x120 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644671] CPU: 1
+PID: 83210 Comm: heat-manage Kdump: loaded Tainted: G           O     ---------
+-t - 4.18.0-147.3.1.el8_1.7.tis.x86_64 #1
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644672] Hardware
+name: HPE ProLiant DL360 Gen10/ProLiant DL360 Gen10, BIOS U32 04/18/2019
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644673] Call
+Trace:
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644679] 
+dump_stack+0x5a/0x73
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644708] 
+xfs_dabuf_map.constprop.18+0x166/0x380 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644725] 
+xfs_da_read_buf+0x6c/0x120 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644739] 
+xfs_da3_node_read+0x1e/0x100 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644754] 
+xfs_da3_node_lookup_int+0x6e/0x340 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644775]  ?
+kmem_zone_alloc+0x95/0x100 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644791] 
+xfs_dir2_node_removename+0x4e/0x610 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644806]  ?
+xfs_bmap_last_extent+0x5c/0xa0 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644821]  ?
+xfs_bmap_last_offset+0x54/0xc0 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644841]  ?
+kmem_alloc+0x96/0x100 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644858] 
+xfs_dir_removename+0x16d/0x180 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644879] 
+xfs_remove+0x250/0x300 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644900] 
+xfs_vn_unlink+0x55/0xa0 [xfs]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644904] 
+vfs_unlink+0xe1/0x1a0
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644909] 
+ovl_do_remove+0x381/0x490 [overlay]
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644912] 
+vfs_unlink+0xe1/0x1a0
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644914] 
+do_unlinkat+0x25f/0x2b0
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644917] 
+do_syscall_64+0x5b/0x1c0
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644919] 
+entry_SYSCALL_64_after_hwframe+0x65/0xca
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644921] RIP:
+0033:0x7f7334c08147
+2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644923] Code: 48
+3d 00 f0 ff ff 77 03 48 98 c3 48 8b 15 21 5d 2d 00 f7 d8 64 89 02 48 83 c8 ff
+eb eb 66 0f 1f 44 00 00 b8 57 00 00 00 0f 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b
+0d f9 5c 2d 00 f7 d8 64 89 01 48
 
-But what about the non-mapping case? I'm not sure how that happens,
-but this does seem very fragile.
-
-I'm wondering why you didn't want to just do the get_page()
-unconditionally and early. Is avoiding the refcount really such a big
-optimization?
-
-            Linus
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
