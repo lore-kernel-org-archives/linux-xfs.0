@@ -2,195 +2,463 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-24.8 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1,USER_IN_DEF_DKIM_WL autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFE84C63697
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 01:56:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74292C2D0E4
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 04:07:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72BEC20757
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 01:56:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E54EB20857
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 04:07:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ajpTdOn1"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="aSxbE0mO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726746AbgKXBzq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Nov 2020 20:55:46 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:54906 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726731AbgKXBzq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Nov 2020 20:55:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1606182944;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=VGcoD9cJyIoraWzK6hKk5qDVwHUv+H8uXT6RPGfb/Jg=;
-        b=ajpTdOn1ijqa/y/mDvyBoVf6/7aVUjO2fVS6nola1+9GnVXFG2/UCIFf9Vi/VOrmsUTT1p
-        WNCTWp/PoVwSTcqRWJUPIp+ZzmAgPCqpa+5JpBWs1yQjCiBMp5NlSqJnae1mjvBm6LG26a
-        Oi9HXNRTeXQTeW4IpxeKfvY8hKliHlg=
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
- [209.85.214.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-426-qdN-6fvpPk6FvkwD8wKJBg-1; Mon, 23 Nov 2020 20:55:42 -0500
-X-MC-Unique: qdN-6fvpPk6FvkwD8wKJBg-1
-Received: by mail-pl1-f199.google.com with SMTP id f3so12443148plb.11
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 17:55:42 -0800 (PST)
+        id S1727438AbgKXEHm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Nov 2020 23:07:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59728 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726295AbgKXEHl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Nov 2020 23:07:41 -0500
+Received: from mail-oo1-xc43.google.com (mail-oo1-xc43.google.com [IPv6:2607:f8b0:4864:20::c43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A36B6C0613CF
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 20:07:41 -0800 (PST)
+Received: by mail-oo1-xc43.google.com with SMTP id s11so3650372oov.13
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 20:07:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:from:to:cc:subject:in-reply-to:message-id:references
+         :user-agent:mime-version;
+        bh=4s4srLlSIgeu4tQu6G6mnWxXPBj5BBQqj6M6YAiHAxM=;
+        b=aSxbE0mO0zHJeuA0XRlTdeCizmtPtSZk0QeLZ83j9zLU2mI9YpC85EJ1pPCeLJnrhx
+         llyE+/HHRk2oxLhvml1dUXheXk+JZJFWHd2GE3fAfgdNT7ChYX8USlgwc6qdIPhLjMGc
+         VtJzcno9DZ7eMfYc9ALMaxGJETqujEzWzgK4fPeqbL0WF5lXjdvhsfPSGYzgUt4GB4MD
+         llbIwiLTp3MnoxhI+EsLBVGzqVXoCGAM/XhxUCFbD3aSc9HQS81S3dC1vdqmJcx6iOAC
+         UuD/0ldJmSAcl7ZDf9ebRXAyFe5Dnlu9zHEO2YVDL12M3HnLz+8sMPQZcGxOhR1r+orM
+         Ct/Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=VGcoD9cJyIoraWzK6hKk5qDVwHUv+H8uXT6RPGfb/Jg=;
-        b=CvZoOZqB3ql3U4rZFw/d69aVi43x5nzOZcdQBYRQ51WyzvThXGa/6ETK2YuAwgp1Sq
-         oGYifAl6ek7o1hhesOR9aL7fwOPYesTaM7FGV+uKNtDxRVzsIW0dYPMbbWLzDxFBq0go
-         Y0kKxhc2UUSCLGYnOdKAlsCXutmNZR9nUAo1TZRggyotPL72fBkgtoF8SQUu2Ga1rAFz
-         rYOORT79qUaWXFpHfjx46V0to9eOFQK7/7afTaaTzO0X5d2MOx3KwM9QNM1/0xvt1/Ap
-         b/Op4LvX+scEPxfV7c3CcrkBsouC47kyEUJXdx04dKS4Q25jXl0b3Sedk9hoRj3uHGrL
-         0cww==
-X-Gm-Message-State: AOAM532Q/4SEv0av8WxH6ej1NeVFOQSMNyKcrD+ZIsnBi6BvoWqBEATM
-        6SPEQHYvqOSoXN4jaDmJ2ghUJnKLXe8hn8P4uWaIjc0KdwIVmfXvXB1Q09gNxs/LgWFq8nZHdcb
-        mkDDvLb+Q1e0Bc6CMRgmO
-X-Received: by 2002:a17:90a:f314:: with SMTP id ca20mr2124851pjb.191.1606182941014;
-        Mon, 23 Nov 2020 17:55:41 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwOERy6YQDTd4yvMOmWdY1TucX213z+RoPyE86xDRv8QQM4Q6XXSAOPEPqX8h9a9FwiW8mHlQ==
-X-Received: by 2002:a17:90a:f314:: with SMTP id ca20mr2124837pjb.191.1606182940792;
-        Mon, 23 Nov 2020 17:55:40 -0800 (PST)
-Received: from xiangao.remote.csb ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id e14sm11300058pgv.64.2020.11.23.17.55.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Nov 2020 17:55:40 -0800 (PST)
-Date:   Tue, 24 Nov 2020 09:55:30 +0800
-From:   Gao Xiang <hsiangkao@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH v2] generic: add test for XFS forkoff miscalcution on
- 32-bit platform
-Message-ID: <20201124015530.GA3096505@xiangao.remote.csb>
-References: <20201118060258.1939824-1-hsiangkao@redhat.com>
- <20201123082047.2991878-1-hsiangkao@redhat.com>
- <20201123182400.GD7880@magnolia>
+        h=x-gm-message-state:date:from:to:cc:subject:in-reply-to:message-id
+         :references:user-agent:mime-version;
+        bh=4s4srLlSIgeu4tQu6G6mnWxXPBj5BBQqj6M6YAiHAxM=;
+        b=SVFTJNF4Wm+yyTfkAbz1TlVl00QMv2dO59Zh0tFpXtyOyDoSlutQH3Xasu/HJ9pncE
+         yc+czFH88AI0lKaFiceeifmefUdqylLdnX3ocAz4RR3uOAzPpJ6EK+i/iQe/6i/8K7jT
+         54h8loMLX+bFDCSqJ47qnEDyNaXVmZ07PwyPhNWeSO3XtaqIxaBLMpfSmOpX0HToyLaD
+         ZvMUu1SuT/6Y2KqIx1Pbs96xCACcv6eZKEhGO1mkmS5mxIE8HPnYCqa/zBVfCVCZEc63
+         lpyGCkdA1BnTgrFCEYIWbzUTkagZhQsceIw5kVrnn32LICT/8/oWBLySlUb031yBcUHX
+         bK6w==
+X-Gm-Message-State: AOAM531V8sR47QsX7S0maPmeAfdl5V7NSf8tkhLwzhpQG6RIgZEhzdFM
+        HFIO6FK1N/M2VThNqztyvt9vew==
+X-Google-Smtp-Source: ABdhPJwo7tt8Vg6oCOBPbR6cik3I/GPZahth1TIbz0UMD0k+HKHV2p3rilMyVpphvblvLDAY9TVwxA==
+X-Received: by 2002:a4a:9cc7:: with SMTP id d7mr1948769ook.8.1606190860479;
+        Mon, 23 Nov 2020 20:07:40 -0800 (PST)
+Received: from eggly.attlocal.net (172-10-233-147.lightspeed.sntcca.sbcglobal.net. [172.10.233.147])
+        by smtp.gmail.com with ESMTPSA id m65sm7930807otm.40.2020.11.23.20.07.37
+        (version=TLS1 cipher=ECDHE-ECDSA-AES128-SHA bits=128/128);
+        Mon, 23 Nov 2020 20:07:39 -0800 (PST)
+Date:   Mon, 23 Nov 2020 20:07:24 -0800 (PST)
+From:   Hugh Dickins <hughd@google.com>
+X-X-Sender: hugh@eggly.anvils
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+cc:     Jan Kara <jack@suse.cz>,
+        syzbot <syzbot+3622cea378100f45d59f@syzkaller.appspotmail.com>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        Theodore Ts'o <tytso@mit.edu>, Linux-MM <linux-mm@kvack.org>,
+        Oleg Nesterov <oleg@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Kirill A. Shutemov" <kirill@shutemov.name>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>, Qian Cai <cai@lca.pw>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        William Kucharski <william.kucharski@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, Hugh Dickins <hughd@google.com>
+Subject: Re: kernel BUG at fs/ext4/inode.c:LINE!
+In-Reply-To: <CAHk-=wivRS_1uy326sLqKuwerbL0APyKYKwa+vWVGsQg8sxhLw@mail.gmail.com>
+Message-ID: <alpine.LSU.2.11.2011231928140.4305@eggly.anvils>
+References: <000000000000d3a33205add2f7b2@google.com> <20200828100755.GG7072@quack2.suse.cz> <20200831100340.GA26519@quack2.suse.cz> <CAHk-=wivRS_1uy326sLqKuwerbL0APyKYKwa+vWVGsQg8sxhLw@mail.gmail.com>
+User-Agent: Alpine 2.11 (LSU 23 2013-08-11)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20201123182400.GD7880@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
-
-On Mon, Nov 23, 2020 at 10:24:00AM -0800, Darrick J. Wong wrote:
-> On Mon, Nov 23, 2020 at 04:20:47PM +0800, Gao Xiang wrote:
-
-...
-
-> > +_supported_fs generic
-> > +_require_scratch
-> > +_require_attrs user
+On Mon, 30 Aug 2020, Linus Torvalds wrote:
+> On Mon, Aug 31, 2020 at 3:03 AM Jan Kara <jack@suse.cz> wrote:
+> >
+> > On Fri 28-08-20 12:07:55, Jan Kara wrote:
+> > >
+> > > Doh, so this is:
+> > >
+> > >                         wait_on_page_writeback(page);
+> > > >>>                     BUG_ON(PageWriteback(page));
+> > >
+> > > in mpage_prepare_extent_to_map(). So we have PageWriteback() page after we
+> > > have called wait_on_page_writeback() on a locked page. Not sure how this
+> > > could ever happen even less how ext4 could cause this...
+> >
+> > I was poking a bit into this and there were actually recent changes into
+> > page bit waiting logic by Linus. Linus, any idea?
 > 
-> Does this require
+> So the main change is that now if somebody does a wake_up_page(), the
+> page waiter will be released - even if somebody else then set the bit
+> again (or possible if the waker never cleared it!).
 > 
-> _require_no_xfs_bug_on_assert ?
+> It used to be that the waiter went back to sleep.
 > 
-
-For the sake of harmless testcase, I think that is fine and I will
-add it in the next version as
-[ $FSTYP = "xfs" ] && _require_no_xfs_bug_on_assert
-
-
-To clarify the synotom:
-if bug_on_assert is on, it will bug_on on the second setfattr,
-_scratch_cycle_mount will fail due to
-umount: can't unmount /tmp/mnt: Device or resource busy
-
-if _scratch_cycle_mount is removed, _getfattr will hung due to
-(I think) unbalanced xfs_ilock(dp, XFS_ILOCK_EXCL) in xfs_attr_set()
-and xfs_attr_get() will take the lock again.
-
-
-if bug_on_assert is off, it will fail on _scratch_cycle_mount due to
-log recovery replay fail when mounting as below
-
-[  856.786226] XFS (sda): Mounting V5 Filesystem                       
-[  856.802704] XFS (sda): Starting recovery (logdev: internal)                                                                                                                                                    
-[  856.806362] XFS: Assertion failed: len <= XFS_DFORK_ASIZE(dip, mp), file: fs/xfs/xfs_inode_item_recover.c, line: 426
-
-but if the line of _scratch_cycle_mount is removed, _getfattr will
-success due to
-	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, roundup(new_size, 4),
-				      GFP_NOFS | __GFP_NOFAIL);
-	ifp->if_bytes = new_size;
-in xfs_idata_realloc(), and xfs_attr_shortform_getvalue() will
-temporary ok. yet this testcase have _scratch_cycle_mount anyway.
-
-In any case, it's fine with _getfattr after _scratch_cycle_mount
-for this testcase.
-
-And "bug_on_assert is off" does no harm to the system stablity itself
-so I think that's better.
-
-> > +
-> > +# Use fixed inode size 512, so both v4 and v5 can be tested,
-> > +# and also make sure the issue can be triggered if the default
-> > +# inode size is changed later.
-> > +[ $FSTYP = "xfs" ] && MKFS_OPTIONS="$MKFS_OPTIONS -i size=512"
-> > +_scratch_mkfs > $seqres.full 2>&1
-> > +_scratch_mount
-> > +
-> > +localfile="${SCRATCH_MNT}/testfile"
-> > +touch $localfile
-> > +
-> > +# value cannot exceed XFS_ATTR_SF_ENTSIZE_MAX (256) or it will turn into
-> > +# leaf form directly; the following combination can trigger the issue for
-> > +# both v4 (XFS_LITINO = 412) & v5 (XFS_LITINO = 336) fses.
-> > +"${SETFATTR_PROG}" -n user.0 -v "`seq 0 80`" "${localfile}"
-> > +"${SETFATTR_PROG}" -n user.1 -v "`seq 0 80`" "${localfile}"
+> Which really shouldn't matter, but if we had any code that did something like
 > 
-> It's probably worth mentioning that the second setattr causes an integer
-> underflow that is incorrectly typecast, leading to the assert
-> triggering.  Otherwise this seems reasonable to me.
-
-Ok, will try to add in the next version as well.
-
-Thanks,
-Gao Xiang
-
+>         end_page_writeback();
+>         .. something does set_page_writeback() on the page again ..
 > 
-> --D
+> then the old BUG_ON() would likely never have triggered (because the
+> waiter would have seen the writeback bit being set again and gone back
+> to sleep), but now it will.
 > 
-> > +
-> > +# Make sure that changes are written to disk
-> > +_scratch_cycle_mount
-> > +
-> > +# getfattr won't succeed with the expected result if fails
-> > +_getfattr --absolute-names -ebase64 -d $localfile | tail -n +2 | sort
-> > +
-> > +_scratch_unmount
-> > +status=0
-> > +exit
-> > diff --git a/tests/generic/618.out b/tests/generic/618.out
-> > new file mode 100644
-> > index 00000000..848fdc58
-> > --- /dev/null
-> > +++ b/tests/generic/618.out
-> > @@ -0,0 +1,4 @@
-> > +QA output created by 618
-> > +
-> > +user.0=0sMAoxCjIKMwo0CjUKNgo3CjgKOQoxMAoxMQoxMgoxMwoxNAoxNQoxNgoxNwoxOAoxOQoyMAoyMQoyMgoyMwoyNAoyNQoyNgoyNwoyOAoyOQozMAozMQozMgozMwozNAozNQozNgozNwozOAozOQo0MAo0MQo0Mgo0Mwo0NAo0NQo0Ngo0Nwo0OAo0OQo1MAo1MQo1Mgo1Mwo1NAo1NQo1Ngo1Nwo1OAo1OQo2MAo2MQo2Mgo2Mwo2NAo2NQo2Ngo2Nwo2OAo2OQo3MAo3MQo3Mgo3Mwo3NAo3NQo3Ngo3Nwo3OAo3OQo4MA==
-> > +user.1=0sMAoxCjIKMwo0CjUKNgo3CjgKOQoxMAoxMQoxMgoxMwoxNAoxNQoxNgoxNwoxOAoxOQoyMAoyMQoyMgoyMwoyNAoyNQoyNgoyNwoyOAoyOQozMAozMQozMgozMwozNAozNQozNgozNwozOAozOQo0MAo0MQo0Mgo0Mwo0NAo0NQo0Ngo0Nwo0OAo0OQo1MAo1MQo1Mgo1Mwo1NAo1NQo1Ngo1Nwo1OAo1OQo2MAo2MQo2Mgo2Mwo2NAo2NQo2Ngo2Nwo2OAo2OQo3MAo3MQo3Mgo3Mwo3NAo3NQo3Ngo3Nwo3OAo3OQo4MA==
-> > diff --git a/tests/generic/group b/tests/generic/group
-> > index 94e860b8..eca9d619 100644
-> > --- a/tests/generic/group
-> > +++ b/tests/generic/group
-> > @@ -620,3 +620,4 @@
-> >  615 auto rw
-> >  616 auto rw io_uring stress
-> >  617 auto rw io_uring stress
-> > +618 auto quick attr
-> > -- 
-> > 2.18.4
-> > 
+> So I would suspect a pre-existing issue that was just hidden by the
+> old behavior and was basically impossible to trigger unless you hit
+> *just* the right timing.
 > 
+> And now it's easy to trigger, because the first time somebody clears
+> PG_writeback, the wait_on_page_writeback() will just return *without*
+> re-testing and *without* going back to sleep.
+> 
+> Could there be somebody who does set_page_writeback() without holding
+> the page lock?
+> 
+> Maybe adding a
+> 
+>         WARN_ON_ONCE(!PageLocked(page));
+> 
+> at the top of __test_set_page_writeback() might find something?
+> 
+> Note that it looks like this problem has been reported on Android
+> before according to that syzbot thing. Ie, this thing:
+> 
+>     https://groups.google.com/g/syzkaller-android-bugs/c/2CfEdQd4EE0/m/xk_GRJEHBQAJ
+> 
+> looks very similar, and predates the wake_up_page() changes.
+> 
+> So it was probably just much _harder_ to hit before, and got easier to hit.
+> 
+> Hmm. In fact, googling for
+> 
+>         mpage_prepare_extent_to_map "kernel BUG"
+> 
+> seems to find stuff going back years. Here's a patchwork discussion
+> where you had a debug patch to try to figure it out back in 2016:
+> 
+>     https://patchwork.ozlabs.org/project/linux-ext4/patch/20161122133452.GF3973@quack2.suse.cz/
+> 
+> although that one seems to be a different BUG_ON() in the same area.
+> 
+> Maybe entirely unrelated, but the fact that this function shows up a
+> fair amount is perhaps a sign of some long-running issue..
 
+No recent updates here, nor in
+https://lore.kernel.org/linux-mm/37abe67a5a7d83b361932464b4af499fdeaf5ef7.camel@redhat.com/
+but I believe I've found the answer (or an answer) to this issue.
+
+You may not care for this patch, but I haven't thought of a better,
+so let me explain in its commit message.  And its "Fixes:" tag is unfair
+to your patch, sorry: I agree the issue has probably lurked there longer.
+
+[PATCH] mm: fix VM_BUG_ON(PageTail) and BUG_ON(PageWriteback)
+
+Twice now, when exercising ext4 looped on shmem huge pages, I have crashed
+on the PF_ONLY_HEAD check inside PageWaiters(): ext4_finish_bio() calling
+end_page_writeback() calling wake_up_page() on tail of a shmem huge page,
+no longer an ext4 page at all.
+
+The problem is that PageWriteback is not accompanied by a page reference
+(as the NOTE at the end of test_clear_page_writeback() acknowledges): as
+soon as TestClearPageWriteback has been done, that page could be removed
+from page cache, freed, and reused for something else by the time that
+wake_up_page() is reached.
+
+https://lore.kernel.org/linux-mm/20200827122019.GC14765@casper.infradead.org/
+Matthew Wilcox suggested avoiding or weakening the PageWaiters() tail
+check; but I'm paranoid about even looking at an unreferenced struct page,
+lest its memory might itself have already been reused or hotremoved (and
+wake_up_page_bit() may modify that memory with its ClearPageWaiters()).
+
+Then on crashing a second time, realized there's a stronger reason against
+that approach.  If my testing just occasionally crashes on that check,
+when the page is reused for part of a compound page, wouldn't it be much
+more common for the page to get reused as an order-0 page before reaching
+wake_up_page()?  And on rare occasions, might that reused page already be
+marked PageWriteback by its new user, and already be waited upon?  What
+would that look like?
+
+It would look like BUG_ON(PageWriteback) after wait_on_page_writeback()
+in write_cache_pages() (though I have never seen that crash myself).
+
+And prior to 2a9127fcf229 ("mm: rewrite wait_on_page_bit_common() logic")
+this would have been much less likely: before that, wake_page_function()'s
+non-exclusive case would stop walking and not wake if it found Writeback
+already set again; whereas now the non-exclusive case proceeds to wake.
+
+I have not thought of a fix that does not add a little overhead.
+It would be safe to wake_up_page() after TestClearPageWriteback()
+while still holding i_pages lock (since that lock is needed to remove
+the page from cache), but the history of long page lock hash chains
+cautions against; so the patch below does get_page() when PageWaiters
+there, and put_page() after wake_up_page_bit() at the end.  And in
+any case, we do need the i_pages lock, even though it was skipped
+before when !mapping_use_writeback_tags() i.e. swap.  Can mapping be
+NULL? I don't see how, but allow for that with a WARN_ON_ONCE(): this
+patch is no worse than before, but does not fix the issue if !mapping.
+
+The bulk of the patch below is cleanup: it was not helpful to separate
+test_clear_page_writeback() from end_page_writeback(), especially with
+the latter declaring BUG() on a condition which the former was working
+around: combine them into end_page_writeback() in mm/page-writeback.c.
+
+Was there a chance of missed wakeups before, since a page freed before
+reaching wake_up_page() would have PageWaiters cleared?  I think not,
+because each waiter does hold a reference on the page: this bug comes
+not from real waiters, but from when PageWaiters is a false positive.
+
+Reported-by: syzbot+3622cea378100f45d59f@syzkaller.appspotmail.com
+Reported-by: Qian Cai <cai@lca.pw>
+Fixes: 2a9127fcf229 ("mm: rewrite wait_on_page_bit_common() logic")
+Signed-off-by: Hugh Dickins <hughd@google.com>
+Cc: stable@vger.kernel.org # v5.8+
+---
+
+ include/linux/page-flags.h |    1 
+ include/linux/pagemap.h    |    1 
+ kernel/sched/wait_bit.c    |    5 -
+ mm/filemap.c               |   35 ------------
+ mm/page-writeback.c        |   96 ++++++++++++++++++++++-------------
+ 5 files changed, 67 insertions(+), 71 deletions(-)
+
+--- 5.10-rc5/include/linux/page-flags.h	2020-10-25 16:45:47.061817039 -0700
++++ linux/include/linux/page-flags.h	2020-11-22 18:31:21.303046924 -0800
+@@ -550,7 +550,6 @@ static __always_inline void SetPageUptod
+ 
+ CLEARPAGEFLAG(Uptodate, uptodate, PF_NO_TAIL)
+ 
+-int test_clear_page_writeback(struct page *page);
+ int __test_set_page_writeback(struct page *page, bool keep_write);
+ 
+ #define test_set_page_writeback(page)			\
+--- 5.10-rc5/include/linux/pagemap.h	2020-11-22 17:43:01.585279333 -0800
++++ linux/include/linux/pagemap.h	2020-11-22 18:31:21.303046924 -0800
+@@ -660,6 +660,7 @@ static inline int lock_page_or_retry(str
+  */
+ extern void wait_on_page_bit(struct page *page, int bit_nr);
+ extern int wait_on_page_bit_killable(struct page *page, int bit_nr);
++extern void wake_up_page_bit(struct page *page, int bit_nr);
+ 
+ /* 
+  * Wait for a page to be unlocked.
+--- 5.10-rc5/kernel/sched/wait_bit.c	2020-03-29 15:25:41.000000000 -0700
++++ linux/kernel/sched/wait_bit.c	2020-11-22 18:31:21.303046924 -0800
+@@ -90,9 +90,8 @@ __wait_on_bit_lock(struct wait_queue_hea
+ 			ret = action(&wbq_entry->key, mode);
+ 			/*
+ 			 * See the comment in prepare_to_wait_event().
+-			 * finish_wait() does not necessarily takes wwq_head->lock,
+-			 * but test_and_set_bit() implies mb() which pairs with
+-			 * smp_mb__after_atomic() before wake_up_page().
++			 * finish_wait() does not necessarily take
++			 * wwq_head->lock, but test_and_set_bit() implies mb().
+ 			 */
+ 			if (ret)
+ 				finish_wait(wq_head, &wbq_entry->wq_entry);
+--- 5.10-rc5/mm/filemap.c	2020-11-22 17:43:01.637279974 -0800
++++ linux/mm/filemap.c	2020-11-22 18:31:21.303046924 -0800
+@@ -1093,7 +1093,7 @@ static int wake_page_function(wait_queue
+ 	return (flags & WQ_FLAG_EXCLUSIVE) != 0;
+ }
+ 
+-static void wake_up_page_bit(struct page *page, int bit_nr)
++void wake_up_page_bit(struct page *page, int bit_nr)
+ {
+ 	wait_queue_head_t *q = page_waitqueue(page);
+ 	struct wait_page_key key;
+@@ -1147,13 +1147,6 @@ static void wake_up_page_bit(struct page
+ 	spin_unlock_irqrestore(&q->lock, flags);
+ }
+ 
+-static void wake_up_page(struct page *page, int bit)
+-{
+-	if (!PageWaiters(page))
+-		return;
+-	wake_up_page_bit(page, bit);
+-}
+-
+ /*
+  * A choice of three behaviors for wait_on_page_bit_common():
+  */
+@@ -1466,32 +1459,6 @@ void unlock_page(struct page *page)
+ }
+ EXPORT_SYMBOL(unlock_page);
+ 
+-/**
+- * end_page_writeback - end writeback against a page
+- * @page: the page
+- */
+-void end_page_writeback(struct page *page)
+-{
+-	/*
+-	 * TestClearPageReclaim could be used here but it is an atomic
+-	 * operation and overkill in this particular case. Failing to
+-	 * shuffle a page marked for immediate reclaim is too mild to
+-	 * justify taking an atomic operation penalty at the end of
+-	 * ever page writeback.
+-	 */
+-	if (PageReclaim(page)) {
+-		ClearPageReclaim(page);
+-		rotate_reclaimable_page(page);
+-	}
+-
+-	if (!test_clear_page_writeback(page))
+-		BUG();
+-
+-	smp_mb__after_atomic();
+-	wake_up_page(page, PG_writeback);
+-}
+-EXPORT_SYMBOL(end_page_writeback);
+-
+ /*
+  * After completing I/O on a page, call this routine to update the page
+  * flags appropriately
+--- 5.10-rc5/mm/page-writeback.c	2020-10-25 16:45:47.977843485 -0700
++++ linux/mm/page-writeback.c	2020-11-22 18:31:21.303046924 -0800
+@@ -589,7 +589,7 @@ static void wb_domain_writeout_inc(struc
+ 
+ /*
+  * Increment @wb's writeout completion count and the global writeout
+- * completion count. Called from test_clear_page_writeback().
++ * completion count. Called from end_page_writeback().
+  */
+ static inline void __wb_writeout_inc(struct bdi_writeback *wb)
+ {
+@@ -2719,55 +2719,85 @@ int clear_page_dirty_for_io(struct page
+ }
+ EXPORT_SYMBOL(clear_page_dirty_for_io);
+ 
+-int test_clear_page_writeback(struct page *page)
++/**
++ * end_page_writeback - end writeback against a page
++ * @page: the page
++ */
++void end_page_writeback(struct page *page)
+ {
+-	struct address_space *mapping = page_mapping(page);
++	struct address_space *mapping;
+ 	struct mem_cgroup *memcg;
+ 	struct lruvec *lruvec;
+-	int ret;
++	unsigned long flags;
++	int writeback;
++	int waiters;
++
++	/*
++	 * TestClearPageReclaim could be used here but it is an atomic
++	 * operation and overkill in this particular case. Failing to
++	 * shuffle a page marked for immediate reclaim is too mild to
++	 * justify taking an atomic operation penalty at the end of
++	 * every page writeback.
++	 */
++	if (PageReclaim(page)) {
++		ClearPageReclaim(page);
++		rotate_reclaimable_page(page);
++	}
+ 
++	mapping = page_mapping(page);
++	WARN_ON_ONCE(!mapping);
+ 	memcg = lock_page_memcg(page);
+ 	lruvec = mem_cgroup_page_lruvec(page, page_pgdat(page));
++
++	dec_lruvec_state(lruvec, NR_WRITEBACK);
++	dec_zone_page_state(page, NR_ZONE_WRITE_PENDING);
++	inc_node_page_state(page, NR_WRITTEN);
++
++	if (mapping)
++		xa_lock_irqsave(&mapping->i_pages, flags);
++
++	writeback = TestClearPageWriteback(page);
++	/* No need for smp_mb__after_atomic() after TestClear */
++	waiters = PageWaiters(page);
++	if (waiters) {
++		/*
++		 * Writeback doesn't hold a page reference on its own, relying
++		 * on truncation to wait for the clearing of PG_writeback.
++		 * We could safely wake_up_page_bit(page, PG_writeback) here,
++		 * while holding i_pages lock: but that would be a poor choice
++		 * if the page is on a long hash chain; so instead choose to
++		 * get_page+put_page - though atomics will add some overhead.
++		 */
++		get_page(page);
++	}
++
+ 	if (mapping && mapping_use_writeback_tags(mapping)) {
+ 		struct inode *inode = mapping->host;
+ 		struct backing_dev_info *bdi = inode_to_bdi(inode);
+-		unsigned long flags;
+ 
+-		xa_lock_irqsave(&mapping->i_pages, flags);
+-		ret = TestClearPageWriteback(page);
+-		if (ret) {
+-			__xa_clear_mark(&mapping->i_pages, page_index(page),
++		__xa_clear_mark(&mapping->i_pages, page_index(page),
+ 						PAGECACHE_TAG_WRITEBACK);
+-			if (bdi->capabilities & BDI_CAP_WRITEBACK_ACCT) {
+-				struct bdi_writeback *wb = inode_to_wb(inode);
++		if (bdi->capabilities & BDI_CAP_WRITEBACK_ACCT) {
++			struct bdi_writeback *wb = inode_to_wb(inode);
+ 
+-				dec_wb_stat(wb, WB_WRITEBACK);
+-				__wb_writeout_inc(wb);
+-			}
++			dec_wb_stat(wb, WB_WRITEBACK);
++			__wb_writeout_inc(wb);
+ 		}
++		if (inode && !mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK))
++			sb_clear_inode_writeback(inode);
++	}
+ 
+-		if (mapping->host && !mapping_tagged(mapping,
+-						     PAGECACHE_TAG_WRITEBACK))
+-			sb_clear_inode_writeback(mapping->host);
+-
++	if (mapping)
+ 		xa_unlock_irqrestore(&mapping->i_pages, flags);
+-	} else {
+-		ret = TestClearPageWriteback(page);
+-	}
+-	/*
+-	 * NOTE: Page might be free now! Writeback doesn't hold a page
+-	 * reference on its own, it relies on truncation to wait for
+-	 * the clearing of PG_writeback. The below can only access
+-	 * page state that is static across allocation cycles.
+-	 */
+-	if (ret) {
+-		dec_lruvec_state(lruvec, NR_WRITEBACK);
+-		dec_zone_page_state(page, NR_ZONE_WRITE_PENDING);
+-		inc_node_page_state(page, NR_WRITTEN);
+-	}
+ 	__unlock_page_memcg(memcg);
+-	return ret;
++
++	if (waiters) {
++		wake_up_page_bit(page, PG_writeback);
++		put_page(page);
++	}
++	BUG_ON(!writeback);
+ }
++EXPORT_SYMBOL(end_page_writeback);
+ 
+ int __test_set_page_writeback(struct page *page, bool keep_write)
+ {
