@@ -2,152 +2,195 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE4CC56202
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 01:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFE84C63697
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 01:56:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C0A2206FA
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 01:35:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72BEC20757
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 01:56:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Sq1krQ3c"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ajpTdOn1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727459AbgKXBfl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Nov 2020 20:35:41 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:51654 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726186AbgKXBfk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Nov 2020 20:35:40 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO0FGLb058692;
-        Tue, 24 Nov 2020 00:24:36 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2020-01-29;
- bh=s/wLH0QqtDoPPbmRzkc8eTBYqRq4wxY1UzHtffjSwz8=;
- b=Sq1krQ3cSED5pLy6pWV46kwif7nc42STNNJzHlAK01thgK2XP2imWSN2tpJ9wUfHps31
- iVctBZkM/dyIo7vBIr+w31EMghj4zBbcnW7E2WcvUwoSxr1V/NRuyc/CYhguv9rjpNdV
- 23mV0hXgQ5LiTqWHiUjoowiGkXzwdmDAWtHO0ey0PMeGpGFJ7fm2RLvYHmNqnRGPmN5s
- L5DtA4UqMziKbEyA6IqxMG5LzKIPPvnum76gXTFXvDvZeBKITmv0KEDyChseTqSLUBA+
- iGGqPZm+HXtQof4SQBP+Zyuz+gid6CezsSH9ijBl9ui2djF9kKvuHq0nG13thg9nfrBo +g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 34xtaqkhwd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 24 Nov 2020 00:24:36 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO0Fu7r185600;
-        Tue, 24 Nov 2020 00:24:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 34ycnrp1ba-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Nov 2020 00:24:35 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AO0OZG8032448;
-        Tue, 24 Nov 2020 00:24:35 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 23 Nov 2020 16:24:34 -0800
-Date:   Mon, 23 Nov 2020 16:24:33 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 9/9] libxfs-apply: don't add duplicate headers
-Message-ID: <20201124002433.GA31219@magnolia>
-References: <160503138275.1201232.927488386999483691.stgit@magnolia>
- <160503144025.1201232.11112616423278752638.stgit@magnolia>
- <8adce075-983b-2b3f-eb3c-10eb72bccf0c@sandeen.net>
+        id S1726746AbgKXBzq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Nov 2020 20:55:46 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:54906 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726731AbgKXBzq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Nov 2020 20:55:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1606182944;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VGcoD9cJyIoraWzK6hKk5qDVwHUv+H8uXT6RPGfb/Jg=;
+        b=ajpTdOn1ijqa/y/mDvyBoVf6/7aVUjO2fVS6nola1+9GnVXFG2/UCIFf9Vi/VOrmsUTT1p
+        WNCTWp/PoVwSTcqRWJUPIp+ZzmAgPCqpa+5JpBWs1yQjCiBMp5NlSqJnae1mjvBm6LG26a
+        Oi9HXNRTeXQTeW4IpxeKfvY8hKliHlg=
+Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com
+ [209.85.214.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-426-qdN-6fvpPk6FvkwD8wKJBg-1; Mon, 23 Nov 2020 20:55:42 -0500
+X-MC-Unique: qdN-6fvpPk6FvkwD8wKJBg-1
+Received: by mail-pl1-f199.google.com with SMTP id f3so12443148plb.11
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Nov 2020 17:55:42 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=VGcoD9cJyIoraWzK6hKk5qDVwHUv+H8uXT6RPGfb/Jg=;
+        b=CvZoOZqB3ql3U4rZFw/d69aVi43x5nzOZcdQBYRQ51WyzvThXGa/6ETK2YuAwgp1Sq
+         oGYifAl6ek7o1hhesOR9aL7fwOPYesTaM7FGV+uKNtDxRVzsIW0dYPMbbWLzDxFBq0go
+         Y0kKxhc2UUSCLGYnOdKAlsCXutmNZR9nUAo1TZRggyotPL72fBkgtoF8SQUu2Ga1rAFz
+         rYOORT79qUaWXFpHfjx46V0to9eOFQK7/7afTaaTzO0X5d2MOx3KwM9QNM1/0xvt1/Ap
+         b/Op4LvX+scEPxfV7c3CcrkBsouC47kyEUJXdx04dKS4Q25jXl0b3Sedk9hoRj3uHGrL
+         0cww==
+X-Gm-Message-State: AOAM532Q/4SEv0av8WxH6ej1NeVFOQSMNyKcrD+ZIsnBi6BvoWqBEATM
+        6SPEQHYvqOSoXN4jaDmJ2ghUJnKLXe8hn8P4uWaIjc0KdwIVmfXvXB1Q09gNxs/LgWFq8nZHdcb
+        mkDDvLb+Q1e0Bc6CMRgmO
+X-Received: by 2002:a17:90a:f314:: with SMTP id ca20mr2124851pjb.191.1606182941014;
+        Mon, 23 Nov 2020 17:55:41 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwOERy6YQDTd4yvMOmWdY1TucX213z+RoPyE86xDRv8QQM4Q6XXSAOPEPqX8h9a9FwiW8mHlQ==
+X-Received: by 2002:a17:90a:f314:: with SMTP id ca20mr2124837pjb.191.1606182940792;
+        Mon, 23 Nov 2020 17:55:40 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id e14sm11300058pgv.64.2020.11.23.17.55.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Nov 2020 17:55:40 -0800 (PST)
+Date:   Tue, 24 Nov 2020 09:55:30 +0800
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Eric Sandeen <sandeen@redhat.com>
+Subject: Re: [PATCH v2] generic: add test for XFS forkoff miscalcution on
+ 32-bit platform
+Message-ID: <20201124015530.GA3096505@xiangao.remote.csb>
+References: <20201118060258.1939824-1-hsiangkao@redhat.com>
+ <20201123082047.2991878-1-hsiangkao@redhat.com>
+ <20201123182400.GD7880@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <8adce075-983b-2b3f-eb3c-10eb72bccf0c@sandeen.net>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=2
- mlxlogscore=999 phishscore=0 spamscore=0 malwarescore=0 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011240000
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
- mlxlogscore=999 clxscore=1015 suspectscore=2 lowpriorityscore=0
- priorityscore=1501 bulkscore=0 impostorscore=0 adultscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011240000
+In-Reply-To: <20201123182400.GD7880@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 23, 2020 at 02:30:58PM -0600, Eric Sandeen wrote:
-> On 11/10/20 12:04 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > When we're backporting patches from libxfs, don't add a S-o-b header if
-> > there's already one in the patch being ported.
-> 
-> I guess the goal here is to not add 2 identical sign offs in a row.
-> 
-> But when I do the libxfs-application, I do feel like it should add
-> my SOB as sort of a chain of custody record before I commit it to a
-> new tree/project, no?
-> 
-> So could this be modified to simply not add 2 identical SOBs in a row?
-> 
-> Maybe we can just run "uniq" on the $_hdr.new file?
+Hi Darrick,
 
-Not sure how uniq gets us to "not add 2 identical signoffs in a row" but
-changing the last line of add_header to:
+On Mon, Nov 23, 2020 at 10:24:00AM -0800, Darrick J. Wong wrote:
+> On Mon, Nov 23, 2020 at 04:20:47PM +0800, Gao Xiang wrote:
 
-tail -n 1 "$hdrfile" | grep -q "^${hdr}$" || echo "$hdr" >> "$hdrfile"
+...
 
-would do it.
-
---D
-
-> Thanks,
-> -Eric
+> > +_supported_fs generic
+> > +_require_scratch
+> > +_require_attrs user
 > 
+> Does this require
 > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tools/libxfs-apply |   14 +++++++++++---
-> >  1 file changed, 11 insertions(+), 3 deletions(-)
-> > 
-> > 
-> > diff --git a/tools/libxfs-apply b/tools/libxfs-apply
-> > index 3258272d6189..35cdb9c3449b 100755
-> > --- a/tools/libxfs-apply
-> > +++ b/tools/libxfs-apply
-> > @@ -193,6 +193,14 @@ filter_xfsprogs_patch()
-> >  	rm -f $_libxfs_files
-> >  }
-> >  
-> > +add_header()
-> > +{
-> > +	local hdr="$1"
-> > +	local hdrfile="$2"
+> _require_no_xfs_bug_on_assert ?
+> 
+
+For the sake of harmless testcase, I think that is fine and I will
+add it in the next version as
+[ $FSTYP = "xfs" ] && _require_no_xfs_bug_on_assert
+
+
+To clarify the synotom:
+if bug_on_assert is on, it will bug_on on the second setfattr,
+_scratch_cycle_mount will fail due to
+umount: can't unmount /tmp/mnt: Device or resource busy
+
+if _scratch_cycle_mount is removed, _getfattr will hung due to
+(I think) unbalanced xfs_ilock(dp, XFS_ILOCK_EXCL) in xfs_attr_set()
+and xfs_attr_get() will take the lock again.
+
+
+if bug_on_assert is off, it will fail on _scratch_cycle_mount due to
+log recovery replay fail when mounting as below
+
+[  856.786226] XFS (sda): Mounting V5 Filesystem                       
+[  856.802704] XFS (sda): Starting recovery (logdev: internal)                                                                                                                                                    
+[  856.806362] XFS: Assertion failed: len <= XFS_DFORK_ASIZE(dip, mp), file: fs/xfs/xfs_inode_item_recover.c, line: 426
+
+but if the line of _scratch_cycle_mount is removed, _getfattr will
+success due to
+	ifp->if_u1.if_data = krealloc(ifp->if_u1.if_data, roundup(new_size, 4),
+				      GFP_NOFS | __GFP_NOFAIL);
+	ifp->if_bytes = new_size;
+in xfs_idata_realloc(), and xfs_attr_shortform_getvalue() will
+temporary ok. yet this testcase have _scratch_cycle_mount anyway.
+
+In any case, it's fine with _getfattr after _scratch_cycle_mount
+for this testcase.
+
+And "bug_on_assert is off" does no harm to the system stablity itself
+so I think that's better.
+
 > > +
-> > +	grep -q "^${hdr}$" "$hdrfile" || echo "$hdr" >> "$hdrfile"
-> > +}
+> > +# Use fixed inode size 512, so both v4 and v5 can be tested,
+> > +# and also make sure the issue can be triggered if the default
+> > +# inode size is changed later.
+> > +[ $FSTYP = "xfs" ] && MKFS_OPTIONS="$MKFS_OPTIONS -i size=512"
+> > +_scratch_mkfs > $seqres.full 2>&1
+> > +_scratch_mount
 > > +
-> >  fixup_header_format()
-> >  {
-> >  	local _source=$1
-> > @@ -280,13 +288,13 @@ fixup_header_format()
-> >  	sed -i '${/^[[:space:]]*$/d;}' $_hdr.new
-> >  
-> >  	# Add Signed-off-by: header if specified
-> > -	if [ ! -z ${SIGNED_OFF_BY+x} ]; then 
-> > -		echo "Signed-off-by: $SIGNED_OFF_BY" >> $_hdr.new
-> > +	if [ ! -z ${SIGNED_OFF_BY+x} ]; then
-> > +		add_header "Signed-off-by: $SIGNED_OFF_BY" $_hdr.new
-> >  	else	# get it from git config if present
-> >  		SOB_NAME=`git config --get user.name`
-> >  		SOB_EMAIL=`git config --get user.email`
-> >  		if [ ! -z ${SOB_NAME+x} ]; then
-> > -			echo "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" >> $_hdr.new
-> > +			add_header "Signed-off-by: $SOB_NAME <$SOB_EMAIL>" $_hdr.new
-> >  		fi
-> >  	fi
-> >  
+> > +localfile="${SCRATCH_MNT}/testfile"
+> > +touch $localfile
+> > +
+> > +# value cannot exceed XFS_ATTR_SF_ENTSIZE_MAX (256) or it will turn into
+> > +# leaf form directly; the following combination can trigger the issue for
+> > +# both v4 (XFS_LITINO = 412) & v5 (XFS_LITINO = 336) fses.
+> > +"${SETFATTR_PROG}" -n user.0 -v "`seq 0 80`" "${localfile}"
+> > +"${SETFATTR_PROG}" -n user.1 -v "`seq 0 80`" "${localfile}"
+> 
+> It's probably worth mentioning that the second setattr causes an integer
+> underflow that is incorrectly typecast, leading to the assert
+> triggering.  Otherwise this seems reasonable to me.
+
+Ok, will try to add in the next version as well.
+
+Thanks,
+Gao Xiang
+
+> 
+> --D
+> 
+> > +
+> > +# Make sure that changes are written to disk
+> > +_scratch_cycle_mount
+> > +
+> > +# getfattr won't succeed with the expected result if fails
+> > +_getfattr --absolute-names -ebase64 -d $localfile | tail -n +2 | sort
+> > +
+> > +_scratch_unmount
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/618.out b/tests/generic/618.out
+> > new file mode 100644
+> > index 00000000..848fdc58
+> > --- /dev/null
+> > +++ b/tests/generic/618.out
+> > @@ -0,0 +1,4 @@
+> > +QA output created by 618
+> > +
+> > +user.0=0sMAoxCjIKMwo0CjUKNgo3CjgKOQoxMAoxMQoxMgoxMwoxNAoxNQoxNgoxNwoxOAoxOQoyMAoyMQoyMgoyMwoyNAoyNQoyNgoyNwoyOAoyOQozMAozMQozMgozMwozNAozNQozNgozNwozOAozOQo0MAo0MQo0Mgo0Mwo0NAo0NQo0Ngo0Nwo0OAo0OQo1MAo1MQo1Mgo1Mwo1NAo1NQo1Ngo1Nwo1OAo1OQo2MAo2MQo2Mgo2Mwo2NAo2NQo2Ngo2Nwo2OAo2OQo3MAo3MQo3Mgo3Mwo3NAo3NQo3Ngo3Nwo3OAo3OQo4MA==
+> > +user.1=0sMAoxCjIKMwo0CjUKNgo3CjgKOQoxMAoxMQoxMgoxMwoxNAoxNQoxNgoxNwoxOAoxOQoyMAoyMQoyMgoyMwoyNAoyNQoyNgoyNwoyOAoyOQozMAozMQozMgozMwozNAozNQozNgozNwozOAozOQo0MAo0MQo0Mgo0Mwo0NAo0NQo0Ngo0Nwo0OAo0OQo1MAo1MQo1Mgo1Mwo1NAo1NQo1Ngo1Nwo1OAo1OQo2MAo2MQo2Mgo2Mwo2NAo2NQo2Ngo2Nwo2OAo2OQo3MAo3MQo3Mgo3Mwo3NAo3NQo3Ngo3Nwo3OAo3OQo4MA==
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index 94e860b8..eca9d619 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -620,3 +620,4 @@
+> >  615 auto rw
+> >  616 auto rw io_uring stress
+> >  617 auto rw io_uring stress
+> > +618 auto quick attr
+> > -- 
+> > 2.18.4
 > > 
+> 
+
