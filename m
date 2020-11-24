@@ -2,174 +2,101 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25750C6379D
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 20:16:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D06BEC56202
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 20:29:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C94DB208B8
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 20:16:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UlG140+S"
+	by mail.kernel.org (Postfix) with ESMTP id 7138E20678
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 20:29:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730476AbgKXUQA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Nov 2020 15:16:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40624 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728617AbgKXUP7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 15:15:59 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4251EC0613D6;
-        Tue, 24 Nov 2020 12:15:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=r81uB21KgkrQOks2IFcrN3ZOTlRJS3bUyN7vYcsmfFs=; b=UlG140+SGaMtrTfp69FggRQZT2
-        ua4M8lWOfBdQjG/fVnSThO5rTs+SVW0D2ckxd67Q5PXBI012Svr53SElnjEBQ+BcbPkWpOxyit+zn
-        JTXRW5S2yebgbbbmDgc4SFbBo62a4s2goDFOD29PLJHpuYbtlskUkcK1oY2q8AqYKLjKIVZrciXIo
-        8sB3tfUXK8DxuWA5cWodBpAwcn47cgqWVQOrhQMuFyK+3SYe54Btds2vzaHA8+m3McQZpOae8rEkS
-        zNABYfLBTEFYtw0ObLKVnr5Xk2HUBZ7nwD5GQBoOLe7GuQ8l8WJPcLvo/eHwfuGAOMtbiasHd1pLF
-        cvFQA94w==;
-Received: from willy by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1khejA-0001KH-FM; Tue, 24 Nov 2020 20:15:52 +0000
-Date:   Tue, 24 Nov 2020 20:15:52 +0000
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Hugh Dickins <hughd@google.com>, Jan Kara <jack@suse.cz>,
-        syzbot <syzbot+3622cea378100f45d59f@syzkaller.appspotmail.com>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
-        Theodore Ts'o <tytso@mit.edu>, Linux-MM <linux-mm@kvack.org>,
-        Oleg Nesterov <oleg@redhat.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "Kirill A. Shutemov" <kirill@shutemov.name>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Alex Shi <alex.shi@linux.alibaba.com>, Qian Cai <cai@lca.pw>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        William Kucharski <william.kucharski@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: kernel BUG at fs/ext4/inode.c:LINE!
-Message-ID: <20201124201552.GE4327@casper.infradead.org>
-References: <000000000000d3a33205add2f7b2@google.com>
- <20200828100755.GG7072@quack2.suse.cz>
- <20200831100340.GA26519@quack2.suse.cz>
- <CAHk-=wivRS_1uy326sLqKuwerbL0APyKYKwa+vWVGsQg8sxhLw@mail.gmail.com>
- <alpine.LSU.2.11.2011231928140.4305@eggly.anvils>
- <20201124121912.GZ4327@casper.infradead.org>
- <alpine.LSU.2.11.2011240810470.1029@eggly.anvils>
- <20201124183351.GD4327@casper.infradead.org>
- <CAHk-=wjtGAUP5fydxR8iWbzB65p2XvM0BrHE=PkPLQcJ=kq_8A@mail.gmail.com>
+        id S1726851AbgKXU3N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Nov 2020 15:29:13 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:45200 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726631AbgKXU3M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 15:29:12 -0500
+Received: from dread.disaster.area (pa49-179-6-140.pa.nsw.optusnet.com.au [49.179.6.140])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7DD6F58C7B8;
+        Wed, 25 Nov 2020 07:29:10 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1khew1-00EeTu-N9; Wed, 25 Nov 2020 07:29:09 +1100
+Date:   Wed, 25 Nov 2020 07:29:09 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     bugzilla-daemon@bugzilla.kernel.org
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [Bug 210341] New: XFS (dm-3): Internal error xfs_trans_cancel at
+ line 1041 of file fs/xfs/xfs_trans.c.
+Message-ID: <20201124202909.GB2842436@dread.disaster.area>
+References: <bug-210341-201763@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHk-=wjtGAUP5fydxR8iWbzB65p2XvM0BrHE=PkPLQcJ=kq_8A@mail.gmail.com>
+In-Reply-To: <bug-210341-201763@https.bugzilla.kernel.org/>
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.3 cv=Ubgvt5aN c=1 sm=1 tr=0 cx=a_idp_d
+        a=uDU3YIYVKEaHT0eX+MXYOQ==:117 a=uDU3YIYVKEaHT0eX+MXYOQ==:17
+        a=kj9zAlcOel0A:10 a=nNwsprhYR40A:10 a=VwQbUJbxAAAA:8 a=JJa4EKUDAAAA:8
+        a=7-415B0cAAAA:8 a=l53b9WMv9s8PVzMLClIA:9 a=CjuIK1q_8ugA:10
+        a=AjGcO6oz07-iQ99wixmX:22 a=pcahhcY2dJ4xbbEV-xyx:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 24, 2020 at 11:00:42AM -0800, Linus Torvalds wrote:
-> On Tue, Nov 24, 2020 at 10:33 AM Matthew Wilcox <willy@infradead.org> wrote:
-> >
-> > We could fix this by turning that 'if' into a 'while' in
-> > write_cache_pages().
+On Tue, Nov 24, 2020 at 05:53:09AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=210341
 > 
-> That might be the simplest patch indeed.
+>             Bug ID: 210341
+>            Summary: XFS (dm-3): Internal error xfs_trans_cancel at line
+>                     1041 of file fs/xfs/xfs_trans.c.
+>            Product: File System
+>            Version: 2.5
+>     Kernel Version: 4.18.0-147
+>           Hardware: Intel
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: blocking
+>           Priority: P1
+>          Component: XFS
+>           Assignee: filesystem_xfs@kernel-bugs.kernel.org
+>           Reporter: lokendra.rathour@hsc.com
+>         Regression: No
 > 
-> At the same time, I do worry about other cases like this: while
-> spurious wakeup events are normal and happen in other places, this is
-> a bit different.
+> Created attachment 293797
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=293797&action=edit
+> Detailed logs as shown above
 > 
-> This is literally a wakeup that leaks from a previous use of a page,
-> and makes us think that something could have happened to the new use.
+> Getting errror for xfs file system :
 > 
-> The unlock_page() case presumably never hits that, because even if we
-> have some unlock without a page ref (which I don't think can happen,
-> but whatever..), the exclusive nature of "lock_page()" means that no
-> locker can care - once you get the lock, you own the page./
-> 
-> The writeback code is special in that the writeback bit isn't some
-> kind of exclusive bit, but this code kind of expected it to be that.
-> 
-> So I'd _like_ to have something like
-> 
->         WARN_ON_ONCE(!page_count(page));
-> 
-> in the wake_up_page_bit() function, to catch things that wake up a
-> page that has already been released and might be reused..
-> 
-> And that would require the "get_page()" to be done when we set the
-> writeback bit and queue the page up for IO (so that then
-> end_page_writeback() would clear the bit, do the wakeup, and then drop
-> the ref).
-> 
-> Hugh's second patch isn't pretty - I think the "get_page()" is
-> conceptually in the wrong place - but it "works" in that it keeps that
-> "implicit page reference" being kept by the PG_writeback bit, and then
-> it takes an explicit page reference before it clears the bit.
-> 
-> So while I don't love the whole "PG_writeback is an implicit reference
-> to the page" model, Hugh's patch at least makes that model much more
-> straightforward: we really either have that PG_writeback, _or_ we have
-> a real ref to the page, and we never have that odd "we could actually
-> lose the page" situation.
-> 
-> So I think I prefer Hugh's two-liner over your one-liner suggestion.
-> 
-> But your one-liner is technically not just smaller, it obviously also
-> avoids the whole mucking with the atomic page ref.
-> 
-> I don't _think_ that the extra get/put overhead could possibly really
-> matter: doing the writeback is going to be a lot more expensive
-> anyway. And an atomic access to a 'struct page' sounds expensive, but
-> that cacheline is already likely dirty in the L1 cache because we've
-> touch page->flags and done other things to it).
-> 
-> So I'd personally be inclined to go with Hugh's patch. Comments?
+> 2020-11-11T11:55:16.809 controller-1 kernel: alert [419472.614847] XFS (dm-3):
+> xfs_dabuf_map: bno 8388608 dir: inode 122425344
+> 2020-11-11T11:55:16.809 controller-1 kernel: alert [419472.621963] XFS (dm-3):
+> [00] br_startoff 8388608 br_startblock -2 br_blockcount 1 br_state 0
+> 2020-11-11T11:55:16.823 controller-1 kernel: alert [419472.630908] XFS (dm-3):
+> Internal error xfs_da_do_buf(1) at line 2558 of file
+> fs/xfs/libxfs/xfs_da_btree.c.  Caller xfs_da_read_buf+0x6c/0x120 [xfs]
+> 2020-11-11T11:55:16.824 controller-1 kernel: warning [419472.644671] CPU: 1
+> PID: 83210 Comm: heat-manage Kdump: loaded Tainted: G           O     ---------
+> -t - 4.18.0-147.3.1.el8_1.7.tis.x86_64 #1
 
-My only objection to Hugh's patch is that it may cause us to fail
-to split pages when we can currently split them.  That is, we do:
+So you have a corrupt directory (missing a leaf root pointer). Have
+you run `xfs_repair -n` on that filesystem to see if it finds the
+same corruption?
 
-	wait_on_page_writeback()
-	if (page_has_private(page))
-		do_invalidatepage(page, offset, length);
-	split_huge_page()
+Keep in mind that you are running on a CentOS8/RHEL8 kernel. It is
+unlikely that upstream developers will be able to reliably diagnose
+the root cause of your issue as the kernel codebase is a highly
+modified vendor kernel.  You really should report this to your
+vendor support contacts, not upstream....
 
-(at least we do in my THP patchset; not sure if there's any of that
-in the kernel today), and the extra reference held for a few nanoseconds
-after calling wake_up_page() will cause us to fail to split the page.
-It probably doesn't matter; there has to be a fallback path anyway.
+Cheers,
 
-Now I'm looking at that codepath, and the race that Hugh uncovered now
-looks like a real bug.  Consider this sequence:
-
-page allocated, added to page cache, dirtied, writeback started
-
---- thread A ---
-end_page_writeback()
-	test_clear_page_writeback
---- ctx switch to thread B ---
-alloc page, add to page cache, dirty page, start page writeback,
-truncate_inode_pages_range()
-	wait_on_page_writeback()
---- ctx switch to thread A ---
-	wake_up_page()
---- ctx switch to thread B ---
-free page
-alloc page
-write new data to page
-
-... now the DMA actually starts to do page writeback, and it's writing
-the new data.
-
-So my s/if/while/ suggestion is wrong and we need to do something to
-prevent spurious wakeups.  Unless we bury the spurious wakeup logic
-inside wait_on_page_writeback() ...
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
