@@ -2,138 +2,108 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2143C2D0E4
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:28:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8B82C64E75
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:52:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D12620679
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:28:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9C69B206FA
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 15:52:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="JFbStEBI"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JwfKDPvt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389740AbgKXP1p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Nov 2020 10:27:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52224 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389371AbgKXP1o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 10:27:44 -0500
-Received: from mail-qk1-x742.google.com (mail-qk1-x742.google.com [IPv6:2607:f8b0:4864:20::742])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 74865C0617A6
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2020 07:27:43 -0800 (PST)
-Received: by mail-qk1-x742.google.com with SMTP id q22so20753900qkq.6
-        for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2020 07:27:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=T1CJlj8IfSUUHiH+kqtPsU00jQAk/4cxU5HTLWgky3g=;
-        b=JFbStEBIKWinwRehV0dG/qoEhAWyKvWiQAcUNmzhgCFsSOHXJxkNEFj0egRb0/3Sgg
-         q8KlbvBm+SZWA8+kLS4QAKx1VMbVvr9WwqryXOZ+nR5L7jF7I75raMadKItlGdyFsXV4
-         MAXLlg4J8SGJkJn/ndQd+F10zISr9GtcWt18YmMODwZOvgxHvEGGMFMb6q7Mcm+Our5Z
-         cA7l+b63IFHl9JGoL794bcoTHGTctqQrHW9IfKnfgdMLNCdJzkdZSjFqFgZqy0gdO73i
-         CG3TfNm0Q2N/eDAytp9pIzHdFBlHhU6va67BpY6PFvFMeeVBU9lbourS+JouXuxSIthE
-         vQIQ==
+        id S2389629AbgKXPwW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Nov 2020 10:52:22 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:24456 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2389676AbgKXPwV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 10:52:21 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1606233139;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc; bh=5Q/jjcA5ifwOtsh8jyArTjjVWuhZSisA03wE7hFKMGg=;
+        b=JwfKDPvtvDcE8vuKFvFCx+dKHX9P/qwhaJojflVLxwvObSuBrPb/BN2SFP8/a1rZ9nj8yU
+        Y8AVST8nIvTOelwiqeumnebvJFFx39jX5M25/3hjoI5yfnNY2bAlGH7dIddfb8XxULBqY+
+        SD/3bkwuPUaJA/NfQxss4cpIrGfkhWc=
+Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com
+ [209.85.214.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-332-vgekxR2HN_Ot4rRv1evOzA-1; Tue, 24 Nov 2020 10:52:16 -0500
+X-MC-Unique: vgekxR2HN_Ot4rRv1evOzA-1
+Received: by mail-pl1-f198.google.com with SMTP id b4so5733427plk.17
+        for <linux-xfs@vger.kernel.org>; Tue, 24 Nov 2020 07:52:16 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=T1CJlj8IfSUUHiH+kqtPsU00jQAk/4cxU5HTLWgky3g=;
-        b=un4a3pZtjP8OvJkwtooocY78SslUK9o09wfY0IDVUT4e9sW0MR8/Z4HjTHhLrGgxdC
-         wPoUX+AEUdnqP001Pay7NmXT7tH+C5yg/QJJBZ7lvx113v2Hsh7R4M92ndoRDqXfwkDu
-         J6/eZ6KQmPKXYCvDV1msZG/Si/fdQHZ4tI+uZ2hL1/uSDtkFXKUuyPOFTRQ5T6ZV6WBa
-         kip1QLxLAZQd6SSD8BupTcEXDMeo6LZbzvGL3xt63cn+vAw3YyTEpF14g2s/th5rR+Bz
-         Dy2YFnltmMxxs3UODNLn88EFB6PjLpcYwoG3AiCkT6z+uNzOMJ6+LINpYpEm0ObYzNTq
-         peHA==
-X-Gm-Message-State: AOAM530j+y59Iy9CQX2iqnvf7ikdi3WP6NeL7NHQF0cgHaMSRnO/xINg
-        y6za/ldQFkmB8Baa20kIaheFpg==
-X-Google-Smtp-Source: ABdhPJwWUvdVx1Vqxqge3kQRlk8iWNcGxBL9lgm9oszusQZMiFgHGeM23mQSdnOTIDE/+Anp4R5TCw==
-X-Received: by 2002:a05:620a:404d:: with SMTP id i13mr758647qko.279.1606231662613;
-        Tue, 24 Nov 2020 07:27:42 -0800 (PST)
-Received: from ziepe.ca (hlfxns017vw-156-34-48-30.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.48.30])
-        by smtp.gmail.com with ESMTPSA id y23sm13290051qkb.26.2020.11.24.07.27.40
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=5Q/jjcA5ifwOtsh8jyArTjjVWuhZSisA03wE7hFKMGg=;
+        b=EYPF1BcV2LXl419nzm8hk0MP2OprxJOurqX8Dj28YhF8bbHdcsNKTFaj7KyDFBMKgL
+         MnjahVlfgIKCJkmwCWjdUx0LgE8fbTQg1U7F/WIFxcs/wShVYhALH28TumkIa97BuuVD
+         lUvCSbw7F/8UKekBIrskg+6uP3yoov5e77c/JzxZRQFQb3OnUK/z9OaGvXNgVUsUNtRu
+         JcvAMs65jLeUawKZz5JF28v8+1wE3Y8eVrv3oCEP0+6sXJ+e5hlOoPF4hAN1Mxfk0EDu
+         7Fsu+oSDEaY+TjRze2Y/C3UJPdSOPMu76sluQdI4VAmO+haQY/Q7VL2URrCWk23OHLg5
+         AATA==
+X-Gm-Message-State: AOAM533y9K6XVJPcTEMdvmRoVLvLEBv7QulK5bgJPRk1j+fF10eWEsQO
+        PdMvYKbIx035qS9KbbGOp2GdhsVcid2wJdHEhXJy/cU1dEZuGJeRiLHm6/ePcWMn9NzwGO1M6EH
+        vD/U+WDGAwNH+LP4lOZRzAJdwdJZeWNVHve+0YZuFihEQ20c7ZnympfNH5Bre6wkUZTXz3tlsGg
+        ==
+X-Received: by 2002:a17:90a:a50b:: with SMTP id a11mr5856054pjq.170.1606233135477;
+        Tue, 24 Nov 2020 07:52:15 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyVgCrflLPZdPYHD5UrJignCoJNpXxIH1WfDBTKXB5v/+LvdWVQdePUKWEsqCZfyoSpbsjcbQ==
+X-Received: by 2002:a17:90a:a50b:: with SMTP id a11mr5856024pjq.170.1606233135107;
+        Tue, 24 Nov 2020 07:52:15 -0800 (PST)
+Received: from xiangao.remote.csb ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id mn21sm3723909pjb.28.2020.11.24.07.52.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Nov 2020 07:27:40 -0800 (PST)
-Received: from jgg by mlx with local (Exim 4.94)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1khaEF-000ogj-SX; Tue, 24 Nov 2020 11:27:39 -0400
-Date:   Tue, 24 Nov 2020 11:27:39 -0400
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     DRI Development <dri-devel@lists.freedesktop.org>,
-        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-        linux-mm@kvack.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        "Paul E . McKenney" <paulmck@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Michel Lespinasse <walken@google.com>,
-        Waiman Long <longman@redhat.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Randy Dunlap <rdunlap@infradead.org>,
-        Dave Chinner <david@fromorbit.com>, Qian Cai <cai@lca.pw>,
-        "Matthew Wilcox (Oracle)" <willy@infradead.org>,
-        Daniel Vetter <daniel.vetter@intel.com>
-Subject: Re: [PATCH 2/3] mm: Extract might_alloc() debug check
-Message-ID: <20201124152739.GF5487@ziepe.ca>
-References: <20201120095445.1195585-1-daniel.vetter@ffwll.ch>
- <20201120095445.1195585-3-daniel.vetter@ffwll.ch>
- <20201120180719.GO244516@ziepe.ca>
- <20201124143411.GN401619@phenom.ffwll.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201124143411.GN401619@phenom.ffwll.local>
+        Tue, 24 Nov 2020 07:52:14 -0800 (PST)
+From:   Gao Xiang <hsiangkao@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Gao Xiang <hsiangkao@redhat.com>
+Subject: [PATCH 1/3] xfs: convert noroom, okalloc in xfs_dialloc() to bool
+Date:   Tue, 24 Nov 2020 23:51:28 +0800
+Message-Id: <20201124155130.40848-1-hsiangkao@redhat.com>
+X-Mailer: git-send-email 2.18.4
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 24, 2020 at 03:34:11PM +0100, Daniel Vetter wrote:
-> On Fri, Nov 20, 2020 at 02:07:19PM -0400, Jason Gunthorpe wrote:
-> > On Fri, Nov 20, 2020 at 10:54:43AM +0100, Daniel Vetter wrote:
-> > > diff --git a/include/linux/sched/mm.h b/include/linux/sched/mm.h
-> > > index d5ece7a9a403..f94405d43fd1 100644
-> > > +++ b/include/linux/sched/mm.h
-> > > @@ -180,6 +180,22 @@ static inline void fs_reclaim_acquire(gfp_t gfp_mask) { }
-> > >  static inline void fs_reclaim_release(gfp_t gfp_mask) { }
-> > >  #endif
-> > >  
-> > > +/**
-> > > + * might_alloc - Marks possible allocation sites
-> > > + * @gfp_mask: gfp_t flags that would be use to allocate
-> > > + *
-> > > + * Similar to might_sleep() and other annotations this can be used in functions
-> > > + * that might allocate, but often dont. Compiles to nothing without
-> > > + * CONFIG_LOCKDEP. Includes a conditional might_sleep() if @gfp allows blocking.
-> > > + */
-> > > +static inline void might_alloc(gfp_t gfp_mask)
-> > > +{
-> > > +	fs_reclaim_acquire(gfp_mask);
-> > > +	fs_reclaim_release(gfp_mask);
-> > > +
-> > > +	might_sleep_if(gfpflags_allow_blocking(gfp_mask));
-> > > +}
-> > 
-> > Reviewed-by: Jason Gunthorpe <jgg@nvidia.com>
-> > 
-> > Oh, I just had a another thread with Matt about xarray, this would be
-> > perfect to add before xas_nomem():
-> 
-> Yeah I think there's plenty of places where this will be useful. Want to
-> slap a sob onto this diff so I can include it for the next round, or will
-> you or Matt send this out when my might_alloc has landed?
+Boolean is preferred for such use.
 
-When this is merged I can do this - just wanted to point out the API
-is good and useful
+Signed-off-by: Gao Xiang <hsiangkao@redhat.com>
+---
+ fs/xfs/libxfs/xfs_ialloc.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Jason
+diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
+index 974e71bc4a3a..45cf7e55f5ee 100644
+--- a/fs/xfs/libxfs/xfs_ialloc.c
++++ b/fs/xfs/libxfs/xfs_ialloc.c
+@@ -1716,11 +1716,11 @@ xfs_dialloc(
+ 	xfs_agnumber_t		agno;
+ 	int			error;
+ 	int			ialloced;
+-	int			noroom = 0;
++	bool			noroom = false;
+ 	xfs_agnumber_t		start_agno;
+ 	struct xfs_perag	*pag;
+ 	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+-	int			okalloc = 1;
++	bool			okalloc = true;
+ 
+ 	if (*IO_agbp) {
+ 		/*
+@@ -1753,8 +1753,8 @@ xfs_dialloc(
+ 	if (igeo->maxicount &&
+ 	    percpu_counter_read_positive(&mp->m_icount) + igeo->ialloc_inos
+ 							> igeo->maxicount) {
+-		noroom = 1;
+-		okalloc = 0;
++		noroom = true;
++		okalloc = false;
+ 	}
+ 
+ 	/*
+-- 
+2.18.4
+
