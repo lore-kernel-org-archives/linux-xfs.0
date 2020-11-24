@@ -5,116 +5,104 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F7ECC2D0E4
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 00:32:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14DE3C63697
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 00:35:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3314420729
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 00:32:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4B9A20758
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 00:35:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ClZ031gc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JfH5rbzU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730533AbgKXAbp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Nov 2020 19:31:45 -0500
-Received: from aserp2130.oracle.com ([141.146.126.79]:54478 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730538AbgKXAbn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Nov 2020 19:31:43 -0500
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO0UY1s116271;
-        Tue, 24 Nov 2020 00:30:34 GMT
+        id S1729740AbgKXAfK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Nov 2020 19:35:10 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:35026 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728339AbgKXAfJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Nov 2020 19:35:09 -0500
+X-Greylist: delayed 631 seconds by postgrey-1.27 at vger.kernel.org; Mon, 23 Nov 2020 19:35:08 EST
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO0FOn3059161;
+        Tue, 24 Nov 2020 00:25:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2020-01-29;
- bh=UJ2IooOa3qth53Eu+aG8b6OfZ/oPhvjmH3uhWCeRPCE=;
- b=ClZ031gci3rQUKsgxg0lXlThAUmtTjhTQifnW7MEGJFqe1jyUPGtkPyDwCaPQB7Utjj9
- V79Ju30qtxuEPa+MZc+3Hy+Zq0gGRhplKrcl7kPAUs9fRFeDxLRrbpQcG98wzIO32Fc0
- H0MgoLziVSLE8GotvFbFUKhYOFCKnL1Sg6I91U5EOWk+z5Osqk8jXE1W2l2asDonRmtM
- Tzuwwg730dI8QKkBtzkkpLv2KDyBgQoZNQ9L0V47PWG0wSOssXdg0J04kZq39VcdsJF+
- o6uhd/zaqao2CurncyZVwOSzg+hyk3pbmrxCOwL90NYK1+hN7yOYDyhQJapCh/Cg3f4T 2Q== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2130.oracle.com with ESMTP id 34xrdar70p-1
+ bh=iVBq0hiyY4s1Y9vKkB54kExkXAnt6i5Se5UGScodWr4=;
+ b=JfH5rbzUTGT28JsltbSl7Qt69wkn1R0CHeLYWSoHifgXNHxC5I1w4AS9QxgkVYd4I3zj
+ URUqZoQQwkFSJB4DZuT2JPJUoIZRiORMMA/aLQ1kwUgKiIrVY0YbXPwC+X16qFHwQIhr
+ 3yI6kq9Pqf4sIDEekIWfprX/RxnTH3Y4rcCJDkyRGMYtFxDTWkNgheS8tgHNFa3UhcFB
+ YiqSoPazxfFdV40GWv6+gsRHD9g9VrEPUijS8Du/VER1rVrx9EevjzSILq8xTxmTBslZ
+ aD7OlpnYn0ngyIGhuiDwfSVT/+ehfTOCY3HOm7Ayf92G3TrJ0sR1x87bVwO0R/5ELQhI Tg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 34xtaqkj0t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 24 Nov 2020 00:30:34 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO0TtDE020732;
-        Tue, 24 Nov 2020 00:30:33 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 34ycnrp9fh-1
+        Tue, 24 Nov 2020 00:25:29 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0AO0G2gG059968;
+        Tue, 24 Nov 2020 00:25:28 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 34ycfmk00r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Nov 2020 00:30:33 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AO0UTV3002451;
-        Tue, 24 Nov 2020 00:30:29 GMT
+        Tue, 24 Nov 2020 00:25:28 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 0AO0PSR3011536;
+        Tue, 24 Nov 2020 00:25:28 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 23 Nov 2020 16:30:29 -0800
-Date:   Mon, 23 Nov 2020 16:30:28 -0800
+        with ESMTP ; Mon, 23 Nov 2020 16:25:27 -0800
+Date:   Mon, 23 Nov 2020 16:25:27 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xiakaixu1987@gmail.com
-Cc:     linux-xfs@vger.kernel.org, Kaixu Xia <kaixuxia@tencent.com>
-Subject: Re: [PATCH] xfs: show the proper user quota options
-Message-ID: <20201124003028.GF7880@magnolia>
-References: <1606124332-22100-1-git-send-email-kaixuxia@tencent.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 08/26] xfs_logprint: refactor timestamp printing
+Message-ID: <20201124002527.GE7880@magnolia>
+References: <160375524618.881414.16347303401529121282.stgit@magnolia>
+ <160375529676.881414.3983778876306819986.stgit@magnolia>
+ <3922d9ed-4ced-a92f-1b0c-749b44d79c1f@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1606124332-22100-1-git-send-email-kaixuxia@tencent.com>
+In-Reply-To: <3922d9ed-4ced-a92f-1b0c-749b44d79c1f@sandeen.net>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 suspectscore=3
- mlxlogscore=999 phishscore=0 spamscore=0 malwarescore=0 adultscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2009150000 definitions=main-2011240001
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 impostorscore=0 mlxscore=0
- mlxlogscore=999 spamscore=0 phishscore=0 clxscore=1015 malwarescore=0
- lowpriorityscore=0 adultscore=0 suspectscore=3 priorityscore=1501
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 spamscore=0
+ adultscore=0 bulkscore=0 suspectscore=1 malwarescore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
- definitions=main-2011240001
+ definitions=main-2011240000
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9814 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 phishscore=0
+ mlxlogscore=999 clxscore=1015 suspectscore=1 lowpriorityscore=0
+ priorityscore=1501 bulkscore=0 impostorscore=0 adultscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2011240000
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 23, 2020 at 05:38:52PM +0800, xiakaixu1987@gmail.com wrote:
-> From: Kaixu Xia <kaixuxia@tencent.com>
+On Mon, Nov 23, 2020 at 02:14:27PM -0600, Eric Sandeen wrote:
+> On 10/26/20 6:34 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Introduce type-specific printing functions to xfs_logprint to print an
+> > xfs_timestamp instead of open-coding the timestamp decoding.  This is
+> > needed to stay ahead of changes that we're going to make to
+> > xfs_timestamp_t in the following patches.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  logprint/log_misc.c      |   18 ++++++++++++++++--
+> >  logprint/log_print_all.c |    3 +--
+> >  logprint/logprint.h      |    2 ++
+> >  3 files changed, 19 insertions(+), 4 deletions(-)
+> > 
 > 
-> The quota option 'usrquota' should be shown if both the XFS_UQUOTA_ACCT
-> and XFS_UQUOTA_ENFD flags are set. The option 'uqnoenforce' should be
-> shown when only the XFS_UQUOTA_ACCT flag is set. The current code logic
-> seems wrong, Fix it and show proper options.
+> Just for the record, I decided to not take this one; the helper function
+> with the somewhat vague "compact" arg at the callers doesnt' really seem
+> worth it, I just open-coded this at the 2 callsites when I did the merge.
 
-This needs a regression test case to make sure that quota mount options
-passed in ==> quota options in /proc/mounts, wouldn't you say? ;)
+<nod> it was kind of questionable from the start :)
 
 --D
 
-> Signed-off-by: Kaixu Xia <kaixuxia@tencent.com>
-> ---
->  fs/xfs/xfs_super.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index e3e229e52512..5ebd6cdc44a7 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -199,10 +199,12 @@ xfs_fs_show_options(
->  		seq_printf(m, ",swidth=%d",
->  				(int)XFS_FSB_TO_BB(mp, mp->m_swidth));
->  
-> -	if (mp->m_qflags & (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD))
-> -		seq_puts(m, ",usrquota");
-> -	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
-> -		seq_puts(m, ",uqnoenforce");
-> +	if (mp->m_qflags & XFS_UQUOTA_ACCT) {
-> +		if (mp->m_qflags & XFS_UQUOTA_ENFD)
-> +			seq_puts(m, ",usrquota");
-> +		else
-> +			seq_puts(m, ",uqnoenforce");
-> +	}
->  
->  	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
->  		if (mp->m_qflags & XFS_PQUOTA_ENFD)
-> -- 
-> 2.20.0
-> 
+> Thanks,
+> -Eric
