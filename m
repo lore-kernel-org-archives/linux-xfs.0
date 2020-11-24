@@ -2,63 +2,64 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28475C2D0E4
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 11:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C869C56201
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 12:05:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A7B742076B
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 11:52:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Fiz9D45S"
+	by mail.kernel.org (Postfix) with ESMTP id 1752B2076B
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Nov 2020 12:05:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732957AbgKXLwx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Nov 2020 06:52:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47058 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732852AbgKXLww (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 06:52:52 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC5BFC0613D6;
-        Tue, 24 Nov 2020 03:52:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=EcWi9+S29vOTFIAAm9bKVVKBIY3LaJMRPri+apbEGP8=; b=Fiz9D45SkyFlVfE2RbxXqJ8oUG
-        F45hNDPlYd6z1KtuS6IJXKWqExQGxhxZMW1rEOAT5icqPVG8OmKwHPHm3ZXDqf174Py+EIoHqlHb9
-        XgiX8KfMhA1O/aMB6q8p1g9DcrMpDTYRm1wgMNr1kKTatHnEpmkLHOLea1cGfDd/wrtcywozyUt1z
-        w2Hk8lrazrHXfvmiXnuHG9UEGsA5yEz/z/JJwqZuaDCHkgA9u4sUZ8UxaFPi5+ToDDyGijKnWRNTk
-        ojQahvjpt08p3Y1o2pNEtquOjuIpwW7I1AT3PiVicJBhvJtm4Ew6w4kk/W/OE3X8ooajD5uHaDPKX
-        VX5/q5IQ==;
-Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1khWs4-0000Tx-5n; Tue, 24 Nov 2020 11:52:32 +0000
-Date:   Tue, 24 Nov 2020 11:52:32 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Zhen Lei <thunder.leizhen@huawei.com>
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
+        id S1732864AbgKXMFg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Nov 2020 07:05:36 -0500
+Received: from szxga07-in.huawei.com ([45.249.212.35]:8399 "EHLO
+        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729172AbgKXMFf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Nov 2020 07:05:35 -0500
+Received: from DGGEMS406-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4CgN4p1hWqz6yHj;
+        Tue, 24 Nov 2020 20:05:14 +0800 (CST)
+Received: from [127.0.0.1] (10.174.178.208) by DGGEMS406-HUB.china.huawei.com
+ (10.3.19.206) with Microsoft SMTP Server id 14.3.487.0; Tue, 24 Nov 2020
+ 20:05:30 +0800
+Subject: Re: [PATCH 1/2] xfs: check the return value of krealloc()
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     "Darrick J . Wong" <darrick.wong@oracle.com>,
         Brian Foster <bfoster@redhat.com>,
         linux-xfs <linux-xfs@vger.kernel.org>,
         linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] xfs: remove the extra processing of zero size in
- xfs_idata_realloc()
-Message-ID: <20201124115232.GC32060@infradead.org>
 References: <20201124104531.561-1-thunder.leizhen@huawei.com>
- <20201124104531.561-3-thunder.leizhen@huawei.com>
+ <20201124104531.561-2-thunder.leizhen@huawei.com>
+ <20201124115131.GB32060@infradead.org>
+From:   "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
+Message-ID: <c3258752-4315-de2a-b0e3-3fb996fe1728@huawei.com>
+Date:   Tue, 24 Nov 2020 20:05:30 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201124104531.561-3-thunder.leizhen@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20201124115131.GB32060@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.208]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 24, 2020 at 06:45:31PM +0800, Zhen Lei wrote:
-> krealloc() does the free operation when the parameter new_size is 0, with
-> ZERO_SIZE_PTR returned. Because all other places use NULL to check whether
-> if_data is available or not, so covert it from ZERO_SIZE_PTR to NULL.
 
-This new code looks much harder to read than the version it replaced.
+
+On 2020/11/24 19:51, Christoph Hellwig wrote:
+> On Tue, Nov 24, 2020 at 06:45:30PM +0800, Zhen Lei wrote:
+>> krealloc() may fail to expand the memory space. Add sanity checks to it,
+>> and WARN() if that really happened.
+> 
+> What part of the __GFP_NOFAIL semantics isn't clear enough?
+
+Oh, sorry, I didn't notice __GFP_NOFAIL flag.
+
+> 
+> 
+
