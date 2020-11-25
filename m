@@ -4,38 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17604C56202
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 20:53:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35B8BC56201
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 20:56:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C56072075A
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 20:53:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFE1D2075A
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 20:56:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731190AbgKYUxD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Nov 2020 15:53:03 -0500
-Received: from sandeen.net ([63.231.237.45]:35698 "EHLO sandeen.net"
+        id S1731284AbgKYUzt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Nov 2020 15:55:49 -0500
+Received: from sandeen.net ([63.231.237.45]:35840 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730178AbgKYUxD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Nov 2020 15:53:03 -0500
+        id S1730719AbgKYUzt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Nov 2020 15:55:49 -0500
 Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.146])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 2D957324E60;
-        Wed, 25 Nov 2020 14:52:56 -0600 (CST)
-Subject: Re: [PATCH 2/5] libxfs: fix weird comment
+        by sandeen.net (Postfix) with ESMTPSA id 22401324E60;
+        Wed, 25 Nov 2020 14:55:42 -0600 (CST)
+Subject: Re: [PATCH 4/5] debian: fix version in changelog
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <160633667604.634603.7657982642827987317.stgit@magnolia>
- <160633668822.634603.17791163917116618433.stgit@magnolia>
+ <160633670037.634603.12898768383906866110.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <efd655a9-933c-9a1c-4f6f-61bf59336c6b@sandeen.net>
-Date:   Wed, 25 Nov 2020 14:53:01 -0600
+Message-ID: <dde3c0a0-877f-beb4-63a8-fb5103477425@sandeen.net>
+Date:   Wed, 25 Nov 2020 14:55:48 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
  Gecko/20100101 Thunderbird/78.5.0
 MIME-Version: 1.0
-In-Reply-To: <160633668822.634603.17791163917116618433.stgit@magnolia>
+In-Reply-To: <160633670037.634603.12898768383906866110.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -46,37 +46,27 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 11/25/20 2:38 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Not sure what happened with this multiline comment, but clean up all the
-> stars.
+> We're still at 5.10-rc0, at least according to the tags.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-urk, that looks like something I would do, thanks :)
-
-"My God, it's full of stars!"
+Thanks for spotting this
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  include/platform_defs.h.in |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+>  debian/changelog |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > 
-> diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
-> index 95e7209a3332..539bdbecf6e0 100644
-> --- a/include/platform_defs.h.in
-> +++ b/include/platform_defs.h.in
-> @@ -86,9 +86,9 @@ extern int	platform_nproc(void);
->  /* Simplified from version in include/linux/overflow.h */
+> diff --git a/debian/changelog b/debian/changelog
+> index c41e3913efa4..ba6861985365 100644
+> --- a/debian/changelog
+> +++ b/debian/changelog
+> @@ -1,4 +1,4 @@
+> -xfsprogs (5.10.0-1) unstable; urgency=low
+> +xfsprogs (5.10.0-rc0-1) unstable; urgency=low
 >  
->  /*
-> - *  * Compute a*b+c, returning SIZE_MAX on overflow. Internal helper for
-> - *   * struct_size() below.
-> - *    */
-> + * Compute a*b+c, returning SIZE_MAX on overflow. Internal helper for
-> + * struct_size() below.
-> + */
->  static inline size_t __ab_c_size(size_t a, size_t b, size_t c)
->  {
->  	return (a * b) + c;
+>    * New upstream prerelease
+>  
 > 
