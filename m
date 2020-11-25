@@ -2,76 +2,126 @@ Return-Path: <linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48C8FC64E7C
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 06:46:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 958F2C5519F
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 09:20:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2EFA2067D
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 06:46:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AA53208CA
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Nov 2020 09:20:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726923AbgKYGqZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Nov 2020 01:46:25 -0500
-Received: from szxga04-in.huawei.com ([45.249.212.190]:7678 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726760AbgKYGqY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Nov 2020 01:46:24 -0500
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Cgry20BZ6z15L7C;
-        Wed, 25 Nov 2020 14:46:02 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.487.0; Wed, 25 Nov 2020 14:46:13 +0800
-From:   Qinglang Miao <miaoqinglang@huawei.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        <linux-xfs@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>,
-        Qinglang Miao <miaoqinglang@huawei.com>
-Subject: [PATCH] xfs: check the return value of krealloc() in xfs_uuid_mount
-Date:   Wed, 25 Nov 2020 14:50:36 +0800
-Message-ID: <20201125065036.154312-1-miaoqinglang@huawei.com>
-X-Mailer: git-send-email 2.20.1
+        id S1726114AbgKYJUL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Nov 2020 04:20:11 -0500
+Received: from mx2.suse.de ([195.135.220.15]:43090 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725938AbgKYJUK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Nov 2020 04:20:10 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.221.27])
+        by mx2.suse.de (Postfix) with ESMTP id 7E1A2AE42;
+        Wed, 25 Nov 2020 09:20:08 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 96F841E130F; Wed, 25 Nov 2020 10:20:07 +0100 (CET)
+Date:   Wed, 25 Nov 2020 10:20:07 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Hugh Dickins <hughd@google.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Jan Kara <jack@suse.cz>,
+        syzbot <syzbot+3622cea378100f45d59f@syzkaller.appspotmail.com>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        syzkaller-bugs <syzkaller-bugs@googlegroups.com>,
+        Theodore Ts'o <tytso@mit.edu>, Linux-MM <linux-mm@kvack.org>,
+        Oleg Nesterov <oleg@redhat.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        "Kirill A. Shutemov" <kirill@shutemov.name>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>, Qian Cai <cai@lca.pw>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        William Kucharski <william.kucharski@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: kernel BUG at fs/ext4/inode.c:LINE!
+Message-ID: <20201125092007.GA16944@quack2.suse.cz>
+References: <000000000000d3a33205add2f7b2@google.com>
+ <20200828100755.GG7072@quack2.suse.cz>
+ <20200831100340.GA26519@quack2.suse.cz>
+ <CAHk-=wivRS_1uy326sLqKuwerbL0APyKYKwa+vWVGsQg8sxhLw@mail.gmail.com>
+ <alpine.LSU.2.11.2011231928140.4305@eggly.anvils>
+ <20201124121912.GZ4327@casper.infradead.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201124121912.GZ4327@casper.infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-krealloc() may fail to expand the memory space. Add sanity checks to it,
-and WARN() if that really happened.
+On Tue 24-11-20 12:19:12, Matthew Wilcox wrote:
+> On Mon, Nov 23, 2020 at 08:07:24PM -0800, Hugh Dickins wrote:
+> > Twice now, when exercising ext4 looped on shmem huge pages, I have crashed
+> > on the PF_ONLY_HEAD check inside PageWaiters(): ext4_finish_bio() calling
+> > end_page_writeback() calling wake_up_page() on tail of a shmem huge page,
+> > no longer an ext4 page at all.
+> > 
+> > The problem is that PageWriteback is not accompanied by a page reference
+> > (as the NOTE at the end of test_clear_page_writeback() acknowledges): as
+> > soon as TestClearPageWriteback has been done, that page could be removed
+> > from page cache, freed, and reused for something else by the time that
+> > wake_up_page() is reached.
+> > 
+> > https://lore.kernel.org/linux-mm/20200827122019.GC14765@casper.infradead.org/
+> > Matthew Wilcox suggested avoiding or weakening the PageWaiters() tail
+> > check; but I'm paranoid about even looking at an unreferenced struct page,
+> > lest its memory might itself have already been reused or hotremoved (and
+> > wake_up_page_bit() may modify that memory with its ClearPageWaiters()).
+> > 
+> > Then on crashing a second time, realized there's a stronger reason against
+> > that approach.  If my testing just occasionally crashes on that check,
+> > when the page is reused for part of a compound page, wouldn't it be much
+> > more common for the page to get reused as an order-0 page before reaching
+> > wake_up_page()?  And on rare occasions, might that reused page already be
+> > marked PageWriteback by its new user, and already be waited upon?  What
+> > would that look like?
+> > 
+> > It would look like BUG_ON(PageWriteback) after wait_on_page_writeback()
+> > in write_cache_pages() (though I have never seen that crash myself).
+> 
+> I don't think this is it.  write_cache_pages() holds a reference to the
+> page -- indeed, it holds the page lock!  So this particular race cannot
+> cause the page to get recycled.  I still have no good ideas what this
+> is :-(
 
-Fixes: 771915c4f688 ("xfs: remove kmem_realloc()")
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Qinglang Miao <miaoqinglang@huawei.com>
----
- fs/xfs/xfs_mount.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+But does it really matter what write_cache_pages() does? I mean we start
+page writeback. I mean struct bio holds no reference to the page it writes.
+The only thing that prevents the page from being freed under bio's hands is
+PageWriteback bit. So when the bio is completing we do (e.g. in
+ext4_end_bio()), we usually walk all pages in a bio
+bio_for_each_segment_all() and for each page call end_page_writeback(), now
+once end_page_writeback() calls test_clear_page_writeback() which clears
+PageWriteback(), the page can get freed. And that can happen before the
+wake_up_page() call in end_page_writeback(). So a race will be like:
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 150ee5cb8..c07f48c32 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -80,9 +80,13 @@ xfs_uuid_mount(
- 	}
- 
- 	if (hole < 0) {
--		xfs_uuid_table = krealloc(xfs_uuid_table,
-+		uuid_t *if_xfs_uuid_table;
-+		if_xfs_uuid_table = krealloc(xfs_uuid_table,
- 			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
- 			GFP_KERNEL | __GFP_NOFAIL);
-+		if (!if_xfs_uuid_table)
-+			goto out_duplicate;
-+		xfs_uuid_table = if_xfs_uuid_table;
- 		hole = xfs_uuid_table_size++;
- 	}
- 	xfs_uuid_table[hole] = *uuid;
+CPU1					CPU2
+ext4_end_bio()
+  ...
+  end_page_writeback(page)
+    test_clear_page_writeback(page)
+					free page
+					reallocate page for something else
+					we can even dirty & start to
+					  writeback 'page'
+    wake_up_page(page)
+
+and we have a "spurious" wake up on 'page'.
+
+								Honza
 -- 
-2.23.0
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
